@@ -6,16 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from api.analytics import (
-    BOT_DOMAIN,
-    BOT_SENDER_UA,
     DOMAIN,
     PLATFORM_PATTERNS,
     _detect_whatsapp_variant,
-    classify_asset,
     detect_ai_agent,
     detect_platform,
-    track_asset_fetch,
-    track_bot_fetch,
     track_og_image,
 )
 
@@ -248,15 +243,33 @@ class TestTrackOgImage:
         with patch("api.analytics.asyncio.create_task", mock_create_task):
             track_og_image(request, page="home")
 
-    def test_fallback_to_client_host(self, mock_create_task: MagicMock) -> None:
-        """Should fallback to client.host when X-Forwarded-For not present."""
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("peer", "forwarded"),
+        [
+            # Behind Cloud Run the peer is the front end's private address: no header, not a wrong one.
+            ("10.0.0.1", None),
+            ("127.0.0.1", None),
+            # A public peer (a direct caller) is the visitor.
+            ("84.75.12.9", "84.75.12.9"),
+        ],
+    )
+    async def test_falls_back_to_a_public_peer_only(self, peer: str, forwarded: str | None) -> None:
+        """Without a usable header the socket peer is the visitor only when it is a public address."""
         request = MagicMock()
         request.headers = {"user-agent": "Twitterbot/1.0"}
         request.client = MagicMock()
-        request.client.host = "10.0.0.1"
+        request.client.host = peer
 
-        with patch("api.analytics.asyncio.create_task", mock_create_task):
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
             track_og_image(request, page="home")
+            await asyncio.sleep(0)
+
+            headers = mock_client.post.call_args[1]["headers"]
+            assert headers.get("X-Forwarded-For") == forwarded
+            assert ("X-Forwarded-For" in headers) is (forwarded is not None)
 
     def test_handles_missing_client(self, mock_create_task: MagicMock) -> None:
         """Should handle missing client gracefully."""
@@ -347,6 +360,32 @@ class TestDetectAiAgent:
             # were prerendered but not counted until these patterns existed.
             ("Grok/1.0", ("grok", "user_directed")),
             ("Mozilla/5.0 (compatible; xAI-Bot/1.0)", ("grok", "user_directed")),
+            # xAI's search index carries the bare "xai" token too; ordered before it,
+            # it is an index read, not a person's fetch (a live sample read it as one).
+            ("Mozilla/5.0 (compatible; xAI-SearchBot/1.0)", ("grok", "index")),
+            ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Amazonbot/0.1)", ("amazon", "index")),
+            (
+                "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)",
+                ("meta", "training"),
+            ),
+            ("Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)", ("ahrefs", "seo")),
+            ("Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)", ("semrush", "seo")),
+            ("Mozilla/5.0 (compatible; DataForSeoBot/1.0)", ("dataforseo", "seo")),
+            ("Mozilla/5.0 (compatible; Google-CloudVertexBot; +https://cloud.google.com)", ("gemini", "index")),
+            ("Mozilla/5.0 (compatible; ExaSearchBot/1.0)", ("exa", "index")),
+            ("Keenable-User/1.0 (+https://keenable.ai/bot)", ("keenable", "user_directed")),
+            ("Keenable-SearchBot/1.0 (+https://keenable.ai/bot)", ("keenable", "index")),
+            ("Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (compatible; Bytespider)", ("bytedance", "training")),
+            ("CCBot/2.0 (https://commoncrawl.org/faq/)", ("commoncrawl", "training")),
+            ("Mozilla/5.0 (compatible; Qwantbot/2.1)", ("qwant", "search")),
+            (
+                "Mozilla/5.0 (compatible; PetalBot;+https://webmaster.petalsearch.com/site/petalbot)",
+                ("huawei", "search"),
+            ),
+            ("Sogou web spider/4.0(+http://www.sogou.com/docs/help/webmasters.htm#07)", ("sogou", "search")),
+            ("Mozilla/5.0 (compatible; MJ12bot/v1.4.8; http://mj12bot.com/)", ("majestic", "seo")),
+            ("Mozilla/5.0 (compatible; DotBot/1.2; +https://opensiteexplorer.org/dotbot)", ("moz", "seo")),
+            ("Mozilla/5.0 (compatible; HaloBot/1.0)", ("haloscan", "seo")),
         ],
     )
     def test_classifies(self, user_agent: str, expected: tuple[str, str]) -> None:
@@ -358,6 +397,8 @@ class TestDetectAiAgent:
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36",
             "Twitterbot/1.0",
             "Slackbot-LinkExpanding 1.0",
+            # Sogou's browser, which people use: only the spider's full token is a crawler.
+            "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Chrome/88.0 Mobile Safari/537.36 SogouMobileBrowser/5.38.6",
             "",
         ],
     )
@@ -366,89 +407,8 @@ class TestDetectAiAgent:
         assert detect_ai_agent(user_agent) is None
 
 
-class TestTrackBotFetch:
-    """Recording an agent reading a page."""
-
-    @staticmethod
-    def _request(user_agent: str) -> MagicMock:
-        request = MagicMock()
-        request.headers = {"user-agent": user_agent}
-        request.client.host = "203.0.113.7"
-        return request
-
-    @pytest.mark.asyncio
-    async def test_records_against_the_bot_site_not_the_main_one(self) -> None:
-        """Mixing these into anyplot.ai is what broke the human numbers before."""
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            track_bot_fetch(self._request("Mozilla/5.0 (compatible; Claude-User/1.0)"), "/box-basic", 200)
-            await asyncio.sleep(0)  # let the fire-and-forget task run
-
-            assert mock_client.post.call_args[1]["json"]["domain"] == BOT_DOMAIN
-
-    @pytest.mark.asyncio
-    async def test_carries_assistant_kind_and_public_path(self) -> None:
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            track_bot_fetch(self._request("MistralAI-User/1.0"), "/box-basic/python/matplotlib", 200)
-            await asyncio.sleep(0)
-
-            payload = mock_client.post.call_args[1]["json"]
-            assert payload["name"] == "bot_fetch"
-            # the public URL, never this router's /seo-proxy prefix
-            assert payload["url"] == "https://anyplot.ai/box-basic/python/matplotlib"
-            assert payload["props"] == {
-                "assistant": "mistral",
-                "kind": "user_directed",
-                "path": "/box-basic/python/matplotlib",
-                "status": "200",
-            }
-
-    @pytest.mark.asyncio
-    async def test_reports_the_visitor_not_our_own_infrastructure(self) -> None:
-        """Analytics wants the LEFTMOST forwarded entry — the actual visitor.
-
-        The opposite of the rate limiter, which takes the rightmost because the
-        leftmost is client-controlled. Plausible documents that it uses "the
-        first valid IP address from the list" and that forwarding "a server,
-        hosting provider, or CDN IP address instead of the actual visitor IP"
-        makes its bot filtering drop the event — so handing it the rightmost
-        entry, which is ours, silently loses the data.
-        """
-        request = MagicMock()
-        request.headers = {
-            "user-agent": "Mozilla/5.0 (compatible; Claude-User/1.0)",
-            "x-forwarded-for": "203.0.113.7, 198.51.100.2, 10.0.0.9",
-        }
-        request.client.host = "127.0.0.1"
-
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            track_bot_fetch(request, "/box-basic", 200)
-            await asyncio.sleep(0)
-
-            assert mock_client.post.call_args[1]["headers"]["X-Forwarded-For"] == "203.0.113.7"
-
-    @pytest.mark.asyncio
-    async def test_sends_nothing_for_a_human(self) -> None:
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            track_bot_fetch(self._request("Mozilla/5.0 (X11; Linux) Chrome/126.0 Safari/537.36"), "/", 200)
-            await asyncio.sleep(0)
-
-            mock_client.post.assert_not_called()
-
-
 class TestOgImageAudienceSplit:
-    """A shared link and a crawler fetch are different things and are recorded apart."""
+    """A shared link is a human signal on anyplot.ai; a crawler's fetch is a machine read and never a Plausible event."""
 
     @staticmethod
     def _request(user_agent: str) -> MagicMock:
@@ -477,68 +437,27 @@ class TestOgImageAudienceSplit:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        ("user_agent", "assistant", "kind"),
+        "user_agent",
         [
-            ("Mozilla/5.0 (compatible; Googlebot/2.1)", "google", "search"),
-            ("Mozilla/5.0 (compatible; Claude-User/1.0)", "claude", "user_directed"),
-            ("Mozilla/5.0 (compatible; GPTBot/1.4)", "chatgpt", "training"),
+            "Mozilla/5.0 (compatible; Googlebot/2.1)",
+            "Mozilla/5.0 (compatible; Claude-User/1.0)",
+            "Mozilla/5.0 (compatible; GPTBot/1.4)",
+            "Mozilla/5.0 (compatible; AhrefsBot/7.0)",
         ],
     )
-    async def test_a_crawler_fetch_goes_to_the_bot_site(self, user_agent: str, assistant: str, kind: str) -> None:
-        """Now that /og/ is crawlable these arrive in volume; they must not
-        drown the sharing signal or inflate visitors on the main site."""
+    async def test_a_crawler_fetch_sends_nothing(self, user_agent: str) -> None:
+        """Since /og/ is crawlable these arrive in volume. On anyplot.ai they would drown the sharing signal and
+        inflate visitors; the machine-read line (api/machine_reads.py) records them instead."""
         with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
-            track_og_image(self._request(user_agent), page="spec_detail", spec="box-basic")
+            with patch("api.analytics.asyncio.create_task") as create_task:
+                track_og_image(self._request(user_agent), page="spec_detail", spec="box-basic")
             await asyncio.sleep(0)
 
-            payload = mock_client.post.call_args[1]["json"]
-            assert payload["domain"] == BOT_DOMAIN
-            assert payload["props"]["assistant"] == assistant
-            assert payload["props"]["kind"] == kind
-
-
-class TestBotEventsUseANeutralAgent:
-    """Plausible drops events whose UA it identifies as a bot — verified live."""
-
-    @staticmethod
-    def _request(user_agent: str) -> MagicMock:
-        request = MagicMock()
-        request.headers = {"user-agent": user_agent}
-        request.client.host = "203.0.113.7"
-        return request
-
-    @pytest.mark.asyncio
-    async def test_bot_fetch_does_not_forward_the_crawler_agent(self) -> None:
-        """Forwarding it means the bot site records nothing at all."""
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            track_bot_fetch(self._request("Mozilla/5.0 (compatible; Claude-User/1.0)"), "/box-basic", 200)
-            await asyncio.sleep(0)
-
-            call = mock_client.post.call_args[1]
-            assert call["headers"]["User-Agent"] == BOT_SENDER_UA
-            # the identity is not lost — it travels in the props
-            assert call["json"]["props"]["assistant"] == "claude"
-
-    @pytest.mark.asyncio
-    async def test_machine_side_og_image_also_uses_it(self) -> None:
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            track_og_image(
-                self._request("Mozilla/5.0 (compatible; Googlebot/2.1)"), page="spec_detail", spec="box-basic"
-            )
-            await asyncio.sleep(0)
-
-            call = mock_client.post.call_args[1]
-            assert call["json"]["domain"] == BOT_DOMAIN
-            assert call["headers"]["User-Agent"] == BOT_SENDER_UA
+            create_task.assert_not_called()
+            mock_client.post.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_the_main_site_still_sees_the_real_agent(self) -> None:
@@ -556,7 +475,7 @@ class TestBotEventsUseANeutralAgent:
 
 
 class TestVisitorIpValidation:
-    """Plausible uses "the first VALID IP address from the list" — so must we."""
+    """Plausible uses "the first VALID IP address from the list"; the API hands it a public one."""
 
     @staticmethod
     def _request(headers: dict[str, str]) -> MagicMock:
@@ -572,142 +491,29 @@ class TestVisitorIpValidation:
             ({"x-forwarded-for": "unknown, 84.75.12.9"}, "84.75.12.9"),
             ({"cf-connecting-ip": "garbage", "x-forwarded-for": "84.75.12.9"}, "84.75.12.9"),
             ({"x-forwarded-for": "2a02:1210::1, 10.0.0.1"}, "2a02:1210::1"),
-            # The crawler path (Cloud Run app -> Cloudflare -> API): the site's
-            # Cloudflare put the crawler first in x-forwarded-for, and
-            # cf-connecting-ip is the app container's Google egress address —
-            # the "hosting provider IP" Plausible drops. The forwarded list
-            # must win, or one crawler read in twenty gets counted.
-            ({"cf-connecting-ip": "34.90.1.1", "x-forwarded-for": "84.75.12.9, 172.68.0.1, 34.90.1.1"}, "84.75.12.9"),
+            # cf-connecting-ip first: Cloudflare overwrites it, so through the
+            # edge it cannot be forged, while the forwarded list can.
+            ({"cf-connecting-ip": "34.90.1.1", "x-forwarded-for": "84.75.12.9, 172.68.0.1, 34.90.1.1"}, "34.90.1.1"),
             # A direct client behind Cloudflare: both headers name the visitor
             ({"cf-connecting-ip": "84.75.12.9", "x-forwarded-for": "84.75.12.9"}, "84.75.12.9"),
-            # cf-connecting-ip is still the fallback when nothing is forwarded
             ({"cf-connecting-ip": "84.75.12.9"}, "84.75.12.9"),
-            # nothing usable anywhere: fall back to the socket peer
-            ({"x-forwarded-for": "nonsense"}, "127.0.0.1"),
-            ({}, "127.0.0.1"),
+            # A forged private address at the front of the list is skipped, not
+            # handed to Plausible as the visitor.
+            ({"x-forwarded-for": "10.0.0.9, 84.75.12.9"}, "84.75.12.9"),
+            ({"cf-connecting-ip": "192.168.1.1", "x-forwarded-for": "84.75.12.9"}, "84.75.12.9"),
+            # Documentation (TEST-NET), loopback, CGNAT, link-local, unique-local
+            # and unspecified addresses are not public either; neither is multicast,
+            # which `is_global` alone would let through.
+            ({"x-forwarded-for": "203.0.113.7"}, ""),
+            ({"x-forwarded-for": "100.64.0.1, 169.254.1.1, fd00::1, fe80::1, ::1, 0.0.0.0, 84.75.12.9"}, "84.75.12.9"),
+            ({"x-forwarded-for": "224.0.0.1, 84.75.12.9"}, "84.75.12.9"),
+            # Nothing usable anywhere, and the socket peer (127.0.0.1 here, Cloud
+            # Run's front end in production) is not public either: no address.
+            ({"x-forwarded-for": "nonsense"}, ""),
+            ({}, ""),
         ],
     )
-    def test_skips_tokens_that_are_not_addresses(self, headers: dict[str, str], expected: str) -> None:
+    def test_takes_the_first_public_address(self, headers: dict[str, str], expected: str) -> None:
         from api.request_context import visitor_ip
 
         assert visitor_ip(self._request(headers)) == expected
-
-
-class TestClassifyAsset:
-    """Which API paths are a request for ONE thing, and what thing."""
-
-    @pytest.mark.parametrize(
-        ("path", "expected"),
-        [
-            ("/specs/bar-basic/seaborn/code", ("code", "bar-basic", "seaborn")),
-            ("/specs/scatter-3d/mui-x-charts/code", ("code", "scatter-3d", "mui-x-charts")),
-            ("/specs/bar-basic", ("spec", "bar-basic", None)),
-            # navigation, not an asset
-            ("/specs", None),
-            ("/specs/map", None),
-            ("/specs/bar-basic/images", None),
-            ("/plots/filter", None),
-            ("/seo-proxy/bar-basic", None),
-            ("/llms-full.txt", None),
-            # not a spec id shape: nothing reaches the classifier with a query
-            # string, but a malformed segment must not become a dashboard key
-            ("/specs/Bar_Basic", None),
-            ("/specs/bar-basic/seaborn/code/", None),
-        ],
-    )
-    def test_classifies(self, path: str, expected: tuple[str, str, str | None] | None) -> None:
-        assert classify_asset(path) == expected
-
-
-class TestTrackAssetFetch:
-    """Which plots do assistants actually pull the code of."""
-
-    @staticmethod
-    def _request(user_agent: str, path: str) -> MagicMock:
-        request = MagicMock()
-        request.headers = {"user-agent": user_agent, "x-forwarded-for": "84.75.12.9"}
-        request.url.path = path
-        request.client.host = "127.0.0.1"
-        return request
-
-    @pytest.mark.asyncio
-    async def test_records_the_asset_against_the_bot_site(self) -> None:
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            request = self._request("Mozilla/5.0 (compatible; Claude-User/1.0)", "/specs/bar-basic/seaborn/code")
-            track_asset_fetch(request, asset="code", spec="bar-basic", library="seaborn", status=200)
-            await asyncio.sleep(0)
-
-            payload = mock_client.post.call_args[1]["json"]
-            assert payload["name"] == "asset_fetch"
-            assert payload["domain"] == BOT_DOMAIN
-            assert payload["url"] == "https://api.anyplot.ai/specs/bar-basic/seaborn/code"
-            assert payload["props"] == {
-                "asset": "code",
-                "spec": "bar-basic",
-                "library": "seaborn",
-                "assistant": "claude",
-                "kind": "user_directed",
-                "status": "200",
-            }
-            # The crawler's own address, never a hosting-provider one
-            assert mock_client.post.call_args[1]["headers"]["X-Forwarded-For"] == "84.75.12.9"
-
-    @pytest.mark.asyncio
-    async def test_a_spec_read_carries_no_library(self) -> None:
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            track_asset_fetch(
-                self._request("Mozilla/5.0 (compatible; GPTBot/1.4)", "/specs/bar-basic"),
-                asset="spec",
-                spec="bar-basic",
-                library=None,
-                status=200,
-            )
-            await asyncio.sleep(0)
-
-            props = mock_client.post.call_args[1]["json"]["props"]
-            assert "library" not in props
-            assert props["assistant"] == "chatgpt"
-            assert props["kind"] == "training"
-
-    @pytest.mark.asyncio
-    async def test_sends_nothing_for_a_browser(self) -> None:
-        """The SPA fetches the same routes; a human's read is not an assistant's."""
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            request = self._request(
-                "Mozilla/5.0 (X11; Linux) Chrome/126.0 Safari/537.36", "/specs/bar-basic/seaborn/code"
-            )
-            track_asset_fetch(request, asset="code", spec="bar-basic", library="seaborn", status=200)
-            await asyncio.sleep(0)
-
-            mock_client.post.assert_not_called()
-
-
-class TestBotFetchRecordsTheStatus:
-    """A miss is a signal, but it is not a page read — so record it, don't hide it."""
-
-    @staticmethod
-    def _request() -> MagicMock:
-        request = MagicMock()
-        request.headers = {"user-agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"}
-        request.client.host = "203.0.113.7"
-        return request
-
-    @pytest.mark.asyncio
-    async def test_a_miss_is_recorded_as_such(self) -> None:
-        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
-            mock_client = AsyncMock()
-            mock_client_class.return_value.__aenter__.return_value = mock_client
-
-            track_bot_fetch(self._request(), "/bar-basic/python/highcharts", 404)
-            await asyncio.sleep(0)
-
-            assert mock_client.post.call_args[1]["json"]["props"]["status"] == "404"
