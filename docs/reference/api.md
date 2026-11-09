@@ -958,7 +958,8 @@ the first plot of that data, also when the library has a plot of the data
 before. What a library switch carried from the plot of the data before (its
 theme, its texts, its requests) goes with every new data version: a paste, a
 change, `.to_long()` or an undo. A switch or the admin fan-out's copy after the
-data changed carries no plot of the earlier data, only the memory.
+data changed carries only the theme you asked for on the plot of the earlier
+data, never its texts or requests, besides the memory.
 
 The memory lives in the agents service's memory only and goes with the
 session; the usage telemetry counts its entries by kind, never their text.

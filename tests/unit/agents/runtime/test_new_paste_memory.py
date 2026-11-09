@@ -23,10 +23,10 @@ from agents.anyplot.data.store import DatasetStore
 from agents.anyplot.dataset_versions import push_version, undo_version
 from agents.anyplot.memory import MEMORY_SEQ, memory_delta, plan, read_memory
 from agents.anyplot.opening import store_dataset
-from agents.anyplot.schemas import RememberItem
-from agents.anyplot.services import Services, get_services
+from agents.anyplot.schemas import PlotResult, RememberItem
+from agents.anyplot.services import CodeVersion, Services, get_services
 from agents.anyplot.session_state import PENDING_REQUEST
-from agents.anyplot.switch import CARRY, read_carry
+from agents.anyplot.switch import CARRY, read_carry, source_plot
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import SCATTER_PLAN, VERDICT_OK, default_script
@@ -120,10 +120,11 @@ def test_every_new_data_version_drops_the_carry() -> None:
     assert undone is not None and undone.delta[CARRY] is None
 
 
-async def test_a_switch_after_new_data_carries_no_plot_of_the_earlier_data(
+async def test_a_switch_after_new_data_carries_only_the_asked_theme_of_the_earlier_plot(
     client: httpx.AsyncClient, runtime: Runtime, swap_models
 ) -> None:
-    """The dark theme and the texts were asked for on the plot of the data before; the memory still travels."""
+    """Owner decision of 2026-11-09: the dark theme the user asked for on the plot of the data before carries, as "plot
+    the new data" keeps it; that plot's texts and requests stay behind, and the memory still travels."""
     script = default_script()
     script["root"][0] = {"call": "plot_pipeline", "args": {"theme": "dark"}}
     swap_models("gemini", script)
@@ -134,10 +135,34 @@ async def test_a_switch_after_new_data_carries_no_plot_of_the_earlier_data(
 
     switched = await switch(client, sid, "seaborn")
 
-    assert switched["carry"]["from_plot"] is False and switched["carry"]["decisions"] == 2
+    assert switched["carry"]["from_plot"] is True and switched["carry"]["decisions"] == 2
     carry = read_carry(await _session_state(client, sid), ("scatter-basic", "seaborn"))
-    assert carry is not None and carry.theme is None and carry.requests == []
+    assert carry is not None and carry.theme == "dark" and carry.requests == []
     assert carry.expected_texts == ["Zeit (h)"]  # the memory's own text, which only the user removes
+
+
+def test_a_plot_of_another_data_version_gives_its_theme_and_no_texts_or_requests() -> None:
+    version = CodeVersion(
+        number=1,
+        working="w",
+        run_form="r",
+        export="e",
+        data_csv="a\n1\n",
+        render_id="r1",
+        result=PlotResult(status="ok", attempts=1, artifacts=["plot.py"]),
+        theme="dark",
+        theme_asked=True,
+        expected_texts=["Exam 2025"],
+        requests=["title: Exam 2025"],
+        data_version=1,
+    )
+
+    earlier = source_plot(version, data_version=2)
+    same = source_plot(version, data_version=1)
+
+    assert earlier is not None and (earlier.theme, earlier.theme_asked) == ("dark", True)
+    assert (earlier.expected_texts, earlier.requests) == ([], [])
+    assert same is not None and (same.expected_texts, same.requests) == (["Exam 2025"], ["title: Exam 2025"])
 
 
 async def test_a_switch_on_the_data_of_the_plot_still_carries_it(
