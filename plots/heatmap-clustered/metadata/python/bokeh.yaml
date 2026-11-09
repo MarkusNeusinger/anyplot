@@ -2,46 +2,46 @@ library: bokeh
 language: python
 specification_id: heatmap-clustered
 created: '2025-12-26T15:43:08Z'
-updated: '2026-05-09T08:55:53Z'
-generated_by: claude-haiku
-workflow_run: 25596905183
+updated: '2026-11-09T10:38:41Z'
+generated_by: claude-opus
+workflow_run: 42600795257
 issue: 2021
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 87
 review:
   strengths:
-  - Complete clustered heatmap with dendrograms on both axes showing hierarchical
-    structure
-  - 'Perfect theme adaptation: data colors identical across renders, chrome elements
-    correctly invert'
-  - 'Excellent Bokeh patterns: ColumnDataSource, nested layouts, ColorBar, LinearColorMapper,
-    HoverTool'
-  - Realistic gene expression data with meaningful biological structure and tumor
-    vs normal separation
-  - Professional appearance with proper spacing, readability in both themes, sophisticated
-    dendrogram extraction
+  - Dendrogram leaves are mapped exactly onto the cell centers by sharing x_range/y_range
+    Range1d objects between the dendrogram and heatmap figures
+  - Ward/Euclidean clustering via scipy.cluster.hierarchy reorders both axes; tumor/normal
+    and gene-family blocks emerge clearly
+  - The Imprint diverging ramp has a theme-adaptive midpoint and symmetric limits
+    derived from the data; theme chrome is correct in both renders
+  - HoverTool exposes the gene, sample and value per cell in the HTML output
   weaknesses:
-  - 'Title format error: says ''pyplots.ai'' instead of ''anyplot.ai'' on line 333'
+  - 'Suggestion: the Gene axis title reads top-to-bottom while the color bar title
+    reads bottom-to-top; one orientation for both would read more calmly.'
+  - 'Suggestion: a tumor/normal column color strip with a small legend (allowed by
+    the Notes) would label the dominant column split directly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface color
-      Chrome: Title "heatmap-clustered · bokeh · pyplots.ai" in dark text (INK, 28pt), axis labels "Samples"/"Genes" in dark text (22pt), row/column labels in soft gray (INK_SOFT, 18pt), colorbar with "Expression (z-score)" title and tick labels all clearly readable on light surface
-      Data: RdBu11 diverging colormap showing -3 (blue) to +3 (red) with white near-zero, white cell borders for definition, dendrograms in soft gray lines, clear hierarchical structure with tumor/normal sample separation visible
-      Legibility verdict: PASS - All elements readable with appropriate contrast
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas
+      Chrome: centered dark-ink title (~58% width); gene tick labels at 34 pt on the right with a rotated "Gene" title; 45-degree sample labels with a "Sample" title; color bar "Expression (z-score)" with -3..3 ticks; all readable, nothing clipped
+      Data: 20x15 cells in the Imprint diverging ramp (#AE3030 -> page midpoint -> #4467A3) with page-colored gaps; soft-ink column dendrogram on top splitting normal vs tumor samples, root-left row dendrogram on the left splitting immune, metabolism/cancer and cell-cycle genes; leaves aligned with cell centers
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface color
-      Chrome: Title, axis labels, and tick labels all in light text (#F0EFE8 primary, #B8B7B0 secondary), all clearly readable on dark surface, no dark-on-dark failures, dendrogram lines properly visible in light gray
-      Data: RdBu11 palette colors IDENTICAL to light render (only chrome changed), white cell borders preserved, same hierarchical clustering and tumor/normal separation patterns
-      Legibility verdict: PASS - All text readable, no contrast failures, data colors unchanged
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in #F0EFE8, ticks and dendrogram lines in #B8B7B0; no dark-on-dark text
+      Data: same red/blue anchors as light; the ramp midpoint switches to #1A1A17 as the style guide prescribes, so near-zero values are near-page tones; blocks equally readable
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -49,72 +49,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicit font sizes, theme-adaptive colors, readable in
-          both renders
+        comment: 'Explicit sizes: 34 pt gene ticks, 30 pt rotated sample ticks, 42
+          pt axis titles; readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Gene labels right, sample labels bottom angled, title/colorbar separate
+        comment: Rotated sample labels spaced apart; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 20x15 cells with white borders visible, dendrograms at line_width=2
-          clear
+        comment: Cells, 3 px dendrogram lines and the color bar visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: RdBu11 CVD-safe, good contrast, no red-green sole signal
+        comment: Red/blue diverging ramp, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper spacing, all elements visible, good proportions
+        comment: Square 2400x2400, matrix dominates, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title says 'pyplots.ai' instead of 'anyplot.ai'
+        passed: true
+        comment: Sample, Gene, Expression (z-score)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: RdBu11 for diverging, backgrounds correct, theme-adaptive chrome
-          proper
+        comment: imprint_div with theme-adaptive midpoint; correct page backgrounds
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Professional layout with dendrograms, appropriate RdBu11, proper
-          theme adaptation
+        comment: 'Clustermap composition: root-left row dendrogram, gene labels on
+          the right, color bar outside the label column'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean minimal aesthetic, soft dendrogram lines, subtle cell borders
+        comment: Page-colored cell gaps, chrome-free dendrogram panels with leaves
+          aligned to cell centers, no axis lines or ticks on the matrix
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Dendrograms show hierarchy, reordering reveals patterns, color shows
-          divergence
+        passed: false
+        comment: Blocks come from the clustering itself; no hierarchy chosen beyond
+          the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,26 +121,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct clustered heatmap with row/column dendrograms
+        comment: Clustermap-style heatmap with both dendrograms
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Dendrograms both axes, hierarchical clustering, diverging colormap,
-          colorbar all present
+        comment: Both dendrograms, Ward/Euclidean reordering, diverging map centered
+          on zero, color bar; optional color strips not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Matrix values to heatmap, labels applied, LinearColorMapper correct
+        comment: Leaves map exactly to cells (scipy 10k+5 coordinates converted)
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend proper but title format wrong
+        passed: true
+        comment: Mandated title; color bar titled Expression (z-score)
     data_quality:
       score: 15
       max: 15
@@ -151,19 +150,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects shown with meaningful structure
+        comment: Distinct row and column clusters with varying merge heights, signed
+          values
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Gene expression scenario realistic, real genes, realistic grouping
+        comment: Real gene symbols, tumor vs normal samples
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20x15 matrix, z-score range -3 to 3 sensible
+        comment: z-scores within +/-3, symmetric limits from the data
     code_quality:
       score: 10
       max: 10
@@ -173,65 +173,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct script, no unnecessary functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, none unused
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, clean Bokeh patterns
+        comment: scipy linkage/dendrogram used, no hand-rolled clustering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: plot-{THEME}.html + plot-{THEME}.png via Selenium, Bokeh 3 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ColumnDataSource, layouts, ColorBar, LinearColorMapper, HoverTool
-          all idiomatic
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool, dendrogram extraction, complex nested layout assembly
-    score_caps: None applied
+        comment: ColumnDataSource from tidy df, LinearColorMapper field transform,
+          ColorBar layout, shared Range1d across gridded figures
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HoverTool on cells with gene, sample and value in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T10:35:37Z'
 impl_tags:
   dependencies:
   - scipy
+  - matplotlib
   - selenium
   techniques:
   - colorbar
   - hover-tooltips
   - html-export
-  - annotations
+  - subplots
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - hierarchical-clustering
   styling:
   - custom-colormap
-  - edge-highlighting
+  - minimal-chrome
