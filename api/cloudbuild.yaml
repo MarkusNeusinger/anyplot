@@ -28,8 +28,8 @@ substitutions:
   # PLAUSIBLE_API_KEY, AGENT_USER_ID_KEY, TURNSTILE_SECRET_KEY and the hand-attached
   # ORIGIN_SECRET),
   # objectCreator and objectViewer on gs://anyplot-agent-cases, objectViewer on
-  # gs://anyplot-static (fonts), READER on the BigQuery datasets agent_telemetry and
-  # agent_telemetry_logs, and run.invoker on anyplot-agents. The build account (the
+  # gs://anyplot-static (fonts), READER on the BigQuery datasets agent_telemetry,
+  # agent_telemetry_logs, machine_reads and machine_reads_logs, and run.invoker on anyplot-agents. The build account (the
   # Compute Engine default service account) holds iam.serviceAccountUser on it to
   # deploy as it. A new secret or bucket the service reads needs a grant here first.
   # anyplot-agents accepts this account as its caller (_API_CALLER in
@@ -68,6 +68,12 @@ substitutions:
   # says "not configured". Set it on the deploy-api trigger once the views exist,
   # for the same reason as the two above: this pipeline writes it on every deploy.
   _AGENT_TELEMETRY_DATASET: ""
+  # `<project>.<dataset>` of the machine-read telemetry's BigQuery views
+  # (docs/reference/machine-readers.md), which the public machine-reader numbers and
+  # their /debug section read. Empty: both say "not configured". Set it on the
+  # deploy-api trigger once the views and the two READER entries exist, never with
+  # `gcloud run services update`: this pipeline writes it on every deploy.
+  _MACHINE_READS_DATASET: ""
 
 steps:
   # Build the container image
@@ -151,7 +157,7 @@ steps:
       # both flags means one deploy cannot undo an out-of-band change; the cost
       # is that a variable dropped from this line is no longer removed by the
       # next deploy, which is the trade already accepted for the secrets.
-      - "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}|AGENT_ENABLED=${_AGENT_ENABLED}|AGENT_PUBLIC_ENABLED=${_AGENT_PUBLIC_ENABLED}|AGENT_SERVICE_URL=${_AGENT_SERVICE_URL}|AGENT_TELEMETRY_DATASET=${_AGENT_TELEMETRY_DATASET}"
+      - "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}|AGENT_ENABLED=${_AGENT_ENABLED}|AGENT_PUBLIC_ENABLED=${_AGENT_PUBLIC_ENABLED}|AGENT_SERVICE_URL=${_AGENT_SERVICE_URL}|AGENT_TELEMETRY_DATASET=${_AGENT_TELEMETRY_DATASET}|MACHINE_READS_DATASET=${_MACHINE_READS_DATASET}"
       - "--cpu-throttling"
       # 40, not 15: with _MAX_INSTANCES=1 this limit is the only capacity the
       # service has, and 15 was a default nobody had measured against. On this

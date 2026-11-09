@@ -2,6 +2,10 @@
 FastMCP server for anyplot.
 
 Provides tools for AI assistants to search plot specifications and fetch implementation code.
+
+Every JSON-RPC request over HTTP writes one machine-read line (`api/machine_reads.py`): the method, the
+tool's name and its `spec_id` and `library` arguments when they are catalogue ids, never any other argument
+and never a result.
 """
 
 import os
@@ -12,6 +16,7 @@ from fastmcp import FastMCP
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
+from api.machine_reads import MachineReadMcpMiddleware
 from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem
 from api.version import APP_VERSION
 from core.database import ImplRepository, LibraryRepository, SpecRepository, is_db_configured
@@ -80,6 +85,7 @@ async def get_mcp_db_session() -> AsyncSession:
 # the fastmcp PACKAGE version — clients saw "3.4.5" while /health said the app
 # is 3.1.0 (verified live).
 mcp_server = FastMCP("anyplot", version=APP_VERSION)
+mcp_server.add_middleware(MachineReadMcpMiddleware())
 
 
 @mcp_server.tool()

@@ -355,138 +355,56 @@ To review the entry:
 
 ---
 
-## AI and crawler traffic (separate site)
+## AI and crawler traffic (retired bot site)
 
-Agent traffic is recorded against a **second Plausible site, `bots.anyplot.ai`**,
-never the main one. Every Plausible event creates a visitor, so routing these
-into `anyplot.ai` would re-introduce the inflation that audit 2026-07-08
-(High #7) removed — visitor counts ran ~40% high and the trend lines were
-unusable. The bot site has no tracking script installed and never will: its
-events arrive server-side through the Events API, which is why it shows
-"Setup pending" in the Plausible UI. That is expected, not a broken install.
+From 2026-08-18 until the machine-read lines replaced it in November 2026, a
+second Plausible site, `bots.anyplot.ai`, recorded three server-side events:
+`bot_fetch` (a catalogue page an AI assistant or search crawler requested),
+`asset_fetch` (one implementation's code or one spec's detail fetched through
+the API), and the machine side of `og_image_view`. It saw about 1.7 % of the
+real crawler reads, because Plausible drops events from crawler and datacenter
+addresses, and 71 % of its last week was a scanner that spoofed crawler user
+agents. Its history is exported to a dated directory under
+`~/backups/plausible/` on the owner's machine. The site stays dormant for 30
+days after the change deployed and is then deleted; until then its dashboard
+shows a flat line, which is expected.
 
-| Event | Properties | Source | Description |
-|-------|-----------|--------|-------------|
-| `bot_fetch` | `assistant`, `kind`, `path`, `status` | `api/main.py` (middleware) | An AI assistant or search crawler requested a catalogue page. Always recorded on `bots.anyplot.ai`. |
-| `asset_fetch` | `asset`, `spec`, `library`?, `assistant`, `kind`, `status` | `api/main.py` (middleware) | An AI assistant or search crawler fetched ONE thing through the API: an implementation's runnable source (`asset=code`, `GET /specs/{spec}/{library}/code`) or a spec's detail (`asset=spec`, `GET /specs/{spec}`). Lists, the map, the filter and the machine files are not recorded. Always on `bots.anyplot.ai`. See the cache caveat below. |
-| `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`?, plus `assistant` + `kind` when machine-fetched | `api/routers/og_images.py` | A preview image was fetched. **Split by audience**, see below. |
+Machine reads are now one content-free line per request by a crawler, an AI
+assistant, or an MCP client, written to Cloud Logging and read in BigQuery:
+[Machine readers](machine-readers.md). The `kind` taxonomy and the vendor
+table, `AI_AGENTS` in `api/analytics.py`, are described there.
 
-#### og:image is split by who fetched it
+### og:image is split by who fetched it
 
-A social or messenger preview means a human shared a link — a product signal
-that belongs with the human numbers, so those stay on `anyplot.ai`. A search or
-AI crawler fetching the same image is not a share, and since `robots.txt` began
-permitting `/og/` those arrive in volume: recording them on the main site would
-drown the sharing signal in crawler traffic and inflate visitor counts.
+A social or messenger preview means a person shared a link, a product signal
+that belongs with the human numbers, so `og_image_view` on `anyplot.ai`
+records it. A search or AI crawler fetching the same image is not a share, and
+since `robots.txt` began permitting `/og/` those arrive in volume: on the main
+site they would drown the sharing signal and inflate visitor counts. So
+`track_og_image` returns early when `detect_ai_agent` recognises the user
+agent. A crawler's image fetch sends nothing to Plausible, and the API writes
+its machine-read line instead, with `surface` `og`. Anything `detect_ai_agent`
+doesn't recognise (Twitter, Facebook, Slack, WhatsApp, …) is a share and stays
+on `anyplot.ai`.
 
-The split uses `detect_ai_agent` — if it recognises the user agent, the event is
-machine-side and goes to `bots.anyplot.ai` carrying the same `assistant` and
-`kind` props as `bot_fetch`, so both events slice alike. Anything it does not
-recognise (Twitter, Facebook, Slack, WhatsApp, …) is a share and stays put.
+Plausible discards an event and still answers `202 ok` in two cases, both
+found by probe events against the live API:
 
-#### Two things Plausible will silently drop
-
-Both were found by sending probe events against the live API and comparing what
-appeared, and both make an event vanish with an HTTP `202 ok` — Plausible always
-acknowledges, then discards.
-
-**A bot User-Agent.** Plausible identifies crawler agents and drops their
-events. Verified: the same event sent as `Claude-User` never appears, sent as a
-browser UA it does. There is no documented bypass. Machine-side events are
-therefore sent under `BOT_SENDER_UA` (`anyplot-server/1.0`); nothing is lost,
-because the UA only feeds Plausible's browser/OS/device detection — meaningless
-for a crawler — while the identity travels in `assistant` and `kind`.
-
-**Our own IP instead of the visitor's.** The
-[Events API docs](https://plausible.io/docs/events-api) state that Plausible
-uses "the first valid IP address from the list" and that if you "forward a
-server, hosting provider, or CDN IP address instead of the actual visitor IP,
-Plausible's bot filtering will drop the event". Analytics therefore resolves the
-IP with `visitor_ip`, **not** the rate limiter's `client_ip`: the latter
-deliberately returns the *rightmost* forwarded entry, because the leftmost is
-client-controlled and forging it once let callers poison another user's
-rate-limit bucket. The rightmost entry is our own infrastructure, so reusing it
-here would discard every event. `api/request_context.py` documents why the two
-must stay separate.
-
-The same trap has a second face on the crawler path. A prerendered page reaches
-the API through the site's nginx (Cloud Run app → Cloudflare → API), so on that
-hop `cf-connecting-ip` is the **app container's Google egress address** — a
-hosting-provider IP, dropped — while the crawler itself is only visible as the
-first `x-forwarded-for` entry, where the site-side Cloudflare put it.
-kurrentschrift measured the effect with probe events on 2026-08-28 (`34.90.x`
-and `35.204.x` dropped, a home IP kept): one counted read in twenty. Since
-2026-08-28 `visitor_ip` therefore reads the forwarded list **first** and falls
-back to `cf-connecting-ip`, and nginx's `@seo_proxy` forwards the crawler in
-`X-Forwarded-For` explicitly. For a direct client behind Cloudflare both
-headers name the same address, so nothing changes there. If `bot_fetch` counts
-ever look implausibly low again, this is the first thing to re-verify: the
-daily `bot-serving-check` fires ~25 crawler requests from a GitHub runner at
-06:23 UTC and should be visible on the bot site as that many events.
-
-Register the properties on the **`bots.anyplot.ai`** site, not on `anyplot.ai`
-— property registration is per site, and without it the events still arrive
-but cannot be broken down, which is the whole point of collecting them.
-`asset_fetch` also needs a **goal** (Custom event) of that name before the
-dashboard can break it down:
-
-| Property | Description | Used by |
-|----------|-------------|---------|
-| `assistant` | Vendor (`claude`, `chatgpt`, `gemini`, `mistral`, `perplexity`, `meta`, `amazon`, `duckduckgo`, `grok`, `google`, `bing`, …) | `bot_fetch`, `asset_fetch` |
-| `kind` | Why it fetched — see the table below | `bot_fetch`, `asset_fetch` |
-| `path` | Public path that was requested, e.g. `/box-basic/python/matplotlib` | `bot_fetch` |
-| `status` | Response status as a string (`200`, `404`, …) | `bot_fetch`, `asset_fetch` |
-| `asset` | What was fetched through the API: `code` (one implementation's runnable source) or `spec` (one spec's detail) | `asset_fetch` |
-| `spec` | The spec id, e.g. `box-basic` | `asset_fetch` |
-| `library` | The library id for a `code` read, e.g. `seaborn`; absent on a `spec` read | `asset_fetch` |
-
-`asset_fetch` counts **cache misses**, not requests: the two routes answer
-`public, max-age=300` and are also what the SPA fetches, so Cloudflare serves
-repeat reads from its edge and those never reach the middleware. For sporadic
-assistant traffic — one assistant, one plot, minutes apart — nearly every read
-is a miss, so the number is close; it is not exact. The alternative (dropping
-the edge cache for routes the SPA needs on every spec page) was not worth the
-precision. Filter on `asset`, then break down by `spec` for "which plots do
-assistants pull the code of", and by `library` within `asset=code`.
-
-Filter on `status` before reading anything else. The event records the
-*request*, not a successful read: an assistant asking for a URL that no longer
-exists is a signal worth keeping — it is how a library migration announces
-itself — but counting it as a page view would be a lie. This is also why the
-recording lives in a middleware rather than a router dependency: a dependency
-runs before the handler and cannot see the response, so every miss was recorded
-as a read.
-
-Machine-side `og_image_view` events carry the main site's image properties as
-well, so register these on `bots.anyplot.ai` too: `page`, `platform`, `spec`,
-`language`, `library`, and the `filter_*` family.
-
-`kind` is the property worth filtering on:
-
-| `kind` | Meaning |
-|--------|---------|
-| `user_directed` | A person asked their assistant to open this page. This is a **reader** |
-| `index` | An assistant's search index is building a corpus; no one is waiting |
-| `search` | A classic search crawler (Googlebot, bingbot, …) |
-| `inspection` | Search Console's URL inspection tool |
-| `training` | A training-corpus crawler |
-
-`assistant` carries the vendor (`claude`, `chatgpt`, `gemini`, `mistral`,
-`perplexity`, `meta`, `amazon`, `duckduckgo`, `grok`, `google`, `bing`, …).
-The taxonomy lives in `AI_AGENTS` in `api/analytics.py`, ordered most-specific
-first because matching is substring-based: `claude-user`, `claude-searchbot`
-and `claudebot` mean three different things and a broader `claude` pattern
-would collapse them.
-
-Search crawlers are included deliberately. Crawl frequency per engine is
-otherwise only visible by sampling Search Console's URL inspection one URL at a
-time — which is how a months-long recrawl gap after the June 2026 outage went
-unnoticed until someone went looking.
-
-Only `/seo-proxy/*` paths count as page reads; `robots.txt` and `sitemap.xml`
-live on the same router and are machine files, not catalogue pages. The
-reported `path` is always the public URL, never the internal `/seo-proxy`
-prefix.
+- **A bot user agent.** The same event sent as `Claude-User` never appeared,
+  sent as a browser user agent it did. Whether that also costs some preview
+  events (a preview fetcher sends its own crawler-like user agent) has not
+  been measured.
+- **Our own IP instead of the visitor's.** The
+  [Events API docs](https://plausible.io/docs/events-api) state that Plausible
+  uses "the first valid IP address from the list" and that if you "forward a
+  server, hosting provider, or CDN IP address instead of the actual visitor
+  IP, Plausible's bot filtering will drop the event". The event therefore
+  carries `visitor_ip`, **not** the rate limiter's `client_ip`, which returns
+  the rightmost forwarded entry, our own infrastructure. `visitor_ip` takes
+  `cf-connecting-ip` first, which Cloudflare overwrites, then the leftmost
+  public forwarded entry, so a forged private address at the front of the list
+  is skipped. `api/request_context.py` documents why the two must stay
+  separate.
 
 ## Server-side og:image tracking
 
@@ -531,7 +449,7 @@ Bot requests page → nginx detects bot → SEO proxy serves HTML with og:image 
 
 **Messaging Apps**: slack, discord, telegram, whatsapp, signal, viber, skype, teams, snapchat
 
-**Search Engines**: google, bing, yandex, duckduckgo, baidu, apple
+**Search Engines**: google, bing, yandex, duckduckgo, baidu, apple. `detect_ai_agent` recognises all six, so their fetches are machine reads and never reach Plausible; the values stay in `detect_platform` for completeness.
 
 **Link Preview Services**: embedly, quora, outbrain, rogerbot, showyoubot
 
@@ -590,7 +508,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `size_bucket` | Size class of pasted data (`lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `200kb_1mb`, `over_1mb`; `over_200kb` until the paste cap rose to 1 MB on 2026-10-14), never the size | `agent_data_parsed`, `agent_data_confirmed` |
 | `changes` | How many change lines an assistant's data change or generated table carried (`1`, `2`, `3+`) | `agent_data_prepared` |
 | `version` | The data version an undo restored, by its place in its data (`1` is the paste, `2`, `3+`), never the session's number for it | `agent_data_undo` |
-| `kind` | What a file brought into the agent chat was, by its first bytes (`text`, `spreadsheet`, `parquet`, `arrow`, `numpy`, `hdf5`, `pickle`, `pdf`, `archive`, `binary`, `unknown`), or the format the server found when it converted the file (`xlsx`, `xlsm`, `xlsb`, `xls`, `ods`, `parquet`, `feather`, `arrow`, `npy`, `npz`); on this site only, the bots site's `kind` is another property | `agent_data_file` |
+| `kind` | What a file brought into the agent chat was, by its first bytes (`text`, `spreadsheet`, `parquet`, `arrow`, `numpy`, `hdf5`, `pickle`, `pdf`, `archive`, `binary`, `unknown`), or the format the server found when it converted the file (`xlsx`, `xlsm`, `xlsb`, `xls`, `ods`, `parquet`, `feather`, `arrow`, `npy`, `npz`) | `agent_data_file` |
 | `encoding` | The text encoding the browser read a dropped file with (`utf-8`, `utf-8-bom`, `utf-16le`, `utf-16be`, `windows-1252`, `none`) | `agent_data_file` |
 | `outcome` | What happened to a dropped file (`attached`, `removed`, `sheet`, `refused`, `failed`, `too_large`, `busy`, `unreadable`; `filled`, `replaced` and `kept` until 2026-11-05), or to a cut turn the page read again (`resumed`, `gone`, `failed`) | `agent_data_file`, `agent_turn_resumed` |
 | `as` | How the agent chat's message box took a paste, a file or a typed table (`data`: an attachment for the dataset route; `message`: typed text) | `agent_input_routed` |
@@ -937,6 +855,7 @@ public stats page.
 - **Event tracking**: Passed via `onTrackEvent` prop throughout component tree
 - **Agent chat events**: `app/src/hooks/useAgentSession.ts` (parse, plot, guardrail), `app/src/pages/AgentChatPage.tsx` (pageview, open), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`
+- **og:image events**: `track_og_image()` in `api/analytics.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
 
 ## Testing
 

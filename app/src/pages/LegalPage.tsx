@@ -272,6 +272,15 @@ export function LegalPage() {
                   'IP address, URL and user-agent of each request, for security and debugging.',
                 ],
                 [
+                  'machine readers',
+                  <Box component="span" id="machine-readers" sx={ANCHOR_SX}>
+                    each request by a crawler, an ai assistant or an mcp client is one content-free
+                    line: the vendor and purpose, whether Cloudflare verified it, the page or file
+                    it asked for and the status. no IP address, no user-agent, nothing about
+                    anyone&apos;s browsing.
+                  </Box>,
+                ],
+                [
                   'edge',
                   'Cloudflare uses your IP address to rate-limit, filter bots and absorb DDoS attacks.',
                 ],
@@ -295,7 +304,7 @@ export function LegalPage() {
               rows={[
                 [
                   'hosting',
-                  'Google Cloud (Run, SQL, Storage, Logging) in the Netherlands (europe-west4)',
+                  'Google Cloud (Run, SQL, Storage, Logging, BigQuery) in the Netherlands (europe-west4)',
                 ],
                 ['cdn / ddos / bot check', 'Cloudflare (global, EU data centers for EU visitors)'],
                 ['analytics', 'Plausible Analytics (EU, proxied)'],
@@ -319,6 +328,7 @@ export function LegalPage() {
                   'cleared by the next feedback after ten minutes; its salt dies with the server instance',
                 ],
                 ['assistant telemetry', 'up to 180 days'],
+                ['machine readers', 'up to 180 days'],
                 ['feedback case files', '180 days'],
                 ['feedback entries, case rows', 'until you ask to delete them'],
               ]}

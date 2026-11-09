@@ -1,7 +1,14 @@
-"""Server-side Plausible Analytics for og:image tracking.
+"""Server-side Plausible Analytics for og:image tracking, and the vendor table of the machine reads.
 
-Tracks og:image requests from social media bots (Twitter, WhatsApp, etc.)
-since bots don't execute JavaScript and can't be tracked client-side.
+Tracks og:image requests from social media and messenger previews (Twitter,
+WhatsApp, etc.), which run no JavaScript and can't be tracked client-side. A
+preview means a person shared a link, so it is a human signal and goes to the
+anyplot.ai site. A crawler's or an AI assistant's fetch of the same image is a
+machine read: `api/machine_reads.py` writes its line and nothing goes to
+Plausible.
+
+`AI_AGENTS` is the vendor table both machine-read writers use
+(`api/machine_reads.py`, and the `$machine_agent` map of `app/nginx.conf`).
 
 Uses fire-and-forget pattern to avoid delaying responses.
 """
@@ -21,30 +28,15 @@ logger = logging.getLogger(__name__)
 PLAUSIBLE_ENDPOINT = "https://plausible.io/api/event"
 DOMAIN = "anyplot.ai"
 
-# AI fetches go to a SEPARATE Plausible site. Every Plausible event creates a
-# visitor, so routing these into the main site would re-introduce exactly the
-# bot inflation that once made visitor counts ~40% too high and the trend
-# lines unusable. A second site keeps the human
-# numbers clean while still answering "how often does an assistant read this".
-BOT_DOMAIN = "bots.anyplot.ai"
-
-# Plausible discards events whose User-Agent it recognises as a bot, and it
-# recognises all of them — verified against the live API: the same event sent
-# as `Claude-User` never appears, sent as a browser UA it does. Forwarding the
-# real crawler UA therefore guarantees the bot site records nothing at all.
-#
-# So machine-side events are sent under a neutral agent. Nothing is lost: the
-# UA only feeds Plausible's browser/OS/device detection, which is meaningless
-# for a crawler, while the identity that matters travels in the `assistant` and
-# `kind` properties either way.
-BOT_SENDER_UA = "anyplot-server/1.0"
-
 # Which assistant, and on whose behalf. The distinction is the point: a
 # user-directed fetch means a person asked their assistant to open this page,
 # which is a reader; an index crawler is building a corpus with no one waiting.
 # Ordered most-specific first — matching is substring-based, and e.g.
 # "claude-user" must never be shadowed by a broader "claude" pattern.
-# Vendor taxonomy per each vendor's own crawler documentation.
+# Vendor taxonomy per each vendor's own crawler documentation. The nginx
+# `$machine_agent` map repeats every token in this order
+# (tests/unit/api/test_machine_reads_nginx.py), so a vendor added here needs
+# its line there too.
 AI_AGENTS: tuple[tuple[str, str, str], ...] = (
     # (user-agent substring, assistant, kind)
     ("claude-user", "claude", "user_directed"),
@@ -60,16 +52,24 @@ AI_AGENTS: tuple[tuple[str, str, str], ...] = (
     ("notebooklm", "gemini", "user_directed"),
     ("google-agent", "gemini", "user_directed"),
     ("googleagent", "gemini", "user_directed"),
+    # Builds Vertex AI agents' grounding on the site owner's request. Before
+    # the google entries; it contains neither "googlebot" nor "googleother".
+    ("google-cloudvertexbot", "gemini", "index"),
     ("mistralai-user", "mistral", "user_directed"),
     ("mistralai-index", "mistral", "index"),
     ("meta-externalfetcher", "meta", "user_directed"),
     ("meta-webindexer", "meta", "index"),
+    ("meta-externalagent", "meta", "training"),
     ("duckassistbot", "duckduckgo", "user_directed"),
     ("amzn-user", "amazon", "user_directed"),
     ("amzn-searchbot", "amazon", "index"),
+    ("amazonbot", "amazon", "index"),
     ("grok-deepsearch", "grok", "user_directed"),
     ("grokbot", "grok", "user_directed"),
     ("xai-grok", "grok", "user_directed"),
+    # xAI's search index. Before the bare "xai" below, which would otherwise
+    # record it as a user-directed fetch (a live sample did exactly that).
+    ("xai-searchbot", "grok", "index"),
     # The bare tokens the nginx map already serves (`~*grok`, `~*xai`): xAI's
     # fetcher was seen sending plain "Grok" and "xAI-Bot" without the grok
     # substring. Both were prerendered but never counted, because nothing above
@@ -79,10 +79,34 @@ AI_AGENTS: tuple[tuple[str, str, str], ...] = (
     ("xai", "grok", "user_directed"),
     ("youbot", "you", "index"),
     ("cohere-ai", "cohere", "user_directed"),
+    # AI search indexes and training corpora that nginx does not prerender
+    # (its `$is_bot` map leaves them on the SPA shell), so most of their reads
+    # are nginx's lines. Bytespider is a welcome training crawler since the
+    # robots.txt policy opened to every crawler. Keenable documents
+    # Keenable-User (a person's agent asked) and Keenable-SearchBot; the bare
+    # token also catches the "KeenableBot" UA seen in the request log.
+    ("exasearchbot", "exa", "index"),
+    ("keenable-user", "keenable", "user_directed"),
+    ("keenable", "keenable", "index"),
+    ("bytespider", "bytedance", "training"),
+    ("ccbot", "commoncrawl", "training"),
+    # SEO tools: crawlers that index the web for search-marketing products.
+    # HaloBot is Haloscan's.
+    ("semrushbot", "semrush", "seo"),
+    ("ahrefsbot", "ahrefs", "seo"),
+    ("dataforseobot", "dataforseo", "seo"),
+    ("mj12bot", "majestic", "seo"),
+    ("dotbot", "moz", "seo"),
+    ("halobot", "haloscan", "seo"),
     # Classic search crawlers. Worth recording for the same reason the AI ones
     # are: crawl frequency per engine is otherwise only visible by sampling
     # Search Console's URL inspection one URL at a time, which is how the
     # months-long recrawl gap after the June 2026 outage stayed invisible.
+    # Sogou by its spider's full token: its mobile browser, which people use,
+    # also carries "sogou".
+    ("qwantbot", "qwant", "search"),
+    ("petalbot", "huawei", "search"),
+    ("sogou web spider", "sogou", "search"),
     ("google-inspectiontool", "google", "inspection"),
     ("googleother", "google", "search"),
     ("googlebot", "google", "search"),
@@ -199,9 +223,7 @@ def detect_platform(user_agent: str) -> str:
     return "unknown"
 
 
-async def _send_plausible_event(
-    user_agent: str, client_ip: str, name: str, url: str, props: dict, domain: str = DOMAIN
-) -> None:
+async def _send_plausible_event(user_agent: str, client_ip: str, name: str, url: str, props: dict) -> None:
     """Internal: Send event to Plausible (called as background task).
 
     Args:
@@ -210,18 +232,13 @@ async def _send_plausible_event(
         name: Event name
         url: Page URL
         props: Event properties
-        domain: Plausible site to record against; BOT_DOMAIN keeps AI traffic
-            out of the human numbers
     """
-    # Events for the bot site travel under a neutral agent: Plausible drops
-    # anything it identifies as a bot, which is every UA this path carries.
-    sender_ua = BOT_SENDER_UA if domain == BOT_DOMAIN else user_agent
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             await client.post(
                 PLAUSIBLE_ENDPOINT,
-                headers={"User-Agent": sender_ua, "X-Forwarded-For": client_ip, "Content-Type": "application/json"},
-                json={"name": name, "url": url, "domain": domain, "props": props},
+                headers={"User-Agent": user_agent, "X-Forwarded-For": client_ip, "Content-Type": "application/json"},
+                json={"name": name, "url": url, "domain": DOMAIN, "props": props},
             )
     except Exception as e:
         # warning (not debug) so prod outages of the Plausible pipeline are
@@ -262,6 +279,15 @@ def track_og_image(
         filters: Query params for filtered home page (e.g., {'lib': 'plotly', 'dom': 'statistics'})
     """
     user_agent = request.headers.get("user-agent", "")
+    # Who fetched it decides whether this is an event at all. A social or
+    # messenger preview means a person shared a link: a product signal that
+    # belongs with the human numbers. A search or AI crawler fetching the same
+    # image is not a share, and since robots.txt permits /og/ (#10472) those
+    # arrive in volume; on the main site they would drown the sharing signal
+    # and inflate visitor counts. detect_ai_agent recognises exactly the machine
+    # side, and its read is a machine-read line (api/machine_reads.py) instead.
+    if detect_ai_agent(user_agent) is not None:
+        return
     client_ip = visitor_ip(request)
     platform = detect_platform(user_agent)
 
@@ -280,20 +306,7 @@ def track_og_image(
         # Fallback: missing spec for a spec-based page
         url = "https://anyplot.ai/"
 
-    # Where this is recorded depends on WHO fetched it. A social or messenger
-    # preview means a human shared a link — that is a product signal and belongs
-    # with the human numbers. A search or AI crawler fetching the same image is
-    # not a share, and now that robots.txt permits /og/ (#10472) those will
-    # arrive in volume: recording them on the main site would drown the sharing
-    # signal in crawler traffic and inflate visitor counts. detect_ai_agent
-    # recognises exactly the machine side, so its verdict makes the split.
-    agent = detect_ai_agent(user_agent)
-    domain = BOT_DOMAIN if agent else DOMAIN
-
     props: dict[str, str] = {"page": page, "platform": platform}
-    if agent:
-        # Same shape as bot_fetch, so the bot site slices both events alike
-        props["assistant"], props["kind"] = agent
     if spec:
         props["spec"] = spec
     if language:
@@ -308,110 +321,7 @@ def track_og_image(
 
     # Fire-and-forget: create task without awaiting, but add exception handler.
     # Track via _BACKGROUND_TASKS so the GC cannot collect the task before it runs.
-    task = asyncio.create_task(_send_plausible_event(user_agent, client_ip, "og_image_view", url, props, domain=domain))
-    _BACKGROUND_TASKS.add(task)
-    task.add_done_callback(_BACKGROUND_TASKS.discard)
-    task.add_done_callback(_handle_task_exception)
-
-
-# The single-asset API reads an assistant makes after landing on a page: the
-# runnable source of one implementation and the detail of one spec. Nothing
-# else on the API is counted — the list endpoints, /plots/filter and the
-# machine files are catalogue navigation, not a request for one thing.
-# `/specs/map` shares the shape of a spec id and is excluded by name.
-_ASSET_ROUTES: tuple[tuple[re.Pattern[str], str], ...] = (
-    (re.compile(r"^/specs/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-z0-9]+(?:-[a-z0-9]+)*)/code$"), "code"),
-    (re.compile(r"^/specs/([a-z0-9]+(?:-[a-z0-9]+)*)$"), "spec"),
-)
-_NOT_A_SPEC = frozenset({"map"})
-
-
-def classify_asset(path: str) -> tuple[str, str, str | None] | None:
-    """(asset, spec_id, library_id) for a single-asset API path, else None.
-
-    `asset` is `code` (one implementation's runnable source) or `spec` (one
-    spec's detail); `library_id` is None for a spec read.
-    """
-    for pattern, asset in _ASSET_ROUTES:
-        m = pattern.match(path)
-        if m is None:
-            continue
-        spec_id = m.group(1)
-        if spec_id in _NOT_A_SPEC:
-            return None
-        return asset, spec_id, (m.group(2) if m.lastindex and m.lastindex >= 2 else None)
-    return None
-
-
-def track_asset_fetch(request: Request, *, asset: str, spec: str, library: str | None, status: int) -> None:
-    """Record an AI or search agent fetching one asset through the API (fire-and-forget).
-
-    Same site, same gate and same audience rule as `track_bot_fetch`: humans
-    and unclassified clients cost nothing beyond a substring scan, and the
-    event goes to BOT_DOMAIN. The props answer "which plots do assistants
-    actually pull the code of": `asset` (code · spec), `spec`, `library`.
-
-    One caveat the dashboard must know: these routes answer `public,
-    max-age=300`, so a read that Cloudflare serves from its edge never reaches
-    this process. The count is therefore the cache MISSES — the first fetch
-    per URL per edge TTL — which for sporadic assistant traffic is nearly all
-    of them, but not the same thing as every request.
-    """
-    detected = detect_ai_agent(request.headers.get("user-agent", ""))
-    if detected is None:
-        return
-    assistant, kind = detected
-    props: dict[str, str] = {"asset": asset, "spec": spec, "assistant": assistant, "kind": kind, "status": str(status)}
-    if library is not None:
-        props["library"] = library
-    url = f"https://api.anyplot.ai{request.url.path}"
-
-    task = asyncio.create_task(
-        _send_plausible_event(
-            request.headers.get("user-agent", ""), visitor_ip(request), "asset_fetch", url, props, domain=BOT_DOMAIN
-        )
-    )
-    _BACKGROUND_TASKS.add(task)
-    task.add_done_callback(_BACKGROUND_TASKS.discard)
-    task.add_done_callback(_handle_task_exception)
-
-
-def track_bot_fetch(request: Request, path: str, status: int) -> None:
-    """Record an AI or search agent requesting a page (fire-and-forget).
-
-    Recorded against BOT_DOMAIN, never the main site: every Plausible event
-    creates a visitor, and mixing these in is what once made the human numbers
-    unusable.
-
-    Non-agent traffic is ignored, so humans and unclassified bots cost nothing
-    beyond a substring scan. The `kind` prop is the one that answers the
-    question worth asking — `user_directed` means a person asked their
-    assistant to open this page, which is a reader; `search`, `index` and
-    `training` are machines building a corpus with nobody waiting.
-
-    Args:
-        request: FastAPI request, for the UA and forwarded IP
-        path: Public path being requested, e.g. "/box-basic/python/matplotlib"
-        status: Response status. Recorded rather than filtered on: an assistant
-            asking for a URL that no longer exists is a signal worth having, and
-            counting it as a successful read would be a lie. Filter on it in the
-            dashboard.
-    """
-    user_agent = request.headers.get("user-agent", "")
-    detected = detect_ai_agent(user_agent)
-    if detected is None:
-        return
-    assistant, kind = detected
-
-    # visitor_ip, not the rate limiter's client_ip: Plausible documents that it
-    # drops events carrying an infrastructure address rather than the real
-    # visitor's, and the rate limiter deliberately returns the rightmost
-    # forwarded entry — ours. See api/request_context.py for why the two differ.
-    client_ip = visitor_ip(request)
-    props = {"assistant": assistant, "kind": kind, "path": path, "status": str(status)}
-    url = f"https://anyplot.ai{path}"
-
-    task = asyncio.create_task(_send_plausible_event(user_agent, client_ip, "bot_fetch", url, props, domain=BOT_DOMAIN))
+    task = asyncio.create_task(_send_plausible_event(user_agent, client_ip, "og_image_view", url, props))
     _BACKGROUND_TASKS.add(task)
     task.add_done_callback(_BACKGROUND_TASKS.discard)
     task.add_done_callback(_handle_task_exception)

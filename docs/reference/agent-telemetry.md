@@ -260,6 +260,11 @@ jsonPayload.log_type="agent_telemetry"
 An exclusion on the `_Default` sink (step 3 below) keeps the same lines out of the project's `_Default`
 bucket, so they live in one place with one retention.
 
+The machine-read lines of the API and the site's nginx are the sibling pair, built the same way: the
+`machine-reads` bucket, the `anyplot.machine_reads_logs` linked dataset, and the `anyplot.machine_reads` views
+([Machine readers](machine-readers.md)). The two stay apart so the legal page and each bucket's description
+describe one thing each.
+
 ## Views
 
 Create them in file order. Each file is a script of `CREATE OR REPLACE VIEW` statements with the project
