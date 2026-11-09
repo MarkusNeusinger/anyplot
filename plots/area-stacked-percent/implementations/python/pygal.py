@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked-percent: 100% Stacked Area Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -30,11 +30,11 @@ UNITS = "Units sold (millions)"  # role: value
 years = [2018, 2019, 2020, 2021, 2022, 2023, 2024]
 market_size = [2100, 2200, 2000, 2300, 2200, 2400, 2500]  # all devices sold that year, million units
 share_percent = {
-    "Smartphones": [42, 40, 38, 36, 35, 33, 32],
-    "Laptops": [28, 27, 26, 25, 24, 23, 22],
-    "Tablets": [18, 19, 20, 21, 21, 22, 22],
-    "Wearables": [8, 10, 12, 14, 16, 18, 20],
-    "Accessories": [4, 4, 4, 4, 4, 4, 4],
+    "Smartphones": [60, 59, 57, 56, 55, 54, 53],
+    "Laptops": [10, 10, 11, 10, 9, 9, 9],
+    "Tablets": [14, 14, 15, 14, 14, 13, 13],
+    "Wearables": [10, 11, 11, 14, 16, 18, 19],
+    "Accessories": [6, 6, 6, 6, 6, 6, 6],
 }
 df = pd.DataFrame(
     [
