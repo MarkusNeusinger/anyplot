@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-3d: 3D Scatter Plot
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-09
@@ -43,56 +43,46 @@ BOX_HALF = {"x": 1.0, "y": 1.0, "z": 0.8}  # half-extent of each normalized axis
 N_TICKS = 5
 
 # Columns: set these to your table's column names
-X = "X-Axis (units)"  # role: x
-Y = "Y-Axis (units)"  # role: y
-Z = "Z-Axis (units)"  # role: z
+X = "Bill Length (mm)"  # role: x
+Y = "Flipper Length (mm)"  # role: y
+Z = "Body Mass (kg)"  # role: z
 
-# Data: replace this block with your own table, for example df = pd.read_csv("points.csv")
+# Data: replace this block with your own table, for example df = pd.read_csv("penguins.csv")
+# Field measurements of three penguin species, 50 birds each
 np.random.seed(42)
-n_per_cluster = 50
-x1 = np.random.randn(n_per_cluster) * 0.8 + 2
-y1 = np.random.randn(n_per_cluster) * 0.8 + 2
-z1 = np.random.randn(n_per_cluster) * 0.8 + 2
-x2 = np.random.randn(n_per_cluster) * 0.7 - 2
-y2 = np.random.randn(n_per_cluster) * 0.7 - 1
-z2 = np.random.randn(n_per_cluster) * 0.7 + 3
-x3 = np.random.randn(n_per_cluster) * 0.9
-y3 = np.random.randn(n_per_cluster) * 0.9 - 2
-z3 = np.random.randn(n_per_cluster) * 0.9 - 1
-df = pd.DataFrame({X: np.concatenate([x1, x2, x3]), Y: np.concatenate([y1, y2, y3]), Z: np.concatenate([z1, z2, z3])})
+species = {  # mean and spread of (bill, flipper, mass) per species
+    "Adelie": ((38.8, 190.0, 3.70), (2.4, 6.5, 0.42)),
+    "Chinstrap": ((48.8, 195.8, 3.73), (3.0, 7.0, 0.38)),
+    "Gentoo": ((47.5, 217.2, 5.08), (2.8, 6.2, 0.45)),
+}
+df = pd.DataFrame(
+    np.vstack([np.random.normal(mean, sd, size=(50, 3)) for mean, sd in species.values()]), columns=[X, Y, Z]
+)
 
 # Plot: reads only df and the constants above
-lims = {axis: (df[col].min(), df[col].max()) for axis, col in (("x", X), ("y", Y), ("z", Z))}
+# Orthographic view as one matrix: rotate about z by the azimuth, tilt by the elevation
+PROJ = np.array(
+    [
+        [np.cos(AZIMUTH), -np.sin(AZIMUTH), 0.0],
+        [np.sin(AZIMUTH) * np.sin(ELEVATION), np.cos(AZIMUTH) * np.sin(ELEVATION), np.cos(ELEVATION)],
+    ]
+)
+DEPTH = np.array([np.sin(AZIMUTH) * np.cos(ELEVATION), np.cos(AZIMUTH) * np.cos(ELEVATION), -np.sin(ELEVATION)])
+half = np.array([BOX_HALF["x"], BOX_HALF["y"], BOX_HALF["z"]])
+bx, by, bz = half
 
-
-def normalize(values, axis):
-    lo, hi = lims[axis]
-    span = (hi - lo) or 1.0
-    return (2 * (np.asarray(values, dtype=float) - lo) / span - 1) * BOX_HALF[axis]
-
-
-def project(xn, yn, zn):
-    """Orthographic view: rotate about z by the azimuth, tilt by the elevation."""
-    x_rot = xn * np.cos(AZIMUTH) - yn * np.sin(AZIMUTH)
-    y_rot = xn * np.sin(AZIMUTH) + yn * np.cos(AZIMUTH)
-    screen_y = y_rot * np.sin(ELEVATION) + zn * np.cos(ELEVATION)
-    depth = y_rot * np.cos(ELEVATION) - zn * np.sin(ELEVATION)
-    return x_rot, screen_y, depth
-
-
-bx, by, bz = BOX_HALF["x"], BOX_HALF["y"], BOX_HALF["z"]
-
-
-def screen(xn, yn, zn):
-    sx, sy, _ = project(np.asarray(xn, dtype=float), np.asarray(yn, dtype=float), np.asarray(zn, dtype=float))
-    return list(sx), list(sy)
-
+# Normalize each column into the box, then project the markers
+values = df[[X, Y, Z]].to_numpy(dtype=float)
+lo, hi = np.nanmin(values, axis=0), np.nanmax(values, axis=0)
+span = np.where(hi > lo, hi - lo, 1.0)
+normed = (2 * (values - lo) / span - 1) * half
+screen_xy = normed @ PROJ.T
+depth = normed @ DEPTH
 
 # Projected marks, sorted back to front; far points are drawn smaller
-px, py, depth = project(normalize(df[X], "x"), normalize(df[Y], "y"), normalize(df[Z], "z"))
 nearness = 1 - (depth - np.nanmin(depth)) / ((np.nanmax(depth) - np.nanmin(depth)) or 1.0)
-marks = df.assign(px=px, py=py, size=24 + nearness * 24).iloc[np.argsort(-depth, kind="stable")]
-source = ColumnDataSource(marks)
+marks = df.assign(px=screen_xy[:, 0], py=screen_xy[:, 1], size=24 + nearness * 24)
+source = ColumnDataSource(marks.iloc[np.argsort(-depth, kind="stable")])
 
 title = "scatter-3d · python · bokeh · anyplot.ai"
 p = figure(
@@ -109,34 +99,35 @@ p = figure(
 )
 
 # Pane grids on the floor and the two back walls (the walls at max x and max y face the viewer)
+# Every line is a segment between two 3D corners, projected in one matrix product
 ticks = {axis: np.linspace(-BOX_HALF[axis], BOX_HALF[axis], N_TICKS) for axis in BOX_HALF}
-pane_style = {"line_color": INK, "line_alpha": 0.12, "line_width": 2}
-for t in ticks["x"]:
-    p.line(*screen([t, t], [-by, by], [-bz, -bz]), **pane_style)  # floor
-    p.line(*screen([t, t], [by, by], [-bz, bz]), **pane_style)  # back wall y = max
-for t in ticks["y"]:
-    p.line(*screen([-bx, bx], [t, t], [-bz, -bz]), **pane_style)  # floor
-    p.line(*screen([bx, bx], [t, t], [-bz, bz]), **pane_style)  # back wall x = max
-for t in ticks["z"]:
-    p.line(*screen([bx, bx], [-by, by], [t, t]), **pane_style)
-    p.line(*screen([-bx, bx], [by, by], [t, t]), **pane_style)
+pane_segments = np.array(
+    [s for t in ticks["x"] for s in (((t, -by, -bz), (t, by, -bz)), ((t, by, -bz), (t, by, bz)))]
+    + [s for t in ticks["y"] for s in (((-bx, t, -bz), (bx, t, -bz)), ((bx, t, -bz), (bx, t, bz)))]
+    + [s for t in ticks["z"] for s in (((bx, -by, t), (bx, by, t)), ((-bx, by, t), (bx, by, t)))]
+)
+pane_xy = pane_segments @ PROJ.T
+p.multi_line(xs=pane_xy[..., 0].tolist(), ys=pane_xy[..., 1].tolist(), line_color=INK, line_alpha=0.12, line_width=2)
 
-# Box edges: back edges faint, front top edges dashed so the cube reads as a volume
+# Box edges: faint solid edges, plus one dashed hidden edge so the cube reads as a volume
+edge_segments = np.array(
+    [
+        ((bx, by, -bz), (bx, by, bz)),
+        ((-bx, by, bz), (bx, by, bz)),
+        ((bx, -by, bz), (bx, by, bz)),
+        ((bx, -by, -bz), (bx, -by, bz)),
+        ((-bx, -by, bz), (-bx, by, bz)),
+        ((-bx, -by, bz), (bx, -by, bz)),
+        ((-bx, -by, -bz), (-bx, -by, bz)),
+    ]
+)
+edge_xy = edge_segments @ PROJ.T
 edge_style = {"line_color": INK_SOFT, "line_alpha": 0.45, "line_width": 3}
-for xs, ys, zs in (
-    ([bx, bx], [by, by], [-bz, bz]),
-    ([-bx, bx], [by, by], [bz, bz]),
-    ([bx, bx], [-by, by], [bz, bz]),
-    ([bx, bx], [-by, -by], [-bz, bz]),
-    ([-bx, -bx], [-by, by], [bz, bz]),
-    ([-bx, bx], [-by, -by], [bz, bz]),
-):
-    p.line(*screen(xs, ys, zs), **edge_style)
-p.line(*screen([-bx, -bx], [-by, -by], [-bz, bz]), line_dash=[10, 8], **edge_style)
-p.line(*screen([bx, bx], [by, by], [-bz, -bz]), **edge_style)
+p.multi_line(xs=edge_xy[:-1, :, 0].tolist(), ys=edge_xy[:-1, :, 1].tolist(), **edge_style)
+p.line(edge_xy[-1, :, 0], edge_xy[-1, :, 1], line_dash=[10, 8], **edge_style)
 
 # Points: color carries the z value, translucency lets interior points show through
-color_mapper = LinearColorMapper(palette=IMPRINT_SEQ256, low=lims["z"][0], high=lims["z"][1])
+color_mapper = LinearColorMapper(palette=IMPRINT_SEQ256, low=lo[2], high=hi[2])
 points = p.scatter(
     x="px",
     y="py",
@@ -151,19 +142,14 @@ p.add_tools(HoverTool(renderers=[points], tooltips=[(c, f"@{{{c}}}{{0.00}}") for
 
 
 # Axes along three outer edges, each with an arrow, value ticks and its label
-def point(xn, yn, zn):
-    sx, sy, _ = project(xn, yn, zn)
-    return np.array([sx, sy])
-
-
 axis_specs = (
-    ("x", X, lambda s: point(s, -by, -bz), (0.04, -0.06), "left", "top"),
-    ("y", Y, lambda s: point(-bx, s, -bz), (-0.04, -0.06), "right", "top"),
-    ("z", Z, lambda s: point(-bx, by, s), (-0.07, 0.0), "right", "middle"),
+    (0, X, (-bx, -by, -bz), (bx, -by, -bz), (0.04, -0.06), "left", "top"),
+    (1, Y, (-bx, -by, -bz), (-bx, by, -bz), (-0.04, -0.06), "right", "top"),
+    (2, Z, (-bx, by, -bz), (-bx, by, bz), (-0.07, 0.0), "right", "middle"),
 )
-for axis, col, at, tick_offset, align, baseline in axis_specs:
-    half = BOX_HALF[axis]
-    start, end = at(-half), at(half)
+for i, col, corner_lo, corner_hi, tick_offset, align, baseline in axis_specs:
+    tick_xy = (np.array(corner_lo) + np.outer(np.linspace(0, 1, N_TICKS), np.subtract(corner_hi, corner_lo))) @ PROJ.T
+    start, end = tick_xy[0], tick_xy[-1]
     p.line([start[0], end[0]], [start[1], end[1]], line_color=INK_SOFT, line_width=5)
 
     direction = (end - start) / np.linalg.norm(end - start)
@@ -172,9 +158,7 @@ for axis, col, at, tick_offset, align, baseline in axis_specs:
     arrow = [end, base + perp * 0.035, base - perp * 0.035]
     p.patch(x=[a[0] for a in arrow], y=[a[1] for a in arrow], fill_color=INK_SOFT, line_color=INK_SOFT)
 
-    lo, hi = lims[axis]
-    for t, value in zip(ticks[axis], np.linspace(lo, hi, N_TICKS), strict=True):
-        tick = at(t)
+    for tick, value in zip(tick_xy, np.linspace(lo[i], hi[i], N_TICKS), strict=True):
         p.add_layout(
             Label(
                 x=tick[0] + tick_offset[0],
@@ -188,7 +172,7 @@ for axis, col, at, tick_offset, align, baseline in axis_specs:
         )
 
     # Axis title outside the box, parallel to its edge and kept upright
-    mid = at(0.0)
+    mid = (start + end) / 2
     outward = mid / (np.linalg.norm(mid) or 1.0)
     angle = np.arctan2(direction[1], direction[0])
     if angle > np.pi / 2 + 1e-6:
