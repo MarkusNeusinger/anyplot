@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-box: Violin Plot with Embedded Box Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-12
+Library: bokeh 3.10.1 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-09
 """
 
 import os
@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Legend, LegendItem
 from bokeh.plotting import figure
@@ -23,46 +24,46 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series is always #009E73
-IMPRINT = [
-    "#009E73",  # bluish green - first series
-    "#C475FD",  # vermillion
-    "#4467A3",  # blue
-    "#BD8233",  # reddish purple
-]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Test scores by study method (educational context)
+# Columns: set these to your table's column names
+STUDY_METHOD = "Study Method"  # role: group
+TEST_SCORE = "Test Score"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-categories = ["Method A", "Method B", "Method C", "Method D"]
+lecture = np.random.normal(72, 12, 120)  # standard distribution
+flipped = np.concatenate([np.random.normal(78, 8, 100), [48, 52, 95, 98]])  # outliers at both ends
+self_study = np.random.normal(65, 15, 120)  # wider spread
+peer_tutoring = np.concatenate([np.random.normal(80, 6, 90), np.random.normal(55, 3, 20), [38, 40, 42]])  # bimodal
+df = pd.DataFrame(
+    {
+        STUDY_METHOD: ["Lecture"] * len(lecture)
+        + ["Flipped Classroom"] * len(flipped)
+        + ["Self-Study"] * len(self_study)
+        + ["Peer Tutoring"] * len(peer_tutoring),
+        # Test scores live on a 0–100 scale
+        TEST_SCORE: np.clip(np.concatenate([lecture, flipped, self_study, peer_tutoring]), 0, 100),
+    }
+)
 
-# Create distributions with different characteristics to showcase features
-data = {
-    "Method A": np.random.normal(72, 12, 120),  # Standard distribution
-    "Method B": np.concatenate(
-        [
-            np.random.normal(78, 8, 100),  # Main group
-            np.array([48, 52, 95, 98]),  # Outliers both ends
-        ]
-    ),
-    "Method C": np.random.normal(65, 15, 120),  # Wider spread
-    "Method D": np.concatenate(
-        [
-            np.random.normal(80, 6, 90),  # Tight main group
-            np.random.normal(55, 3, 20),  # Bimodal lower group
-            np.array([38, 40, 42]),  # Low outliers
-        ]
-    ),
-}
+# Plot: reads only df and the constants above
+scores = df.dropna(subset=[STUDY_METHOD, TEST_SCORE]).astype({STUDY_METHOD: str, TEST_SCORE: float})
+methods = list(scores[STUDY_METHOD].unique())
 
-# Create figure with categorical x-axis
 p = figure(
-    width=4800,
-    height=2700,
-    title="violin-box · bokeh · pyplots.ai",
-    x_axis_label="Study Method",
-    y_axis_label="Test Score",
-    x_range=categories,
+    width=3200,
+    height=1800,
+    title="violin-box · python · bokeh · anyplot.ai",
+    x_axis_label=STUDY_METHOD,
+    y_axis_label=TEST_SCORE,
+    x_range=methods,
     toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
 # Theme-adaptive styling
@@ -71,17 +72,17 @@ p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
 p.title.text_color = INK
-p.title.text_font_size = "28pt"
+p.title.text_font_size = "50pt"
 
 p.xaxis.axis_label_text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_color = INK
-p.yaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 
 p.xaxis.major_label_text_color = INK_SOFT
-p.xaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_color = INK_SOFT
-p.yaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "34pt"
 
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
@@ -92,24 +93,22 @@ p.yaxis.major_tick_line_color = INK_SOFT
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
 p.ygrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_dash = "solid"
 
-# Violin width scaling (0.4 = 40% of category spacing)
+# Violin width scaling (share of category spacing on each side)
 violin_width = 0.38
+box_width = 0.08
+cap_width = 0.05
 
 # Track renderers for legend
 violin_renderer = None
 box_renderer = None
 median_renderer = None
-outlier_renderer = None
-
-# Collect outlier data for all categories
-all_outliers_x = []
-all_outliers_y = []
+outlier_mask = pd.Series(False, index=scores.index)
 
 # Draw violins with embedded box plots for each category
-for i, cat in enumerate(categories):
-    values = np.array(data[cat])
+for i, method in enumerate(methods):
+    group_scores = scores[scores[STUDY_METHOD] == method][TEST_SCORE]
+    values = group_scores.to_numpy()
     n = len(values)
 
     # Compute KDE using Gaussian kernel (Silverman's rule for bandwidth)
@@ -118,7 +117,8 @@ for i, cat in enumerate(categories):
     bandwidth = 0.9 * min(std, iqr / 1.34) * n ** (-0.2)
     bandwidth = max(bandwidth, 0.1)
 
-    y_grid = np.linspace(values.min() - std, values.max() + std, 100)
+    # Tails end one bandwidth past the data range
+    y_grid = np.linspace(values.min() - bandwidth, values.max() + bandwidth, 100)
     density = np.zeros_like(y_grid, dtype=float)
     for xi in values:
         density += np.exp(-0.5 * ((y_grid - xi) / bandwidth) ** 2)
@@ -127,16 +127,11 @@ for i, cat in enumerate(categories):
     # Scale density to violin width
     density_scaled = density / density.max() * violin_width
 
-    # Create violin shape (mirrored on both sides)
-    x_left = -density_scaled
-    x_right = density_scaled
+    # Create violin shape (mirrored on both sides) in categorical offset format
+    xs_left = [(method, float(-d)) for d in density_scaled]
+    xs_right = [(method, float(d)) for d in density_scaled[::-1]]
 
-    # Convert to categorical offset format for bokeh
-    xs_left = [(cat, float(xl)) for xl in x_left]
-    xs_right = [(cat, float(xr)) for xr in x_right[::-1]]
-
-    # Draw violin patch with Okabe-Ito color
-    violin_color = IMPRINT[i % len(IMPRINT)]
+    violin_color = IMPRINT_PALETTE[i]
     vr = p.patch(
         xs_left + xs_right,
         list(y_grid) + list(y_grid[::-1]),
@@ -157,14 +152,12 @@ for i, cat in enumerate(categories):
     whisker_high = min(values.max(), q3 + 1.5 * iqr_val)
 
     # Draw box inside violin (IQR from Q1 to Q3)
-    box_width = 0.08
-    box_fill_color = violin_color  # Same color as violin
     br = p.quad(
-        left=[(cat, -box_width)],
-        right=[(cat, box_width)],
+        left=[(method, -box_width)],
+        right=[(method, box_width)],
         top=[q3],
         bottom=[q1],
-        fill_color=box_fill_color,
+        fill_color=violin_color,
         fill_alpha=0.9,
         line_color=INK,
         line_width=3,
@@ -174,9 +167,9 @@ for i, cat in enumerate(categories):
 
     # Draw median line
     mr = p.segment(
-        x0=[(cat, -box_width * 1.3)],
+        x0=[(method, -box_width * 1.3)],
         y0=[median],
-        x1=[(cat, box_width * 1.3)],
+        x1=[(method, box_width * 1.3)],
         y1=[median],
         line_color=INK,
         line_width=5,
@@ -184,46 +177,47 @@ for i, cat in enumerate(categories):
     if median_renderer is None:
         median_renderer = mr
 
-    # Whiskers (vertical lines from box to whisker limits)
-    p.segment(x0=[cat], y0=[q1], x1=[cat], y1=[whisker_low], line_color=INK_SOFT, line_width=3)
-    p.segment(x0=[cat], y0=[q3], x1=[cat], y1=[whisker_high], line_color=INK_SOFT, line_width=3)
-
-    # Whisker caps
-    cap_width = 0.05
+    # Whiskers (vertical lines from box to whisker limits) with caps
     p.segment(
-        x0=[(cat, -cap_width)],
-        y0=[whisker_low],
-        x1=[(cat, cap_width)],
-        y1=[whisker_low],
+        x0=[method, method],
+        y0=[q1, q3],
+        x1=[method, method],
+        y1=[whisker_low, whisker_high],
         line_color=INK_SOFT,
         line_width=3,
     )
     p.segment(
-        x0=[(cat, -cap_width)],
-        y0=[whisker_high],
-        x1=[(cat, cap_width)],
-        y1=[whisker_high],
+        x0=[(method, -cap_width), (method, -cap_width)],
+        y0=[whisker_low, whisker_high],
+        x1=[(method, cap_width), (method, cap_width)],
+        y1=[whisker_low, whisker_high],
         line_color=INK_SOFT,
         line_width=3,
     )
 
-    # Collect outliers
-    outliers = values[(values < whisker_low) | (values > whisker_high)]
-    for out in outliers:
-        all_outliers_x.append(cat)
-        all_outliers_y.append(out)
+    # Mark outliers beyond the whiskers
+    outlier_mask |= (scores[STUDY_METHOD] == method) & (
+        (scores[TEST_SCORE] < whisker_low) | (scores[TEST_SCORE] > whisker_high)
+    )
 
-# Draw all outliers
-if len(all_outliers_x) > 0:
-    outlier_source = ColumnDataSource(data={"x": all_outliers_x, "y": all_outliers_y})
+# Draw all outliers at their values
+outlier_renderer = None
+if outlier_mask.any():
     outlier_renderer = p.scatter(
-        x="x", y="y", source=outlier_source, size=18, fill_color="white", line_color=INK, line_width=3, marker="circle"
+        x=STUDY_METHOD,
+        y=TEST_SCORE,
+        source=ColumnDataSource(scores[outlier_mask]),
+        size=22,
+        fill_color=PAGE_BG,
+        line_color=INK,
+        line_width=3,
+        marker="circle",
     )
 
 # Create legend
 legend_items = [
     LegendItem(label="Distribution (KDE)", renderers=[violin_renderer]),
-    LegendItem(label="IQR (Q1-Q3)", renderers=[box_renderer]),
+    LegendItem(label="IQR (Q1–Q3)", renderers=[box_renderer]),
     LegendItem(label="Median", renderers=[median_renderer]),
 ]
 if outlier_renderer is not None:
@@ -231,13 +225,13 @@ if outlier_renderer is not None:
 
 legend = Legend(items=legend_items, location="top_right")
 legend.label_text_color = INK_SOFT
-legend.label_text_font_size = "16pt"
+legend.label_text_font_size = "34pt"
 legend.background_fill_color = ELEVATED_BG
 legend.border_line_color = INK_SOFT
-legend.glyph_height = 30
-legend.glyph_width = 30
-legend.spacing = 15
-legend.padding = 20
+legend.glyph_height = 50
+legend.glyph_width = 50
+legend.spacing = 20
+legend.padding = 30
 p.add_layout(legend, "right")
 
 # Save HTML output
@@ -245,7 +239,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -260,6 +254,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)  # let bokeh's JS render the canvas
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()

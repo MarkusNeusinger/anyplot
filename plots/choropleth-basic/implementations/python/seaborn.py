@@ -1,198 +1,211 @@
 """ anyplot.ai
 choropleth-basic: Choropleth Map with Regional Coloring
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-15
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-09
 """
+
+import json
+import os
+from urllib.request import urlopen
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.collections import PolyCollection
+from matplotlib.colors import LinearSegmentedColormap, LogNorm
+from matplotlib.path import Path
+from matplotlib.ticker import FuncFormatter
 
 
-# Data: US states tile grid map with economic data (GDP growth rate %)
-# Tile grid maps are a recognized cartogram technique that ensures equal visual weight per region
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# State data with grid positions (row, col) approximating US map layout
-# Values represent GDP growth rate (%) - None indicates missing data
-states_data = {
-    # Row 0 (top - Pacific Northwest, Northern states)
-    "WA": (0, 1, 3.2),
-    "MT": (0, 3, 1.8),
-    "ND": (0, 5, 2.1),
-    "MN": (0, 6, 2.9),
-    "WI": (0, 7, 2.3),
-    "MI": (0, 8, 1.9),
-    "NY": (0, 10, 3.5),
-    "VT": (0, 11, 1.5),
-    "ME": (0, 12, 1.2),
-    # Row 1
-    "OR": (1, 1, 2.8),
-    "ID": (1, 2, 3.1),
-    "WY": (1, 3, 0.9),
-    "SD": (1, 5, 1.7),
-    "IA": (1, 6, 2.0),
-    "IL": (1, 7, 2.5),
-    "IN": (1, 8, 2.2),
-    "OH": (1, 9, 1.8),
-    "PA": (1, 10, 2.1),
-    "MA": (1, 11, 3.8),
-    "NH": (1, 12, 2.4),
-    # Row 2
-    "NV": (2, 1, 4.1),
-    "UT": (2, 2, 4.5),
-    "CO": (2, 3, 3.9),
-    "NE": (2, 5, 1.6),
-    "KS": (2, 6, 1.4),
-    "MO": (2, 7, 1.9),
-    "KY": (2, 8, 2.0),
-    "WV": (2, 9, 0.5),
-    "VA": (2, 10, 3.2),
-    "MD": (2, 11, 2.8),
-    "NJ": (2, 12, 2.6),
-    # Row 3
-    "CA": (3, 1, 3.7),
-    "AZ": (3, 2, 4.2),
-    "NM": (3, 3, 1.3),
-    "OK": (3, 5, 1.1),
-    "AR": (3, 6, 1.5),
-    "TN": (3, 7, 3.0),
-    "NC": (3, 9, 3.4),
-    "SC": (3, 10, 2.7),
-    "DE": (3, 11, 2.3),
-    "CT": (3, 12, 2.9),
-    # Row 4 (bottom - Southern states)
-    "TX": (4, 3, 3.6),
-    "LA": (4, 5, 0.8),
-    "MS": (4, 6, 0.6),
-    "AL": (4, 7, 1.7),
-    "GA": (4, 8, 3.3),
-    "FL": (4, 10, 3.8),
-    "RI": (4, 12, 2.0),
-    # Missing data examples (show as gray/hatched pattern per spec)
-    "PR": (4, 13, None),  # Puerto Rico - no data
-    # Alaska and Hawaii (offset)
-    "AK": (5, 0, 0.4),
-    "HI": (5, 2, 2.5),
-    "DC": (3, 13, None),  # DC - no data available
+# Imprint palette and the sequential ramp built from its positions 1 and 3
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", [IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]])
+REGION_INK = "#FFFDF6"  # labels on the filled regions: the fills are identical in both themes
+
+sns.set_theme(
+    style="white",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Constants: US state outlines and an Albers Equal Area composite (Alaska, Hawaii and
+# Puerto Rico get their own Albers parameters and are moved next to the lower 48)
+GEOJSON_URL = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
+ALBERS_LOWER48 = {"lon0": -96.0, "lat0": 37.5, "p1": 29.5, "p2": 45.5, "scale": 1.0, "shift": (0.0, 0.0)}
+ALBERS_PLACED = {
+    "Alaska": {"lon0": -154.0, "lat0": 50.0, "p1": 55.0, "p2": 65.0, "scale": 0.35, "shift": (-0.27, -0.29)},
+    "Hawaii": {"lon0": -157.0, "lat0": 3.0, "p1": 8.0, "p2": 18.0, "scale": 1.0, "shift": (-0.12, -0.54)},
+    "Puerto Rico": {"lon0": -66.5, "lat0": 18.0, "p1": 8.0, "p2": 18.0, "scale": 1.0, "shift": (0.30, -0.20)},
 }
+LABEL_MIN_AREA = 0.0017  # smallest projected area that holds a state code
 
-# Create DataFrame
-rows = []
-for state, (r, c, val) in states_data.items():
-    rows.append({"state": state, "row": r, "col": c, "gdp_growth": val})
-df = pd.DataFrame(rows)
+# Columns: set these to your table's column names
+STATE = "State"  # role: region_id
+STATE_CODE = "State code"  # role: extra
+DENSITY = "Population density (people per sq mi)"  # role: value
 
-# Create grid matrix for heatmap (6 rows x 14 cols)
-n_rows, n_cols = 6, 14
-grid = np.full((n_rows, n_cols), np.nan)
-state_labels = np.full((n_rows, n_cols), "", dtype=object)
-missing_mask = np.zeros((n_rows, n_cols), dtype=bool)
+# Data: 2020 US Census population density of the 50 states and DC (Puerto Rico is not
+# part of this table and shows as no data); replace this block with your own table,
+# for example df = pd.read_csv("states.csv")
+states = [
+    ("Alabama", "AL", 99.2),
+    ("Alaska", "AK", 1.3),
+    ("Arizona", "AZ", 62.9),
+    ("Arkansas", "AR", 57.9),
+    ("California", "CA", 253.7),
+    ("Colorado", "CO", 55.7),
+    ("Connecticut", "CT", 744.7),
+    ("Delaware", "DE", 508.0),
+    ("District of Columbia", "DC", 11280.0),
+    ("Florida", "FL", 401.4),
+    ("Georgia", "GA", 185.6),
+    ("Hawaii", "HI", 226.6),
+    ("Idaho", "ID", 22.3),
+    ("Illinois", "IL", 231.1),
+    ("Indiana", "IN", 189.4),
+    ("Iowa", "IA", 57.1),
+    ("Kansas", "KS", 35.9),
+    ("Kentucky", "KY", 114.1),
+    ("Louisiana", "LA", 107.5),
+    ("Maine", "ME", 44.2),
+    ("Maryland", "MD", 636.1),
+    ("Massachusetts", "MA", 901.2),
+    ("Michigan", "MI", 177.6),
+    ("Minnesota", "MN", 71.7),
+    ("Mississippi", "MS", 63.1),
+    ("Missouri", "MO", 89.5),
+    ("Montana", "MT", 7.4),
+    ("Nebraska", "NE", 25.5),
+    ("Nevada", "NV", 28.3),
+    ("New Hampshire", "NH", 153.8),
+    ("New Jersey", "NJ", 1263.0),
+    ("New Mexico", "NM", 17.5),
+    ("New York", "NY", 428.7),
+    ("North Carolina", "NC", 214.7),
+    ("North Dakota", "ND", 11.3),
+    ("Ohio", "OH", 288.8),
+    ("Oklahoma", "OK", 57.7),
+    ("Oregon", "OR", 44.1),
+    ("Pennsylvania", "PA", 290.5),
+    ("Rhode Island", "RI", 1061.4),
+    ("South Carolina", "SC", 173.3),
+    ("South Dakota", "SD", 11.7),
+    ("Tennessee", "TN", 167.6),
+    ("Texas", "TX", 111.6),
+    ("Utah", "UT", 39.7),
+    ("Vermont", "VT", 69.8),
+    ("Virginia", "VA", 218.6),
+    ("Washington", "WA", 115.9),
+    ("West Virginia", "WV", 74.6),
+    ("Wisconsin", "WI", 108.8),
+    ("Wyoming", "WY", 6.0),
+]
+df = pd.DataFrame(states, columns=[STATE, STATE_CODE, DENSITY])
 
-for _, row in df.iterrows():
-    r, c = int(row["row"]), int(row["col"])
-    if row["gdp_growth"] is not None and not pd.isna(row["gdp_growth"]):
-        grid[r, c] = row["gdp_growth"]
+# Plot: reads only df and the constants above
+with urlopen(GEOJSON_URL, timeout=30) as response:
+    features = json.load(response)["features"]
+
+
+def albers(lon, lat, lon0, lat0, p1, p2, scale, shift):
+    """Albers Equal Area conic on the unit sphere, then scaled and moved into place."""
+    lon, lat = np.radians(lon), np.radians(lat)
+    lon0, lat0, p1, p2 = np.radians([lon0, lat0, p1, p2])
+    n = (np.sin(p1) + np.sin(p2)) / 2
+    c = np.cos(p1) ** 2 + 2 * n * np.sin(p1)
+    rho0 = np.sqrt(c - 2 * n * np.sin(lat0)) / n
+    rho = np.sqrt(c - 2 * n * np.sin(lat)) / n
+    theta = n * (lon - lon0)
+    return np.column_stack([rho * np.sin(theta) * scale + shift[0], (rho0 - rho * np.cos(theta)) * scale + shift[1]])
+
+
+values = pd.to_numeric(df[DENSITY], errors="coerce")
+lookup = dict(zip(df[STATE], values, strict=True))
+codes = dict(zip(df[STATE], df[STATE_CODE], strict=True))
+
+shaded, shaded_values, missing, labels = [], [], [], []
+for feature in features:
+    name = feature["properties"]["name"]
+    params = ALBERS_PLACED.get(name, ALBERS_LOWER48)
+    geometry = feature["geometry"]
+    polygons = [geometry["coordinates"]] if geometry["type"] == "Polygon" else geometry["coordinates"]
+    rings = []
+    for polygon in polygons:
+        ring = np.asarray(polygon[0], dtype=float)
+        lon = np.where(ring[:, 0] > 0, ring[:, 0] - 360, ring[:, 0])  # Aleutians past the antimeridian
+        rings.append(albers(lon, ring[:, 1], **params))
+    value = lookup.get(name, np.nan)
+    if pd.notna(value):
+        shaded.extend(rings)
+        shaded_values.extend([value] * len(rings))
     else:
-        missing_mask[r, c] = True  # Mark as missing data
-    state_labels[r, c] = row["state"]
+        missing.extend(rings)
+    # State code at the interior point farthest from the outline of the largest part,
+    # where the part is big enough to hold it
+    areas = [abs(np.sum(x * np.roll(y, -1) - np.roll(x, -1) * y)) / 2 for x, y in (ring.T for ring in rings)]
+    ring = rings[int(np.argmax(areas))]
+    if name in codes and max(areas) >= LABEL_MIN_AREA:
+        gx, gy = np.meshgrid(*(np.linspace(ring[:, i].min(), ring[:, i].max(), 40) for i in range(2)))
+        candidates = np.column_stack([gx.ravel(), gy.ravel()])
+        candidates = candidates[Path(ring).contains_points(candidates)]
+        start, edge = ring[:-1], np.diff(ring, axis=0)
+        offset = candidates[:, None, :] - start[None, :, :]
+        t = np.clip((offset * edge).sum(-1) / np.maximum((edge**2).sum(-1), 1e-12), 0, 1)
+        clearance = np.linalg.norm(offset - t[..., None] * edge, axis=-1).min(axis=1)
+        cx, cy = candidates[np.argmax(clearance)]
+        labels.append((cx, cy, codes[name]))
 
-# Set up seaborn styling
-sns.set_theme(style="white", context="talk", font_scale=1.2)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+norm = LogNorm(vmin=np.nanmin(values), vmax=np.nanmax(values))
+regions = PolyCollection(
+    shaded, array=np.asarray(shaded_values), cmap=imprint_seq, norm=norm, edgecolor=PAGE_BG, linewidth=0.4
+)
+ax.add_collection(regions)
 
-# Create figure with appropriate size for 4800x2700 output
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Create heatmap using seaborn with masked values for empty cells
-empty_mask = np.isnan(grid) & ~missing_mask  # True for truly empty cells (no state)
-heatmap = sns.heatmap(
-    grid,
-    mask=empty_mask,
-    cmap="YlGnBu",
-    annot=False,  # We'll add custom annotations
-    cbar=True,
-    cbar_kws={"label": "GDP Growth Rate (%)", "shrink": 0.7, "aspect": 20, "pad": 0.02},
-    linewidths=1.5,  # Reduced from 3 to be less overwhelming
-    linecolor="white",
-    square=True,
-    vmin=0,
-    vmax=5,
-    ax=ax,
+# No-data regions: muted gray with hatching, never a color of the scale
+ax.add_collection(
+    PolyCollection(missing, facecolor=INK_MUTED, edgecolor=PAGE_BG, linewidth=0.4, hatch="////", alpha=0.55)
 )
 
-# Add gray cells for missing data with hatching pattern
-for i in range(n_rows):
-    for j in range(n_cols):
-        if missing_mask[i, j]:
-            # Draw gray rectangle with hatching for missing data
-            rect = mpatches.Rectangle(
-                (j, i), 1, 1, fill=True, facecolor="#d0d0d0", edgecolor="white", linewidth=1.5, hatch="///", zorder=2
-            )
-            ax.add_patch(rect)
+for cx, cy, code in labels:
+    ax.text(cx, cy, code, ha="center", va="center", fontsize=6.5, fontweight="bold", color=REGION_INK)
 
-# Customize colorbar
-cbar = heatmap.collections[0].colorbar
-cbar.ax.tick_params(labelsize=18)
-cbar.set_label("GDP Growth Rate (%)", fontsize=20, labelpad=10)
+# Colorbar
+cbar = fig.colorbar(regions, ax=ax, shrink=0.72, aspect=22, pad=0.01)
+cbar.set_label(DENSITY, fontsize=9, color=INK, labelpad=6)
+cbar.ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:,.0f}"))
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, length=0, which="both")
+cbar.outline.set_visible(False)
 
-# Add state code and value annotations
-for i in range(n_rows):
-    for j in range(n_cols):
-        if state_labels[i, j]:  # If there's a state here
-            # State code (larger, bold)
-            ax.text(
-                j + 0.5,
-                i + 0.35,
-                state_labels[i, j],
-                ha="center",
-                va="center",
-                fontsize=20,
-                fontweight="bold",
-                color="#1a1a1a" if not missing_mask[i, j] else "#666666",
-            )
-            # Value or "N/A" for missing data (increased from 13pt to 16pt)
-            if not missing_mask[i, j] and not np.isnan(grid[i, j]):
-                ax.text(
-                    j + 0.5,
-                    i + 0.7,
-                    f"{grid[i, j]:.1f}%",
-                    ha="center",
-                    va="center",
-                    fontsize=16,
-                    color="#333333",
-                    fontweight="medium",
-                )
-            else:
-                ax.text(
-                    j + 0.5, i + 0.7, "N/A", ha="center", va="center", fontsize=16, color="#888888", fontstyle="italic"
-                )
+# Style
+title = "choropleth-basic · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=round(12 * min(1.0, 67 / len(title))), fontweight="medium", color=INK, pad=6)
+ax.set_aspect("equal")
+ax.autoscale_view()
+ax.set_axis_off()
 
-# Styling
-ax.set_title("choropleth-basic · seaborn · pyplots.ai", fontsize=26, pad=20, fontweight="bold")
+if missing:
+    no_data = mpatches.Patch(facecolor=INK_MUTED, edgecolor=PAGE_BG, hatch="////", alpha=0.55, label="No data")
+    ax.legend(handles=[no_data], loc="lower right", fontsize=8, frameon=True, labelcolor=INK)
 
-# Remove axis labels and ticks (tile grid doesn't need them)
-ax.set_xticks([])
-ax.set_yticks([])
-ax.set_xlabel("")
-ax.set_ylabel("")
-
-# Add legend for missing data
-missing_patch = mpatches.Patch(facecolor="#d0d0d0", edgecolor="white", hatch="///", label="No Data Available")
-ax.legend(handles=[missing_patch], loc="lower left", fontsize=16, framealpha=0.9)
-
-# Add subtitle explaining the visualization
-ax.text(
-    0.5,
-    -0.06,
-    "US States GDP Growth Rate (%) — Tile Grid Choropleth Map",
-    ha="center",
-    va="top",
-    fontsize=18,
-    color="#555555",
-    transform=ax.transAxes,
-)
-
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.01, right=0.99, top=0.94, bottom=0.02)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

@@ -2,12 +2,12 @@ library: plotly
 language: python
 specification_id: violin-split
 created: '2025-12-26T10:02:58Z'
-updated: '2026-05-08T16:57:56Z'
-generated_by: claude-haiku
-workflow_run: 25567697150
+updated: '2026-11-09T08:17:07Z'
+generated_by: claude-opus
+workflow_run: 42582781449
 issue: 1949
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/plotly/plot-light.html
@@ -15,40 +15,42 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-sp
 quality_score: 87
 review:
   strengths:
-  - Correct Okabe-Ito palette usage with brand green (#009E73) as first series
-  - Theme-adaptive chrome implementation with all elements properly colored for both
-    light and dark themes
-  - Proper font sizing for high-resolution rendering (28/22/18px)
-  - Clean data generation with realistic salary distributions and appropriate clipping
-  - Correct split violin implementation using Plotly's side parameter
-  - Meanline visualization for showing distribution center
-  - Both PNG and HTML output generation
-  - Good use of opacity (0.75) for distribution visibility
+  - Native go.Violin split with side='negative'/'positive' and violinmode='overlay'
+    gives each category two independent half densities that meet at a shared center
+    line, Male always on the left and Female always on the right
+  - Inner box plot per half (box=dict(visible=True)) sits at the quartiles of its
+    own half, with an ELEVATED_BG fill and INK_SOFT outline that stay visible on the
+    fill in both themes, plus a dashed mean line
+  - spanmode='hard' ends every half at its own data range, so no tail trails past
+    the observed salaries; value axis is shared and not forced to zero
+  - Mixture-based synthetic data (bimodal Software Engineering, trimodal Sales, unimodal
+    Product Management and Operations) shows the lopsided, multimodal halves the chart
+    exists to compare
+  - 'Theme tokens threaded through every chrome element; Imprint #009E73 / #C475FD
+    identical in both renders; $ tick formatting via tickformat=''$,.0f'''
+  - HTML export keeps Plotly's native hover (quartiles, mean, KDE extents per half)
+    and legend toggling for the interactive view
   weaknesses:
-  - Title contains 'pyplots.ai' instead of 'anyplot.ai' - violates spec format requirement
+  - 'Suggestion: the legend title ''Gender'' sits above the baseline of the ''Male''/''Female''
+    entries; legend.title.side=''top left'' or a vertically centred title would align
+    it with the entries.'
+  - 'Suggestion: the dashed mean line (width=6) next to the solid median line inside
+    small boxes reads busy in Operations; a thinner mean line would keep the median
+    the clear focal mark.'
   image_description: |-
-    NOTE: Image viewing was blocked by permission restrictions. Review is based on code analysis.
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 on paper and plot area.
+      Chrome: centred title "violin-split · python · plotly · anyplot.ai" in dark ink; horizontal legend "Gender: Male / Female" in an elevated box under the title; y-axis "Annual Salary ($)" with $40,000–$180,000 ticks, x-axis "Job Category" with four categories; subtle horizontal grid, left and bottom axis lines only. All text dark and readable.
+      Data: four split violins (Software Engineering, Product Management, Sales, Operations); Male half in #009E73 on the left, Female half in #C475FD on the right, alpha 0.75, halves meeting at the center line. Each half carries a light inner box with median line and dashed mean line, plus whiskers near the center. Software Engineering bimodal, Sales trimodal and tall, Operations low and wide. Tails cut flat at each half's data range.
+      Legibility verdict: PASS
 
-    Expected Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) per style guide
-      Chrome: Title, axis labels (Job Category, Annual Salary), tick labels should be in dark text (#1A1A17 for primary, #4A4A44 for secondary)
-      Data: Split violin plot with Male (left) in Okabe-Ito green (#009E73), Female (right) in Okabe-Ito orange (#D55E00). Meanlines visible. 4 job categories.
-      Grid: Subtle gridlines in rgba(26,26,23,0.10)
-      Legend: Horizontal legend above plot showing "Gender" with Male/Female entries
-      Legibility expectation: PASS (font sizes are explicitly set to appropriate values)
-
-    Expected Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) per style guide
-      Chrome: Title, axis labels, ticks should be in light text (#F0EFE8 for primary, #B8B7B0 for secondary)
-      Data: Identical Okabe-Ito colors (#009E73 green, #D55E00 orange) - only chrome should differ from light render
-      Grid: Subtle gridlines in rgba(240,239,232,0.10)
-      Legend: Horizontal legend with dark-themed background (#242420)
-      Legibility expectation: PASS (all colors properly theme-adapted)
-
-    LIMITATION: Unable to visually confirm rendering without image access. Code analysis shows proper implementation of theme-adaptive colors and element sizing.
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and legend in light ink; tick labels in light grey INK_SOFT; legend box elevated #242420 with light border; grid subtle but visible. No dark-on-dark text.
+      Data: same green #009E73 and purple #C475FD halves in the same positions (appearing slightly deeper only through alpha over the dark page); inner boxes fill dark elevated with light-grey outlines and light median/mean lines, all visible against the fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,70 +58,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28/22/18px) with appropriate theme-adaptive
-          colors
+        comment: Explicit sizes (16/12/10) per library prompt; all text readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Good spacing between violin plot sections and categories
+        comment: No text collisions; inner boxes sit inside their halves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violin shapes, meanlines, and markers clearly visible with opacity=0.75
+        comment: Halves, boxes, medians and mean lines visible in both themes; legend
+          swatches match fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe and colorblind-friendly
+        comment: Green vs purple is CVD-safe with strong luminance difference
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Appropriate margins (100,60,120,80) and whitespace
+        comment: 3200x1800; balanced margins, title ~33% width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Annual Salary ($)'', ''Job Category'''
+        comment: '''Annual Salary ($)'' and ''Job Category'' descriptive with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Title format incorrect: ''pyplots.ai'' instead of ''anyplot.ai''.
-          Colors correct: #009E73, #D55E00, backgrounds #FAF8F1/#1A1A17'
+        passed: true
+        comment: 'Imprint #009E73 then #C475FD; correct page backgrounds in both themes'
+      score: 30
     design_excellence:
-      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Uses standard theme-adaptive design, no exceptional aesthetic choices
+        passed: true
+        comment: 'Above baseline: elevated-fill inner boxes with INK_SOFT outlines
+          and $ tick formatting chosen for the salary domain'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Meanline visualization, proper opacity handling, clean layout
+        comment: 'Above baseline: x grid removed for the categorical axis, legend
+          placed in the header band clear of the data'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Effectively shows salary distribution comparison by gender across
-          job categories
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
+      score: 10
     spec_compliance:
-      score: 13
       max: 15
       items:
       - id: SC-01
@@ -127,29 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct split violin implementation with left/right halves
+        comment: Split violin with independent half densities
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors for split groups, legend showing Gender labels, split
-          halves meet at center
+        comment: Distinct colors with legend, halves meet at center, inner quartile
+          boxes, same side per group in every category
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Category, Y=Salary, split_group=Gender correctly mapped
+        comment: Categories on x, salary on y; shared axis not forced to zero; tails
+          end at data range
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title format incorrect: should be ''violin-split · plotly · anyplot.ai''
-          not ''pyplots.ai'''
-    data_quality:
+        passed: true
+        comment: Mandated title format; legend 'Gender' with Male/Female
       score: 15
+    data_quality:
       max: 15
       items:
       - id: DQ-01
@@ -157,23 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varied distributions across 4 categories with bimodal distribution
-          in Engineering/Sales
+        comment: Uni-, bi- and trimodal halves with differing widths and medians across
+          4 categories, 99-100 points per half
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salary data is real-world plausible with realistic gender distribution
-          variations
+        comment: Salary by gender across real job categories, neutral fictional data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salary range $40k-$200k is appropriate and realistic
+        comment: Salaries $40k-$180k plausible per role; no Check values in spec
+      score: 15
     code_quality:
-      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -181,33 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes, direct implementation
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, pandas, plotly'
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or unnecessary complexity
+        comment: Appropriate complexity; KDE and quartiles left to go.Violin
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
+      score: 10
     library_mastery:
-      score: 8
       max: 10
       items:
       - id: LM-01
@@ -215,22 +217,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses go.Figure() and go.Violin() idiomatically with appropriate parameters
+        comment: go.Violin with side, violinmode='overlay', violingap, groupby loop
+          over traces
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses Plotly's side parameter for split violins and meanline_visible
-          for distribution center
+        comment: Plotly-native half violins via side=, built-in box and meanline,
+          spanmode='hard' and scalemode='width'
+      score: 7
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
+  rendered_at: '2026-11-09T08:13:20Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending
+  - minimal-chrome
