@@ -132,10 +132,26 @@ def test_a_theme_token_picks_fixed_values_and_a_data_dependent_conditional_is_no
     assert [token.name for token in find_regions(code).theme_tokens] == ["INK", "BANDS", "EDGE", "IS_DARK", "LATE"]
 
 
-def plain_theme_value(node: ast.expr, names: set[str]) -> bool:
-    """A value read from literals and `names` alone (`THEME` and the file's tokens): constants, those names,
-    comparisons, conditional expressions and a sign or `not`. Nothing a token rule could reasonably refuse."""
+def literal_container(node: ast.expr) -> bool:
+    """A list, tuple or dict of literals only (`[0.30, 0.22]`, `{"a": 1}`), nested or signed; no name inside."""
     if isinstance(node, ast.Constant):
+        return True
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub | ast.UAdd):
+        return literal_container(node.operand)
+    if isinstance(node, ast.List | ast.Tuple):
+        return all(literal_container(element) for element in node.elts)
+    if isinstance(node, ast.Dict):
+        return all(key is not None and literal_container(key) for key in node.keys) and all(
+            literal_container(value) for value in node.values
+        )
+    return False
+
+
+def plain_theme_value(node: ast.expr, names: set[str]) -> bool:
+    """A value read from literals and `names` alone (`THEME` and the file's tokens): constants and containers of
+    them, those names, comparisons, conditional expressions and a sign or `not`. Nothing a token rule could
+    reasonably refuse."""
+    if literal_container(node):
         return True
     if isinstance(node, ast.Name):
         return node.id in names

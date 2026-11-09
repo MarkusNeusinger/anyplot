@@ -13,6 +13,7 @@ from agents.anyplot.code.profiles.julia.validate import validate_security as val
 from agents.anyplot.code.profiles.r.coupling import structure_reasons as r_structure_reasons
 from agents.anyplot.code.profiles.r.normalise import normalise as normalise_r
 from agents.anyplot.code.profiles.r.validate import validate_security as validate_r_security
+from agents.anyplot.code.readiness import MAX_SECURITY_REASONS
 from agents.evals.eligibility import (
     LIBRARIES,
     implementation_glob,
@@ -121,7 +122,8 @@ def assert_the_sweep_follows_the_profiles(library: str, occurring: tuple[str, ..
     for path in files:
         spec_id = path.parents[2].name
         normalised = normalise(strip_noqa_comments(path.read_text(encoding="utf-8")) or "")
-        found = {finding.rule for finding in validate(normalised)}
+        # The scan names the first MAX_SECURITY_REASONS findings and counts the rest, so the sweep sees their rules.
+        found = {finding.rule for finding in validate(normalised)[:MAX_SECURITY_REASONS]}
         rules.update(found)
         categories = {reason_category(reason) for reason in structure(normalised)}
         categories |= {"map-spec"} if spec_id in MAP_SPECS else set()

@@ -167,6 +167,8 @@ DATA_LINE = re.compile(r"^# (?:--- )?Data\b", re.MULTILINE)
 PLOT_LINE = re.compile(r"^# (?:--- )?Plot\b", re.MULTILINE)
 COLUMN_LINE = re.compile(r'^[A-Z][A-Z0-9_]*\s*<-\s*"[^"\n]*"\s*# role: \w+\s*$', re.MULTILINE)
 ANY_DATA_MARKER = re.compile(r"^#.*\bData\b", re.MULTILINE)
+COMMON_HINTS = ("synthetic-data", "limits")
+"""Hint categories the catalogue always has somewhere, so a detection that stops firing fails the corpus test."""
 
 
 def layout_in_text(text: str) -> bool | None:
@@ -186,8 +188,9 @@ def test_catalogue_corpus() -> None:
     profile flags it or its structure fails; a clean file has no reason; a coupled file has no blocking reason and
     one hint per reason but the `canvas:` one, which appears exactly where the normaliser could not put the canvas
     on target, and the `data-block` hint exactly when its layout is incomplete, which a plain reading of the text
-    confirms where it can; all three classes occur."""
+    confirms where it can; all three classes occur, and so do the `COMMON_HINTS`."""
     statuses: Counter[str] = Counter()
+    hinted: Counter[str] = Counter()
     for path in R_CATALOGUE_FILES:
         spec = path.parts[-4]
         normalised = normalise(path.read_text(encoding="utf-8"))
@@ -206,8 +209,10 @@ def test_catalogue_corpus() -> None:
         complete = is_layout_complete(find_regions(normalised))
         assert ("data-block" in categories) == (not complete), spec
         assert layout_in_text(normalised) in (None, complete), spec  # the same answer from the text alone
+        hinted.update(categories)
 
     assert sum(statuses.values()) == len(R_CATALOGUE_FILES) and set(statuses) == {"clean", "coupled", "blocked"}
+    assert all(hinted[category] for category in COMMON_HINTS), hinted
 
 
 @pytest.mark.parametrize("spec_id", ["dendrogram-basic", "scatter-categorical"])

@@ -266,8 +266,9 @@ KNOWN_CHANGES = frozenset(
 """The normaliser's rewrites of a Makie file (module docstring), by their change line without its line numbers."""
 HEADER = re.compile(r"^# anyplot\.ai\b")
 CATALOGUE_TITLE = re.compile(r'"[^"\n]*· anyplot\.ai"')
-RESOLUTION = re.compile(r"\bFigure\([^()]*(?:\([^()]*\)[^()]*)*\bresolution\s*=")
-"""`Figure(...; resolution = ...)`, the keyword Makie 0.21 deprecated for `size`."""
+RESOLUTION = re.compile(r"\bFigure\([^()]*(?:\([^()]*\)[^()]*)*\bresolution\s*(?:=|[,)])")
+"""`Figure(...; resolution = ...)` or the shorthand `Figure(; resolution)`, the keyword Makie 0.21 deprecated for
+`size`; a call with deeper parentheses is left to the normaliser's own reading, so the check runs one way."""
 SCRIPT_DIR_SAVE = re.compile(r"^save\(\s*joinpath\(\s*@__DIR__", re.MULTILINE)
 CANVASES = frozenset({(3200, 1800), (2400, 2400)})
 
@@ -275,9 +276,9 @@ CANVASES = frozenset({(3200, 1800), (2400, 2400)})
 def test_catalogue_corpus() -> None:
     """Every Makie file normalises idempotently, parses after normalising and carries only the known rewrites, and a
     plain reading of the text decides which apply: the header goes exactly where the file starts with one, every
-    catalogue title is emptied and none survives, a `resolution` keyword of a `Figure` call is renamed exactly
-    where the file has one and none survives, and a save next to the script moves to the working directory. The
-    canvas is 3200x1800 or 2400x2400, or there is none exactly where the normaliser leaves a note. The counts of a
+    catalogue title is emptied and none survives, every `resolution` keyword of a `Figure` call is renamed or noted
+    and none survives unnoted, and a save next to the script moves to the working directory. The canvas is
+    3200x1800 or 2400x2400, or there is none exactly where the normaliser leaves a canvas note. The counts of a
     day (325 files on 2026-10-29: 122 renamed keywords, 4 moved saves, 250 landscape, 69 square and 6 unmeasured
     canvases) move with every regeneration, so the test holds these rules instead."""
     canvases: set[tuple[int, int] | None] = set()
@@ -292,14 +293,18 @@ def test_catalogue_corpus() -> None:
         assert ("removed the catalogue header" in kinds) == bool(HEADER.match(text)), name
         assert "emptied the catalogue title" in kinds or not CATALOGUE_TITLE.search(text), name
         assert not HEADER.match(report.code) and not CATALOGUE_TITLE.search(report.code), name
+        notes = {note.split(":", 1)[0] for note in report.notes}
+        assert notes <= {"canvas", "resolution"}, (name, report.notes)
         renamed = "renamed the Figure's deprecated resolution keyword to size" in kinds
-        assert renamed == bool(RESOLUTION.search(text)) and not RESOLUTION.search(report.code), name
+        # A Figure that passes size and resolution keeps both, with a note.
+        assert renamed or "resolution" in notes or not RESOLUTION.search(text), name
+        assert "resolution" in notes or not RESOLUTION.search(report.code), name
         moved = 'saved "plot-$(THEME).png" in the working directory instead of next to the script' in kinds
         assert moved or not SCRIPT_DIR_SAVE.search(text), name
         assert not SCRIPT_DIR_SAVE.search(report.code), name
         canvas = measure_canvas(report.code).pixels
         assert canvas in CANVASES or canvas is None, (name, canvas)
-        assert (canvas is None) == bool(report.notes), (name, report.notes)
+        assert (canvas is None) == ("canvas" in notes), (name, report.notes)
         canvases.add(canvas)
 
     assert CANVASES <= canvases, canvases  # both orientations are in use

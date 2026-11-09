@@ -150,9 +150,19 @@ def test_structure_reasons_of_a_good_file_are_empty() -> None:
 
 BLOCKING = frozenset({"map-spec", "library-disabled", "syntax", "security", "no-theme", "savefig-target"})
 """The reason categories of `blocked` (`readiness.scan`); a clean or coupled file carries none of them."""
-COMMENT = re.compile(r"(?:^|(?<=\s))#.*$", re.MULTILINE)
-ARROWS_CALL = re.compile(r"(?<![\w.!])arrows!?\(")
-"""A call of `arrows!` or `arrows`, the Makie 0.24 calls that render with a deprecation warning (not `arrows2d!`)."""
+STRING = re.compile(r'"(?:[^"\\\n]|\\.)*"')
+COMMENT = re.compile(r"#.*$", re.MULTILINE)
+"""A comment, once the strings are blanked: no `#` of a string (`colorant"#009E73"`) is left to start one."""
+ARROWS_CALL = re.compile(r"(?<![\w!.])(?:[A-Za-z]\w*\.)?arrows!?\s*\(")
+"""A call of `arrows!` or `arrows`, also qualified (`Makie.arrows!`), the Makie 0.24 calls that render with a
+deprecation warning (not `arrows2d!`)."""
+COMMON_HINTS = ("synthetic-data", "limits")
+"""Hint categories the catalogue always has somewhere, so a detection that stops firing fails the corpus test."""
+
+
+def code_only(text: str) -> str:
+    """`text` with its strings blanked and its comments dropped, for a plain reading of the calls."""
+    return COMMENT.sub("", STRING.sub('""', text))
 
 
 def test_catalogue_corpus() -> None:
@@ -163,8 +173,9 @@ def test_catalogue_corpus() -> None:
     reason; a coupled file has no blocking reason and one hint per reason but the `canvas:` one, which appears
     exactly where the normaliser could not measure the canvas, the `data-block` hint exactly when its layout is
     incomplete, and the `deprecated-api` hint exactly when its code calls `arrows!` or `arrows`; coupled and blocked
-    files both occur."""
+    files both occur, and so do the `COMMON_HINTS`."""
     statuses: Counter[str] = Counter()
+    hinted: Counter[str] = Counter()
     for path in JULIA_CATALOGUE_FILES:
         spec = path.parts[-4]
         normalised = normalise(path.read_text(encoding="utf-8"))
@@ -181,9 +192,11 @@ def test_catalogue_corpus() -> None:
         assert ("canvas" in categories) == (measure_canvas(normalised).note is not None), spec
         assert (readiness.status == "clean") == (not readiness.reasons), spec
         assert ("data-block" in categories) == (not is_layout_complete(find_regions(normalised))), spec
-        assert ("deprecated-api" in categories) == bool(ARROWS_CALL.search(COMMENT.sub("", normalised))), spec
+        assert ("deprecated-api" in categories) == bool(ARROWS_CALL.search(code_only(normalised))), spec
+        hinted.update(categories)
 
     assert sum(statuses.values()) == len(JULIA_CATALOGUE_FILES) and {"coupled", "blocked"} <= set(statuses)
+    assert all(hinted[category] for category in COMMON_HINTS), hinted
 
 
 @pytest.mark.parametrize("spec_id", ["biplot-pca", "contour-decision-boundary"])

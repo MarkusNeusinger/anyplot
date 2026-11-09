@@ -176,16 +176,19 @@ def test_a_save_inside_a_block_is_no_protected_save() -> None:
     assert find_regions(code).save is None
 
 
+BINDING = r"(?:(?:const|global) )?"
+"""The wrappers a top-level binding may stand in (`regions.BINDING_WRAPPERS`)."""
 LITERAL_TOKEN = re.compile(
-    r'^(?:const )?([A-Z][A-Z0-9_]*)\s*=\s*THEME == "(?:light|dark)" \? (?:colorant)?"[^"\n]*" : (?:colorant)?"[^"\n]*"\s*$'
+    rf'^{BINDING}([A-Z][A-Z0-9_]*)\s*=\s*THEME == "(?:light|dark)" \? (?:colorant)?"[^"\n]*" : (?:colorant)?"[^"\n]*"\s*$'
 )
 """A theme token of the plainest shape, `const PAGE_BG = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"`."""
-TOP_LEVEL_SAVE = re.compile(r"^save\(", re.MULTILINE)
-"""A save at column 0; a save inside `with_theme(...) do` is indented and no statement of its own."""
-IMPRINT_LINE = re.compile(r"^(?:const )?(?:IMPRINT|IMPRINT_PALETTE)\s*=", re.MULTILINE)
+TOP_LEVEL_SAVE = re.compile(r"^(?:(?:Cairo)?Makie\.)?save\s*\(", re.MULTILINE)
+"""A save at column 0, also qualified (`regions.SAVE_NAMES`); a save inside `with_theme(...) do` is indented and no
+statement of its own."""
+IMPRINT_LINE = re.compile(rf"^{BINDING}(?:IMPRINT|IMPRINT_PALETTE)\s*=", re.MULTILINE)
 DATA_LINE = re.compile(r"^# (?:--- )?Data\b")
 PLOT_LINE = re.compile(r"^# (?:--- )?Plot\b")
-COLUMN_LINE = re.compile(r'^(?:const )?([A-Z][A-Z0-9_]*)\s*=\s*"[^"\n]*"\s*# role: \w+\s*$')
+COLUMN_LINE = re.compile(rf'^{BINDING}([A-Z][A-Z0-9_]*)\s*=\s*"[^"\n]*"\s*# role: \w+\s*$')
 
 
 def test_catalogue_corpus() -> None:
