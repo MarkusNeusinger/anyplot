@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-categorical
 created: '2025-12-30T11:40:30Z'
-updated: '2026-11-09T01:12:25Z'
+updated: '2026-11-09T01:18:55Z'
 generated_by: claude-opus-5-5
 adopted_from: ebeec892e34b79a7acc23e43968831382a4addc7 (ebeec892e34b79a7acc23e43968831382a4addc7)
 workflow_run: 42543833861
@@ -13,43 +13,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'One p.scatter renderer per product built with df.groupby(sort=False) and its
-    own ColumnDataSource, with legend_label: idiomatic bokeh, and the legend comes
-    from the data with the column constant as its title'
-  - 'The Imprint palette is in canonical order (#009E73, #C475FD, #4467A3), identical
-    in both renders. The chrome is threaded through INK, INK_SOFT and ELEVATED_BG,
-    so every text element reads correctly in both themes'
-  - Markers at size 24 with fill_alpha 0.8 and a 2 px page-colored outline keep coincident
-    points separable (visible where Product A points touch near x≈22–26) without moving
-    any mark off its value
-  - Legend glyph box set to 60 px so bokeh's 0.4 factor draws the legend markers at
-    the same 24 px as the data marks, which keeps legend and plot visually matched
-  - Figure-level tooltips format product, spend and engagement to one decimal for
-    inspection in the HTML output
+  - 'One p.scatter renderer per product from its own ColumnDataSource with legend_label
+    gives an exact one-to-one mapping between colors, legend entries and groups; groups
+    iterate with sort=False so Sparkling Water takes #009E73 and the rest follow the
+    Imprint order'
+  - Translucent fills (fill_alpha=0.8) with a 2 px page-colored outline keep coincident
+    points distinguishable in both themes, exactly the overlap handling the spec suggests,
+    with every point at its exact (x, y) value
+  - Legend glyph box sized (glyph_width/height=60) so the legend markers match the
+    24 px data marks; bold legend title on the elevated surface reads cleanly in both
+    themes
+  - Native bokeh tooltips with formatted fields ({0.1}) and brace-wrapped column names
+    expose product, spend and engagement per point in the HTML output
+  - Plausible, neutral beverage-marketing scenario with readable axis titles and units
+    taken from the column constants
   weaknesses:
-  - 'DQ-02 (both): the categories are labelled "Product A", "Product B", "Product
-    C", which reads as a generic placeholder scenario → concrete product names that
-    fit the marketing-spend story (for example product lines of a consumer brand).
-    Likely cause: the keys of the clusters dict.'
-  - 'Suggestion: a descriptive title prefix (for example "Campaign Spend vs Engagement
-    · ") would tell the reader what the clusters represent.'
-  - 'Suggestion: marker shapes varied per product (circle, square, triangle via the
-    scatter marker argument), which the Notes allow, would add a second, non-color
-    distinction between the groups.'
+  - 'Suggestion: varying marker shapes per product (the Notes allow it) would add
+    a redundant cue for readers who cannot separate Energy Drink #4467A3 from the
+    dark page at small sizes.'
+  - 'Suggestion: a modest within-group correlation in the generated data would let
+    the chart also show the ''comparing correlation patterns'' use case.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 on both the plot area and the border; no white seam.
-      Chrome: bold dark title "scatter-categorical · python · bokeh · anyplot.ai" top-left (~47 % of the width); dark axis titles "Marketing Spend ($K)" and "Customer Engagement Score (0–100)"; INK_SOFT tick labels 20–100 / 20–80; subtle grid at 15 % alpha; left and bottom axis lines only; legend top-right on an elevated card with a bold title "Product". All text is clearly readable.
-      Data: 150 points in three well-separated clouds: Product A #009E73 bottom-left (spend ~15–35, engagement ~14–40), Product B #C475FD top-middle (spend ~36–67, engagement ~58–92), Product C #4467A3 right (spend ~63–98, engagement ~27–65). Markers are 24 px, translucent, with page-colored outlines. The first series is #009E73.
+      Background: warm off-white #FAF8F1 across canvas and plot area; no frame box, only left and bottom axis lines in INK_SOFT.
+      Chrome: bold title "scatter-categorical · python · bokeh · anyplot.ai" top-left (~52% of width), axis titles "Marketing Spend ($K)" and "Customer Engagement Score (0–100)" in dark ink, tick labels 20–100 / 20–80 in soft dark gray, subtle light grid. Legend top-right on an elevated panel with bold title "Product" and three entries. All text readable.
+      Data: 150 points in three clusters — Sparkling Water (#009E73) low spend / low engagement bottom-left, Cold Brew Coffee (#C475FD) mid spend / high engagement top-center, Energy Drink (#4467A3) high spend / mid engagement right. Translucent fills with thin page-colored outlines; markers well sized for the density.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17; the legend card is #242420.
-      Chrome: title and axis titles in light #F0EFE8; tick labels and legend labels in #B8B7B0. Grid is subtle but visible. No dark-on-dark text anywhere.
-      Data: the same three colors at the same positions as in the light render; only the outlines flip to the dark page color. Product C's #4467A3 is the darkest of the three on this background but stays clearly visible.
+      Background: warm near-black #1A1A17; no frame box, left/bottom axis lines in light soft gray.
+      Chrome: title and axis titles in light ink, tick labels light gray, grid subtle but visible, legend panel #242420 with light text. No dark-on-dark text.
+      Data: identical colors and positions to the light render; only the chrome and the marker outline (page color) flip. Energy Drink blue is the dimmest series on the dark page but still clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,75 +57,70 @@ review:
         name: Text Legibility
         score: 8
         max: 8
+        comment: Explicit sizes (50/42/34 pt); all text readable in both themes and
+          at thumbnail size
         passed: true
-        comment: All font sizes set explicitly (50/42/34 pt); readable in both themes
-          and at 400 px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
+        comment: No text collisions; legend sits in empty top-right space
         passed: true
-        comment: No text collisions; the legend sits in empty space top-right; mark
-          overlap is minimal and outlined
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
-        passed: true
         comment: 24 px markers suit 150 points; legend glyphs match the marks in both
           themes
+        passed: true
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
+        comment: Imprint colors CVD-safe; green/purple/blue clearly distinct
         passed: true
-        comment: Green/purple/blue are CVD-distinguishable; the groups are also spatially
-          separated
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
+        comment: 3200x1800; balanced margins, title ~52% width, nothing clipped
         passed: true
-        comment: 3200x1800 (gate passed); balanced axis titles, no overflow, the title
-          at about 47 % of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
-        passed: true
         comment: Descriptive axis titles with units ($K, 0–100)
+        passed: true
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
+        comment: 'First series #009E73, Imprint order, correct theme backgrounds'
         passed: true
-        comment: 'Imprint palette in canonical order, the first series #009E73; correct
-          page backgrounds in both themes'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
+        comment: 'Above baseline: bold legend title on the elevated panel with tuned
+          padding/spacing, legend glyph box sized to the marks'
         passed: true
-        comment: 'The style-guide baseline: a bold title, a soft-ink hierarchy and
-          an elevated legend card; nothing decided beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
+        comment: 'Above baseline: page-colored marker outlines and a page-colored
+          outline line that removes the frame seam'
         passed: true
-        comment: 'Beyond the baseline: the frame outline is removed by painting it
-          in the page color, and the legend glyph box is sized so the legend markers
-          match the 24 px data marks; the legend padding and spacing are tuned'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
         passed: false
-        comment: Data displayed; no hierarchy or focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -137,53 +129,51 @@ review:
         name: Plot Type
         score: 5
         max: 5
+        comment: Categorical scatter, no unasked layers
         passed: true
-        comment: Scatter colored by category; no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
+        comment: Color by category, legend naming every category, colorblind-safe
+          colors, translucency + outline all present
         passed: true
-        comment: Distinct colorblind-safe colors, a legend naming every category,
-          translucency with an outline; every 'A good version shows' bullet met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
+        comment: Points at exact values; automatic ranges show all data
         passed: true
-        comment: Every point sits at its exact (x, y); the axes show all the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        comment: Mandated title format; legend title 'Product' and entries readable
         passed: true
-        comment: The title matches the required format; the legend title 'Product'
-          and its entries match the data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
         max: 6
+        comment: Three groups with distinct location and spread, stray points near
+          the group borders
         passed: true
-        comment: Three groups with different means and spreads show the category comparison;
-          little overlap is permitted
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Marketing spend versus engagement is plausible and neutral, but the
-          'Product A/B/C' labels read as generic (defect line)
+        comment: Beverage marketing spend vs engagement — plausible and neutral
+        passed: true
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        comment: Spend 15–98 $K and engagement 14–92 within the 0–100 score range;
+          no Check values in the spec
         passed: true
-        comment: Spend of $15–98K and engagement inside 0–100 are sensible; the spec
-          carries no Check values
     code_quality:
       score: 10
       max: 10
@@ -192,33 +182,32 @@ review:
         name: KISS Structure
         score: 3
         max: 3
+        comment: Flat script, no functions or classes
         passed: true
-        comment: Flat script with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
         comment: np.random.seed(42)
+        passed: true
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        comment: All imports used
         passed: true
-        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        comment: Appropriate complexity; groupby loop for renderers
         passed: true
-        comment: Appropriate complexity; a groupby loop with one renderer per group
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        comment: plot-{THEME}.html + plot-{THEME}.png via Selenium per library prompt
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png with the current Bokeh
-          3 API
     library_mastery:
       score: 6
       max: 10
@@ -227,29 +216,32 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
+        comment: Idiomatic ColumnDataSource per group, legend_label, figure(tooltips=...)
+          instead of a hand-added HoverTool
         passed: true
-        comment: A ColumnDataSource per group, legend_label to build the legend automatically,
-          column-name strings as glyph arguments, figure-level tooltips
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
+        comment: Bokeh tooltip field formatters ({0.1}) with brace-wrapped column
+          names
         passed: false
-        comment: Bokeh's figure-level tooltips with format specs ({0.1}) on brace-wrapped
-          column names; nothing else bokeh-specific
-  verdict: REJECTED
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
-  rendered_at: '2026-11-09T01:09:34Z'
+  rendered_at: '2026-11-09T01:16:16Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
+  - columndatasource
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
