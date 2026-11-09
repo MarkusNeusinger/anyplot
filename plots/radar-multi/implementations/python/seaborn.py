@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 radar-multi: Multi-Series Radar Chart
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -51,9 +51,9 @@ PRODUCT = "Product"  # role: series
 # Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 dimensions = ["Performance", "Reliability", "Usability", "Features", "Support", "Value"]
 products = {
-    "Product A": [92, 88, 72, 78, 65, 90],
-    "Product B": [65, 70, 95, 88, 85, 60],
-    "Product C": [75, 58, 82, 65, 92, 72],
+    "Nimbus Pro 14": [92, 88, 72, 78, 65, 90],
+    "Vela Air 13": [65, 70, 95, 88, 85, 60],
+    "Orion Flex 15": [75, 58, 82, 65, 92, 72],
 }
 df = pd.DataFrame(
     {
@@ -107,9 +107,22 @@ ax.set_ylim(0, SCALE_MAX)
 rings = np.arange(GRID_STEP, SCALE_MAX + GRID_STEP, GRID_STEP)
 ax.set_yticks(rings, [str(r) for r in rings])
 ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
-ax.set_rlabel_position(180 / len(axes_order))
+rlabel_deg = 180 / len(axes_order)
+ax.set_rlabel_position(rlabel_deg)
 ax.set_xlabel("")
 ax.set_ylabel("")
+# Name the value scale once, just outside the outer ring above the ring labels
+ax.text(
+    np.deg2rad(rlabel_deg),
+    SCALE_MAX * 1.1,
+    SCORE,
+    fontsize=8,
+    color=INK_SOFT,
+    ha="left",
+    va="center",
+    rotation=90 - rlabel_deg,
+    rotation_mode="anchor",
+)
 ax.yaxis.grid(True, linestyle="--", linewidth=0.7, color=INK, alpha=0.18)
 ax.xaxis.grid(True, linestyle="-", linewidth=0.7, color=INK, alpha=0.12)
 ax.spines["polar"].set_color(INK_SOFT)
@@ -118,8 +131,8 @@ ax.spines["polar"].set_linewidth(0.8)
 ax.set_title("radar-multi · python · seaborn · anyplot.ai", fontsize=12, color=INK, pad=24)
 sns.move_legend(
     ax,
-    "upper right",
-    bbox_to_anchor=(1.12, 1.12),
+    "lower right",
+    bbox_to_anchor=(1.12, -0.06),
     title=PRODUCT,
     fontsize=8,
     title_fontsize=9,
