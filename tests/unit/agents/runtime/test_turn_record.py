@@ -516,11 +516,7 @@ class TestTurns:
         await turn(client, sid, "what is the mean?")
 
         record = await last(client, sid, lines)
-        assert guards(record) == [
-            ("scope_guard", "out_of_scope"),
-            ("scope_guard", "paste_note_in_scope"),
-            ("scope_guard", "language_detected"),  # the session's first typed message in scope
-        ]
+        assert guards(record) == [("scope_guard", "out_of_scope"), ("scope_guard", "paste_note_in_scope")]
         assert (record["kind"], record["refusal"]) == ("talk", None)
 
     @pytest.mark.parametrize(
