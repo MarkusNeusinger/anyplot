@@ -1,211 +1,162 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-density: Ternary Density Plot
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-19
+Library: plotnine 0.15.8 | Python 3.13
+Quality: pending | Updated: 2026-11-09
 """
+
+import os
 
 import numpy as np
 import pandas as pd
+from contourpy import contour_generator
 from plotnine import (
     aes,
     coord_fixed,
-    element_blank,
+    element_rect,
     element_text,
-    geom_density_2d,
+    geom_path,
     geom_polygon,
+    geom_raster,
     geom_segment,
     geom_text,
-    geom_tile,
     ggplot,
+    guide_colorbar,
     labs,
-    scale_fill_cmap,
+    scale_fill_gradient,
     theme,
     theme_void,
 )
 from scipy.stats import gaussian_kde
 
 
-# Generate synthetic compositional data (sediment: sand/silt/clay)
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint continuous colormap imprint_seq: brand green (low density) → blue (high density)
+IMPRINT_SEQ = ["#009E73", "#4467A3"]
+
+# Constants
+GRID_STEPS = [0.2, 0.4, 0.6, 0.8]  # ternary grid every 20 %
+CONTOUR_LEVELS = [0.2, 0.4, 0.6, 0.8]  # contour levels as shares of the peak density
+GRID_RESOLUTION = 240  # KDE evaluation points along the triangle's base
+
+# Columns: set these to your table's column names
+SAND = "Sand (%)"  # role: component_a
+SILT = "Silt (%)"  # role: component_b
+CLAY = "Clay (%)"  # role: component_c
+
+# Data: replace this block with your own table, for example df = pd.read_csv("sediments.csv")
 np.random.seed(42)
+sand_rich = np.random.beta(5, 2, 300) * 60 + 35
+silt_sandy = np.random.beta(2, 3, 300) * (100 - sand_rich) * 0.6
+silt_rich = np.random.beta(5, 2, 250) * 50 + 40
+sand_silty = np.random.beta(2, 4, 250) * (100 - silt_rich) * 0.5
+clay_rich = np.random.beta(4, 2, 250) * 45 + 40
+sand_clayey = np.random.beta(2, 5, 250) * (100 - clay_rich) * 0.4
+sand = np.concatenate([sand_rich, sand_silty, sand_clayey])
+silt = np.concatenate([silt_sandy, silt_rich, 100 - sand_clayey - clay_rich])
+clay = np.concatenate([100 - sand_rich - silt_sandy, 100 - sand_silty - silt_rich, clay_rich])
+compositions = np.clip(np.column_stack([sand, silt, clay]), 0, None)
+compositions = compositions / compositions.sum(axis=1, keepdims=True) * 100
+df = pd.DataFrame(compositions, columns=[SAND, SILT, CLAY])
 
-# Create three clusters of compositions
-# Cluster 1: Sandy sediments (high sand)
-n1 = 300
-sand1 = np.random.beta(5, 2, n1) * 60 + 35
-silt1 = np.random.beta(2, 3, n1) * (100 - sand1) * 0.6
-clay1 = 100 - sand1 - silt1
+# Plot: reads only df and the constants above
+# Ternary → Cartesian: sand vertex at (0, 0), silt at (1, 0), clay at (0.5, √3/2)
+height = np.sqrt(3) / 2
+parts = df[[SAND, SILT, CLAY]].dropna()
+shares = parts.div(parts.sum(axis=1), axis=0)
+x_data = shares[SILT] + shares[CLAY] / 2
+y_data = shares[CLAY] * height
 
-# Cluster 2: Silty sediments (high silt)
-n2 = 250
-silt2 = np.random.beta(5, 2, n2) * 50 + 40
-sand2 = np.random.beta(2, 4, n2) * (100 - silt2) * 0.5
-clay2 = 100 - sand2 - silt2
-
-# Cluster 3: Clay-rich sediments (high clay)
-n3 = 250
-clay3 = np.random.beta(4, 2, n3) * 45 + 40
-sand3 = np.random.beta(2, 5, n3) * (100 - clay3) * 0.4
-silt3 = 100 - sand3 - clay3
-
-# Combine all clusters
-sand = np.concatenate([sand1, sand2, sand3])
-silt = np.concatenate([silt1, silt2, silt3])
-clay = np.concatenate([clay1, clay2, clay3])
-
-# Ensure non-negative values and normalize to sum to 100
-sand = np.clip(sand, 0, 100)
-silt = np.clip(silt, 0, 100)
-clay = np.clip(clay, 0, 100)
-total = sand + silt + clay
-sand = sand / total * 100
-silt = silt / total * 100
-clay = clay / total * 100
-
-# Convert ternary to Cartesian coordinates
-# Formula: x = 0.5 * (2*b + c) / total, y = (sqrt(3)/2) * c / total
-# Where a=sand (bottom-left), b=silt (bottom-right), c=clay (top)
-x_data = 0.5 * (2 * silt + clay) / 100
-y_data = (np.sqrt(3) / 2) * clay / 100
-
-# Compute KDE on the data points
-points = np.vstack([x_data, y_data])
-kde = gaussian_kde(points, bw_method="silverman")
-
-# Create grid for density estimation
-grid_resolution = 150
-x_grid = np.linspace(0, 1, grid_resolution)
-y_grid = np.linspace(0, np.sqrt(3) / 2, grid_resolution)
+# Kernel density on a regular grid covering the triangle's bounding box
+kde = gaussian_kde(np.vstack([x_data, y_data]))
+x_grid = np.linspace(0, 1, GRID_RESOLUTION)
+y_grid = np.linspace(0, height, round(GRID_RESOLUTION * height))
 xx, yy = np.meshgrid(x_grid, y_grid)
+density = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
+inside = (yy <= 2 * height * xx + 1e-9) & (yy <= 2 * height * (1 - xx) + 1e-9)
+density = density / density[inside].max()
+density_df = pd.DataFrame({"x": xx.ravel(), "y": yy.ravel(), "density": density.ravel()})
 
-# Evaluate KDE on grid
-positions = np.vstack([xx.ravel(), yy.ravel()])
-density = kde(positions).reshape(xx.shape)
+# Contour lines traced on the same density surface
+contours = contour_generator(x_grid, y_grid, density)
+contour_rows = []
+for level in CONTOUR_LEVELS:
+    for k, line in enumerate(contours.lines(level)):
+        contour_rows.append(pd.DataFrame({"x": line[:, 0], "y": line[:, 1], "path": f"{level}-{k}"}))
+contour_df = pd.concat(contour_rows, ignore_index=True)
 
-# Create mask for valid ternary region (inside triangle)
-# Convert grid points back to ternary to check bounds
-# c = y * 2/sqrt(3), b = x - c/2, a = 1 - b - c
-cc = yy * 2 / np.sqrt(3)
-bb = xx - cc / 2
-aa = 1 - bb - cc
-mask = (aa >= -0.001) & (bb >= -0.001) & (cc >= -0.001) & (aa <= 1.001) & (bb <= 1.001) & (cc <= 1.001)
-
-# Apply mask (set values outside triangle to NaN)
-density_masked = np.where(mask, density, np.nan)
-
-# Create DataFrame for density grid
-density_df = pd.DataFrame({"x": xx.ravel(), "y": yy.ravel(), "density": density_masked.ravel()}).dropna()
-
-# Triangle vertices for frame
-vertices = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, np.sqrt(3) / 2, 0]})
-
-# Grid lines at 20% intervals
-grid_lines = []
-for pct in [0.2, 0.4, 0.6, 0.8]:
-    # Lines parallel to bottom (constant clay)
-    x1 = 0.5 * (2 * 0 + pct)
-    y1 = (np.sqrt(3) / 2) * pct
-    x2 = 0.5 * (2 * (1 - pct) + pct)
-    y2 = (np.sqrt(3) / 2) * pct
-    grid_lines.append({"x": x1, "y": y1, "xend": x2, "yend": y2})
-
-    # Lines parallel to left side (constant silt)
-    x1 = 0.5 * (2 * pct + (1 - pct))
-    y1 = (np.sqrt(3) / 2) * (1 - pct)
-    x2 = 0.5 * (2 * pct + 0)
-    y2 = 0
-    grid_lines.append({"x": x1, "y": y1, "xend": x2, "yend": y2})
-
-    # Lines parallel to right side (constant sand)
-    x1 = 0.5 * (2 * 0 + (1 - pct))
-    y1 = (np.sqrt(3) / 2) * (1 - pct)
-    x2 = 0.5 * (2 * (1 - pct) + 0)
-    y2 = 0
-    grid_lines.append({"x": x1, "y": y1, "xend": x2, "yend": y2})
-
-grid_df = pd.DataFrame(grid_lines)
-
-# Tick labels along edges
-tick_labels = []
-label_offset = 0.06
-for pct in [0, 20, 40, 60, 80, 100]:
-    frac = pct / 100
-    # Sand axis (left edge going up)
-    x = 0.5 * (2 * 0 + frac)
-    y = (np.sqrt(3) / 2) * frac
-    tick_labels.append({"x": x - label_offset, "y": y, "label": str(pct)})
-
-    # Silt axis (bottom edge)
-    x = 0.5 * (2 * frac + 0)
-    y = 0
-    tick_labels.append({"x": x, "y": y - label_offset * 0.8, "label": str(pct)})
-
-    # Clay axis (right edge going up)
-    x = 0.5 * (2 * (1 - frac) + frac)
-    y = (np.sqrt(3) / 2) * frac
-    tick_labels.append({"x": x + label_offset, "y": y, "label": str(pct)})
-
-tick_df = pd.DataFrame(tick_labels)
-
-# Vertex labels
-vertex_labels = pd.DataFrame(
+# Page-coloured masks outside the triangle keep the density and contours inside its edges
+mask_df = pd.DataFrame(
     {
-        "x": [0 - 0.02, 1 + 0.02, 0.5],
-        "y": [0 - 0.1, 0 - 0.1, np.sqrt(3) / 2 + 0.08],
-        "label": ["Sand (%)", "Silt (%)", "Clay (%)"],
+        "x": [-1, 2, 2, -1, 0, 0.5, 0.5, -1, -1, 1, 0.5, 0.5, 2, 2],
+        "y": [-1, -1, 0, 0, 0, height, 2, 2, 0, 0, height, 2, 2, 0],
+        "side": ["bottom"] * 4 + ["left"] * 5 + ["right"] * 5,
+    }
+)
+frame_df = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, height, 0]})
+
+# Grid lines parallel to each side: constant clay, constant silt, constant sand
+steps = np.array(GRID_STEPS)
+grid_df = pd.DataFrame(
+    {
+        "x": np.concatenate([steps / 2, steps, 1 - steps]),
+        "y": np.concatenate([steps * height, np.zeros_like(steps), np.zeros_like(steps)]),
+        "xend": np.concatenate([1 - steps / 2, steps + (1 - steps) / 2, (1 - steps) / 2]),
+        "yend": np.concatenate([steps * height, (1 - steps) * height, (1 - steps) * height]),
     }
 )
 
-# Build the plot
-# Calculate tile size for proper coverage
-tile_size = 1.0 / grid_resolution
+# Tick labels at the outer end of each grid line, read along the matching edge
+pct = [f"{round(s * 100)}" for s in GRID_STEPS]
+tick_df = pd.DataFrame(
+    {
+        "x": np.concatenate([steps, 1 - steps / 2 + 0.035, (1 - steps) / 2 - 0.035]),
+        "y": np.concatenate([np.full_like(steps, -0.04), steps * height + 0.02, (1 - steps) * height + 0.02]),
+        "label": pct * 3,
+    }
+)
+vertex_df = pd.DataFrame({"x": [-0.03, 1.03, 0.5], "y": [-0.085, -0.085, height + 0.055], "label": [SAND, SILT, CLAY]})
 
 plot = (
     ggplot()
-    # Density heatmap using tiles
-    + geom_tile(
-        data=density_df,
-        mapping=aes(x="x", y="y", fill="density"),
-        width=tile_size * 1.1,
-        height=tile_size * 1.1,
-        alpha=0.85,
+    + geom_raster(data=density_df, mapping=aes(x="x", y="y", fill="density"), interpolation="bilinear")
+    + geom_path(data=contour_df, mapping=aes(x="x", y="y", group="path"), color=PAGE_BG, size=0.6, alpha=0.9)
+    + geom_polygon(data=mask_df, mapping=aes(x="x", y="y", group="side"), fill=PAGE_BG, color=None)
+    + geom_segment(data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=0.3, alpha=0.3)
+    + geom_polygon(data=frame_df, mapping=aes(x="x", y="y"), fill=None, color=INK_SOFT, size=0.8)
+    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=8, color=INK_SOFT)
+    + geom_text(data=vertex_df, mapping=aes(x="x", y="y", label="label"), size=10, fontweight="bold", color=INK)
+    + scale_fill_gradient(
+        low=IMPRINT_SEQ[0],
+        high=IMPRINT_SEQ[1],
+        limits=(0, 1),
+        breaks=[0, 0.5, 1],
+        labels=["Low", "Medium", "High"],
+        name="Relative\ndensity",
+        guide=guide_colorbar(),
     )
-    + scale_fill_cmap(cmap_name="viridis", name="Density")
-    # Contour lines for key density levels using geom_density_2d
-    + geom_density_2d(
-        data=pd.DataFrame({"x": x_data, "y": y_data}),
-        mapping=aes(x="x", y="y"),
-        color="white",
-        size=0.8,
-        alpha=0.7,
-        levels=6,
-    )
-    # Grid lines beneath density (already visible due to alpha)
-    + geom_segment(
-        data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#ffffff", size=0.8, alpha=0.3
-    )
-    # Triangle frame on top
-    + geom_polygon(data=vertices, mapping=aes(x="x", y="y"), fill=None, color="#306998", size=2.5)
-    # Tick labels
-    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=14, color="#666666")
-    # Vertex labels
-    + geom_text(
-        data=vertex_labels, mapping=aes(x="x", y="y", label="label"), size=18, fontweight="bold", color="#306998"
-    )
-    # Title and theme
-    + labs(title="ternary-density · plotnine · pyplots.ai")
-    + coord_fixed(ratio=1)
+    + labs(title="ternary-density · python · plotnine · anyplot.ai")
+    + coord_fixed(ratio=1, xlim=(-0.12, 1.12), ylim=(-0.13, height + 0.09), expand=False)
     + theme_void()
     + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=28, ha="center", weight="bold"),
-        plot_margin=0.02,
-        legend_position="right",
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
-        legend_key_size=40,
-        legend_background=element_blank(),
+        figure_size=(6, 6),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=12, ha="center", weight="bold", color=INK),
+        plot_margin=0.03,
+        legend_position="bottom",
+        legend_direction="horizontal",
+        legend_title=element_text(size=8, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_key_width=120,
+        legend_key_height=12,
+        legend_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
 )
 
-# Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
