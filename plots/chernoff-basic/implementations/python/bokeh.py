@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -30,7 +30,14 @@ PUPIL = INK if THEME == "light" else PAGE_BG
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Constants
-FEATURES = ["Face width", "Face height", "Eye size", "Mouth curve"]  # driven by the variables in METRICS, in order
+FEATURES = [  # driven by the variables in METRICS, in order
+    "Face width",
+    "Face height",
+    "Eye size",
+    "Mouth curve",
+    "Brow slant",
+    "Nose width",
+]
 
 # Columns: set these to your table's column names
 COMPANY = "Company"  # role: observation_id
@@ -38,27 +45,38 @@ SECTOR = "Sector"  # role: extra
 METRICS = [
     "Revenue Growth (%)",
     "Profit Margin (%)",
-    "Customer Satisfaction (%)",
+    "Customer Satisfaction (score)",
     "Market Share (%)",
+    "Debt-to-Equity (ratio)",
+    "R&D Spend (% of revenue)",
 ]  # role: variable_
 
 # Data: replace this block with your own table, for example df = pd.read_csv("companies.csv")
 np.random.seed(42)
-profiles = {  # per sector, the range of each metric as a share
-    "Tech": [(0.6, 1.0), (0.5, 0.9), (0.6, 0.95), (0.3, 0.7)],
-    "Retail": [(0.2, 0.5), (0.15, 0.4), (0.5, 0.8), (0.4, 0.8)],
-    "Energy": [(0.05, 0.3), (0.3, 0.6), (0.3, 0.6), (0.5, 0.9)],
+profiles = {  # per sector: fictional companies and the plausible range of each metric, in its own unit
+    "Tech": (
+        ["Nimbus Systems", "Quantia Labs", "Corvex Software", "Helio Networks"],
+        [(8, 35), (15, 30), (70, 88), (3, 20), (0.1, 0.6), (10, 25)],
+    ),
+    "Retail": (
+        ["Marigold Stores", "Brightcart", "Urban Pantry", "Kestrel Outfitters"],
+        [(-3, 10), (2, 8), (62, 85), (2, 12), (0.5, 1.5), (0.5, 3)],
+    ),
+    "Energy": (
+        ["Northwind Power", "Basalt Petroleum", "Solvane Energy", "Ridgeline Utilities"],
+        [(-5, 12), (5, 15), (55, 75), (4, 18), (0.8, 2.0), (1, 5)],
+    ),
 }
 records = []
-for sector, ranges in profiles.items():
-    draws = np.column_stack([np.random.uniform(low, high, 4) for low, high in ranges]) * 100
-    for k, row in enumerate(draws, start=1):
-        records.append({COMPANY: f"{sector} #{k}", SECTOR: sector, **dict(zip(METRICS, row.round(1), strict=True))})
+for sector, (names, ranges) in profiles.items():
+    draws = np.column_stack([np.random.uniform(low, high, len(names)) for low, high in ranges])
+    for name, row in zip(names, draws, strict=True):
+        records.append({COMPANY: name, SECTOR: sector, **dict(zip(METRICS, row.round(2), strict=True))})
 df = pd.DataFrame(records)
 
 # Plot: reads only df and the constants above
 W, H = 3200, 1800
-MARGIN_SIDE, MARGIN_TOP, MARGIN_BOTTOM = 80, 230, 200  # the top band holds title and legend, the bottom one the key
+MARGIN_SIDE, MARGIN_TOP, MARGIN_BOTTOM = 80, 230, 250  # the top band holds title and legend, the bottom one the key
 FRAME_W, FRAME_H = W - 2 * MARGIN_SIDE, H - MARGIN_TOP - MARGIN_BOTTOM
 
 # One palette position per sector; with more sectors than positions, all faces take the brand color and no legend
@@ -70,7 +88,7 @@ colors = {sector: IMPRINT_PALETTE[i] if by_sector else IMPRINT_PALETTE[0] for i,
 values = df[METRICS].astype(float)
 span = (values.max() - values.min()).replace(0, 1)
 scaled = ((values - values.min()) / span).to_numpy()
-s_width, s_height, s_eye, s_mouth = scaled.T
+s_width, s_height, s_eye, s_mouth, s_brow, s_nose = scaled.T
 
 # Grid: one cell per face, the y unit chosen so a data unit spans about the same pixels on both axes
 n_faces = len(df)
@@ -89,23 +107,23 @@ faces["rw"] = unit * (0.17 + 0.17 * s_width)
 faces["rh"] = unit * (0.20 + 0.14 * s_height)
 faces["w"] = 2 * faces["rw"]
 faces["h"] = 2 * faces["rh"]
-faces["eye_r"] = unit * (0.025 + 0.04 * s_eye)
+faces["eye_r"] = unit * (0.02 + 0.035 * s_eye)
 faces["pupil_r"] = 0.45 * faces["eye_r"]
-faces["eye_y"] = faces["cy"] + 0.28 * faces["rh"]
-faces["eye_lx"] = faces["cx"] - 0.45 * faces["rw"]
-faces["eye_rx"] = faces["cx"] + 0.45 * faces["rw"]
-brow_y = faces["eye_y"] + faces["eye_r"] + 0.035 * unit
-brow_half = 1.15 * faces["eye_r"]
-brow_tilt = unit * 0.02 * (s_width - 0.5)
+faces["eye_y"] = faces["cy"] + 0.2 * faces["rh"]
+faces["eye_lx"] = faces["cx"] - 0.4 * faces["rw"]
+faces["eye_rx"] = faces["cx"] + 0.4 * faces["rw"]
+brow_y = faces["eye_y"] + faces["eye_r"] + 0.02 * unit  # sized so the brows stay inside the smallest face
+brow_half = 0.9 * faces["eye_r"]
+brow_tilt = unit * 0.045 * (s_brow - 0.5)  # a higher value lifts the outer ends into a frown
 faces["brow_l_out"], faces["brow_l_in"] = faces["eye_lx"] - brow_half, faces["eye_lx"] + brow_half
 faces["brow_r_in"], faces["brow_r_out"] = faces["eye_rx"] - brow_half, faces["eye_rx"] + brow_half
 faces["brow_out_y"], faces["brow_in_y"] = brow_y + brow_tilt, brow_y - brow_tilt
 faces["label_y"] = faces["cy"] - 0.36 * unit
 
-# Nose: a wedge whose width follows the face height; mouth: a parabola that frowns as its variable rises
-nose_w = unit * (0.02 + 0.03 * s_height)
-nose_top = faces["cy"] + 0.10 * faces["rh"]
-nose_tip = faces["cy"] - 0.12 * faces["rh"]
+# Nose: a wedge that widens as its variable rises; mouth: a parabola that frowns as its variable rises
+nose_w = unit * (0.02 + 0.07 * s_nose)
+nose_top = faces["cy"] + 0.02 * faces["rh"]
+nose_tip = faces["cy"] - 0.2 * faces["rh"]
 faces["nose_xs"] = list(np.column_stack([faces["cx"], faces["cx"] - nose_w / 2, faces["cx"] + nose_w / 2]))
 faces["nose_ys"] = list(np.column_stack([nose_top, nose_tip, nose_tip]))
 t = np.linspace(-1, 1, 25)
@@ -190,16 +208,24 @@ p.text(
     text_color=INK_SOFT,
 )
 
-# Key: which variable drives which feature, and in which direction
-key = "   ·   ".join(f"{feature}: {metric}" for feature, metric in zip(FEATURES, METRICS, strict=False))
-p.add_layout(
-    Title(text=key, align="center", text_font_size="30pt", text_font_style="normal", text_color=INK, standoff=16),
-    "below",
-)
+# Key: which variable drives which feature, three entries per line, and in which direction
+entries = [f"{feature}: {metric}" for feature, metric in zip(FEATURES, METRICS, strict=False)]
+for start in range(0, len(entries), 3):
+    p.add_layout(
+        Title(
+            text="   ·   ".join(entries[start : start + 3]),
+            align="center",
+            text_font_size="30pt",
+            text_font_style="normal",
+            text_color=INK,
+            standoff=12,
+        ),
+        "below",
+    )
 p.add_layout(
     Title(
         text="Each variable min-max scaled across all faces: a higher value widens and lengthens the face, "
-        "enlarges the eyes and turns the mouth down",
+        "enlarges the eyes, turns the mouth down, slants the brows into a frown and widens the nose",
         align="center",
         text_font_size="26pt",
         text_font_style="italic",
@@ -216,10 +242,7 @@ p.add_tools(
         tooltips=[
             (COMPANY, f"@{{{COMPANY}}}"),
             (SECTOR, f"@{{{SECTOR}}}"),
-            (METRICS[0], "@value_0{0.0}"),
-            (METRICS[1], "@value_1{0.0}"),
-            (METRICS[2], "@value_2{0.0}"),
-            (METRICS[3], "@value_3{0.0}"),
+            *[(metric, f"@value_{i}{{0.0[0]}}") for i, metric in enumerate(METRICS)],
         ],
     )
 )
