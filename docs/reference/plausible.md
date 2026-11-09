@@ -364,10 +364,11 @@ second Plausible site, `bots.anyplot.ai`, recorded three server-side events:
 the API), and the machine side of `og_image_view`. It saw about 1.7 % of the
 real crawler reads, because Plausible drops events from crawler and datacenter
 addresses, and 71 % of its last week was a scanner that spoofed crawler user
-agents. Its history is exported to a dated directory under
-`~/backups/plausible/` on the owner's machine. The site stays dormant for 30
-days after the change deployed and is then deleted; until then its dashboard
-shows a flat line, which is expected.
+agents. Its history is exported to
+`~/backups/plausible/bots.anyplot.ai-2026-11-09/` on the owner's machine (four
+Stats API pulls and a README; 7,184 `bot_fetch` events since 2026-08-18). The
+site stays dormant for 30 days after the change deployed and is then deleted;
+until then its dashboard shows a flat line, which is expected.
 
 Machine reads are now one content-free line per request by a crawler, an AI
 assistant, or an MCP client, written to Cloud Logging and read in BigQuery:

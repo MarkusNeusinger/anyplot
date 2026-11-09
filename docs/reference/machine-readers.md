@@ -1,10 +1,10 @@
 # Machine readers
 
 > **Status (2026-11-09):** both writers are in the repository: the API (`api/machine_reads.py`) and the site's
-> nginx (`app/nginx.conf`). The Google Cloud resources that keep the lines (the log bucket, the sink, the
-> `_Default` exclusion, the linked dataset, and the views) aren't created yet; see
-> [Set up the Google Cloud side](#set-up-the-google-cloud-side). The public numbers on `/stats` and the owner's
-> section on `/debug` come in a later change.
+> nginx (`app/nginx.conf`). The log bucket, the sink, and the `_Default` exclusion exist since 2026-11-09
+> (steps 1 to 3 of [Set up the Google Cloud side](#set-up-the-google-cloud-side)); the linked dataset, the views,
+> the two `READER` entries, and the trigger substitution (steps 4 to 8) wait for the owner's OK after the writers
+> merge. The public numbers on `/stats` and the owner's section on `/debug` come in a later change.
 
 A machine reader is a crawler, an AI assistant, or an MCP client that reads the catalogue. Every request one of
 them makes is recorded as one content-free JSON line: who sent it (the vendor, why it fetches, and whether
@@ -197,6 +197,12 @@ Run steps 1 to 3 before the change that writes the lines merges. Run steps 4 to 
 view SQL comes from the merged repository, and step 8 right after step 7. Step 9 redeploys the Worker; run it
 right after the merge.
 
+| Steps | State |
+|---|---|
+| 1 to 3 (bucket, sink, `_Default` exclusion) | Done on 2026-11-09 at 08:40 UTC on the owner's OK, and read back: the bucket is `ACTIVE` with 180 days and analytics on; the sink and the exclusion carry the filter below |
+| 4 to 8 (link, views dataset, views, `READER` entries, trigger substitution) | Pending the owner's OK, after the writers merge |
+| 9 (Worker redeploy) | Pending the owner, after the writers merge |
+
 1. Create the log bucket:
 
    ```bash
@@ -373,9 +379,11 @@ often a query runs. The total stays under $1 a month.
 From 2026-08-18 until the machine-read lines replaced it in November 2026, the Plausible site `bots.anyplot.ai`
 recorded the events `bot_fetch`, `asset_fetch`, and the machine side of `og_image_view`. It saw about 1.7 % of
 the real crawler reads, because Plausible drops crawler and datacenter addresses, and 71 % of its last week was a
-scanner that spoofed crawler user agents. Its history is exported to a dated directory under
-`~/backups/plausible/` on the owner's machine; the site stays dormant for 30 days after the change deployed and
-is then deleted. The API no longer sends it anything, so its dashboard shows a flat line, not a broken install.
+scanner that spoofed crawler user agents. Its history is exported to
+`~/backups/plausible/bots.anyplot.ai-2026-11-09/` on the owner's machine: four Stats API pulls and a README with
+the totals (7,184 `bot_fetch` events since 2026-08-18). The site stays dormant for 30 days after the change
+deployed and is then deleted. The API no longer sends it anything, so its dashboard shows a flat line, not a
+broken install.
 
 ## Files
 
