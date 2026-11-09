@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -29,23 +29,44 @@ FILL_ALPHA = 0.6
 
 # Columns: set these to your table's column names
 STORE = "Store"  # role: label
-LONGITUDE = "Longitude (°)"  # role: x
-LATITUDE = "Latitude (°)"  # role: y
+EASTING = "Easting (km)"  # role: x
+NORTHING = "Northing (km)"  # role: y
 
 # Data: replace this block with your own table, for example df = pd.read_csv("stores.csv")
 np.random.seed(42)
-n_stores = 20
+branches = [
+    "Old Town",
+    "Riverside",
+    "Harbour",
+    "Market Square",
+    "University",
+    "Northgate",
+    "Eastfield",
+    "West End",
+    "Southbank",
+    "Hillcrest",
+    "Station Road",
+    "Parkview",
+    "Millbrook",
+    "Lakeside",
+    "Cathedral",
+    "Docklands",
+    "Greenwood",
+    "Bridgeport",
+    "Elm Park",
+    "Kingsway",
+]
 df = pd.DataFrame(
     {
-        STORE: [f"Store {i}" for i in range(n_stores)],
-        LONGITUDE: np.random.uniform(10, 90, n_stores),
-        LATITUDE: np.random.uniform(10, 90, n_stores),
+        STORE: branches,
+        EASTING: np.random.uniform(0, 16, len(branches)),
+        NORTHING: np.random.uniform(0, 16, len(branches)),
     }
 )
 
 # Plot: reads only df and the constants above
-seeds = df.dropna(subset=[LONGITUDE, LATITUDE]).reset_index(drop=True)
-points = seeds[[LONGITUDE, LATITUDE]].to_numpy(dtype=float)
+seeds = df.dropna(subset=[EASTING, NORTHING]).reset_index(drop=True)
+points = seeds[[EASTING, NORTHING]].to_numpy(dtype=float)
 n_seeds = len(points)
 
 # Bounding box around the seeds
@@ -59,27 +80,7 @@ cx, cy = (x_min + x_max) / 2, (y_min + y_max) / 2
 far = 10 * max(x_max - x_min, y_max - y_min)
 guards = np.array([[cx + dx * far, cy + dy * far] for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy])
 vor = Voronoi(np.vstack([points, guards]))
-
-
-def clip_to_box(polygon):
-    """Sutherland-Hodgman clipping of a convex polygon to the bounding box."""
-    edges = [(0, x_min, 1), (0, x_max, -1), (1, y_min, 1), (1, y_max, -1)]
-    for axis, bound, sign in edges:
-        clipped = []
-        for i, curr in enumerate(polygon):
-            nxt = polygon[(i + 1) % len(polygon)]
-            curr_in = sign * (curr[axis] - bound) >= 0
-            next_in = sign * (nxt[axis] - bound) >= 0
-            if curr_in:
-                clipped.append(curr)
-            if curr_in != next_in:
-                t = (bound - curr[axis]) / (nxt[axis] - curr[axis])
-                clipped.append(curr + t * (nxt - curr))
-        polygon = clipped
-        if not polygon:
-            break
-    return polygon
-
+box_edges = [(0, x_min, 1), (0, x_max, -1), (1, y_min, 1), (1, y_max, -1)]
 
 # Neighbouring cells share a Voronoi ridge; colour them greedily in smallest-last order
 neighbours = {i: set() for i in range(n_seeds)}
@@ -102,7 +103,20 @@ fig = go.Figure()
 # Voronoi cells (service areas)
 for idx in range(n_seeds):
     region = vor.regions[vor.point_region[idx]]
-    polygon = clip_to_box([vor.vertices[v] for v in region])
+    polygon = [vor.vertices[v] for v in region]
+    # Sutherland-Hodgman: clip the convex cell against each side of the bounding box
+    for axis, bound, sign in box_edges:
+        clipped = []
+        for i, curr in enumerate(polygon):
+            nxt = polygon[(i + 1) % len(polygon)]
+            curr_in = sign * (curr[axis] - bound) >= 0
+            next_in = sign * (nxt[axis] - bound) >= 0
+            if curr_in:
+                clipped.append(curr)
+            if curr_in != next_in:
+                t = (bound - curr[axis]) / (nxt[axis] - curr[axis])
+                clipped.append(curr + t * (nxt - curr))
+        polygon = clipped
     if len(polygon) < 3:
         continue
     poly = np.array(polygon + [polygon[0]])
@@ -124,13 +138,13 @@ for idx in range(n_seeds):
 # Seed points (store locations) on top
 fig.add_trace(
     go.Scatter(
-        x=seeds[LONGITUDE],
-        y=seeds[LATITUDE],
+        x=seeds[EASTING],
+        y=seeds[NORTHING],
         mode="markers",
         marker={"size": 10, "color": INK, "line": {"color": ELEVATED_BG, "width": 2}, "symbol": "circle"},
         name=STORE,
         customdata=seeds[[STORE]].astype(str),
-        hovertemplate=f"%{{customdata[0]}}<br>{LONGITUDE}: %{{x:.1f}}<br>{LATITUDE}: %{{y:.1f}}<extra></extra>",
+        hovertemplate=f"%{{customdata[0]}}<br>{EASTING}: %{{x:.1f}}<br>{NORTHING}: %{{y:.1f}}<extra></extra>",
     )
 )
 
@@ -154,13 +168,13 @@ fig.update_layout(
     },
     xaxis={
         **axis_style,
-        "title": {"text": LONGITUDE, "font": {"size": 12, "color": INK}},
+        "title": {"text": EASTING, "font": {"size": 12, "color": INK}},
         "range": [x_min, x_max],
         "constrain": "domain",
     },
     yaxis={
         **axis_style,
-        "title": {"text": LATITUDE, "font": {"size": 12, "color": INK}},
+        "title": {"text": NORTHING, "font": {"size": 12, "color": INK}},
         "range": [y_min, y_max],
         "scaleanchor": "x",
         "scaleratio": 1,
