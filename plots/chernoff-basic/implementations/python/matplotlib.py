@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -31,21 +31,30 @@ EYE_WHITE = "#FFFDF6"
 
 # Columns: set these to your table's column names
 CAR = "Car"  # role: observation_id
-RATINGS = ["Fuel efficiency", "Power", "Reliability", "Comfort"]  # role: variable_
+RATINGS = ["Fuel efficiency", "Power", "Reliability", "Comfort", "Safety", "Cargo space", "Price"]  # role: variable_
 CAR_CLASS = "Car class"  # role: extra
 
 # Data: replace this block with your own table, for example df = pd.read_csv("car_ratings.csv")
 np.random.seed(42)
 class_profiles = {
-    "Economy": [(0.70, 0.25), (0.20, 0.20), (0.40, 0.30), (0.30, 0.30)],
-    "Sports": [(0.15, 0.20), (0.75, 0.20), (0.40, 0.25), (0.25, 0.25)],
-    "Luxury": [(0.35, 0.25), (0.50, 0.25), (0.70, 0.25), (0.70, 0.25)],
+    "Economy": {
+        "models": ["City Hatch", "Compact Sedan", "Eco Wagon"],
+        "ratings": [(0.70, 0.25), (0.20, 0.20), (0.40, 0.30), (0.30, 0.30), (0.40, 0.25), (0.55, 0.30), (0.05, 0.20)],
+    },
+    "Sports": {
+        "models": ["Roadster GT", "Track Coupé", "Turbo Spyder"],
+        "ratings": [(0.15, 0.20), (0.75, 0.20), (0.40, 0.25), (0.25, 0.25), (0.35, 0.25), (0.05, 0.20), (0.55, 0.25)],
+    },
+    "Luxury": {
+        "models": ["Grand Tourer", "Executive Sedan", "Premium SUV"],
+        "ratings": [(0.35, 0.25), (0.50, 0.25), (0.70, 0.25), (0.70, 0.25), (0.70, 0.25), (0.45, 0.40), (0.70, 0.25)],
+    },
 }
 rows = []
 for car_class, profile in class_profiles.items():
-    for i in range(3):
-        ratings = [low + np.random.rand() * span for low, span in profile]
-        rows.append({CAR: f"{car_class} {i + 1}", CAR_CLASS: car_class, **dict(zip(RATINGS, ratings, strict=True))})
+    for model in profile["models"]:
+        ratings = [low + np.random.rand() * span for low, span in profile["ratings"]]
+        rows.append({CAR: model, CAR_CLASS: car_class, **dict(zip(RATINGS, ratings, strict=True))})
 df = pd.DataFrame(rows)
 
 # Plot: reads only df and the constants above
@@ -65,19 +74,20 @@ group_colors = dict(zip(groups, IMPRINT_PALETTE, strict=False))
 
 n_cols = int(np.ceil(np.sqrt(len(df))))
 n_rows = int(np.ceil(len(df) / n_cols))
-row_step = 1.15
+col_step = 1.2
+row_step = 1.12
 
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
-fig.subplots_adjust(left=0.03, right=0.97, top=0.91, bottom=0.2)
+fig.subplots_adjust(left=0.08, right=0.92, top=0.92, bottom=0.2)
 
 for pos, (idx, face) in enumerate(features.iterrows()):
-    cx = pos % n_cols
+    cx = (pos % n_cols) * col_step
     cy = -(pos // n_cols) * row_step
     width = 0.45 + face["Face width"] * 0.35
     height = 0.6 + face["Face height"] * 0.3
     eye = 0.045 + face["Eye size"] * 0.05
-    eye_dx = width * (0.15 + face["Eye spacing"] * 0.14)
+    eye_dx = width * (0.15 + face["Eye spacing"] * 0.1)
     eye_y = cy + height * 0.14
     color = group_colors.get(df.at[idx, CAR_CLASS], IMPRINT_PALETTE[0])
 
@@ -108,44 +118,58 @@ for pos, (idx, face) in enumerate(features.iterrows()):
     mouth_y = cy - height * 0.25 - curve * (1 - (mouth_x / mouth_half) ** 2)
     ax.plot(cx + mouth_x, mouth_y, color=FEATURE_INK, linewidth=1.8, solid_capstyle="round")
 
-    ax.text(cx, cy - height / 2 - 0.06, df.at[idx, CAR], ha="center", va="top", fontsize=9, color=INK)
+    ax.text(cx, cy - height / 2 - 0.05, df.at[idx, CAR], ha="center", va="top", fontsize=9, color=INK)
 
-ax.set_xlim(-0.6, n_cols - 0.4)
-ax.set_ylim(-(n_rows - 1) * row_step - 0.7, 0.55)
+ax.set_xlim(-0.6, (n_cols - 1) * col_step + 0.6)
+ax.set_ylim(-(n_rows - 1) * row_step - 0.65, 0.5)
 ax.set_aspect("equal")
 ax.axis("off")
 
 # Style
 title = "Car Ratings · chernoff-basic · python · matplotlib · anyplot.ai"
-ax.set_title(title, fontsize=10, fontweight="bold", color=INK, pad=12)
+ax.set_title(title, fontsize=10, fontweight="bold", color=INK, pad=10)
 
-key_text = "\n".join(f"{feature}  ←  {rating}" for feature, rating in mapped)
-fig.text(
-    0.06,
-    0.05,
-    "Feature key\n" + key_text,
-    fontsize=7.5,
-    color=INK_SOFT,
-    va="bottom",
-    linespacing=1.5,
-    bbox={"boxstyle": "round,pad=0.6", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.6},
+# Feature key and class legend share one boxed treatment, side by side under the grid
+key_handles = [patches.Patch(visible=False) for _ in mapped]
+key_labels = [f"{feature}  ←  {rating}" for feature, rating in mapped]
+key = fig.legend(
+    key_handles,
+    key_labels,
+    title="Feature key",
+    loc="lower left",
+    bbox_to_anchor=(0.04, 0.025),
+    ncol=2,
+    handlelength=0,
+    handletextpad=0,
+    columnspacing=1.6,
+    fontsize=9,
+    title_fontsize=9,
+    alignment="left",
+    frameon=True,
 )
+legends = [key]
 
 if len(groups) > 0:
     handles = [patches.Patch(facecolor=group_colors[g], edgecolor=INK, linewidth=0.8, label=g) for g in groups]
-    leg = fig.legend(
-        handles=handles,
-        title=CAR_CLASS,
-        loc="lower right",
-        bbox_to_anchor=(0.94, 0.05),
-        fontsize=8,
-        title_fontsize=8,
-        frameon=True,
+    legends.append(
+        fig.legend(
+            handles=handles,
+            title=CAR_CLASS,
+            loc="lower right",
+            bbox_to_anchor=(0.96, 0.025),
+            fontsize=9,
+            title_fontsize=9,
+            alignment="left",
+            frameon=True,
+        )
     )
+
+for leg in legends:
     leg.get_frame().set_facecolor(ELEVATED_BG)
     leg.get_frame().set_edgecolor(INK_SOFT)
     plt.setp(leg.get_texts(), color=INK_SOFT)
     leg.get_title().set_color(INK)
+    leg.get_title().set_fontweight("bold")
 
 # Save
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
