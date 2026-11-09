@@ -1,13 +1,16 @@
-"""Set v4 of the review retest: the catalogue audit's pairs before their fixes.
+"""Set v4 of the review retest: the catalogue audit's implementations before their fixes.
 
-The label patterns are checked against what the stored reviews of those pairs
-wrote at the pinned commits: a stand-in's pattern matches the line in which
-the live review named the stand-in, and no pattern takes praise, a
-suggestion, or a remark about something else for a catch.
+The label patterns are checked against what the stored reviews of those
+implementations wrote at the pinned commits: a stand-in's pattern matches the
+line in which the live review named the stand-in, and no pattern takes praise,
+a suggestion, or a remark about something else for a catch. A pattern is
+matched against every weakness line of a run, not only the lines of its own
+criteria, so a word that also fits an unrelated defect line is a false catch.
 """
 
 from __future__ import annotations
 
+import functools
 import re
 from pathlib import Path
 from typing import Any
@@ -22,9 +25,9 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 MANIFEST = REPO_ROOT / "automation" / "retest" / "set-v4.yaml"
 PASS_1 = "586d4242432491519c5bd0f5dda62f35471b31a1"
 PASS_2 = "473023d4fa28ccfd1f6a8ce6f718720f5313a7e0"
-CANONICAL = (3200, 1800), (2400, 2400)
 
 
+@functools.cache
 def _manifest() -> dict[str, Any]:
     return yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
 
@@ -190,7 +193,32 @@ def test_control_probes_stay_quiet_on_praise():
     assert _matches("f-contour-3d-muix", "A2", "VQ-01 (dark): the axis ticks are dark-on-dark and unreadable")
 
 
-def test_no_render_is_off_canvas():
-    """The owner's decision: on-canvas renders only (validate --check-renders checks the PNGs)."""
-    assert rt.CANVASES == CANONICAL
-    assert not any(rt.forward_only(i) for i in _manifest()["items"])
+@pytest.mark.parametrize(
+    ("item_id", "label_id", "text"),
+    [
+        ("f-line-3d-trajectory-pygal", "D3", "VQ-05 (both): the landscape orientation leaves wide side margins"),
+        ("f-parliament-basic-pygal", "D1", "VQ-05 (both): the 16:9 aspect leaves balanced margins around the dome"),
+        ("f-acf-pacf-pygal", "D1", "CQ-01 (code): the pygal.Bar config dict repeats the Style per panel"),
+        (
+            "f-sequence-logo-basic-altair",
+            "D1",
+            "VQ-01 (both): the tick label font size is 10 px, below the 12 px minimum",
+        ),
+        ("f-surface-basic-highcharts", "D2", "VQ-01 (both): the title descenders render crisply at 66 px"),
+        (
+            "f-flowmap-origin-destination-ggplot2",
+            "D1",
+            "VQ-07 (dark): legend keys keep strong contrast; the title is grey",
+        ),
+        (
+            "f-map-tile-background-ggplot2",
+            "D1",
+            "SC-02 (both): polygon outlines of the land are accurate but the labels are small",
+        ),
+        ("f-windrose-basic-pygal", "D1", "SC-04 (both): the legend sector polygons are styled like the data"),
+        ("f-scatter-connected-temporal-pygal", "D1", "SC-04 (both): the legend labels touch their swatches"),
+        ("f-flowmap-origin-destination-ggplot2", "D3", "SC-04 (both): the legend labels overlap the legend frame"),
+    ],
+)
+def test_no_catch_on_an_unrelated_defect_line(item_id, label_id, text):
+    assert not _matches(item_id, label_id, text)

@@ -1,13 +1,15 @@
-# Review retest set v4 — the catalogue audit's pairs, before tonight's fixes.
+# Review retest set v4 — 28 implementations of the catalogue audit of
+# 2026-11-08, as they were before the fixes of 2026-11-08/09.
 #
-# The measurement set for the review-rule changes the catalogue audit of
-# 2026-11-08 proposes (P1: a stand-in for the plot type scores SC-01 = 0;
-# decision 1: a named SC-01/02/03 defect line blocks approval; P5: today's
-# review on the dark render; false alarms on controls). Sets v1 to v3 hold
-# none of these pairs. Owner decision of 2026-11-09: on-canvas renders only
-# (3200 x 1800 or 2400 x 2400, the only ones the canvas gate sends to a
-# review), taken from the audit's pre-fix snapshot, frozen before the fixes
-# of that night replaced the production renders.
+# The measurement set for the review-rule changes the audit proposes (P1: a
+# stand-in for the plot type scores SC-01 = 0; decision 1: a named SC-01/02/03
+# defect line blocks approval; P5: the current review on the dark render;
+# false alarms on controls). Sets v1 to v3 hold none of these
+# implementations. Every item is a fresh item: the audit's "pair"
+# (spec/language/library) is not a regen pair here. Owner decision of
+# 2026-11-09: on-canvas renders only (3200 x 1800 or 2400 x 2400, the only
+# ones the canvas gate sends to a review), taken from the audit's pre-fix
+# snapshot, frozen before the fixes replaced the production renders.
 #
 # What each item pins (the same contract as set v1, see set-v1.yaml):
 #   - implementation and metadata: `plots/<spec>/…` at main when the audit's
@@ -15,10 +17,10 @@
 #     when main was 586d42424; pass 2 at 20:31:20Z, when main was 473023d4f.
 #     The two commits hold the same plots/ tree (`git diff 586d42424
 #     473023d4f -- plots/` is empty), and no fix touched plots/ before
-#     98abc0f82 (20:41Z). Six items were fixed and merged later that night
-#     (acf-pacf, line-3d-trajectory, line-timeseries and parliament-basic on
-#     pygal, scatter-connected-temporal on pygal, flowmap-origin-destination
-#     on ggplot2): their pin is the pre-fix commit and their renders come from
+#     98abc0f82 (20:41Z). Six items were fixed and merged between
+#     2026-11-08T22:31Z and 2026-11-09T00:34Z (acf-pacf, line-3d-trajectory,
+#     line-timeseries, parliament-basic and scatter-connected-temporal on
+#     pygal, flowmap-origin-destination on ggplot2): their pin is the pre-fix commit and their renders come from
 #     the snapshot, so freeze's "changed on main after the pin" refusal, which
 #     guards `render: production` only, does not apply to them;
 #   - spec text: `plots/<spec>/specification.md` at 586d42424, the text the
@@ -103,20 +105,22 @@ snapshots:
 
 patterns:
   # The dark render loses a legend's keys: near-black keys on a dark legend box.
-  dark-legend-keys: &dark-legend-keys '(?s)^(?!\s*Suggestion:)(?=.*\bdark\b).*((legend|keys?|swatch\w*|size (guide|legend)|width (guide|legend)|reference circles?)\b.{0,100}(invisible|near-?black|\bblack\b|dark[- ]on[- ]dark|barely|faint|low[- ]contrast|contrast|hard to (see|read)|disappear\w*|vanish\w*|cannot be (read|seen)|blend\w*)|(invisible|near-?black|dark[- ]on[- ]dark|barely visible|low[- ]contrast)\b.{0,100}(legend|keys?|swatch\w*))'
+  dark-legend-keys: &dark-legend-keys '(?s)^(?!\s*Suggestion:)(?=.*\bdark\b).*((legend|keys?|swatch\w*|size (guide|legend)|width (guide|legend)|reference circles?)\b.{0,100}(invisible|near-?black|\bblack\b|dark[- ]on[- ]dark|barely|faint|(low|poor|weak|insufficient)[- ]contrast|\b1\.\d+ ?: ?1\b|hard to (see|read)|disappear\w*|vanish\w*|cannot be (read|seen)|blend\w*)|(invisible|near-?black|dark[- ]on[- ]dark|barely visible|(low|poor|weak|insufficient)[- ]contrast)\b.{0,100}(legend|keys?|swatch\w*))'
   # Text chrome (axis titles, ticks, legend text) dark on the dark page.
-  dark-text: &dark-text '(?s)^(?!\s*Suggestion:)(?=.*\bdark\b).*(\b(axis|axes|tick|legend|labels?|titles?)\w*.{0,80}(dark[- ]on[- ]dark|\bblack\b|contrast|illegib\w*|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear\w*|vanish\w*|blend\w*)|(dark[- ]on[- ]dark|\bblack\b|contrast|illegib\w*|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear\w*|vanish\w*|blend\w*).{0,80}\b(axis|axes|tick|legend|labels?|titles?))'
+  dark-text: &dark-text '(?s)^(?!\s*Suggestion:)(?=.*\bdark\b).*(\b(axis|axes|tick|legend|labels?|titles?)\w*.{0,80}(dark[- ]on[- ]dark|\bblack\b|(low|poor|weak|insufficient)[- ]contrast|\b1\.\d+ ?: ?1\b|illegib\w*|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear\w*|vanish\w*|blend\w*)|(dark[- ]on[- ]dark|\bblack\b|(low|poor|weak|insufficient)[- ]contrast|illegib\w*|hard to (read|see)|unreadable|invisible|barely (visible|legible|readable)|faint|disappear\w*|vanish\w*|blend\w*).{0,80}\b(axis|axes|tick|legend|labels?|titles?))'
   # A choropleth drawn as a tile grid or as markers, with no real outlines.
   no-real-regions: &no-real-regions '(?s)^(?!\s*Suggestion:).*(tile[- ]?(grid|map|mosaic|cartogram|layout)|grid of (equal |uniform |identical )?(squares|tiles|rectangles|cells)|(equal|uniform|identical|fixed-size) (squares|tiles|rectangles|square markers)|square (markers|tiles)|mosaic|schematic|(no|without|missing|lacks?|not) (true |real |actual |any |literal )?(geographic |region |state |country )?(outlines?|boundar\w*|polygons?|projection)|not a (true |real |literal |genuine )?choropleth|(no|without) (filled )?(region )?polygons)'
   # A tile-background map with no tiles: hand-made land shapes or simulated tiles.
-  no-tiles: &no-tiles '(?s)^(?!\s*Suggestion:).*((no|without|missing|lacks?|instead of|rather than|replac\w*|in place of|not) .{0,30}(real |actual |raster |map |web )?tiles?\b|simulat\w* tiles?|fake tiles?|tile (provider|imagery|background|layer).{0,60}(missing|absent|infeasible|replaced|simulat\w*|approximat\w*)|(tile|background)\w*\b.{0,60}(geom_rect|simulat\w*|rectangles|boxes)|(crude|hand-?drawn|hand-?made|approximate|polygon|schematic|invented|stylized|rough|simplified) (continent|coast|land|outline|polygon|basemap|map|shape)\w*|attribution.{0,60}(missing|absent|\bno\b|tiny|small|unreadable|illegible|infeasible))'
+  no-tiles: &no-tiles '(?s)^(?!\s*Suggestion:).*((no|without|missing|lacks?|instead of|rather than|replac\w*|in place of|not) .{0,30}(real |actual |raster |map |web )?tiles?\b|simulat\w* tiles?|fake tiles?|tile (provider|imagery|background|layer).{0,60}(missing|absent|infeasible|replaced|simulat\w*|approximat\w*)|(tile|background)\w*\b.{0,60}(geom_rect|simulat\w*|rectangles|boxes)|(crude|hand-?drawn|hand-?made|approximate|schematic|invented|stylized|rough|simplified) (continent|coast|land|outline|polygon|basemap|map|shape)\w*|attribution.{0,60}(missing|absent|\bno\b|tiny|small|unreadable|illegible|infeasible))'
   # A cartogram drawn as a proportional-symbol map: circles on raw centroids,
   # no displacement. The spec accepts non-overlapping Dorling circles, so
   # "Dorling" alone names nothing, and circle overlap is a VQ-02 symptom that
   # names the stand-in only where overlap is the defect (the ggplot2 item).
   bubble-map: &bubble-map '(?s)^(?!\s*Suggestion:).*(proportional[- ]symbol|bubble map|(circles?|bubbles?|dots?|symbols?) (sit |placed |drawn )?(exactly )?(at|on) (the )?(raw|exact|hard-?coded|true|actual|original|fixed) (state )?centroids?|(no|without|missing|lacks?) (any )?(collision|displacement|repulsion|relaxation|layout step)|undistorted (geography|map|basemap|shapes?)|not (a |the )?(true |real |proper |canonical |genuine )?(dorling|cartogram))'
   # A sequence logo drawn as stacked bars with text, not stretched glyphs.
-  bars-not-glyphs: &bars-not-glyphs '(?s)^(?!\s*Suggestion:).*(stretch\w*|(plain|centred|centered|proportional\w*|sized|scaled) (text|letters?|labels?|glyphs?)|font[- ]?size|(rectangles?|blocks?|bars?|rects?|segments?)\b.{0,60}\b(letters?|text|labels?)\b|stacked bar|not (true |real )?glyphs?|glyphs? (do not|don.t|doesn.t|not|never) (fill|stretch|occupy))'
+  # A weakness line about anything else (tick font sizes, bar colours) must not
+  # count, so every alternative names the letters or the bars that carry them.
+  bars-not-glyphs: &bars-not-glyphs '(?s)^(?!\s*Suggestion:).*((letters?|glyphs?)\b.{0,80}(not (stretch\w*|scaled to fill)|(do not|don.t|doesn.t|never|cannot|fail to) (\w+ )?(stretch|fill|occupy)|font[- ]?size|plain text|centred|centered|clamp\w*)|(stretch\w*|font[- ]?size|plain text)\b.{0,60}\b(letters?|glyphs?)|(plain|centred|centered|proportional\w*|font-?sized|clamped) (text|letters?|glyphs?)|(rectangles?|blocks?|rects?|mark_rect|geom_rect)\b.{0,60}\b(letters?|text)\b|stacked bar|not (true |real )?glyphs?)'
   # 3D in a 2D library: a claim that the hand projection is not the plot type.
   # A false alarm on a control: these controls project their 3D by hand.
   not-real-3d: &not-real-3d '(?s)^(?!\s*Suggestion:).*(not (a |an )?(true|real|genuine|proper|native) 3-?d|(no|lacks?|without) (a )?(true|real|genuine|native) 3-?d|rather than (a )?(true|real|genuine|native) 3-?d|pseudo[- ]?3-?d|fake 3-?d|faux 3-?d|simulated 3-?d|(2-?d|two-dimensional) (stand-?in|substitute|fallback|approximation)|(stand-?in|substitute) for (a |the )?(true |real )?3-?d|wrong (chart|plot) type)'
@@ -135,8 +139,8 @@ items:
     new: {commit: *run1, render: {snapshot: run1/surface-basic}}
     note: "P1 stand-in. #11824, live 81 (SC-01 2/5). A flat top-down 34 x 34 grid of bordered square tiles in 7 colour bands: no 3D surface, no z axis, no perspective (F42). The top tile row cuts the subtitle's descenders (F118). P1: SC-01 = 0 expected"
     defects:
-      - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*(not (a |an )?(true |real |genuine |proper )?3-?d|(no|without|missing|lacks?) (a |an )?(true |real )?(3-?d|z[- ]?axis|depth|perspective|oblique|surface)|flat\w*.{0,40}(2-?d|heat ?map|top[- ]down|grid|tiles?|view|chart)|top[- ]down|pseudo[- ]?(3-?d|heat ?map)|tiled|(2-?d|two-dimensional) (stand-?in|substitute|fallback|approximation|heat ?map))', note: 'a flat top-down tile heatmap, not a 3D surface (F42)'}
-      - {id: D2, criteria: [VQ-02, VQ-05], match: '(?s)^(?!\s*Suggestion:).*(subtitle.{0,100}(overlap\w*|cut|clip\w*|collid\w*|cover\w*|touch\w*|cross\w*|descender)|(overlap\w*|cut|clip\w*|collid\w*|cover\w*|touch\w*|cross\w*)\b.{0,100}subtitle|descender)', note: 'the top tile row cuts the subtitle descenders (F118)'}
+      - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*(not (a |an )?(true |real |genuine |proper )?3-?d|(no|without|missing|lacks?) (a |an )?(true |real )?(3-?d|z[- ]?axis|depth|perspective|oblique view|surface)|flat\w* (2-?d|top[- ]down|heat ?map|tiles?|grid of)|top[- ]down (2-?d |flat )?(view|heat ?map|grid|tiles?)|pseudo[- ]?(3-?d|heat ?map)|tiled[- ]scatter|(2-?d|two-dimensional) (stand-?in|substitute|fallback|approximation|heat ?map))', note: 'a flat top-down tile heatmap, not a 3D surface (F42)'}
+      - {id: D2, criteria: [VQ-02, VQ-05], match: '(?s)^(?!\s*Suggestion:).*(subtitle.{0,100}(overlap\w*|\bcut\b|clip\w*|collid\w*|cover\w*|touch\w*|cross\w*|descenders?)|(overlap\w*|\bcut\b|clip\w*|collid\w*|cover\w*|touch\w*|cross\w*)\b.{0,100}subtitle|(\bcut\b|clip\w*|cover\w*|overlap\w*|cross\w*)\b.{0,40}descenders?)', note: 'the top tile row cuts the subtitle descenders (F118)'}
     permitted: []
 
   - id: f-scatter-3d-echarts
@@ -147,7 +151,7 @@ items:
     new: {commit: *run2, render: {snapshot: run2/scatter-3d}}
     note: "P1 stand-in. #11812, live 85 (SC-01 4/5). The isometric projection is upside down and has no frame: three bare axis guides fan up from one origin, each cluster near a tip, so it reads as a ternary or star-coordinates plot; no box, pane grid or depth cue (G42). P1: SC-01 = 0 expected"
     defects:
-      - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*(ternary|star[- ]?(coordinates?|plot|chart)|radar|upside[- ]down|(no|without|missing|lacks?) (a |any )?(3-?d )?(frame|box|floor|pane|back ?plane|wall|depth cue|grid(ded)? (box|floor|plane))|not (a |an )?(true |real |convincing )?3-?d|(fan|spoke|radiat)\w*.{0,60}(origin|point|centre|center)|reads? (as|like) (a )?(ternary|radar|star|2-?d|flat))', note: 'no 3D frame or depth cue: the projection reads as a ternary or star plot (G42)'}
+      - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*(ternary|star[- ]?(coordinates?|plot|chart)|radar|upside[- ]down|(no|without|missing|lacks?) (a |any )?(3-?d )?(frame|box|floor|pane|back ?plane|wall|depth cue|grid(ded)? (box|floor|plane))|not (a |an )?(true |real |convincing )?3-?d|(fan|spoke|radiat)\w*.{0,60}(origin|centre|center)|reads? (as|like) (a )?(ternary|radar|star|2-?d|flat))', note: 'no 3D frame or depth cue: the projection reads as a ternary or star plot (G42)'}
     permitted: []
 
   # ---- P1: the spec's defining mark replaced ----------------------------------
@@ -170,8 +174,8 @@ items:
     new: {commit: *run2, render: {snapshot: run2/windrose-basic}}
     note: "P1 stand-in and P5 dark. #10150, live 87 (SC-01 3/5). A stacked radar: four nested polygons joined by straight chords between eight direction points, not one wedge per sector (G136). In the dark render the dotted 8/16/24/32 % frequency rings are near-black on #1A1A17, about 1.2:1 (G137). P1: SC-01 = 0 expected"
     defects:
-      - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*(radar|star[- ]?(chart|shape|plot)|polygons?\b|(no|without|missing|lacks?|rather than|instead of|not) (discrete |pie-like |separate |true )?(wedges?|petals?|sector bars?|spoke bars?)|interpolat\w*.{0,60}(straight|line|polygon|chord)|straight[- ]line|chords?)', note: 'a stacked radar of polygons, not wedges per sector (G136)'}
-      - {id: D2, criteria: [VQ-03, VQ-07, SC-02, DE-02], match: '(?s)^(?!\s*Suggestion:)(?=.*\bdark\b).*((rings?|circles?|guides?|grid\w*|frequency (rings?|circles?|lines?))\b.{0,100}(invisible|vanish\w*|barely|hard to see|disappear\w*|faint|near-?black|\bblack\b|dark[- ]on[- ]dark|low[- ]contrast|contrast|lost)|(invisible|vanish\w*|barely visible|near-?black|dark[- ]on[- ]dark|low[- ]contrast)\b.{0,100}(rings?|circles?|guides?|grid))', note: 'the frequency rings are near-black in the dark render (G137)'}
+      - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*(radar|star[- ]?(chart|shape|plot)|(stacked|nested|filled|closed|interpolated) polygons?|polygons? (instead of|rather than)|(no|without|missing|lacks?|rather than|instead of|not) (discrete |pie-like |separate |true )?(wedges?|petals?|sector bars?|spoke bars?)|interpolat\w*.{0,60}(straight|polygon|chord)|straight (chords?|lines?) between)', note: 'a stacked radar of polygons, not wedges per sector (G136)'}
+      - {id: D2, criteria: [VQ-03, VQ-07, SC-02, DE-02], match: '(?s)^(?!\s*Suggestion:)(?=.*\bdark\b).*((rings?|circles?|guides?|grid\w*|frequency (rings?|circles?|lines?))\b.{0,100}(invisible|vanish\w*|barely|hard to see|disappear\w*|faint|near-?black|\bblack\b|dark[- ]on[- ]dark|(low|poor|weak|insufficient)[- ]contrast|\b1\.\d+ ?: ?1\b|lost)|(invisible|vanish\w*|barely visible|near-?black|dark[- ]on[- ]dark|(low|poor|weak|insufficient)[- ]contrast)\b.{0,100}(rings?|circles?|guides?|grid))', note: 'the frequency rings are near-black in the dark render (G137)'}
     permitted: []
 
   - id: f-errorbar-basic-plotnine
@@ -219,7 +223,7 @@ items:
     defects:
       - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*((concentric|closed|separate|discrete|nested)\s+(year[- ]?)?(rings?|circles?|loops?)|rings?\b.{0,40}(rather than|instead of|not)\b.{0,40}spiral|not (a |one )?(single |true |real )?continuous\b.{0,30}spiral|(radius|radial) (step|jump)\w*|steps? (between|at) (each |every )?(year|cycle|jan)|resets? (every|each) (year|cycle))', note: 'concentric year rings, not one continuous spiral (F114)'}
       - {id: D2, criteria: [SC-02, VQ-03], match: '(?s)^(?!\s*Suggestion:).*((rings?|arcs?|lines?|traces?|spiral|path|curves?)\b.{0,80}(gaps?\b|breaks?\b|broken|dashes\b|discontinu\w*|interrupt\w*)|(gaps?\b|breaks?\b|broken|discontinu\w*|interrupt\w*).{0,80}\b(rings?|arcs?|lines?|traces?|spiral|path|curves?)|segments? (do not|don.t|never) (join|connect|meet)|not (one |a )?continuous (line|trace|path))', note: 'every ring breaks at each colour change (F115)'}
-      - {id: D3, criteria: [SC-03, VQ-02], match: '(?s)^(?!\s*Suggestion:).*(year labels?|labels?).{0,100}(drift\w*|off (its|their) (own )?rings?|wrong rings?|misplaced|misalign\w*|(sit|sits|land|lands) (on|near|closer to) (the )?(wrong|previous|inner|next)|nearer|closer to)', note: 'the year labels drift onto the wrong rings (F116)'}
+      - {id: D3, criteria: [SC-03, VQ-02], match: '(?s)^(?!\s*Suggestion:).*((year|ring|cycle)[- ]labels?\b.{0,100}(drift\w*|off (its|their) (own )?rings?|wrong rings?|misplaced|misalign\w*|(sit|sits|land|lands) (on|near|closer to) (the )?(wrong|previous|inner|next|other)|nearer (to )?(the )?(wrong|previous|inner|other)|closer to (the )?(wrong|previous|inner|other))|\b20(19|2[0-3])\b.{0,60}(wrong|previous|inner|other|neighbou?ring) ring)', note: 'the year labels drift onto the wrong rings (F116)'}
       - {id: D4, criteria: [VQ-07, SC-03, DQ-03], match: '(?s)^(?!\s*Suggestion:).*((cold|cool|low)\w*.{0,60}(green|brand)|(hot|warm|high)\w*.{0,60}blue|blue.{0,60}(hot|warm|summer|jul)|invert\w*.{0,40}(colou?r|ramp|scale|map|semantics)|(colou?r|ramp|scale|map)\w*.{0,40}(invert\w*|reversed|backwards|counter-?intuitive))', note: 'the temperature ramp is inverted: cold green, hot blue (F117)'}
     permitted: []
 
@@ -232,7 +236,7 @@ items:
     note: "P1 stand-in. #10916, live 91 (SC-01 4/5, SC-02 3/4). The density layer is a 28 x 16 lattice of separate circles with gaps, a bubble mosaic, not a continuous heatmap (G26). The only geography is a six-point schematic coast strip far from every hot spot; the grid runs over bay water drawn as land (G90). P1: SC-01 = 0 expected"
     defects:
       - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*(bubble[- ]?mosaic|grid of (separate |discrete )?(circles|bubbles|dots)|(separate|discrete|individual) (circles|bubbles|dots|markers)|(circles|bubbles|dots)\b.{0,60}(gaps?|lattice|grid)|lattice|not (a |an )?(smooth|continuous|true|real)\b.{0,40}(heat ?map|surface|density)|(no|without|lacks?) (smooth|continuous) (density|surface|colou?r))', note: 'a bubble mosaic, not a continuous density surface (G26)'}
-      - {id: D2, criteria: [SC-02], match: '(?s)^(?!\s*Suggestion:).*((coast\w*|basemap|geograph\w*|shoreline|map)\b.{0,80}(rough|minimal|schematic|sketch\w*|crude|sparse|thin|strip|far from|away from|missing|absent|does not locate)|(no|without|missing|lacks?) (any )?(streets?|shoreline|bay|landmarks?|basemap|geographic (context|reference)))', note: 'a schematic coast strip far from every hot spot locates nothing (G90)'}
+      - {id: D2, criteria: [SC-02], match: '(?s)^(?!\s*Suggestion:).*((coast\w*|basemap|geograph\w*|shoreline)\b.{0,80}(rough|minimal|schematic|sketch\w*|crude|sparse|strip|far from|away from|missing|absent|does not locate)|(no|without|missing|lacks?) (any )?(streets?|shoreline|bay|landmarks?|basemap|geographic (context|reference)))', note: 'a schematic coast strip far from every hot spot locates nothing (G90)'}
     permitted: []
 
   - id: f-acf-pacf-pygal
@@ -243,7 +247,7 @@ items:
     new: {commit: *run1, render: {snapshot: run1/acf-pacf}}
     note: "P1 stand-in. #8569, live 85 (SC-01 4/5). Wide filled rounded bars, not the thin stems the spec asks for twice (F47). The two panels do not share a lag axis: PACF lag k sits under ACF lag k-1 (F46). Fixed on main by #12837; pinned before the fix. P1: SC-01 = 0 expected"
     defects:
-      - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*((filled|wide|broad|rounded|thick) bars?|bars? (instead of|rather than|not) (thin |vertical )?(stems?|lines?)|(no|without|missing|lacks?|not) (thin |vertical )?stems?|pygal\.bar)', note: 'filled bars, not thin stems (F47)'}
+      - {id: D1, criteria: [SC-01, SC-02], match: '(?s)^(?!\s*Suggestion:).*((filled|wide|broad|rounded|thick) bars?|bars? (instead of|rather than|not) (thin |vertical )?(stems?|lines?)|(no|without|missing|lacks?|not) (thin |vertical )?stems?|pygal\.bar\b.{0,60}(instead of|rather than|not (thin )?stems?|filled))', note: 'filled bars, not thin stems (F47)'}
       - {id: D2, criteria: [SC-03, SC-02], match: '(?s)^(?!\s*Suggestion:).*((lag|x)[- ]?(axis|axes|ticks?|positions?)\b.{0,80}(misalign\w*|offset|shift\w*|do not (line|align)|don.t (line|align)|not (shared|aligned)|separate|differ\w*)|(misalign\w*|offset by one|off by one|one slot)\b.{0,80}\b(lags?|panels?|bars?)|(two|separate|own) (tick rows?|lag axes|x[- ]axes))', note: 'the panels do not share a lag axis (F46)'}
     permitted: []
 
@@ -279,7 +283,7 @@ items:
     note: "P1 stand-in. #11183, live 85 (SC-01 3/5, 'accepted library limitation'). A mosaic of equal geom_tile squares subtitled 'Schematic tile-map … not to scale' (G13). Every tile has the same seam, so no border shows where one country ends: Bolivia and Argentina merge into one green block (G74). P1: SC-01 = 0 expected"
     defects:
       - {id: D1, criteria: [SC-01, SC-02], match: *no-real-regions, note: 'a schematic tile mosaic, no real outlines (G13)'}
-      - {id: D2, criteria: [SC-02, VQ-03], match: '(?s)^(?!\s*Suggestion:).*((boundar\w*|borders?|seams?|gaps?)\b.{0,80}(invisible|indistinguish\w*|same|uniform|identical|cannot|can.t|merge|run together|not (visible|distinguish\w*)|ambiguous|every tile)|(merge|run together|indistinguishable|one (uniform |green )?block)\b.{0,80}(countr\w*|regions?|tiles?|bolivia|argentina|peru|chile))', note: 'no visible border between countries: same-value neighbours merge (G74)'}
+      - {id: D2, criteria: [SC-02, VQ-03], match: '(?s)^(?!\s*Suggestion:).*((boundar\w*|borders?|seams?)\b.{0,80}(invisible|indistinguish\w*|cannot|can.t|merge|run together|not (visible|distinguish\w*)|ambiguous|every tile|looks? (like|the same as)|identical to)|(merge|run together|indistinguishable|one (uniform |green )?block)\b.{0,80}(countr\w*|regions?|tiles?|bolivia|argentina|peru|chile))', note: 'no visible border between countries: same-value neighbours merge (G74)'}
     permitted: []
 
   - id: f-map-tile-background-ggplot2
@@ -326,7 +330,7 @@ items:
     note: "P1 stand-in and P5 dark. #8460, live 85 (SC-01 4/5, called Dorling). Small circles exactly on raw state centroids over the full undistorted albersUsa basemap, no displacement: a proportional-symbol map (F09). The size legend box covers the VA and NC circles (F57). White population labels spill off the circles onto the pale basemap, about 1.19:1 in light (F58). In the dark render the size-legend swatches are #070706 on #242420, 1.29:1 (F59). P1: SC-01 = 0 expected"
     defects:
       - {id: D1, criteria: [SC-01, SC-02], match: *bubble-map, note: 'circles on raw centroids over an undistorted map: a proportional-symbol map (F09)'}
-      - {id: D2, criteria: [VQ-02], match: '(?s)^(?!\s*Suggestion:).*(legend\b.{0,100}(overlap\w*|cover\w*|hid\w*|obscur\w*|sits? (on|over)|cuts?)|(overlap\w*|cover\w*|hid\w*|obscur\w*)\b.{0,80}\b(VA|NC|virginia|carolina|east coast))', note: 'the size legend covers the VA and NC circles (F57)'}
+      - {id: D2, criteria: [VQ-02], match: '(?s)^(?!\s*Suggestion:).*(legend\b.{0,100}(overlap\w*|cover\w*|hid\w*|obscur\w*|sits? (on|over)|cuts?)|(overlap\w*|cover\w*|hid\w*|obscur\w*)\b.{0,80}\b(VA|NC|virginia|carolina|east coast)\b)', note: 'the size legend covers the VA and NC circles (F57)'}
       - {id: D3, criteria: [VQ-01], match: '(?s)^(?!\s*Suggestion:).*((white|population|value) (italic )?labels?\b.{0,100}(spill\w*|off the circles?|on the (pale |light )?basemap|contrast|invisible|illegib\w*|hard to (read|see)|barely)|(13\.0M|19\.6M))', note: 'white labels off their circles on the pale basemap in light (F58)'}
       - {id: D4, criteria: [VQ-03, VQ-07, SC-04], match: *dark-legend-keys, note: 'size-legend swatches near-black on the dark legend box (F59)'}
     permitted: []
@@ -342,7 +346,7 @@ items:
     defects:
       - {id: D1, criteria: [VQ-03, VQ-07], match: '(?s)^(?!\s*Suggestion:).*((lines?|strokes?|trajectory|path|attractor|curves?)\b.{0,100}(too thin|faint|vanish\w*|ghost\w*|barely (visible|readable|legible|there)|hard to (see|read|follow)|low[- ]contrast|(poor|weak|insufficient) contrast|nearly invisible|washed[- ]out|disappear\w*)|(too thin|faint|ghost\w*|barely visible|low[- ]contrast|nearly invisible|washed[- ]out)\b.{0,80}(lines?|strokes?|trajectory|path|attractor|curves?))', note: 'thin translucent strokes nearly vanish, above all in the dark render (F90)'}
       - {id: D2, criteria: [SC-02, VQ-03], match: '(?s)^(?!\s*Suggestion:).*((lines?|trajectory|path|curves?|traces?)\b.{0,80}(gaps?\b|breaks?\b|broken|discontinu\w*|interrupt\w*)|(gaps?\b|breaks?\b|broken|discontinu\w*|interrupt\w*).{0,80}\b(lines?|trajectory|path|curves?|traces?)|loose (strand )?ends?|segments? (do not|don.t|never) (join|connect|meet)|not (one |a )?(single )?continuous (line|trace|path|trajectory))', note: '29 gaps where the 30 series share no endpoint (F89)'}
-      - {id: D3, criteria: [SC-02, VQ-06], match: '(?s)^(?!\s*Suggestion:).*((no|without|missing|lacks?)\b.{0,40}(3-?d |x, y,? (and|or) z |xyz |z[- ])?ax[ie]s|(no|without|missing|lacks?)\b.{0,30}(colou?r ?bar|colou?r key|legend|key|gradient key)|(axes|axis)\b.{0,40}(not drawn|unlabell?ed|missing)|orient)', note: 'no 3D axes and no key for the time gradient (F91)'}
+      - {id: D3, criteria: [SC-02, SC-03, SC-04, VQ-06], match: '(?s)^(?!\s*Suggestion:).*((no|without|missing|lacks?)\b.{0,40}(3-?d |x, y,? (and|or) z |xyz |z[- ])?ax[ie]s|(no|without|missing|lacks?)\b.{0,30}(colou?r ?bar|colou?r key|legend|key|gradient key)|(axes|axis)\b.{0,40}(not drawn|unlabell?ed|missing)|(cannot|can.t|unable to|hard to|nothing to) orient)', note: 'no 3D axes and no key for the time gradient (F91)'}
     permitted: []
 
   - id: f-flowmap-origin-destination-ggplot2
@@ -355,7 +359,7 @@ items:
     defects:
       - {id: D1, criteria: [VQ-03, VQ-07, SC-04], match: *dark-legend-keys, note: 'the flow-width legend keys are near-black on the dark legend box (G84)'}
       - {id: D2, criteria: [VQ-05, SC-04], match: '(?s)^(?!\s*Suggestion:).*(title\b.{0,100}(clip\w*|cut|crop\w*|truncat\w*|runs? (off|past|beyond)|off[- ]canvas|right edge|canvas edge)|(clip\w*|cut off|crop\w*|truncat\w*)\b.{0,60}title)', note: 'the title runs off the right canvas edge (G83)'}
-      - {id: D3, criteria: [VQ-02], match: '(?s)^(?!\s*Suggestion:).*((LHR|AMS|CDG|FRA|europe\w*|airport|city|labels?)\b.{0,100}(overlap\w*|collid\w*|collision|crowd\w*|clash\w*|touch\w*|on (the |an )?arcs?|sits? on)|(overlap\w*|collid\w*|collision|crowd\w*)\b.{0,100}(LHR|AMS|CDG|FRA|europe\w*|labels?))', note: 'European airport labels collide and sit on arcs (G85)'}
+      - {id: D3, criteria: [VQ-02], match: '(?s)^(?!\s*Suggestion:).*((\b(LHR|AMS|CDG|FRA)\b|europe\w*|airport|\bcity)( labels?)?\b.{0,100}(overlap\w*|collid\w*|collision|crowd\w*|clash\w*|touch\w*|on (the |an )?arcs?|sits? on)|(overlap\w*|collid\w*|collision|crowd\w*)\b.{0,100}(\b(LHR|AMS|CDG|FRA)\b|europe\w*|airport))', note: 'European airport labels collide and sit on arcs (G85)'}
     permitted: []
 
   # ---- Post-rework misses: the review named the defect, the ladder merged it -
@@ -378,7 +382,7 @@ items:
     new: {commit: *run2, render: {snapshot: run2/parliament-basic}}
     note: "Post-rework miss. #12053, a regen merged at 79 whose review named it as an SC-02 and VQ-05 defect line. The seat arcs form a flattened ellipse: outer half-width about 1381 px against a height of about 1197 px, about 15 % wider than tall, not the half circle the spec asks for (G112). Low, in no label: the blocks run right to left (G191); a neutral party in the semantic red (G192); 12 px seats (G193). Fixed on main by #12876; pinned before the fix"
     defects:
-      - {id: D1, criteria: [SC-02, VQ-05, SC-01], match: '(?s)^(?!\s*Suggestion:).*(ellip\w*|flatten\w*|squash\w*|squish\w*|distort\w*|wider than (it is )?tall|aspect|not (a |an )?(true |proper |round |circular )?(semi-?circle|half[- ]circle|hemicycle|arc)|x_?range)', note: 'the seat arcs form a flattened ellipse, not a half circle (G112)'}
+      - {id: D1, criteria: [SC-02, VQ-05, SC-01], match: '(?s)^(?!\s*Suggestion:).*(ellip\w*|\boval\b|(arcs?|dome|hemicycle|chamber|semi-?circle|half[- ]circle)\b.{0,60}(flatten\w*|squash\w*|squish\w*|stretch\w*|distort\w*|wider than)|wider than (it is )?tall|not (a |an )?(true |proper |round |circular )?(semi-?circle|half[- ]circle|hemicycle)|aspect( ratio)?\b.{0,40}(distort\w*|skew\w*|unequal|wrong|stretch\w*)|unequal (scal\w*|px|pixels?)|x_?range\b.{0,40}\brange\b)', note: 'the seat arcs form a flattened ellipse, not a half circle (G112)'}
     permitted: []
 
   - id: f-scatter-connected-temporal-pygal
@@ -389,7 +393,7 @@ items:
     new: {commit: *run2, render: {snapshot: run2/scatter-connected-temporal}}
     note: "Post-rework miss. #12067, a regen merged at 78 whose review named both. The year labels sit on the path: '1990' covers the 1991 and 1992 markers, '2020' the 2021 marker, '▶' sits on the 1981 marker (G118). The end label '● 2023' draws a solid dot below and right of the real 2023 marker, which reads as an observation that does not exist (G119). Low, in no label: the start marker in the semantic red (G202); one oversized y tick (G203). Fixed on main by #12878; pinned before the fix"
     defects:
-      - {id: D1, criteria: [VQ-02, SC-02], match: '(?s)^(?!\s*Suggestion:).*((year |time |date )?labels?\b.{0,100}(overlap\w*|cover\w*|on (the )?(path|line|markers?|segments?)|collid\w*|touch\w*|sit\w* on|obscur\w*)|(overlap\w*|cover\w*|collid\w*|obscur\w*)\b.{0,80}(year |time )?labels?|\b(1990|2010|2020)\b.{0,60}(marker|path|line|segment))', note: 'year labels sit on the path and the markers (G118)'}
+      - {id: D1, criteria: [VQ-02, SC-02], match: '(?s)^(?!\s*Suggestion:).*((year|time|date|decade|key[- ]year)[- ]labels?\b.{0,100}(overlap\w*|cover\w*|on (the )?(path|line|markers?|segments?)|collid\w*|touch\w*|sit\w* on|obscur\w*)|(overlap\w*|cover\w*|collid\w*|obscur\w*)\b.{0,80}(year|time|date|decade)[- ]labels?|\b(1990|2010|2020)\b.{0,60}(marker|path|line|segment))', note: 'year labels sit on the path and the markers (G118)'}
       - {id: D2, criteria: [SC-03, DQ-03], match: '(?s)^(?!\s*Suggestion:).*((●|\bbullet\b|\bdot\b|filled circle|solid circle)\W.{0,100}(2023|end label|end marker|extra|reads as|looks like)|(extra|phantom|spurious|false|fake|additional|second|duplicate|non-?existent) (observation|point|marker|dot|data ?point|end ?point)|\b2023\b.{0,80}(\bdot\b|\bbullet\b|●|filled circle|solid circle))', note: 'the end label draws a dot that reads as a non-existent observation (G119)'}
     permitted: []
 

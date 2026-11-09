@@ -31,7 +31,7 @@ on:
         default: ''
         type: string
       set:
-        description: "Frozen set: automation/retest/set-<set>.yaml and its lock (v1 = 27 fresh items and 10 pairs, core 15 and 7; v2 = the 12 pairs of verification round 1; v3 = the 15 first generations of line-tanabe-sugano; v4 = 28 pairs of the 2026-11-08 catalogue audit before its fixes, core 22)"
+        description: "Frozen set: automation/retest/set-<set>.yaml and its lock (v1 = 27 fresh items and 10 pairs, core 15 and 7; v2 = the 12 pairs of verification round 1; v3 = the 15 first generations of line-tanabe-sugano; v4 = 28 implementations of the 2026-11-08 catalogue audit before its fixes, core 22)"
         required: false
         default: 'v1'
         type: choice
