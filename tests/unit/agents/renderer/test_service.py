@@ -4,7 +4,7 @@ import asyncio
 import base64
 import json
 import time
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Callable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -70,6 +70,22 @@ async def client(overrides: None) -> AsyncIterator[httpx.AsyncClient]:
 
 def auth(token: str = GOOD) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+async def until(condition: Callable[[], bool], timeout_s: float = 5.0) -> None:
+    """Wait until the requests under test reached `condition`: a fixed sleep is a guess that a loaded machine
+    overruns, and a page replay that arrives after its build starts a second one."""
+    async with asyncio.timeout(timeout_s):
+        while not condition():
+            await asyncio.sleep(0.005)
+
+
+def joined_in_flight(caplog: pytest.LogCaptureFixture) -> int:
+    """How many requests joined a job still running, as the service logs each (`Renderer.join`)."""
+    return sum(
+        '"event": "render_joined"' in record.getMessage() and '"finished": false' in record.getMessage()
+        for record in caplog.records
+    )
 
 
 class TestCallerCheck:
@@ -192,14 +208,16 @@ class TestRender:
         assert second.status_code == 503 and second.json() == {"detail": "busy"}
         assert (await first).status_code == 200
 
-    async def test_a_replay_while_the_render_runs_joins_it(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+    async def test_a_replay_while_the_render_runs_joins_it(
+        self, client: httpx.AsyncClient, fake: FakeExecutor, caplog: pytest.LogCaptureFixture
+    ) -> None:
         """The backend replays a POST after an ambiguous failure; the first may have arrived. The code runs once."""
+        caplog.set_level("INFO", logger="agents.renderer")
         fake.gate = asyncio.Event()
         first = asyncio.create_task(client.post("/render", json=body(), headers=auth()))
-        while fake.active == 0:
-            await asyncio.sleep(0.01)
+        await until(lambda: fake.active > 0)
         second = asyncio.create_task(client.post("/render", json=body(), headers=auth()))
-        await asyncio.sleep(0.05)
+        await until(lambda: joined_in_flight(caplog) == 1)  # it joined the render, which still waits at the gate
         fake.gate.set()
 
         responses = await asyncio.gather(first, second)
@@ -631,11 +649,17 @@ class TestPage:
 
         assert first.content == second.content and fake.calls == [("page123", "page-light")] * 2
 
-    async def test_a_replay_while_the_build_runs_joins_it(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+    async def test_a_replay_while_the_build_runs_joins_it(
+        self, client: httpx.AsyncClient, fake: FakeExecutor, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A page is not kept for replays, so a replay that arrived after the build would build it again: the test
+        waits for the build to run and for the replay to join it before it opens the gate."""
+        caplog.set_level("INFO", logger="agents.renderer")
         fake.gate = asyncio.Event()
         first = asyncio.create_task(client.post("/page", json=page_body(), headers=auth()))
-        await asyncio.sleep(0.05)
+        await until(lambda: fake.active > 0)
         replay = asyncio.create_task(client.post("/page", json=page_body(), headers=auth()))
+        await until(lambda: joined_in_flight(caplog) == 1)
         other = await client.post("/page", json=page_body(source="const data = 2;\n"), headers=auth())
         fake.gate.set()
 
