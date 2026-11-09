@@ -52,7 +52,7 @@ Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with 
 
 ### Detected bots
 
-nginx detects 52 User-Agent patterns, organized by category:
+nginx detects 57 User-Agent patterns (counted 2026-11-09), organized by category:
 
 **Social Media:**
 | Bot | User-Agent Pattern |
@@ -103,21 +103,20 @@ asked about a plot page could describe nothing at all.
 Three vendor splits are easy to get backwards, so they are spelled out:
 
 - **Meta**: `meta-externalfetcher` (user-directed) and `meta-webindexer` (AI
-  search index) are served; `meta-externalagent` is the training crawler and is
-  not mapped.
+  search index) are served; `meta-externalagent`, the training crawler, has
+  been served too since 2026-08-19, when the map began to err toward listing.
 - **Mistral**: `mistralai-user` and `mistralai-index` are served — Mistral
   documents both as never used for generative-AI training; `mistralai-training`
   is the training crawler and is not mapped.
 - **Amazon**: `amzn-searchbot` and `amzn-user` are the sanctioned retrieval
-  agents, both documented as not crawling for model training; plain `amazonbot`
-  is the training crawler and is not mapped.
+  agents, both documented as not crawling for model training; `amazonbot`,
+  Amazon's documented crawler token, has been served too since 2026-08-19.
 
 Mapping is not permission. This map decides only *what* an agent receives once
 it arrives; whether it may crawl at all is robots.txt plus Cloudflare's AI Crawl
 Control — which is why mapping community-reported tokens costs nothing, and why
-an unmapped agent is not thereby declined. Under the current policy everything
-except `Bytespider` may crawl, so the mapping question is only ever about
-rendering.
+an unmapped agent is not thereby declined. Under the current policy every
+crawler may crawl, so the mapping question is only ever about rendering.
 
 **Search Engines:**
 | Bot | User-Agent Pattern |
@@ -141,11 +140,31 @@ rendering.
 | ChatGPT search | `oai-searchbot` | citation index |
 | ChatGPT user fetch | `chatgpt-user` | a human asked ChatGPT to open the page |
 | Perplexity | `perplexitybot`, `perplexity-user` | citation index / user fetch |
+| Amazon crawler | `amazonbot` | index crawler |
+| Meta crawler | `meta-externalagent` | training crawler |
+| xAI search | `xai-searchbot`, served through `xai` | search index |
 
 None of these execute JavaScript, so without the map entries an AI answer
 citing anyplot would describe the empty SPA shell. The map decides **what** a
 crawler is served, never **whether** it may fetch — that is the robots.txt +
 Cloudflare question in [AI crawler policy](#ai-crawler-policy).
+
+**Counted, but served the SPA shell:** these crawlers are not in the map, so
+they receive the shell. Each read is still a machine-read line, written by
+nginx ([Machine readers](machine-readers.md)), with the purpose in brackets.
+Prerendering one of them is a serving decision of its own: ExaSearchBot alone
+fetches about 7,400 shell pages a week, which would become DB-backed renders on
+the API.
+
+| Bot | User-Agent Pattern | Purpose |
+|-----|-------------------|---------|
+| Exa | `exasearchbot` | AI search index (`index`) |
+| Keenable | `keenable-user`, `keenable` | a person's agent / AI search index |
+| Google Vertex AI agents | `google-cloudvertexbot` | builds an agent's grounding on the site owner's request (`index`) |
+| ByteDance | `bytespider` | training crawler (`training`) |
+| Common Crawl | `ccbot` | training corpus (`training`) |
+| Qwant · Petal · Sogou | `qwantbot`, `petalbot`, `sogou web spider` | search engines (`search`) |
+| SEO tools | `semrushbot`, `ahrefsbot`, `dataforseobot`, `mj12bot`, `dotbot`, `halobot` | search-marketing indexes (`seo`) |
 
 **Link Preview Services:**
 | Bot | User-Agent Pattern |
@@ -480,20 +499,24 @@ uv run python -c "from PIL import features; print(features.check('raqm'))"
 
 ### Frontend (anyplot.ai)
 
-Static file at `app/public/robots.txt`. It carries the full policy — the content
-signals and the one declined agent — so it holds regardless of what Cloudflare
-does or does not prepend (see [AI crawler policy](#ai-crawler-policy)):
+Static file at `app/public/robots.txt`. It carries the full policy, the content
+signals included, so it holds regardless of what Cloudflare does or does not
+prepend (see [AI crawler policy](#ai-crawler-policy)):
 
-Two groups, in this order: `Bytespider`, declined on bandwidth grounds, then the
-wildcard that allows everyone else. The retrieval-yes / training-no split this
-section used to describe is gone — the policy is open to every operator, so the
-named allow-groups it needed became redundant with `User-agent: *`. The declined
-group verbatim; read the file for the rest:
+One group, the wildcard that allows everyone. The retrieval-yes / training-no
+split this section used to describe is gone — the policy is open to every
+operator, so the named allow-groups it needed became redundant with
+`User-agent: *`. The `Bytespider` group, which declined that crawler on
+bandwidth grounds, went on 2026-11-09 with its Cloudflare block, when the owner
+decided that every crawler is welcome. The group reads as follows; the rest of
+the file is comments and the `Sitemap:` line:
 
 ```txt
-User-agent: Bytespider
+User-agent: *
 Content-Signal: search=yes,ai-input=yes,ai-train=yes
-Disallow: /
+Disallow: /debug
+Disallow: /interactive
+Allow: /
 ```
 
 The file opens with two terse comment lines naming `llms.txt` and the OpenAPI
@@ -501,7 +524,8 @@ spec, and closes with a fuller block beside `Sitemap:` that also names
 `llms-full.txt` — see [Discoverability for assistants](#discoverability-for-assistants)
 for why a guide that nothing points to is findable only by guessing.
 
-Four properties of that file are deliberate and should survive any cleanup:
+Four properties of that file are deliberate and should survive any cleanup. The
+second and third bind again as soon as a named group returns:
 
 - The `Content-Signal` line carries exactly the three
   [contentsignals.org](https://contentsignals.org) tokens — `search`,
@@ -512,7 +536,7 @@ Four properties of that file are deliberate and should survive any cleanup:
 - The `Content-Signal` line is repeated in **every** group. A crawler reads only
   the group that matches it, so a signal declared once under `User-agent: *`
   never reaches a named agent.
-- The named group comes **before** the wildcard. A spec-compliant crawler picks
+- A named group comes **before** the wildcard. A spec-compliant crawler picks
   the most specific match regardless of order, but simpler parsers take the
   first match and would read `Allow: /` and stop.
 - Inside each group, `Disallow:` comes **before** `Allow: /` — same reason: with
@@ -556,6 +580,11 @@ served copy that would drift.
 **Decision (2026-08-18, supersedes issue #9633):** everything is open. Retrieval,
 citation, search indexing and model training are permitted for every operator.
 
+Three questions, three places: what a crawler receives is the `$is_bot` map in
+[Bot detection](#bot-detection); whether it may fetch is robots.txt plus
+Cloudflare, below; how much it reads, and whether Cloudflare verified it, is in
+[Machine readers](machine-readers.md).
+
 The previous policy drew a retrieval-yes / training-no line and expressed the
 training half as a reservation of rights under Article 4 of EU Directive
 2019/790. That line was never coherent here: the catalogue is MIT-licensed and
@@ -573,13 +602,13 @@ was correct under the old policy and is simply no longer wanted under this one.
 | Group | Agents | Policy |
 |---|---|---|
 | Everything | search engines, AI assistants, their index and training crawlers, social and link previews | allowed |
-| Bandwidth exception | `Bytespider` | declined |
 | App internals | `/debug`, `/interactive` for all agents | declined |
 
-`Bytespider` is the one exception and it is operational, not principled: it is
-documented as ignoring robots.txt and crawls far more aggressively than this
-catalogue can justify serving. The robots group states the intent; Cloudflare
-does the enforcing. If its behaviour changes, the group can go.
+Until 2026-11-09 `Bytespider` was the one exception, an operational one: it is
+documented as ignoring robots.txt and crawling far more aggressively than this
+catalogue can justify serving, so a robots group declined it and Cloudflare
+blocked it. Both went when the owner decided that every crawler is welcome.
+Blocking returns only on evidence from the request logs.
 
 #### Cloudflare is the enforcement layer
 
@@ -588,26 +617,26 @@ The edge can be stricter than this file and answers blocked agents with `HTTP
 `robots.txt` that the dashboard still blocks is a published lie**. Keep the two
 in step.
 
-Measured on the live zone 2026-08-18 (zone `anyplot.ai` → **AI Crawl Control** →
-Security):
-
-The dashboard was brought in line with the open policy on 2026-08-18. State
-after that change:
+The dashboard (zone `anyplot.ai` → **AI Crawl Control** → Security) was
+brought in line with the open policy on 2026-08-18. On 2026-11-09 its block
+rule was first narrowed to the two ByteDance crawlers and then deleted, when
+the owner decided that every crawler is welcome. State after that change:
 
 | State | Agents |
 |---|---|
-| Blocked at the edge | `Bytespider`, `TikTok Spider`, `Anchor Browser`, `Novellum AI Crawl`, `Timpibot` |
-| Passing | everything else, including `GPTBot`, `CCBot`, `Amazonbot`, `meta-externalagent`, `Google-CloudVertexBot`, `PetalBot`, `FacebookBot`, `Arquivo Web Crawler`, and every retrieval agent |
+| Blocked at the edge | none; blocking returns only on evidence from the request logs |
+| Passing | everyone, including `Bytespider`, `TikTok Spider`, `Anchor Browser`, `Novellum AI Crawl`, and `Timpibot`, which were blocked until 2026-11-09 |
 
-`Bytespider` and `TikTok Spider` are both ByteDance; the first is documented as
-ignoring robots.txt, and the second shares its operator. The remaining three are
-blocked for a weaker reason — no vendor documentation of their crawling
-behaviour could be found, so their rule-compliance is unverified rather than
-disproven. Revisit if that changes.
+The `Bytespider` group in `robots.txt`, which the edge no longer enforces, goes
+in #12868. The zone's other security
+rules, and the principle that no rule hard-blocks traffic that could be a
+human, are in
+[`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#security-rules-pro-since-2026-11-09).
 
 Cloudflare is **not** prepending a managed robots.txt block: the live file is
-byte-identical to this repo's, and enforcement is purely the 403. That was
-different at the 2026-07-25 measurement, so re-check rather than assume.
+byte-identical to this repo's, and since 2026-11-09 the edge blocks no crawler.
+That was different at the 2026-07-25 measurement, so re-check rather than
+assume.
 
 `bot-serving-check` deliberately tests the Cloud Run origin, not the edge, so it
 will never catch a dashboard change. Edge drift has to be checked by hand.
@@ -616,7 +645,7 @@ Verify afterwards:
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; GPTBot/1.4; +https://openai.com/gptbot)" https://anyplot.ai/   # expect 200 once unblocked
-curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; Bytespider)" https://anyplot.ai/                              # expect 403
+curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; Bytespider)" https://anyplot.ai/                              # expect 200: no edge block since 2026-11-09
 curl -sA "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)" https://anyplot.ai/scatter-basic | grep -o '<title>[^<]*</title>'   # per-route title, not the SPA shell
 ```
 

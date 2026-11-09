@@ -6,7 +6,7 @@ import {
   type ChatItem,
   initialAgentState,
 } from 'src/hooks/useAgentSession';
-import type { DatasetChanged, DatasetParsed, PlotResult } from 'src/lib/agent';
+import type { DatasetChanged, DatasetParsed, NewDataBase, PlotResult } from 'src/lib/agent';
 import {
   cutRequest,
   PLOT_SUMMARY_MAX,
@@ -370,6 +370,7 @@ describe('threadModel', () => {
       chapters: [],
       answers: new Set(),
       decisionsAt: 0,
+      decisionsEarlier: false,
     });
     const copied: ChatItem[] = [{ id: 1, kind: 'data' }];
     expect(headings(copied)).toEqual(['# data', 'data']);
@@ -499,6 +500,35 @@ describe('threadModel: questions and the decisions', () => {
     // The newest `# plot` line, where the next plot takes them over, above a newer `# data`.
     expect(decisionsAt).toBe(4);
   });
+
+  it('puts them on the new data line after a paste with other columns, until the next plot', () => {
+    // Owner decision of 2026-11-08: the user sees the decisions of the earlier plot before the next
+    // plot takes them over, and can forget them there; a paste whose columns all carried keeps them
+    // on the plot line.
+    const other = item({
+      type: 'parse_done',
+      parsed: { ...PARSED, version: 2, columns_changed: true } as DatasetParsed,
+      bytes: 10,
+      chip: '▤ pendulum',
+    });
+    const pasted = run(paste('▤ table'), summary('12 rows.'), plot(1), other, summary('3 rows.'));
+    const model = threadModel(pasted.items);
+    expect(model.chapters.map(chapter => chapter.kind)).toEqual(['data', 'plot', 'data']);
+    expect([model.decisionsAt, model.decisionsEarlier]).toEqual([3, true]);
+
+    const plotted = run(paste('▤ table'), summary('12 rows.'), plot(1), other, plot(2));
+    expect([
+      threadModel(plotted.items).decisionsAt,
+      threadModel(plotted.items).decisionsEarlier,
+    ]).toEqual([4, false]);
+    const same = run(paste('▤ table'), summary('12 rows.'), plot(1), paste('▤ again'));
+    expect([threadModel(same.items).decisionsAt, threadModel(same.items).decisionsEarlier]).toEqual(
+      [2, false]
+    );
+    // Before any plot the decisions have no earlier plot to come from.
+    const first = run(other, summary('3 rows.'));
+    expect(threadModel(first.items).decisionsEarlier).toBe(false);
+  });
 });
 
 describe('plotSummaries', () => {
@@ -547,6 +577,33 @@ describe('plotSummaries', () => {
       [2, null],
       [3, 'first plot'],
     ]);
+  });
+
+  it('names where "plot the new data" started: the version before it, or the catalogue plot', () => {
+    // Owner decision of 2026-11-08: the plot's `new_data` says whether the latest plot was the base.
+    const newData = (id: number): ChatItem => ({
+      id,
+      kind: 'action',
+      action: 'plot_new_data',
+      library: 'matplotlib',
+      label: 'plot the new data',
+    });
+    const items: ChatItem[] = [
+      create(1),
+      { id: 2, kind: 'plot', version: 1 },
+      newData(3),
+      { id: 4, kind: 'plot', version: 2 },
+      newData(5),
+      { id: 6, kind: 'plot', version: 4 },
+    ];
+    const bases: Record<number, NewDataBase> = { 2: 'previous', 4: 'other_paste' };
+    expect([...plotSummaries(items, libraryOf, version => bases[version])]).toEqual([
+      [1, 'first plot'],
+      [2, 'new data on v1'],
+      [4, 'new data, new from the catalogue'],
+    ]);
+    // A plot whose server named no base reads as before.
+    expect(plotSummaries(items, libraryOf).get(2)).toBeNull();
   });
 
   it('cuts a request to one line of 40 characters, the ellipsis included', () => {

@@ -2,49 +2,55 @@ library: bokeh
 language: python
 specification_id: line-confidence
 created: '2025-12-26T16:13:06Z'
-updated: '2026-05-09T12:41:55Z'
-generated_by: claude-haiku
-workflow_run: 25601273113
+updated: '2026-11-09T12:28:13Z'
+generated_by: claude-opus
+workflow_run: 42615486352
 issue: 2007
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/bokeh/plot-dark.html
-quality_score: 94
+quality_score: 83
 review:
   strengths:
-  - Excellent visual quality with explicitly sized text readable in both light and
-    dark themes
-  - Perfect spec compliance with all required features (central line, semi-transparent
-    band, legend, grid)
-  - Strong library mastery leveraging Bokeh-specific features (HoverTool, Legend styling,
-    varea for efficient area visualization)
-  - 'Flawless theme-adaptive styling and palette compliance using Okabe-Ito #009E73
-    with correct backgrounds'
-  - Clean, reproducible, well-structured code with proper separation of concerns
+  - Native varea glyph draws the band between the lower and upper bound at every x,
+    with the line rendered after it so the solid 5 px Imprint green line sits on top
+    as the strongest mark
+  - 'Band and line share #009E73 (band at fill_alpha 0.3), so the band reads as a
+    lighter tone of its own line rather than a second series; gridlines stay visible
+    through it in both themes'
+  - Explicit bokeh Legend model names both the forecast line and the '95% confidence
+    interval' band, styled with the ELEVATED_BG/INK_SOFT tokens in both themes
+  - HoverTool bound to the line shows week, forecast and the formatted CI range in
+    the HTML output
+  - Realistic, neutral sales-forecast scenario whose interval widens over the horizon,
+    with descriptive axis titles carrying units
+  - All chrome is threaded through theme tokens; no dark-on-dark or light-on-light
+    text in either render
   weaknesses:
-  - Design Excellence could be more sophisticated (currently well-configured defaults
-    rather than exceptional aesthetic design)
-  - Visual refinement at library defaults level - could add more custom styling touches
-    for polish
-  - Data storytelling is clear but conventional - visual hierarchy is functional rather
-    than compelling
+  - 'DE-02 (both): the plot area is enclosed by a four-sided INK_SOFT outline frame
+    although nothing about a line chart requires all four spines → L-shaped or no
+    frame (drop the top and right sides). Likely cause: p.outline_line_color = INK_SOFT;
+    set p.outline_line_color = None and keep the x/y axis lines.'
+  - 'Suggestion: a slightly darker line tone than the band (or a thin page-colored
+    halo under the line) would lift the central line further off the band in the light
+    render.'
+  - 'Suggestion: start the x range at week 1 (data-driven) to remove the empty strip
+    between 0 and 1.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "line-confidence · bokeh · pyplots.ai" is clear and dark; X-axis label "Time (units)" and Y-axis label "Predicted Value" are prominent; tick labels (0, 5, 10, etc.) are clearly readable against light background
-      Data: Central trend line in #009E73 (brand green) with semi-transparent (#009E73 alpha 0.3) confidence band showing uncertainty widening over time; both elements are clearly distinguished from background
-      Legend: "Prediction" and "95% Confidence Interval" labels positioned in bottom-right with appropriate styling
-      Legibility verdict: PASS - All text elements are easily readable with good contrast
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: bold near-black title "line-confidence · python · bokeh · anyplot.ai" top-left (~49% width); italic axis titles "Week" and "Forecast weekly sales (thousand units)"; dark-grey tick labels 0–50 and 0–150; subtle grid; a thin four-sided grey outline frames the plot area. Legend top-left on an elevated off-white box: "Sales forecast" (green line) and "95% confidence interval" (light green swatch). All text readable.
+      Data: solid #009E73 line over 50 weeks rising from ~22 to ~140 with short-term noise, enclosed by a semi-transparent #009E73 band (alpha 0.3) that widens from ~±16 to ~±45; gridlines visible through the band.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title, axis labels, and tick labels are all visible light text against dark background (no dark-on-dark failures); text colors appear theme-adaptive
-      Data: The #009E73 central line and confidence band are IDENTICAL in color to the light render (only chrome changed); the semi-transparent fill is clearly visible against dark background
-      Legend: Same styling as light render, positioned identically
-      Legibility verdict: PASS - All text is readable; no dark-on-dark failures detected; theme adaptation successful
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light grey, faint grid, light-grey outline frame; legend on #242420 box with light-grey labels. No dark-on-dark text.
+      Data: identical #009E73 line and band (band reads as dark teal on the dark page, still distinct from the background); colors identical to the light render, only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,74 +61,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
-          perfect readability in both themes
+        comment: Explicit sizes (50/42/34/34pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all content fully readable
+        comment: Legend sits above the band in the top-left; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line and band perfectly adapted to 50-point dataset; both elements
-          clearly visible
+        comment: 5 px line and alpha-0.3 band clearly visible; legend glyphs match
+          marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 with good contrast; CVD-safe; semi-transparent
-          fill aids readability'
+        comment: Single hue, good contrast, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60-70% of canvas; balanced margins; legend positioned
-          appropriately
+        comment: 3200x1800, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Time (units)', Y-axis 'Predicted Value'; title in correct
-          format
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
-          theme-correct chrome in both renders'
+        comment: '#009E73 for line and band; correct theme backgrounds'
     design_excellence:
-      score: 14
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: false
-        comment: Professional, well-configured styling; strong design but resembles
-          configured library default rather than exceptional aesthetic
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
         passed: false
-        comment: Grid subtle and appropriate; outline styled; legend refined; some
-          customization beyond defaults
+        comment: Subtle grid, but a four-sided outline frame where the spine rule
+          asks for L-shaped or none (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear visual hierarchy between line and band; uncertain communication
-          is effective; storytelling functional rather than compelling
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -132,26 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with confidence interval; uses varea() and line()
+        comment: Line with shaded confidence band
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Central line, semi-transparent band, legend, grid all present and
-          working
+        comment: Solid prominent line on top, band from lower to upper bound, semi-transparent
+          (0.3), legend names both and the band's meaning, related colors, grid
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X, Y, Y_lower, Y_upper correctly mapped; axes show full data range
+        comment: x=Week, y/bounds mapped correctly, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-confidence · bokeh · pyplots.ai'; legend labels clear
+        comment: Mandated title format; reader-facing legend labels
     data_quality:
       score: 15
       max: 15
@@ -161,22 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows widening uncertainty over horizon; clear trend with realistic
-          variations
+        comment: Widening interval shows varying uncertainty
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Model predictions with 95% CI; realistic ML scenario; neutral, scientific
-          context
+        comment: Neutral product sales forecast
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y values 4-21 sensible; X values 0-10 reasonable; uncertainty widening
-          is plausible
+        comment: 50 weeks, sales 20-140k with bounds staying non-negative; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -186,56 +183,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → figure → styling → save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; fully deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity; no over-engineering
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files (plot-{THEME}.png/html); current API
+        comment: plot-{THEME}.html + .png via Selenium, Bokeh 3 API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert idiomatic Bokeh: figure(), ColumnDataSource, varea(), HoverTool,
-          Legend, Selenium screenshot'
+        comment: ColumnDataSource with column-name glyph args, native varea for the
+          band
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: 'Excellent use of Bokeh-specific features: HoverTool interactivity,
-          varea for efficient area viz, Legend customization, HTML export'
+        passed: false
+        comment: HoverTool restricted to the line renderer with formatted CI range
+          tooltip; explicit Legend model
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T12:25:36Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - hover-tooltips
+  - layer-composition
   - custom-legend
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -243,3 +244,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling

@@ -43,6 +43,7 @@ from pydantic import (
     model_validator,
 )
 
+from core.library_names import resolve_library
 from core.spec_roles import ROLE_PATTERN
 
 from .language import DEFAULT_LANGUAGE, LANGUAGE_PATTERN
@@ -233,6 +234,12 @@ not recover from."""
 NotReadyReason = Literal["no_dataset", "incomplete_bindings", "data_unconfirmed"]
 """`data_unconfirmed`: the dataset and its bindings are there, but the user has not confirmed
 them in the data panel yet (step 1 of two, owner rule of 2026-10-11)."""
+NewDataBase = Literal["previous", "other_paste", "other_data", "bindings_changed", "kept_note", "no_plot"]
+"""Where the page's "plot the new data" starts (`pipeline.new_data_base`, owner decision of 2026-11-08): `previous`,
+the library's latest version, which drew a version of the same paste with the same bindings; else the catalogue plot,
+because that version drew data a later paste replaced (`other_paste`), a table computed since replaced the data it
+drew (`other_data`), it drew other bindings (`bindings_changed`), a first-plot note waits that only a first plot takes
+(`kept_note`), or the library has none (`no_plot`)."""
 ArtifactName = Literal[
     "plot-light.png", "plot-dark.png", "plot.py", "plot.R", "plot.jl", "plot.js", "plot.tsx", "plot.html", "data.csv"
 ]
@@ -446,6 +453,14 @@ class SwitchArgs(_ServerContract):
     library: str = Field(pattern=r"^[a-z0-9]{1,32}$")
     plot: bool = True
     spec_id: str | None = Field(default=None, pattern=r"^[a-z0-9-]{1,100}$")
+
+    @field_validator("library", mode="before")
+    @classmethod
+    def _library_id(cls, value: Any) -> Any:
+        """A library the model names in a common form (`D3.js`, `chart js`, `MUI X`) is that library's id, through the
+        names table the scope guard reads the user's message with (`core.library_names`); anything else is checked as
+        it was written."""
+        return (resolve_library(value) or value) if isinstance(value, str) else value
 
 
 class Edit(_ModelOutput):
@@ -828,6 +843,14 @@ class PlotResult(_ServerContract):
     first-plot note (`pipeline.pending_fate`: `used`, or `dropped` because the user rebound a column it was written
     for; None without one). The root describes the plot by them, never by what an earlier turn said: the user may
     have rebound a column in the data panel since. Root-only too; the root reads the bindings fenced as user data.
+
+    `new_data` is where the page's "plot the new data" (`plot_new_data`) started (`pipeline.new_data_base`):
+    `previous`, the library's latest version, or why it started from the catalogue plot instead; None for every
+    other run. The root's reply and the plot card's label both say it, so it goes to the page too.
+
+    `combined` is `true` on a run that first combined the rows sharing a repeated key into a new data version
+    (`repeated_keys.combine_repeated_key`, owner decision of 2026-11-09), which the first line of `changes` announces
+    with its counts, also on a run that shipped nothing. Root-only too: the root reads it as `data_changed: true`.
     """
 
     status: PlotStatus
@@ -843,6 +866,8 @@ class PlotResult(_ServerContract):
     memory_full: bool | None = None
     bindings: list[Binding] | None = Field(default=None, max_length=MAX_COLUMNS)
     kept_request: Literal["used", "dropped"] | None = None
+    new_data: NewDataBase | None = None
+    combined: bool | None = None
 
     @model_validator(mode="after")
     def _status_rules(self) -> Self:

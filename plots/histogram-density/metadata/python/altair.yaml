@@ -2,43 +2,52 @@ library: altair
 language: python
 specification_id: histogram-density
 created: '2025-12-29T22:49:29Z'
-updated: '2026-05-11T03:53:13Z'
-generated_by: claude-haiku
-workflow_run: 25648723776
+updated: '2026-11-09T11:02:15Z'
+generated_by: claude-opus
+workflow_run: 42604112553
 issue: 2442
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Proper theme adaptation with correct background and text colors in both light
-    and dark renders
-  - 'Effective use of Okabe-Ito palette (#009E73 and #D55E00) with good visual contrast'
-  - Clear data representation of bimodal distribution with KDE overlay providing statistical
-    context
-  - All text elements (title, axis labels, tick labels) are readable in both themes
-  - Proper density normalization with well-chosen bin width and domain specifications
-  - Good use of Altair layer composition for combining histogram and KDE line
+  - Contiguous rect bars over 25 consistent bins drawn with np.histogram(density=True),
+    so the bar areas sum to 1 and the y axis reads 'Density (probability per ms)',
+    a real per-unit density, not counts
+  - The KDE overlay sits on the same density scale, drawn over the bars as a dashed
+    theme-neutral line (INK) that contrasts with the brand-green bars in both themes
+  - Two-component reaction-time mixture (alert baseline plus a fatigued tail) gives
+    a right-skewed, bimodal outline that the 25-bin choice resolves without breaking
+    into spikes
+  - Each layer gets its own legend (square swatch for the bars, dashed stroke for
+    the curve), so every legend glyph matches its mark
+  - Bin separators in the page colour and a y-only grid keep the bars contiguous but
+    countable in both themes
+  - Tooltips with bin start, bin end and density add inspection to the HTML output
+  - 'Theme tokens are threaded through the axes, title, legend and view: no dark-on-dark
+    or light-on-light text'
   weaknesses:
-  - Design could benefit from more visual refinement (e.g., removing top/right spines)
-  - Limited use of distinctive Altair features beyond basic layer composition
-  - Code structure is straightforward but could include more deliberate styling customizations
+  - 'Suggestion: bin and normalise in Vega-Lite (transform_bin plus a joinaggregate
+    density, or transform_density for the curve) so the HTML chart stays data-driven
+    instead of plotting precomputed numpy arrays.'
+  - 'Suggestion: anchor the legends with orient=''top-right'' instead of fixed legendX/legendY
+    pixel offsets, so they follow the view if its width changes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly applied
-      Chrome: Title in dark text (#1A1A17) clearly readable, axis labels and ticks properly visible
-      Data: Histogram bars in Okabe-Ito bluish-green (#009E73) with opacity 0.75, KDE overlay in vermillion (#D55E00), bimodal distribution evident
-      Legibility verdict: PASS — all text and data elements clearly visible against light background
+      Background: warm off-white #FAF8F1 across the canvas and view, with centred padding to 3200x1800.
+      Chrome: centred bold title "histogram-density · python · altair · anyplot.ai" (~45 % of the width) in dark ink; y axis "Density (probability per ms)" with ticks 0.000–0.011; x axis "Reaction Time (ms)" with ticks 160–500; a subtle horizontal-only grid; left and bottom axis lines in INK_SOFT. All text is readable.
+      Data: 25 contiguous brand-green (#009E73, opacity 0.85) bars with thin page-coloured separators, rising from 0 to a main peak of ~0.0103 at 255–270 ms, then a long right tail with a secondary bump at ~380 ms. A dashed near-black KDE curve follows the outline on the same scale. Top-right legend: green square "Histogram (area = 1)" and dashed stroke "Kernel density estimate".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly applied
-      Chrome: Title and axis titles in light text (#F0EFE8) readable, tick labels in #B8B7B0, no dark-on-dark failures detected
-      Data: Histogram bars identical green (#009E73), KDE line identical vermillion (#D55E00) — theme-independent data colors confirmed
-      Legibility verdict: PASS — all text and data elements clearly visible, proper contrast maintained against dark background
+      Background: warm near-black #1A1A17 for the canvas and view.
+      Chrome: title and axis titles in light ink (#F0EFE8), tick and legend labels in light grey (INK_SOFT); the grid is subtle but visible. No dark-on-dark text.
+      Data: the same #009E73 bars (they look deeper only because of the 0.85 opacity over the dark page), with dark separators; the KDE curve flips to a light dashed stroke; the legend glyphs match. The data layout is identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,45 +58,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark renders
+        comment: Font sizes set explicitly (title 16, axis titles 12, labels 10 at
+          scale 4); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Well-spaced elements, no overlaps
+        comment: The legend sits in the empty upper right, clear of the bars and the
+          curve; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars and KDE line clearly visible
+        comment: Bars, separators and the 2.5 px dashed curve are clear; both legend
+          glyphs are visible and match their marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe
+        comment: Green against a neutral dashed line, told apart by both hue/lightness
+          and dash; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: 3200x1800, the gate passed; balanced margins and axis-label sizes;
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: '''Reaction Time (ms)'' and ''Density (probability per ms)'' carry
+          their units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Okabe-Ito usage, theme-correct backgrounds and chrome
+        comment: 'Bars are #009E73 and the curve uses the theme-neutral INK; backgrounds
+          #FAF8F1 / #1A1A17; both renders theme-correct'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -95,19 +111,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Uses Okabe-Ito palette well, opacity and stroke customization
+        comment: 'Above baseline: the legend is placed inside the empty top-right
+          of the plot, with a separate glyph type for each layer, and the y-axis title
+          spells out ''probability per ms'''
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid, minimal customization beyond defaults
+        comment: Page-coloured hairline bin separators keep the contiguous bars countable;
+          the x-grid is dropped for this histogram, and the y-domain gets 10 % headroom
+          without nice rounding
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Bimodal distribution clearly shown, KDE provides statistical context
+        comment: A baseline-plus-fatigued mixture makes the long tail and the secondary
+          mode near 380 ms the visible story, which the low-bandwidth KDE brings out
     spec_compliance:
       score: 15
       max: 15
@@ -117,25 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram
+        comment: Density histogram with a density-curve overlay that the Notes suggest
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density normalization, histogram, KDE overlay
+        comment: 'Density y axis, area = 1, consistent bins, a contiguous zero baseline,
+          an overlay on the same scale in a contrasting style with a legend, and a
+          bin count that fits n=500: all bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes properly configured with correct scales
+        comment: x/x2 bin edges and the density on y; the domain spans exactly the
+          bin range; the KDE is evaluated over the same range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed
+        comment: Mandated title format; the legend entries are readable text
     data_quality:
       score: 15
       max: 15
@@ -145,19 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution evident, appropriate binning
+        comment: Shows skew, a secondary cluster, tails, and bars above and below
+          the curve
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic reaction time scenario with baseline/fatigued conditions
+        comment: 'Reaction times of alert and fatigued trials: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proper density normalization, sensible domain
+        comment: Reaction times of 150–520 ms with means 250/380 ms; peak density
+          ~0.010 per ms is consistent with a ~14 ms bin width (area = 1). No Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -167,58 +194,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct, no unnecessary complexity
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: os, altair, numpy, pandas, PIL and scipy.stats are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean layer composition
+        comment: Uses np.histogram(density=True) and scipy.stats.gaussian_kde; nothing
+          is hand-rolled
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Proper PNG and HTML output
+        comment: Saves plot-{THEME}.png (with pad-only to the target) and plot-{THEME}.html;
+          current Altair 6 API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Standard Altair patterns, good scale specifications
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Effective use of layer composition and tooltip encoding
+        comment: Layered charts, typed encodings, rect with x/x2 and shared scales,
+          but the binning and the density are precomputed outside Vega-Lite
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: A strokeDash encoding gives the curve its own stroke-type legend
+          next to the colour legend, through Vega-Lite's per-channel legends
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-09T10:59:22Z'
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
-  - kde
   - binning
+  - kde
   styling:
   - alpha-blending
+  - edge-highlighting

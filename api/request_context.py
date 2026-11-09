@@ -48,43 +48,50 @@ def visitor_ip(request: Request) -> str:
     rightmost entry means handing it our own infrastructure's address, and the
     event is silently discarded.
 
-    Spoofing is not a concern in this direction: a forged value skews a
+    Spoofing matters less in this direction: a forged value skews a
     geolocation bucket, where forging the rate-limit key locked people out.
 
-    Order: the leftmost valid `x-forwarded-for` entry FIRST, then
-    `cf-connecting-ip`, then the socket peer. It used to be the other way
-    round, and that lost nearly every crawler read: the prerendered pages
-    reach this host through the site's nginx (Cloud Run app → Cloudflare →
-    API), so on that hop `cf-connecting-ip` is the app container's Google
-    egress address — exactly the "hosting provider IP" Plausible drops — while
-    the crawler itself is only visible as the first forwarded entry, where the
-    site-side Cloudflare put it. Probe events measured the effect (34.90.x /
-    35.204.x dropped, a home IP kept): one counted read in twenty. For a direct client behind Cloudflare the leftmost
-    entry and `cf-connecting-ip` are the same address, so nothing changes
-    there.
+    One consumer: `api/analytics.py::track_og_image`, for the link previews
+    that fetch an og image from `api.anyplot.ai` directly, never through the
+    site's nginx. Order:
+
+    1. `cf-connecting-ip`, because Cloudflare overwrites it on everything it
+       proxies, so through the edge it cannot be forged.
+    2. The leftmost PUBLIC `x-forwarded-for` entry. A scanner forging a private
+       or reserved address at the front of the list (`10.0.0.9, …`) is skipped
+       rather than handed to Plausible as the visitor.
+    3. The socket peer, if it is public. Behind Cloud Run it is the front end's
+       private or loopback address, which Plausible would drop the event for.
+
+    The empty string when none of the three is a public address: the event then
+    goes without an `X-Forwarded-For` rather than with an address that is not
+    the visitor's, and Plausible sees only the API's own address.
     """
+    cf_ip = request.headers.get("cf-connecting-ip", "").strip()
+    if _is_public_ip(cf_ip):
+        return cf_ip
     for entry in request.headers.get("x-forwarded-for", "").split(","):
         candidate = entry.strip()
-        if _is_ip(candidate):
+        if _is_public_ip(candidate):
             return candidate
-    cf_ip = request.headers.get("cf-connecting-ip", "").strip()
-    if _is_ip(cf_ip):
-        return cf_ip
-    return request.client.host if request.client else ""
+    peer = request.client.host if request.client else ""
+    return peer if _is_public_ip(peer) else ""
 
 
-def _is_ip(value: str) -> bool:
-    """Whether the token is a real address.
+def _is_public_ip(value: str) -> bool:
+    """Whether the token is a public unicast address.
 
-    Proxies do insert non-addresses — `unknown` is the classic — and Plausible
-    documents that it uses "the first **valid** IP address from the list".
-    Forwarding a non-address gets the event discarded or mis-located, so a
-    malformed entry is skipped rather than passed on.
+    Proxies insert non-addresses (`unknown` is the classic), and Plausible
+    documents that it uses "the first **valid** IP address from the list", so a
+    malformed entry is skipped rather than passed on. Private, loopback,
+    link-local, carrier-grade NAT, unique-local, documentation (TEST-NET) and
+    unspecified addresses are all `is_global=False`; a multicast address can be
+    `is_global=True` (224.0.0.1 is), hence the second clause.
     """
     if not value:
         return False
     try:
-        ipaddress.ip_address(value)
+        address = ipaddress.ip_address(value)
     except ValueError:
         return False
-    return True
+    return address.is_global and not address.is_multicast

@@ -2,47 +2,48 @@ library: letsplot
 language: python
 specification_id: line-annotated-events
 created: '2025-12-31T11:00:44Z'
-updated: '2026-05-16T01:25:24Z'
-generated_by: claude-haiku
-workflow_run: 25948845999
+updated: '2026-11-09T12:15:35Z'
+generated_by: claude-opus
+workflow_run: 42613813707
 issue: 2997
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Excellent visual quality with all text properly sized and readable in both light
-    and dark themes
-  - Perfect spec compliance with all required features implemented correctly
-  - Realistic data scenario showing plausible feature launch impacts on user growth
-  - Professional visual design using correct Okabe-Ito palette and intentional typography
-    hierarchy
-  - Good data storytelling with visual hierarchy clearly showing feature-driven growth
+  - One brand-green data line with every one of the five launches marked by a dashed
+    INK_MUTED vertical line at its own date, clearly distinct from the line in both
+    themes
+  - Event labels sit just right of their marker with a small diamond anchor and alternate
+    between two heights, so Team Workspaces and API v2.0 never collide with their
+    neighbours and no label covers the data line
+  - Hollow page-filled event points on the series show the value at each launch, and
+    the generated step increases make each launch read as a visible jump
+  - Native layer_tooltips on both the event lines (event name + date) and the data
+    line (date + formatted users) add real inspection value in the HTML output
+  - 'Chrome is fully theme-tokenised: warm #FAF8F1 / #1A1A17 surfaces, INK/INK_SOFT
+    text, subtle horizontal-only grid, all readable in both renders'
   weaknesses:
-  - 'CQ-05 Issue: Code should use ANYPLOT_THEME environment variable for theme-dependent
-    filenames (should output f''plot-{THEME}.png'' not ''plot.png'')'
-  - 'Theme-adaptive styling: Grid color (#CCCCCC) and event text color (#333333) are
-    hard-coded instead of using theme tokens (PAGE_BG, INK, INK_SOFT)'
-  - 'Limited letsplot distinctive features: Doesn''t leverage letsplot''s unique interactive
-    HTML capabilities beyond standard geom composition'
+  - 'Suggestion: the label text is padded with two leading spaces to clear the diamond;
+    geom_text''s nudge_x would express that offset directly.'
+  - 'Suggestion: the y-axis headroom above the labels (9,500 to 10,000) is unused;
+    trimming the upper limit slightly would give the series more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title (size 24pt), axis labels (20pt), ticks (16pt), event labels (14pt) all clearly visible with dark text
-      Data: Green line (#009E73 Okabe-Ito position 1), red event markers (#DC2626), subtle gray grid
-      Events: Five annotations (Feature A, Feature B, Mobile App, API v2.0, Partners) positioned at alternating heights to avoid overlap
-      Legibility verdict: PASS - all elements readable, no overlap, proper contrast
+      Background: warm off-white #FAF8F1 across plot and panel.
+      Chrome: bold dark title "line-annotated-events · python · letsplot · anyplot.ai" at about 59 % of the width; axis titles "Date" and "Daily active users" in dark ink; tick labels Jan–Jan and 0–10,000 in INK_SOFT; subtle horizontal grid only. All readable.
+      Data: one #009E73 line of 365 daily values rising from about 1,000 to 8,000 with visible step jumps; five dashed grey vertical lines (Dark Mode mid-Feb, Team Workspaces end of Apr, Mobile App mid-Jul, API v2.0 early Oct, Partners end of Nov); hollow page-filled circles with dark outline where each line meets the series; bold dark labels with a diamond anchor alternating at about 8,500 and 9,100. No label overlaps another label or the data line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels, ticks, event labels all clearly visible with light/off-white text
-      Data: Green line identical to light render (#009E73) - confirming theme-independence of data colors
-      Grid: Subtle, appropriate for dark theme, not too dominant
-      Legibility verdict: PASS - no dark-on-dark issues, all text readable, brand green (#009E73) visible and distinguishable
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels in light grey INK_SOFT, grid subtle dark grey. No dark-on-dark text.
+      Data: identical #009E73 line; event lines flip to a lighter grey, hollow points outlined in light ink, labels in light ink. Data color identical to light render, only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,69 +54,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: Explicit sizes; title, axis, tick and event labels readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Event labels at alternating heights with nudge_x offset; zero collisions
+        comment: Alternating label heights keep all five labels apart and above the
+          data line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line, markers, and labels optimally sized for canvas
+        comment: 1.3 line width suits 365 points; event lines and points visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green + red accent; colorblind-safe, good contrast
+        comment: Green line vs neutral dashed grey markers; distinction by hue, lightness
+          and dash
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 50-70% of canvas; balanced margins; no clipping
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with semantic meaning
+        comment: Date / Daily active users, reader-facing
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 primary; backgrounds #FAF8F1/#1A1A17; theme-correct
-          chrome'
+        comment: 'Single series #009E73; correct theme backgrounds'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Professional design with color hierarchy; above defaults but not
-          exceptional
+        passed: true
+        comment: Bold event labels with diamond anchors form a typographic tier between
+          title and ticks
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: theme_minimal() reduces clutter; could benefit from explicit spine
-          removal
+        passed: true
+        comment: x grid and ticks removed so the event lines are the only verticals;
+          labels share a consistent left offset
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Clear visual hierarchy shows feature-driven growth; good emphasis
-          through color contrast
+        passed: true
+        comment: Hollow points mark the series value at each launch, making the step
+          jump after each event the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with event markers
+        comment: Line with event vlines, markers and labels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features implemented: line, vertical lines, markers, labels'
+        comment: Dashed distinct vlines, labels beside markers, alternating heights;
+          legend N/A (one event type)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: Marks at their data values; full year shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''line-annotated-events · letsplot · anyplot.ai'''
+        comment: Mandated title format; legend N/A
     data_quality:
       score: 15
       max: 15
@@ -153,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows trend, seasonality, and event impact demonstrating full plot
-          capabilities
+        comment: 365 points, 5 unevenly spaced events, label staggering shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real scenario: Daily Active Users with feature launch impacts'
+        comment: SaaS daily active users with named product launches; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values realistic (1000-7000 users); event impacts plausible
+        comment: DAU 1k-8k over a year with 300-800 user launch steps is plausible;
+          no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,55 +181,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow without unnecessary functions
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set with np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot imported
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Should use f'plot-{THEME}.png' with ANYPLOT_THEME env var
+        passed: true
+        comment: plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert ggplot() + geom composition with proper API usage
+        comment: Layered grammar with per-layer data, scale_x_datetime(format=) and
+          scale_y_continuous(format=',.0f')
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses standard geoms; doesn't leverage letsplot's interactive HTML
-          features
+        passed: true
+        comment: layer_tooltips with title/line/format on the vline and line layers
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T12:13:00Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling

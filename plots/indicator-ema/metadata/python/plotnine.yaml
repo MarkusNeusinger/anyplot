@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:19:30Z'
-updated: '2026-05-19T05:25:18Z'
-generated_by: claude-sonnet
-workflow_run: 26076820142
+updated: '2026-11-09T11:44:36Z'
+generated_by: claude-opus
+workflow_run: 42609887258
 issue: 3652
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,120 +15,124 @@ preview_html_dark: null
 quality_score: 84
 review:
   strengths:
-  - 'Full spec compliance: price line, both EMAs, crossover detection, and thickness
-    hierarchy all implemented correctly'
-  - EMA spread ribbon between the two EMA lines adds meaningful visual context without
-    cluttering
-  - Correct ewm(adjust=False) EMA calculation and long-format DataFrame pattern is
-    idiomatic plotnine
-  - Both theme renders show correct data colors and legible chrome
-  - np.random.seed(42) plus realistic stock price random walk produces a compelling
-    example dataset
+  - 'The price line (size 1.0, #009E73) is clearly dominant over the two thinner EMA
+    lines (size 0.6, #C475FD and #4467A3), so the hierarchy the spec asks for reads
+    at a glance in both themes'
+  - 'EMAs are computed with pandas ewm(span, adjust=False), and they behave like their
+    periods: EMA-12 hugs and turns with the price, EMA-26 is smoother and turns later,
+    and both stay at the level of recent prices'
+  - 'Idiomatic grammar-of-graphics construction: wide-to-long melt, one geom_line
+    mapped to color and size by series, scale_color_manual/scale_size_manual with
+    limits from the data so the price gets #009E73, and guides(size=None) to merge
+    the line legend'
+  - 'Crossover markers in Imprint #BD8233 with a page-colored outline stay small enough
+    that the lines beneath stay visible, and sit on the short EMA at the crossing
+    dates'
+  - 'Theme tokens are threaded through every chrome element; both renders are fully
+    readable with correct #FAF8F1 / #1A1A17 surfaces and identical data colors'
+  - scale_x_datetime(date_breaks='1 month', date_labels='%b %Y') gives clean monthly
+    ticks for the 120 business days
   weaknesses:
-  - 'Source code uses non-Okabe-Ito colors (#306998, #E24A33, #FFD43B) and no ANYPLOT_THEME
-    env-var reading — must read os.getenv("ANYPLOT_THEME", "light") and apply PAGE_BG/ELEVATED_BG/INK/INK_SOFT
-    tokens to all chrome elements'
-  - Output saved as plot.png — must be f"plot-{THEME}.png" (plot-light.png / plot-dark.png)
-  - 'Legend background hard-coded to fill=white — must use ELEVATED_BG token (#FFFDF6
-    light / #242420 dark)'
-  - 'Title in source has wrong format (indicator-ema · plotnine · pyplots.ai) — must
-    include language and correct domain: indicator-ema · python · plotnine · anyplot.ai'
+  - 'SC-02 (both): a crossover marker is drawn on 3 Jan 2024 (index 1), where the
+    two EMAs only leave their shared starting value (sign of EMA-12 − EMA-26 goes
+    0 → −) rather than cross; it overlaps the genuine crossover dot on 4 Jan → highlight
+    only real sign flips between −1 and +1 (one spurious marker fewer). Likely cause:
+    np.diff(np.sign(...)) != 0 counts the change from the zero at index 0 as a crossover;
+    drop zero signs (e.g. compare signs from index 1 on, or require sign[i-1] * sign[i]
+    < 0).'
+  - 'Suggestion: the ''Series'' legend title is generic; a title such as ''Line''
+    or dropping it would read slightly cleaner.'
+  - 'Suggestion: the vertical spacing between legend keys is generous; tightening
+    legend_key_spacing_y would make the legend more compact next to the panel.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct, not pure white
-      Chrome: Title "indicator-ema · python · plotnine · anyplot.ai" in bold dark text (clearly readable). Axis labels "Date" and "Price ($)" in dark text. Tick labels at 45° angle for x-axis — all readable against light background. Legend on right with light/white background and dark text.
-      Data: Close Price line in teal/green (#009E73 — Okabe-Ito position 1). EMA-12 in orange (Okabe-Ito position 2/5). EMA-26 in steel blue (Okabe-Ito position 3). Shaded ribbon between EMAs. Pink/rose crossover markers at EMA crossing points.
+      Background: warm off-white #FAF8F1 across plot and panel; legend box on the elevated #FFFDF6 surface with a thin INK_SOFT frame.
+      Chrome: bold near-black title "indicator-ema · python · plotnine · anyplot.ai" (~53% of the width), axis titles "Date" and "Close price (USD)" in dark ink, monthly x ticks Jan 2024–Jun 2024 and y ticks 130–160 in dark gray, subtle major grid, left and bottom axis lines only. All text readable.
+      Data: thick #009E73 close-price line falling from ~163 to ~125 then recovering to ~137; thinner #C475FD EMA-12 and #4467A3 EMA-26 overlaid; a faint blue ribbon between the two EMAs; six #BD8233 crossover dots with page-colored outlines (two overlapping at the very start, then late Jan, early Apr, mid May, mid Jun). Legend "Series" (Close price (USD), EMA-12, EMA-26) and "Signal" (EMA crossover).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct, not pure black
-      Chrome: Title visible in lighter text against dark background. Axis labels and tick labels appear in lighter colors with adequate contrast. Legend has dark background with light text. No dark-on-dark text failure detected.
-      Data: Colors identical to light render — Close Price teal/green, EMA-12 orange, EMA-26 blue (data color stability confirmed). Ribbon between EMAs appears as dark brownish-orange with alpha. Crossover markers remain visible.
+      Background: warm near-black #1A1A17; legend on the elevated #242420 surface with a light frame.
+      Chrome: title in light ink, axis titles light, tick labels light gray; grid subtle but visible; no dark-on-dark text anywhere.
+      Data: identical colors to the light render (#009E73 price, #C475FD EMA-12, #4467A3 EMA-26, #BD8233 crossover dots); the ribbon reads as a dark navy band; crossover dot outlines now near-black.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt title, 20pt axis, 16pt ticks).
-          Both renders legible. Minor deduction for dark-theme text color adaptation
-          uncertainty in source.
+        comment: Explicit sizes (title 12, axis titles 10, ticks/legend 8); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 45-degree date labels prevent tick overlap; no text collisions.
+        comment: No text collisions; legend sits outside the panel
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All lines and crossover markers clearly visible. Minor deduction
-          for slight crowding when EMAs converge near the ribbon.
+        comment: Price and EMA lines visible at their widths; crossover dots and legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; green/orange/blue are CVD-safe. Crossover points
-          use shape+color distinction.
+        comment: Green/purple/blue/ochre distinguishable, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized. Legend placement good. Minor deduction
-          for margins near chart edges.
+        comment: 3200x1800 canvas, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Price ($) with units; correct title format in rendered image.
+        comment: '''Date'' and ''Close price (USD)'' with unit'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Images show #009E73 as first series and theme-appropriate backgrounds,
-          but source code uses legacy #306998 (Python Blue), #E24A33, #FFD43B — non-Okabe-Ito.
-          Crossover points use custom non-standard color. Partial credit for correct
-          rendered output.'
+        passed: true
+        comment: 'Price #009E73 first, Imprint order for EMAs, correct backgrounds
+          in both themes'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above default: thickness hierarchy, EMA ribbon for spread context,
-          crossover point highlights. Not yet publication-ready.'
+        passed: false
+        comment: 'Style-guide baseline: bold title, line-width hierarchy the Notes
+          ask for; nothing beyond'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: theme_minimal() base with L-shaped axis lines and subtle grid. Legend
-          background hard-coded white rather than ELEVATED_BG. Margins not maximally
-          generous.
+        passed: false
+        comment: Crossover dots carry a page-colored outline that separates them from
+          the lines beneath, and minor grid removed in favour of monthly breaks
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Crossover markers and EMA ribbon guide viewer toward trading signals.
-          Bold price line draws eye first. Falls short of 6 because no contextual
-          labels anchor trend phases.
+        passed: false
+        comment: Crossover markers are what the Notes suggest; the EMA ribbon is an
+          unrequested band and earns no credit
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,28 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EMA overlay chart with price line and multiple EMA lines.
+        comment: Price line with EMA overlays on the same price axis
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Price line prominent; EMA-12 and EMA-26 overlaid; distinct colors;
-          EMA lines thinner; crossover points highlighted; all series labeled.
+        passed: false
+        comment: Prominent price, distinct thinner EMAs, legend with periods all present;
+          crossover highlight drawn at index 1 where no crossing happens (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=Price ($); full 120-day range visible; EMAs track price
-          correctly.
+        comment: Every line at its computed value; dots on the short EMA
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title indicator-ema · python · plotnine · anyplot.ai correct per
-          rendered image. Legend labels Close Price, EMA-12, EMA-26 match series.
+        comment: Mandated title format; legend entries EMA-12 / EMA-26 / Close price
+          (USD)
     data_quality:
       score: 15
       max: 15
@@ -167,24 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all EMA aspects: trend following, divergence/convergence,
-          crossover events, spread via ribbon.'
+        comment: Trend, lag, downtrend and sideways stretches with several crossovers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic stock price using Gaussian random walk with drift; Jan-Jun
-          2024 trading days; plausible price levels.
+        comment: 120 business days of a plausible stock closing price, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 trading days, seed(42), EMA spans 12/26 are standard financial
-          indicators, ewm(adjust=False) is correct calculation.
+        comment: Prices 125-165 USD; checked EMA recursion (ewm adjust=False) and
+          that both EMAs start at the first price; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,35 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, plot, save. No functions or classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used; no extraneous imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Crossover detection loop is idiomatic. Long-format DataFrame via
-          pd.concat is clean.
+        comment: EMA via pandas ewm; no fake UI or hand-rolled computation
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Code saves to plot.png instead of f"plot-{THEME}.png". Pipeline requires
-          plot-light.png / plot-dark.png.
+        passed: true
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400, current plotnine API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -228,17 +227,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Multiple named geom layers, aes with data-level overrides, inherit_aes=False
-          for crossover layer, scale_x_datetime with date_labels. Well above default.
+        comment: Long-format data with color and size both mapped to series, scale_size_manual
+          + guides(size=None) to merge legends, scale_x_datetime date_breaks/date_labels
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Multi-geom layer composition (3x geom_line + geom_point for crossovers),
-          scale_color_manual with named dict, inherit_aes=False override — plotnine/ggplot2
-          specific patterns.
+        passed: false
+        comment: Grammar-native size scale for line hierarchy and a separate fill
+          legend for the signal layer; the ribbon is unrequested and earns no credit
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-09T11:41:16Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -248,6 +249,6 @@ impl_tags:
   - wide-to-long
   dataprep:
   - time-series
-  - rolling-window
   styling:
   - alpha-blending
+  - edge-highlighting

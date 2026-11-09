@@ -13,9 +13,10 @@
  *   visitor's (the public API, the bot check, the public limits), and this menu stays, so the
  *   admin can switch back;
  * - lines a visitor does not get, such as `AGENT_ENABLED` being off;
- * - after an expired admin session, the line that says so, with the link to `/debug`.
- *
- * Later extras (the progress grid, the meters) join as further `AdminSection`s in `children`.
+ * - after an expired admin session, the line that says so, with the link to `/debug`;
+ * - in `children`, as further `AdminSection`s the page passes: the running turn's progress grid
+ *   (`ProgressTimeline`, also in the visitor's view) and, on the admin lane only, the meters
+ *   (`now 2 runs · today 62 %`), which the page reads again as the menu opens (`onOpen`).
  *
  * A popover like the language chip's. It stays mounted while closed, so the data box keeps the
  * user's choice from one save to the next. The button never waits: the switch back from "view as
@@ -67,7 +68,9 @@ export interface AdminMenuProps {
   save?: AdminSave | null;
   /** Lines only an admin gets, such as why the session did not open. */
   diagnostics?: readonly string[];
-  /** Later admin extras, each an `AdminSection`. */
+  /** The menu opened: the page reads what its sections show again (the meters). */
+  onOpen?: () => void;
+  /** The page's admin extras, each an `AdminSection`: the progress grid, the meters. */
   children?: React.ReactNode;
 }
 
@@ -100,6 +103,45 @@ export function AdminSection({
   );
 }
 
+/**
+ * The admin meters (kit 5 option C): the runs in flight now, from the lane's `/status`, and the
+ * share of the day budget spent, from `/budget` (`budgetShare`, the debug page's share too):
+ * `now 2 runs · today 62 %`, with the share as a small bar beside it. `null` reads `—`: not
+ * read yet, or the read failed. Counts only; the admin lane only.
+ */
+export function AdminMeters({ runs, share }: { runs: number | null; share: number | null }) {
+  const now = runs === null ? 'now —' : `now ${runs} run${runs === 1 ? '' : 's'}`;
+  const today = share === null ? 'today —' : `today ${share} %`;
+  return (
+    <Box
+      data-testid="admin-meters"
+      sx={{
+        fontFamily: typography.mono,
+        fontSize: smallText,
+        color: 'var(--ink)',
+        display: 'flex',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 1,
+      }}
+    >
+      <span>{`${now} · ${today}`}</span>
+      {share !== null && (
+        <Box
+          component="span"
+          aria-hidden
+          sx={{ width: 96, height: 6, bgcolor: 'var(--rule)', display: 'inline-flex' }}
+        >
+          <Box
+            component="span"
+            sx={{ width: `${Math.min(share, 100)}%`, bgcolor: 'var(--ink-soft)' }}
+          />
+        </Box>
+      )}
+    </Box>
+  );
+}
+
 const LABEL: Record<AdminMode, string> = {
   admin: 'admin',
   visitor: 'admin · as visitor',
@@ -113,6 +155,7 @@ export function AdminMenu({
   fanOut = null,
   save = null,
   diagnostics = [],
+  onOpen,
   children,
 }: AdminMenuProps) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -129,11 +172,14 @@ export function AdminMenu({
         component="button"
         type="button"
         data-testid="admin-menu"
-        onClick={(event: React.MouseEvent<HTMLElement>) => setAnchor(event.currentTarget)}
+        onClick={(event: React.MouseEvent<HTMLElement>) => {
+          setAnchor(event.currentTarget);
+          onOpen?.();
+        }}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? popoverId : undefined}
-        title="admin only · the fan-out, .save() and the visitor's view"
+        title="admin only · the fan-out, .save(), the visitor's view, the progress grid and the meters"
         sx={{ ...headerChipSx, ml: 'auto' }}
       >
         {LABEL[mode]}

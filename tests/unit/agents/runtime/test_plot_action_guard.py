@@ -19,7 +19,7 @@ from agents.anyplot.agent import PASTED_LINE
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.pipeline import load_inputs
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger
-from agents.anyplot.plugins.tool_safety import PLOT_ACTION_REFUSAL, PLOT_ACTION_TOOLS, ToolSafetyPlugin
+from agents.anyplot.plugins.tool_safety import CAP_MESSAGE, PLOT_ACTION_REFUSAL, PLOT_ACTION_TOOLS, ToolSafetyPlugin
 from agents.anyplot.policy import root_instruction
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import BINDINGS, confirm_delta, read_session
@@ -125,7 +125,11 @@ class TestTheGuard:
     async def test_a_plot_action_reads_and_plots_once(self, action_ledger: RequestLedger) -> None:
         for name, args in READS.items():
             assert await before(name, args) is None, name
-        assert await before("plot_pipeline", {}) == {"status": "error", "code": "one_pipeline_per_turn"}
+        assert await before("plot_pipeline", {}) == {
+            "status": "error",
+            "code": "one_pipeline_per_turn",
+            "message": CAP_MESSAGE.format(tool="plot_pipeline", calls=1),
+        }
 
     async def test_the_guard_comes_before_the_arguments_and_after_the_allowlist(
         self, action_ledger: RequestLedger
@@ -140,8 +144,8 @@ class TestTheGuard:
             "code": "tool_not_allowed",
         }
 
-    def test_the_plot_buttons_are_the_create_and_the_carry(self) -> None:
-        assert PLOT_ACTIONS == {"create_plot", "carry_plot"} and PLOT_ACTIONS < set(ACTION_MESSAGES)
+    def test_the_plot_buttons_are_the_create_the_carry_and_the_new_data(self) -> None:
+        assert PLOT_ACTIONS == {"create_plot", "carry_plot", "plot_new_data"} and PLOT_ACTIONS < set(ACTION_MESSAGES)
 
     def test_the_prompt_names_the_code_and_every_refused_tool(self) -> None:
         policy = root_instruction()

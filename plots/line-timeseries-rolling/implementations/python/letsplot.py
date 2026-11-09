@@ -1,8 +1,10 @@
 """ anyplot.ai
 line-timeseries-rolling: Time Series with Rolling Average Overlay
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-13
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-09
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,58 +13,74 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
-# Data: Simulated daily sensor temperature readings
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette: the rolling average takes the brand green, the raw readings the next position
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+WINDOW = 14  # rolling window in days
+
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+TEMPERATURE = "Vienna Daily Mean Temperature (°C)"  # role: value
+ROLLING = "14-Day Rolling Average"  # role: rolling_avg
+
+# Data: replace this block with your own table, for example df = pd.read_csv("sensor.csv")
+# Simulated weather-station record: the seasonal cycle peaks in mid-July (day ~195)
 np.random.seed(42)
 n_days = 180
-dates = pd.date_range("2024-01-01", periods=n_days, freq="D")
+days = np.arange(n_days)
+temperature = 11 + 10 * np.sin(2 * np.pi * (days - 104) / 365) + np.random.normal(0, 3, n_days)
+df = pd.DataFrame({DATE: pd.date_range("2024-01-01", periods=n_days, freq="D"), TEMPERATURE: temperature})
+df[ROLLING] = df[TEMPERATURE].rolling(window=WINDOW).mean()
 
-# Generate realistic temperature data with seasonal trend and noise
-base_temp = 15  # Base temperature in Celsius
-seasonal = 10 * np.sin(2 * np.pi * np.arange(n_days) / 365)  # Seasonal variation
-noise = np.random.normal(0, 3, n_days)  # Daily fluctuations
-trend = np.linspace(0, 2, n_days)  # Slight warming trend
-values = base_temp + seasonal + noise + trend
+# Plot: reads only df and the constants above
+raw_label = "Raw Data"
+series = "Series"
+long_df = pd.concat(
+    [
+        df[[DATE, TEMPERATURE]].assign(**{series: raw_label}),
+        df[[DATE, ROLLING]].rename(columns={ROLLING: TEMPERATURE}).assign(**{series: ROLLING}),
+    ],
+    ignore_index=True,
+).dropna(subset=[TEMPERATURE])
 
-# Calculate 14-day rolling average
-rolling_window = 14
-rolling_avg = pd.Series(values).rolling(window=rolling_window, center=False).mean()
-
-# Create DataFrame for plotting
-df = pd.DataFrame({"date": dates, "value": values, "rolling_avg": rolling_avg})
-
-# Reshape data for lets-plot (long format for legend)
-df_raw = df[["date", "value"]].copy()
-df_raw["series"] = "Raw Data"
-df_raw = df_raw.rename(columns={"value": "temp"})
-
-df_rolling = df[["date", "rolling_avg"]].dropna().copy()
-df_rolling["series"] = f"{rolling_window}-Day Rolling Avg"
-df_rolling = df_rolling.rename(columns={"rolling_avg": "temp"})
-
-df_long = pd.concat([df_raw, df_rolling], ignore_index=True)
-
-# Plot
 plot = (
-    ggplot(df_long, aes(x="date", y="temp", color="series"))
-    + geom_line(aes(alpha="series", size="series"))
-    + labs(x="Date", y="Temperature (°C)", title="line-timeseries-rolling · letsplot · pyplots.ai")
-    + scale_color_manual(name="", values=["#306998", "#FFD43B"])
-    + scale_alpha_manual(name="", values=[0.5, 1.0])
-    + scale_size_manual(name="", values=[0.8, 2.5])
+    ggplot(long_df, aes(x=DATE, y=TEMPERATURE, color=series))
+    + geom_line(
+        aes(alpha=series, size=series), tooltips=layer_tooltips().line("@" + series).line("@{" + TEMPERATURE + "}")
+    )
+    + scale_color_manual(values={ROLLING: IMPRINT_PALETTE[0], raw_label: IMPRINT_PALETTE[1]}, name="")
+    + scale_alpha_manual(values={ROLLING: 1.0, raw_label: 0.55}, name="")
+    + scale_size_manual(values={ROLLING: 1.6, raw_label: 0.5}, name="")
+    + scale_x_datetime(format="%b %Y")
+    + labs(title="line-timeseries-rolling · python · letsplot · anyplot.ai", x=DATE, y=TEMPERATURE)
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major=element_line(color=GRID, size=0.3),
+        panel_grid_minor=element_blank(),
+        axis_line_x=element_line(color=INK_SOFT, size=0.6),
+        axis_line_y=element_line(color=INK_SOFT, size=0.6),
+        axis_ticks=element_blank(),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK),
+        legend_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="top",
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save HTML for interactive version
-ggsave(plot, "plot.html", path=".")
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")

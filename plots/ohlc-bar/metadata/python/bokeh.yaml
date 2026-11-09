@@ -2,49 +2,52 @@ library: bokeh
 language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:04:51Z'
-updated: '2026-05-17T10:51:28Z'
-generated_by: claude-haiku
-workflow_run: 25988513694
+updated: '2026-11-09T13:36:28Z'
+generated_by: claude-opus
+workflow_run: 42625812904
 issue: 3293
-language_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/bokeh/plot-dark.html
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Perfect visual output in both light and dark themes with excellent text legibility
-  - Correct OHLC implementation with proper up/down color differentiation
-  - Realistic financial data (50 trading days, proper price ranges)
-  - Proper use of bokeh segment() and HoverTool for interactivity
-  - No overlaps, accessibility issues, or unreadable elements
+  - 'Faithful OHLC construction from three bokeh segment glyphs per direction: a high-low
+    line plus a left open tick and a right close tick, all at their data values; TICK_WIDTH=0.35
+    keeps neighbouring ticks clearly apart so every period reads as its own bar'
+  - 'Up and down bars use Imprint brand green #009E73 and the red loss anchor #AE3030,
+    identical in both renders; the direction also reads from the tick order, so color
+    is not the sole signal'
+  - Trading-day x slots with major_label_overrides remove weekend gaps and label every
+    fifth session as 'Jun 02', 'Jun 09', … — date formatting fitted to daily data
+  - 'Grid chosen for this chart: horizontal price-level grid only at low alpha, no
+    vertical grid and no axis tick marks, so the price levels the Notes ask about
+    stay easy to read'
+  - Horizontal legend placed in reserved y-headroom (Range1d upper pad derived from
+    the data span) so it never sits on the bars
+  - HoverTool bound to the high-low renderers with formatted Date/Open/High/Low/Close
+    tooltips adds full inspection in the HTML output
+  - Theme tokens threaded through every chrome element; both renders are fully readable
   weaknesses:
-  - Code lacks theme environment variable pattern (ANYPLOT_THEME) - background and
-    text colors hardcoded instead of using theme tokens
-  - Uses export_png() which is discouraged in bokeh.md - should use Selenium screenshot
-    approach
-  - Output naming does not follow plot-{THEME}.html convention
-  - Design is functional but generic - no intentional aesthetic sophistication or
-    visual hierarchy
-  - No visual storytelling or emphasis to guide viewer through insights
+  - 'Suggestion: the x labels carry no year (''Jun 02'' … ''Aug 04''); adding it to
+    the first label or the axis title (e.g. ''Date (2025)'') would anchor the period.'
+  - 'Suggestion: the data loop (lines 48–63) could be expressed as a vectorized random
+    walk with np.cumsum for a shorter data block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "ohlc-bar · bokeh · anyplot.ai" (36pt), X-axis "Date", Y-axis "Price ($)" all clearly readable in dark text
-      Tick labels: "Jun 01", "Jun 06", etc. visible in secondary text color
-      Data: OHLC bars rendered with teal vertical lines (high-low range), horizontal ticks (open-close), up bars in teal/cyan (#009E73), down bars in orange (#E07020)
-      Grid: Subtle dashed lines with low opacity
-      Legibility verdict: PASS - all elements readable with perfect contrast
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: bold title "ohlc-bar · python · bokeh · anyplot.ai" top-left (~42% width), y-axis "Price ($)" with ticks 130–170, x-axis "Date" with labels Jun 02 … Aug 04 every five sessions; dark ink text, all readable; faint horizontal grid only; L-shaped axis lines.
+      Data: 50 OHLC bars — thin vertical high-low lines with a short left open tick and right close tick; up bars #009E73 green, down bars #AE3030 red; ticks never touch neighbours. Horizontal legend "Up (close ≥ open)" / "Down (close < open)" top-left in the headroom, clear of the bars.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and axis labels rendered in light color (#F0EFE8 or similar) with excellent contrast on dark background
-      Tick labels: Light-colored, clearly readable (appears to be INK_SOFT token)
-      Data: OHLC bars identical to light render - teal for up, orange for down (data colors unchanged across themes, only chrome flipped)
-      Grid: Subtle and visible on dark background
-      Legibility verdict: PASS - no dark-on-dark failures, all text clearly readable against dark surface
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light soft grey, legend text light on a #242420 box; no dark-on-dark text; grid subtle but visible.
+      Data: identical green/red bar colors and positions to the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,70 +58,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (36pt, 28pt, 22pt); perfectly readable
-          in both light and dark themes
+        comment: Title 50pt, axis titles 42pt, ticks/legend 34pt; readable in both
+          themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced with no collisions
+        comment: No text collisions; legend sits in headroom above the bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: OHLC bars and ticks clearly visible; teal and orange colors well
-          separated
+        comment: 5 px lines and ticks clearly visible for 50 bars; legend line glyphs
+          match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Strong contrast between teal and orange; CVD-safe palette
+        comment: Green vs red differ in lightness; direction also encoded by tick
+          order
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization (60-70%); balanced margins
+        comment: 3200x1800, balanced margins, nothing clipped, balanced axis/tick
+          labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Price ($), Date formatting correct'
+        comment: '''Date'' and ''Price ($)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Rendered output uses #009E73 (teal) for up, orange for down; backgrounds
-          #FAF8F1 light / #1A1A17 dark; text colors theme-correct'
+        comment: 'Up = #009E73, down = #AE3030 loss anchor (semantic); correct theme
+          backgrounds'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured defaults but not distinctive; generic color and layout
-          choices
+        passed: true
+        comment: Raised for the horizontal legend tucked into data-derived headroom
+          and the trading-day axis without weekend gaps
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Library defaults with minimal customization; grid functional but
-          not refined
+        passed: true
+        comment: Raised for a grid chosen for this chart (price-level y grid only,
+          no x grid, no tick marks)
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual emphasis or narrative guidance
+        comment: Data displayed with Notes-allowed direction colors; no further hierarchy
+          chosen
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +134,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OHLC bar chart; all subtypes present
+        comment: Correct OHLC bar chart, no filled bodies
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Vertical range bars, horizontal open/close ticks, up/down coloring
-          all present
+        comment: Thin high-low lines, left open/right close ticks, direction colors,
+          daily date formatting, grid lines; all characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price; all 50 days visible
+        comment: Marks at their data values; price axis spans lows/highs without zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend N/A for implicit up/down series
+        comment: Mandated title format; legend labels descriptive
     data_quality:
       score: 15
       max: 15
@@ -157,23 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All OHLC aspects shown: opens, highs, lows, closes, bull/bear days'
+        comment: Up and down bars, varied ranges, trend and rebound shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price data, 50 trading days, realistic $150 starting price,
-          plausible volatility
+        comment: Daily stock prices over 50 trading days, the scenario the spec names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $130-$170 realistic; daily movements align with ~1-3%
-          volatility
+        comment: Prices 131–168 $, daily moves ~1–3 %; high >= max(open,close) and
+          low <= min by construction (checked in code)
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -181,59 +186,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, figure, plot, save'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports from numpy, pandas, bokeh
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Code is clear but missing theme environment variable pattern; uses
-          discouraged export_png(); hardcoded background color
+        passed: true
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Output correctly named as plot-light.png and plot-dark.png
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per library
+          prompt
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct use of figure(), ColumnDataSource, segment(), HoverTool but
-          straightforward application
+        passed: true
+        comment: ColumnDataSource per group, segment glyphs, legend_label grouping,
+          Range1d from data
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses HoverTool and ColumnDataSource (bokeh patterns) but generic
-          application
+        passed: true
+        comment: HoverTool bound to specific renderers with formatted tooltips; ticker
+          + major_label_overrides for a gapless trading-day axis
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T13:33:46Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - hover-tooltips
+  - layer-composition
   - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - columndatasource
+  - iteration-over-groups
   dataprep:
   - time-series
   styling:

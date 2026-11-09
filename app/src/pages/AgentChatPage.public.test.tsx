@@ -79,6 +79,17 @@ function renderPage(library = 'matplotlib', language = 'python', extra = '') {
   );
 }
 
+/** One route's answer in place of the stub's, every other route as before. */
+function answerWith(pathname: string, response: Response) {
+  const stub = globalThis.fetch as unknown as ReturnType<
+    typeof vi.fn<(input: string, init?: RequestInit) => Promise<Response>>
+  >;
+  const base = stub.getMockImplementation()!;
+  stub.mockImplementation(async (input, init) =>
+    new URL(input).pathname === pathname ? response.clone() : base(input, init)
+  );
+}
+
 /** The calls to the debug API: a visitor's browser makes none. */
 const debugCalls = () => calls.filter(call => call.url.pathname.includes('/debug/'));
 /** The chat's own calls, on the public lane. */
@@ -161,9 +172,40 @@ describe('AgentChatPage on the public lane', () => {
         .getAllByRole('button')
         .map(button => button.textContent)
     ).toEqual(['view as visitor']);
+    // The public lane has no `/budget`: the visitor's view has no meters and asks none.
+    expect(within(menu).queryByTestId('admin-meters')).not.toBeInTheDocument();
+    expect(calls.some(call => call.url.pathname.endsWith('/budget'))).toBe(false);
     // The owner's persona tests are no visitor's use.
     expect(analytics.trackPageview).not.toHaveBeenCalled();
     expect(analytics.trackEvent).not.toHaveBeenCalledWith('agent_open', expect.anything());
+  });
+
+  it("shows a visitor the service's mood from the public lane's status, and asks no budget", async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('load-mood')).toHaveTextContent(/quiet$/));
+    expect(calls.some(call => call.url.pathname.endsWith('/agent/status'))).toBe(true);
+    expect(calls.some(call => call.url.pathname.endsWith('/budget'))).toBe(false);
+  });
+
+  it('shows no mood after a failed first read, never a guessed quiet', async () => {
+    answerWith('/agent/status', json(503, { detail: 'unavailable' }));
+    renderPage();
+    await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
+    expect(screen.getByTestId('chat-frame-tab')).toBeInTheDocument();
+    expect(screen.queryByTestId('load-mood')).not.toBeInTheDocument();
+  });
+
+  it('asks no budget for an expired admin session either', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    answerWith('/debug/agent/status', json(403, { detail: 'Invalid admin token' }));
+    renderPage();
+    await waitFor(() =>
+      expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin · expired ▾$/)
+    );
+    await userEvent.setup().click(screen.getByTestId('admin-menu'));
+    const menu = await screen.findByRole('dialog', { name: 'Admin' });
+    expect(within(menu).queryByTestId('admin-meters')).not.toBeInTheDocument();
+    expect(calls.some(call => call.url.pathname.endsWith('/budget'))).toBe(false);
   });
 
   it('says it is an experimental AI in one line, with the details behind its button', async () => {

@@ -20,7 +20,8 @@
  * - Folded by default since 2026-11-02 (owner: less text, the details behind
  *   a toggle rather than removed): the image, its toolbar and the theme switch
  *   show; the run's rounds and its "what changed" list sit behind one status
- *   line (`second try · 5 changes ⓘ`), and the code behind `.show_code()`,
+ *   line (`ready in 1:12 · second try · 5 changes ⓘ`: how long the plot took
+ *   by the working line's clock, when the page timed it), and the code behind `.show_code()`,
  *   while `.copy()` and the downloads stay in view. Each card keeps its own
  *   choice while the session lives, also across a fold of the whole card;
  *   a new version's card starts folded. The residual notes stay in view: they
@@ -99,7 +100,7 @@ import { decisionsText, plotCardLabel } from 'src/sections/agent-chat/cardLabels
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { InteractivePreview } from 'src/sections/agent-chat/InteractivePreview';
-import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
+import { elapsedClock, IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { plainNotes } from 'src/sections/agent-chat/residualNotes';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
@@ -557,10 +558,16 @@ export function ResultCard({
   // Named the way the progress grid names its rounds, and which round shipped when an earlier one won.
   const attempts = triesText(result);
   const rounds = gridRows(result.rounds ?? [], [], result.status);
-  // The status line: the tries and how many changes the run made, and the toggle of both lists.
-  const summary = result.changes.length
-    ? `${attempts} · ${plural(result.changes.length, 'change')}`
-    : attempts;
+  // The status line: how long the plot took (the working line's clock, frozen as it shipped), the
+  // tries and how many changes the run made, and the toggle of both lists. A version the page did
+  // not time says no time, never a wrong one.
+  const summary = [
+    version.readyMs !== undefined ? `ready in ${elapsedClock(version.readyMs)}` : null,
+    attempts,
+    result.changes.length ? plural(result.changes.length, 'change') : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
   const hasDetails = rounds.length > 0 || result.changes.length > 0;
   // The remembered decisions the version kept and the ones it added, as the server named them;
   // a version whose memory is unknown has neither.

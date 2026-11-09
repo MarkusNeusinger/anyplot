@@ -158,8 +158,8 @@ ADAPTATION rules, with the Python profile's ids: exactly one top-level
 `const data = loadUserData();` (`placeholder-count`) and `loadUserData` nowhere else
 (`placeholder-use`); no draws from the distributions that fabricate data (`rng`: D3's
 `randomNormal`, `randomLogNormal`, `randomExponential`, ...; `Math.random`, D3's
-`randomUniform`, `randomInt`, `randomLcg` and `shuffle` stay allowed for jitter and
-subsampling, R's and Julia's precedent); no data from memory (`literal-data`: an array
+`randomUniform`, `randomInt`, `randomLcg` and `shuffle` stay allowed for jitter, never to
+sample the rows, R's and Julia's precedent); no data from memory (`literal-data`: an array
 literal with more than `MAX_LITERAL_NUMBERS` numbers); the palette prefix kept
 (`palette-prefix`: an `IMPRINT_PALETTE` or `IMPRINT` the code writes out keeps the
 original entries in order and adds only the next Imprint positions, and is never
@@ -632,7 +632,8 @@ RNG_DRAWS = re.compile(
     r"|Cauchy|Bates|IrwinHall|Bernoulli)$"
 )
 """D3's draws from distributions that fabricate data; `Math.random`, `d3.randomUniform`, `d3.randomInt`,
-`d3.randomLcg` and `d3.shuffle` stay allowed for jitter and subsampling (R's and Julia's precedent)."""
+`d3.randomLcg` and `d3.shuffle` stay allowed for jitter, never to sample the rows (R's and Julia's precedent; the
+check is syntactic)."""
 
 _URL_IN_TEXT = re.compile(
     r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S|(?:^|[\s\"'(=,])/{2,}[a-z0-9_\[%]"
