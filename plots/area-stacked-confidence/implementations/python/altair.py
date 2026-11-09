@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -57,13 +57,12 @@ ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 VALUE, LOW, HIGH = CONSUMPTION[0], LOWER[0], UPPER[0]
 sources = [str(source) for source in df[SOURCE].dropna().unique()]
 
-# Stack each source on the ones listed before it; bands stack the same way so each sits on its own edge
+# Stack each source on the ones listed before it; each band is that source's own interval shifted onto its stack base
 stacked = df.dropna(subset=[SOURCE]).copy()
-by_quarter = stacked.groupby(QUARTER, sort=False)
-stacked["stack_top"] = by_quarter[VALUE].cumsum()
+stacked["stack_top"] = stacked.groupby(QUARTER, sort=False)[VALUE].cumsum()
 stacked["stack_base"] = stacked["stack_top"] - stacked[VALUE]
-stacked["band_low"] = by_quarter[LOW].cumsum()
-stacked["band_high"] = by_quarter[HIGH].cumsum()
+stacked["band_low"] = stacked["stack_base"] + stacked[LOW]
+stacked["band_high"] = stacked["stack_base"] + stacked[HIGH]
 
 x_enc = alt.X(QUARTER.translate(ESCAPE), type="temporal", title=QUARTER, axis=alt.Axis(format="%Y-Q%q", grid=False))
 color_enc = alt.Color(
