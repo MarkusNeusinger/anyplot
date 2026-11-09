@@ -1,10 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 circos-basic: Circos Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-15
+Library: letsplot | Python 3.13
+Quality: pending | Updated: 2026-11-09
 """
 
-import math
 import os
 
 import numpy as np
@@ -12,7 +11,6 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
-    coord_fixed,
     element_blank,
     element_rect,
     element_text,
@@ -20,6 +18,8 @@ from lets_plot import (
     geom_text,
     ggplot,
     ggsize,
+    guide_legend,
+    guides,
     labs,
     scale_fill_manual,
     scale_x_continuous,
@@ -31,300 +31,196 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
-np.random.seed(42)
-
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Genomic-style data: 8 chromosomes with connections and expression data
-chromosomes = ["Chr1", "Chr2", "Chr3", "Chr4", "Chr5", "Chr6", "Chr7", "Chr8"]
-n_chromosomes = len(chromosomes)
+# Imprint palette: all eight positions, one per segment in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Chromosome sizes (proportional to their arc length)
-chr_sizes = [120, 95, 85, 75, 70, 65, 55, 50]  # Megabases
+# Constants: layout radii of the circle (unit circle = outer edge of the segment ring)
+RING_OUTER, RING_INNER = 1.0, 0.92
+TRACK_BANDS = [(0.89, 0.79), (0.75, 0.65), (0.61, 0.51)]  # (outer, inner) per track, up to three
+LABEL_RADIUS = 1.10
+GAP_SHARE = 0.10  # share of the circle left as gaps between segments
+ARC_POINTS = 60
+PANEL_ASPECT = 1.11  # panel width / height on the square canvas under title, legend and caption: keeps the circle round
 
-# Connections between chromosomes (inter-chromosomal rearrangements)
-connections = [
-    ("Chr1", "Chr3", 25),
-    ("Chr1", "Chr5", 18),
-    ("Chr2", "Chr4", 22),
-    ("Chr2", "Chr7", 15),
-    ("Chr3", "Chr6", 20),
-    ("Chr4", "Chr8", 12),
-    ("Chr5", "Chr7", 16),
-    ("Chr6", "Chr8", 10),
-    ("Chr1", "Chr8", 8),
-    ("Chr3", "Chr5", 14),
-]
+# Columns: set these to your table's column names
+CHROMOSOME = "Chromosome"  # role: source
+LINKED = "Linked chromosome"  # role: target
+LINKS = "Rearrangements"  # role: value
+LENGTH = "Length (Mb)"  # role: segment_size
+LIVER = "Expression, liver"  # role: track_data
+BRAIN = "Expression, brain"  # role: extra
 
-# Track data: expression levels for each chromosome (inner tracks)
-expression_track1 = [0.85, 0.72, 0.93, 0.68, 0.81, 0.55, 0.78, 0.62]  # Normalized 0-1
-expression_track2 = [0.45, 0.82, 0.38, 0.91, 0.55, 0.73, 0.42, 0.88]  # Normalized 0-1
-
-# Colors for chromosomes (colorblind-friendly palette)
-chr_colors = ["#306998", "#FFD43B", "#27AE60", "#E74C3C", "#9B59B6", "#1ABC9C", "#F39C12", "#3498DB"]
-
-# Calculate angular positions for each chromosome
-total_size = sum(chr_sizes)
-gap_angle = 0.08  # Gap between chromosomes in radians
-total_gap = gap_angle * n_chromosomes
-available_angle = 2 * math.pi - total_gap
-
-# Assign angular positions to each chromosome
-chr_arcs = {}
-current_angle = 0
-for i, chrom in enumerate(chromosomes):
-    arc_size = (chr_sizes[i] / total_size) * available_angle
-    chr_arcs[chrom] = {
-        "start": current_angle,
-        "end": current_angle + arc_size,
-        "mid": current_angle + arc_size / 2,
-        "size": chr_sizes[i],
-        "color": chr_colors[i],
-        "idx": i,
+# Data: replace this block with your own table, for example df = pd.read_csv("rearrangements.csv")
+# Segment rows carry the length and the track values; link rows carry the linked chromosome and the count.
+segments = pd.DataFrame(
+    {
+        CHROMOSOME: ["Chr1", "Chr2", "Chr3", "Chr4", "Chr5", "Chr6", "Chr7", "Chr8"],
+        LENGTH: [120, 95, 85, 75, 70, 65, 55, 50],
+        LIVER: [0.85, 0.72, 0.93, 0.68, 0.81, 0.55, 0.78, 0.62],
+        BRAIN: [0.45, 0.82, 0.38, 0.91, 0.55, 0.73, 0.42, 0.88],
     }
-    current_angle += arc_size + gap_angle
+)
+links = pd.DataFrame(
+    [
+        ("Chr1", "Chr3", 25),
+        ("Chr1", "Chr5", 18),
+        ("Chr2", "Chr4", 22),
+        ("Chr2", "Chr7", 15),
+        ("Chr3", "Chr6", 20),
+        ("Chr4", "Chr8", 12),
+        ("Chr5", "Chr7", 16),
+        ("Chr6", "Chr8", 10),
+        ("Chr1", "Chr8", 8),
+        ("Chr3", "Chr5", 14),
+    ],
+    columns=[CHROMOSOME, LINKED, LINKS],
+)
+df = pd.concat([segments, links], ignore_index=True)
 
-# Radii for different elements
-outer_radius = 1.0  # Outer chromosome ring
-inner_ring_radius = 0.92  # Inner edge of chromosome ring
-track1_outer = 0.88  # Expression track 1
-track1_inner = 0.78
-track2_outer = 0.74  # Expression track 2
-track2_inner = 0.64
-chord_radius = 0.60  # Ribbons connecting chromosomes
+# Plot: reads only df and the constants above
+tracks = [LIVER, BRAIN]
+segments = df[df[LINKED].isna()]
+order = list(df[CHROMOSOME].dropna().unique())
+# A ribbon is drawn only when both of its ends are segments on the ring
+links = df.dropna(subset=[CHROMOSOME, LINKED, LINKS])
+links = links[(links[LINKS] > 0) & links[LINKED].isin(order)]
+colors = [IMPRINT_PALETTE[i] for i in range(len(order))]
 
-# Build outer arc segments (chromosome ring)
-arc_data = []
-n_arc_points = 50
+# Arc lengths follow the segment lengths; segments without a length get the mean one
+sizes = segments.groupby(CHROMOSOME, sort=False)[LENGTH].sum(min_count=1).reindex(order)
+sizes = sizes.fillna(sizes.mean()).fillna(1.0)
+gap = 2 * np.pi * GAP_SHARE / len(order)
+arcs = sizes / sizes.sum() * (2 * np.pi - gap * len(order))
+starts = pd.Series(np.concatenate([[0.0], np.cumsum(arcs.to_numpy() + gap)[:-1]]), index=order)
 
-for chrom in chromosomes:
-    arc = chr_arcs[chrom]
-    angles = np.linspace(arc["start"], arc["end"], n_arc_points)
+# Outer segment ring
+ring_frames = []
+for name in order:
+    a = np.linspace(starts[name], starts[name] + arcs[name], ARC_POINTS)
+    radius = np.concatenate([np.full(ARC_POINTS, RING_OUTER), np.full(ARC_POINTS, RING_INNER)])
+    angle = np.concatenate([a, a[::-1]])
+    ring_frames.append(
+        pd.DataFrame({"x": radius * np.cos(angle), "y": radius * np.sin(angle), "poly": name, CHROMOSOME: name})
+    )
+ring_df = pd.concat(ring_frames, ignore_index=True)
 
-    # Outer edge
-    for angle in angles:
-        arc_data.append(
-            {
-                "x": outer_radius * np.cos(angle),
-                "y": outer_radius * np.sin(angle),
-                "chromosome": chrom,
-                "arc_id": f"{chrom}_arc",
-            }
+# Concentric data tracks: a faint band per segment, and a bar whose height follows the value
+track_values = segments.groupby(CHROMOSOME, sort=False)[tracks].mean().reindex(order)
+band_frames, bar_frames = [], []
+for track, (outer, inner) in zip(tracks, TRACK_BANDS, strict=False):
+    peak = track_values[track].max()
+    for name in order:
+        a = np.linspace(starts[name], starts[name] + arcs[name], ARC_POINTS)
+        angle = np.concatenate([a, a[::-1]])
+        band_r = np.concatenate([np.full(ARC_POINTS, outer), np.full(ARC_POINTS, inner)])
+        band_frames.append(
+            pd.DataFrame({"x": band_r * np.cos(angle), "y": band_r * np.sin(angle), "poly": f"{track}|{name}"})
         )
-    # Inner edge (reversed)
-    for angle in reversed(angles):
-        arc_data.append(
-            {
-                "x": inner_ring_radius * np.cos(angle),
-                "y": inner_ring_radius * np.sin(angle),
-                "chromosome": chrom,
-                "arc_id": f"{chrom}_arc",
-            }
-        )
+        value = track_values.at[name, track]
+        if pd.notna(value) and peak > 0:
+            top = inner + (outer - inner) * max(value, 0) / peak
+            bar_r = np.concatenate([np.full(ARC_POINTS, top), np.full(ARC_POINTS, inner)])
+            bar_frames.append(
+                pd.DataFrame(
+                    {
+                        "x": bar_r * np.cos(angle),
+                        "y": bar_r * np.sin(angle),
+                        "poly": f"{track}|{name}",
+                        CHROMOSOME: name,
+                    }
+                )
+            )
+band_df = pd.concat(band_frames, ignore_index=True)
+bar_df = (
+    pd.concat(bar_frames, ignore_index=True) if bar_frames else pd.DataFrame(columns=["x", "y", "poly", CHROMOSOME])
+)
 
-arc_df = pd.DataFrame(arc_data)
+# Ribbons: one angle per link unit everywhere, so a ribbon is equally wide at both ends
+chord_radius = TRACK_BANDS[len(tracks) - 1][1] - 0.03
+totals = pd.concat([links.groupby(CHROMOSOME)[LINKS].sum(), links.groupby(LINKED)[LINKS].sum()])
+totals = totals.groupby(level=0).sum().reindex(order).fillna(0)
+unit = np.nanmin(np.where(totals > 0, 0.9 * arcs / totals.where(totals > 0), np.inf))
+cursor = starts + (arcs - totals * unit) / 2
+t = np.linspace(0, 1, 50)[1:-1]
+ribbon_frames = []
+for k, (src, tgt, value) in enumerate(zip(links[CHROMOSOME], links[LINKED], links[LINKS], strict=True)):
+    width = value * unit
+    s0, s1 = cursor[src], cursor[src] + width
+    cursor[src] = s1
+    e0, e1 = cursor[tgt], cursor[tgt] + width
+    cursor[tgt] = e1
+    src_arc = np.linspace(s0, s1, 12)
+    tgt_arc = np.linspace(e0, e1, 12)
+    # Quadratic Bezier curves through the centre join the two anchor arcs
+    xs = np.concatenate(
+        [
+            chord_radius * np.cos(src_arc),
+            ((1 - t) ** 2 * np.cos(s1) + t**2 * np.cos(e0)) * chord_radius,
+            chord_radius * np.cos(tgt_arc),
+            ((1 - t) ** 2 * np.cos(e1) + t**2 * np.cos(s0)) * chord_radius,
+        ]
+    )
+    ys = np.concatenate(
+        [
+            chord_radius * np.sin(src_arc),
+            ((1 - t) ** 2 * np.sin(s1) + t**2 * np.sin(e0)) * chord_radius,
+            chord_radius * np.sin(tgt_arc),
+            ((1 - t) ** 2 * np.sin(e1) + t**2 * np.sin(s0)) * chord_radius,
+        ]
+    )
+    ribbon_frames.append(pd.DataFrame({"x": xs, "y": ys, "poly": f"link{k}", CHROMOSOME: src}))
+ribbon_df = (
+    pd.concat(ribbon_frames, ignore_index=True)
+    if ribbon_frames
+    else pd.DataFrame(columns=["x", "y", "poly", CHROMOSOME])
+)
 
-# Build track 1 data (bar heights based on expression)
-track1_data = []
-for chrom in chromosomes:
-    arc = chr_arcs[chrom]
-    expr = expression_track1[arc["idx"]]
+# Segment labels outside the ring
+mids = starts + arcs / 2
+label_df = pd.DataFrame(
+    {"x": LABEL_RADIUS * np.cos(mids.to_numpy()), "y": LABEL_RADIUS * np.sin(mids.to_numpy()), "label": order}
+)
 
-    # Create arc segment for this track
-    angles = np.linspace(arc["start"], arc["end"], n_arc_points)
-    bar_height = track1_inner + (track1_outer - track1_inner) * expr
+limit = LABEL_RADIUS + 0.06
+caption = f"Inner tracks, outer to inner: {' · '.join(tracks)} | Ribbon width: {LINKS}"
+title = "circos-basic · python · letsplot · anyplot.ai"
 
-    # Outer edge at expression level
-    for angle in angles:
-        track1_data.append(
-            {
-                "x": bar_height * np.cos(angle),
-                "y": bar_height * np.sin(angle),
-                "chromosome": chrom,
-                "track_id": f"{chrom}_track1",
-            }
-        )
-    # Inner edge
-    for angle in reversed(angles):
-        track1_data.append(
-            {
-                "x": track1_inner * np.cos(angle),
-                "y": track1_inner * np.sin(angle),
-                "chromosome": chrom,
-                "track_id": f"{chrom}_track1",
-            }
-        )
-
-track1_df = pd.DataFrame(track1_data)
-
-# Build track 2 data
-track2_data = []
-for chrom in chromosomes:
-    arc = chr_arcs[chrom]
-    expr = expression_track2[arc["idx"]]
-
-    angles = np.linspace(arc["start"], arc["end"], n_arc_points)
-    bar_height = track2_inner + (track2_outer - track2_inner) * expr
-
-    # Outer edge at expression level
-    for angle in angles:
-        track2_data.append(
-            {
-                "x": bar_height * np.cos(angle),
-                "y": bar_height * np.sin(angle),
-                "chromosome": chrom,
-                "track_id": f"{chrom}_track2",
-            }
-        )
-    # Inner edge
-    for angle in reversed(angles):
-        track2_data.append(
-            {
-                "x": track2_inner * np.cos(angle),
-                "y": track2_inner * np.sin(angle),
-                "chromosome": chrom,
-                "track_id": f"{chrom}_track2",
-            }
-        )
-
-track2_df = pd.DataFrame(track2_data)
-
-# Build ribbon connections between chromosomes
-ribbon_data = []
-ribbon_id = 0
-
-# Track offsets for connection placement within each chromosome
-chr_offsets = {chrom: chr_arcs[chrom]["start"] for chrom in chromosomes}
-
-for src, tgt, val in connections:
-    src_arc = chr_arcs[src]
-    tgt_arc = chr_arcs[tgt]
-
-    # Calculate angular width proportional to connection value
-    width_factor = val / 100.0  # Normalize
-    src_width = (src_arc["end"] - src_arc["start"]) * width_factor * 0.8
-    tgt_width = (tgt_arc["end"] - tgt_arc["start"]) * width_factor * 0.8
-
-    # Source position
-    src_start = chr_offsets[src]
-    src_end = src_start + src_width
-    chr_offsets[src] = src_end + 0.01
-
-    # Target position
-    tgt_start = chr_offsets[tgt]
-    tgt_end = tgt_start + tgt_width
-    chr_offsets[tgt] = tgt_end + 0.01
-
-    # Create bezier-like ribbon
-    n_bezier = 40
-    polygon_x = []
-    polygon_y = []
-
-    # Source arc at chord radius
-    src_angles = np.linspace(src_start, src_end, 10)
-    for angle in src_angles:
-        polygon_x.append(chord_radius * np.cos(angle))
-        polygon_y.append(chord_radius * np.sin(angle))
-
-    # Bezier curve from source end to target start
-    src_end_x = chord_radius * np.cos(src_end)
-    src_end_y = chord_radius * np.sin(src_end)
-    tgt_start_x = chord_radius * np.cos(tgt_start)
-    tgt_start_y = chord_radius * np.sin(tgt_start)
-
-    for i in range(1, n_bezier):
-        t = i / n_bezier
-        x = (1 - t) ** 2 * src_end_x + 2 * (1 - t) * t * 0 + t**2 * tgt_start_x
-        y = (1 - t) ** 2 * src_end_y + 2 * (1 - t) * t * 0 + t**2 * tgt_start_y
-        polygon_x.append(x)
-        polygon_y.append(y)
-
-    # Target arc (reversed)
-    tgt_angles = np.linspace(tgt_end, tgt_start, 10)
-    for angle in tgt_angles:
-        polygon_x.append(chord_radius * np.cos(angle))
-        polygon_y.append(chord_radius * np.sin(angle))
-
-    # Bezier curve back from target end to source start
-    tgt_end_x = chord_radius * np.cos(tgt_end)
-    tgt_end_y = chord_radius * np.sin(tgt_end)
-    src_start_x = chord_radius * np.cos(src_start)
-    src_start_y = chord_radius * np.sin(src_start)
-
-    for i in range(1, n_bezier):
-        t = i / n_bezier
-        x = (1 - t) ** 2 * tgt_end_x + 2 * (1 - t) * t * 0 + t**2 * src_start_x
-        y = (1 - t) ** 2 * tgt_end_y + 2 * (1 - t) * t * 0 + t**2 * src_start_y
-        polygon_x.append(x)
-        polygon_y.append(y)
-
-    # Add points to dataframe
-    for x, y in zip(polygon_x, polygon_y, strict=False):
-        ribbon_data.append({"x": x, "y": y, "ribbon_id": f"ribbon_{ribbon_id}", "source": src})
-
-    ribbon_id += 1
-
-ribbon_df = pd.DataFrame(ribbon_data)
-
-# Create chromosome labels
-label_data = []
-label_radius = 1.12
-for chrom in chromosomes:
-    arc = chr_arcs[chrom]
-    mid_angle = arc["mid"]
-    label_data.append({"x": label_radius * np.cos(mid_angle), "y": label_radius * np.sin(mid_angle), "label": chrom})
-
-label_df = pd.DataFrame(label_data)
-
-# Build the circos plot
 plot = (
     ggplot()
-    # Ribbons connecting chromosomes (innermost, with transparency)
-    + geom_polygon(
-        aes(x="x", y="y", group="ribbon_id", fill="source"), data=ribbon_df, alpha=0.45, color=PAGE_BG, size=0.2
-    )
-    # Expression track 2 (inner track)
-    + geom_polygon(
-        aes(x="x", y="y", group="track_id", fill="chromosome"), data=track2_df, alpha=0.65, color=PAGE_BG, size=0.3
-    )
-    # Expression track 1 (middle track)
-    + geom_polygon(
-        aes(x="x", y="y", group="track_id", fill="chromosome"), data=track1_df, alpha=0.8, color=PAGE_BG, size=0.3
-    )
-    # Outer chromosome ring
-    + geom_polygon(
-        aes(x="x", y="y", group="arc_id", fill="chromosome"), data=arc_df, alpha=0.95, color=PAGE_BG, size=0.8
-    )
-    # Chromosome labels
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=14, color=INK, fontface="bold")
-    + scale_fill_manual(values=chr_colors, name="Chromosome")
-    + coord_fixed(ratio=1)
-    + scale_x_continuous(limits=(-1.45, 1.45))
-    + scale_y_continuous(limits=(-1.45, 1.45))
-    + labs(title="circos-basic · letsplot · anyplot.ai")
-    + ggsize(1200, 1200)
+    + geom_polygon(aes(x="x", y="y", group="poly"), data=band_df, fill=INK, alpha=0.06, color=PAGE_BG, size=0.3)
+    + geom_polygon(aes(x="x", y="y", group="poly", fill=CHROMOSOME), data=ribbon_df, alpha=0.5, color=PAGE_BG, size=0.2)
+    + geom_polygon(aes(x="x", y="y", group="poly", fill=CHROMOSOME), data=bar_df, alpha=0.85, color=PAGE_BG, size=0.3)
+    + geom_polygon(aes(x="x", y="y", group="poly", fill=CHROMOSOME), data=ring_df, color=PAGE_BG, size=0.6)
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=6, color=INK, fontface="bold")
+    + scale_fill_manual(values=colors, limits=order, name=CHROMOSOME)
+    + scale_x_continuous(limits=(-limit * PANEL_ASPECT, limit * PANEL_ASPECT))
+    + scale_y_continuous(limits=(-limit, limit))
+    + guides(fill=guide_legend(nrow=1))
+    + labs(title=title, caption=caption)
+    + ggsize(600, 600)
     + theme(
-        plot_title=element_text(size=26, face="bold", color=INK),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        plot_caption=element_text(size=9, color=INK_SOFT),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid=element_blank(),
-        legend_text=element_text(size=14, color=INK_SOFT),
-        legend_title=element_text(size=16, face="bold", color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_blank(),
         legend_position="bottom",
+        legend_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
 )
 
-# Save as PNG (scale 3x for 3600x3600 px output)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
-
-# Save as HTML for interactivity
+# Save: 600 × 600 at scale 4 = 2400 × 2400 px
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
