@@ -519,6 +519,9 @@ COMMENT = re.compile(r"(?:^|(?<=\s))#.*$", re.MULTILINE)
 """A comment, and anything a `#` after a blank starts: dropping too much only weakens the plain reading below."""
 THEME_STATEMENT_LINE = re.compile(r'^THEME\s*<-\s*Sys\.getenv\("ANYPLOT_THEME", "light"\)\s*$', re.MULTILINE)
 """The theme statement, whose `Sys.getenv` the profile admits there and nowhere else."""
+STRING = re.compile(r'"(?:[^"\\\n]|\\.)*"|\'(?:[^\'\\\n]|\\.)*\'')
+"""A one-line string literal: blanked before the readings of code, so a title such as "Data source (2024)" or a
+label holding `<<-` is not read as a call or an assignment."""
 LIBRARY_CALL = re.compile(r"^\s*(?:library|require)\(\s*[\"']?([A-Za-z][A-Za-z0-9.]*)[\"']?\s*\)", re.MULTILINE)
 SUPER_ASSIGNMENT = re.compile(r"<<-|->>")
 URL_STRING = re.compile(r"[\"'](?:https?|ftp)://")
@@ -538,9 +541,10 @@ def test_catalogue_corpus() -> None:
         normalised = normalise(path.read_text(encoding="utf-8"))
         findings = Counter(finding.rule for finding in validate_security(normalised))
         assert set(findings) <= KNOWN_FINDINGS.get(name, frozenset()), (name, findings)
-        code = THEME_STATEMENT_LINE.sub("", COMMENT.sub("", normalised))
-        imports = [package for package in LIBRARY_CALL.findall(code) if package not in available]
+        text = COMMENT.sub("", THEME_STATEMENT_LINE.sub("", normalised))
+        bare = COMMENT.sub("", STRING.sub('""', THEME_STATEMENT_LINE.sub("", normalised)))
+        imports = [package for package in LIBRARY_CALL.findall(text) if package not in available]
         assert findings["banned-import"] >= len(imports), name
-        assert findings["banned-statement"] >= len(SUPER_ASSIGNMENT.findall(code)), name
-        assert findings["url-literal"] >= len(URL_STRING.findall(code)), name
-        assert findings["banned-name"] >= len([call for call in CALL_NAME.findall(code) if denied(call)]), name
+        assert findings["url-literal"] >= len(URL_STRING.findall(text)), name
+        assert findings["banned-statement"] >= len(SUPER_ASSIGNMENT.findall(bare)), name
+        assert findings["banned-name"] >= len([call for call in CALL_NAME.findall(bare) if denied(call)]), name

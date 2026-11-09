@@ -226,10 +226,15 @@ def test_the_figure_mode_draws_every_canvas(library: str) -> None:
     assert canvas.on_target and canvas.pixels is None
 
 
-PLOTLY_THEME_SAVE = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*\.write_image\(\s*f"plot-\{THEME\}\.png"', re.MULTILINE)
+PLOTLY_THEME_SAVE = re.compile(
+    r"""^[A-Za-z_][A-Za-z0-9_]*\.write_image\(\s*f(["'])plot-\{THEME\}\.png\1""", re.MULTILINE
+)
 """A module-level `fig.write_image(f"plot-{THEME}.png", ...)`: the save the plotly step always pins."""
-BOKEH_NAMED_SAVE = re.compile(r"^(?:save|export_png|show)\(\s*[A-Za-z_][A-Za-z0-9_]*\s*[,)]", re.MULTILINE)
-"""A module-level `save(p)`, `export_png(p, ...)` or `show(p)` of a named plot: the save the bokeh step always pins."""
+BOKEH_NAMED_SAVE = re.compile(
+    r"^(?:bokeh\.(?:io|plotting)\.)?(?:save|export_png|show)\(\s*[A-Za-z_][A-Za-z0-9_]*\s*[,)]", re.MULTILINE
+)
+"""A module-level `save(p)`, `export_png(p, ...)` or `show(p)` of a named plot, also as `bokeh.io.save(p)`: the save
+the bokeh step always pins."""
 BROWSER_SCREENSHOT = re.compile(r"\.save_screenshot\(|\.screenshot\(|[\"']Page\.captureScreenshot[\"']")
 """The catalogue's own export through a browser (Selenium's `driver.save_screenshot(...)`, an element's
 `.screenshot(...)`, or Chrome's `Page.captureScreenshot` through `execute_cdp_cmd`), a valid ending of a bokeh file

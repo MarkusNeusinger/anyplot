@@ -220,10 +220,12 @@ def test_code_with_syntax_problems_is_read_as_far_as_it_parses() -> None:
 
 LITERAL_TOKEN = re.compile(r'^([A-Z][A-Z0-9_]*)\s*<-\s*if \(THEME == "(?:light|dark)"\) "[^"\n]*" else "[^"\n]*"\s*$')
 """A theme token of the plainest shape, `PAGE_BG <- if (THEME == "light") "#FAF8F1" else "#1A1A17"`."""
-DATA_LINE = re.compile(r"^# Data\b")
-PLOT_LINE = re.compile(r"^# Plot\b")
+DATA_LINE = re.compile(r"^# (?:--- )?Data\b")
+PLOT_LINE = re.compile(r"^# (?:--- )?Plot\b")
+"""The catalogue's two marker forms, `# Data` and the decorated `# --- Data: ...`, each spelled out."""
 COLUMN_LINE = re.compile(r'^([A-Z][A-Z0-9_]*)\s*<-\s*"[^"\n]*"\s*# role: \w+\s*$')
-STANDARD_TARGET_TEXT = re.compile(r'sprintf\(\s*"plot-%s\.png"\s*,\s*THEME\s*\)')
+STANDARD_TARGET_TEXT = re.compile(r"""sprintf\(\s*(["'])plot-%s\.png\1\s*,\s*THEME\s*\)""")
+SAVE_COMMENT = re.compile(r"(?:^|(?<=\s))#.*$", re.MULTILINE)
 
 
 def test_catalogue_corpus() -> None:
@@ -244,7 +246,7 @@ def test_catalogue_corpus() -> None:
         assert len(regions.saves) == 1, name
         assert regions.save.device == "ragg::agg_png", name
         assert set(regions.save.keywords) <= set(SAVE_KEYWORDS), name
-        save = text(code, regions.save.statement)
+        save = SAVE_COMMENT.sub("", text(code, regions.save.statement))
         assert regions.save.standard_target == bool(STANDARD_TARGET_TEXT.search(save)), name
         tokens = {token.name for token in regions.theme_tokens}
         assert {m.group(1) for line in lines if (m := LITERAL_TOKEN.match(line))} <= tokens, name
