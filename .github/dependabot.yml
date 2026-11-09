@@ -64,6 +64,9 @@ updates:
       # ignore was in place) on 2026-10-22, when Rolldown 1.1.5 put its interop
       # helper into the theme chunk and made a cycle with the mui chunk. #12235
       # fixed it with 8.3.5, whose Rolldown emits that helper as its own chunk.
+      # Usually, not always: on 2026-11-08 dropping the web-vitals chunk let it
+      # fold the helper into theme again, so app/vite.config.ts now builds the
+      # theme modules into the mui chunk.
       - dependency-name: "vite"
         update-types:
           [

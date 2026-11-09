@@ -2,45 +2,54 @@ library: seaborn
 language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:38:38Z'
-updated: '2026-05-10T10:49:35Z'
-generated_by: claude-haiku
-workflow_run: 25626522942
+updated: '2026-11-09T09:07:22Z'
+generated_by: claude-opus
+workflow_run: 42589299124
 issue: 2331
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Both light and dark renders perfectly readable with correct theme-adaptive colors
-  - Data color (#009E73) matches Okabe-Ito brand palette exactly
-  - Clean, focused design clearly communicates classifier calibration quality
-  - Includes both Brier score and ECE metrics for comprehensive evaluation
-  - 'Proper theme-adaptive backgrounds (#FAF8F1 light / #1A1A17 dark) with no legibility
-    failures'
-  - Diagonal reference line effectively guides interpretation
+  - Brier score and ECE are folded into each model's legend label, so every metric
+    sits next to the curve it belongs to without an extra annotation layer
+  - Long-format melt plus pandas cut/groupby feeds a single sns.lineplot with hue
+    and style mapped to the model (estimator=None, sort=True), giving every curve
+    its own Imprint color and a redundant marker shape; points sit exactly at each
+    bin's computed (mean prediction, fraction of positives)
+  - The optional prediction histogram is a 3:1 secondary panel sharing the probability
+    x axis (sharex), drawn with sns.histplot element='step' and light fills so the
+    three distributions stay readable where they overlap
+  - 'The three synthetic classifiers show the three calibration archetypes: near-diagonal
+    logistic regression, a flattened overconfident Naive Bayes and a steep underconfident
+    random forest'
+  - Theme tokens are threaded through set_theme rc, the marker halos (markeredgecolor=PAGE_BG)
+    and the INK_MUTED diagonal, so both renders read cleanly with identical data colors
   weaknesses:
-  - Design Excellence could be elevated through custom spine styling (remove top/right)
-    or refined grid appearance
-  - Library Mastery could be enhanced with more distinctive seaborn features (set_palette,
-    custom grid styling)
+  - 'DQ-02 (both): the base rate of about 36 % defaults (np.random.beta(2, 3.5)) is
+    far above what a hold-out set of loan applicants shows → a default rate of roughly
+    10–20 % (for example beta(1.5, 6)). Likely cause: the beta parameters of the calibrated
+    probabilities.'
+  - 'Suggestion: the histogram''s 20 bins could match the curve''s 10 bins so each
+    point lines up with the bar that holds its samples.'
+  - 'Suggestion: ordering the legend entries by ECE would put the ranking of the models
+    in reading order.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "calibration-curve · seaborn · anyplot.ai" is clearly readable in dark text. X-axis "Mean Predicted Probability" and Y-axis "Fraction of Positives" are readable. All tick labels (0.0-1.0) are distinct and well-spaced. Legend shows "Logistic Regression (Brier: 0.236, ECE: 0.036)" and "Perfectly Calibrated" with clear visibility. Grid lines are subtle but visible.
-      Data: Green circular markers (#009E73, Okabe-Ito position 1) plot observed fraction of positives against mean predicted probability. Gray dashed diagonal reference line shows perfect calibration baseline.
-      Legibility verdict: PASS - All text maintains excellent contrast with no overlaps. All elements clearly distinguishable. No dark-on-light or light-on-light failures.
+      Background: warm off-white #FAF8F1 across figure and both panels, 2400x2400 square canvas.
+      Chrome: title "calibration-curve · python · seaborn · anyplot.ai" in dark ink, about 67 % of the width; y label "Fraction of positives (Defaulted)", histogram y label "Count", shared x label "Predicted probability (curve: bin mean)"; tick labels in INK_SOFT, subtle grid, top/right spines removed; legend in an elevated off-white frame at the upper left, clear of all data. All readable.
+      Data: upper panel (3/4 height) shows a grey dashed diagonal "Perfect calibration" and three reliability curves with markers at each bin: Logistic regression #009E73 circles hugging the diagonal (Brier 0.192, ECE 0.019), Naive Bayes #C475FD squares flattened across the diagonal (Brier 0.211, ECE 0.129), Random forest #4467A3 triangles steep between 0.29 and 0.62 (Brier 0.211, ECE 0.113). Lower panel: step histograms of predicted probabilities per model in the same colors with light fills, sharing the 0–1 x axis.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title, axis labels, and tick labels are rendered in light text that maintains full contrast and readability. No dark-on-dark failures present. Legend is readable with appropriate background. Grid lines are subtle and visible.
-      Data: Green markers (#009E73) are identical shade to light render - data colors properly theme-independent. Diagonal reference line visible with same gray dashed styling.
-      Legibility verdict: PASS - All text elements rendered in appropriately light colors for dark surface. Brand green data markers pop clearly against dark background. Perfect color consistency between renders.
-
-    Both renders demonstrate excellent theme-adaptation with proper chrome switching while maintaining data color integrity.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels and legend text in light ink, tick labels in light grey, grid subtle but visible, legend frame on #242420 with a light outline; no dark-on-dark text anywhere.
+      Data: identical colors, markers and positions to the light render; marker halos switch to the dark page color; the dashed diagonal is light grey and clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,51 +60,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both light and dark renders. Font sizes
-          appropriate for 4800×2700px
+        comment: Explicit sizes (title 12, labels 10, ticks 8, legend 7); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No colliding elements. Legend, axes, labels well-spaced with generous
-          margins
+        comment: Legend sits in the empty upper-left corner; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Data markers clearly visible. Diagonal reference line visible. Grid
-          subtle but distinguishable
+        comment: Bin markers at 7 pt with page-colored halos; legend glyphs match
+          the line+marker marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) is Okabe-Ito palette, colorblind-safe with strong
-          contrast on both surfaces
+        comment: Green/purple/blue plus distinct marker shapes; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proportional space use. Nothing cut off. Appropriate margins and
-          centering
+        comment: Square 2400x2400 canvas, 3:1 panel ratio, balanced labels, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Mean Predicted Probability'', ''Fraction of
-          Positives''. Correct title format'
+        comment: Descriptive labels naming the outcome and the binned quantity
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Data #009E73, backgrounds #FAF8F1/#1A1A17, both renders theme-correct'
+        comment: 'Imprint order from #009E73; correct #FAF8F1 / #1A1A17 surfaces'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -103,22 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean, professional rendering. Intentional simplicity effective but
-          margins exist for custom spine/grid refinement
+        comment: Metrics folded into the legend labels and redundant marker shapes
+          with page-colored halos, beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid subtle with good alpha control. Could enhance with custom spine
-          styling or theme-aware colors
+        comment: Zero-length ticks, marker halos and a 3:1 shared-axis histogram panel
+          kept visually subordinate
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Excellent visual hierarchy. Reference line guides interpretation.
-          Metrics (Brier/ECE) provide essential context
+        comment: Data chosen to contrast well calibrated, overconfident and underconfident
+          models, ranked by their legend metrics
     spec_compliance:
       score: 15
       max: 15
@@ -128,53 +134,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calibration curve format showing binned predictions vs observed
-          frequency
+        comment: Reliability diagram with the optional histogram panel
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line, binning, Brier/ECE metrics. Optional histogram
-          omitted (acceptable)
+        comment: Diagonal, 10 equal-width bins, Brier and ECE per model, histogram
+          shares the x axis and is smaller, legend names each model
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: mean predicted probability. Y-axis: fraction of positives.
-          Scale 0-1 appropriate'
+        comment: Points at each bin's mean prediction vs fraction of positives, straight
+          segments, empty bins dropped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''calibration-curve · seaborn · anyplot.ai''.
-          Legend labels clear'
+        comment: Mandated title; legend entries are readable model names with their
+          metrics
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows well-calibrated model with Brier and ECE metrics. Focused scope
-          appropriate
+        comment: Shows calibrated, overconfident (flattened) and underconfident (steep)
+          curves plus the prediction distributions
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Synthetic data plausible. Metrics (Brier: 0.236, ECE: 0.036) realistic
-          for well-calibrated classifier'
+        comment: Credit-risk scenario with real model names, but a ~36 % default base
+          rate is implausible for loan applicants (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Probability scale (0-1) standard. Metric values realistic
+        comment: Probabilities in 0-1, 2000 samples in the spec's range; checked the
+          legend metrics follow from the binned computation in code (lines 71-82);
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -184,57 +191,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, focused implementation appropriate for plot type
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic rendering
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Straightforward, appropriate complexity
+        comment: pandas cut/groupby computes the curve and the bin counts the ECE
+          needs in one pass
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs as theme-aware plot-light.png and plot-dark.png
+        comment: Saves plot-{THEME}.png at dpi=400 with default bbox
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses seaborn lineplot() appropriately. Proper theme system implied
-          by correct backgrounds
+        comment: Long-format melt with hue/style mapping, estimator=None lineplot,
+          histplot hue with binrange, sns.despine
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Standard seaborn patterns. Could explore set_palette() or custom
-          grid styling for deeper customization
+        comment: Seaborn's style semantic mapping markers per model and histplot element='step'
+          layering
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-09T09:04:10Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - shared-axes
+  - reference-line
+  - custom-legend
   patterns:
   - data-generation
+  - wide-to-long
   dataprep:
   - binning
+  - groupby-aggregation
   styling:
-  - grid-styling
+  - alpha-blending
+  - publication-ready

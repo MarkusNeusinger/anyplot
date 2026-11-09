@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-split: Split Violin Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-08
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 87/100 | Updated: 2026-11-09
 """
 
 import os
@@ -11,124 +11,102 @@ import pandas as pd
 import plotly.graph_objects as go
 
 
-# Theme-adaptive colors
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette (first series is always #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette: all eight positions, one per split group in order (first is always #009E73)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Salary distributions by gender across job categories
+# Columns: set these to your table's column names
+JOB = "Job Category"  # role: category
+SALARY = "Annual Salary ($)"  # role: value
+GENDER = "Gender"  # role: split_group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("salaries.csv")
 np.random.seed(42)
-
-categories = ["Software Engineering", "Product Management", "Sales", "Operations"]
 n_per_group = 100
+salary_mixtures = {  # (mean, sd) of each mixture component; components share the rows equally
+    "Software Engineering": {"Male": [(95000, 18000), (135000, 15000)], "Female": [(92000, 17000), (132000, 16000)]},
+    "Product Management": {"Male": [(105000, 20000)], "Female": [(101000, 21000)]},
+    "Sales": {
+        "Male": [(60000, 12000), (95000, 15000), (140000, 18000)],
+        "Female": [(58000, 13000), (92000, 16000), (135000, 19000)],
+    },
+    "Operations": {"Male": [(72000, 16000)], "Female": [(68000, 17000)]},
+}
+frames = []
+for job, genders in salary_mixtures.items():
+    for gender, components in genders.items():
+        n = n_per_group // len(components)
+        # Truncated normal by rejection: oversample, keep draws inside the pay band, take the first n
+        draws = [np.random.normal(mean, sd, 3 * n) for mean, sd in components]
+        salaries = np.concatenate([d[(d >= 40000) & (d <= 200000)][:n] for d in draws])
+        frames.append(pd.DataFrame({JOB: job, SALARY: salaries, GENDER: gender}))
+df = pd.concat(frames, ignore_index=True)
 
-data = []
-for category in categories:
-    # Male (left half) - varied distributions
-    if category == "Software Engineering":
-        male = np.concatenate(
-            [np.random.normal(95000, 18000, n_per_group // 2), np.random.normal(135000, 15000, n_per_group // 2)]
-        )
-    elif category == "Product Management":
-        male = np.random.normal(105000, 20000, n_per_group)
-    elif category == "Sales":
-        male = np.concatenate(
-            [
-                np.random.normal(60000, 12000, n_per_group // 3),
-                np.random.normal(95000, 15000, n_per_group // 3),
-                np.random.normal(140000, 18000, n_per_group // 3),
-            ]
-        )
-    else:  # Operations
-        male = np.random.normal(72000, 16000, n_per_group)
-
-    # Female (right half) - varied distributions with different centers
-    if category == "Software Engineering":
-        female = np.concatenate(
-            [np.random.normal(92000, 17000, n_per_group // 2), np.random.normal(132000, 16000, n_per_group // 2)]
-        )
-    elif category == "Product Management":
-        female = np.random.normal(101000, 21000, n_per_group)
-    elif category == "Sales":
-        female = np.concatenate(
-            [
-                np.random.normal(58000, 13000, n_per_group // 3),
-                np.random.normal(92000, 16000, n_per_group // 3),
-                np.random.normal(135000, 19000, n_per_group // 3),
-            ]
-        )
-    else:  # Operations
-        female = np.random.normal(68000, 17000, n_per_group)
-
-    # Clamp to reasonable salary range
-    male = np.clip(male, 40000, 200000)
-    female = np.clip(female, 40000, 200000)
-
-    for val in male:
-        data.append({"Category": category, "Salary": val, "Gender": "Male"})
-    for val in female:
-        data.append({"Category": category, "Salary": val, "Gender": "Female"})
-
-df = pd.DataFrame(data)
-
-# Create split violin plot
+# Plot: reads only df and the constants above
 fig = go.Figure()
-
-# Add traces for each gender
-for gender, okabe_idx in [("Male", 0), ("Female", 1)]:
-    subset = df[df["Gender"] == gender]
-    side = "negative" if gender == "Male" else "positive"
-
+for i, (gender, rows) in enumerate(df.groupby(GENDER, sort=False)):
     fig.add_trace(
         go.Violin(
-            x=subset["Category"],
-            y=subset["Salary"],
-            name=gender,
-            side=side,
-            line_color=IMPRINT[okabe_idx],
-            fillcolor=IMPRINT[okabe_idx],
+            x=rows[JOB],
+            y=rows[SALARY],
+            name=str(gender),
+            side="negative" if i % 2 == 0 else "positive",
+            line=dict(color=IMPRINT_PALETTE[i], width=1.5),
+            fillcolor=IMPRINT_PALETTE[i],
             opacity=0.75,
-            meanline_visible=True,
-            meanline_color=INK_SOFT,
+            meanline=dict(visible=True, color=INK, width=6),
+            box=dict(visible=True, width=0.25, fillcolor=ELEVATED_BG, line=dict(color=INK_SOFT, width=4)),
             points=False,
+            spanmode="hard",
             scalemode="width",
             width=0.9,
         )
     )
 
-# Update layout with theme-adaptive styling
+# Style
 fig.update_layout(
-    title=dict(text="violin-split · plotly · pyplots.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    autosize=False,
+    title=dict(
+        text="violin-split · python · plotly · anyplot.ai",
+        font=dict(size=16, color=INK),
+        x=0.5,
+        xanchor="center",
+        y=0.96,
+    ),
     xaxis=dict(
-        title=dict(text="Job Category", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
+        title=dict(text=JOB, font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
+        showgrid=False,
+        showline=True,
         linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
+        ticks="",
     ),
     yaxis=dict(
-        title=dict(text="Annual Salary ($)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
+        title=dict(text=SALARY, font=dict(size=12, color=INK)),
+        tickfont=dict(size=10, color=INK_SOFT),
+        tickformat="$,.0f",
         gridcolor=GRID,
-        linewidth=0.5,
+        showline=True,
         linecolor=INK_SOFT,
-        zerolinecolor=INK_SOFT,
+        zeroline=False,
+        ticks="",
     ),
     legend=dict(
-        title=dict(text="Gender", font=dict(size=18, color=INK)),
+        title=dict(text=GENDER, font=dict(size=10, color=INK), side="left"),
         bgcolor=ELEVATED_BG,
         bordercolor=INK_SOFT,
         borderwidth=1,
-        font=dict(size=16, color=INK_SOFT),
+        font=dict(size=10, color=INK_SOFT),
         orientation="h",
         yanchor="bottom",
-        y=1.02,
+        y=1.0,
         xanchor="center",
         x=0.5,
     ),
@@ -136,10 +114,10 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     violingap=0.15,
     violinmode="overlay",
-    margin=dict(l=100, r=60, t=120, b=80),
+    margin=dict(l=80, r=40, t=90, b=60),
     font=dict(family="sans-serif", color=INK),
 )
 
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

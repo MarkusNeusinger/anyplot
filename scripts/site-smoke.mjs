@@ -13,8 +13,9 @@
 // which tells which deploy answered. It also checks the API's /health. Console
 // errors are printed as warnings only, since third-party noise (an analytics
 // blocker, a GitHub rate limit) is not an outage. Exit code 0 means every
-// check passed, 1 means at least one failed, 2 means no browser could be found
-// or started, so nothing was checked.
+// check passed, 1 means at least one failed, 2 means none failed but something
+// went unchecked: no browser could be found or started, or Cloudflare answered
+// a page with a challenge (SMOKE_TOKEN below).
 //
 // Run (playwright-core lives in the scratchpad, not the repo):
 //   SCRATCH=<the session scratchpad>
@@ -27,6 +28,22 @@
 // and MIN_TEXT the characters a rendered #root must hold. NODE_PATH does not
 // reach ESM bare imports, so playwright-core is loaded through createRequire,
 // which honours it.
+//
+// SMOKE_TOKEN: Cloudflare classes headless Chromium as "definitely automated",
+// so if Super Bot Fight Mode challenges that group, every page here sees a
+// challenge page instead of the site. A WAF skip rule lets a request through
+// that phase when it carries `X-Smoke-Token` with the right value
+// (infra/cloudflare/README.md, "Security rules"). The value lives only in the
+// dev box's .env and in that rule, never in the repository; the open-pr skill's
+// recipe passes it in. The header goes only to https requests for SITE's own
+// origin, and only when that is one of the site hosts the rule names. Paths
+// under /api never get it: there the apex Worker forwards headers to the API
+// host and nginx forwards /api/event to Plausible. So neither the API host nor
+// a third party ever sees it, and the script never prints it. Unset, nothing is
+// sent. CI's "Browser boot" step runs against
+// localhost, where no Cloudflare stands in between, and never needs it. A page
+// Cloudflare challenged anyway says nothing about the site behind it, so its
+// line reads SKIP, not FAIL, and names the challenge.
 
 import { createRequire } from 'node:module';
 import { existsSync, readdirSync } from 'node:fs';
@@ -41,6 +58,15 @@ const pages = process.argv.slice(2);
 if (pages.length === 0) pages.push('/', '/plots', '/scatter-basic');
 // A rendered page carries far more; the blank page of #12225 carried none.
 const MIN_TEXT = Number(process.env.MIN_TEXT || 200);
+const SMOKE_TOKEN = process.env.SMOKE_TOKEN || '';
+const SITE_ORIGIN = new URL(SITE).origin;
+// The hosts the Cloudflare smoke bypass matches; anywhere else the token means nothing.
+const TOKEN_HOSTS = new Set(['anyplot.ai', 'www.anyplot.ai', 'python.anyplot.ai']);
+const carriesToken = (u) =>
+  u.protocol === 'https:' &&
+  u.origin === SITE_ORIGIN &&
+  TOKEN_HOSTS.has(u.hostname) &&
+  !/^\/api(\/|$)/.test(u.pathname);
 
 // A browser that is already on the machine: CHROME_PATH, the cloud container's
 // Chromium, or the one the Playwright MCP plugin installed locally. Never
@@ -87,9 +113,26 @@ try {
   console.log(`FAIL\tthe browser at ${executablePath} did not start: ${e.message.split('\n')[0]}`);
   process.exit(2);
 }
+
+// A context of its own per page, as browser.newPage() gives, so no page inherits another's cookies.
+// The token is added by a route rather than extraHTTPHeaders: those go out with every request of
+// the context, the page's calls to the API host and to third parties included.
+async function openPage() {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  if (SMOKE_TOKEN) {
+    await context.route(
+      carriesToken,
+      (route) => route.continue({ headers: { ...route.request().headers(), 'x-smoke-token': SMOKE_TOKEN } }),
+    );
+  }
+  return context.newPage();
+}
+
+let challenged = 0;
 for (const path of pages) {
   const url = `${SITE}${path.startsWith('/') ? path : `/${path}`}`;
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const page = await openPage();
+  let challenge = false;
   const pageErrors = [];
   const consoleErrors = [];
   page.on('pageerror', (e) => pageErrors.push(e.message));
@@ -100,15 +143,20 @@ for (const path of pages) {
   try {
     const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
     status = response ? response.status() : status;
-    // The app renders client-side: wait for #root to fill, bounded, then read it.
-    await page
-      .waitForFunction((min) => (document.getElementById('root')?.innerText.length ?? 0) >= min, MIN_TEXT, {
-        timeout: 15000,
-      })
-      .catch(() => {});
-    // The layout chrome alone can pass the text threshold while the route's lazy chunk still
-    // loads, so let the network settle (bounded) before the route is judged.
-    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+    // Cloudflare marks its challenge pages; such a page says nothing about the site behind it.
+    challenge = response?.headers()['cf-mitigated'] === 'challenge';
+    // A challenge page never grows the app's #root, so waiting for it would only burn the timeouts.
+    if (!challenge) {
+      // The app renders client-side: wait for #root to fill, bounded, then read it.
+      await page
+        .waitForFunction((min) => (document.getElementById('root')?.innerText.length ?? 0) >= min, MIN_TEXT, {
+          timeout: 15000,
+        })
+        .catch(() => {});
+      // The layout chrome alone can pass the text threshold while the route's lazy chunk still
+      // loads, so let the network settle (bounded) before the route is judged.
+      await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+    }
   } catch (e) {
     pageErrors.push(`navigation: ${e.message.split('\n')[0]}`);
   }
@@ -125,17 +173,26 @@ for (const path of pages) {
     })
     .catch(() => ({ text: 0, boundary: null, h1: null, bundle: null }));
   const ok = status === 200 && pageErrors.length === 0 && seen.text >= MIN_TEXT && !seen.boundary;
-  if (!ok) failed += 1;
+  const skipped = !ok && challenge;
+  if (skipped) challenged += 1;
+  else if (!ok) failed += 1;
   const detail =
+    (skipped ? `\tchallenged by Cloudflare, not checked (SMOKE_TOKEN ${SMOKE_TOKEN ? 'sent' : 'unset'})` : '') +
     (pageErrors.length ? `\tpageerror: ${pageErrors.slice(0, 2).join(' | ')}` : '') +
     (seen.boundary ? `\terror boundary: "${seen.boundary}"` : '');
   const warn = consoleErrors.length ? `\tconsole errors (warning): ${consoleErrors.length}` : '';
   console.log(
-    `${ok ? 'OK  ' : 'FAIL'}\t${url}\tstatus=${status}\ttext=${seen.text}\th1=${JSON.stringify(seen.h1)}` +
-      `\tbundle=${seen.bundle}${detail}${warn}`,
+    `${ok ? 'OK  ' : skipped ? 'SKIP' : 'FAIL'}\t${url}\tstatus=${status}\ttext=${seen.text}` +
+      `\th1=${JSON.stringify(seen.h1)}\tbundle=${seen.bundle}${detail}${warn}`,
   );
-  await page.close();
+  await page.context().close();
 }
 await browser.close();
-console.log(failed ? `${failed} check(s) failed: treat it as an incident` : 'all checks passed');
-process.exit(failed ? 1 : 0);
+if (failed) {
+  console.log(`${failed} check(s) failed${challenged ? `, ${challenged} not checked` : ''}: treat it as an incident`);
+} else if (challenged) {
+  console.log(`${challenged} page(s) challenged by Cloudflare, so not checked: check SMOKE_TOKEN and the smoke bypass`);
+} else {
+  console.log('all checks passed');
+}
+process.exit(failed ? 1 : challenged ? 2 : 0);
