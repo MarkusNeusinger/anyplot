@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:19:30Z'
-updated: '2026-11-09T11:39:14Z'
+updated: '2026-11-09T11:44:36Z'
 generated_by: claude-opus
 workflow_run: 42609887258
 issue: 3652
@@ -12,48 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - Tidy melt into one long frame with color and size both mapped to the series, so
-    scale_size_manual makes the price line (1.0) visibly thicker than both EMAs (0.6)
-    and guides(size=None) keeps a single combined legend — idiomatic grammar-of-graphics
-    layering
-  - 'EMAs come straight from pandas ewm(span=…, adjust=False): EMA-12 hugs the price
-    and turns early, EMA-26 is smoother and lags, neither drifts from the price level,
-    exactly the behavior the spec''s characteristic section asks for'
-  - 'Imprint palette in canonical order (price #009E73, EMA-12 #C475FD, EMA-26 #4467A3)
-    with identical data colors in both renders; every chrome element (title, axis
-    titles, ticks, grid, legend box) threads the theme tokens, so both themes read
-    cleanly'
-  - Crossover markers in Imprint ochre with a thin page-colored outline are small
-    and sit on the short EMA at each crossing, leaving the lines beneath visible
-  - scale_x_datetime with monthly breaks and '%b %Y' labels gives an uncluttered,
-    readable date axis
+  - 'The price line (size 1.0, #009E73) is clearly dominant over the two thinner EMA
+    lines (size 0.6, #C475FD and #4467A3), so the hierarchy the spec asks for reads
+    at a glance in both themes'
+  - 'EMAs are computed with pandas ewm(span, adjust=False), and they behave like their
+    periods: EMA-12 hugs and turns with the price, EMA-26 is smoother and turns later,
+    and both stay at the level of recent prices'
+  - 'Idiomatic grammar-of-graphics construction: wide-to-long melt, one geom_line
+    mapped to color and size by series, scale_color_manual/scale_size_manual with
+    limits from the data so the price gets #009E73, and guides(size=None) to merge
+    the line legend'
+  - 'Crossover markers in Imprint #BD8233 with a page-colored outline stay small enough
+    that the lines beneath stay visible, and sit on the short EMA at the crossing
+    dates'
+  - 'Theme tokens are threaded through every chrome element; both renders are fully
+    readable with correct #FAF8F1 / #1A1A17 surfaces and identical data colors'
+  - scale_x_datetime(date_breaks='1 month', date_labels='%b %Y') gives clean monthly
+    ticks for the 120 business days
   weaknesses:
-  - 'SC-04 (both): the legend explains the three lines but not the ochre crossover
-    dots, so the reader has to guess what the six amber markers mean → give the dots
-    a legend entry such as "EMA crossover" (for example by mapping a constant label
-    to fill on the geom_point layer with scale_fill_manual). Likely cause: geom_point(crossovers,
-    …) sets fill as a fixed parameter outside aes(), so no guide is built for it.'
-  - 'CQ-04 (code): lines 75–83 write out an 8-line Python loop with two compound conditions
-    to find sign changes of ema_short − ema_long → `np.flatnonzero(np.diff(np.sign(wide[short_label]
-    - wide[long_label])) != 0) + 1` (numpy), one line with the same indices. Likely
-    cause: the crossover detection was written element by element instead of vectorized.'
-  - 'Suggestion: the two crossover dots at the very first dates come from both EMAs
-    starting at the same first price and sit almost on top of each other; skipping
-    the warm-up stretch for crossover detection would leave only the meaningful crossings.'
+  - 'SC-02 (both): a crossover marker is drawn on 3 Jan 2024 (index 1), where the
+    two EMAs only leave their shared starting value (sign of EMA-12 − EMA-26 goes
+    0 → −) rather than cross; it overlaps the genuine crossover dot on 4 Jan → highlight
+    only real sign flips between −1 and +1 (one spurious marker fewer). Likely cause:
+    np.diff(np.sign(...)) != 0 counts the change from the zero at index 0 as a crossover;
+    drop zero signs (e.g. compare signs from index 1 on, or require sign[i-1] * sign[i]
+    < 0).'
+  - 'Suggestion: the ''Series'' legend title is generic; a title such as ''Line''
+    or dropping it would read slightly cleaner.'
+  - 'Suggestion: the vertical spacing between legend keys is generous; tightening
+    legend_key_spacing_y would make the legend more compact next to the panel.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across canvas and panel, not pure white.
-      Chrome: bold dark title "indicator-ema · python · plotnine · anyplot.ai" centered (~53% of width); axis titles "Date" and "Close price (USD)" in dark ink; monthly tick labels Jan 2024–Jun 2024 and y ticks 130–160 in soft ink; subtle grid; left and bottom axis lines only; legend "Series" on the right in an elevated box with a thin border. All text readable, no clipping.
-      Data: thick green #009E73 close-price line (120 business days, ~165 down to ~125, recovering to ~137), thinner lavender EMA-12 and blue EMA-26 lines, a faint blue-grey ribbon filling the gap between the two EMAs, and six small ochre crossover dots with page-colored outlines (two at the very start, one late January, early April, mid May, mid June).
+      Background: warm off-white #FAF8F1 across plot and panel; legend box on the elevated #FFFDF6 surface with a thin INK_SOFT frame.
+      Chrome: bold near-black title "indicator-ema · python · plotnine · anyplot.ai" (~53% of the width), axis titles "Date" and "Close price (USD)" in dark ink, monthly x ticks Jan 2024–Jun 2024 and y ticks 130–160 in dark gray, subtle major grid, left and bottom axis lines only. All text readable.
+      Data: thick #009E73 close-price line falling from ~163 to ~125 then recovering to ~137; thinner #C475FD EMA-12 and #4467A3 EMA-26 overlaid; a faint blue ribbon between the two EMAs; six #BD8233 crossover dots with page-colored outlines (two overlapping at the very start, then late Jan, early Apr, mid May, mid Jun). Legend "Series" (Close price (USD), EMA-12, EMA-26) and "Signal" (EMA crossover).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title in near-white, axis titles light, tick labels light grey, grid subtle but visible, legend box on a slightly elevated dark fill with light text. No dark-on-dark text anywhere.
-      Data: identical colors to the light render — green price, lavender EMA-12, blue EMA-26 (lower contrast than on light but clearly visible), the ribbon now a dark blue-grey, ochre crossover dots. Brand green reads well.
+      Background: warm near-black #1A1A17; legend on the elevated #242420 surface with a light frame.
+      Chrome: title in light ink, axis titles light, tick labels light gray; grid subtle but visible; no dark-on-dark text anywhere.
+      Data: identical colors to the light render (#009E73 price, #C475FD EMA-12, #4467A3 EMA-26, #BD8233 crossover dots); the ribbon reads as a dark navy band; crossover dot outlines now near-black.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -65,48 +66,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 12, axis titles 10, ticks and legend 8); all
-          text readable in both themes
+        comment: Explicit sizes (title 12, axis titles 10, ticks/legend 8); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the EMA lines crossing each other is the plot
-          type
+        comment: No text collisions; legend sits outside the panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line prominent, EMAs thinner but visible, crossover dots small
-          and outlined; legend line samples match the marks in both themes
+        comment: Price and EMA lines visible at their widths; crossover dots and legend
+          glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green / lavender / blue are CVD-distinct; no red-green signal
+        comment: Green/purple/blue/ochre distinguishable, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, balanced margins, legend fits on the right without
-          overflow
+        comment: 3200x1800 canvas, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Date" and "Close price (USD)" with unit'
+        comment: '''Date'' and ''Close price (USD)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint canonical order, first series #009E73, correct backgrounds
-          in both themes, data colors identical'
+        comment: 'Price #009E73 first, Imprint order for EMAs, correct backgrounds
+          in both themes'
     design_excellence:
       score: 9
       max: 20
@@ -116,23 +115,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit font
-          hierarchy; nothing decided beyond it'
+        comment: 'Style-guide baseline: bold title, line-width hierarchy the Notes
+          ask for; nothing beyond'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Crossover dots with a thin page-colored outline so they separate
-          from the lines beneath, and a monthly date-break density chosen for the
-          6-month range
+        passed: false
+        comment: Crossover dots carry a page-colored outline that separates them from
+          the lines beneath, and minor grid removed in favour of monthly breaks
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Crossovers follow the Notes; the EMA ribbon is an unrequested addition
-          and earns no credit
+        comment: Crossover markers are what the Notes suggest; the EMA ribbon is an
+          unrequested band and earns no credit
     spec_compliance:
       score: 14
       max: 15
@@ -142,28 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Price line with two EMA overlays on one price axis
+        comment: Price line with EMA overlays on the same price axis
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Price prominent, distinct EMA colors, EMAs thinner, 12/26 periods,
-          crossovers highlighted, periods labelled in legend; all good-version properties
-          met
+        passed: false
+        comment: Prominent price, distinct thinner EMAs, legend with periods all present;
+          crossover highlight drawn at index 1 where no crossing happens (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every line at its computed value; dots on the short EMA at each crossing
-          date
+        comment: Every line at its computed value; dots on the short EMA
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct; legend omits the crossover dots (defect line)
+        passed: true
+        comment: Mandated title format; legend entries EMA-12 / EMA-26 / Close price
+          (USD)
     data_quality:
       score: 15
       max: 15
@@ -173,23 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Downtrend, sideways stretch and recovery show the short EMA leading,
-          the long one lagging, and several crossovers
+        comment: Trend, lag, downtrend and sideways stretches with several crossovers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily closing prices of a stock over 120 business days, neutral
+        comment: 120 business days of a plausible stock closing price, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices 125–165 USD with ~1.8% daily volatility; EMAs from ewm(span,
-          adjust=False) start at the first price; no Check values in the spec
+        comment: Prices 125-165 USD; checked EMA recursion (ewm adjust=False) and
+          that both EMAs start at the first price; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -209,20 +205,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Lines 75–83 hand-written crossover loop replaceable by np.diff(np.sign(...))
-          (defect line)
+        passed: true
+        comment: EMA via pandas ewm; no fake UI or hand-rolled computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=400, 8x4.5 in), current API
+        comment: Saves plot-{THEME}.png at 8x4.5 in, dpi 400, current plotnine API
     library_mastery:
       score: 6
       max: 10
@@ -232,19 +227,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Tidy melt with color and size both mapped to the series, scale_size_manual
-          for line widths and guides(size=None) to merge the guides
+        comment: Long-format data with color and size both mapped to series, scale_size_manual
+          + guides(size=None) to merge legends, scale_x_datetime date_breaks/date_labels
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: scale_x_datetime date_breaks/date_labels; layer-level data frames
-          per geom
-  verdict: REJECTED
+        comment: Grammar-native size scale for line hierarchy and a separate fill
+          legend for the signal layer; the ribbon is unrequested and earns no credit
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
-  rendered_at: '2026-11-09T11:36:18Z'
+  rendered_at: '2026-11-09T11:41:16Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -254,7 +249,6 @@ impl_tags:
   - wide-to-long
   dataprep:
   - time-series
-  - rolling-window
   styling:
   - alpha-blending
   - edge-highlighting
