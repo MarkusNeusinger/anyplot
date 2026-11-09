@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: contour-decision-boundary
 created: '2025-12-31T05:48:19Z'
-updated: '2026-11-09T09:57:53Z'
+updated: '2026-11-09T20:49:22Z'
 generated_by: claude-opus
 workflow_run: 42596277251
 issue: 2921
@@ -12,59 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Point outlines are drawn in the INK token, so they flip from near-black on the
-    light render to near-white on the dark one and every training point stays clear
-    of both regions in both themes
-  - 'The Notes'' option is used and explained: correctly classified points are circles,
-    misclassified ones are larger diamonds, and the ''Training point'' legend explains
-    both shapes, so every misclassified point reads as one class lying on the other
-    class''s region'
-  - Regions are translucent (alpha 0.32) while the points carry the full Imprint color,
-    so the points stay the strongest marks and a point's class matches its region
-    by shared hue; the fill legend is titled 'Class (region and point)' to say so
-  - 'Grammar-native construction: geom_raster for the mesh with show_legend=False,
-    guide_legend(override_aes=...) to give the fill legend square swatches and the
-    shape legend a visible INK_SOFT fill, scale limits taken from the data order so
-    the first class gets #009E73'
-  - scale_*_continuous(expand=(0, 0)) with coord_cartesian on the mesh extent makes
-    the predicted regions fill the whole panel edge to edge, with no page-colored
-    gutter
-  - 'Adaptable code: the SVC falls back to a DummyClassifier for a single class, and
-    the plot block reads only df and the column constants'
+  - Region edges are contoured from the SVM margin with contourpy, so the curved boundary
+    is smooth with no mesh stair-steps
+  - Region fill at alpha 0.32 with ink-outlined points keeps the training points the
+    strongest marks on both regions in both themes
+  - Shared fill scale across region and point layers plus the legend title 'Cultivar
+    (region and point)' make misclassified points read immediately
+  - Matching limits on scale_shape_manual and scale_size_manual merge correct/misclassified
+    into one legend; override_aes keeps every glyph visible
+  - expand=(0,0) with coord_cartesian makes the predicted regions fill the whole plotted
+    plane
   weaknesses:
-  - 'SC-02 (both): the curved class boundary shows the mesh as stair-steps of about
-    12 px (one 200x200 cell), clearly visible at full size along the near-vertical
-    boundary at X1 = 1.8 and the lower-left boundary near X1 = -0.9, which violates
-    the spec''s ''mesh fine enough that a curved boundary does not show the grid as
-    stair-steps'' → a smooth boundary edge. Likely cause: geom_raster draws the hard
-    predicted labels cell by cell, so the color edge follows the cell edges; bilinear
-    interpolation only blurs each step. Drawing the regions from the continuous clf.decision_function
-    on the mesh (for example a filled contour split at 0) instead of the per-cell
-    labels gives an edge that follows the boundary between cells.'
-  - 'DQ-02 (both): the labels are abstract only, ''Class 0'' / ''Class 1'' and ''Feature
-    X1'' / ''Feature X2'', so the chart reads as a bare make_moons demo with no comprehensible
-    scenario → name the classes and features for a neutral context (for example two
-    plant varieties over two measured leaf traits with units), keeping the synthetic
-    make_moons geometry. Likely cause: np.where(y == 0, ''Class 0'', ''Class 1'')
-    and the FEATURE_1 / FEATURE_2 constants.'
-  - 'Suggestion: only three y ticks (-1, 0, 1) span the panel; a 0.5 step would make
-    point positions easier to read off.'
-  - 'Suggestion: the ''Correctly classified'' legend label sits within a few pixels
-    of the legend frame''s right edge; a little more legend padding would let it breathe.'
+  - 'Suggestion: the Rosea region in the light render is quite pale; a slightly higher
+    alpha (about 0.38) would balance the two regions'' visual weight.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page and panel; legend on the slightly lighter elevated surface with a thin INK_SOFT frame.
-      Chrome: title 'contour-decision-boundary · python · plotnine · anyplot.ai' centered at about 60 % of the width, dark ink; axis titles 'Feature X1' / 'Feature X2' and tick labels (-1..2 on x, -1/0/1 on y) in dark grey, all readable; no grid, left and bottom axis lines only; legend 'Class (region and point)' with square Class 0 (green) / Class 1 (purple) swatches and 'Training point' with a circle (Correctly classified) and a diamond (Misclassified), both in a grey fill.
-      Data: the whole panel is filled with a translucent green region (Class 0, #009E73 at alpha 0.32) and a translucent lilac region (Class 1, #C475FD) separated by a curved SVM boundary following the two moons; 200 training points drawn as full-color circles with a near-black outline, misclassified points as larger diamonds (purple diamonds in the green region, green diamonds in the purple region). The boundary edge shows small cell-sized stair-steps at full size. First class is #009E73.
+      Background: warm off-white #FAF8F1 page and panel.
+      Chrome: centered title "contour-decision-boundary · python · plotnine · anyplot.ai" in dark ink, axis titles "Leaf length (cm)" / "Leaf width (cm)", soft-ink tick labels, left and bottom axis lines, no grid; legend on the right on an elevated box: "Cultivar (region and point)" with Alba (green) and Rosea (lavender) squares, "Training point" with circle = Correctly classified and diamond = Misclassified. All readable.
+      Data: the whole panel is filled with a translucent green Alba region (left/top) and lavender Rosea region (right/bottom) separated by a smooth S-shaped boundary; 200 training points as ink-outlined circles in #009E73 and #C475FD; about 14 misclassified points as larger diamonds (green diamonds on the Rosea region, purple diamonds on the Alba region).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page and panel; legend on the #242420 elevated surface with a light-grey frame.
-      Chrome: title and axis titles in near-white, tick labels and legend labels in light grey, all readable; no dark-on-dark text anywhere; axis lines light grey.
-      Data: point colors identical to the light render (#009E73 green, #C475FD purple); the translucent regions now read as deep green and deep plum over the dark page; point outlines flip to near-white so every point stands out on both regions; misclassified diamonds identical in shape and position. Brand green clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and legend titles in light ink; tick and legend labels in soft light grey; legend box on #242420. No dark-on-dark text.
+      Data: identical point colors #009E73 / #C475FD; regions are the same hues at alpha 0.32 over the dark page (dark green / muted purple); point outlines flip to light ink and keep every point distinct.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -76,50 +50,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt, axis titles 10 pt, ticks and legend 8 pt; all readable
-          in both themes and at thumbnail size
+        comment: Explicit sizes (title 12, axis titles 10, ticks and legend 8 pt);
+          INK/INK_SOFT tokens keep every label readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; point overlap in the moon interiors stays readable
-          through the outlines
+        comment: No text collisions; the legend sits outside the panel; the few touching
+          points at the boundary stay distinguishable by their outlines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 200 points at size 3.2/4.2 with theme-flipping outlines, visible
-          on both regions in both themes; legend glyphs visible and matching
+        comment: 200 points at size 3.2 with an ink outline read clearly on both regions
+          in both themes; misclassified diamonds enlarged to 4.2; all legend glyphs
+          filled and outlined
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs purple is CVD-safe, and correct/misclassified is redundantly
-          encoded by shape and size
+        comment: Green vs lavender separates under CVD; correct/misclassified also
+          carried by shape and size, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced panel and legend, title about 60 % of the width,
-          nothing overflows
+        comment: 3200x1800 canvas; title about 60 % of the width; panel fills the
+          canvas well, legend balanced on the right, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Reader text; dimensionless synthetic features carry no unit (their
-          abstractness is scored in DQ-02)
+        comment: '''Leaf length (cm)'' and ''Leaf width (cm)'' are descriptive with
+          units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-2 in data order, #009E73 first; correct page
-          colors and chrome in both themes'
+        comment: 'First class Alba = #009E73, second Rosea = #C475FD in Imprint order;
+          backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
       score: 11
       max: 20
@@ -128,28 +103,26 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Beyond baseline: outline color tied to INK so points invert their
-          rim per theme, medium-weight title, legend title ''Class (region and point)''
-          that ties both layers to one key'
+        passed: true
+        comment: Legend title 'Cultivar (region and point)' explains the shared fill
+          encoding; tick marks dropped and medium-weight title chosen for this chart
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: 'Beyond baseline: no grid and no tick marks chosen for a filled raster,
-          expand=(0,0) so regions run edge to edge with no gutter, square override
-          swatches for the fill legend'
+        passed: true
+        comment: expand=(0,0) plus coord_cartesian makes the region fill run flush
+          to the axis lines; grid removed deliberately because the filled plane carries
+          the structure
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Misclassified points are enlarged as well as reshaped (4.2 vs 3.2),
-          an emphasis the Notes do not prescribe, drawing the eye to the boundary
-          errors
+        passed: true
+        comment: Misclassified points are enlarged as well as reshaped, so the errors
+          along the boundary become the focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -157,31 +130,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Decision-boundary regions from a trained SVC on a mesh with training
-          points overlaid
+        comment: Decision-boundary regions from a trained RBF SVM with training points
+          overlaid
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Translucent class regions, true-class markers, correct/misclassified
-          marker styles, legend all present; the curved boundary shows mesh stair-steps
-          (defect line)
+        passed: true
+        comment: Whole plane filled translucently, points at true class with outlines,
+          color match point/region, smooth contour-based boundary (no stair-steps),
+          legend covers classes and correct/misclassified markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at their exact feature values, regions cover the full feature
-          plane
+        comment: X1/X2 mapped correctly; points at exact values; axes cover all data
+          plus 10 % padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend titles and entries are reader text
+        comment: Title 'contour-decision-boundary · python · plotnine · anyplot.ai';
+          legend entries readable class names and status labels
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -189,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Curved non-linear boundary, misclassified points of both classes
-          on the other region, overlapping class areas near the boundary
+        comment: Curved non-linear boundary, interlocking classes, misclassified points
+          of both classes
       - id: DQ-02
         name: Realistic Context
-        score: 1
+        score: 5
         max: 5
-        passed: false
-        comment: 'Abstract labels only: ''Class 0/1'', ''Feature X1/X2'' (defect line)'
+        passed: true
+        comment: Two plant cultivars classified by leaf length and width; neutral
+          and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: make_moons with noise 0.25 gives a sensible two-class spread; no
-          Check values in the spec
+        comment: Leaf lengths 3.5-9.6 cm, widths 2.3-4.3 cm; 200 points and a 200x200
+          mesh within the spec's ranges. No Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -219,26 +194,26 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: random_state=42; deterministic SVC
+        comment: make_moons random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used, DummyClassifier included
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sklearn SVC and predict compute the regions; nothing hand-rolled
+        comment: contourpy (a non-plotting utility) turns the margin into smooth polygons;
+          complexity justified by the no-stair-steps requirement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at 400 dpi via plot.save; current plotnine
-          0.15 API
+        comment: Saves plot-{THEME}.png at 3200x1800 via plot.save; current API
     library_mastery:
       score: 6
       max: 10
@@ -247,29 +222,32 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Layered grammar with a separate data= layer, data-ordered scale limits,
-          guides(...) per aesthetic
+        passed: true
+        comment: 'Layered grammar: geom_polygon regions + geom_point, data-order limits,
+          shared fill scale across layers, coord_cartesian zoom'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: guide_legend(override_aes=...) to restyle each legend's keys and
-          geom_raster with interpolation
-  verdict: REJECTED
+        passed: true
+        comment: Per-guide override_aes and a merged shape+size legend via matching
+          scale limits
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
-  rendered_at: '2026-11-09T09:54:24Z'
+  rendered_at: '2026-11-09T10:02:08Z'
 impl_tags:
   dependencies:
   - sklearn
+  - contourpy
   techniques:
   - layer-composition
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
