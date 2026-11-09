@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 survival-kaplan-meier: Kaplan-Meier Survival Plot
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -34,10 +34,13 @@ GROUP = "Arm"  # role: group
 # Data: replace this block with your own table, for example df = pd.read_csv("trial.csv")
 np.random.seed(42)
 n_per_group = 80
-treatment_times = np.clip(np.random.exponential(scale=24, size=n_per_group), 0.5, 60)
-treatment_events = 1 - np.random.binomial(1, 0.25, n_per_group)
-control_times = np.clip(np.random.exponential(scale=16, size=n_per_group), 0.5, 60)
-control_events = 1 - np.random.binomial(1, 0.20, n_per_group)
+follow_up = 60  # study end in months; subjects still alive then are censored, not deaths
+treatment_raw = np.random.exponential(scale=24, size=n_per_group)
+treatment_events = (1 - np.random.binomial(1, 0.25, n_per_group)) * (treatment_raw < follow_up)
+treatment_times = np.clip(treatment_raw, 0.5, follow_up)
+control_raw = np.random.exponential(scale=16, size=n_per_group)
+control_events = (1 - np.random.binomial(1, 0.20, n_per_group)) * (control_raw < follow_up)
+control_times = np.clip(control_raw, 0.5, follow_up)
 df = pd.DataFrame(
     {
         TIME: np.concatenate([treatment_times, control_times]),
@@ -54,9 +57,10 @@ median_lines = []
 for i, (arm, rows) in enumerate(df.dropna(subset=[TIME, EVENT]).groupby(GROUP, sort=False)):
     color = IMPRINT_PALETTE[i]
     km = SurvfuncRight(rows[TIME].to_numpy(dtype=float), rows[EVENT].to_numpy(dtype=float))
-    times = np.concatenate([[0.0], km.surv_times])
-    surv = np.concatenate([[1.0], km.surv_prob])
-    se = np.concatenate([[0.0], km.surv_prob_se])
+    # Start at S = 1 and hold the last step out to the final follow-up time
+    times = np.concatenate([[0.0], km.surv_times, [rows[TIME].max()]])
+    surv = np.concatenate([[1.0], km.surv_prob, km.surv_prob[-1:]])
+    se = np.concatenate([[0.0], km.surv_prob_se, km.surv_prob_se[-1:]])
 
     ax.step(times, surv, where="post", color=color, linewidth=2.5, label=arm, zorder=3)
     ax.fill_between(
