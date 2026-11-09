@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-connected-temporal: Connected Scatter Plot with Temporal Path
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-09
@@ -31,9 +31,10 @@ YEAR = "Year"  # role: time
 # Fertility against urbanisation for an emerging economy, 1980-2023
 np.random.seed(42)
 urban_step = np.random.normal(0.95, 0.3, 44)
-urban_step[20:24] = np.random.normal(-0.1, 0.2, 4)  # 2000-2003: migration to the cities stalls
+urban_step[20:25] = np.random.normal(-0.9, 0.15, 5)  # 2000-2004: a rural return reverses urbanisation
 fertility_step = np.random.normal(-0.075, 0.03, 44)
-fertility_step[35:38] += 0.17  # 2015-2017: a pronatalist rebound
+fertility_step[20:25] += 0.11  # fertility climbs back with it, so the path turns back on itself
+fertility_step[34:38] += 0.16  # 2014-2017: a pronatalist rebound
 df = pd.DataFrame(
     {
         YEAR: range(1980, 2024),
@@ -73,6 +74,14 @@ for i in sorted({int(round(k)) for k in np.linspace(0, n - 1, min(6, n))}):
             centre = screen[i] + direction * (gap + abs(direction[0]) * half_w + abs(direction[1]) * half_h)
             # clearance between the label box and the sampled path, less a marker's radius and a margin
             room = np.min(np.maximum(np.abs(samples - centre) - [half_w, half_h], 0).max(axis=1)) - 16
+            # and the box stays inside the plot area, clear of the title
+            inside = min(
+                centre[0] - half_w - x_lo * px_x,
+                x_hi * px_x - centre[0] - half_w,
+                centre[1] - half_h + y_hi * px_y,
+                -y_lo * px_y - centre[1] - half_h,
+            )
+            room = min(room, inside)
             if room > best_room:
                 best, best_room = centre, room
         if best_room > 0:
