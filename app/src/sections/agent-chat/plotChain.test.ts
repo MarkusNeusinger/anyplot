@@ -6,17 +6,25 @@ import {
   initialAgentState,
   type ParseResult,
 } from 'src/hooks/useAgentSession';
-import type { DatasetParsed, LongSuggestion, RoleSpec } from 'src/lib/agent';
+import {
+  type DatasetParsed,
+  type LongSuggestion,
+  MAX_MESSAGE_CHARS,
+  type RoleSpec,
+} from 'src/lib/agent';
 import {
   boxData,
   type ChainRead,
   chainStep,
   endsWithQuestion,
+  plotClick,
+  type PlotClickPage,
   sameStopMark,
   stopMark,
   warnedRole,
 } from 'src/sections/agent-chat/plotChain';
-import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
+import { routeInput } from 'src/sections/agent-chat/routeInput';
+import { type Attachment, overCap } from 'src/sections/agent-chat/useChatAttachment';
 
 const role = (name: string, extra: Partial<RoleSpec> = {}): RoleSpec => ({
   name,
@@ -78,11 +86,21 @@ const chain = (overrides: Partial<ChainRead> = {}): ChainRead => ({
   rechecked: false,
   ...overrides,
 });
-const page = { plotAll: false, attachment: false };
+const page = { plotAll: false, fanOut: false, attachment: false };
 
 describe('chainStep', () => {
   it('plots after a clean reading, whatever an earlier reply asked', () => {
     expect(chainStep(read(), chain(), page)).toEqual({ kind: 'plot' });
+  });
+
+  it("goes on to the admin's fan-out with all pressed, never over an open panel", () => {
+    expect(chainStep(read(), chain(), { ...page, plotAll: true })).toEqual({ kind: 'plot' });
+    expect(chainStep(read(), chain(), { ...page, plotAll: true, fanOut: true })).toEqual({
+      kind: 'stop',
+      stop: null,
+    });
+    // Without all, the plot is this library's: an open panel holds nothing back.
+    expect(chainStep(read(), chain(), { ...page, fanOut: true })).toEqual({ kind: 'plot' });
   });
 
   it('waits while anything is in flight or a switch the reading asked for is still to come', () => {
@@ -98,15 +116,14 @@ describe('chainStep', () => {
     for (const outcome of ['transcribed', 'failed', 'forwarded', 'skipped'] as const) {
       expect(chainStep(read(), chain({ result: { outcome, turnEnd: null } }), page)).toEqual(end);
     }
-    // The turn never ended (the page unmounted), a required role without a column, the admin's
-    // fan-out, a new attachment in the box, a table read from text to decide on.
+    // The turn never ended (the page unmounted), a required role without a column, a new
+    // attachment in the box, a table read from text to decide on.
     expect(
       chainStep(read(), chain({ result: { outcome: 'stored', turnEnd: null } }), page)
     ).toEqual(end);
     expect(
       chainStep(read({ bindingsComplete: false, missingRoles: ['y'] }), chain(), page)
     ).toEqual(end);
-    expect(chainStep(read(), chain(), { ...page, plotAll: true })).toEqual(end);
     expect(chainStep(read(), chain(), { ...page, attachment: true })).toEqual(end);
     expect(chainStep(read({ phase: 'error' }), chain(), page)).toEqual(end);
   });
@@ -262,8 +279,127 @@ describe('boxData', () => {
 
   it('sends a table typed into the box, and never a message', () => {
     expect(boxData(null, 'hours,score\n1.5,52\n2.0,58\n3.0,61\n')).toBe('typed');
+    expect(boxData(null, 'a:7,b:12,c:5')).toBe('typed');
     expect(boxData(null, 'make the bars blue')).toBeNull();
+    expect(boxData(null, 'make it 16:9')).toBeNull();
     expect(boxData(null, '   ')).toBeNull();
+  });
+
+  it('counts a table in the box by the dataset limits, and prose by the message cap', () => {
+    expect(boxData(null, `hours,score\n${'1.5,52\n'.repeat(400)}`)).toBe('typed');
+    expect(boxData(null, `${'words without a table '.repeat(100)}end`)).toBeNull();
+    // More rows than the server reads: no data either, so the box holds it as text over the cap.
+    expect(boxData(null, `x,y\n${'1,2\n'.repeat(20_100)}`)).toBeNull();
+  });
+});
+
+describe('plotClick', () => {
+  const SHORT_CSV = 'x,y\n1,2\n2,4\n3,9\n4,16';
+  // About 5 KB: longer than a message may be, far below the dataset route's limits.
+  const LONG_CSV = [
+    'month,revenue',
+    ...Array.from({ length: 450 }, (_, i) => `${i + 1},${(100 + i * 3.5).toFixed(2)}`),
+  ].join('\n');
+  // Cells copied from a spreadsheet: tab-separated, Windows line ends.
+  const SHEET_TSV = [
+    'Region\tSales\tCost',
+    ...Array.from({ length: 12 }, (_, i) => `R${i + 1}\t${1000 + i * 37}\t${600 + i * 21}`),
+  ].join('\r\n');
+  /** The chip a paste of `text` becomes, as `useChatAttachment` makes it. */
+  const pasted = (text: string): Attachment => ({
+    id: 1,
+    via: 'paste',
+    text,
+    name: null,
+    lines: text.split(/\r?\n/).length,
+    bytes: text.length,
+    notes: [],
+    converted: null,
+    kind: 'text',
+    encoding: null,
+    status: overCap(text) ? 'over_cap' : 'ready',
+    error: null,
+    readingLine: null,
+  });
+  /** An open session on a fresh page: no data, nothing running, an empty box. */
+  const fresh: PlotClickPage = {
+    kind: 'create',
+    box: null,
+    open: true,
+    busy: false,
+    fanOut: false,
+    locked: false,
+    canCreate: false,
+    needsText: false,
+    text: '',
+  };
+
+  it.each([
+    ['a short CSV', SHORT_CSV],
+    ['a 5 KB CSV', LONG_CSV],
+    ['cells copied from a spreadsheet', SHEET_TSV],
+  ])('reads and plots %s pasted on a fresh page and after a turn', (_, text) => {
+    // The paste is data, so it waits as a chip and the box keeps no text.
+    expect(routeInput(text)).toBe('data');
+    const chip = pasted(text);
+    expect(chip.status).toBe('ready');
+    const box = boxData(chip, '');
+    expect(box).toBe('attachment');
+    // A fresh page, before any turn: no data, nothing bound.
+    expect(plotClick({ ...fresh, box })).toBe('send_first');
+    // After a turn: with a note typed under the chip, and over data that has a plot already.
+    expect(plotClick({ ...fresh, box: boxData(chip, 'log scale on y') })).toBe('send_first');
+    expect(plotClick({ ...fresh, kind: 'new_data', box })).toBe('send_first');
+  });
+
+  it('counts a long paste by the dataset limits and only its note by the message cap', () => {
+    expect(LONG_CSV.length).toBeGreaterThan(MAX_MESSAGE_CHARS);
+    expect(plotClick({ ...fresh, box: boxData(pasted(LONG_CSV), '') })).toBe('send_first');
+    // More rows than the server reads: Enter cannot send it either.
+    const tooLong = pasted(`x,y\n${'1,2\n'.repeat(20_100)}`);
+    expect(tooLong.status).toBe('over_cap');
+    expect(plotClick({ ...fresh, box: boxData(tooLong, '') })).toBeNull();
+    // A note over the cap holds the chip back, as Enter holds it.
+    const note = 'a'.repeat(MAX_MESSAGE_CHARS + 1);
+    expect(plotClick({ ...fresh, box: boxData(pasted(SHORT_CSV), note) })).toBeNull();
+  });
+
+  it('reads the data in the box whenever Enter would, also with all pressed or its panel open', () => {
+    const box = boxData(pasted(SHORT_CSV), '');
+    expect(plotClick({ ...fresh, kind: 'all', box })).toBe('send_first');
+    expect(plotClick({ ...fresh, kind: 'all', box, fanOut: true })).toBe('send_first');
+    // A table typed over stored data goes first: never the old data's fan-out, never a request.
+    const typed = boxData(null, SHORT_CSV);
+    expect(plotClick({ ...fresh, kind: 'all', box: typed, canCreate: true })).toBe('send_first');
+    expect(plotClick({ ...fresh, box: typed, canCreate: true, fanOut: true })).toBe('send_first');
+  });
+
+  it('reads no table typed into a box that all holds, as Enter sends none from it', () => {
+    const held = { ...fresh, kind: 'all' as const, locked: true, canCreate: true };
+    // The fan-out plots the stored data as it is, as with an empty box.
+    expect(plotClick({ ...held, box: boxData(null, SHORT_CSV) })).toBe('plot_all');
+    // A pasted chip still goes first: the box opens for its note.
+    const chip = boxData(pasted(SHORT_CSV), '');
+    expect(plotClick({ ...held, box: chip, canCreate: false })).toBe('send_first');
+  });
+
+  it('waits with the data in the box while the session opens or works, as Enter does', () => {
+    const box = boxData(pasted(SHORT_CSV), '');
+    expect(plotClick({ ...fresh, box, open: false })).toBeNull();
+    expect(plotClick({ ...fresh, box, busy: true })).toBeNull();
+  });
+
+  it('plots the stored data, sends the text or opens the fan-out with nothing in the box', () => {
+    expect(plotClick(fresh)).toBeNull();
+    const stored = { ...fresh, canCreate: true };
+    expect(plotClick(stored)).toBe('plot');
+    expect(plotClick({ ...stored, text: 'log scale on y' })).toBe('plot');
+    expect(plotClick({ ...stored, text: 'a'.repeat(MAX_MESSAGE_CHARS + 1) })).toBeNull();
+    const current = { ...stored, kind: 'update' as const, needsText: true };
+    expect(plotClick(current)).toBeNull();
+    expect(plotClick({ ...current, text: 'log scale on y' })).toBe('send_text');
+    expect(plotClick({ ...stored, kind: 'all' })).toBe('plot_all');
+    expect(plotClick({ ...stored, kind: 'all', fanOut: true })).toBeNull();
   });
 });
 

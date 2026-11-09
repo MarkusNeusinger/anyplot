@@ -12,7 +12,9 @@ outcome per rendered theme, the adapter plan and the `PlotResult`. The artifact,
 bundle and theme-toggle routes read from it.
 
 `RefusalStore` keeps, only with `AGENT_KEEP_REFUSALS`, the messages the scope judge
-refused, per session and bounded, for the feedback bundle.
+refused, per session and bounded, for the feedback bundle. `TurnRecords`
+(`turn_record.py`) keeps the record of each session's latest turns for the bundle:
+tool calls and guard verdicts as closed codes, never content.
 """
 
 from collections import deque
@@ -27,8 +29,18 @@ from .render import make_backend
 from .render.contract import RenderBackend
 from .render.serial import SerialRenderer
 from .render.store import RenderStore
-from .schemas import DEFAULT_CODE_ARTIFACT, AdaptPlan, ArtifactName, CodeArtifact, PlotResult, Theme, artifact_names
+from .schemas import (
+    DEFAULT_CODE_ARTIFACT,
+    AdaptPlan,
+    ArtifactName,
+    Binding,
+    CodeArtifact,
+    PlotResult,
+    Theme,
+    artifact_names,
+)
 from .settings import get_settings
+from .turn_record import TurnRecords
 
 
 PADDED_REASON = "canvas_padded"
@@ -97,6 +109,19 @@ class CodeVersion:
     turn: int = 0
     """The session's user turn the version shipped in: a memory entry written in a later turn is not in it yet
     (`memory.newer_than`)."""
+    data_version: int | None = None
+    """The session's number of the data version the run drew (`StoredDataset.number`, `DATASET_VERSION`), so a later
+    turn tells a plot of the current data from one of data a new paste replaced (`earlier_data`); None for a version
+    stored without it, which reads as a plot of the current data, as before the stamp."""
+    data_source: str | None = None
+    """Where the table the run drew comes from (`StoredDataset.source`): set for a table `generate_data` or
+    `run_data_code` computed and the versions made from it, None for a paste and its changes. With `data_version`, what
+    tells the page's "plot the new data" a change of the same table from a table that replaced it in the same lineage
+    (`pipeline.new_data_base`)."""
+    bindings: list[Binding] | None = None
+    """The bindings the run drew with (`SessionView.bindings`), which the page's "plot the new data" compares with the
+    ones in force before it starts from this version (`pipeline.new_data_base`); None for a version stored without
+    them, which never counts as the same."""
 
     @property
     def target(self) -> tuple[str, str]:
@@ -107,6 +132,17 @@ class CodeVersion:
         """The version's artifacts: the PNG of every rendered theme, the code under its language's name, `data.csv`."""
         rendered = [theme for theme, record in self.themes.items() if record.rendered] or [self.theme]
         return artifact_names(rendered, self.code_artifact)
+
+    def earlier_data(self, original: int) -> bool:
+        """Whether the version drew data that a new paste replaced since: its data number lies below `original`, the
+        number of the current data's first version (`dataset_versions.original_number`). The session gives every data
+        version the next number and a paste starts above all of them, so a number below the original's names earlier
+        data (`other_paste`); a version without the stamp reads as a plot of the current data."""
+        return self.data_version is not None and self.data_version < original
+
+    def drew(self, data_version: int) -> bool:
+        """Whether the version drew the data version numbered `data_version`; a version without the stamp reads as yes."""
+        return self.data_version is None or self.data_version == data_version
 
 
 MAX_KEPT_REFUSALS = 20
@@ -201,6 +237,9 @@ class Services:
     versions: VersionStore = field(default_factory=VersionStore)
     usage: UsageBook = field(default_factory=UsageBook)
     refusals: RefusalStore = field(default_factory=RefusalStore)
+    turns: TurnRecords = field(default_factory=TurnRecords)
+    """The record of each session's latest turns (`turn_record.py`): the root's tool calls and the guards' verdicts,
+    closed codes only, which the session bundle carries."""
     backend_factory: Callable[[], RenderBackend] = field(default=lambda: make_backend(get_settings()))
     judge_factory: Callable[[], JudgeClient] = field(default=lambda: make_judge_client(get_settings()))
     _backend: SerialRenderer | None = None
@@ -245,6 +284,7 @@ class Services:
         self.renders.delete_session(session_id)
         self.versions.delete_session(session_id)
         self.refusals.delete_session(session_id)
+        self.turns.delete_session(session_id)
         self.session_networks.pop(session_id, None)
 
 

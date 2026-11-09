@@ -343,6 +343,15 @@ class Settings(BaseSettings):
     needs `roles/bigquery.dataViewer` on that dataset and on the linked log
     dataset the views read, and `roles/bigquery.jobUser` on the project."""
 
+    machine_reads_dataset: str | None = None
+    """`<project>.<dataset>` of the machine-read telemetry's BigQuery views
+    (`api/telemetry/views/*.sql`, `docs/reference/machine-readers.md`), such as
+    `anyplot.machine_reads`; its queries read the linked log dataset of the
+    same name plus `_logs` (`anyplot.machine_reads_logs`). Unset or empty, the
+    machine-reader numbers answer `status: not_configured`. The API's runtime
+    identity needs `roles/bigquery.dataViewer` on that dataset and on the
+    linked log dataset, and `roles/bigquery.jobUser` on the project."""
+
     # =============================================================================
     # CORS
     # =============================================================================

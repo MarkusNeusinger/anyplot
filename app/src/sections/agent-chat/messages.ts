@@ -9,6 +9,7 @@
 
 import type { ConfirmLoss } from 'src/hooks/useAgentSession';
 import { countOf } from 'src/sections/agent-chat/countOf';
+import { englishName, languageLabel } from 'src/sections/agent-chat/languages';
 import type { ChainStop } from 'src/sections/agent-chat/plotChain';
 
 /** Errors of a turn (stream `error` events and failed requests). */
@@ -81,6 +82,47 @@ export function refusalLabel(code: string): string {
  */
 export const RECONNECTING_TEXT = 'connection lost · reconnecting…';
 
+/** The working line's words while a plot is drawn (`workingLine`), and the status line's. */
+export const DRAWING_TEXT = 'drawing your plot';
+/** The same words on a phone (the v4 phone mock): `drawing · 0:42`. */
+export const DRAWING_SHORT = 'drawing';
+/** How long a plot usually takes, at the status line's end while one is drawn. */
+export const USUAL_PLOT_TIME = 'usually 1–3 min';
+
+/**
+ * An elapsed time as the working line's clock reads it: `0:42`, `12:05`, past an hour `1:02:03`;
+ * never below zero, so a clock that starts a moment late reads `0:00`.
+ */
+export function elapsedClock(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = String(total % 60).padStart(2, '0');
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}`
+    : `${minutes}:${seconds}`;
+}
+
+/**
+ * Where the own turn waits in the run queue, after `you are`: position 1 runs next, so `next`;
+ * then `2nd`, `3rd`, `4th`, `11th`, `21st`.
+ */
+export function queuePlace(position: number): string {
+  if (position <= 1) return 'next';
+  const tens = position % 100;
+  const suffix =
+    tens >= 11 && tens <= 13
+      ? 'th'
+      : position % 10 === 1
+        ? 'st'
+        : position % 10 === 2
+          ? 'nd'
+          : position % 10 === 3
+            ? 'rd'
+            : 'th';
+  return `${position}${suffix}`;
+}
+
 /**
  * Why a `plot` event shipped no render (`failed` or `not_ready`). `data_unconfirmed` has no line:
  * the thread shows no failed plot for it, only the status line at the chat frame's foot
@@ -119,9 +161,9 @@ export function nextUtcMidnight(now: number = Date.now()): string {
 /**
  * The whole chat paused for the day: the service's day budget is spent. `until` is
  * the reset in the user's time; the server's own refusal says 00:00 UTC, since it
- * does not know the user's time zone. Only that refusal says the user's own limit
- * is untouched: `/status` reports the pause for everyone, so a note from it cannot
- * know, and a user whose own budget is spent too gets `budget` on the next turn.
+ * does not know the user's time zone. The line of a data call the pause refused (a
+ * paste, a conversion: `429 service_paused`); before the user types, the frame's
+ * tab says it as its mood (`resting until 01:00`, `LoadMood.tsx`).
  */
 export function servicePausedText(until: string = nextUtcMidnight()): string {
   return `the chat has reached today's overall limit and is paused until ${localClock(until) ?? '00:00 UTC'}`;
@@ -206,28 +248,46 @@ export interface NoticeInfo {
 }
 
 /**
- * The thread's one quiet line when the session's first typed message (`detected`) or a paste
- * before any typed message (`pasted`, the language of its notes or column names) set the
- * session language; a choice from the chip or the chat says nothing. The line names only the
- * language: where it came from, that a plot keeps its own and the chip that changes both are
- * behind its ⓘ, as the experimental notice does it.
+ * The thread's one language line, the offer of a language found in the user's message or data
+ * (`German detected in your message`), which `.switch()` follows: the line names only where it
+ * was found; what the button sets, that nothing changes until then and the menu at the top are
+ * behind its ⓘ. `current` is the session language the replies are in until then.
  */
-export function languageNotice(
+export function languageOfferLine(
   language: string,
-  source: 'detected' | 'pasted'
+  basis: 'message' | 'data',
+  current: string
 ): { text: string; info: NoticeInfo } {
+  const name = englishName(language);
   return {
-    text: `reply language: ${language}`,
+    text: `${name} detected in your ${basis === 'data' ? 'data' : 'message'}`,
     info: {
-      label: 'About the reply language',
-      heading: '# reply language',
+      label: 'About the language offer',
+      heading: '# language',
       lines: [
-        source === 'pasted' ? 'detected from your pasted data' : 'detected from your message',
-        'a plot you have keeps its language',
-        'the language chip in the header changes both',
+        `replies and plot labels in ${name}`,
+        `until then everything stays ${englishName(current)}`,
+        'the menu at the top changes it any time',
       ],
     },
   };
+}
+
+/**
+ * The accessible name of an offer's `.switch()`: what a click does, in words that start with the
+ * word on screen, so a voice command such as "click switch" finds it (WCAG 2.5.3).
+ */
+export const languageSwitchLabel = (language: string) =>
+  `Switch the replies and plot labels to ${englishName(language)}`;
+
+/**
+ * The same line once the user took the offer, in the language's own words: `replies and plot
+ * labels: Deutsch`. With a plot on screen the click starts no run, so the line says that the
+ * next version comes in the new language.
+ */
+export function languageAcceptedLine(language: string, plot: boolean): string {
+  const line = `replies and plot labels: ${languageLabel(language)}`;
+  return plot ? `${line} · the next plot version uses it` : line;
 }
 
 /**
@@ -270,6 +330,16 @@ export const DATA_HOWTO = [
  */
 export const NO_DATA_PLACEHOLDER = 'paste a table or drop a file';
 
+/**
+ * The message box's placeholders with data on a phone (`PHONE_QUERY`), where a browser cuts a
+ * placeholder without an ellipsis (owner, 2026-11-08): before the library's first plot, and once
+ * it has one. The wider screen keeps its longer words.
+ */
+export const PHONE_PLACEHOLDER = {
+  first: 'ask or say what to plot',
+  change: 'ask for a change',
+} as const;
+
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
   invalid: 'the server refused this language name',
@@ -302,6 +372,18 @@ export function describeLibraryFailure(code: string, ref: string | null): string
  */
 export const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 
+/**
+ * What `plot the new data` does, its description beside the status line (owner decision of
+ * 2026-11-08): the latest plot changed for the new data while the data comes from its paste with
+ * its bindings, else the catalogue plot as `.start_over()` makes it. The page cannot know which
+ * before the click; the plot's label says it after (`new data on v3`, `NEW_DATA_FRESH_LABEL`).
+ */
+export const NEW_DATA_HELP =
+  'your latest plot with the new data when it comes from the same paste with the same bindings, else new from the catalogue plot; keeps your remembered decisions';
+
+/** A plot card's label after "plot the new data" started from the catalogue plot (`plotSummaries`). */
+export const NEW_DATA_FRESH_LABEL = 'new data, new from the catalogue';
+
 /** What the remembered decisions do, behind the ⓘ at the end of their list (`Remembered`). */
 export const REMEMBERED_DETAILS = [
   'every next plot keeps these decisions, also in another library',
@@ -310,6 +392,14 @@ export const REMEMBERED_DETAILS = [
 
 /** The first line behind that ⓘ once the memory has no room; the chapter line itself says `full`. */
 export const REMEMBERED_FULL = 'full: forget one before a new decision fits';
+
+/**
+ * What the new data's line says of the decisions it holds after a paste with other columns
+ * than the data the latest plot drew: first behind the list's ⓘ, and the title of the line's
+ * `.forget_all()`. Nothing is removed by itself (owner decision of 2026-11-08).
+ */
+export const REMEMBERED_EARLIER =
+  'made for your earlier data, which had other columns; the next plot still keeps them';
 
 /**
  * The label a question's reply starts with (the v4 mock): the turn changed nothing, by the

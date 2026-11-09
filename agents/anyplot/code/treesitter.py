@@ -2,12 +2,15 @@
 
 The Python profile reads code with `ast`; every other language of the catalogue (R first,
 then JavaScript and Julia, `agentic/specs/261024-agent-all-libraries.md`) is read with
-tree-sitter, through this module. Two packages are pinned exactly in the `agents` extra
-(owner decision of 2026-10-29): `tree-sitter` 0.26.0 and `tree-sitter-language-pack`
-0.13.0, which bundles every grammar as a compiled extension in its wheel (the R grammar
-is r-lib's tree-sitter-r, MIT). The pack's 1.x line downloads grammars at run time, which
-the service must never do, so `GRAMMARS` names the grammars this code reads and a test
-pins both versions.
+tree-sitter, through this module. Two packages are pinned exactly in the `agents` extra:
+`tree-sitter` and `tree-sitter-language-pack` (the R grammar is r-lib's tree-sitter-r,
+MIT). The pack's 1.x line ships no grammars, and its `get_language` downloads its
+release's bundle on first use, which the service must never do. So the grammars of
+`GRAMMARS` are fetched before the service runs, at image build time (agents/Dockerfile)
+or once for development (`uv run python -m tools.tree_sitter_grammars`), and this module
+loads them through the pack's `LanguageRegistry`, which reads the directory in
+`GRAMMARS_DIR_ENV` and never downloads. The service runs `check_grammars` at its start,
+so a missing grammar stops it there.
 
 The module has three layers, and only the last one knows a grammar's node names:
 
@@ -61,8 +64,11 @@ line 271; `point[0]` is safe). A test refuses the attribute form in this package
 import bisect
 import functools
 import math
+import os
 from collections.abc import Iterator
 from dataclasses import dataclass
+from importlib.metadata import version
+from pathlib import Path
 from typing import Literal
 
 import tree_sitter_language_pack
@@ -70,8 +76,11 @@ from tree_sitter import Language, Node, Parser, Tree
 
 
 TREE_SITTER_VERSION = "0.26.0"
-LANGUAGE_PACK_VERSION = "0.13.0"
-"""The pinned versions (`pyproject.toml`, the `agents` extra); a test compares them with the installed ones."""
+"""The pinned version (`pyproject.toml`, the `agents` extra); a test compares it with the installed one."""
+
+GRAMMARS_DIR_ENV = "TREE_SITTER_LANGUAGE_PACK_LIBS_DIR"
+"""The pack's variable for the directory its `LanguageRegistry` loads grammars from. The agents image sets it to
+its read-only grammar directory; unset, it is set to `development_grammars_dir()` before the first load."""
 
 Grammar = Literal["r", "julia", "javascript", "tsx"]
 GRAMMARS: tuple[Grammar, ...] = ("r", "julia", "javascript", "tsx")
@@ -86,12 +95,39 @@ MAX_SYNTAX_PROBLEMS = 20
 """`syntax_problems` stops after this many: the first one is what a repair needs."""
 
 
+def development_grammars_dir() -> Path:
+    """Where `tools.tree_sitter_grammars` stages the grammars outside the image: one directory per pack version
+    in the user's cache, shared by every checkout and worktree."""
+    cache = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+    return cache / "anyplot" / f"tree-sitter-grammars-{version('tree-sitter-language-pack')}"
+
+
+@functools.cache
+def _registry() -> tree_sitter_language_pack.LanguageRegistry:
+    # The pack reads the directory from the environment once, when the registry is made.
+    os.environ.setdefault(GRAMMARS_DIR_ENV, str(development_grammars_dir()))
+    return tree_sitter_language_pack.LanguageRegistry.new()
+
+
 @functools.cache
 def language(grammar: Grammar) -> Language:
-    """The compiled grammar from the language pack; never downloaded (0.13.0 bundles it)."""
+    """The compiled grammar, loaded from the grammar directory; never downloaded."""
     if grammar not in GRAMMARS:
         raise ValueError(f"no tree-sitter grammar {grammar!r}; served: {', '.join(GRAMMARS)}")
-    return tree_sitter_language_pack.get_language(grammar)
+    try:
+        loaded: Language = _registry().get_language(grammar)
+    except tree_sitter_language_pack.LanguageNotFoundError as error:
+        raise RuntimeError(
+            f"tree-sitter grammar {grammar!r} is not in {os.environ[GRAMMARS_DIR_ENV]}; the agents image fetches "
+            "it at build time, a checkout with `uv run python -m tools.tree_sitter_grammars`"
+        ) from error
+    return loaded
+
+
+def check_grammars() -> None:
+    """Load every grammar of `GRAMMARS`: the service runs this at its start, so a missing one stops it there."""
+    for grammar in GRAMMARS:
+        language(grammar)
 
 
 def parse(code: str, grammar: Grammar) -> Tree:

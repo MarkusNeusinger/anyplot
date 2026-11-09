@@ -2,122 +2,128 @@ library: letsplot
 language: python
 specification_id: forest-basic
 created: '2025-12-27T19:22:44Z'
-updated: '2026-05-11T01:28:49Z'
-generated_by: claude-haiku
-workflow_run: 25645235139
+updated: '2026-11-09T10:51:51Z'
+generated_by: claude-opus
+workflow_run: 42599298591
 issue: 2378
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 83
 review:
   strengths:
-  - Perfect theme-adaptive rendering with identical data colors across light/dark
-  - Complete forest plot implementation with all required features (whiskers, diamonds,
-    reference line, weights)
-  - Excellent text legibility in both themes with proper color token application (INK/INK_SOFT)
-  - Clean code structure with realistic data and deterministic computations
-  - 'Proper Okabe-Ito palette usage for primary data (green #009E73)'
-  - Custom marker sizing proportional to study weights shows attention to detail
+  - Studies ordered by effect size, each named at its row, with square markers at
+    their effect sizes and full-length CI segments; nothing displaced from its value
+  - Pooled diamond sits in its own bottom row with tips at the pooled interval bounds,
+    drawn in the theme-adaptive neutral ink so it reads apart from the green study
+    markers in both themes
+  - scale_size_area makes marker area proportional to study weight, keeping the smallest
+    (Taylor 2022) visible and the largest inside its row
+  - Only the vertical x-grid is kept and the horizontal grid dropped, a grid density
+    chosen for a forest plot where rows are labelled directly
+  - Theme tokens threaded through every chrome element; both renders are fully legible
+    and the data colors are identical across themes
   weaknesses:
-  - Title contains "pyplots.ai" instead of "anyplot.ai" - should be "forest-basic
-    · letsplot · anyplot.ai"
-  - Design Excellence could be raised with more visual refinement (e.g., selective
-    grid on x-axis only, spine styling)
-  - Limited use of library-specific distinctive features beyond standard ggplot2 syntax
+  - 'DQ-03 (code): the pooled centre is weighted by the WEIGHT column while its interval
+    comes from inverse-variance weights of the CI-derived SEs, and the ''Weight (%)''
+    column sums to 105.8 rather than 100 and disagrees with the CIs (e.g. Brown 2020
+    has 9.5 % but 7.8 % by inverse variance) → derive the centre and the interval
+    from the same inverse-variance weights (centre 0.313 instead of 0.305, -0.007
+    visually) and make the weight column the normalized inverse-variance percentages.
+    Likely cause: np.average(studies[EFFECT], weights=weights) and the hand-typed
+    WEIGHT list.'
+  - 'Suggestion: configure geom_point tooltips (layer_tooltips with study, effect,
+    CI and weight) so the HTML view exposes the numbers behind each row.'
+  - 'Suggestion: fill missing weights before mapping marker size as well, so a table
+    with an empty weight cell still renders (the size aesthetic currently receives
+    NaN).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "forest-basic · letsplot · pyplots.ai" in bold 24pt dark text; x-axis label "Log Odds Ratio (95% CI)" in 20pt dark text; all tick labels (study names, axis values) in 16pt muted gray - all clearly readable against light background
-      Data: Forest plot with 10 studies sorted by effect size; study confidence intervals rendered as horizontal green whiskers (#009E73); point estimates as proportionally-sized green squares; reference line at null effect (0) as dashed gray line; pooled estimate at bottom as yellow diamond with label "Pooled: 0.31 [0.15, 0.46]" - all elements clearly distinguishable
-      Grid: Subtle x-axis gridlines visible; y-axis grid removed (appropriate for categorical study names)
-      Legibility verdict: PASS - all text elements are dark on light background with sufficient contrast
+      Background: warm off-white #FAF8F1, no white panel box.
+      Chrome: bold near-black title "forest-basic · python · letsplot · anyplot.ai" top left (~48 % width); study names on the y axis in INK_SOFT gray; x tick labels -0.4…1; x title "Log Odds Ratio of 6-month Smoking Abstinence (95% CI)"; subtle vertical grid only; dashed INK_SOFT null line at 0 through all rows and the pooled row. All readable.
+      Data: ten green #009E73 square markers sized by weight with green CI segments, sorted by effect size (Johnson 2019 top at -0.12, Taylor 2022 bottom at 0.65); near-black diamond in the "Pooled estimate" row spanning ~0.20–0.41 centred ~0.305.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title in light text (white/off-white) at 24pt bold; x-axis label in light text; all tick labels and axis text in light muted gray - all clearly readable against dark background
-      Data: Identical forest plot structure to light render; green (#009E73) confidence intervals and point estimates exactly match light render (confirming Okabe-Ito consistency); yellow diamond (#FFD43B) for pooled estimate stands out clearly; reference line visible - all elements identifiable and data colors prove theme-independence of data visualization
-      Grid: X-axis gridlines slightly more visible due to contrast against dark background but remain appropriately subtle
-      Legibility verdict: PASS - no dark-on-dark failures; all text is light-colored with good contrast against dark background; data colors identical to light render confirming proper theme handling
+      Background: warm near-black #1A1A17.
+      Chrome: title in off-white, axis and study labels in light gray, grid faint but visible, null line light gray dashed. No dark-on-dark text.
+      Data: identical green #009E73 markers and segments; diamond flips to the light neutral ink, staying distinct from the studies.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes, but title has domain name error
+        comment: Explicit sizes (16/12/10 pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements well-spaced with no collisions
+        comment: No text or mark collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data elements (whiskers, points, diamond) clearly visible with
-          weight-based sizing
+        comment: Markers sized by weight, smallest still visible; segments 1.0 thick
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 for all data elements; good contrast and CVD-safe'
+        comment: Single hue plus neutral diamond; high contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape proportions good; no cut-off elements; generous margins
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis descriptive with units; y-axis shows study identifiers; title
-          format correct
+        comment: x axis names the effect measure, scale and CI
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Primary data uses Okabe-Ito position 1 (#009E73); backgrounds correct;
-          theme-adaptive chrome applied
+        comment: 'Studies #009E73, diamond theme-adaptive neutral, correct backgrounds'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional clean styling with theme-adaptive colors; minimal decorative
-          elements
+        passed: false
+        comment: Style-guide baseline; clean typography, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Minimal chrome appropriate for plot type; could refine grid presence
+        passed: false
+        comment: 'Horizontal grid dropped, only the vertical x-grid kept: a grid density
+          chosen for this chart'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Studies ordered by effect size; pooled estimate highlights focal
-          point; reference line aids interpretation
+        passed: false
+        comment: Data displayed; diamond separation is what the spec asks for
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -125,28 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct forest plot with confidence intervals and effect sizes
+        comment: Basic forest plot, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Reference line, weighted markers, pooled diamond - all present
+        comment: Diamond at bottom from the studies, null line at 0 through all rows,
+          weight-sized markers, ordered by effect size, labelled axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly mapped; all data visible and properly scaled
+        comment: Markers and CIs at their values, all data within axes
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Format correct but title domain wrong: says ''pyplots.ai'' instead
-          of ''anyplot.ai'''
+        passed: true
+        comment: Mandated title; legend N/A (hidden, rows labelled directly)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -154,22 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive forest plot: studies, effects, CIs, pooled estimate,
-          weights'
+        comment: Studies on both sides of the null, CIs crossing and not crossing
+          it, varied weights
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical meta-analysis context; realistic log odds ratios with 95%
-          CIs; appropriate weight distribution
+        comment: Nicotine patch vs placebo meta-analysis, plausible log ORs
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Log OR scale [-0.5, 1.0] appropriate; pooled estimate 0.31 reasonable
-          given individual effects
+        passed: false
+        comment: 'Checked: pooled centre 0.305 (study weights) vs 0.313 inverse-variance;
+          pooled SE 0.053 gives 0.20–0.41 as drawn; weight % sums to 105.8 and disagrees
+          with the CIs (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -179,57 +185,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no unnecessary functions or classes
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Embedded data; no randomness; deterministic weighted average calculation
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pandas, lets_plot imported; all used appropriately
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or unnecessary complexity; clean readable implementation
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: plot-{THEME}.png at scale 4 and .html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good ggplot2 grammar of graphics syntax; proper aes() and theme()
-          usage; high-level API
+        passed: false
+        comment: scale_size_area for area-proportional weights, geom_polygon diamond,
+          scale_y_continuous breaks/labels for named rows
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses geom_polygon for diamond and scale_size_identity for weighting;
-          mostly standard ggplot2 patterns
+        comment: HTML export only, default tooltips not configured
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T10:48:56Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - manual-ticks
   - layer-composition
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - groupby-aggregation
+  styling:
+  - minimal-chrome
+  - grid-styling

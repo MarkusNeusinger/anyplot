@@ -2,43 +2,69 @@ library: bokeh
 language: python
 specification_id: scatter-3d
 created: '2025-12-26T10:31:32Z'
-updated: '2026-05-08T22:49:55Z'
-generated_by: claude-haiku
-workflow_run: 25582870408
+updated: '2026-11-09T14:53:58Z'
+generated_by: claude-opus
+workflow_run: 42636237529
 issue: 1945
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 84
 review:
   strengths:
-  - Clear 3D isometric projection with effective depth perception via size variation
-    and Z-value color mapping
-  - Excellent theme adaptation with consistent data colors across light/dark renders
-    and proper chrome theming
-  - 'Strong use of Bokeh''s distinctive features: custom 3D projection math, ColumnDataSource,
-    LinearColorMapper, and Selenium export'
-  - Well-designed axis arrows and labels that clearly orient viewer in 3D space
-  - Subtle, professional grid styling (alpha=0.05, dashed) that doesn't compete with
-    data
+  - 'Hand-built orthographic projection from one matrix product (PROJ) turns bokeh,
+    which has no 3D, into a convincing 3D box: pane grids on the floor and two back
+    walls, outer box edges, and the hidden back edge drawn dashed'
+  - 'Depth cues the spec asks for: markers sorted back to front and scaled from 24
+    to 48 px by nearness, translucent fill (alpha 0.8) with a page-colored outline
+    so overlapping points stay distinguishable'
+  - Oblique viewpoint (elevation 25°, azimuth 45°) gives all three axes visible extent;
+    each axis has an arrow, five value ticks and a bold title with units, parallel
+    to its edge
+  - Color bar built from bokeh's native ColorBar with LinearColorMapper on the Imprint
+    sequential ramp, titled with the variable it encodes
+  - HoverTool reports all three original values per point in the HTML output, and
+    the toolbar keeps pan/zoom for the interactive view
+  - Realistic penguin field-measurement scenario (three species, 50 birds each) with
+    plausible bill, flipper and mass values that form visibly separate clusters
+  - Theme tokens threaded through every text, line and fill; both renders pass the
+    readability check
   weaknesses:
-  - 'Title contains wrong domain: ''pyplots.ai'' instead of ''anyplot.ai'' (appears
-    on line 100 and 282) - must be corrected to ''anyplot.ai'''
+  - 'VQ-02 (both): at the two lower box corners the tick labels of different axes
+    stack against each other: ''2.6'' (Body Mass) sits directly above ''228.1'' (Flipper
+    Length) at the left corner, and ''173.1'' (Flipper Length) runs into ''35.4''
+    (Bill Length) with about 10 px between them at the front corner, so a reader can
+    attach a value to the wrong axis → at least about 30 px between labels of different
+    axes (+20 px). Likely cause: the shared corner points in axis_specs; drop the
+    corner tick of one axis or set a larger tick_offset along each axis direction.'
+  - 'VQ-07 (dark): a 1 px light-gray (#535350) rectangle frames the whole plot area
+    in the dark render; it does not come from a theme token and is close to invisible
+    in the light render (#FBFAF5), so the chrome differs between themes and draws
+    a box the style guide does not ask for → no frame, or a frame drawn from INK_SOFT
+    in both themes. Likely cause: bokeh''s default frame or border line that p.outline_line_color=None
+    does not reach; also set p.border_line_color / min_border-area outline properties
+    explicitly.'
+  - 'Suggestion: color currently repeats z (body mass) as a ramp; the data already
+    carries species, and coloring by species with a legend would add the fourth variable
+    the Notes mention.'
+  - 'Suggestion: tick values at even fractions of the data range (228.1, 214.3, 200.6)
+    are harder to read than round values; ticks at round numbers within the range
+    would read faster.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "scatter-3d · bokeh · pyplots.ai" in dark text (44pt), axis labels "X-Axis (units)", "Y-Axis (units)", "Z-Axis (units)" in dark bold text (44pt), color bar title in 32pt dark text. All text clearly readable against light background.
-      Data: 150 points with viridis gradient (purple at low Z to cyan to green to yellow at high Z). Points sized 25-50 based on depth, alpha=0.8. Three clusters clearly visible. Data colors match viridis256 palette.
-      Legibility verdict: PASS - all elements readable and well-contrasted
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
+      Chrome: bold dark title "scatter-3d · python · bokeh · anyplot.ai" top left; an orthographic 3D box (elevation 25°, azimuth 45°) with gray outer edges, subtle pane grids on the floor and the two back walls, and the hidden back edge dashed. Three dark-gray arrowed axes along the lower edges: Bill Length (mm) to the right, Flipper Length (mm) to the left, Body Mass (kg) vertical, each with five tick values (35.4–55.2, 173.1–228.1, 2.6–6.0) and a bold title parallel to its edge. A tall color bar at the right edge, ticks 3–6, rotated title "Body Mass (kg)". At the two lower corners tick labels of different axes sit close together ("2.6" over "228.1", "173.1" next to "35.4").
+      Data: 150 translucent circles with a page-colored outline, sized 24–48 px by depth, colored on the Imprint sequential ramp from #009E73 (light birds) to #4467A3 (heavy birds); three clusters visible (a high-mass cluster at the back left, two lower clusters front and right).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Same title format in light text (appears to be light cream/off-white color). Axis labels in light text, color bar title and labels in light text. All chrome elements are light-colored and clearly visible against dark background.
-      Data: Same viridis gradient colors as light render (purple to cyan to green to yellow) - colors are IDENTICAL to light render, only chrome changed theme. Points, sizing, and cluster distribution are identical.
-      Legibility verdict: PASS - all text is light-on-dark with excellent contrast, no dark-on-dark failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, ticks in light gray INK_SOFT, axis lines and arrows light gray, pane grids subtle but visible; no dark-on-dark text. A thin 1 px light-gray rectangle frames the plot area that is not visible in the light render.
+      Data: identical marker colors and positions as the light render; outlines flip to the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -46,58 +72,52 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title 48pt, labels 44pt, colorbar 32pt/24pt).
-          All text readable in both themes. Minor: title domain error affects content
-          but not legibility.'
+        comment: Title 50pt, axis titles 40pt bold, ticks 28pt; all readable in both
+          themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text. Axis labels positioned away from data. Color
-          bar labels clear.
+        comment: Corner tick labels of different axes crowd each other at the two
+          lower corners (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 points with size variation (25-50) based on depth. Alpha=0.8.
-          Markers clearly visible and adapted to data density. Edge color provides
-          definition.
+        comment: 150 points at 24-48 px with alpha 0.8 and outline; color bar visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and CVD-safe. Good contrast
-          between data and background. No red-green dependency.
+        comment: Green-to-blue ramp, no red-green signal, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 4800×2700 canvas with balanced margins. Plot centered, title top,
-          colorbar right. Good use of space but slightly conservative.
+        comment: 2400x2400 canvas, box centered, color bar at the right, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
-        max: 2
-        passed: false
-        comment: 'Axis labels are descriptive with units (X/Y/Z-Axis (units)). CRITICAL:
-          Title has wrong domain - shows ''pyplots.ai'' instead of ''anyplot.ai''.'
-      - id: VQ-07
-        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis256 palette used for continuous Z-value mapping (correct
-          for continuous data). Background colors theme-correct (#FAF8F1 light, #1A1A17
-          dark). Data colors identical across renders. All chrome theme-adaptive.'
+        comment: Bill Length (mm), Flipper Length (mm), Body Mass (kg)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: Imprint sequential ramp and correct backgrounds, but an untokened
+          light frame shows only in the dark render (defect line)
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -105,27 +125,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom 3D isometric projection implementation with mathematical rotation
-          matrix. Viridis colormap chosen appropriately for continuous data. Above
-          default appearance but not exceptionally sophisticated.
+        comment: Arrowed axes, bold axis titles parallel to their edges, weight hierarchy
+          between box edges, pane grids and axis lines
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Grid lines very subtle (dashed, alpha=0.05). Custom axis arrows and
-          labels instead of default axes. Clean, uncluttered layout. No unnecessary
-          decoration.
+        comment: Hidden back edge drawn dashed, pane grids at alpha 0.12 distinct
+          from box edges at 0.45
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Three clusters clearly visible through spatial arrangement. Z-value
-          encoded as color gradient adds fourth dimension. Size variation by depth
-          creates visual hierarchy. Effectively tells story of 3D clustering.
+        passed: false
+        comment: Clusters are visible but no focal point beyond the spec; color repeats
+          z
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,31 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D scatter plot with proper isometric projection. Effectively
-          displays spatial relationships.
+        comment: 3D scatter in an oblique projected box
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X/Y/Z axes with labels and units present. Color encoding for Z-value
-          with colorbar. Interactive tools in HTML (pan, wheel_zoom, box_zoom, reset,
-          save).
+        comment: 'All good-version bullets met: markers in a 3D frame with labeled
+          axes and units, oblique view, pane grids and translucency, color bar labeled
+          with its variable; HTML keeps pan/zoom (bokeh has no native 3D rotation)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X mapped to x-axis, Y to y-axis, Z to vertical position and color.
-          All data visible. Ranges appropriate.
+        comment: Each point projected from its own normalized x, y, z; ticks span
+          the data range
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title format is 'scatter-3d · bokeh · pyplots.ai' but WRONG DOMAIN
-          - should be 'anyplot.ai'. Color bar serves as legend with proper Z-Value
-          label. Domain error prevents full score.
+        passed: true
+        comment: Title 'scatter-3d · python · bokeh · anyplot.ai'; color bar titled
+          Body Mass (kg)
     data_quality:
       score: 15
       max: 15
@@ -167,24 +182,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Data shows three distinct clusters with different centers and spreads.
-          Z-value variation across full range. Demonstrates spatial relationships
-          and clustering effectively.
+        comment: Three separated clusters in 3D show the spatial-relationship purpose
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Random 3D clustered data is plausible for scientific/ML exploration.
-          Neutral, non-controversial. Realistic use case for 3D scatter visualization.
+        comment: Penguin field measurements, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Data ranges reasonable (approximately -3 to 4). Cluster sizes and
-          centers are statistically plausible. Factually sound random generation with
-          proper seed.
+        comment: Bill 35-55 mm, flipper 173-228 mm, mass 2.6-6.0 kg are plausible
+          for these species; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -194,37 +205,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme → data generation → figure → plotting
-          → save. No unnecessary functions/classes.'
+        comment: Flat script; the only helper is the _lerp_hex ramp builder the bokeh
+          library prompt prescribes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, time, pathlib (file handling), numpy (math/data),
-          bokeh (plotting), selenium (screenshot).'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for 3D projection. Clear variable names. No
-          fake functionality or over-engineering.
+        comment: Projection, panes and edges as vectorized matrix products; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-light.png and plot-dark.png. Also saves HTML. Uses
-          current Bokeh API correctly.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per the
+          library prompt
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -232,31 +242,37 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure(), scatter(), ColorBar, and LinearColorMapper
-          idiomatically. Proper theme-token usage. Well-structured Bokeh patterns.
+        comment: ColumnDataSource with column-name fields, field+transform color spec,
+          multi_line for all grid segments, Label annotations
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Custom 3D isometric projection with mathematical transformation.
-          LinearColorMapper for color mapping. Selenium-based PNG export. Custom axis
-          arrows via patches. Sophisticated Bokeh-specific techniques that couldn't
-          easily transfer to other libraries.
-  verdict: REJECTED
+        passed: false
+        comment: HoverTool with braced column names and number format; LinearColorMapper
+          + ColorBar
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T14:50:06Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - 3d-projection
-  - html-export
-  - annotations
   - colorbar
+  - annotations
+  - hover-tooltips
+  - html-export
+  - layer-composition
   patterns:
   - data-generation
   - columndatasource
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
+  - minimal-chrome

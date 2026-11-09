@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { UnifiedDiff } from 'src/sections/debug/UnifiedDiff';
-import { render, screen } from 'src/test-utils';
+import { render, screen, styleAt } from 'src/test-utils';
 
 const DIFF = [
   '--- catalogue/scatter-basic/matplotlib.py',
@@ -42,6 +42,6 @@ describe('UnifiedDiff', () => {
     const del = block.querySelector('[data-line="del"]') as HTMLElement;
     expect(getComputedStyle(add).backgroundColor).toBe('rgba(0, 158, 115, 0.16)');
     expect(getComputedStyle(del).backgroundColor).toBe('rgba(174, 48, 48, 0.16)');
-    expect(getComputedStyle(add).color).toBe('var(--ink)');
+    expect(styleAt(add).color).toBe('var(--ink)');
   });
 });

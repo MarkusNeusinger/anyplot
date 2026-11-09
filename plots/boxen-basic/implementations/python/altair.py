@@ -1,7 +1,7 @@
 """ anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
 Library: altair 6.3.0 | Python 3.14.10
-Quality: 86/100 | Updated: 2026-11-09
+Quality: 87/100 | Updated: 2026-11-09
 """
 
 import os
@@ -48,7 +48,7 @@ df = pd.DataFrame(
 
 # Plot: reads only df and the constants above
 ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
-VIEW_W, VIEW_H = 510, 350
+VIEW_W, VIEW_H = 560, 340
 
 groups = df.groupby(ENDPOINT, sort=False)[RESPONSE_TIME]
 # Tukey's depth rule: floor(log2 n) - 3 boxes leave 4 to 8 observations beyond the deepest box on each side
@@ -72,12 +72,12 @@ level_labels = [
     f"{LEVEL_NAMES.get(level, f'1/{2 ** (level + 1)}')} ({100 * (1 - 0.5**level):.3g}%)"
     for level in range(1, k_max + 1)
 ]
-# Steps of imprint_seq (green to blue), shaded lighter with depth: the hue alone barely changes between
-# neighbouring levels, so a growing tint gives every level a clearly different lightness from the next
+# Evenly spaced steps of imprint_seq from its green to its blue stop, one per level; every second level is
+# shaded lighter, because green and blue sit close in lightness and neighbouring hue steps alone blur together
 seq_rgb = np.array([[int(stop[i : i + 2], 16) for i in (1, 3, 5)] for stop in IMPRINT_SEQ])
-position = np.linspace(0, 1, k_max)[:, None]
-hues = seq_rgb[0] + position * (seq_rgb[1] - seq_rgb[0])
-steps = np.rint(hues + (255 - hues) * 0.7 * position**1.6).astype(int)
+steps = seq_rgb[0] + np.linspace(0, 1, k_max)[:, None] * (seq_rgb[1] - seq_rgb[0])
+tint = np.where(np.arange(k_max) % 2 == 1, 0.45, 0.0)[:, None]
+steps = np.rint(steps + tint * (255 - steps)).astype(int)
 level_colors = [f"#{r:02X}{g:02X}{b:02X}" for r, g, b in steps]
 boxes["Letter value"] = [level_labels[level - 1] for level in boxes["Level"]]
 # Widths shrink linearly with depth; the widest box takes 72 % of a category's slot
@@ -115,7 +115,7 @@ letter_boxes = (
         color=alt.Color(
             "Letter value",
             type="ordinal",
-            title="Letter value (share inside)",
+            title=["Letter value", "(share inside)"],
             scale=alt.Scale(domain=level_labels, range=level_colors),
         ),
         order=alt.Order("Level", sort="descending"),
@@ -166,7 +166,7 @@ chart = (
         tickColor=INK_SOFT,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=11,
+        labelFontSize=10,
         titleFontSize=12,
         titleFontWeight="normal",
         gridColor=INK,
@@ -180,7 +180,7 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
         labelFontSize=10,
-        titleFontSize=11,
+        titleFontSize=10,
         symbolType="square",
         symbolSize=140,
         symbolStrokeWidth=0,

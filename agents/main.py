@@ -16,22 +16,22 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/sessions/{sid}/memory` | | `{entries, max_entries, written}`: the plot memory, oldest first, each `{id, kind, target, text, expect, turn}` (`memory.py`); `written` once it ever held an entry, from then on its entries alone travel | |
 | `DELETE /v1/sessions/{sid}/memory` | | the GET's shape with no entries: forget all, a blank start | `409 run_active` |
 | `DELETE /v1/sessions/{sid}/memory/{entry_id}` | | the GET's shape after the removal | `404 not_found`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as the first version of new data under the session's next number (`version`, also `original_version`; `can_undo` false: the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget for `daily_limit`), `429 service_paused` (the service's day budget), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version, columns_changed, language, file_name?, tables?, table?}` (`columns_changed`: the data replaces data, and a column a binding of the replaced data used is not in it, so the page shows the remembered decisions on the new data's line; `file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, with `offer: {language, basis: "data"}` when the notes or the column names are in another language the page has not been offered yet and the user picked none, which the page offers once, `language.data_offer`), stored as the first version of new data under the session's next number (`version`, also `original_version`; `can_undo` false: the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget for `daily_limit`), `429 service_paused` (the service's day budget), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget), `429 service_paused`, `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
-| `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides; `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern) |
+| `PUT /v1/sessions/{sid}/language` | `{language, via?}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`; `via`: `header`, the chip and the default, or `offer`, the button on an offer line) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), and the plot's; source `chosen` from the chip, which ends every offer, `offer` from an offer while the user picked none, with the content-free `language_offer` telemetry line (`via`, the language as a closed code); `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern, or another `via`) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, under its own number (`version`: the session numbers every stored version once, so paste, change, undo, change is 1, 2, 1, 3), its bindings carried over (`dataset_versions.py`); `can_undo` whether another undo has a version to restore, `original_version` the number of the current data's first version; unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (the target's first version, numbered 1) plus `confirmed: true`, `complete`, `missing_roles`, `copied_from` (the source's version number) and `carry` (the switch answer's shape: the plot memory and a carry of the source's latest plot come along, so the fan-out sends `carry_plot` on `offer`): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
-| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`, every event with the id `<run_id>.<n>` (`agents/turn_log.py`) and a `: ping` comment after every 15 s without one; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), in the dataset shape with `version`, `can_undo` (false when `generate_data` made the session's first data) and `original_version`, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `plot_new_data`, "plot the new data": from the library's latest version while it drew the same paste with the same bindings, else the fresh plot; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`, every event with the id `<run_id>.<n>` (`agents/turn_log.py`) and a `: ping` comment after every 15 s without one; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), in the dataset shape with `version`, `can_undo` (false when `generate_data` made the session's first data) and `original_version`, and `language` (`{language, source}`, with `offer: {language, basis: "message"}` when the scope judge named another language for the typed message that the page has not been offered yet and the user picked none) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `GET /v1/sessions/{sid}/turn` | header `Last-Event-ID: <run_id>.<n>` | SSE `anyplot/1`: the session's latest turn from its event `n + 1` on, as the turn's stream sent it, live until that stream ends; for a page that lost the stream (`agents/turn_log.py`); a read, which never holds or stops the run | `404 not_found` (another turn is the latest, or none), `422` (an id of another form) |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=&theme=` | | the file; `plot.html` (a JavaScript version only) is the self-contained interactive page in `theme` (default: the version's), built on demand and answered as an attachment | `404`; for `plot.html` also `409 run_active`, `503 capacity`, `503 page_unavailable` (a renderer without `POST /page`), `500 page_failed` |
-| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); `session.versions` (how many versions the session holds) and `session.last_run` (`schemas.LastRun`: how the latest plot run ended, content-free) in every form; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
+| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); `session.versions` (how many versions the session holds) and `session.last_run` (`schemas.LastRun`: how the latest plot run ended, content-free) in every form, and `turns` (`{records, dropped}`: the record of each of the session's latest turns, its root tool calls and guard verdicts as closed codes, `anyplot/turn_record.py`) in every form too; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
 
 Every `/v1` route needs `X-Anyplot-User` (the BFF's opaque user id); sessions are
@@ -168,7 +168,8 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
-from agents.anyplot import telemetry
+from agents.anyplot import telemetry, turn_record
+from agents.anyplot.code import treesitter
 from agents.anyplot.data.bindings import check_bindings, label_siblings
 from agents.anyplot.data.classify import classify_paste, request_for_chat
 from agents.anyplot.data.parse import (
@@ -200,11 +201,13 @@ from agents.anyplot.language import (
     DEFAULT_LANGUAGE,
     LANGUAGE_PATTERN,
     MAX_LANGUAGE_CHARS,
+    LanguageSource,
+    data_offer,
     english_name,
     is_valid,
     normalise,
-    pasted_language,
     refusal_lang,
+    same_language,
 )
 from agents.anyplot.memory import (
     ENTRY_ID_PATTERN,
@@ -252,7 +255,13 @@ from agents.anyplot.plugins.ledger import (
     utc_stamp,
     weighted_usd,
 )
-from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, paste_table_line, scope_refusals
+from agents.anyplot.plugins.scope_guard import (
+    LOCKED_OUT,
+    SESSION_CLOSED,
+    paste_table_line,
+    scope_refusals,
+    served_library_request,
+)
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.contract import ConvertJob, PageFailed, PageUnsupported, RendererUnavailable
 from agents.anyplot.render.serial import RenderBusy
@@ -288,6 +297,7 @@ from agents.anyplot.session_state import (
     DATASET_ORIGINAL,
     DATASET_TOP,
     DATASET_VERSION,
+    LANGUAGE_OFFERED,
     PENDING_BINDINGS,
     PENDING_CLEARED,
     PENDING_EXPECTED_TEXTS,
@@ -302,6 +312,7 @@ from agents.anyplot.session_state import (
     confirm_delta,
     confirmation_fingerprint,
     language_delta,
+    offered_delta,
     plot_language,
     read_session,
 )
@@ -331,10 +342,11 @@ USER_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 SESSION_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
 SPEC_PATTERN = r"^[a-z0-9-]{1,100}$"
 LOCALE_PATTERN = r"^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$"
-Action = Literal["create_plot", "carry_plot", "summarize_data", "example_data"]
+Action = Literal["create_plot", "carry_plot", "plot_new_data", "summarize_data", "example_data"]
 ACTION_MESSAGES: dict[str, str] = {
     "create_plot": "[action] Create the plot from my dataset and bindings.",
     "carry_plot": "[action] Create the plot from my dataset and bindings, with the decisions I made so far.",
+    "plot_new_data": "[action] Create the plot from my changed dataset and bindings.",
     "summarize_data": "[action] Summarize the dataset for the user.",
     "example_data": "[action] Make example data to try this plot.",
 }
@@ -342,15 +354,16 @@ ACTION_MESSAGES: dict[str, str] = {
 `summarize_data` also carries the notes the user pasted with the data, when the stored dataset kept any
 (`user_notes_block`): the dataset route ran the pre-filter and the scope judge on them at the paste.
 `example_data` is the page's `.example_data()`: the root makes example data as for a typed request (root.md,
-"Example data"). An action, not the words "example data", because the session's first typed message sets the
-session language (`detected`, `language.py`): typed English words would keep a German visitor in English, while
-an action skips the judge and leaves the language as it was.
+"Example data"). An action, not the words "example data": an action skips the judge, so it neither costs a judge
+call nor makes an offer of a language (`language.py`), and it leaves the session language as it was.
 `create_plot` (`.create_plot()`, `.start_over()`) starts from the catalogue code (`RequestLedger.fresh_start`): its
 run takes no switch's carry but applies the plot memory, which only the user clears. `carry_plot` (2026-11-02) is
 the page's "plot in <library> with your
-decisions" after a switch: its run takes the carry and the memory (`switch.py`); the root calls the same bare
-`plot_pipeline` for both."""
-PLOT_ACTIONS: frozenset[str] = frozenset({"create_plot", "carry_plot"})
+decisions" after a switch: its run takes the carry and the memory (`switch.py`). `plot_new_data` (2026-11-08) is the
+page's "plot the new data" after a data change or a paste: its run starts from the library's latest version while
+that version drew the same paste with the same bindings, else as `create_plot` does (`RequestLedger.new_data`,
+`pipeline.new_data_base`); the root calls the same bare `plot_pipeline` for all three."""
+PLOT_ACTIONS: frozenset[str] = frozenset({"create_plot", "carry_plot", "plot_new_data"})
 """The actions of the page's plot buttons: the click confirmed the data and bindings as shown, so the turn plots them
 as they are (`RequestLedger.plot_action`, the guard in `plugins/tool_safety.py`)."""
 ACTION_LANGUAGE_LINE = "Reply in {name}, the session language."
@@ -559,6 +572,9 @@ StreamNote = (
 """What the stream's outbox carries: a queue position of a waiting sandbox run, that run's start once it waited,
 an ADK event, or the run's end."""
 
+QueueOutcome = Literal["started", "expired", "withdrawn"]
+"""How a turn's wait in the run queue ended, the `queue` line's verdict besides `run_limit` and `full`, which the
+turn's record closes (`turn_record.HOOK_VERDICTS`, pinned equal by a test)."""
 TIER_LANES: dict[Tier, Lane] = {"admin": "admin", "public": "normal"}
 """The run queue's lane of each tier (`run_queue.py`): an admin's runs share the concurrency and the rate with
 everyone's and have a per-user cap of their own."""
@@ -617,7 +633,7 @@ class TurnSlot:
             self._fail("capacity")
             return False
         self.run.ticket = ticket
-        outcome = "started"
+        outcome: QueueOutcome = "started"
         waited = False
         try:
             async with contextlib.aclosing(queue.wait(ticket, heartbeat_s=HEARTBEAT_S)) as positions:
@@ -775,6 +791,9 @@ def get_runtime() -> Runtime:
 
 @contextlib.asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    # A missing tree-sitter grammar stops the start, never a request: the service does not download one.
+    treesitter.check_grammars()
+
     async def sweeper() -> None:
         while True:
             await asyncio.sleep(SWEEP_INTERVAL_S)
@@ -938,9 +957,14 @@ class SwitchLibraryBody(_Body):
 
 
 class LanguageBody(_Body):
-    """The chat header's language chip: a short language name or code (`de`, `English`, `Swedish`)."""
+    """A pick of the session language: a short language name or code (`de`, `English`, `Swedish`), and where.
+
+    `via` is `header` for the chat header's chip (the default) and `offer` for the button on the line that offered
+    a language the judge named for a message or a paste.
+    """
 
     language: str = Field(min_length=1, max_length=MAX_LANGUAGE_CHARS, pattern=LANGUAGE_PATTERN)
+    via: Literal["header", "offer"] = "header"
 
 
 class DatasetBody(_Body):
@@ -1017,7 +1041,8 @@ async def status(runtime: RuntimeDep, tier: CallerTier) -> dict[str, Any]:
     `user_max_runs` is the caller's own cap in their tier's lane (`AGENT_USER_MAX_RUNS`, or
     `AGENT_ADMIN_USER_MAX_RUNS` for an admin), which the admin chat's fan-out over every library keeps to; `tier` is
     the tier the request was served as. `paused` says the service's day budget is spent, so every turn gets
-    `service_paused` until `resets_at` (the next 00:00 UTC): the page shows the note before the user types.
+    `service_paused` until `resets_at` (the next 00:00 UTC): the chat frame's tab shows it as its mood before the
+    user types, read again after each run and every 60 s while the tab is visible.
     """
     settings = get_settings()
     queue = runtime.run_queue()
@@ -1215,7 +1240,8 @@ async def switch_library(
     if target.pair() == source.pair():
         carry = read_carry(session.state, target.pair())  # the same target again: a carry made for it stays
     else:
-        plot = source_plot(services.versions.latest_rendered(sid, target=source.pair()))
+        # A plot of earlier data carries only its asked theme to the current data (`source_plot`).
+        plot = source_plot(services.versions.latest_rendered(sid, target=source.pair()), view.dataset_version)
         pending = read_carry(session.state, source.pair())
         carry = carry_for(source=source, target=target, plot=plot, pending=pending, memory=memory)
     target_latest = services.versions.latest_rendered(sid, target=target.pair())
@@ -1613,7 +1639,7 @@ async def _ingest_paste(
     # The root has not read this paste yet: the first turn on it summarizes it, the summary action or the note the
     # user typed with it (`SUMMARY_PENDING`).
     delta[SUMMARY_PENDING] = ingested.dataset_id
-    # Read again: the chip's choice may have landed while the judges ran, and a choice is never overwritten.
+    # Read again: the chip's choice may have landed while the judges ran, and no offer comes after a choice.
     # From this read to the append below nothing suspends: `InMemorySessionService.get_session` and
     # `append_event` (ADK 2.13) contain no `await` that yields, and the code between them is synchronous,
     # so on the one event loop no `PUT /language` can land in between; the read and the conditional
@@ -1621,13 +1647,14 @@ async def _ingest_paste(
     # compare-and-set instead. Keep any new `await` out of this block.
     session = await runtime.session(user, sid)
     current = read_session(session.state) or view
-    language, language_source = current.language, current.language_source
-    derived = pasted_language(current.language_source, notes_lang, header_lang)
-    if derived is not None:
-        language, language_source = derived, "pasted"
-        delta.update(language_delta(derived, "pasted"))
-        attribution("data_language", ledger, lang=derived, basis="notes" if derived == notes_lang else "headers")
+    # The data's language never sets the session's: the page offers it once, and a click sets it.
+    offered = data_offer(current.language, current.language_source, current.language_offered, notes_lang, header_lang)
+    if offered is not None:
+        delta.update(offered_delta(current.language_offered, offered))
+        attribution("data_language", ledger, lang=offered, basis="notes" if offered == notes_lang else "headers")
     await runtime.write_state(session, delta)
+    language = _language_body(current, (offered, "data") if offered is not None else None)
+    _telemetry_offer(ledger, language)
     return JSONResponse(
         {
             "preview": parsed.preview,
@@ -1636,13 +1663,17 @@ async def _ingest_paste(
             "warnings": parsed.warnings,
             "context_lines": parsed.context_lines,
             "roles": _page_roles(view.snapshot.roles()),
-            # In the language the paste leaves: `.to_long()`'s new column names are generated text.
-            "suggestion": _suggestion(view, parsed.profile, language),
+            # In the session language: `.to_long()`'s new column names are generated text.
+            "suggestion": _suggestion(view, parsed.profile, current.language),
             # A paste is the first version of its data: nothing before it to undo (`dataset_payload`).
             "version": ingested.number,
             "can_undo": False,
             "original_version": ingested.number,
-            "language": {"language": language, "source": language_source},
+            # A column the replaced data was plotted by is not in this data: the page shows the remembered decisions,
+            # which every next plot still applies, on the new data's line with `.forget_all()` (owner decision of
+            # 2026-11-08). Only the user clears them.
+            "columns_changed": ingested.columns_changed,
+            "language": language,
             **({"file_name": file_name} if file_name is not None else {}),
             **({"tables": parsed.tables, "table": parsed.table} if parsed.tables else {}),
         },
@@ -1691,13 +1722,15 @@ async def _screen_notes(
 ) -> tuple[ParsedDataset, str | None]:
     """The notes pasted around the table, kept only when the pre-filter and the scope judge pass them.
 
-    Returns the dataset and, for kept notes, the judge's `lang` for them, which may set the
-    session language (`language.pasted_language`); None when the notes were dropped.
+    Returns the dataset and, for kept notes, the judge's `lang` for them, which the page may be
+    offered (`language.data_offer`); None when the notes were dropped.
 
     `parsed.context_lines` (a title, an export's metadata, a source line, "values in
     Fahrenheit, make it a line chart") reach the root as the user's words, so they are
     checked like a chat message: first the deterministic pre-filter (`INSTRUCTION_LIKE`),
-    then the scope judge with the scope rubric on the lines inside `<user_notes>`. It runs
+    then the scope judge with the scope rubric on the lines inside `<user_notes>`; an
+    `other_library` for notes that name only libraries served here goes on as `in_scope`,
+    as in the chat (`scope_guard.served_library_request`). It runs
     after the dataset judge, so a refused table spends no call on its notes. A hit, a
     verdict other than `in_scope` or no verdict (`JudgeUnavailable`: fail closed) drops
     every note with a warning (`without_context`), and the table is stored all the same.
@@ -1730,6 +1763,10 @@ async def _screen_notes(
         judge_output=answer.output_tokens,
         **counts,
     )
+    if answer.verdict == "other_library" and served_library_request("\n".join(lines), get_settings().libraries):
+        # "please do this in d3" around a table asks for a library the user may switch to (`served_library_request`).
+        attribution("notes_judge", ledger, verdict="served_library_in_scope", **counts)
+        answer = answer.model_copy(update={"verdict": "in_scope"})
     if answer.verdict != "in_scope":
         return without_context(parsed, NOTES_REFUSED_WARNING), None
     return parsed, answer.lang
@@ -1940,26 +1977,40 @@ async def put_bindings(
 
 
 @app.put("/v1/sessions/{sid}/language", dependencies=v1_dependencies)
-async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: RuntimeDep) -> JSONResponse:
-    """The user's choice (the chat header's chip): the session language with the source `chosen`, and the plot's.
+async def put_language(
+    sid: SessionId, body: LanguageBody, user: User, runtime: RuntimeDep, rid: RequestId
+) -> JSONResponse:
+    """The user's pick: the session language and the plot's, from the chip (`via: header`) or an offer (`via: offer`).
 
-    Detection never writes over a choice, and the root's `set_language` tool with `applies_to` `both` makes the
-    same change. The next reply and the next plot version use it; earlier versions keep
-    their text. The pattern runs before `normalise` (a leading space is a `422`), and the
-    answer carries the stored form, which the page shows: `English` comes back as `en`,
-    `Swedish` as typed. `409 run_active` while a turn or a theme render is in flight in the
-    session, so a choice never races detection inside a run; a paste in flight does not block
-    it, because the paste reads the session again before it writes the language.
+    The chip sets the source `chosen`, which is final: no language is offered after it, and the root's
+    `set_language` tool makes the same change. An accepted offer sets the source `offer`, so a later message
+    in another language may still offer that one. The write is the same either way: the next reply and the next
+    plot version use it; earlier versions keep their text, and a plot the library has gets its text rewritten
+    by the next version (`pipeline.LANGUAGE_REWRITE_REQUEST`). The pattern runs before `normalise` (a leading
+    space is a `422`), and the answer carries the stored form, which the page shows: `English` comes back as
+    `en`, `Swedish` as typed. `409 run_active` while a turn or a theme render is in flight in the session, so a
+    pick never races the scope guard's offer inside a run; a paste in flight does not block it, because the paste
+    reads the session again before it records an offer.
     """
     session = await runtime.session(user, sid)
     _active(runtime, sid, paste=False)
-    if read_session(session.state) is None:
+    current = read_session(session.state)
+    if current is None:
         raise AgentsError(404, "session_expired")
     value = normalise(body.language)
     if not is_valid(value):
         raise AgentsError(422, "invalid")
-    await runtime.write_state(session, {**language_delta(value, "chosen"), PLOT_LANGUAGE: value})
-    answer: dict[str, Any] = {"language": value, "source": "chosen"}
+    # An offer accepted after a pick (a button another tab still showed) sets the language and keeps the pick final.
+    source: LanguageSource = "offer" if body.via == "offer" and current.language_source != "chosen" else "chosen"
+    await runtime.write_state(session, {**language_delta(value, source), PLOT_LANGUAGE: value})
+    telemetry.write(
+        telemetry.LanguageOffer,
+        _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid), current, session),
+        attempt=f"{body.via}:{rid}",
+        via=body.via,
+        language=telemetry.plot_language(value),
+    )
+    answer: dict[str, Any] = {"language": value, "source": source}
     view = read_session(session.state)
     stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
     if view is not None and stored is not None:
@@ -2153,12 +2204,16 @@ async def copy_dataset(
     if origin.plot_language_choice is not None or origin_latest is not None:
         shown[PLOT_LANGUAGE] = plot_language(origin, origin_latest)
     # `.plot_all()` plots the user's tuned plot in every library (2026-11-02): the memory comes along, and a carry for
-    # this session's library from the page session's latest plot, so the fan-out's `carry_plot` takes both.
+    # this session's library from the page session's latest plot, so the fan-out's `carry_plot` takes both. A plot of
+    # data before the copied version carries only its asked theme to it (`source_plot`), as "plot the new data" keeps
+    # the theme too.
     memory = read_memory(source.state)
     carry = carry_for(
         source=Target(spec_id=origin.spec_id, library=origin.library),
         target=Target(spec_id=view.spec_id, library=view.library),
-        plot=source_plot(services.versions.latest_rendered(body.from_session, target=origin.target)),
+        plot=source_plot(
+            services.versions.latest_rendered(body.from_session, target=origin.target), origin.dataset_version
+        ),
         pending=read_carry(source.state, origin.target),
         memory=memory,
     )
@@ -2179,6 +2234,8 @@ async def copy_dataset(
             DATASET_COPIED_FROM: origin.dataset_version,
             CONFIRMED: confirmation_fingerprint(copied.dataset_id, bindings),
             **language_delta(origin.language, origin.language_source),
+            # The page session's offers stand for its copies: a fan-out session never offers one again.
+            LANGUAGE_OFFERED: list(origin.language_offered),
             **shown,
             **PENDING_CLEARED,
         },
@@ -2197,7 +2254,7 @@ async def copy_dataset(
             **dataset_payload(copied, bindings, can_undo=False, original_version=copied.number),
             "roles": _page_roles(roles),
             "suggestion": _suggestion(view, copied.profile, origin.language),
-            "language": {"language": origin.language, "source": origin.language_source},
+            "language": _language_body(origin),
             "confirmed": True,
             "complete": check.complete,
             "missing_roles": check.missing_roles,
@@ -2248,6 +2305,34 @@ def _suggestion(view: SessionView, profile: DatasetProfile, language: str | None
     return {**suggestion.body(), "siblings": label_siblings(roles, profile)}
 
 
+def _language_body(view: SessionView, offer: tuple[str, str] | None = None) -> dict[str, Any]:
+    """The session language as the page reads it, `{language, source}`, and the language to offer, if any.
+
+    `offer` is `(language, basis)`, the basis `message` (a typed message) or `data` (a paste's notes or column
+    names); the body carries it as `offer: {language, basis}` only while it still holds: never after a pick, which
+    the root's `set_language` may have made in the same turn, and never for the language the session has now.
+    """
+    body: dict[str, Any] = {"language": view.language, "source": view.language_source}
+    if offer is not None and view.language_source != "chosen" and not same_language(offer[0], view.language):
+        body["offer"] = {"language": offer[0], "basis": offer[1]}
+    return body
+
+
+def _telemetry_offer(ledger: RequestLedger | None, body: dict[str, Any]) -> None:
+    """The `language_offer` line (`via: shown`) for a language body that carries an offer to the page: content-free,
+    the language as a closed code. One per offer, since each language is offered once per session."""
+    offer = body.get("offer")
+    if ledger is None or not isinstance(offer, dict):
+        return
+    telemetry.write(
+        telemetry.LanguageOffer,
+        ledger,
+        attempt=f"shown:{ledger.request_id}",
+        via="shown",
+        language=telemetry.plot_language(offer["language"]),
+    )
+
+
 async def _session_sync(
     runtime: Runtime, user: str, sid: str, *, dataset_before: str | None = None, ledger: RequestLedger | None = None
 ) -> dict[str, Any]:
@@ -2260,10 +2345,10 @@ async def _session_sync(
     the new version as the dataset route would answer it (`roles` included, because a
     `generate_data` in a session without data stores its first version, and the page
     learns the spec's roles only from a dataset answer), plus the turn's change lines
-    from the ledger. The page learns both from `done`. The scope guard's detection or the
-    root's `set_language` may have set the session language, so `language` carries it as
-    `{language, source}` after every run, for the page's chip. Empty when the session is
-    gone, so the stream still closes.
+    from the ledger. The page learns both from `done`. The root's `set_language` may have set
+    the session language, so `language` carries it as `{language, source}` after every run,
+    for the page's chip, with `offer` when the scope guard offered the message's language
+    (`_language_body`). Empty when the session is gone, so the stream still closes.
     """
     try:
         session = await runtime.session(user, sid)
@@ -2275,12 +2360,13 @@ async def _session_sync(
     payload: dict[str, Any] = {
         "bindings": [binding.model_dump() for binding in view.bindings],
         "data_confirmed": view.data_confirmed,
-        "language": {"language": view.language, "source": view.language_source},
+        "language": _language_body(view, ledger.language_offer if ledger is not None else None),
     }
+    _telemetry_offer(ledger, payload["language"])
     stored = get_services().datasets.get(view.dataset_id, sid) if view.dataset_id else None
     if stored is not None:
-        # The wide-table offer in the session language after the turn: the first typed message or `set_language`
-        # may have changed it, and the page's card must name what `.to_long()` applies (live round 9).
+        # The wide-table offer in the session language after the turn: `set_language` may have changed it, and the
+        # page's card must name what `.to_long()` applies.
         payload["suggestion"] = _suggestion(view, stored.profile)
         if view.dataset_id != dataset_before:
             changes = list(ledger.dataset_changes) if ledger is not None else []
@@ -2349,9 +2435,9 @@ async def _settle_kept_note(runtime: Runtime, user: str, sid: str, ledger: Reque
 async def _after_turn(runtime: Runtime, user: str, sid: str, facts: TurnFacts) -> TurnFacts:
     """`facts` with the session language and its source as the turn left them.
 
-    The scope guard's detection and the root's `set_language` set them inside the run (`_produce`), so the turn
-    that detects or switches the language records the new value, not the one it started with. The values from
-    before the turn stay when the session is gone.
+    The root's `set_language` sets them inside the run (`_produce`), so the turn that switches the language
+    records the new value, not the one it started with. The values from before the turn stay when the session is
+    gone.
     """
     try:
         view = read_session((await runtime.session(user, sid)).state)
@@ -2368,20 +2454,20 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
     The request id goes into the idempotency key only (hashed), so two turns of the same number, such as a turn
     refused before the judge and the turn sent after it, stay two rows.
     """
-    error = failure or ledger.error
+    codes = telemetry.turn_codes(ledger, failure)  # the turn's record (`_keep_turn`) writes the same three
     telemetry.write(
         telemetry.ChatTurn,
         ledger,
         attempt=f"turn:{ledger.request_id}",
-        kind="error" if error is not None and ledger.refusal is None else telemetry.turn_kind(ledger),
+        kind=codes.kind,
         action=facts.action or "text",
         asked_question=ledger.reply_question and ledger.refusal is None,
         tools=sorted({tool for tool in ledger.tools if tool in telemetry.TOOL_NAMES}),
         prep_ops=sorted({op for op in ledger.prep_ops if op in telemetry.PREP_OPS}),
         prep_calls=ledger.tools.count("prepare_data"),
         capability_gap=telemetry.closed_set(ledger.capability_gaps, telemetry.CAPABILITY_GAPS),
-        refusal=telemetry.closed(ledger.refusal[0] if ledger.refusal else None, get_args(telemetry.RefusalCode)),
-        error=telemetry.closed(error, get_args(telemetry.ErrorCode)),
+        refusal=codes.refusal,
+        error=codes.error,
         reply_reasked=ledger.reply_reasked,
         language_source=telemetry.closed(facts.language_source, get_args(telemetry.LanguageSource), "default"),
         plot_language=telemetry.plot_language(facts.language),
@@ -2394,13 +2480,29 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
     )
 
 
-async def _refused(translator: Translator, ledger: RequestLedger, facts: TurnFacts) -> AsyncGenerator[str, None]:
+def _keep_turn(runtime: Runtime, ledger: RequestLedger, facts: TurnFacts, failure: str | None = None) -> None:
+    """The turn's record for the feedback case (`turn_record.py`), kept next to its `chat_turn` line at each of the
+    turn's ends with the same `failure`: the root's tool calls and the guards' verdicts, closed codes only. A session
+    purged while the turn ran (its turn log is gone, `Runtime.purge`) keeps nothing, so no ring outlives its session.
+    Never raises, and logs the exception's class only: the record must never cost the turn."""
+    try:
+        if ledger.session_id not in runtime.turns:
+            return
+        get_services().turns.add(ledger.session_id, turn_record.build(ledger, facts.action, failure))
+    except Exception as exc:
+        logger.warning("turn record failed: %s", type(exc).__name__)
+
+
+async def _refused(
+    runtime: Runtime, translator: Translator, ledger: RequestLedger, facts: TurnFacts
+) -> AsyncGenerator[str, None]:
     """A turn the ledger refused before the scope judge and any model call: `ready`, the refusal, `done`."""
     yield translator.ready()
     for chunk in translator.refusal():
         yield chunk
     attribution("run", ledger, model_versions=[], kind=ledger.kind)
     _telemetry_turn(ledger, facts)
+    _keep_turn(runtime, ledger, facts)
     yield translator.done()
 
 
@@ -2417,12 +2519,19 @@ def _turn_stream(
 
 
 def _refuse_now(
-    translator: Translator, ledger: RequestLedger, facts: TurnFacts, log: TurnLog, code: str, hook: str, **fields: Any
+    runtime: Runtime,
+    translator: Translator,
+    ledger: RequestLedger,
+    facts: TurnFacts,
+    log: TurnLog,
+    code: str,
+    hook: str,
+    **fields: Any,
 ) -> StreamingResponse:
     """The fixed refusal `code` as the whole turn, sent before the judge: no model call, no queue, no message counted."""
     ledger.refuse(code, refusal(code, ledger.lang))
     attribution(hook, ledger, verdict=code, **fields)
-    return _turn_stream(_refused(translator, ledger, facts), log)
+    return _turn_stream(_refused(runtime, translator, ledger, facts), log)
 
 
 async def _produce(
@@ -2494,10 +2603,11 @@ async def post_message(
         kind="action" if body.action else "text",
         tier=tier,
         # The refusals sent before the judge (the budget, unsupported content) follow the
-        # session language, never the browser's locale; after the judge, the message's.
+        # session language, never the browser's locale, and so do the ones after the judge.
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
         site_theme=theme,
         fresh_start=body.action == "create_plot",
+        new_data=body.action == "plot_new_data",
         plot_action=body.action in PLOT_ACTIONS,
     )
     _stamp(ledger, view, session)
@@ -2523,18 +2633,18 @@ async def post_message(
     # An admin is exempt from all but the strikes and the global budget (`plugins/ledger.py`, the ledger's tier).
     refused = scope_refusals(session.events)
     if refused >= settings.session_refusals:
-        return _refuse_now(translator, ledger, facts, log, SESSION_CLOSED, "session_closed", refusals=refused)
+        return _refuse_now(runtime, translator, ledger, facts, log, SESSION_CLOSED, "session_closed", refusals=refused)
     if services.usage.locked_out(user, settings):
         # Past the day's `attack` strikes: its own refusal, never the misleading "usage limit" text (2026-10-14).
-        return _refuse_now(translator, ledger, facts, log, LOCKED_OUT, "budget_halt", agent="route")
+        return _refuse_now(runtime, translator, ledger, facts, log, LOCKED_OUT, "budget_halt", agent="route")
     if not budget_allows(ledger, services.usage, settings):
         # The refusal the root would send, sent now: a user over the daily budget spends nothing. When only the
         # service's day budget is spent, every user gets `service_paused`, which says their own limit is untouched.
         code = day_refusal(services.usage, user, settings, tier=tier)
-        return _refuse_now(translator, ledger, facts, log, code, "budget_halt", agent="route")
+        return _refuse_now(runtime, translator, ledger, facts, log, code, "budget_halt", agent="route")
     limit = services.usage.message_limit(user, settings, tier)
     if limit is not None:
-        return _refuse_now(translator, ledger, facts, log, limit, "message_limit")
+        return _refuse_now(runtime, translator, ledger, facts, log, limit, "message_limit")
     services.usage.add_message(user)
     run = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now())
     # Registered here so a second request cannot slip in before the stream starts; the
@@ -2553,7 +2663,7 @@ async def post_message(
         # (live case of 2026-10-14, a German CSV paste answered in English). The name is the server's own word.
         text = f"{text} {ACTION_LANGUAGE_LINE.format(name=reply_language)}"
     # The first turn on a paste summarizes it: the summary action, or the note the user typed with the paste, which
-    # the scope judge reads as typed text (and which may set the session language). A summary action afterwards
+    # the scope judge reads as typed text (and whose language the page may be offered). A summary action afterwards
     # still carries the notes, so a refused note's summary has them too.
     summary_pending = view is not None and view.summary_pending
     first_turn = body.action == "summarize_data" or (summary_pending and body.text is not None)
@@ -2646,6 +2756,7 @@ async def post_message(
                 with contextlib.suppress(BaseException):  # the original exit goes on after the line
                     after = await _after_turn(runtime, user, sid, facts)
                 _telemetry_turn(ledger, after, "cancelled")
+                _keep_turn(runtime, ledger, after, "cancelled")
         try:
             if ledger.error is not None:
                 failure = ledger.error
@@ -2653,7 +2764,9 @@ async def post_message(
                 failure = "deadline"
             attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
             # Written before anything else is yielded: a client that goes during the error event loses no line.
-            _telemetry_turn(ledger, await _after_turn(runtime, user, sid, facts), failure)
+            after = await _after_turn(runtime, user, sid, facts)
+            _telemetry_turn(ledger, after, failure)
+            _keep_turn(runtime, ledger, after, failure)
             if failure is not None:
                 for chunk in translator.error(failure):
                     yield chunk
@@ -2880,7 +2993,11 @@ async def bundle(
     that made no plot: no version, and with `include_data` the session's current `data.csv` as
     the top-level `data_csv`. A fan-out session whose data is a copy names the source's data version
     as `session.dataset_copied_from`. `session.versions` counts the versions the session holds and
-    `session.last_run` says how its latest plot run ended, in every form, also `version=0`.
+    `session.last_run` says how its latest plot run ended, in every form, also `version=0`; so does `turns`, the
+    record of the session's latest turns (`turn_record.py`: `records`, the root's tool calls and the guards'
+    verdicts per turn as closed codes, and `dropped`, the older turns the ring no longer holds). A record's `turn` is
+    the ordinal of its user line in `transcript`; a turn refused before the scope judge stores no line and shares the
+    number of the next turn's.
     """
     session = await runtime.session(user, sid)
     services = get_services()
@@ -2952,6 +3069,8 @@ async def bundle(
         },
         "snapshot": {"spec_id": view.snapshot.spec_id, "library_version": view.snapshot.library_version},
         "transcript": transcript,
+        # Content-free like `last_run`, in every form: what each turn called and what its guards said.
+        "turns": services.turns.bundle(sid),
         "versions": items,
         "profile": dataset.profile.model_dump(mode="json") if dataset else None,
         "bindings": [binding.model_dump() for binding in view.bindings],

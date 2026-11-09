@@ -34,10 +34,11 @@ The agents service writes one wide JSON line per event to stdout on its own logg
 | Event | When | Main fields |
 |---|---|---|
 | `data_input` | A paste or a dropped file reaches the dataset route, or the file conversion refuses a file | `format`, `entry` (`paste` or `file`), `outcome`, `cause`, `size_bucket`, `rows_bucket`, `cols_bucket`, column counts by type, `max_categories_bucket`, `missing_bucket`, `warnings` (codes), `tables`, `sheets`, `notes` and `file_name` (booleans), `spec_fit`, judge tokens, `latency_ms` |
-| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `example`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `capability_gap` (since 2026-11-07, see [Fields added on 2026-11-07](#fields-added-on-2026-11-07)), `conversion` (what the turn did about a required role left open: `none` when the session block listed no conversion, `date`, `number` or `index` for the column `prepare_data` made, `asked` when one was listed and none was made; `asked_question` tells a question from a skip), `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
-| `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `version` (the shipped version's number, which `outcome.version` names), `shipped_score`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps`, and since 2026-11-01 `lane`, `queue_wait_ms`, `queue_position`, `user_runs_today`, `user_tokens_today` (see [Fields added on 2026-11-01](#fields-added-on-2026-11-01)) |
+| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `example`, `talk`, `refused`, `error`; a turn whose `plot_pipeline` call ToolSafety refused before the run is no `plot` turn since 2026-11-08, see [Meanings changed on 2026-11-08](#meanings-changed-on-2026-11-08)), `action`, `asked_question`, `tools`, `prep_ops`, `capability_gap` (since 2026-11-07, see [Fields added on 2026-11-07](#fields-added-on-2026-11-07)), `conversion` (what the turn did about a required role left open: `none` when the session block listed no conversion, `date`, `number` or `index` for the column `prepare_data` made, `asked` when one was listed and none was made; `asked_question` tells a question from a skip), `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
+| `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason, also when ToolSafety refused the call before the run) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `version` (the shipped version's number, which `outcome.version` names), `shipped_score`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps`, and since 2026-11-01 `lane`, `queue_wait_ms`, `queue_position`, `user_runs_today`, `user_tokens_today` (see [Fields added on 2026-11-01](#fields-added-on-2026-11-01)) |
 | `plot_switch` | The session switches its (spec, library) target, since 2026-11-02 | `switch_source`, `from_library`, `spec_changed`, `library_changed`, `carried_count`, `newer_count`, `target_has_plot`, `offered`, `memory_kinds` (see [Fields added on 2026-11-02](#fields-added-on-2026-11-02)) |
 | `outcome` | The page's beacon after a copy, a download, a session save, or a feedback send | `action` (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_page`, `opened_preview`, `opened_data_view`, `downloaded_data`, `saved_session`, `feedback`; `downloaded_page` is a JavaScript plot's interactive `plot.html`, and `opened_preview` that page shown in the card, a look that keeps nothing, both since 2026-10-31; `opened_data_view` is the data panel's view of every row once it shows the rows, with version 0 because it looks at the session's data and not at a result, a look that keeps nothing either, since 2026-11-02), `version`, `reaction` |
+| `language_offer` | Since 2026-11-08: the server sends the page the offer of a language it found in a typed message or a paste, the user takes such an offer with `.switch()`, or the user picks a language in the chat header's menu | `via` (`shown`, `offer`, `header`), `language` (the closed code of `plot_language` below) |
 
 Every line carries the same envelope:
 
@@ -45,7 +46,7 @@ Every line carries the same envelope:
 |---|---|
 | `log_type` | Always `agent_telemetry`: the sink selects on it |
 | `schema` | The line format's version, `1`. A renamed or removed field is a new schema; an added field is not |
-| `event` | One of the five events (`plot_switch` since 2026-11-02) |
+| `event` | One of the six events (`plot_switch` since 2026-11-02, `language_offer` since 2026-11-08) |
 | `service`, `revision` | Cloud Run's `K_SERVICE` and `K_REVISION` |
 | `source` | `live`; `fanout` for every line of a session the admin's "plot in all libraries" fan-out opened; or `harness` for the eval harnesses (`agents/evals/matrix.py`, `agents/evals/prep.py`). The card and the `source = 'live'` filters count `live` only. See [Fan-out sessions](#fan-out-sessions) |
 | `session` | An HMAC-SHA256 of the session id under a random per-process salt, 16 hex characters |
@@ -121,7 +122,7 @@ not know yet becomes `other`, so a new rule never drops a line.
 | Event | Field | Meaning |
 |---|---|---|
 | `chat_turn` | `plot_language` | The session language as the turn left it, as a code: `en`, `de`, `fr`, `es`, `it`, `pt`, `nl`, `pl`, `zh`, `vi`, `ru`, `ja` (the languages `agents/anyplot/language.py` names in `ENGLISH_NAMES`), and `other` for every other language. The session language itself is free text (`Swedish`), and a rare language could single a user out, so it never reaches a line |
-| `chat_turn` | `language_source` | Since 2026-10-30 read after the turn's run, like `plot_language`: the turn whose message the scope judge detected, or that called `set_language`, records the new value. Before, it recorded the value from before the turn |
+| `chat_turn` | `language_source` | Since 2026-10-30 read after the turn's run, like `plot_language`: the turn that called `set_language` records the new value (until 2026-11-08 also the turn whose message the scope judge detected). Before, it recorded the value from before the turn. The values since 2026-11-08 are in [Fields added on 2026-11-08](#fields-added-on-2026-11-08) |
 | `chat_turn`, `pipeline_run` | `steps[].thoughts` | The thinking tokens among `output`. `output` stays candidates plus thoughts, as both providers bill them, so the cost view prices `output` as before; `thoughts` is a part of it, never added to it. `null` for the judges, which book a plain total |
 | `pipeline_run` | `stages` | The stage that ended each attempt, in order (`pipeline.Run.stages`): retries after a failed check, proofreads, repairs and their causes. `adapter_truncated` counts the adapter answers cut off at the output limit. `stage` stays what stopped the run, also a limit before the next attempt. Both take the values of `pipeline.Stage` (pinned by a test), and `other` for a stage added there before the telemetry knows it |
 | `pipeline_run` | `round_scores` | The bucket of each round's latest review score in round order, `unscored` for a round without one (a failed render, a checklist review). `score_round1` and `score_round2` repeat the first two |
@@ -211,9 +212,11 @@ text.
 | `plot_switch` | `carried_count`, `newer_count`, `target_has_plot`, `offered` | How many decisions a plot in the new library would take over, how many of them came after that library's own latest plot, whether it has one, and whether the answer offered the carry run |
 | `plot_switch` | `memory_kinds` | The plot memory's entries counted by kind (`title`, `axis_label`, `reference_line`, `annotation`, `marker` and the other kinds of the closed set) |
 | `pipeline_run` | `carried` | The run took a switch's carry: the first plot in a new library, from its catalogue plot with the user's decisions |
-| `pipeline_run` | `fresh` | The run was the page's `.create_plot()` or `.start_over()`: the catalogue code again, without a switch's carry, with the memory's decisions |
+| `pipeline_run` | `fresh` | The run was the page's `.create_plot()` or `.start_over()`: the catalogue code again, without a switch's carry, with the memory's decisions; also "plot the new data" when it started from the catalogue plot |
+| `pipeline_run` | `new_data` | Since 2026-11-08, only on the page's "plot the new data": `previous` when the run started from the library's latest version (the same paste, the same bindings), else why it started from the catalogue plot: `other_paste`, `other_data` (a computed table replaced the data), `bindings_changed`, `kept_note` (a first-plot request waited) or `no_plot`. It counts how often the latest version is the base |
 | `pipeline_run` | `memory_entries`, `remembered`, `memory_full` | The plot memory's entries the run handed the adapter, the entries it stored once it shipped, and whether the memory had no room for them |
 | `chat_turn` | `action` `carry_plot`, `tools` `forget` | The page's carry run after a switch, and the root removing a decision |
+| `chat_turn` | `action` `plot_new_data` | Since 2026-11-08: the page's "plot the new data", after a data change or a paste |
 
 The typed columns are in `agents/telemetry/views/02_event_views.sql` (`pipeline_runs` and the new `plot_switches`).
 Applying the changed views waits for the owner's approval, as on 2026-11-01; until then the fields sit in `payload`
@@ -240,6 +243,39 @@ The typed column `capability_gap` is in `agents/telemetry/views/02_event_views.s
 changed view waits for the owner's approval, as on 2026-11-01; until then the field sits in `payload` of the
 `events` view.
 
+### Fields added on 2026-11-08
+
+- **`language_offer`, a new event.** A typed message or a paste in another language no longer sets the session
+  language: the page offers it once, and the user takes it or not. One line per offer the server sends to the page
+  (`via: shown`, from the scope guard's offer for a typed message, in the turn's `done`, or from the dataset route's
+  offer for the notes or column names of a paste), per offer the user takes (`via: offer`, `PUT .../language` with
+  `via: offer`) and per pick in the chat header (`via: header`). `language` is the closed code, as `plot_language`.
+  The share of offers taken is the `offer` lines over the `shown` ones. A request in the chat ("auf Deutsch bitte")
+  writes no line: the turn's `chat_turn.language_source` records `chosen`. The event replaces a Plausible event the
+  design proposed: most of the chat's sessions are the owner's own, and the Plausible dashboard is public.
+- **`chat_turn.language_source`.** The closed set is `default`, `chosen` and `offer` now: `offer` is a session whose
+  user took an offer. `pasted` and `detected` no longer appear, so expect more `default` from that day.
+
+The typed columns of the new event are in the view `language_offers` in `agents/telemetry/views/02_event_views.sql`.
+Applying the changed view waits for the owner's approval, as on 2026-11-01; until then the lines sit in `payload` of
+the `events` view.
+
+### Meanings changed on 2026-11-08
+
+ToolSafety refuses `plot_pipeline` before the run in a turn that changed the data itself, and on the summary turn of
+a paste while the data is unconfirmed (`data_changed_this_turn`, `summary_turn`; see the agent network's
+[Two steps](../concepts/agent-network.md#two-steps-data-first-then-the-plot)). Before, such a call ran into the run's
+own `not_ready`. No field is new, but three readings change from that date on:
+
+- **`chat_turn.kind` and `chat_turn.tools`.** `tools` lists only the calls ToolSafety allowed, so the refused
+  `plot_pipeline` is not in it, and the turn's `kind` is `prep`, `formula`, `code` or `talk` instead of `plot`.
+- **`pipeline_run` `not_ready`.** The refusal writes the same line as the run's own `not_ready` would, with the run's
+  reason, so the funnel still sees the ask. The Budget plugin counts no daily run for it, so `user_runs_today` is
+  `null` on such a line.
+- **`chat_turn.error` `no_reply`.** A summary turn whose reply is empty, or that the output sanitiser empties, ends as
+  `no_reply` after such a refusal: no `plot` event went to the page. Before, the `not_ready` event counted as the
+  turn's answer.
+
 ## Where the lines go
 
 | Resource | Name | Notes |
@@ -260,6 +296,11 @@ jsonPayload.log_type="agent_telemetry"
 An exclusion on the `_Default` sink (step 3 below) keeps the same lines out of the project's `_Default`
 bucket, so they live in one place with one retention.
 
+The machine-read lines of the API and the site's nginx are the sibling pair, built the same way: the
+`machine-reads` bucket, the `anyplot.machine_reads_logs` linked dataset, and the `anyplot.machine_reads` views
+([Machine readers](machine-readers.md)). The two stay apart so the legal page and each bucket's description
+describe one thing each.
+
 ## Views
 
 Create them in file order. Each file is a script of `CREATE OR REPLACE VIEW` statements with the project
@@ -268,7 +309,7 @@ and dataset names written out.
 | File | Views | Content |
 |---|---|---|
 | `01_events.sql` | `events` | One row per line, deduplicated by `idempotency_key` (`QUALIFY ROW_NUMBER()`), with the envelope as columns and the line as `payload` |
-| `02_event_views.sql` | `data_inputs`, `chat_turns`, `pipeline_runs`, `plot_switches` (since 2026-11-02), `outcomes` | One typed column per field, `NULL` where a line predates the field; `pipeline_runs` also has `adapter_truncations`, the count of `adapter_truncated` in `stages` |
+| `02_event_views.sql` | `data_inputs`, `chat_turns`, `pipeline_runs`, `plot_switches` (since 2026-11-02), `outcomes`, `language_offers` (since 2026-11-08) | One typed column per field, `NULL` where a line predates the field; `pipeline_runs` also has `adapter_truncations`, the count of `adapter_truncated` in `stages` |
 | `03_sessions.sql` | `sessions` | One row per session: data inputs, transcription offers, turns, runs, `not_ready` asks, shipped plots, `turns_to_first_plot`, keeps (copies and downloads), saves, feedback, rejections (feedback with `thumbs_down` or `bug`), `kept`, `funnel_last_step` (from `outcome_only` and `data_refused` through `transcription_offered`, `data_ok`, `chatted`, `plot_not_ready`, `plot_run` and `plot_shipped` to `kept`), and `state` under a 30-minute inactivity rule (`active`, `rejected`, `kept`, `saved`, `refined`, `abandoned_after_plot`, `abandoned_before_plot`). A session is `kept` when, after its last pipeline run, the user copied or downloaded a result (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_data`) and sent no feedback with `thumbs_down` or `bug`. A saved session is never a keep, because users also save a session to report a plot they did not like: a session whose only take-away is a save ends `saved`, and one with a `thumbs_down` or `bug` ends `rejected`. The view's header lists example sessions and how each is classified. A transcription writes two `data_input` rows, the offer (outcome `transcribed`) and the confirmed paste; every view counts the input once and the offers apart. `not_ready` runs are never counted as runs or in the repair rate |
 | `04_usage_failures.sql` | `usage`, `input_formats`, `failures`, `attempts` | Usage by day, spec and library (each line under the library it was written under, so a library switch splits a session's runs correctly; `sessions_kept` counts each session the `sessions` view calls `kept` once, under the day, spec and library of its last shipped run, so run it after `03_sessions.sql`); data inputs by format and entry, each input under its own format; one row per failure with its kind and closed code (since 2026-10-30 also the kinds `edit` and `validator`); one row per adapter attempt of a run with the stage that ended it |
 | `05_prices_cost.sql` | `model_prices`, `cost` | The `eu` list prices of `agents/evals/pricing.py` (a test keeps both equal) and the cost of every turn step and data-input judge call, with `thoughts_tokens`, the thinking part of `output_tokens` |
@@ -422,12 +463,32 @@ Run these steps once, as a project owner. They write nothing but the resources n
     `_AGENT_TELEMETRY_DATASET` substitution on the `deploy-api` trigger. The pipeline writes the variable on
     every deploy, smoke-tests the new revision and moves the pinned traffic to it; a
     `gcloud run services update` would create a revision that serves no traffic and that the next deploy
-    overwrites.
+    overwrites. `deploy-api` is a second-generation trigger on a repository connection, where
+    `gcloud builds triggers update github ... --update-substitutions` fails with `INVALID_ARGUMENT`; export the
+    trigger, edit the file, and import it, as in
+    [Change a trigger's included files](../../agentic/docs/project-guide.md#change-a-triggers-included-files):
 
-    ```bash
-    gcloud builds triggers update github deploy-api --region=europe-west4 \
-      --update-substitutions=_AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry
-    ```
+    1. Export the trigger into a scratch directory outside the repository (read-only):
+
+       ```bash
+       gcloud builds triggers describe deploy-api --region=europe-west4 --project=anyplot --format=yaml > before.yaml
+       ```
+
+    2. Copy `before.yaml` to `after.yaml` and add `_AGENT_TELEMETRY_DATASET: anyplot.agent_telemetry` under
+       `substitutions`. Leave every other key as exported.
+    3. Check that `diff before.yaml after.yaml` shows only that line.
+    4. Import the edited config. It keeps the trigger's `id`, so it updates the trigger in place:
+
+       ```bash
+       gcloud builds triggers import --source=after.yaml --region=europe-west4 --project=anyplot
+       ```
+
+    5. Read the trigger back and compare:
+
+       ```bash
+       gcloud builds triggers describe deploy-api --region=europe-west4 --project=anyplot --format=yaml > verify.yaml
+       diff after.yaml verify.yaml && echo "trigger matches the edited config"
+       ```
 
     The setting takes effect with the next API deploy; run the trigger by hand if you want it at once
     (`gcloud builds triggers run deploy-api --region=europe-west4 --branch=main`).
@@ -446,9 +507,10 @@ be named like the views dataset plus `_logs` (`anyplot.agent_telemetry_logs` for
 `AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry`), because it queries the log view `_AllLogs` directly: it
 filters `timestamp` to the window before it deduplicates, so a load scans the window's partitions only and
 never the whole 180 days, which the `events` view, deduplicated over the whole bucket, cannot avoid. The
-window starts at the current time floored to 10 minutes, passed as a query parameter, so repeated loads send
-the same query and BigQuery may answer from its result cache; on top of that the API keeps each answer for 10
-minutes, so reloading `/debug` runs no query at all. The answer holds aggregates only. `status` is
+window starts at the current time floored to 10 minutes, passed as a query parameter. BigQuery's result cache
+doesn't answer a repeat, because the linked `_AllLogs` view changes with every line that arrives, so the API
+keeps each answer for 10 minutes, and reloading `/debug` runs no query at all. The answer holds aggregates only.
+`status` is
 `not_configured` while the variable is unset, and `unavailable` when the query fails (no table yet, no
 permission, a timeout); both come with zeros, the card shows its empty state, and a failure is never kept.
 

@@ -42,7 +42,7 @@ from core.agent_cases import row_from_manifest
 from core.config import Settings
 from core.database import FEEDBACK_STATUSES, AgentFeedback, AgentFeedbackRepository, connection
 
-from .test_import_case import DATA, _bundle
+from .test_import_case import DATA, TURNS, _bundle
 
 
 CASE_A = "20261012T143005Z-1a2b3c4d"
@@ -99,12 +99,16 @@ def stored(
     version: int = 2,
     include_data: bool = True,
     replaces: str | None = None,
+    turns: dict | None = None,
 ) -> dict[str, bytes]:
-    """The files of a case exactly as the BFF's feedback route stores them (`api/agent_cases.py`)."""
+    """The files of a case exactly as the BFF's feedback route stores them (`api/agent_cases.py`); `turns`, the
+    record of each turn, as a bundle since 2026-11-09 carries it."""
     from api.agent_cases import Submission
     from api.agent_cases import build_case as build_stored_case
 
     bundle = _bundle()
+    if turns is not None:
+        bundle["turns"] = turns
     bundle["versions"] = [item for item in bundle["versions"] if item["number"] == version]
     if not include_data:
         for item in bundle["versions"]:
@@ -235,6 +239,22 @@ class TestSync:
         loaded = load_cases(fixtures_dir=import_case.FIXTURES_DIR, promoted_dir=cases)
         assert [(case.case_id, case.origin) for case in loaded] == [(target.name, "promoted")]
         assert leftovers(cases) == []
+
+    def test_a_case_with_the_turn_record_syncs_as_before(self, cases) -> None:
+        """The manifest keeps the bundle's `turns`; the importer reads nothing of it."""
+        plain, recorded = stored(), stored(turns=TURNS)
+        assert manifest_of(recorded)["bundle"]["turns"] == TURNS and "turns" not in manifest_of(plain)["bundle"]
+        contents = []
+        for files in (plain, recorded):
+            sync(
+                [row_for(files, promoted_at=PROMOTED, expected="rejected")],
+                MemoryStore((CASE_A, files)),
+                cases,
+                force=True,
+            )
+            contents.append(written(cases / dir_name(CASE_A)))
+
+        assert contents[0] == contents[1]
 
     def test_the_rows_outcome_wins_over_the_reaction(self, cases) -> None:
         files = stored(reaction="thumbs_down")

@@ -77,7 +77,17 @@ STARTED_STEP = "started"
 """The status step the route sends once a run that waited leaves the run queue; no pipeline event carries it.
 A turn without pipeline steps (a summary that runs data code) has nothing else that tells the page the wait is
 over, so its queue position would stay on screen until the reply."""
-PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version", "rounds")
+PLOT_FIELDS = (
+    "status",
+    "reason",
+    "attempts",
+    "artifacts",
+    "changes",
+    "residual_defects",
+    "version",
+    "rounds",
+    "new_data",
+)
 ROUND_OUTCOMES = frozenset(get_args(RoundOutcome))
 RUBRIC_ID = re.compile(r"[A-Z]{2}-[0-9]{2}")
 """A rubric id a repairing status names (`schemas.RubricId`)."""
@@ -209,9 +219,12 @@ class Translator:
     def _plot(self, output: dict[str, Any]) -> dict[str, Any]:
         """The plot event: the allowlisted fields, the model-written lines sanitised to one plain line each.
 
-        `version` goes out only when the result was stored as a version, and `memory` (`plot_memory`) only with it.
+        `version` goes out only when the result was stored as a version, and `memory` (`plot_memory`) only with it;
+        `new_data` only for the page's "plot the new data", where the card's label says where the plot started.
         """
         data = {key: output[key] for key in PLOT_FIELDS if key in output}
+        if data.get("new_data") is None:
+            data.pop("new_data", None)
         if not isinstance(data.get("version"), int):
             data.pop("version", None)
         elif (memory := plot_memory(self.ledger.shipped_memory)) is not None:

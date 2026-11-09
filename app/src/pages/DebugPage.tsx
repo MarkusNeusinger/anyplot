@@ -17,6 +17,7 @@ import { FeedbackSection } from 'src/sections/debug/FeedbackSection';
 import type { FeedbackVoteItem, VoteSort } from 'src/sections/debug/FeedbackTopList';
 import { KPIGrid } from 'src/sections/debug/KPIGrid';
 import { LibraryCoverage, type LibraryStats } from 'src/sections/debug/LibraryCoverage';
+import { MachineReadersSection } from 'src/sections/debug/MachineReadersSection';
 import { ProblemAreas, type ProblemSpec } from 'src/sections/debug/ProblemAreas';
 import { RecentActivity, type RecentActivityData } from 'src/sections/debug/RecentActivity';
 import type { SortDir } from 'src/sections/debug/SortableHeader';
@@ -478,6 +479,9 @@ export function DebugPage() {
 
       {/* Agent usage: the agent chat's content-free telemetry, 7 or 30 days */}
       <AgentUsageSection token={adminToken} reloadCounter={reloadCounter} />
+
+      {/* Machine readers: crawlers, AI assistants and MCP clients, 7 or 30 days */}
+      <MachineReadersSection token={adminToken} reloadCounter={reloadCounter} />
 
       {/* Agent cases: the triage of the agent chat's quick feedback */}
       <AgentCasesSection token={adminToken} reloadCounter={reloadCounter} />

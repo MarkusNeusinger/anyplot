@@ -210,6 +210,17 @@ def test_the_remembered_bullet_names_exactly_the_buttons_of_the_decisions_list()
     assert "above the composer" not in controls_section()
 
 
+def test_the_remembered_bullet_says_where_the_decisions_stand_after_a_paste_with_other_columns() -> None:
+    """Owner decision of 2026-11-08: after a paste that lacks a column the data before it was bound to, the new
+    `# data` line holds the decisions until the next plot, counted as earlier ones and with `.forget_all()` beside
+    them, so the root can point the user there. The words are the page's own."""
+    remembered = (AGENT_CHAT / "Remembered.tsx").read_text(encoding="utf-8")
+    bullet = bullet_of("The remembered decisions")
+
+    assert "the new `# data` line, as `· 3 earlier decisions ▾ · .forget_all()`, until the next plot" in bullet
+    assert "'earlier decision'" in remembered and "Forget all earlier decisions" in remembered
+
+
 def test_the_prompt_says_what_the_page_shows_of_questions_and_kept_decisions() -> None:
     """The page marks a message that changed nothing as a question and starts the reply with a label of its own,
     and an open plot card names the remembered decisions it kept and added on its first line, while its label

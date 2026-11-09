@@ -1,148 +1,161 @@
 """ anyplot.ai
 tree-phylogenetic: Phylogenetic Tree Diagram
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-15
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 88/100 | Updated: 2026-11-09
 """
 
 import os
 
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.collections import LineCollection
 from matplotlib.patches import Patch
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Clade colors (excellent colorblind-safe palette - preserved from previous implementation)
-APES_COLOR = "#306998"
-MONKEYS_COLOR = "#FFD43B"
-PROSIMIANS_COLOR = "#5A9C5A"
+# Imprint palette: all eight positions, one per clade in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Primate phylogenetic tree - pre-computed coordinates
-# Each leaf: (name, y_position, x_end) where x_end is total distance from root
-# Species ordered by evolutionary grouping (top to bottom)
-species = [
-    ("Galago", 0, 0.24),
-    ("Tarsier", 1, 0.24),
-    ("Lemur", 2, 0.18),
-    ("Spider Monkey", 3, 0.20),
-    ("Capuchin", 4, 0.19),
-    ("Baboon", 5, 0.18),
-    ("Rhesus Macaque", 6, 0.18),
-    ("Gibbon", 7, 0.16),
-    ("Orangutan", 8, 0.15),
-    ("Gorilla", 9, 0.14),
-    ("Chimpanzee", 10, 0.13),
-    ("Human", 11, 0.13),
-]
+# Columns: set these to your table's column names
+NODE = "Node"  # role: species_names
+PARENT = "Parent"  # role: extra
+BRANCH_LENGTH = "Branch length (substitutions per site)"  # role: branch_lengths
+CLADE = "Clade"  # role: extra
 
-# Pre-computed branch segments for the phylogenetic tree
-# Format: (x_start, y_start, x_end, y_end, color)
-branches = [
-    # Root split (Prosimians vs Simians)
-    (0, 5.5, 0.05, 5.5, INK_SOFT),  # Root to split
-    (0.05, 1, 0.05, 5.5, INK_SOFT),  # Vertical at root
-    (0.05, 1, 0.05, 10, INK_SOFT),  # Vertical to Simians
-    # Prosimians clade
-    (0.05, 1, 0.08, 1, PROSIMIANS_COLOR),  # To Prosimians node
-    (0.08, 0.5, 0.08, 2, PROSIMIANS_COLOR),  # Prosimians vertical
-    (0.08, 0.5, 0.10, 0.5, PROSIMIANS_COLOR),  # To Lorisoids
-    (0.10, 0, 0.10, 1, PROSIMIANS_COLOR),  # Lorisoids vertical
-    (0.10, 0, 0.24, 0, PROSIMIANS_COLOR),  # To Galago
-    (0.10, 1, 0.24, 1, PROSIMIANS_COLOR),  # To Tarsier
-    (0.08, 2, 0.18, 2, PROSIMIANS_COLOR),  # To Lemur
-    # Simians main branch
-    (0.05, 10, 0.08, 10, INK_SOFT),  # To Simians node
-    (0.08, 5.5, 0.08, 10, INK_SOFT),  # Simians vertical
-    # Apes clade
-    (0.08, 10, 0.10, 10, APES_COLOR),  # To Apes
-    (0.10, 8.5, 0.10, 10, APES_COLOR),  # Apes vertical
-    # African Apes
-    (0.10, 10, 0.11, 10, APES_COLOR),  # To African Apes
-    (0.11, 9.5, 0.11, 11, APES_COLOR),  # African Apes vertical
-    (0.11, 9, 0.14, 9, APES_COLOR),  # To Gorilla
-    (0.11, 10.5, 0.12, 10.5, APES_COLOR),  # To Hominini
-    (0.12, 10, 0.12, 11, APES_COLOR),  # Hominini vertical
-    (0.12, 10, 0.13, 10, APES_COLOR),  # To Chimpanzee
-    (0.12, 11, 0.13, 11, APES_COLOR),  # To Human
-    # Asian Apes
-    (0.10, 8.5, 0.13, 8.5, APES_COLOR),  # To Asian Apes
-    (0.13, 7, 0.13, 8, APES_COLOR),  # Asian Apes vertical
-    (0.13, 7, 0.16, 7, APES_COLOR),  # To Gibbon
-    (0.13, 8, 0.15, 8, APES_COLOR),  # To Orangutan
-    # Monkeys clade
-    (0.08, 5.5, 0.12, 5.5, MONKEYS_COLOR),  # To Monkeys
-    (0.12, 3.5, 0.12, 5.5, MONKEYS_COLOR),  # Monkeys vertical
-    # Old World Monkeys
-    (0.12, 5.5, 0.14, 5.5, MONKEYS_COLOR),  # To Old World
-    (0.14, 5, 0.14, 6, MONKEYS_COLOR),  # OW vertical
-    (0.14, 5, 0.18, 5, MONKEYS_COLOR),  # To Baboon
-    (0.14, 6, 0.18, 6, MONKEYS_COLOR),  # To Rhesus
-    # New World Monkeys
-    (0.12, 3.5, 0.15, 3.5, MONKEYS_COLOR),  # To New World
-    (0.15, 3, 0.15, 4, MONKEYS_COLOR),  # NW vertical
-    (0.15, 3, 0.20, 3, MONKEYS_COLOR),  # To Spider Monkey
-    (0.15, 4, 0.19, 4, MONKEYS_COLOR),  # To Capuchin
-]
+# Data: replace this block with your own edge list, for example df = pd.read_csv("tree.csv")
+# One row per node: its parent (empty for the root), the length of the branch above it,
+# and the clade that colors that branch (empty for branches outside every clade).
+# Primate phylogeny from mitochondrial DNA; children are listed in drawing order, bottom to top.
+df = pd.DataFrame(
+    [
+        ("Primates", None, 0.05, None),
+        ("Strepsirrhines", "Primates", 0.04, "Strepsirrhines"),
+        ("Galago", "Strepsirrhines", 0.13, "Strepsirrhines"),
+        ("Lemur", "Strepsirrhines", 0.11, "Strepsirrhines"),
+        ("Haplorhines", "Primates", 0.02, None),
+        ("Tarsier", "Haplorhines", 0.17, "Tarsiers"),
+        ("Simians", "Haplorhines", 0.04, None),
+        ("New World Monkeys", "Simians", 0.03, "New World Monkeys"),
+        ("Spider Monkey", "New World Monkeys", 0.05, "New World Monkeys"),
+        ("Capuchin", "New World Monkeys", 0.04, "New World Monkeys"),
+        ("Catarrhines", "Simians", 0.02, None),
+        ("Old World Monkeys", "Catarrhines", 0.03, "Old World Monkeys"),
+        ("Baboon", "Old World Monkeys", 0.04, "Old World Monkeys"),
+        ("Rhesus Macaque", "Old World Monkeys", 0.04, "Old World Monkeys"),
+        ("Apes", "Catarrhines", 0.02, "Apes"),
+        ("Asian Apes", "Apes", 0.03, "Apes"),
+        ("Gibbon", "Asian Apes", 0.03, "Apes"),
+        ("Orangutan", "Asian Apes", 0.02, "Apes"),
+        ("African Apes", "Apes", 0.01, "Apes"),
+        ("Gorilla", "African Apes", 0.03, "Apes"),
+        ("Hominini", "African Apes", 0.01, "Apes"),
+        ("Chimpanzee", "Hominini", 0.01, "Apes"),
+        ("Human", "Hominini", 0.01, "Apes"),
+    ],
+    columns=[NODE, PARENT, BRANCH_LENGTH, CLADE],
+)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot: reads only df and the constants above
+nodes = df[NODE].tolist()
+parents = dict(zip(df[NODE], df[PARENT], strict=True))
+lengths = dict(zip(df[NODE], df[BRANCH_LENGTH], strict=True))
+clades = dict(zip(df[NODE], df[CLADE], strict=True))
+children = {node: df.loc[df[PARENT] == node, NODE].tolist() for node in nodes}
+root = next(node for node in nodes if pd.isna(parents[node]))
+clade_names = df[CLADE].dropna().unique().tolist()
+clade_colors = {clade: IMPRINT_PALETTE[i] for i, clade in enumerate(clade_names)}
+
+# Rectangular layout: x is the distance from the root (a root without a stem starts at 0),
+# tips sit one row apart in preorder, and every internal node sits midway between its outer children
+x_pos, y_pos, preorder, stack = {}, {}, [], [root]
+while stack:
+    node = stack.pop()
+    preorder.append(node)
+    parent = parents[node]
+    start = 0.0 if pd.isna(parent) else x_pos[parent]
+    x_pos[node] = start + (0.0 if pd.isna(lengths[node]) else lengths[node])
+    stack.extend(reversed(children[node]))
+tips = [node for node in preorder if not children[node]]
+y_pos.update({tip: float(rank) for rank, tip in enumerate(tips)})
+for node in reversed(preorder):
+    if children[node]:
+        y_pos[node] = (y_pos[children[node][0]] + y_pos[children[node][-1]]) / 2
+
+# Branch segments: a horizontal per node (its own length) and a vertical joining each node's children
+horizontal, horizontal_colors, vertical, vertical_colors = [], [], [], []
+for node in preorder:
+    color = clade_colors.get(clades[node], INK_SOFT)
+    start = 0.0 if pd.isna(parents[node]) else x_pos[parents[node]]
+    horizontal.append([(start, y_pos[node]), (x_pos[node], y_pos[node])])
+    horizontal_colors.append(color)
+    if children[node]:
+        ys = [y_pos[c] for c in children[node]]
+        vertical.append([(x_pos[node], min(ys)), (x_pos[node], max(ys))])
+        vertical_colors.append(color)
+
+depth = max(x_pos.values())
+tip_x = np.array([x_pos[tip] for tip in tips])
+tip_y = np.array([y_pos[tip] for tip in tips])
+tip_colors = [clade_colors.get(clades[tip], INK_SOFT) for tip in tips]
+
+# Scale bar: the largest 1-2-5 step that fits in a quarter of the tree depth
+magnitude = 10 ** np.floor(np.log10(depth / 4))
+scale = max(step * magnitude for step in (1, 2, 5) if step * magnitude <= depth / 4)
+scale_y = -0.9
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Draw all branches
-for x1, y1, x2, y2, color in branches:
-    ax.plot([x1, x2], [y1, y2], color=color, linewidth=2.5, solid_capstyle="round")
+ax.add_collection(LineCollection(vertical, colors=vertical_colors, linewidths=2.0, capstyle="round", zorder=2))
+ax.add_collection(LineCollection(horizontal, colors=horizontal_colors, linewidths=2.0, capstyle="round", zorder=2))
+ax.scatter(tip_x, tip_y, s=28, color=tip_colors, edgecolors=PAGE_BG, linewidths=0.8, zorder=3)
+for tip, x, y in zip(tips, tip_x, tip_y, strict=True):
+    ax.annotate(tip, (x, y), xytext=(6, 0), textcoords="offset points", va="center", ha="left", fontsize=8, color=INK)
 
-# Draw species labels
-for name, y, x in species:
-    ax.plot(x, y, "o", color=INK_SOFT, markersize=8)
-    ax.text(x + 0.008, y, name, va="center", ha="left", fontsize=16, fontweight="medium", color=INK)
+# Scale bar, drawn in the same data units as the branches
+ax.plot([0, scale], [scale_y, scale_y], color=INK, linewidth=2.0, solid_capstyle="butt")
+ax.annotate(
+    f"{scale:g} substitutions per site",
+    (scale, scale_y),
+    xytext=(6, 0),
+    textcoords="offset points",
+    va="center",
+    ha="left",
+    fontsize=7,
+    color=INK_SOFT,
+)
 
 # Style
-ax.set_xlabel("Evolutionary Distance (substitutions per site)", fontsize=20, color=INK)
-ax.set_ylabel("")
-ax.set_title(
-    "Primate Evolution · tree-phylogenetic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK
-)
-
-# Set axis limits
-ax.set_xlim(-0.02, 0.38)
-ax.set_ylim(-1, 12.5)
-
-# Style ticks
-ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+title = "tree-phylogenetic · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
+ax.set_xlabel(BRANCH_LENGTH, fontsize=10, color=INK)
+ax.set_xlim(-depth * 0.03, depth * 1.32)
+ax.set_ylim(scale_y - 0.7, len(tips) - 0.4)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.tick_params(axis="y", left=False, labelleft=False)
-
-# Add subtle grid on x-axis only
-ax.grid(True, axis="x", alpha=0.15, linestyle="-", linewidth=0.8, color=INK_SOFT)
-
-# Remove spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_visible(False)
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.set_axisbelow(True)
+for side in ("top", "right", "left"):
+    ax.spines[side].set_visible(False)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-# Add legend explaining clade colors
-legend_elements = [
-    Patch(facecolor=APES_COLOR, edgecolor=INK_SOFT, label="Apes"),
-    Patch(facecolor=MONKEYS_COLOR, edgecolor=INK_SOFT, label="Monkeys"),
-    Patch(facecolor=PROSIMIANS_COLOR, edgecolor=INK_SOFT, label="Prosimians"),
-]
-leg = ax.legend(
-    handles=legend_elements, loc="upper left", fontsize=16, frameon=True, fancybox=False, edgecolor=INK_SOFT
-)
+legend_handles = [Patch(facecolor=clade_colors[clade], edgecolor="none", label=clade) for clade in clade_names]
+leg = ax.legend(handles=legend_handles, title=CLADE, loc="upper right", fontsize=8, title_fontsize=8, frameon=True)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
-leg.get_frame().set_linewidth(1.5)
-for text in leg.get_texts():
-    text.set_color(INK_SOFT)
+leg.get_frame().set_linewidth(0.8)
+plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_title().set_color(INK)
 
-# Add scale bar
-ax.plot([0, 0.05], [-0.5, -0.5], color=INK_SOFT, linewidth=3, solid_capstyle="butt")
-ax.text(0.025, -0.8, "0.05", ha="center", va="top", fontsize=14, color=INK_SOFT)
+fig.subplots_adjust(left=0.04, right=0.97, top=0.91, bottom=0.12)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

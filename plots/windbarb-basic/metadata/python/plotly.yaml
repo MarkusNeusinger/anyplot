@@ -2,10 +2,9 @@ library: plotly
 language: python
 specification_id: windbarb-basic
 created: '2026-01-11T20:53:05Z'
-updated: '2026-11-09T01:33:55Z'
-generated_by: claude-opus-5-5
-adopted_from: 461d3fff72e6b27ae3cf1a6a563be64ab83192b0 (461d3fff72e6b27ae3cf1a6a563be64ab83192b0)
-workflow_run: 42545289724
+updated: '2026-11-09T17:16:49Z'
+generated_by: claude-opus
+workflow_run: 42661730483
 issue: 3694
 language_version: 3.14.10
 library_version: 7.1.0
@@ -13,54 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - 'Barb geometry follows the standard notation: staffs point toward where the wind
-    comes from, half barbs, full barbs and filled triangular pennants add up to the
-    rounded speed in knots, all on one side of the staff, and the three calm stations
-    are open circles with no staff'
-  - The barb key is a second plotly axis pair locked to the map with scaleanchor,
-    so each key sample (calm, 5, 10, 50, 65 kt) is drawn with the same barb code at
-    exactly the map's scale
-  - Barb size and map extent derive from the station spacing (scipy cdist nearest-neighbour
-    median) and from every drawn point, so the 60 barbs sit clear of each other and
-    none is cut at the axis edge
-  - 'Idiomatic plotly geometry: None-separated line traces for staffs and feathers,
-    fill=''toself'' for pennants, scaleanchor for an equal-aspect lon/lat map'
-  - 'Native hover in the HTML output: each station dot answers with speed in kt and
-    direction in degrees via customdata and hovertemplate, while the key panel is
-    excluded from hover'
-  - 'Theme tokens threaded through title, axis titles, ticks, axis lines and grid;
-    the barbs keep #009E73 in both renders'
+  - 'Full standard notation built from go.Scatter traces: None-separated line segments
+    for staffs and feathers, fill=''toself'' triangles for pennants, speeds rounded
+    to 5 kt and decomposed into pennants, full and half barbs on the Northern-Hemisphere
+    left side, staffs pointing upwind'
+  - Calm stations below 2.5 kt drawn as open circles without a staff (two in the south-east
+    ridge), so every notation element of the spec appears in the data
+  - The barb key is a second subplot locked to the map's scale with scaleanchor, so
+    its samples (calm, 5, 10, 50, 65 kt) are drawn by the same code at exactly the
+    map's size
+  - Barb geometry derived from the median nearest-neighbour station spacing and an
+    equal-aspect map, keeping all 60 barbs clear of their neighbours
+  - Hover reports speed and meteorological direction per station via customdata and
+    hovertemplate in the HTML output
+  - Plausible North Sea / Denmark station grid with a gale in the north-west and a
+    calm ridge in the south-east, giving a readable speed gradient
+  - Theme tokens threaded through title, axis titles, ticks, axis lines, grid and
+    key text; both renders read cleanly
   weaknesses:
-  - 'VQ-03 (both): on the storm barbs (around 4.6°E 53.8°N and 10.6°E 55.7°N) and
-    the key''s 65 kt sample the full and half barbs start right at the pennant''s
-    base, so the feathers merge into the triangle and are hard to count → leave at
-    least one feather step of clear staff between the pennant base and the first barb.
-    Likely cause: along += flag_base + 0.4 * step after a pennant.'
-  - 'DQ-02 (both): the three 55–70 kt storm stations (indices 12, 38, 55) are isolated
-    points surrounded by 15–25 kt neighbours, a wind field no real pressure system
-    produces → let the strong winds come from a coherent feature such as a gradient
-    toward one corner of the grid. Likely cause: u[storm_stations] and v[storm_stations]
-    set on scattered indices.'
-  - 'Suggestion: the empty space below the barb key could hold a short line on the
-    station network or the date of the observation.'
+  - 'Suggestion: the map occupies only the left three quarters while the space below
+    the key stays empty; a slightly larger map domain would use the canvas better.'
+  - 'Suggestion: key labels at 10 px could go to 11 px so the decoding text holds
+    up better in the 400 px thumbnail.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across paper and plot area.
-      Chrome: title "windbarb-basic · python · plotly · anyplot.ai" centred in dark ink, about 38% of the width; axis titles "Longitude (°E)" and "Latitude (°N)" in dark ink, tick labels (4–12, 53–58) in INK_SOFT; subtle grey grid, left and bottom axis lines only. "Barb key" panel at the right with five samples (calm circle, half barb 5 kt, full barb 10 kt, pennant 50 kt, 50+10+5 = 65 kt) and grey labels. All readable.
-      Data: 10 x 6 station grid, every barb in #009E73 with a dot at the station; mostly westerly to south-westerly staffs with 1–3 feathers, three filled pennants on storm stations (5°E 54°N, 11°E 56°N, 8°E 58°N), three open calm circles (3°E 53°N, 8°E 55°N, 8°E 57°N). Neighbouring barbs stay apart; feathers next to the pennants crowd the triangles.
+      Chrome: title "windbarb-basic · python · plotly · anyplot.ai" centred in dark ink; axis titles "Longitude (°E)" and "Latitude (°N)" and ticks 4–12 / 53–58 in INK/INK_SOFT; subtle grid; left and bottom axis lines; "Barb key" panel on the right with five labelled samples. All readable.
+      Data: 60 stations on a 10 x 6 grid, every barb in #009E73 with a dot at the station; staffs point upwind, half/full barbs and filled pennants on one side; pennant barbs in the north-west gale, two open calm circles at 12°E 53–54°N. Barbs stay clear of their neighbours.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and "Barb key" in light ink, tick and key labels in light grey INK_SOFT; grid subtle light grey, axis lines light grey. No dark-on-dark text.
-      Data: identical #009E73 barbs, pennants, dots and calm circles at the same positions as the light render; only chrome flipped. Green reads well on the dark surface.
+      Chrome: title, axis titles, ticks and key labels in light ink; grid subtle but visible; no dark-on-dark text.
+      Data: identical #009E73 barbs, pennants and calm circles in the same positions as the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,34 +59,34 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 16, axis titles 12, ticks and key labels 10-11 set explicitly;
+        comment: Explicit sizes (title 16, axis titles 12, ticks and key labels 10);
           readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; neighbouring barbs stay apart (closest pair at
-          11°E 57-58°N still clear)
+        comment: No text collisions; barbs spaced from the station spacing stay clear
+          of neighbours
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Feathers next to the pennants merge into the triangle on the storm
-          barbs and the 65 kt key sample (defect line)
+        comment: 2.4 px strokes; every half barb, full barb and pennant countable
+          in both themes; key samples visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green series, strong contrast on both backgrounds
+        comment: Single brand green on both surfaces, no color-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, map and key balanced, nothing clipped
+        comment: 3200x1800; equal-aspect map plus key panel; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -107,9 +98,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 single series, correct theme backgrounds'
+        comment: 'Single series #009E73; backgrounds #FAF8F1 / #1A1A17; theme-correct
+          chrome'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -117,21 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Key drawn at the map's exact scale with a clear title/label hierarchy,
-          beyond the baseline
+        comment: Key title in INK over INK_SOFT labels, key samples drawn at the map
+          scale, slanted synoptic feathers
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Equal aspect via scaleanchor, extents padded from the drawn geometry,
+          staff length derived from the station spacing, tick marks removed
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Tick marks off, barb size and map padding derived from station spacing,
-          key aligned to the plot top
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Data displayed, no hierarchy chosen beyond the Notes
+        comment: Gale-to-calm gradient from north-west to south-east gives the field
+          a readable focus
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Standard wind barb plot with calm circles and a key, no unasked layers
+        comment: Standard wind barb plot, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Upwind staffs, 5/10/50 kt notation on one side (NH), calm circles,
-          spacing without overlap, key - all present
+        comment: Upwind staffs, 5/10/50 notation on the NH left side, calm open circles,
+          spacing without overlap, notation key
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Staff foot at each station's lon/lat, equal aspect, all stations
-          shown
+        comment: Staffs anchored at station positions; speeds rounded to 5 kt
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; key labels decode the notation in plain text
+        comment: Mandated title; key labels decode the notation
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Calm, half, full and pennant barbs and turning directions all shown
+        comment: Half barbs, full barbs, pennants, combinations and calm stations
+          all present
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: North Sea / Denmark station grid is plausible and neutral, but isolated
-          storm stations amid moderate winds are not (defect line)
+        comment: Surface stations over the North Sea and Denmark
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: 15-25 kt typical winds, 55-70 kt storms, calm under 2.5
-          kt; speeds rounded to 5 kt before decoding'
+        comment: Calm to about 70 kt in the gale, plausible; no Check values in the
+          spec
     code_quality:
       score: 10
       max: 10
@@ -195,7 +187,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Flat script, panel loop, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,14 +205,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Hand-built barb geometry is required (plotly has no barb trace);
-          one shared loop draws map and key
+        comment: Plotly has no barb primitive, so the geometry is necessary; compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png at 800x450 scale 4 and plot-{THEME}.html
+        comment: plot-{THEME}.png and .html, current API
     library_mastery:
       score: 6
       max: 10
@@ -230,31 +221,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: None-separated line traces, fill='toself' pennants, scaleanchor equal
-          aspect, hovertemplate with customdata
+        comment: go.Scatter with None-separated segments and fill='toself' pennants,
+          layout axes dicts
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Key subplot scale-locked to the map via cross-axis scaleanchor; hover
-          readout in HTML
+        comment: scaleanchor-locked key subplot, customdata hovertemplate with speed
+          and direction
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
-  rendered_at: '2026-11-09T01:30:53Z'
+  rendered_at: '2026-11-09T17:14:02Z'
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - custom-legend
+  - patches
   - subplots
-  - annotations
   - hover-tooltips
+  - custom-legend
   - html-export
-  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
+  - grid-styling

@@ -4,7 +4,12 @@ A case is a directory with `case.json`, `data.csv` and optionally `snapshot.json
 `change_request.txt` (`agents/evals/fixtures/README.md`). `case.json` may name a
 session `language` (a value of `language.LANGUAGE_PATTERN`), which the harness sets
 through `PUT /v1/sessions/{sid}/language` before the first turn, as the chat header's
-chip would; without it the session keeps its own default and detection. Two sources:
+chip would; without it the session keeps its own default and detection. It may name
+`before_operations`, the data steps a user takes before the plot: lists of `prepare_data`
+operations, which the harness stores as the session's next data versions right after the
+paste, before the bindings and the confirmation, through the server's own code and with
+no model call (`matrix.store_data_steps`). The `n5000` cases of the specs that draw one
+value per key aggregate their raw records this way (`make_fixtures.py`). Two sources:
 
 * `agents/evals/fixtures/cases/`: committed, synthetic only (`origin="fixtures"`);
 * `agents/evals/.cases/`: promoted feedback cases, git-ignored because they hold users'
@@ -51,6 +56,8 @@ EXPECTED: tuple[str, ...] = ("accepted", "rejected", "unknown")
 SMOKE_TAG = "smoke"
 STRESS_TAG = "stress"
 MAX_CHANGE_REQUEST_CHARS = 600
+MAX_BEFORE_VERSIONS = 5
+"""Data steps a case may take before its plot: the versions the undo history keeps, as for the prep cases."""
 _CASE_ID = re.compile(FIXTURE_PATTERN)
 
 
@@ -105,6 +112,9 @@ class EvalCase:
     """The session language the harness chooses before the first turn (source `chosen`), or `None`."""
     checks: FollowUpChecks | None = None
     """What the follow-up's shipped version must show; only a case with a `change_request` has them."""
+    before_operations: tuple[tuple[dict[str, Any], ...], ...] = ()
+    """The data steps before the plot, one `prepare_data` call's operations each, stored as a version of its own
+    after the paste (`matrix.store_data_steps`); `bindings` name the columns the last one leaves."""
     snapshot_file: Path | None = field(default=None, repr=False)
 
     def snapshot(self) -> CatalogueSnapshot:
@@ -148,6 +158,7 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
     checks = _checks(raw.get("checks"), directory)
     if checks is not None and change_request is None:
         raise CaseError(f"{directory}/case.json: checks need a change_request.txt, the follow-up they measure")
+    before_operations = _before_operations(raw.get("before_operations"), directory)
     snapshot_file = directory / "snapshot.json"
     perturbation = raw.get("perturbation")
     return EvalCase(
@@ -166,8 +177,35 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
         change_request=change_request,
         language=language,
         checks=checks,
+        before_operations=before_operations,
         snapshot_file=snapshot_file if snapshot_file.is_file() else None,
     )
+
+
+def _before_operations(value: Any, directory: Path) -> tuple[tuple[dict[str, Any], ...], ...]:
+    """`before_operations` of `case.json`: 1 to `MAX_BEFORE_VERSIONS` lists, each a valid argument of `prepare_data`.
+
+    Whether they apply to the case's data shows only when the harness stores them, which raises then: a fixture bug.
+    """
+    from pydantic import ValidationError
+
+    from agents.anyplot.data.prepare import PrepareArgs
+
+    if value is None:
+        return ()
+    where = f"{directory}/case.json: before_operations"
+    if not isinstance(value, list) or not 0 < len(value) <= MAX_BEFORE_VERSIONS:
+        raise CaseError(f"{where} must be a list of 1 to {MAX_BEFORE_VERSIONS} operation lists")
+    steps = []
+    for operations in value:
+        try:
+            PrepareArgs.model_validate({"operations": operations})
+        except ValidationError as exc:
+            raise CaseError(
+                f"{where}: an operation list that prepare_data refuses ({exc.error_count()} errors)"
+            ) from exc
+        steps.append(tuple(operations))
+    return tuple(steps)
 
 
 def _checks(value: Any, directory: Path) -> FollowUpChecks | None:

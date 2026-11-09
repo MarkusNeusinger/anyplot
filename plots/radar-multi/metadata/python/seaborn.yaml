@@ -2,126 +2,133 @@ library: seaborn
 language: python
 specification_id: radar-multi
 created: '2025-12-25T19:07:05Z'
-updated: '2026-05-07T16:59:36Z'
-generated_by: claude-haiku
-workflow_run: 25509517980
+updated: '2026-11-09T14:30:13Z'
+generated_by: claude-opus
+workflow_run: 42633238493
 issue: 2026
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - Excellent theme implementation with correct token mapping
-  - Perfect Okabe-Ito compliance with proper color ordering
-  - All radar chart requirements present and working
-  - Clean, reproducible code following KISS principles
-  - Strong data storytelling through diverse product profiles
-  - Idiomatic seaborn and matplotlib usage
+  - 'The plot layer reads the tidy df directly: sns.lineplot with hue, hue_order,
+    palette, units=PRODUCT, estimator=None and sort=False draws every outline on matplotlib''s
+    polar axes without any reshaping'
+  - Each polygon is closed in the data by repeating its first vertex at 2π, so outlines
+    and fills follow exactly the same vertices and never smooth past them
+  - 'Imprint colors #009E73, #C475FD, #4467A3 in canonical order, identical in both
+    themes; fills at alpha 0.22 keep every polygon and the dashed rings visible where
+    the three overlap'
+  - 'Clear chrome hierarchy: axis names at 10 pt in INK, ring values at 8 pt in INK_SOFT
+    on a ray between two spokes, and the scale named once (''Score (0-100)'') along
+    that same ray'
+  - Vertex markers carry a PAGE_BG edge, which separates near-coincident vertices
+    from the outlines in both themes
+  - sns.move_legend relocates seaborn's own hue legend with a reader-facing title
+    ('Product') instead of rebuilding it by hand
+  - 'Plausible, neutral scenario: three fictional laptops scored 0-100 on six dimensions,
+    with crossing outlines so no product dominates everywhere'
   weaknesses:
-  - Title contains 'pyplots.ai' instead of 'anyplot.ai' (line 99) - violates SC-04
-    format requirement
+  - 'Suggestion: a single focal choice (for example, ordering the series or the legend
+    by overall score) would give the comparison a clearer entry point.'
+  - 'Suggestion: legend handles could show the polygon fill alongside the outline
+    so the legend mirrors the full mark.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "radar-multi · seaborn · pyplots.ai" in dark text (24pt bold), category axis labels (Performance, Reliability, Usability, Features, Support, Value) in dark text (18pt), radial tick labels (20, 40, 60, 80, 100) in soft gray (14pt) - all readable with good contrast
-      Data: Three overlapping filled polygons with transparency (alpha=0.25) and outlined markers
-        - Green (#009E73, Product A) - correct first series brand color
-        - Orange (#D55E00, Product B) - correct second position
-        - Blue (#0072B2, Product C) - correct third position
-      Gridlines: Subtle dashed gridlines at 20, 40, 60, 80, 100 intervals (radial and azimuthal)
-      Legend: Upper right corner with three product labels in appropriate colors, light background frame
-      Legibility verdict: PASS - All text clearly readable against light background with good contrast
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 square canvas.
+      Chrome: title "radar-multi · python · seaborn · anyplot.ai" at top center (~58 % width), dark ink; six axis names (Performance, Reliability, Usability, Features, Support, Value) in dark ink at the spoke ends; ring values 20/40/60/80/100 in soft gray on a ray between Performance and Reliability; "Score (0-100)" rotated along the same ray outside the outer ring; dashed rings and solid spokes subtle; outer polar spine in INK_SOFT; legend bottom right on an elevated frame titled "Product". All text readable, nothing clipped.
+      Data: three closed polygons with circular vertex markers (white edges) and translucent fills: Nimbus Pro 14 in #009E73 (first series), Vela Air 13 in #C475FD, Orion Flex 15 in #4467A3. Outlines cross; rings remain visible through the overlapping fills.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text, category labels in light text, radial tick labels in soft light gray - all clearly readable against dark background with proper contrast
-      Data: Same three polygon series with identical colors to light render:
-        - Green (#009E73) - IDENTICAL to light render ✓
-        - Orange (#D55E00) - IDENTICAL to light render ✓
-        - Blue (#0072B2) - IDENTICAL to light render ✓
-      Gridlines: Subtle gridlines in light gray, same styling as light render
-      Legend: Same positioning and labels, dark background frame adapts to theme
-      Legibility verdict: PASS - No dark-on-dark issues; all text readable; data colors maintain consistency with light render
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis names and legend text flip to light ink #F0EFE8; ring values and scale label in light soft gray #B8B7B0; outer spine light gray; legend frame on #242420. No dark-on-dark text anywhere.
+      Data: identical colors to the light render (#009E73, #C475FD, #4467A3); marker edges switch to the dark page color; fills read as deep translucent tints with rings still visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, labels, ticks explicitly sized and readable. Tick labels slightly
-          compact but acceptable.
+        comment: Explicit sizes (title 12, axis names 10, ring values 8 pt); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Category labels well-spaced; legend properly positioned without overlap.
+        comment: No text collisions; ring labels clear of the outlines; legend sits
+          outside the outer ring
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (10pt) and lines (3pt) well-sized; fills (alpha=0.25) allow
-          overlapping visibility.
+        comment: 6 pt markers and 2 pt lines suit 18 vertices; legend glyphs visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good contrast across all series.
+        comment: Green, lavender and blue Imprint hues are CVD-distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate for radar; balanced margins; legend well-placed.
+        comment: Square 2400x2400 canvas for a symmetric plot; radar fills the frame,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title contains 'pyplots.ai' instead of 'anyplot.ai' - violates SC-04
-          format requirement.
+        passed: true
+        comment: Readable dimension names; value scale named 'Score (0-100)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; positions 2-3 follow Okabe-Ito; backgrounds
-          correct; data colors identical across themes.'
+        comment: 'First series #009E73, canonical Imprint order, correct backgrounds
+          in both themes'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Theme-adaptive tokens well-used; professional polish with intentional
-          styling.
+        comment: 'Beyond baseline: a deliberate INK vs INK_SOFT hierarchy between
+          axis names and ring values, and the scale name set once along the ring-label
+          ray'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Grid customized; legend theme-aware; solid execution.
+        comment: 'Beyond baseline: ring values placed on a ray between spokes, dashed
+          rings vs solid spokes, PAGE_BG marker edges separating vertices'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Products show contrasting profiles; clear comparative insight.
+        passed: false
+        comment: Data displayed clearly; no hierarchy or focal point chosen beyond
+          the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,26 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-series radar with all features present.
+        comment: Multi-series radar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: filled polygons, transparency, colors, legend,
-          gridlines, axis labels, closed paths, fills and outlines.'
+        comment: Translucent fills with outlines, distinct colors, legend, rings every
+          20, labels at outer edge, closed polygons — all Notes and good-version bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Six axes correctly mapped; three series; 0-100 range; all data visible.
+        comment: Vertices at their values on evenly spaced spokes, straight segments,
+          0-100 shared scale
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Legend correct; title has 'pyplots.ai' instead of 'anyplot.ai'.
+        passed: true
+        comment: Mandated title format; legend titled 'Product' with the three series
+          names
     data_quality:
       score: 15
       max: 15
@@ -158,19 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All six dimensions; three series with distinct profiles.
+        comment: Overlaps, crossing outlines and varied strengths across six axes
+          and three series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product comparison neutral, realistic, industry-standard.
+        comment: Fictional laptop models scored on product dimensions; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 scale sensible; values plausible.
+        comment: Scores 58-95 on a 0-100 scale; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -180,61 +191,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure; no functions/classes.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static, deterministic data.
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; defensive path cleanup.
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering; Pythonic.
+        comment: Closing vertex appended in the data; no hand-rolled algorithm a call
+          replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png output.
+        comment: Saves plot-{THEME}.png at default bbox; current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of sns.set_theme(), set_context(), polar projection.
+        comment: 'Beyond the prompt: lineplot with units= and estimator=None to draw
+          unaggregated per-series paths from the tidy df, hue_order to fix legend
+          order'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Polar projection and theme-adaptive tokens are library-specific.
+        passed: false
+        comment: sns.move_legend to relocate and retitle seaborn's own hue legend
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-09T14:27:27Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - custom-legend
   - manual-ticks
+  - annotations
   - layer-composition
   patterns:
-  - data-generation
-  - iteration-over-groups
   - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
-  - publication-ready

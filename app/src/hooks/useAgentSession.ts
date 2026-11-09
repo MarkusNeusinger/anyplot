@@ -149,9 +149,12 @@
  * `carryOffer` holds the offer of the plot in the new library with the plot
  * memory's decisions (`carryPlot`, the action `carry_plot`); from the menu the
  * run waits for the user's click. The offer ends once a plot in that library
- * ships, whatever turn shipped it, or with the next switch, whose answer
- * brings its own offer or none. `createPlot` stays the fresh plot without the
- * decisions (`.create_plot()`, `.start_over()`). The plot memory is the
+ * ships, whatever turn shipped it, with the next switch, whose answer
+ * brings its own offer or none, or with a new data version (a paste, a change,
+ * an undo), for which the server drops its carry too. `createPlot` stays the fresh plot from the
+ * catalogue code, without the carry but with the remembered decisions (`.create_plot()`,
+ * `.start_over()`), and `plotNewData` is "plot the new data" (`plot_new_data`), which the server
+ * starts from the latest plot when its guard allows it. The plot memory is the
  * server's list of the decisions a plot takes over (`memory`): the hook reads
  * it after every turn's `done` (a shipped run adds entries, the assistant's
  * `forget` removes them; nothing else empties it), after a switch, and
@@ -172,16 +175,19 @@
  * Session language: one per session, for the assistant's replies and every
  * text in the plot, held as `plotLanguage` (`language` is the programming
  * language on this page). It starts as `en` with the source `default`,
- * whatever the browser's locale, as the server's does. A paste's answer may
- * bring `pasted` (the language of the notes around the table or of its column
- * names; only over `default` or an earlier `pasted`), with one quiet notice. The
- * `done` of the session's first typed message brings `detected` (`language_sync`), which
- * appends one quiet notice to the thread; a choice from the header's chip
- * (`setLanguage`, `PUT .../language`) or the assistant's `set_language` brings
- * `chosen`, which is final. Only the server's answers set it, and a `done` never
- * moves it down from `chosen` (a choice from another tab can land between the
- * server's finish and this page's `run_end`). It is no data change: it never
- * touches the confirmation.
+ * whatever the browser's locale, as the server's does, and stays English until
+ * the user picks another. A turn's `done` or a paste's answer may carry an
+ * offer (`language.offer`: a language the server found in the typed message or
+ * in the paste's notes or column names), which appends the thread's one
+ * language line (`language_offer`) with `.switch()`; ignored, nothing changes.
+ * `acceptLanguage` (`PUT .../language` with `via: offer`) takes it: source
+ * `offer`, the line then names the language it set. A choice from the header's
+ * chip (`setLanguage`) or the assistant's `set_language` brings `chosen`, which
+ * is final: it closes every open offer, and none comes after it. Only the
+ * server's answers set it, and a `done` never moves it down the ladder
+ * (`SOURCE_RANK`: a choice from another tab can land between the server's
+ * finish and this page's `run_end`). It is no data change: it never touches
+ * the confirmation.
  *
  * Quick feedback: `sendFeedback` (`.send()` on a result card) has the BFF store
  * the case of one version in the private case bucket. It starts no run and
@@ -234,6 +240,7 @@ import {
   type Eligibility,
   type FeedbackReaction,
   isTranscribed,
+  type LanguageOffer,
   type LanguageSource,
   type LongSuggestion,
   MAX_DATASET_BYTES,
@@ -248,6 +255,7 @@ import {
   type PlotResult,
   type PlotTarget,
   PNG_ARTIFACT,
+  languageOffer as readLanguageOffer,
   plotLanguage as readPlotLanguage,
   renderedThemes,
   type RoleSpec,
@@ -264,7 +272,8 @@ import {
 } from 'src/lib/agent';
 import { readSseEvents } from 'src/lib/sse';
 import { downloadBlob } from 'src/sections/agent-chat/files';
-import { languageNotice, nextUtcMidnight, type NoticeInfo } from 'src/sections/agent-chat/messages';
+import { sameLanguage } from 'src/sections/agent-chat/languages';
+import { nextUtcMidnight, type NoticeInfo } from 'src/sections/agent-chat/messages';
 import type { ConvertedFile } from 'src/sections/agent-chat/useChatAttachment';
 
 /** How long Stop waits for the server's `done` before it lets go of the stream. */
@@ -301,6 +310,14 @@ export interface RunState {
   rounds?: Round[];
   /** The turn's stream was cut, and the page waits to read the rest of the turn again (`RESUME_DELAYS_MS`). */
   reconnecting?: boolean;
+  /**
+   * When the run's clock started (ms since the epoch): the turn's start, or, after a wait in the
+   * run queue, the wait's end. Absent for a turn the page did not start (the late read of a cut
+   * turn), which shows no clock and gives its version no `readyMs`, never a wrong time.
+   */
+  startedAt?: number;
+  /** The most rounds the run may make, from the server's steps (`max_attempts`); absent without it. */
+  maxAttempts?: number;
 }
 
 export type ThemeImage =
@@ -345,6 +362,11 @@ export interface PlotVersion {
    * label and no kept line.
    */
   decisions?: VersionDecisions;
+  /**
+   * How long the plot took, from the run's clock (`RunState.startedAt`) to the version (ms), for
+   * the card's `ready in 1:12`; absent for a version the page did not time.
+   */
+  readyMs?: number;
 }
 
 /**
@@ -443,6 +465,12 @@ export interface DataSnapshot {
   /** Up to 20 data rows (the header is `profile.columns[].name`). */
   preview: string[][];
   profile: DatasetProfile;
+  /**
+   * A paste whose answer said a column the replaced data was plotted by is not in it
+   * (`columns_changed`): its chapter line holds the remembered decisions until the next plot,
+   * with `.forget_all()` (`threadModel`'s `decisionsEarlier`).
+   */
+  columnsChanged?: true;
 }
 
 /**
@@ -501,7 +529,21 @@ export type ChatItem =
    */
   | { id: number; kind: 'transcription' }
   /** A quiet line from the page itself; `info` holds the details behind its ⓘ, which keep it short. */
-  | { id: number; kind: 'notice'; text: string; info?: NoticeInfo };
+  | { id: number; kind: 'notice'; text: string; info?: NoticeInfo }
+  /**
+   * The offer of a language found in a typed message or a paste (`basis`), the thread's one
+   * language line: `open` while its `.switch()` can take it, `accepted` once it did (`plot`: a
+   * plot was on screen, so its next version brings the language), `closed` once a pick elsewhere
+   * made it moot (the chip, a request in the chat, another offer taken).
+   */
+  | {
+      id: number;
+      kind: 'language_offer';
+      language: string;
+      basis: LanguageOffer['basis'];
+      state: 'open' | 'accepted' | 'closed';
+      plot?: boolean;
+    };
 
 /** Distributes `Omit` over the union, so each member keeps its own fields. */
 type WithoutId<T> = T extends unknown ? Omit<T, 'id'> : never;
@@ -900,8 +942,9 @@ export interface AgentSessionState {
   libraryBusy: boolean;
   /**
    * After a switch whose answer offered it: the plot in this library with the
-   * plot memory's decisions. A shipped plot in that library or the next switch
-   * ends it.
+   * plot memory's decisions. A shipped plot in that library, the next switch or
+   * a new data version (a paste, a change, an undo, which drop the server's carry
+   * too) ends it.
    */
   carryOffer: CarryOffer | null;
   /** The plot memory as the server last listed it; `null` until a list arrived, or from a server without one. */
@@ -1028,14 +1071,23 @@ type Action =
   | { type: 'theme_busy'; busy: boolean }
   | { type: 'page_busy'; busy: boolean }
   | { type: 'language_start' }
-  /** The language route's answer: the stored form, source `chosen`. */
-  | { type: 'language_done'; plotLanguage: PlotLanguage }
+  /**
+   * The language route's answer: the stored form, source `chosen` from the chip, `offer` from
+   * the `.switch()` of the offer line `offerId`.
+   */
+  | { type: 'language_done'; plotLanguage: PlotLanguage; offerId?: number }
   | { type: 'language_failed' }
   /**
-   * A turn's `done` named the session language, and with data the `.to_long()`
-   * offer the server computed in it: the offer applies only with that language.
+   * A turn's `done` or a paste's answer named the session language, and with data the
+   * `.to_long()` offer the server computed in it: the offer applies only with that language.
+   * `offer`: a language the server found in the message or the data, which the thread offers.
    */
-  | { type: 'language_sync'; plotLanguage: PlotLanguage; suggestion?: LongSuggestion | null }
+  | {
+      type: 'language_sync';
+      plotLanguage: PlotLanguage;
+      suggestion?: LongSuggestion | null;
+      offer?: LanguageOffer | null;
+    }
   /**
    * The `.to_long()` offer as the server recomputed it in the session language
    * (a turn's `done`, the language route's answer): the card names what the
@@ -1044,10 +1096,22 @@ type Action =
   | { type: 'suggestion_sync'; suggestion: LongSuggestion | null }
   /** Append a thread item; the reducer gives it the next id. */
   | { type: 'item'; item: NewChatItem }
-  | { type: 'run_start'; kind: RunState['kind'] }
+  /**
+   * A turn starts. `at` (ms since the epoch) starts its clock (`RunState.startedAt`): only a turn
+   * the page starts carries it, never the late read of a cut turn, whose start the page never saw.
+   */
+  | { type: 'run_start'; kind: RunState['kind']; at?: number }
   | { type: 'run_queued'; position: number; waiting: number }
-  | { type: 'run_started' }
-  | { type: 'run_step'; step: PipelineStep; attempt: number | null; previous?: Round | null }
+  /** The wait in the run queue is over; `at` starts the clock again, from the wait's end. */
+  | { type: 'run_started'; at?: number }
+  | {
+      type: 'run_step';
+      step: PipelineStep;
+      attempt: number | null;
+      previous?: Round | null;
+      /** The run's round cap, when the server sent it with the step. */
+      maxAttempts?: number | null;
+    }
   | { type: 'run_stopping' }
   | { type: 'run_reconnecting'; on: boolean }
   /**
@@ -1057,7 +1121,8 @@ type Action =
    */
   | { type: 'turn_outcome'; outcome: TurnOutcome | null }
   | { type: 'run_end' }
-  | { type: 'version_add'; version: PlotVersion }
+  /** A version shipped; `at` (ms since the epoch) freezes the run's clock into `readyMs`. */
+  | { type: 'version_add'; version: PlotVersion; at?: number }
   | { type: 'version_image'; number: number; theme: Theme; image: ThemeImage }
   | { type: 'version_code'; number: number; code: CodeText }
   /** A feedback case was stored for the version; a later one replaces the record. */
@@ -1271,6 +1336,9 @@ function withDataVersion(
     undoError: null,
     toLongBusy: false,
     toLongError: null,
+    // The server dropped the switch's carry with the new version: it was taken from a plot of the
+    // data before (owner decision of 2026-11-08).
+    carryOffer: null,
   };
 }
 
@@ -1411,6 +1479,8 @@ function snapshotOf(
     changes: next.dataChange?.kind === 'changed' ? next.dataChange.changes : [],
     preview: parsed.preview,
     profile: parsed.profile,
+    // Only a paste's answer names it; a change, an undo or a copy never carries it.
+    ...(parsed.columns_changed === true ? { columnsChanged: true as const } : {}),
   };
 }
 
@@ -1546,10 +1616,36 @@ function switchDecisions(items: ChatItem[], next: AgentSessionState): ChatItem[]
 /** The ladder of the language sources: the server only ever climbs it within a session. */
 const SOURCE_RANK: Record<LanguageSource, number> = {
   default: 0,
-  pasted: 1,
-  detected: 2,
-  chosen: 3,
+  offer: 1,
+  chosen: 2,
 };
+
+/**
+ * The thread with its language lines settled after a pick: the offer line `accepted` (the
+ * `.switch()` the user pressed) names the language it set, and every other open one closes,
+ * since the user picked. With no line accepted (the chip, a request in the chat), all close.
+ */
+function settleOffers(
+  items: ChatItem[],
+  picked: PlotLanguage,
+  plot: boolean,
+  accepted?: number
+): ChatItem[] {
+  let changed = false;
+  const next = items.map(item => {
+    if (item.kind !== 'language_offer' || item.state !== 'open') return item;
+    changed = true;
+    if (item.id === accepted && sameLanguage(item.language, picked.language)) {
+      return { ...item, state: 'accepted' as const, plot };
+    }
+    return { ...item, state: 'closed' as const };
+  });
+  return changed ? next : items;
+}
+
+/** Whether the thread already offered `language`: the server offers each once, the page shows it once. */
+const offeredBefore = (items: ChatItem[], language: string) =>
+  items.some(item => item.kind === 'language_offer' && sameLanguage(item.language, language));
 
 function sameBindings(a: BindingMap, b: BindingMap): boolean {
   const names = Object.keys(a);
@@ -1657,6 +1753,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           // And it starts over: a loss named for the data before it is not its own. A paste
           // that drops a confirmation the user had given is named by `agentReducer`.
           confirmLoss: null,
+          // The server dropped the switch's carry with the paste, as with every new data version.
+          carryOffer: null,
         },
         parseChange(state, action),
         action.chip
@@ -1860,8 +1958,14 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       return { ...state, pageBusy: action.busy };
     case 'language_start':
       return { ...state, languageBusy: true };
-    case 'language_done':
-      return { ...state, languageBusy: false, plotLanguage: action.plotLanguage };
+    case 'language_done': {
+      // A pick: the chip's closes every open offer line, a `.switch()` turns its own line into
+      // the language it set. A plot on screen keeps its text until its next version.
+      const picked = action.plotLanguage;
+      const plot = Object.keys(state.versions).length > 0;
+      const items = settleOffers(state.items, picked, plot, action.offerId);
+      return { ...state, languageBusy: false, plotLanguage: picked, items };
+    }
     case 'language_failed':
       return { ...state, languageBusy: false };
     case 'language_sync': {
@@ -1876,19 +1980,28 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         action.suggestion !== undefined
           ? reduce(state, { type: 'suggestion_sync', suggestion: action.suggestion })
           : state;
-      const next = { ...synced, plotLanguage: action.plotLanguage };
-      const before = state.plotLanguage;
       const after = action.plotLanguage;
-      // The first typed message or a paste set it: one quiet line, with the chip that changes it
-      // behind its ⓘ.
-      if (after.source === 'detected' && SOURCE_RANK[before.source] < SOURCE_RANK.detected) {
-        return appendItem(next, { kind: 'notice', ...languageNotice(after.language, 'detected') });
-      }
+      // The assistant's `set_language` is a pick like the chip's: the open offer lines close.
+      const items =
+        after.source === 'chosen'
+          ? settleOffers(synced.items, after, Object.keys(state.versions).length > 0)
+          : synced.items;
+      const next = { ...synced, plotLanguage: after, items };
+      const offer = action.offer;
+      // A language found in the message or the data: one line that offers it, once per
+      // language, never after a pick and never for the language the session has.
       if (
-        after.source === 'pasted' &&
-        (before.source === 'default' || before.language !== after.language)
+        offer &&
+        after.source !== 'chosen' &&
+        !sameLanguage(offer.language, after.language) &&
+        !offeredBefore(next.items, offer.language)
       ) {
-        return appendItem(next, { kind: 'notice', ...languageNotice(after.language, 'pasted') });
+        return appendItem(next, {
+          kind: 'language_offer',
+          language: offer.language,
+          basis: offer.basis,
+          state: 'open',
+        });
       }
       return next;
     }
@@ -1905,7 +2018,16 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'item':
       return appendItem(state, action.item);
     case 'run_start':
-      return { ...state, run: { kind: action.kind, steps: [], queue: null, stopping: false } };
+      return {
+        ...state,
+        run: {
+          kind: action.kind,
+          steps: [],
+          queue: null,
+          stopping: false,
+          ...(action.at !== undefined ? { startedAt: action.at } : {}),
+        },
+      };
     case 'run_queued': {
       if (!state.run) return state;
       const steps = state.run.steps;
@@ -1919,19 +2041,28 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         },
       };
     }
-    case 'run_started':
+    case 'run_started': {
       // The wait is over: a turn without pipeline steps (a summary that runs data code) had its
       // queue position on screen until the reply. A plot run that has not reached its first step
       // is starting again (`starting…`). A replayed start after a resume changes nothing more.
+      // The clock starts again at the wait's end, for a timed run that waited: a run the page did
+      // not time stays without a clock, and a replayed start finds no wait to end.
       if (!state.run) return state;
+      const waited = state.run.steps.some(entry => entry.step === 'queued');
+      const restart =
+        waited && state.run.startedAt !== undefined && action.at !== undefined
+          ? { startedAt: action.at }
+          : {};
       return {
         ...state,
         run: {
           ...state.run,
+          ...restart,
           queue: null,
           steps: state.run.steps.filter(entry => entry.step !== 'queued'),
         },
       };
+    }
     case 'run_step':
       if (!state.run) return state;
       return {
@@ -1943,6 +2074,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           rounds: action.previous
             ? [...(state.run.rounds ?? []), action.previous]
             : state.run.rounds,
+          ...(action.maxAttempts ? { maxAttempts: action.maxAttempts } : {}),
         },
       };
     case 'run_stopping':
@@ -1976,9 +2108,17 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       // The version's decisions, by the server's ids: the kept ones from before the run are in the
       // list the page holds; the added ones come with the read after the turn (`memory_sync`).
       const memory = action.version.result.memory;
-      const version = memory
-        ? { ...action.version, decisions: versionDecisions(memory, state.memory) }
-        : action.version;
+      // The run's clock, frozen as the version arrives; a run the page did not time gives none.
+      const startedAt = state.run?.startedAt;
+      const timed =
+        startedAt !== undefined && action.at !== undefined
+          ? { readyMs: Math.max(0, action.at - startedAt) }
+          : {};
+      const version = {
+        ...action.version,
+        ...timed,
+        ...(memory ? { decisions: versionDecisions(memory, state.memory) } : {}),
+      };
       // A shipped plot in the offer's library ends the offer, whichever turn shipped it (the carry
       // run, a fresh `.create_plot()`, a typed change): the server's carry is spent then too.
       // Versions carry their library, not their spec; the spec cannot change yet.
@@ -2801,6 +2941,7 @@ export function useAgentSession({
           images: {},
           code: { state: 'loading' },
         },
+        at: Date.now(),
       });
       addItem({ kind: 'plot', version: number });
       void loadImage(number, theme, result.status);
@@ -2816,7 +2957,7 @@ export function useAgentSession({
           safeDispatch({ type: 'run_queued', position: event.position, waiting: event.waiting });
           break;
         case 'started':
-          safeDispatch({ type: 'run_started' });
+          safeDispatch({ type: 'run_started', at: Date.now() });
           break;
         case 'step':
           safeDispatch({
@@ -2824,6 +2965,7 @@ export function useAgentSession({
             step: event.step,
             attempt: event.attempt,
             previous: event.previous,
+            maxAttempts: event.maxAttempts,
           });
           break;
         case 'message':
@@ -2869,8 +3011,8 @@ export function useAgentSession({
               dataConfirmed: event.dataConfirmed,
             });
           }
-          // The first typed message (`detected`) or the assistant's `set_language`
-          // (`chosen`) may have set the session language: the chip follows the server.
+          // The assistant's `set_language` (`chosen`) may have set the session language: the
+          // chip follows the server, and a language found in the message comes as its offer.
           // The `.to_long()` offer travels with the language the server computed it in, and applies
           // only when that language does: a `done` the chip ignores never renames the card.
           if (event.language) {
@@ -2878,6 +3020,7 @@ export function useAgentSession({
               type: 'language_sync',
               plotLanguage: event.language,
               suggestion: event.suggestion,
+              offer: event.languageOffer,
             });
           }
           // The user asked for the plot in another library: the page switches once the turn is over.
@@ -3005,19 +3148,23 @@ export function useAgentSession({
    * The frame of a turn on the page: the run from the start, Stop, and at the end how the turn
    * ended (`turnErrorRef`, `turnRefusalRef`, `turnEndRef`) and, after a `done`, the plot memory as
    * the server has it. `work` reads the turn into `read`; a failure it throws becomes the turn's
-   * error line, unless the user stopped the turn.
+   * error line, unless the user stopped the turn. `timed`: the page starts the turn now, so its
+   * clock starts too; the late read of a cut turn is not, whose start the page never saw.
    */
   const driveTurn = useCallback(
     async (
       kind: RunState['kind'],
-      work: (controller: AbortController, read: TurnRead) => Promise<void>
+      work: (controller: AbortController, read: TurnRead) => Promise<void>,
+      timed = true
     ): Promise<TurnRead> => {
       const read = freshRead();
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
       unconfirmedRef.current = false;
-      safeDispatch({ type: 'run_start', kind });
+      safeDispatch(
+        timed ? { type: 'run_start', kind, at: Date.now() } : { type: 'run_start', kind }
+      );
       try {
         await work(controller, read);
       } catch (err) {
@@ -3093,17 +3240,23 @@ export function useAgentSession({
         // request asks for: asking again would make that plot a second time.
         const repeats = (shipped: boolean) =>
           sameRequest(cut.body, body) && (cut.shipped || shipped);
-        const late = await driveTurn(kind, async (controller, read) => {
-          read.lastId = cut.lastId;
-          // Its outcome counts what came before the cut too.
-          Object.assign(read, cut.changes);
-          const resumed = await reattach(sid, read, controller, [0]);
-          // Nothing new starts then, so a read that failed says why the click did nothing.
-          if (resumed?.outcome === 'failed' && !read.finished && repeats(read.shipped)) {
-            addItem({ kind: 'error', code: 'network', ref: null });
-            read.errorCode = 'network';
-          }
-        });
+        // Untimed: the cut turn started long before this read, so it shows no clock and its plot
+        // no `ready in`, never a wrong time.
+        const late = await driveTurn(
+          kind,
+          async (controller, read) => {
+            read.lastId = cut.lastId;
+            // Its outcome counts what came before the cut too.
+            Object.assign(read, cut.changes);
+            const resumed = await reattach(sid, read, controller, [0]);
+            // Nothing new starts then, so a read that failed says why the click did nothing.
+            if (resumed?.outcome === 'failed' && !read.finished && repeats(read.shipped)) {
+              addItem({ kind: 'error', code: 'network', ref: null });
+              read.errorCode = 'network';
+            }
+          },
+          false
+        );
         if (repeats(late.shipped)) return;
         if (turnEndRef.current === 'stopped') return;
         if (!mounted.current || stateRef.current.sessionId !== sid) return;
@@ -3155,11 +3308,23 @@ export function useAgentSession({
   );
 
   /**
-   * `.create_plot()`, `.start_over()`: the fresh plot from the catalogue code, without the plot memory's decisions.
+   * `.create_plot()`, `.start_over()`: the fresh plot from the catalogue code, without a switch's
+   * carry; the server still applies the plot memory's decisions, which only the user clears.
    * `label` is the button pressed, which the thread shows.
    */
   const createPlot = useCallback(
     (label?: string) => runTurn({ action: 'create_plot' }, label),
+    [runTurn]
+  );
+
+  /**
+   * `plot the new data` with an empty box: the server starts from the library's latest plot when
+   * the data comes from its paste with its bindings, with a request of its own for the new data,
+   * else from the catalogue code as `createPlot` does; the plot's `new_data` says which (owner
+   * decision of 2026-11-08). `label` is the button as it read, for the thread.
+   */
+  const plotNewData = useCallback(
+    (label?: string) => runTurn({ action: 'plot_new_data' }, label),
     [runTurn]
   );
 
@@ -3272,9 +3437,15 @@ export function useAgentSession({
           // A confirmed parse is a transcription's `.use()`: its item becomes the card.
           ...(options.chip ? { chip: options.chip } : confirmed ? { fromTranscription: true } : {}),
         });
-        // A paste before any typed message may set the session language from its notes or headers.
+        // Notes or column names in another language come as its offer; the language stays.
         const pastedLanguage = readPlotLanguage(parsed.language);
-        if (pastedLanguage) safeDispatch({ type: 'language_sync', plotLanguage: pastedLanguage });
+        if (pastedLanguage) {
+          safeDispatch({
+            type: 'language_sync',
+            plotLanguage: pastedLanguage,
+            offer: readLanguageOffer(parsed.language),
+          });
+        }
         trackEvent('agent_data_parsed', { status: 'ok', size_bucket: bucket });
         outcome = 'stored';
         const defaults = toMap(parsed.bindings);
@@ -3481,24 +3652,27 @@ export function useAgentSession({
   // ---------------------------------------------------------------- language
 
   /**
-   * The chip's choice: `PUT .../language` with the value as given (the chip
-   * trims it). The answer is the new state, source `chosen`, in the server's
-   * stored form (`English` comes back as `en`). Nothing starts without a
-   * session or while anything else is in flight, which the server would refuse
-   * with `409 run_active`. A failure keeps the old value and rejects with an
-   * `AgentApiError` for the chip's failure line; a 401 or 403 also shows the
-   * sign-in notice.
+   * A pick of the session language: the chip's (`PUT .../language` with the value as
+   * given, which the chip trims; source `chosen`, which closes every open offer line), or
+   * with `offerId` the `.switch()` of that offer line (`via: offer`, source `offer`, the line
+   * then names the language it set). The answer is the new state in the server's stored
+   * form (`English` comes back as `en`). Nothing starts without a session or while
+   * anything else is in flight, which the server would refuse with `409 run_active`. A
+   * failure keeps the old value and rejects with an `AgentApiError` for the caller's
+   * failure line; a 401 or 403 also shows the sign-in notice. The server's usage
+   * telemetry counts the offers and the picks (`language_offer`); the page sends nothing.
    */
-  const setLanguage = useCallback(
-    async (language: string): Promise<void> => {
+  const pickLanguage = useCallback(
+    async (language: string, offerId?: number): Promise<void> => {
       const current = stateRef.current;
       const sid = current.sessionId;
       if (!sid || current.run || busy()) return;
       languageRef.current = true;
       safeDispatch({ type: 'language_start' });
       try {
-        const { suggestion, ...applied } = await agentApi.setLanguage(token, sid, language);
-        safeDispatch({ type: 'language_done', plotLanguage: applied });
+        const via = offerId !== undefined ? 'offer' : undefined;
+        const { suggestion, ...applied } = await agentApi.setLanguage(token, sid, language, via);
+        safeDispatch({ type: 'language_done', plotLanguage: applied, offerId });
         // The offer's new column names follow the language: the card shows what `.to_long()` applies.
         if (suggestion !== undefined) safeDispatch({ type: 'suggestion_sync', suggestion });
       } catch (err) {
@@ -3510,6 +3684,19 @@ export function useAgentSession({
       }
     },
     [token, safeDispatch, handleFailure, busy]
+  );
+
+  /** The chip's choice (`pickLanguage` without an offer line). */
+  const setLanguage = useCallback((language: string) => pickLanguage(language), [pickLanguage]);
+
+  /** The `.switch()` of the offer line `offerId`: the language it offered, as the line holds it. */
+  const acceptLanguage = useCallback(
+    async (offerId: number): Promise<void> => {
+      const item = stateRef.current.items.find(entry => entry.id === offerId);
+      if (item?.kind !== 'language_offer' || item.state !== 'open') return;
+      await pickLanguage(item.language, offerId);
+    },
+    [pickLanguage]
   );
 
   // ---------------------------------------------------------------- feedback
@@ -3614,6 +3801,7 @@ export function useAgentSession({
     confirmData,
     undoData,
     createPlot,
+    plotNewData,
     exampleData,
     carryPlot,
     followChatSwitch,
@@ -3631,6 +3819,7 @@ export function useAgentSession({
     fetchDataCsv,
     saveSession,
     setLanguage,
+    acceptLanguage,
     sendFeedback,
   };
 }

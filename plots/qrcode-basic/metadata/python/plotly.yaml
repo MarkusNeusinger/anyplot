@@ -2,128 +2,128 @@ library: plotly
 language: python
 specification_id: qrcode-basic
 created: '2026-01-07T16:30:22Z'
-updated: '2026-06-24T17:24:10Z'
-generated_by: claude-sonnet
-workflow_run: 28115424908
+updated: '2026-11-09T14:27:42Z'
+generated_by: claude-opus
+workflow_run: 42632228095
 issue: 3184
-language_version: 3.13.14
-library_version: 6.8.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - 'Perfect spec compliance: uses qrcode library as recommended, correct error correction
-    level M (15%), quiet zone, all three finder patterns present'
-  - 'Elegant dark-mode adaptation: theme-adaptive ink/paper tokens for QR modules
-    maintain high contrast readability in both themes'
-  - Polished annotations below the QR code (URL + metadata) give viewers the full
-    encoded content and technical context
-  - Brand-green accent (#009E73) used tastefully for border and URL text without overwhelming
-    the QR visualization
-  - Clean, deterministic, no-functions code structure with well-documented sys.path
-    workaround
-  - Both HTML and PNG outputs saved correctly with correct canvas size (2400x2400
-    square)
+  - 'The module pattern is a real ISO/IEC 18004 encoding: decoding the light render
+    independently gives version 2, level M, mask 2, byte mode, 18 bytes "https://pyplots.ai",
+    and all 16 Reed-Solomon syndromes are zero, so a standard reader will scan it'
+  - All three finder patterns are intact nested squares in the upper left, upper right
+    and lower left; the version-2 alignment pattern sits in the lower-right area and
+    the fourth corner has no finder
+  - A 4-module quiet zone sits on a near-white tile that stays dark-on-light in both
+    themes, while only the page and title flip with the theme
+  - go.Heatmap with a two-stop colorscale, scaleanchor/scaleratio=1 and ranges pinned
+    to the padded matrix gives square, sharp, equal modules with no gradient or gaps
+  - The HTML hovertemplate reports each module's (x, y) coordinate, a plotly-native
+    way to inspect the grid
   weaknesses:
-  - Bottom metadata annotation (y=-0.27, yanchor=top) is very close to the bottom
-    canvas edge with b=130 margin on 600px height — increase bottom margin to b=150
-    to add breathing room
-  - 'Design Excellence is somewhat restrained: the annotation zone is informative
-    but the visual hierarchy could be strengthened (e.g., larger URL font at 13-14pt,
-    more whitespace between QR code and annotations)'
+  - 'VQ-05 (both): the code tile sits off-centre vertically, with about 180 px of
+    page between the title and the tile but about 600 px below it, so the lower third
+    of the square canvas is empty → balance the space above and below the tile (bottom
+    margin about −70 px, or matching top and bottom margins). Likely cause: margin
+    b=150 against t=80.'
+  - 'Suggestion: the title''s font family asks for Arial Black, but the render falls
+    back to a regular-weight sans; name a family the renderer has, or drop the family,
+    so the code matches the output.'
+  - 'Suggestion: once a QR package (qrcode or segno) is in the runner''s dependencies,
+    the roughly 100-line hand-written encoder could become a single library call,
+    as the spec''s Notes recommend.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint chrome token
-      Chrome: Title "qrcode-basic · python · plotly · anyplot.ai" in dark text at top — clearly readable. No axis labels or ticks (appropriate for QR code). URL annotation in bold green (#009E73) and metadata in soft gray below QR code — both readable.
-      Data: QR code rendered as 33×33 module heatmap with near-black modules on off-white background — very high contrast. Three finder patterns visible in top-left, top-right, and bottom-left corners. Quiet zone present. Accent green (#009E73) border frames the QR area. Dotted green divider separates QR from annotation zone.
-      Legibility verdict: PASS — all text readable; bottom metadata annotation sits very close to canvas bottom edge but all pixels visible.
+      Background: warm off-white #FAF8F1 page, with a slightly lighter near-white #FFFDF6 tile carrying the code.
+      Chrome: title "qrcode-basic · python · plotly · anyplot.ai" centred at the top in dark ink, about 48% of the width, fully readable. No axes, ticks or grid (as the spec permits).
+      Data: a 25×25 version-2 QR code in near-black #1A1A17 modules on the white tile with a 4-module quiet zone; three intact finder patterns (upper left, upper right, lower left), the alignment pattern near the lower right, and timing rows visible. The modules are square, equal-sized and sharp-edged. The tile sits high on the canvas, leaving a large empty band below it. No Imprint data colors apply (black-on-white is mandated).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint chrome token
-      Chrome: Title in light cream text — clearly readable against dark background. No dark-on-dark issues. Metadata in light soft gray (#B8B7B0 equivalent) — readable. URL in brand green — visible and readable.
-      Data: QR code colors are theme-inverted (light off-white modules on dark background) using theme-adaptive ink/paper tokens — maintains very high contrast. Module pattern is identical in structure, only ink/paper polarity flipped as expected. Accent green (#009E73) border and dotted divider remain identical to light render.
-      Legibility verdict: PASS — all text readable; no dark-on-dark failures detected.
+      Background: warm near-black #1A1A17 page; the code keeps its near-white tile (the spec permits a white tile behind the code in the dark theme).
+      Chrome: the title is in light ink #F0EFE8 and clearly readable; no dark-on-dark text anywhere.
+      Data: the module matrix, tile and quiet zone are identical to the light render; only the page and title flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; bottom metadata annotation very
-          close to canvas bottom edge (tight margin)
+        comment: The title at 16 px is readable in both themes; no other text
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, QR modules, or annotations
+        comment: Nothing overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: QR modules are maximally high-contrast in both themes
+        comment: Modules large and sharp, finder patterns clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Near-black/off-white is CVD-safe; no red-green dependency
+        comment: Maximum-contrast black on white
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct; clean layout; b=130 margin leaves
-          metadata annotation with very little breathing room before canvas edge
+        comment: The tile sits high, leaving the bottom third empty (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed; title format correct; URL and metadata annotations
-          provide appropriate context
+        comment: 'N/A: no axes, as the spec permits; the title is correct'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Background #FAF8F1/#1A1A17 correct; accent #009E73 (Imprint pos
-          1) used for border and URL text; module colors use theme-adaptive ink/paper
-          tokens (appropriate for QR code)'
+        comment: 'Backgrounds #FAF8F1 / #1A1A17 are correct; the mandated black-on-white
+          code has no categorical series'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Above default; intentional hierarchy with accent border, dotted divider,
-          and dual-level annotation zone; green accent used tastefully
+        comment: The style-guide baseline, nothing beyond it (the Arial Black choice
+          does not render)
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Axes fully hidden (appropriate); no grid; accent border with opacity
-          adds elegance; more refined than a bare heatmap
+        passed: false
+        comment: Clean, but the vertical whitespace is unbalanced; nothing beyond
+          the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: URL annotation clearly communicates what is encoded; version and
-          error-correction metadata adds useful technical context; green border draws
-          the eye to the code
+        passed: false
+        comment: The code is displayed; no hierarchy chosen beyond the Notes (none
+          expected on a -basic spec)
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code visualization using the recommended qrcode library
-          rendered as a heatmap
+        comment: A single basic QR code with no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zone (border=4), finder patterns in three corners, error correction
-          level M (15%), uses qrcode library as spec recommends
+        comment: Quiet zone, black on white, three finders, level M, a 2400 px canvas
+          that prints at 300 DPI, and a scannable real encoding (verified by an independent
+          decode). No QR package is installed in the runner, and the code comment
+          says so
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Encodes https://pyplots.ai; 33x33 module matrix correctly rendered
+        comment: Every module sits at its encoded position
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'qrcode-basic · python · plotly · anyplot.ai'; no
-          legend needed
+        comment: The title format is correct; a legend is N/A
     data_quality:
       score: 15
       max: 15
@@ -164,21 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full QR code with all required structural elements; version, error
-          correction, and module count shown
+        comment: Version 2 shows finder, timing, alignment and format areas, the dark
+          module and the data modules
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real URL (https://pyplots.ai), neutral and real-world plausible
+        comment: The spec's example URL
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Error correction M is the spec-recommended default; Version 2 is
-          appropriate for the URL length
+        comment: 'Checked: 18 bytes at level M selects version 2 (25×25), and the
+          decode returns the content with zero RS syndromes'
     code_quality:
       score: 10
       max: 10
@@ -188,63 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean linear structure
+        comment: Flat script, no functions or classes beyond the mask lambdas table
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: QR generation is fully deterministic; no random seed needed
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used; no extraneous dependencies
+        comment: os, sys, numpy and plotly are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; sys.path manipulation is documented and necessary
-          to prevent filename shadowing
+        comment: The encoder is long, but no available call computes it (no QR package
+          installed)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Plotly
-          API
+        comment: Saves plot-{THEME}.png at 2400×2400 and plot-{THEME}.html with the
+          current API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: go.Heatmap for matrix data is idiomatic; fig.add_shape() and fig.add_annotation()
-          used correctly; write_image()/write_html() correct
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Plotly's shape-drawing (accent border rectangle, dotted line),
-          annotation system for rich sub-QR labeling, and hovertemplate for interactive
-          module inspection; HTML export leverages Plotly's interactive nature
+        comment: 'go.Heatmap with a discrete two-stop colorscale and scaleanchor:
+          standard usage'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: A hovertemplate with module coordinates in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
+  rendered_at: '2026-11-09T14:23:56Z'
 impl_tags:
-  dependencies:
-  - qrcode
+  dependencies: []
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
-  - custom-colormap
   - minimal-chrome

@@ -27,9 +27,12 @@
   and refuses the call with `{"status": "error", "code": "budget"}` past
   `AGENT_DAILY_PIPELINE_RUNS`, and notes the refused call in the turn's record of the
   root's calls (`RequestLedger.tool_calls`) in its place, since its answer ends the
-  plugin chain before ToolSafety. A second call in the same invocation, and a call
-  ToolSafety's own check refuses (invalid arguments, a URL), are left to ToolSafety
-  and never counted.
+  plugin chain before ToolSafety. A call ToolSafety's own check refuses (invalid
+  arguments, a URL) and one the turn's bounds stop (`tool_safety.pipeline_bound`: a
+  second call, a switch asked for in the turn, a call after the turn's own data change
+  or on the summary turn of an unconfirmed paste) are left to ToolSafety and never
+  counted. A run that answers `not_ready` itself (unconfirmed data on any other turn)
+  counts.
 
 The plugin never raises; an internal failure halts the root like an exhausted budget.
 """
@@ -61,7 +64,7 @@ from .ledger import (
     usage_breakdown,
     usage_tokens,
 )
-from .tool_safety import ToolSafetyPlugin, call_key, recorded_name
+from .tool_safety import ToolSafetyPlugin, call_key, pipeline_bound, recorded_name
 
 
 logger = logging.getLogger(__name__)
@@ -168,10 +171,10 @@ class BudgetPlugin(BasePlugin):
             return None
         try:
             ledger = ledger_for(tool_context.invocation_id)
-            if ledger.pipeline_calls:
-                return None  # ToolSafety refuses the second call; it is not a run
             if ToolSafetyPlugin.check(tool.name, tool_args, tool_context.agent_name) is not None:
-                return None  # ToolSafety refuses an invalid call; it is not a run either
+                return None  # ToolSafety refuses an invalid call; it is not a run
+            if pipeline_bound(ledger, tool_context) is not None:
+                return None  # ToolSafety refuses it within the turn's bounds (a second call, a switch); no run either
             usage = get_services().usage
             settings = get_settings()
             user = ledger.user_id or tool_context.session.user_id

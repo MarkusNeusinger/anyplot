@@ -1,12 +1,11 @@
 /**
  * The session language chip in the chat's header row, next to the library menu:
- * the language in its own words, `English ▾` until something sets it, `Deutsch ▾`
- * after a paste whose notes or column names are German, after the session's first
- * typed message, or after a choice here or a request in the chat ("answer in
- * English"); a language outside the list as the server stored it. How it was set
- * (`default`, `from data`, `detected`, `chosen`) is in its accessible name only,
- * which starts with the words on screen, `Reply language: Deutsch, detected. Change`
- * (on screen as `lang: de · detected` until the v4 frame of 2026-11-06). The session
+ * the language in its own words, `English ▾` until the user picks another, `Deutsch ▾`
+ * after a choice here, a request in the chat ("answer in German") or a `.switch()` on
+ * the thread's offer of a language found in a message or a paste; a language outside
+ * the list as the server stored it. How it was set (`default`, `chosen`, `chosen from
+ * the offer`) is in its accessible name only, which starts with the words on screen,
+ * `Reply language: Deutsch, chosen. Change`. A choice here ends every offer. The session
  * language is the
  * language of the assistant's replies and of the first plot's text; code,
  * comments and column names stay as they are. Since 2026-11-01 a plot keeps
@@ -41,7 +40,7 @@ import {
   type LanguageSource,
   type PlotLanguage,
 } from 'src/lib/agent';
-import { COMMON_LANGUAGES } from 'src/sections/agent-chat/languages';
+import { COMMON_LANGUAGES, languageLabel } from 'src/sections/agent-chat/languages';
 import { describeLanguageFailure } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import {
@@ -58,12 +57,11 @@ import { colors, typography } from 'src/theme';
 /** The server's longest language value; the field stops there. */
 const MAX_LANGUAGE_CHARS = 40;
 
-/** How the chip names each source; `pasted` reads as where the language came from. */
+/** How the chip names each source in its accessible name; an accepted offer was a pick too. */
 const SOURCE_LABEL: Record<LanguageSource, string> = {
   default: 'default',
-  pasted: 'from data',
-  detected: 'detected',
   chosen: 'chosen',
+  offer: 'chosen from the offer',
 };
 
 export interface LanguageChipProps {
@@ -76,20 +74,6 @@ export interface LanguageChipProps {
 }
 
 const sameCode = (value: string, code: string) => value.toLowerCase() === code;
-
-/**
- * How the chip names a language: its endonym from the list, each word capitalised as the
- * language writes its own name (`Deutsch`, `Tiếng Việt`, `中文`), else the value as the server
- * stored it, which may be any language a visitor typed.
- */
-function languageLabel(language: string): string {
-  const known = COMMON_LANGUAGES.find(option => sameCode(language, option.code));
-  if (!known) return language;
-  return known.endonym
-    .split(' ')
-    .map(word => word.charAt(0).toLocaleUpperCase(known.code) + word.slice(1))
-    .join(' ');
-}
 
 export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);

@@ -1,7 +1,7 @@
 """ anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-09
+Quality: 88/100 | Updated: 2026-11-09
 """
 
 import os
@@ -44,11 +44,10 @@ col, row = (grid.flatten() for grid in np.meshgrid(np.arange(10), np.arange(6)))
 lon, lat = 3.0 + col, 53.0 + row
 u = 15 + 10 * np.sin(col * 0.5) + np.random.uniform(-5, 5, size=col.shape)
 v = 5 + 8 * np.cos(row * 0.8) + np.random.uniform(-5, 5, size=row.shape)
-calm_stations, storm_stations = [0, 25, 45], [12, 38, 55]
-u[calm_stations] = np.random.uniform(-1, 1, size=3)
-v[calm_stations] = np.random.uniform(-1, 1, size=3)
-u[storm_stations] = 40 + np.random.uniform(0, 15, size=3)
-v[storm_stations] = 30 + np.random.uniform(0, 10, size=3)
+# A gale off the north-west corner strengthens the flow there; a ridge in the south-east lets it fall calm
+gale = 1 + 2.3 * np.exp(-((np.hypot(col, 5 - row) / 2.4) ** 2))
+ridge = 1 - 0.98 * np.exp(-((np.hypot(9 - col, row) / 1.8) ** 2))
+u, v = u * gale * ridge, v * gale * ridge
 df = pd.DataFrame({LON: lon, LAT: lat, U_WIND: u, V_WIND: v})
 
 # Plot: reads only df and the constants above; a station with a missing value has no barb to draw
@@ -96,7 +95,9 @@ for xaxis, yaxis, xs, ys, us, vs in panels:
         for _ in range(int(pennants)):
             outer = tip - along * into_wind
             flags += [tuple(outer), tuple(outer + feather * side), tuple(outer - flag_base * into_wind), None]
-            along += flag_base + 0.4 * step
+            along += flag_base
+        # Clear staff between the pennant and the next barb, wide enough that the slanted barb stays off the triangle
+        along += 1.6 * step if pennants and (fulls or rest) else 0.0
         for length in [feather] * int(fulls) + [feather / 2] * int(rest >= HALF_KT):
             root = tip - along * into_wind
             lines += [tuple(root), tuple(root + length * (side + slant * into_wind)), None]

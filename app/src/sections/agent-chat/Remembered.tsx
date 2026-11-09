@@ -14,6 +14,10 @@
  *   for a blank start, and the ⓘ with what the list does, centred and wrapping as in the v4 mock.
  *   Nothing else clears the memory: `.start_over()` keeps it (owner decision of 2026-11-02).
  *   Editing an entry comes later; until then a change in words goes through the chat.
+ * - After a paste with other columns than the data the latest plot drew, the new data's line holds
+ *   them as `3 earlier decisions ▾ · .forget_all()` until the next plot (owner decision of
+ *   2026-11-08): `ForgetEarlier` is that `.forget_all()`, the list's own through its handle
+ *   (`RememberedHandle`), and the list's ⓘ says first where they came from. Ignored, they stay.
  *
  * The list is one keyed row of the thread, so when a newer chapter takes the decisions over the
  * row moves with them, and its own state (the entry being removed, a failure line) and a focus
@@ -34,7 +38,7 @@
  * failure line.
  */
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -44,6 +48,7 @@ import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import {
   describeMemoryFailure,
   REMEMBERED_DETAILS,
+  REMEMBERED_EARLIER,
   REMEMBERED_FULL,
 } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
@@ -65,15 +70,26 @@ export interface RememberedCountProps {
    * thread's, shared by every line's count.
    */
   handoffRef: React.RefObject<boolean>;
+  /**
+   * The line is the new data's, after a paste with other columns than the data the latest plot
+   * drew (`threadModel`'s `decisionsEarlier`): the count reads `3 earlier decisions`, and the line
+   * offers `.forget_all()` beside it (`ForgetEarlier`). Ignored, the decisions stay and the next
+   * plot takes them over.
+   */
+  earlier?: boolean;
 }
 
-/** The chapter line's `3 decisions ▾`, and `· full` once the memory has no room. */
+/**
+ * The chapter line's `3 decisions ▾`, and `· full` once the memory has no room; on the new data's
+ * line after a paste with other columns, `3 earlier decisions ▾`.
+ */
 export function RememberedCount({
   memory,
   open,
   listId,
   onToggle,
   handoffRef,
+  earlier = false,
 }: RememberedCountProps) {
   const ref = useRef<HTMLButtonElement>(null);
   // A newer chapter took the decisions over while the count had the focus: the focus moves along
@@ -95,6 +111,7 @@ export function RememberedCount({
   }, [handoffRef]);
   const count = memory?.entries.length ?? 0;
   if (!memory || count === 0) return null;
+  const words = countOf(count, earlier ? 'earlier decision' : 'decision');
   return (
     <>
       <Box
@@ -106,11 +123,11 @@ export function RememberedCount({
         aria-controls={listId}
         // The words on screen first, then what they count (WCAG 2.5.3); the arrow is the state,
         // which `aria-expanded` says.
-        aria-label={`${countOf(count, 'decision')} remembered`}
+        aria-label={`${words} remembered`}
         onClick={onToggle}
         sx={{ ...chapterControlSx, color: 'var(--ink)' }}
       >
-        {countOf(count, 'decision')}
+        {words}
         <span aria-hidden>{open ? ' ▴' : ' ▾'}</span>
       </Box>
       {isFull(memory) && (
@@ -122,6 +139,49 @@ export function RememberedCount({
         </Box>
       )}
     </>
+  );
+}
+
+/** What the list lets the chapter line do through it: its own `.forget_all()`. */
+export interface RememberedHandle {
+  forgetAll: () => void;
+}
+
+export interface ForgetEarlierProps {
+  memory: PlotMemory | null;
+  /** Something is in flight: the server would refuse a removal. */
+  disabled: boolean;
+  /** The list's `.forget_all()` (`RememberedHandle`), which shows its progress and a failure. */
+  onForgetAll: () => void;
+}
+
+/**
+ * The `.forget_all()` on the new data's chapter line, after a paste with other columns than the
+ * data the latest plot drew: every remembered decision goes in one click, before the next plot
+ * takes them over. It is the list's own forget-all, so the list shows its progress, a failure and
+ * where the focus goes after it; nothing shows while the memory is empty or unknown.
+ */
+export function ForgetEarlier({ memory, disabled, onForgetAll }: ForgetEarlierProps) {
+  if (!memory || memory.entries.length === 0) return null;
+  return (
+    <Box
+      component="button"
+      type="button"
+      data-testid="decisions-forget-all"
+      // Inert, never disabled, while something is in flight: the focus stays on it.
+      aria-disabled={disabled || undefined}
+      onClick={() => {
+        if (!disabled) onForgetAll();
+      }}
+      aria-label="Forget all earlier decisions"
+      title={REMEMBERED_EARLIER}
+      sx={{
+        ...chapterControlSx,
+        '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },
+      }}
+    >
+      .forget_all()
+    </Box>
   );
 }
 
@@ -142,6 +202,13 @@ export interface RememberedProps {
   fallbackFocusRef?: React.RefObject<HTMLElement | null>;
   /** Say what a removal did, in the page's status region outside the thread's log. */
   onAnnounce: (text: string) => void;
+  /**
+   * The list held after a paste with other columns (`ForgetEarlier` on the line): the ⓘ says
+   * where the decisions came from first.
+   */
+  earlier?: boolean;
+  /** Where the list puts its `.forget_all()` for the chapter line's own (`ForgetEarlier`). */
+  handleRef?: React.Ref<RememberedHandle>;
 }
 
 /** The pending marker of `.forget_all()`, which no entry id matches (`m` and digits). */
@@ -157,6 +224,8 @@ export function Remembered({
   onForgetAll,
   fallbackFocusRef,
   onAnnounce,
+  earlier = false,
+  handleRef,
 }: RememberedProps) {
   const entries = useMemo(() => memory?.entries ?? [], [memory]);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -216,6 +285,9 @@ export function Remembered({
       if (mounted.current) setPendingId(null);
     }
   };
+  // The chapter line's `.forget_all()` (`ForgetEarlier`) is this list's: one pending state, one
+  // failure line, one place the focus goes after it.
+  useImperativeHandle(handleRef, () => ({ forgetAll: () => void forget(ALL, 0, '') }));
 
   // Empty, the list renders nothing while this component stays: it moves the focus once the last
   // entry went.
@@ -325,7 +397,11 @@ export function Remembered({
           <InfoPopover
             label="About the remembered decisions"
             heading="# remembered decisions"
-            lines={[...(full ? [REMEMBERED_FULL] : []), ...REMEMBERED_DETAILS]}
+            lines={[
+              ...(earlier ? [REMEMBERED_EARLIER] : []),
+              ...(full ? [REMEMBERED_FULL] : []),
+              ...REMEMBERED_DETAILS,
+            ]}
           />
         </Box>
       </Box>

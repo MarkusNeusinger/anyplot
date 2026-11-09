@@ -32,7 +32,6 @@ from agents.anyplot.agent import (
     session_context,
 )
 from agents.anyplot.code.edits import apply_plan
-from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.parse import HEADERLESS_LIST_WARNING, MAX_INPUT_BYTES, parse_dataset
 from agents.anyplot.data.transcribe import (
     MAX_TRANSCRIBE_CHARS,
@@ -68,7 +67,9 @@ from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import (
     BINDINGS,
     LANGUAGE,
+    LANGUAGE_OFFERED,
     LANGUAGE_SOURCE,
+    LAST_RUN,
     PENDING_REQUEST,
     PLOT_LANGUAGE,
     SUMMARY_PENDING,
@@ -2095,9 +2096,10 @@ async def test_out_of_scope_text_is_refused_without_any_agent_call(
 
     events = parse_sse(response.text)
     assert [name for name, _ in events] == ["ready", "refusal", "done"]
-    refusal = events[1][1]
-    assert refusal["code"] == "out_of_scope"
-    assert refusal["text"].startswith("Ich kann nur bei diesem Plot")
+    refused = events[1][1]
+    assert refused["code"] == "out_of_scope"
+    # In the session language, English until the user picks another: never the German message's.
+    assert refused["text"] == refusal("out_of_scope", "en")
     assert fake.requests == []
     assert events[-1][1]["llm_calls"] == 0
 
@@ -2377,8 +2379,14 @@ async def test_a_plain_list_is_transcribed_but_json_and_tables_are_not(client: h
     sid = await open_session(client, with_data=False)
     judge.transcriptions = [_reading(["Tier", "Anzahl"], [["Hund", "7"], ["Katze", "3"]])]
 
-    listed = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hund 7\nKatze 3\n"})
+    # A list in words the transcriber reads; `Hund 7` lines are a pair list, which code reads (`layouts.py`).
+    listed = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hund sieben\nKatze drei\n"}
+    )
     assert listed.status_code == 200 and listed.json()["transcribed"] is True
+    pairs = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hund 7\nKatze 3\n"})
+    assert pairs.status_code == 200 and "transcribed" not in pairs.json()
+    assert pairs.json()["profile"]["source_format"] == "pair_list"
 
     one_column_json = await client.post(
         f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": '[{"Anzahl": 7}, {"Anzahl": 3}]'}
@@ -2459,8 +2467,9 @@ async def test_a_transcription_out_of_time_or_room_names_the_text_not_an_outage(
     """Live round 7: a slow reading of a long text or a cut-off one is the text's size; a short text timing out
     or an error is an outage, 503 (Fable and Gemini review of #12202: a stall is no "your text is too long")."""
     sid = await open_session(client, with_data=False)
-    short = "Hund 7\nKatze 3\nVogel 4\n"
-    long = "".join(f"Hund {i}\n" for i in range(MAX_TRANSCRIBE_LINES // 2))  # half the line cap
+    # Lines in words: `Hund 7` lines are a pair list, which code reads (`layouts.py`), never the transcriber.
+    short = "Hund sieben\nKatze drei\nVogel vier\n"
+    long = "".join(f"Hund {i}x\n" for i in range(MAX_TRANSCRIBE_LINES // 2))  # half the line cap
     assert near_transcribe_cap(long) and not near_transcribe_cap(short)
 
     judge.delay_s, judge.timeout_s = 0.2, 0.05
@@ -2490,7 +2499,8 @@ async def test_a_transcription_out_of_time_or_room_names_the_text_not_an_outage(
 @pytest.mark.parametrize(
     "text",
     [
-        pytest.param("".join(f"Hund {i}\n" for i in range(MAX_TRANSCRIBE_LINES + 1)), id="label-value-lines"),
+        # Lines that are no label/value pairs (`layouts.py` reads `Hund 7` lines by code since 2026-11-09).
+        pytest.param("".join(f"Hund {i}x\n" for i in range(MAX_TRANSCRIBE_LINES + 1)), id="label-lines"),
         pytest.param("".join(f"Name{i}\n" for i in range(250)), id="unique-names"),
     ],
 )
@@ -3038,9 +3048,8 @@ async def test_the_summarize_data_action_skips_the_judge_and_reaches_the_root(
 async def test_the_example_data_action_skips_the_judge_and_leaves_the_language_to_the_first_message(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """`.example_data()` is an action: the words "example data" typed as the session's first message would set the
-    session language (`detected`), so a German visitor would stay in English. The action is never judged, so the
-    language stays unset and the visitor's first typed message still sets it."""
+    """`.example_data()` is an action: it is never judged, so it costs no judge call and offers no language; the
+    visitor's first typed message in German still brings the offer of German."""
     script = default_script()
     script["root"] = [{"text": "I made example data to try the plot."}, {"text": "Gern."}]
     fake = swap_models("anthropic-vertex", script)
@@ -3058,7 +3067,7 @@ async def test_the_example_data_action_skips_the_judge_and_leaves_the_language_t
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
     typed = await say(client, sid, "Mach die Punkte größer")
 
-    assert done_language(typed) == {"language": "de", "source": "detected"}
+    assert done_language(typed) == {"language": "en", "source": "default", "offer": OFFER_DE_MESSAGE}
 
 
 async def test_the_session_answer_names_the_spec_roles(client: httpx.AsyncClient) -> None:
@@ -3457,14 +3466,14 @@ async def test_a_formula_in_the_data_field_is_refused_and_never_transcribed(
     assert literal.status_code == 200 and "transcribed" not in literal.json()
     assert literal.json()["profile"]["rows"] == 2 and len(judge.transcribe_calls) == len(data)
 
-    # A formula the chat could not take (over `MAX_MESSAGE_CHARS`) is the transcriber's after
-    # all: the page's offer sends the refused text to the chat, so only text that fits a turn
-    # is refused, and the transcriber's rubric computes nothing.
+    # A formula the chat could not take (over `MAX_MESSAGE_CHARS`) reaches no model either: the
+    # transcriber reads no more than the chat takes (owner rule of 2026-11-09), so the parser's
+    # refusal stands, and the page keeps such text in the box over the cap anyway.
     long_formula = "y = sin(x) from -pi to pi\n" + "note: the curve is drawn for the quarterly report\n" * 45
-    assert MAX_MESSAGE_CHARS < len(long_formula) <= MAX_TRANSCRIBE_CHARS and looks_like_formula(long_formula)
-    judge.transcriptions = [_reading(["Name", "Wert"], [["a", "1"], ["b", "2"]])]  # the fake reader's table
-    read = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": long_formula})
-    assert read.status_code == 200 and read.json()["transcribed"] is True
+    assert len(long_formula) > MAX_MESSAGE_CHARS == MAX_TRANSCRIBE_CHARS
+    refused = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": long_formula})
+    assert (refused.status_code, refused.json()["detail"]) == (422, "unparseable")
+    assert len(judge.transcribe_calls) == len(data)
     assert [line["outcome"] for line in attribution_lines(caplog, "data_transcribe")].count("formula") == len(formulas)
 
 
@@ -3645,6 +3654,11 @@ def done_language(events: list[tuple[str, dict[str, Any]]]) -> dict[str, Any] | 
     return data.get("language")
 
 
+OFFER_DE_MESSAGE = {"language": "de", "basis": "message"}
+OFFER_DE_DATA = {"language": "de", "basis": "data"}
+"""The `offer` of a `language` body: German, found in a typed message or in a paste's notes or column names."""
+
+
 async def test_a_new_session_starts_in_english_whatever_the_locale(client: httpx.AsyncClient, swap_models) -> None:
     """A German browser opens an English session: the locale is metadata, never the session language."""
     fake = swap_models("gemini", default_script())
@@ -3681,40 +3695,93 @@ async def test_a_language_chosen_in_the_chip_reaches_the_root_and_the_adapter(
     assert (await _session_state(client, sid))[PLOT_LANGUAGE] == "ja"  # the chip sets the plot's language too
 
 
-async def test_the_first_typed_message_detects_the_language_once(
+async def test_a_message_in_another_language_is_offered_once_and_changes_nothing(
     client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
 ) -> None:
+    """The page is English: a German message brings the offer of German with its `done`, and the reply, the
+    session block and the state stay English. A second German message offers nothing."""
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
-    fake = swap_models("gemini", {"root": [{"text": "Gern."}, {"text": "Okay."}]})
+    fake = swap_models("gemini", {"root": [{"text": "Sure."}, {"text": "Okay."}]})
     sid = await open_session(client)
-    judge.script = [JudgeVerdict(verdict="in_scope", lang="de"), JudgeVerdict(verdict="in_scope", lang="en")]
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de"), JudgeVerdict(verdict="in_scope", lang="de")]
 
     first = await say(client, sid, "Mach die Punkte größer")
 
-    assert done_language(first) == {"language": "de", "source": "detected"}
+    assert done_language(first) == {"language": "en", "source": "default", "offer": OFFER_DE_MESSAGE}
     state = await _session_state(client, sid)
-    assert (state[LANGUAGE], state[LANGUAGE_SOURCE]) == ("de", "detected")
-    root = request_text(requests_of(fake, "root")[0])  # the root's first call of this turn already reads it
-    line, value = language_block("de", "detected")
+    assert LANGUAGE not in state and LANGUAGE_SOURCE not in state and state[LANGUAGE_OFFERED] == ["de"]
+    root = request_text(requests_of(fake, "root")[0])
+    line, value = language_block("en", "default")
     assert line in root and value in root
     lines = attribution_lines(caplog, "scope_guard")
-    assert [(line["verdict"], line["lang"]) for line in lines] == [("in_scope", "de"), ("language_detected", "de")]
+    assert [(line["verdict"], line["lang"]) for line in lines] == [("in_scope", "de"), ("language_offer", "de")]
     caplog.clear()
 
-    second = await say(client, sid, "now make the title much shorter please")
+    second = await say(client, sid, "Und die Achsen bitte beschriften")
 
-    assert done_language(second) == {"language": "de", "source": "detected"}  # a later message never flips it
+    assert done_language(second) == {"language": "en", "source": "default"}  # German comes once
     assert [line["verdict"] for line in attribution_lines(caplog, "scope_guard")] == ["in_scope"]
     # The state event is content-free: the transcript holds the two messages and the two replies only.
     bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
     assert [turn["role"] for turn in bundle["transcript"]] == ["user", "assistant", "user", "assistant"]
-    assert (bundle["session"]["plot_language"], bundle["session"]["plot_language_source"]) == ("de", "detected")
+    assert (bundle["session"]["plot_language"], bundle["session"]["plot_language_source"]) == ("en", "default")
 
 
-async def test_a_short_english_first_message_leaves_the_default(
+async def test_an_accepted_offer_switches_the_replies_and_english_comes_back_once(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """The click sends `PUT /language` with `via: offer`: the replies and the plot switch at once, the source is
+    `offer`, and an English message later offers English back, once, from three words on."""
+    fake = swap_models("gemini", {"root": [{"text": "Sure."}, {"text": "Gern."}, {"text": "Gern."}, {"text": "Ok."}]})
+    sid = await open_session(client)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    assert done_language(await say(client, sid, "Mach die Punkte größer")) == {
+        "language": "en",
+        "source": "default",
+        "offer": OFFER_DE_MESSAGE,
+    }
+
+    accepted = await put_language(client, sid, {"language": "de", "via": "offer"})
+
+    assert accepted.json() == {"language": "de", "source": "offer", "suggestion": None}
+    state = await _session_state(client, sid)
+    assert (state[LANGUAGE], state[LANGUAGE_SOURCE], state[PLOT_LANGUAGE]) == ("de", "offer", "de")
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
+    short = await say(client, sid, "sin x")  # under three words: the judge's `en` is no signal
+    assert done_language(short) == {"language": "de", "source": "offer"}
+    root = request_text(requests_of(fake, "root")[-1])
+    line, value = language_block("de", "offer")
+    assert line in root and value in root
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en"), JudgeVerdict(verdict="in_scope", lang="en")]
+    english = await say(client, sid, "make the points larger")
+    assert done_language(english) == {
+        "language": "de",
+        "source": "offer",
+        "offer": {"language": "en", "basis": "message"},
+    }
+    again = await say(client, sid, "and the title shorter please")
+    assert done_language(again) == {"language": "de", "source": "offer"}  # English came back once
+
+
+async def test_an_offer_accepted_after_a_pick_keeps_the_pick_final(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """A button another tab still showed: the click sets the language, and the pick stays final."""
+    swap_models("gemini", {"root": [{"text": "Bien."}]})
+    sid = await open_session(client)
+    assert (await put_language(client, sid, {"language": "fr"})).status_code == 200
+
+    late = await put_language(client, sid, {"language": "de", "via": "offer"})
+
+    assert late.json() == {"language": "de", "source": "chosen", "suggestion": None}
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="it")]
+    assert done_language(await say(client, sid, "Fai i punti più grandi")) == {"language": "de", "source": "chosen"}
+
+
+async def test_a_short_english_message_offers_nothing(
     client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """The judge answers `en` for "English or unclear": `sin x` stays at the default, the next message is judged."""
+    """English is the session's: no English message offers anything, and another language at any length does."""
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     swap_models("gemini", {"root": [{"text": "Sure."}] * 3})
     sid = await open_session(client)
@@ -3722,17 +3789,17 @@ async def test_a_short_english_first_message_leaves_the_default(
     short = await say(client, sid, "sin x")  # the unscripted judge answers in_scope, en
 
     assert done_language(short) == {"language": "en", "source": "default"}
-    assert not [line for line in attribution_lines(caplog, "scope_guard") if line["verdict"] == "language_detected"]
     longer = await say(client, sid, "make the points larger")
-    assert done_language(longer) == {"language": "en", "source": "detected"}
+    assert done_language(longer) == {"language": "en", "source": "default"}
+    assert not [line for line in attribution_lines(caplog, "scope_guard") if line["verdict"] == "language_offer"]
 
     other = await open_session(client)
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
     german = await say(client, other, "Mach größer")
-    assert done_language(german) == {"language": "de", "source": "detected"}  # any length for another language
+    assert done_language(german) == {"language": "en", "source": "default", "offer": OFFER_DE_MESSAGE}
 
 
-async def test_an_action_and_a_refused_message_never_detect(client: httpx.AsyncClient, swap_models, judge) -> None:
+async def test_an_action_and_a_refused_message_never_offer(client: httpx.AsyncClient, swap_models, judge) -> None:
     swap_models("gemini", default_script())
     sid = await open_session(client)
 
@@ -3741,8 +3808,21 @@ async def test_an_action_and_a_refused_message_never_detect(client: httpx.AsyncC
     refused = await say(client, sid, "Schreib mir ein Gedicht über Katzen")
 
     assert [name for name, _ in refused] == ["ready", "refusal", "done"]
-    assert refused[1][1]["text"] == refusal("out_of_scope", "de")  # the refusal uses the message's language
+    # The refusal is in the session language, English until the user picks another: never the message's.
+    assert refused[1][1]["text"] == refusal("out_of_scope", "en")
     assert done_language(refused) == {"language": "en", "source": "default"}
+    assert LANGUAGE_OFFERED not in await _session_state(client, sid)
+
+
+async def test_a_refusal_follows_the_picked_language(client: httpx.AsyncClient, swap_models, judge) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    assert (await put_language(client, sid, {"language": "fr"})).status_code == 200
+    judge.script = [JudgeVerdict(verdict="needs_data", lang="de")]
+
+    refused = await say(client, sid, "Zeig den Aktienkurs von XYZ")
+
+    assert refused[1][1]["text"] == refusal("needs_data", "fr")
 
 
 GERMAN_CHANGE = "Mach die Punkte etwas größer."
@@ -3751,14 +3831,14 @@ GERMAN_CHANGE = "Mach die Punkte etwas größer."
 async def test_a_message_in_another_language_keeps_the_plots_language(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """v1 in English from the action; the German change records `de` for the replies, and v2 keeps English: a
-    follow-up message never rewrites the plot's text (owner decision of 2026-11-01)."""
+    """v1 in English from the action; the German change is drawn and answered in English, with the offer of
+    German in its `done`: until the user takes it, everything stays English."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
             {"text": ROOT_REPLY},
             {"call": "plot_pipeline", "args": {"change_request": "Make the points a bit larger.", "base": "previous"}},
-            {"text": "Fertig: größere Punkte."},
+            {"text": "Done: larger points."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
         "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
@@ -3772,36 +3852,67 @@ async def test_a_message_in_another_language_keeps_the_plots_language(
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["version"]) == ("ok", 2)
-    assert done_language(events) == {"language": "de", "source": "detected"}
+    assert done_language(events) == {"language": "en", "source": "default", "offer": OFFER_DE_MESSAGE}
     first, second = adapter_inputs(fake)
     for adapted in (first, second):
         assert "Plot language:\n<plot_language>\nen\n</plot_language>" in adapted
-        assert "language_changed" not in adapted
-    # The notes explain the plot to the user: v2's go in German, the language the user now chats in.
-    assert "<reply_language>" not in first
-    assert f"{REPLY_LANGUAGE_HEADING}\n<reply_language>\nde\n</reply_language>" in second
+        assert "language_changed" not in adapted and "<reply_language>" not in adapted
     reviews = [request_text(request) for request in requests_of(fake, "reviewer")]
     assert all("Plot language:\n<plot_language>\nen\n</plot_language>" in review for review in reviews)
-    # The root replies in German and reads that the plot is English.
     block = request_text(requests_of(fake, "root")[-1]).split("Session (set by the server):")[-1]
-    assert "<reply_language>\nde\n</reply_language>" in block
-    assert f"{PLOT_LANGUAGE_HEADING}\n<plot_language>\nen\n</plot_language>" in block
+    assert "<reply_language>\nen\n</reply_language>" in block and "<plot_language>" not in block
     bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
     assert [version["language"] for version in bundle["versions"]] == ["en", "en"]
-    assert bundle["session"]["locale"] == "en" and bundle["session"]["plot_language"] == "de"
+    assert bundle["session"]["locale"] == "en" and bundle["session"]["plot_language"] == "en"
+
+
+async def test_accepting_the_offer_with_a_plot_rewrites_the_next_version(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """The click starts no run: the next version, asked for in the chat, comes with its text in German through the
+    rewrite of a base in another language (`language_changed`), and v1 keeps its English text."""
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"text": "Sure."},
+            {"call": "plot_pipeline", "args": {"change_request": "Make the points a bit larger.", "base": "previous"}},
+            {"text": "Fertig."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    assert done_language(await say(client, sid, "Was zeigt die x-Achse?"))["offer"] == OFFER_DE_MESSAGE
+    assert (await put_language(client, sid, {"language": "de", "via": "offer"})).json()["source"] == "offer"
+    assert len(adapter_inputs(fake)) == 1  # the click alone draws nothing
+
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    events = await say(client, sid, GERMAN_CHANGE)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["version"]) == ("ok", 2)
+    assert done_language(events) == {"language": "de", "source": "offer"}
+    second = adapter_inputs(fake)[1]
+    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and '"language_changed": true' in second
+    assert [version.language for version in get_services().versions.all(sid)] == ["en", "de"]
 
 
 async def test_an_english_message_keeps_a_german_paste_plot_german(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """Live test of 2026-11-01 (B1): a German paste set `de`, the first plot was German, and "Use a log scale on y"
-    then recorded `en` and turned the plot's title and numbers English while its axes stayed German."""
+    """Live test of 2026-11-01 (B1): after a German paste the first plot was German, and "Use a log scale on y" then
+    turned the plot's title and numbers English while its axes stayed German. Now the user takes the paste's offer
+    of German; the English message then offers English back, and ignoring it keeps the replies and the plot German."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
             {"text": "Hier ist dein Plot."},
             {"call": "plot_pipeline", "args": {"change_request": "Use a log scale on y.", "base": "previous"}},
-            {"text": "Done: the y axis is logarithmic."},
+            {"text": "Fertig: die y-Achse ist logarithmisch."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
         "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
@@ -3810,21 +3921,52 @@ async def test_an_english_message_keeps_a_german_paste_plot_german(
     sid = await open_session(client, with_data=False)
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]  # the dataset judge reads the headers as German
     data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
-    assert (await paste(client, sid, data))["language"] == {"language": "de", "source": "pasted"}
+    pasted = await paste(client, sid, data)
+    assert pasted["language"] == {"language": "en", "source": "default", "offer": OFFER_DE_DATA}
+    assert (await put_language(client, sid, {"language": "de", "via": "offer"})).status_code == 200
     assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
     await create_plot(client, sid)
     judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
 
     events = await say(client, sid, "Use a log scale on y")
 
-    assert done_language(events) == {"language": "en", "source": "detected"}  # the replies follow the message
+    english = {"language": "en", "basis": "message"}
+    assert done_language(events) == {"language": "de", "source": "offer", "offer": english}  # offered, not set
     first, second = adapter_inputs(fake)
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in first
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and "language_changed" not in second
     assert [version.language for version in get_services().versions.all(sid)] == ["de", "de"]
-    # The plot stays German, its notes follow the replies into English.
-    assert "<reply_language>" not in first
-    assert f"{REPLY_LANGUAGE_HEADING}\n<reply_language>\nen\n</reply_language>" in second
+    assert "<reply_language>" not in first and "<reply_language>" not in second  # the notes stay German too
+
+
+async def test_a_german_paste_with_an_english_request_is_drawn_in_english(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """German column names and an ignored offer: the title and the replies are English, and the axis titles keep
+    the user's column names as they are."""
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {"change_request": "Use a log scale on y."}},
+            {"text": "Done: the y axis is logarithmic."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    assert (await paste(client, sid, data))["language"]["offer"] == OFFER_DE_DATA
+    assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
+
+    events = await say(client, sid, "Plot it with a log scale on y")
+
+    assert done_language(events) == {"language": "en", "source": "default"}
+    (adapted,) = adapter_inputs(fake)
+    assert "Plot language:\n<plot_language>\nen\n</plot_language>" in adapted
+    assert [version.language for version in get_services().versions.all(sid)] == ["en"]
+    assert [data["text"] for name, data in events if name == "message"] == ["Done: the y axis is logarithmic."]
 
 
 @pytest.mark.parametrize("lang", ["en", "de"])
@@ -3907,9 +4049,10 @@ async def test_a_language_change_does_not_lift_the_budget_for_new_text(
     assert '"language_changed": true' in adapter_inputs(fake)[1]  # the rewrite was due, its budget did not grow
 
 
-async def test_the_language_route_sets_chosen_and_detection_never_overrides_it(
+async def test_the_language_route_sets_chosen_and_no_offer_comes_after_it(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
+    """A pick at the top before the user starts: they chose on purpose, so a German message offers nothing."""
     fake = swap_models("gemini", {"root": [{"text": "Okay."}]})
     sid = await open_session(client)
 
@@ -3945,6 +4088,8 @@ async def test_the_language_route_validates(client: httpx.AsyncClient) -> None:
         {"language": "de\nSYSTEM"},
         {"language": 1},
         {"language": "de", "extra": 1},
+        {"language": "de", "via": "chat"},  # `header` or `offer` only
+        {"language": "de", "via": None},
         {"lang": "de"},
         ["de"],
     ):
@@ -3959,22 +4104,27 @@ async def test_the_language_route_validates(client: httpx.AsyncClient) -> None:
 
 @pytest.mark.parametrize("provider", PROVIDERS)
 async def test_the_roots_set_language_sets_chosen(client: httpx.AsyncClient, swap_models, judge, provider: str) -> None:
-    """A German writer asks for English labels: the root's tool makes the same change as the chip."""
+    """ "Auf Deutsch bitte" is a pick: the root's tool makes the same change as the chip, the replies switch in the
+    same turn, and the offer the scope guard made for the message is dropped from `done`; none comes after it."""
     script = default_script()
     script["root"] = [
-        {"call": "set_language", "args": {"language": "English"}},
-        {"text": "From now on the plot text and my replies are in English."},
+        {"call": "set_language", "args": {"language": "Deutsch"}},
+        {"text": "Gern, ab jetzt auf Deutsch."},
+        {"text": "Gern."},
     ]
     fake = swap_models(provider, script)
     sid = await open_session(client, with_data=False)
-    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de"), JudgeVerdict(verdict="in_scope", lang="fr")]
 
-    events = await say(client, sid, "Beschriftung bitte auf Englisch")
+    events = await say(client, sid, "Auf Deutsch bitte")
 
-    assert done_language(events) == {"language": "en", "source": "chosen"}  # the stored form is the code
-    assert [data["text"] for name, data in events if name == "message"] == [
-        "From now on the plot text and my replies are in English."
-    ]
+    assert done_language(events) == {"language": "de", "source": "chosen"}  # the stored form is the code
+    assert [data["text"] for name, data in events if name == "message"] == ["Gern, ab jetzt auf Deutsch."]
+    assert (await _session_state(client, sid))[PLOT_LANGUAGE] == "de"
+    assert done_language(await say(client, sid, "Rends les points plus grands")) == {
+        "language": "de",
+        "source": "chosen",
+    }
     if provider == "gemini":
         reply_request = requests_of(fake, "root")[1]
         responses = [
@@ -3983,7 +4133,7 @@ async def test_the_roots_set_language_sets_chosen(client: httpx.AsyncClient, swa
             for part in content.parts or []
             if part.function_response is not None and part.function_response.name == "set_language"
         ]
-        # Detected `de`, now `en`; without a plot nothing is outdated.
+        # English, now German; without a plot nothing is outdated.
         assert responses == [{"status": "ok", "source": "chosen", "changed": True, "plot_outdated": False}]
 
 
@@ -4017,17 +4167,17 @@ def change_request_of(adapter_input: str) -> str | None:
 async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """v1 comes from the action, in English; a German question then records `de` for the replies and leaves the plot
-    English. "Beschriftung auf Deutsch" changes no reply language, but the shown plot is outdated, so the root remakes
-    it in German."""
+    """v1 comes from the action, in English; a German question offers German and leaves everything English.
+    "Beschriftung auf Deutsch" asks for the plot's text only: the replies stay English, the shown plot is outdated,
+    so the root remakes it in German."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
             {"text": ROOT_REPLY},
-            {"text": "Die x-Achse zeigt die Lernstunden."},
+            {"text": "The x axis shows the study hours."},
             {"call": "set_language", "args": {"language": "de", "applies_to": "plot"}},
             {"call": "plot_pipeline", "args": {"base": "previous"}},
-            {"text": "Die Beschriftung ist jetzt auf Deutsch."},
+            {"text": "The labels are German now."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
         "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
@@ -4037,9 +4187,12 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
     await create_plot(client, sid)
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de"), JudgeVerdict(verdict="in_scope", lang="de")]
     question = await say(client, sid, "Was zeigt die x-Achse?")
-    assert done_language(question) == {"language": "de", "source": "detected"}
+    assert done_language(question) == {"language": "en", "source": "default", "offer": OFFER_DE_MESSAGE}
 
     events = await say(client, sid, "Beschriftung auf Deutsch, bitte.")
+
+    # A request for the plot's text is no pick of the replies; German was offered with the question already.
+    assert done_language(events) == {"language": "en", "source": "default"}
 
     responses = [
         part.function_response.response
@@ -4051,6 +4204,22 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["version"]) == ("ok", 2)
     assert [version.language for version in get_services().versions.all(sid)] == ["en", "de"]
+
+
+async def test_a_german_request_for_german_labels_still_offers_german_replies(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """ "Beschriftung auf Deutsch" in an English session asks for the plot's text only: the root's `set_language`
+    with `applies_to` `plot` is no pick of the replies, so the message's German still comes as the offer."""
+    script = {"root": [{"call": "set_language", "args": {"language": "de", "applies_to": "plot"}}, {"text": "Sure."}]}
+    swap_models("gemini", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+
+    events = await say(client, sid, "Beschriftung auf Deutsch, bitte.")
+
+    assert done_language(events) == {"language": "en", "source": "default", "offer": OFFER_DE_MESSAGE}
+    assert (await _session_state(client, sid))[PLOT_LANGUAGE] == "de"
 
 
 async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
@@ -4078,12 +4247,16 @@ async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["version"]) == ("ok", 2)
-    assert done_language(events) == {"language": "en", "source": "detected"}  # the replies stay English
+    assert done_language(events) == {"language": "en", "source": "default"}  # the replies stay English
     state = await _session_state(client, sid)
-    assert (state[LANGUAGE], state[PLOT_LANGUAGE]) == ("en", "de")
+    assert LANGUAGE not in state and state[PLOT_LANGUAGE] == "de"
     second = adapter_inputs(fake)[1]
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and '"language_changed": true' in second
     assert change_request_of(second) == LANGUAGE_REWRITE_REQUEST
+    # The plot is German, its notes follow the replies, which stay English; the root reads both languages.
+    assert f"{REPLY_LANGUAGE_HEADING}\n<reply_language>\nen\n</reply_language>" in second
+    block = request_text(requests_of(fake, "root")[-1]).split("Session (set by the server):")[-1]
+    assert f"{PLOT_LANGUAGE_HEADING}\n<plot_language>\nde\n</plot_language>" in block
     versions = get_services().versions.all(sid)
     assert [version.language for version in versions] == ["en", "de"]
     assert versions[1].requests == [LANGUAGE_REWRITE_REQUEST]
@@ -4358,9 +4531,8 @@ GERMAN_NOTED_PASTE = (
 async def test_a_short_note_is_judged_and_stored_alone_while_the_root_gets_the_notes_and_the_file_name(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """The scope judge, the language detection and the stored user turn take only what the user typed: the paste's
-    notes and file name, judged at the paste, reach the root in the session block of the note's turn. Wrapped around
-    "nur 2024", the preambles' English words would let a judge's `en` overwrite the pasted German."""
+    """The scope judge, the language offer and the stored user turn take only what the user typed: the paste's
+    notes and file name, judged at the paste, reach the root in the session block of the note's turn."""
     script = default_script()
     script["root"] = [{"text": "4 Zeilen, 3 Spalten. Nur 2024 behalten."}]
     fake = swap_models("anthropic-vertex", script)
@@ -4378,7 +4550,7 @@ async def test_a_short_note_is_judged_and_stored_alone_while_the_root_gets_the_n
     )
     assert pasted.status_code == 200, pasted.text
     assert (pasted.json()["language"], pasted.json()["file_name"]) == (
-        {"language": "de", "source": "pasted"},
+        {"language": "en", "source": "default", "offer": OFFER_DE_DATA},
         "umsatz_filialen.csv",
     )
 
@@ -4389,7 +4561,8 @@ async def test_a_short_note_is_judged_and_stored_alone_while_the_root_gets_the_n
     assert "<user_message>\nnur 2024\n</user_message>" in prompt
     assert "<user_notes>" not in prompt and "umsatz_filialen" not in prompt and "Tausend Franken" not in prompt
     state = await _session_state(client, sid)
-    assert (read_session(state).language, read_session(state).language_source) == ("de", "pasted")
+    assert (read_session(state).language, read_session(state).language_source) == ("en", "default")
+    assert read_session(state).language_offered == ["de"]
     runtime = app.dependency_overrides[get_runtime]()
     session = await runtime.session(USER, sid)
     typed = [
@@ -4800,7 +4973,7 @@ async def test_an_over_long_source_is_refused_before_anything_runs(client: httpx
     assert refused.status_code == 422 and judge.calls == []
 
 
-# --- The session language from the pasted data (owner request of 2026-10-14) ----------------
+# --- The language offer of pasted data -------------------------------------------------------
 
 GERMAN_PASTE = (
     "Tageshöchsttemperaturen Wien, März bis Mai\ndatum,temperatur\n2026-04-01,14\n2026-04-02,17\n2026-04-03,12\n"
@@ -4815,56 +4988,59 @@ async def paste(client: httpx.AsyncClient, sid: str, text: str) -> dict[str, Any
     return body
 
 
-async def test_german_notes_set_the_session_language_before_any_typed_message(
+async def test_german_notes_offer_german_and_the_summary_stays_english(
     client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Live case of 2026-10-14: German notes and data, and the first summary came in English."""
+    """German notes and data: the page offers German once, and until the user takes it the summary is English."""
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
-    fake = swap_models("gemini", {"root": [{"text": "Deine Daten: drei Tage im April."}]})
+    fake = swap_models("gemini", {"root": [{"text": "Your data: three days in April."}]})
     sid = await open_session(client, with_data=False)
     judge.script = [JudgeVerdict(verdict="in_scope", lang="en"), JudgeVerdict(verdict="in_scope", lang="de")]
 
     body = await paste(client, sid, GERMAN_PASTE)
 
-    assert body["language"] == {"language": "de", "source": "pasted"}
+    assert body["language"] == {"language": "en", "source": "default", "offer": OFFER_DE_DATA}
     state = await _session_state(client, sid)
-    assert (state[LANGUAGE], state[LANGUAGE_SOURCE]) == ("de", "pasted")
+    assert LANGUAGE not in state and LANGUAGE_SOURCE not in state and state[LANGUAGE_OFFERED] == ["de"]
     (line,) = attribution_lines(caplog, "data_language")
     assert (line["lang"], line["basis"]) == ("de", "notes")
     turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
-    assert done_language(parse_sse(turn.text)) == {"language": "de", "source": "pasted"}
-    root = request_text(requests_of(fake, "root")[0])  # the summary turn already writes German
-    line_text, value = language_block("de", "pasted")
+    assert done_language(parse_sse(turn.text)) == {"language": "en", "source": "default"}  # an action offers nothing
+    root = request_text(requests_of(fake, "root")[0])
+    line_text, value = language_block("en", "default")
     assert line_text in root and value in root
+    assert "- Reply language:" not in root and ACTION_LANGUAGE_LINE.format(name="German") not in root
 
 
-async def test_the_column_names_set_it_when_no_notes_were_kept(client: httpx.AsyncClient, judge) -> None:
+async def test_the_column_names_offer_it_when_no_notes_were_kept(client: httpx.AsyncClient, judge) -> None:
     sid = await open_session(client, with_data=False)
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
 
     body = await paste(client, sid, GERMAN_HEADERS)
 
-    assert body["language"] == {"language": "de", "source": "pasted"} and len(judge.calls) == 1
+    assert body["language"] == {"language": "en", "source": "default", "offer": OFFER_DE_DATA}
+    assert len(judge.calls) == 1
 
 
-async def test_the_summary_after_a_paste_without_notes_names_the_reply_language(
+async def test_the_summary_after_an_accepted_offer_names_the_reply_language(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """Live case of 2026-10-14: a German CSV without notes set `de`, and the summary came in English.
-
-    Without notes the summary turn's only user text is the English `[action]` line, so the
-    session block names the language in English words as well as inside its fence.
-    """
+    """Live case of 2026-10-14: a German CSV without notes, and the summary came in English. Once the user takes
+    the offer, the summary turn's only user text is still the English `[action]` line, so the session block names
+    the language in English words as well as inside its fence."""
     fake = swap_models("gemini", {"root": [{"text": "Drei Tage im April."}]})
     sid = await open_session(client, with_data=False)
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
-    assert (await paste(client, sid, GERMAN_HEADERS))["language"] == {"language": "de", "source": "pasted"}
+    assert (await paste(client, sid, GERMAN_HEADERS))["language"]["offer"] == OFFER_DE_DATA
+    accepted = await put_language(client, sid, {"language": "de", "via": "offer"})
+    assert accepted.json() == {"language": "de", "source": "offer", "suggestion": None}
 
     turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
 
     assert turn.status_code == 200, turn.text
+    assert done_language(parse_sse(turn.text)) == {"language": "de", "source": "offer"}
     root = request_text(requests_of(fake, "root")[0])
-    line_text, value = language_block("de", "pasted")
+    line_text, value = language_block("de", "offer")
     assert line_text in root and value in root
     assert REPLY_LANGUAGE_LINE.format(name="German") in root
     assert f"[action] Summarize the dataset for the user. {ACTION_LANGUAGE_LINE.format(name='German')}" in root
@@ -4891,42 +5067,52 @@ async def test_refused_notes_say_nothing_and_unclear_headers_keep_the_default(cl
     assert LANGUAGE_SOURCE not in state
 
 
-@pytest.mark.parametrize(("chosen", "source"), [("fr", "chosen"), ("make the points larger", "detected")])
-async def test_a_paste_never_overrides_a_choice_or_a_typed_message(
-    client: httpx.AsyncClient, swap_models, judge, chosen: str, source: str
+@pytest.mark.parametrize("before", ["pick", "message"])
+async def test_a_paste_offers_nothing_after_a_pick_or_a_language_offered_before(
+    client: httpx.AsyncClient, swap_models, judge, before: str
 ) -> None:
+    """A pick at the top ends every offer; a German message offered German already, which comes once."""
     swap_models("gemini", {"root": [{"text": "Sure."}]})
-    sid = await open_session(client)  # its English sample table keeps the default (the unscripted judge says `en`)
-    if source == "chosen":
-        assert (await put_language(client, sid, {"language": chosen})).status_code == 200
+    sid = await open_session(client)  # its English sample table offers nothing (the unscripted judge says `en`)
+    if before == "pick":
+        assert (await put_language(client, sid, {"language": "fr"})).status_code == 200
         expected = {"language": "fr", "source": "chosen"}
     else:
-        assert done_language(await say(client, sid, chosen)) == {"language": "en", "source": "detected"}
-        expected = {"language": "en", "source": "detected"}
+        judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+        offered = await say(client, sid, "Mach die Punkte größer")
+        assert done_language(offered) == {"language": "en", "source": "default", "offer": OFFER_DE_MESSAGE}
+        expected = {"language": "en", "source": "default"}
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de"), JudgeVerdict(verdict="in_scope", lang="de")]
 
     body = await paste(client, sid, GERMAN_PASTE)
 
     assert body["language"] == expected
-    state = await _session_state(client, sid)
-    assert {"language": state[LANGUAGE], "source": state[LANGUAGE_SOURCE]} == expected
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and {"language": view.language, "source": view.language_source} == expected
 
 
-async def test_the_first_typed_message_still_replaces_a_pasted_language(
-    client: httpx.AsyncClient, swap_models, judge
-) -> None:
-    swap_models("gemini", {"root": [{"text": "Sure."}, {"text": "Sure."}]})
+async def test_an_ignored_offer_keeps_everything_english(client: httpx.AsyncClient, swap_models, judge) -> None:
+    """The user ignores the German offer: the replies and the plot stay English, and German never comes again;
+    a paste in another language still brings its own offer."""
+    fake = swap_models("gemini", {"root": [{"text": "Sure."}, {"text": "Sure."}]})
     sid = await open_session(client)
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
-    await paste(client, sid, GERMAN_HEADERS)
+    assert (await paste(client, sid, GERMAN_HEADERS))["language"]["offer"] == OFFER_DE_DATA
 
-    short = await say(client, sid, "sin x")  # English or unclear: the pasted language stays
-    assert done_language(short) == {"language": "de", "source": "pasted"}
-    longer = await say(client, sid, "make the points larger")
-    assert done_language(longer) == {"language": "en", "source": "detected"}
+    short = await say(client, sid, "sin x")
+    assert done_language(short) == {"language": "en", "source": "default"}
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    german = await say(client, sid, "Mach die Punkte größer")
+    assert done_language(german) == {"language": "en", "source": "default"}  # German came once, with the paste
+    root = request_text(requests_of(fake, "root")[-1])
+    line_text, value = language_block("en", "default")
+    assert line_text in root and value in root
 
     judge.script = [JudgeVerdict(verdict="in_scope", lang="fr")]
-    assert (await paste(client, sid, GERMAN_HEADERS))["language"] == {"language": "en", "source": "detected"}
+    french = await paste(client, sid, GERMAN_HEADERS)
+    assert french["language"] == {"language": "en", "source": "default", "offer": {"language": "fr", "basis": "data"}}
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    assert (await paste(client, sid, GERMAN_HEADERS))["language"] == {"language": "en", "source": "default"}
 
 
 TITLE_REQUEST = "Title: Umsatz QX7 nach Filiale und Quartal"
@@ -4937,8 +5123,10 @@ async def test_a_title_asked_for_before_the_confirmation_reaches_the_first_plot(
 ) -> None:
     """Live round 9 of 2026-10-16: the user asked for a title before `.confirm()`, the root said it had noted
     it, and the plot `.create_plot()` drew had another title. The root keeps such a request through
-    `plot_pipeline` (`not_ready`, `request_kept`), and the bare `.create_plot()` after the confirmation
-    hands it to the adapter, with the title as an expected text."""
+    `plot_pipeline`, and the bare `.create_plot()` after the confirmation hands it to the adapter, with the title
+    as an expected text. The typed title after the paste is the paste's summary turn, so ToolSafety refuses the
+    call before the run (`summary_turn`) and keeps the request as the run's own `not_ready` would: no `plot`
+    event, `request_kept` for the root, the `not_ready` run in the last run."""
     script = default_script()
     script["root"] = [
         {
@@ -4961,9 +5149,9 @@ async def test_a_title_asked_for_before_the_confirmation_reaches_the_first_plot(
         json={"text": "Setz den Titel auf „Umsatz QX7 nach Filiale und Quartal“"},
     )
 
-    blocked = next(data for name, data in parse_sse(asked.text) if name == "plot")
-    assert (blocked["status"], blocked["reason"]) == ("not_ready", "data_unconfirmed")
-    assert "request_kept" not in blocked  # a root-only fact, never on the page's event
+    events = parse_sse(asked.text)
+    assert not any(name == "plot" for name, _ in events)  # refused before the run: the page sees no plot card
+    assert events[-1][1]["data_confirmed"] is False
     responses = [
         part.function_response.response
         for request in requests_of(fake, "root")
@@ -4972,6 +5160,8 @@ async def test_a_title_asked_for_before_the_confirmation_reaches_the_first_plot(
         if part.function_response is not None and part.function_response.name == "plot_pipeline"
     ]
     assert responses and responses[-1]["request_kept"] is True
+    assert (responses[-1]["code"], responses[-1]["reason"]) == ("summary_turn", "data_unconfirmed")
+    assert (await _session_state(client, sid))[LAST_RUN]["status"] == "not_ready"
 
     confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
     assert confirmed.status_code == 200, confirmed.text
