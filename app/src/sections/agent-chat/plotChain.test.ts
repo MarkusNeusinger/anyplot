@@ -319,6 +319,7 @@ describe('plotClick', () => {
     open: true,
     busy: false,
     fanOut: false,
+    locked: false,
     canCreate: false,
     needsText: false,
     text: '',
@@ -362,6 +363,15 @@ describe('plotClick', () => {
     const typed = boxData(null, SHORT_CSV);
     expect(plotClick({ ...fresh, kind: 'all', box: typed, canCreate: true })).toBe('send_first');
     expect(plotClick({ ...fresh, box: typed, canCreate: true, fanOut: true })).toBe('send_first');
+  });
+
+  it('reads no table typed into a box that all holds, as Enter sends none from it', () => {
+    const held = { ...fresh, kind: 'all' as const, locked: true, canCreate: true };
+    // The fan-out plots the stored data as it is, as with an empty box.
+    expect(plotClick({ ...held, box: boxData(null, SHORT_CSV) })).toBe('plot_all');
+    // A pasted chip still goes first: the box opens for its note.
+    const chip = boxData(pasted(SHORT_CSV), '');
+    expect(plotClick({ ...held, box: chip, canCreate: false })).toBe('send_first');
   });
 
   it('waits with the data in the box while the session opens or works, as Enter does', () => {

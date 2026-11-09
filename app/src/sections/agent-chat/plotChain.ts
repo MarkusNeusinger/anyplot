@@ -68,6 +68,11 @@ export interface PlotClickPage {
   /** The admin's fan-out panel is open. */
   fanOut: boolean;
   /**
+   * `all` holds the message box in step 2 (`chatLocked`): the fan-out takes no text, and Enter
+   * sends none from the box, only an attachment, for which the box opens.
+   */
+  locked: boolean;
+  /**
    * Stored data with every required role bound, no table read from text waiting, no attachment
    * in the box, nothing running: what a plot starts from.
    */
@@ -79,9 +84,12 @@ export interface PlotClickPage {
 }
 
 export function plotClick(page: PlotClickPage): PlotClick | null {
+  // A table typed into a box that `all` holds goes nowhere, as with Enter: the fan-out plots the
+  // stored data as it is.
+  const box = page.locked && page.box === 'typed' ? null : page.box;
   // Data in the box goes first, whenever Enter would send it (`handleSend`): also while `all` is
   // pressed and while the fan-out's panel is open, where Enter reads it too.
-  if (page.box !== null) return page.open && !page.busy ? 'send_first' : null;
+  if (box !== null) return page.open && !page.busy ? 'send_first' : null;
   if (page.kind === 'all') return page.canCreate && !page.fanOut ? 'plot_all' : null;
   // Text over the cap is never cut and never goes, also not as a plot's request.
   if (!page.canCreate || page.text.length > MAX_MESSAGE_CHARS) return null;

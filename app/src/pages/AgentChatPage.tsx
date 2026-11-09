@@ -763,6 +763,7 @@ function AgentChat({
     open: state.phase === 'ready' && !!state.sessionId,
     busy,
     fanOut: !!fanOut,
+    locked: chatLocked,
     canCreate,
     needsText: plotNeedsText,
     text: plotText,
