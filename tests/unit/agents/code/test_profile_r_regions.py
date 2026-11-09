@@ -1,6 +1,8 @@
 """Tests for agents/anyplot/code/profiles/r/regions.py: the ggplot2 conventions as spans."""
 
 import ast
+import re
+from collections import Counter
 
 import pytest
 
@@ -216,24 +218,55 @@ def test_code_with_syntax_problems_is_read_as_far_as_it_parses() -> None:
     assert isinstance(regions, Regions)
 
 
-def test_catalogue_corpus() -> None:
-    """All 325 files: the theme statement, the protected save with the standard target (one after the
-    normaliser's inlining) and `ragg::agg_png`, only the save keywords, 1,322 tokens, markers in 247 files,
-    column constants in 4 (measured on 2026-10-29)."""
-    tokens = with_markers = with_columns = standard = 0
-    for path in R_CATALOGUE_FILES:
-        regions = find_regions(path.read_text(encoding="utf-8"))
-        assert regions.theme is not None, path
-        assert regions.save is not None and regions.save.statement is not None, path
-        assert len(regions.saves) == 1, path
-        assert regions.save.device == "ragg::agg_png", path
-        assert set(regions.save.keywords) <= set(SAVE_KEYWORDS), path
-        standard += regions.save.standard_target
-        tokens += len(regions.theme_tokens)
-        with_markers += regions.data_marker is not None and regions.plot_marker is not None
-        with_columns += bool(regions.columns)
+LITERAL_TOKEN = re.compile(r'^([A-Z][A-Z0-9_]*)\s*<-\s*if \(THEME == "(?:light|dark)"\) "[^"\n]*" else "[^"\n]*"\s*$')
+"""A theme token of the plainest shape, `PAGE_BG <- if (THEME == "light") "#FAF8F1" else "#1A1A17"`."""
+DATA_LINE = re.compile(r"^# Data\b")
+PLOT_LINE = re.compile(r"^# Plot\b")
+COLUMN_LINE = re.compile(r'^([A-Z][A-Z0-9_]*)\s*<-\s*"[^"\n]*"\s*# role: \w+\s*$')
+STANDARD_TARGET_TEXT = re.compile(r'sprintf\(\s*"plot-%s\.png"\s*,\s*THEME\s*\)')
 
-    assert (tokens, with_markers, with_columns, standard) == (1322, 247, 4, 324)
+
+def test_catalogue_corpus() -> None:
+    """The conventions of every ggplot2 file (module docstring), each found where the file's text has it and only
+    there: the theme statement, one protected save with `ragg::agg_png` and only the save keywords, the theme
+    tokens, the markers, the column constants and the standard target. The counts of a day (325 files on
+    2026-10-29: 1,322 tokens, markers in 247 files, column constants in 4, the standard target in 324 before the
+    normaliser inlines logistic-regression's) move with every regeneration, so each detection is held to a plain
+    reading of the text instead."""
+    found: Counter[str] = Counter()
+    for path in R_CATALOGUE_FILES:
+        code = path.read_text(encoding="utf-8")
+        lines = code.splitlines()
+        name = path.parts[-4]
+        regions = find_regions(code)
+        assert regions.theme is not None, name
+        assert regions.save is not None and regions.save.statement is not None, name
+        assert len(regions.saves) == 1, name
+        assert regions.save.device == "ragg::agg_png", name
+        assert set(regions.save.keywords) <= set(SAVE_KEYWORDS), name
+        save = text(code, regions.save.statement)
+        assert regions.save.standard_target == bool(STANDARD_TARGET_TEXT.search(save)), name
+        tokens = {token.name for token in regions.theme_tokens}
+        assert {m.group(1) for line in lines if (m := LITERAL_TOKEN.match(line))} <= tokens, name
+        for token in regions.theme_tokens:
+            statement = text(code, token.span)
+            assert statement.lstrip().startswith(token.name) and "THEME" in statement, (name, token.name)
+        for marker, word, canonical in (
+            (regions.data_marker, "Data", DATA_LINE),
+            (regions.plot_marker, "Plot", PLOT_LINE),
+        ):
+            assert marker is not None or not any(canonical.match(line) for line in lines), (name, word)
+            assert marker is None or re.match(rf"#.*\b{word}\b", lines[marker.line - 1]), (name, word)
+            found[word] += marker is not None
+        assert {m.group(1) for line in lines if (m := COLUMN_LINE.match(line))} <= {c.name for c in regions.columns}
+        for constant in regions.columns:
+            statement = text(code, constant.span)
+            assert f"# role: {constant.role}" in statement and constant.name in statement, (name, constant.name)
+        found["tokens"] += bool(tokens)
+        found["columns"] += bool(regions.columns)
+        found["standard"] += regions.save.standard_target
+
+    assert all(found[kind] for kind in ("tokens", "Data", "Plot", "columns", "standard")), found
 
 
 def test_module_imports_stay_inside_the_core_boundary() -> None:

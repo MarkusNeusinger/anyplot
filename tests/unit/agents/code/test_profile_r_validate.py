@@ -1,9 +1,11 @@
 """Tests for agents/anyplot/code/profiles/r/validate.py: the SECURITY and ADAPTATION profiles for R."""
 
+import re
 from collections import Counter
 
 import pytest
 
+from agents.anyplot.code.profiles.r.coupling import DATASET_PACKAGES
 from agents.anyplot.code.profiles.r.normalise import normalise
 from agents.anyplot.code.profiles.r.validate import LIBRARY_ALLOWLIST, denied, validate_adaptation, validate_security
 from agents.anyplot.code.validate import Finding
@@ -499,25 +501,46 @@ def test_adaptation_allows(line: str) -> None:
     assert validate_adaptation(code, original_palette=PALETTE) == []
 
 
-def test_catalogue_corpus() -> None:
-    """SECURITY over the 325 normalised catalogue files (2026-10-29, after the owner's narrowing of the denied-name
-    rule): 6 files have findings. The 4 map specs that install or load geodata packages
-    (flowmap-origin-destination, heatmap-geographic, map-connection-lines, map-projections; the other 9 map specs
-    pass SECURITY and are blocked by name), qrcode-basic (a URL and the qrcode package) and maze-circular's `<<-`.
-    The 7 flow files that name a column `source` and the 2 dataset-package files pass SECURITY now."""
-    flagged: dict[str, Counter[str]] = {}
-    for path in R_CATALOGUE_FILES:
-        findings = validate_security(normalise(path.read_text(encoding="utf-8")))
-        if findings:
-            flagged[path.parts[-4]] = Counter(finding.rule for finding in findings)
+KNOWN_FINDINGS: dict[str, frozenset[str]] = {
+    "flowmap-origin-destination": frozenset({"banned-import"}),
+    "heatmap-geographic": frozenset({"banned-name"}),
+    "map-connection-lines": frozenset({"banned-name", "url-literal"}),
+    "map-projections": frozenset({"banned-import"}),
+    "maze-circular": frozenset({"banned-statement"}),
+    "qrcode-basic": frozenset({"banned-import", "url-literal"}),
+}
+"""The ggplot2 files the SECURITY profile flags, each for a real reason (6 files on 2026-10-29, after the owner's
+narrowing of the denied-name rule): four map specs install or load geodata packages (`maps`, `requireNamespace`,
+`install.packages`, a download URL), qrcode-basic loads the qrcode package and encodes a URL, and maze-circular
+assigns with `<<-`. A regeneration may take a file off the list (flowmap-origin-destination's of 2026-11-09, #12862,
+dropped `maps`); a file on it for another rule, or one not on it, is a false refusal until shown otherwise. The 7
+flow files that name a column `source` and the 2 dataset-package files pass SECURITY."""
+COMMENT = re.compile(r"(?:^|(?<=\s))#.*$", re.MULTILINE)
+"""A comment, and anything a `#` after a blank starts: dropping too much only weakens the plain reading below."""
+THEME_STATEMENT_LINE = re.compile(r'^THEME\s*<-\s*Sys\.getenv\("ANYPLOT_THEME", "light"\)\s*$', re.MULTILINE)
+"""The theme statement, whose `Sys.getenv` the profile admits there and nowhere else."""
+LIBRARY_CALL = re.compile(r"^\s*(?:library|require)\(\s*[\"']?([A-Za-z][A-Za-z0-9.]*)[\"']?\s*\)", re.MULTILINE)
+SUPER_ASSIGNMENT = re.compile(r"<<-|->>")
+URL_STRING = re.compile(r"[\"'](?:https?|ftp)://")
+CALL_NAME = re.compile(r"(?<![\w.:$@])([A-Za-z][A-Za-z0-9._]*)\s*\(")
 
-    assert sorted(flagged) == [
-        "flowmap-origin-destination",
-        "heatmap-geographic",
-        "map-connection-lines",
-        "map-projections",
-        "maze-circular",
-        "qrcode-basic",
-    ]
-    assert set(flagged["maze-circular"]) == {"banned-statement"}
-    assert set(flagged["qrcode-basic"]) == {"banned-import", "url-literal"}
+
+def test_catalogue_corpus() -> None:
+    """SECURITY over every normalised ggplot2 file: no file is flagged that `KNOWN_FINDINGS` does not name, or for a
+    rule it does not name; and a plain reading of the text decides the rest, so the profile still finds what is
+    there: each `library()` or `require()` of a package outside the allowlist is a `banned-import` finding, each
+    `<<-` or `->>` a `banned-statement`, each URL string a `url-literal`, each call of a denied name a
+    `banned-name`. Regenerations rewrite flagged files, so the test holds these rules, not the list of a day; the
+    refused snippets above keep each rule's reach when no catalogue file needs it any more."""
+    available = LIBRARY_ALLOWLIST | DATASET_PACKAGES
+    for path in R_CATALOGUE_FILES:
+        name = path.parts[-4]
+        normalised = normalise(path.read_text(encoding="utf-8"))
+        findings = Counter(finding.rule for finding in validate_security(normalised))
+        assert set(findings) <= KNOWN_FINDINGS.get(name, frozenset()), (name, findings)
+        code = THEME_STATEMENT_LINE.sub("", COMMENT.sub("", normalised))
+        imports = [package for package in LIBRARY_CALL.findall(code) if package not in available]
+        assert findings["banned-import"] >= len(imports), name
+        assert findings["banned-statement"] >= len(SUPER_ASSIGNMENT.findall(code)), name
+        assert findings["url-literal"] >= len(URL_STRING.findall(code)), name
+        assert findings["banned-name"] >= len([call for call in CALL_NAME.findall(code) if denied(call)]), name

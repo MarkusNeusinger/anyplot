@@ -2,8 +2,11 @@
 
 import json
 import shutil
+from collections import Counter
 from pathlib import Path
 
+from agents.anyplot.code.profiles.r.normalise import normalise as normalise_r
+from agents.anyplot.code.profiles.r.validate import validate_security as validate_r_security
 from agents.evals.eligibility import (
     LIBRARIES,
     implementation_glob,
@@ -13,6 +16,8 @@ from agents.evals.eligibility import (
     security_rule,
     sweep,
 )
+from core.spec_roles import MAP_SPECS
+from core.utils import strip_noqa_comments
 
 
 REPO_PLOTS = Path(__file__).resolve().parents[4] / "plots"
@@ -92,26 +97,39 @@ def test_the_sweep_covers_every_library_with_a_runtime() -> None:
 
 
 def test_the_ggplot2_sweep_over_the_real_catalogue() -> None:
-    """The R runtime over all 325 ggplot2 files (2026-10-29, PR 3b; the owner rule of the same day: a missing marker
-    is `coupled`, never `blocked`): 4 clean, 306 coupled, 15 blocked, which are the 13 map specs, qrcode-basic (the
-    qrcode package and a URL) and maze-circular (`<<-`). Four map specs carry SECURITY findings too."""
-    result = sweep(REPO_PLOTS, ("ggplot2",))
+    """The R runtime over every ggplot2 file (PR 3b, 2026-10-29; the owner rule of the same day: a missing marker
+    is `coupled`, never `blocked`). The counts of a day (325 files on 2026-10-29: 4 clean, 306 coupled, 15 blocked,
+    which were the 13 map specs, qrcode-basic and maze-circular; four map specs carried SECURITY findings too) move
+    with regenerations, so the sweep is held to rules: every file gets a status and none errors, all three statuses
+    occur, a file is blocked exactly when its spec is a map spec or the SECURITY profile flags it, for no other
+    reason, and the counts by category and by rule, the eligible share and the Markdown row follow from those
+    files."""
+    files = sorted(REPO_PLOTS.glob(implementation_glob("ggplot2")))
+    map_specs = {path.parents[2].name for path in files} & MAP_SPECS
+    flagged: dict[str, set[str]] = {}
+    for path in files:
+        code = strip_noqa_comments(path.read_text(encoding="utf-8")) or ""
+        if findings := validate_r_security(normalise_r(code)):
+            flagged[path.parents[2].name] = {finding.rule for finding in findings}
 
+    result = sweep(REPO_PLOTS, ("ggplot2",))
     ggplot2 = result["by_library"]["ggplot2"]
-    assert (ggplot2["files"], ggplot2["eligible"]) == (325, 310)
-    assert ggplot2["statuses"] == {"clean": 4, "coupled": 306, "blocked": 15, "error": 0}
-    assert ggplot2["blocked_by_category"] == {"map-spec": 13, "security": 6}
-    assert ggplot2["security_rules"] == {"banned-import": 3, "banned-name": 2, "banned-statement": 1, "url-literal": 2}
-    security = sorted(item["spec_id"] for item in result["blocked"] if "security" in item["categories"])
-    assert security == [
-        "flowmap-origin-destination",
-        "heatmap-geographic",
-        "map-connection-lines",
-        "map-projections",
-        "maze-circular",
-        "qrcode-basic",
-    ]
-    assert markdown(result, "2026-10-29").splitlines()[4] == "| ggplot2 | 325 | 310 (95.4 %) | 4 | 306 | 15 | 0 |"
+    statuses = ggplot2["statuses"]
+    assert ggplot2["files"] == len(files) == sum(statuses.values())
+    assert statuses["error"] == 0 and all(statuses[status] for status in ("clean", "coupled", "blocked")), statuses
+    assert ggplot2["eligible"] == statuses["clean"] + statuses["coupled"]
+    blocked = {item["spec_id"]: set(item["categories"]) for item in result["blocked"]}
+    assert len(blocked) == statuses["blocked"] and set(blocked) == map_specs | set(flagged)
+    for spec_id, categories in blocked.items():
+        expected = {"map-spec"} if spec_id in map_specs else set()
+        assert categories == expected | ({"security"} if spec_id in flagged else set()), spec_id
+    by_category = {"map-spec": len(map_specs), "security": len(flagged)}
+    assert ggplot2["blocked_by_category"] == {category: n for category, n in by_category.items() if n}
+    assert ggplot2["security_rules"] == dict(sorted(Counter(r for rules in flagged.values() for r in rules).items()))
+    eligible, total = ggplot2["eligible"], ggplot2["files"]
+    row = f"| ggplot2 | {total} | {eligible} ({eligible / total * 100:.1f} %) | {statuses['clean']} | "
+    row += f"{statuses['coupled']} | {statuses['blocked']} | 0 |"
+    assert markdown(result, "2026-11-09").splitlines()[4] == row
 
 
 def test_the_makie_sweep_over_the_real_catalogue() -> None:

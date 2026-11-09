@@ -2,6 +2,7 @@
 screenshot block that goes, and `.format` as an f-string (`agents/anyplot/code/normalise.py`, step 7)."""
 
 import ast
+import re
 
 import pytest
 
@@ -225,20 +226,44 @@ def test_the_figure_mode_draws_every_canvas(library: str) -> None:
     assert canvas.on_target and canvas.pixels is None
 
 
+PLOTLY_THEME_SAVE = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*\.write_image\(\s*f"plot-\{THEME\}\.png"', re.MULTILINE)
+"""A module-level `fig.write_image(f"plot-{THEME}.png", ...)`: the save the plotly step always pins."""
+BOKEH_NAMED_SAVE = re.compile(r"^(?:save|export_png|show)\(\s*[A-Za-z_][A-Za-z0-9_]*\s*[,)]", re.MULTILINE)
+"""A module-level `save(p)`, `export_png(p, ...)` or `show(p)` of a named plot: the save the bokeh step always pins."""
+BROWSER_SCREENSHOT = re.compile(r"\.save_screenshot\(|\.screenshot\(|[\"']Page\.captureScreenshot[\"']")
+"""The catalogue's own export through a browser (Selenium's `driver.save_screenshot(...)`, an element's
+`.screenshot(...)`, or Chrome's `Page.captureScreenshot` through `execute_cdp_cmd`), a valid ending of a bokeh file
+the step leaves alone."""
+FIGURE_SAVE_NOTE = "figure save: "
+
+
 @pytest.mark.parametrize("library", ["plotly", "bokeh"])
 def test_the_normalised_catalogue_ends_on_the_figure_save(library: str) -> None:
-    """Measured on 2026-10-31: 318 of 325 plotly files (7 save a single-theme `"plot.png"`) and 321 of 325 bokeh files
-    (4 save no named plot at module level) end on the pinned save; every file normalises idempotently."""
+    """Every plotly and bokeh catalogue file normalises idempotently and either ends on the pinned figure save or
+    carries the step's note on why it was left alone, and a plain reading of the text decides which files must end
+    on it: every module-level save of the theme PNG (plotly) or of a named plot (bokeh). A bokeh file the step
+    leaves alone still exports its PNG, through a browser screenshot of its own.
+
+    On 2026-10-31, 318 of 325 plotly files ended on the save (the other 7 write a single-theme `"plot.png"`) and 321
+    of 325 bokeh files (4 save no named plot at module level). Regenerations move those counts: on 2026-11-09
+    map-marker-clustered's bokeh file (#12859) became the fifth, since it saves `curdoc()` and screenshots the
+    figure's element. So the test holds the rule, not the count of a day."""
     paths = sorted(REPO_ROOT.glob(f"plots/*/implementations/python/{library}.py"))
+    named_save = PLOTLY_THEME_SAVE if library == "plotly" else BOKEH_NAMED_SAVE
     ending = 0
     for path in paths:
-        result = normalise(path.read_text(encoding="utf-8"), library=library)
-        tree = ast.parse(result)
+        text = path.read_text(encoding="utf-8")
+        name = f"{path.parts[-4]}/{library}"
+        report = normalise_report(text, library=library)
+        tree = ast.parse(report.code)
         saves = figure_saves(tree, library)  # type: ignore[arg-type]
-        if saves:
-            ending += saves[-1][0] is tree.body[-1]
-        assert normalise(result, library=library) == result, path
-    assert len(paths) == 325 and ending == (318 if library == "plotly" else 321)
+        ends = bool(saves) and saves[-1][0] is tree.body[-1]
+        assert normalise(report.code, library=library) == report.code, name
+        assert ends or any(note.startswith(FIGURE_SAVE_NOTE) for note in report.notes), (name, report.notes)
+        assert ends or not named_save.search(text), name
+        assert ends or library == "plotly" or BROWSER_SCREENSHOT.search(text), name
+        ending += ends
+    assert 2 * ending > len(paths), ending  # the pinned save is the rule, a file left alone the exception
 
 
 class TestReadiness:
