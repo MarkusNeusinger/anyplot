@@ -1,127 +1,202 @@
 """ anyplot.ai
 polar-line: Polar Line Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-12
+Library: bokeh 3.10.1 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-09
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource
-from bokeh.plotting import figure, output_file, save
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Range1d
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data: Wind speed pattern over 24 hours (cyclical)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+CYCLE = 24  # hours in one turn of the circle
+SPOKES = 12  # radial grid lines, one every CYCLE / SPOKES hours
+RADIUS_LABEL = "Wind speed (m/s)"  # what the radius measures, shared by every series
+
+# Columns: set these to your table's column names
+HOUR = "Hour of day"  # role: theta
+DAYS = ["12 Mar 2025", "13 Mar 2025"]  # role: radius
+
+# Data: replace this block with your own table, for example df = pd.read_csv("wind.csv")
 np.random.seed(42)
+hours = np.arange(24)
+angle = hours * (2 * np.pi / 24)
+base_pattern = 5 + 3 * np.sin(angle - np.pi / 2) + 2 * np.cos(2 * angle)
+day1 = np.maximum(base_pattern + np.random.normal(0, 0.5, len(hours)), 0.5)
+day2 = np.maximum(base_pattern * 0.8 + np.random.normal(0, 0.4, len(hours)), 0.5)
+df = pd.DataFrame({HOUR: hours, DAYS[0]: day1, DAYS[1]: day2})
 
-# Hours of day (cyclical, 0-24)
-hours = np.linspace(0, 24, 25)
-theta = hours * (2 * np.pi / 24)  # Convert to radians
+# Plot: reads only df and the constants above
+title = "polar-line · python · bokeh · anyplot.ai"
+title_size = f"{max(34, round(50 * (67 / len(title) if len(title) > 67 else 1.0)))}pt"
 
-# Wind speed pattern: lower at night, higher during afternoon
-base_pattern = 5 + 3 * np.sin(theta - np.pi / 2) + 2 * np.cos(2 * theta)
-wind_speed_day1 = base_pattern + np.random.normal(0, 0.5, len(theta))
-wind_speed_day2 = base_pattern * 0.8 + np.random.normal(0, 0.4, len(theta))
+# Radial scale from the data: a 1-2-5 step giving at most six rings
+r_peak = float(df[DAYS].max().max())
+raw_step = r_peak / 6
+magnitude = 10 ** np.floor(np.log10(raw_step))
+step = next(m * magnitude for m in (1, 2, 5, 10) if m * magnitude >= raw_step)
+rings = np.arange(step, r_peak + step * 0.999, step)
+r_outer = rings[-1]
+extent = r_outer * 1.22
 
-# Ensure positive values
-wind_speed_day1 = np.maximum(wind_speed_day1, 0.5)
-wind_speed_day2 = np.maximum(wind_speed_day2, 0.5)
-
-# Close the loop by connecting last point to first
-theta = np.append(theta, theta[0])
-wind_speed_day1 = np.append(wind_speed_day1, wind_speed_day1[0])
-wind_speed_day2 = np.append(wind_speed_day2, wind_speed_day2[0])
-
-# Convert polar to Cartesian for Bokeh (which doesn't have native polar support)
-x1 = wind_speed_day1 * np.cos(theta)
-y1 = wind_speed_day1 * np.sin(theta)
-x2 = wind_speed_day2 * np.cos(theta)
-y2 = wind_speed_day2 * np.sin(theta)
-
-# Create figure (square for polar plot)
 p = figure(
-    width=3600,
-    height=3600,
-    title="polar-line · bokeh · pyplots.ai",
-    x_axis_label="Wind Speed (m/s)",
-    y_axis_label="Wind Speed (m/s)",
-    x_range=(-12, 12),
-    y_range=(-12, 12),
-    tools="",
+    width=2400,
+    height=2400,
+    title=title,
+    x_range=Range1d(-extent, extent),
+    y_range=Range1d(-extent, extent),
+    match_aspect=True,
+    x_axis_type=None,
+    y_axis_type=None,
     toolbar_location=None,
+    min_border_top=110,
+    min_border_bottom=50,
+    min_border_left=50,
+    min_border_right=50,
 )
 
-# Draw concentric circles for radial grid
-for r in [2, 4, 6, 8, 10]:
-    circle_theta = np.linspace(0, 2 * np.pi, 100)
-    cx = r * np.cos(circle_theta)
-    cy = r * np.sin(circle_theta)
-    p.line(cx, cy, line_color="#cccccc", line_width=1.5, line_alpha=0.5)
+# Grid: concentric rings and radial spokes, clockwise from the top like a clock
+circle = np.linspace(0, 2 * np.pi, 361)
+for r in rings:
+    p.line(r * np.sin(circle), r * np.cos(circle), line_color=INK, line_alpha=0.15, line_width=2)
+spoke_angles = np.arange(SPOKES) * (2 * np.pi / SPOKES)
+p.multi_line(
+    xs=[[0, r_outer * np.sin(a)] for a in spoke_angles],
+    ys=[[0, r_outer * np.cos(a)] for a in spoke_angles],
+    line_color=INK,
+    line_alpha=0.15,
+    line_width=2,
+)
 
-# Draw radial lines for angular grid (every 30 degrees = 2 hours)
-for angle in np.linspace(0, 2 * np.pi, 12, endpoint=False):
-    p.line([0, 11 * np.cos(angle)], [0, 11 * np.sin(angle)], line_color="#cccccc", line_width=1.5, line_alpha=0.5)
+# Angle labels just outside the outer ring
+label_r = r_outer * 1.09
+p.text(
+    x=label_r * np.sin(spoke_angles),
+    y=label_r * np.cos(spoke_angles),
+    text=[f"{h:g}h" for h in np.arange(SPOKES) * CYCLE / SPOKES],
+    text_align="center",
+    text_baseline="middle",
+    text_font_size="34pt",
+    text_color=INK_SOFT,
+)
 
-# Add hour labels around the circle
-hour_labels = ["0h", "2h", "4h", "6h", "8h", "10h", "12h", "14h", "16h", "18h", "20h", "22h"]
-label_radius = 11.5
-for i, label in enumerate(hour_labels):
-    angle = i * (2 * np.pi / 12)
-    lx = label_radius * np.cos(angle)
-    ly = label_radius * np.sin(angle)
-    p.text(
-        [lx],
-        [ly],
-        text=[label],
-        text_align="center",
-        text_baseline="middle",
-        text_font_size="18pt",
-        text_color="#444444",
+# Radius labels along the spoke between 0h and the first spoke clockwise
+label_angle = np.pi / SPOKES
+p.text(
+    x=rings * np.sin(label_angle),
+    y=rings * np.cos(label_angle),
+    text=[f"{r:g}" for r in rings],
+    text_align="left",
+    text_baseline="bottom",
+    text_font_size="28pt",
+    text_color=INK_SOFT,
+    x_offset=8,
+)
+p.text(
+    x=[0],
+    y=[-extent * 0.97],
+    text=[f"Radius: {RADIUS_LABEL}"],
+    text_align="center",
+    text_baseline="bottom",
+    text_font_size="34pt",
+    text_color=INK,
+)
+
+# Series: one closed loop per radius column in theta order, markers on the data points
+rows = df.sort_values(HOUR)
+theta = rows[HOUR].to_numpy(dtype=float) * (2 * np.pi / CYCLE)
+for i, series in enumerate(DAYS):
+    radius = rows[series].to_numpy(dtype=float)
+    points = ColumnDataSource(
+        {"x": radius * np.sin(theta), "y": radius * np.cos(theta), "hour": rows[HOUR], "speed": radius}
+    )
+    loop_theta = np.append(theta, theta[0])
+    loop_radius = np.append(radius, radius[0])
+    color = IMPRINT_PALETTE[i]
+    p.line(
+        loop_radius * np.sin(loop_theta),
+        loop_radius * np.cos(loop_theta),
+        line_color=color,
+        line_width=5,
+        line_alpha=0.95,
+        legend_label=str(series),
+    )
+    markers = p.scatter(
+        "x", "y", source=points, size=16, color=color, line_color=PAGE_BG, line_width=2, legend_label=str(series)
+    )
+    p.add_tools(
+        HoverTool(
+            renderers=[markers],
+            tooltips=[("Series", str(series)), (HOUR, "@hour{0.[0]}"), (RADIUS_LABEL, "@speed{0.0}")],
+        )
     )
 
-# Add radius labels
-for r in [2, 4, 6, 8, 10]:
-    p.text([r + 0.3], [0.5], text=[f"{r}"], text_font_size="14pt", text_color="#666666")
-
-# Create data sources
-source1 = ColumnDataSource(data={"x": x1, "y": y1})
-source2 = ColumnDataSource(data={"x": x2, "y": y2})
-
-# Plot the polar lines
-p.line("x", "y", source=source1, line_color="#306998", line_width=4, legend_label="Day 1", line_alpha=0.9)
-p.scatter("x", "y", source=source1, color="#306998", size=12, alpha=0.9)
-
-p.line("x", "y", source=source2, line_color="#FFD43B", line_width=4, legend_label="Day 2", line_alpha=0.9)
-p.scatter("x", "y", source=source2, color="#FFD43B", size=12, alpha=0.9)
-
-# Style the plot
-p.title.text_font_size = "32pt"
+# Style
+p.title.text_font_size = title_size
 p.title.align = "center"
+p.title.text_color = INK
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
 
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-
-# Hide the default axes for cleaner polar appearance
-p.xaxis.visible = False
-p.yaxis.visible = False
-p.xgrid.visible = False
-p.ygrid.visible = False
-
-# Style legend
 p.legend.location = "top_right"
-p.legend.label_text_font_size = "18pt"
-p.legend.background_fill_alpha = 0.8
-p.legend.border_line_color = "#cccccc"
-p.legend.padding = 15
-p.legend.spacing = 10
+p.legend.label_text_font_size = "34pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.background_fill_alpha = 0.9
+p.legend.border_line_color = INK_SOFT
+p.legend.glyph_width = 60
+p.legend.glyph_height = 40
+p.legend.padding = 20
+p.legend.spacing = 12
 
-# Background
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "#ffffff"
-p.outline_line_color = "#dddddd"
-
-# Save PNG and HTML
-export_png(p, filename="plot.png")
-output_file("plot.html", title="polar-line · bokeh · pyplots.ai")
+# Save: interactive HTML, then a headless Chrome screenshot of it
+output_file(f"plot-{THEME}.html", title=title)
 save(p)
+
+W, H = 2400, 2400
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+# Paint the page itself in PAGE_BG so no white shows through the seam around the plot frame
+driver.execute_script(
+    "document.documentElement.style.background = arguments[0];"
+    "document.body.style.background = arguments[0];"
+    "document.body.style.margin = '0';",
+    PAGE_BG,
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
