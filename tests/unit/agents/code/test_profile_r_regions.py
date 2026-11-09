@@ -219,8 +219,7 @@ def test_code_with_syntax_problems_is_read_as_far_as_it_parses() -> None:
 def test_catalogue_corpus() -> None:
     """All 325 files: the theme statement, the protected save with the standard target (one after the
     normaliser's inlining) and `ragg::agg_png`, only the save keywords, 1,322 tokens, markers in 247 files,
-    column constants in 4 (measured on 2026-10-29); 1,323 tokens since #12862 regenerated flowmap-origin-destination
-    (2026-11-09)."""
+    column constants in 4 (measured on 2026-10-29)."""
     tokens = with_markers = with_columns = standard = 0
     for path in R_CATALOGUE_FILES:
         regions = find_regions(path.read_text(encoding="utf-8"))
@@ -234,7 +233,7 @@ def test_catalogue_corpus() -> None:
         with_markers += regions.data_marker is not None and regions.plot_marker is not None
         with_columns += bool(regions.columns)
 
-    assert (tokens, with_markers, with_columns, standard) == (1323, 247, 4, 324)
+    assert (tokens, with_markers, with_columns, standard) == (1322, 247, 4, 324)
 
 
 def test_module_imports_stay_inside_the_core_boundary() -> None:

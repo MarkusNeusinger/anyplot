@@ -227,26 +227,18 @@ def test_the_figure_mode_draws_every_canvas(library: str) -> None:
 
 @pytest.mark.parametrize("library", ["plotly", "bokeh"])
 def test_the_normalised_catalogue_ends_on_the_figure_save(library: str) -> None:
-    """Every file with a named figure save ends on the pinned save, and every file normalises idempotently.
-
-    A rule, not one day's counts: on 2026-10-31, 7 plotly files saved a single-theme `"plot.png"` and 4 bokeh files
-    no named plot at module level; a new bokeh map that screenshots its page through a browser made it 5 on
-    2026-11-09, and the pinned count broke although no file stopped ending on its save. The files without a named save
-    stay a small share, so a `figure_saves` that found none would still fail here."""
+    """Measured on 2026-10-31: 318 of 325 plotly files (7 save a single-theme `"plot.png"`) and 321 of 325 bokeh files
+    (4 save no named plot at module level) end on the pinned save; every file normalises idempotently."""
     paths = sorted(REPO_ROOT.glob(f"plots/*/implementations/python/{library}.py"))
-    without_save: list[str] = []
-    not_ending: list[str] = []
+    ending = 0
     for path in paths:
         result = normalise(path.read_text(encoding="utf-8"), library=library)
         tree = ast.parse(result)
         saves = figure_saves(tree, library)  # type: ignore[arg-type]
-        if not saves:
-            without_save.append(path.parts[-4])
-        elif saves[-1][0] is not tree.body[-1]:
-            not_ending.append(path.parts[-4])
+        if saves:
+            ending += saves[-1][0] is tree.body[-1]
         assert normalise(result, library=library) == result, path
-    assert paths and not_ending == []
-    assert len(without_save) < len(paths) / 10, without_save
+    assert len(paths) == 325 and ending == (318 if library == "plotly" else 321)
 
 
 class TestReadiness:
