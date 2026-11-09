@@ -519,7 +519,7 @@ jobs:
         # block the main regeneration pipeline. Skip cleanly and continue.
         continue-on-error: true
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@6d5ae526d25ce88daa2200be073e1a373167f064  # v1
+        uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe  # v1
         with:
           anthropic_api_key: ${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
           claude_code_oauth_token: ${{ steps.claude_auth.outputs.mode == 'subscription' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
@@ -598,7 +598,7 @@ jobs:
         # rather than aborting the dispatch.
         continue-on-error: true
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@6d5ae526d25ce88daa2200be073e1a373167f064  # v1
+        uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe  # v1
         with:
           anthropic_api_key: ${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
           claude_code_oauth_token: ${{ steps.claude_auth.outputs.mode == 'subscription' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
