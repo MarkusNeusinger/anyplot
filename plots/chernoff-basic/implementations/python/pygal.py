@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
@@ -43,7 +43,7 @@ METRICS = [
 # Data: replace this block with your own table, for example df = pd.read_csv("cars.csv")
 df = pd.DataFrame(
     {
-        CAR: ["Sedan A", "SUV B", "Sports C", "Compact D", "Luxury E"],
+        CAR: ["Aurora Sedan", "Ridgeback SUV", "Vortex GT", "Pebble City", "Regent Luxe"],
         METRICS[0]: [190, 260, 420, 130, 330],
         METRICS[1]: [34, 24, 21, 40, 26],
         METRICS[2]: [4.5, 4.0, 3.5, 4.0, 5.0],
@@ -106,18 +106,20 @@ ET.register_namespace("", svg_ns)
 svg_tree = ET.fromstring(chart.render())
 faces_group = ET.SubElement(svg_tree, f"{{{svg_ns}}}g", {"id": "chernoff-faces"})
 
-# Grid layout: one cell per face, the grid and the feature key centered between title and legend
-side_margin = 200
-key_cols = 3
-key_h = 70 + int(np.ceil(len(mapping) / key_cols)) * 60
+# Grid layout: one cell per face; the free height between title and legend is split into equal gaps
+side_margin = 100
+key_cols = 2
+key_font, key_line = 52, 80
+key_h = key_font * 0.8 + int(np.ceil(len(mapping) / key_cols)) * key_line + 12
 cols = max(min(n_faces, 6), int(np.ceil(np.sqrt(n_faces * 16 / 9))))
 rows = int(np.ceil(n_faces / cols))
 cell_w = (WIDTH - 2 * side_margin) / cols
-label_size = round(min(52, max(24, cell_w * 0.09)))
-content_top, content_bottom = 150, 1620
-face_size = min(cell_w * 0.85 / 0.9, ((content_bottom - content_top - key_h - 120) / rows - label_size * 2) / 1.1)
+label_size = round(min(56, max(24, cell_w * 0.09)))
+content_top, content_bottom = 85, 1705
+face_size = min(cell_w * 0.92 / 0.9, ((content_bottom - content_top - key_h - 240) / rows - label_size * 2) / 1.1)
 row_h = face_size * 1.1 + label_size * 2
-grid_top = content_top + (content_bottom - content_top - rows * row_h - 120 - key_h) / 2
+gap = (content_bottom - content_top - rows * row_h - key_h) / 3
+grid_top = content_top + gap
 line_w = max(2.0, face_size / 60)
 
 for i, (name, feature) in enumerate(zip(names, normalized, strict=True)):
@@ -230,7 +232,7 @@ for i, (name, feature) in enumerate(zip(names, normalized, strict=True)):
     label.text = name
 
 # Feature key: which variable drives which facial feature
-key_top = grid_top + rows * row_h + 120
+key_top = grid_top + rows * row_h + gap + key_font * 0.8
 key_title = ET.SubElement(
     svg_tree,
     f"{{{svg_ns}}}text",
@@ -238,7 +240,7 @@ key_title = ET.SubElement(
         "x": f"{side_margin}",
         "y": f"{key_top}",
         "font-family": "DejaVu Sans, sans-serif",
-        "font-size": "44",
+        "font-size": f"{key_font}",
         "font-weight": "bold",
         "fill": INK,
     },
@@ -250,9 +252,9 @@ for i, (feature_name, metric) in enumerate(mapping):
         f"{{{svg_ns}}}text",
         {
             "x": f"{side_margin + (i % key_cols) * (WIDTH - 2 * side_margin) / key_cols}",
-            "y": f"{key_top + 70 + (i // key_cols) * 60}",
+            "y": f"{key_top + key_line + (i // key_cols) * key_line}",
             "font-family": "DejaVu Sans, sans-serif",
-            "font-size": "40",
+            "font-size": f"{key_font - 4}",
             "fill": INK_SOFT,
         },
     )
