@@ -5,7 +5,7 @@ import re
 import pytest
 
 from agents.anyplot.code.profiles.julia.normalise import measure_canvas, normalise, normalise_report, pixels, plan_scale
-from agents.anyplot.code.treesitter import Source, syntax_problems
+from agents.anyplot.code.treesitter import Source, jl_arguments, jl_callee, syntax_problems, walk
 
 from .conftest import JULIA_CATALOGUE, JULIA_CATALOGUE_FILES, JULIA_CATALOGUE_NORMALISED, source
 
@@ -266,9 +266,20 @@ KNOWN_CHANGES = frozenset(
 """The normaliser's rewrites of a Makie file (module docstring), by their change line without its line numbers."""
 HEADER = re.compile(r"^# anyplot\.ai\b")
 CATALOGUE_TITLE = re.compile(r'"[^"\n]*· anyplot\.ai"')
-RESOLUTION = re.compile(r"\bFigure\([^()]*(?:\([^()]*\)[^()]*)*\bresolution\s*(?:=|[,)])")
-"""`Figure(...; resolution = ...)` or the shorthand `Figure(; resolution)`, the keyword Makie 0.21 deprecated for
-`size`; a call with deeper parentheses is left to the normaliser's own reading, so the check runs one way."""
+FIGURES = frozenset({"Figure", "Makie.Figure", "CairoMakie.Figure"})
+
+
+def resolution_keywords(code: str) -> int:
+    """How many `Figure` calls pass `resolution`, the keyword Makie 0.21 deprecated for `size`, read from the syntax
+    tree, so a nested or multi-line argument list and the shorthand `Figure(; resolution)` count too."""
+    source = Source(code, "julia")
+    return sum(
+        any(argument.name == "resolution" for argument in jl_arguments(source, node))
+        for node in walk(source.root)
+        if node.type == "call_expression" and jl_callee(source, node) in FIGURES
+    )
+
+
 SCRIPT_DIR_SAVE = re.compile(r"^save\(\s*joinpath\(\s*@__DIR__", re.MULTILINE)
 CANVASES = frozenset({(3200, 1800), (2400, 2400)})
 
@@ -297,8 +308,8 @@ def test_catalogue_corpus() -> None:
         assert notes <= {"canvas", "resolution"}, (name, report.notes)
         renamed = "renamed the Figure's deprecated resolution keyword to size" in kinds
         # A Figure that passes size and resolution keeps both, with a note.
-        assert renamed or "resolution" in notes or not RESOLUTION.search(text), name
-        assert "resolution" in notes or not RESOLUTION.search(report.code), name
+        assert renamed or "resolution" in notes or not resolution_keywords(text), name
+        assert "resolution" in notes or not resolution_keywords(report.code), name
         moved = 'saved "plot-$(THEME).png" in the working directory instead of next to the script' in kinds
         assert moved or not SCRIPT_DIR_SAVE.search(text), name
         assert not SCRIPT_DIR_SAVE.search(report.code), name

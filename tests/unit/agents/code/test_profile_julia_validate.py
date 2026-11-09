@@ -436,7 +436,20 @@ another rule, or one not on it, is a false refusal until shown otherwise."""
 COMMENT = re.compile(r"(?:^|(?<=\s))#.*$", re.MULTILINE)
 """A comment, and anything a `#` after a blank starts: dropping too much only weakens the plain reading below."""
 STRING = re.compile(r'"(?:[^"\\\n]|\\.)*"')
-PACKAGE_LOAD = re.compile(r"^\s*(?:using|import)\s+([A-Za-z]\w*)", re.MULTILINE)
+PACKAGE_LOAD = re.compile(r"^\s*(?:using|import)\s+([^\n:]+)", re.MULTILINE)
+"""A `using` or `import` statement up to its `:` (`using A, B`, `using Statistics: mean`): the packages it loads."""
+
+
+def loaded_packages(text: str) -> list[str]:
+    """Every package a `using` or `import` of `text` names, each by its root (`CairoMakie.Cairo` is CairoMakie)."""
+    return [
+        part.strip().split(".")[0].split()[0]
+        for statement in PACKAGE_LOAD.findall(text)
+        for part in statement.split(",")
+        if part.strip()
+    ]
+
+
 URL_TEXT = re.compile(
     r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S|(?:^|[\s\"'(=,])/{2,}[a-z0-9_\[%]"
 )
@@ -459,7 +472,7 @@ def test_catalogue_corpus() -> None:
         findings = Counter(finding.rule for finding in validate_security(normalised))
         assert set(findings) <= KNOWN_FINDINGS.get(name, frozenset()), (name, findings)
         text = COMMENT.sub("", normalised)
-        loads = [package for package in PACKAGE_LOAD.findall(text) if package not in available]
+        loads = [package for package in loaded_packages(text) if package not in available]
         assert findings["banned-import"] >= len(loads), name
         urls = [literal for literal in STRING.findall(text) if URL_TEXT.search(literal[1:-1])]
         assert findings["url-literal"] >= len(urls), name

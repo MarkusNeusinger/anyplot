@@ -180,12 +180,23 @@ def layout_in_text(text: str) -> bool | None:
     return False if not ANY_DATA_MARKER.search(text) else None
 
 
+def blocking_categories(spec: str, normalised: str) -> set[str]:
+    """The reason categories `scan` must block `spec` for, from the three sources: the map-spec list, the SECURITY
+    profile and the structure check (whose syntax reason, when there is one, stands alone beside the map spec)."""
+    expected = {"map-spec"} if spec in MAP_SPECS else set()
+    structure = [reason.split(":", 1)[0] for reason in structure_reasons(normalised)]
+    if structure[:1] == ["syntax"]:
+        return expected | {"syntax"}
+    return expected | ({"security"} if validate_security(normalised) else set()) | set(structure)
+
+
 def test_catalogue_corpus() -> None:
     """Every normalised ggplot2 file is classified, and each class keeps its meaning while the catalogue changes
     (owner rule of 2026-10-29: a missing marker never blocks). The counts of a day (325 files on 2026-10-29: 4
     clean, 306 coupled, 15 blocked; hints data-block 306, synthetic-data 279, limits 134, ...) move with every
     regeneration, so the test holds rules: a file is blocked exactly when its spec is a map spec, the SECURITY
-    profile flags it or its structure fails; a clean file has no reason; a coupled file has no blocking reason and
+    profile flags it or its structure fails, for exactly those reasons (`blocking_categories`); a clean file has no
+    reason; a coupled file has no blocking reason and
     one hint per reason but the `canvas:` one, which appears exactly where the normaliser could not put the canvas
     on target, and the `data-block` hint exactly when its layout is incomplete, which a plain reading of the text
     confirms where it can; all three classes occur, and so do the `COMMON_HINTS`."""
@@ -197,10 +208,11 @@ def test_catalogue_corpus() -> None:
         readiness = scan(normalised, spec_id=spec, enabled_libraries=ENABLED)
         categories = [reason.split(":", 1)[0] for reason in readiness.reasons]
         statuses[readiness.status] += 1
-        must_block = spec in MAP_SPECS or bool(validate_security(normalised)) or bool(structure_reasons(normalised))
-        assert (readiness.status == "blocked") == must_block, (spec, readiness.reasons)
+        expected = blocking_categories(spec, normalised)
+        assert (readiness.status == "blocked") == bool(expected), (spec, readiness.reasons)
         assert all(len(hint) <= MAX_REASON_CHARS for hint in readiness.hints), spec
         if readiness.status == "blocked":
+            assert set(categories) == expected, (spec, readiness.reasons)
             continue
         assert not set(categories) & BLOCKING, (spec, readiness.reasons)
         assert len(readiness.hints) == len([category for category in categories if category != "canvas"]), spec
