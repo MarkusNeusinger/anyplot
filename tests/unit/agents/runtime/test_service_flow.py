@@ -69,6 +69,7 @@ from agents.anyplot.session_state import (
     BINDINGS,
     LANGUAGE,
     LANGUAGE_SOURCE,
+    LAST_RUN,
     PENDING_REQUEST,
     PLOT_LANGUAGE,
     SUMMARY_PENDING,
@@ -4937,8 +4938,10 @@ async def test_a_title_asked_for_before_the_confirmation_reaches_the_first_plot(
 ) -> None:
     """Live round 9 of 2026-10-16: the user asked for a title before `.confirm()`, the root said it had noted
     it, and the plot `.create_plot()` drew had another title. The root keeps such a request through
-    `plot_pipeline` (`not_ready`, `request_kept`), and the bare `.create_plot()` after the confirmation
-    hands it to the adapter, with the title as an expected text."""
+    `plot_pipeline`, and the bare `.create_plot()` after the confirmation hands it to the adapter, with the title
+    as an expected text. The typed title after the paste is the paste's summary turn, so ToolSafety refuses the
+    call before the run (`summary_turn`) and keeps the request as the run's own `not_ready` would: no `plot`
+    event, `request_kept` for the root, the `not_ready` run in the last run."""
     script = default_script()
     script["root"] = [
         {
@@ -4961,9 +4964,9 @@ async def test_a_title_asked_for_before_the_confirmation_reaches_the_first_plot(
         json={"text": "Setz den Titel auf „Umsatz QX7 nach Filiale und Quartal“"},
     )
 
-    blocked = next(data for name, data in parse_sse(asked.text) if name == "plot")
-    assert (blocked["status"], blocked["reason"]) == ("not_ready", "data_unconfirmed")
-    assert "request_kept" not in blocked  # a root-only fact, never on the page's event
+    events = parse_sse(asked.text)
+    assert not any(name == "plot" for name, _ in events)  # refused before the run: the page sees no plot card
+    assert events[-1][1]["data_confirmed"] is False
     responses = [
         part.function_response.response
         for request in requests_of(fake, "root")
@@ -4972,6 +4975,8 @@ async def test_a_title_asked_for_before_the_confirmation_reaches_the_first_plot(
         if part.function_response is not None and part.function_response.name == "plot_pipeline"
     ]
     assert responses and responses[-1]["request_kept"] is True
+    assert (responses[-1]["code"], responses[-1]["reason"]) == ("summary_turn", "data_unconfirmed")
+    assert (await _session_state(client, sid))[LAST_RUN]["status"] == "not_ready"
 
     confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
     assert confirmed.status_code == 200, confirmed.text

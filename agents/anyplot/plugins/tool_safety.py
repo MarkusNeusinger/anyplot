@@ -14,11 +14,19 @@
   fenced as `errors`, like the tools' own refusals, so the model can fix the one
   field that was wrong); no link (a scheme such as
   `https://` or `data:image`, or `www.`) or file path in any string argument, as link
-  hygiene; at most one `plot_pipeline` call per invocation (the "one repair round"
-  bound) and at most `MAX_DATA_CODE_CALLS` (2) `run_data_code` calls, whose `code`
+  hygiene; then the turn's caps (`TURN_CAPS`, counted from the turn's allowed calls, so a refused
+  call never counts): one `plot_pipeline` call per turn (the "one repair round" bound),
+  two `prepare_data`, two `generate_data`, three `query_data` and `MAX_DATA_CODE_CALLS` (2)
+  `run_data_code` calls, each refusal with a fixed `message` (`CAP_MESSAGE`). `run_data_code`'s `code`
   (at most `MAX_DATA_CODE_CHARS`, a `source_language` of a fixed set) is exempt from the
   link rule, because the DATA validator bans URL literals and every file reader itself
   and a division (`x / 2`) reads as a path to the rule.
+  The pipeline's bounds (`pipeline_bound`, which the Budget plugin reads too, so it counts no daily run for them):
+  its one call, a switch asked for in the turn (`switch_requested`), a call after the turn's own data change
+  (`data_changed_this_turn`), and one on the summary turn of a paste while the data is unconfirmed (`summary_turn`).
+  Those two stop before the run, as its own `not_ready` would (`pipeline.stop_not_ready`: the first plot's request
+  kept, the `pipeline_run` line, the last run), and answer with a fixed `message`, the run's `reason` and
+  `request_kept`; the page gets no `plot` event.
   Personal data in a `change_request` (a name, an address, an e-mail address, a phone
   number, a web address without a scheme or `www.` such as `jana-novak.de`) passes:
   whether plot text is an advertisement or a message to other people is the scope
@@ -52,12 +60,14 @@
   plugin notes a pipeline run it refuses before this plugin sees it, refused by `budget`. Closed names and codes only,
   never an argument or a result: the `done` event's `turn` reads it, and the feedback case bundle is to carry it.
 
-Every refusal is `{"status": "error", "code": <enum>}`. The plugin never raises.
+Every refusal is `{"status": "error", "code": <enum>}`, a cap's and a stop's before the run with a `message`. The plugin
+never raises.
 """
 
 import json
 import logging
 import re
+from dataclasses import dataclass
 from typing import Any, Literal
 
 from google.adk.plugins.base_plugin import BasePlugin
@@ -71,8 +81,11 @@ from ..data.prepare import PrepareArgs, validation_lines
 from ..data.query import QueryArgs
 from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS, LanguageTarget
 from ..memory import ForgetArgs
+from ..pipeline import load_inputs, run_args, stop_not_ready
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, PipelineArgs, PlotResult, SwitchArgs
+from ..services import get_services
+from ..session_state import read_session
 from .ledger import TOOL_ALLOWED, CallOutcome, RequestLedger, argument_hash, attribution, ledger_for
 
 
@@ -93,7 +106,51 @@ something is refused there until it is listed: the click confirmed what the pane
 (the data, the bindings, the language, the plot memory and the library)."""
 PLOT_ACTION_REFUSAL = "plot_as_confirmed"
 MAX_DATA_CODE_CALLS = 2
-"""`run_data_code` calls per invocation: the first, and one retry after the validator's findings."""
+"""`run_data_code` calls per turn (`TURN_CAPS`): the first, and one retry after the validator's findings."""
+
+
+@dataclass(frozen=True, slots=True)
+class TurnCap:
+    """How many calls of a tool one turn may make (`calls`), and the code of the refusal after them."""
+
+    calls: int
+    code: str
+
+
+TURN_CAPS: dict[str, TurnCap] = {
+    PREPARE_TOOL: TurnCap(2, "too_many_prepare_calls"),
+    GENERATE_TOOL: TurnCap(2, "too_many_generate_calls"),
+    QUERY_TOOL: TurnCap(3, "too_many_query_calls"),
+    DATA_CODE_TOOL: TurnCap(MAX_DATA_CODE_CALLS, "too_many_data_runs"),
+    PIPELINE_TOOL: TurnCap(1, "one_pipeline_per_turn"),
+}
+"""The per-turn caps, each counted from the turn's allowed calls (`RequestLedger.calls_of`), so a refused call never
+counts: a data call and one retry after its error, a third question about the data, and one plot run, the "one repair
+round" bound. The tools without a cap here are bounded by the turn's model calls."""
+CAP_MESSAGE = (
+    "This turn has used up its {tool} calls ({calls} per turn), so this call did not run. Answer with what the turn's "
+    "results hold, and say plainly what could not be done."
+)
+"""The message of every cap refusal: fixed text and the server's own tool name, never a word of the user's."""
+CAP_CODES = frozenset(cap.code for cap in TURN_CAPS.values())
+DATA_CHANGED = "data_changed_this_turn"
+SUMMARY_TURN = "summary_turn"
+STOP_MESSAGES: dict[str, str] = {
+    DATA_CHANGED: (
+        "No plot was made: this turn changed the data, and a plot waits until the user has checked the new version. "
+        "Reply with the data change and its counts. When `reason` is `incomplete_bindings`, name the roles that still "
+        "need a column; when `request_kept` is true, add that the plot request is kept for the next plot."
+    ),
+    SUMMARY_TURN: (
+        "No plot was made: this turn summarizes data the user has not confirmed yet, and a plot waits for the user's "
+        "check. Reply with the summary. When `reason` is `incomplete_bindings`, name the roles that still need a "
+        "column; when `request_kept` is true, say in a few words that the wish is kept for the first plot."
+    ),
+}
+"""The two refusals of `plot_pipeline` before the run (`pipeline_bound`), whose result also says what the run would
+have found (`reason`, the `NotReadyReason`) and whether the call's first-plot request was kept (`request_kept`)."""
+DATA_CHANGE_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
+"""The root's tools that store a new data version: after one in a turn, a plot waits for the user's check."""
 MAX_DATA_CODE_CHARS = 6_000
 """`run_data_code`'s `code`: a chat message holds at most 2,000 characters, and a translation from
 JavaScript, R or a formula into Python with imports and a `df` can be about three times longer."""
@@ -241,8 +298,8 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     GENERATE_TOOL: _DATA_VERSION_KEYS,
     DATA_CODE_TOOL: _DATA_VERSION_KEYS,
     # Every PlotResult field, so a field added to the schema (as `version` was) can never turn a
-    # shipped plot into `invalid_result` for the root, plus the tool-error shape.
-    PIPELINE_TOOL: frozenset(PlotResult.model_fields) | frozenset({"code", "result", "error"}),
+    # shipped plot into `invalid_result` for the root, plus the tool-error shape and the turn bounds' `message`.
+    PIPELINE_TOOL: frozenset(PlotResult.model_fields) | frozenset({"code", "message", "result", "error"}),
 }
 
 
@@ -268,9 +325,9 @@ def call_key(tool_context: ToolContext, name: str) -> str:
 def call_outcome(tool_name: str, result: Any) -> CallOutcome:
     """What a root tool's own answer says it did (`ledger.CallOutcome`), read before ToolSafety checks or fences it.
 
-    A writer's `ok` is a stored change, as `empty_reply.stored_change` reads it: the data, the bindings, a language,
-    the plot memory, or a switch the page carries out. A reader's `ok` changes nothing, and so does a
-    `keep_plot_request` that kept nothing. `plot_pipeline` answers with its `PlotResult`.
+    A writer's `ok` is a stored change, which `empty_reply.stored_in_turn` reads from the record: the data, the
+    bindings, a language, the plot memory, or a switch the page carries out. A reader's `ok` changes nothing, and so
+    does a `keep_plot_request` that kept nothing. `plot_pipeline` answers with its `PlotResult`.
     """
     if not isinstance(result, dict):
         return "error"
@@ -302,6 +359,82 @@ def call_outcome(tool_name: str, result: Any) -> CallOutcome:
 
 def tool_error(code: ErrorCode) -> dict[str, Any]:
     return {"status": "error", "code": code}
+
+
+def capped(ledger: RequestLedger, name: str) -> ErrorCode | None:
+    """The cap refusal of a call of `name` when the turn has made all the calls its cap allows (`TURN_CAPS`)."""
+    cap = TURN_CAPS.get(name)
+    return cap.code if cap is not None and ledger.calls_of(name) >= cap.calls else None
+
+
+def changed_data(ledger: RequestLedger) -> bool:
+    """Whether the turn stored a new data version before this call (`prepare_data`, a rebuild from `from_version`
+    without an operation among them, `generate_data`, `run_data_code`), as the record of its calls says: an allowed
+    call whose own answer was a stored change, or one still under way, which a plot in the same model answer would
+    race. A call that failed changed nothing."""
+    return any(
+        call.tool in DATA_CHANGE_TOOLS and call.verdict == TOOL_ALLOWED and call.outcome in ("changed", "unfinished")
+        for call in ledger.tool_calls
+    )
+
+
+def data_confirmed(tool_context: ToolContext) -> bool:
+    """Whether the user confirmed the data and the bindings in force (`SessionView.data_confirmed`)."""
+    view = read_session(tool_context.state)
+    return view is not None and view.data_confirmed
+
+
+def pipeline_bound(ledger: RequestLedger, tool_context: ToolContext) -> ErrorCode | None:
+    """The turn's bound on a `plot_pipeline` call, or None; ToolSafety refuses the call with it, and Budget counts no
+    daily run for it.
+
+    In order: the turn's one run (`one_pipeline_per_turn`), a switch the page carries out after the turn, which plots
+    there (`switch_requested`), the turn's own data change (`data_changed_this_turn`), and the summary turn of a paste
+    while the data is unconfirmed (`summary_turn`). The last two stop before the run with what a run would have found
+    (`refuse_before_run`). A data change needs no look at the confirmation: a stored version is never confirmed in
+    its turn, and one still under way leaves the old version confirmed until it stores the new one, which a run in the
+    same model answer would race. A summary turn on confirmed data still plots (a summary turn again after a failed
+    one, whose plot click had confirmed the data)."""
+    code = capped(ledger, PIPELINE_TOOL)
+    if code is not None:
+        return code
+    if ledger.switch_request is not None:
+        # The page switches after this turn and plots there: a run here would be thrown away.
+        return "switch_requested"
+    if changed_data(ledger):
+        return DATA_CHANGED
+    if ledger.summary_turn and not data_confirmed(tool_context):
+        return SUMMARY_TURN
+    return None
+
+
+def turn_bound(ledger: RequestLedger, name: str, tool_context: ToolContext) -> ErrorCode | None:
+    """The refusal of a call the turn's caps and bounds stop, or None: checked once, after the arguments' verdict."""
+    if name == PIPELINE_TOOL:
+        return pipeline_bound(ledger, tool_context)
+    if name == SWITCH_TOOL and ledger.calls_of(PIPELINE_TOOL) >= 1:
+        # The turn already ran a plot in this library; the user asks again (Flash review, 2026-11-02).
+        return "plot_already_run"
+    return capped(ledger, name)
+
+
+def refuse_before_run(
+    ledger: RequestLedger, tool_context: ToolContext, arguments: dict[str, Any], code: ErrorCode
+) -> dict[str, Any]:
+    """The refusal of a `plot_pipeline` call that `pipeline_bound` stops before the run (`STOP_MESSAGES`).
+
+    It leaves what the run's own `not_ready` would (`pipeline.stop_not_ready`): the first plot's request kept, the
+    `pipeline_run` line, the last run. The result says what the run would have found (`reason`) and whether it kept
+    the request (`request_kept`), as a `not_ready` result does; the page gets no `plot` event."""
+    args = run_args(ledger, PipelineArgs.model_validate(arguments))
+    view, _, reason = load_inputs(tool_context, get_services())
+    # `load_inputs` finds no reason only on confirmed data: here a data change still under way, whose new version the
+    # user has not confirmed yet.
+    result = stop_not_ready(tool_context, ledger, args, view, reason or "data_unconfirmed")
+    refusal: dict[str, Any] = {**tool_error(code), "message": STOP_MESSAGES[code], "reason": result.reason}
+    if result.request_kept:
+        refusal["request_kept"] = True
+    return refusal
 
 
 def result_limit(tool_name: str) -> int:
@@ -435,34 +568,22 @@ class ToolSafetyPlugin(BasePlugin):
             if verdict != "tool_not_allowed" and ledger.plot_action and tool.name not in PLOT_ACTION_TOOLS:
                 # Before the arguments' verdict: a fixed call would be refused all the same, so the root never retries.
                 verdict = PLOT_ACTION_REFUSAL
-            if verdict is None and tool.name == PIPELINE_TOOL:
-                if ledger.pipeline_calls >= 1:
-                    verdict = "one_pipeline_per_turn"
-                elif ledger.switch_request is not None:
-                    # The page switches after this turn and plots there: a run here would be thrown away.
-                    verdict = "switch_requested"
-                else:
-                    ledger.pipeline_calls += 1
-            if verdict is None and tool.name == SWITCH_TOOL and ledger.pipeline_calls >= 1:
-                # The turn already ran a plot in this library; the user asks again (Flash review, 2026-11-02).
-                verdict = "plot_already_run"
-            if verdict is None and tool.name == DATA_CODE_TOOL:
-                if ledger.data_code_calls >= MAX_DATA_CODE_CALLS:
-                    verdict = "too_many_data_runs"
-                else:
-                    ledger.data_code_calls += 1
+            if verdict is None:
+                # After the arguments' verdict: the caps and the turn's bounds, all counted from the allowed calls.
+                verdict = turn_bound(ledger, tool.name, tool_context)
+            refusal = None if verdict is None else self.refusal(ledger, tool_context, tool.name, tool_args, verdict)
             attribution(
                 "tool", ledger, agent=agent, tool=tool.name, args=argument_hash(tool_args), verdict=verdict or "allowed"
             )
             if agent == ROOT_AGENT:
-                self._open(ledger, tool_context, tool.name, verdict or TOOL_ALLOWED)
-            if verdict is None:
-                # The usage telemetry's `tools` (`telemetry.TOOL_NAMES` keeps only the root's known tools).
+                # A refusal before the run that kept the first plot's request did that much (`CallOutcome` `kept`).
+                kept = refusal is not None and refusal.get("request_kept") is True
+                self._open(ledger, tool_context, tool.name, verdict or TOOL_ALLOWED, "kept" if kept else "refused")
+            if refusal is None:
+                # The usage telemetry's `tools` (`telemetry.TOOL_NAMES` keeps only the root's known tools), and the one
+                # count of the turn's caps (`RequestLedger.calls_of`).
                 ledger.tools.append(tool.name)
                 return None
-            refusal = tool_error(verdict)
-            if verdict == "invalid_arguments" and tool.name in ARGUMENT_ERROR_TOOLS:
-                refusal["errors"] = argument_errors(tool.name, tool_args)
             return refusal
         except Exception as exc:
             logger.warning("tool check failed: %s", type(exc).__name__)
@@ -472,8 +593,8 @@ class ToolSafetyPlugin(BasePlugin):
     def check(name: str, arguments: dict[str, Any], agent: str) -> ErrorCode | None:
         """The refusal code for a call, or None: allowlist, arguments, no URL or path (also used by Budget).
 
-        The bounds of the turn (a plot button's `PLOT_ACTION_TOOLS`, the per-turn pipeline and data-run counts) are
-        `before_tool_callback`'s: a call this passes can still be refused there."""
+        The bounds of the turn (a plot button's `PLOT_ACTION_TOOLS`, the per-turn caps and the pipeline's bounds,
+        `turn_bound`) are `before_tool_callback`'s: a call this passes can still be refused there."""
         if name not in ALLOWED_TOOLS.get(agent, frozenset()):
             return "tool_not_allowed"
         try:
@@ -485,10 +606,27 @@ class ToolSafetyPlugin(BasePlugin):
         return None
 
     @staticmethod
-    def _open(ledger: RequestLedger, tool_context: ToolContext, name: str, verdict: str) -> None:
+    def refusal(
+        ledger: RequestLedger, tool_context: ToolContext, name: str, arguments: dict[str, Any], code: ErrorCode
+    ) -> dict[str, Any]:
+        """The answer to a refused call: the code, with the message of a cap or of a stop before the run, or the
+        validation lines of a data tool's arguments."""
+        if code in STOP_MESSAGES:
+            return refuse_before_run(ledger, tool_context, arguments, code)
+        refusal = tool_error(code)
+        if code in CAP_CODES:
+            refusal["message"] = CAP_MESSAGE.format(tool=name, calls=TURN_CAPS[name].calls)
+        elif code == "invalid_arguments" and name in ARGUMENT_ERROR_TOOLS:
+            refusal["errors"] = argument_errors(name, arguments)
+        return refusal
+
+    @staticmethod
+    def _open(
+        ledger: RequestLedger, tool_context: ToolContext, name: str, verdict: str, refused: CallOutcome = "refused"
+    ) -> None:
         """Note the root's call in the turn's record (`RequestLedger.tool_calls`); a failure here never refuses it."""
         try:
-            ledger.open_call(call_key(tool_context, name), recorded_name(name), verdict)
+            ledger.open_call(call_key(tool_context, name), recorded_name(name), verdict, refused=refused)
         except Exception as exc:
             logger.warning("tool call record failed: %s", type(exc).__name__)
 
