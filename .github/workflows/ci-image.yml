@@ -342,8 +342,9 @@ jobs:
           # What can change how this container boots or what it serves: the
           # Dockerfile, the three nginx files, the build inputs, and what the
           # build context can see. Not app/src — the gate is upstream of every
-          # line of it.
-          APP_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(app/(Dockerfile|nginx\.conf|security-headers\.conf|origin-gate\.conf\.template|package\.json|yarn\.lock|vite\.config\.ts|index\.html|\.dockerignore)$|\.github/workflows/ci-image\.yml$)' || true)
+          # line of it. Also the browser smoke this job runs, so a change to
+          # that script is exercised before it merges.
+          APP_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(app/(Dockerfile|nginx\.conf|security-headers\.conf|origin-gate\.conf\.template|package\.json|yarn\.lock|vite\.config\.ts|index\.html|\.dockerignore)$|scripts/site-smoke\.mjs$|\.github/workflows/ci-image\.yml$)' || true)
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
             echo "Manual trigger with force_run=true, will build the app image"

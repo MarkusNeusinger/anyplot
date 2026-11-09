@@ -588,26 +588,26 @@ The edge can be stricter than this file and answers blocked agents with `HTTP
 `robots.txt` that the dashboard still blocks is a published lie**. Keep the two
 in step.
 
-Measured on the live zone 2026-08-18 (zone `anyplot.ai` → **AI Crawl Control** →
-Security):
-
-The dashboard was brought in line with the open policy on 2026-08-18. State
-after that change:
+The dashboard (zone `anyplot.ai` → **AI Crawl Control** → Security) was
+brought in line with the open policy on 2026-08-18. On 2026-11-09 its block
+rule was first narrowed to the two ByteDance crawlers and then deleted, when
+the owner decided that every crawler is welcome. State after that change:
 
 | State | Agents |
 |---|---|
-| Blocked at the edge | `Bytespider`, `TikTok Spider`, `Anchor Browser`, `Novellum AI Crawl`, `Timpibot` |
-| Passing | everything else, including `GPTBot`, `CCBot`, `Amazonbot`, `meta-externalagent`, `Google-CloudVertexBot`, `PetalBot`, `FacebookBot`, `Arquivo Web Crawler`, and every retrieval agent |
+| Blocked at the edge | none; blocking returns only on evidence from the request logs |
+| Passing | everyone, including `Bytespider`, `TikTok Spider`, `Anchor Browser`, `Novellum AI Crawl`, and `Timpibot`, which were blocked until 2026-11-09 |
 
-`Bytespider` and `TikTok Spider` are both ByteDance; the first is documented as
-ignoring robots.txt, and the second shares its operator. The remaining three are
-blocked for a weaker reason — no vendor documentation of their crawling
-behaviour could be found, so their rule-compliance is unverified rather than
-disproven. Revisit if that changes.
+The `Bytespider` group in `robots.txt`, which the edge no longer enforces, goes
+in #12868. The zone's other security
+rules, and the principle that no rule hard-blocks traffic that could be a
+human, are in
+[`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#security-rules-pro-since-2026-11-09).
 
 Cloudflare is **not** prepending a managed robots.txt block: the live file is
-byte-identical to this repo's, and enforcement is purely the 403. That was
-different at the 2026-07-25 measurement, so re-check rather than assume.
+byte-identical to this repo's, and since 2026-11-09 the edge blocks no crawler.
+That was different at the 2026-07-25 measurement, so re-check rather than
+assume.
 
 `bot-serving-check` deliberately tests the Cloud Run origin, not the edge, so it
 will never catch a dashboard change. Edge drift has to be checked by hand.
@@ -616,7 +616,7 @@ Verify afterwards:
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; GPTBot/1.4; +https://openai.com/gptbot)" https://anyplot.ai/   # expect 200 once unblocked
-curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; Bytespider)" https://anyplot.ai/                              # expect 403
+curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; Bytespider)" https://anyplot.ai/                              # expect 200: no edge block since 2026-11-09
 curl -sA "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)" https://anyplot.ai/scatter-basic | grep -o '<title>[^<]*</title>'   # per-route title, not the SPA shell
 ```
 
