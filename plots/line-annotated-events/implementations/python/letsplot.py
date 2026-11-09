@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-annotated-events: Annotated Line Plot with Event Markers
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
@@ -55,7 +55,7 @@ trend = np.linspace(1000, 5000, 365)
 seasonality = 300 * np.sin(np.arange(365) * 2 * np.pi / 30)
 noise = np.random.normal(0, 150, 365)
 daily_users = trend + seasonality + noise
-launches = {45: "Feature A", 120: "Feature B", 200: "Mobile App", 280: "API v2.0", 330: "Partners"}
+launches = {45: "Dark Mode", 120: "Team Workspaces", 200: "Mobile App", 280: "API v2.0", 330: "Partners"}
 step_sizes = {45: 400, 120: 600, 200: 800, 280: 500, 330: 300}
 for day, step in step_sizes.items():
     daily_users[day:] += step
