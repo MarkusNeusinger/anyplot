@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 surface-basic: Basic 3D Surface Plot
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
@@ -26,12 +26,12 @@ imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", [IMPRINT_PALETTE[
 plt.rcParams.update({"grid.color": to_rgba(INK, 0.15), "grid.linewidth": 0.6})
 
 # Columns: set these to your table's column names
-X = "X Axis"  # role: x
-Y = "Y Axis"  # role: y
-Z = "Amplitude"  # role: z
+X = "Distance East (m)"  # role: x
+Y = "Distance North (m)"  # role: y
+Z = "Wave Height (m)"  # role: z
 
 # Data: replace this block with your own table, for example df = pd.read_csv("grid.csv")
-# Damped radial ripple on a 40 × 40 grid, one row per grid point
+# Damped radial ripple on a pond surface, 40 × 40 grid, one row per grid point
 grid_x, grid_y = np.meshgrid(np.linspace(-4, 4, 40), np.linspace(-4, 4, 40))
 radius_sq = grid_x**2 + grid_y**2
 df = pd.DataFrame(
@@ -45,10 +45,11 @@ ZZ = table.to_numpy(dtype=float)
 
 fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax = fig.add_subplot(111, projection="3d", facecolor=PAGE_BG)
-fig.subplots_adjust(left=0.0, right=0.92, bottom=0.04, top=0.92)
+fig.subplots_adjust(left=-0.12, right=0.98, bottom=0.02, top=0.94)
 
 surf = ax.plot_surface(XX, YY, ZZ, cmap=imprint_seq, linewidth=0, antialiased=False)
 ax.view_init(elev=30, azim=45)
+ax.set_box_aspect((1.5, 1.5, 0.75), zoom=1.08)
 
 # Style
 title = "surface-basic · python · matplotlib · anyplot.ai"
@@ -64,7 +65,7 @@ for axis in (ax.xaxis, ax.yaxis, ax.zaxis):
     axis.pane.set_edgecolor(INK_SOFT)
     axis.line.set_color(INK_SOFT)
 
-cbar = fig.colorbar(surf, ax=ax, shrink=0.6, aspect=14, pad=0.06)
+cbar = fig.colorbar(surf, ax=ax, shrink=0.6, aspect=14, pad=0.07)
 cbar.set_label(Z, fontsize=10, color=INK)
 cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
