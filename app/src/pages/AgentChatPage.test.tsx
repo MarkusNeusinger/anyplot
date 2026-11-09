@@ -3854,6 +3854,67 @@ describe('AgentChatPage attachment', () => {
       expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
     });
 
+    it.each([
+      ['a short CSV', TABLE],
+      [
+        'a 5 KB CSV',
+        [
+          'hours,score',
+          ...Array.from({ length: 400 }, (_, i) => `${i + 1}.5,${50 + (i % 40)}`),
+        ].join('\n'),
+      ],
+      [
+        'cells copied from a spreadsheet',
+        ['hours\tscore', '1.5\t52', '2.0\t58', '3.0\t61'].join('\r\n'),
+      ],
+    ])('makes %s, the first paste of a fresh session, one click from its plot', async (_, text) => {
+      cleanSummary();
+      await openChat();
+      // The paste is the page's first action: no turn ran, nothing is stored.
+      const create = screen.getByRole('button', { name: 'Create plot' });
+      expect(create).toHaveAttribute('aria-disabled', 'true');
+      expect(confirmAndTurns()).toEqual([]);
+      pasteText(text);
+      expect(chip()).toBeInTheDocument();
+      expect(message()).toHaveValue('');
+      // Active at once, as Enter would send it now: a long paste counts by the dataset's limits.
+      expect(create).not.toHaveAttribute('aria-disabled');
+      expect(step()).toHaveTextContent(
+        'step 1 of 2 · .create_plot() reads the attached table and plots it · Enter ↵ only reads it'
+      );
+      fireEvent.click(create);
+      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+      await turnEnded();
+      expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot']);
+      expect(datasetPosts()).toHaveLength(1);
+      expect(JSON.parse(String((datasetPosts()[0][1] as RequestInit).body)).text).toBe(text);
+    });
+
+    it('reads a pasted table with all pressed, then plots it in every library', async () => {
+      cleanSummary();
+      await openChat();
+      await toggleAll();
+      const plotAll = screen.getByRole('button', { name: 'Plot in all libraries' });
+      expect(plotAll).toHaveAttribute('aria-disabled', 'true');
+      pasteText(TABLE);
+      // Enter would read it: the button reads it too, and plots it where `all` says.
+      expect(plotAll).not.toHaveAttribute('aria-disabled');
+      expect(step()).toHaveTextContent(
+        'step 1 of 2 · .plot_all() reads the attached table and plots it · Enter ↵ only reads it'
+      );
+      fireEvent.click(plotAll, { detail: 1 });
+      const panel = await screen.findByRole('region', { name: 'All libraries' });
+      expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm']);
+      expect(datasetPosts()).toHaveLength(1);
+      expect(
+        within(panel)
+          .getAllByRole('article')
+          .map(card => card.getAttribute('aria-label'))
+      ).toEqual(['matplotlib', 'seaborn']);
+      // A pointer click moves no focus.
+      expect(panel).not.toHaveFocus();
+    });
+
     it('says that it reads while the reading runs, and plots after it', async () => {
       cleanSummary();
       await openChat();

@@ -225,6 +225,7 @@ import {
   type ChainStep,
   chainStep,
   type ChainStop,
+  plotClick,
   sameStopMark,
   type StopMark,
   stopMark,
@@ -582,8 +583,9 @@ function AgentChat({
   const chainPage = useRef<{
     state: AgentSessionState;
     plotAll: boolean;
+    fanOut: boolean;
     attachment: boolean;
-    plot: () => void;
+    plot: (keyboard: boolean) => void;
   } | null>(null);
   // The chain waits for the next commit while the session settles: every commit lets it read on.
   const commitWaiters = useRef<(() => void)[]>([]);
@@ -699,7 +701,7 @@ function AgentChat({
   const step2 = inStep2(state);
   // A plot button may start on stored data once every required role is bound and nothing is in
   // flight: on unconfirmed data its click confirms the data as shown first (`startPlot`). Data
-  // waiting in the box goes first instead (`sendsFirst`), never the data before it.
+  // waiting in the box goes first instead (`plotClick`), never the data before it.
   const canCreate =
     state.phase === 'ready' &&
     !!state.dataset &&
@@ -735,8 +737,8 @@ function AgentChat({
   const exampleActive =
     state.phase === 'ready' && !state.dataset && !state.transcription && !attachment && !busy;
   // What the box holds that the plot button sends before it plots (`plotChain.ts`): an
-  // attachment, or a table typed into the box. Not with the admin's fan-out, whose `.plot_all()`
-  // copies data already stored.
+  // attachment, or a table typed into the box. With the admin's `all` pressed too: the click
+  // reads it, and the fan-out copies it once it is stored and reads clean.
   const boxSends = useMemo(() => boxData(attachment, draft), [attachment, draft]);
   // New data in the box, or on its way after the click: the button names the plot it makes.
   const boxHoldsData = !!attachment || boxSends === 'typed' || chainView?.kind === 'reading';
@@ -744,15 +746,6 @@ function AgentChat({
   // own step-1 line and the thread name it by.
   const plotKind = plotButtonKind(state, plotAll, boxHoldsData);
   const plotAction = plotAll ? '.plot_all()' : plotButtonLabel(state, boxHoldsData);
-  // One click sends the box's data as Enter would, then plots once the reading comes back clean
-  // (owner decision of 2026-11-08), whenever nothing runs.
-  const sendsFirst =
-    boxSends !== null &&
-    plotKind !== 'all' &&
-    state.phase === 'ready' &&
-    !!state.sessionId &&
-    !busy &&
-    !fanOut;
   // `.update_plot() →` on confirmed data whose plot is current sends the box's text, a change of
   // the latest version: with an empty box there is nothing to update. On data or bindings
   // changed since, and with a switch's offer, it plots with an empty box too.
@@ -761,12 +754,19 @@ function AgentChat({
   // the switch's offer, else "plot the new data" (`plot_new_data`), else the catalogue plot.
   const plotStart = carry ? 'carry' : plotKind === 'new_data' ? 'new_data' : 'create';
   const plotText = draft.trim();
-  // Text over the cap is never cut and never goes, also not as a plot's request.
-  const plotActive =
-    plotKind === 'all'
-      ? canCreate && !fanOut
-      : sendsFirst ||
-        (canCreate && plotText.length <= MAX_MESSAGE_CHARS && (!plotNeedsText || plotText !== ''));
+  // What one click does now, the one rule for the button's state and its click (`plotClick`):
+  // data in the box goes first as Enter sends it, then plots once the reading comes back clean
+  // (owner decision of 2026-11-08), whenever Enter would send it; null while the button is inert.
+  const click = plotClick({
+    kind: plotKind,
+    box: boxSends,
+    open: state.phase === 'ready' && !!state.sessionId,
+    busy,
+    fanOut: !!fanOut,
+    canCreate,
+    needsText: plotNeedsText,
+    text: plotText,
+  });
   // The click starts from the catalogue plot although the library has one: data or bindings
   // changed since, or new data in the box, so the plot is made anew, with the remembered decisions.
   const plotFresh = hasPlot && (!step2 || boxHoldsData) && plotKind !== 'all';
@@ -775,12 +775,13 @@ function AgentChat({
   // column, a run), what to check, or what the click does.
   const status = statusLine(state, {
     action: plotAction,
-    // With data, the line says the attachment replaces it; it names the plot button that takes
-    // it along, unless only Enter sends it.
+    // With data, the line says the attachment replaces it; it names the plot button that reads
+    // and plots it, unless the button can only read it: with `all` while the fan-out's panel is
+    // open, or while the chip cannot go at all.
     attachmentLine: attachment
       ? attachmentWaitLine(
           state.dataset ? state.dataset.parsed.profile.rows : null,
-          boxSends === 'attachment' && plotKind !== 'all' ? plotAction : null
+          boxSends === 'attachment' && !(plotAll && fanOut) ? plotAction : null
         )
       : null,
     readingLine: chainView?.kind === 'reading' ? CHAIN_READING_TEXT : null,
@@ -958,7 +959,7 @@ function AgentChat({
    * the user's next step ended (`cancelChain`), or a newer one, does nothing more; the page never
    * restores a chain, so a reload or a closed tab ends it with the session.
    */
-  const plotChain = async (sent: Attachment, ownNote?: string) => {
+  const plotChain = async (sent: Attachment, ownNote: string | undefined, keyboard: boolean) => {
     chainSeq.current += 1;
     const id = chainSeq.current;
     chainRef.current = id;
@@ -992,7 +993,7 @@ function AgentChat({
         chainRef.current = null;
         if (step.kind === 'plot' && page) {
           setChainView(null);
-          page.plot();
+          page.plot(keyboard);
         } else if (step.kind === 'stop' && step.stop && page) {
           setChainView({ kind: 'stopped', stop: step.stop, mark: stopMark(page.state) });
         } else {
@@ -1010,16 +1011,19 @@ function AgentChat({
     }
   };
 
-  /** The plot button with data in the box: the attachment, or the table typed there, goes first. */
-  const sendAndPlot = () => {
+  /**
+   * The plot button with data in the box: the attachment, or the table typed there, goes first.
+   * `keyboard`: the click came from a key, so a fan-out's panel takes the focus when it opens.
+   */
+  const sendAndPlot = (keyboard: boolean) => {
     if (attachment) {
-      void plotChain(attachment);
+      void plotChain(attachment, undefined, keyboard);
       return;
     }
     const typed = attach.attachTyped(draft.trim());
     if (!typed) return;
     setDraft('');
-    void plotChain(typed, '');
+    void plotChain(typed, '', keyboard);
   };
 
   /**
@@ -1057,15 +1061,6 @@ function AgentChat({
       void (kind === 'new_data' ? session.plotNewData(label) : session.createPlot(label));
     }
   };
-  // The one click's chain reads the page from here after its awaits: its plot is this render's
-  // click on the plot button with an empty box, the switch's offer when there is one.
-  chainPage.current = {
-    state,
-    plotAll,
-    attachment: !!attachment,
-    plot: () => void startPlot(plotStart, false, plotButtonLabel(state)),
-  };
-
   /**
    * A library picked in the menu. While the fan-out is on, any pick turns it
    * off: the library in use only that; another library switches as it would
@@ -1116,12 +1111,12 @@ function AgentChat({
    * library of the header at once; the server copies this session's confirmed version into each
    * library's session, so data that is not confirmed yet is confirmed first, as for
    * `.create_plot()`, and a refusal opens no panel. The upload and the bindings go along only
-   * for a server without the copy.
+   * for a server without the copy. `keyboard`: a key pressed the button, so the panel takes the
+   * focus when it opens.
    */
-  const handlePlotAll = async (event: React.MouseEvent) => {
+  const startPlotAll = async (keyboard: boolean) => {
     const sourceSession = state.sessionId;
     if (!canCreate || !sourceSession) return;
-    const keyboard = event.detail === 0;
     if (!state.dataConfirmed && !(await session.confirmData())) return;
     const upload = state.dataset?.upload;
     fanOutFocus.current = keyboard;
@@ -1131,6 +1126,17 @@ function AgentChat({
       bindings: state.bindings,
       libraries: [...libraries],
     });
+  };
+  // The one click's chain reads the page from here after its awaits: its plot is this render's
+  // click on the plot button with an empty box, the switch's offer when there is one, and with
+  // `all` pressed the fan-out.
+  chainPage.current = {
+    state,
+    plotAll,
+    fanOut: !!fanOut,
+    attachment: !!attachment,
+    plot: keyboard =>
+      void (plotAll ? startPlotAll(keyboard) : startPlot(plotStart, false, plotButtonLabel(state))),
   };
 
   /**
@@ -1143,28 +1149,22 @@ function AgentChat({
   };
 
   /**
-   * The plot button. `.plot_all()` opens the fan-out; with data in the box the click reads it and
-   * plots it once it reads clean (`sendAndPlot`); `.update_plot() →` on a current plot sends the
-   * box's text as Enter does; every other click plots, with the box's text as the request: the
-   * switch's offer with the remembered decisions when there is one (`carry_plot`), else `plot the
-   * new data` (`plot_new_data`) after a data change or a paste, else the catalogue plot. The
-   * thread names the turn as the button read.
+   * The plot button, as `plotClick` decided for this render: with data in the box the click reads
+   * it and plots it once it reads clean (`sendAndPlot`), with `all` pressed in the fan-out;
+   * `.plot_all()` opens the fan-out; `.update_plot() →` on a current plot sends the box's text as
+   * Enter does; every other click plots, with the box's text as the request: the switch's offer
+   * with the remembered decisions when there is one (`carry_plot`), else `plot the new data`
+   * (`plot_new_data`) after a data change or a paste, else the catalogue plot. The thread names
+   * the turn as the button read.
    */
   const handlePlot = (event: React.MouseEvent) => {
     cancelChain();
-    if (plotKind === 'all') {
-      void handlePlotAll(event);
-      return;
-    }
-    if (sendsFirst) {
-      sendAndPlot();
-      return;
-    }
-    if (plotNeedsText) {
-      handleSend();
-      return;
-    }
-    void startPlot(plotStart, true, plotButtonLabel(state));
+    // A key press clicks with no pointer: `detail` counts no clicks then.
+    const keyboard = event.detail === 0;
+    if (click === 'send_first') sendAndPlot(keyboard);
+    else if (click === 'plot_all') void startPlotAll(keyboard);
+    else if (click === 'send_text') handleSend();
+    else if (click === 'plot') void startPlot(plotStart, true, plotButtonLabel(state));
   };
 
   /**
@@ -1524,7 +1524,7 @@ function AgentChat({
                   chatLocked={chatLocked}
                   plot={{
                     kind: plotKind,
-                    active: plotActive,
+                    active: click !== null,
                     confirming: state.confirmBusy,
                     fresh: plotFresh,
                   }}

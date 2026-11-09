@@ -3,7 +3,9 @@
  * 2026-11-08): a file opened with `.open()` or dropped on the chat, a table pasted into the box,
  * or a table typed there. The click sends it as Enter would, with the box's text as its note,
  * and once the server's reading comes back clean the page goes on by itself as a click on the
- * plot button would on that data: the step-1 confirmation, then the plot. Enter still only sends.
+ * plot button would on that data: the step-1 confirmation, then the plot, or with the admin's
+ * `all` pressed the fan-out (`.plot_all()`). Enter still only sends. The button is active
+ * whenever Enter would send that data (`plotClick`): data in the box never waits for Enter alone.
  *
  * Clean means: the data is stored, the reading's turn ended with its `done`, every required role
  * has a column, the server refused no binding, the data card shows no warning (the parser's, a
@@ -23,7 +25,11 @@ import {
 import { isPlotAction, longSuggestion, MAX_MESSAGE_CHARS, tableChoice } from 'src/lib/agent';
 import { bindingHint } from 'src/sections/agent-chat/bindings';
 import { routeInput } from 'src/sections/agent-chat/routeInput';
+import type { PlotButtonKind } from 'src/sections/agent-chat/steps';
 import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
+
+/** What waits in the message box as data: an attachment, or a table typed into the box. */
+export type BoxData = 'attachment' | 'typed' | null;
 
 /**
  * What the message box holds that the plot button sends before it plots: the attachment, once it
@@ -31,16 +37,56 @@ import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
  * which Enter would send as data too (`attachTyped`). `null` for nothing to send first. The box's
  * text goes with an attachment as its note, and like any message it never goes over the cap.
  */
-export function boxData(
-  attachment: Attachment | null,
-  draft: string
-): 'attachment' | 'typed' | null {
+export function boxData(attachment: Attachment | null, draft: string): BoxData {
   const text = draft.trim();
   if (text.length > MAX_MESSAGE_CHARS) return null;
   if (attachment) {
     return attachment.status === 'ready' || attachment.status === 'failed' ? 'attachment' : null;
   }
   return text && routeInput(text) === 'data' ? 'typed' : null;
+}
+
+/**
+ * What one click on the plot button does now, the one rule behind the button's state and its
+ * click (`AgentChatPage.tsx`): `send_first` reads the box's data as Enter sends it and plots once
+ * it reads clean (`chainStep`), `plot_all` opens the admin's fan-out, `send_text` sends the box's
+ * text as Enter does (`.update_plot() →` on a current plot), `plot` plots the data as the card
+ * shows it with the box's text as the request. `null`: the button is inert.
+ */
+export type PlotClick = 'send_first' | 'plot_all' | 'send_text' | 'plot';
+
+/** What the page knows when the plot button renders. */
+export interface PlotClickPage {
+  /** The button as it reads (`plotButtonKind`). */
+  kind: PlotButtonKind;
+  /** The data waiting in the box (`boxData`). */
+  box: BoxData;
+  /** The session is open: its phase is `ready` and its id is known. */
+  open: boolean;
+  /** Something runs (`sessionBusy`). */
+  busy: boolean;
+  /** The admin's fan-out panel is open. */
+  fanOut: boolean;
+  /**
+   * Stored data with every required role bound, no table read from text waiting, no attachment
+   * in the box, nothing running: what a plot starts from.
+   */
+  canCreate: boolean;
+  /** `.update_plot() →` on a current plot, which takes the box's text. */
+  needsText: boolean;
+  /** The box's text, trimmed. */
+  text: string;
+}
+
+export function plotClick(page: PlotClickPage): PlotClick | null {
+  // Data in the box goes first, whenever Enter would send it (`handleSend`): also while `all` is
+  // pressed and while the fan-out's panel is open, where Enter reads it too.
+  if (page.box !== null) return page.open && !page.busy ? 'send_first' : null;
+  if (page.kind === 'all') return page.canCreate && !page.fanOut ? 'plot_all' : null;
+  // Text over the cap is never cut and never goes, also not as a plot's request.
+  if (!page.canCreate || page.text.length > MAX_MESSAGE_CHARS) return null;
+  if (page.needsText) return page.text !== '' ? 'send_text' : null;
+  return 'plot';
 }
 
 /** Why the one click stopped at the data card: what the status line asks the user to look at. */
@@ -72,9 +118,13 @@ export interface ChainRead {
   rechecked: boolean;
 }
 
-/** What the page adds: the admin's fan-out is on, or another attachment waits in the box. */
+/**
+ * What the page adds: the admin's `all` is pressed, so the plot is the fan-out; the fan-out's
+ * panel is open; another attachment waits in the box.
+ */
 export interface ChainPage {
   plotAll: boolean;
+  fanOut: boolean;
   attachment: boolean;
 }
 
@@ -151,8 +201,10 @@ export function chainStep(state: AgentSessionState, read: ChainRead, page: Chain
   if (since.some(item => item.kind === 'error' || item.kind === 'plot_failed')) {
     return stopFor({ reason: 'error' });
   }
-  // The fan-out's `.plot_all()` is a click of its own; a new attachment is the user's next step.
-  if (page.plotAll || page.attachment || !state.dataset || state.transcription) return END;
+  // A new attachment is the user's next step. With `all` pressed the plot is the fan-out, which
+  // never opens over a panel still open: that one closes first.
+  if (page.attachment || !state.dataset || state.transcription) return END;
+  if (page.plotAll && page.fanOut) return END;
   if (state.bindingsError) return stopFor({ reason: 'bindings_failed' });
   if (!state.bindingsComplete || state.missingRoles.length > 0) return END;
   const parsed = state.dataset.parsed;
