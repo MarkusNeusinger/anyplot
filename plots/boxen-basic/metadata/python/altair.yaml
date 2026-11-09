@@ -2,129 +2,138 @@ library: altair
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:09:18Z'
-updated: '2026-05-17T09:10:40Z'
-generated_by: claude-haiku
-workflow_run: 25986356663
+updated: '2026-11-09T00:55:37Z'
+generated_by: claude-opus-5-5
+adopted_from: 671573dfa41f9e5747d3222d7dd509e8c3f3d2d3 (671573dfa41f9e5747d3222d7dd509e8c3f3d2d3)
+workflow_run: 42541890177
 issue: 3414
-language_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-dark.html
-quality_score: 79
+quality_score: 86
 review:
   strengths:
-  - Correct letter-value plot type with complete feature coverage (nested boxes, quantile
-    levels, outliers, median lines)
-  - Realistic neutral data scenario (server response times) clearly demonstrates all
-    visualization features
-  - Strong visual rendering in both themes with proper text legibility, contrast,
-    and balanced layout
-  - Deterministic reproducible code with explicit seed and clean linear structure
-  - Proper specification compliance (title format, data mapping, axis labels with
-    units)
+  - Letter values are computed correctly with Tukey's depth rule (floor(log2 n) -
+    3 gives 8 levels for about 2000 observations), every box edge at quantile 0.5^(k+1)
+    / 1 - 0.5^(k+1), and the outliers are exactly the observations beyond the deepest
+    box
+  - 'Idiomatic Vega-Lite construction: mark_bar with y/y2 for the box spans, a size
+    channel with scale=None for the shrinking widths, and an ordinal color scale whose
+    domain keeps the levels in depth order in the legend'
+  - Log value axis with hand-picked 1-2-5 ticks makes the right-skewed response times
+    readable without squashing every box under the slowest outlier
+  - Legend entries name each level by its letter value and the share of the data inside
+    it (Fourths (50%) ... 1/512 (99.6%)), which explains the quantile levels as the
+    spec asks
+  - Thin page-colored strokes separate the nested boxes in both themes, and the median
+    tick flips between INK tokens so it reads on light and dark
+  - Tooltips on boxes, medians and outliers give exact bounds in the HTML view
   weaknesses:
-  - 'CQ-05 CRITICAL: Saves to plot.png instead of plot-{THEME}.png — must add THEME
-    environment variable reading and use dynamic filenames'
-  - 'VQ-07: Code hardcodes #306998 (Python blue, not Okabe-Ito brand #009E73) and
-    #FFD43B without theme adaptation — implement theme-adaptive tokens (INK, INK_SOFT,
-    BRAND=#009E73)'
-  - 'Missing theme configuration: Code lacks Altair library guide''s theme-adaptive
-    chrome pattern (background, text colors, grid colors)'
-  - 'DE-01/DE-03: Generic styling without visual hierarchy or design emphasis — could
-    refine spines, add color emphasis, or highlight comparison insights'
-  - 'Library usage: Manual quantile calculation loop could leverage Altair transforms
-    or aggregates for more idiomatic implementation'
+  - 'VQ-07 (both): the letter-value colors leave the imprint_seq ramp: each step is
+    tinted up to 70 % toward white, so the deep levels end in pale lavender-greys
+    (about #C8D0E4) that are custom hex values rather than steps between #009E73 and
+    #4467A3, while the first three levels (Fourths, Eighths, Sixteenths) stay nearly
+    the same green in the legend → use discrete steps of imprint_seq itself, spaced
+    so that neighbouring levels differ visibly. Likely cause: the `steps = hues +
+    (255 - hues) * 0.7 * position**1.6` tint in the color block.'
+  - 'Suggestion: the legend box is much taller than its eight entries need relative
+    to the empty band below it; aligning its top with the plot''s top edge already
+    works, so a slightly larger symbol or label size could balance it against the
+    axis titles.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 range) — correct light theme surface
-      Chrome: Title "boxen-basic · altair · pyplots.ai" in dark text at top, centered and readable. X-axis labeled "Endpoint" with four category labels (API Gateway, Auth Service, Cache, Database) rotated and clear. Y-axis labeled "Response Time (ms)" with numeric ticks (0, 50, 100... 1,300) all readable in dark text. Grid lines subtle and visible.
-      Data: Nested rectangles in teal/greenish color (#009E73, Okabe-Ito position 1) with opacity decreasing across quantile levels (nested boxes narrow with depth). Yellow/gold tick marks at medians. Small circle outliers scattered above boxes.
-      Legibility verdict: PASS — All text clearly readable against light background
+      Background: warm off-white #FAF8F1, consistent across plot area and padding.
+      Chrome: bold dark title "boxen-basic · python · altair · anyplot.ai" centered over the plot; y-axis "Response Time (ms), log scale" with 1-2-5 log ticks (2 … 1,000); x-axis "Endpoint" with API Gateway, Database, Auth Service, Cache; subtle grey horizontal grid; legend "Letter value (share inside)" on an elevated off-white card at the right. All text dark and readable.
+      Data: four letter-value stacks of nested boxes, widest green #009E73 Fourths box around a dark median tick, each deeper level narrower and shifted from green through teal to pale blue/lavender; thin page-colored strokes separate the boxes; open grey circles mark the outliers beyond the deepest box at both tails. First level is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17 range) — correct dark theme surface
-      Chrome: Title in light text at top, readable. X-axis labels in light text, clear. Y-axis labels in light text, readable. Grid subtle but visible. No dark-on-dark failures (all text is light-colored).
-      Data: Nested boxes maintain identical teal color (#009E73) — proper theme adaptation confirmed, only chrome flips. Yellow median marks visible. Outlier points visible.
-      Legibility verdict: PASS — All text clearly readable against dark background; data colors identical to light render
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, grid subtle light grey, legend card #242420 with light labels — no dark-on-dark text anywhere.
+      Data: box colors identical to the light render; median ticks flip to a light tone, outlier circles light grey; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set; all text readable in both renders; relies
-          on defaults for theme colors
+        comment: Explicit font sizes; title, ticks, axis titles and legend readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; labels well-spaced; rotated axis labels clear
+        comment: No text collisions; overlapping outlier circles in the tails are
+          permitted and stay distinguishable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nested boxes clearly visible; outliers and medians distinguishable;
-          opacity gradient shows quantile depth
+        comment: Boxes, median ticks and outlier circles clearly visible; legend swatches
+          match the boxes in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito position 1 (#009E73) is CVD-safe; excellent contrast in
-          both themes
+        comment: Green-to-blue lightness ramp, no red-green reliance; levels also
+          separated by width
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas; balanced margins; nothing cut off
+        comment: 3200x1800, balanced layout, nothing cut off, title width well proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units ('Response Time (ms)'); title format correct
+        comment: '''Response Time (ms), log scale'' and ''Endpoint'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Images show correct colors (#009E73) and theme adaptation; code
-          hardcodes #306998 (non-Okabe-Ito) and #FFD43B without theme tokens — partial
-          compliance'
+        comment: Ordered levels use a ramp tinted toward white beyond imprint_seq,
+          and the first three levels are near-identical (defect line); backgrounds
+          correct
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured defaults; professional appearance; no distinctive
-          design choices
+        comment: Legend labels carrying letter value plus share inside, 1-2-5 log
+          ticks chosen for the skewed data
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Subtle grid and minimal spines; adequate whitespace; some refinement
-          visible
+        comment: Page-colored strokes separating nested boxes, x ticks and x grid
+          removed, median tick slightly overhanging the widest box
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed without visual hierarchy or emphasis; no focal point
-          highlighting comparison
+        comment: Log scale chosen so tail shape and skew across endpoints are comparable
+          at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -134,26 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct letter-value/boxen plot type with all subtypes
+        comment: Letter-value plot with only boxes, median, outliers and level legend
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nested boxes, decreasing widths, outliers, median lines — all present
+        comment: Nested boxes, decreasing widths, shaded levels, outliers as points,
+          axis labels and level legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: Box edges at their quantiles, outliers at their values, full range
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct (boxen-basic · altair · anyplot.ai); no legend
-          needed
+        comment: Correct mandated title; legend entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -163,21 +173,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows ALL boxen features (quantile levels, outliers, varied distributions)
+        comment: 8 levels per category, unequal tails, outliers on both sides, different
+          distribution shapes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world neutral scenario (server response times by endpoint)
+        comment: Server response times by endpoint, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response time values plausible; proportions realistic
+        comment: 'Checked: depth rule floor(log2 n)-3 = 8 for n about 2000, quantile
+          bounds 0.5^(k+1), share labels 1-0.5^k (50 %, 75 %, ... 99.6 %); millisecond
+          values plausible'
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -185,58 +198,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Readable but hardcodes colors; no fake functionality
+        passed: true
+        comment: Quantiles via pandas, appropriate complexity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Saves plot.png instead of plot-{THEME}.png'
+        passed: true
+        comment: Saves plot-{THEME}.png and .html, current Altair 6 API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Correct Altair API; manual quantile calculations work but not idiomatic
+        comment: Layered charts, y/y2 spans, size channel with scale=None, ordinal
+          color domain ordering the legend
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Basic layer composition; no distinctive Altair features (transforms,
-          aggregates)
+        comment: Vega-Lite tooltips on all three layers for the HTML view
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-09T00:52:44Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
-  dataprep: []
+  dataprep:
+  - groupby-aggregation
   styling:
-  - alpha-blending
+  - custom-colormap
+  - edge-highlighting
+  - minimal-chrome
