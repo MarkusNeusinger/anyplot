@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-clustered: Clustered Heatmap
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 88/100 | Updated: 2026-11-09
@@ -94,7 +94,8 @@ mapper = LinearColorMapper(palette=IMPRINT_DIV256, low=-limit, high=limit, nan_c
 # Layout on a 2400 × 2400 canvas: title band, column dendrogram band, then row dendrogram + heatmap
 TITLE_H, DENDRO = 140, 340
 HEAT_W, HEAT_H = 2400 - DENDRO, 2400 - TITLE_H - DENDRO
-BORDER_LEFT, BORDER_RIGHT, BORDER_TOP, BORDER_BOTTOM = 20, 560, 10, 240
+# The left border leaves room for the first rotated sample label, which Bokeh otherwise shifts inward
+BORDER_LEFT, BORDER_RIGHT, BORDER_TOP, BORDER_BOTTOM = 80, 560, 10, 240
 
 x_range = Range1d(-0.5, n_cols - 0.5)
 y_range = Range1d(-0.5, n_rows - 0.5)
@@ -147,6 +148,8 @@ for axis in (heatmap.xaxis, heatmap.yaxis):
     axis.axis_line_color = None
     axis.major_tick_line_color = None
     axis.minor_tick_line_color = None
+# Rotated sample labels need a smaller size than the gene labels to keep a gap between neighbours
+heatmap.xaxis.major_label_text_font_size = "30pt"
 heatmap.grid.grid_line_color = None
 heatmap.outline_line_color = None
 heatmap.background_fill_color = PAGE_BG
