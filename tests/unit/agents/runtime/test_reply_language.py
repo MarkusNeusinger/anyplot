@@ -15,7 +15,7 @@ from agents.anyplot.plugins import reply_language as plugin_module
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger
 from agents.anyplot.plugins.reply_language import REASK_LINE, ReplyLanguagePlugin, reply_text
 from agents.anyplot.services import Services
-from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE
+from agents.anyplot.session_state import LANGUAGE, LANGUAGE_OFFERED, LANGUAGE_SOURCE
 
 
 # Replies of the kind the root writes, one per language: a data summary with column names in backticks.
@@ -157,7 +157,7 @@ def response(text: str) -> LlmResponse:
     return LlmResponse(content=types.Content(role="model", parts=[types.Part(text=text)]))
 
 
-def german_session(source: str = "pasted") -> FakeContext:
+def german_session(source: str = "offer") -> FakeContext:
     return FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: source}))
 
 
@@ -205,7 +205,7 @@ class TestPlugin:
         [
             (german_session(), response(REPLIES["de"])),  # the right language
             (german_session(), response("Fertig.")),  # unsure
-            (german_session("default"), response(REPLIES["en"])),  # the default is no signal
+            (FakeContext(session=FakeSession(state={})), response(REPLIES["en"])),  # English, the default
             (
                 FakeContext(session=FakeSession(state={LANGUAGE: "Swedish", LANGUAGE_SOURCE: "chosen"})),
                 response(REPLIES["en"]),
@@ -235,6 +235,36 @@ class TestPlugin:
 
         assert await run(context, reply) is None
         assert model.requests == []
+
+    async def test_a_german_reply_in_an_english_session_is_asked_again(
+        self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The default English holds like any language: a German message only makes the page offer German, so a
+        German reply to it is asked again in English, until the user picks German."""
+        model = FakeModel([REPLIES["en"]])
+        monkeypatch.setattr(plugin_module, "root_model", lambda: model)
+        offered = FakeContext(session=FakeSession(state={LANGUAGE_OFFERED: ["de"]}))
+
+        result = await run(offered, response(REPLIES["de"]))
+
+        assert result is not None and reply_text(result) == REPLIES["en"]
+        (asked,) = model.requests
+        assert asked.contents[-1].parts[0].text == REASK_LINE.format(name="English")
+
+    @pytest.mark.parametrize("offered", [[], ["fr"]])
+    async def test_in_an_english_session_only_an_offered_language_is_asked_again(
+        self, offered: list[str], ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A sure guess of a language nobody wrote to the chat is the detector's, not the root's: no paid re-ask."""
+        model = FakeModel([REPLIES["en"]])
+        monkeypatch.setattr(plugin_module, "root_model", lambda: model)
+        lines: list[dict[str, Any]] = []
+        monkeypatch.setattr(plugin_module, "attribution", lambda hook, ledger, **fields: lines.append(fields))
+
+        context = FakeContext(session=FakeSession(state={LANGUAGE_OFFERED: offered}))
+        assert await run(context, response(REPLIES["de"])) is None
+
+        assert model.requests == [] and [line["verdict"] for line in lines] == ["not_offered"]
 
     async def test_log_only_when_reask_is_off(
         self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch

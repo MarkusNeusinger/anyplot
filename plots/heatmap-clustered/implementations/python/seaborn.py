@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-clustered: Clustered Heatmap
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 96/100 | Updated: 2026-05-09
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 88/100 | Updated: 2026-11-09
 """
 
 import os
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Patch
 
 
@@ -20,49 +21,14 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data: Gene expression matrix (simulated)
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Create realistic gene expression data with natural clusters
-n_genes = 30
-n_samples = 20
+# Imprint diverging cmap for z-scores; the annotation strips skip its two end hues
+DIV_LOW, DIV_HIGH = "#4467A3", "#AE3030"
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", [DIV_LOW, PAGE_BG, DIV_HIGH])
+ANNOTATION_COLORS = [c for c in IMPRINT_PALETTE if c not in (DIV_LOW, DIV_HIGH)]
 
-# Gene groups (3 clusters)
-gene_groups = np.repeat(["Immune", "Metabolic", "Signaling"], [10, 10, 10])
-
-# Sample groups (2 conditions)
-sample_groups = np.repeat(["Control", "Treatment"], [10, 10])
-
-# Generate base expression patterns for each gene cluster
-expression = np.zeros((n_genes, n_samples))
-
-# Immune genes: higher in treatment
-expression[0:10, 0:10] = np.random.normal(-1, 0.5, (10, 10))
-expression[0:10, 10:20] = np.random.normal(1.5, 0.5, (10, 10))
-
-# Metabolic genes: lower in treatment
-expression[10:20, 0:10] = np.random.normal(1, 0.5, (10, 10))
-expression[10:20, 10:20] = np.random.normal(-1.2, 0.5, (10, 10))
-
-# Signaling genes: mixed response
-expression[20:30, 0:10] = np.random.normal(0.3, 0.8, (10, 10))
-expression[20:30, 10:20] = np.random.normal(-0.3, 0.8, (10, 10))
-
-# Create gene and sample labels
-gene_labels = [f"{gene_groups[i][0]}{i + 1:02d}" for i in range(n_genes)]
-sample_labels = [f"{sample_groups[i][0]}{i + 1:02d}" for i in range(n_samples)]
-
-# Create DataFrame
-df = pd.DataFrame(expression, index=gene_labels, columns=sample_labels)
-
-# Create color palettes for annotations
-gene_palette = {"Immune": "#306998", "Metabolic": "#FFD43B", "Signaling": "#7B9F35"}
-sample_palette = {"Control": "#E57373", "Treatment": "#64B5F6"}
-
-gene_colors = pd.Series([gene_palette[g] for g in gene_groups], index=gene_labels)
-sample_colors = pd.Series([sample_palette[s] for s in sample_groups], index=sample_labels)
-
-# Set seaborn theme for consistent styling
 sns.set_theme(
     style="ticks",
     rc={
@@ -74,83 +40,116 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Plot: Clustered heatmap with dendrograms
-sns.set_context("talk", font_scale=1.1)
+# Columns: set these to your matrix's index and column level names and its value label
+GENE_GROUP = "Gene group"  # role: extra
+GENE = "Genes"  # role: row_labels
+CONDITION = "Condition"  # role: extra
+SAMPLE = "Samples"  # role: column_labels
+EXPRESSION = "Expression (z-score)"  # role: matrix
+
+# Data: replace this block with your own labeled matrix, for example df = pd.read_csv("expr.csv", index_col=0)
+np.random.seed(42)
+gene_groups = np.repeat(["Immune", "Metabolic", "Signaling"], [10, 10, 10])
+sample_groups = np.repeat(["Control", "Treatment"], [10, 10])
+expression = np.zeros((30, 20))
+# Immune genes: higher in treatment
+expression[0:10, 0:10] = np.random.normal(-1, 0.5, (10, 10))
+expression[0:10, 10:20] = np.random.normal(1.5, 0.5, (10, 10))
+# Metabolic genes: lower in treatment
+expression[10:20, 0:10] = np.random.normal(1, 0.5, (10, 10))
+expression[10:20, 10:20] = np.random.normal(-1.2, 0.5, (10, 10))
+# Signaling genes: mixed response
+expression[20:30, 0:10] = np.random.normal(0.3, 0.8, (10, 10))
+expression[20:30, 10:20] = np.random.normal(-0.3, 0.8, (10, 10))
+gene_labels = [
+    *["IL6", "CXCL8", "TNF", "IL1B", "CCL2", "IFNG", "CD74", "STAT1", "IRF7", "ISG15"],
+    *["PFKM", "HK2", "LDHA", "PKM", "GAPDH", "ENO1", "ALDOA", "CPT1A", "ACACA", "FASN"],
+    *["MAPK1", "AKT1", "EGFR", "KRAS", "PIK3CA", "JUN", "FOS", "SRC", "MTOR", "NFKB1"],
+]
+sample_labels = [f"{'Ctrl' if s == 'Control' else 'Trt'}-{i % 10 + 1}" for i, s in enumerate(sample_groups)]
+df = pd.DataFrame(
+    expression,
+    index=pd.MultiIndex.from_arrays([gene_groups, gene_labels], names=[GENE_GROUP, GENE]),
+    columns=pd.MultiIndex.from_arrays([sample_groups, sample_labels], names=[CONDITION, SAMPLE]),
+)
+
+# Plot: reads only df and the constants above
+matrix = df.copy()
+row_colors = col_colors = None
+legends = []
+used = 0
+for axis, title in ((0, GENE_GROUP), (1, CONDITION)):
+    index = matrix.axes[axis]
+    if index.nlevels < 2:
+        continue
+    groups = pd.unique(index.get_level_values(0))
+    colors = dict(zip(groups, ANNOTATION_COLORS[used:], strict=False))
+    used += len(groups)
+    strip = pd.Series([colors[g] for g in index.get_level_values(0)], index=index.get_level_values(-1), name="")
+    legends.append((title, [Patch(facecolor=colors[g], edgecolor=INK_SOFT, label=g) for g in groups]))
+    if axis == 0:
+        row_colors = strip
+    else:
+        col_colors = strip
+matrix.index = matrix.index.get_level_values(-1)
+matrix.columns = matrix.columns.get_level_values(-1)
+limit = np.nanmax(np.abs(matrix.to_numpy()))
 
 g = sns.clustermap(
-    df,
+    matrix,
     method="ward",
     metric="euclidean",
-    cmap="RdBu_r",
+    cmap=imprint_div,
     center=0,
-    vmin=-3,
-    vmax=3,
-    row_colors=gene_colors,
-    col_colors=sample_colors,
-    dendrogram_ratio=(0.15, 0.15),
-    cbar_pos=(0.02, 0.3, 0.03, 0.4),
-    figsize=(16, 12),
-    linewidths=0.5,
-    linecolor=INK_SOFT,
+    vmin=-limit,
+    vmax=limit,
+    row_colors=row_colors,
+    col_colors=col_colors,
+    dendrogram_ratio=(0.14, 0.14),
+    colors_ratio=0.025,
+    cbar_pos=(0.03, 0.86, 0.025, 0.1),
+    figsize=(6, 6),
+    linewidths=0.3,
+    linecolor=PAGE_BG,
     xticklabels=True,
     yticklabels=True,
-    tree_kws={"linewidths": 2},
+    tree_kws={"linewidths": 0.9, "colors": INK_SOFT},
+)
+g.figure.subplots_adjust(left=0.02, right=0.88, top=0.9, bottom=0.17)
+
+# Style
+g.ax_heatmap.set_xlabel(SAMPLE, fontsize=10, color=INK)
+g.ax_heatmap.set_ylabel(GENE, fontsize=10, color=INK)
+g.ax_heatmap.tick_params(axis="x", labelsize=7, rotation=90, colors=INK_SOFT, length=2)
+g.ax_heatmap.tick_params(axis="y", labelsize=7, rotation=0, colors=INK_SOFT, length=2)
+for strip_ax in (g.ax_row_colors, g.ax_col_colors):
+    if strip_ax is not None:
+        strip_ax.tick_params(labelsize=6, colors=INK_SOFT, length=0)
+g.cax.set_title(EXPRESSION, fontsize=7, color=INK, loc="left", pad=4)
+g.cax.tick_params(labelsize=6, colors=INK_SOFT, length=2)
+
+g.figure.suptitle(
+    "heatmap-clustered · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, y=0.97
 )
 
-# Set figure background
-g.figure.patch.set_facecolor(PAGE_BG)
+for i, (title, handles) in enumerate(legends):
+    g.figure.legend(
+        handles=handles,
+        title=title,
+        loc="lower left" if i == 0 else "lower right",
+        bbox_to_anchor=(0.02, 0.005) if i == 0 else (0.98, 0.005),
+        ncol=len(handles),
+        fontsize=7,
+        title_fontsize=8,
+        frameon=False,
+        handlelength=1.2,
+        columnspacing=1.0,
+    )
 
-# Style adjustments
-g.ax_heatmap.set_xlabel("Samples", fontsize=20, color=INK)
-g.ax_heatmap.set_ylabel("Genes", fontsize=20, color=INK)
-g.ax_heatmap.tick_params(axis="x", labelsize=12, rotation=45, colors=INK_SOFT)
-g.ax_heatmap.tick_params(axis="y", labelsize=12, colors=INK_SOFT)
-g.ax_heatmap.set_facecolor(PAGE_BG)
-
-# Title
-g.figure.suptitle("heatmap-clustered · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, y=0.98)
-
-# Colorbar label
-g.cax.set_ylabel("Expression (z-score)", fontsize=14, color=INK)
-g.cax.tick_params(labelsize=12, colors=INK_SOFT)
-g.cax.set_facecolor(PAGE_BG)
-
-# Add legends for row/column colors with better positioning
-# Gene group legend
-gene_legend = [Patch(facecolor=gene_palette[k], label=k) for k in gene_palette]
-g.ax_heatmap.legend(
-    handles=gene_legend,
-    title="Gene Group",
-    loc="upper left",
-    bbox_to_anchor=(1.15, 1.0),
-    fontsize=12,
-    title_fontsize=14,
-    frameon=True,
-    fancybox=False,
-    edgecolor=INK_SOFT,
-    facecolor=ELEVATED_BG,
-)
-
-# Sample group legend positioned lower to avoid overlap
-sample_legend = [Patch(facecolor=sample_palette[k], label=k) for k in sample_palette]
-g.figure.legend(
-    handles=sample_legend,
-    title="Condition",
-    loc="lower left",
-    bbox_to_anchor=(0.88, 0.25),
-    fontsize=12,
-    title_fontsize=14,
-    frameon=True,
-    fancybox=False,
-    edgecolor=INK_SOFT,
-    facecolor=ELEVATED_BG,
-)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

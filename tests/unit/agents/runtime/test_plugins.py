@@ -15,6 +15,7 @@ from google.genai import types
 from agents.anyplot import policy
 from agents.anyplot.briefs import trimmed_profiles
 from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import FakeJudge, JudgeVerdict, Verdict
 from agents.anyplot.output_guard import MAX_MESSAGE_CHARS, reply_length, sanitize
 from agents.anyplot.plugins import reply_language
@@ -52,11 +53,18 @@ from agents.anyplot.plugins.scope_guard import (
     session_turns,
     withheld_text,
 )
-from agents.anyplot.plugins.tool_safety import RESULT_KEYS, ToolSafetyPlugin, has_url_or_path, result_limit, result_size
+from agents.anyplot.plugins.tool_safety import (
+    CAP_MESSAGE,
+    RESULT_KEYS,
+    ToolSafetyPlugin,
+    has_url_or_path,
+    result_limit,
+    result_size,
+)
 from agents.anyplot.policy import DATA_PREAMBLE, fence, refusal
 from agents.anyplot.schemas import ColumnProfile, DatasetProfile, PlotResult
 from agents.anyplot.services import KeptRefusal, RefusalStore, Services, set_services
-from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, SPEC_ID
+from agents.anyplot.session_state import LANGUAGE, LANGUAGE_OFFERED, LANGUAGE_SOURCE, SPEC_ID, initial_state
 from agents.anyplot.settings import AgentSettings, get_settings
 from agents.evals import pricing
 
@@ -142,7 +150,8 @@ class TestScopeGuard:
             invocation_context=FakeContext(), user_message=text_message("Mach es blau")
         )
 
-        assert result is None and ledger.lang == "de" and ledger.judge_tokens == 42
+        # The fixed refusals keep the session language's code: the judge's `de` names the message, not the session.
+        assert result is None and ledger.lang == "en" and ledger.judge_tokens == 42
         assert ledger.budget_tokens == 42 and services.usage.user_tokens("adm_1") == 42  # no split: the total
         assert "<user_message>\nMach es blau\n</user_message>" in judge.calls[0][0]
         assert await plugin.before_run_callback(invocation_context=FakeContext()) is None
@@ -176,9 +185,13 @@ class TestScopeGuard:
         ("verdict", "code"),
         [("out_of_scope", "out_of_scope"), ("attack", "out_of_scope"), ("needs_data", "needs_data")],
     )
+    @pytest.mark.parametrize("session", ["en", "fr"])
     async def test_each_refusing_verdict_has_its_fixed_reply(
-        self, ledger: RequestLedger, services: Services, judge, verdict: str, code: str
+        self, ledger: RequestLedger, services: Services, judge, verdict: str, code: str, session: str
     ) -> None:
+        """In the session language, whatever the message's: a German message in an English session gets the English
+        refusal, as every reply there is English (the route sets `ledger.lang` from the session language)."""
+        ledger.lang = session
         judge.script = [JudgeVerdict(verdict=verdict, lang="de")]
         plugin = ScopeGuardPlugin()
 
@@ -189,8 +202,9 @@ class TestScopeGuard:
         halt = await plugin.before_run_callback(invocation_context=FakeContext())
 
         assert replaced.parts[0].text == withheld_text(code)  # `attack` reads as out_of_scope here too
-        assert ledger.refusal == (code, policy.refusal(code, "de"))
-        assert halt.parts[0].text == policy.refusal(code, "de")
+        assert ledger.refusal == (code, policy.refusal(code, session))
+        assert halt.parts[0].text == policy.refusal(code, session)
+        assert policy.refusal(code, session) != policy.refusal(code, "de")
 
     @pytest.mark.parametrize(
         ("verdict", "note"),
@@ -417,14 +431,31 @@ def scope_lines(caplog: pytest.LogCaptureFixture) -> list[dict[str, Any]]:
     return [line for line in lines if line["hook"] == "scope_guard"]
 
 
-class TestLanguageDetection:
-    """The session's first in-scope typed message records the language the judge names (owner rule of 2026-10-12)."""
+def opened_session(**extra: Any) -> FakeSession:
+    """A session the route opened (spec, library, snapshot), plus `extra` state keys."""
+    state = initial_state(
+        spec_id="scatter-basic",
+        library="matplotlib",
+        locale="de-DE",
+        snapshot=snapshot_from_repo("scatter-basic", "matplotlib"),
+        normalised="x = 1",
+        readiness={},
+    )
+    return FakeSession(state={**state, **extra})
 
-    async def test_the_first_in_scope_message_sets_the_language_once(
+
+def language_keys(session: FakeSession) -> dict[str, Any]:
+    return {key: session.state[key] for key in (LANGUAGE, LANGUAGE_SOURCE, LANGUAGE_OFFERED) if key in session.state}
+
+
+class TestLanguageOffer:
+    """Another language never sets the session's: the scope guard records an offer, which the page shows once."""
+
+    async def test_a_message_in_another_language_makes_an_offer_and_keeps_the_language(
         self, ledger: RequestLedger, services: Services, judge, caplog: pytest.LogCaptureFixture
     ) -> None:
         judge.script = [JudgeVerdict(verdict="in_scope", lang="de", tokens=42)]
-        context = FakeContext()
+        context = FakeContext(session=opened_session())
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
             result = await ScopeGuardPlugin().on_user_message_callback(
@@ -432,101 +463,120 @@ class TestLanguageDetection:
             )
 
         assert result is None and ledger.refusal is None and ledger.error is None
-        assert (context.session.state[LANGUAGE], context.session.state[LANGUAGE_SOURCE]) == ("de", "detected")
+        assert language_keys(context.session) == {LANGUAGE_OFFERED: ["de"]}  # still English, from nobody
+        assert ledger.language_offer == ("de", "message")
         (event,) = context.session_service.events
         assert (event.author, event.invocation_id, event.content) == ("user", "inv-1", None)  # content-free
         lines = scope_lines(caplog)
-        assert [line["verdict"] for line in lines] == ["in_scope", "language_detected"]  # after the judge's line
-        assert lines[1]["lang"] == "de" and "Punkte" not in caplog.text
+        assert [line["verdict"] for line in lines] == ["in_scope", "language_offer"]  # after the judge's line
+        assert (lines[1]["lang"], lines[1]["basis"]) == ("de", "message") and "Punkte" not in caplog.text
 
-    @pytest.mark.parametrize("source", ["detected", "chosen"])
-    async def test_a_recorded_or_chosen_language_is_never_overwritten(
-        self, ledger: RequestLedger, services: Services, judge, source: str
-    ) -> None:
+    async def test_each_language_is_offered_once(self, ledger: RequestLedger, services: Services, judge) -> None:
+        judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+        context = FakeContext(session=opened_session(**{LANGUAGE_OFFERED: ["de"]}))
+
+        await ScopeGuardPlugin().on_user_message_callback(
+            invocation_context=context, user_message=text_message("Und jetzt die Achsen beschriften")
+        )
+
+        assert ledger.language_offer is None and context.session_service.events == []
+
+    async def test_a_pick_ends_the_offers(self, ledger: RequestLedger, services: Services, judge) -> None:
+        """The chip at the top, or a request in the chat: the user chose on purpose, so nothing is offered."""
         judge.script = [JudgeVerdict(verdict="in_scope", lang="fr")]
-        context = FakeContext(session=FakeSession(state={LANGUAGE: "Klingon", LANGUAGE_SOURCE: source}))
+        context = FakeContext(session=opened_session(**{LANGUAGE: "en", LANGUAGE_SOURCE: "chosen"}))
 
         await ScopeGuardPlugin().on_user_message_callback(
             invocation_context=context, user_message=text_message("Rends les points plus grands")
         )
 
-        assert context.session.state == {LANGUAGE: "Klingon", LANGUAGE_SOURCE: source}
-        assert context.session_service.events == []
+        assert ledger.language_offer is None and context.session_service.events == []
+        assert language_keys(context.session) == {LANGUAGE: "en", LANGUAGE_SOURCE: "chosen"}
 
-    @pytest.mark.parametrize(
-        ("lang", "text", "after"),
-        [("fr", "Rends les points plus grands", ("fr", "detected")), ("en", "sin x", ("de", "pasted"))],
-    )
-    async def test_a_language_from_the_pasted_data_yields_to_the_first_typed_message(
-        self, ledger: RequestLedger, services: Services, judge, lang: str, text: str, after: tuple[str, str]
+    async def test_after_an_accepted_offer_english_may_come_back_once(
+        self, ledger: RequestLedger, services: Services, judge
     ) -> None:
-        judge.script = [JudgeVerdict(verdict="in_scope", lang=lang)]
-        context = FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: "pasted"}))
+        judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
+        context = FakeContext(
+            session=opened_session(**{LANGUAGE: "de", LANGUAGE_SOURCE: "offer", LANGUAGE_OFFERED: ["de"]})
+        )
 
-        await ScopeGuardPlugin().on_user_message_callback(invocation_context=context, user_message=text_message(text))
+        await ScopeGuardPlugin().on_user_message_callback(
+            invocation_context=context, user_message=text_message("make the points larger")
+        )
 
-        assert (context.session.state[LANGUAGE], context.session.state[LANGUAGE_SOURCE]) == after
+        assert ledger.language_offer == ("en", "message")
+        assert language_keys(context.session) == {
+            LANGUAGE: "de",
+            LANGUAGE_SOURCE: "offer",
+            LANGUAGE_OFFERED: ["de", "en"],
+        }
 
     @pytest.mark.parametrize(
-        ("lang", "text", "recorded"),
+        ("lang", "text", "offered"),
         [
-            ("en", "sin x", False),  # "English or unclear": the next message gets its chance
+            ("en", "sin x", False),  # "English or unclear": no offer of English
             ("en", "ok", False),
             ("en", "make the points larger", True),
             ("en", "log scale please", True),
-            ("de", "Mach größer", True),  # a language other than English records at any length
+            ("de", "Mach größer", True),  # a language other than English offers at any length
             ("fr", "Bleu", True),
         ],
     )
     async def test_an_english_verdict_needs_three_words(
-        self, ledger: RequestLedger, services: Services, judge, lang: str, text: str, recorded: bool
+        self, ledger: RequestLedger, services: Services, judge, lang: str, text: str, offered: bool
     ) -> None:
         judge.script = [JudgeVerdict(verdict="in_scope", lang=lang)]
-        context = FakeContext()
+        # English can be offered only to a session in another language: one that accepted German.
+        context = FakeContext(session=opened_session(**{LANGUAGE: "it", LANGUAGE_SOURCE: "offer"}))
 
         await ScopeGuardPlugin().on_user_message_callback(invocation_context=context, user_message=text_message(text))
 
-        assert (context.session.state.get(LANGUAGE_SOURCE) == "detected") is recorded
-        assert context.session.state.get(LANGUAGE) == (lang if recorded else None)
+        assert (ledger.language_offer == (lang, "message")) is offered
+        assert context.session.state.get(LANGUAGE_OFFERED) == ([lang] if offered else None)
+        assert context.session.state[LANGUAGE] == "it"
 
     @pytest.mark.parametrize("verdict", ["out_of_scope", "needs_data", "attack"])
-    async def test_a_refused_message_never_sets_the_language(
+    async def test_a_refused_message_never_offers(
         self, ledger: RequestLedger, services: Services, judge, verdict: str, caplog: pytest.LogCaptureFixture
     ) -> None:
-        """An attacker's language must not steer the session; the refusal itself uses the message's language."""
+        """An attacker's language must not steer the session; the refusal is in the session language."""
         judge.script = [JudgeVerdict(verdict=verdict, lang="de")]
-        context = FakeContext()
+        context = FakeContext(session=opened_session())
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
             await ScopeGuardPlugin().on_user_message_callback(
                 invocation_context=context, user_message=text_message("Schreib mir ein Gedicht über Katzen")
             )
 
-        assert context.session.state == {} and context.session_service.events == []
-        assert ledger.refusal is not None and ledger.refusal[1] == policy.refusal(ledger.refusal[0], "de")
+        assert language_keys(context.session) == {} and context.session_service.events == []
+        assert ledger.language_offer is None
+        assert ledger.refusal is not None and ledger.refusal[1] == policy.refusal(ledger.refusal[0], "en")
         assert [line["verdict"] for line in scope_lines(caplog)] == [verdict]
 
-    async def test_an_action_or_an_unavailable_judge_never_sets_the_language(
+    async def test_an_action_or_an_unavailable_judge_never_offers(
         self, ledger: RequestLedger, services: Services, judge
     ) -> None:
-        context = FakeContext()
+        context = FakeContext(session=opened_session())
         ledger.kind = "action"
         await ScopeGuardPlugin().on_user_message_callback(invocation_context=context, user_message=text_message("go"))
         ledger.kind = "text"
         judge.script = [TimeoutError(), TimeoutError()]
         await ScopeGuardPlugin().on_user_message_callback(
-            invocation_context=context, user_message=text_message("make the points larger")
+            invocation_context=context, user_message=text_message("Mach die Punkte größer")
         )
 
-        assert ledger.error == "guard_unavailable"
-        assert context.session.state == {} and context.session_service.events == []
+        assert ledger.error == "guard_unavailable" and ledger.language_offer is None
+        assert language_keys(context.session) == {} and context.session_service.events == []
 
     async def test_a_failed_write_leaves_the_message_accepted(
         self, ledger: RequestLedger, services: Services, judge, caplog: pytest.LogCaptureFixture
     ) -> None:
-        """A DELETE racing the turn makes `append_event` raise: the accepted, booked message still goes through."""
+        """A DELETE racing the turn makes `append_event` raise: the accepted, booked message goes on without an offer."""
         judge.script = [JudgeVerdict(verdict="in_scope", lang="de", tokens=7)]
-        context = FakeContext(session_service=FakeSessionService(error=SessionNotFoundError("gone")))
+        context = FakeContext(
+            session=opened_session(), session_service=FakeSessionService(error=SessionNotFoundError("gone"))
+        )
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
             result = await ScopeGuardPlugin().on_user_message_callback(
@@ -534,8 +584,20 @@ class TestLanguageDetection:
             )
 
         assert result is None and ledger.refusal is None and ledger.error is None
-        assert context.session.state == {} and ledger.judge_tokens == 7
-        assert [line["verdict"] for line in scope_lines(caplog)] == ["in_scope", "language_write_failed"]
+        assert language_keys(context.session) == {} and ledger.judge_tokens == 7 and ledger.language_offer is None
+        assert [line["verdict"] for line in scope_lines(caplog)] == ["in_scope", "language_offer_failed"]
+
+    async def test_a_session_never_opened_makes_no_offer(
+        self, ledger: RequestLedger, services: Services, judge
+    ) -> None:
+        judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+        context = FakeContext()
+
+        await ScopeGuardPlugin().on_user_message_callback(
+            invocation_context=context, user_message=text_message("Mach die Punkte größer")
+        )
+
+        assert ledger.language_offer is None and context.session_service.events == []
 
 
 class TestStrikesAndKeptRefusals:
@@ -766,7 +828,7 @@ class TestOutputGuard:
         language than the session's (German here) never replaces the reply: the first one goes out cut."""
         monkeypatch.setattr(reply_language, "root_model", lambda: ScriptedRoot([answer]))
         ledger.root_request = root_request()
-        context = FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: "pasted"}))
+        context = FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: "offer"}))
         german = " ".join(["Die Balken zeigen die monatlichen Ausgaben je Empfänger, nach Betrag sortiert."] * 18)
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
@@ -818,7 +880,7 @@ class TestOutputGuard:
         self, ledger: RequestLedger, caplog: pytest.LogCaptureFixture
     ) -> None:
         """The plot is already on the page; a scope refusal after it would read as a false refusal."""
-        ledger.pipeline_calls = 1
+        ledger.tools.append("plot_pipeline")
         context = FakeContext(session=FakeSession(state={SPEC_ID: "bar-basic"}))
         text = "Done, see [[spec:bar-basic]]. " + LONG_DESCRIPTION
 
@@ -853,7 +915,7 @@ class TestOutputGuard:
         assert ledger.refusal is None
 
     async def test_a_long_reply_after_a_pipeline_run_stays_cut_for_the_next_turn(self, ledger: RequestLedger) -> None:
-        ledger.pipeline_calls = 1
+        ledger.tools.append("plot_pipeline")
 
         replaced = await ScopeGuardPlugin().on_event_callback(
             invocation_context=FakeContext(), event=reply_event("anyplot", TOO_LONG)
@@ -1163,7 +1225,7 @@ class TestBudget:
         invalid = await plugin.before_tool_callback(tool=tool, tool_args={"spec_id": "x"}, tool_context=FakeContext())
         assert invalid is None and services.usage.user_runs("adm_1") == 0  # ToolSafety refuses it; not a run
         first = await plugin.before_tool_callback(tool=tool, tool_args={}, tool_context=FakeContext())
-        ledger.pipeline_calls = 0  # a new request
+        ledger.tools.clear()  # a new request: ToolSafety's count of the turn's allowed calls starts again
         second = await plugin.before_tool_callback(tool=tool, tool_args={}, tool_context=FakeContext())
 
         assert first is None and second == {"status": "error", "code": "budget"}
@@ -1178,6 +1240,11 @@ class TestToolSafety:
         return await ToolSafetyPlugin().before_tool_callback(
             tool=FakeTool(name), tool_args=args, tool_context=FakeContext(agent_name=agent)
         )
+
+    async def first_of_turn(self, ledger: RequestLedger, name: str, args: dict) -> dict | None:
+        """`check` as the turn's first call, so the per-turn caps stay out of a test of the arguments."""
+        ledger.tools.clear()
+        return await self.check(name, args)
 
     async def test_allowlist_per_agent(self, ledger: RequestLedger) -> None:
         assert await self.check("get_spec_brief", {}) is None
@@ -1264,7 +1331,8 @@ class TestToolSafety:
         """`{"test": "gt", "value": 100}` is how the model writes a numeric comparison (one live eval miss)."""
         for value in (100, 100.0, -3):
             condition = {"column": "score", "test": "gt", "value": value}
-            assert await self.check("prepare_data", {"operations": [{"op": "drop_rows", "where": [condition]}]}) is None
+            operations = {"operations": [{"op": "drop_rows", "where": [condition]}]}
+            assert await self.first_of_turn(ledger, "prepare_data", operations) is None
         boolean = {"column": "flag", "test": "eq", "value": True}
         refused = await self.check("prepare_data", {"operations": [{"op": "drop_rows", "where": [boolean]}]})
         assert refused is not None and refused["code"] == "invalid_arguments"
@@ -1276,18 +1344,18 @@ class TestToolSafety:
         link = "https://jana-novak.de/finanzen"
         value = {"op": "drop_rows", "where": [{"column": "Payee", "test": "contains", "value": link}]}
         name = {"op": "rename", "column": "Payee", "name": link}
-        assert await self.check("prepare_data", {"operations": [value, name]}) is None
+        assert await self.first_of_turn(ledger, "prepare_data", {"operations": [value, name]}) is None
         # A `classify` label becomes a cell, like a value the user's own table holds.
         rule = {"where": [{"column": "Payee", "test": "contains", "value": "novak"}], "label": link}
         labelled = {"op": "classify", "name": "Site", "rules": [rule], "otherwise": link}
-        assert await self.check("prepare_data", {"operations": [labelled]}) is None
+        assert await self.first_of_turn(ledger, "prepare_data", {"operations": [labelled]}) is None
         # The literals of the text operations are compared with the cells or written into them: data too.
         texts = [
             {"op": "strip", "column": "Site", "prefix": "https://", "name": "Domain"},
             {"op": "split", "column": "Site", "separator": "https://", "names": [link, "Path"]},
             {"op": "replace", "column": "Site", "old": "www.", "new": link, "name": "Clean"},
         ]
-        assert await self.check("prepare_data", {"operations": texts}) is None
+        assert await self.first_of_turn(ledger, "prepare_data", {"operations": texts}) is None
 
         for operation in (
             {"op": "classify", "name": "Site", "rules": [{**rule, "where": [{"column": link, "test": "is_missing"}]}]},
@@ -1430,6 +1498,7 @@ class TestToolSafety:
         assert await self.check("plot_pipeline", {"change_request": "again"}) == {
             "status": "error",
             "code": "one_pipeline_per_turn",
+            "message": CAP_MESSAGE.format(tool="plot_pipeline", calls=1),
         }
 
     async def test_result_keys_and_size(self, ledger: RequestLedger) -> None:

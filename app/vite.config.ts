@@ -73,6 +73,15 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id, { getModuleInfo }) {
+          // The app's theme modules import MUI and load on every page, so they travel with
+          // `mui`. As an automatic chunk of their own they can be where Rolldown puts its
+          // CJS-interop helper, which `mui` imports back: the `mui` ↔ `theme` cycle leaves the
+          // helper uninitialized and every page blank ("t is not a function"). It did so on
+          // 2026-11-08 once the dynamic `web-vitals` chunk was gone, though Rolldown 1.2
+          // usually emits the helper as its own `rolldown-runtime` chunk. `manualChunks` is
+          // never offered the helper itself; the browser-boot step of ci-image.yml is the
+          // check that catches a new cycle.
+          if (id.includes('/src/theme/')) return 'mui';
           if (id.includes('node_modules/@mui/icons-material/')) return 'mui-icons';
           if (id.includes('node_modules/@mui/') && onlyTheDataView(id, getModuleInfo)) return null;
           if (id.includes('node_modules/@mui/')) return 'mui';
