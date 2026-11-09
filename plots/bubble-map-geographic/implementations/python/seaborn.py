@@ -1,16 +1,51 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-05-18
+Library: seaborn 0.13.2 | Python 3.14.9
+Quality: 81/100 | Updated: 2026-11-09
 """
 
+import os
+
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.ticker import MaxNLocator
 
 
-# Simplified world coastline polygons (major continents outline)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Constants
+MAP_LON = (-180, 180)  # world extent of the basemap
+MAP_LAT = (-70, 85)
+MAX_BUBBLE_AREA = 600  # marker area (pt²) of the largest value; area is proportional to the value
+
+# Simplified world coastline polygons (major continents outline), as (lon, lat)
 WORLD_COASTLINES = [
     # North America
     [
@@ -140,269 +175,245 @@ WORLD_COASTLINES = [
     ],
 ]
 
-# Data: World cities with populations (millions)
-np.random.seed(42)
+# Columns: set these to your table's column names
+CITY = "City"  # role: label
+LATITUDE = "Latitude (°)"  # role: latitude
+LONGITUDE = "Longitude (°)"  # role: longitude
+POPULATION = "Population (millions)"  # role: value
+CONTINENT = "Continent"  # role: category
 
-cities_data = {
-    "city": [
-        "Tokyo",
-        "Delhi",
-        "Shanghai",
-        "Sao Paulo",
-        "Mexico City",
-        "Cairo",
-        "Mumbai",
-        "Beijing",
-        "Dhaka",
-        "Osaka",
-        "New York",
-        "Karachi",
-        "Buenos Aires",
-        "Istanbul",
-        "Kolkata",
-        "Manila",
-        "Lagos",
-        "Rio de Janeiro",
-        "Guangzhou",
-        "Los Angeles",
-        "Moscow",
-        "Paris",
-        "Bangkok",
-        "London",
-        "Lima",
-        "Seoul",
-        "Sydney",
-    ],
-    "latitude": [
-        35.68,
-        28.61,
-        31.23,
-        -23.55,
-        19.43,
-        30.04,
-        19.08,
-        39.90,
-        23.81,
-        34.69,
-        40.71,
-        24.86,
-        -34.60,
-        41.01,
-        22.57,
-        14.60,
-        6.52,
-        -22.91,
-        23.13,
-        34.05,
-        55.76,
-        48.86,
-        13.76,
-        51.51,
-        -12.05,
-        37.57,
-        -33.87,
-    ],
-    "longitude": [
-        139.69,
-        77.21,
-        121.47,
-        -46.63,
-        -99.13,
-        31.24,
-        72.88,
-        116.41,
-        90.41,
-        135.50,
-        -74.01,
-        67.01,
-        -58.38,
-        28.98,
-        88.36,
-        120.98,
-        3.38,
-        -43.17,
-        113.26,
-        -118.24,
-        37.62,
-        2.35,
-        100.50,
-        -0.13,
-        -77.04,
-        127.00,
-        151.21,
-    ],
-    "population": [
-        37.4,
-        32.9,
-        29.2,
-        22.4,
-        21.8,
-        21.3,
-        21.0,
-        20.9,
-        22.5,
-        19.1,
-        18.8,
-        16.8,
-        15.5,
-        15.4,
-        14.9,
-        14.4,
-        14.4,
-        13.6,
-        13.5,
-        12.5,
-        12.5,
-        11.1,
-        10.7,
-        9.5,
-        10.9,
-        9.8,
-        5.4,
-    ],
-    "continent": [
-        "Asia",
-        "Asia",
-        "Asia",
-        "South America",
-        "North America",
-        "Africa",
-        "Asia",
-        "Asia",
-        "Asia",
-        "Asia",
-        "North America",
-        "Asia",
-        "South America",
-        "Europe",
-        "Asia",
-        "Asia",
-        "Africa",
-        "South America",
-        "Asia",
-        "North America",
-        "Europe",
-        "Europe",
-        "Asia",
-        "Europe",
-        "South America",
-        "Asia",
-        "Oceania",
-    ],
-}
+# Data: replace this block with your own table, for example df = pd.read_csv("cities.csv")
+df = pd.DataFrame(
+    {
+        CITY: [
+            "Tokyo",
+            "Delhi",
+            "Shanghai",
+            "Sao Paulo",
+            "Mexico City",
+            "Cairo",
+            "Mumbai",
+            "Beijing",
+            "Dhaka",
+            "Osaka",
+            "New York",
+            "Karachi",
+            "Buenos Aires",
+            "Istanbul",
+            "Kolkata",
+            "Manila",
+            "Lagos",
+            "Rio de Janeiro",
+            "Guangzhou",
+            "Los Angeles",
+            "Moscow",
+            "Paris",
+            "Bangkok",
+            "London",
+            "Lima",
+            "Seoul",
+            "Sydney",
+        ],
+        LATITUDE: [
+            35.68,
+            28.61,
+            31.23,
+            -23.55,
+            19.43,
+            30.04,
+            19.08,
+            39.90,
+            23.81,
+            34.69,
+            40.71,
+            24.86,
+            -34.60,
+            41.01,
+            22.57,
+            14.60,
+            6.52,
+            -22.91,
+            23.13,
+            34.05,
+            55.76,
+            48.86,
+            13.76,
+            51.51,
+            -12.05,
+            37.57,
+            -33.87,
+        ],
+        LONGITUDE: [
+            139.69,
+            77.21,
+            121.47,
+            -46.63,
+            -99.13,
+            31.24,
+            72.88,
+            116.41,
+            90.41,
+            135.50,
+            -74.01,
+            67.01,
+            -58.38,
+            28.98,
+            88.36,
+            120.98,
+            3.38,
+            -43.17,
+            113.26,
+            -118.24,
+            37.62,
+            2.35,
+            100.50,
+            -0.13,
+            -77.04,
+            127.00,
+            151.21,
+        ],
+        POPULATION: [
+            37.4,
+            32.9,
+            29.2,
+            22.4,
+            21.8,
+            21.3,
+            21.0,
+            20.9,
+            22.5,
+            19.1,
+            18.8,
+            16.8,
+            15.5,
+            15.4,
+            14.9,
+            14.4,
+            14.4,
+            13.6,
+            13.5,
+            12.5,
+            12.5,
+            11.1,
+            10.7,
+            9.5,
+            10.9,
+            9.8,
+            5.4,
+        ],
+        CONTINENT: [
+            "Asia",
+            "Asia",
+            "Asia",
+            "South America",
+            "North America",
+            "Africa",
+            "Asia",
+            "Asia",
+            "Asia",
+            "Asia",
+            "North America",
+            "Asia",
+            "South America",
+            "Europe",
+            "Asia",
+            "Asia",
+            "Africa",
+            "South America",
+            "Asia",
+            "North America",
+            "Europe",
+            "Europe",
+            "Asia",
+            "Europe",
+            "South America",
+            "Asia",
+            "Oceania",
+        ],
+    }
+)
 
-df = pd.DataFrame(cities_data)
+# Plot: reads only df and the constants above
+continents = list(df[CONTINENT].dropna().unique())
+continent_palette = {c: IMPRINT_PALETTE[i] for i, c in enumerate(continents)}
+value_max = df[POPULATION].max()
 
-# Scale bubble sizes: area proportional to population using sqrt scaling
-# Bubble map emphasizes size encoding - use larger range than scatter
-min_size = 120
-max_size = 2200
-df["bubble_size"] = min_size + (max_size - min_size) * (np.sqrt(df["population"]) / np.sqrt(df["population"].max()))
+# Larger bubbles first, so smaller ones are drawn on top and never hidden
+plot_df = df.sort_values(POPULATION, ascending=False)
 
-# Set seaborn theme
-sns.set_theme(style="whitegrid", context="talk", font_scale=1.1)
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Set map extent
-ax.set_xlim(-180, 180)
-ax.set_ylim(-70, 85)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+ax.set_xlim(*MAP_LON)
+ax.set_ylim(*MAP_LAT)
 ax.set_aspect("equal")
 
-# Draw simplified coastlines as background
+# Basemap: land in a quiet translucent neutral, ocean on the page background
 for coastline in WORLD_COASTLINES:
-    if len(coastline) > 2:
-        lons = [p[0] for p in coastline]
-        lats = [p[1] for p in coastline]
-        ax.fill(lons, lats, color="#e8e8e8", edgecolor="#b0b0b0", linewidth=1, alpha=0.8, zorder=1)
+    lons, lats = zip(*coastline, strict=True)
+    ax.fill(lons, lats, facecolor=MUTED, alpha=0.18, edgecolor=MUTED, linewidth=0.6, zorder=1)
 
-# Ocean background
-ax.set_facecolor("#d4e8f7")
-
-# Color palette for continents
-continent_palette = {
-    "Asia": "#306998",
-    "Europe": "#FFD43B",
-    "North America": "#E07B53",
-    "South America": "#5AAE61",
-    "Africa": "#9D6AB8",
-    "Oceania": "#2DB5AE",
-}
-
-# Plot bubbles using seaborn scatterplot
-# Use size parameter with explicit sizes tuple for bubble encoding
+# Bubble area proportional to population: size_norm from 0 keeps area ∝ value
 sns.scatterplot(
-    data=df,
-    x="longitude",
-    y="latitude",
-    hue="continent",
-    size="population",
-    sizes=(min_size, max_size),
+    data=plot_df,
+    x=LONGITUDE,
+    y=LATITUDE,
+    hue=CONTINENT,
+    hue_order=continents,
+    size=POPULATION,
+    sizes=(0, MAX_BUBBLE_AREA),
+    size_norm=(0, value_max),
     palette=continent_palette,
     alpha=0.6,
-    edgecolor="white",
-    linewidth=2,
+    edgecolor=PAGE_BG,
+    linewidth=0.8,
+    legend=False,
     ax=ax,
     zorder=3,
-    legend="full",
 )
-
-# Customize legends - separate continent and size legends
-handles, labels = ax.get_legend_handles_labels()
-
-# Find indices for continent legend (skip size entries)
-continent_indices = [i for i, label in enumerate(labels) if label in continent_palette]
-continent_handles = [handles[i] for i in continent_indices]
-continent_labels = [labels[i] for i in continent_indices]
 
 # Continent legend
-legend1 = ax.legend(
+continent_handles = [
+    plt.scatter([], [], s=60, color=continent_palette[c], alpha=0.6, edgecolor=PAGE_BG, linewidth=0.8)
+    for c in continents
+]
+continent_legend = ax.legend(
     continent_handles,
-    continent_labels,
+    continents,
+    loc="upper left",
+    bbox_to_anchor=(1.02, 1.0),
+    fontsize=8,
+    title=CONTINENT,
+    title_fontsize=8,
+    framealpha=0.95,
+    labelspacing=0.35,
+)
+ax.add_artist(continent_legend)
+
+# Size legend: reference bubbles drawn like the data marks, at nice values within the data range
+ref_values = [v for v in MaxNLocator(nbins=4).tick_values(0, value_max) if 0 < v <= value_max]
+size_handles = [
+    plt.scatter([], [], s=MAX_BUBBLE_AREA * v / value_max, color=MUTED, alpha=0.6, edgecolor=PAGE_BG, linewidth=0.8)
+    for v in ref_values
+]
+ax.legend(
+    size_handles,
+    [f"{v:g}" for v in ref_values],
     loc="lower left",
-    fontsize=14,
-    title="Continent",
-    title_fontsize=16,
+    bbox_to_anchor=(1.02, 0.0),
+    fontsize=8,
+    title=POPULATION,
+    title_fontsize=8,
     framealpha=0.95,
-    edgecolor="#cccccc",
-)
-ax.add_artist(legend1)
-
-# Size legend showing population scale
-size_legend_pops = [5, 15, 30]
-size_legend_elements = []
-for pop in size_legend_pops:
-    size = min_size + (max_size - min_size) * (np.sqrt(pop) / np.sqrt(df["population"].max()))
-    elem = plt.scatter([], [], s=size, c="gray", alpha=0.6, edgecolor="white", linewidth=1.5)
-    size_legend_elements.append(elem)
-
-size_legend = ax.legend(
-    handles=size_legend_elements,
-    labels=[f"{p}M" for p in size_legend_pops],
-    loc="lower right",
-    fontsize=14,
-    title="Population",
-    title_fontsize=16,
-    framealpha=0.95,
-    edgecolor="#cccccc",
-    labelspacing=1.8,
+    labelspacing=1.35,
+    borderpad=0.7,
 )
 
-# Labels and styling
-ax.set_xlabel("Longitude (°)", fontsize=20)
-ax.set_ylabel("Latitude (°)", fontsize=20)
-ax.set_title(
-    "World Major City Populations · bubble-map-geographic · seaborn · pyplots.ai",
-    fontsize=24,
-    fontweight="bold",
-    pad=20,
-)
-ax.tick_params(axis="both", labelsize=16)
-
-# Subtle grid
-ax.grid(True, alpha=0.3, linestyle="--", color="#888888")
+# Style
+ax.set_xlabel(LONGITUDE, fontsize=10)
+ax.set_ylabel(LATITUDE, fontsize=10)
+ax.set_title("bubble-map-geographic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8)
+ax.grid(True, linestyle="--", linewidth=0.5)
 ax.set_axisbelow(True)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
