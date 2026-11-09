@@ -2,51 +2,51 @@ library: seaborn
 language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:02:44Z'
-updated: '2026-05-17T10:42:25Z'
-generated_by: claude-haiku
-workflow_run: 25988429133
+updated: '2026-11-09T13:51:48Z'
+generated_by: claude-opus
+workflow_run: 42627596714
 issue: 3293
-language_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 82
 review:
   strengths:
-  - Correct OHLC bar implementation with proper high-low ranges and open-close ticks
-  - 'Excellent theme adaptation: both light and dark renders perfectly readable with
-    zero dark-on-dark or light-on-light issues'
-  - Perfect visual quality across all measures (legibility, no overlaps, element visibility,
-    appropriate layout)
-  - Clean, reproducible code with proper theme token approach and seeded randomness
-  - Realistic financial context with appropriate 45-day trading period and sensible
-    price dynamics
-  - 'All specification requirements met: correct plot type, required features, proper
-    data mapping, and correct title/legend format'
+  - 'Every period is a true OHLC bar at its data values: a thin vlines high-low stroke
+    with a left hlines tick at the open and a right tick at the close, tick half-width
+    0.3 leaving a clear gap to the neighboring bars'
+  - 'Finance semantic exception applied correctly: up bars in brand green #009E73,
+    down bars in matte red #AE3030, identical in both renders, with the legend labels
+    naming the rule (Close ≥ Open / Close < Open)'
+  - 'Theme chrome fully threaded through the sns.set_theme rc block: warm #FAF8F1
+    / #1A1A17 backgrounds, INK title and labels, INK_SOFT ticks and spines, no dark-on-dark
+    text'
+  - Trading-day positions remove weekend gaps, with weekly Monday date ticks formatted
+    as %b %d that match the daily frequency; y-only grid behind the bars and a price
+    axis padded around the lows and highs, not forced to zero
+  - Plausible fictional scenario (Northwind Robotics, NWRB) with seeded random-walk
+    closes, overnight gaps and realistic intraday ranges around $125–170
   weaknesses:
-  - Design Excellence is functional but not exceptional—could benefit from more intentional
-    visual hierarchy or sophisticated styling beyond default refinement
-  - seaborn library features not leveraged distinctively; implementation appropriately
-    drops to matplotlib primitives for custom OHLC, but doesn't showcase seaborn-specific
-    strengths
+  - 'Suggestion: seaborn contributes only the theme and sns.despine; the bars are
+    plain matplotlib vlines/hlines, which is the right call for OHLC but leaves no
+    seaborn-specific feature on show.'
+  - 'Suggestion: the 45° rotation of the short ''Jan 02''-style date labels is not
+    needed at nine ticks and could be dropped for a calmer x-axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — perfect for light theme
-      Chrome: Title ("ohlc-bar · seaborn · anyplot.ai") in dark text (24pt), axis labels (20pt) and tick labels (16pt) all clearly visible in dark ink colors; legend in upper left with clear labels
-      Data: 45 trading days of OHLC bars with blue bars for up movements (close ≥ open) and red bars for down movements (close < open); vertical lines show high-low range, left/right ticks show open/close prices
-      Grid: Subtle y-axis grid at 15% alpha aids price-level reading without visual clutter
-      Legibility verdict: PASS — all text readable, strong contrast against light background, no light-on-light issues
+      Background: warm off-white #FAF8F1, figure and axes alike.
+      Chrome: title "ohlc-bar · python · seaborn · anyplot.ai" centered in near-black; y-axis label "Northwind Robotics (NWRB) Price ($)", x-axis label "Date", tick labels in dark grey (130–170 on y, Jan 02 … Feb 27 rotated 45° on x); left and bottom spines only; subtle horizontal grid lines; legend top right on an elevated frame with "Up (Close ≥ Open)" and "Down (Close < Open)". All readable.
+      Data: 45 OHLC bars — thin vertical high-low lines with a left open tick and a right close tick; up bars #009E73 green, down bars #AE3030 red; price rises to ~168 in mid-January then trends down to ~125 by early March. Ticks short enough to keep neighboring bars separate; legend clear of the data.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — perfect for dark theme
-      Chrome: Title in light text (#F0EFE8), axis labels and tick labels in light secondary text (#B8B7B0), all clearly visible against dark background; legend equally readable
-      Data: Identical data colors (blue and red) to light render — only chrome adapted to dark theme, confirming proper theme implementation
-      Grid: Same subtle styling as light render, visible against dark background
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, adequate contrast throughout
-
-    Both renders demonstrate perfect theme adaptation with identical data visualization and only theme-appropriate chrome changes.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels in light ink, tick labels and spines in light grey, faint grid lines, legend frame on the elevated dark surface with light text. No dark-on-dark text anywhere.
+      Data: identical bar positions and identical green #009E73 / red #AE3030 colors as the light render; only the chrome flipped. Both colors stand out clearly against the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,76 +57,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All text explicitly sized and readable in both themes: title 24pt,
-          axis labels 20pt, tick labels 16pt, legend 16pt'
+        comment: Explicit sizes (title 12, labels 10, ticks/legend 8); all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; date labels rotated 45° for clarity; legend
-          positioned in upper left without overlap
+        comment: No text collisions; legend sits in empty upper-right space; neighboring
+          bar ticks never touch
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 45 OHLC bars clearly visible and distinguishable with appropriate
-          line width (2pt); colors have good contrast
+        comment: 1.2 pt strokes visible on both surfaces for 45 bars; legend line
+          samples match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good color contrast; blue/red distinction is CVD-safe and clear
+        comment: Green/red differ in lightness and direction also reads from the open/close
+          ticks
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Standard 16:9 landscape (4800×2700px); plot fills 60-70% of canvas
-          with balanced margins and generous padding
+        comment: 3200x1800; balanced margins, title ~40% width, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows format; axis labels descriptive with units ('Date'
-          and 'Price ($)')
+        comment: Descriptive price label with unit ($); Date on x
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect theme chrome: backgrounds correct (#FAF8F1 light, #1A1A17
-          dark); text colors theme-adaptive; data colors identical between renders'
+        comment: 'Finance semantic exception: up #009E73, down #AE3030; correct theme
+          backgrounds'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional polish with intentional theme-adaptive design; clear
-          visual hierarchy (title > labels > ticks); thoughtful approach to color
-          encoding, though not exceptionally innovative
+        comment: Style-guide baseline typography and chrome, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed appropriately (top/right); custom grid styling (15%
-          alpha, 0.8pt width); generous whitespace; well-polished details
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through color encoding (up/down); price trend
-          progresses left-to-right with natural narrative; could benefit from more
-          emphasis
+        passed: false
+        comment: Direction coloring is what the Notes suggest; no further hierarchy
+          chosen
     spec_compliance:
       score: 15
       max: 15
@@ -136,29 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Perfect OHLC bar implementation: vertical lines for high-low range,
-          left tick for open, right tick for close'
+        comment: 'True OHLC bars: high-low line, left open tick, right close tick'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: OHLC bars, up/down color distinction,
-          date axis with appropriate formatting, grid for price-level reading'
+        comment: Thin lines, left/right ticks, up/down colors, daily date formatting,
+          grid — all Notes and good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (dates) and Y-axis (prices) correctly mapped; all data visible
-          within axis limits with 10% padding
+        comment: All bars at their data values; y range spans lows/highs with padding,
+          not forced to zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'ohlc-bar · seaborn · anyplot.ai' correct; legend with clear
-          labels 'Up (Close ≥ Open)' and 'Down (Close < Open)'
+        comment: Mandated title format; legend entries readable and correct
     data_quality:
       score: 15
       max: 15
@@ -168,22 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all OHLC aspects: open, high, low, close properly visualized;
-          both up and down bars present'
+        comment: Up and down runs, long and short ranges, near-doji bars, overnight
+          gaps
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock context with $150 base price; appropriate volatility
-          (daily returns ~N(0.001, 0.02)); 45 trading days (~2 months) realistic timeframe
+        comment: Fictional ticker Northwind Robotics (NWRB), neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ($128-$170) sensible for stock data; date range (Jan
-          2 - Feb 27, 2024) sensible for 45 business days; scaling correct
+        comment: Prices $125–170 with ~2% daily moves, plausible for a mid-cap stock;
+          no Check values in spec
     code_quality:
       score: 10
       max: 10
@@ -193,66 +185,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward procedural code: imports → theme tokens → data generation
-          → plotting → save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output on repeated runs
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy, pandas, seaborn;
-          all used'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity; custom legend construction is elegant;
-          no fake UI or over-engineering
+        comment: vectorized vlines/hlines, no hand-rolled algorithms
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output filename f'plot-{THEME}.png'; DPI 300; facecolor properly
-          set
+        comment: Saves plot-{THEME}.png, no bbox_inches tight
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Good idiomatic seaborn: sns.set_theme() with rc dict is the recommended
-          pattern; appropriately mixes seaborn styling with matplotlib primitives
-          for custom OHLC'
+        comment: sns.set_theme rc + sns.despine; plotting via matplotlib vlines/hlines,
+          the reasonable route for OHLC in seaborn
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: Uses matplotlib primitives (vlines, hlines) for OHLC bars; appropriate
-          choice for this plot type but not distinctive to seaborn
-    score_caps_applied: None
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-09T13:49:14Z'
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
   dataprep:
   - time-series
   styling:
+  - minimal-chrome
   - grid-styling
-  - publication-ready
