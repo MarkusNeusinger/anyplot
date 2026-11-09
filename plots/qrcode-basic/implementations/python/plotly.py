@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-09
+Quality: 82/100 | Updated: 2026-11-09
 """
 
 import os
