@@ -54,7 +54,8 @@ Seven decisions I made and hold the agents to, each with its reason and the code
   metadata server, and a read-only root filesystem, under a service account that holds no IAM role.
   ([renderer](agents/renderer/main.py), [validator](agents/anyplot/code/validate.py))
 - **Models choose, the server acts.** The assistant never writes data rows: it picks from a closed set of
-  typed operations, which the server applies with pandas and reports with counts. Guardrail plugins check
+  typed operations, which the server applies with pandas and reports with counts, and it gets example data
+  from formulas or a sandboxed snippet whose written-out values the validator caps. Guardrail plugins check
   every turn: a scope judge that fails closed, token and run budgets per request, user, network, and day,
   and a tool allowlist per agent. ([operations](agents/anyplot/data/prepare.py),
   [plugins](agents/anyplot/plugins/))
