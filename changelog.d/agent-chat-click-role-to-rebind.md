@@ -9,4 +9,4 @@
   to the pair. While the dropdowns would not answer, during a step or with the
   fan-out's panel open, the pairs stay plain text. `.change()` still opens
   every dropdown. On a phone each pair is a 32 px target, and the rows of a
-  line that wraps never overlap.
+  line that wraps never overlap. (#13005)
