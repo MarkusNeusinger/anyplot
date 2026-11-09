@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: plotnine 0.15.8 | Python 3.14.10
 Quality: 86/100 | Updated: 2026-11-09
