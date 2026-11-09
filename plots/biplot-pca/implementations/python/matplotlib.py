@@ -1,103 +1,123 @@
 """ anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-17
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-09
 """
 
+import os
+
+import matplotlib.patheffects as patheffects
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 
-# Load and prepare data
-iris = load_iris()
-X = iris.data
-y = iris.target
-feature_names = ["Sepal Length", "Sepal Width", "Petal Length", "Petal Width"]
-target_names = iris.target_names
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Standardize features
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Perform PCA
+# Constants
+ARROW_REACH = 0.85  # longest loading arrow spans this share of the largest score distance from the origin
+NEAR_ANGLE = np.deg2rad(12)  # arrows closer than this in direction get their labels split above and below
+LABEL_LIFT = 5  # extra vertical clearance (points) for split labels, keeping them off points and the PC2 = 0 line
+
+# Columns: set these to your table's column names
+MEASUREMENTS = ["Sepal length (cm)", "Sepal width (cm)", "Petal length (cm)", "Petal width (cm)"]  # role: features
+SPECIES = "Species"  # role: labels
+
+# Data: replace this block with your own table, for example df = pd.read_csv("flowers.csv")
+iris = load_iris(as_frame=True)
+df = iris.data.set_axis(MEASUREMENTS, axis=1)
+df[SPECIES] = [iris.target_names[code].capitalize() for code in iris.target]
+
+# Plot: reads only df and the constants above
+observations = df.dropna(subset=MEASUREMENTS).reset_index(drop=True)
+table = observations[MEASUREMENTS]
 pca = PCA(n_components=2)
-scores = pca.fit_transform(X_scaled)
-loadings = pca.components_.T  # Transpose to get (n_features, n_components)
-explained_variance = pca.explained_variance_ratio_ * 100
+scores = pca.fit_transform(StandardScaler().fit_transform(table))
+loadings = pca.components_.T
+explained = pca.explained_variance_ratio_ * 100
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# One common factor for every arrow, so relative lengths follow the loadings
+scale = ARROW_REACH * np.hypot(scores[:, 0], scores[:, 1]).max() / np.hypot(loadings[:, 0], loadings[:, 1]).max()
+tips = loadings * scale
+angles = np.arctan2(tips[:, 1], tips[:, 0])
 
-# Define colors for each class
-colors = ["#306998", "#FFD43B", "#E74C3C"]
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot observation scores (points) by group
-for i, (target, color) in enumerate(zip(target_names, colors, strict=True)):
-    mask = y == i
+ax.axhline(0, color=INK_MUTED, linewidth=0.8, alpha=0.6, zorder=1)
+ax.axvline(0, color=INK_MUTED, linewidth=0.8, alpha=0.6, zorder=1)
+
+for i, (species, rows) in enumerate(observations.groupby(SPECIES, sort=False)):
     ax.scatter(
-        scores[mask, 0],
-        scores[mask, 1],
-        c=color,
-        s=150,
-        alpha=0.7,
-        label=target.capitalize(),
-        edgecolors="white",
-        linewidth=0.5,
+        scores[rows.index, 0],
+        scores[rows.index, 1],
+        s=60,
+        alpha=0.75,
+        color=IMPRINT_PALETTE[i],
+        edgecolors=PAGE_BG,
+        linewidth=0.6,
+        label=species,
+        zorder=2,
     )
 
-# Scale loadings for visibility - use smaller scale to keep arrows within plot
-scale_factor = 2.5
-
-# Plot loading arrows and labels
-arrow_color = "#2C3E50"
-for i, feature in enumerate(feature_names):
-    x_arrow = loadings[i, 0] * scale_factor
-    y_arrow = loadings[i, 1] * scale_factor
-
+for i, measurement in enumerate(table.columns):
     ax.annotate(
         "",
-        xy=(x_arrow, y_arrow),
+        xy=tips[i],
         xytext=(0, 0),
-        arrowprops={"arrowstyle": "-|>", "color": arrow_color, "lw": 2.5, "mutation_scale": 15},
+        arrowprops={"arrowstyle": "-|>", "color": INK, "lw": 1.6, "mutation_scale": 12, "shrinkA": 0, "shrinkB": 0},
+        zorder=3,
+    )
+    gaps = angles[i] - np.delete(angles, i)
+    near = np.abs(gaps) < NEAR_ANGLE
+    va = "center" if not near.any() else ("bottom" if (gaps[near] > 0).all() else "top")
+    direction = tips[i] / np.hypot(*tips[i])
+    lift = {"center": 0, "bottom": LABEL_LIFT, "top": -LABEL_LIFT}[va]
+    ax.annotate(
+        measurement,
+        xy=tips[i],
+        xytext=direction * 6 + np.array([0, lift]),
+        textcoords="offset points",
+        ha="left" if direction[0] >= 0 else "right",
+        va=va,
+        fontsize=8,
+        color=INK,
+        path_effects=[patheffects.withStroke(linewidth=2.5, foreground=PAGE_BG)],
+        bbox={"boxstyle": "round,pad=0.25", "facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.85},
+        zorder=4,
     )
 
-    # Position text with custom offsets to avoid overlap
-    # Manual adjustments for Iris dataset features
-    offsets = {
-        "Sepal Length": (0.3, 0.25),
-        "Sepal Width": (-0.1, 0.3),
-        "Petal Length": (0.35, -0.25),
-        "Petal Width": (0.35, 0.3),
-    }
-    dx, dy = offsets.get(feature, (0.3, 0.3))
-    text_x = x_arrow + dx
-    text_y = y_arrow + dy
+# Style
+ax.set_aspect("equal", adjustable="datalim")
+ax.margins(0.12)
+ax.set_xlabel(f"PC1 ({explained[0]:.1f}% of variance)", fontsize=10, color=INK)
+ax.set_ylabel(f"PC2 ({explained[1]:.1f}% of variance)", fontsize=10, color=INK)
+ax.set_title("biplot-pca · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for side in ("left", "bottom"):
+    ax.spines[side].set_color(INK_SOFT)
+ax.grid(True, alpha=0.12, linewidth=0.6, color=INK)
+ax.set_axisbelow(True)
 
-    # Adjust alignment based on position
-    ha = "left" if x_arrow >= 0 else "right"
-    va = "bottom" if y_arrow >= 0 else "top"
-
-    ax.text(text_x, text_y, feature, fontsize=14, ha=ha, va=va, fontweight="bold", color=arrow_color)
-
-# Draw reference lines at origin
-ax.axhline(y=0, color="gray", linestyle="--", linewidth=1, alpha=0.5)
-ax.axvline(x=0, color="gray", linestyle="--", linewidth=1, alpha=0.5)
-
-# Labels and title
-ax.set_xlabel(f"PC1 ({explained_variance[0]:.1f}%)", fontsize=20)
-ax.set_ylabel(f"PC2 ({explained_variance[1]:.1f}%)", fontsize=20)
-ax.set_title("biplot-pca · matplotlib · pyplots.ai", fontsize=24)
-
-# Styling
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=16, loc="upper right", framealpha=0.9)
-ax.grid(True, alpha=0.3, linestyle="--")
-
-# Set axis limits with some padding
-ax.set_xlim(-3.5, 4)
-ax.set_ylim(-3, 3)
+if observations[SPECIES].nunique() > 1:
+    leg = ax.legend(title=SPECIES, fontsize=8, title_fontsize=8, loc="best", frameon=True)
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
+    leg.get_title().set_color(INK)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

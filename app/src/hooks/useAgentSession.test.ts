@@ -1007,6 +1007,31 @@ describe('useAgentSession: confirming the data (step 1)', () => {
     expect(result.current.state.items.filter(item => item.kind === 'notice')).toEqual([]);
     expect(result.current.state).toMatchObject({ dataConfirmed: false, confirmLoss: 'data' });
   });
+
+  it('drops the confirmation from the done alone when the server refused the plot before the run', async () => {
+    // Since 2026-11-08 the server refuses a plot call after the turn's own data change before the
+    // run: no `plot` event, so the `done` that carries the new data is what takes step 1 back.
+    const routes = baseRoutes();
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    await act(() => result.current.confirmData());
+    const before = result.current.state.items.length;
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'The data is now the daily mean: 7 rows.' }],
+        [
+          'done',
+          { llm_calls: 2, bindings: PREPARED.bindings, data_confirmed: false, dataset: PREPARED },
+        ],
+      ]);
+    await act(() => result.current.sendMessage('daily mean instead of hourly, and plot it'));
+
+    const added = result.current.state.items.slice(before);
+    expect(kindsOf(added)).toEqual(['user', 'data', 'assistant']);
+    expect(result.current.state.items.some(item => item.kind === 'plot_failed')).toBe(false);
+    expect(trackEvent).not.toHaveBeenCalledWith('agent_plot_rendered', expect.anything());
+    expect(result.current.state).toMatchObject({ dataConfirmed: false, confirmLoss: 'data' });
+  });
 });
 
 describe('useAgentSession: copying the confirmed data (the admin fan-out)', () => {
