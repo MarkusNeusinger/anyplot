@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: polar-bar
 created: '2025-12-30T16:31:19Z'
-updated: '2026-11-09T14:01:06Z'
+updated: '2026-11-09T14:09:16Z'
 generated_by: claude-opus
 workflow_run: 42629389660
 issue: 2693
@@ -12,76 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/python/pygal/plot-dark.html
-quality_score: 75
+quality_score: 81
 review:
   strengths:
-  - 'Stacked wedges with radial edges: pygal''s Radar chart is fed STEPS_PER_SECTOR
-    samples per direction, and samples outside BAR_FILL drop to zero, so every direction
-    gets one bar of equal angular width with a clear gap to its neighbours, in clockwise
-    compass order from N at the top.'
-  - 'Stacking is correct and consistent: the cumulative sums are drawn outermost-first,
-    so every bar shows Calm, Light, Moderate and Strong in the same radial order,
-    each segment as long as its own value, on a radial scale that starts at 0.'
-  - x_labels_major together with show_minor_x_labels=False labels only the eight compass
-    samples at the rim, which keeps the 128 underlying samples invisible.
-  - 'Theme chrome works in both renders: the #FAF8F1 and #1A1A17 backgrounds, light
-    or dark ink for the title, compass labels and legend, and dashed muted rings and
-    spokes that stay visible on both surfaces.'
-  - The data is a plausible wind rose with a westerly prevailing wind (W and NW dominate,
-    E and SE are weak). It is generated deterministically and kept in a tidy df that
-    is pivoted for pygal.
-  - The interactive HTML export keeps pygal's native hover tooltips and its clickable
-    legend for toggling the speed classes.
+  - 'True wind-rose bars: each direction is a wedge of one angular width (80% of its
+    45° sector) with radial edges, built from pygal''s Radar by sampling 16 points
+    per sector, in compass order clockwise from N at the top'
+  - 'Stacking is correct: cumulative series are drawn outer-first so each speed class''s
+    segment has its own radial length, and the frequencies sum to 100% across all
+    32 cells'
+  - 'Ordered speed classes use discrete imprint_seq steps from #009E73 (Calm) to #4467A3
+    (Strong), identical in both themes'
+  - Radial scale starts at zero (range=(0, top*1.08)) with dashed muted concentric
+    rings labelled 4%-24%, visible but lighter than the bars in both themes
+  - pygal-specific add_xml_filter and render_tree are used to square the polar box
+    and move the ring labels off the N spoke with a page-coloured halo
+  - Interactive HTML output keeps pygal's native hover tooltips and toggleable legend
   weaknesses:
-  - 'VQ-07 (both): the four speed classes are ordered categories (Calm < Light < Moderate
-    < Strong) but use the unordered categorical palette (#009E73, #C475FD, #4467A3,
-    #BD8233), which hides their order → color them with four ordered steps of imprint_seq
-    (#009E73 → #4467A3), Calm to Strong. Likely cause: the colors=tuple(IMPRINT_PALETTE[i
-    % len(IMPRINT_PALETTE)] ...) line in Style; interpolate the steps with the library
-    prompt''s _lerp_hex instead (this also removes the modulo, which would recycle
-    colors).'
-  - 'SC-03, VQ-05 (both): the polar area is an ellipse, not a circle. The 32 ring
-    sits about 727 px from the center horizontally but only about 645 px vertically
-    (about 12 % wider), so W and E bars are drawn about 12 % longer per unit than
-    N and S bars, and bar lengths in different directions cannot be compared → a circular
-    plot area (horizontal radius = vertical radius, delta about −80 px horizontally).
-    Likely cause: pygal Radar sizes its radii from the plot box, which the bottom
-    legend makes wider than it is tall; make the plot box square (for example raise
-    the legend''s height share or move the legend so the box''s width equals its height).'
-  - 'SC-02, VQ-02 (both): the concentric rings'' value labels for 8 and 16 sit along
-    the N spoke and are hidden under the N bar, and the 0 label at the center is overdrawn
-    by the wedge tips. Only 24 and 32 can be read, so the shorter bars, which are
-    most of them, cannot be read against a labelled ring → visible labels on every
-    ring. Likely cause: pygal draws the y labels on the first spoke (N), which the
-    bars cover; draw the N label on a spoke where it stays clear (for example start
-    the samples so that the label spoke falls in a gap between bars) or set y_labels
-    explicitly so the labels stay legible.'
-  - 'DQ-03 (both): the ''Frequency (%)'' values add up to 142 % across all 32 direction
-    × speed cells (Calm 55, Light 45, Moderate 27, Strong 15), but wind-rose frequencies
-    are shares of all observations and should total 100 % (delta −42 percentage points)
-    → scale the counts so that they sum to 100. Likely cause: the hand-typed speeds
-    dict.'
-  - 'VQ-06 (both): the radial value labels (24, 32) carry no unit or quantity, so
-    the reader cannot tell the scale shows frequency in percent → name the radial
-    quantity, for example ''Frequency (%)'' as a y_title or as a % suffix on the ring
-    labels. Likely cause: no y_title / value_formatter set from the FREQUENCY constant.'
-  - 'Suggestion: the empty band between the S label and the legend could go to a larger
-    rose once the plot area is circular.'
+  - 'VQ-02 (both): the 12% and 16% ring labels sit on the right edge of the NW bar,
+    their glyphs partly over the bar''s fill (the halo keeps them readable but they
+    collide with the data) → place the ring labels in a gap with short bars, e.g.
+    between E and SE, so no label touches a bar. Likely cause: gap = math.pi / n_dirs
+    rotates the labels only 22.5° off N, while the long NW bar''s edge reaches to
+    about 27° from N.'
+  - 'VQ-04 (both): neighbouring speed steps are barely distinguishable — Calm #009E73
+    vs Light #178C83 and Moderate #2E7A93 vs Strong #4467A3 differ only slightly,
+    so segment boundaries in the short E/SE/NE bars nearly vanish → spread the steps
+    further apart (e.g. lighten the first step or extend the ramp so adjacent steps
+    differ clearly) so every step stays distinguishable from its neighbours. Likely
+    cause: four linear steps over the short #009E73→#4467A3 ramp in the seq_colors
+    loop.'
+  - 'VQ-05 (both): the x_title ''Rings: Frequency (%) of all observations'' renders
+    at title size (about 66 px, as large as the main title) and floats about 150 px
+    below the S label, so the bottom band of the canvas is dominated by an axis caption
+    → about 48 px, matching the compass labels, with less gap above it. Likely cause:
+    pygal draws x_title with title_font_size=66; set a separate label/title size or
+    shorten the spacing.'
+  - 'CQ-01 (code): the move_ring_labels function breaks the Imports → Data → Plot
+    → Save structure → do the label rewrite inline on chart.render_tree() and save
+    that tree (e.g. via cairosvg) instead of a named filter function. Likely cause:
+    chart.add_xml_filter(move_ring_labels) requires a callable.'
+  - 'Suggestion: add a few pixels of space between each legend swatch and its text
+    — the boxes currently touch the labels.'
+  - 'Suggestion: list the legend from Calm to Strong so it reads in the same inner-to-outer
+    order as the stacked segments.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
-      Chrome: the title "polar-bar · python · pygal · anyplot.ai" is centered in dark ink at the top. The compass labels N, NE, E, SE, S, SW, W and NW sit at the rim in dark ink, rotated along their spokes. Thin dark spokes run out from the center, and dashed muted concentric rings mark the radial scale. Only the ring labels "24" and "32" can be read along the N spoke: the 8 and 16 labels are hidden under the N bar, and the 0 at the center is overdrawn by the wedge tips. The rings are visibly elliptical, wider than they are tall. A two-column legend at the bottom lists Strong, Moderate, Light and Calm with square swatches.
-      Data: eight stacked wedges with radial edges and gaps between them. Calm is #009E73 (innermost), Light #C475FD, Moderate #4467A3 and Strong #BD8233 (outermost). W is the longest bar (about 33), NW is next, N and SW are medium, and NE, E, SE and S are short.
-      Legibility verdict: PASS. All visible text is clearly readable; the inner ring labels are hidden, not illegible.
+      Chrome: title "polar-bar · python · pygal · anyplot.ai" in dark ink at the top (~65% width); compass labels N, NE, E, SE, S, SW, W, NW at the rim in dark ink (diagonals rotated); dashed muted concentric rings with labels 4%-24% placed between N and NW; x_title "Rings: Frequency (%) of all observations" in large dark text below the rose; 2-column legend at the bottom (Strong, Moderate, Light, Calm). All text readable.
+      Data: eight stacked wedges radiating from the centre, W longest (~23.5%), NW second, E/SE/NE short; segments in four imprint_seq steps from brand green #009E73 (Calm, innermost) to blue #4467A3 (Strong, outermost). The 12% and 16% ring labels touch the NW bar edge.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: the title, compass labels, the 24/32 ring labels and the legend text are drawn in light ink #F0EFE8, so there is no dark-on-dark text. The spokes are light, and the dashed rings are muted grey and still visible. The same inner-label occlusion and elliptical rings as in the light render.
-      Data: the wedge colors are identical to the light render (#009E73, #C475FD, #4467A3, #BD8233), with the same geometry; only the chrome flipped.
-      Legibility verdict: PASS.
+      Chrome: title, compass labels, ring labels, x_title and legend text all in light ink #F0EFE8, clearly readable; rings and spokes in light muted grey, subtle but visible. No dark-on-dark text.
+      Data: bar colors identical to the light render (same four imprint_seq steps); brand green Calm segments read well on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -89,50 +78,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 66, compass labels 56 and legend 44 px are explicitly sized
-          and readable in both themes and at thumbnail size
+        comment: Explicit sizes (title 66, labels 48, legend 44); all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: false
-        comment: The 8/16 ring labels are hidden under the N bar and the center 0
-          is overdrawn by the wedge tips (defect line)
+        comment: 12% and 16% ring labels sit on the NW bar edge (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All wedges and segments are clearly visible, including the thin Strong
-          rims; the legend swatches match the marks
+        comment: Wedges, rings and legend swatches clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Four well-separated hues, no red-green pair
+        passed: false
+        comment: Adjacent speed steps Calm/Light and Moderate/Strong barely distinguishable
+          (defect line)
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: false
-        comment: The plot area is elliptical, about 12 % wider than tall (defect line);
-          otherwise balanced, nothing clipped
+        comment: Square 2400x2400, rose well centred; x_title at title size dominates
+          the bottom band (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: The radial ring values carry no unit or quantity name (defect line)
+        passed: true
+        comment: Ring caption names the quantity with unit; compass labels at the
+          rim
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Ordered speed classes drawn in the categorical palette instead of
-          imprint_seq steps (defect line); the backgrounds and chrome are theme-correct
+        passed: true
+        comment: 'Ordered speed classes in imprint_seq steps starting at #009E73;
+          correct backgrounds in both themes'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -140,21 +129,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: The style-guide baseline, nothing beyond it
+        comment: 'Style-guide baseline: theme tokens, Imprint ramp, explicit font
+          sizes'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: The spine and grid rules met, nothing beyond
+        comment: 'Beyond baseline: ring labels rotated off the N spoke with a page-coloured
+          halo, polar box forced square so the rose is circular'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed, no hierarchy chosen beyond the Notes
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -162,33 +153,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: A stacked polar bar chart (wind rose) with wedges radiating from
-          the center
+        comment: Polar bar / wind rose with wedges radiating from the centre
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'C3 is partly missed: only the 24 and 32 rings have readable value
-          labels (defect line). C1, C2, C4 and C5 are met: radial bars from zero,
-          equal widths in compass order with rim labels, consistent stacking with
-          a legend'
+        passed: true
+        comment: 8 compass directions in order, one angular width, zero-based radial
+          scale, labelled rings, stacked speed classes with legend - all good-version
+          bullets met
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: The elliptical plot area scales E–W bars about 12 % longer per unit
-          than N–S bars (defect line)
+        passed: true
+        comment: Cumulative stacking gives each segment its own radial length; all
+          data in range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; the legend names each speed class with its
+        comment: Mandated title format; legend names each speed class with its km/h
           range
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -196,59 +185,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Stacked classes, strongly varying bar lengths, a prevailing-wind
-          asymmetry
+        comment: Shows varied bar lengths, a prevailing direction, and multi-class
+          stacking
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wind direction by speed class, a neutral meteorological scenario
+        comment: Plausible wind climatology with prevailing westerlies and Beaufort-like
+          speed bands
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Checked the sum of all frequency cells: 142 % instead of 100 % (defect
-          line). The individual values are plausible'
+        passed: true
+        comment: 'Checked: the 32 frequencies sum to 100%; W total 23.5% reads just
+          under the 24% ring'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear script, no functions or classes
+        passed: false
+        comment: move_ring_labels function defined (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, pandas, pygal and Style are all used
+        comment: copy, math, os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: The wedge sampling is the minimal workaround for pygal's missing
-          polar bar type
+        comment: Wedge sampling is necessary since pygal has no polar bar; seq interpolation
+          follows the library prompt
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
-          3 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal 3
+          API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -256,28 +246,31 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: A Style object, chart.add per series, Radar fill; a reasonable use
-          of pygal
+        comment: Style object, Radar with fill, legend_at_bottom; but Radar is bent
+          into a polar bar via dense sampling
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Turns pygal's Radar into a polar bar via dense samples, with x_labels_major
-          and show_minor_x_labels=False labelling only the compass points
-  verdict: REJECTED
+        comment: Uses pygal's render_tree() to measure the plot box and add_xml_filter
+          to post-process the SVG, plus native HTML interactivity
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T13:57:49Z'
+  rendered_at: '2026-11-09T14:06:06Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - html-export
-  - hover-tooltips
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep:
   - cumulative-sum
-  styling: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
