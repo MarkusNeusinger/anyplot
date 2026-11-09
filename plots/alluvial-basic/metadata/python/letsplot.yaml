@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:37:09Z'
-updated: '2026-11-09T01:40:05Z'
+updated: '2026-11-09T01:47:30Z'
 generated_by: claude-opus
 workflow_run: 42545914650
 issue: 1878
@@ -15,99 +15,94 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 quality_score: 83
 review:
   strengths:
-  - Block heights and band widths share one unit scale, and every column totals 231k,
-    so the flows are honestly proportional
-  - Category colors follow the Imprint order and stay identical across columns and
-    both themes; bands take the color of their target block
-  - 'Clean label placement: labels left of the first column and right of the others,
-    with ''name · value'' typography and knock-out geom_label boxes'
-  - Smoothstep band curves never overshoot their endpoints and page-colored hairlines
-    keep adjacent bands separable
-  - 'Theme tokens threaded through every text and outline; all text readable on both
-    #FAF8F1 and #1A1A17'
+  - 'Block heights and band widths fall out of the flow table: every middle block''s
+    incoming total equals its outgoing total (Jul 2024: Annual 81k, Monthly 71k, Free
+    trial 10k, Inactive 69k), so both band stacks fit their blocks exactly'
+  - Bands are stacked inside their source block by target order and inside their target
+    block by source order, so every band attaches cleanly to the blocks it leaves
+    and enters
+  - Labels at every column carry category and value (e.g. 'Annual plan · 81k'), placed
+    left of the first column and right of the others, with bold column headers for
+    each snapshot
+  - Theme tokens threaded through every text layer and block outline; the Imprint
+    fills are identical in both renders and the translucent bands stay distinguishable
+    on both backgrounds
+  - 'Layered grammar with one data frame per layer: geom_polygon grouped by band,
+    geom_rect blocks, geom_text and geom_label for headers and labels on theme_void'
   weaknesses:
-  - 'VQ-01 (both): the block labels at geom size 4 (about 11 pt) blur and become hard
-    to read in the 400 px thumbnail → geom size about 5 (+1 mm, about +3 pt). Likely
-    cause: size=4 on the two block-label geom_text/geom_label layers.'
-  - 'VQ-02 (both): the middle-column labels ("Annual plan · 81k", "Free trial · 10k",
-    "Inactive · 69k") sit with their opaque boxes on the first ~90 px of the outgoing
-    bands and hide where those bands leave their blocks → label boxes clear of the
-    bands, for example a lower box alpha or a narrower node gap so the bands remain
-    visible behind the text. Likely cause: geom_label fill=PAGE_BG, alpha=0.85 at
-    xmax + 0.008.'
-  - 'VQ-06 (both): nothing in the render names the quantity — the labels read "65k"
-    without saying it counts accounts → state the measure, for example a descriptive
-    title prefix ''Subscription Plan Transitions (accounts) · ''. Likely cause: the
-    ACCOUNTS column name is never shown.'
-  - 'Suggestion: the value labels could drop the ''k'' and carry the unit once in
-    the title to shorten the middle-column labels.'
+  - 'VQ-02 (both): the middle column''s labels (''Free trial · 10k'', ''Inactive ·
+    69k'', ''Monthly plan · 71k'') sit on top of the outgoing bands, and ''Free trial
+    · 10k'' crosses the green, purple and blue bands that leave that block, so text
+    and data marks collide (readable only through the 50 % label box) → keep the labels
+    off the bands, e.g. widen the gap between the middle blocks and the band start
+    or give the label box a fully opaque PAGE_BG fill. Likely cause: others label_x
+    = xmax + 0.008 places the labels inside the band region, with geom_label alpha=0.5.'
+  - 'Suggestion: configure lets-plot tooltips on the bands (source plan → next plan,
+    accounts moved) for the HTML detail view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no axes or grid (theme_void).
-      Chrome: bold near-black title "alluvial-basic · python · letsplot · anyplot.ai" top left (~50 % width); bold column headers "Jan 2024", "Jul 2024", "Jan 2025"; soft-ink block labels "Annual plan · 65k" etc. left of the first column and right of the others (middle ones on light knock-out boxes). All readable.
-      Data: three columns of four stacked blocks — Annual plan #009E73, Monthly plan #C475FD, Free trial #4467A3, Inactive #BD8233 — outlined in INK_SOFT; translucent bands (alpha 0.55) colored by target category, large stable flows plus thin crossing transitions (e.g. Inactive → Annual green band).
+      Background: warm off-white #FAF8F1, no axes, no grid (theme_void).
+      Chrome: bold near-black title "alluvial-basic · python · letsplot · anyplot.ai" at top left, INK_SOFT subtitle "Block heights and band widths: Accounts (thousands)", bold column headers Jan 2024 / Jul 2024 / Jan 2025; category labels with values at every block (left of the first column, right of the others; the middle labels on a translucent page-colored box over the bands). All readable.
+      Data: three columns of four stacked blocks — Annual plan #009E73, Monthly plan #C475FD, Free trial #4467A3, Inactive #BD8233 — with INK_SOFT outlines; translucent bands (alpha 0.55) colored by target category, width proportional to flow, smooth S-curves, thin bands for rare transitions.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title and column headers in light #F0EFE8, block labels in #B8B7B0, middle-column label boxes dark. No dark-on-dark text.
-      Data: block colors identical to the light render; bands appear deeper because the translucent fill blends with the dark page, still distinguishable; block outlines light grey.
+      Chrome: title and headers in light ink, labels and subtitle in light grey INK_SOFT; no dark-on-dark text; the middle label boxes are dark translucent.
+      Data: identical block and band colors to the light render; translucent bands read darker over the dark page but remain distinguishable, blue Free-trial bands dimmest yet visible; block outlines light grey.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, column headers and block labels readable in both themes at
-          full size; the size-4 block labels blur in the 400 px thumbnail (defect
-          line)
+        comment: Title 16 pt bold, headers and labels sized in mm, all readable in
+          both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
-        passed: true
-        comment: No text-on-text collisions; the middle-column label boxes sit on
-          the start of the outgoing bands and hide them (defect line)
+        passed: false
+        comment: Middle-column labels sit on the outgoing bands; 'Free trial · 10k'
+          crosses several bands (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Blocks outlined in INK_SOFT, bands at alpha 0.55 with a hairline
-          page-colored edge; thin rare-transition bands are visible in both themes
+        comment: Blocks outlined, thin bands still visible in both themes; no legend
+          needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue/ochre are CVD-distinguishable and every block is
-          also named by its label
+        comment: Four distinct Imprint hues plus direct labels; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas (gate passed), balanced margins, labels inside the
-          canvas, title ~50 % width
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Column headers name the time points, but nothing in the render says
-          what the 65k values count (defect line)
+        passed: true
+        comment: N/A axes; column headers and subtitle naming the unit (accounts,
+          thousands)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-4 in canonical order, first category #009E73,
-          identical in both renders; backgrounds #FAF8F1 / #1A1A17'
+        comment: 'Imprint order from #009E73, correct page backgrounds in both themes'
     design_excellence:
       score: 10
       max: 20
@@ -117,21 +112,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clear three-level hierarchy (bold title, bold 6 mm column headers,
-          soft-ink block labels with 'name · value' typography)
+        comment: 'Beyond baseline: subtitle stating what heights and widths encode,
+          compact ''name · value'' labels, bold column headers as a typographic tier'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Labels placed outside the first column and right of the others, page-colored
-          hairlines between bands, fixed block gaps
+        comment: 'Beyond baseline: labels flanking the outer columns, page-colored
+          hairline edges on the bands, band order sorted to keep stacks tidy'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed, no hierarchy chosen beyond the Notes (default)
+        passed: true
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single basic alluvial diagram, no highlights or extra layers
+        comment: Correct alluvial diagram, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Chronological columns, stacked blocks sized by value, bands between
-          neighbors proportional to flow, consistent category colors, translucent
-          bands, column headers and labels in every column
+        comment: Chronological columns, consistent category colors, proportional bands,
+          transparency, headers and labels at every column — all good-version bullets
+          met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Band widths and block heights share one unit scale; smoothstep curves
-          stay within the band endpoints (no overshoot)
+        comment: Block heights and band widths proportional to the values; bands attach
+          to their source and target blocks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'alluvial-basic · python · letsplot · anyplot.ai'; legend N/A,
-          direct labels name every block
+        comment: Mandated title; no legend needed thanks to direct labels
     data_quality:
       score: 15
       max: 15
@@ -173,22 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Stable dominant flows, crossing transitions, hair-thin rare moves,
-          and blocks that grow and shrink between columns
+        comment: Shows stable flows, crossings, thin rare transitions and blocks that
+          grow and shrink
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Subscription plan transitions (annual, monthly, trial, inactive)
-          — plausible and neutral
+        comment: Subscription plan transitions between snapshots — neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: column totals 231k in all three columns; Jul 2024 Annual
-          in = out = 81k, Inactive 69k; labels match the matrices'
+        comment: 'Checked: middle block inflows equal outflows (81/71/10/69k), Jan
+          2025 totals 85/78/10/58k computed from the flow table'
     code_quality:
       score: 10
       max: 10
@@ -198,67 +191,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded flow matrices
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: lets-plot has no alluvial geom, so the polygon layout is the necessary
-          computation; vectorized groupby/cumsum stacking
+        comment: Layout computed with pandas groupby/cumsum; lets-plot has no alluvial
+          geom, so the polygon build is needed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Grammar-of-graphics layering: geom_polygon with group aesthetic,
-          geom_rect, one scale_fill_manual dict shared by blocks and bands, theme_void'
+        comment: Layered grammar with per-layer data, theme_void, scale_fill_manual
+          by named mapping
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: false
-        comment: geom_label with label_size/label_padding/alpha for knock-out labels;
-          interactive HTML export
-  verdict: REJECTED
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
-  rendered_at: '2026-11-09T01:37:09Z'
+  rendered_at: '2026-11-09T01:44:36Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - bezier-curves
   - annotations
   - html-export
   patterns:
   - data-generation
-  - groupby-aggregation
   - iteration-over-groups
+  - columnar-constants
   dataprep:
+  - groupby-aggregation
   - cumulative-sum
   styling:
-  - minimal-chrome
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
