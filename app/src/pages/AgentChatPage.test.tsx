@@ -3915,6 +3915,16 @@ describe('AgentChatPage attachment', () => {
       expect(panel).not.toHaveFocus();
     });
 
+    it('takes the focus into the fan-out it opened after reading, when a key pressed it', async () => {
+      cleanSummary();
+      await openChat();
+      await toggleAll();
+      pasteText(TABLE);
+      // A key press is a click with `detail` 0: the panel the chain opens takes the focus.
+      fireEvent.click(screen.getByRole('button', { name: 'Plot in all libraries' }), { detail: 0 });
+      expect(await screen.findByRole('region', { name: 'All libraries' })).toHaveFocus();
+    });
+
     it('says that it reads while the reading runs, and plots after it', async () => {
       cleanSummary();
       await openChat();
