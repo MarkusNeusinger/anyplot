@@ -126,7 +126,7 @@ import subprocess
 import sys
 import time
 from collections import Counter
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -1067,6 +1067,39 @@ def shipped_shows(sid: str, number: Any) -> dict[str, Any] | None:
     return shows.model_dump(mode="json") if shows is not None else None
 
 
+async def store_data_steps(runtime: "Runtime", user: str, sid: str, steps: Sequence[Sequence[dict[str, Any]]]) -> None:
+    """Each step's `prepare_data` operations applied to the session's current data and stored as its next version,
+    with the change lines the session block shows, as the tool stores one; no model call. A case's data steps in the
+    matrix (`EvalCase.before_operations`) and a prep case's earlier changes (`prep.PrepCase.before_operations`) both
+    come this way. Their lists passed the `Operation` models already, so a refusal here is a fixture bug and raises."""
+    from agents.anyplot.data.prepare import PrepareArgs, apply_and_parse
+    from agents.anyplot.dataset_versions import push_version
+    from agents.anyplot.services import get_services
+    from agents.anyplot.session_state import read_session
+
+    store = get_services().datasets
+    for operations in steps:
+        session = await runtime.session(user, sid)
+        view = read_session(session.state)
+        stored = store.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+        if view is None or stored is None:
+            raise RuntimeError("the case's session has no data to change")
+        args = PrepareArgs.model_validate({"operations": list(operations)})
+        prepared, parsed = apply_and_parse(stored.as_parsed(), args.operations, language=view.language)
+        version = push_version(
+            store,
+            sid,
+            view,
+            parsed,
+            view.snapshot,
+            converted=prepared.converted,
+            row_numbers=prepared.row_numbers,
+            splits=prepared.splits,
+            changes=prepared.changes,
+        )
+        await runtime.write_state(session, version.delta)
+
+
 def version_facts(sid: str, number: Any) -> dict[str, Any] | None:
     """What `follow_up_checks` reads of the shipped version `number`: its code, plot language, theme, drawn texts
     and missed requested texts, from the in-process services; None for a version it does not hold."""
@@ -1160,6 +1193,8 @@ class CaseRunner:
     renders_dir: Path
     recorder: AttemptRecorder | None = None
     theme: str | None = None
+    runtime: "Runtime | None" = None
+    """The app's runtime, whose sessions a case's data steps change (`before_operations`)."""
 
     async def run(self, case: "EvalCase", repeat: int) -> dict[str, Any]:
         """One case and repeat, from opening the session to deleting it; never raises for a broken case."""
@@ -1205,6 +1240,10 @@ class CaseRunner:
             return
         if not await self._dataset(record, case, sid, headers("d")):
             return
+        if case.before_operations:
+            if self.runtime is None:
+                raise RuntimeError("a case with data steps needs the app's runtime")
+            await store_data_steps(self.runtime, user, sid, case.before_operations)
         if not await self._bindings(record, case, sid, headers("b")):
             return
         if not await self._confirm(record, sid, headers("c")):
@@ -1554,7 +1593,9 @@ async def _run_matrix(
     try:
         transport = httpx.ASGITransport(app=timed)
         async with httpx.AsyncClient(transport=transport, base_url="http://agents", timeout=None) as client:
-            runner = CaseRunner(client, timed, collector, settings, config.out / "renders", recorder, config.theme)
+            runner = CaseRunner(
+                client, timed, collector, settings, config.out / "renders", recorder, config.theme, runtime
+            )
             for index, (case, repeat) in enumerate(plan, start=1):
                 if config.budget_usd is not None and runs and total + costliest > config.budget_usd:
                     stopped = "budget"
