@@ -1,11 +1,10 @@
-"""A library the chat serves, however the user writes its name, and the reply language of a message without one.
+"""A library the chat serves, however the user writes its name, and the refusal language of a message without one.
 
 Live session of 2026-11-08: in a German session "erstell das bitte mal in d3" and "d3.js" got the `other_library`
 pointer to the catalogue, the second in English, and only "D3.js", the display name the judge's rubric lists, switched
 the plot. The scope guard now lifts an `other_library` for a message that names only served libraries
 (`scope_guard.served_library_request`, one names table in `core/library_names.py`), `switch_plot` takes any common
-form, and the judge's `en` for a message too short to tell never overrides the session language
-(`scope_guard.refusal_language`).
+form, and every refusal after the judge is in the session language (#12865), so "d3.js" no longer flips it.
 """
 
 from collections.abc import AsyncIterator, Iterator
@@ -18,7 +17,7 @@ import pytest
 from agents.anyplot import policy
 from agents.anyplot.models import JudgeVerdict
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger
-from agents.anyplot.plugins.scope_guard import ScopeGuardPlugin, refusal_language, served_library_request, withheld_text
+from agents.anyplot.plugins.scope_guard import ScopeGuardPlugin, served_library_request, withheld_text
 from agents.anyplot.schemas import SwitchArgs
 from agents.anyplot.services import Services
 from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE
@@ -33,7 +32,8 @@ from .test_service_flow import open_session as open_confirmed
 
 ALL_LIBRARIES = sorted(SUPPORTED_LIBRARIES)
 """The deploy's served set (`agents/cloudbuild.yaml` `_LIBRARIES`)."""
-GERMAN = {LANGUAGE: "de", LANGUAGE_SOURCE: "detected"}
+GERMAN = {LANGUAGE: "de", LANGUAGE_SOURCE: "chosen"}
+"""A session whose user picked German in the chat header: since #12865 nothing a user writes sets the language."""
 
 
 @pytest.fixture
@@ -114,8 +114,8 @@ class TestScopeGuard:
 
         assert replaced is None and ledger.refusal is None and ledger.error is None
         lines = [line["verdict"] for line in scope_lines(caplog)]
-        assert lines == ["other_library", "served_library_in_scope", "language_detected"]  # the judge's on record
-        assert (context.session.state[LANGUAGE], context.session.state[LANGUAGE_SOURCE]) == ("de", "detected")
+        assert lines[:2] == ["other_library", "served_library_in_scope"]  # the judge's own verdict stays on record
+        assert LANGUAGE not in context.session.state  # an accepted message never sets the language (#12865)
 
     @pytest.mark.parametrize(
         "text", ["Port this plot to Vega-Lite", "Kannst du das in Excel machen?", "port the d3 version to vega-lite"]
@@ -131,11 +131,12 @@ class TestScopeGuard:
     async def test_a_catalogue_library_not_served_here_keeps_its_pointer(
         self, ledger: RequestLedger, services: Services, judge
     ) -> None:
-        """The default served set is matplotlib and seaborn: d3 is in the catalogue, not here."""
+        """The default served set is matplotlib and seaborn: d3 is in the catalogue, not here. The pointer is in the
+        session language (English here), whatever language the message is in."""
         replaced, _ = await judged(judge, "erstell das bitte mal in d3", "other_library", "de")
 
         assert replaced.parts[0].text == withheld_text("other_library")
-        assert ledger.refusal == ("other_library", policy.refusal("other_library", "de"))
+        assert ledger.refusal == ("other_library", policy.refusal("other_library", "en"))
 
     async def test_an_attack_that_names_a_library_stays_an_attack(
         self, ledger: RequestLedger, services: Services, judge, served: list[str]
@@ -173,24 +174,7 @@ class TestScopeGuard:
 
 
 class TestRefusalLanguage:
-    """The judge's `en` for a message too short to tell is no language: it never overrides the session's."""
-
-    @pytest.mark.parametrize(
-        ("session", "judged", "text", "expected"),
-        [
-            ("de", "en", "vega-lite", "de"),  # the live case: a name has no language
-            ("de", "en", "d3.js", "de"),
-            ("de", "en", "in Excel", "de"),
-            ("de", "en", "Write me an email to my customers about this plot", "en"),  # three words or more: English
-            ("de", "fr", "Bleu", "fr"),  # a language other than English counts at any length
-            ("en", "de", "Schreib mir ein Gedicht", "de"),
-            ("en", "en", "d3.js", "en"),
-        ],
-    )
-    def test_a_short_english_guess_keeps_the_session_language(
-        self, session: str, judged: str, text: str, expected: str
-    ) -> None:
-        assert refusal_language(session, judged, text) == expected
+    """A message without a clear language never flips the session's: the refusal follows the session (#12865)."""
 
     async def test_a_short_refused_message_keeps_the_german_session(
         self, ledger: RequestLedger, services: Services, judge, served: list[str]
@@ -261,8 +245,8 @@ async def say(client: httpx.AsyncClient, sid: str, text: str) -> list[tuple[str,
 async def test_the_live_session_switches_on_its_first_message_in_german(
     client: httpx.AsyncClient, swap_models, judge, served: list[str]
 ) -> None:
-    """The three messages of 2026-11-08, with the judge answering as it did then: each one asks for D3.js, the first
-    already switches, every reply and refusal is German, and the session stays German."""
+    """The three messages of 2026-11-08 in a session set to German, with the judge answering as it did then: each one
+    asks for D3.js, the first already switches, every refusal is German, and the session stays German."""
     switch = "Der Plot kommt jetzt in D3.js, mit deinen bisherigen Entscheidungen."
     swap_models(
         "gemini",
@@ -278,6 +262,8 @@ async def test_the_live_session_switches_on_its_first_message_in_german(
         },
     )
     sid = await open_confirmed(client)
+    chosen = await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "de"})
+    assert chosen.status_code == 200, chosen.text  # the chat header's language chip
     judge.script = [
         JudgeVerdict(verdict="other_library", lang="de"),
         JudgeVerdict(verdict="other_library", lang="en"),
@@ -291,7 +277,7 @@ async def test_the_live_session_switches_on_its_first_message_in_german(
         assert [name for name, _ in events if name in ("refusal", "error")] == [], text
         done = events[-1][1]
         assert events[-1][0] == "done" and done["switch"] == {"library": "d3", "plot": True}, text
-        assert done["language"] == {"language": "de", "source": "detected"}, text
+        assert (done["language"]["language"], done["language"]["source"]) == ("de", "chosen"), text
 
     refused = await say(client, sid, "vega-lite")  # a tool outside the catalogue: its pointer, in German
 
@@ -299,7 +285,7 @@ async def test_the_live_session_switches_on_its_first_message_in_german(
         {"code": "other_library", "text": policy.refusal("other_library", "de")}
     ]
     state = await _session_state(client, sid)
-    assert (state[LANGUAGE], state[LANGUAGE_SOURCE]) == ("de", "detected")
+    assert (state[LANGUAGE], state[LANGUAGE_SOURCE]) == ("de", "chosen")
     runtime = app.dependency_overrides[get_runtime]()
     assert (await runtime.session(USER, sid)).state["anyplot.library"] == "matplotlib"  # the page switches
 
