@@ -13,4 +13,4 @@
   measured on. Only on-canvas renders qualify, as the canvas gate sends no
   other render to a review. The workflow's `set` input takes `v4`; its 56
   renders go up with the owner's one-time upload, and its labels stay drafts
-  until the owner confirms them.
+  until the owner confirms them. (#12957)
