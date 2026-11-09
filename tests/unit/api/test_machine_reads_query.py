@@ -14,6 +14,7 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
+from api import machine_reads_query
 from api.agent_usage import decode_rows
 from api.machine_reads import AUDIENCE_SQL
 from api.machine_reads_query import (
@@ -251,6 +252,15 @@ class TestReadDetail:
         now[0] += 2
         read_detail(fake, DATASET, 7, now=NOW, clock=lambda: now[0])
         assert len(fake.calls) == 4
+
+    def test_expired_answers_are_dropped_on_the_next_write(self, fake) -> None:
+        now = [100.0]
+        read_detail(fake, DATASET, 7, now=NOW, clock=lambda: now[0])
+        read_detail(fake, DATASET, 30, now=NOW, clock=lambda: now[0])
+        assert len(machine_reads_query._DETAIL_CACHE) == 2
+        now[0] += DETAIL_CACHE_TTL_S + 1
+        read_detail(fake, DATASET, 7, now=datetime(2026, 11, 10, 9, 0, tzinfo=UTC), clock=lambda: now[0])
+        assert list(machine_reads_query._DETAIL_CACHE) == [(DATASET, 7, "2026-11-04")]
 
     def test_a_failure_is_never_kept(self) -> None:
         failing = FakeQuery(error=RuntimeError("timeout"))

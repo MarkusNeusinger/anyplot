@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeContext, type ThemeContextValue } from 'src/hooks/useLayoutContext';
 import { StatsPage } from 'src/pages/StatsPage';
-import { render, screen, userEvent, waitFor } from 'src/test-utils';
+import { render, screen, userEvent, waitFor, within } from 'src/test-utils';
 
 const darkThemeValue: ThemeContextValue = {
   mode: 'dark',
@@ -510,6 +510,14 @@ describe('StatsPage', () => {
       'aria-label',
       '2026-10-20: 1 request · 0 for a person · 1 ai index & training · 0 search engines'
     );
+    // Each day is a named, focusable image, so a keyboard and a screen reader reach its numbers.
+    const strip = screen.getByRole('group', { name: 'machine readers per day' });
+    expect(
+      within(strip).getByRole('img', {
+        name: '2026-11-09: 21 requests · 2 for a person · 16 ai index & training · 3 search engines',
+      })
+    ).toHaveAttribute('tabindex', '0');
+    expect(within(strip).getAllByRole('img')).toHaveLength(28);
   });
 
   it.each([

@@ -118,6 +118,8 @@ function MachineReadersChart({
   return (
     <>
       <Box
+        role="group"
+        aria-label="machine readers per day"
         sx={{
           display: 'flex',
           alignItems: 'flex-end',
@@ -134,8 +136,13 @@ function MachineReadersChart({
             `${point.index_training} ai index & training · ${point.search} search engines`;
           return (
             <Tooltip key={point.date} title={title} arrow>
+              {/* Focusable, so a keyboard reaches each day's numbers as a pointer does; the
+                  Tooltip names the column (`aria-label`), which `role="img"` lets assistive
+                  technology read. */}
               <Box
                 data-testid="machine-readers-day"
+                role="img"
+                tabIndex={0}
                 sx={{
                   flex: 1,
                   height: '100%',
@@ -143,8 +150,12 @@ function MachineReadersChart({
                   flexDirection: 'column-reverse',
                   gap: `${GAP_PX}px`,
                   borderRadius: '2px 2px 0 0',
-                  '&:hover': { bgcolor: 'var(--rule)' },
-                  '&:hover .machine-readers-muted': { opacity: 0.45 },
+                  outline: 'none',
+                  '&:hover, &:focus-visible': { bgcolor: 'var(--rule)' },
+                  '&:focus-visible': { boxShadow: `inset 0 -2px 0 ${colors.primary}` },
+                  '&:hover .machine-readers-muted, &:focus-visible .machine-readers-muted': {
+                    opacity: 0.45,
+                  },
                   transition: 'background-color 0.15s ease',
                 }}
               >

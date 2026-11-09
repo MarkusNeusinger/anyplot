@@ -480,5 +480,9 @@ def read_detail(
         daily=[_detail_day(date, by_day.get(date, {})) for date in dates],
     )
     with _CACHE_LOCK:
-        _DETAIL_CACHE[key] = (clock() + DETAIL_CACHE_TTL_S, detail)
+        now_s = clock()
+        # Expired answers go on every write, so the answers of past days do not pile up in a long-lived process.
+        for stale in [kept_key for kept_key, (expires, _) in _DETAIL_CACHE.items() if expires <= now_s]:
+            del _DETAIL_CACHE[stale]
+        _DETAIL_CACHE[key] = (now_s + DETAIL_CACHE_TTL_S, detail)
     return detail
