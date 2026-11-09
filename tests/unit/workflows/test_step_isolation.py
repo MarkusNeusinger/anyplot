@@ -49,38 +49,57 @@ STAGE = "Stage regen pair"
 RECORD = "$RUNNER_TEMP/anyplot-regen-record.json"
 SUMMARY = "$RUNNER_TEMP/anyplot-regen-summary.md"
 
-# `echo`/`printf` of one quoted variable, piped straight into a quiet grep.
+# `echo`/`printf` of one quoted variable (`"$X"`, `"${X}"`, `"${X:-}"`), piped straight into a quiet grep.
 ECHO_INTO_GREP_Q = re.compile(
-    r'\b(?:echo|printf)\b[^|\n]*"\$\{?\w+\}?"[^|\n]*\|\s*grep\b(?:\s+-[\w-]+)*?\s+(?:-\w*q\w*|--quiet|--silent)\b'
+    r'\b(?:echo|printf)\b[^|\n]*"\$(?:\w+|\{[^}"\n]+\})"[^|\n]*\|\s*grep\b(?:\s+-[\w-]+)*?\s+(?:-\w*q\w*|--quiet|--silent)\b'
 )
 
 
+def _racy_lines(text: str) -> list[tuple[int, str]]:
+    """(first line number, command) of each racy pipeline; a trailing backslash joins the next line."""
+    hits: list[tuple[int, str]] = []
+    parts: list[str] = []
+    start = 0
+    for number, line in enumerate(text.splitlines(), start=1):
+        if not parts and line.lstrip().startswith("#"):
+            continue  # a comment ends at its newline, backslash or not
+        if not parts:
+            start = number
+        if line.rstrip().endswith("\\"):
+            parts.append(line.rstrip()[:-1])
+            continue
+        command = " ".join([*parts, line])
+        parts = []
+        if ECHO_INTO_GREP_Q.search(command):
+            hits.append((start, command.strip()))
+    return hits
+
+
 @pytest.mark.parametrize(
-    ("line", "flagged"),
+    ("text", "flagged"),
     [
         ('if echo "$CURRENT_LABELS" | grep -q "ai-approved"; then', True),
         ('elif echo "${PRESENT}" | grep -qxF "$stale"; then', True),
+        ('if echo "${LABELS:-}" | grep -q spec-ready; then', True),
         ("printf '%s\\n' \"$LABELS\" | grep -q spec-ready", True),
         ('echo "$X" | grep -x -q y', True),
+        ('if echo "$LABELS" | \\\n     grep -q "ai-approved"; then', True),
+        ('# echo "$LABELS" | grep -q "ai-approved" was racy', False),
         ('if grep -q "ai-approved" <<< "$CURRENT_LABELS"; then', False),
         ('if echo " $labels " | grep -q " regen:kept "; then', False),
         ('echo "$X" | grep -c y', False),
         ("gh pr view 7 --json labels -q '.labels[].name' | grep -qxF ai-review-paused", False),
     ],
 )
-def test_the_guard_flags_exactly_the_racy_form(line, flagged):
-    assert bool(ECHO_INTO_GREP_Q.search(line)) is flagged
+def test_the_guard_flags_exactly_the_racy_form(text, flagged):
+    assert bool(_racy_lines(text)) is flagged
 
 
 @pytest.mark.parametrize(
     "path", WORKFLOW_FILES, ids=lambda p: p.name if p.parent.name == "workflows" else p.parent.name
 )
 def test_no_step_pipes_a_variable_into_a_quiet_grep(path):
-    hits = [
-        f"{path.name}:{number}: {line.strip()}"
-        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1)
-        if not line.lstrip().startswith("#") and ECHO_INTO_GREP_Q.search(line)
-    ]
+    hits = [f"{path.name}:{number}: {command}" for number, command in _racy_lines(path.read_text(encoding="utf-8"))]
     assert not hits, 'use `grep -q PATTERN <<< "$VAR"` instead:\n' + "\n".join(hits)
 
 
