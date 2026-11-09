@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: histogram-stacked
 created: '2025-12-30T10:38:59Z'
-updated: '2026-11-09T11:08:11Z'
+updated: '2026-11-09T11:13:02Z'
 generated_by: claude-opus
 workflow_run: 42605730150
 issue: 2601
@@ -12,45 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 80
 review:
   strengths:
-  - Shared bin boundaries for all groups come from a single np.histogram_bin_edges
-    call over the pooled data, so every group's segments line up bin for bin.
-  - Segments stack in one fixed order (Shade-grown, Partial-sun, Full-sun) in every
-    bin, from a zero baseline, with no gaps between segments; the frequency axis reaches
-    past the tallest total (76) through range=(0, tallest_total * 1.1).
-  - Theme tokens are threaded through pygal's Style, so both renders are theme-correct;
-    the Imprint palette is passed whole and brand green comes first.
-  - 'Realistic, neutral scenario: plant heights under three light conditions, with
-    plausibly shifted normal distributions that make the composition change across
-    bins easy to read.'
-  - 'Native pygal interactivity in the HTML output: per-segment hover tooltips and
-    toggleable legend entries.'
+  - 'Contiguous stacked bins: the segments of each bin sit directly on one another
+    from a zero baseline, and the bins touch, so every bar top reads as the combined
+    frequency in both renders'
+  - One shared set of bin edges from np.histogram_bin_edges is applied to every group,
+    and the y range is derived from the tallest total (×1.1), so the axis is never
+    truncated
+  - 'Imprint palette in canonical order (#009E73, #C475FD, #4467A3) with identical
+    data colors in both themes; the chrome flips correctly through the Style tokens'
+  - Realistic, neutral scenario (plant heights by light condition, 450 plants) with
+    three overlapping distributions that show the composition shifting across the
+    bins
+  - 'Clean adaptable-code layout: column constants, a tidy df, and plain lists built
+    per group with groupby(sort=False), so the segment order is one stable order in
+    every bin'
+  - Native pygal interactive HTML output with per-segment tooltips alongside the PNG
   weaknesses:
-  - 'SC-02 (both): adjacent histogram bars are separated by gaps of about 16 px, so
-    the bins do not read as contiguous intervals → contiguous bars (gap 0 px, −16
-    px). Likely cause: spacing=24 on pygal.StackedBar; set spacing=0.'
-  - 'Suggestion: label bins with one decimal (e.g. "24.6–28.8") or choose round bin
-    edges, because the integer-rounded labels make equal-width bins look like widths
-    of 4 and 5.'
-  - 'Suggestion: the dotted y-guides are barely perceptible on the dark render; a
-    slightly stronger guide tone would help the reader read the totals.'
+  - 'VQ-05 (both): the x-axis title ''Plant Height (cm)'' sits on top of the bottom
+    legend row with almost no gap (its descenders nearly touch the legend text), so
+    the axis title and the legend crowd each other → a clear gap of about 30–40 px
+    between the axis title and the legend. Likely cause: legend_at_bottom with margin=60
+    and no extra legend spacing; the axis title at title_font_size=66 fills the space
+    between the tick labels and the legend.'
+  - 'CQ-01 (code): a class ContiguousStackedBar subclass overrides the private attribute
+    _series_margin to make the bins touch, which breaks the no-functions/no-classes
+    KISS structure → configure the chart without a class, for example by setting the
+    attribute on the chart instance (chart._series_margin = 0) or another flat configuration.
+    Likely cause: the subclass written to mirror pygal''s Histogram.'
+  - 'Suggestion: the rounded bin labels give uneven ranges (''24–29'' and ''49–54''
+    span 5 cm, the others 4 cm); one decimal or rounded bin edges would make the shared
+    bin width explicit.'
+  - 'Suggestion: the axis titles are drawn as large as the chart title; a smaller
+    axis-title size would give the title its own level in the hierarchy.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 (sampled 250,248,241)
-      Chrome: centred title "histogram-stacked · python · pygal · anyplot.ai", axis titles "Plant Height (cm)" and "Frequency (plants)", bin tick labels 12–16 … 58–62, y ticks 0–80, dotted y-guides, three-column legend at the bottom; all text is dark ink and readable
-      Data: 12 stacked bars, with Shade-grown #009E73 at the bottom, Partial-sun #C475FD in the middle and Full-sun #4467A3 on top in every bin; the tallest total is 76 at 37–41; there are about 16 px gaps between bars
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: title "histogram-stacked · python · pygal · anyplot.ai" centered at top in dark ink; y-axis title "Frequency (plants)" rotated, x-axis title "Plant Height (cm)"; tick labels 0–80 on y and twelve bin labels (12–16 … 58–62) on x, all dark and readable; dotted horizontal guides subtle but visible; legend at the bottom in three columns (Shade-grown, Partial-sun, Full-sun). The x-axis title sits very close above the legend row.
+      Data: twelve contiguous stacked bars; Shade-grown #009E73 at the bottom, Partial-sun #C475FD in the middle, Full-sun #4467A3 on top, same order in every bin, zero baseline, tallest total 76 in 37–41 below the 80 gridline. Thin segments in the tails (e.g. 1 Partial-sun in 12–16, 1 Shade-grown in 37–41) are visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 (sampled 26,26,23)
-      Chrome: title, axis titles, ticks and legend in light ink #F0EFE8, all readable, with no dark-on-dark text; the dotted guides are very faint but perceptible
-      Data: colors identical to the light render (green, purple, blue)
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, axis titles, tick labels and legend text all in light ink and readable; no dark-on-dark text; dotted guides are faint but visible.
+      Data: identical colors and stacking to the light render (#009E73, #C475FD, #4467A3); brand green reads well on the dark surface; all three segments are distinguishable from each other and the background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -58,44 +69,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 66, labels 44); all text readable in both
-          themes
+        comment: Explicit pygal sizes (title 66, ticks 44, legend 44); all text readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions
+        comment: No text collides with text or data; bin labels fit their slots
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Solid segments, legend swatches match the marks in both themes
+        comment: Solid segments, thin tail segments still visible; legend swatches
+          match the fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, purple and blue are distinguishable, including under CVD
+        comment: Green, purple and blue differ in hue and lightness; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 3200x1800, balanced margins, title about 60% of the width
+        passed: false
+        comment: 3200x1800; x-axis title crowds the bottom legend row (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Plant Height (cm) and Frequency (plants), both with units
+        comment: '''Plant Height (cm)'' with unit and ''Frequency (plants)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint order starting with #009E73; backgrounds #FAF8F1 and #1A1A17'
+        comment: 'Imprint positions 1-3 in canonical order, first series #009E73,
+          backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 8
       max: 20
@@ -105,21 +119,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Style-guide baseline, nothing beyond it
+        comment: Style-guide baseline; axis titles share the chart title's size, no
+          hierarchy decided beyond it
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Y-only guides as the style guide asks; nothing beyond
+        comment: Spine and grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed; no hierarchy chosen beyond the Notes
+        comment: Data displayed in a stable order; no focal point chosen beyond the
+          Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,26 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stacked histogram with shared bins
+        comment: Stacked histogram with contiguous bins
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Bars are not contiguous (about 16 px gaps) (defect line); the other
-          Notes and good-version bullets are met
+        passed: true
+        comment: 'Shared bin edges, distinct colors, legend, totals = combined frequency,
+          one segment order in every bin, zero baseline, axis reaching past the tallest
+          total: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Counts per bin, zero baseline, axis reaches past the tallest total
+        comment: Counts from np.histogram per group on shared edges; all data on the
+          axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend names the three groups
+        comment: Mandated title format; legend names the three light conditions
     data_quality:
       score: 15
       max: 15
@@ -156,31 +174,31 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three overlapping groups whose composition changes across bins; tails
-          with thin segments
+        comment: Three overlapping groups show changing composition across bins, thin
+          tail segments and a dominant group per region
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plant heights by light condition; neutral and plausible
+        comment: 'Plant heights by light condition: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Heights of 12–62 cm and 450 plants are sensible; no Check values
-          in the spec
+        comment: Heights 12-62 cm and per-bin counts up to 76 of 450 plants are sensible;
+          no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Flat script, no functions
+        passed: false
+        comment: A class subclass exists only to override _series_margin (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -198,13 +216,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: np.histogram for the counts and shared edges; no hand-rolled algorithm
+        comment: np.histogram_bin_edges / np.histogram compute the bins; no hand-rolled
+          algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html, current pygal 3 API
+        comment: plot-{THEME}.png and plot-{THEME}.html, current pygal 3 API
     library_mastery:
       score: 4
       max: 10
@@ -214,17 +233,18 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: StackedBar with a Style object; standard usage
+        comment: Style object for tokens, StackedBar, x_labels, legend_at_bottom_columns;
+          the bin contiguity rests on a private attribute
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+        comment: Nothing beyond the mandated Style object and HTML export
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T11:05:18Z'
+  rendered_at: '2026-11-09T11:10:18Z'
 impl_tags:
   dependencies: []
   techniques:
