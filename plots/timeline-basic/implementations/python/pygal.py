@@ -1,148 +1,159 @@
-""" anyplot.ai
+"""anyplot.ai
 timeline-basic: Event Timeline
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-11
 """
 
-from datetime import date
+import os
 
-import cairosvg
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
-# Data - Software project milestones
-events = [
-    (date(2024, 1, 15), "Project Kickoff", "Planning"),
-    (date(2024, 2, 10), "Requirements Complete", "Planning"),
-    (date(2024, 3, 20), "Architecture Design", "Design"),
-    (date(2024, 4, 25), "Development Start", "Development"),
-    (date(2024, 6, 15), "Alpha Release", "Development"),
-    (date(2024, 8, 1), "Beta Release", "Testing"),
-    (date(2024, 9, 10), "User Acceptance", "Testing"),
-    (date(2024, 10, 20), "Production Launch", "Deployment"),
-]
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Sort events by date
-events = sorted(events, key=lambda x: x[0])
+# Imprint palette: all eight positions, one per project phase in order
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Category colors mapped to pygal color indices
-categories = ["Planning", "Design", "Development", "Testing", "Deployment"]
-category_colors = {
-    "Planning": "#306998",
-    "Design": "#FFD43B",
-    "Development": "#4ECDC4",
-    "Testing": "#FF6B6B",
-    "Deployment": "#45B7D1",
-}
+# Constants
+STEM_LEVELS = (1.0, 2.0)  # connector lengths in layout units; the vertical offset carries no data
 
-# Custom style for large canvas (4800x2700)
+# Columns: set these to your table's column names
+DATE = "Milestone date"  # role: date
+EVENT = "Milestone"  # role: event
+PHASE = "Project phase"  # role: category
+
+# Data: replace this block with your own table, for example df = pd.read_csv("milestones.csv")
+df = pd.DataFrame(
+    {
+        DATE: pd.to_datetime(
+            [
+                "2024-01-15",
+                "2024-02-10",
+                "2024-03-20",
+                "2024-04-25",
+                "2024-06-15",
+                "2024-08-01",
+                "2024-09-10",
+                "2024-10-20",
+            ]
+        ),
+        EVENT: [
+            "Project Kickoff",
+            "Requirements Complete",
+            "Architecture Design",
+            "Development Start",
+            "Alpha Release",
+            "Beta Release",
+            "User Acceptance",
+            "Production Launch",
+        ],
+        PHASE: ["Planning", "Planning", "Design", "Development", "Development", "Testing", "Testing", "Deployment"],
+    }
+)
+
+# Plot: reads only df and the constants above
+events = df.dropna(subset=[DATE]).sort_values(DATE)
+events = events.assign(**{DATE: events[DATE].dt.date, EVENT: events[EVENT].fillna("").astype(str)})
+phases = events[PHASE].dropna().unique().tolist()
+
+# Labels alternate above and below the axis; stems cycle the levels so close neighbours on one side clear each other
+side = [1 if i % 2 == 0 else -1 for i in range(len(events))]
+stem = [s * STEM_LEVELS[(i // 2) % len(STEM_LEVELS)] for i, s in enumerate(side)]
+span = max(STEM_LEVELS) + 1
+
+start = min(events[DATE])
+end = max(events[DATE])
+month_ticks = pd.date_range(pd.Timestamp(start).replace(day=1), pd.Timestamp(end) + pd.offsets.MonthBegin(1), freq="MS")
+tick_step = max(1, len(month_ticks) // 12)
+
+title = "Software Project Milestones · timeline-basic · python · pygal · anyplot.ai"
+title_size = max(44, round(66 * min(1.0, 67 / len(title))))
+
+# Series order: axis line, connectors, one series per phase, event names, dates — colors follow the same order
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=tuple(category_colors[c] for c in categories),
-    title_font_size=60,
-    label_font_size=32,
-    major_label_font_size=32,
-    legend_font_size=36,
-    value_font_size=28,
-    tooltip_font_size=28,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(INK_SOFT, INK_MUTED, *(IMPRINT_PALETTE[i] for i in range(len(phases))), INK, INK_SOFT),
+    value_colors=(None, None, *(None for _ in phases), INK, INK_SOFT),
+    title_font_size=title_size,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=0,
+    value_label_font_size=38,
+    tooltip_font_size=36,
 )
 
-# Reference date for x-axis positioning
-reference_date = date(2024, 1, 1)
-
-# Create XY chart - using native pygal scatter capabilities
-chart = pygal.XY(
-    width=4800,
-    height=2700,
+chart = pygal.DateLine(
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="Software Project Milestones · timeline-basic · pygal · pyplots.ai",
-    show_legend=True,
-    legend_at_bottom=False,
-    legend_box_size=32,
-    x_title="Month (2024)",
-    y_title="Project Phase",
-    show_dots=True,
-    dots_size=18,
-    stroke=False,
-    show_x_guides=True,
-    show_y_guides=True,
-    margin=120,
-    x_labels_major_every=1,
+    title=title,
+    x_title=DATE,
+    show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    range=(-span, span),
+    xrange=(month_ticks[0].date(), month_ticks[-1].date()),
+    x_value_formatter=lambda d: d.strftime("%b %Y"),
+    x_label_rotation=0,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=len(phases),
+    legend_box_size=36,
     truncate_legend=-1,
+    print_labels=True,
+    allow_interruptions=True,
+    dots_size=24,
+    margin=60,
+    # Labels centre on their stem; the frame line at the plot's left edge carries no data on a timeline, so it is hidden
+    css=[
+        "file://style.css",
+        "file://graph.css",
+        "inline:.text-overlay text.label{text-anchor:middle}.axis > .line{stroke-opacity:0}",
+    ],
+)
+chart.x_labels = [t.date() for t in month_ticks[::tick_step]]
+
+chart.add(None, [(start, 0), (end, 0)], stroke=True, show_dots=False, stroke_style={"width": 5})
+
+connectors = []
+for d, h in zip(events[DATE], stem, strict=True):
+    connectors += [(d, 0), (d, h), None]
+chart.add(None, connectors, stroke=True, show_dots=False, stroke_style={"width": 3})
+
+for phase in phases:
+    chart.add(phase, [(d, 0) for d in events.loc[events[PHASE] == phase, DATE]], stroke=False)
+
+chart.add(
+    None,
+    [
+        {"value": (d, h + 0.5 * s), "label": name}
+        for d, name, h, s in zip(events[DATE], events[EVENT], stem, side, strict=True)
+    ],
+    stroke=False,
+    dots_size=0,
+)
+chart.add(
+    None,
+    [
+        {"value": (d, h + 0.22 * s), "label": d.strftime("%b %d")}
+        for d, h, s in zip(events[DATE], stem, side, strict=True)
+    ],
+    stroke=False,
+    dots_size=0,
 )
 
-# Custom x-axis labels for months
-chart.x_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"]
-chart.x_labels_major = chart.x_labels
-
-# Y positions for alternating above/below layout - spread vertically to use more canvas
-y_positions = {
-    0: 4,  # Above
-    1: 1,  # Below
-    2: 4,  # Above
-    3: 1,  # Below
-    4: 4,  # Above
-    5: 1,  # Below
-    6: 4,  # Above
-    7: 1,  # Below
-}
-
-# Group events by category for legend
-category_data = {cat: [] for cat in categories}
-
-for i, (event_date, event_name, category) in enumerate(events):
-    # X position: days since Jan 1, scaled to month
-    days = (event_date - reference_date).days
-    x_val = days / 30.44  # Average days per month
-
-    # Y position for alternating layout
-    y_val = y_positions[i]
-
-    # Add data point with label
-    category_data[category].append({"value": (x_val, y_val), "label": f"{event_name}\n{event_date.strftime('%b %d')}"})
-
-# Add each category as a series
-for category in categories:
-    if category_data[category]:
-        chart.add(category, category_data[category])
-
-# Set y range to maximize vertical usage (values 0-5 with padding)
-chart.range = (0, 5)
-
-# Render base SVG
-svg_string = chart.render().decode("utf-8")
-
-# Add a horizontal timeline axis in the middle (y=2.5) as visual anchor
-# Calculate plot area based on pygal defaults with our margins
-PLOT_LEFT = 400
-PLOT_RIGHT = 4550
-PLOT_TOP = 300
-PLOT_BOTTOM = 2200
-PLOT_HEIGHT = PLOT_BOTTOM - PLOT_TOP
-
-# Timeline at y=2.5 (middle of 0-5 range)
-timeline_y = PLOT_TOP + PLOT_HEIGHT * (1 - 2.5 / 5)  # Invert because SVG y goes down
-
-# Create timeline axis elements
-timeline_svg = f"""
-<g class="timeline-axis">
-  <line x1="{PLOT_LEFT}" y1="{timeline_y:.0f}" x2="{PLOT_RIGHT}" y2="{timeline_y:.0f}"
-        stroke="#999999" stroke-width="4" stroke-dasharray="15,8"/>
-  <text x="{PLOT_LEFT - 80}" y="{timeline_y + 10:.0f}" font-family="Consolas, sans-serif"
-        font-size="28" fill="#666666" text-anchor="end">Timeline</text>
-</g>
-"""
-
-# Inject timeline before </svg>
-svg_output = svg_string.replace("</svg>", f"{timeline_svg}\n</svg>")
-
-# Save outputs
-with open("plot.html", "w") as f:
-    f.write(svg_output)
-
-cairosvg.svg2png(bytestring=svg_output.encode(), write_to="plot.png")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
