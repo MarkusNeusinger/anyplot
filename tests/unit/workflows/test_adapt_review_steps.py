@@ -951,8 +951,7 @@ class TestVerdictStepReviewFree:
         runner = tmp_path / "runner" / "regen-tools"
         runner.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(TOOLS / "regen_gate.py", runner / "regen_gate.py")
-        # The step's fixed /tmp/anyplot-* files, moved under this test's directory (parallel runs).
-        script = _step("impl-review.yml", VERDICT)["run"].replace("/tmp/anyplot-", f"{tmp_path}/anyplot-")
+        script = _step("impl-review.yml", VERDICT)["run"]
         return _run(script, tmp_path, tmp_path, **{**self.ENV, "RUNNER_TEMP": str(tmp_path / "runner"), **env})
 
     def _comment(self, calls: list[list[str]]) -> str:
