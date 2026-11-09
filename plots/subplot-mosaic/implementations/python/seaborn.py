@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -84,7 +84,7 @@ df = pd.concat(rows, ignore_index=True)
 
 # Plot: reads only df and the constants above
 daily = df.groupby(DATE, sort=True).agg({REVENUE: "sum", CONVERSIONS: "sum"}).reset_index()
-order_value = "Per conversion"
+order_value = "Order value ($)"
 daily[order_value] = daily[REVENUE] / daily[CONVERSIONS].replace(0, np.nan)
 n_channels = df[CHANNEL].nunique()
 channel_palette = IMPRINT_PALETTE[:n_channels]
@@ -120,6 +120,7 @@ sns.barplot(
     palette=channel_palette,
     estimator="sum",
     errorbar=None,
+    saturation=1,
     edgecolor=PAGE_BG,
     legend=False,
     ax=axes["C"],
@@ -128,7 +129,9 @@ axes["C"].set_title("Revenue by channel", fontsize=9, fontweight="bold", loc="le
 axes["C"].set_ylabel(f"Total {REVENUE.lower()}")
 
 # D: distribution of daily response times
-sns.histplot(data=df, x=RESPONSE, bins=30, color=IMPRINT_PALETTE[0], edgecolor=PAGE_BG, linewidth=0.4, ax=axes["D"])
+sns.histplot(
+    data=df, x=RESPONSE, bins=30, color=IMPRINT_PALETTE[0], alpha=1, edgecolor=PAGE_BG, linewidth=0.4, ax=axes["D"]
+)
 axes["D"].set_title("Response times", fontsize=9, fontweight="bold", loc="left")
 axes["D"].set_ylabel("Channel-days")
 
@@ -146,6 +149,7 @@ sns.boxplot(
     hue=CHANNEL,
     palette=channel_palette,
     legend=False,
+    saturation=1,
     width=0.6,
     linewidth=0.7,
     fliersize=1.5,
@@ -161,12 +165,12 @@ for key in ("A", "E", "F"):
     axes[key].xaxis.set_major_locator(locator)
     axes[key].xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
     axes[key].set_xlabel("")
-    axes[key].xaxis.get_offset_text().set_size(6)
+    axes[key].xaxis.get_offset_text().set_size(7)
 for key in ("A", "C"):
     axes[key].yaxis.set_major_formatter(EngFormatter(sep=""))
 for key, ax in axes.items():
     small = key in "EFG"
-    ax.tick_params(axis="both", labelsize=6 if small else 7, length=2)
+    ax.tick_params(axis="both", labelsize=7 if small else 7.5, length=2)
     ax.xaxis.label.set_size(7 if small else 8)
     ax.yaxis.label.set_size(7 if small else 8)
     ax.yaxis.set_major_locator(MaxNLocator(4 if small else 5))
