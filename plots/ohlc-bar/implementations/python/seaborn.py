@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
@@ -55,7 +55,8 @@ n_days = 45
 base_price = 150.0
 returns = np.random.normal(0.001, 0.02, n_days)
 close_prices = base_price * np.cumprod(1 + returns)
-open_prices = np.roll(close_prices, 1)
+overnight_gaps = np.random.normal(0, 0.006, n_days)
+open_prices = np.roll(close_prices, 1) * (1 + overnight_gaps)
 open_prices[0] = base_price
 df = pd.DataFrame(
     {
@@ -85,7 +86,7 @@ ax.legend(handles=[up_line, down_line], fontsize=8, loc="best")
 tick_positions = positions[:: max(1, len(df) // 8)]
 ax.set_xticks(tick_positions, df[DATE].iloc[tick_positions].dt.strftime("%b %d"), rotation=45, ha="right")
 ax.set_xlabel(DATE, fontsize=10, color=INK)
-ax.set_ylabel("Price ($)", fontsize=10, color=INK)
+ax.set_ylabel("Northwind Robotics (NWRB) Price ($)", fontsize=10, color=INK)
 ax.set_title("ohlc-bar · python · seaborn · anyplot.ai", fontsize=12, color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 sns.despine(ax=ax)
