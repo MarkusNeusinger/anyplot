@@ -2,133 +2,130 @@ library: bokeh
 language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:03:22Z'
-updated: '2026-04-26T05:42:16Z'
-generated_by: claude-opus
-workflow_run: 24949132327
+updated: '2026-11-09T01:11:02Z'
+generated_by: claude-opus-5-5
+adopted_from: ebeec892e34b79a7acc23e43968831382a4addc7 (ebeec892e34b79a7acc23e43968831382a4addc7)
+workflow_run: 42543649437
 issue: 789
-python_version: 3.14.4
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/bokeh/plot-dark.html
-quality_score: 69
+quality_score: 88
 review:
   strengths:
-  - Correct single funnel with stage name and value+percentage on every segment, widths
-    proportional to the first stage
-  - 'First stage in brand green #009E73 and correct theme backgrounds in both renders'
-  - Neutral, realistic sales funnel with uneven drops
+  - 'Width encoding follows the spec exactly: each segment''s top edge is its value
+    relative to the first stage (1,000 → 600 → 400 → 200 → 100 render at 100/60/40/20/10
+    % of the widest edge), all centered on one vertical axis'
+  - 'Clear two-level label hierarchy: bold INK stage names on the left, INK_SOFT value-plus-share
+    labels (''1,000  (100%)'') on the right, each placed a constant gap off the slanted
+    segment edge at mid-height, readable in both themes'
+  - Page-colored 8 px seams with round joins separate the stages in both themes, and
+    the outline is set to the page color so no frame line shows; axes and grid are
+    deliberately dropped for this non-Cartesian chart
+  - 'Idiomatic bokeh: one vectorized p.patches call and two p.text glyphs all driven
+    by column names from a single ColumnDataSource'
+  - HoverTool on the patches renderer gives stage, formatted visitor count and share
+    of the first stage in the interactive HTML
   weaknesses:
-  - 'VQ-01 (both): value labels at 22pt and legend text at 24pt on the 4800 px canvas
-    render at about 10 px in a 2000 px view and vanish in the thumbnail → bokeh-prompt
-    sizes on a 3200 px canvas (about 34pt values, 50pt title). Likely cause: text_font_size=''22pt''
-    / label_text_font_size=''24pt''.'
-  - 'VQ-04 (both): white stage and value labels on the golden and pink segments have
-    low contrast (about 2:1) → ink-colored text or labels beside the segment. Likely
-    cause: text_color=''white'' for every non-yellow fill.'
-  - 'VQ-05 (both): canvas is 4800x2700, not the canonical 3200x1800 → width=3200,
-    height=1800 (-1600 x -900). Likely cause: figure(width=4800, height=2700).'
-  - 'VQ-07 (both): stages 2-5 use Okabe-Ito hexes (#D55E00, #0072B2, #CC79A7, #E69F00)
-    instead of Imprint positions 2-5 → IMPRINT_PALETTE[i]. Likely cause: a hard-coded
-    colors list.'
-  - 'SC-04 (both): title ''funnel-basic · bokeh · anyplot.ai'' omits the language
-    → ''funnel-basic · python · bokeh · anyplot.ai''. Likely cause: the title string.'
-  - 'CQ-01 (code): no column-0 # Data / # Plot block and no column constants for the
-    stage and value roles → one Data block binding df and STAGE/VALUE constants with
-    # role comments. Likely cause: lists typed inline.'
-  - 'CQ-05 (code): uses bokeh.io.export_png and saves bare plot.png / plot.html →
-    output_file(f''plot-{THEME}.html'') plus the Selenium screenshot to plot-{THEME}.png.
-    Likely cause: export_png(p, filename=''plot.png'').'
-  - 'Suggestion: a HoverTool on the segments would add bokeh-native value to the HTML
-    view.'
-  - 'Suggestion: the legend repeats the in-segment labels and could be dropped.'
+  - 'Suggestion: the measured quantity (''Visitors'') only appears in the hover tooltip;
+    a descriptive title prefix such as ''Website Visitor Funnel · '' would tell the
+    static reader what the counts are.'
+  - 'Suggestion: the left stage names and right value labels stand at slightly different
+    distances from the funnel''s outer silhouette on the upper stages; aligning both
+    columns on fixed x positions would give the labels a cleaner vertical rhythm.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correct.
-      Chrome: Small bold title "funnel-basic · bokeh · anyplot.ai" at the very top edge; no axes or grid. A boxed legend at the far right edge lists "Awareness: 1,000" … "Purchase: 100" in small text.
-      Data: Five centered trapezoids narrowing top to bottom in Okabe-Ito colors: green #009E73, orange, blue, pink, golden. Each carries a bold white stage name and a small white value label "1,000 (100%)" … "100 (10%)"; white text on the pink and golden fills has weak contrast.
-      Legibility verdict: PASS with weak spots (value labels tiny, white on golden/pink low contrast)
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, no white edge.
+      Chrome: centered bold title "funnel-basic · python · bokeh · anyplot.ai" in dark ink (~40 % of width); no axes or grid (by design for a funnel). Stage names (Awareness, Interest, Consideration, Intent, Purchase) in bold near-black to the left of each segment; value labels ("1,000  (100%)", "600  (60%)", "400  (40%)", "200  (20%)", "100  (10%)") in dark grey to the right. All readable.
+      Data: five stacked trapezoids centered on one axis, top to bottom #009E73, #C475FD, #4467A3, #BD8233, #AE3030 (Imprint positions 1-5 in order), separated by thin page-colored seams; top edges proportional to value, the last one tapering to a narrow tip.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correct.
-      Chrome: Title in light ink, legend on a slightly elevated dark box with light-grey text, readable; a faint grey frame surrounds the plot area.
-      Data: Same segment colors as the light render, same white in-segment labels.
-      Legibility verdict: PASS with the same weak spots
+      Background: warm near-black #1A1A17, no white hairline.
+      Chrome: title and stage names in light ink #F0EFE8, value labels in light grey #B8B7B0; no dark-on-dark text anywhere.
+      Data: segment colors identical to the light render; seams flip to the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Value labels at 22pt and legend at 24pt on a 4800 px canvas are tiny
-          and blur at thumbnail size (defect line)
+        passed: true
+        comment: Explicit sizes (title 50pt, names 40pt bold, values 38pt); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions
+        comment: Names and values sit clear of the slanted segment edges; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All segments and legend swatches visible
+        comment: Every segment clearly visible, including the narrow Purchase tip
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: White labels on the golden and pink fills fall well below comfortable
-          contrast (defect line)
+        passed: true
+        comment: Adjacent stages differ strongly in hue and lightness; stage names
+          carry identity, not color alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: 4800x2700 canvas, not a canonical size (defect line)
+        passed: true
+        comment: Funnel and labels fill the canvas in balance; nothing clipped; title
+          proportion fine
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes; title present
+        comment: N/A for axes (none on a funnel); stage names and value labels are
+          reader text
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First stage #009E73 and backgrounds correct, but stages 2-5 use
-          Okabe-Ito hexes outside Imprint (defect line)'
+        passed: true
+        comment: 'Imprint positions 1-5 in canonical order starting at #009E73; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 8
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Style-guide baseline, nothing beyond it
+        comment: 'Typographic hierarchy chosen beyond the baseline: bold INK stage
+          names vs regular INK_SOFT value+share labels'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Axes and grid hidden as required, nothing beyond
+        passed: true
+        comment: Page-colored round-joined seams between stages, outline matched to
+          the page, labels placed a constant gap off each slanted edge at mid-height
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed, no hierarchy chosen beyond the Notes
+        passed: true
+        comment: Data displayed clearly; no focal point chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,26 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single trapezoid funnel
+        comment: Single basic funnel; no reference lines, highlights or callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, proportional widths, stage name and value+percentage
-          on every segment
+        comment: Largest-to-smallest order, distinct color per stage, value and percentage
+          labels, widths proportional to first stage, names beside segments - all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Ordered largest to smallest, widths value / first value
+        comment: Top-edge widths match value/first-stage ratios; tapers are permitted
+          by the spec
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title omits the language segment (defect line)
+        passed: true
+        comment: Title format correct; no legend needed (stages named directly)
     data_quality:
       score: 15
       max: 15
@@ -165,36 +164,36 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Five stages with uneven drops
+        comment: Five stages with uneven drops (400, 200, 200, 100)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral sales funnel
+        comment: Marketing visitor funnel, neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Checked 1,000/600/400/200/100 and 100/60/40/20/10 % computed from
-          value / first value
+        comment: 'Checked: percentages 100/60/40/20/10 % fall out of value/values[0]
+          and match the rendered top-edge widths'
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'No # Data / # Plot block and no column constants (defect line)'
+        passed: true
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -206,42 +205,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Vectorized geometry with numpy column_stack; no fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: export_png to bare plot.png / plot.html (defect line)
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per library
+          prompt
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Single vectorized p.patches with list-valued xs/ys columns and text
+          glyphs bound to source columns
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: patch + Label + LegendItem, no ColumnDataSource
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Nothing beyond what the library prompt mandates
+        comment: HoverTool scoped to the patches renderer with column-formatted tooltips
+          ({0,0}, {0%})
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T01:07:41Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
   - patches
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
-  - iteration-over-groups
+  - columndatasource
   dataprep:
   - normalization
   styling:
-  - alpha-blending
+  - minimal-chrome
   - edge-highlighting
