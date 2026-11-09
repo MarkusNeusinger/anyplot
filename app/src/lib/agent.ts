@@ -132,6 +132,82 @@ export interface AgentStatus {
   enabled: boolean;
 }
 
+/** The day caps the agents service counts users at (`ledger.LIMIT_KINDS`). */
+export const LIMIT_KINDS = [
+  'tokens',
+  'runs',
+  'data_runs',
+  'messages',
+  'pastes',
+  'conversions',
+  'locked_out',
+] as const;
+
+/**
+ * The answer of the admin lane's `GET /budget`, the agents service's usage book of the day:
+ * counts and times only. The debug page's "today" line and the chat's admin meters read it.
+ */
+export interface AgentBudget {
+  since: string;
+  started_at: string;
+  resets_at: string;
+  paused: boolean;
+  tokens: number;
+  budget_tokens: number;
+  usd: number | null;
+  budget_usd: number | null;
+  users: number;
+  users_at_limit: number;
+  limits: Record<string, number>;
+}
+
+const count = (value: unknown): number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+
+const amount = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+
+const instant = (value: unknown): string | null =>
+  typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null;
+
+/** A record of counts under `keys`, 0 for a key it lacks or holds no count under. */
+export const countsOf = (value: unknown, keys: readonly string[]): Record<string, number> => {
+  const record = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  return Object.fromEntries(keys.map(key => [key, count(record[key])]));
+};
+
+/** `/budget`'s answer as the page reads it; `null` for one without its times. */
+export function readBudget(body: unknown): AgentBudget | null {
+  if (!body || typeof body !== 'object') return null;
+  const record = body as Record<string, unknown>;
+  const since = instant(record.since);
+  const started = instant(record.started_at);
+  const resets = instant(record.resets_at);
+  if (!since || !started || !resets) return null;
+  return {
+    since,
+    started_at: started,
+    resets_at: resets,
+    paused: record.paused === true,
+    tokens: count(record.tokens),
+    budget_tokens: count(record.budget_tokens),
+    usd: amount(record.usd),
+    budget_usd: amount(record.budget_usd),
+    users: count(record.users),
+    users_at_limit: count(record.users_at_limit),
+    limits: countsOf(record.limits, LIMIT_KINDS),
+  };
+}
+
+/**
+ * The share of the day budget spent, in whole percent: the weighted tokens against their budget,
+ * which the service's day pause is measured on (`ledger.py`). `null` without a budget. The one
+ * share both the debug page and the chat's admin meter show, so they never disagree.
+ */
+export function budgetShare(budget: AgentBudget): number | null {
+  return budget.budget_tokens > 0 ? Math.round((budget.tokens / budget.budget_tokens) * 100) : null;
+}
+
 export interface Eligibility {
   eligible: boolean;
   status: string;
@@ -1301,6 +1377,17 @@ export function attachmentFilename(header: string | null): string | null {
 
 export const agentApi = {
   status: (token: string) => agentJson<AgentStatus>('/status', token),
+  /**
+   * The day's usage book (`GET /budget`), the admin meters' share; the admin lane only, since the
+   * public lane has no such route: a call with `PUBLIC_LANE` rejects without a request. An answer
+   * without its times rejects too.
+   */
+  budget: async (token: string): Promise<AgentBudget> => {
+    if (laneOf(token) === 'public') throw new AgentApiError(404, 'not_found');
+    const budget = readBudget(await agentJson<unknown>('/budget', token));
+    if (!budget) throw new AgentApiError(502, 'upstream');
+    return budget;
+  },
   eligibility: (token: string, spec: string, library: string, signal?: AbortSignal) =>
     agentJson<Eligibility>(
       `/eligibility?spec=${encodeURIComponent(spec)}&library=${encodeURIComponent(library)}`,
@@ -1718,6 +1805,11 @@ export type AgentEvent =
       type: 'step';
       step: PipelineStep;
       attempt: number | null;
+      /**
+       * The most rounds the run may make (`max_attempts`, the service's `AGENT_MAX_ATTEMPTS`), so
+       * the page counts `try 2 of 2` from the server; `null` from a server without it.
+       */
+      maxAttempts: number | null;
       /** On `repairing`: how the round before it ended. */
       previous: Round | null;
     }
@@ -2101,6 +2193,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         type: 'step',
         step: d.step as PipelineStep,
         attempt: isInt(d.attempt) ? d.attempt : null,
+        maxAttempts: isInt(d.max_attempts) && d.max_attempts >= 1 ? d.max_attempts : null,
         previous:
           isInt(d.attempt) && d.attempt > 1
             ? toRound({

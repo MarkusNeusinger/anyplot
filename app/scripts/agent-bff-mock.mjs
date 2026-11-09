@@ -196,6 +196,12 @@
  * marks that come with it, a question's `?` and its answer label, arrive visibly
  * after the reply), MOCK_MEMORY_FIELD (`0`: a shipped plot names no
  * `memory`, as an older server's, so its card shows no kept label).
+ * The load mood and the admin meters (slice 8+9): MOCK_MAX_ATTEMPTS (unset: no field; else the
+ * run's round cap, `max_attempts` on every pipeline step, as the service's `AGENT_MAX_ATTEMPTS`
+ * sends it), MOCK_WAITING (0, other turns that wait in the run queue besides the mock's own, which
+ * `/status` counts in `waiting`), MOCK_PAUSED (`1`: `/status` says the day budget is spent,
+ * `paused` until the next 00:00 UTC, `resets_at`) and MOCK_BUDGET_PCT (62, the share of the day
+ * budget `GET /debug/agent/budget` reports spent, the admin lane only).
  * Slowed down, the page's working states stay visible:
  *
  *   MOCK_OPEN_MS=2500 MOCK_PARSE_MS=4000 MOCK_QUEUE=0 MOCK_STEP_MS=3000 node app/scripts/agent-bff-mock.mjs
@@ -273,6 +279,14 @@ const OPEN_MS = Number(process.env.MOCK_OPEN_MS ?? 0);
 const NO_COPY = process.env.MOCK_NO_COPY === '1';
 const CUT_AFTER = Number(process.env.MOCK_CUT_AFTER ?? 0);
 const RESUME_FAILS = Number(process.env.MOCK_RESUME_FAILS ?? 0);
+// The run's round cap on the pipeline steps (`max_attempts`); unset sends no field, as an older server.
+const MAX_ATTEMPTS = process.env.MOCK_MAX_ATTEMPTS ? Number(process.env.MOCK_MAX_ATTEMPTS) : null;
+// Other turns in the run queue, which `/status` counts in `waiting` (the page's mood reads `busy`).
+const OTHERS_WAITING = Number(process.env.MOCK_WAITING ?? 0);
+// The day budget is spent: `/status` says `paused` until the next 00:00 UTC.
+const PAUSED = process.env.MOCK_PAUSED === '1';
+// The share of the day budget spent, for the admin lane's `GET /budget`.
+const BUDGET_PCT = Number(process.env.MOCK_BUDGET_PCT ?? 62);
 /** The public lane's door (`GET /agent/lane`): open unless `MOCK_PUBLIC_LANE=closed`. */
 const PUBLIC_LANE_OPEN = process.env.MOCK_PUBLIC_LANE !== 'closed';
 /**
@@ -1077,6 +1091,15 @@ function artifactNames(version) {
 const sessions = new Map();
 let waitingTurns = 0;
 let runsInFlight = 0;
+/** When the mock started, the usage book's `started_at`. */
+const MOCK_STARTED_AT = new Date().toISOString();
+
+/** The next 00:00 UTC, when the service's day budget starts again (`ledger.next_reset`). */
+function nextUtcMidnight(now = new Date()) {
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
+  ).toISOString();
+}
 
 function renderVersion(session, version, theme) {
   version.pngs[theme] = drawPlot(theme, points(version), {
@@ -1454,17 +1477,20 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         if (stopped()) return;
         // The step that opens a repair round says how the round before it ended.
         const before = step === 'repairing' ? rounds[attempt - 2] : null;
+        // The run's round cap rides on every step, as the service's `pipeline.run` sends it.
+        const cap = MAX_ATTEMPTS ? { max_attempts: MAX_ATTEMPTS } : {};
         send(
           'status',
           before
             ? {
                 step,
                 attempt,
+                ...cap,
                 outcome: before.outcome,
                 findings: before.findings,
                 defects: before.defects ?? [],
               }
-            : { step, attempt }
+            : { step, attempt, ...cap }
         );
         await wait(STEP_MS);
         // A stopped run finishes the step in progress before it ends.
@@ -2629,13 +2655,40 @@ async function route(req, res) {
         location: 'eu',
         provider: 'anthropic-vertex',
         version: 'mock',
-        waiting: waitingTurns,
+        waiting: waitingTurns + OTHERS_WAITING,
         in_flight: runsInFlight,
         user_max_runs: 3,
+        // The service's `ledger.paused()`: every turn would get `service_paused` until the reset.
+        ...(PAUSED ? { paused: true, resets_at: nextUtcMidnight() } : {}),
         enabled: true,
       },
       ref
     );
+  // The day's usage book (`agents/main.py` `budget`), the admin lane only: the public lane's
+  // `/budget` is refused above. Counts and times only, as the service answers them.
+  if (method === 'GET' && sub === '/budget') {
+    const budgetTokens = 2_000_000;
+    const startOfDay = new Date();
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    return json(
+      res,
+      200,
+      {
+        since: startOfDay.toISOString(),
+        started_at: MOCK_STARTED_AT,
+        resets_at: nextUtcMidnight(),
+        paused: PAUSED,
+        tokens: Math.round((budgetTokens * BUDGET_PCT) / 100),
+        budget_tokens: budgetTokens,
+        usd: null,
+        budget_usd: null,
+        users: 3,
+        users_at_limit: 0,
+        limits: {},
+      },
+      ref
+    );
+  }
   if (method === 'GET' && sub === '/eligibility') {
     const library = url.searchParams.get('library');
     const eligible = !!SPECS[url.searchParams.get('spec')] && AGENT_LIBRARIES.includes(library);

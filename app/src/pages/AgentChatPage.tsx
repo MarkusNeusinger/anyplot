@@ -94,10 +94,16 @@
  * `.stop()` while a run is in progress, `.start_over()` once the library has a
  * plot, and `.feedback()` before the first plot.
  *
- * Work in flight is never silent: a turn without pipeline steps holds an
- * in-progress line in the thread (`ChatThread`), the progress timeline below
- * it shows only what the line does not (a `create_plot` run, a queue position,
- * pipeline steps), and the data card says why its controls wait.
+ * Work in flight is never silent: one working line at the thread's foot says
+ * what the turn does now (`WorkingLine`: `drawing your plot · second try · 0:42`,
+ * `waiting · you are 3rd`, `summarizing your data`), for every turn and on both
+ * lanes; the status line at the frame's foot counts the same clock beside
+ * `usually 1–3 min`, and a shipped plot's card keeps it as `ready in 1:12`. The
+ * frame's tab says how the service is (`LoadMood`: `● quiet`, `● busy`, `●
+ * resting until 01:00`), from the one reader of `/status` (`useAgentStatus`),
+ * which reads again after each run and while the tab is visible. The run's
+ * progress grid and the admin meters are sections of the admin menu, and the
+ * data card says why its controls wait.
  *
  * The admin menu's `all 15 libraries` is the admin's test run, the fan-out (in the library
  * menu as `all` until 2026-11-06). While it is on, the library chip reads `all 15 libraries ▾`
@@ -169,6 +175,7 @@ import {
   sessionHoldsWork,
   useAgentSession,
 } from 'src/hooks/useAgentSession';
+import { loadMood, useAgentStatus } from 'src/hooks/useAgentStatus';
 import { useAnalytics } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
@@ -177,6 +184,7 @@ import {
   type AgentLane,
   type AgentStatus,
   browserLocale,
+  budgetShare,
   DEFAULT_AGENT_LIBRARIES,
   MAX_MESSAGE_CHARS,
   PUBLIC_LANE,
@@ -184,7 +192,12 @@ import {
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
-import { AdminMenu, type AdminMode } from 'src/sections/agent-chat/AdminMenu';
+import {
+  AdminMenu,
+  AdminMeters,
+  type AdminMode,
+  AdminSection,
+} from 'src/sections/agent-chat/AdminMenu';
 import { attachmentSummary } from 'src/sections/agent-chat/attachmentText';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatFrame, FrameRule, StatusLine } from 'src/sections/agent-chat/ChatFrame';
@@ -196,6 +209,7 @@ import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
+import { LoadMood } from 'src/sections/agent-chat/LoadMood';
 import {
   attachmentWaitLine,
   CHAIN_READING_TEXT,
@@ -225,14 +239,12 @@ import {
   plotButtonKind,
   plotButtonLabel,
   runView,
-  showsTimeline,
   statusLine,
 } from 'src/sections/agent-chat/steps';
 import {
   bodyTextSx,
   labelSx,
   MASTHEAD_CLEARANCE,
-  smallText,
   visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useChatAttachment';
@@ -499,14 +511,25 @@ function AgentChat({
     previews: Record<string, ThemedPreviewSource>;
     data: string[];
   } | null>(null);
-  const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
-  // `.plot_all()`: the caller's own run cap (`user_max_runs`, 5 for an admin), and the session whose
-  // confirmed data the open fan-out copies.
-  const [maxRuns, setMaxRuns] = useState(DEFAULT_USER_MAX_RUNS);
-  // Both answers below are in (or failed): before that, the libraries and the limit are fallbacks.
-  const [listsSettled, setListsSettled] = useState(false);
-  // The service's day budget is spent: until when (ISO), for the note above the composer.
-  const [pausedUntil, setPausedUntil] = useState<string | null>(null);
+  // The libraries the catalogue implements the spec in (null before its answer, or after it failed),
+  // and whether that answer is in.
+  const [implemented, setImplemented] = useState<string[] | null>(null);
+  const [specSettled, setSpecSettled] = useState(false);
+  // The lane's `/status`, its one reader (`useAgentStatus`): the enabled libraries and the run cap
+  // of its first answer, and the load the frame's tab shows as its mood, read again while the tab
+  // is visible and after each run.
+  const agentStatus = useAgentStatus({ token, lane, takeAdminStatus, running: !!state.run });
+  const libraries = useMemo(() => {
+    const base = agentStatus.libraries ?? [...DEFAULT_AGENT_LIBRARIES];
+    return implemented ? base.filter(lib => implemented.includes(lib)) : base;
+  }, [agentStatus.libraries, implemented]);
+  // `.plot_all()`: the caller's own run cap (`user_max_runs`, 5 for an admin).
+  const maxRuns = agentStatus.userMaxRuns ?? DEFAULT_USER_MAX_RUNS;
+  // Both answers are in (or failed): before that, the libraries and the limit are fallbacks.
+  const listsSettled = specSettled && agentStatus.settled;
+  // The admin meters' share of the day budget (`/budget`), read as the admin menu opens.
+  const [budgetPercent, setBudgetPercent] = useState<number | null>(null);
+  // The session whose confirmed data the open fan-out copies.
   const [fanOut, setFanOut] = useState<{
     sourceSession: string;
     upload?: DatasetUpload;
@@ -582,21 +605,9 @@ function AgentChat({
   );
 
   // The spec's title, implemented libraries, previews and data bullets come from the public
-  // catalogue API; the enabled libraries from the agents service. Both are best effort.
+  // catalogue API, best effort; the enabled libraries from the agents service (`useAgentStatus`).
   useEffect(() => {
     const controller = new AbortController();
-    let implemented: string[] | null = null;
-    let enabled: string[] | null = null;
-    const publish = () => {
-      if (controller.signal.aborted) return;
-      const base = enabled ?? [...DEFAULT_AGENT_LIBRARIES];
-      setLibraries(implemented ? base.filter(lib => implemented!.includes(lib)) : base);
-    };
-    let pending = 2;
-    const settle = () => {
-      pending -= 1;
-      if (pending === 0 && !controller.signal.aborted) setListsSettled(true);
-    };
     apiGet<{
       title: string;
       data?: string[];
@@ -608,45 +619,43 @@ function AgentChat({
         if (controller.signal.aborted) return;
         setTitle(spec.title);
         setReference({ previews: previewsByLibrary(spec.implementations), data: spec.data ?? [] });
-        implemented = spec.implementations.map(impl => impl.library_id);
-        publish();
+        setImplemented(spec.implementations.map(impl => impl.library_id));
       })
       .catch(() => undefined)
-      .finally(settle);
-    // The admin lane's first chat takes the answer of the admin check, which asked the same
-    // route a moment ago; every other chat asks.
-    const checked = lane === 'admin' ? takeAdminStatus() : null;
-    (checked ? Promise.resolve(checked) : agentApi.status(token))
-      .then(status => {
-        if (Array.isArray(status.libraries) && status.libraries.length) {
-          enabled = status.libraries;
-          publish();
-        }
-        if (typeof status.user_max_runs === 'number' && status.user_max_runs > 0) {
-          setMaxRuns(status.user_max_runs);
-        }
-        if (
-          status.paused === true &&
-          typeof status.resets_at === 'string' &&
-          Date.parse(status.resets_at) > Date.now()
-        ) {
-          setPausedUntil(status.resets_at);
-        }
-      })
-      .catch(() => undefined)
-      .finally(settle);
+      .finally(() => {
+        if (!controller.signal.aborted) setSpecSettled(true);
+      });
     return () => controller.abort();
-  }, [specId, token, lane, takeAdminStatus]);
+  }, [specId]);
 
-  // The pause ends with the service's new day: the note goes at that moment, without a reload.
+  // A `service_paused` refusal says the day budget is spent: the tab rests at once, until the
+  // reset the refusal names, without waiting for the next read. A data call's `429` does not:
+  // its own line says the same with the time, and the next read brings the mood.
+  const { markPaused } = agentStatus;
+  const pausedSeen = useRef(0);
   useEffect(() => {
-    if (!pausedUntil) return;
-    const timer = window.setTimeout(
-      () => setPausedUntil(null),
-      Math.max(0, Date.parse(pausedUntil) - Date.now())
-    );
-    return () => window.clearTimeout(timer);
-  }, [pausedUntil]);
+    for (let index = state.items.length - 1; index >= 0; index -= 1) {
+      const item = state.items[index];
+      if (item.id <= pausedSeen.current) break;
+      if (item.kind === 'refusal' && item.code === 'service_paused' && item.until) {
+        pausedSeen.current = item.id;
+        markPaused(item.until);
+        break;
+      }
+    }
+  }, [state.items, markPaused]);
+
+  // The admin meters, as the admin menu opens on the admin lane: the runs in flight through the
+  // one status reader (also during a run, when its answer feeds the meters alone), and the day
+  // budget's share. The public lane has no `/budget`, and neither has "view as visitor".
+  const { refresh: refreshStatus } = agentStatus;
+  const readMeters = useCallback(() => {
+    void refreshStatus();
+    agentApi
+      .budget(token)
+      .then(budget => setBudgetPercent(budgetShare(budget)))
+      .catch(() => undefined);
+  }, [refreshStatus, token]);
 
   // A refused admin call ends the admin hint, and the page falls back to the public lane with a
   // new session (`useAgentAdmin`); a refusal on the public lane says nothing about the admin.
@@ -797,9 +806,13 @@ function AgentChat({
     !state.run &&
     Object.keys(state.versions).length === 0;
   const feedbackShown = !!state.chatFeedback || (feedbackOpen && feedbackOffer);
-  // While a run's timeline stands below the thread, what the run sends into the thread waits
-  // for its plot, which takes the timeline's place (`runView`).
+  // While a plot is drawn, what the run sends into the thread waits for its card, so the user's
+  // prompt and the working line below it stay in view (`runView`).
   const view = runView(state);
+  // The service's mood on the frame's tab (`LoadMood`), from the last read, busy also while the
+  // own turn waits in the queue (where it stands is the working line's); none before an answer.
+  const ownQueued = state.run?.steps[state.run.steps.length - 1]?.step === 'queued';
+  const mood = loadMood(agentStatus.load, ownQueued);
   // The session's own state while nothing waits, so the thread's state changes only with it.
   const threadState = useMemo(
     () => (view.items === state.items ? state : { ...state, items: view.items }),
@@ -1199,7 +1212,22 @@ function AgentChat({
             ]
           : []
       }
-    />
+      onOpen={admin.mode === 'admin' ? readMeters : undefined}
+    >
+      {/* The running turn's progress grid, the working line's detail, in the admin's and the
+          visitor's view alike; not after an expired admin session, whose menu says only that. */}
+      {admin.mode !== 'expired' && state.run && (
+        <AdminSection heading="progress of this turn">
+          <ProgressTimeline run={state.run} />
+        </AdminSection>
+      )}
+      {/* The meters on the admin lane only: the public lane has no `/budget`. */}
+      {admin.mode === 'admin' && (
+        <AdminSection heading="load · runs in flight, today's budget">
+          <AdminMeters runs={agentStatus.inFlight} share={budgetPercent} />
+        </AdminSection>
+      )}
+    </AdminMenu>
   );
 
   // A refusal on the admin lane falls back to the public lane (the effect above); in between,
@@ -1346,6 +1374,7 @@ function AgentChat({
             box's attachment. */}
         <ChatFrame
           header={headerRow}
+          mood={mood && <LoadMood mood={mood} />}
           onDragEnter={ready ? attach.handleDragEnter : undefined}
           onDragOver={ready ? attach.handleDragOver : undefined}
           onDragLeave={ready ? attach.handleDragLeave : undefined}
@@ -1436,40 +1465,6 @@ function AgentChat({
                 ref={tailRef}
                 sx={{ display: 'flex', flexDirection: 'column', gap: 2, scrollMarginBottom: 16 }}
               >
-                {/* At the foot, where a long thread keeps it in view: the queue position of a turn
-                without the progress timeline, whose first row says it for a plot run (one
-                position on screen). Out of the flow, at the right of the in-progress line above:
-                it comes with the queue and would otherwise push the composer down and back. */}
-                {state.run?.queue && !showsTimeline(state) && (
-                  <Box
-                    role="status"
-                    data-testid="queue-counter"
-                    aria-label={`Queued: position ${state.run.queue.position}, ${state.run.queue.waiting} waiting`}
-                    sx={{
-                      // Where it would stand as the foot's first item, at its right edge, then lifted
-                      // by its own height and the chat's gap above the foot, into the line's row.
-                      position: 'absolute',
-                      alignSelf: 'flex-end',
-                      mt: -2,
-                      transform: 'translateY(-100%)',
-                      fontFamily: typography.mono,
-                      fontSize: smallText,
-                      color: 'var(--ink)',
-                      bgcolor: 'var(--bg-elevated)',
-                      border: '1px solid var(--rule)',
-                      borderRadius: 1,
-                      px: 1,
-                      py: 0.25,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    queue {state.run.queue.position}/{state.run.queue.waiting}
-                  </Box>
-                )}
-                {/* A turn without pipeline steps has its in-progress line in the thread instead; the
-                run's plot, once in the thread, takes the timeline's place. */}
-                {state.run && view.timeline && <ProgressTimeline run={state.run} />}
-
                 {/* The frame's second dashed rule: the thread above, the composer below. The thread
                     is never empty, since the start item stands first in it. */}
                 <FrameRule />
@@ -1535,7 +1530,6 @@ function AgentChat({
                   }}
                   example={{ active: exampleActive }}
                   confirmError={state.confirmError}
-                  pausedUntil={pausedUntil}
                   onExampleData={() => void session.exampleData()}
                   onPlot={handlePlot}
                 />

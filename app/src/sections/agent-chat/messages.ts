@@ -82,6 +82,47 @@ export function refusalLabel(code: string): string {
  */
 export const RECONNECTING_TEXT = 'connection lost · reconnecting…';
 
+/** The working line's words while a plot is drawn (`workingLine`), and the status line's. */
+export const DRAWING_TEXT = 'drawing your plot';
+/** The same words on a phone (the v4 phone mock): `drawing · 0:42`. */
+export const DRAWING_SHORT = 'drawing';
+/** How long a plot usually takes, at the status line's end while one is drawn. */
+export const USUAL_PLOT_TIME = 'usually 1–3 min';
+
+/**
+ * An elapsed time as the working line's clock reads it: `0:42`, `12:05`, past an hour `1:02:03`;
+ * never below zero, so a clock that starts a moment late reads `0:00`.
+ */
+export function elapsedClock(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = String(total % 60).padStart(2, '0');
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}`
+    : `${minutes}:${seconds}`;
+}
+
+/**
+ * Where the own turn waits in the run queue, after `you are`: position 1 runs next, so `next`;
+ * then `2nd`, `3rd`, `4th`, `11th`, `21st`.
+ */
+export function queuePlace(position: number): string {
+  if (position <= 1) return 'next';
+  const tens = position % 100;
+  const suffix =
+    tens >= 11 && tens <= 13
+      ? 'th'
+      : position % 10 === 1
+        ? 'st'
+        : position % 10 === 2
+          ? 'nd'
+          : position % 10 === 3
+            ? 'rd'
+            : 'th';
+  return `${position}${suffix}`;
+}
+
 /**
  * Why a `plot` event shipped no render (`failed` or `not_ready`). `data_unconfirmed` has no line:
  * the thread shows no failed plot for it, only the status line at the chat frame's foot
@@ -120,9 +161,9 @@ export function nextUtcMidnight(now: number = Date.now()): string {
 /**
  * The whole chat paused for the day: the service's day budget is spent. `until` is
  * the reset in the user's time; the server's own refusal says 00:00 UTC, since it
- * does not know the user's time zone. Only that refusal says the user's own limit
- * is untouched: `/status` reports the pause for everyone, so a note from it cannot
- * know, and a user whose own budget is spent too gets `budget` on the next turn.
+ * does not know the user's time zone. The line of a data call the pause refused (a
+ * paste, a conversion: `429 service_paused`); before the user types, the frame's
+ * tab says it as its mood (`resting until 01:00`, `LoadMood.tsx`).
  */
 export function servicePausedText(until: string = nextUtcMidnight()): string {
   return `the chat has reached today's overall limit and is paused until ${localClock(until) ?? '00:00 UTC'}`;
@@ -288,6 +329,16 @@ export const DATA_HOWTO = [
  * data line right above it offers example data and `.open()`.
  */
 export const NO_DATA_PLACEHOLDER = 'paste a table or drop a file';
+
+/**
+ * The message box's placeholders with data on a phone (`PHONE_QUERY`), where a browser cuts a
+ * placeholder without an ellipsis (owner, 2026-11-08): before the library's first plot, and once
+ * it has one. The wider screen keeps its longer words.
+ */
+export const PHONE_PLACEHOLDER = {
+  first: 'ask or say what to plot',
+  change: 'ask for a change',
+} as const;
 
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
