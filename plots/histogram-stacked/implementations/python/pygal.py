@@ -1,7 +1,7 @@
 """anyplot.ai
 histogram-stacked: Stacked Histogram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 73/100 | Updated: 2026-05-12
+Quality: pending | Updated: 2026-05-12
 """
 
 import os
