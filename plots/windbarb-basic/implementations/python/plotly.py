@@ -1,7 +1,7 @@
 """anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: plotly 7.1.0 | Python 3.14.10
-Quality: 84/100 | Updated: 2026-11-09
+Quality: pending | Updated: 2026-11-09
 """
 
 import os
