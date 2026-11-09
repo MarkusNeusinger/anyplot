@@ -14,6 +14,8 @@ from pathlib import Path
 import pytest
 
 from agents.anyplot.data.classify import _ARROW, _SHAPED, _STRONG, classify_paste
+from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.transcribe import looks_like_free_text
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -34,11 +36,22 @@ def test_the_server_classifies_each_shared_case_as_it_names(case: dict) -> None:
     "case", [case for case in SHARED["cases"] if case["route"] == "data"], ids=lambda case: f"case-{case['id']}"
 )
 def test_text_routed_as_data_is_text_the_parser_reads(case: dict) -> None:
-    """A table sent as an attachment never meets a classifier refusal, except code the chat cannot take."""
-    if case["server"] == "code":
-        assert len(_text(case)) > 2000  # the dataset route refuses it with the line that asks to shorten it
-    else:
-        assert case["server"] is None
+    """A table sent as an attachment never meets a classifier refusal: code stays a message at any length."""
+    assert case["server"] is None
+
+
+@pytest.mark.parametrize(
+    "case", [case for case in SHARED["cases"] if "parsed" in case], ids=lambda case: f"case-{case['id']}"
+)
+def test_the_parser_reads_each_layout_case_as_the_case_names(case: dict) -> None:
+    """The layouts the page routes as data (`layouts.py`) are read by code, not by the transcriber."""
+    parsed = parse_dataset(_text(case))
+
+    assert case["route"] == "data"
+    assert parsed.profile.source_format == case["parsed"]["format"]
+    assert parsed.profile.rows == case["parsed"]["rows"]
+    assert [column.name for column in parsed.profile.columns] == case["parsed"]["columns"]
+    assert not looks_like_free_text(parsed)
 
 
 def test_the_code_veto_cases_are_code_on_both_sides() -> None:

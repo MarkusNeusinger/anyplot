@@ -34,6 +34,8 @@ WarningCode = Literal[
     "short_rows_padded",
     "trailing_empty_fields",
     "multiple_tables",
+    "cell_lines_read",
+    "pair_list_read",
     "headerless_list",
     "category_header",
     "repeated_keys",
@@ -137,6 +139,8 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
             r"^the data holds [0-9]+ tables, each under its own header; .*the table picker in the data panel reads another one$",
             "multiple_tables",
         ),
+        (r"^read one cell per line: [0-9,]+ rows of [0-9]+ columns(?:; .*)?$", "cell_lines_read"),
+        (r"^read a list of [0-9,]+ label/value pairs as two columns(?:, named .*)?$", "pair_list_read"),
         (
             r"^no header line: the first line is a value, kept as the first row, and the column is named '.*'$",
             "headerless_list",

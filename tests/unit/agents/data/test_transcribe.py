@@ -17,6 +17,7 @@ from agents.anyplot.data.transcribe import (
     transcribable,
     transcribe_refusal,
 )
+from agents.anyplot.schemas import MAX_MESSAGE_CHARS
 
 
 def test_transcribable_is_short_non_blank_text() -> None:
@@ -24,6 +25,11 @@ def test_transcribable_is_short_non_blank_text() -> None:
     assert not transcribable("   \n")
     assert transcribable("x" * MAX_TRANSCRIBE_CHARS)
     assert not transcribable("x" * (MAX_TRANSCRIBE_CHARS + 1))
+
+
+def test_the_transcriber_reads_no_more_than_the_chat_takes() -> None:
+    """Owner rule of 2026-11-09: long text is read only by code, so long free text never reaches a model as data."""
+    assert MAX_TRANSCRIBE_CHARS == MAX_MESSAGE_CHARS
 
 
 def test_transcribable_caps_the_lines_and_says_why() -> None:
@@ -36,7 +42,7 @@ def test_transcribable_caps_the_lines_and_says_why() -> None:
         "free text as a table takes"
     )
     assert transcribe_refusal("x" * (MAX_TRANSCRIBE_CHARS + 1)) == (
-        "the text is longer than the 4,000 characters the model that reads free text as a table takes"
+        "the text is longer than the 2,000 characters the model that reads free text as a table takes"
     )
     assert transcribe_refusal(" \n") == "the text is empty"
 
@@ -105,15 +111,29 @@ def test_a_header_with_a_column_names_form_gets_no_note(text: str) -> None:
 
 def test_a_category_header_note_is_never_a_free_text_reading() -> None:
     assert not looks_like_free_text(parse_dataset("Tier_Art\nHund\nKatze\nHund\n"))
-    assert category_header_warning(parse_dataset("Hund 7\nKatze 3\nHund 2\n")) is None  # free text, no table
+    assert category_header_warning(parse_dataset("Hund 7\nKatze 3\nHund 2\n")) is None  # label/value pairs
+
+
+@pytest.mark.parametrize(
+    ("text", "columns"),
+    [
+        pytest.param("Hund 7\nKatze 3\nVogel 4\n", ["label", "value"], id="label-value-lines"),
+        pytest.param("Tier Anzahl\nHund 7\nKatze 3\nHund 2\n", ["Tier", "Anzahl"], id="under-a-header"),
+        pytest.param("Tier Anzahl\nHund .5\nKatze -.3\nHund .5\n", ["Tier", "Anzahl"], id="with-leading-dots"),
+    ],
+)
+def test_label_value_lines_are_a_table_code_reads(text: str, columns: list[str]) -> None:
+    """The transcriber's until 2026-11-09; since the owner's rule of that day code reads them (`layouts.py`)."""
+    parsed = parse_dataset(text)
+
+    assert not looks_like_free_text(parsed)
+    assert [column.name for column in parsed.profile.columns] == columns
+    assert parsed.profile.source_format == "pair_list"
 
 
 @pytest.mark.parametrize(
     "text",
     [
-        pytest.param("Hund 7\nKatze 3\nVogel 4\n", id="label-value-lines"),
-        pytest.param("Tier Anzahl\nHund 7\nKatze 3\nHund 2\n", id="label-value-lines-under-a-header"),
-        pytest.param("Tier Anzahl\nHund .5\nKatze -.3\nHund .5\n", id="label-value-lines-with-leading-dots"),
         pytest.param(
             "Wir hatten letztes Jahr sieben Hunde.\nDann kamen drei Katzen dazu.\nDann kamen drei Katzen dazu.\n",
             id="prose",
@@ -124,13 +144,13 @@ def test_a_category_header_note_is_never_a_free_text_reading() -> None:
         pytest.param("Das sind meine Daten aus der Umfrage\nja\nja\n", id="a-sentence-above-a-list"),
     ],
 )
-def test_one_column_of_prose_or_label_value_lines_is_free_text(text: str) -> None:
+def test_one_column_of_prose_or_names_is_free_text(text: str) -> None:
     assert looks_like_free_text(parse_dataset(text))
 
 
 def test_free_text_is_one_column_without_a_delimiter_but_never_json() -> None:
-    # A list typed one label and value per line parses as one text column headed by its first line.
-    assert looks_like_free_text(parse_dataset("Hund 7\nKatze 3\nVogel 4\n"))
+    # Names typed one per line parse as one text column headed by its first line.
+    assert looks_like_free_text(parse_dataset("Alice\nBob\nCarol\n"))
     assert not looks_like_free_text(parse_dataset("Tier,Anzahl\nHund,7\nKatze,3\n"))
     assert not looks_like_free_text(parse_dataset('[{"Anzahl": 7}, {"Anzahl": 3}]'))
     # An object of values or a dict literal is `json_pairs`: data, never free text.

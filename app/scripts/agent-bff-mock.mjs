@@ -678,12 +678,16 @@ function splitLine(line, delimiter) {
 
 /**
  * The transcribed answer of `POST .../dataset` for text that is no table: every
- * `<label> <number>` pair becomes a row of `category,value`, and the CSV goes
- * through `parseDataset` so the preview and profile match a later `.use()`.
- * Returns null when the text holds no such pair (the real service answers 422).
+ * `<label> <number>` pair (also `label:7` or `label=7`) becomes a row of
+ * `category,value`, and the CSV goes through `parseDataset` so the preview and
+ * profile match a later `.use()`. Returns null when the text holds no such pair
+ * (the real service answers 422). The real service reads a pair list or a web
+ * table copied one cell per line by code instead (`agents/anyplot/data/layouts.py`).
  */
 function transcribeFreeText(text) {
-  const pairs = [...text.matchAll(/([\p{L}][\p{L}\p{N}_-]*)\s+(-?\d+(?:[.,]\d+)?)\b/gu)];
+  const pairs = [
+    ...text.matchAll(/([\p{L}][\p{L}\p{N}_-]*)(?:\s+|\s*[:=]\s*)(-?\d+(?:[.,]\d+)?)\b/gu),
+  ];
   if (!pairs.length) return null;
   const rows = pairs.map(([, label, number]) => [label, number.replace(',', '.')]);
   const csv = ['category,value', ...rows.map(row => row.join(','))].join('\n') + '\n';

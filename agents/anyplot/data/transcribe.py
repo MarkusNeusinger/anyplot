@@ -21,14 +21,15 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..schemas import MAX_COLUMN_NAME_CHARS
+from ..schemas import MAX_COLUMN_NAME_CHARS, MAX_MESSAGE_CHARS
 from .parse import MAX_INPUT_CELL_CHARS, ParsedDataset
 
 
-MAX_TRANSCRIBE_CHARS = 4_000
-"""The longest pasted text a model reads as a table. A real table of that size is a few
-hundred rows, which the model would have to write back cell by cell; above it the
-deterministic parser's answer stands (stored, or `422 unparseable`)."""
+MAX_TRANSCRIBE_CHARS = MAX_MESSAGE_CHARS
+"""The longest pasted text a model reads as a table: what the chat takes, 2,000 characters (owner rule of
+2026-11-09, 4,000 before). Longer text is read only by code, in a format the parser knows (`parse.parse_dataset`,
+the layouts of `layouts.py`), so long free text never reaches a model as data; above the cap the deterministic
+parser's answer stands (stored, or `422 unparseable`). The page routes by the same line (`routeInput.ts`, rule 14)."""
 MAX_TRANSCRIBE_COLUMNS = 20
 MAX_TRANSCRIBE_ROWS = 200
 """Bounds of the read table: within the limit that `MAX_TRANSCRIBE_CHARS` of text can
