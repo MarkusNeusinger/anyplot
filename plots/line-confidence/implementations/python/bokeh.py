@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-confidence: Line Plot with Confidence Interval
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 80/100 | Updated: 2026-11-09
@@ -28,20 +28,21 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
 
 # Columns: set these to your table's column names
-TIME = "Time (units)"  # role: x
-PREDICTION = "Predicted Value"  # role: y
+TIME = "Week"  # role: x
+PREDICTION = "Forecast weekly sales (thousand units)"  # role: y
 LOWER = "Lower bound (95% CI)"  # role: y_lower
 UPPER = "Upper bound (95% CI)"  # role: y_upper
 
 # Data: replace this block with your own table, for example df = pd.read_csv("forecast.csv")
+# Sales forecast for a new product line over its first 50 weeks
 np.random.seed(42)
-time_points = np.linspace(0, 10, 50)
-y_true = 2 + 0.5 * time_points + 0.1 * time_points**2
-prediction = y_true + np.random.normal(0, 0.5, len(time_points))
-uncertainty = 0.8 + 0.15 * time_points  # interval widens over the prediction horizon
+weeks = np.arange(1, 51)
+y_true = 20 + 0.5 * weeks + 0.04 * weeks**2
+prediction = y_true + np.random.normal(0, 5, len(weeks))
+uncertainty = 8 + 0.3 * weeks  # interval widens over the forecast horizon
 df = pd.DataFrame(
     {
-        TIME: time_points,
+        TIME: weeks,
         PREDICTION: prediction,
         LOWER: prediction - 1.96 * uncertainty,
         UPPER: prediction + 1.96 * uncertainty,
@@ -73,14 +74,14 @@ p.add_tools(
     HoverTool(
         renderers=[line],
         tooltips=[
-            (TIME, f"@{{{TIME}}}{{0.00}}"),
-            (PREDICTION, f"@{{{PREDICTION}}}{{0.00}}"),
-            ("95% CI", f"@{{{LOWER}}}{{0.00}} – @{{{UPPER}}}{{0.00}}"),
+            (TIME, f"@{{{TIME}}}{{0}}"),
+            (PREDICTION, f"@{{{PREDICTION}}}{{0.0}}"),
+            ("95% CI", f"@{{{LOWER}}}{{0.0}} – @{{{UPPER}}}{{0.0}}"),
         ],
     )
 )
 
-legend = Legend(items=[("Prediction", [line]), ("95% confidence interval", [band])], location="top_left")
+legend = Legend(items=[("Sales forecast", [line]), ("95% confidence interval", [band])], location="top_left")
 legend.label_text_font_size = "34pt"
 legend.glyph_height = 40
 legend.glyph_width = 60
