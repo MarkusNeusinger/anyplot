@@ -88,18 +88,25 @@ export function SpecDetailView({
     }
   }, [selectedLibrary]);
 
-  // 👍 / 👎 on the plot — one tap rates THIS implementation, once: the vote is
-  // final for the session, so nobody can flip up/down at will (the server
-  // drops repeat votes from the same session for the same image as well).
-  // The visitor's own vote is kept per spec/language/library in localStorage
-  // so the thumb stays inked when they come back or flip through the carousel;
-  // the server row is what gets counted (FeedbackRepository.reaction_counts).
+  // 👍 / 👎 on the plot — one tap rates THIS version of the implementation,
+  // once: the vote is final for the session, so nobody can flip up/down at
+  // will (the server drops repeat votes from the same session on the same
+  // version as well). A regeneration changes `updated` and starts a new
+  // version, which the visitor may rate again. The visitor's own vote is kept
+  // per spec/language/library/version in localStorage so the thumb stays inked
+  // when they come back or flip through the carousel; the server row is what
+  // gets counted (FeedbackRepository.reaction_counts).
   const submitReaction = useQuickReaction();
   const [votes, setVotes] = useLocalStorage<Record<string, QuickReaction>>(PLOT_VOTES_KEY, {});
   const voteTarget = useMemo<VoteTarget | null>(
     () =>
       currentImpl
-        ? { specId, language: currentImpl.language, libraryId: currentImpl.library_id }
+        ? {
+            specId,
+            language: currentImpl.language,
+            libraryId: currentImpl.library_id,
+            version: currentImpl.updated ?? null,
+          }
         : null,
     [specId, currentImpl]
   );

@@ -2,119 +2,134 @@ library: pygal
 language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:17:50Z'
-updated: '2026-05-09T15:15:07Z'
-generated_by: claude-haiku
-workflow_run: 25603857606
+updated: '2026-11-09T00:25:26Z'
+generated_by: claude-opus-5-5
+adopted_from: 68ddebdc0340d846bc99a02c34862976a9d328b5 (68ddebdc0340d846bc99a02c34862976a9d328b5)
+workflow_run: 42539285551
 issue: 2035
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/pygal/plot-dark.html
-quality_score: 66
+quality_score: 84
 review:
   strengths:
-  - Correct scatter plot matrix layout with diagonal histograms
-  - Good data quality showing positive and negative correlations
-  - Clean layout with minimal text overlap
-  - Realistic iris-like dataset with plausible values
-  - Proper distinction between diagonal and off-diagonal cells
+  - 'Builds the full 4×4 SPLOM inside one pygal.XY chart: every variable is scaled
+    into a unit cell, so each column shares its x range and each row its y range,
+    and the upper triangle mirrors the lower exactly as the spec asks'
+  - 'Uses pygal''s own mechanics for the grid: allow_interruptions with (None, None)
+    separators draws all cell frames, guides and histogram outlines as single series,
+    and print_labels point labels carry the tick and variable-name text'
+  - Diagonal histograms come from np.histogram with Sturges bins on the cell's own
+    x scale, filled as a step outline sitting on the cell floor
+  - Variable names in bold on the left and bottom edges, with three to five tick values
+    per cell, so neighboring cells' ticks stay apart
+  - 'Theme tokens threaded through Style (background, ink, soft ink, rule) — both
+    renders read cleanly; points use #009E73 at 0.65 opacity so the 0.1 cm measurement
+    lattice shows as darker overlapping dots'
+  - Iris-like data driven by one shared size factor gives positive and negative correlations
+    and skewed log-normal petal distributions in plausible centimetre ranges
   weaknesses:
-  - 'Palette failure: Uses Python Blue (#306998) instead of Okabe-Ito (#009E73)'
-  - 'No theme adaptation: Hard-coded colors ignore ANYPLOT_THEME environment variable'
-  - 'Chrome failure: Dark-gray text (#333) on dark background creates dark-on-dark
-    readability issue'
-  - 'Wrong output filename: Saves as plot.png instead of plot-{THEME}.png'
-  - 'Title domain typo: pyplots.ai instead of anyplot.ai'
-  - 'Dark background appears pure black instead of warm #1A1A17'
+  - 'VQ-02 (both): the bottom row''s name "Petal width (cm)" ends about 10 px before
+    its "1.5" tick label, so they read as one run "(cm)1.5" → leave at least 30 px
+    between the row names and the y tick labels (about +20 px). Likely cause: row_names
+    placed at x = -0.25 while the y ticks right-align at x = -0.04 with name_room
+    sized for the 40 px font only in xrange, not in the label position.'
+  - 'Suggestion: the HTML tooltips show the scaled unit-cell coordinates instead of
+    the measurements; per-point labels or a formatter carrying the original values
+    would make the hover useful.'
+  - 'Suggestion: a little less empty space below the bottom variable names would balance
+    the canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Off-white/beige consistent with #FAF8F1 specification
-      Chrome: Title and variable names clearly visible in dark text (#333); excellent contrast against light background
-      Data: Scatter points and histograms render in teal/turquoise color (Python Blue palette, not Okabe-Ito); good color saturation for visibility
-      Legibility verdict: PASS - all text fully readable with good contrast
+      Background: warm off-white #FAF8F1 across the whole 2400×2400 canvas.
+      Chrome: title "scatter-matrix · python · pygal · anyplot.ai" in dark ink at the top (~74 % width); bold dark variable names on the left (rows) and bottom (columns); soft-gray tick labels (3–5 per cell); thin gray cell frames and interior guides aligned to ticks. All text readable; the "Petal width (cm)" row name nearly touches its "1.5" tick.
+      Data: 4×4 grid; 12 off-diagonal scatters of 100 #009E73 points at partial opacity (darker where rounded values coincide), diagonal cells with filled green histograms. Positive sepal-length/petal correlations, negative sepal-width correlations; upper triangle mirrors lower.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Appears to be pure black or near-black, NOT the warm #1A1A17 specified in style guide
-      Chrome: Title and variable labels attempt light rendering but text color (#333 dark gray) does not adapt for dark theme, creating dark-on-dark readability issues
-      Data: Scatter points and histograms identical teal color to light render (correctly theme-independent), but hard to see against dark background due to chrome failure
-      Legibility verdict: FAIL - text uses dark-on-dark rendering (#333 gray on near-black background); dark theme chrome not properly adapted; requires environment-based color swapping
+      Background: warm near-black #1A1A17.
+      Chrome: title, bold variable names in light ink; tick labels in light soft gray; cell frames and guides in subtle light rule. No dark-on-dark text.
+      Data: identical #009E73 points and histograms (blended darker on the dark surface by the same opacity); same layout and values as the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Readable but not explicitly sized for theme adaptation; lacks dynamic
-          styling
+        passed: true
+        comment: Title 66, labels 40 px, bold names; readable in both themes and at
+          thumbnail size
       - id: VQ-02
         name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: '"Petal width (cm)" row name runs into its "1.5" tick label (defect
+          line)'
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; good spacing throughout
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Points, histograms, and grid all clearly visible; markers well-sized
-          for density
+        comment: 100 points per cell at size 8 and 0.65 opacity; histograms clearly
+          filled
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between elements (separate from palette choice)
+        comment: Single green series, strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins; minor space inefficiency
+        comment: Square 2400×2400, grid fills the canvas, balanced tick and name sizes
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive variable names but lacks units (e.g., no measurement
-          units)
+        passed: true
+        comment: Readable names with units (cm)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL FAILURE: Uses Python Blue (#306998) instead of Okabe-Ito
-          (#009E73); no theme-adaptive chrome; dark background pure black not #1A1A17'
+        passed: true
+        comment: '#009E73 single series, correct backgrounds, chrome flips per theme'
     design_excellence:
-      score: 6
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
-        passed: false
-        comment: Generic default styling with wrong color palette; no design sophistication
+        passed: true
+        comment: 'Three-level type hierarchy chosen: large title, bold variable names,
+          soft-ink ticks'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Minimal customization; library defaults with crude PIL text overlay
+        passed: true
+        comment: Guides only at tick positions and skipped on cell frames, deliberate
+          inter-cell gap
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,50 +137,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter matrix with diagonal histograms
+        comment: Square scatter matrix with diagonal histograms
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter plots, histograms, variable labels'
+        comment: Diagonal histograms, off-diagonal scatters, names left/bottom, small
+          translucent points, symmetric, shared row/column ranges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; axes show full data range
+        comment: Linear scaling per variable; all data within cells; marks at their
+          values
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title format error: ''pyplots.ai'' instead of ''anyplot.ai''; domain
-          typo'
+        passed: true
+        comment: Mandated title; legend N/A for a single series
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: correlations (positive/negative) and distributions'
+        comment: Positive and negative correlations, differing distribution shapes
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Iris-like dataset is realistic, plausible, and neutral
+        comment: Iris-like flower measurements, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions align with real iris dataset
+        comment: Sepal length 4–7.6, width 2–3.9, petal 2–6 and 0.5–2.3 cm; plausible;
+          no Check values in spec
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,56 +190,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic output (np.random.seed(42))
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports utilized
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Functional but manual PIL compositing is verbose
+        passed: true
+        comment: Histogram via np.histogram; manual cell layout needed since pygal
+          has no subplots
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Saves as plot.png instead of plot-{THEME}.png'
+        passed: true
+        comment: plot-{THEME}.png and .html, pygal 3 API
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses pygal.XY() and .Histogram() but non-idiomatic PIL composite
-          approach
+        passed: true
+        comment: Style object for theme, pygal.XY series; workable but heavy coordinate
+          hand-building
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Limited leveraging of pygal-specific capabilities
+        passed: true
+        comment: allow_interruptions with None separators, print_labels point labels,
+          inline css overrides
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T00:22:33Z'
 impl_tags:
-  dependencies:
-  - pillow
+  dependencies: []
   techniques:
   - subplots
+  - manual-ticks
+  - annotations
+  - layer-composition
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
-  styling: []
+  - iteration-over-groups
+  dataprep:
+  - binning
+  - normalization
+  styling:
+  - alpha-blending
+  - minimal-chrome

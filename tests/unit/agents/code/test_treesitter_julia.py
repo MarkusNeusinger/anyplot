@@ -22,15 +22,18 @@ from agents.anyplot.code.treesitter import (
     walk,
 )
 
-from .conftest import JULIA_CATALOGUE_FILES
+from .conftest import JULIA_CATALOGUE_FILES, merged_specs
 
 
 def first(source: Source, kind: str) -> Node:
     return next(node for node in walk(source.root) if node.type == kind)
 
 
-def test_the_catalogue_has_325_makie_files() -> None:
-    assert len(JULIA_CATALOGUE_FILES) == 325
+def test_the_parse_gate_reads_every_merged_makie_file() -> None:
+    """The parse gate below runs over every merged Makie implementation, not a count of a day (325 on 2026-10-29):
+    the glob finds exactly the specs whose metadata names one."""
+    assert JULIA_CATALOGUE_FILES
+    assert {path.parts[-4] for path in JULIA_CATALOGUE_FILES} == merged_specs("julia", "makie")
 
 
 @pytest.mark.parametrize("path", JULIA_CATALOGUE_FILES, ids=lambda path: path.parts[-4])

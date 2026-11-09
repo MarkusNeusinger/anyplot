@@ -23,7 +23,8 @@ from api.exceptions import raise_validation_error
 from api.secret_compare import secret_matches
 from core.config import settings
 from core.constants import LIBRARY_NAMES, SUPPORTED_LIBRARIES
-from core.database import FEEDBACK_REACTIONS, FEEDBACK_STATUSES, FeedbackRepository, SpecRepository
+from core.database import FEEDBACK_STATUSES, FeedbackRepository, SpecRepository
+from core.plot_votes import VOTE_SORTS
 
 
 router = APIRouter(prefix="/debug", tags=["debug"])
@@ -581,12 +582,18 @@ async def invalidate_cache(x_cache_token: str | None = Header(default=None)) -> 
 # ============================================================================
 
 
-class FeedbackTopPage(BaseModel):
-    """Aggregated count of one reaction per page path."""
+class FeedbackVoteItem(BaseModel):
+    """One plot's 👍/👎: the current version's, and the earlier versions' beside them (`core.plot_votes`)."""
 
-    path: str
-    count: int
-    last_seen: str | None  # ISO timestamp of the most recent entry on this path
+    spec_id: str
+    language: str | None
+    library_id: str
+    path: str  # the plot's page, `/{spec}/{language}/{library}`
+    thumbs_up: int
+    thumbs_down: int
+    earlier_thumbs_up: int
+    earlier_thumbs_down: int
+    last_vote: str | None  # ISO timestamp of the newest counted vote
 
 
 class FeedbackMessageItem(BaseModel):
@@ -609,17 +616,17 @@ class FeedbackStatusUpdate(BaseModel):
     status: str
 
 
-@router.get("/feedback/top", response_model=list[FeedbackTopPage], dependencies=[Depends(require_admin)])
-async def feedback_top_pages(
-    reaction: str, limit: int = 20, db: AsyncSession = Depends(require_db)
-) -> list[FeedbackTopPage]:
-    """Top pages by reaction count (thumbs_up / thumbs_down / idea / bug)."""
-    if reaction not in FEEDBACK_REACTIONS:
-        raise_validation_error(f"reaction must be one of {FEEDBACK_REACTIONS}")
+@router.get("/feedback/votes", response_model=list[FeedbackVoteItem], dependencies=[Depends(require_admin)])
+async def feedback_votes(
+    sort: str = "thumbs_down", limit: int = 25, db: AsyncSession = Depends(require_db)
+) -> list[FeedbackVoteItem]:
+    """The plots with the most votes, one entry per implementation, ranked by the current version's `sort`."""
+    if sort not in VOTE_SORTS:
+        raise_validation_error(f"sort must be one of {VOTE_SORTS}")
     if not 1 <= limit <= 100:
         raise_validation_error("limit must be between 1 and 100")
-    rows = await FeedbackRepository(db).top_paths_by_reaction(reaction, limit)
-    return [FeedbackTopPage(**row) for row in rows]
+    rows = await FeedbackRepository(db).vote_counts_by_implementation(sort, limit)
+    return [FeedbackVoteItem(**row) for row in rows]
 
 
 @router.get("/feedback/messages", response_model=list[FeedbackMessageItem], dependencies=[Depends(require_admin)])

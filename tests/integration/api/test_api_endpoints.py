@@ -365,3 +365,29 @@ class TestFeedbackEndpoint:
         result = await test_db_with_data.execute(select(Feedback).order_by(Feedback.library_id))
         rows = list(result.scalars().all())
         assert [(r.library_id, r.reaction) for r in rows] == [("matplotlib", "thumbs_up"), ("plotly", "thumbs_down")]
+
+    async def test_a_session_may_rate_a_regenerated_plot_once(self, client, test_db_with_data):
+        """A vote on the version before the last update does not block a vote on the current one; a second vote on
+        the current one is still dropped, and the old row stays."""
+        from datetime import datetime, timedelta, timezone
+
+        from sqlalchemy import select
+
+        from core.database import FeedbackRepository, ImplRepository
+        from core.database.models import Feedback
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        vote = {"spec_id": "scatter-basic", "library_id": "matplotlib", "language": "python", "session_id": "s1"}
+        await FeedbackRepository(test_db_with_data).create(
+            {**vote, "reaction": "thumbs_down", "created_at": now - timedelta(days=3)}
+        )
+        await ImplRepository(test_db_with_data).upsert(
+            "scatter-basic", "matplotlib", {"updated": now - timedelta(days=1)}
+        )
+
+        new_version = await client.post("/feedback", json={**vote, "reaction": "thumbs_up"})
+        repeat = await client.post("/feedback", json={**vote, "reaction": "thumbs_down"})
+        assert (new_version.status_code, repeat.status_code) == (200, 200)
+
+        result = await test_db_with_data.execute(select(Feedback).order_by(Feedback.created_at))
+        assert [r.reaction for r in result.scalars().all()] == ["thumbs_down", "thumbs_up"]
