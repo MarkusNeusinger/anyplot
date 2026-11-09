@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { MapGraphData } from 'src/hooks/useForceGraphSimulation';
-import { fireEvent, render, screen } from 'src/test-utils';
+import { fireEvent, render, screen, styleAt } from 'src/test-utils';
 
 import { MapLegend } from './MapLegend';
 
@@ -76,19 +76,19 @@ describe('MapLegend', () => {
       />
     );
 
-    const toggle = screen.getByRole('button', { name: 'legend ▸' });
+    // The toggle shows on a phone only. jsdom applies `@media` at its fixed 1024 px window, where
+    // the toggle is hidden and so has no accessible name: the test finds the button by its text,
+    // which names it on a phone, and checks the widths on the style sheet.
+    const toggle = screen.getByText('legend ▸');
+    expect(toggle.tagName).toBe('BUTTON');
+    expect(styleAt(toggle, 390).display).toBe('inline-block');
+    expect(styleAt(toggle, 1024).display).toBe('none');
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(toggle);
-    expect(screen.getByRole('button', { name: 'legend ▾' })).toHaveAttribute(
-      'aria-expanded',
-      'true'
-    );
+    expect(screen.getByText('legend ▾')).toHaveAttribute('aria-expanded', 'true');
 
-    fireEvent.click(screen.getByRole('button', { name: 'legend ▾' }));
-    expect(screen.getByRole('button', { name: 'legend ▸' })).toHaveAttribute(
-      'aria-expanded',
-      'false'
-    );
+    fireEvent.click(screen.getByText('legend ▾'));
+    expect(screen.getByText('legend ▸')).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('calls setHoverType on mouse enter and clears it on mouse leave', () => {
