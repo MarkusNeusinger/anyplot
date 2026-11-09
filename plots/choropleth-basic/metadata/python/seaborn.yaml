@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: choropleth-basic
 created: '2025-12-31T13:54:42Z'
-updated: '2026-11-09T09:36:27Z'
+updated: '2026-11-09T09:44:51Z'
 generated_by: claude-opus
 workflow_run: 42593988096
 issue: 3069
@@ -12,164 +12,166 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choroplet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 75
+quality_score: 85
 review:
   strengths:
-  - Continuous values use the imprint_seq ramp with a matching colorbar (0–5 %), and
-    the fills are identical in both themes while only the chrome flips
-  - Missing regions (DC, PR) are drawn in a muted gray with /// hatching and explained
-    by a 'No data' legend entry, clearly distinct from every color of the scale in
-    both renders
-  - Region boundaries come from sns.heatmap's linewidths/linecolor=PAGE_BG gutters,
-    thin and quiet, so neighbours of similar shade stay separate in both themes
-  - 'Theme tokens are threaded through every text element: title, colorbar ticks and
-    label, legend and caption are all readable on #FAF8F1 and #1A1A17'
+  - Real 2020 US Census population densities for all 50 states and DC, with Puerto
+    Rico in the outlines but not in the table, so the no-data style shows up in a
+    real case
+  - 'Composite Albers Equal Area projection: the lower 48 on standard parallels 29.5/45.5,
+    with Alaska, Hawaii and Puerto Rico each projected on their own parameters and
+    moved into place (Aleutians across the antimeridian handled)'
+  - LogNorm on imprint_seq lets a variable spanning four orders of magnitude read
+    as a West (green) to Northeast corridor (blue) gradient instead of one dark DC
+    and a flat rest
+  - Region boundaries are drawn as 0.4 pt page-colored gaps, so neighbors stay separate
+    in both themes without competing with the fills
+  - No-data regions are hatched muted gray with their own legend entry, distinct from
+    every color of the green-blue ramp
+  - State codes placed at the interior point farthest from the outline, and only on
+    parts large enough to hold them, so no code crosses a border
+  - Colorbar without an outline, with zero-length ticks and thousand-separated labels
+    (10 to 10,000), labelled with the variable and its unit
   weaknesses:
-  - 'SC-01, SC-02 (both): the regions are equal-size squares on a tile grid, not filled
-    areas with their real outlines in a map projection (the spec''s first ''A good
-    version shows:'' bullet and the Notes'' projection bullet) → draw the real state
-    polygons (e.g. a bundled US states GeoJSON/shapefile plotted with matplotlib patches
-    or geopandas on the seaborn-themed axes) in an Albers Equal Area projection. Likely
-    cause: sns.heatmap on a row/column pivot used as a stand-in for a map.'
-  - 'SC-01 (both): every tile carries a value label (''3.2%'') and the axes carry
-    a caption line (''GDP growth rate (%) by state · tile grid map …''); the basic
-    variant allows plain region name labels only → keep the state codes, drop the
-    value text and the caption. Likely cause: the second ax.text in the label loop
-    and the ax.text at y=-0.04.'
-  - 'DQ-02 (both): real US state names carry invented GDP growth rates (e.g. UT 4.5
-    %, WV 0.5 %) → use a fictional or clearly synthetic region set, or published values
-    for the real states. Likely cause: the hand-typed states list.'
-  - 'VQ-01 (both): the 6 pt per-tile value labels shrink to about 4 px in the 400
-    px thumbnail and cannot be read there → remove them (see SC-01 line) or, if kept,
-    at least 8 pt (+2 pt). Likely cause: fontsize=6 on the value ax.text.'
-  - 'VQ-05 (both): the map fills only the middle ~65 % of the canvas height, leaving
-    about 15 % empty above the title and 10 % below the caption → let the map grow
-    to fill the vertical space. Likely cause: square=True on a 6×14 grid caps the
-    axes height inside subplots_adjust(top=0.9, bottom=0.08).'
-  - 'CQ-04 (code): IMPRINT_PALETTE is defined but never used, and cbar.set_label repeats
-    the label already passed in cbar_kws → delete the unused constant and pass the
-    label once. Likely cause: leftover template lines.'
-  - 'Suggestion: a colorbar spanning the data range (0.4–4.5) rather than rounded
-    0–5 would use more of the ramp.'
+  - 'CQ-01 (code): the projection is a helper function `albers(...)` (about 10 lines)
+    when the rubric asks for a flat Imports → Data → Plot → Save script → inline the
+    projection math in the ring loop (or as a module-level expression applied to each
+    ring) and remove the `def`. Likely cause: the `def albers(lon, lat, lon0, lat0,
+    p1, p2, scale, shift)` block.'
+  - 'Suggestion: DC (11,280 per sq mi) sets the top of the log scale but is too small
+    to see, so the visible states use only about the lower three quarters of the ramp.
+    Capping the colorbar near the highest visible state, with an extend arrow, would
+    spread the ramp across the states a reader can actually see.'
+  - 'Suggestion: the ''No data'' legend sits in the lower-right corner, far from Puerto
+    Rico. Placing it closer to the Puerto Rico inset would tie the swatch to the region
+    it explains.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full canvas.
-      Chrome: title "choropleth-basic · python · seaborn · anyplot.ai" dark ink at top centre; vertical colorbar on the right labelled "GDP growth rate (%)" with ticks 0–5 in soft dark gray; "No data" legend box with hatched gray swatch at lower right; caption "GDP growth rate (%) by state · tile grid map, one equal-size tile per region" below the map. All readable.
-      Data: 52 equal-size square tiles arranged in an approximate US layout (AK, HI bottom-left), filled on the imprint_seq ramp from #009E73 green (low, e.g. AK 0.4 %, WV 0.5 %) to #4467A3 blue (high, UT 4.5 %); page-colored gutters between tiles; each tile shows a bold white state code and a 6 pt white value; DC and PR hatched gray with dark "n/a".
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: the title "choropleth-basic · python · seaborn · anyplot.ai" is dark ink, centered at the top and about 50 % of the width. On the right is a vertical colorbar (log scale, ticks 10 / 100 / 1,000 / 10,000 in INK_SOFT) labelled "Population density (people per sq mi)". A framed "No data" legend with a hatched gray swatch sits in the lower right. No axes, by design. All text is readable.
+      Data: a US Albers Equal Area map of the lower 48 with Alaska and Hawaii insets at the lower left and Puerto Rico at the lower right. Fills run on imprint_seq from brand green #009E73 (AK, WY, MT, ND, SD) to blue #4467A3 (NJ, RI, MA, CT, MD). Boundaries are thin off-white lines. Puerto Rico is hatched gray (no data). Bold white state codes sit inside the larger states. The small Northeast states are unlabelled.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, colorbar label and caption flip to light ink; colorbar ticks light gray; legend frame light gray on dark elevated fill. No dark-on-dark text.
-      Data: tile fills identical to the light render; gutters now near-black; no-data tiles darker gray hatching with light "n/a" text.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: the title, the colorbar label and the legend text flip to light ink (#F0EFE8), and the tick labels to light gray INK_SOFT. The legend frame is light gray on the dark elevated surface. There is no dark-on-dark text anywhere.
+      Data: the fills are the same green-to-blue ramp as in the light render, unchanged. Boundaries are now thin near-black page-colored gaps, still clearly separating neighbors. The Puerto Rico hatch is a dimmer gray but distinct from the ramp. White state codes read well on the fills.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: Main text readable in both themes; 6 pt per-tile values blur in the
-          400 px thumbnail (defect line)
+        passed: true
+        comment: Title 12 pt, colorbar label 9 pt, ticks 8 pt, state codes 6.5 pt
+          bold white on the fills; everything readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions
+        comment: No text collisions; state codes are only placed on parts big enough
+          to hold them
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tiles, gutters, hatching and legend swatch visible in both themes
+        comment: Every state is filled; DC and the small Northeast states are hard
+          to make out, which a spec permission covers; the hatched no-data swatch
+          is visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq ramp plus hatched no-data; no red-green signal
+        comment: The green-to-blue ramp carries no red-green signal; no-data is set
+          apart by its hatching
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Map fills only the middle ~65 % of the height, wide empty bands above
-          and below (defect line)
+        passed: true
+        comment: 3200x1800; the map fills the canvas with balanced margins; colorbar
+          and legend sit clear of the map
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar labelled 'GDP growth rate (%)' with unit; no axes needed
-          for a map
+        comment: The colorbar is labelled with the variable and its unit; there are
+          no axes, by design
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq for continuous data, correct backgrounds, theme-correct
-          chrome
+        comment: 'imprint_seq #009E73 -> #4467A3; backgrounds #FAF8F1 / #1A1A17; fills
+          identical in both themes'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Style-guide baseline; no evidence beyond it
+        comment: 'Beyond the baseline: no colorbar outline, zero-length ticks with
+          thousand separators, bold white codes on the fills, medium-weight title'
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Beyond the baseline: page-colored boundary gaps that adapt to the
+          theme, codes placed at each part''s interior point farthest from its outline,
+          compact composite insets'
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Outline-free colorbar with zero-length ticks and page-colored tile
-          gutters go beyond the spine/grid rules
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Data displayed; no hierarchy chosen beyond the Notes
+        comment: A log norm chosen for a variable spanning four orders of magnitude,
+          so the low-density West versus the dense Northeast corridor reads at a glance
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Tile grid map is a related but different form of a choropleth; per-tile
-          value labels and caption exceed the basic variant (defect lines)
+        passed: true
+        comment: A single shaded choropleth layer; the plain state-code labels are
+          allowed by the spec
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Colorbar, quiet boundaries and gray/hatched missing data present;
-          real outlines and map projection (Notes + first 'A good version shows:'
-          bullet) missing
+        passed: true
+        comment: 'Color legend with the value range, Albers Equal Area projection,
+          a sequential ramp, quiet boundaries, gray hatched no-data style: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each tile shaded by its own value; colorbar covers the full range
+        comment: Each state is shaded by its own value; the outlines are real; the
+          colorbar covers the full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; 'No data' legend and colorbar label read well
+        comment: Title in the mandated format; colorbar and no-data legend are labelled
+          as text for a reader
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -177,56 +179,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows a spread of values and missing regions
+        comment: Shows a continuous scale, a strong regional pattern and a real missing
+          region (Puerto Rico)
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Real US states carry invented GDP growth numbers (defect line)
+        passed: true
+        comment: '2020 US Census population density: real, neutral data'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0.4–4.5 % annual GDP growth is plausible; no Check values in spec
+        comment: Checked NJ 1263, RI 1061.4, MA 901.2, AK 1.3, WY 6.0, DC 11280 against
+          2020 Census densities; the colorbar runs from about 1.3 to 11,280
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Flat script, no functions
+        passed: false
+        comment: The albers() helper function breaks the flat script structure (defect
+          line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data
+        comment: 'Deterministic: a fixed table and a pinned GeoJSON URL'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Unused IMPRINT_PALETTE constant and duplicated colorbar label (defect
-          line)
+        passed: true
+        comment: No geo package is installed, so the hand-written projection and label
+          placement replace no available call
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, no bbox_inches tight, current API
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches='tight'
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -234,28 +239,33 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: sns.heatmap with cbar_kws and square=True; default level
+        comment: seaborn has no geographic plots; set_theme drives the chrome, and
+          the map is matplotlib collections
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses heatmap's linewidths/linecolor gutters and NaN masking for the
-          tile layout
-  verdict: REJECTED
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
-  rendered_at: '2026-11-09T09:33:39Z'
+  rendered_at: '2026-11-09T09:41:50Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
   - custom-legend
-  - hatching
+  - annotations
+  - patches
   patterns:
-  - data-generation
+  - dataset-loading
+  - iteration-over-groups
+  - explicit-figure
   dataprep:
-  - pivot
+  - normalization
   styling:
   - publication-ready
+  - custom-colormap
+  - minimal-chrome
+  - edge-highlighting
