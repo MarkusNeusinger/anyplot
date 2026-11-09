@@ -207,6 +207,16 @@ header on line 1, moves `//#` directive lines that sat above the old header
 directly below the new one, and drops a stale second header block among the
 leading lines, so a file always comes out with exactly one header.
 
+### `render_hash.py`
+Ties the staged renders to the code that made them (stdlib, plus
+`regen_gate.py` from its own directory). `write` stages the sha256 of the
+implementation with its `Quality:` header line reset to `pending` as
+`render.sha256` (`impl-generate.yml`, `impl-repair.yml`, each from a copy at
+the workflow's ref); `check` compares it with the file at the PR head
+(`impl-review.yml`, "Check the render hash (warn-only)") and reports `match`,
+`mismatch`, `missing`, or `unreadable`. It never fails the review. See
+[Renders tied to their code](../../docs/workflows/overview.md#renders-tied-to-their-code).
+
 ### `spec_characteristics_lint.py`
 Lint for the closing `## What a good version looks like` section of
 `plots/*/specification.md`. Standard library only; it imports the parser from

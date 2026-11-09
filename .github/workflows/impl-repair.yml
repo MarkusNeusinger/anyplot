@@ -124,6 +124,8 @@ jobs:
           echo "branch=$BRANCH" >> $GITHUB_ENV
           git fetch origin "$BRANCH"
           git checkout "$BRANCH"
+          # The head this repair starts from; "Check the repair's push" needs it.
+          echo "start_sha=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Derive language + extension from library
         id: lang
@@ -459,7 +461,39 @@ jobs:
           echo "::error::Claude stopped the session (${{ steps.claude_cost.outputs.stop_reason }}); the retry is skipped"
           exit 1
 
+      # A repair is new code with its own renders. Renders without a pushed
+      # change, or from a file that differs from the pushed one, would send
+      # the old code back to review under a lower threshold. Gate failures
+      # write `gate` for "Handle repair failure".
+      - name: Check the repair's push
+        id: push_gate
+        if: success()
+        env:
+          SPEC_ID: ${{ inputs.specification_id }}
+          LIBRARY: ${{ inputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
+          BRANCH: ${{ env.branch }}
+          START_SHA: ${{ env.start_sha }}
+        run: |
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
+          fail() { echo "gate=$1" >> "$GITHUB_OUTPUT"; echo "::error::$1"; exit 1; }
+          git fetch origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}" \
+            || fail "could not fetch ${BRANCH} to check the repair's push"
+          rc=0; git diff --quiet "$START_SHA" "origin/$BRANCH" -- "$IMPL_FILE" || rc=$?
+          if [ "$rc" = 0 ]; then
+            fail "the repair pushed no change to ${IMPL_FILE} since ${START_SHA:0:7}"
+          elif [ "$rc" != 1 ]; then
+            fail "could not compare ${IMPL_FILE} with ${START_SHA:0:7} (git diff exit ${rc})"
+          fi
+          rc=0; git diff --quiet "origin/$BRANCH" -- "$IMPL_FILE" || rc=$?
+          if [ "$rc" != 0 ]; then
+            fail "${IMPL_FILE} in the workspace is not the pushed file, so the renders may come from unpushed code (git diff exit ${rc})"
+          fi
+          echo "::notice::The repair pushed ${IMPL_FILE} at $(git rev-parse --short "origin/$BRANCH"), and the workspace holds that file"
+
       - name: Process repaired image
+        id: process
         if: success()
         env:
           SPEC_ID: ${{ inputs.specification_id }}
@@ -468,10 +502,13 @@ jobs:
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
 
+          # Without both renders the review would score the previous ones
+          # against the repaired code.
           if [ ! -f "$IMPL_DIR/plot-light.png" ] || [ ! -f "$IMPL_DIR/plot-dark.png" ]; then
-            echo "::warning::Missing plot-{light,dark}.png after repair"
+            echo "gate=the repair left no plot-light.png and plot-dark.png" >> "$GITHUB_OUTPUT"
+            echo "::error::Missing plot-{light,dark}.png after repair"
             ls -la "$IMPL_DIR/" || true
-            exit 0
+            exit 1
           fi
 
           source .venv/bin/activate
@@ -536,6 +573,7 @@ jobs:
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
           STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
@@ -556,6 +594,21 @@ jobs:
               gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot-${theme}.html" 2>/dev/null || true
             fi
           done
+
+          # render.sha256 of the repaired file ("Check the repair's push" made
+          # sure it is the pushed one), as impl-generate stages it: from this
+          # workflow's ref, private, never fatal, a stale one goes.
+          TOOLS="$RUNNER_TEMP/render-tools"
+          mkdir -p "$TOOLS"
+          if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
+             && git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$TOOLS/regen_gate.py" \
+             && python3 "$TOOLS/render_hash.py" write --source "$IMPL_DIR/${LIBRARY}${EXT}" --out "$RUNNER_TEMP/render.sha256" \
+             && gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
+            echo "::notice::Staged render.sha256"
+          else
+            echo "::warning::render.sha256 not staged; impl-review reports the render hash as missing"
+            gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
+          fi
 
           # The smoke run of the repaired file replaces the staged one (private,
           # never promoted). Without a new one the stale record from before the
@@ -621,6 +674,8 @@ jobs:
           CLAUDE_STOPPED: ${{ steps.claude_cost.outputs.stopped == 'true' || steps.claude_retry_cost.outputs.stopped == 'true' }}
           STOP_REASON: ${{ steps.claude_cost.outputs.stop_reason || steps.claude_retry_cost.outputs.stop_reason }}
           CLAUDE_MODE: ${{ steps.claude_auth.outputs.mode }}
+          # A gate the repair failed ("Check the repair's push", "Process repaired image").
+          GATE: ${{ steps.push_gate.outputs.gate || steps.process.outputs.gate }}
         run: |
           # Restore ai-rejected label that was removed at start of repair so the
           # PR state stays consistent (otherwise it looks "stuck approved").
@@ -693,6 +748,11 @@ jobs:
             [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
           done
           EXHAUSTED="The repair workflow itself failed twice for this attempt — likely a persistent Claude Code Action issue."
+          CAUSE="The repair workflow failed (probably a transient Claude Code Action issue)."
+          if [ -n "$GATE" ]; then
+            EXHAUSTED="After its one auto-retry, the repair failed a gate: ${GATE}."
+            CAUSE="The repair failed a gate: ${GATE}."
+          fi
           if [ -z "$RETRY_COUNT" ]; then
             echo "::error::Could not read the retry marker for PR #${PR_NUM} after 3 attempts — not auto-retrying"
             EXHAUSTED="The repair workflow failed, and whether its one auto-retry was already used could not be read, so none was started."
@@ -718,7 +778,7 @@ jobs:
             gh pr comment "$PR_NUM" --body "${MARKER}
           ## :wrench: Repair Workflow Crashed (Attempt ${ATTEMPT}/4) — Auto-Retrying
 
-          The repair workflow failed (probably a transient Claude Code Action issue). Automatically re-triggering this attempt...
+          ${CAUSE} Automatically re-triggering this attempt...
 
           ---
           :robot: *[impl-repair](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"

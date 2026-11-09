@@ -911,6 +911,9 @@ jobs:
           for f in plot-light.png plot-dark.png plot-light.html plot-dark.html plot.png plot.html; do
             cp "${IMPL_DIR}/${f}" "/tmp/anyplot-plot-cache/${f}" 2>/dev/null || true
           done
+          # The file those renders came from, before the checkout below puts
+          # the pushed branch in its place: "Upload to GCS Staging" hashes it.
+          cp "${IMPL_DIR}/${LIBRARY}${EXT}" "$RUNNER_TEMP/render-source" 2>/dev/null || rm -f "$RUNNER_TEMP/render-source"
 
           # Configure git auth (Claude's action configured it, but it's gone now)
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
@@ -918,14 +921,14 @@ jobs:
           # Sync with remote (Claude already pushed the code)
           git fetch origin
 
-          # Check if remote branch exists before checkout (fixes branch-not-found error)
-          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-            git checkout -B "$BRANCH" "origin/$BRANCH"
-          else
-            # Branch doesn't exist on remote - create fresh from main
-            echo "::warning::Remote branch $BRANCH not found, creating fresh from main"
-            git checkout -B "$BRANCH" origin/main
+          # The generator (or the adopt step) pushes the branch. Without it the
+          # renders belong to no pushed code, and checking out origin/main
+          # would put a regeneration's renders under the live implementation.
+          if ! git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "::error::Remote branch ${BRANCH} not found: the implementation was never pushed, so its renders are neither committed nor staged"
+            exit 1
           fi
+          git checkout -B "$BRANCH" "origin/$BRANCH"
 
           # An implementation PR never changes dependency files, and impl-merge.yml
           # refuses one that does. #9398 (qrcode-basic, makie) committed the
@@ -1541,6 +1544,22 @@ jobs:
           echo "png_url_dark=${PUBLIC_URL}/plot-dark.png"   >> $GITHUB_OUTPUT
           echo "uploaded=true" >> $GITHUB_OUTPUT
           echo "::notice::Uploaded plot-light + plot-dark (+responsive variants)"
+
+          # render.sha256: the hash of the file the renders came from, which
+          # impl-review compares with the PR head (automation/scripts/render_hash.py,
+          # from this workflow's ref). Private and never promoted (not plot-*).
+          # Never fatal; a stale hash goes, so the review reports it missing.
+          TOOLS="$RUNNER_TEMP/render-tools"
+          mkdir -p "$TOOLS"
+          if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
+             && git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$TOOLS/regen_gate.py" \
+             && python3 "$TOOLS/render_hash.py" write --source "$RUNNER_TEMP/render-source" --out "$RUNNER_TEMP/render.sha256" \
+             && gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
+            echo "::notice::Staged render.sha256"
+          else
+            echo "::warning::render.sha256 not staged; impl-review reports the render hash as missing"
+            gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
+          fi
 
           # Upload HTML for interactive libraries (one per theme)
           for theme in light dark; do

@@ -467,7 +467,8 @@ class TestRepairUpload:
             f"-h Cache-Control:no-store cp {staging.adapt}/new-smoke.json {staging.staging}/adapt/new-smoke.json"
             in calls
         )
-        assert not [call for call in calls if call.startswith("rm ")]
+        # Only the smoke record is in question here; render.sha256 has its own tests.
+        assert not [call for call in calls if call.startswith("rm ") and "/adapt/" in call]
 
     def test_without_a_record_the_stale_one_goes(self, tmp_path: Path, shell: list[str]) -> None:
         staging = Staging(tmp_path)
