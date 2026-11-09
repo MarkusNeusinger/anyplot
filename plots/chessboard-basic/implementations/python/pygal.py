@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chessboard-basic: Chess Board Grid Visualization
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -20,16 +20,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 DARK_SQUARE = IMPRINT_PALETTE[3]
 
-
-def _lerp_hex(c0, c1, t):
-    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
-    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
-    r, g, b = (round(a + (b - a) * t) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
-    return f"#{r:02X}{g:02X}{b:02X}"
-
-
 # Light squares: a pale tint of the same ochre, identical in both themes
-LIGHT_SQUARE = _lerp_hex(DARK_SQUARE, "#FAF8F1", 0.7)
+LIGHT_SQUARE = "#E8D5B8"
 
 # Data: board parameters — files (columns) left to right, ranks (rows) bottom to top
 FILES = ["a", "b", "c", "d", "e", "f", "g", "h"]
