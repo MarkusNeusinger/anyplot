@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: biplot-pca
 created: '2026-01-09T13:17:48Z'
-updated: '2026-11-09T08:26:36Z'
+updated: '2026-11-09T08:33:30Z'
 generated_by: claude-opus
 workflow_run: 42584880958
 issue: 3417
@@ -12,47 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - Loadings drawn with ax.annotate and arrowprops from the origin, all scaled by
-    one common factor so relative arrow lengths follow the loadings
-  - Labels for the nearly parallel Petal width / Petal length arrows are split above
-    and below their tips, so each name stays attributable to its own arrow
-  - patheffects.withStroke halo in the page color keeps the variable names readable
-    over grid and points in both themes
-  - Axis labels carry the variance explained (73.0 % and 22.9 %), computed from PCA.explained_variance_ratio_
-    on standardized data
-  - set_aspect('equal', adjustable='datalim') keeps PC1 and PC2 on the same scale,
-    so arrow directions are geometrically true
-  - Real Iris data via sklearn with species groups in Imprint order and theme tokens
-    threaded through every chrome element
+  - Loadings scaled by one common factor (ARROW_REACH of the largest score distance),
+    so relative arrow lengths follow the loadings and the arrows span the score cloud
+  - Equal aspect with adjustable='datalim' keeps arrow directions geometrically true
+  - Angle-aware label placement splits the near-parallel Petal width / Petal length
+    labels above and below their tips, so each name stays attributable
+  - Explained variance in the axis labels comes straight from pca.explained_variance_ratio_
+    (73.0 % / 22.9 %)
+  - Theme tokens threaded through every chrome element; both renders read cleanly
   weaknesses:
-  - 'VQ-02 (both): the ''Petal width (cm)'' label sits on top of a Virginica point
-    at about PC1 1.9, PC2 0.3 (the point shows behind the ''P''), and the ''Petal
-    length (cm)'' label runs along the PC2 = 0 reference line, which shows between
-    its words → label text clear of data points and the reference line by a few points
-    (about +4 pt of vertical offset). Likely cause: the label offset `xytext=direction
-    * 6` gives near-horizontal arrows almost no vertical clearance.'
-  - 'Suggestion: a correlation-circle style reference (unit circle scaled by the same
-    factor) would give the arrow lengths a magnitude reference, as the Notes suggest.'
-  - 'Suggestion: a slightly larger label font (9 pt) for the variable names would
-    give the arrows more presence against 150 points.'
+  - 'VQ-02 (both): the 85 %-opaque page-colored label boxes of ''Petal width (cm)''
+    and ''Petal length (cm)'' sit on the Virginica cluster at PC1 ≈ 1.8–2.9 and hide
+    several score points (around (1.9, 0.4), (2.3, 0.45), (2.9, 0.4) and (1.85, −0.15))
+    → no label box may cover a data mark; drop the bbox and keep only the stroke halo,
+    or a fully transparent box. Likely cause: the bbox={... ''alpha'': 0.85} on the
+    arrow-label annotate, on top of the withStroke path effect.'
+  - 'Suggestion: the unit circle the Notes suggest is optional; a correlation-scaled
+    circle would give the arrow lengths a reference.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, square 2400x2400 canvas.
-      Chrome: title "biplot-pca · python · matplotlib · anyplot.ai" in dark ink at top (~60 % width); axis labels "PC1 (73.0% of variance)" and "PC2 (22.9% of variance)"; grey tick labels −3..3 on both axes; subtle grid; left/bottom spines only; thin grey crosshair at the origin; legend "Species" in the lower right with elevated off-white frame. All readable.
-      Data: 150 points — Setosa #009E73 (left cluster), Versicolor #C475FD and Virginica #4467A3 (right, partly overlapping), alpha 0.75 with page-color outline. Four dark-ink arrows from the origin: Sepal width up-left, Sepal length up-right, Petal width and Petal length nearly horizontal right; names at the tips with page-color halo. "Petal width (cm)" label overlaps a Virginica point; "Petal length (cm)" sits on the PC2=0 line.
+      Chrome: title "biplot-pca · python · matplotlib · anyplot.ai" in dark ink at the top (~60 % width); x label "PC1 (73.0% of variance)", y label "PC2 (22.9% of variance)"; tick labels -3..3 in soft ink; subtle grid; muted crosshair at PC1 = 0 and PC2 = 0; left and bottom spines only. Legend "Species" lower right in a light elevated frame. All text readable.
+      Data: 150 score points — Setosa #009E73 on the left (PC1 ≈ -2.5), Versicolor #C475FD and Virginica #4467A3 overlapping on the right. Four dark-ink arrows from the origin: Sepal width up-left (long), Sepal length up-right, Petal width and Petal length nearly parallel along +PC1, each labeled at its tip (Petal width above, Petal length below). The label boxes of the petal labels cover a few Virginica points.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis labels and arrow labels in light ink, tick labels in light grey, subtle grid, legend frame #242420 with light text. No dark-on-dark text.
-      Data: same Imprint colors (#009E73, #C475FD, #4467A3) as light; arrows flip to light ink #F0EFE8. Virginica blue is darker on near-black but still distinguishable thanks to the outlines. Same label overlaps as light.
+      Chrome: title, axis labels in light ink, tick labels in soft light ink, subtle grid, legend frame on #242420 with light text. No dark-on-dark text.
+      Data: identical point colors to the light render (green, purple, blue); arrows switch to light ink #F0EFE8; arrow labels light with dark halo/box. Virginica blue is darker against the background but clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,73 +54,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (12/10/8 pt) fit the square canvas; all text readable
-          in both themes
+        comment: Explicit sizes (title 12, axis labels 10, ticks/arrow labels/legend
+          8 pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: false
-        comment: '''Petal width (cm)'' label sits on a Virginica point; ''Petal length
-          (cm)'' runs along the PC2=0 line (defect line)'
+        comment: The opaque label boxes of 'Petal width (cm)' and 'Petal length (cm)'
+          sit on Virginica score points and hide them (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: s=60 with alpha 0.75 and outline suits 150 points; arrows at lw 1.6
-          clearly visible; legend glyphs match marks
+        comment: 150 points at s=60, alpha 0.75 with page-colored outline; arrows
+          lw 1.6 in ink; legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue are CVD-separable; arrows in ink contrast with
-          both backgrounds
+        comment: Green/purple/blue Imprint positions are CVD-distinguishable; arrows
+          in high-contrast ink
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400, balanced margins, nothing clipped, legend in empty lower-right
-          corner
+        comment: 2400x2400 square canvas, equal aspect, balanced margins, title ~60%
+          width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Component names with variance explained percentages
+        comment: '''PC1 (73.0% of variance)'' / ''PC2 (22.9% of variance)''; feature
+          names carry units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-3 in order, first #009E73; correct theme backgrounds;
-          chrome flips correctly'
+        comment: 'Imprint positions 1-3 in canonical order, first #009E73; #FAF8F1
+          / #1A1A17 backgrounds; theme-correct chrome in both renders'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Page-color halo on arrow labels and elevated legend frame lift the
-          typography beyond the baseline
+        comment: 'Style-guide baseline: clean type hierarchy and palette, nothing
+          decided beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Origin crosshair at low alpha and tick marks removed (length=0) for
-          a cleaner frame, equal aspect keeps geometry true
+        comment: 'Beyond baseline: muted origin crosshair at alpha 0.6, ticks with
+          zero length, and angle-aware label split (above/below) for near-parallel
+          arrows'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed clearly; no focal point chosen beyond the Notes
+        passed: true
+        comment: Data displayed clearly; no focal point or hierarchy chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: PCA biplot with scores and loading arrows
+        comment: 'PCA biplot: scores as points plus loading arrows from the origin'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: PC1 vs PC2, colored scores with legend, arrows from origin, each
-          labeled at its tip, common scaling, variance % in axis labels; unit circle
-          optional
+        comment: PC1 vs PC2, colored scores with legend, one arrow per variable from
+          origin, each labeled at its tip, one common scale factor, variance % in
+          axis labels; unit circle optional and not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Scores at their PC coordinates, no jitter; all data within axes
+        comment: Scores at their PCA coordinates, no jitter; equal aspect keeps arrow
+          directions true
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend 'Species' with Setosa/Versicolor/Virginica
+        comment: Title 'biplot-pca · python · matplotlib · anyplot.ai'; legend titled
+          'Species' with Setosa/Versicolor/Virginica
     data_quality:
       score: 15
       max: 15
@@ -166,21 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows separated and overlapping groups, correlated (petal) and near-orthogonal
-          (sepal width) loadings
+        comment: Shows correlated (petal pair), separate (sepal width) loadings, clustered
+          and overlapping groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Iris measurements, neutral
+        comment: Iris dataset, as the spec suggests; neutral and real
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked explained variance of standardized Iris: 73.0 % and 22.9
-          % match the known 72.96 / 22.85 %; computed by PCA, not typed'
+        comment: Standardized Iris PCA gives 73.0% / 22.9% explained variance, computed
+          via PCA, matches known values (72.96 / 22.85)
     code_quality:
       score: 10
       max: 10
@@ -190,13 +189,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic dataset and PCA
+        comment: Deterministic built-in dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -208,13 +207,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: PCA and StandardScaler from sklearn; compact label-placement logic
+        comment: PCA and scaling via sklearn; no fake UI; label logic purposeful
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, no bbox_inches tight, current API
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches
     library_mastery:
       score: 6
       max: 10
@@ -224,23 +223,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes methods, annotate with arrowprops, set_aspect(adjustable='datalim'),
-          groupby loop per palette position
+        comment: Axes methods, ax.annotate with arrowprops for loadings, set_aspect('equal',
+          adjustable='datalim'), offset-points label placement
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: matplotlib.patheffects.withStroke halo for labels over data
-  verdict: REJECTED
+        passed: true
+        comment: patheffects.withStroke halos on labels; annotate textcoords='offset
+          points'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
-  rendered_at: '2026-11-09T08:23:56Z'
+  rendered_at: '2026-11-09T08:30:52Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - dataset-loading
   - iteration-over-groups
@@ -248,5 +249,5 @@ impl_tags:
   - pca
   - normalization
   styling:
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending

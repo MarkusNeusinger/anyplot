@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
 Library: matplotlib 3.11.2 | Python 3.14.10
-Quality: 85/100 | Updated: 2026-11-09
+Quality: 83/100 | Updated: 2026-11-09
 """
 
 import os
