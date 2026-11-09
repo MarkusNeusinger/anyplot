@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 78/100 | Updated: 2026-11-09
@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Label, LinearColorMapper, Range1d
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Label, LabelSet, LinearColorMapper, Range1d
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from selenium import webdriver
@@ -49,8 +49,8 @@ TIME = "Time (s)"  # role: color
 # Data: replace this block with your own table, for example df = pd.read_csv("trajectory.csv")
 # Lorenz attractor (sigma=10, rho=28, beta=8/3), inline Euler integration
 sigma, rho, beta = 10.0, 28.0, 8.0 / 3.0
-n_points = 1500
-dt = 0.01
+n_points = 2000
+dt = 0.005
 xs, ys, zs = np.zeros(n_points), np.zeros(n_points), np.zeros(n_points)
 xs[0], ys[0], zs[0] = 0.1, 0.0, 0.0
 for i in range(n_points - 1):
@@ -62,21 +62,19 @@ df = pd.DataFrame({TIME: np.linspace(0, n_points * dt, n_points), X: xs, Y: ys, 
 # Plot: reads only df and the constants above
 # Standardize each coordinate so all three axes share one scale in the projection
 coords = df[[X, Y, Z]].astype(float)
-norm = (coords - coords.mean()) / coords.std() * 2
-nx, ny, nz = norm[X].to_numpy(), norm[Y].to_numpy(), norm[Z].to_numpy()
+mean, std = coords.mean(), coords.std().fillna(0).replace(0, 1)
+norm = ((coords - mean) / std * 2).to_numpy()
 
-# Oblique projection (elevation=20°, azimuth=55°)
-elev_rad = np.radians(20)
-azim_rad = np.radians(55)
-
-
-def project(px, py, pz):
-    x_rot = px * np.cos(azim_rad) - py * np.sin(azim_rad)
-    y_rot = px * np.sin(azim_rad) + py * np.cos(azim_rad)
-    return x_rot, y_rot * np.sin(elev_rad) + pz * np.cos(elev_rad)
-
-
-x_proj, y_proj = project(nx, ny, nz)
+# Oblique projection (elevation=20°, azimuth=55°) as a 3x2 matrix: standardized xyz -> screen xy
+elev_rad, azim_rad = np.radians(20), np.radians(55)
+proj = np.array(
+    [
+        [np.cos(azim_rad), np.sin(azim_rad) * np.sin(elev_rad)],
+        [-np.sin(azim_rad), np.cos(azim_rad) * np.sin(elev_rad)],
+        [0.0, np.cos(elev_rad)],
+    ]
+)
+x_proj, y_proj = (norm @ proj).T
 times = df[TIME].astype(float).to_numpy()
 
 # Line as consecutive segments, each colored by the time at its start
@@ -133,7 +131,7 @@ scatter = p.scatter(
     size=18,
     fill_color=INK_SOFT,
     line_color=None,
-    alpha=0.12,
+    alpha=0.0,
     hover_fill_color=ANYPLOT_AMBER,
     hover_alpha=0.95,
 )
@@ -145,35 +143,83 @@ p.add_tools(
     )
 )
 
-# 3D axes drawn from the projected origin of the standardized space
-axis_length = 2.5
-arrow_size = 0.18
-origin = np.array(project(0.0, 0.0, 0.0))
-axis_ends = {
-    X: np.array(project(axis_length, 0.0, 0.0)),
-    Y: np.array(project(0.0, axis_length, 0.0)),
-    Z: np.array(project(0.0, 0.0, axis_length)),
-}
-label_offsets = {X: (0.15, -0.2), Y: (-0.75, -0.4), Z: (0.15, 0.1)}
-for name, end in axis_ends.items():
-    p.line(x=[origin[0], end[0]], y=[origin[1], end[1]], line_color=INK_SOFT, line_width=4)
-    direction = (end - origin) / np.linalg.norm(end - origin)
+# 3D axes along edges of the data's bounding box, with value ticks: X and Y along the front floor
+# edges from the min corner, Z up the outer vertical edge at the far end of X, clear of the path
+lo, hi = np.nanmin(norm, axis=0), np.nanmax(norm, axis=0)
+hi = np.where(hi > lo, hi, lo + 1.0)  # a constant column still gets a visible axis
+z_start = lo.copy()
+z_start[0] = hi[0]
+axis_starts = (lo, lo, z_start)
+center = ((lo + hi) / 2) @ proj
+span = np.linalg.norm(hi - lo)
+tick_len = 0.012 * span
+ticks = {"x0": [], "y0": [], "x1": [], "y1": [], "lx": [], "ly": [], "text": []}
+extent_x, extent_y = [], []
+for k, name in enumerate((X, Y, Z)):
+    start_3d = axis_starts[k]
+    corner = start_3d @ proj
+    end_3d = start_3d.copy()
+    end_3d[k] = hi[k]
+    end = end_3d @ proj
+    direction = (end - corner) / np.linalg.norm(end - corner)
     perp = np.array([-direction[1], direction[0]])
-    base = end - arrow_size * direction
-    p.patch(
-        x=[end[0], base[0] + arrow_size * 0.5 * perp[0], base[0] - arrow_size * 0.5 * perp[0]],
-        y=[end[1], base[1] + arrow_size * 0.5 * perp[1], base[1] - arrow_size * 0.5 * perp[1]],
-        fill_color=INK_SOFT,
-        line_color=INK_SOFT,
-    )
-    dx, dy = label_offsets[name]
-    p.add_layout(
-        Label(x=end[0] + dx, y=end[1] + dy, text=name, text_font_size="42pt", text_color=INK, text_font_style="bold")
-    )
+    # Ticks and labels point away from the data, onto empty canvas
+    if np.dot(perp, (corner + end) / 2 - center) < 0:
+        perp = -perp
+    p.line(x=[corner[0], end[0]], y=[corner[1], end[1]], line_color=INK_SOFT, line_width=4)
 
-# Ranges from the projected data and axes, with padding
-all_x = np.concatenate([x_proj, [origin[0]], [e[0] for e in axis_ends.values()]])
-all_y = np.concatenate([y_proj, [origin[1]], [e[1] for e in axis_ends.values()]])
+    # "Nice" tick values in the original units of this column
+    v_lo, v_hi = coords[name].min(), coords[name].max()
+    raw_step = (v_hi - v_lo) / 4 or max(abs(v_hi), 1.0)
+    magnitude = 10 ** np.floor(np.log10(raw_step))
+    step = magnitude * next(m for m in (1, 2, 2.5, 5, 10) if m * magnitude >= raw_step)
+    for value in np.arange(np.ceil(v_lo / step) * step, v_hi + step * 1e-9, step):
+        point_3d = start_3d.copy()
+        point_3d[k] = (value - mean[name]) / std[name] * 2
+        pos = point_3d @ proj
+        ticks["x0"].append(pos[0])
+        ticks["y0"].append(pos[1])
+        ticks["x1"].append(pos[0] + tick_len * perp[0])
+        ticks["y1"].append(pos[1] + tick_len * perp[1])
+        ticks["lx"].append(pos[0] + 3.2 * tick_len * perp[0])
+        ticks["ly"].append(pos[1] + 3.2 * tick_len * perp[1])
+        ticks["text"].append(f"{value:g}")
+    # Axis title at the middle of the axis, outside its tick labels; Z reads upright along its axis
+    label_pos = (corner + end) / 2 + 7.5 * tick_len * perp
+    p.add_layout(
+        Label(
+            x=label_pos[0],
+            y=label_pos[1],
+            text=name,
+            text_font_size="40pt",
+            text_color=INK,
+            text_font_style="bold",
+            text_align="center",
+            text_baseline="middle",
+            angle=np.pi / 2 if k == 2 else 0.0,
+        )
+    )
+    extent_x += [corner[0], end[0], label_pos[0]]
+    extent_y += [corner[1], end[1], label_pos[1]]
+
+tick_source = ColumnDataSource(data=ticks)
+p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=tick_source, line_color=INK_SOFT, line_width=3)
+p.add_layout(
+    LabelSet(
+        x="lx",
+        y="ly",
+        text="text",
+        source=tick_source,
+        text_font_size="30pt",
+        text_color=INK_SOFT,
+        text_align="center",
+        text_baseline="middle",
+    )
+)
+
+# Ranges from the projected data, axes and their labels, with padding
+all_x = np.concatenate([x_proj, extent_x, ticks["lx"]])
+all_y = np.concatenate([y_proj, extent_y, ticks["ly"]])
 x_min, x_max = np.nanmin(all_x), np.nanmax(all_x)
 y_min, y_max = np.nanmin(all_y), np.nanmax(all_y)
 x_pad = (x_max - x_min) * 0.12
