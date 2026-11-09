@@ -157,7 +157,9 @@ export function AboutPage() {
               the same catalogue, served to ai coding assistants over the model context protocol.
               six tools search specs by tag, return a spec with its implementations, and fetch one
               library&apos;s code, so your assistant starts from code that already rendered and
-              passed review. setup on the {proseLink(paths.mcp, 'mcp', 'mcp page')}.
+              passed review. setup on the {proseLink(paths.mcp, 'mcp', 'mcp page')}; the{' '}
+              {proseLink(paths.stats, 'stats', 'stats page')} shows, per day, how many assistants
+              and crawlers read the catalogue and how many came on behalf of a person.
             </Box>
           </Box>
         </Box>

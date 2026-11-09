@@ -1,111 +1,158 @@
 """ anyplot.ai
 silhouette-basic: Silhouette Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 62/100 | Updated: 2026-05-10
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-09
 """
 
+import os
+
 import altair as alt
-import numpy as np
 import pandas as pd
+from PIL import Image
 from sklearn.cluster import KMeans
 from sklearn.datasets import load_iris
-from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.metrics import silhouette_samples
 
 
-# Data - Use iris dataset for realistic clustering example
-np.random.seed(42)
-iris = load_iris()
-X = iris.data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Perform K-means clustering with 3 clusters
-n_clusters = 3
-kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-cluster_labels = kmeans.fit_predict(X)
+# Imprint palette: all eight positions, one per cluster in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Calculate silhouette scores
-silhouette_avg = silhouette_score(X, cluster_labels)
-sample_silhouette_values = silhouette_samples(X, cluster_labels)
+# Columns: set these to your table's column names
+SAMPLE = "Sample"  # role: samples
+CLUSTER = "Cluster"  # role: cluster_labels
+SILHOUETTE = "Silhouette coefficient"  # role: silhouette_values
 
-# Build dataframe with samples sorted by cluster and silhouette score
-# Horizontal bars: y-axis is sample position, x-axis is silhouette score
-records = []
-y_lower = 0
+# Data: replace this block with your own table, for example df = pd.read_csv("clusters.csv")
+features = load_iris().data
+labels = KMeans(n_clusters=3, random_state=42, n_init=10).fit_predict(features)
+df = pd.DataFrame(
+    {
+        SAMPLE: [f"Iris {i + 1}" for i in range(len(features))],
+        CLUSTER: labels,
+        SILHOUETTE: silhouette_samples(features, labels),
+    }
+)
 
-for cluster_id in range(n_clusters):
-    cluster_mask = cluster_labels == cluster_id
-    cluster_silhouette_values = sample_silhouette_values[cluster_mask]
-    cluster_silhouette_values.sort()
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+silhouette_avg = df[SILHOUETTE].mean()
+gap = max(2, round(len(df) * 0.03))
 
-    cluster_size = len(cluster_silhouette_values)
-    cluster_avg = np.mean(cluster_silhouette_values)
+# Sort within each cluster and stack the clusters bottom-up with a gap between blocks
+ordered = df.dropna(subset=[SILHOUETTE]).sort_values([CLUSTER, SILHOUETTE]).reset_index(drop=True)
+cluster_names = [f"Cluster {c}" for c in ordered[CLUSTER].unique()]
+ordered["cluster_name"] = ordered[CLUSTER].map(lambda c: f"Cluster {c}")
+ordered["block"] = ordered.groupby(CLUSTER, sort=False).ngroup()
+ordered["y"] = ordered.index + ordered["block"] * gap
+ordered["y2"] = ordered["y"] + 1.15  # slight overlap hides anti-aliasing seams between neighbouring bars
 
-    for i, sil_value in enumerate(cluster_silhouette_values):
-        records.append(
-            {
-                "y": y_lower + i,
-                "y2": y_lower + i + 0.8,  # Bar thickness
-                "silhouette": sil_value,
-                "cluster": f"Cluster {cluster_id} (avg: {cluster_avg:.2f})",
-                "cluster_id": cluster_id,
-            }
-        )
+summary = ordered.groupby("cluster_name", sort=False).agg(
+    y_mid=("y", "mean"), x_tip=(SILHOUETTE, "max"), avg=(SILHOUETTE, "mean")
+)
+summary = summary.reset_index()
+summary["label"] = summary["cluster_name"] + summary["avg"].map(lambda v: f" · avg {v:.2f}")
 
-    y_lower += cluster_size + 5  # Gap between clusters
+x_low = min(0.0, ordered[SILHOUETTE].min())
+x_max = ordered[SILHOUETTE].max()
+x_high = max(1.0, x_max + 0.2 * (x_max - x_low))  # room right of the longest bar for its cluster label
+x_scale = alt.Scale(domain=[x_low - 0.05 * (x_high - x_low), x_high])
 
-df = pd.DataFrame(records)
-
-# Color palette - Python Blue as primary, then distinct colors
-colors = ["#306998", "#FFD43B", "#E34C26"]
-
-# Create horizontal silhouette bars using mark_rect for proper horizontal bars
 bars = (
-    alt.Chart(df)
+    alt.Chart(ordered)
     .mark_rect()
     .encode(
-        x=alt.X("silhouette:Q", title="Silhouette Coefficient", scale=alt.Scale(domain=[-0.15, 1.0])),
-        x2=alt.value(0),  # Bars start from 0 and extend to silhouette value
-        y=alt.Y("y:Q", axis=None),
-        y2="y2:Q",
+        x=alt.X(SILHOUETTE.translate(ESCAPE), type="quantitative", title=SILHOUETTE, scale=x_scale),
+        x2=alt.datum(0),
+        y=alt.Y("y", type="quantitative", axis=None),
+        y2="y2",
         color=alt.Color(
-            "cluster:N",
-            title="Cluster",
-            scale=alt.Scale(domain=df["cluster"].unique().tolist(), range=colors),
-            legend=alt.Legend(titleFontSize=18, labelFontSize=16, symbolSize=200),
+            "cluster_name",
+            type="nominal",
+            title=CLUSTER,
+            sort=cluster_names,
+            scale=alt.Scale(domain=cluster_names, range=IMPRINT_PALETTE),
+            legend=None,
         ),
         tooltip=[
-            alt.Tooltip("cluster:N", title="Cluster"),
-            alt.Tooltip("silhouette:Q", title="Silhouette Score", format=".3f"),
+            alt.Tooltip(SAMPLE.translate(ESCAPE), type="nominal", title=SAMPLE),
+            alt.Tooltip("cluster_name", type="nominal", title=CLUSTER),
+            alt.Tooltip(SILHOUETTE.translate(ESCAPE), type="quantitative", title=SILHOUETTE, format=".3f"),
         ],
     )
 )
 
-# Vertical line for average silhouette score
-avg_line_data = pd.DataFrame({"avg_silhouette": [silhouette_avg]})
 avg_line = (
-    alt.Chart(avg_line_data)
-    .mark_rule(color="#E63946", strokeWidth=3, strokeDash=[8, 4])
-    .encode(
-        x=alt.X("avg_silhouette:Q"), tooltip=[alt.Tooltip("avg_silhouette:Q", title="Average Silhouette", format=".3f")]
+    alt.Chart(pd.DataFrame({"avg": [silhouette_avg]}))
+    .mark_rule(color=INK, strokeWidth=2, strokeDash=[8, 5])
+    .encode(x=alt.X("avg", type="quantitative"), tooltip=[alt.Tooltip("avg", title="Average", format=".3f")])
+)
+
+avg_label = (
+    alt.Chart(pd.DataFrame({"avg": [silhouette_avg], "label": [f"Overall avg {silhouette_avg:.2f}"]}))
+    .mark_text(align="left", baseline="bottom", dx=6, dy=-4, fontSize=11, color=INK, y="height")
+    .encode(x=alt.X("avg", type="quantitative"), text="label")
+)
+
+cluster_labels = (
+    alt.Chart(summary)
+    .mark_text(align="left", baseline="middle", dx=10, fontSize=11, fontWeight="bold", color=INK)
+    .encode(x=alt.X("x_tip", type="quantitative"), y=alt.Y("y_mid", type="quantitative"), text="label")
+)
+
+title = "silhouette-basic · python · altair · anyplot.ai"
+chart = (
+    alt.layer(bars, avg_line, avg_label, cluster_labels)
+    .properties(
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        padding={"left": 10, "right": 10, "top": 10, "bottom": 10},
+        title=alt.Title(title, fontSize=16, anchor="start"),
+    )
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.15,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+    )
+    .configure_axisY(grid=False)
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+        padding=8,
     )
 )
 
-# Annotation for average line
-avg_text = (
-    alt.Chart(pd.DataFrame({"x": [silhouette_avg + 0.02], "y": [5], "text": [f"Avg: {silhouette_avg:.3f}"]}))
-    .mark_text(fontSize=18, fontWeight="bold", color="#E63946", align="left")
-    .encode(x="x:Q", y="y:Q", text="text:N")
-)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# Combine layers
-chart = (
-    alt.layer(bars, avg_line, avg_text)
-    .properties(width=1600, height=900, title=alt.Title("silhouette-basic · altair · pyplots.ai", fontSize=28))
-    .configure_axis(labelFontSize=18, titleFontSize=22)
-    .configure_legend(titleFontSize=18, labelFontSize=16)
-)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
 
-# Save as PNG (4800x2700 at scale_factor=3)
-chart.save("plot.png", scale_factor=3.0)
-
-# Save as HTML for interactivity
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.html")

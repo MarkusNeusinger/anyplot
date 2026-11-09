@@ -253,8 +253,16 @@ export function AgentUsageSection({ token, reloadCounter }: AgentUsageSectionPro
   );
 }
 
-/** One KPI tile, as the page's own KPI grid draws them. */
-function UsageTile({ label, value, detail }: { label: string; value: string; detail?: string }) {
+/** One KPI tile, as the page's own KPI grid draws them; the machine readers section uses it too. */
+export function UsageTile({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+}) {
   return (
     <Box
       role="group"

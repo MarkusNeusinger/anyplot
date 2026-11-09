@@ -1352,7 +1352,9 @@ _ABOUT_BOT_BODY = (
     "<p>The same catalogue, served to AI coding assistants over the Model Context Protocol. Six "
     "tools search specs by tag, return a spec with its implementations, and fetch one library's "
     "code, so your assistant starts from code that already rendered and passed review. Setup is "
-    'on the <a href="https://anyplot.ai/mcp">MCP page</a>.</p>'
+    'on the <a href="https://anyplot.ai/mcp">MCP page</a>; the '
+    '<a href="https://anyplot.ai/stats">stats page</a> shows, per day, how many assistants and '
+    "crawlers read the catalogue and how many came on behalf of a person.</p>"
     "<h2>Open</h2>"
     "<p>Source, specs and pipeline live at "
     '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a> '

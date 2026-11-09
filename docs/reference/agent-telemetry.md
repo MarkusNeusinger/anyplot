@@ -463,12 +463,32 @@ Run these steps once, as a project owner. They write nothing but the resources n
     `_AGENT_TELEMETRY_DATASET` substitution on the `deploy-api` trigger. The pipeline writes the variable on
     every deploy, smoke-tests the new revision and moves the pinned traffic to it; a
     `gcloud run services update` would create a revision that serves no traffic and that the next deploy
-    overwrites.
+    overwrites. `deploy-api` is a second-generation trigger on a repository connection, where
+    `gcloud builds triggers update github ... --update-substitutions` fails with `INVALID_ARGUMENT`; export the
+    trigger, edit the file, and import it, as in
+    [Change a trigger's included files](../../agentic/docs/project-guide.md#change-a-triggers-included-files):
 
-    ```bash
-    gcloud builds triggers update github deploy-api --region=europe-west4 \
-      --update-substitutions=_AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry
-    ```
+    1. Export the trigger into a scratch directory outside the repository (read-only):
+
+       ```bash
+       gcloud builds triggers describe deploy-api --region=europe-west4 --project=anyplot --format=yaml > before.yaml
+       ```
+
+    2. Copy `before.yaml` to `after.yaml` and add `_AGENT_TELEMETRY_DATASET: anyplot.agent_telemetry` under
+       `substitutions`. Leave every other key as exported.
+    3. Check that `diff before.yaml after.yaml` shows only that line.
+    4. Import the edited config. It keeps the trigger's `id`, so it updates the trigger in place:
+
+       ```bash
+       gcloud builds triggers import --source=after.yaml --region=europe-west4 --project=anyplot
+       ```
+
+    5. Read the trigger back and compare:
+
+       ```bash
+       gcloud builds triggers describe deploy-api --region=europe-west4 --project=anyplot --format=yaml > verify.yaml
+       diff after.yaml verify.yaml && echo "trigger matches the edited config"
+       ```
 
     The setting takes effect with the next API deploy; run the trigger by hand if you want it at once
     (`gcloud builds triggers run deploy-api --region=europe-west4 --branch=main`).
@@ -487,9 +507,10 @@ be named like the views dataset plus `_logs` (`anyplot.agent_telemetry_logs` for
 `AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry`), because it queries the log view `_AllLogs` directly: it
 filters `timestamp` to the window before it deduplicates, so a load scans the window's partitions only and
 never the whole 180 days, which the `events` view, deduplicated over the whole bucket, cannot avoid. The
-window starts at the current time floored to 10 minutes, passed as a query parameter, so repeated loads send
-the same query and BigQuery may answer from its result cache; on top of that the API keeps each answer for 10
-minutes, so reloading `/debug` runs no query at all. The answer holds aggregates only. `status` is
+window starts at the current time floored to 10 minutes, passed as a query parameter. BigQuery's result cache
+doesn't answer a repeat, because the linked `_AllLogs` view changes with every line that arrives, so the API
+keeps each answer for 10 minutes, and reloading `/debug` runs no query at all. The answer holds aggregates only.
+`status` is
 `not_configured` while the variable is unset, and `unavailable` when the query fails (no table yet, no
 permission, a timeout); both come with zeros, the card shows its empty state, and a failure is never kept.
 
