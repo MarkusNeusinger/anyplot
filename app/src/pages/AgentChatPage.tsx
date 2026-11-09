@@ -783,13 +783,14 @@ function AgentChat({
     // and plots it, unless the button can only read it: with `all` while the fan-out's panel is
     // open, or while the chip cannot go at all.
     // A table typed into the box replaces the data as a paste does: while there is data the line
-    // says so before Enter or the click sends it, since `.undo()` cannot bring the data back.
+    // says so before Enter or the click sends it, since `.undo()` cannot bring the data back. Not
+    // while `all` holds the box in step 2: nothing reads its text then (`plotClick`'s `locked`).
     attachmentLine: attachment
       ? attachmentWaitLine(
           state.dataset ? state.dataset.parsed.profile.rows : null,
           boxSends === 'attachment' && !(plotAll && fanOut) ? plotAction : null
         )
-      : boxSends === 'typed' && state.dataset
+      : boxSends === 'typed' && state.dataset && !chatLocked
         ? attachmentWaitLine(
             state.dataset.parsed.profile.rows,
             plotAll && fanOut ? null : plotAction,
