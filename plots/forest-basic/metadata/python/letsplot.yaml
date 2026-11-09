@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: forest-basic
 created: '2025-12-27T19:22:44Z'
-updated: '2026-11-09T10:45:52Z'
+updated: '2026-11-09T10:51:51Z'
 generated_by: claude-opus
 workflow_run: 42599298591
 issue: 2378
@@ -12,48 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/letsplot/plot-dark.html
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - 'Complete forest-plot anatomy: ten study rows ordered by effect size, each named
-    at its row with a square at its estimate and a horizontal CI segment, the pooled
-    diamond in its own bottom row and a dashed null line at 0 running through every
-    row including the diamond'
-  - Pooled diamond computed from the data (weighted centre 0.305, inverse-variance
-    interval 0.20 to 0.41) and drawn with geom_polygon so its tips sit exactly at
-    the pooled bounds; drawn in the theme ink so it stands apart from the green study
-    markers in both renders
-  - 'Marker area proportional to study weight via scale_size_area: the lightest study
-    (Taylor 2022, 7.5 %) is still clearly visible and the heaviest stays well inside
-    its row'
-  - 'Theme tokens threaded through every chrome element; data colour #009E73 identical
-    across light and dark; y grid removed and a subtle x grid kept for reading effect
-    values'
-  - Study names mapped onto a numeric row axis with scale_y_continuous breaks/labels,
-    which keeps the diamond row and the studies on one axis and lets the null line
-    span all of them; the HTML output keeps lets-plot's native hover tooltips
+  - Studies ordered by effect size, each named at its row, with square markers at
+    their effect sizes and full-length CI segments; nothing displaced from its value
+  - Pooled diamond sits in its own bottom row with tips at the pooled interval bounds,
+    drawn in the theme-adaptive neutral ink so it reads apart from the green study
+    markers in both themes
+  - scale_size_area makes marker area proportional to study weight, keeping the smallest
+    (Taylor 2022) visible and the largest inside its row
+  - Only the vertical x-grid is kept and the horizontal grid dropped, a grid density
+    chosen for a forest plot where rows are labelled directly
+  - Theme tokens threaded through every chrome element; both renders are fully legible
+    and the data colors are identical across themes
   weaknesses:
-  - 'DQ-02 (both): the scenario is a generic ''treatment vs control'' trial set with
-    no named intervention or outcome; only the x-axis ''Log Odds Ratio'' hints at
-    the domain → name a concrete, plausible clinical question (e.g. a drug and an
-    outcome such as 30-day readmission) in the data comment and the axis label. Likely
-    cause: the data block''s placeholder description.'
-  - 'Suggestion: a weight label next to each study name or a size legend would let
-    the reader decode the marker sizes.'
-  - 'Suggestion: the pooled centre uses the stated weights while its interval uses
-    the inverse variance from the CIs (0.305 vs an inverse-variance centre of 0.313);
-    using one weighting for both would keep the diamond self-consistent.'
+  - 'DQ-03 (code): the pooled centre is weighted by the WEIGHT column while its interval
+    comes from inverse-variance weights of the CI-derived SEs, and the ''Weight (%)''
+    column sums to 105.8 rather than 100 and disagrees with the CIs (e.g. Brown 2020
+    has 9.5 % but 7.8 % by inverse variance) → derive the centre and the interval
+    from the same inverse-variance weights (centre 0.313 instead of 0.305, -0.007
+    visually) and make the weight column the normalized inverse-variance percentages.
+    Likely cause: np.average(studies[EFFECT], weights=weights) and the hand-typed
+    WEIGHT list.'
+  - 'Suggestion: configure geom_point tooltips (layer_tooltips with study, effect,
+    CI and weight) so the HTML view exposes the numbers behind each row.'
+  - 'Suggestion: fill missing weights before mapping marker size as well, so a table
+    with an empty weight cell still renders (the size aesthetic currently receives
+    NaN).'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across plot and panel, 3200x1800.
-      Chrome: bold dark title "forest-basic · python · letsplot · anyplot.ai" top left (~48 % of width); study names on the y axis in INK_SOFT; x axis "Log Odds Ratio (95% CI)" with ticks -0.4 to 1; subtle vertical grid, no horizontal grid; all text readable.
-      Data: ten green (#009E73) square markers sized by weight with green CI segments, ordered by effect from Johnson 2019 (-0.12) at the top to Taylor 2022 (0.65); a near-black pooled diamond in the bottom "Pooled estimate" row spanning about 0.20 to 0.41, centred near 0.31; a dashed grey null line at 0 through every row.
+      Background: warm off-white #FAF8F1, no white panel box.
+      Chrome: bold near-black title "forest-basic · python · letsplot · anyplot.ai" top left (~48 % width); study names on the y axis in INK_SOFT gray; x tick labels -0.4…1; x title "Log Odds Ratio of 6-month Smoking Abstinence (95% CI)"; subtle vertical grid only; dashed INK_SOFT null line at 0 through all rows and the pooled row. All readable.
+      Data: ten green #009E73 square markers sized by weight with green CI segments, sorted by effect size (Johnson 2019 top at -0.12, Taylor 2022 bottom at 0.65); near-black diamond in the "Pooled estimate" row spanning ~0.20–0.41 centred ~0.305.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title in light ink, axis labels and ticks in light grey #B8B7B0, grid faint but visible; no dark-on-dark text anywhere.
-      Data: identical green markers and segments; the diamond flips to the light ink colour and stays distinct; the dashed null line is light grey and visible.
+      Chrome: title in off-white, axis and study labels in light gray, grid faint but visible, null line light gray dashed. No dark-on-dark text.
+      Data: identical green #009E73 markers and segments; diamond flips to the light neutral ink, staying distinct from the studies.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -65,7 +62,7 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (16/12/10); all text readable in both themes
+        comment: Explicit sizes (16/12/10 pt); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -77,34 +74,33 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Smallest weight marker still clear; CI segments at size 1.0 visible
+        comment: Markers sized by weight, smallest still visible; segments 1.0 thick
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green series plus neutral diamond; no colour-only signal
+        comment: Single hue plus neutral diamond; high contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, canvas gate passed; balanced margins, nothing clipped
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Log Odds Ratio (95% CI)'' names the measure and its scale'
+        comment: x axis names the effect measure, scale and CI
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Studies #009E73, diamond theme ink, correct backgrounds in both
-          renders'
+        comment: 'Studies #009E73, diamond theme-adaptive neutral, correct backgrounds'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -112,20 +108,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Style-guide baseline, nothing beyond it
+        comment: Style-guide baseline; clean typography, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Spine and grid rules met, nothing beyond
+        comment: 'Horizontal grid dropped, only the vertical x-grid kept: a grid density
+          chosen for this chart'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed; the diamond's contrast is what the spec asks for,
-          no hierarchy chosen beyond it
+        comment: Data displayed; diamond separation is what the spec asks for
     spec_compliance:
       score: 15
       max: 15
@@ -141,20 +137,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Diamond at bottom computed from studies, null line through all rows,
-          weight-sized markers, effect-size ordering, labelled axis
+        comment: Diamond at bottom from the studies, null line at 0 through all rows,
+          weight-sized markers, ordered by effect size, labelled axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Markers and segments at their values; full CI range visible
+        comment: Markers and CIs at their values, all data within axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; single series, legend N/A
+        comment: Mandated title; legend N/A (hidden, rows labelled directly)
     data_quality:
       score: 14
       max: 15
@@ -164,21 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varying CI widths, intervals crossing the null, a study on the negative
-          side, varying weights
+        comment: Studies on both sides of the null, CIs crossing and not crossing
+          it, varied weights
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible but generic treatment-vs-control scenario (defect line)
+        comment: Nicotine patch vs placebo meta-analysis, plausible log ORs
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'Checked: weighted pooled centre 0.305, inverse-variance half-width
-          0.104 (diamond 0.20 to 0.41, matches render); log-OR values plausible'
+        passed: false
+        comment: 'Checked: pooled centre 0.305 (study weights) vs 0.313 inverse-variance;
+          pooled SE 0.053 gives 0.20–0.41 as drawn; weight % sums to 105.8 and disagrees
+          with the CIs (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -212,35 +209,38 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and .html via ggsave
+        comment: plot-{THEME}.png at scale 4 and .html
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Standard grammar-of-graphics layering
+        passed: false
+        comment: scale_size_area for area-proportional weights, geom_polygon diamond,
+          scale_y_continuous breaks/labels for named rows
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+        comment: HTML export only, default tooltips not configured
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
-  rendered_at: '2026-11-09T10:18:54Z'
+  rendered_at: '2026-11-09T10:48:56Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - manual-ticks
-  - patches
+  - layer-composition
   - html-export
-  patterns: []
-  dataprep: []
+  patterns:
+  - data-generation
+  dataprep:
+  - groupby-aggregation
   styling:
+  - minimal-chrome
   - grid-styling
