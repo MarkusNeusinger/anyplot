@@ -301,6 +301,14 @@ export interface RunState {
   rounds?: Round[];
   /** The turn's stream was cut, and the page waits to read the rest of the turn again (`RESUME_DELAYS_MS`). */
   reconnecting?: boolean;
+  /**
+   * When the run's clock started (ms since the epoch): the turn's start, or, after a wait in the
+   * run queue, the wait's end. Absent for a turn the page did not start (the late read of a cut
+   * turn), which shows no clock and gives its version no `readyMs`, never a wrong time.
+   */
+  startedAt?: number;
+  /** The most rounds the run may make, from the server's steps (`max_attempts`); absent without it. */
+  maxAttempts?: number;
 }
 
 export type ThemeImage =
@@ -345,6 +353,11 @@ export interface PlotVersion {
    * label and no kept line.
    */
   decisions?: VersionDecisions;
+  /**
+   * How long the plot took, from the run's clock (`RunState.startedAt`) to the version (ms), for
+   * the card's `ready in 1:12`; absent for a version the page did not time.
+   */
+  readyMs?: number;
 }
 
 /**
@@ -1044,10 +1057,22 @@ type Action =
   | { type: 'suggestion_sync'; suggestion: LongSuggestion | null }
   /** Append a thread item; the reducer gives it the next id. */
   | { type: 'item'; item: NewChatItem }
-  | { type: 'run_start'; kind: RunState['kind'] }
+  /**
+   * A turn starts. `at` (ms since the epoch) starts its clock (`RunState.startedAt`): only a turn
+   * the page starts carries it, never the late read of a cut turn, whose start the page never saw.
+   */
+  | { type: 'run_start'; kind: RunState['kind']; at?: number }
   | { type: 'run_queued'; position: number; waiting: number }
-  | { type: 'run_started' }
-  | { type: 'run_step'; step: PipelineStep; attempt: number | null; previous?: Round | null }
+  /** The wait in the run queue is over; `at` starts the clock again, from the wait's end. */
+  | { type: 'run_started'; at?: number }
+  | {
+      type: 'run_step';
+      step: PipelineStep;
+      attempt: number | null;
+      previous?: Round | null;
+      /** The run's round cap, when the server sent it with the step. */
+      maxAttempts?: number | null;
+    }
   | { type: 'run_stopping' }
   | { type: 'run_reconnecting'; on: boolean }
   /**
@@ -1057,7 +1082,8 @@ type Action =
    */
   | { type: 'turn_outcome'; outcome: TurnOutcome | null }
   | { type: 'run_end' }
-  | { type: 'version_add'; version: PlotVersion }
+  /** A version shipped; `at` (ms since the epoch) freezes the run's clock into `readyMs`. */
+  | { type: 'version_add'; version: PlotVersion; at?: number }
   | { type: 'version_image'; number: number; theme: Theme; image: ThemeImage }
   | { type: 'version_code'; number: number; code: CodeText }
   /** A feedback case was stored for the version; a later one replaces the record. */
@@ -1905,7 +1931,16 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'item':
       return appendItem(state, action.item);
     case 'run_start':
-      return { ...state, run: { kind: action.kind, steps: [], queue: null, stopping: false } };
+      return {
+        ...state,
+        run: {
+          kind: action.kind,
+          steps: [],
+          queue: null,
+          stopping: false,
+          ...(action.at !== undefined ? { startedAt: action.at } : {}),
+        },
+      };
     case 'run_queued': {
       if (!state.run) return state;
       const steps = state.run.steps;
@@ -1919,19 +1954,28 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         },
       };
     }
-    case 'run_started':
+    case 'run_started': {
       // The wait is over: a turn without pipeline steps (a summary that runs data code) had its
       // queue position on screen until the reply. A plot run that has not reached its first step
       // is starting again (`starting…`). A replayed start after a resume changes nothing more.
+      // The clock starts again at the wait's end, for a timed run that waited: a run the page did
+      // not time stays without a clock, and a replayed start finds no wait to end.
       if (!state.run) return state;
+      const waited = state.run.steps.some(entry => entry.step === 'queued');
+      const restart =
+        waited && state.run.startedAt !== undefined && action.at !== undefined
+          ? { startedAt: action.at }
+          : {};
       return {
         ...state,
         run: {
           ...state.run,
+          ...restart,
           queue: null,
           steps: state.run.steps.filter(entry => entry.step !== 'queued'),
         },
       };
+    }
     case 'run_step':
       if (!state.run) return state;
       return {
@@ -1943,6 +1987,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           rounds: action.previous
             ? [...(state.run.rounds ?? []), action.previous]
             : state.run.rounds,
+          ...(action.maxAttempts ? { maxAttempts: action.maxAttempts } : {}),
         },
       };
     case 'run_stopping':
@@ -1976,9 +2021,17 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       // The version's decisions, by the server's ids: the kept ones from before the run are in the
       // list the page holds; the added ones come with the read after the turn (`memory_sync`).
       const memory = action.version.result.memory;
-      const version = memory
-        ? { ...action.version, decisions: versionDecisions(memory, state.memory) }
-        : action.version;
+      // The run's clock, frozen as the version arrives; a run the page did not time gives none.
+      const startedAt = state.run?.startedAt;
+      const timed =
+        startedAt !== undefined && action.at !== undefined
+          ? { readyMs: Math.max(0, action.at - startedAt) }
+          : {};
+      const version = {
+        ...action.version,
+        ...timed,
+        ...(memory ? { decisions: versionDecisions(memory, state.memory) } : {}),
+      };
       // A shipped plot in the offer's library ends the offer, whichever turn shipped it (the carry
       // run, a fresh `.create_plot()`, a typed change): the server's carry is spent then too.
       // Versions carry their library, not their spec; the spec cannot change yet.
@@ -2801,6 +2854,7 @@ export function useAgentSession({
           images: {},
           code: { state: 'loading' },
         },
+        at: Date.now(),
       });
       addItem({ kind: 'plot', version: number });
       void loadImage(number, theme, result.status);
@@ -2816,7 +2870,7 @@ export function useAgentSession({
           safeDispatch({ type: 'run_queued', position: event.position, waiting: event.waiting });
           break;
         case 'started':
-          safeDispatch({ type: 'run_started' });
+          safeDispatch({ type: 'run_started', at: Date.now() });
           break;
         case 'step':
           safeDispatch({
@@ -2824,6 +2878,7 @@ export function useAgentSession({
             step: event.step,
             attempt: event.attempt,
             previous: event.previous,
+            maxAttempts: event.maxAttempts,
           });
           break;
         case 'message':
@@ -3005,19 +3060,23 @@ export function useAgentSession({
    * The frame of a turn on the page: the run from the start, Stop, and at the end how the turn
    * ended (`turnErrorRef`, `turnRefusalRef`, `turnEndRef`) and, after a `done`, the plot memory as
    * the server has it. `work` reads the turn into `read`; a failure it throws becomes the turn's
-   * error line, unless the user stopped the turn.
+   * error line, unless the user stopped the turn. `timed`: the page starts the turn now, so its
+   * clock starts too; the late read of a cut turn is not, whose start the page never saw.
    */
   const driveTurn = useCallback(
     async (
       kind: RunState['kind'],
-      work: (controller: AbortController, read: TurnRead) => Promise<void>
+      work: (controller: AbortController, read: TurnRead) => Promise<void>,
+      timed = true
     ): Promise<TurnRead> => {
       const read = freshRead();
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
       unconfirmedRef.current = false;
-      safeDispatch({ type: 'run_start', kind });
+      safeDispatch(
+        timed ? { type: 'run_start', kind, at: Date.now() } : { type: 'run_start', kind }
+      );
       try {
         await work(controller, read);
       } catch (err) {
@@ -3093,17 +3152,23 @@ export function useAgentSession({
         // request asks for: asking again would make that plot a second time.
         const repeats = (shipped: boolean) =>
           sameRequest(cut.body, body) && (cut.shipped || shipped);
-        const late = await driveTurn(kind, async (controller, read) => {
-          read.lastId = cut.lastId;
-          // Its outcome counts what came before the cut too.
-          Object.assign(read, cut.changes);
-          const resumed = await reattach(sid, read, controller, [0]);
-          // Nothing new starts then, so a read that failed says why the click did nothing.
-          if (resumed?.outcome === 'failed' && !read.finished && repeats(read.shipped)) {
-            addItem({ kind: 'error', code: 'network', ref: null });
-            read.errorCode = 'network';
-          }
-        });
+        // Untimed: the cut turn started long before this read, so it shows no clock and its plot
+        // no `ready in`, never a wrong time.
+        const late = await driveTurn(
+          kind,
+          async (controller, read) => {
+            read.lastId = cut.lastId;
+            // Its outcome counts what came before the cut too.
+            Object.assign(read, cut.changes);
+            const resumed = await reattach(sid, read, controller, [0]);
+            // Nothing new starts then, so a read that failed says why the click did nothing.
+            if (resumed?.outcome === 'failed' && !read.finished && repeats(read.shipped)) {
+              addItem({ kind: 'error', code: 'network', ref: null });
+              read.errorCode = 'network';
+            }
+          },
+          false
+        );
         if (repeats(late.shipped)) return;
         if (turnEndRef.current === 'stopped') return;
         if (!mounted.current || stateRef.current.sessionId !== sid) return;

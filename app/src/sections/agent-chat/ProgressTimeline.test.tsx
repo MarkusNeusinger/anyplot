@@ -236,37 +236,22 @@ describe('ProgressTimeline', () => {
     }
   });
 
-  it("turns the page's scroll anchoring off while the run lasts, and back after it", () => {
-    // A repair round's row grew the grid, and the browser scrolled the page to hold a node below
-    // it: the loader and the rows already shown jumped up by that row.
+  it('holds neither the scroll anchoring nor a loader: the admin menu mounts it with every run', () => {
+    // The menu's popover stays mounted while closed: a hold here would switch the page's anchoring
+    // off for every run, and a second loader would say what the working line says.
     const root = document.documentElement;
     root.style.overflowAnchor = 'auto';
-    const first = render(<ProgressTimeline run={run(FIRST.slice(0, 1))} />);
-    expect(root.style.overflowAnchor).toBe('none');
-    // Two at once (none today) hold it off until the last one goes, then the page's value is back.
-    const second = render(<ProgressTimeline run={run(FIRST.slice(0, 2))} />);
-    first.unmount();
-    expect(root.style.overflowAnchor).toBe('none');
-    second.unmount();
+    const { unmount } = render(<ProgressTimeline run={run(FIRST.slice(0, 1))} />);
     expect(root.style.overflowAnchor).toBe('auto');
-    root.style.overflowAnchor = '';
-  });
-
-  it('adds a stop below the grid, keeping the queue position in its row', () => {
-    const { rerender } = render(<ProgressTimeline run={run([], { stopping: true })} />);
-    const grid = screen.getByRole('table', { name: 'Progress' });
-    expect(grid.parentElement?.firstElementChild).toBe(grid);
-    expect(grid.nextElementSibling).toHaveTextContent('stopping…');
-    expect(screen.queryByText('starting…')).not.toBeInTheDocument();
-
-    rerender(
-      <ProgressTimeline
-        run={run([['queued', null]], { queue: { position: 2, waiting: 3 }, stopping: true })}
-      />
+    expect(screen.queryByTestId('loader-spinner')).not.toBeInTheDocument();
+    // The stop and the reconnect are the working line's words too.
+    unmount();
+    render(
+      <ProgressTimeline run={run(FIRST.slice(0, 2), { stopping: true, reconnecting: true })} />
     );
-    expect(grid.parentElement?.firstElementChild).toBe(grid);
-    expect(within(grid).getByText('queued · 2 of 3')).toBeInTheDocument();
-    expect(grid.nextElementSibling).toHaveTextContent('leaving the queue…');
+    expect(screen.queryByText(/stopping|reconnecting/)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('row')).toHaveLength(1);
+    root.style.overflowAnchor = '';
   });
 
   it('keeps the widths of the step cells, whatever their state and whichever round', () => {
@@ -286,41 +271,7 @@ describe('ProgressTimeline', () => {
 
   it('shows no grid for a turn that has not reached a pipeline step', () => {
     render(<ProgressTimeline run={run([['queued', null]], { kind: 'message' })} />);
-    expect(screen.getByText('queued')).toBeInTheDocument();
+    expect(screen.getByText('no pipeline step yet')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-  });
-
-  it('says it is stopping after the current step', () => {
-    render(<ProgressTimeline run={run(FIRST.slice(0, 1), { stopping: true })} />);
-    expect(screen.getByText('stopping after this step…')).toBeInTheDocument();
-  });
-
-  it('says a cut stream reconnects below the grid, quietly, until a stop says more', () => {
-    const { unmount } = render(
-      <ProgressTimeline run={run(FIRST.slice(0, 2), { reconnecting: true })} />
-    );
-    const grid = screen.getByRole('table', { name: 'Progress' });
-    expect(grid.nextElementSibling).toHaveTextContent(/^connection lost · reconnecting…$/);
-    expect(grid.nextElementSibling).toHaveStyle({ color: 'var(--ink-muted)' });
-    expect(screen.getByTestId('loader-spinner')).toBeInTheDocument();
-    unmount();
-    render(
-      <ProgressTimeline run={run(FIRST.slice(0, 2), { reconnecting: true, stopping: true })} />
-    );
-    expect(screen.queryByText('connection lost · reconnecting…')).not.toBeInTheDocument();
-    expect(screen.getByText('stopping after this step…')).toBeInTheDocument();
-  });
-
-  it('shows the site loader beside the run, outside its live region, from the queue to the stop', () => {
-    const { unmount } = render(<ProgressTimeline run={run([['queued', null]])} />);
-    const loader = screen.getByTestId('loader-spinner');
-    expect(loader).toHaveAttribute('aria-hidden', 'true');
-    expect(loader).toHaveAttribute('data-size', 'inline');
-    // The live region announces the words and the grid; the dots never join it.
-    expect(loader.closest('[aria-live]')).toBeNull();
-    unmount();
-
-    render(<ProgressTimeline run={run(FIRST.slice(0, 1), { stopping: true })} />);
-    expect(screen.getByTestId('loader-spinner')).toBeInTheDocument();
   });
 });

@@ -1,13 +1,22 @@
 /**
  * The agent chat's two steps, data first, as the page, the status line at the chat frame's foot
- * and the data card read them from the session state, and the thread's in-progress line of a
- * turn the assistant is still working on.
+ * and the data card read them from the session state, and the working line at the thread's foot
+ * of a turn the assistant is still working on.
  */
 
-import type { AgentSessionState, ChatItem } from 'src/hooks/useAgentSession';
+import type { AgentSessionState, ChatItem, RunState } from 'src/hooks/useAgentSession';
 import { isPlotAction } from 'src/lib/agent';
 import { countOf } from 'src/sections/agent-chat/countOf';
-import { CONFIRM_LOST_STEP_TEXT, NEW_DATA_PLOT } from 'src/sections/agent-chat/messages';
+import {
+  CONFIRM_LOST_STEP_TEXT,
+  DRAWING_SHORT,
+  DRAWING_TEXT,
+  NEW_DATA_PLOT,
+  queuePlace,
+  RECONNECTING_TEXT,
+  USUAL_PLOT_TIME,
+} from 'src/sections/agent-chat/messages';
+import { roundLabel } from 'src/sections/agent-chat/timeline';
 
 /** The step the session is in: 1 the data, 2 the plot. */
 export type AgentStep = 1 | 2;
@@ -158,7 +167,15 @@ export interface StatusLineOptions {
 /** The status line's step and its words, after the `>>>` the line starts with. */
 export interface StatusLineText {
   step: AgentStep;
+  /** `step 2 of 2`, `back to step 1 of 2`: the line's start, before its first `·`. */
+  head: string;
+  /**
+   * The whole line as the plot button's description reads it (`step 2 of 2 · drawing your plot ·
+   * usually 1–3 min`): never the clock, which only the eye reads.
+   */
   text: string;
+  /** While a plot is drawn, the run's part, which the line shows with its clock; else null. */
+  run: RunLine | null;
 }
 
 /**
@@ -166,21 +183,23 @@ export interface StatusLineText {
  * lost confirmation), which took the step header's place and the step lines above the message
  * box in the v4 frame (2026-11-06), and since the v4 composer row is the plot button's
  * description. After the step it names, in this order: the plot button's one click reading the
- * box's data, the attachment that waits, the plot that runs, where that click stopped, step 1's
- * line, while `all` holds the box what `.plot_all()` does, before the library's first plot in
- * step 2 what the plot button does, else the confirmed data's shape.
+ * box's data, the attachment that waits, the plot that runs (with its clock, which the
+ * description leaves out), where that click stopped, step 1's line, while `all` holds the box
+ * what `.plot_all()` does, before the library's first plot in step 2 what the plot button does,
+ * else the confirmed data's shape.
  */
 export function statusLine(state: AgentSessionState, options: StatusLineOptions): StatusLineText {
   const step: AgentStep = inStep2(state) ? 2 : 1;
   const head = step === 1 && state.confirmLoss ? 'back to step 1 of 2' : `step ${step} of 2`;
+  const before = options.readingLine ?? options.attachmentLine ?? null;
+  const run = before === null ? runLine(state) : null;
   const detail =
-    options.readingLine ??
-    options.attachmentLine ??
-    runLine(state) ??
+    before ??
+    (run ? [run.words, run.tail].filter(Boolean).join(' · ') : null) ??
     (step === 1 ? options.stopLine : null) ??
     stepOneLine(state, options.action) ??
     stepTwoLine(state, options);
-  return { step, text: `${head} · ${detail}` };
+  return { step, head, text: `${head} · ${detail}`, run };
 }
 
 /**
@@ -220,8 +239,8 @@ export function stepAnnouncement(state: AgentSessionState): string {
 }
 
 /**
- * What the thread's in-progress line says: the turn's kind, that it stops, that it reconnects, or,
- * once a run's card is in, that the reply is on its way.
+ * What the working line says for a turn without plot work (`pendingReply`): the turn's kind, that
+ * it stops, that it reconnects, or, once a run's card is in, that the reply is on its way.
  */
 export type PendingReply =
   'summarize_data' | 'example_data' | 'message' | 'stopping' | 'reconnecting' | 'writing';
@@ -242,16 +261,13 @@ export function awaitsReply(state: AgentSessionState): boolean {
 }
 
 /**
- * The in-progress line in the assistant's slot of the thread, while a turn
- * without pipeline steps waits for its reply: the summary of the data, example
- * data, a question, a data request. It shows exactly while the turn's own prompt is the
- * last item, so the first reply (a message, a refusal, an error, a plot) takes
- * its place. A plot run (`create_plot`, `carry_plot`) gets none, and neither
- * does a turn that reached a pipeline step: the progress timeline below the
- * thread shows those, and two indicators would say the same thing. A wait in
- * the run queue keeps the line, since the queue counter says where, not what.
- * Once a run's card took the timeline's place, the line stands below the card
- * until the reply takes its place (`awaitsReply`).
+ * What the working line says while a turn without plot work waits for its reply: the summary of
+ * the data, example data, a question, a data request. It shows exactly while the turn's own
+ * prompt is the last item, so the first reply (a message, a refusal, an error, a plot) takes its
+ * place. A plot run (`create_plot`, `carry_plot`) gets none here, and neither does a turn that
+ * reached a pipeline step: that is plot work (`plotWork`), which the working line words itself.
+ * A wait in the run queue keeps the line (`workingLine` says where the turn waits). Once a run's
+ * card is in, the line stands below the card until the reply takes its place (`awaitsReply`).
  */
 export function pendingReply(state: AgentSessionState): PendingReply | null {
   const run = state.run;
@@ -269,55 +285,183 @@ export function pendingReply(state: AgentSessionState): PendingReply | null {
 }
 
 /**
- * Whether the progress timeline below the thread has something to say that
- * the in-progress line does not: a plot run, whose path shows up front from
- * the queue on, or any turn that reached a pipeline step. A turn without steps
- * that waits in the queue keeps the in-progress line and the queue counter
- * alone, so its wait has one loader and one queue position, not two.
+ * Plot work: a plot run, which draws from the queue on, or any turn that reached a pipeline step.
+ * The working line says `drawing your plot` for it, with its clock and its try, and the status
+ * line at the frame's foot the same with how long a plot usually takes. A turn without steps that
+ * waits in the queue keeps its own words (`pendingReply`), so its wait has one line, not two.
  */
-export function showsTimeline(state: AgentSessionState): boolean {
+export function plotWork(state: AgentSessionState): boolean {
   const run = state.run;
   return !!run && (isPlotAction(run.kind) || run.steps.some(entry => entry.step !== 'queued'));
 }
 
-/** The status line's words while a plot runs: what happens, and how long it usually takes. */
-export const RUN_LINE = 'drawing your plot · usually 1–3 min';
+/** The run waits in the run queue: its last step is the wait. */
+function inQueue(run: RunState): boolean {
+  return run.steps[run.steps.length - 1]?.step === 'queued';
+}
 
-/**
- * The status line's part while a plot runs (the progress timeline stands below the thread,
- * `runView`): it takes the step's part, which would still invite the click that started the run,
- * and says how long a plot takes; `.stop()` stands at the line's end. `null` while no plot runs,
- * and once the run's card took the timeline's place.
- */
-export function runLine(state: AgentSessionState): string | null {
-  if (!runView(state).timeline) return null;
-  return state.run?.stopping ? 'stopping…' : RUN_LINE;
+/** A run's part of the status line while a plot is drawn (`runLine`). */
+export interface RunLine {
+  /** `drawing your plot`, or `stopping…` once `.stop()` was pressed. */
+  words: string;
+  /** The words on a phone: `drawing`. */
+  short: string;
+  /** When the clock after the words started (`RunState.startedAt`); null for no clock. */
+  clockFrom: number | null;
+  /** After the clock: `usually 1–3 min`; empty while the run stops. */
+  tail: string;
 }
 
 /**
- * The thread and the progress timeline of a run, as the page shows them: every item the reducer
- * keeps, a version per data item and a line per library switch (`threadModel.ts` puts them in
- * chapters). While the timeline stands below the thread, an item the run sends in (a reply, a
- * refusal, a note) would land above it and push it and the composer down: it waits, and the
- * user's own message or action stays in view. The run's result card (a plot, or the card of a run
- * that failed) takes the timeline's place, and the waiting items come with it; a run that ends
- * without one shows them as it ends. Returns `state.items` itself while nothing waits.
+ * The status line's part while a plot is drawn (`runView`): it takes the step's part, which would
+ * still invite the click that started the run, and says how long it runs and how long a plot
+ * usually takes, `drawing your plot · 0:42 · usually 1–3 min` (on a phone `drawing · 0:42 · …`),
+ * the clock counting on past the usual time unchanged; `.stop()` stands at the line's end. No
+ * clock while the run waits in the queue or was not timed. `null` while no plot is drawn, and
+ * once the run's card is in.
+ */
+export function runLine(state: AgentSessionState): RunLine | null {
+  const run = state.run;
+  if (!run || !runView(state).drawing) return null;
+  if (run.stopping) return { words: 'stopping…', short: 'stopping…', clockFrom: null, tail: '' };
+  return {
+    words: DRAWING_TEXT,
+    short: DRAWING_SHORT,
+    clockFrom: !inQueue(run) && run.startedAt !== undefined ? run.startedAt : null,
+    tail: USUAL_PLOT_TIME,
+  };
+}
+
+/** Items that end a turn's plot work in the thread: its card, or the error or refusal that ended it. */
+const ENDS_DRAWING: ReadonlySet<ChatItem['kind']> = new Set([
+  'plot',
+  'plot_failed',
+  'error',
+  'refusal',
+]);
+
+/**
+ * The thread of a run, as the page shows it: every item the reducer keeps, a version per data
+ * item and a line per library switch (`threadModel.ts` puts them in chapters). While a plot is
+ * drawn (`drawing`), an item the run sends in (a reply, a note) would land above the working line
+ * and push it and the composer down: it waits, and the user's own message or action stays in
+ * view. The run's result card (a plot, or the card of a run that failed) ends the drawing, and the
+ * waiting items come with it; so does an error or a refusal that ends the turn, which takes the
+ * working line's place; a run that ends without any shows them as it ends. Returns `state.items`
+ * itself while nothing waits.
  *
  * The data versions never wait: the live card moves with every new version, and held back it
- * would unmount and lose its own state, while the stub it left says it holds the latest data. Today a version arrives only with a turn's `done`, which ends the run, or from the
- * card's own controls, which wait while a run lasts, so none lands under a running timeline.
+ * would unmount and lose its own state, while the stub it left says it holds the latest data.
+ * Today a version arrives only with a turn's `done`, which ends the run, or from the card's own
+ * controls, which wait while a run lasts, so none lands under a plot being drawn.
  */
-export function runView(state: AgentSessionState): { items: ChatItem[]; timeline: boolean } {
+export function runView(state: AgentSessionState): { items: ChatItem[]; drawing: boolean } {
   const items = state.items;
-  if (!showsTimeline(state)) return { items, timeline: false };
+  if (!plotWork(state)) return { items, drawing: false };
   let ask = items.length - 1;
   while (ask >= 0 && items[ask].kind !== 'user' && items[ask].kind !== 'action') ask -= 1;
-  if (ask < 0) return { items, timeline: true };
+  if (ask < 0) return { items, drawing: true };
   const since = items.slice(ask + 1);
-  if (since.some(item => item.kind === 'plot' || item.kind === 'plot_failed')) {
-    return { items, timeline: false };
-  }
-  if (!since.length) return { items, timeline: true };
+  if (since.some(item => ENDS_DRAWING.has(item.kind))) return { items, drawing: false };
+  if (!since.length) return { items, drawing: true };
   const versions = since.filter(item => item.kind === 'data' || item.kind === 'data_stub');
-  return { items: [...items.slice(0, ask + 1), ...versions], timeline: true };
+  return { items: [...items.slice(0, ask + 1), ...versions], drawing: true };
+}
+
+/** What the working line says, at the thread's foot (`WorkingLine.tsx`). */
+export interface WorkingLineText {
+  /** `drawing` while a plot is drawn, else the line's own kind. */
+  kind: PendingReply | 'drawing' | 'waiting';
+  /** The words on a wide screen. */
+  text: string;
+  /** The words on a phone (`drawing`, `drawing · second try`); the same where nothing is shorter. */
+  short: string;
+  /** When the clock after the words started (`RunState.startedAt`); null for no clock. */
+  clockFrom: number | null;
+}
+
+/** The working line's words of a turn without plot work, beside the site's loader. */
+const PENDING_TEXT: Record<'summarize_data' | 'example_data' | 'message' | 'writing', string> = {
+  summarize_data: 'summarizing your data',
+  example_data: 'making example data',
+  message: 'working on your message',
+  writing: 'writing the reply',
+};
+
+/** The words of a run that stops: it leaves the queue, ends at its next step, or just stops. */
+function stoppingText(run: RunState): string {
+  if (inQueue(run)) return 'leaving the queue…';
+  return run.steps.some(entry => entry.step !== 'queued')
+    ? 'stopping after this step…'
+    : 'stopping…';
+}
+
+/**
+ * The try a plot is on, for the working line: none on the first try (owner, 2026-11-09: the
+ * common line stays short); from the second on `try 2 of 2` with the server's round cap
+ * (`max_attempts`), else `second try`, never a cap the page assumes.
+ */
+export function trySegment(run: RunState): string | null {
+  let attempt = 1;
+  for (let index = run.steps.length - 1; index >= 0; index -= 1) {
+    const entry = run.steps[index];
+    if (entry.step === 'queued') continue;
+    attempt = entry.attempt ?? 1;
+    break;
+  }
+  if (attempt < 2) return null;
+  return run.maxAttempts
+    ? `try ${attempt} of ${Math.max(run.maxAttempts, attempt)}`
+    : roundLabel(attempt);
+}
+
+/**
+ * The one working line at the thread's foot, for every turn and both lanes (the v4 design): what
+ * the turn in flight does now, beside the site's loader. It took the place of the thread's
+ * in-progress line, the progress timeline below the thread and the queue counter.
+ *
+ * - While a plot is drawn: `drawing your plot · second try · 0:42` (on a phone `drawing · 0:42`),
+ *   the try from the second on (`trySegment`), the clock from `RunState.startedAt`.
+ * - While the own turn waits in the run queue: `waiting · you are 3rd`, without a clock (owner,
+ *   2026-11-09: the line in view says where, the frame's tab only `busy`).
+ * - A turn without plot work keeps its words (`summarizing your data`, `working on your message`),
+ *   and below a run's card `writing the reply`, while the reply is on its way.
+ * - `leaving the queue…`, `stopping after this step…` or `stopping…` once `.stop()` was pressed,
+ *   and `connection lost · reconnecting…` while the page reads a cut turn again.
+ *
+ * `null` while nothing is in flight, once the first reply of a turn without plot work took the
+ * line's place, and once an error or a refusal ended the turn.
+ */
+export function workingLine(state: AgentSessionState): WorkingLineText | null {
+  const run = state.run;
+  if (!run) return null;
+  const words = (kind: WorkingLineText['kind'], text: string, short = text): WorkingLineText => ({
+    kind,
+    text,
+    short,
+    clockFrom: null,
+  });
+  const waiting = () =>
+    words('waiting', run.queue ? `waiting · you are ${queuePlace(run.queue.position)}` : 'waiting');
+  if (!runView(state).drawing) {
+    const pending = pendingReply(state);
+    if (pending === null) return null;
+    // Below the run's card no step is left to finish: the reply is what stops.
+    if (pending === 'stopping') {
+      return words('stopping', awaitsReply(state) ? 'stopping…' : stoppingText(run));
+    }
+    if (pending === 'reconnecting') return words('reconnecting', RECONNECTING_TEXT);
+    if (pending === 'writing') return words('writing', PENDING_TEXT.writing);
+    return inQueue(run) ? waiting() : words(pending, PENDING_TEXT[pending]);
+  }
+  if (run.stopping) return words('stopping', stoppingText(run));
+  if (run.reconnecting) return words('reconnecting', RECONNECTING_TEXT);
+  if (inQueue(run)) return waiting();
+  const tries = trySegment(run);
+  return {
+    kind: 'drawing',
+    text: tries ? `${DRAWING_TEXT} · ${tries}` : DRAWING_TEXT,
+    short: tries ? `${DRAWING_SHORT} · ${tries}` : DRAWING_SHORT,
+    clockFrom: run.startedAt ?? null,
+  };
 }

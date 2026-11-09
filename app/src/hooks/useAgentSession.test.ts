@@ -3803,6 +3803,78 @@ describe('useAgentSession: session language', () => {
   });
 });
 
+describe("agentReducer: the run's clock", () => {
+  const ready: AgentSessionState = {
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+  };
+  const version = (number = 1) => ({
+    number,
+    library: 'matplotlib',
+    result: PLOT_OK as unknown as PlotResult,
+    theme: 'light' as const,
+    images: {},
+    code: { state: 'loading' as const },
+  });
+  const run = (actions: Action[]) => actions.reduce(agentReducer, ready);
+
+  it('starts at the turn the page starts, and again at the end of a wait in the queue', () => {
+    const started = run([{ type: 'run_start', kind: 'create_plot', at: 1_000 }]);
+    expect(started.run?.startedAt).toBe(1_000);
+    // A turn that never waited sends no `started`: its clock runs from the start.
+    expect(
+      run([
+        { type: 'run_start', kind: 'create_plot', at: 1_000 },
+        { type: 'run_step', step: 'adapting', attempt: 1 },
+      ]).run?.startedAt
+    ).toBe(1_000);
+    // A turn that waited starts its clock again at the wait's end.
+    const waited = run([
+      { type: 'run_start', kind: 'create_plot', at: 1_000 },
+      { type: 'run_queued', position: 2, waiting: 3 },
+      { type: 'run_started', at: 9_000 },
+    ]);
+    expect(waited.run?.startedAt).toBe(9_000);
+    // A replayed start after a resume finds no wait to end: nothing changes.
+    const replayed = agentReducer(
+      agentReducer(waited, { type: 'run_step', step: 'adapting', attempt: 1 }),
+      { type: 'run_started', at: 20_000 }
+    );
+    expect(replayed.run?.startedAt).toBe(9_000);
+  });
+
+  it('keeps the late read of a cut turn without a clock, also after its replayed start', () => {
+    const late = run([
+      { type: 'run_start', kind: 'create_plot' },
+      { type: 'run_queued', position: 1, waiting: 1 },
+      { type: 'run_started', at: 9_000 },
+    ]);
+    expect(late.run).not.toHaveProperty('startedAt');
+    const plotted = agentReducer(late, { type: 'version_add', version: version(), at: 12_000 });
+    expect(plotted.versions[1]).not.toHaveProperty('readyMs');
+  });
+
+  it('freezes the elapsed time into the version as it ships, and none for an untimed one', () => {
+    const timed = run([
+      { type: 'run_start', kind: 'create_plot', at: 1_000 },
+      { type: 'run_step', step: 'adapting', attempt: 1, maxAttempts: 2 },
+    ]);
+    expect(timed.run?.maxAttempts).toBe(2);
+    const shipped = agentReducer(timed, { type: 'version_add', version: version(), at: 73_400 });
+    expect(shipped.versions[1].readyMs).toBe(72_400);
+    // The version keeps its time after the run ends.
+    expect(agentReducer(shipped, { type: 'run_end' }).versions[1].readyMs).toBe(72_400);
+    // A version added without the time (or outside a run) carries no field.
+    expect(
+      agentReducer(timed, { type: 'version_add', version: version() }).versions[1]
+    ).not.toHaveProperty('readyMs');
+    expect(
+      agentReducer(ready, { type: 'version_add', version: version(), at: 5 }).versions[1]
+    ).not.toHaveProperty('readyMs');
+  });
+});
+
 describe('agentReducer', () => {
   it('syncs the session language from done, never down from chosen and never into the data', () => {
     const ready: AgentSessionState = {
@@ -4792,6 +4864,8 @@ describe('useAgentSession: a cut stream', () => {
       'assistant',
     ]);
     expect(result.current.state.versions[1]).toBeDefined();
+    // Read again within the turn the page started: its clock ran on, and the version keeps it.
+    expect(result.current.state.versions[1].readyMs).toEqual(expect.any(Number));
     expect(result.current.state.run).toBeNull();
     expect(trackEvent).toHaveBeenCalledWith('agent_turn_resumed', { outcome: 'resumed' });
   });
@@ -4865,8 +4939,13 @@ describe('useAgentSession: a cut stream', () => {
     expect(trackEvent).toHaveBeenCalledWith('agent_turn_resumed', { outcome: 'failed' });
 
     // The network is back and the user clicks again: the stored version 1 comes, not a version 2.
-    routes['GET /sessions/S1/turn'] = () => numberedSse(TURN_REST, { from: 4 });
+    // The late read is untimed: its run has no clock while it reads, even after a replayed
+    // `started`, and the version it brings says no time, never a wrong one.
+    routes['GET /sessions/S1/turn'] = () =>
+      numberedSse([['status', { step: 'started' }], ...TURN_REST], { from: 4 });
     await act(() => result.current.createPlot());
+    expect(result.current.state.versions[1]).toBeDefined();
+    expect(result.current.state.versions[1]).not.toHaveProperty('readyMs');
 
     expect(turnPosts()).toHaveLength(1);
     const reads = turnReads();

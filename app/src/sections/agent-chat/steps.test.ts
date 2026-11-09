@@ -11,12 +11,14 @@ import {
   pendingReply,
   plotButtonKind,
   plotButtonLabel,
+  plotWork,
   runLine,
   runView,
-  showsTimeline,
   statusLine,
   stepAnnouncement,
   stepOneLine,
+  trySegment,
+  workingLine,
 } from 'src/sections/agent-chat/steps';
 
 const queued = (kind: RunState['kind']): RunState => ({
@@ -37,15 +39,74 @@ function running(run: RunState): AgentSessionState {
   };
 }
 
-describe('the waits of a turn', () => {
-  it('gives a queued example_data turn one indicator: the in-progress line, no timeline', () => {
+/** A plot run that started at `T0` and reached `steps`, the attempt of each. */
+const T0 = 1_000_000;
+const drawing = (steps: [string, number][], extra: Partial<RunState> = {}): RunState => ({
+  kind: 'create_plot',
+  steps: steps.map(([step, attempt]) => ({ step: step as RunState['steps'][0]['step'], attempt })),
+  queue: null,
+  stopping: false,
+  startedAt: T0,
+  ...extra,
+});
+
+/** The working line as the eye reads it: its words, and `· clock` where a clock follows them. */
+const line = (state: AgentSessionState) => {
+  const working = workingLine(state);
+  return working && { text: working.text, short: working.short, clock: working.clockFrom };
+};
+
+describe('the working line', () => {
+  it('gives a queued example_data turn one line that says where it waits, and no plot work', () => {
     const state = running(queued('example_data'));
     expect(pendingReply(state)).toBe('example_data');
-    expect(showsTimeline(state)).toBe(false);
+    expect(plotWork(state)).toBe(false);
+    // Owner, 2026-11-09 (open point 1, option a): the position in the line in view, never a clock.
+    expect(line(state)).toEqual({
+      text: 'waiting · you are next',
+      short: 'waiting · you are next',
+      clock: null,
+    });
+    expect(line(running({ ...queued('message'), queue: { position: 3, waiting: 5 } }))?.text).toBe(
+      'waiting · you are 3rd'
+    );
+    expect(line(running({ ...queued('message'), queue: null }))?.text).toBe('waiting');
   });
 
-  it('keeps the timeline for a queued plot run and for any turn that reached a pipeline step', () => {
-    expect(showsTimeline(running(queued('create_plot')))).toBe(true);
+  it('keeps the words of a turn without plot work, and no clock', () => {
+    const started = (kind: RunState['kind']) =>
+      running({ kind, steps: [], queue: null, stopping: false, startedAt: T0 });
+    expect(line(started('summarize_data'))).toEqual({
+      text: 'summarizing your data',
+      short: 'summarizing your data',
+      clock: null,
+    });
+    expect(line(started('example_data'))?.text).toBe('making example data');
+    expect(line(started('message'))?.text).toBe('working on your message');
+    // Its first reply takes the line's place.
+    const replied = started('message');
+    expect(
+      line({ ...replied, items: [...replied.items, { id: 2, kind: 'assistant', text: 'Hi.' }] })
+    ).toBeNull();
+    expect(line({ ...replied, run: null })).toBeNull();
+  });
+
+  it('draws a plot run and any turn that reached a pipeline step, with the clock from its start', () => {
+    expect(plotWork(running(queued('create_plot')))).toBe(true);
+    // A plot run waiting in the queue: its position, no clock yet.
+    expect(line(running(queued('create_plot')))).toEqual({
+      text: 'waiting · you are next',
+      short: 'waiting · you are next',
+      clock: null,
+    });
+    // Before its first step and through the first try: no try segment (owner, 2026-11-09).
+    for (const steps of [[], [['adapting', 1]], [['reviewing', 1]]] as [string, number][][]) {
+      expect(line(running(drawing(steps)))).toEqual({
+        text: 'drawing your plot',
+        short: 'drawing',
+        clock: T0,
+      });
+    }
     const stepped = running({
       ...queued('message'),
       steps: [
@@ -53,19 +114,98 @@ describe('the waits of a turn', () => {
         { step: 'adapting', attempt: 1 },
       ],
       queue: null,
+      startedAt: T0,
     });
-    expect(showsTimeline(stepped)).toBe(true);
+    expect(plotWork(stepped)).toBe(true);
     expect(pendingReply(stepped)).toBeNull();
+    expect(line(stepped)?.text).toBe('drawing your plot');
+    // The late read of a cut turn was not timed: no clock, never a wrong time.
+    expect(line(running(drawing([['adapting', 1]], { startedAt: undefined })))?.clock).toBeNull();
   });
 
-  it('says in the status line that a plot runs and how long it takes, and that it stops once pressed', () => {
+  it('names the try from the second on: by the server cap, else in words', () => {
+    const second: [string, number][] = [
+      ['reviewing', 1],
+      ['repairing', 2],
+    ];
+    expect(line(running(drawing(second)))).toEqual({
+      text: 'drawing your plot · second try',
+      short: 'drawing · second try',
+      clock: T0,
+    });
+    expect(line(running(drawing(second, { maxAttempts: 2 })))?.text).toBe(
+      'drawing your plot · try 2 of 2'
+    );
+    expect(line(running(drawing(second, { maxAttempts: 3 })))?.short).toBe('drawing · try 2 of 3');
+    // The first try stays short, also with the cap; a cap is never a constant of the page.
+    expect(line(running(drawing([['adapting', 1]], { maxAttempts: 2 })))?.text).toBe(
+      'drawing your plot'
+    );
+    expect(trySegment(drawing([['repairing', 3]]))).toBe('third try');
+    expect(trySegment(drawing([['repairing', 3]], { maxAttempts: 2 }))).toBe('try 3 of 3');
+  });
+
+  it('says the stop, the reconnect and the reply after the card, without a clock', () => {
+    const steps: [string, number][] = [['rendering', 1]];
+    expect(line(running(drawing(steps, { stopping: true })))?.text).toBe(
+      'stopping after this step…'
+    );
+    expect(line(running(drawing([], { stopping: true })))?.text).toBe('stopping…');
+    expect(line(running({ ...queued('create_plot'), stopping: true }))?.text).toBe(
+      'leaving the queue…'
+    );
+    expect(line(running({ ...queued('message'), stopping: true }))?.text).toBe(
+      'leaving the queue…'
+    );
+    expect(line(running(drawing(steps, { reconnecting: true })))).toEqual({
+      text: 'connection lost · reconnecting…',
+      short: 'connection lost · reconnecting…',
+      clock: null,
+    });
+    const card = running(drawing(steps));
+    const withCard = {
+      ...card,
+      items: [...card.items, { id: 2, kind: 'plot' as const, version: 1 }],
+    };
+    expect(line(withCard)).toEqual({
+      text: 'writing the reply',
+      short: 'writing the reply',
+      clock: null,
+    });
+  });
+
+  it('gives its place to an error or a refusal that ended the turn', () => {
+    const state = running(drawing([['adapting', 1]]));
+    const error = { id: 2, kind: 'error', code: 'no_reply', ref: 'r-1' } as const;
+    expect(runView({ ...state, items: [...state.items, error] }).drawing).toBe(false);
+    expect(line({ ...state, items: [...state.items, error] })).toBeNull();
+    const refusal = { id: 2, kind: 'refusal', code: 'service_paused', text: 'paused' } as const;
+    expect(line({ ...state, items: [...state.items, refusal] })).toBeNull();
+    // The same for a turn without plot work, whose prompt is no longer the last item.
+    const question = running({ kind: 'message', steps: [], queue: null, stopping: false });
+    expect(line({ ...question, items: [...question.items, error] })).toBeNull();
+  });
+
+  it('says in the status line that a plot is drawn, its clock apart, and that it stops once pressed', () => {
     // `.stop()` stands at the line's end as a button of its own, so the words leave it out.
-    expect(runLine(running(queued('create_plot')))).toBe('drawing your plot · usually 1–3 min');
-    expect(runLine(running({ ...queued('carry_plot'), stopping: true }))).toBe('stopping…');
-    // A turn without a pipeline step keeps the step's line: its in-progress line says what runs.
+    expect(runLine(running(drawing([['adapting', 1]])))).toEqual({
+      words: 'drawing your plot',
+      short: 'drawing',
+      clockFrom: T0,
+      tail: 'usually 1–3 min',
+    });
+    // While the run waits in the queue the clock does not run.
+    expect(runLine(running(queued('create_plot')))?.clockFrom).toBeNull();
+    expect(runLine(running({ ...queued('carry_plot'), stopping: true }))).toEqual({
+      words: 'stopping…',
+      short: 'stopping…',
+      clockFrom: null,
+      tail: '',
+    });
+    // A turn without a pipeline step keeps the step's line: its working line says what runs.
     expect(runLine(running(queued('example_data')))).toBeNull();
     expect(runLine({ ...initialAgentState('matplotlib'), phase: 'ready' })).toBeNull();
-    // The run's card took the timeline's place while the reply is still on its way: no plotting.
+    // The run's card is in while the reply is still on its way: no drawing.
     const shipped = running(queued('create_plot'));
     expect(
       runLine({ ...shipped, items: [...shipped.items, { id: 2, kind: 'plot', version: 1 }] })
@@ -83,25 +223,25 @@ describe('runView', () => {
   const ask = { id: 1, kind: 'action', action: 'create_plot', library: 'matplotlib' } as const;
   const note = { id: 2, kind: 'assistant', text: 'Adapting the catalogue plot.' } as const;
 
-  it('holds what a run sends into the thread while its timeline stands below it', () => {
-    // Above the timeline it pushed the timeline and the composer down mid-run.
+  it('holds what a run sends into the thread while a plot is drawn', () => {
+    // Above the working line it pushed the line and the composer down mid-run.
     const state = { ...running(plotRun), items: [ask, note] };
-    expect(runView(state)).toEqual({ items: [ask], timeline: true });
+    expect(runView(state)).toEqual({ items: [ask], drawing: true });
   });
 
   it('never holds a data version back: the live card would unmount', () => {
-    // A version under a running timeline (none arrives there today) keeps the card in the
-    // thread, and the stub it left; only the talk waits.
+    // A version while a plot is drawn (none arrives there today) keeps the card in the thread,
+    // and the stub it left; only the talk waits.
     const stub = { id: 4, kind: 'data_stub', rows: 2, columns: 2, card: 5 } as const;
     const live = { id: 5, kind: 'data' } as const;
     const state = { ...running(plotRun), items: [ask, note, stub, live] };
-    expect(runView(state)).toEqual({ items: [ask, stub, live], timeline: true });
+    expect(runView(state)).toEqual({ items: [ask, stub, live], drawing: true });
   });
 
-  it("lets the run's result card take the timeline's place, with the held items", () => {
+  it("lets the run's result card end the drawing, with the held items", () => {
     const card = { id: 3, kind: 'plot', version: 1 } as const;
     const state = { ...running(plotRun), items: [ask, note, card] };
-    expect(runView(state)).toEqual({ items: [ask, note, card], timeline: false });
+    expect(runView(state)).toEqual({ items: [ask, note, card], drawing: false });
     // A run that failed hands over to its card the same way.
     const failed = {
       id: 3,
@@ -116,16 +256,16 @@ describe('runView', () => {
     } as unknown as Extract<ChatItem, { kind: 'plot_failed' }>;
     expect(runView({ ...running(plotRun), items: [ask, note, failed] })).toEqual({
       items: [ask, note, failed],
-      timeline: false,
+      drawing: false,
     });
   });
 
-  it('holds nothing for a turn without the timeline, nor once the run is over', () => {
+  it('holds nothing for a turn without plot work, nor once the run is over', () => {
     const question = running(queued('message'));
     expect(runView({ ...question, items: [ask, note] }).items).toEqual([ask, note]);
     expect(runView({ ...running(plotRun), run: null, items: [ask, note] })).toEqual({
       items: [ask, note],
-      timeline: false,
+      drawing: false,
     });
   });
 });
@@ -263,10 +403,17 @@ describe('statusLine', () => {
   } as unknown as AgentSessionState['versions'];
 
   it('names step 1 and its data without data, and what to check with it', () => {
-    expect(statusLine(ready(), options)).toEqual({ step: 1, text: 'step 1 of 2 · your data' });
+    expect(statusLine(ready(), options)).toEqual({
+      step: 1,
+      head: 'step 1 of 2',
+      text: 'step 1 of 2 · your data',
+      run: null,
+    });
     expect(statusLine(ready({ dataset }), options)).toEqual({
       step: 1,
+      head: 'step 1 of 2',
       text: 'step 1 of 2 · check the data and the bindings above, then .create_plot()',
+      run: null,
     });
   });
 
@@ -279,10 +426,9 @@ describe('statusLine', () => {
       note: '',
       bytes: 8,
     };
-    expect(statusLine(ready({ transcription }), options)).toEqual({
-      step: 1,
-      text: 'step 1 of 2 · decide on the table first: .use() or .discard()',
-    });
+    expect(statusLine(ready({ transcription }), options).text).toBe(
+      'step 1 of 2 · decide on the table first: .use() or .discard()'
+    );
   });
 
   it('says back to step 1 after a lost confirmation, with what lost it', () => {
@@ -292,15 +438,21 @@ describe('statusLine', () => {
   });
 
   it("puts a waiting attachment first, then a plot's run, before the step's own words", () => {
-    const run = queued('create_plot');
+    const run: RunState = { ...queued('create_plot'), steps: [], queue: null, startedAt: 5 };
     const confirmed = ready({ dataset, dataConfirmed: true, run, items: running(run).items });
+    // The description reads no clock; the line shows it between the words and the usual time.
     expect(statusLine(confirmed, options)).toEqual({
       step: 2,
+      head: 'step 2 of 2',
       text: 'step 2 of 2 · drawing your plot · usually 1–3 min',
+      run: { words: 'drawing your plot', short: 'drawing', clockFrom: 5, tail: 'usually 1–3 min' },
     });
     expect(
-      statusLine(confirmed, { ...options, attachmentLine: 'the attached table is read' }).text
-    ).toBe('step 2 of 2 · the attached table is read');
+      statusLine(confirmed, { ...options, attachmentLine: 'the attached table is read' })
+    ).toMatchObject({ text: 'step 2 of 2 · the attached table is read', run: null });
+    expect(statusLine({ ...confirmed, run: { ...run, stopping: true } }, options).text).toBe(
+      'step 2 of 2 · stopping…'
+    );
   });
 
   it("puts the one click's reading before everything, and where it stopped in step 1's place", () => {

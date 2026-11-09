@@ -7,6 +7,7 @@ import {
   ANONYMOUS_ID_KEY,
   anonymousId,
   browserLocale,
+  budgetShare,
   caseListQuery,
   codeArtifact,
   convertAnswer,
@@ -21,6 +22,7 @@ import {
   PUBLIC_LANE,
   publicLaneOpen,
   publicRoute,
+  readBudget,
   renderedThemes,
   sizeBucket,
   switchCarry,
@@ -48,8 +50,21 @@ describe('parseAgentEvent', () => {
       type: 'step',
       step: 'repairing',
       attempt: 2,
+      maxAttempts: null,
       previous: null,
     });
+  });
+
+  it("reads the run's round cap from a step, never a cap that is no count", () => {
+    const cap = (value: unknown) => {
+      const event = parseAgentEvent(
+        raw('status', { step: 'adapting', attempt: 1, max_attempts: value })
+      );
+      return event?.type === 'step' ? event.maxAttempts : 'none';
+    };
+    expect(cap(2)).toBe(2);
+    expect(cap(3)).toBe(3);
+    for (const wrong of [0, -1, 1.5, '2', null]) expect(cap(wrong)).toBeNull();
   });
 
   it('reads how the round before a repair ended, and drops an outcome it does not know', () => {
@@ -840,6 +855,31 @@ describe('the public lane', () => {
       path: '/eligibility?spec=a&library=b',
       session: null,
     });
+  });
+
+  it('asks the day budget on the admin lane only, and reads its share once for both views', async () => {
+    const answer = {
+      since: '2026-11-09T00:00:00Z',
+      started_at: '2026-11-08T22:00:00Z',
+      resets_at: '2026-11-10T00:00:00Z',
+      paused: false,
+      tokens: 620_000,
+      budget_tokens: 1_000_000,
+    };
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify(answer), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    // The public lane has no `/budget`: no request goes.
+    await expect(agentApi.budget(PUBLIC_LANE)).rejects.toMatchObject({ code: 'not_found' });
+    expect(fetchMock).not.toHaveBeenCalled();
+    const budget = await agentApi.budget('');
+    expect((fetchMock.mock.calls[0] as unknown as [string])[0]).toMatch(/\/debug\/agent\/budget$/);
+    expect(budget).toMatchObject({ tokens: 620_000, budget_tokens: 1_000_000, usd: null });
+    expect(budgetShare(budget)).toBe(62);
+    expect(budgetShare({ ...budget, budget_tokens: 0 })).toBeNull();
+    // An answer without its times is no budget.
+    expect(readBudget({ ...answer, since: 'soon' })).toBeNull();
+    fetchMock.mockImplementationOnce(async () => new Response('{}', { status: 200 }));
+    await expect(agentApi.budget('')).rejects.toMatchObject({ code: 'upstream' });
   });
 
   it('tells the lanes apart by the credential, and no header can carry the public one', () => {

@@ -1,6 +1,6 @@
 /**
- * The agent chat's composer at the foot of the thread (`AgentChatPage.tsx`): the service's pause
- * note, the drop hint, the data line, and one row in two fixed places, the message box with its
+ * The agent chat's composer at the foot of the thread (`AgentChatPage.tsx`): the drop hint, the
+ * data line, and one row in two fixed places, the message box with its
  * `❯` and the plot button, with the counter near the message cap below it. Below the theme's `sm`
  * (a phone) the row stacks them: the box takes the whole line, the plot button the line under it
  * at the full width, in the same order for the eye, the DOM and Tab. Nothing comes or goes
@@ -17,7 +17,9 @@
  *   buttons styled as links, with a 44 px target at phone width.
  * - The message box: Enter sends its text as a turn, or the attachment with the text as its note;
  *   Shift+Enter is a new line. On a touch screen, whose keyboard names Enter "return", a small
- *   `↵` inside the box sends too. It has no `.send()` beside it any more.
+ *   `↵` inside the box sends too. It has no `.send()` beside it any more. A browser cuts a long
+ *   placeholder without an ellipsis, so on a phone the placeholders with data are short ones
+ *   (`PHONE_PLACEHOLDER`): "ask or say what to plot", "ask for a change".
  * - The plot button, filled from the moment data is stored or waits in the box, quiet and inert
  *   before: `.create_plot() →` (confirms the data and the bindings as shown, then plots, with the
  *   box's text as the request), `.update_plot() →` once the library has a plot (sends the box's
@@ -35,6 +37,7 @@
  */
 
 import Box from '@mui/material/Box';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import type { Failure } from 'src/hooks/useAgentSession';
 import { MAX_MESSAGE_CHARS } from 'src/lib/agent';
@@ -47,7 +50,7 @@ import {
   ERROR_TEXT,
   NEW_DATA_PLOT,
   NO_DATA_PLACEHOLDER,
-  servicePausedText,
+  PHONE_PLACEHOLDER,
   START_OVER_HELP,
 } from 'src/sections/agent-chat/messages';
 import { type PlotButtonKind, STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
@@ -57,6 +60,7 @@ import {
   composerGhostSx,
   labelSx,
   messageBoxSx,
+  PHONE_QUERY,
   smallText,
   visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
@@ -172,8 +176,6 @@ export interface ComposerProps {
   example: { active: boolean };
   /** Why the confirmation a plot click starts with was refused; it shows under the composer. */
   confirmError: Failure | null;
-  /** Until when (ISO) the service paused, for the note above the box. */
-  pausedUntil: string | null;
   onExampleData: () => void;
   onPlot: (event: React.MouseEvent) => void;
 }
@@ -183,7 +185,9 @@ export function Composer(props: ComposerProps) {
   const { attachment, attachmentNotice, onRemoveAttachment, dropHint } = props;
   const { canOpen, fileInputRef, onFileChosen } = props;
   const { ready, busy, hasData, step2, hasPlot, chatLocked, plot, example } = props;
-  const { confirmError, pausedUntil, onExampleData, onPlot } = props;
+  const { confirmError, onExampleData, onPlot } = props;
+  // Read at the first render, so a phone never shows the long placeholder first.
+  const narrow = useMediaQuery(PHONE_QUERY, { noSsr: true });
   // While `all` holds the box in step 2, the line at the frame's foot says why, and the box names
   // it as its description; an attachment, new data, goes all the same, with Enter in the box,
   // which it opens for that.
@@ -202,22 +206,6 @@ export function Composer(props: ComposerProps) {
 
   return (
     <>
-      {/* Told before the user types: every turn would get `service_paused` until then. */}
-      {pausedUntil && (
-        <Box
-          role="note"
-          data-testid="service-paused"
-          sx={{
-            ...labelSx,
-            color: 'var(--ink)',
-            borderLeft: `3px solid ${colors.warning}`,
-            pl: 1.5,
-            lineHeight: 1.6,
-          }}
-        >
-          # {servicePausedText(pausedUntil)}
-        </Box>
-      )}
       {/* A file dragged over the chat: whether a drop attaches it, or why it waits. */}
       {dropHint && (
         <Box
@@ -355,18 +343,23 @@ export function Composer(props: ComposerProps) {
               // With data, step 1 talks about the data and what the plot should do, step 2 about
               // the plot; short since 2026-11-02, the how-to is behind the header's ⓘ. With an
               // attachment the text is its note, also while `all` is pressed in step 2, which
-              // otherwise holds the box: the fan-out takes no text.
+              // otherwise holds the box: the fan-out takes no text. On a phone, where the browser
+              // cuts it without an ellipsis, the placeholder with data is a short one.
               attachment
                 ? ATTACHMENT_PLACEHOLDER
                 : chatLocked
                   ? 'all libraries: the table goes as it is · turn all off to chat'
                   : !hasData
                     ? NO_DATA_PLACEHOLDER
-                    : !step2
-                      ? `ask about your data, or say what the ${hasPlot ? 'next' : 'first'} plot should do`
-                      : !hasPlot
-                        ? 'optional: what the first plot should do differently'
-                        : 'ask for a change, e.g. log scale on y'
+                    : narrow
+                      ? hasPlot
+                        ? PHONE_PLACEHOLDER.change
+                        : PHONE_PLACEHOLDER.first
+                      : !step2
+                        ? `ask about your data, or say what the ${hasPlot ? 'next' : 'first'} plot should do`
+                        : !hasPlot
+                          ? 'optional: what the first plot should do differently'
+                          : 'ask for a change, e.g. log scale on y'
             }
             value={draft}
             rows={1}
@@ -389,7 +382,9 @@ export function Composer(props: ComposerProps) {
               flex: 1,
               resize: 'vertical',
               // The box grows with its text up to a few lines, where the browser can. Empty, it
-              // stays one line, its placeholder cut with an ellipsis where the line is too short.
+              // stays one line; a placeholder too long for it is cut, with an ellipsis where the
+              // browser draws one (a desktop browser), without one on a phone, hence its short
+              // placeholders there.
               fieldSizing: 'content',
               maxHeight: '12rem',
               '&:placeholder-shown': { fieldSizing: 'fixed' },

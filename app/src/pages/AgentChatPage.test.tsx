@@ -7,7 +7,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { analyticsMuted } from 'src/analytics/mute';
 import type { MemoryEntry } from 'src/lib/agent';
 import { AgentChatPage } from 'src/pages/AgentChatPage';
-import { LEAVE_TEXT, servicePausedText } from 'src/sections/agent-chat/messages';
+import { LEAVE_TEXT, localClock, nextUtcMidnight } from 'src/sections/agent-chat/messages';
 import { theme } from 'src/theme';
 import { ADMIN_HINT_KEY, VIEW_AS_VISITOR_KEY } from 'src/utils/adminAuth';
 
@@ -791,14 +791,16 @@ describe('AgentChatPage gating', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('the assistant is closed right now. please try again later.');
     expect(alert).not.toHaveTextContent('AGENT_ENABLED');
+    // The check's answer stands for the chat's own: the switched-off status is asked once.
+    const statusCalls = () =>
+      agentCalls().filter(([input]) => pathOf(input) === '/debug/agent/status');
+    expect(statusCalls()).toHaveLength(1);
     const menu = await openAdminMenu();
     expect(within(menu).getByRole('region', { name: 'diagnostics' })).toHaveTextContent(
       'not_enabled · the agent chat is switched off on this server (AGENT_ENABLED)'
     );
-    // The check's answer stands for the chat's own: the switched-off status is asked once.
-    expect(agentCalls().filter(([input]) => pathOf(input) === '/debug/agent/status')).toHaveLength(
-      1
-    );
+    // Opening the menu reads it once more, for the meters.
+    await waitFor(() => expect(statusCalls()).toHaveLength(2));
   });
 
   it('switches to the visitor view and back from the admin menu, remembered for the tab', async () => {
@@ -947,10 +949,14 @@ describe('AgentChatPage gating', () => {
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_confirmed', {
       size_bucket: 'lt_1kb',
     });
-    // While it plots, the status line says so and how long it takes, in the step's words' place.
+    // While it plots, the status line says so, how long it runs and how long it usually takes, in
+    // the step's words' place; the plot button's description, the same line, reads no clock.
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      /^>>> step 2 of 2 · drawing your plot · usually 1–3 min$/
+      /^>>> step 2 of 2 · drawing your plot · \d+:\d\d · usually 1–3 min$/
     );
+    expect(create).toHaveAccessibleDescription('step 2 of 2 · drawing your plot · usually 1–3 min');
+    // The working line at the thread's foot says the same, with the same clock.
+    expect(screen.getByTestId('working-line')).toHaveTextContent(/^drawing your plot · \d+:\d\d$/);
     expect(screen.queryByText(/create the plot as it is/)).not.toBeInTheDocument();
     expect(lastAction()).toHaveTextContent(/^❯\.create_plot\(\)# matplotlib$/);
 
@@ -982,10 +988,13 @@ describe('AgentChatPage gating', () => {
       'true'
     );
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      /^>>> step 2 of 2 · drawing your plot · usually 1–3 min$/
+      /^>>> step 2 of 2 · drawing your plot · \d+:\d\d · usually 1–3 min$/
     );
     releaseTurn?.();
     await turnEnded();
+    // The card keeps the run's clock as the plot shipped (`ready in`).
+    const summaries = screen.getAllByTestId('result-summary');
+    expect(summaries[summaries.length - 1]).toHaveTextContent(/^ready in \d+:\d\d · /);
   });
 
   it("goes back to step 1 with the dropdowns the turn's done reports, the plot button acting again", async () => {
@@ -1876,9 +1885,9 @@ describe('AgentChatPage .example_data()', () => {
     example.focus();
     fireEvent.click(example, { detail: 0 });
 
-    // The button stays in its place, inert, with the focus: the thread says it once, beside
+    // The button stays in its place, inert, with the focus: the working line says it once, beside
     // the loader.
-    const pending = await screen.findByTestId('pending-reply');
+    const pending = await screen.findByTestId('working-line');
     expect(pending).toHaveTextContent(/^making example data$/);
     expect(within(pending).getByTestId('loader-spinner')).toBeInTheDocument();
     expect(screen.getAllByText(/making example data/)).toHaveLength(1);
@@ -2040,7 +2049,7 @@ describe('AgentChatPage working states', () => {
     holdNextTurn = true;
     await attachAndSend('hours,score\n1.5,52\n2.0,58\n');
 
-    const pending = await screen.findByTestId('pending-reply');
+    const pending = await screen.findByTestId('working-line');
     expect(pending).toHaveTextContent(/^summarizing your data$/);
     expect(within(pending).getByTestId('loader-spinner')).toBeInTheDocument();
     expect(lastInThread()).toBe(pending);
@@ -2054,13 +2063,14 @@ describe('AgentChatPage working states', () => {
     // The plot button waits in its place at the composer's end; `.stop()` at the status line's.
     expect(composerButtons()).toEqual(['.example_data() (inert)', '.create_plot() → (inert)']);
     expect(statusActions()).toEqual(['.stop()']);
-    // One indicator: a turn without pipeline steps mounts no progress timeline.
+    // One indicator: a turn without pipeline steps has no grid, and no clock.
     expect(screen.queryByRole('table', { name: 'Progress' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('run-clock')).not.toBeInTheDocument();
 
     releaseTurn?.();
     expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
     await turnEnded();
-    expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('working-line')).not.toBeInTheDocument();
     expect(screen.getByTestId('bindings-heading')).toHaveTextContent(
       /^# bindings — which column plays which role$/
     );
@@ -2068,35 +2078,48 @@ describe('AgentChatPage working states', () => {
     await untilActive(screen.getByRole('button', { name: 'Create plot' }));
   });
 
-  it('puts an in-progress line in the thread for a question, and leaves a plot run to the timeline', async () => {
+  it('puts one working line in the thread for a question and for a plot run, the grid in the admin menu', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndSummarize();
 
     holdNextTurn = true;
     sendFromComposer('what is the mean score?');
-    const pending = await screen.findByTestId('pending-reply');
+    const pending = await screen.findByTestId('working-line');
     expect(pending).toHaveTextContent(/^working on your message$/);
     expect(screen.queryByRole('table', { name: 'Progress' })).not.toBeInTheDocument();
     releaseTurn?.();
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
-    expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('working-line')).not.toBeInTheDocument();
     await turnEnded();
 
-    // `.create_plot()` shows its path in the timeline from the start, with the loader beside
-    // it; the thread adds nothing.
+    // `.create_plot()` draws on the same line at the thread's foot, with its clock and the
+    // loader beside it; the queue counter and the timeline below the thread are gone.
     holdNextTurn = true;
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
-    expect(await screen.findByRole('table', { name: 'Progress' })).toBeInTheDocument();
-    expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+    const line = await screen.findByTestId('working-line');
+    expect(line).toHaveTextContent(/^drawing your plot · \d+:\d\d$/);
+    expect(lastInThread()).toBe(line);
+    expect(screen.queryByTestId('queue-counter')).not.toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Progress' })).not.toBeInTheDocument();
     expect(screen.getAllByTestId('loader-spinner')).toHaveLength(1);
+    // The run's grid is the admin menu's, for the admin alone.
+    const menu = await openAdminMenu();
+    expect(
+      within(within(menu).getByRole('region', { name: 'progress of this turn' })).getByRole(
+        'table',
+        { name: 'Progress' }
+      )
+    ).toBeInTheDocument();
+    await closeAdminMenu();
     releaseTurn?.();
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
     await turnEnded();
     expect(screen.queryByTestId('loader-spinner')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('working-line')).not.toBeInTheDocument();
   });
 
-  it('shows one queue position, out of the flow for a text turn and in the timeline for a plot run', async () => {
+  it('shows one queue position, in the working line, for a text turn and for a plot run', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndSummarize();
@@ -2148,31 +2171,43 @@ describe('AgentChatPage working states', () => {
         : base(input, init)
     );
 
-    // A question waits with the thread's in-progress line: the badge names the position, beside
-    // that line and out of the flow, so it moves nothing as it comes and goes.
+    // A question waits in the queue: the working line says where (owner, 2026-11-09, option a),
+    // the tab only that the service is busy, and nothing else on screen names a position.
+    const mood = () => screen.getByTestId('load-mood');
+    await waitFor(() => expect(mood()).toHaveTextContent(/quiet$/));
     sendFromComposer('what is the mean score?');
-    const badge = await screen.findByTestId('queue-counter');
-    expect(badge).toHaveTextContent('queue 2/3');
-    expect(badge).toHaveStyle({ position: 'absolute' });
-    expect(screen.getByTestId('pending-reply')).toBeInTheDocument();
-    // The wait ends before the reply: the badge goes, the in-progress line stays.
+    const line = await screen.findByTestId('working-line');
+    await waitFor(() => expect(line).toHaveTextContent(/^waiting · you are 2nd$/));
+    expect(mood()).toHaveTextContent(/busy$/);
+    expect(mood()).not.toHaveTextContent(/2nd|3rd/);
+    expect(screen.queryByTestId('queue-counter')).not.toBeInTheDocument();
+    expect(screen.getAllByText(/you are 2nd/)).toHaveLength(1);
+    // The wait ends before the reply: the line says what the turn does, in the same element.
     act(() => push?.([['status', { step: 'started' }]]));
-    await waitFor(() => expect(screen.queryByTestId('queue-counter')).not.toBeInTheDocument());
-    expect(screen.getByTestId('pending-reply')).toBeInTheDocument();
+    await waitFor(() => expect(line).toHaveTextContent(/^working on your message$/));
+    expect(screen.getByTestId('working-line')).toBe(line);
+    expect(mood()).toHaveTextContent(/quiet$/);
     act(() => finish?.());
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
     await turnEnded();
 
-    // A plot run names its position in the timeline's first row, and nowhere else.
+    // A plot run waits the same way, without a clock while it waits, in the line or the footer.
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
-    const grid = await screen.findByRole('table', { name: 'Progress' });
-    expect(await within(grid).findByText('queued · 2 of 3')).toBeInTheDocument();
-    expect(screen.queryByTestId('queue-counter')).not.toBeInTheDocument();
-    expect(screen.getAllByText(/queue/)).toHaveLength(1);
-    // Out of the queue before its first step, the run is starting.
+    const plotLine = await screen.findByTestId('working-line');
+    await waitFor(() => expect(plotLine).toHaveTextContent(/^waiting · you are 2nd$/));
+    expect(screen.queryByTestId('run-clock')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      /^>>> step 2 of 2 · drawing your plot · usually 1–3 min$/
+    );
+    // The admin menu's grid keeps the position too, unseen while the menu is closed.
+    expect(screen.getByText('queued · 2 of 3')).not.toBeVisible();
+    // Out of the queue the clock starts, from the wait's end, in the line and the footer.
     act(() => push?.([['status', { step: 'started' }]]));
-    expect(await within(grid).findByText('starting…')).toBeInTheDocument();
-    expect(screen.queryByText(/queue/)).not.toBeInTheDocument();
+    await waitFor(() => expect(plotLine).toHaveTextContent(/^drawing your plot · 0:0\d$/));
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      /^>>> step 2 of 2 · drawing your plot · 0:0\d · usually 1–3 min$/
+    );
+    expect(screen.queryByText(/you are/)).not.toBeInTheDocument();
     act(() => finish?.());
     await turnEnded();
   });
@@ -2814,52 +2849,187 @@ describe('AgentChatPage URL', () => {
   });
 });
 
-describe('AgentChatPage service pause', () => {
-  /** The status answer as `stubFetch` gives it, plus `extra`. */
-  function statusWith(extra: Record<string, unknown>) {
+describe('AgentChatPage load mood and admin meters', () => {
+  /**
+   * The status answers as `stubFetch` gives them, plus `extra`, the next ones from `later` in
+   * turn (the last one stays), and the day budget for the admin meters.
+   */
+  function statusWith(extra: Record<string, unknown>, ...later: Record<string, unknown>[]) {
     const base = fetchMock.getMockImplementation() as (
       input: string,
       init?: RequestInit
     ) => Promise<Response>;
-    fetchMock.mockImplementation((input: string, init?: RequestInit) =>
-      input.endsWith('/debug/agent/status')
-        ? Promise.resolve(
-            json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, ...extra })
-          )
-        : base(input, init)
-    );
+    const answers = [extra, ...later];
+    fetchMock.mockImplementation((input: string, init?: RequestInit) => {
+      if (input.endsWith('/debug/agent/status')) {
+        const next = answers.length > 1 ? answers.shift()! : answers[0];
+        return Promise.resolve(
+          json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, ...next })
+        );
+      }
+      if (input.endsWith('/debug/agent/budget')) {
+        return Promise.resolve(
+          json(200, {
+            since: '2026-11-09T00:00:00Z',
+            started_at: '2026-11-09T00:00:00Z',
+            resets_at: '2026-11-10T00:00:00Z',
+            paused: false,
+            tokens: 620_000,
+            budget_tokens: 1_000_000,
+          })
+        );
+      }
+      return base(input, init);
+    });
   }
+  const mood = () => screen.getByTestId('load-mood');
+  const statusCalls = () =>
+    agentCalls().filter(([input]) => pathOf(input) === '/debug/agent/status').length;
+  const budgetCalls = () =>
+    fetchMock.mock.calls.filter(([input]) => String(input).includes('/budget')).length;
 
-  it('says before the user types that the whole chat paused, until when in their time', async () => {
-    const resetsAt = new Date(Date.now() + 3_600_000).toISOString();
-    statusWith({ paused: true, resets_at: resetsAt });
-    localStorage.setItem(ADMIN_HINT_KEY, '1');
-    renderAt(PAGE);
-
-    const note = await screen.findByTestId('service-paused');
-    expect(note).toHaveAttribute('role', 'note');
-    expect(note).toHaveTextContent(`# ${servicePausedText(resetsAt)}`);
-    // `/status` is the same for everyone: a user whose own budget is spent too must not read otherwise.
-    expect(note).not.toHaveTextContent('your own limit');
-    // The composer stays: the note may go stale at midnight, the server decides each turn.
-    expect(screen.getByLabelText('Message')).toBeInTheDocument();
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
-  it('shows no note while the service runs, nor for a reset already past', async () => {
-    statusWith({ paused: false, resets_at: new Date(Date.now() + 3_600_000).toISOString() });
+  it('shows the mood on the tab after the path, a status of its own: quiet, busy, resting', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    statusWith({ waiting: 0 });
     localStorage.setItem(ADMIN_HINT_KEY, '1');
-    const { unmount } = renderAt(PAGE);
-    await screen.findByLabelText('Message');
+    const quiet = renderAt(PAGE);
+    await waitFor(() => expect(mood()).toHaveTextContent(/^· ● the assistant is quiet$/));
+    expect(mood()).toHaveAttribute('role', 'status');
+    expect(mood().closest('[aria-hidden="true"]')).toBeNull();
+    expect(screen.getByTestId('chat-frame-tab')).toHaveAttribute('aria-hidden', 'true');
+    quiet.unmount();
+
+    statusWith({ waiting: 2 });
+    const busy = renderAt(PAGE);
+    await waitFor(() => expect(mood()).toHaveTextContent(/busy$/));
+    busy.unmount();
+
+    // The day budget spent: resting until the reset in the visitor's own time. The pause note
+    // above the composer is gone; the composer stays, since the server decides each turn.
+    const resetsAt = new Date(Date.now() + 3_600_000).toISOString();
+    statusWith({ paused: true, resets_at: resetsAt });
+    renderAt(PAGE);
     await waitFor(() =>
-      expect(agentCalls().some(([input]) => pathOf(input).endsWith('/status'))).toBe(true)
+      expect(mood()).toHaveTextContent(new RegExp(`resting until ${localClock(resetsAt)}$`))
     );
     expect(screen.queryByTestId('service-paused')).not.toBeInTheDocument();
-    unmount();
+    expect(screen.queryByText(/today's overall limit/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Message')).toBeInTheDocument();
+    // The pause ends at the reset, without a reload (and without a read: the tab is hidden).
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    await act(async () => vi.advanceTimersByTimeAsync(3_600_000));
+    await waitFor(() => expect(mood()).toHaveTextContent(/quiet$/));
+  });
 
-    statusWith({ paused: true, resets_at: new Date(Date.now() - 1_000).toISOString() });
+  it('reads again every 60 s while visible, keeps the libraries, and stops when the page goes', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    statusWith({ waiting: 0 }, { waiting: 3, libraries: ['matplotlib'] });
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const { unmount } = renderAt(PAGE);
+    await waitFor(() => expect(mood()).toHaveTextContent(/quiet$/));
+    expect(statusCalls()).toBe(1);
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    await waitFor(() => expect(mood()).toHaveTextContent(/busy$/));
+    expect(statusCalls()).toBe(2);
+    // A poll changes the load only: the fan-out still counts the first read's libraries.
+    const menu = await openAdminMenu();
+    expect(within(menu).getByRole('button', ALL_TOGGLE)).toHaveTextContent('all 2 libraries');
+    await closeAdminMenu();
+    const before = statusCalls();
+    unmount();
+    await act(async () => vi.advanceTimersByTimeAsync(5 * 60_000));
+    expect(statusCalls()).toBe(before);
+  });
+
+  it('turns resting at once on a service_paused refusal', async () => {
+    statusWith({ waiting: 0 });
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText('Message');
-    expect(screen.queryByTestId('service-paused')).not.toBeInTheDocument();
+    await waitFor(() => expect(mood()).toHaveTextContent(/quiet$/));
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    // The refusal arrives, and the turn's `done` waits: no read can have brought the pause yet.
+    let finish: (() => void) | null = null;
+    const refused = () =>
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            const write = (list: [string, unknown][]) =>
+              controller.enqueue(
+                new TextEncoder().encode(
+                  list
+                    .map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+                    .join('')
+                )
+              );
+            write([
+              ['refusal', { code: 'service_paused', text: 'paused for today, until 00:00 UTC' }],
+            ]);
+            finish = () => {
+              write([['done', {}]]);
+              controller.close();
+            };
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'text/event-stream' } }
+      );
+    fetchMock.mockImplementation((input: string, init: RequestInit = {}) =>
+      pathOf(input).endsWith('/sessions/S1/messages')
+        ? Promise.resolve(refused())
+        : base(input, init)
+    );
+    const box = await screen.findByLabelText('Message');
+    await waitFor(() => expect(box).toBeEnabled());
+    const reads = statusCalls();
+    sendFromComposer('hello');
+    await screen.findByTestId('refusal');
+    // The refusal names the next 00:00 UTC; the tab says it in the user's time, before any read.
+    await waitFor(() =>
+      expect(mood()).toHaveTextContent(
+        new RegExp(`resting until ${localClock(nextUtcMidnight())}$`)
+      )
+    );
+    expect(statusCalls()).toBe(reads);
+    act(() => finish?.());
+    await turnEnded();
+  });
+
+  it('reads the meters as the admin menu opens during a run, and leaves the tab as it was', async () => {
+    statusWith({ waiting: 0, in_flight: 1 });
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndSummarize();
+    await waitFor(() => expect(mood()).toHaveTextContent(/quiet$/));
+    holdNextTurn = true;
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    await screen.findByTestId('working-line');
+    const statusBefore = statusCalls();
+    expect(budgetCalls()).toBe(0);
+
+    // Meanwhile the queue filled up and more runs are in flight.
+    statusWith({ waiting: 4, in_flight: 3 });
+    const menu = await openAdminMenu();
+    // One `/status` through the one reader, and one `/budget`.
+    await waitFor(() =>
+      expect(within(menu).getByTestId('admin-meters')).toHaveTextContent(
+        /^now 3 runs · today 62 %$/
+      )
+    );
+    expect(statusCalls()).toBe(statusBefore + 1);
+    expect(budgetCalls()).toBe(1);
+    // The menu's answer during the run feeds the meters alone: the tab shows what a visitor's does.
+    expect(mood()).toHaveTextContent(/quiet$/);
+    await closeAdminMenu();
+    releaseTurn?.();
+    await turnEnded();
   });
 });
 
