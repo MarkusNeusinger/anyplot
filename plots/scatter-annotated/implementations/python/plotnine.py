@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-annotated: Annotated Scatter Plot with Text Labels
-Library: plotnine 0.15.9 | Python 3.13
-Quality: pending | Updated: 2026-11-09
+Library: plotnine 0.15.9 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-09
 """
 
 import os
