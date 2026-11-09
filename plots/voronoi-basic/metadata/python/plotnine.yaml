@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:21:49Z'
-updated: '2026-11-09T08:14:36Z'
+updated: '2026-11-09T08:19:58Z'
 generated_by: claude-opus
 workflow_run: 42583708026
 issue: 3415
@@ -12,45 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - 'Correct Voronoi geometry: scipy.spatial.Voronoi with mirrored seeds bounds every
-    real cell, and Sutherland-Hodgman clipping makes the 20 cells tile the bounding
-    box with no gaps or overlaps; every edge is straight and every cell convex'
-  - A greedy colouring over vor.ridge_points means no two cells that share an edge
-    get the same Imprint hue, and all eight hues are spread evenly. Adjacent cells
-    always differ, as the spec asks
-  - Cell edges are drawn in the page colour, so they read as light seams on the light
-    render and dark seams on the dark render, and the boundaries stay visible in both
-    themes
-  - Seeds sit at their exact coordinates as INK-filled dots with a page-coloured ring,
-    so they stand out from all eight fills in both themes
-  - 'Idiomatic plotnine: geom_polygon with a group aesthetic, scale_fill_identity
-    for precomputed hues, coord_fixed(ratio=1, expand=False) so the panel equals the
-    clipping box and distances are not distorted'
+  - Correct Voronoi construction with scipy.spatial.Voronoi and mirrored seeds, so
+    every cell is bounded and clipped to the box with straight convex edges
+  - Greedy colouring over the ridge adjacency guarantees that cells sharing an edge
+    never share a fill
+  - Seeds drawn as ink dots with a page-colored ring and cell edges in the page color,
+    both flipping with the theme, so seeds and boundaries read in both renders
+  - 'Grammar-native composition: tidy polygon frame, geom_polygon(group=...), scale_fill_identity
+    and coord_fixed(expand=False)'
   weaknesses:
-  - 'VQ-06 (both): the axis titles read ''X Coordinate'' and ''Y Coordinate'', with
-    no unit or real-world quantity → name the measure with its unit (e.g. ''Easting
-    (km)'' / ''Northing (km)''). Likely cause: the X and Y column constants on lines
-    41–42.'
-  - 'DQ-02 (both): the seeds are 20 unnamed uniform-random points on an abstract 1–9
-    plane, a plausible but generic scenario → give them a concrete neutral context,
-    such as store or cell-tower locations on a city grid in km, reflected in the column
-    names. Likely cause: the data block on lines 45–47 and the column constants.'
-  - 'Suggestion: optional seed labels (the Data allows a label column), placed next
-    to each seed, would show which facility owns each cell.'
+  - 'VQ-07 (both): the semantic red anchor #AE3030 fills four ordinary cells (e.g.
+    the cells around seeds at about (2.2, 7.2), (4.4, 6.5) and (7.6, 1.3)) by palette
+    position, although the style guide reserves slot 5 for bad/loss/error roles →
+    colour the adjacency from the seven non-red Imprint hues (a planar map needs at
+    most four). Likely cause: IMPRINT_PALETTE lists all eight positions and the greedy
+    colouring picks from all of them.'
+  - 'CQ-04 (code): the mirrors are placed at 2*x_min - margin - x (and analogues),
+    so their bisectors fall outside the box and lines 84-101 hand-write Sutherland-Hodgman
+    clipping → reflect the seeds exactly across the box edges (2*x_min - x, 2*x_max
+    - x, 2*y_min - y, 2*y_max - y); the real cells then end at the box and vor.regions
+    can be drawn directly, removing the clipping loop (about 17 lines). Likely cause:
+    the margin term in the mirrors block (lines 58-66).'
+  - 'Suggestion: seed labels (the Data allows a label column) next to a few seeds
+    could name the towers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 surface, 2400x2400 square canvas.
-      Chrome: bold near-black title "voronoi-basic · python · plotnine · anyplot.ai" centered at about 70 % of the width; axis titles "X Coordinate" / "Y Coordinate" in INK; tick labels 2.5 / 5.0 / 7.5 in INK_SOFT, with unlabelled minor ticks; a thin INK_SOFT panel border; no grid. All of it readable.
-      Data: 20 convex Voronoi cells tile the bounding box, filled with all eight Imprint hues (#009E73 green, lavender, blue, ochre, matte red, cyan, rose, lime). No two cells that share an edge have the same fill. Cell edges are off-white seams. Each seed is a near-black dot with an off-white ring at its coordinates, clearly visible on every fill, including the dark red and blue cells. Two close seed pairs (around (2.5, 9) and (8.7, 2.2)) each sit in their own cell.
+      Background: warm off-white #FAF8F1 page and panel, thin INK_SOFT frame around the square panel.
+      Chrome: bold dark title "voronoi-basic · python · plotnine · anyplot.ai" (~70% width), axis titles "Easting (km)" / "Northing (km)" in dark ink, tick labels 2.5 / 5.0 / 7.5 in soft grey — all readable, no grid.
+      Data: 20 Voronoi cells filled from the Imprint palette (#009E73 green, lavender, blue, ochre, matte red, cyan, rose, lime), no two edge-sharing cells alike, separated by off-white edges; outer cells clipped at the box; 20 near-black seed dots with off-white rings sit inside their cells.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 surface.
-      Chrome: title, axis titles and tick labels flip to light text (#F0EFE8 / #B8B7B0) and are fully readable. No dark-on-dark text. The panel border is light grey.
-      Data: the cell fills are identical to the light render, same hue per cell. The edges flip to near-black seams, which stay visible between all fills. The seeds flip to off-white dots with a near-black ring, and they stand out on every fill. Brand green #009E73 cells remain clearly visible.
+      Background: warm near-black #1A1A17 page and panel, light frame.
+      Chrome: title, axis titles in light ink and tick labels in light grey — all readable, no dark-on-dark text.
+      Data: cell fills identical to the light render; cell edges and seed rings flip to near-black, seed dots flip to light ink and stand out on every fill. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,49 +60,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt on a 6 in square; all
-          readable in both themes and at thumbnail size
+        comment: Explicit sizes (title 12 pt bold, axis titles 10, ticks 8); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; close seed pairs remain separate dots
+        comment: No text collisions; seeds sit inside their cells
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 20 seeds drawn as prominent ringed dots; edges visible on every fill
-          in both themes
+        comment: 20 seeds at size 3 with a page-colored ring stand out from every
+          fill; cell edges visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Cells are separated by contrasting seams, so hue is never the only
-          signal
+        comment: Cells are separated by edge strokes as well as fills, so color is
+          never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square, no canvas gate file; panel fills the canvas well,
-          title about 70 % of the width
+        comment: 2400x2400 square, coord_fixed panel fills the canvas, title ~70%
+          width, balanced axis labels
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
-        max: 2
-        passed: false
-        comment: '''X Coordinate'' / ''Y Coordinate'' have no unit or quantity (defect
-          line)'
-      - id: VQ-07
-        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint hues only, identical across themes; correct #FAF8F1 / #1A1A17
-          backgrounds and theme-adaptive chrome'
+        comment: Easting (km) / Northing (km) with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Backgrounds and chrome correct in both themes, #009E73 present;
+          but the semantic red anchor #AE3030 fills four ordinary cells (defect line)'
     design_excellence:
       score: 10
       max: 20
@@ -114,24 +111,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised one point: the cell seams and seed rings take the page colour
-          and the seed fill takes the ink colour, so the figure-ground contrast inverts
-          with the theme on purpose'
+        comment: Page-colored cell edges and seed rings that flip with the theme give
+          a cut-paper map look beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Raised one point: expand=False makes the panel the clipping box
-          exactly, so no empty band surrounds the tessellation; no grid is drawn over
-          the cells'
+        comment: Gridless panel with expand=False so cells run edge to edge into a
+          thin frame; sparse ticks chosen for a map
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: true
-        comment: 'Default: the partition is displayed with no focal point chosen beyond
-          the Notes'
+        comment: Partition displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: A single Voronoi partition with seed points and no extra overlay
+        comment: Correct Voronoi partition, no overlays
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cells clipped to the box, distinguishable fills and edges, seeds
-          marked, adjacent cells differ; all 'A good version shows' bullets met
+        comment: Cells clipped to the box, one cell per seed, straight convex edges,
+          seeds marked at their coordinates, adjacent cells differ in fill
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Seeds at exact x/y; coord_fixed ratio 1 keeps perpendicular bisectors
-          true
+        comment: Seeds plotted at exact x/y; axes show the whole box
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; no legend needed (N/A)
+        comment: Title format correct; legend N/A (identity fills)
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,23 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Interior cells, clipped border cells, and small and large cells all
+        comment: Unequal cells, crowded pairs, clipped elongated border cells all
           shown
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Generic uniform-random points on an abstract plane (defect line)
+        passed: true
+        comment: 20 cell-tower sites on a 10 km city grid, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 seeds, within the 10–50 range; box padded 12 % around the seed
-          spread. The spec has no Check values
+        comment: Seeds in 1-9 km on a 10 km grid, 20 seeds within the 10-50 range;
+          no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -195,7 +188,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with no functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,20 +200,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Uses scipy Voronoi; the clipping and colouring have no available
-          single call among the installed packages
+        passed: false
+        comment: Mirrors are offset by a margin, so lines 84-101 hand-write Sutherland-Hodgman
+          clipping that exact reflection across the box edges makes unnecessary (defect
+          line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at 6x6 in, 400 dpi
+        comment: Saves plot-{THEME}.png at 6x6 in, 400 dpi; current API
     library_mastery:
       score: 6
       max: 10
@@ -230,19 +224,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar layering of geom_polygon(group=) and geom_point from a second
-          data frame; coord_fixed with xlim/ylim and expand=False
+        comment: 'Tidy polygon frame with geom_polygon(group=...) plus scale_fill_identity
+          and coord_fixed(expand=False): grammar-native composition'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: scale_fill_identity maps precomputed hex colours straight through,
-          a ggplot-grammar idiom
-  verdict: REJECTED
+        comment: scale_fill_identity to carry precomputed fills through the grammar;
+          otherwise nothing beyond the mandate
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
-  rendered_at: '2026-11-09T08:11:03Z'
+  rendered_at: '2026-11-09T08:16:56Z'
 impl_tags:
   dependencies:
   - scipy
@@ -250,6 +244,11 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - voronoi-tessellation
+  - polygon-clipping
+  - graph-coloring
   styling:
-  - edge-highlighting
+  - publication-ready
+  - minimal-chrome

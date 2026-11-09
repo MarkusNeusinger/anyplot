@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
 Library: plotnine 0.15.8 | Python 3.14.10
-Quality: 83/100 | Updated: 2026-11-09
+Quality: 84/100 | Updated: 2026-11-09
 """
 
 import os
