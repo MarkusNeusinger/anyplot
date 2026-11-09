@@ -2,45 +2,56 @@ library: letsplot
 language: python
 specification_id: residual-plot
 created: '2025-12-26T19:38:27Z'
-updated: '2026-05-10T09:10:40Z'
-generated_by: claude-haiku
-workflow_run: 25624731633
+updated: '2026-11-09T14:35:50Z'
+generated_by: claude-opus
+workflow_run: 42634230321
 issue: 2332
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/letsplot/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - Perfect visual quality with flawless theme adaptation—data colors identical across
-    light/dark, chrome properly inverted
-  - Comprehensive diagnostic visualization meeting all spec requirements with meaningful
-    visual hierarchy (reference line, outlier bands, LOWESS curve)
-  - 'Proper Okabe-Ito palette ensuring colorblind safety (#009E73 green for normal,
-    #D55E00 orange for outliers)'
-  - Clean, reproducible code with deterministic seeding and proper lets-plot idioms
-  - Realistic regression data with deliberate heteroscedasticity demonstrating actual
-    residual plot diagnostic patterns
-  - 'Excellent data storytelling through layered techniques: LOWESS curve draws eye,
-    outliers highlighted, reference bands provide diagnostic context'
+  - Every point sits at its computed (fitted, residual) values, with no jitter or
+    nudge; the residual is derived in the plot zone from the observed and fitted columns,
+    so a user's table drops in unchanged
+  - The zero line spans the full fitted range and stays visible through the cloud
+    in both themes; the ±2σ bands are horizontal, symmetric, and computed from the
+    plotted residuals
+  - 'Outliers beyond 2σ are drawn in the semantic Imprint red #AE3030 against #009E73
+    for the bulk, and their position beyond the dashed bands gives the same signal
+    without color'
+  - Native geom_smooth(method='loess') draws the smoother from the plotted residuals,
+    in the INK color so it reads as a diagnostic layer rather than a data series
+  - 'A clear line-weight hierarchy: a solid 0.9 zero line, muted dashed 0.6 bands
+    at alpha 0.7, and a 1.1 ink smoother'
+  - A realistic house-sale scenario whose slightly convex price curve, fitted with
+    a straight line, produces the U-shaped residual pattern the diagnostic exists
+    to reveal, plus mild heteroscedasticity
+  - Theme tokens are threaded through every chrome element; the legend sits on the
+    ELEVATED_BG surface, and both renders read cleanly
+  - Library-native HTML export keeps lets-plot's default hover tooltips in the interactive
+    view
   weaknesses:
-  - 'Title contains incorrect domain: ''pyplots.ai'' instead of ''anyplot.ai'' — change
-    to ''residual-plot · letsplot · anyplot.ai'''
+  - 'Suggestion: a slightly heavier tick-label size (11 pt) would hold up better in
+    the 400 px thumbnail.'
+  - 'Suggestion: the dashed ±2σ bands extend a few pixels past the panel''s grid lines
+    on the right; letting them end with the panel would tidy the edge.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color
-      Chrome: Title "residual-plot · letsplot · pyplots.ai", axis labels "Fitted Values" and "Residuals (Observed - Predicted)", tick labels all in dark text (#1A1A17 INK) — perfectly readable against light background
-      Data: Green points (#009E73) for normal observations, orange points (#D55E00) for outliers, black LOWESS curve showing residual pattern, light gray reference line at y=0, dashed outlier bands at ±2σ in muted gray
-      Legibility verdict: PASS — all text readable, no light-on-light issues, excellent contrast
+      Background: warm off-white #FAF8F1 across the plot and panel.
+      Chrome: the bold near-black title "residual-plot · python · letsplot · anyplot.ai" sits top left at about 50 % of the width; the x-axis title "Predicted sale price ($k)", the y-axis title "Residual: sale price − predicted ($k)", and dark-grey ticks (100–550; -30 to 30) are all readable; the grid is subtle; the "Point type" legend sits on the right on an elevated surface with a soft outline.
+      Data: about 150 points in #009E73 at alpha 0.75 and about 13 outliers in red #AE3030, beyond dashed grey ±2σ bands at about ±28.4; a solid dark zero line spans the panel, and a thick near-black LOESS curve traces a U shape (about +21 at the left, -10.5 near 310, +20 at the right).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color
-      Chrome: Same title and axis labels now rendered in light text (#F0EFE8 INK for dark), tick labels in soft gray (#B8B7B0 INK_SOFT) — perfectly readable against dark background
-      Data: Green points (#009E73) — IDENTICAL to light render, orange points (#D55E00) — IDENTICAL to light render, LOWESS curve in light color for dark readability, reference lines and bands in light gray
-      Legibility verdict: PASS — no dark-on-dark failures, all text light-colored and clearly visible, data colors properly invariant across themes
+      Background: warm near-black #1A1A17.
+      Chrome: the title, axis titles, and ticks render in light ink and are all readable; there is no dark-on-dark text; the grid is subtle; the legend sits on the #242420 elevated surface with light text.
+      Data: the point colors (#009E73 and #AE3030) are identical to the light render; the zero line and the LOESS curve flip to light ink and stay clearly visible; the dashed bands are mid-grey.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,49 +62,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (24pt title, 20pt labels, 16pt ticks),
-          readable in both themes with proper color adaptation
+        comment: Explicit sizes (title 16, axis titles 12, ticks 10); all text is
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, points, or legend elements
+        comment: No text collisions; point overlap is light and expected
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and LOWESS curve perfectly visible, alpha=0.75 adapted for
-          150 points
+        comment: Size 2.8 markers at alpha 0.75 suit 150 points; the legend glyphs
+          are visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2, colorblind-safe, outlier identification
-          by color and legend label
+        comment: Green and red differ in luminance, and outlier status is also carried
+          by position beyond the bands
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions and balanced margins, nothing cut off
+        comment: 3200x1800; balanced proportions; nothing is cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context
+        comment: Descriptive axis titles with $k units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Okabe-Ito, correct backgrounds (#FAF8F1/#1A1A17), perfect
-          theme-adaptive chrome
+        comment: 'Bulk in #009E73, outliers in the semantic Imprint red; backgrounds
+          are correct in both themes'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -101,24 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful combination of reference line, outlier bands, LOWESS,
-          and color-coded outliers. Professional but follows standard practices.
+        comment: The smoother is drawn in INK rather than a palette color, separating
+          the diagnostic layer from the data
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Theme customization applied with subtle grid. Could be more refined
-          with explicit spine control.
+        comment: 'A line hierarchy beyond the baseline: a solid 0.9 zero line, muted
+          dashed 0.6 alpha-0.7 bands, and a 1.1 smoother'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Excellent visual hierarchy: LOWESS curve focal point, outliers highlighted,
-          reference bands provide diagnostic context'
+        comment: The data is chosen so a straight fit to a convex price curve leaves
+          a clear U, making the missed curvature the focal finding
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -126,26 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct residual plot
+        comment: Residual vs fitted scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: reference line, outlier bands, LOWESS smoothing,
-          outlier coloring, transparency'
+        comment: Zero line, alpha, colored outliers, and the optional ±2σ bands and
+          LOESS are all present and computed from the residuals
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=fitted values, Y=residuals, all data visible
+        comment: Fitted on x and residual on y; the marks sit at their values
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend correct, but title says 'pyplots.ai' instead of 'anyplot.ai'
+        passed: true
+        comment: Correct title format; the legend labels read clearly
     data_quality:
       score: 15
       max: 15
@@ -155,19 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all residual plot aspects: normal, outliers, trend, heteroscedasticity'
+        comment: Shows the nonlinearity pattern, mild heteroscedasticity, and outliers
+          on both sides
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic regression scenario, neutral domain, 150 observations
+        comment: 'House sale price vs living area: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible fitted values (50-350) and residual range (-25 to 30)
+        comment: Prices of $100k–550k with residuals of about ±30k are sensible; the
+          bands at about ±28.4 match 2σ of the plotted residuals
     code_quality:
       score: 10
       max: 10
@@ -177,50 +190,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, lets_plot, os'
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: np.polyfit for the fit, native LOESS; nothing hand-rolled
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html correctly
+        comment: Saves plot-{THEME}.png and .html with the current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert ggplot + geom composition, proper theme customization, correct
-          sizing and export
+        comment: Grammar layering, scale_color_manual with a dict mapping, ggsave
+          scale
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses HTML export, geom_smooth loess, complete theme API. Solid but
-          fairly standard patterns.
+        passed: false
+        comment: Native geom_smooth loess stat with a span parameter
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-09T14:33:10Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -228,8 +243,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  dataprep:
   - regression
-  dataprep: []
   styling:
   - alpha-blending
   - grid-styling
