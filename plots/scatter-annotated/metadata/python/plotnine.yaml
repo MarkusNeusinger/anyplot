@@ -2,112 +2,127 @@ library: plotnine
 language: python
 specification_id: scatter-annotated
 created: '2025-12-30T17:47:43Z'
-updated: '2026-05-13T11:29:02Z'
-generated_by: claude-haiku
-workflow_run: 25795358982
+updated: '2026-11-09T14:59:26Z'
+generated_by: claude-opus
+workflow_run: 42638223741
 issue: 2790
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 72
+quality_score: 84
 review:
   strengths:
-  - Correct plot type with all required annotations
-  - Clean, deterministic data generation with realistic business context
-  - Readable layout with no text overlap
-  - Consistent data colors across light and dark renders
+  - Labels sit directly above their points and switch below only when the nearest
+    neighbour is close above (CodeBase under its marker, clear of InfoGrid), so no
+    label collides with another label or a marker in either render, and every point
+    stays at its exact (x, y)
+  - 'Translucent markers (alpha 0.7) with a thin page-colored outline, so they stay
+    distinct on both #FAF8F1 and #1A1A17 while keeping the same #009E73 fill'
+  - Per-layer data subsets (geom_text with data=above_df / below_df) and nudge_y with
+    va anchoring are idiomatic grammar-of-graphics placement instead of drawing text
+    by hand
+  - Theme tokens threaded through every chrome element; title, axis titles and tick
+    labels are crisp in both themes with a clear size hierarchy (bold 12 pt title,
+    10 pt axis titles, 8 pt ticks)
   weaknesses:
-  - 'Hardcoded point color (#306998) violates Okabe-Ito standard—should be #009E73'
-  - Hardcoded text color (#333333) fails dark theme with dark-on-dark legibility issue
-  - Code doesn't read ANYPLOT_THEME environment variable for theme adaptation
-  - Output filename hardcoded as plot.png instead of plot-{THEME}.png
-  - Generic styling with no theme-adaptive chrome (background, text, grid)
+  - 'DQ-02 (both): the company names TechCorp, DataFlow, CloudNet, AI Labs, InfoGrid,
+    AppWorks, SoftCore, CodeBase, SmartSys, WebDev read as generic placeholder names,
+    and the margins rise almost perfectly linearly with revenue → named, plausible
+    firms of one sector (or a real public dataset) with scatter around the trend.
+    Likely cause: the companies list and the hand-typed revenue/profit_margin arrays
+    with ±0.5 noise.'
+  - 'Suggestion: varying the data so a few points cluster tightly would exercise the
+    label-avoidance and leader lines the spec describes.'
+  - 'Suggestion: a focal point (e.g. the highest-margin firm emphasized) would give
+    the chart a hierarchy beyond plain labels.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title, axis labels, and tick labels are dark gray, clearly visible and readable
-      Data: Ten company points in teal/cyan color with dark gray labels positioned above; revenue (x-axis) ranges 20-220M, profit margin (y-axis) ranges 4-26%
-      Legibility verdict: PASS - All text elements are clearly readable with excellent contrast
+      Background: warm off-white #FAF8F1 across the whole canvas and panel.
+      Chrome: bold title "scatter-annotated · python · plotnine · anyplot.ai" centred at the top (~57% of width); axis titles "Annual Revenue ($ Millions)" and "Profit Margin (%)" in dark ink; tick labels 50/100/150/200 and 5–25 in soft dark grey; subtle major grid on both axes, left and bottom axis lines only. All readable.
+      Data: 10 #009E73 markers at alpha 0.7 with a thin off-white outline, rising from TechCorp (~33, 5.5) to AI Labs (~201, 22.7). Each carries a dark company label just above it; CodeBase sits below its marker so it clears InfoGrid. No label collides with another label or a marker.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17), correct for dark theme
-      Chrome: Axis labels and title are light gray/tan, readable but not using recommended light-theme text tokens; company name labels appear in medium gray (#333333 hardcoded)
-      Data: Same teal/cyan data points as light render (colors correctly persist across themes); company labels are medium gray, struggling against dark background
-      Legibility verdict: PARTIAL FAIL - Company name labels have poor contrast on dark background (dark-on-dark issue); axis labels/title are readable but not optimally light-themed
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink #F0EFE8, tick labels in light grey; grid subtle but visible; axis lines light grey. No dark-on-dark text.
+      Data: same #009E73 fill at alpha 0.7 (reads deeper on the dark page, as translucency implies), same positions and label placement as the light render; labels in light ink. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 8
         max: 8
-        passed: false
-        comment: 'Light render readable; dark render has poor contrast on labels (hardcoded
-          #333333 on dark background)'
+        passed: true
+        comment: Explicit sizes; title, axis titles, ticks and labels readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels positioned above points with adequate spacing
+        comment: No label touches another label or any marker; CodeBase placed below
+          to clear InfoGrid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points and labels clearly visible
+        comment: Prominent markers for 10 sparse points, page-colored outline
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Point color hardcoded as #306998 instead of Okabe-Ito #009E73'
+        passed: true
+        comment: Single hue with labels; strong contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions and balanced margins
+        comment: 3200x1800, balanced margins, title ~57% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Critical: Wrong point color (#306998 not #009E73), hardcoded text
-          colors, no theme adaptation, dark render text unreadable'
+        passed: true
+        comment: '#009E73 single series, correct backgrounds in both themes'
     design_excellence:
-      score: 7
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
-        passed: false
-        comment: Generic styling with hardcoded colors, no design thought
+        passed: true
+        comment: Page-colored outline rings on translucent markers and a bold title
+          over lighter tick ink give a deliberate hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Neighbour-aware above/below label side keeps every label snug to
+          its point without collisions
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond library defaults
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Labels identify points but provide no visual hierarchy
+        comment: Data displayed and labelled; no focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -117,27 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with annotations
+        comment: Annotated scatter, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: Every point labelled, labels clear of each other and markers, alpha
+          0.7; labels sit close enough that leader lines are not needed
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped
+        comment: Markers at exact values; only labels move
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct, no legend needed
+        comment: Correct title format; legend N/A for single series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -145,21 +161,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full range of values
+        comment: Labels above and below points, translucent markers
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Real company names with plausible business context
+        comment: Neutral business context, but generic placeholder company names and
+          an almost perfectly linear trend (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually realistic values
+        comment: Revenue $33–201M and margins 5–23% are plausible; no Check values
+          in the Notes
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,31 +185,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear script
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hardcoded colors instead of theme variables
+        passed: true
+        comment: Short nearest-neighbour rule; adjustText is not installed, so no
+          available call replaces it
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png instead of plot-{THEME}.png
+        passed: true
+        comment: Saves plot-{THEME}.png at 3200x1800, current API
     library_mastery:
       score: 5
       max: 10
@@ -201,19 +220,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct plotnine pattern but no theme adaptation
+        comment: Per-layer data= subsets, nudge_y with va anchoring, scale expand
+          instead of manual limits
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage of geoms and theme
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-09T14:56:49Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
