@@ -80,7 +80,8 @@ plot = (
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        # The round panel's outline runs through the month labels' descenders: no stroke, so none is painted over
+        panel_background=element_rect(fill=PAGE_BG, size=0),
         panel_grid_major=element_line(color=GRID, size=0.5),
         panel_grid_minor=element_blank(),
         axis_title_x=element_blank(),
