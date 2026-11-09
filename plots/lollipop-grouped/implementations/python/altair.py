@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 lollipop-grouped: Grouped Lollipop Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-17
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-09
 """
 
 import os
