@@ -4,180 +4,146 @@ Library: pygal 3.1.0 | Python 3.13.13
 Quality: 68/100 | Updated: 2026-05-15
 """
 
-import cairosvg
+import os
+
+import pandas as pd
 import pygal
 from pygal.style import Style
 
 
-# Primate phylogenetic tree based on mitochondrial DNA divergence (simplified)
-# Tree structure: ((((Human, Chimpanzee), Gorilla), Orangutan), (Gibbon, Macaque))
-# Scaled to use more canvas width - multiply x positions to spread tree wider
-scale_factor = 1.35
-species_data = [
-    ("Human", 0.95 * scale_factor, 0),
-    ("Chimpanzee", 0.95 * scale_factor, 1.5),
-    ("Gorilla", 0.82 * scale_factor, 3),
-    ("Orangutan", 0.62 * scale_factor, 5),
-    ("Gibbon", 0.95 * scale_factor, 7),
-    ("Macaque", 0.95 * scale_factor, 8.5),
-]
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Y positions from species data
-species_y = {name: y for name, _, y in species_data}
-species_x = {name: x for name, x, _ in species_data}
+# Imprint palette: all eight positions in canonical order, one per clade
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Define tree connections
-tree_segments = []
+# Columns: set these to your table's column names
+TAXON = "Taxon"  # role: species_names
+PARENT = "Parent"  # role: extra
+BRANCH = "Branch length (substitutions per site)"  # role: branch_lengths
+CLADE = "Clade"  # role: extra
 
-# Human-Chimpanzee clade (most recent common ancestor)
-hc_ancestor_x = 0.82 * scale_factor
-hc_ancestor_y = (species_y["Human"] + species_y["Chimpanzee"]) / 2
-tree_segments.append([(hc_ancestor_x, species_y["Human"]), (species_x["Human"], species_y["Human"])])
-tree_segments.append([(hc_ancestor_x, species_y["Chimpanzee"]), (species_x["Chimpanzee"], species_y["Chimpanzee"])])
-tree_segments.append([(hc_ancestor_x, species_y["Human"]), (hc_ancestor_x, species_y["Chimpanzee"])])
+# Data: replace this block with your own table, for example df = pd.read_csv("tree.csv")
+# Catarrhine primates from mitochondrial DNA (simplified branch lengths), one row per node:
+# (Macaque, (Gibbon, (Orangutan, (Gorilla, (Chimpanzee, Human))))) in Newick terms
+df = pd.DataFrame(
+    [
+        ("Catarrhini", None, 0.0, None),
+        ("Macaque", "Catarrhini", 0.26, "Old World monkeys"),
+        ("Hominoidea", "Catarrhini", 0.07, None),
+        ("Gibbon", "Hominoidea", 0.19, "Gibbons"),
+        ("Hominidae", "Hominoidea", 0.04, "Great apes"),
+        ("Orangutan", "Hominidae", 0.15, "Great apes"),
+        ("Homininae", "Hominidae", 0.03, "Great apes"),
+        ("Gorilla", "Homininae", 0.10, "Great apes"),
+        ("Hominini", "Homininae", 0.02, "Great apes"),
+        ("Chimpanzee", "Hominini", 0.065, "Great apes"),
+        ("Human", "Hominini", 0.065, "Great apes"),
+    ],
+    columns=[TAXON, PARENT, BRANCH, CLADE],
+)
 
-# Human-Chimp-Gorilla clade
-hcg_ancestor_x = 0.62 * scale_factor
-hcg_ancestor_y = (hc_ancestor_y + species_y["Gorilla"]) / 2
-tree_segments.append([(hcg_ancestor_x, hc_ancestor_y), (hc_ancestor_x, hc_ancestor_y)])
-tree_segments.append([(hcg_ancestor_x, species_y["Gorilla"]), (species_x["Gorilla"], species_y["Gorilla"])])
-tree_segments.append([(hcg_ancestor_x, hc_ancestor_y), (hcg_ancestor_x, species_y["Gorilla"])])
+# Plot: rectangular layout; x is the summed branch length from the root, tips are spread evenly in depth-first order
+parent_of = df.set_index(TAXON)[PARENT].to_dict()
+branch_of = df.set_index(TAXON)[BRANCH].fillna(0.0).to_dict()
+clade_of = df.set_index(TAXON)[CLADE].to_dict()
+children = {parent: group[TAXON].tolist() for parent, group in df.dropna(subset=[PARENT]).groupby(PARENT, sort=False)}
+root = df.loc[df[PARENT].isna(), TAXON].iloc[0]
 
-# Great apes clade including Orangutan
-great_apes_x = 0.41 * scale_factor
-great_apes_y = (hcg_ancestor_y + species_y["Orangutan"]) / 2
-tree_segments.append([(great_apes_x, hcg_ancestor_y), (hcg_ancestor_x, hcg_ancestor_y)])
-tree_segments.append([(great_apes_x, species_y["Orangutan"]), (species_x["Orangutan"], species_y["Orangutan"])])
-tree_segments.append([(great_apes_x, hcg_ancestor_y), (great_apes_x, species_y["Orangutan"])])
+order = [root]  # breadth-first: every parent comes before its children
+for taxon in order:
+    order.extend(children.get(taxon, []))
+depth = {root: 0.0}
+for taxon in order[1:]:
+    depth[taxon] = depth[parent_of[taxon]] + float(branch_of[taxon])
 
-# Gibbon-Macaque clade
-gm_ancestor_x = 0.68 * scale_factor
-gm_ancestor_y = (species_y["Gibbon"] + species_y["Macaque"]) / 2
-tree_segments.append([(gm_ancestor_x, species_y["Gibbon"]), (species_x["Gibbon"], species_y["Gibbon"])])
-tree_segments.append([(gm_ancestor_x, species_y["Macaque"]), (species_x["Macaque"], species_y["Macaque"])])
-tree_segments.append([(gm_ancestor_x, species_y["Gibbon"]), (gm_ancestor_x, species_y["Macaque"])])
+tips = []
+stack = [root]
+while stack:
+    taxon = stack.pop()
+    if taxon in children:
+        stack.extend(reversed(children[taxon]))
+    else:
+        tips.append(taxon)
+height = {taxon: float(i) for i, taxon in enumerate(tips)}
+for taxon in reversed(order):
+    if taxon in children:
+        height[taxon] = sum(height[child] for child in children[taxon]) / len(children[taxon])
 
-# Root: connects great apes and gibbon-macaque clades (x=0)
-root_x = 0.0
-root_y = (great_apes_y + gm_ancestor_y) / 2
-tree_segments.append([(root_x, great_apes_y), (great_apes_x, great_apes_y)])
-tree_segments.append([(root_x, gm_ancestor_y), (gm_ancestor_x, gm_ancestor_y)])
-tree_segments.append([(root_x, great_apes_y), (root_x, gm_ancestor_y)])
+clades = [clade for clade in df[CLADE].drop_duplicates() if not pd.isna(clade)]
+segments = {clade: [] for clade in [*clades, None]}
+for taxon in order[1:]:  # the branch into each node, in that node's clade colour
+    key = None if pd.isna(clade_of[taxon]) else clade_of[taxon]
+    segments[key] += [(depth[parent_of[taxon]], height[taxon]), (depth[taxon], height[taxon]), (None, None)]
+for taxon, kids in children.items():  # the connector joining a node's children, in the node's clade colour
+    key = None if pd.isna(clade_of[taxon]) else clade_of[taxon]
+    lows, highs = min(height[kid] for kid in kids), max(height[kid] for kid in kids)
+    segments[key] += [(depth[taxon], lows), (depth[taxon], highs), (None, None)]
 
-# Colorblind-friendly palette for species markers
-species_colors = ["#E63946", "#457B9D", "#2A9D8F", "#E9C46A", "#F4A261", "#9C6644"]
-
-# Branch color - pyplots blue
-branch_color = "#306998"
-
-# Custom style for pyplots - larger fonts for 4800x2700 canvas
+clade_colors = [IMPRINT_PALETTE[i] for i in range(len(clades))]
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#999",
-    colors=(branch_color,),
-    title_font_size=56,
-    label_font_size=44,
-    major_label_font_size=40,
-    legend_font_size=44,
-    value_font_size=36,
-    tooltip_font_size=28,
-    stroke_width=6,
-    opacity=1.0,
-    guide_stroke_color="#ddd",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_SOFT,
+    # branch series per clade, the shared ancestral stems in neutral ink, then the tip markers per clade
+    colors=(*clade_colors, INK, *clade_colors),
+    value_colors=(INK,) * (2 * len(clades) + 1),  # tip labels in theme ink, whatever the marker colour
+    guide_stroke_color=RULE,
+    major_guide_stroke_color=RULE,
+    guide_stroke_dasharray="none",
+    major_guide_stroke_dasharray="none",
+    title_font_size=66,
+    label_font_size=46,
+    major_label_font_size=46,
+    legend_font_size=46,
+    value_font_size=8,
+    value_label_font_size=50,
+    opacity=1,
+    opacity_hover=1,
+    stroke_opacity=1,
+    stroke_opacity_hover=1,
+    stroke_width=7,
 )
 
-# Create XY chart for phylogenetic tree
+max_depth = max(depth.values())
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="Primate Evolution · tree-phylogenetic · pygal · pyplots.ai",
-    x_title="Evolutionary Distance (substitutions per site)",
-    y_title="",
-    show_legend=False,
-    show_dots=False,
-    stroke_style={"width": 6},
-    fill=False,
-    show_x_guides=False,
-    show_y_guides=False,
+    title="tree-phylogenetic · python · pygal · anyplot.ai",
+    x_title=BRANCH,
+    xrange=(0, max_depth * 1.3),
+    range=(-0.6, len(tips) - 0.4),
     show_y_labels=False,
-    range=(-1.5, 10),
-    xrange=(-0.05, 1.45),
-    print_values=False,
+    show_x_guides=True,
+    show_y_guides=False,
+    show_dots=False,
+    allow_interruptions=True,
+    print_labels=True,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=max(len(clades), 1),
+    legend_box_size=40,
+    truncate_legend=-1,
+    spacing=24,
+    margin=40,
 )
 
-# Add all tree branches as unnamed series
-for seg in tree_segments:
-    chart.add(None, seg, show_dots=False, stroke_style={"width": 6})
+for clade in clades:
+    chart.add(str(clade), segments[clade])
+chart.add(None, segments[None])
+for clade in clades:
+    # two no-break spaces keep the species name clear of its tip marker
+    tip_points = [
+        {"value": (depth[tip], height[tip]), "label": f"  {tip}"} for tip in tips if clade_of[tip] == clade
+    ]
+    chart.add(None, tip_points, stroke=False, show_dots=True, dots_size=14)
 
-# Add species markers (dots only, labels added via SVG)
-for i, (_name, x_pos, y_pos) in enumerate(species_data):
-    color = species_colors[i % len(species_colors)]
-    chart.add(
-        None, [{"value": (x_pos, y_pos), "color": color}], show_dots=True, dots_size=28, stroke_style={"width": 0}
-    )
-
-# Render to SVG string first
-svg_content = chart.render().decode("utf-8")
-
-# Calculate pixel positions for species labels
-# Plot area bounds for coordinate conversion
-plot_x_min, plot_x_max = 180, 4620
-plot_y_min, plot_y_max = 100, 2500
-data_x_min, data_x_max = -0.05, 1.45
-data_y_min, data_y_max = -1.5, 10
-
-# Generate species label SVG elements positioned directly next to leaf nodes
-species_labels_svg = '<g class="species-labels">\n'
-for i, (name, x_pos, y_pos) in enumerate(species_data):
-    # Inline coordinate conversion (data to pixel)
-    px = plot_x_min + (x_pos - data_x_min) / (data_x_max - data_x_min) * (plot_x_max - plot_x_min)
-    py = plot_y_max - (y_pos - data_y_min) / (data_y_max - data_y_min) * (plot_y_max - plot_y_min)
-    color = species_colors[i % len(species_colors)]
-    # Position label to the right of the marker
-    species_labels_svg += f'  <text x="{px + 50}" y="{py + 12}" font-size="42" fill="{color}" '
-    species_labels_svg += f'font-family="sans-serif" font-weight="bold">{name}</text>\n'
-species_labels_svg += "</g>\n"
-
-# Add scale bar with label - inline coordinate conversion
-scale_x_data, scale_y_data = 0.0, -1.0
-scale_px = plot_x_min + (scale_x_data - data_x_min) / (data_x_max - data_x_min) * (plot_x_max - plot_x_min)
-scale_py = plot_y_max - (scale_y_data - data_y_min) / (data_y_max - data_y_min) * (plot_y_max - plot_y_min)
-scale_end_x_data = 0.1
-scale_end_px = plot_x_min + (scale_end_x_data - data_x_min) / (data_x_max - data_x_min) * (plot_x_max - plot_x_min)
-scale_width = scale_end_px - scale_px
-
-scale_bar_svg = f"""
-<g class="scale-bar">
-  <line x1="{scale_px}" y1="{scale_py}" x2="{scale_end_px}" y2="{scale_py}" stroke="#333" stroke-width="10"/>
-  <text x="{scale_px + scale_width / 2}" y="{scale_py + 55}" text-anchor="middle" font-size="40" fill="#333" font-family="sans-serif">0.1 substitutions/site</text>
-</g>
-"""
-
-# Insert labels and scale bar before closing </svg> tag
-svg_content = svg_content.replace("</svg>", species_labels_svg + scale_bar_svg + "</svg>")
-
-# Save SVG
-with open("plot.svg", "w") as f:
-    f.write(svg_content)
-
-# For HTML, use the modified SVG
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Phylogenetic Tree - pygal</title>
-    <style>body {{ margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }}</style>
-</head>
-<body>
-{svg_content}
-</body>
-</html>"""
-with open("plot.html", "w") as f:
-    f.write(html_content)
-
-# Convert to PNG using cairosvg
-cairosvg.svg2png(bytestring=svg_content.encode("utf-8"), write_to="plot.png")
+# Save
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
