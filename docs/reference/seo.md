@@ -488,8 +488,8 @@ split this section used to describe is gone — the policy is open to every
 operator, so the named allow-groups it needed became redundant with
 `User-agent: *`. The `Bytespider` group, which declined that crawler on
 bandwidth grounds, went on 2026-11-09 with its Cloudflare block, when the owner
-decided that every crawler is welcome. The group verbatim; read the file for the
-rest:
+decided that every crawler is welcome. The group reads as follows; the rest of
+the file is comments and the `Sitemap:` line:
 
 ```txt
 User-agent: *
