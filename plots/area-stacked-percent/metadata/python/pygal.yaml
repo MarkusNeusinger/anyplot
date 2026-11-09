@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: area-stacked-percent
 created: '2025-12-30T11:26:39Z'
-updated: '2026-11-09T00:08:20Z'
+updated: '2026-11-09T00:12:53Z'
 generated_by: claude-opus-5-5
 adopted_from: 68ddebdc0340d846bc99a02c34862976a9d328b5 (68ddebdc0340d846bc99a02c34862976a9d328b5)
 workflow_run: 42538176833
@@ -13,48 +13,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 83
 review:
   strengths:
-  - Uses pygal's native StackedLine(fill=True, stack_from_top=False) for the stacked
-    areas, with the shares computed from the raw values by pivot_table and a row-wise
-    div, so every time point sums to exactly 100 % and the top edge is flat in both
-    renders
-  - Value axis is pinned to range=(0, 100) with explicit 20 % y_labels and a value_formatter
-    that prints shares as whole percentages, both on the axis and in the native HTML
-    tooltips
-  - 'Theme tokens flow through one Style object: background, text, and guide colors
-    flip correctly between #FAF8F1 and #1A1A17, while the five Imprint fills stay
-    identical'
-  - Bottom legend with legend_at_bottom_columns equal to the category count lays the
-    five entries out in one row in stacking order, with x guides turned off so only
-    the horizontal percentage grid remains
+  - pygal.StackedLine with fill=True and stack_from_top=False is the native pygal
+    route to a stacked area chart; layers stack bottom-up in legend order with a flat
+    100% top edge in both renders
+  - Normalisation is done once from the raw units with pivot_table + div(sum(axis=1)),
+    so each layer's thickness is computed from the data rather than typed in, and
+    every year sums to exactly 100%
+  - value_formatter renders shares as whole percentages in the native HTML tooltips,
+    and the fixed y_labels 0-100% axis is never truncated
+  - 'Theme tokens threaded through a single Style object: warm #FAF8F1 / #1A1A17 backgrounds,
+    readable INK text in both themes, Imprint colors identical across renders'
+  - Plausible device-market scenario (smartphones losing share to wearables) with
+    readable labels and units
   weaknesses:
-  - 'DQ-03 (both): the shares imply that laptops sell at two thirds of the smartphone
-    volume (28 % vs 42 % in 2018, 588 M vs 882 M units). In the real device market,
-    smartphones outsell laptops by roughly 6 to 8 times (about 1.4 B vs 0.2 B units)
-    → keep laptops at about 8–10 % and smartphones at about 55–60 % of the total (laptops
-    about −18 percentage points). Likely cause: the share_percent dict in the Data
-    block.'
-  - 'Suggestion: Accessories is fixed at exactly 4 % every year, so its band is a
-    ruler-straight strip; a small year-to-year drift would read as observed data.'
-  - 'Suggestion: the legend swatches sit flush against their labels; a few pixels
-    of gap would make the entries easier to read.'
+  - 'VQ-02 (both): in the bottom legend each 40 px color swatch touches the first
+    letter of its label (Wearables, Accessories, Smartphones), gap about 0 px → leave
+    about 10-12 px between swatch and text (+10 px). Likely cause: legend_box_size=40
+    exceeds the fixed text offset pygal leaves for its default box size; reduce legend_box_size
+    toward the legend font size or raise the spacing.'
+  - 'Suggestion: the ''Year'' x-axis title sits far below the tick labels; a tighter
+    gap would read as one block with the axis.'
+  - 'Suggestion: the small dots at every layer boundary add little at seven time points;
+    dots_size could be dropped for a cleaner area surface while keeping the HTML tooltips.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matching #FAF8F1, across the canvas and the plot area.
-      Chrome: the title "area-stacked-percent · python · pygal · anyplot.ai" is centred at the top in dark ink at about 62 % of the width. The y-axis title "Share of total (%)" is rotated on the left, and the x-axis title "Year" is centred below the year ticks. The y ticks run 0%–100% in 20 % steps and the x ticks run 2018–2024, all in dark ink and readable. Faint horizontal grid lines sit at each 20 % step, and there are no vertical guides. A one-row legend at the bottom reads Smartphones, Laptops, Tablets, Wearables, Accessories.
-      Data: five opaque stacked bands from bottom to top: Smartphones in brand green #009E73 (42 % → 32 %), Laptops in lavender #C475FD, Tablets in blue #4467A3, Wearables in ochre #BD8233 (growing from 8 % to 20 %), and Accessories in matte red #AE3030 as a thin constant 4 % strip at the top. The stack fills 0–100 % at every year with a flat top edge. Small dots mark each layer boundary at each year.
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title "area-stacked-percent · python · pygal · anyplot.ai" centred at top, dark ink; y-axis title "Share of total (%)" and ticks 0%-100% in 20% steps; x-axis title "Year" with ticks 2018-2024; subtle horizontal guides only; single-row legend at the bottom (Smartphones, Laptops, Tablets, Wearables, Accessories). All text readable.
+      Data: five filled layers stacked from the bottom: Smartphones #009E73 (60% -> 53%), Laptops #C475FD, Tablets #4467A3, Wearables #BD8233 (widening from 10% to 19%), Accessories #AE3030 (constant 6%) at the top; stack top flat at 100% at every year; small dots at each boundary point. Legend swatches touch their label text.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matching #1A1A17.
-      Chrome: the title, axis titles, tick labels and legend text are all light (#F0EFE8 / #B8B7B0) and readable. There is no dark-on-dark text. The grid lines are faint light lines, still visible.
-      Data: the band colors are identical to the light render (green, lavender, blue, ochre, red), and the brand green reads well on the dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text in light ink, all clearly readable; no dark-on-dark text; guides subtle.
+      Data: identical layer colors and geometry to the light render; brand green bottom layer reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,73 +60,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes set explicitly (title 66, labels 48, legend 48). Readable
-          in both themes, and the long mandated title sits at about 62 % of the width
+        comment: Explicit font sizes (66/48/48); all text readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions. Legend entries are well spaced
+        comment: Legend swatches touch the first letter of their labels (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Opaque bands are clearly visible, and the legend swatches match the
-          fills in both themes
+        comment: All five layers visible, thinnest (6%) clearly readable; legend swatches
+          match the fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Neighboring bands are distinct in hue and lightness. There is no
-          red-green-only signal
+        comment: Neighboring layers differ strongly in hue and lightness; no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: The plot area fills most of the canvas with balanced margins, and
-          nothing overflows
+        comment: 3200x1800, plot fills the canvas, title ~62% width, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Share of total (%)'' carries the unit, and ''Year'' is descriptive'
+        comment: '''Share of total (%)'' and ''Year'' are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-5 in canonical order, first series #009E73,
-          correct backgrounds and chrome in both themes'
+        comment: 'Imprint canonical order starting #009E73, correct backgrounds in
+          both themes'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: 'The style-guide baseline: clean typography and hierarchy, nothing
-          beyond it'
+        passed: true
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: false
-        comment: 'A grid density chosen for this chart: x guides turned off, y guides
-          at 20 % steps only, and a one-row legend in stacking order'
+        passed: true
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: The data is displayed, but the implementation chose no focal point
-          or hierarchy
+        passed: true
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -138,31 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: A 100 % stacked area chart
+        comment: 100% stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Every Notes bullet and every ''A good version shows:'' bullet holds:
-          layers stack on each other, the stack is full height with a flat top, the
-          axis runs 0-100 %, and the layer order and colors are constant, with a legend'
+        comment: Layers start where the one below ends, stack fills 0-100% with flat
+          top, full percentage axis, consistent layer order and colors with legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shares are computed from the raw values per year. The axes show all
-          the data
+        comment: Year on x, normalised share on y; straight segments, no overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format. The legend entries are readable category
-          names
+        comment: Mandated title format; legend entries are readable device names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -170,21 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows shrinking, growing, stable and thin layers over seven years
+        comment: Shrinking, growing, and constant shares all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Device-category unit sales: a neutral, plausible scenario'
+        comment: Consumer device unit sales by category, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Each year sums to 100 % (checked in the data code and on the axis).
-          The laptop share relative to smartphones is implausible for the real device
-          market (defect line)
+        passed: true
+        comment: 'Checked each year''s shares sum to 100% (e.g. 2024: 53+9+13+19+6);
+          2100-2500 M units plausible'
     code_quality:
       score: 10
       max: 10
@@ -194,7 +184,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -206,21 +196,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, pandas, pygal and Style are all used
+        comment: os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: pivot_table plus a row-wise div for the normalisation. Appropriate
-          complexity
+        comment: pandas pivot_table/div for normalisation; nothing hand-rolled
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current pygal
-          3 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal 3 API
     library_mastery:
       score: 6
       max: 10
@@ -229,21 +217,20 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: StackedLine(fill=True, stack_from_top=False) is the idiomatic pygal
-          stacked area. range, y_labels and legend_at_bottom_columns are used beyond
-          what the library prompt mandates
+        passed: true
+        comment: StackedLine(fill=True, stack_from_top=False) as the native stacked
+          area, legend_at_bottom_columns, truncate_legend=-1
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: pygal's value_formatter drives the percentage text in the native
-          SVG tooltips of the HTML output
-  verdict: REJECTED
+        passed: true
+        comment: value_formatter drives percentage tooltips in pygal's native interactive
+          SVG/HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T00:05:26Z'
+  rendered_at: '2026-11-09T00:10:25Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -251,9 +238,9 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - long-to-wide
   - iteration-over-groups
   dataprep:
   - normalization
-  styling: []
+  styling:
+  - publication-ready
