@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:37:27Z'
-updated: '2026-11-09T02:01:19Z'
+updated: '2026-11-09T02:06:07Z'
 generated_by: claude-opus
 workflow_run: 42548044616
 issue: 2276
@@ -12,91 +12,92 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-featu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - 'Sequential imprint_seq gradient (#009E73 → #4467A3) is mapped to the importance
-    values through a Normalize, so color and bar length tell the same ranking, and
-    the weakest green bars stay distinct from the page in both themes'
-  - Value labels are placed past the end of each error bar (bar_end + 1 % of the range),
-    so every label is clear of its whisker, and error bars drawn in the INK token
-    stay visible against every step of the gradient in both renders
-  - 'Idiomatic seaborn 0.13: sns.barplot with hue=FEATURE and a per-name palette dict
-    with legend=False, theme chrome via sns.set_theme rc, sns.despine for the spines'
-  - Realistic credit-default random-forest scenario with full feature names; importances
-    normalized to sum to 1, sorted highest at top
+  - Sequential imprint_seq gradient (green -> blue) mapped through Normalize to importance,
+    so color and bar length tell the same ranking, with the weakest bars still distinct
+    from the page in both themes
+  - Value labels are placed past each error-bar cap, so every label is clear of its
+    error bar and matches its bar's value
+  - Error bars drawn in the INK token stay visible on every gradient step in both
+    themes
+  - 'Idiomatic seaborn: tidy df with column constants, hue=FEATURE with a per-level
+    dict palette and legend=False, theme tokens via sns.set_theme rc'
+  - Exact 3200x1800 canvas with default bbox; theme-correct chrome in both renders
   weaknesses:
-  - 'VQ-01 (both): the bar-end value labels are set at 7 pt, smaller than the 8 pt
-    tick labels, and blur to about 4 px when the render is scaled to the 400 px thumbnail
-    → 8 pt to match the ticks (+1 pt). Likely cause: ax.text(..., fontsize=7) on line
-    112.'
-  - 'CQ-04 (code): `spread = np.fmax(ranked[STD], 0)` (line 81) is a no-op — the std
-    values are drawn from uniform(0.005, 0.025) and are never negative → delete the
-    line and compute `bar_end = ranked[IMPORTANCE] + ranked[STD]`. Likely cause: defensive
-    clamp left from a draft.'
-  - 'Suggestion: the y-axis title "Feature" repeats what the feature names already
-    say; dropping it would give the long names more room.'
+  - 'DQ-02 (both): in a credit-default model ''Previous Defaults'' ranks last at 0.007,
+    below ''Marital Status'' and ''Savings Balance'', which reads implausible for
+    the domain → place it among the top features (for example swap it with ''Annual
+    Income'' or ''Payment History'') and leave a genuinely weak feature at the tail.
+    Likely cause: the order of the features list against raw_importance.'
+  - 'Suggestion: a slightly heavier weight on the top three value labels could pull
+    the eye to the dominant features without adding a layer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 on figure and axes.
-      Chrome: title "bar-feature-importance · python · seaborn · anyplot.ai" in dark ink, about 56 % of the width; x-axis title "Feature Importance", y-axis title "Feature"; ticks 0.000–0.200 in dark-grey INK_SOFT; subtle vertical grid; top and right spines removed. All readable.
-      Data: 15 horizontal bars sorted highest (Annual Income 0.180) at top to lowest (Previous Defaults 0.007) at bottom, colored by a gradient from #009E73 green (low) to #4467A3 blue (high). Near-black error bars with caps centered on each bar end; small bars' whiskers reach to the zero baseline. Value labels (0.180 … 0.007) in INK_SOFT just past each whisker.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title "bar-feature-importance · python · seaborn · anyplot.ai" in dark ink at top center (~56 % width); x-axis "Feature Importance" with ticks 0.000-0.200, y-axis "Feature" with 15 full feature names; left and bottom spines only; subtle vertical grid. All text dark on light and readable.
+      Data: 15 horizontal bars sorted highest (Annual Income 0.180) to lowest (Previous Defaults 0.007), colored by the imprint_seq ramp from blue (#4467A3-ish, top) to brand green (#009E73-ish, bottom); near-black error bars centered on each bar end (small bars' bars reach to zero); value labels in soft ink beyond each error cap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and tick labels in light ink / light grey; grid subtle but visible; no dark-on-dark text.
-      Data: bar gradient identical to the light render (green to blue); error bars flip to light ink and stay visible on every bar; value labels light grey and readable.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, axis labels and tick labels in light ink, all readable; no dark-on-dark text; grid subtle but visible.
+      Data: bar colors identical to the light render; error bars flip to light ink and stay visible on every bar; value labels in light soft ink. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; value labels at 7 pt are small
-          in the thumbnail (defect line)
+        comment: 'Explicit sizes (title 12, axis labels 10, ticks and value labels
+          8); all text readable on both #FAF8F1 and #1A1A17'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Value labels sit past the whiskers; no collisions
+        comment: Value labels sit past each error-bar cap; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, whiskers and caps visible at every gradient step in both themes
+        comment: 15 bars well sized; error bars in INK contrast with every gradient
+          step in both themes; weakest green bars distinct from the page
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient is CVD-safe; length carries the value redundantly
+        comment: Green-to-blue ramp is redundant with bar length and order; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, full names fit, title ~56 % width
+        comment: 3200x1800, canvas gate passed; balanced margins, title about 56 %
+          of width, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Feature Importance / Feature, readable text (importance is unitless)
+        comment: '''Feature Importance'' and ''Feature'' are readable text; importance
+          is unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 → #4467A3) for continuous mapping; theme backgrounds
-          correct'
+        comment: 'Continuous gradient uses imprint_seq (#009E73 -> #4467A3); theme
+          backgrounds correct; data colors identical across themes'
     design_excellence:
       score: 9
       max: 20
@@ -105,23 +106,23 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Style-guide baseline typography and palette
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint ramp, explicit sizes;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Thin page-colored bar edges separate the bars; value labels offset
-          past each whisker end so they never touch the error bars; x-only grid chosen
-          for a horizontal bar chart
+        passed: false
+        comment: Value labels placed beyond each error-bar end so they never collide;
+          thin page-colored bar edges; x-only grid chosen for horizontal bars
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: true
-        comment: Ranking and gradient are what the Notes ask for; no hierarchy chosen
-          beyond them
+        passed: false
+        comment: Data displayed with the gradient and sort the Notes ask for; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -131,29 +132,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal feature-importance bar chart
+        comment: Horizontal feature-importance bar chart with optional error bars;
+          no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted highest at top, sequential gradient mapped to importance,
-          value labels at bar ends clear of error bars, optional error bars centered
-          on bar ends — all characteristic bullets met
+        comment: Sorted highest at top, zero baseline, full names, sequential gradient
+          mapped to importance, value labels at bar ends clear of error bars, error
+          bars centered on bar ends and visible on every step
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bars from zero baseline, proportional; all features shown
+        comment: Bars at their values from zero; x range covers every error bar and
+          label
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; no legend needed (N/A)
+        comment: Title 'bar-feature-importance · python · seaborn · anyplot.ai'; legend
+          N/A (single encoding, hue legend suppressed)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -161,23 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Dominant features and long tail, with std error bars
+        comment: Dominant features plus a long tail near zero, error bars, value labels
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Credit-default random forest with plausible feature names
+        comment: Credit-default Random Forest is plausible and neutral, but 'Previous
+          Defaults' ranks last (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importances sum to 1 (raw values sum to 1.0, labels match bars);
-          15 features within 10–30; std 0.005–0.025 plausible. No Check values in
-          the spec
+        comment: 'Importances sum to 1.0 (checked: raw values sum to 1.000); std 0.005-0.025
+          sensible for permutation/tree importances; no Check values in Notes'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -185,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,18 +204,21 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: No-op np.fmax clamp on line 81 (defect line)
+        comment: ax.errorbar for precomputed std (sns.barplot cannot take it); text
+          loop needed because labels sit past the error bars, which bar_label cannot
+          place
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png, no bbox_inches tight, current API
+        comment: Saves plot-{THEME}.png at default bbox; current seaborn 0.13 API
+          (hue with legend=False)
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -219,29 +226,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: hue=FEATURE with a per-name palette dict and legend=False (0.13 idiom),
-          sns.despine instead of manual spine toggling
+        comment: sns.barplot on tidy df with column constants, hue=FEATURE with legend=False,
+          sns.set_theme rc for theme tokens, sns.despine
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+        comment: Per-level dict palette mapping each category to its gradient color,
+          a seaborn hue idiom; nothing else beyond the library prompt
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
-  rendered_at: '2026-11-09T01:58:47Z'
+  rendered_at: '2026-11-09T02:03:14Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - error-bars
-  - layer-composition
+  - annotations
+  - custom-colormap
   patterns:
   - data-generation
-  - explicit-figure
+  - iteration-over-groups
   dataprep:
   - normalization
+  - sorting
   styling:
   - gradient-fill
-  - minimal-chrome
+  - publication-ready
