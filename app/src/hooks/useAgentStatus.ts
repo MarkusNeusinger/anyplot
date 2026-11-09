@@ -192,7 +192,8 @@ export function useAgentStatus({
         if (!cancelled) setFirst({ libraries: null, userMaxRuns: null });
       })
       .finally(() => {
-        reading.current = false;
+        // A read the effect dropped (a remount) leaves the guard to the read that replaced it.
+        if (!cancelled) reading.current = false;
       });
     return () => {
       cancelled = true;
