@@ -2,126 +2,125 @@ library: bokeh
 language: python
 specification_id: errorbar-asymmetric
 created: '2025-12-30T17:49:00Z'
-updated: '2026-05-13T07:41:41Z'
-generated_by: claude-haiku
-workflow_run: 25784606098
+updated: '2026-11-09T10:42:28Z'
+generated_by: claude-opus
+workflow_run: 42598536019
 issue: 2781
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/python/bokeh/plot-dark.html
-quality_score: 71
+quality_score: 86
 review:
   strengths:
-  - Asymmetric error bars with clear visual caps showing downside/upside asymmetry
-  - Realistic financial forecasting scenario with proper context (10th-90th percentile)
-  - Good layout and canvas utilization with appropriate margins
-  - Readable in both light and dark themes with clear visual hierarchy
-  - Correct data mapping with all 6 quarters visible and legend explaining percentile
-    bounds
+  - Uses bokeh's native Whisker annotation with TeeHead caps at both ends, fed from
+    one ColumnDataSource, so each arm reaches its own 10th/90th-percentile bound and
+    the caps are clearly visible in both themes
+  - Markers carry a page-colored ring, so the green median dot reads as distinct from
+    the whisker passing behind it and the central value's position between the unequal
+    arms is unmistakable
+  - The legend states what the bounds represent ('Median forecast · bars span 10th–90th
+    percentile') and sits in empty space at the top left without touching any bar
+  - 'Theme tokens threaded through every chrome element: all text, the whiskers, the
+    legend frame and the y-grid flip correctly while the #009E73 markers stay identical'
+  - Data-driven y-range (Range1d from the computed bounds plus 8 % padding) spans
+    every error bar; data block and column constants follow the adaptable-code zones
   weaknesses:
-  - 'Using #FFD43B (yellow) and #306998 (Python blue) instead of Okabe-Ito palette
-    - must use #009E73 for primary series'
-  - Missing theme-adaptive color implementation - code hardcodes backgrounds and text
-    colors instead of reading ANYPLOT_THEME environment variable
-  - Violates bokeh.md export guidance - uses export_png() instead of Selenium with
-    headless Chrome
-  - Output format incorrect - saves as plot.png instead of plot-light.png and plot-dark.png
-    with theme handling
-  - Title contains pyplots.ai instead of anyplot.ai in source code
-  - No visual storytelling or emphasis - data shown clearly but missing design hierarchy
-    to highlight asymmetry insight
+  - 'Suggestion: the downside-heavier risk is the story of this data; a lighter tone
+    for the upper arm or a subtitle naming the skew could make it the focal point.'
+  - 'Suggestion: a HoverTool showing the median, 10th and 90th percentile per quarter
+    would add value in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "errorbar-asymmetric · bokeh · anyplot.ai" readable in dark text. Axis labels "Quarter" and "Revenue Forecast ($ millions)" with units. Tick labels visible. Legend in top-left with clear label "Median forecast (10th-90th percentile)". Grid is subtle dashed lines.
-      Data: 6 quarterly points with central markers in yellow (#FFD43B) with dark outlines. Error bars in tan/orange extending asymmetrically. Asymmetry is visually clear (lower bars larger than upper).
-      Legibility verdict: PASS - All text readable against light background. Colors distinguishable. No dark-on-light legibility issues.
+      Background: warm off-white #FAF8F1 across the canvas and plot area, no outline frame.
+      Chrome: bold near-black title "errorbar-asymmetric · python · bokeh · anyplot.ai" at the top left (~54 % of the width); y-axis label "Revenue forecast ($ millions)", x-axis label "Quarter", ticks 10–20 and Q1 2024 … Q2 2025 in dark grey; subtle horizontal grid only; legend box on #FFFDF6 at the top left. All text clearly readable.
+      Data: six #009E73 circular markers with a page-colored ring at the medians; dark-grey (#4A4A44) whiskers with tee caps at both ends; lower arms longer than upper arms in varying ratios; the axis spans every bar (Q1 2024 down to 10, Q2 2025 up to 20.6).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark surface
-      Chrome: Title and axis labels visible but text colors not properly theme-adapted (should use INK/INK_SOFT tokens per bokeh.md). Not a "dark-on-dark" failure but suboptimal theme implementation in code.
-      Data: Central points and error bars maintain identical colors to light render (#FFD43B, #306998) - data colors correctly constant, only chrome should flip
-      Legibility verdict: PASS - Plot is readable. Text legible against dark background. No actual "dark-on-dark" failures (text is visible). However, chrome colors not theme-optimized per bokeh.md requirements.
+      Background: warm near-black #1A1A17, legend box on #242420.
+      Chrome: title and axis labels in off-white, tick labels and legend text in light grey (#B8B7B0); grid subtle but visible; no dark-on-dark text anywhere.
+      Data: the same #009E73 markers (ring now in the dark page color) and the same whisker geometry; whiskers flip to light grey and stay clearly visible. Data colors identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 8
         max: 8
-        passed: false
-        comment: Explicitly set font sizes good, but missing theme-adaptive text colors
-          per bokeh.md
+        passed: true
+        comment: Explicit 50/42/34 pt sizes; all text readable in both themes and
+          at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no overlapping elements
+        comment: No text collisions; legend sits in empty space above Q1–Q2
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, bars, and caps clearly visible and properly sized
+        comment: 6 sparse points at 40 px with ringed outline; 6 px whiskers and 70
+          px caps; legend glyph matches the markers
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Elements distinguishable but non-compliant palette reduces accessibility
-          score
+        passed: true
+        comment: Single green series against grey whiskers; strong contrast both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions, balanced margins, good use of 4800x2700 canvas
+        comment: 3200x1800, balanced margins, title ~54 % width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Labels descriptive with units, but title URL is 'pyplots.ai' instead
-          of 'anyplot.ai'
+        passed: true
+        comment: '''Revenue forecast ($ millions)'' with unit, ''Quarter'''
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Using #FFD43B and #306998 instead of Okabe-Ito palette.
-          Must use #009E73 for primary series. Backgrounds hardcoded white instead
-          of theme-adaptive #FAF8F1/#1A1A17.'
+        passed: true
+        comment: 'Single series #009E73; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 7
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 5
         max: 8
-        passed: false
-        comment: Generic library defaults with custom colors not design-driven
+        passed: true
+        comment: 'Page-colored marker ring separating the median dot from the whisker,
+          ink-soft whiskers subordinate to the green data marks: a deliberate hierarchy
+          beyond the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Minimal customization beyond basic plotting
+        passed: true
+        comment: Tick marks and plot outline removed and only a y-grid kept, chosen
+          for a categorical-x chart; generous padded range
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data clearly displayed but lacking visual hierarchy or emphasis on
-          asymmetry insight
+        comment: Data displayed clearly; the downside-heavy skew is not made a focal
+          point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,26 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct asymmetric error bar chart type
+        comment: Asymmetric error bar plot, nothing unasked added
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: asymmetric bars, caps, legend with context'
+        comment: Caps at both ends, marker distinct from bar, legend naming the 10th–90th
+          percentile bounds, axis spans all bars
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all 6 quarters visible, axes show full data
-          range
+        comment: Markers at their medians, arms to y−lower and y+upper, no re-centering
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend labels clear and correct; title URL incorrect in code
+        passed: true
+        comment: Mandated title format; legend text for a reader
     data_quality:
       score: 15
       max: 15
@@ -158,24 +157,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full asymmetry variation: downside consistently larger than
-          upside'
+        comment: Clearly unequal arms with ratios varying from 1.2 to 1.7 across six
+          points
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Financial forecasting scenario is realistic and neutral; percentiles
-          sensible
+        comment: Quarterly revenue forecast with downside/upside percentile risk;
+          neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values and percentages are factually sensible for financial
-          domain
+        comment: $10–21 M range sensible; checked bounds on the axis, e.g. Q1 2024
+          10.0–14.0 around 12.5, Q2 2025 14.3–20.6 around 17.8, computed in code from
+          y ± error
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -183,59 +183,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward: imports, data, plotting, export'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42 for deterministic output
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports from numpy, bokeh, bokeh.models
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Acceptable but manual cap drawing (lines 57-61) is verbose; doesn't
-          follow bokeh.md best practices
+        passed: true
+        comment: Native Whisker/TeeHead instead of hand-drawn segments; no fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png instead of plot-light.png and plot-dark.png; no
-          theme parameter handling
+        passed: true
+        comment: plot-{THEME}.html and plot-{THEME}.png via Selenium; current Bokeh
+          3 API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource shared by the Whisker annotation and the scatter
+          glyph, categorical FactorRange from the data, Range1d from computed bounds
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: 'Uses ColumnDataSource and basic bokeh patterns correctly, but violates
-          bokeh.md: uses export_png() (explicitly forbidden) instead of Selenium screenshot'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Whisker for asymmetric bars is a good bokeh feature but implementation
-          is basic/generic
+        comment: Bokeh's Whisker annotation model with configurable TeeHead arrow
+          heads
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-09T10:19:26Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
+  - layer-composition
   - html-export
   patterns:
-  - data-generation
   - columndatasource
   dataprep: []
   styling:
+  - edge-highlighting
   - grid-styling

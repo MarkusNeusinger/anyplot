@@ -606,10 +606,12 @@ class SwitchLibraryBody(_StrictBody):
 
 
 class LanguageBody(_StrictBody):
-    # The chat header's language chip. The pattern runs on the value as sent, which is
+    # A pick of the session language: the chat header's chip (`via: header`, the default) or the button on the
+    # thread's line that offered a language (`via: offer`). The pattern runs on the value as sent, which is
     # forwarded untrimmed: a leading space is a 422 here as at the agents service, which
     # stores the normalised form and answers it.
     language: Annotated[str, Field(min_length=1, max_length=40, pattern=LANGUAGE_PATTERN)]
+    via: Literal["header", "offer"] = "header"
 
 
 class DatasetBody(_StrictBody):
@@ -1403,8 +1405,8 @@ async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Cl
     text to read): `{preview, profile, bindings, warnings, context_lines, roles, language, file_name?, tables?,
     table?}`, stored (`tables`: one label per table when the text held two or more, `table` the one read;
     (`context_lines`: the notes pasted above or below the table that the assistant reads with the data;
-    `language`: the session language as `{language, source}`, source `pasted` when the notes' or the column
-    names' language set it before any typed message or choice); or, for free text the
+    `language`: the session language as `{language, source}`, with `offer: {language, basis}` when the notes or
+    the column names are in another language, which the page offers once); or, for free text the
     parser cannot read, the agents service's `{transcribed, text, preview, profile, warnings, note}`, a
     model's reading that the page shows for confirmation and nothing stored. 413 above 1 MB of UTF-8;
     `422 formula` for text that asks for a formula, which the assistant computes in the chat instead,
@@ -1464,15 +1466,18 @@ async def put_bindings(
 
 @router.put("/sessions/{sid}/language")
 async def put_language(sid: SessionId, body: LanguageBody, ctx: Ctx, client: Client) -> Any:
-    """Set the session language for the replies and the plot text (the chat header's chip).
+    """Set the session language for the replies and the plot text (the chat header's chip, or an offer's button).
 
     The agents service answers `{language, source}`: the stored form (`English` comes back
-    as `en`, `Klingon` as typed) and the source `chosen`, which detection never overrides, plus, when the
-    session has data, `suggestion`: the `.to_long()` offer (or null) with its new column names in that language.
-    `409 run_active` while a turn or a render is in flight, `422 invalid` for a value the
-    agents service refuses.
+    as `en`, `Klingon` as typed) and the source, `chosen` from the chip, which ends every offer, or `offer`
+    from an offer's button, plus, when the session has data, `suggestion`: the `.to_long()` offer (or null)
+    with its new column names in that language. `409 run_active` while a turn or a render is in flight,
+    `422 invalid` for a value the agents service refuses.
     """
-    return await _call_upstream(client, ctx, "PUT", f"/sessions/{sid}/language", json_body={"language": body.language})
+    # `via` travels only for an offer: an agents service from before the field refuses an unknown key, and the chip,
+    # the default, must keep working whichever service deploys first.
+    payload = {"language": body.language, **({"via": body.via} if body.via != "header" else {})}
+    return await _call_upstream(client, ctx, "PUT", f"/sessions/{sid}/language", json_body=payload)
 
 
 @router.post("/sessions/{sid}/dataset/confirm")

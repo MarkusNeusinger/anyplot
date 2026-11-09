@@ -168,3 +168,13 @@ SELECT
   ) AS keeps
 FROM `anyplot.agent_telemetry.events`
 WHERE event = 'outcome';
+
+-- One row per offer of a language the server found in a typed message or a paste (`via` = 'shown'), per offer the
+-- user took (`offer`) and per pick in the chat header (`header`), since 2026-11-08; `language` is a closed code.
+CREATE OR REPLACE VIEW `anyplot.agent_telemetry.language_offers` AS
+SELECT
+  ts, source, session, spec_id, library, turn, idempotency_key, revision,
+  JSON_VALUE(payload.via) AS via,
+  JSON_VALUE(payload.language) AS language
+FROM `anyplot.agent_telemetry.events`
+WHERE event = 'language_offer';
