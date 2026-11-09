@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 icicle-basic: Basic Icicle Chart
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -33,10 +33,10 @@ SIZE = "Size (MB)"  # role: value
 # Data: replace this block with your own table, for example df = pd.read_csv("files.csv")
 # Leaves carry a size; folders are left empty and sum their children
 hierarchy = [
-    ("Root", None, None),
-    ("Documents", "Root", None),
-    ("Pictures", "Root", None),
-    ("Music", "Root", None),
+    ("Home", None, None),
+    ("Documents", "Home", None),
+    ("Pictures", "Home", None),
+    ("Music", "Home", None),
     ("Reports", "Documents", None),
     ("Letters", "Documents", None),
     ("Spreadsheets", "Documents", None),
@@ -46,28 +46,28 @@ hierarchy = [
     ("Albums", "Music", None),
     ("Playlists", "Music", None),
     ("Podcasts", "Music", None),
-    ("Q1_Report", "Reports", 45),
-    ("Q2_Report", "Reports", 55),
-    ("Q3_Report", "Reports", 50),
-    ("Cover_Letter", "Letters", 25),
-    ("Resume", "Letters", 35),
-    ("Thank_You", "Letters", 20),
-    ("Budget", "Spreadsheets", 60),
-    ("Forecast", "Spreadsheets", 40),
-    ("Analysis", "Spreadsheets", 20),
-    ("Photo_1", "Photos", 65),
-    ("Photo_2", "Photos", 75),
-    ("Photo_3", "Photos", 60),
-    ("Screen_1", "Screenshots", 25),
-    ("Screen_2", "Screenshots", 25),
-    ("Icon_1", "Icons", 15),
-    ("Icon_2", "Icons", 15),
-    ("Rock", "Albums", 60),
-    ("Jazz", "Albums", 55),
-    ("Pop", "Albums", 65),
-    ("Favorites", "Playlists", 40),
-    ("Podcast_1", "Podcasts", 45),
-    ("Podcast_2", "Podcasts", 45),
+    ("Q1_Review.pdf", "Reports", 45),
+    ("Q2_Review.pdf", "Reports", 55),
+    ("Q3_Review.pdf", "Reports", 50),
+    ("Cover.docx", "Letters", 25),
+    ("Resume.pdf", "Letters", 35),
+    ("Thanks.docx", "Letters", 20),
+    ("Budget.xlsx", "Spreadsheets", 60),
+    ("Forecast.xlsx", "Spreadsheets", 40),
+    ("Analysis.xlsx", "Spreadsheets", 20),
+    ("Beach.jpg", "Photos", 65),
+    ("Wedding.jpg", "Photos", 75),
+    ("Hiking.jpg", "Photos", 60),
+    ("Bug.png", "Screenshots", 25),
+    ("Chart.png", "Screenshots", 25),
+    ("logo.svg", "Icons", 15),
+    ("favicon.ico", "Icons", 15),
+    ("Kind_of_Blue", "Albums", 60),
+    ("Abbey_Road", "Albums", 55),
+    ("Thriller", "Albums", 65),
+    ("Mixtape.m3u", "Playlists", 40),
+    ("Ep_41.mp3", "Podcasts", 45),
+    ("Ep_42.mp3", "Podcasts", 45),
 ]
 df = pd.DataFrame(hierarchy, columns=[NAME, PARENT, SIZE]).astype({SIZE: float})
 
@@ -140,7 +140,7 @@ for node in order:
         str(node).replace("_", " "),
         ha="center",
         va="center",
-        fontsize=9 if level < 2 else 7,
+        fontsize=9 if level < 2 else 8.5,
         fontweight="bold" if level < 2 else "normal",
         color=text_color,
     )
