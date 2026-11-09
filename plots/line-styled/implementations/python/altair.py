@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-styled: Styled Line Plot
 Library: altair 6.3.0 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -29,7 +29,7 @@ LINE_STYLES = [[1, 0], [10, 4], [2.5, 4], [10, 4, 2.5, 4], [18, 4], [10, 4, 2.5,
 
 # Columns: set these to your table's column names
 MONTH = "Month"  # role: x
-STATIONS = ["Coastal", "Mountain", "Valley", "Highland"]  # role: y_
+STATIONS = ["Harbor Point (10 m)", "Pine Ridge (1,850 m)", "Sun Valley (120 m)", "Elk Plateau (950 m)"]  # role: y_
 TEMPERATURE = "Temperature (°C)"  # the measure the series share, for the value axis
 STATION = "Weather Station"  # what tells the series apart, for the legend
 
@@ -41,7 +41,7 @@ df = pd.DataFrame(
         MONTH: pd.date_range("2025-01-01", periods=12, freq="MS"),
         **{
             station: base_temp + offset + np.random.randn(12) * 1.5
-            for station, offset in zip(STATIONS, [0, -3, 5, -6], strict=True)
+            for station, offset in zip(STATIONS, [0, -6, 5, -3], strict=True)
         },
     }
 )
@@ -86,7 +86,7 @@ lines = (
 
 chart = (
     lines.properties(
-        width=520,
+        width=480,
         height=340,
         background=PAGE_BG,
         padding={"left": 12, "right": 16, "top": 10, "bottom": 10},
