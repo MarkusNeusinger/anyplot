@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-decision-boundary: Decision Boundary Classifier Visualization
 Library: plotnine 0.15.8 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
@@ -6,6 +6,7 @@ Quality: 82/100 | Updated: 2026-11-09
 
 import os
 
+import contourpy
 import numpy as np
 import pandas as pd
 from plotnine import (
@@ -16,7 +17,7 @@ from plotnine import (
     element_rect,
     element_text,
     geom_point,
-    geom_raster,
+    geom_polygon,
     ggplot,
     guide_legend,
     guides,
@@ -31,6 +32,8 @@ from plotnine import (
 )
 from sklearn.datasets import make_moons
 from sklearn.dummy import DummyClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 
@@ -49,15 +52,18 @@ MESH_STEPS = 200  # mesh resolution per axis for the predicted regions
 STATUS = "Training point"
 CORRECT = "Correctly classified"
 MISCLASSIFIED = "Misclassified"
+REGION = "region"
 
 # Columns: set these to your table's column names
-FEATURE_1 = "Feature X1"  # role: X1
-FEATURE_2 = "Feature X2"  # role: X2
-CLASS = "Class"  # role: y
+FEATURE_1 = "Leaf length (cm)"  # role: X1
+FEATURE_2 = "Leaf width (cm)"  # role: X2
+CLASS = "Cultivar"  # role: y
 
 # Data: replace this block with your own table, for example df = pd.read_csv("samples.csv")
 X, y = make_moons(n_samples=200, noise=0.25, random_state=42)
-df = pd.DataFrame({FEATURE_1: X[:, 0], FEATURE_2: X[:, 1], CLASS: np.where(y == 0, "Class 0", "Class 1")})
+df = pd.DataFrame(
+    {FEATURE_1: 6.0 + 1.5 * X[:, 0], FEATURE_2: 3.0 + 0.8 * X[:, 1], CLASS: np.where(y == 0, "Alba", "Rosea")}
+)
 
 # Plot: reads only df and the constants above
 train = df.dropna(subset=[FEATURE_1, FEATURE_2, CLASS]).copy()
@@ -66,7 +72,10 @@ classes = train[CLASS].unique().tolist()
 
 features = train[[FEATURE_1, FEATURE_2]].to_numpy(dtype=float)
 # A single class cannot train an SVM; it then fills the whole plane
-clf = SVC(kernel="rbf", C=1.0, gamma=0.5) if len(classes) > 1 else DummyClassifier(strategy="most_frequent")
+if len(classes) > 1:
+    clf = make_pipeline(StandardScaler(), SVC(kernel="rbf", C=1.0, gamma=0.5, break_ties=True))
+else:
+    clf = DummyClassifier(strategy="most_frequent")
 clf.fit(features, train[CLASS])
 
 x_pad = 0.1 * np.ptp(features[:, 0])
@@ -74,16 +83,38 @@ y_pad = 0.1 * np.ptp(features[:, 1])
 x_grid = np.linspace(features[:, 0].min() - x_pad, features[:, 0].max() + x_pad, MESH_STEPS)
 y_grid = np.linspace(features[:, 1].min() - y_pad, features[:, 1].max() + y_pad, MESH_STEPS)
 xx, yy = np.meshgrid(x_grid, y_grid)
-mesh = pd.DataFrame({FEATURE_1: xx.ravel(), FEATURE_2: yy.ravel()})
-mesh[CLASS] = clf.predict(mesh.to_numpy())
+mesh_points = np.column_stack([xx.ravel(), yy.ravel()])
+
+# Continuous per-class score on the mesh; a region is where its class outscores every other class
+if len(classes) > 1:
+    scores = clf.decision_function(mesh_points)
+    scores = np.column_stack([-scores, scores]) if scores.ndim == 1 else scores
+else:
+    scores = np.ones((len(mesh_points), 1))
+fitted_classes = list(clf.classes_)
+
+# Contour each class margin at 0, so region edges follow the boundary between mesh cells
+rings = []
+for k, label in enumerate(fitted_classes):
+    others = np.delete(scores, k, axis=1)
+    margin = scores[:, k] - (others.max(axis=1) if others.shape[1] else 0.0)
+    generator = contourpy.contour_generator(x_grid, y_grid, margin.reshape(xx.shape), fill_type="OuterOffset")
+    polygons, offsets = generator.filled(0.0, np.inf)
+    for points, offset in zip(polygons, offsets, strict=True):
+        # Outer ring then each hole, bridged back to the outer start, so holes stay unfilled
+        outer = points[offset[0] : offset[1]]
+        parts = [outer] + [np.vstack([points[a:b], outer[:1]]) for a, b in zip(offset[1:-1], offset[2:], strict=True)]
+        ring = np.vstack(parts)
+        rings.append(pd.DataFrame({FEATURE_1: ring[:, 0], FEATURE_2: ring[:, 1], CLASS: label, REGION: len(rings)}))
+regions = pd.concat(rings, ignore_index=True)
 
 train[STATUS] = np.where(clf.predict(features) == train[CLASS], CORRECT, MISCLASSIFIED)
 
 plot = (
     ggplot(train, aes(x=FEATURE_1, y=FEATURE_2))
-    + geom_raster(data=mesh, mapping=aes(fill=CLASS), alpha=0.32, interpolation="bilinear", show_legend=False)
+    + geom_polygon(data=regions, mapping=aes(fill=CLASS, group=REGION), alpha=0.32, color=None, show_legend=False)
     + geom_point(aes(fill=CLASS, shape=STATUS, size=STATUS), color=INK, stroke=0.6)
-    + scale_fill_manual(values=IMPRINT_PALETTE, limits=classes, name="Class (region and point)")
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=classes, name=f"{CLASS} (region and point)")
     + scale_shape_manual(values={CORRECT: "o", MISCLASSIFIED: "D"}, limits=[CORRECT, MISCLASSIFIED])
     + scale_size_manual(values={CORRECT: 3.2, MISCLASSIFIED: 4.2}, limits=[CORRECT, MISCLASSIFIED])
     + scale_x_continuous(expand=(0, 0))
