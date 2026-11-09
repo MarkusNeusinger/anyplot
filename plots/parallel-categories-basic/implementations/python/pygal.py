@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-categories-basic: Basic Parallel Categories Plot
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 83/100 | Updated: 2026-11-09
@@ -101,17 +101,21 @@ chart.add("", [(50, 50)])  # an empty chart would print "No data"
 base_svg = chart.render().decode("utf-8")
 
 # Layout in SVG pixels
-margin_left, margin_right, margin_top, margin_bottom = 470, 470, 300, 230
+margin_left, margin_right, margin_top, margin_bottom = 470, 360, 300, 230
 chart_width = WIDTH - margin_left - margin_right
 chart_height = HEIGHT - margin_top - margin_bottom
 n_dims = len(DIMENSIONS)
 x_positions = [margin_left + i * chart_width / (n_dims - 1) for i in range(n_dims)]
 bar_width = 80
 gap_ratio = 0.05
+label_size, label_pad = 44, 20
+ribbon_opacity = 0.45 if THEME == "light" else 0.62
 font = 'font-family="DejaVu Sans, sans-serif"'
 
 # Category order is the data's first-appearance order; totals per category per dimension
 levels = [df[dim].dropna().unique().tolist() for dim in DIMENSIONS]
+# Labels right of axes 2..n get a clear lane: outgoing ribbons start past the longest label
+label_lanes = [max(len(str(cat)) for cat in cats) * 0.6 * label_size + 2 * label_pad for cats in levels]
 dim_totals = [df.groupby(dim, sort=False)[ORDERS].sum() for dim in DIMENSIONS]
 # Past the eighth category the hues run out: the rest share the muted "other" anchor
 first_colors = {cat: IMPRINT_PALETTE[i] if i < len(IMPRINT_PALETTE) else INK_MUTED for i, cat in enumerate(levels[0])}
@@ -148,7 +152,7 @@ for dim_idx in range(n_dims - 1):
     ]
     flows = flows.sort_values("_order")
 
-    band_x0 = x_positions[dim_idx] + bar_width / 2
+    band_x0 = x_positions[dim_idx] + bar_width / 2 + (label_lanes[dim_idx] if dim_idx > 0 else 0)
     band_x1 = x_positions[dim_idx + 1] - bar_width / 2
     cx0 = band_x0 + 0.4 * (band_x1 - band_x0)
     cx1 = band_x0 + 0.6 * (band_x1 - band_x0)
@@ -172,9 +176,7 @@ for dim_idx in range(n_dims - 1):
             f"L {band_x1:.1f},{y1_bottom:.1f} "
             f"C {cx1:.1f},{y1_bottom:.1f} {cx0:.1f},{y0_bottom:.1f} {band_x0:.1f},{y0_bottom:.1f} Z"
         )
-        parallel_svg += (
-            f'\n<path d="{path_d}" fill="{first_colors[row[DIMENSIONS[0]]]}" fill-opacity="0.45" stroke="none"/>'
-        )
+        parallel_svg += f'\n<path d="{path_d}" fill="{first_colors[row[DIMENSIONS[0]]]}" fill-opacity="{ribbon_opacity}" stroke="none"/>'
         source_offsets[(dim_idx, source_cat)] = y0_bottom
         target_offsets[(dim_idx + 1, target_cat)] = y1_bottom
 
@@ -193,13 +195,12 @@ for dim_idx, dim_name in enumerate(DIMENSIONS):
             f'height="{y_bottom - y_top:.1f}" fill="{fill}" stroke="{PAGE_BG}" stroke-width="2"/>'
         )
         if dim_idx == 0:
-            label_x, anchor = x - bar_width / 2 - 20, "end"
+            label_x, anchor = x - bar_width / 2 - label_pad, "end"
         else:
-            label_x, anchor = x + bar_width / 2 + 20, "start"
+            label_x, anchor = x + bar_width / 2 + label_pad, "start"
         parallel_svg += (
             f'\n<text x="{label_x:.0f}" y="{(y_top + y_bottom) / 2:.0f}" text-anchor="{anchor}" '
-            f'dominant-baseline="middle" font-size="44" {font} fill="{INK}" stroke="{PAGE_BG}" '
-            f'stroke-width="10" stroke-linejoin="round" paint-order="stroke">'
+            f'dominant-baseline="middle" font-size="{label_size}" {font} fill="{INK}">'
             f"{str(cat).replace('&', '&amp;')}</text>"
         )
 
