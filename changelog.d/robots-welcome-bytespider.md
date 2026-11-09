@@ -7,5 +7,5 @@
   request logs. The deploy smoke in `app/cloudbuild.yaml` and the daily
   `bot-serving-check` now recognise the static file by its `Sitemap:` line, which
   the API's own robots.txt lacks while it shares `User-agent: *` and the
-  Content-Signal line, so a misrouted request still fails them. `docs/reference/seo.md` and the `app/nginx.conf` comment
-  follow.
+  Content-Signal line, so a misrouted request still fails them.
+  `docs/reference/seo.md` and the `app/nginx.conf` comment follow. (#12868)
