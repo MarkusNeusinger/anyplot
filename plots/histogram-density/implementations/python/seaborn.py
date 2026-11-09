@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-density: Density Histogram
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 84/100 | Updated: 2026-11-09
@@ -64,7 +64,7 @@ sns.histplot(
     label="Density histogram",
 )
 sns.kdeplot(
-    data=df, x=TEST_SCORE, ax=ax, color=IMPRINT_PALETTE[1], linewidth=2.5, label="Kernel density estimate (KDE)"
+    data=df, x=TEST_SCORE, cut=0, ax=ax, color=IMPRINT_PALETTE[1], linewidth=2.5, label="Kernel density estimate (KDE)"
 )
 
 # Style
