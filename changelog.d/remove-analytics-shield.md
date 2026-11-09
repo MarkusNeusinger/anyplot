@@ -7,4 +7,4 @@
   old Chrome. The Cloudflare Managed Challenge for four hosting-network ASNs (Tencent, Leaseweb, Huawei
   Cloud) is the one mechanism against the farm now, and a person it catches sees the challenge and can
   pass it; `infra/cloudflare/README.md` records it as applied. `app/nginx.conf` holds no entry that
-  matches a browser's user agent, and a unit test fails if one comes back.
+  matches a browser's user agent, and a unit test fails if one comes back. (#13033)
