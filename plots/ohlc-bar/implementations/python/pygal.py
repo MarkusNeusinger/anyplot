@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ohlc-bar: OHLC Bar Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-17
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-09
 """
 
 import os
