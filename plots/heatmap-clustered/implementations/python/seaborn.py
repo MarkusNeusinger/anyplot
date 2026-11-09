@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-clustered: Clustered Heatmap
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -67,8 +67,12 @@ expression[10:20, 10:20] = np.random.normal(-1.2, 0.5, (10, 10))
 # Signaling genes: mixed response
 expression[20:30, 0:10] = np.random.normal(0.3, 0.8, (10, 10))
 expression[20:30, 10:20] = np.random.normal(-0.3, 0.8, (10, 10))
-gene_labels = [f"{g[0]}{i + 1:02d}" for i, g in enumerate(gene_groups)]
-sample_labels = [f"{s[0]}{i + 1:02d}" for i, s in enumerate(sample_groups)]
+gene_labels = [
+    *["IL6", "CXCL8", "TNF", "IL1B", "CCL2", "IFNG", "CD74", "STAT1", "IRF7", "ISG15"],
+    *["PFKM", "HK2", "LDHA", "PKM", "GAPDH", "ENO1", "ALDOA", "CPT1A", "ACACA", "FASN"],
+    *["MAPK1", "AKT1", "EGFR", "KRAS", "PIK3CA", "JUN", "FOS", "SRC", "MTOR", "NFKB1"],
+]
+sample_labels = [f"{'Ctrl' if s == 'Control' else 'Trt'}-{i % 10 + 1}" for i, s in enumerate(sample_groups)]
 df = pd.DataFrame(
     expression,
     index=pd.MultiIndex.from_arrays([gene_groups, gene_labels], names=[GENE_GROUP, GENE]),
@@ -122,8 +126,8 @@ g.figure.subplots_adjust(left=0.02, right=0.88, top=0.9, bottom=0.17)
 # Style
 g.ax_heatmap.set_xlabel(SAMPLE, fontsize=10, color=INK)
 g.ax_heatmap.set_ylabel(GENE, fontsize=10, color=INK)
-g.ax_heatmap.tick_params(axis="x", labelsize=6, rotation=90, colors=INK_SOFT, length=2)
-g.ax_heatmap.tick_params(axis="y", labelsize=6, rotation=0, colors=INK_SOFT, length=2)
+g.ax_heatmap.tick_params(axis="x", labelsize=7, rotation=90, colors=INK_SOFT, length=2)
+g.ax_heatmap.tick_params(axis="y", labelsize=7, rotation=0, colors=INK_SOFT, length=2)
 for strip_ax in (g.ax_row_colors, g.ax_col_colors):
     if strip_ax is not None:
         strip_ax.tick_params(labelsize=6, colors=INK_SOFT, length=0)
