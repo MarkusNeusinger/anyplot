@@ -193,6 +193,31 @@ export interface BoundRole {
 }
 
 /**
+ * The id of a role's control in the dropdowns' block (`BindingsBlock`): a single role's dropdown,
+ * a family's list of chips. The thread has one live data card, so the id is the page's only one.
+ */
+export function roleControlId(name: string): string {
+  return `agent-role-${name}`;
+}
+
+/** The id of a role's pair on the bindings line while it is a button (`BindingsLine`). */
+export function pairId(name: string): string {
+  return `agent-pair-${name}`;
+}
+
+/**
+ * A pair's accessible name: what a click does, then the words on screen in their order, so a
+ * voice command that says them finds the button (`Change the column for x (across): month`). A
+ * required role without a column reads `none yet` where the line shows `—`.
+ */
+export function pairName(role: BoundRole): string {
+  const label = `${role.name}${axisWord(role.name)}`;
+  if (role.missing) return `Pick a column for ${label}: none yet`;
+  const noun = role.columns.length > 1 ? 'columns' : 'column';
+  return `Change the ${noun} for ${label}: ${role.columns.join(', ')}`;
+}
+
+/**
  * The bindings line's roles, in the spec's order: every role with a column, and a required one
  * without (`missing`); an optional role left open, or one the plot computes, says nothing.
  */
