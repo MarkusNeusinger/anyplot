@@ -9,7 +9,7 @@ feature sections, central route/theme/config modules).
 
 ```
 src/
-  main.tsx           Bootstrap only: root render, global CSS, web vitals
+  main.tsx           Bootstrap only: root render, global CSS, shell metadata defaults
   app.tsx            Provider composition (ThemeProvider → CssBaseline → AppRouter)
   global-config.ts   Typed CONFIG: app metadata, API base URLs (VITE_*), isDev
   routes/            Router (index.tsx, lazy-loaded pages, error boundaries)
@@ -39,7 +39,7 @@ src/
   utils/             Pure helpers (filters, fuzzySearch, responsiveImage, …)
   constants/         Domain constants (libraries, language maps); re-exports CONFIG
   types/             Shared domain types (PlotImage, Implementation, …)
-  analytics/         reportWebVitals
+  analytics/         mute.ts (keeps an admin's use of the agent chat out of Plausible)
   styles/            tokens.css (CSS custom properties, dark mode), fonts.css
 ```
 

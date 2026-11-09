@@ -2,121 +2,127 @@ library: pygal
 language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:55:10Z'
-updated: '2026-05-17T02:05:35Z'
-generated_by: claude-haiku
-workflow_run: 25978372923
+updated: '2026-11-09T09:35:40Z'
+generated_by: claude-opus
+workflow_run: 42593213651
 issue: 3340
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 84
 review:
   strengths:
-  - Perfect spec compliance and complete feature coverage
-  - 'Excellent theme adaptation in both renders with correct background colors (#FAF8F1
-    light, #1A1A17 dark)'
-  - Clean, minimal design appropriate for a chess board reference
-  - No visual defects or readability issues; all text legible in both themes
-  - Proper use of classic chess colors that clearly differentiate squares
-  - Correctly implements algebraic notation (a-h columns, 1-8 rows) with light squares
-    at h1 and a8
+  - 'Correct standard orientation in both renders: a1 dark at bottom left, h1 light
+    at bottom right, a8 light at top left, with light squares where file index + rank
+    index is odd'
+  - Board is a true square (about 1840 x 1840 source px) on the 2400 x 2400 canvas,
+    with files a-h centered under their columns and ranks 1-8 centered left of their
+    rows, read off via explicit x_labels/y_labels value dicts
+  - 'Classic wood two-tone scheme: Imprint ochre #BD8233 for dark squares by the documented
+    semantic exception (wood -> ochre) and a pale tint of the same ochre for light
+    squares; both identical in light and dark, only the theme-adaptive INK square
+    borders and text flip'
+  - Per-value pygal style dicts color each square and label it with its algebraic
+    name (a1..h8), so the HTML output shows the square name in pygal's native tooltip
+  - 'No guides, legend or value labels: the empty basic board with only squares, borders
+    and coordinate labels, as the spec asks'
   weaknesses:
-  - Code doesn't read ANYPLOT_THEME environment variable; should dynamically generate
-    plot-{THEME}.png filenames instead of hardcoding plot.png
-  - Design uses professional but standard chess colors without custom refinement—looks
-    like configured defaults rather than intentional design choices
-  - No visual storytelling or visual hierarchy beyond structural grid representation
-  - Font sizes hardcoded in Style but not explicit to guarantee consistency across
-    executions
+  - 'Suggestion: pygal''s y-axis line at the left runs about 35 px past the board''s
+    top and bottom edges and sits detached from the board; hiding it or aligning it
+    with the board edge would tidy the frame.'
+  - 'Suggestion: the free band below the file labels (about 250 px) is larger than
+    the gap between the title and the board; trimming margin_bottom would center the
+    board vertically.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color, NOT pure white
-      Chrome: Title "chessboard-basic · pygal · anyplot.ai" in dark text; X-axis labels (a-h) at bottom in dark; Y-axis labels (1-8) on left in dark — all clearly readable
-      Data: Classic chess colors: cream (#F0D9B5) for light squares, brown (#B58863) for dark squares, properly alternating in 8×8 grid; h1 shows light square, a8 shows light square (correct)
-      Legibility verdict: PASS — all text readable, excellent contrast, no overlapping
+      Background: warm off-white #FAF8F1 (sampled 250,248,241), not pure white.
+      Chrome: monospace title "chessboard-basic · python · pygal · anyplot.ai" in dark ink across ~76% of the width at the top; rank labels 1-8 (bottom to top) on the left and file labels a-h (left to right) below the board, dark ink, large and fully readable; a thin muted y-axis line left of the board. No grid, no legend.
+      Data: 8x8 square board, dark squares ochre #BD8233, light squares pale cream #E8D5B8, thin dark-ink borders. a1 dark, h1 light, a8 light, h8 dark — standard orientation. Board stands out clearly from the page.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color, NOT pure black
-      Chrome: Title and axis labels in light gray/off-white text against dark background — all clearly readable; NO dark-on-dark failures
-      Data: Chess square colors (cream and brown) are IDENTICAL to light render — correctly shows only chrome adaptation, not data color change
-      Legibility verdict: PASS — all text readable against dark background, no text color conflicts, excellent theme adaptation
+      Background: warm near-black #1A1A17 (sampled 26,26,23), not pure black.
+      Chrome: title, rank and file labels in light ink #F0EFE8, clearly readable; no dark-on-dark text. Square borders switch to light ink; y-axis line light-muted.
+      Data: square colors identical to the light render (#BD8233 and #E8D5B8 sampled at the same pixels); same orientation and layout. Board stands out strongly from the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable; explicitly sized; no legibility issues in either
-          theme
+        comment: Title 66 px, rank/file labels 56 px, explicitly set; readable in
+          both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Perfect spacing, no overlapping elements
+        comment: No text collides with text or squares
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 64 squares clearly visible and properly proportioned
+        comment: All 64 squares and their borders clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent contrast between cream and brown; CVD-safe
+        comment: Light/dark squares differ strongly in lightness, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout on 3600×3600 square canvas; appropriate margins; well-centered
+        comment: 2400x2400 square canvas, board 1:1, nothing clipped; slightly larger
+          bottom margin noted only as a suggestion
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with proper chess notation; correct title format
+        comment: 'N/A for axis titles: algebraic coordinates are the labels; title
+          correct'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Spec-requested chess colors; theme-adaptive backgrounds correct;
-          both renders properly themed
+        comment: 'Ochre #BD8233 via the wood semantic exception plus its tint for
+          the spec''s cream/brown scheme; backgrounds #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Classic chess colors are professional but standard defaults, not
-          custom refinement
+        passed: true
+        comment: A coherent wood tone pair derived from one Imprint hue, with theme-adaptive
+          thin borders
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clean minimal design with good whitespace; could tighten margins
-          slightly
+        passed: false
+        comment: 'Style-guide baseline: guides off, thin borders; nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Complete and accurate representation; no visual hierarchy beyond
-          structural grid
+        passed: false
+        comment: Board displayed; no hierarchy beyond the Notes (none expected on
+          a basic board)
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Perfect 8×8 chess grid
+        comment: Empty 8x8 chessboard, no added layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: rows, columns, alternating squares, notation,
-          correct corner squares'
+        comment: 'All Notes and ''A good version shows'' bullets met: alternation,
+          1:1, h1/a8 light, labels a-h bottom and 1-8 left centered, two-tone, empty
+          board'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly labeled and positioned
+        comment: Squares at exact file/rank spans 0-8
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend appropriately omitted
+        comment: Title in the mandated format; no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -155,21 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete 8×8 board with all square types
+        comment: All 64 squares with full notation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Chess is neutral, professional, well-known domain
+        comment: Standard chessboard, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct chess board proportions
+        comment: 'Checked: a1 dark, h1 and a8 light, 8 files x 8 ranks in order'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,54 +184,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → config → generation → plotting'
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic chess board; fully reproducible
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: os, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity; no over-engineering
+        comment: Compact loop; Histogram spans are a sensible route since pygal has
+          no heatmap/rect primitive
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Should read ANYPLOT_THEME and output plot-{THEME}.png; currently
-          hardcoded as plot.png
+        passed: true
+        comment: Saves plot-{THEME}.png and .html with current pygal 3 API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses StackedBar and Style correctly; could leverage pygal theme system
-          better
+        comment: Uses pygal Style and chart options; Histogram repurposed with overpainting
+          is a workaround rather than a native idiom
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Creative use of StackedBar for grid, but relies on basic API
+        comment: Per-value style dicts and per-value labels feed pygal's native SVG
+          tooltips with square names in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T09:32:58Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
