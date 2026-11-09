@@ -992,9 +992,10 @@ only, never an argument, a result, your words, an id or a time:
   the rest.
 - `guards`: the verdicts of the turn's guards in order, each as
   `{guard, verdict}`, such as `{"guard": "output_guard", "verdict": "reply_cut"}`.
-  The scope judge's `attack` reads `out_of_scope`. At most 24 per turn;
-  `guards_dropped` counts the rest.
+  The scope judge's `attack` reads `out_of_scope`. The latest 24 per turn;
+  `guards_dropped` counts the earlier ones.
 - `prep_ops`: the operations of the turn's data changes (`derive`, `aggregate`).
+  At most 16 per turn; `prep_ops_dropped` counts the rest.
 
 The record isn't a join key: don't match it against log or telemetry lines,
 by sequence or by time.

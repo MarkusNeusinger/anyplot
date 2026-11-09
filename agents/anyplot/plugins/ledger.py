@@ -450,7 +450,9 @@ class RequestLedger:
     def fail_call(self, key: str, code: str) -> None:
         """Note the error answer of an opened call that raised (`on_tool_error_callback`), before its close: a call
         ADK could not find (a tool the request did not declare, as on the closing reply) gets no after-tool callback,
-        so it would stay `unfinished`. The call stays open; its close, when it comes, reads the same answer."""
+        so it would stay `unfinished`. The call stays open; its close, when it comes, reads the same answer. Calls
+        without a function call id share their tool's key and close in order (`close_call`), so of two such calls
+        of one tool, one that raised can mark its sibling instead; ADK sets the id on every call."""
         for index in self.open_calls.get(key, []):
             call = self.tool_calls[index]
             if call.outcome == "unfinished":

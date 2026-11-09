@@ -18,6 +18,8 @@ and a turn refused before the scope judge. The session bundle carries the ring u
 * `guards`: the verdicts of the turn's hooks (`ledger.TURN_HOOKS`) in the order they were logged
   (`RequestLedger.guards`, filled by `attribution`): (hook, verdict) and nothing else of the line.
 * `prep_ops`: the operations of the turn's `prepare_data` calls that changed the data, in order.
+* `tools_dropped`, `guards_dropped`, `prep_ops_dropped`: what each list's bound left out (`MAX_RECORD_TOOLS` and
+  `MAX_RECORD_PREP_OPS` keep the first entries, `MAX_RECORD_GUARDS` the latest).
 
 Closed codes only, never an argument, a result, a word of the user, an id, a hash or a time. The guarantee is
 structural: each value is closed to its set before the model sees it (`other` outside it), and the models forbid any
@@ -60,10 +62,12 @@ MAX_RECORD_TOOLS = 32
 """The tool calls a turn's record keeps, the first ones; the rest count as `tools_dropped`. A turn makes at most
 `AGENT_MAX_LLM_CALLS` (16) model calls, and the caps bound the data and plot tools to ten calls per turn."""
 MAX_RECORD_GUARDS = 24
-"""The guard verdicts a turn's record keeps, the first ones; the rest count as `guards_dropped`. A turn logs about a
-dozen at most: the judge, a language detection, the reply checks, the output guard's two, the queue's."""
+"""The guard verdicts a turn's record keeps, the latest ones; the earlier ones count as `guards_dropped`. A turn logs
+about 15 at most: the judge, a language detection, the queue's, the reply checks, the output guard's two. The latest
+are kept because the verdicts that explain how a turn ended come last (the reply checks, the output guard, a halt)."""
 MAX_RECORD_PREP_OPS = 16
-"""The `prepare_data` operations a turn's record keeps; a turn makes at most two calls (`tool_safety.TURN_CAPS`)."""
+"""The `prepare_data` operations a turn's record keeps, the first ones; the rest count as `prep_ops_dropped`. A turn
+makes at most two calls of five operations (`tool_safety.TURN_CAPS`, `prepare.MAX_OPERATIONS`)."""
 MAX_TURN = 100_000
 """The highest turn number a record holds, as the telemetry envelope's `turn`."""
 
@@ -269,6 +273,7 @@ class TurnRecord(_Record):
     guards: list[GuardLine] = Field(default_factory=list, max_length=MAX_RECORD_GUARDS)
     guards_dropped: Count = 0
     prep_ops: list[PrepOp] = Field(default_factory=list, max_length=MAX_RECORD_PREP_OPS)
+    prep_ops_dropped: Count = 0
 
 
 def outcome_code(value: object) -> str | None:
@@ -331,9 +336,10 @@ def build(ledger: RequestLedger, action: str | None, failure: str | None = None)
             "error": codes.error,
             "tools": calls[:MAX_RECORD_TOOLS],
             "tools_dropped": max(len(calls) - MAX_RECORD_TOOLS, 0),
-            "guards": lines[:MAX_RECORD_GUARDS],
+            "guards": lines[-MAX_RECORD_GUARDS:],
             "guards_dropped": max(len(lines) - MAX_RECORD_GUARDS, 0),
             "prep_ops": ops[:MAX_RECORD_PREP_OPS],
+            "prep_ops_dropped": max(len(ops) - MAX_RECORD_PREP_OPS, 0),
         }
     )
 

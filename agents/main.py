@@ -559,6 +559,9 @@ StreamNote = (
 """What the stream's outbox carries: a queue position of a waiting sandbox run, that run's start once it waited,
 an ADK event, or the run's end."""
 
+QueueOutcome = Literal["started", "expired", "withdrawn"]
+"""How a turn's wait in the run queue ended, the `queue` line's verdict besides `run_limit` and `full`, which the
+turn's record closes (`turn_record.HOOK_VERDICTS`, pinned equal by a test)."""
 TIER_LANES: dict[Tier, Lane] = {"admin": "admin", "public": "normal"}
 """The run queue's lane of each tier (`run_queue.py`): an admin's runs share the concurrency and the rate with
 everyone's and have a per-user cap of their own."""
@@ -617,7 +620,7 @@ class TurnSlot:
             self._fail("capacity")
             return False
         self.run.ticket = ticket
-        outcome = "started"
+        outcome: QueueOutcome = "started"
         waited = False
         try:
             async with contextlib.aclosing(queue.wait(ticket, heartbeat_s=HEARTBEAT_S)) as positions:
@@ -2677,8 +2680,9 @@ async def post_message(
                 failure = "deadline"
             attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
             # Written before anything else is yielded: a client that goes during the error event loses no line.
-            _telemetry_turn(ledger, await _after_turn(runtime, user, sid, facts), failure)
-            _keep_turn(runtime, ledger, facts, failure)
+            after = await _after_turn(runtime, user, sid, facts)
+            _telemetry_turn(ledger, after, failure)
+            _keep_turn(runtime, ledger, after, failure)
             if failure is not None:
                 for chunk in translator.error(failure):
                     yield chunk

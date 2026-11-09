@@ -43,6 +43,7 @@ TURNS = {
             "guards": [{"guard": "queue", "verdict": "started"}, {"guard": "budget_exempt", "verdict": "exempt"}],
             "guards_dropped": 0,
             "prep_ops": [],
+            "prep_ops_dropped": 0,
         }
     ],
     "dropped": 0,

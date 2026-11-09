@@ -39,6 +39,7 @@ from agents.anyplot.tools import session as session_tools
 from agents.anyplot.turn_record import (
     HOOK_VERDICTS,
     MAX_RECORD_GUARDS,
+    MAX_RECORD_PREP_OPS,
     MAX_RECORD_TOOLS,
     OUTCOME_CODES,
     OUTSIDE_HOOKS,
@@ -49,7 +50,7 @@ from agents.anyplot.turn_record import (
     guard_line,
     result_code,
 )
-from agents.main import MessageBody, Runtime, TurnFacts, _keep_turn, app, get_runtime, post_message
+from agents.main import MessageBody, QueueOutcome, Runtime, TurnFacts, _keep_turn, app, get_runtime, post_message
 
 from .fakes import SCATTER_PLAN, VERDICT_OK
 from .test_run_queue import Clock
@@ -91,9 +92,17 @@ class TestClosedSets:
 
     def test_every_hook_the_service_logs_is_placed(self) -> None:
         """A new hook lands in the record or among the hooks left out, by a decision, never by default."""
-        pattern = re.compile(r'attribution\(\s*"([a-z_]+)"')
-        logged = {hook for path in source_files() for hook in pattern.findall(path.read_text(encoding="utf-8"))}
-        # The two sites that pass the hook as a variable: the reply checks' lines and the route's refusals.
+        sources = {path: path.read_text(encoding="utf-8") for path in source_files()}
+        logged = {hook for text in sources.values() for hook in re.findall(r'attribution\(\s*"([a-z_]+)"', text)}
+        # The two sites that pass the hook as a variable, and no third one: the reply checks' lines and the route's
+        # refusals before the judge, whose hooks are these five.
+        variable = {
+            (path.name, line)
+            for path, text in sources.items()
+            for line in re.findall(r"\battribution\(\s*([a-z_]\w*)\s*,", text)
+            if path.name != "export.py"  # the exported code's own header, another function of that name
+        }
+        assert variable == {("main.py", "hook"), ("shipped_reply.py", "hook")}
         logged |= {"shipped_reply", "plot_button", "session_closed", "budget_halt", "message_limit"}
 
         assert logged - TURN_HOOKS - OUTSIDE_HOOKS == set()
@@ -101,7 +110,7 @@ class TestClosedSets:
         assert OUTSIDE_HOOKS - logged == set()  # no stale name
 
     def test_every_written_verdict_of_a_turn_hook_is_in_its_set(self) -> None:
-        pattern = re.compile(r'attribution\(\s*"([a-z_]+)",\s*[\w.()]+,\s*verdict="([a-z_]+)"')
+        pattern = re.compile(r'attribution\(\s*"([a-z_]+)",[^)]*?\bverdict="([a-z_]+)"', re.DOTALL)
         written = {pair for path in source_files() for pair in pattern.findall(path.read_text(encoding="utf-8"))}
         turn = {(hook, verdict) for hook, verdict in written if hook in TURN_HOOKS}
 
@@ -112,6 +121,7 @@ class TestClosedSets:
         assert set(get_args(Verdict)) - {"attack"} <= HOOK_VERDICTS["scope_guard"]
         assert HOOK_VERDICTS["budget_halt"] == set(get_args(telemetry.RefusalCode))
         assert HOOK_VERDICTS["message_limit"] == set(get_args(MessageLimit))
+        assert HOOK_VERDICTS["queue"] == set(get_args(QueueOutcome)) | {"run_limit", "full"}
         assert {"locked_out", "service_paused", "budget"} <= HOOK_VERDICTS["scope_guard"]
 
     def test_toolsafetys_codes_are_closed_and_every_refusal_is_a_verdict(self) -> None:
@@ -195,15 +205,20 @@ class TestBuild:
 
         assert (record.kind, record.refusal, record.error) == telemetry.turn_codes(ledger, failure)
 
-    def test_a_turn_keeps_its_first_calls_and_verdicts_and_counts_the_rest(self) -> None:
+    def test_a_turn_keeps_its_first_calls_its_latest_verdicts_and_counts_the_rest(self) -> None:
         ledger = RequestLedger()
-        ledger.tool_calls = [ToolCall("query_data", "allowed", "ok")] * (MAX_RECORD_TOOLS + 8)
-        ledger.guards = [("queue", "started")] * (MAX_RECORD_GUARDS + 3)
+        ledger.tool_calls = [ToolCall("query_data", "allowed", "ok")] * MAX_RECORD_TOOLS
+        ledger.tool_calls += [ToolCall("get_spec_brief", "allowed", "ok")] * 8
+        ledger.guards = [("queue", "started")] * 3 + [("output_guard", "reply_cut")] * MAX_RECORD_GUARDS
+        ledger.prep_ops = ["derive"] * (MAX_RECORD_PREP_OPS + 4)
 
         record = build(ledger, None)
 
         assert (len(record.tools), record.tools_dropped) == (MAX_RECORD_TOOLS, 8)
+        assert {call.tool for call in record.tools} == {"query_data"}
         assert (len(record.guards), record.guards_dropped) == (MAX_RECORD_GUARDS, 3)
+        assert {line.guard for line in record.guards} == {"output_guard"}  # how the turn ended stays
+        assert (len(record.prep_ops), record.prep_ops_dropped) == (MAX_RECORD_PREP_OPS, 4)
 
     def test_the_ring_keeps_the_latest_turns_and_counts_the_older_ones(self) -> None:
         store = TurnRecords(per_session=2)
