@@ -362,13 +362,16 @@ class TurnRecords:
         ring.append(record)
 
     def all(self, session_id: str) -> list[TurnRecord]:
-        return list(self._rings.get(session_id, ()))
+        """The session's records in turn order. A record lands when its turn's stream ends, and a stream the run
+        registry dropped as stale (`Runtime.drop_stale`) can end after a newer turn's; the sort is stable, so a turn
+        refused before the judge stays before the turn that shares its number."""
+        return sorted(self._rings.get(session_id, ()), key=lambda record: record.turn)
 
     def dropped(self, session_id: str) -> int:
         return self._dropped.get(session_id, 0)
 
     def bundle(self, session_id: str) -> dict[str, Any]:
-        """The bundle's `turns`: `records`, oldest first, and `dropped`, the older turns the ring no longer holds."""
+        """The bundle's `turns`: `records` in turn order, and `dropped`, the older turns the ring no longer holds."""
         return {
             "records": [record.model_dump(mode="json") for record in self.all(session_id)],
             "dropped": self.dropped(session_id),

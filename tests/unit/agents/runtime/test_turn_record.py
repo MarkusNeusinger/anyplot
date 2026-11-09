@@ -231,6 +231,24 @@ class TestBuild:
         store.delete_session("s1")
         assert store.bundle("s1") == {"records": [], "dropped": 0}
 
+    def test_a_stale_streams_late_record_still_reads_in_turn_order(self) -> None:
+        """A stream the run registry dropped as stale can end after the session's next turn: its record lands
+        later and reads in its place; two records of one number (a refusal before the judge, the next turn) keep
+        the order they landed in."""
+        store = TurnRecords()
+        refused = RequestLedger(turn=1)
+        refused.refuse("rate_limited", "text")
+        for ledger in (refused, RequestLedger(turn=1), RequestLedger(turn=3), RequestLedger(turn=2)):
+            store.add("s1", build(ledger, None))
+
+        records = store.bundle("s1")["records"]
+        assert [(record["turn"], record["refusal"]) for record in records] == [
+            (1, "rate_limited"),
+            (1, None),
+            (2, None),
+            (3, None),
+        ]
+
     def test_purging_a_session_drops_its_ring(self, services: Services) -> None:
         services.turns.add("s1", build(RequestLedger(turn=1), None))
         services.purge_session("s1")

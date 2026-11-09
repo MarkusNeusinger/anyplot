@@ -974,7 +974,7 @@ its `rounds`), or `null` before any run. Each round of a plot result carries
 that crashed (`key`, `timeout`, `memory`), never an error message.
 
 `turns` is the record of the session's latest turns, in every form of the
-bundle too: `records`, oldest first, and `dropped`, how many older turns the
+bundle too: `records`, in turn order, and `dropped`, how many older turns the
 record no longer holds (it keeps the latest 50). Each record holds closed codes
 only, never an argument, a result, your words, an id or a time:
 
