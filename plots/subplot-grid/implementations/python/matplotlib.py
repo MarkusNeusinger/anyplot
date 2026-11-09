@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 subplot-grid: Subplot Grid Layout
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-09
@@ -50,6 +50,7 @@ spread = np.nanmax(np.abs(returns))
 
 fig, axes = plt.subplots(2, 2, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, layout="constrained")
 (price_ax, volume_ax), (hist_ax, scatter_ax) = axes
+volume_ax.sharex(price_ax)  # both top cells plot the same trading days; the bottom cells keep independent axes
 
 # Stock price with its moving average
 price_ax.plot(days[DAY], days[PRICE], color=IMPRINT_PALETTE[0], linewidth=1.8, label="Close")
@@ -64,7 +65,7 @@ price_ax.plot(
 price_ax.set_title("Stock price", fontsize=10, fontweight="bold", color=INK, loc="left")
 price_ax.set_xlabel(DAY, fontsize=9, color=INK)
 price_ax.set_ylabel(PRICE, fontsize=9, color=INK)
-price_ax.legend(loc="best", fontsize=7.5)
+price_ax.legend(loc="best", fontsize=8)
 
 # Daily volume, coloured by the direction of the day's price move
 volume_ax.bar(days[DAY], days[VOLUME], width=0.8, color=day_colors, linewidth=0)
@@ -76,7 +77,7 @@ volume_ax.legend(
     handles=[Patch(color=UP, label="Up day"), Patch(color=DOWN, label="Down day")],
     loc="upper left",
     ncols=2,
-    fontsize=7.5,
+    fontsize=8,
 )
 
 # Distribution of daily returns
@@ -90,7 +91,7 @@ hist_ax.set_xlabel("Daily return (%)", fontsize=9, color=INK)
 hist_ax.set_ylabel("Trading days", fontsize=9, color=INK)
 hist_ax.set_ylim(0, hist_ax.get_ylim()[1] * 1.3)  # headroom keeps the legend clear of the tallest bins
 hist_ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-hist_ax.legend(loc="best", fontsize=7.5)
+hist_ax.legend(loc="best", fontsize=8)
 
 # Volume against the size of the day's move, coloured by its sign
 points = scatter_ax.scatter(
@@ -108,7 +109,7 @@ scatter_ax.set_xlabel(VOLUME, fontsize=9, color=INK)
 scatter_ax.set_ylabel("Absolute daily return (%)", fontsize=9, color=INK)
 cbar = fig.colorbar(points, ax=scatter_ax, pad=0.02, aspect=14)
 cbar.set_label("Daily return (%)", fontsize=8, color=INK)
-cbar.ax.tick_params(labelsize=7, colors=INK_SOFT, length=0)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, length=0)
 cbar.outline.set_visible(False)
 
 # Style
