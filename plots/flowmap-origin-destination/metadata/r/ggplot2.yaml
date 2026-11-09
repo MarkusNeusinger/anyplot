@@ -2,100 +2,113 @@ library: ggplot2
 language: r
 specification_id: flowmap-origin-destination
 created: '2026-05-20T09:47:52Z'
-updated: '2026-05-20T10:20:54Z'
-generated_by: claude-sonnet
-workflow_run: 26154296171
+updated: '2026-11-08T23:21:40Z'
+generated_by: claude-opus
+workflow_run: 42533411800
 issue: 3765
-language_version: 4.4.1
-library_version: 3.5.1
+language_version: 4.6.1
+library_version: 4.0.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/r/ggplot2/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - Correct Okabe-Ito regional color assignment with Americas first (#009E73) and
-    full theme-adaptive chrome in both renders
-  - 'Excellent data quality: real airports, realistic passenger volumes (2.3-6.5M
-    pax/yr), neutral aviation theme'
-  - geom_curve + scale_linewidth_continuous + directional arrows form a cohesive,
-    idiomatic ggplot2 flow map
-  - Subtitle callout (LHR-DXB busiest corridor at 6.5M pax/yr) adds meaningful storytelling
-    without annotations
-  - Manual label nudges for the dense European cluster show thoughtful layout work
+  - Native geom_curve() with x/y/xend/yend aesthetics draws one curved arc per flow
+    whose ends sit exactly on the airport coordinates, with linewidth mapped to flow
+    so LHR–DXB (6.5M) and DXB–SIN (5.8M) visibly dominate the 2.3M SIN–SYD arc
+  - Arcs at alpha 0.65 keep the thin LHR–TYO and LHR–HKG arcs readable where they
+    run beside the thick European corridors to DXB
+  - The hand-built coastline basemap is drawn in INK_MUTED at linewidth 0.2, clearly
+    quieter than the arcs in both themes, so the flow pattern leads
+  - 'Color by origin region is explained by an ''Origin Region'' legend (Americas
+    #009E73 first, Imprint order), so the reader knows the color encodes the direction''s
+    origin; the width legend uses override.aes to draw neutral INK_SOFT samples tied
+    to flow values'
+  - IATA code labels sit in open space with thin leader lines back to their airports,
+    keeping the dense LHR/AMS/CDG/FRA cluster legible in both themes
+  - 'All chrome threads the theme tokens: warm #FAF8F1 / #1A1A17 backgrounds, elevated
+    legend and label boxes, readable ink in both renders'
   weaknesses:
-  - Title 'Global Air Passenger Flows · flowmap-origin-destination · r · ggplot2 ·
-    anyplot.ai' clips the right canvas edge in both renders — reduce plot.title fontsize
-    from 12pt to 10pt or increase right plot.margin from 8 to 20pt
-  - European airport labels (LHR, AMS, CDG, FRA) near-overlap despite manual nudges
-    — reduce geom_text size from 2.5 to 2.0 or increase nudge magnitudes for those
-    four airports
+  - 'VQ-02 (both): the CDG label box sits on top of the purple NYC→CDG arc at about
+    (-13, 40), hiding a stretch of that arc''s line → place the CDG label anchor clear
+    of every arc path (for example south-west of Paris over the Bay of Biscay, around
+    lon -12, lat 45, or over the Mediterranean). Likely cause: airports$label_lon/label_lat
+    for CDG set to (-14, 40), which lies on the NYC–CDG curve.'
+  - 'DQ-02 (both): the network names real airport pairs (LHR–DXB, NYC–LHR, DXB–SIN
+    …) and attaches invented passenger volumes to them, which reads as published route
+    statistics despite the ''Illustrative'' subtitle → use volumes sourced from published
+    route statistics or present the hubs as a clearly fictional network. Likely cause:
+    the flow vector in flows_raw.'
+  - 'Suggestion: the destination arrowheads at 0.008 npc are barely visible; a slightly
+    larger arrow() length would make flow direction readable without the legend.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title bold dark text clearly readable; subtitle in soft gray; axis labels and tick labels dark and legible; legend text dark on elevated-bg box
-      Data: Green arcs (Americas, #009E73) first series ✓; orange (Europe, #D55E00); blue (Middle East, #0072B2); pink (Asia Pacific, #CC79A7) — all Okabe-Ito in order. Arrow tips on arcs, linewidth varies 0.4-2.8 by passenger volume. Airport nodes as filled circles with white stroke.
-      Concern: Title extends to/past right canvas edge — "anyplot.ai" partially clipped. European cluster labels (LHR, AMS, CDG, FRA) near-overlapping.
-      Legibility verdict: PASS (with noted title edge clipping and European label crowding)
+      Background: warm off-white #FAF8F1 across plot and panel; legend boxes in the slightly lighter elevated tone with a soft ink border.
+      Chrome: bold title "Global Air Passenger Flows · flowmap-origin-destination · r · ggplot2 · anyplot.ai" at ~80% width, grey subtitle "Illustrative network: LHR–DXB is the busiest corridor at 6.5M pax/yr", axis titles Longitude / Latitude, ticks -100…150 and -40…60, subtle grid. All dark text, fully readable.
+      Data: simplified coastlines (North America, Eurasia, Africa, SE Asia, Australia) drawn as thin muted grey outlines; 15 curved arcs between 10 hub airports colored by origin region — Americas #009E73 (NYC), Europe #C475FD (LHR/CDG/AMS/FRA), Middle East #4467A3 (DXB), Asia Pacific #BD8233 (SIN/HKG/TYO/SYD); widths scale with flow (thickest LHR→DXB and DXB→SIN). Filled airport circles with page-colored outline, bold IATA code labels in boxes joined by leader lines. Right side: "Origin Region" legend (4 entries) and "Flow (M pax/yr)" width legend (3–6). The CDG label box covers part of the NYC→CDG arc.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and subtitle render in light INK tokens (#F0EFE8 / #B8B7B0) clearly visible. Axis labels, tick labels, and legend text all light-toned. No dark-on-dark failure. Country borders visible in soft gray INK_SOFT.
-      Data: Identical arc colors to light render — green, orange, blue, pink. Okabe-Ito data colors theme-invariant ✓
-      Concern: Same title edge clipping as light render.
-      Legibility verdict: PASS (with noted title edge clipping)
+      Background: warm near-black #1A1A17; legend and label boxes in the elevated #242420 tone with light border.
+      Chrome: title, subtitle, axis titles and tick labels in light ink, all clearly readable; grid subtle; no dark-on-dark text anywhere.
+      Data: arc and point colors identical to the light render (green, purple, blue, amber); coastlines in muted grey remain visible but quiet; the blue Middle East arcs are darker against the dark page but still clearly distinguishable. Width-legend samples flip to light grey and remain visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 12pt bold, axis 8pt, ticks 7pt).
-          Title clips right canvas edge; European cluster labels crowded.
+        comment: Explicit sizes (title 10 pt, axis 10/8 pt, labels 2.8 mm); all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: true
-        comment: European airports (LHR, AMS, CDG, FRA) near-overlap despite manual
-          nudges; arcs and other labels are clear.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Flow arcs clearly visible with good linewidth range (0.4-2.8) and
-          alpha 0.65. Airport nodes at size 3.5 are distinct.
+        comment: CDG label box sits on the NYC→CDG arc (defect line); other labels
+          clear via leader lines
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Arcs, airports and legend glyphs visible in both themes; width legend
+          samples via override.aes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. No red-green-only encoding.
+        comment: Imprint hues distinguishable; width carries magnitude independently
+          of color
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Map fills canvas well. Minor issue: title clips right edge.'
+        comment: 3200x1800; balanced map and legends, title ~80% width (expected for
+          mandated title)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude / Latitude with descriptive subtitle.
+        comment: Longitude / Latitude with degree tick values; descriptive title and
+          subtitle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Americas first = #009E73. Full Okabe-Ito order. Backgrounds #FAF8F1/#1A1A17.
-          Chrome adapts correctly in both themes.'
+        comment: 'First series #009E73, Imprint order, correct theme backgrounds,
+          identical data colors'
     design_excellence:
       score: 13
       max: 20
@@ -105,24 +118,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional map-based flow visualization with intentional color-by-region,
-          arrow directionality, and subtitle callout. Above generic defaults.
+        comment: 'Beyond baseline: bold IATA code labels in elevated boxes, clear
+          title/subtitle hierarchy, muted basemap ink'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid at linewidth 0.1 (very subtle), minor grid blank, axis ticks
-          removed, legend with fine border.
+        comment: Label anchors hand-placed in open space with thin leader lines, framed
+          elevated legends, basemap kept at 0.2 lw
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtitle highlights busiest corridor. Line-width + color + arrows
-          create visual hierarchy around major hubs.
+        comment: Subtitle names the busiest corridor (LHR–DXB 6.5M); width hierarchy
+          makes the Europe–Gulf–Asia trunk the focal path
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -130,30 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow map with curved arcs, basemap, nodes, and flow-proportional
-          linewidth.
+        comment: Origin-destination flow map with curved arcs over a basemap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Curved arcs, flow-proportional linewidth, alpha transparency, world
-          basemap, airport labels, color encoding.
+        comment: Curved arcs, width ∝ flow, alpha 0.65, color explained by legend,
+          basemap with coastlines quieter than arcs
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Coordinates correctly mapped. Flow -> linewidth. Region -> color.
+        comment: Arc ends sit on the airport coordinates; lon/lat axes show all hubs
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct ({Descriptive} · {spec-id} · r · ggplot2 · anyplot.ai)
-          but clips right canvas edge. Legends correct.
+        comment: Title format correct with descriptive prefix; legends 'Origin Region'
+          and 'Flow (M pax/yr)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -161,22 +173,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 flows across 10 global hubs showing hub structure, varying volumes,
-          and multi-directional patterns.
+        comment: Hubs, dominant corridors and thin flows, convergence on DXB/HKG
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Real airports with IATA codes, genuine air-traffic corridors, neutral
-          aviation theme.
+        comment: Real airport pairs carry invented volumes (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Flow values 2.3-6.5M pax/yr are realistic for major international
-          routes.
+        comment: '2.3–6.5M pax/yr plausible; checked subtitle claim: LHR→DXB 6.5 is
+          the max of the flow vector'
     code_quality:
       score: 10
       max: 10
@@ -186,35 +196,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> tokens -> data -> plot -> save. No functions or classes.
+        comment: Linear data → plot → save, no functions defined
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top.
+        comment: Deterministic data, set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, maps, ragg — all used.
+        comment: ggplot2, dplyr, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean pipeline with |>, organized join logic, manual nudge table
-          well-motivated.
+        comment: 'Hand-entered coastlines are justified: map packages are out of scope
+          per library prompt'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) with ragg::agg_png. Modern linewidth=
-          not deprecated size=.
+        comment: plot-{THEME}.png via ragg, ggplot2 4 API (linewidth, border.colour)
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -222,27 +231,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics layering, scale_linewidth_continuous,
-          guides() for legend ordering, coord_cartesian. Could use coord_sf for geographic
-          projection.
+        comment: Layered geoms with separate data, xend/yend aes, manual scales, guides()
+          ordering with override.aes
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: geom_curve for flow arcs and scale_linewidth_continuous are ggplot2-specific.
-          Combined color + linewidth aesthetics leverages the grammar well.
+        passed: false
+        comment: geom_curve() with arrow() for native curved arcs; ggplot2 4 geom_label
+          border.colour
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-195cdba0ef
+  rendered_at: '2026-11-08T23:18:51Z'
 impl_tags:
-  dependencies:
-  - maps
+  dependencies: []
   techniques:
-  - layer-composition
-  - annotations
   - bezier-curves
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
+  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
+  - publication-ready

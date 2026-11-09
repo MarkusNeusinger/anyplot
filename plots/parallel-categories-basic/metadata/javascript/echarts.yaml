@@ -2,11 +2,12 @@ library: echarts
 language: javascript
 specification_id: parallel-categories-basic
 created: '2026-09-05T10:06:21Z'
-updated: '2026-09-05T10:26:19Z'
-generated_by: claude-sonnet
-workflow_run: 33959338978
+updated: '2026-11-09T01:18:06Z'
+generated_by: claude-opus-5-5
+adopted_from: bcf57c7065e4dc1367af06203a65b484aae687fe (bcf57c7065e4dc1367af06203a65b484aae687fe)
+workflow_run: 42544455075
 issue: 2501
-language_version: 22.23.2
+language_version: 22.23.4
 library_version: 6.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/echarts/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/echarts/plot-dark.png
@@ -15,156 +16,150 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-
 quality_score: 89
 review:
   strengths:
-  - 'All three prior-attempt weaknesses addressed in this revision: a 4th dimension
-    (device type) was added, category nodes now carry their own semantic hue instead
-    of staying neutral, and node labels gained a background pill (padding + borderRadius)
-    that lifts them clearly off the ribbons in both themes.'
-  - 'The four-stage flow (channel -> category -> device -> outcome) is fully mass-conserved:
-    every intermediate node''s inbound sum equals its outbound sum (e.g. Electronics
-    630+420=1050 matches its channel inflow of 420+380+160+90=1050), which is the
-    kind of data discipline that makes a Sankey trustworthy.'
-  - layoutIterations raised to 100 is a genuine, documented attempt at the spec's
-    crossing-minimization guidance rather than a cosmetic tweak, and the code comment
-    explains why.
-  - Clean, fully deterministic, dependency-free code with correct theme-adaptive chrome
-    in both renders; colors are pixel-identical between light and dark, only chrome
-    flips.
+  - 'Builds the parallel-categories form natively from an ECharts Sankey: one justified
+    node column per dimension, one node per category with a height equal to its share,
+    and links split by outcome so every ribbon keeps its Purchased or Abandoned color
+    from the first axis to the last'
+  - 'Uses the Imprint semantic exception correctly: Purchased in brand green #009E73
+    and Abandoned in matte red #AE3030, with neutral inkSoft segments on the three
+    non-outcome axes so the outcome is the only color carrier'
+  - 'emphasis.focus ''trajectory'' gives the interactive path tracing the Notes mention
+    in the HTML view, and layoutIterations: 100 lets the layout settle on a category
+    order with fewer crossings'
+  - 'Theme tokens are threaded through every chrome element: ink axis names, inkSoft
+    subtitle and segments, and label pills filled with pageBg that stay readable over
+    ribbons in both themes'
+  - Realistic, neutral e-commerce funnel (2,430 visitors) derived deterministically
+    from channel volumes, desktop shares and purchase rates, so widths fall out of
+    the computation
   weaknesses:
-  - Adding the device stage increased the ribbon count between category and device
-    to a dense criss-cross (Electronics/Apparel/Home & Garden each splitting into
-    both Desktop and Mobile), so the middle of the diagram still reads as a busy blend
-    of overlapping semi-transparent colors - individual paths remain hard to trace
-    by eye even with the higher layoutIterations.
-  - The Desktop/Mobile waypoint nodes are thin and neutral-colored, which is correct
-    per the plan, but they sit close enough together that the small gap between their
-    two flows narrows to almost nothing near the middle crossing point - a touch more
-    nodeGap there would help separate them visually.
-  - Category node colors (cyan/rose/lime) are a nice semantic touch but aren't explained
-    anywhere in the UI (title/subtitle/legend) - a first-time viewer has to infer
-    that hue changes at each stage rather than reading a mapping.
+  - 'Suggestion: the Purchase outcome labels have no page-colored pill while the other
+    three axes do; giving them the same pill would make the label style uniform.'
+  - 'Suggestion: at opacity 0.6 the Abandoned ribbons read as a dark maroon on the
+    #1A1A17 surface; a slightly higher ribbon opacity in the dark theme would give
+    them more presence.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "parallel-categories-basic · javascript · echarts · anyplot.ai" and descriptive subtitle "Customer journey: acquisition channel → product category → device → purchase outcome" centered at top in dark ink, fully legible against the light surface. Node labels (channel/category/device/outcome names) now sit on a small light-background pill with rounded corners, so every label stays sharp even where it crosses a saturated ribbon.
-      Data: Four channel nodes (Organic Search = brand green #009E73, Paid Ads = lavender, Social Media = blue, Email Campaign = ochre), three category nodes now individually colored (Electronics = cyan, Apparel = rose, Home & Garden = lime), two neutral Desktop/Mobile waypoint nodes (light fill, soft ink border), two outcome nodes (Purchased = green, Abandoned = matte red). Ribbon width is proportional to count at every one of the three stages, and flow is mass-conserved node-to-node. The channel-to-category and especially the category-to-device bands still show heavy ribbon crossing, producing a busy blended-color middle section.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: centered bold title "parallel-categories-basic · javascript · echarts · anyplot.ai" with a soft-gray subtitle "2,430 visitors · ribbon width shows visitors, color shows purchase outcome"; four bold dark axis names (Acquisition channel, Product category, Device, Purchase outcome) above four node columns; category labels in small cream pills next to the dark gray segments. All of it is readable.
+      Data: 4 channel segments, 3 product segments, 2 device segments, 2 outcome segments (green Purchased, red Abandoned), with each segment's length matching its share. Ribbons are translucent green #009E73 or matte red #AE3030 by outcome throughout, and their widths are proportional to visitors. Crossings blend into darker tones, which is expected. Nothing is clipped.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title and subtitle flipped to light ink, fully legible against the dark surface. Node label pills flipped to a dark background with light text, staying readable against both the dark canvas and the semi-transparent ribbons behind them. No dark-on-dark failures observed.
-      Data: Same channel/category/outcome colors as the light render (green, lavender, blue, ochre, cyan, rose, lime, red) - confirmed pixel-identical across themes; only chrome (background, text, label-pill fill) flipped. Same ribbon-crossing density as the light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis names in light ink, subtitle in light gray, light-gray segments on the non-outcome axes, and category labels in near-black pills with light text. There is no dark-on-dark text.
+      Data: ribbon and outcome-segment colors are the same green #009E73 and red #AE3030 as in the light render; at 60 % opacity they read darker on the near-black surface but stay clearly visible. The layout is identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: New label background pills (padding + borderRadius) fix the prior
-          crowding issue; all text reads clearly in both themes.
+        comment: Explicit sizes (title 22, axis names 17, labels 15, subtitle 16 CSS
+          px at 2x); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Label pills lift text off the ribbons; no more label/data collisions.
+        comment: No text collisions; the label pills sit on ribbon starts without
+          hiding any ribbon; ribbon crossings are permitted
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Adding the device stage increased ribbon crossings between category
-          and device; the middle band still reads as a busy color blend despite layoutIterations=100.
+        comment: Segments and ribbons clearly visible in both themes; thin ribbons
+          for rare paths are permitted
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette throughout, redundant text labels for identification.
+        comment: CVD-optimized Imprint green and red with the outcome named on its
+          colored segments
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, generous margins, nothing clipped at any
-          edge.
+        comment: 3200x1800; balanced columns, axis names aligned with node columns,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a Sankey; title and updated subtitle clearly describe
-          all four stages.
+        comment: Descriptive dimension names; the subtitle states the encodings
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; correct semantic exception for Purchased/Abandoned;
-          backgrounds correct; colors identical across themes.'
+        comment: 'Semantic exception Purchased #009E73 / Abandoned #AE3030; correct
+          backgrounds; chrome from theme tokens'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Category nodes now carry individual semantic hues instead of staying
-          neutral, adding polish, but the overall configuration is still close to
-          ECharts Sankey defaults.
+        passed: true
+        comment: 'Beyond the baseline: a typographic hierarchy (bold axis headers,
+          a soft subtitle that explains the encoding) and page-colored label pills'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Label pills, curveness, and clean background are nice touches; still
-          fairly minimal customization beyond that.
+        passed: true
+        comment: Neutral segments on the non-outcome axes keep color for the outcome
+          only; axis names computed to align with the node columns; generous node
+          gaps
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Four color-coded stages (was three, with a flat neutral middle) now
-          carry visual hierarchy end-to-end, telling a clearer channel-to-outcome
-          story.
+        comment: Color confined to the outcome makes purchase vs abandonment the focal
+          reading across all paths; the total in the subtitle anchors the scale
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ECharts has no native parallel-categories chart; Sankey remains the
-          documented, justified substitute that reads visually as an alluvial/parallel-categories
-          chart.
+        comment: Parallel categories via Sankey columns; no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Count-proportional ribbon width, color-by-dimension, and now a genuine
-          crossing-minimization attempt (layoutIterations=100) per the spec's guidance.
+        comment: Named axes with proportional segments, count-proportional ribbons,
+          color by the last dimension kept across axes, layout-ordered categories,
+          trajectory highlighting
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All four dimensions and values represented and mass-conserved.
+        comment: Segment lengths and ribbon widths match the aggregated counts
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; node labels serve as the legend; subtitle
-          updated to list all four stages.
+        comment: Title format correct; the colored outcome segments with their labels
+          serve as the legend
     data_quality:
       score: 15
       max: 15
@@ -174,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Now uses 4 categorical dimensions (up from 3), better showcasing
-          the multi-dimensional nature of a parallel-categories/alluvial chart.
+        comment: 4 dimensions with 2-4 categories each; crossings, unequal segments
+          and thin rare paths all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral e-commerce customer-journey data with sensible
-          device-conversion asymmetry (desktop converts better than mobile).
+        comment: Neutral online-shop funnel with plausible channels, categories and
+          purchase rates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible count values for a mid-size funnel dataset; flows conserve
-          exactly across all three transition stages.
+        comment: 2,430 visitors; purchase rates 30-84 % per path are plausible; no
+          Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -199,34 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hardcoded, deterministic data.
+        comment: Fully deterministic, hard-coded inputs
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global echarts.
+        comment: No imports; uses the provided globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake interactivity.
+        comment: Link aggregation and axis-name placement are needed because the Sankey
+          series has neither; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set, correct mount-node contract, current Sankey
-          API.'
+        comment: Mount-node contract, animation disabled, current ECharts 6 API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -234,24 +229,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct idiomatic use of sankey series options including nodeAlign
-          and layoutIterations.
+        comment: Native sankey series with nodeAlign 'justify', per-node itemStyle,
+          label formatter and graphic text elements
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: curveness, adjacency-focus emphasis, tuned layoutIterations, and
-          custom label-pill styling go beyond a default Sankey configuration.
+        comment: emphasis.focus 'trajectory' for path tracing and layoutIterations
+          tuning to reduce crossings
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-34fe66d3f1
+  rendered_at: '2026-11-09T01:15:10Z'
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
+  - html-export
+  - edge-highlighting
+  - annotations
   patterns:
   - data-generation
+  - groupby-aggregation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - groupby-aggregation
   styling:
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome

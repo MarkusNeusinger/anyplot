@@ -2,67 +2,57 @@ library: pygal
 language: python
 specification_id: parliament-basic
 created: '2026-05-17T13:49:46Z'
-updated: '2026-10-07T09:06:13Z'
-generated_by: claude-sonnet
-workflow_run: 37595648657
+updated: '2026-11-09T00:26:35Z'
+generated_by: claude-opus-5-5
+adopted_from: 68ddebdc0340d846bc99a02c34862976a9d328b5 (68ddebdc0340d846bc99a02c34862976a9d328b5)
+workflow_run: 42539845588
 issue: 2499
-language_version: 3.13.15
+language_version: 3.14.10
 library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 87
 review:
   strengths:
-  - 'Exact Imprint palette in canonical order with #009E73 first: sampled pixels give
-    #009E73, #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD and #954477 identical in
-    both renders, on exactly #FAF8F1 (light) and #1A1A17 (dark) with #1A1A17 / #F0EFE8
-    chrome - only the chrome flips.'
-  - 'One mark per seat with the counts the legend states: counting connected dot blobs
-    per colour in the light render gives 158, 122, 95, 70, 54, 38 and 12 marks, and
-    each party sits as one contiguous wedge running from the inner arc to the outer.'
-  - 'pygal.XY repurposed for a non-cartesian layout: stroke=False with dots_size,
-    show_x_labels / show_y_labels / show_x_guides / show_y_guides all off and an explicit
-    xrange / range frame the dome with no axes and no grid, as the plot type needs.'
-  - Each party is its own pygal series, so the native interactive HTML output gives
-    every seat a hover tooltip naming its party and the legend doubles as pygal's
-    interactive series toggle.
-  - Largest-remainder apportionment gives every arc a seat capacity proportional to
-    its radius, so the dot spacing stays even from the innermost arc to the outermost
-    instead of crowding the short arcs.
+  - One equal-size dot per seat (549 dots for 549 seats) in 15 concentric arcs forming
+    a round half circle; the x/y ranges are derived from the plot-area aspect (x_half
+    = height span × 2.2 / 2) so the semicircle is not squashed
+  - Row radii and dot radius derived from the seat pitch, so the gap between arcs
+    matches the gap between neighbouring seats; largest-remainder allocation of seats
+    to arcs gives a dense, even layout
+  - Each party is one contiguous block in data order, filling the arcs left to right
+    by angle; stepped block boundaries as the spec permits
+  - Legend at the bottom in three columns lists every party with its seat count, swatches
+    match the dot colors in both themes
+  - 'Imprint palette in canonical order starting with #009E73; chrome threaded through
+    Style tokens so the title and legend read correctly on #FAF8F1 and #1A1A17'
+  - 'Clearly fictional chamber: neutral noun + group-word party names, no ideological
+    labels, no real country or election'
+  - Native pygal XY chart with per-series dots_size and guides/labels switched off;
+    the HTML keeps pygal's per-seat hover tooltips and legend toggling
   weaknesses:
-  - 'SC-02, VQ-05 (both): the arcs form an ellipse about 13 % wider than tall (the
-    outer arc spans about 2780 x 1210 px) instead of the half circle the spec''s characteristic
-    bullet names → equal px-per-data-unit on both axes (about -13 % on the x span).
-    Likely cause: xrange=(-99, 99) against range=(-7.2, 99) on the 3200x1800 frame,
-    which scales x and y by different factors.'
-  - 'SC-02 (both): the party blocks run right to left - Harborview Assembly (158,
-    #009E73) holds the right end of the arcs and Ashford Collective (12, #954477)
-    the left - where the spec''s characteristic bullet asks for the blocks to follow
-    one another from left to right → place the first party at the left end. Likely
-    cause: slots.sort(key=lambda slot: slot[0]) with angle 0 at +x, so the first seat
-    lands on the right.'
-  - 'CQ-01 (code): the parliament_layout() helper (lines 50-87) splits the Imports
-    → Data → Plot → Save flow the criterion asks for → inline its ~25-line body. Likely
-    cause: the function definition at line 50.'
-  - 'Suggestion: the majority threshold the Notes offer as optional (275 of 549 seats)
-    would give the chamber a reference point.'
+  - 'Suggestion: a few pixels of gap between each legend swatch and its label text
+    would let the legend breathe; the swatches currently sit flush against the party
+    names.'
+  - 'Suggestion: centering the bottom legend under the half circle (or a 4-column
+    layout) would balance the lone seventh entry on the last row.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, sampled at exactly #FAF8F1 across 5.62M of the 5.76M pixels - not pure white, not dark.
-      Chrome: Title "parliament-basic · python · pygal · anyplot.ai" centred at the top in near-black #1A1A17, spanning about 57 % of the canvas width. No axes, no tick labels and no grid lines at all - correct for this plot type, where a seat's position is layout rather than data. A seven-entry legend sits below the dome in three columns, each entry a small colour swatch plus "Party Name (seats)" in #1A1A17. All text is clearly readable against the light background; the bottom legend row ("Ashford Collective (12)") is fully inside the canvas with its descenders intact - no clipping.
-      Data: 549 equally sized dots arranged in ten concentric semicircular arcs forming a dome. Each party is one contiguous wedge spanning inner to outer arc. First series Harborview Assembly is #009E73 (brand green) on the right flank, then #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD and #954477 running leftwards. Dots are well separated everywhere; none merge. The dome is about 13 % wider than tall, so it reads as a flattened half circle rather than a true one.
-      Legibility verdict: PASS - title and all seven legend entries are readable, dots are clearly distinguishable from the off-white page, nothing is light-on-light.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white plot box.
+      Chrome: title "parliament-basic · python · pygal · anyplot.ai" centered at top in dark ink, ~58% of the width; no axes or grid (correct for a layout chart); bottom legend in three columns with square swatches and "Party (seats)" labels in dark ink — all readable.
+      Data: 15 concentric semicircular arcs of equal-size dots; blocks left to right: Harborview Assembly #009E73 (158), Rivermouth Coalition #C475FD (122), Timberwright Union #4467A3 (95), Stonebridge Front #BD8233 (70), Lowland Alliance #AE3030 (54), Millbrook Guild #2ABCCD (38), Ashford Collective #954477 (12, along the outer bottom-right). Contiguous blocks with stepped boundaries.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, sampled at exactly #1A1A17 - not pure black, not light.
-      Chrome: Same title and same three-column legend, now in light #F0EFE8. No dark-on-dark anywhere: every glyph of the title and of all seven legend labels renders in the light ink token against the near-black page. Legend swatches keep their party colours and remain visible. No clipping at any edge.
-      Data: Data colours are identical to the light render - pixel sampling returns the same #009E73, #C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD and #954477 hexes in both themes; only the background and the text colour flip. Brand green #009E73 reads clearly on the dark surface. The dimmer palette members (#4467A3 blue, #954477 plum) are still distinguishable from the page and from their neighbours.
-      Legibility verdict: PASS - all text readable light-on-dark, all seat marks visible, no dark-on-dark failures.
+      Background: warm near-black #1A1A17.
+      Chrome: title and legend labels in light ink #F0EFE8, clearly readable; no dark-on-dark text anywhere.
+      Data: dot colors and layout identical to the light render; only chrome flipped. All party colors stand out from the dark page, including #4467A3 and #954477.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -70,86 +60,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 66, legend 44, labels 56, ticks 44).
-          Title spans about 57 % of the width with no overflow; every legend entry
-          is readable in both themes. No axis labels to balance - this plot type has
-          no axes.
+        comment: Title 66, legend 46 source-px; readable in both themes and at thumbnail
+          size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'No text collisions: the title sits clear above the dome, the three-column
-          legend clear below it. The seat dots never touch one another, so no mark
-          hides another.'
+        comment: No text collisions; seat dots separated by even gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 549 dots at about 10 px diameter on a 3200 px canvas, evenly spaced
-          and individually distinguishable everywhere; small seat marks in a large
-          chamber are what the spec's permission bullet expects. Legend swatches are
-          visible and carry each party's own colour in both renders.
+        comment: Dots sized from the seat pitch, prominent for 549 seats; legend swatches
+          visible and matching in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Seven Imprint members, each distinguishable from its neighbouring
-          block and from the page in both themes; no red-green pair carries the encoding
-          alone.
+        comment: Neighbouring Imprint colors differ in hue and lightness; legend counts
+          back up the color coding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas is the canonical 3200x1800 and the dome is centred with balanced
-          margins, but the arcs are scaled about 13 % wider than tall, so the proportions
-          are elliptical rather than circular (defect line).
+        comment: 3200x1800; half circle round and centered, legend room reserved,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels N/A - a seat's position is layout, not data, and the
-          implementation correctly draws no axes. The title is descriptive and in
-          the mandated format.
+        comment: 'N/A: seat position is layout, no axes; title correct'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Pixel sampling returns the Imprint palette in canonical order with
-          #009E73 first, identical in both renders; backgrounds are exactly #FAF8F1
-          and #1A1A17 with #1A1A17 / #F0EFE8 chrome. Only the chrome flips.'
+        comment: 'Imprint canonical order starting #009E73; backgrounds #FAF8F1 /
+          #1A1A17'
     design_excellence:
-      score: 8
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: The complete style-guide baseline - Imprint palette, theme tokens,
-          the library prompt's font sizes verbatim - and nothing decided beyond it.
+        passed: true
+        comment: Equal-aspect ranges computed from the plot area keep the hemicycle
+          truly round; dot size derived from seat pitch for a dense, even mosaic
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No grid and no spines, which this plot type requires anyway; the
-          xrange / range padding frames the dome adequately. Nothing beyond the baseline.
+        passed: true
+        comment: Inter-row gap matched to in-row gap via radii/pitch; legend bottom
+          margin computed for the partial last row
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Parties are listed largest to smallest and coloured in palette order;
-          no focal point or hierarchy the implementation chose itself.
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -157,34 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: A semicircular parliament seat chart, one dot per seat. No reference
-          lines, highlighted seats, coalition bands, callouts or second chamber -
-          the basic variant's single chamber is kept.
+        comment: Semicircular parliament seat chart, single chamber, no unasked layers
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Seats in concentric arcs, one mark per seat, legend with party names
-          and seat counts, no axes or grid - all present. Two characteristic properties
-          are missed: the arcs form an ellipse rather than a half circle, and the
-          blocks run right to left instead of left to right (two defect lines).'
+        passed: true
+        comment: Arcs left to right, one dot per seat, legend with seat counts, contiguous
+          blocks in data order, no axes/grid
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Seat positions are layout, not data, and every party gets exactly
-          its seat count of slots - counted per colour in the render: 158/122/95/70/54/38/12.
-          No force, nudge or declutter pass.'
+        comment: Dot counts equal seat counts; layout-positioned type
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly "parliament-basic · python · pygal · anyplot.ai".
-          Legend labels name every party with its seat count and carry that party's
-          colour.
+        comment: Mandated title format; legend 'Party (seats)'
     data_quality:
       score: 15
       max: 15
@@ -194,73 +164,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Seven parties spanning 158 down to 12 seats show the full range the
-          plot type can hold - a dominant block, mid-sized blocks and a handful-of-seats
-          party - with no single party at a majority, so coalition reading is possible.
-          The optional majority line is a permission, not an aspect to exhibit.
+        comment: 7 parties from 158 down to 12 seats show large and tiny blocks; optional
+          majority line not drawn (allowed)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'The fictional chamber the spec asks for: seven invented parties
-          built from a neutral noun plus a group word (Harborview Assembly, Rivermouth
-          Coalition, Timberwright Union, Stonebridge Front, Lowland Alliance, Millbrook
-          Guild, Ashford Collective). No ideological family label, no real country,
-          parliament, election or politician anywhere.'
+        comment: Fictional chamber, neutral noun + group-word names, no ideological
+          labels
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'The Notes carry no "Check values:" bullet. Checked: 7 parties and
-          549 total seats, both inside the spec''s Data range (3-15 parties, 50-700
-          seats); the per-colour mark counts in the light render match the legend
-          exactly (158/122/95/70/54/38/12 and they sum to 549); no party reaches the
-          275-seat majority, which is coherent for a seven-group chamber.'
+        comment: 'Checked: 549 total seats (within 50-700), seats_per_dot=1 so dot
+          counts equal seat counts; no Check values in the spec'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: A parliament_layout() helper function breaks the Imports - Data -
-          Plot - Save flow the criterion asks for (defect line); the rest of the file
-          follows it.
+        passed: true
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic - hard-coded party data and a closed-form layout,
-          no randomness.
+        comment: Deterministic data and layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: math, os, sys, pygal and pygal.style.Style - all used; sys serves
-          the self-shadowing guard.
+        comment: os, numpy, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No available call computes a parliament seat layout, so writing it
-          out is not a deduction; the sys.path guard is exempt. No dead code, no duplicated
-          block, no fake UI.
+        comment: Layout math is compact; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: render_to_png(f"plot-{THEME}.png") plus the HTML pygal needs as an
-          interactive library; no bare plot.png, current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, pygal 3 API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -268,23 +223,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Beyond the prompt''s boilerplate: pygal.XY is driven into a non-cartesian
-          seat layout with stroke=False plus dots_size, all four of show_x_labels
-          / show_y_labels / show_x_guides / show_y_guides off, legend_at_bottom and
-          an explicit xrange / range to frame the dome - pygal''s own options rather
-          than post-processing.'
+        comment: XY chart with one series per party, per-series dots_size, legend_at_bottom_columns
+          and truncate_legend=-1 instead of hand-drawn elements
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: The native interactive SVG/HTML output and the Style token block
-          are what the library prompt mandates for every pygal implementation; nothing
-          distinctive to pygal beyond them.
+        comment: Pygal's native SVG tooltips per seat and clickable legend series
+          toggling in the HTML
   verdict: APPROVED
-  model: claude-opus-5
-  criteria_version: qc-c9b8f090a9.aqr-19d1d793cc.sg-7006008fc6.lib-54d55755be
-  rendered_at: '2026-10-07T08:53:13Z'
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T00:23:52Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -295,4 +246,3 @@ impl_tags:
   dataprep: []
   styling:
   - minimal-chrome
-  - publication-ready
