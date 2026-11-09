@@ -1,28 +1,175 @@
 // anyplot.ai
 // map-connection-lines: Connection Lines Map (Origin-Destination)
-// Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-26
+// Library: echarts 6.1.0 | JavaScript 22.23.4
+// Quality: 90/100 | Updated: 2026-11-09
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic): a global hub-airport flight network --
-const airports = [
-  { code: "JFK", lon: -73.7781, lat: 40.6413 },
-  { code: "LAX", lon: -118.4085, lat: 33.9416 },
-  { code: "GRU", lon: -46.4731, lat: -23.4356 },
-  { code: "LHR", lon: -0.4614, lat: 51.47 },
-  { code: "FRA", lon: 8.5706, lat: 50.0379 },
-  { code: "JNB", lon: 28.246, lat: -26.1392 },
-  { code: "DXB", lon: 55.3644, lat: 25.2532 },
-  { code: "DEL", lon: 77.1025, lat: 28.5562 },
-  { code: "SIN", lon: 103.9915, lat: 1.3644 },
-  { code: "HKG", lon: 113.9185, lat: 22.308 },
-  { code: "HND", lon: 139.7798, lat: 35.5494 },
-  { code: "SYD", lon: 151.1772, lat: -33.9399 },
+// Constants
+// Base map: Natural Earth 1:110m land (public domain, naturalearthdata.com) without
+// Antarctica and islands under 1 square degree, simplified (Douglas-Peucker, 0.8°) and
+// rounded to 0.1°; one [lon, lat] ring per landmass.
+const LAND = [
+  [[107, 77], [114.1, 75.8], [109.4, 74.2], [127, 73.6], [131.3, 70.8], [132.3, 71.8], [139.9, 71.5], [139.1, 72.4],
+    [140.5, 72.8], [169.6, 68.7], [170.8, 69], [170.5, 70.1], [175.7, 69.9], [180, 69], [180, 65], [177.4, 64.6],
+    [179.2, 62.3], [173.7, 61.7], [170.3, 59.9], [163.5, 59.9], [162, 58.2], [163.2, 57.6], [162.1, 54.9],
+    [156.8, 51], [155.9, 56.8], [164.5, 62.6], [160.1, 60.5], [159.3, 61.8], [156.7, 61.4], [154.2, 59.8],
+    [155, 59.1], [142.2, 59], [135.1, 54.7], [139.9, 54.2], [141.4, 52.2], [138.2, 46.3], [127.5, 39.8],
+    [129.5, 36.8], [129.1, 35.1], [126.5, 34.4], [126.9, 36.9], [124.7, 38.1], [125.3, 39.6], [121.1, 38.9],
+    [121.6, 40.9], [118, 39.2], [118.9, 37.4], [122.4, 37.5], [119.2, 34.9], [121.9, 31.7], [121.7, 28.2],
+    [115.9, 22.8], [110.8, 21.4], [110.4, 20.3], [108.5, 21.7], [105.9, 19.8], [109.3, 13.4], [109.2, 11.7],
+    [105.2, 8.6], [105.1, 9.9], [100.1, 13.4], [99.2, 9.2], [103, 5.5], [104.2, 1.3], [101.4, 2.8], [100.1, 6.5],
+    [98.3, 7.8], [98.8, 11.4], [97.2, 16.9], [94.2, 16], [94.3, 18.2], [91.4, 22.8], [87, 21.5], [80.3, 15.9],
+    [79.9, 10.4], [77.5, 8], [73.5, 16], [72.6, 21.4], [70.5, 20.9], [66.4, 25.4], [57.4, 25.7], [56.5, 27.1],
+    [54.7, 26.5], [51.5, 27.9], [50.1, 30.1], [48, 30], [51.8, 24], [54, 24.1], [56.4, 26.4], [56.8, 24.2],
+    [59.8, 22.3], [55.3, 17.2], [43.5, 12.6], [42.6, 16.8], [34.6, 28.1], [34.9, 29.5], [33.9, 27.6], [32.4, 29.9],
+    [36.9, 22], [37.5, 18.6], [43.3, 12.4], [42.7, 11.7], [44.6, 10.4], [51.1, 12], [51, 10.6], [47.7, 4.2],
+    [39.2, -4.7], [40.8, -14.7], [34.8, -19.8], [35.6, -23.7], [32.6, -25.7], [32.2, -28.8], [25.8, -33.9],
+    [18.4, -34.1], [11.8, -18.1], [13.7, -10.7], [11.9, -5], [8.8, -1.1], [9.4, 3.7], [8.5, 4.8], [5.9, 4.3],
+    [4.3, 6.3], [-2, 4.7], [-9, 4.8], [-16.6, 12.2], [-17.6, 14.7], [-16.1, 18.1], [-17, 21.9], [-5.9, 35.8],
+    [-2.2, 35.2], [9.5, 37.4], [11.1, 36.9], [10.3, 33.8], [19.1, 30.3], [21.5, 32.8], [28.9, 30.9], [33.8, 31],
+    [36.2, 36.7], [27.6, 36.7], [26.2, 39.5], [33.5, 42], [38.3, 40.9], [41.7, 42], [36.7, 45.2], [39.1, 47.3],
+    [35, 46.3], [36.3, 45.1], [33.9, 44.4], [32.5, 45.3], [33.3, 46.1], [30.7, 46.6], [27.7, 42.6], [28.8, 41.1],
+    [22.6, 40.3], [24, 37.7], [22.5, 36.4], [19.4, 40.3], [19.5, 41.7], [13.1, 45.7], [12.6, 44.1], [18.5, 40.2],
+    [16.9, 40.4], [16.1, 38], [15.4, 40], [8.9, 44.4], [3.1, 43.1], [-2.1, 36.7], [-5.4, 35.9], [-8.9, 36.9],
+    [-9.4, 43], [-1.4, 44], [-1.2, 46], [-4.6, 48.7], [-1.6, 48.6], [-1.9, 49.8], [1.3, 50.1], [4.7, 53.1],
+    [8.1, 53.5], [8.5, 57.1], [10.6, 57.7], [9.7, 55.5], [10.9, 54], [19.7, 54.4], [21.3, 55.2], [21.6, 57.4],
+    [24.1, 57], [23.3, 59.2], [29.1, 60], [21.3, 60.7], [21.5, 63.2], [25.4, 65.1], [22.2, 65.7], [17.8, 62.7],
+    [17.1, 61.3], [18.8, 60.1], [15.9, 56.1], [12.9, 55.4], [10.4, 59.5], [5.7, 58.6], [5, 62], [14.8, 67.8],
+    [24.5, 71], [28.2, 71.2], [41.1, 67.5], [38.4, 66], [33.2, 66.6], [37, 63.8], [37.2, 65.1], [39.6, 64.5],
+    [42.1, 66.5], [43.9, 66.1], [43.5, 68.6], [46.3, 68.3], [46.3, 66.7], [53.7, 68.9], [59.9, 68.3], [61.1, 68.9],
+    [60.6, 69.9], [68.5, 68.1], [69.2, 68.6], [66.9, 69.5], [66.7, 71], [69.2, 72.8], [72.6, 72.8], [71.8, 71.4],
+    [73.7, 68.4], [71.3, 66.3], [72.4, 66.2], [75.1, 67.8], [73.1, 71.4], [74.7, 72.8], [76.4, 71.2], [75.9, 71.9],
+    [77.6, 72.3], [81.5, 71.8], [80.5, 73.6], [86.8, 73.9], [86, 74.5], [87.2, 75.1], [104.4, 77.7]],
+  [[-90.5, 69.5], [-90.6, 68.5], [-89.2, 69.3], [-87.4, 67.2], [-85.5, 69.9], [-82.6, 69.7], [-81.3, 69.2],
+    [-81.3, 67.6], [-85.8, 66.6], [-93.2, 62], [-94.7, 58.9], [-92.3, 57.1], [-82.3, 55.1], [-82.1, 53.3],
+    [-79.9, 51.2], [-78.6, 52.6], [-79.8, 54.7], [-76.5, 56.5], [-78.5, 58.8], [-77.3, 59.9], [-78.1, 62.3],
+    [-73.8, 62.4], [-69.6, 61.1], [-69.3, 59], [-67.6, 58.2], [-64.6, 60.3], [-61.8, 56.3], [-57.3, 54.6],
+    [-55.7, 52.1], [-60, 50.2], [-66.4, 50.2], [-71.1, 46.8], [-65.1, 49.2], [-64.5, 46.2], [-61.5, 45.9],
+    [-60.5, 47], [-59.8, 45.9], [-65.4, 43.5], [-66.2, 44.5], [-64.4, 45.3], [-67.1, 45.1], [-70.7, 43],
+    [-70, 41.6], [-75.5, 39.5], [-75.9, 37.2], [-76.3, 39.2], [-75.7, 35.6], [-81.3, 31.4], [-80.4, 25.2],
+    [-84.1, 30.1], [-93.8, 29.7], [-96.6, 28.3], [-97.9, 22.4], [-96.3, 19.3], [-94.4, 18.1], [-92, 18.7],
+    [-90.3, 21], [-87.1, 21.5], [-88.9, 15.9], [-83.4, 15.3], [-83.8, 11.1], [-81.4, 8.8], [-79.6, 9.6],
+    [-76.8, 8.6], [-74.9, 11.1], [-71.8, 12.4], [-71.7, 9.1], [-69.9, 12.2], [-68.2, 10.6], [-61.9, 10.7],
+    [-62.4, 9.9], [-57.1, 6], [-51.3, 4.2], [-50.4, -0.1], [-44.9, -1.6], [-44.6, -2.7], [-40, -2.9], [-35.6, -5.1],
+    [-34.7, -7.3], [-38.7, -13.1], [-40.9, -21.9], [-47.6, -24.9], [-48.9, -28.7], [-53.8, -34.4], [-58.4, -33.9],
+    [-56.8, -36.9], [-59.2, -38.7], [-62.3, -38.8], [-62.7, -41], [-65.1, -41.1], [-63.5, -42.6], [-67.3, -45.6],
+    [-66, -48.1], [-69.1, -50.7], [-68.2, -52.3], [-71, -53.8], [-74.9, -52.3], [-75.6, -48.7], [-74.1, -46.9],
+    [-75.6, -46.6], [-72.7, -42.4], [-74.3, -43.2], [-73.6, -37.2], [-71.4, -32.4], [-70.2, -19.8], [-71.5, -17.4],
+    [-76, -14.6], [-81.2, -6.1], [-79.8, -2.7], [-80.9, -1.1], [-77.1, 3.8], [-78.2, 8.3], [-79.6, 8.9],
+    [-80.9, 7.2], [-85.7, 9.9], [-87.5, 13.3], [-103.5, 18.3], [-105.5, 19.9], [-106, 22.8], [-114.8, 31.8],
+    [-109.4, 23.2], [-112.2, 24.7], [-115.1, 27.7], [-114.2, 28.6], [-117.3, 33], [-120.6, 34.6], [-124.4, 40.3],
+    [-124.7, 48.2], [-122.6, 47.1], [-122.8, 49], [-127.4, 50.8], [-134.1, 58.1], [-147.1, 60.9], [-151.7, 59.2],
+    [-150.6, 61.3], [-158.4, 56], [-164.8, 54.4], [-157.7, 57.6], [-157, 58.9], [-162, 58.7], [-161.9, 59.6],
+    [-166.1, 61.5], [-164.6, 63.1], [-160.8, 63.8], [-160.8, 64.8], [-165, 64.4], [-168.1, 65.7], [-161.7, 66.1],
+    [-166.8, 68.4], [-156.6, 71.4], [-136.5, 68.9], [-128.1, 70.5], [-108.9, 67.4], [-108.2, 68.7], [-106.2, 68.8],
+    [-101.5, 67.6], [-97.7, 68.6], [-96.1, 67.3], [-94.2, 69.1], [-96.5, 70.1], [-95.2, 71.9]],
+  [[143.6, -13.8], [145.4, -15], [146.4, -19], [153.1, -26.1], [152.9, -31.6], [150, -37.4], [146.3, -39],
+    [145, -37.9], [143.6, -38.8], [140.6, -38], [138.2, -34.4], [136.8, -35.3], [137.8, -32.9], [136, -34.9],
+    [134.3, -32.6], [131.3, -31.5], [118, -35.1], [115, -34.2], [115.7, -31.6], [113.3, -26.1], [114.2, -26.3],
+    [113.4, -24.4], [114.1, -21.8], [120.9, -19.7], [125.7, -14.2], [129.6, -15], [132.4, -11.1], [136.5, -11.9],
+    [135.5, -15], [140.2, -17.7], [142.5, -10.7]],
+  [[-27.1, 83.5], [-20.8, 82.7], [-31.9, 82.2], [-12.2, 81.3], [-20, 80.2], [-17.7, 80.1], [-19.7, 78.8],
+    [-18.5, 77], [-21.7, 76.6], [-19.8, 76.1], [-20.7, 75.2], [-19.4, 74.3], [-23.6, 73.3], [-22.3, 72.2],
+    [-24.8, 72.3], [-21.8, 70.7], [-25.5, 71.4], [-26.4, 70.2], [-22.3, 70.1], [-39.8, 65.5], [-42.8, 62.7],
+    [-43.4, 60.1], [-48.3, 60.9], [-51.6, 63.6], [-54, 67.2], [-50.9, 69.9], [-54.7, 69.6], [-54.4, 70.8],
+    [-51.4, 70.6], [-55.8, 71.7], [-54.7, 72.6], [-58.6, 75.5], [-68.5, 76.1], [-71.4, 77], [-66.8, 77.4],
+    [-73.3, 78], [-65.7, 79.4], [-68, 80.1], [-62.7, 81.8], [-44.5, 81.7], [-46.8, 82.6]],
+  [[-86.6, 73.2], [-82.3, 73.8], [-80.7, 72.1], [-77.8, 72.7], [-72.2, 71.6], [-67, 69.2], [-68.8, 68.7],
+    [-61.9, 66.9], [-63.9, 65], [-68, 66.3], [-64.7, 63.4], [-68.8, 63.7], [-66.2, 61.9], [-74.8, 64.7],
+    [-77.7, 64.2], [-77.9, 65.3], [-74, 65.5], [-72.9, 67.7], [-79, 70.2], [-89.9, 71.2], [-89.4, 73.1],
+    [-85.8, 73.8]],
+  [[-68.5, 83.1], [-61.9, 82.6], [-76.9, 79.3], [-75.4, 78.5], [-80.6, 76.2], [-89.5, 76.5], [-87.8, 77.2],
+    [-88.3, 77.9], [-85, 77.5], [-88, 78.4], [-85.1, 79.3], [-86.9, 80.3], [-81.8, 80.5], [-91.6, 81.9]],
+  [[134.1, -1.2], [135.5, -3.4], [138.3, -1.7], [144.6, -3.9], [150.7, -10.6], [147.9, -10.1], [144.7, -7.6],
+    [142.6, -9.3], [137.6, -8.4], [138.7, -7.3], [137.9, -5.4], [133, -4.1], [132, -2.8], [133.7, -2.2],
+    [130.5, -0.9]],
+  [[117.9, 1.8], [119, 0.9], [117.8, 0.8], [116.1, -4], [110.2, -2.9], [109.1, -0.5], [109.7, 2], [113, 3.1],
+    [116.7, 6.9], [119.2, 5.4], [117.3, 3.2]],
+  [[50.1, -13.6], [50.4, -15.7], [47.1, -24.9], [44, -25], [43.3, -22.1], [44.4, -16.2], [47.7, -14.6],
+    [49.2, -12]],
+  [[-114.2, 73.1], [-109.9, 73], [-108.2, 71.7], [-108.4, 73.1], [-106.5, 73.1], [-101.1, 69.6], [-113.3, 68.5],
+    [-117.3, 70], [-112.4, 70.4], [-119.4, 71.6]],
+  [[105.8, -5.9], [102.6, -4.2], [95.3, 5.5], [97.5, 5.2], [103.8, 0.1], [103.4, -0.7], [106.1, -3.1]],
+  [[-3, 58.6], [-4.1, 57.6], [-2, 57.7], [-3.1, 56], [1.7, 52.7], [1.4, 51.3], [-5.2, 50], [-3.4, 51.4], [-5.3, 52],
+    [-4.2, 52.3], [-4.6, 53.5], [-2.9, 54], [-6.1, 56.8], [-5, 58.6]],
+  [[141, 37.1], [140.3, 35.1], [135.8, 33.5], [135.1, 34.6], [131, 33.9], [132, 33.1], [130.2, 31.4], [129.4, 33.3],
+    [132.6, 35.4], [135.7, 35.5], [136.7, 37.3], [139.4, 38.2], [139.9, 40.6], [141.4, 41.4]],
+  [[57.5, 70.7], [51.5, 72], [55.6, 75.1], [68.9, 76.5], [58.5, 74.3], [55.4, 72.4]],
+  [[-14.5, 66.5], [-13.6, 65.1], [-18.7, 63.5], [-22.8, 64], [-21.8, 64.4], [-24, 64.9], [-22.2, 65.4],
+    [-24.3, 65.6]],
+  [[-94.7, 77.1], [-79.8, 74.9], [-89.8, 74.5], [-97.1, 76.8]],
+  [[-120.5, 71.4], [-125.9, 71.9], [-123.9, 73.7], [-124.9, 74.3], [-115.5, 73.5]],
+  [[-175, 66.6], [-169.9, 66], [-172.5, 65.4], [-173, 64.3], [-178.7, 66.1], [-180, 65], [-180, 69]],
+  [[18.3, 79.7], [21.5, 79], [15.9, 76.8], [10.4, 79.7]],
+  [[-87, 79.7], [-85.8, 79.3], [-90.8, 78.2], [-96.7, 80.2], [-92.4, 81.3]],
+  [[173, -40.9], [174.2, -41.3], [173.1, -43.9], [169.3, -46.6], [166.7, -46.2]],
+  [[125.2, 1.4], [120.2, 0.2], [120.9, -1.4], [123.3, -0.6], [121.5, -1.9], [123.2, -5.3], [121.5, -4.6],
+    [121, -2.6], [120.4, -5.5], [119.4, -5.4], [118.8, -2.8], [120, 0.6]],
+  [[-108.2, 76.2], [-105.7, 75.5], [-112.2, 74.4], [-113.9, 74.7], [-111.8, 75.2], [-117.7, 75.2], [-115.4, 76.5]],
+  [[174.6, -36.2], [176.8, -37.9], [178.5, -37.7], [175.2, -41.7], [173.8, -39.5], [174.7, -37.4], [172.6, -34.5]],
+  [[-56.1, 50.7], [-56.8, 49.8], [-53.5, 49.2], [-53.1, 46.7], [-54.2, 47.8], [-55.4, 46.9], [-59.3, 47.6],
+    [-55.4, 51.6]],
+  [[143.9, 44.2], [145.3, 44.4], [145.5, 43.3], [140, 41.6], [142, 45.6]],
+  [[99.9, 78.9], [91.2, 80.3], [95.9, 81.3], [100.2, 79.8]],
+  [[143.6, 50.7], [144.7, 49], [143.2, 49.3], [143.5, 46.1], [142.1, 46], [142.2, 54.2]],
+  [[-6.8, 52.3], [-10, 51.8], [-9.7, 53.9], [-6.7, 55.2], [-5.7, 54.6]],
+  [[-67.8, -53.9], [-65, -54.7], [-69.2, -55.5], [-74.7, -52.8], [-71.1, -54.1], [-69.3, -52.5]],
+  [[-79.7, 22.8], [-74.2, 20.3], [-77.8, 19.9], [-77.1, 20.4], [-78.7, 21.6], [-81.8, 22.6], [-85, 21.9],
+    [-82.3, 23.2]],
+  [[-85.2, 65.7], [-80.1, 63.7], [-87.2, 63.5]],
+  [[121.3, 18.5], [122.5, 17.1], [121.7, 14.3], [124, 13.8], [124.1, 12.5], [120.1, 15]],
+  [[126.4, 8.4], [125.4, 5.6], [123.6, 7.8], [121.9, 7.2], [125.4, 9.8]],
+  [[-72.6, 19.9], [-68.3, 18.6], [-71.4, 17.6], [-74.5, 18.3], [-72.3, 18.7], [-73.4, 19.6]],
+  [[-100.4, 73.8], [-97.4, 73.8], [-98.1, 73], [-96.7, 71.7], [-102.5, 72.5], [-100.4, 72.7], [-101.5, 73.4]],
+  [[145.4, -40.8], [148.3, -40.9], [147.9, -43.2], [146, -43.5]],
+  [[108.6, -6.8], [115.7, -8.4], [105.4, -6.9], [106.1, -5.9]],
+  [[-93.2, 72.8], [-95.4, 72.1], [-96, 73.4], [-90.5, 73.9]],
+  [[81.2, 6.2], [79.9, 6.8], [80.1, 9.8], [81.8, 7.5]],
+  [[-98.5, 76.7], [-98.2, 75], [-102.5, 75.6]],
+  [[105.1, 78.3], [99.4, 77.9], [102.1, 79.3]],
+  [[-116.2, 77.6], [-117.1, 76.5], [-122.9, 76.1]],
+  [[145.1, 75.6], [137, 75.3], [138.8, 76.1]],
+  [[15.5, 38.2], [15.1, 36.6], [12.4, 37.6]],
+  [[121.2, 22.8], [120.7, 22], [120.1, 23.6], [121.5, 25.3]],
+  [[9.2, 41.2], [9.7, 39.2], [8.8, 38.9], [8.2, 41]],
+  [[-100.1, 78.3], [-105.2, 78.4], [-104.2, 78.7], [-105.5, 79.3]],
+  [[-95.6, 69.1], [-99.8, 69.4], [-98.2, 70.1]],
+  [[124, 10.3], [123, 9], [122.4, 9.7], [124.1, 11.2]],
+  [[125.5, 12.2], [124.8, 10.1], [124.3, 12.6]],
+  [[110.3, 18.7], [108.6, 19.4], [110.8, 20.1]],
+  [[25.4, 80.4], [27.4, 80.1], [17.4, 80.3]],
+  [[-58.5, -51.1], [-58, -51.9], [-61.2, -51.9]],
+  [[128.7, 1.1], [128.1, -0.9], [127.9, 2.2]],
+  [[130.5, -3.1], [130.8, -3.9], [127.9, -3.4]],
 ];
 
-// [origin, destination, annual passengers in thousands]
-const routes = [
+// Columns: set these to your data's column names
+const ORIGIN = "Origin airport"; // role: extra
+const DESTINATION = "Destination airport"; // role: extra
+const ORIGIN_LAT = "Origin latitude (°)"; // role: origin_lat
+const ORIGIN_LON = "Origin longitude (°)"; // role: origin_lon
+const DEST_LAT = "Destination latitude (°)"; // role: dest_lat
+const DEST_LON = "Destination longitude (°)"; // role: dest_lon
+const PASSENGERS = "Annual passengers (thousands)"; // role: value
+
+// Data: replace this block with your own records, one object per connection
+// A global hub-airport network: [origin, destination, annual passengers in thousands]
+const airports = {
+  JFK: [40.6413, -73.7781],
+  LAX: [33.9416, -118.4085],
+  GRU: [-23.4356, -46.4731],
+  LHR: [51.47, -0.4614],
+  FRA: [50.0379, 8.5706],
+  JNB: [-26.1392, 28.246],
+  DXB: [25.2532, 55.3644],
+  DEL: [28.5562, 77.1025],
+  SIN: [1.3644, 103.9915],
+  HKG: [22.308, 113.9185],
+  HND: [35.5494, 139.7798],
+  SYD: [-33.9399, 151.1772],
+};
+const data = [
   ["JFK", "LHR", 2800],
   ["JFK", "FRA", 1200],
   ["JFK", "GRU", 1100],
@@ -41,158 +188,183 @@ const routes = [
   ["SIN", "SYD", 1600],
   ["HKG", "HND", 1900],
   ["HND", "SYD", 1000],
-];
-
-const byCode = Object.fromEntries(airports.map((a) => [a.code, a]));
-const maxPassengers = Math.max(...routes.map((r) => r[2]));
-
-const traffic = {};
-for (const [origin, dest, passengers] of routes) {
-  traffic[origin] = (traffic[origin] || 0) + passengers;
-  traffic[dest] = (traffic[dest] || 0) + passengers;
-}
-
-// Hand-simplified continent silhouettes (lon/lat vertex lists) so the plot
-// reads as a base map — no bundled world GeoJSON or network fetch is
-// available to this offline browser runtime, so the coastlines are
-// hard-coded low-vertex approximations rather than authoritative data.
-const landmasses = [
-  [[-170, 70], [-150, 72], [-130, 70], [-125, 60], [-95, 68], [-80, 62], [-65, 50], [-55, 48], [-60, 45], [-75, 35], [-80, 25], [-97, 26], [-105, 20], [-115, 30], [-124, 40], [-124, 48], [-130, 55], [-140, 60], [-165, 60], [-170, 70]],
-  [[-80, 10], [-77, 5], [-79, -5], [-70, -18], [-70, -30], [-73, -45], [-68, -55], [-65, -55], [-58, -38], [-48, -25], [-35, -8], [-50, 2], [-60, 8], [-70, 12], [-80, 10]],
-  [[-10, 43], [-9, 53], [0, 51], [5, 58], [10, 58], [20, 60], [30, 60], [40, 66], [35, 55], [28, 45], [22, 40], [15, 38], [10, 44], [0, 44], [-5, 43], [-10, 43]],
-  [[-17, 15], [-16, 27], [-6, 35], [10, 37], [20, 33], [32, 31], [35, 20], [43, 12], [51, 12], [42, -1], [40, -15], [35, -25], [27, -33], [18, -34], [12, -18], [8, -5], [-5, 5], [-17, 15]],
-  [[40, 66], [60, 68], [80, 73], [105, 75], [130, 72], [140, 60], [135, 50], [142, 45], [130, 32], [122, 25], [110, 20], [100, 10], [95, 5], [80, 8], [70, 20], [60, 25], [50, 30], [45, 40], [40, 50], [35, 55], [40, 66]],
-  [[113, -22], [122, -18], [130, -12], [136, -12], [142, -11], [145, -16], [153, -28], [150, -37], [140, -38], [130, -32], [115, -35], [113, -22]],
-];
-
-// The DXB/DEL/HKG/SIN hub cluster sits close together, so its arcs converge
-// and overlap; bow those routes out further and thin them slightly so
-// individual connections stay distinguishable.
-const denseCluster = new Set(["DXB", "DEL", "HKG", "SIN"]);
-// LHR and FRA sit ~9° of longitude apart, close enough that two top-anchored
-// labels crowd each other; drop FRA's label below its marker instead.
-const labelPositionOverrides = { FRA: "bottom" };
-
-const lineData = routes.map(([origin, dest, passengers]) => {
-  const share = passengers / maxPassengers;
-  const inDenseCluster = denseCluster.has(origin) && denseCluster.has(dest);
-  return {
-    coords: [
-      [byCode[origin].lon, byCode[origin].lat],
-      [byCode[dest].lon, byCode[dest].lat],
-    ],
-    value: passengers,
-    lineStyle: {
-      width: (1.2 + share * 5) * (inDenseCluster ? 0.8 : 1),
-      opacity: 0.28 + share * 0.32,
-      curveness: inDenseCluster ? 0.32 : 0.2,
-    },
-  };
-});
-
-const nodeData = airports.map((a) => ({
-  name: a.code,
-  value: [a.lon, a.lat, traffic[a.code]],
-  label: labelPositionOverrides[a.code] ? { position: labelPositionOverrides[a.code] } : undefined,
+].map(([origin, destination, passengers]) => ({
+  [ORIGIN]: origin,
+  [DESTINATION]: destination,
+  [ORIGIN_LAT]: airports[origin][0],
+  [ORIGIN_LON]: airports[origin][1],
+  [DEST_LAT]: airports[destination][0],
+  [DEST_LON]: airports[destination][1],
+  [PASSENGERS]: passengers,
 }));
 
-// --- Init --------------------------------------------------------------
-const chart = echarts.init(document.getElementById("container"));
+// Plot: reads only data and the constants above
+const rad = Math.PI / 180;
+const maxPassengers = Math.max(...data.map((d) => d[PASSENGERS]));
 
-// --- Option --------------------------------------------------------------
+// Northward component of the initial great-circle bearing from one point to another
+const northward = (lon1, lat1, lon2, lat2) => {
+  const [l1, p1, l2, p2] = [lon1, lat1, lon2, lat2].map((v) => v * rad);
+  return Math.cos(Math.atan2(
+    Math.sin(l2 - l1) * Math.cos(p2),
+    Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(l2 - l1),
+  ));
+};
+
+// One marker per airport, sized by the passengers of all its routes; the label goes
+// above or below the marker, on the side no route leaves from as steeply
+const hubs = new Map();
+data.forEach((d) => {
+  [
+    [d[ORIGIN], d[ORIGIN_LON], d[ORIGIN_LAT], d[DEST_LON], d[DEST_LAT]],
+    [d[DESTINATION], d[DEST_LON], d[DEST_LAT], d[ORIGIN_LON], d[ORIGIN_LAT]],
+  ].forEach(([name, lon, lat, otherLon, otherLat]) => {
+    const hub = hubs.get(name) ?? { name, value: [lon, lat, 0], north: -1, south: -1 };
+    const north = northward(lon, lat, otherLon, otherLat);
+    hub.value[2] += d[PASSENGERS];
+    hub.north = Math.max(hub.north, north);
+    hub.south = Math.max(hub.south, -north);
+    hubs.set(name, hub);
+  });
+});
+hubs.forEach((hub) => {
+  hub.label = { position: hub.north > hub.south ? "bottom" : "top" };
+  delete hub.north;
+  delete hub.south;
+});
+const maxTraffic = Math.max(...[...hubs.values()].map((hub) => hub.value[2]));
+
+// Great-circle arcs: spherical interpolation between the two endpoints, a point every
+// 2° of arc, split where an arc crosses the antimeridian so no segment spans the map
+const routes = data.flatMap((d) => {
+  const [lon1, lat1, lon2, lat2] = [d[ORIGIN_LON], d[ORIGIN_LAT], d[DEST_LON], d[DEST_LAT]].map((v) => v * rad);
+  const a = [Math.cos(lat1) * Math.cos(lon1), Math.cos(lat1) * Math.sin(lon1), Math.sin(lat1)];
+  const b = [Math.cos(lat2) * Math.cos(lon2), Math.cos(lat2) * Math.sin(lon2), Math.sin(lat2)];
+  const omega = Math.acos(Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
+  const steps = Math.max(1, Math.ceil(omega / (2 * rad)));
+  const points = Array.from({ length: steps + 1 }, (_, s) => {
+    const f = s / steps;
+    const wa = omega > 0 ? Math.sin((1 - f) * omega) / Math.sin(omega) : 1 - f;
+    const wb = omega > 0 ? Math.sin(f * omega) / Math.sin(omega) : f;
+    const [x, y, z] = a.map((v, k) => wa * v + wb * b[k]);
+    return [Math.atan2(y, x) / rad, Math.atan2(z, Math.hypot(x, y)) / rad];
+  });
+  const segments = [[points[0]]];
+  points.slice(1).forEach((p, s) => {
+    if (Math.abs(p[0] - points[s][0]) > 180) segments.push([]);
+    segments.at(-1).push(p);
+  });
+  const share = d[PASSENGERS] / maxPassengers;
+  return segments.map((coords) => ({
+    name: `${d[ORIGIN]}–${d[DESTINATION]}`,
+    value: d[PASSENGERS],
+    coords,
+    lineStyle: { width: 1.2 + share * 5, opacity: 0.4 + share * 0.3 },
+  }));
+});
+
+// The base map is one registered map of three regions, drawn in order: an outline over
+// every longitude and the latitudes the land covers (60°S to 84°N), so the layout fits
+// the whole map; a graticule every 30° inside it; and the land on top
+const [south, north] = [-60, 84];
+const meridians = Array.from({ length: 13 }, (_, i) =>
+  Array.from({ length: 37 }, (_, k) => [-180 + 30 * i, south + ((north - south) * k) / 36]),
+);
+const parallels = [-30, 0, 30, 60].map((lat) => Array.from({ length: 73 }, (_, k) => [-180 + 5 * k, lat]));
+echarts.registerMap("world", {
+  type: "FeatureCollection",
+  features: [
+    ["Outline", "Polygon", [[...meridians[0], ...meridians.at(-1).toReversed()]]],
+    ["Graticule", "MultiLineString", [...meridians.slice(1, -1), ...parallels]],
+    ["Land", "MultiPolygon", LAND.map((ring) => [ring])],
+  ].map(([name, type, coordinates]) => ({ type: "Feature", properties: { name }, geometry: { type, coordinates } })),
+});
+
+// Natural Earth projection (Šavrič et al. 2011), y pointing down; the inverse solves
+// the latitude polynomial with Newton steps
+const projection = {
+  project: ([lon, lat]) => {
+    const phi = lat * rad;
+    const phi2 = phi * phi;
+    const phi4 = phi2 * phi2;
+    return [
+      lon * rad * (0.8707 - 0.131979 * phi2 + phi4 * (-0.013791 + phi4 * (0.003971 * phi2 - 0.001529 * phi4))),
+      -phi * (1.007226 + phi2 * (0.015085 + phi4 * (-0.044475 + 0.028874 * phi2 - 0.005916 * phi4))),
+    ];
+  },
+  unproject: ([x, y]) => {
+    let phi = -y;
+    for (let k = 0; k < 25; k++) {
+      const phi2 = phi * phi;
+      const phi4 = phi2 * phi2;
+      phi -=
+        (phi * (1.007226 + phi2 * (0.015085 + phi4 * (-0.044475 + 0.028874 * phi2 - 0.005916 * phi4))) + y) /
+        (1.007226 + phi2 * (0.045255 + phi4 * (-0.311325 + 0.259866 * phi2 - 0.065076 * phi4)));
+    }
+    const phi2 = phi * phi;
+    const phi4 = phi2 * phi2;
+    const scale = 0.8707 - 0.131979 * phi2 + phi4 * (-0.013791 + phi4 * (0.003971 * phi2 - 0.001529 * phi4));
+    return [x / scale / rad, phi / rad];
+  },
+};
+
 const title = "Global Flight Routes · map-connection-lines · javascript · echarts · anyplot.ai";
 const titleFontSize = Math.round(22 * Math.min(1, 67 / title.length));
+
+const chart = echarts.init(document.getElementById("container"));
 
 chart.setOption({
   animation: false,
   backgroundColor: "transparent",
-  color: [t.palette[0]],
   title: {
     text: title,
     subtext: "Line width & opacity scale with annual passenger volume (thousands) · marker size scales with hub traffic",
     left: "center",
+    top: 16,
+    itemGap: 10,
     textStyle: { color: t.ink, fontSize: titleFontSize, fontWeight: 500 },
     subtextStyle: { color: t.inkSoft, fontSize: 15 },
   },
   tooltip: {
     trigger: "item",
     formatter: (p) =>
-      p.seriesType === "lines" ? `${p.data.value}k passengers/yr` : `${p.name}: ${p.value[2]}k passengers`,
+      p.seriesName === "Routes" ? `${p.name}: ${p.value}k passengers/yr` : `${p.name}: ${p.value[2]}k passengers`,
   },
-  grid: { left: 110, right: 90, top: 190, bottom: 110, containLabel: true },
-  xAxis: {
-    type: "value",
-    min: -180,
-    max: 180,
-    interval: 30,
-    name: "Longitude",
-    nameLocation: "middle",
-    nameGap: 40,
-    nameTextStyle: { color: t.inkSoft, fontSize: 14 },
-    axisLabel: {
-      color: t.inkSoft,
-      fontSize: 13,
-      formatter: (v) => `${Math.abs(v)}°${v > 0 ? "E" : v < 0 ? "W" : ""}`,
-    },
-    axisLine: { onZero: false, lineStyle: { color: t.inkSoft } },
-    axisTick: { show: false },
-    splitLine: { show: true, lineStyle: { color: t.grid } },
-  },
-  yAxis: {
-    type: "value",
-    min: -60,
-    max: 80,
-    interval: 30,
-    name: "Latitude",
-    nameLocation: "middle",
-    nameGap: 55,
-    nameTextStyle: { color: t.inkSoft, fontSize: 14 },
-    axisLabel: {
-      color: t.inkSoft,
-      fontSize: 13,
-      formatter: (v) => `${Math.abs(v)}°${v > 0 ? "N" : v < 0 ? "S" : ""}`,
-    },
-    axisLine: { onZero: false, lineStyle: { color: t.inkSoft } },
-    axisTick: { show: false },
-    splitLine: { show: true, lineStyle: { color: t.grid } },
+  // Quiet base map: outline, graticule and coastlines in the grid tone, the land in an
+  // opaque tint that hides the graticule beneath it; the outline itself stays unfilled
+  geo: {
+    map: "world",
+    projection,
+    roam: false,
+    silent: true,
+    left: 50,
+    right: 50,
+    top: 105,
+    bottom: 30,
+    itemStyle: { areaColor: echarts.color.lerp(0.12, [t.pageBg, t.ink]), borderColor: t.grid, borderWidth: 1 },
+    regions: [{ name: "Outline", itemStyle: { areaColor: "transparent" } }],
+    emphasis: { disabled: true },
+    select: { disabled: true },
   },
   series: [
     {
-      name: "Landmasses",
-      type: "custom",
-      coordinateSystem: "cartesian2d",
-      xAxisIndex: 0,
-      yAxisIndex: 0,
-      silent: true,
-      z: 1,
-      data: landmasses.map((_, i) => i),
-      renderItem: (params, api) => ({
-        type: "polygon",
-        shape: { points: landmasses[params.dataIndex].map((p) => api.coord(p)) },
-        style: { fill: t.grid, opacity: 0.6, stroke: t.inkSoft, lineWidth: 1, strokeOpacity: 0.4 },
-      }),
-    },
-    {
       name: "Routes",
       type: "lines",
-      coordinateSystem: "cartesian2d",
-      xAxisIndex: 0,
-      yAxisIndex: 0,
-      symbol: ["none", "arrow"],
-      symbolSize: [0, 8],
-      data: lineData,
+      coordinateSystem: "geo",
+      polyline: true,
+      data: routes,
       lineStyle: { color: t.palette[0] },
       z: 2,
     },
     {
       name: "Airports",
       type: "scatter",
-      xAxisIndex: 0,
-      yAxisIndex: 0,
-      data: nodeData,
-      symbolSize: (val) => 12 + Math.sqrt(val[2]) * 0.55,
+      coordinateSystem: "geo",
+      data: [...hubs.values()],
+      symbolSize: (val) => 10 + 24 * Math.sqrt(val[2] / maxTraffic),
       itemStyle: { color: t.palette[0], opacity: 0.9, borderColor: t.pageBg, borderWidth: 1.5 },
-      label: { show: true, formatter: "{b}", position: "top", color: t.ink, fontSize: 13, fontWeight: 500 },
+      label: { show: true, formatter: "{b}", distance: 6, color: t.ink, fontSize: 14, fontWeight: 500 },
+      labelLayout: { moveOverlap: "shiftX" },
       z: 3,
     },
   ],

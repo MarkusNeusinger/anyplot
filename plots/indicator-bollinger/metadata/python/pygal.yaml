@@ -2,118 +2,131 @@ library: pygal
 language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:21:42Z'
-updated: '2026-05-17T10:13:28Z'
-generated_by: claude-haiku
-workflow_run: 25987481141
+updated: '2026-11-09T00:19:58Z'
+generated_by: claude-opus-5-5
+adopted_from: 68ddebdc0340d846bc99a02c34862976a9d328b5 (68ddebdc0340d846bc99a02c34862976a9d328b5)
+workflow_run: 42538720572
 issue: 3237
-language_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-dark.html
-quality_score: 67
+quality_score: 86
 review:
   strengths:
-  - 'Both renders display correct background colors (#FAF8F1 light, #1A1A17 dark)'
-  - Proper Bollinger Bands mathematical calculation (20-period SMA with 2 std dev)
-  - All required data series are visualized
-  - Text is readable in both light and dark themes
-  - Realistic, non-controversial synthetic data
+  - The close price is drawn prominently as a 7 px Imprint-green line, the upper and
+    lower bands share one purple (#C475FD) with an 18 % fill between them, and the
+    20-day SMA is a dashed neutral ink line; all three stay visible through the fill
+    in both themes
+  - Bands are computed from the close price with pandas rolling(20) mean and population
+    std, and start only where a full 20-day window exists, so every line sits at its
+    computed value
+  - Uses pygal DateTimeLine with a per-series stroke_style dasharray, allow_interruptions
+    and None-titled series so the lower band and the fill polygon share the single
+    'Bollinger (±2σ)' legend entry
+  - Theme tokens are threaded through Style (background, foreground, guide colors),
+    so chrome flips correctly while the data colors stay identical
+  - 'Native pygal interactivity: the HTML output carries per-point tooltips for close,
+    SMA and bands'
   weaknesses:
-  - 'Palette non-compliance: uses arbitrary colors instead of Okabe-Ito; fails CVD
-    safety requirement'
-  - 'Theme adaptation failure: code doesn''t read ANYPLOT_THEME; hardcoded for light
-    theme'
-  - 'Title format incorrect: should be ''indicator-bollinger · pygal · anyplot.ai''
-    (note: anyplot, not pyplots)'
-  - 'Wrong output filenames: uses ''plot.png'' instead of theme-aware ''plot-{THEME}.png'''
-  - 'Band visualization unclear: lines shown separately; no clear semi-transparent
-    fill as spec requests'
-  - 'Design excellence absent: no custom styling or visual hierarchy'
+  - 'Suggestion: a slim band-width panel or a note at the late-April/May squeeze would
+    add the secondary indicator the Notes mention.'
+  - 'Suggestion: the gap between the x tick labels, the ''Trading date'' title and
+    the legend row could be tightened to give the plot area more height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - CORRECT
-      Chrome: Title "Bollinger Band Indicator", axis labels "Trading Day" / "Price (USD)" visible and readable with dark text
-      Data: Blue Close Price line, cyan upper/lower band lines, orange-gold SMA (20) dashed line
-      Legibility verdict: PASS - all text elements readable
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title "indicator-bollinger · python · pygal · anyplot.ai" in dark monospace at about 61 % of the width; y-axis title "Northwind Rail (NWRL) close, USD" (rotated), x-axis title "Trading date"; y ticks 128–164 in steps of 4, monthly x ticks Feb–Jun 2024; subtle horizontal guides only; legend row at the bottom. All readable.
+      Data: close price as a thick #009E73 line over 120 business days starting about 151, peaking about 161 in mid-January and falling to about 128 in April before recovering to about 136; upper and lower bands in #C475FD with a light purple fill from late January; dashed near-black 20-day SMA midway between them. The price pierces the lower band in March and the upper band in mid-April. The bands narrow clearly in late April/May.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - CORRECT
-      Chrome: Title, axis labels visible with light text, good contrast, no dark-on-dark failures
-      Data: Colors identical to light render (blue, cyan, orange) - correct theme-independence
-      Legibility verdict: PASS - all text readable, no contrast issues
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend in light #F0EFE8 / #B8B7B0 text; guides subtle; no dark-on-dark text.
+      Data: the green close line and purple bands/fill are identical to the light render; the SMA dash and its legend swatch flip to light ink as theme chrome, so the SMA stays visible on the dark fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Most text readable; legend could be larger
+        comment: Explicit font sizes (66 title, 46 labels/ticks/legend); readable
+          in both themes and at 400 px
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Some overlap where lines cross but distinguishable
+        comment: No text collisions; price crossing the bands is native to the chart
+          type
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All visible; band fill effect unclear
+        comment: Close 7 px, SMA 4 px dashed, bands 3 px; legend swatches match the
+          marks in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Colors not Okabe-Ito; lacks CVD safety
+        passed: true
+        comment: Green vs purple vs neutral ink, also separated by line width and
+          dash
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions; legend slightly cramped
+        comment: 3200x1800, title about 61 % of the width, balanced axis labels, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axis labels good; title format incorrect
+        passed: true
+        comment: '''Trading date'' and ''Northwind Rail (NWRL) close, USD'' with units'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Not Okabe-Ito; no theme adaptation
+        passed: true
+        comment: 'Close = #009E73, bands = Imprint #C475FD, SMA neutral ink; backgrounds
+          #FAF8F1/#1A1A17'
     design_excellence:
-      score: 7
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 5
         max: 8
-        passed: false
-        comment: Generic styling, arbitrary colors
+        passed: true
+        comment: Deliberate stroke hierarchy (7 px price, 4 px dashed SMA, 3 px bands)
+          set through injected CSS, and a widened legend swatch gap
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Minimal customization
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Shows data but lacks hierarchy
+        comment: x guides off and monthly tick labels chosen for this chart; the lower
+          band and fill folded into one legend entry
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the prominent price the
+          Notes ask for
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -121,25 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart correct
+        comment: Price line with three Bollinger bands on one price axis
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All series present; band visualization unclear
+        comment: Prominent price, shared band color with semi-transparent fill, dashed
+          SMA; standard parameters noted in legend (20-day, ±2σ); optional band-width
+          panel not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correct
+        comment: All lines at computed values; bands start at day 20
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format incorrect
+        passed: true
+        comment: Mandated title; legend entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -149,21 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All aspects shown
+        comment: Shows band widening in the January sell-off, a squeeze in late April/May,
+          and price touching and piercing both bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic BB calculation
+        comment: Fictional rail stock, daily closes over 120 business days in 2024
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values
+        comment: Prices 128–161 USD with about 1.5 % daily volatility; no Check values
+          in the Notes
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,54 +188,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple structure
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Has seed
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hardcoded for light theme
+        passed: true
+        comment: pandas rolling for the bands; no hand-rolled algorithm
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Wrong filenames
+        passed: true
+        comment: Saves plot-{THEME}.png and .html; current pygal 3 API
     library_mastery:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: DateTimeLine with datetime x values, per-series stroke_style dasharray,
+          allow_interruptions, None titles to hide legend entries
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: No ANYPLOT_THEME integration
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic usage
-  verdict: REJECTED
+        comment: pygal inline CSS injection for per-series stroke widths, and a closed
+          fill polygon via the zero baseline
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-09T00:17:02Z'
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   dataprep:
   - rolling-window
-  styling: []
+  - time-series
+  styling:
+  - alpha-blending
+  - minimal-chrome
