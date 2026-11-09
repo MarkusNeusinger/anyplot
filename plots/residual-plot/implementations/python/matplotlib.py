@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 residual-plot: Residual Plot
 Library: matplotlib 3.11.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -30,15 +30,16 @@ TREND_BLUE = IMPRINT_PALETTE[2]
 OUTLIER_SD = 2  # residuals beyond this many standard deviations count as outliers
 
 # Columns: set these to your table's column names
-Y_TRUE = "Observed value"  # role: y_true
-Y_PRED = "Fitted value"  # role: y_pred
+Y_TRUE = "Sale price (thousand USD)"  # role: y_true
+Y_PRED = "Predicted price (thousand USD)"  # role: y_pred
 
 # Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
+# House sale prices regressed linearly on floor area; prices rise faster than linearly with size
 np.random.seed(42)
-x = np.linspace(0, 10, 150)
-observed = 2.5 * x + 0.3 * x**2 + np.random.randn(150) * 3  # quadratic truth, so a linear fit leaves a curve
-slope, intercept = np.polyfit(x, observed, 1)
-df = pd.DataFrame({Y_TRUE: observed, Y_PRED: intercept + slope * x})
+floor_area = np.linspace(50, 250, 150)  # m²
+sale_price = 40 + 1.1 * floor_area + 0.007 * floor_area**2 + np.random.randn(150) * 28
+slope, intercept = np.polyfit(floor_area, sale_price, 1)
+df = pd.DataFrame({Y_TRUE: sale_price, Y_PRED: intercept + slope * floor_area})
 
 # Plot: reads only df and the constants above
 residuals = df[Y_TRUE] - df[Y_PRED]
@@ -83,7 +84,7 @@ title = "residual-plot · python · matplotlib · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_title(title, fontsize=title_fontsize, fontweight="bold", color=INK)
 ax.set_xlabel(Y_PRED, fontsize=10, color=INK)
-ax.set_ylabel(f"Residual ({Y_TRUE.lower()} − {Y_PRED.lower()})", fontsize=10, color=INK)
+ax.set_ylabel(f"Residual of {Y_TRUE[:1].lower()}{Y_TRUE[1:]}", fontsize=10, color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
