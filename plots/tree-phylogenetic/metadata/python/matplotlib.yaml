@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: tree-phylogenetic
 created: '2025-12-31T13:56:05Z'
-updated: '2026-11-09T12:17:00Z'
+updated: '2026-11-09T12:21:43Z'
 generated_by: claude-opus
 workflow_run: 42580423695
 issue: 3070
@@ -12,47 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phyl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Rectangular layout computed from the edge list: x is the cumulative branch length
-    from the root, so every horizontal branch is drawn exactly to its own length and
-    tips end at different depths, as the spec requires'
-  - All branches are drawn as two LineCollection objects with per-segment colors,
-    a compact and idiomatic matplotlib approach instead of hundreds of ax.plot calls
-  - 'Each clade colors every branch below its root (Prosimians #009E73, Monkeys #C475FD,
-    Apes #4467A3 in canonical Imprint order) while the uncolored backbone stays in
-    INK_SOFT, so the three clades separate cleanly from the shared ancestry'
-  - Both a 0.05 substitutions-per-site scale bar in data units and a labeled branch-length
-    axis are present; the scale step is derived from the tree depth by a 1-2-5 rule
-    rather than hard-coded
-  - Theme tokens are threaded through every chrome element (title, tick labels, spine,
-    grid, legend frame, tip labels, scale bar); both renders are fully readable
-  - Y axis removed entirely since tip spacing carries no meaning, with a vertical-only
-    grid aligned to the branch-length scale
+  - Branch lengths drawn proportionally from the root along x; tips end at different
+    depths, so the long Tarsier branch and the short hominin splits read correctly
+  - Clade colors cover every branch of each clade, including its stem, while the unclassified
+    backbone stays in neutral ink, explained by a 'Clade' legend
+  - Both a 0.05 substitutions-per-site scale bar and a labeled branch-length axis
+    drawn to the same scale as the branches
+  - Whole tree drawn with two LineCollections carrying per-segment colors; tip labels
+    placed with annotate offset points
+  - Theme tokens applied to every text, spine, grid and legend element; both renders
+    fully readable
   weaknesses:
-  - 'DQ-02 (both): the example topology contradicts the mitochondrial primate phylogeny
-    it claims: Tarsier is nested inside ''Lorisoids'' as Galago''s sister, and Old
-    World Monkeys are grouped with New World Monkeys in a ''Monkeys'' clade sister
-    to Apes → Tarsier as sister to Simians (Haplorhini), and Old World Monkeys as
-    sister to Apes (Catarrhini) with New World Monkeys outside them. Likely cause:
-    the parent column of the edge list (rows Lorisoids/Tarsier, Monkeys/Old World
-    Monkeys).'
-  - 'Suggestion: the scale-bar label at 7 pt is crossed by the 0.10 grid line; placing
-    the bar where no grid line runs through its label would read more cleanly.'
-  - 'Suggestion: small clade labels at the clade roots (in the clade color) would
-    let the reader map colors without looking up the legend.'
+  - 'Suggestion: the 0.10 vertical grid line runs through the ''per site'' text of
+    the scale-bar label; a slightly shorter label position or a page-colored text
+    background would keep it clean.'
+  - 'Suggestion: the labeled x axis and the scale bar both give the scale; keeping
+    only one would reduce redundancy.'
+  - 'Suggestion: a circular layout variant would showcase matplotlib''s polar projection,
+    which the Notes also allow.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no pure white.
-      Chrome: title "tree-phylogenetic · python · matplotlib · anyplot.ai" in dark ink at the top (~53% of the width); x-axis label "Branch length (substitutions per site)" and ticks 0.00-0.30 in dark/soft ink; y axis hidden; subtle vertical grid lines; legend "Clade" upper right on an elevated frame. All text readable.
-      Data: rectangular phylogram of 12 primate tips. Backbone (root stem and Simians split) in INK_SOFT gray; Prosimians clade (Lemur, Tarsier, Galago) in #009E73, Monkeys (Rhesus Macaque, Baboon, Capuchin, Spider Monkey) in #C475FD, Apes (Human, Chimpanzee, Gorilla, Orangutan, Gibbon) in #4467A3. Tips have small colored dots and dark labels; tip depths vary from 0.13 (Human) to 0.24 (Tarsier, Galago). A black 0.05 scale bar with "0.05 substitutions per site" sits bottom left.
+      Background: warm off-white #FAF8F1 across figure and axes.
+      Chrome: title "tree-phylogenetic · python · matplotlib · anyplot.ai" in dark ink at top center (~53% width); x-axis label "Branch length (substitutions per site)" and ticks 0.00-0.30 in dark/soft ink; faint vertical grid lines; only the bottom spine; legend "Clade" upper right on an elevated frame. All readable.
+      Data: rectangular phylogram of 13 primates. Strepsirrhines (Lemur, Galago) in #009E73, Tarsier in #C475FD, New World Monkeys in #4467A3, Old World Monkeys in #BD8233, Apes in #AE3030; backbone in dark grey. Tip dots with page-colored edges and tip names to their right. Black 0.05 scale bar bottom left labeled "0.05 substitutions per site".
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, no pure black.
-      Chrome: title, tip labels and axis label in light ink; ticks and legend entries in light gray INK_SOFT; legend frame on #242420; grid subtle but visible. No dark-on-dark text anywhere.
-      Data: clade colors identical to the light render (#009E73, #C475FD, #4467A3); backbone flips to light gray and the scale bar to near-white, as chrome should.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis label and tip names in light ink; ticks, legend entries and scale label in soft light grey; legend frame on #242420 with a light outline; grid faint. No dark-on-dark text.
+      Data: clade colors identical to the light render; backbone and scale bar flip to light ink. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -65,49 +56,52 @@ review:
         max: 8
         passed: true
         comment: Explicit sizes (title 12, axis label 10, ticks/tips/legend 8, scale
-          label 7); all readable in both themes
+          label 7); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with text, branches or the legend
+        comment: Tip labels clear of branches and the legend; legend sits in the empty
+          upper-right quadrant
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 2 pt branches and tip dots clearly visible; legend swatches match
-          the branch colors
+        comment: 2 pt branches and tip dots with a page-colored edge clearly visible;
+          legend swatches match the branch colors in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue are CVD-distinguishable and clades are also separated
-          by position
+        comment: Imprint hues with good contrast on both surfaces; clades are also
+          separated by position in the tree
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, label room on the right, nothing cut
-          off
+        comment: 3200x1800, balanced margins, nothing clipped; the space right of
+          the tips holds labels and legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Branch length axis with units
+        comment: x axis 'Branch length (substitutions per site)' with unit; y axis
+          has no meaning and is hidden
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-3 in order, first #009E73, correct backgrounds
-          in both themes'
+        comment: 'Clades take Imprint positions 1-5 in order (first #009E73); backbone
+          in INK_SOFT; backgrounds #FAF8F1/#1A1A17; data colors identical in both
+          renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -115,22 +109,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Tip dots with page-colored rims and round line caps give the tree
-          a finished look; scale label in a quieter 7 pt INK_SOFT tier
+        comment: 'Raised by one: two-level ink hierarchy (tip names and legend title
+          in INK, scale label and legend entries in INK_SOFT), round line caps and
+          page-edged tip dots give the tree a finished look'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Meaningless y axis removed entirely and the grid reduced to vertical
-          lines on the branch-length scale
+        comment: 'Raised: grid only along the branch-length axis that carries data,
+          meaningless y axis and left spine removed, legend placed in the tree''s
+          empty quadrant on an elevated frame'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Neutral gray backbone keeps the shared ancestry recessive so the
-          colored clades read as the focus
+        comment: 'Raised by one: the unclassified backbone is drawn in neutral ink
+          so the colored clades and the long Tarsier branch stand out as focal points'
     spec_compliance:
       score: 15
       max: 15
@@ -146,22 +142,25 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Proportional branch lengths, every tip labeled, scale bar plus labeled
-          axis, clades color-coded across all their branches with a legend
+        comment: Proportional branch lengths, rectangular layout, every tip labeled
+          at its branch end, scale bar plus labeled axis with the unit, clades colored
+          across all their branches with a legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x is cumulative branch length; tip order from the layout only
+        comment: x = cumulative distance from root; tips not aligned; vertical spacing
+          from layout only
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend titled 'Clade' with readable entries
+        comment: Title 'tree-phylogenetic · python · matplotlib · anyplot.ai'; legend
+          titled 'Clade' with readable clade names
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -169,23 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Nested clades, varying tip depths, short internal branches and long
-          terminal branches
+        comment: 13 tips, nested clades, short internal branches, a long Tarsier branch,
+          uneven tip depths
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Primate mtDNA scenario is neutral, but Tarsier sits inside Lorisoids
-          and Old World Monkeys are grouped with New World Monkeys (defect line)
+        passed: true
+        comment: Primate mitochondrial phylogeny, the spec's own example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Distances 0.01-0.24 substitutions per site are plausible for mtDNA;
-          checked scale bar 0.05 equals one grid step on the axis; no Check values
-          in the spec
+        comment: No check values in the spec; checked topology (Hominini, African/Asian
+          apes, Catarrhines, Strepsirrhines vs Haplorhines) and that root-to-tip distances
+          of 0.18-0.24 subs/site are plausible magnitudes
     code_quality:
       score: 10
       max: 10
@@ -195,32 +193,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Linear zones, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic edge list
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, plt, numpy, pandas, LineCollection, Patch all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Layout pass is short; scipy dendrogram cannot lay out an edge list
-          with per-branch lengths, so no available call replaces it
+        comment: Compact preorder layout; no installed package computes a phylogram
+          layout (scipy dendrogram ignores per-branch lengths)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png without bbox_inches
+        comment: Saves plot-{THEME}.png, no bbox_inches, current API
     library_mastery:
       score: 6
       max: 10
@@ -230,30 +228,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes API throughout, add_collection with LineCollection for all segments,
-          annotate with offset points for tip labels
+        comment: 'Raised: Axes API throughout, annotate with offset points for tip
+          labels, proxy Patch handles for the legend'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: Per-segment colored LineCollection with capstyle is a matplotlib-specific
-          efficient idiom
-  verdict: REJECTED
+        comment: 'Raised: LineCollection with per-segment colors draws the whole tree
+          in two artists'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
-  rendered_at: '2026-11-09T07:40:35Z'
+  rendered_at: '2026-11-09T12:18:48Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - layer-composition
   patterns:
-  - data-generation
   - explicit-figure
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
-  - publication-ready
   - edge-highlighting
   - grid-styling
