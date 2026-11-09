@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: chernoff-basic
 created: '2025-12-31T11:00:11Z'
-updated: '2026-11-09T09:14:39Z'
+updated: '2026-11-09T09:20:35Z'
 generated_by: claude-opus
 workflow_run: 42590819969
 issue: 3003
@@ -12,107 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Faces are built from native matplotlib patches (Ellipse, Circle) and line plots
-    on one equal-aspect axes with ax.axis('off'), so the grid carries no data axes,
-    as the spec asks
-  - Every variable is min-max normalized to 0-1 before mapping, with a neutral 0.5
-    fallback, so features stay recognizable at both ends of their range
-  - A clear feature key ('Face width ← Fuel efficiency', …) and a Car class legend
-    in matching elevated boxes make the faces decodable in both themes
-  - 'Theme threading is complete: face outlines, labels, key and legend chrome flip
-    with INK/INK_SOFT/ELEVATED_BG, while the Imprint fills (#009E73, #C475FD, #4467A3)
-    and the dark feature strokes stay identical across renders'
-  - Rows grouped by class make the within-class similarity and the between-class contrast
-    (wide Economy faces, tall frowning Sports faces, big-eyed smiling Luxury faces)
-    readable at a glance
+  - 'All seven variables are min-max normalized to 0-1 (lines 61-63) and each drives
+    one facial feature: face width, face height, eye size, mouth curve, eye spacing,
+    brow slant and nose length. The faces differ clearly from car to car.'
+  - The feature key is a fig.legend with invisible handles and handlelength=0, so
+    it reads as a two-column 'Face width ← Fuel efficiency' list. It shares its boxed
+    ELEVATED_BG treatment and bold title with the Car class legend.
+  - 'The data is built so the classes read at a glance: Economy faces are wide and
+    frowning, Sports faces are tall and narrow with small eyes, Luxury faces have
+    large eyes and smile.'
+  - 'Theme handling is complete: face outlines use INK, so they flip to light outlines
+    on dark, while the strokes on the faces keep a fixed dark ink because the fills
+    do not change. Every text uses INK/INK_SOFT tokens and reads in both renders.'
+  - The faces are composed from matplotlib.patches (Ellipse, Circle) plus parametric
+    ax.plot curves on an equal-aspect, axis-off canvas, so there are no data axes,
+    as the spec asks.
   weaknesses:
-  - 'VQ-01 (both): the feature key text at 7.5 pt (legend entries 8 pt) is the smallest
-    text in the figure and drops to about 7 px in the 400 px thumbnail, where the
-    key that decodes the faces blurs → about 9 pt (+1.5 pt). Likely cause: fig.text
-    fontsize=7.5 and legend fontsize=8.'
-  - 'VQ-05 (both): the 3×3 face grid spans only about 57 % of the canvas width, leaving
-    about 22 % empty on each side and an empty band between the key and the legend
-    → let the grid fill about 80 % of the width. Likely cause: ax.set_aspect(''equal'')
-    with ylim spanning ~3.6 units against xlim ~3.0 units, so the height (bottom=0.2)
-    limits the axes and the width cannot be used.'
-  - 'DQ-01 (both): only 4 variables drive features, below the spec''s typical 5-15,
-    so eye spacing, brow slant and nose length are identical on all nine faces and
-    three of the seven drawn features carry no data → 5-7 rating variables (for example
-    add Safety, Price, Cargo space) so every drawn feature varies. Likely cause: RATINGS
-    lists four columns.'
-  - 'DQ-02 (both): the observations are labelled ''Economy 1'' … ''Luxury 3'', which
-    read as placeholders rather than cars → descriptive fictional model names per
-    class (for example ''City hatch'', ''Roadster GT'', ''Grand tourer''). Likely
-    cause: the f"{car_class} {i + 1}" label.'
-  - 'Suggestion: placing the feature key and the class legend side by side under the
-    grid would close the empty band at the bottom.'
+  - 'VQ-03 (both): on Executive Sedan (large eyes on a narrow face) the outer brow
+    tips run into the face outline and merge with it, so at the top of the eye-size
+    range the brow is no longer a separate stroke inside the face → brow length about
+    15 % shorter, or scaled with face width so the tips stay inside the outline. Likely
+    cause: brow half-length `eye * 0.8` scales with eye size only, while eye_dx scales
+    with face width.'
+  - 'Suggestion: put the name labels on one baseline per row (right now each label
+    sits below its own face height) so the grid reads more evenly.'
+  - 'Suggestion: top-align the Car class legend with the Feature key box so the two
+    boxes under the grid form one band.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, 2400x2400 square canvas, no axes.
-      Chrome: bold title "Car Ratings · chernoff-basic · python · matplotlib · anyplot.ai" in near-black at the top (~80 % width); face labels ("Economy 1" … "Luxury 3") in dark ink under each face; a "Feature key" box bottom-left (Face width ← Fuel efficiency, Face height ← Power, Eye size ← Reliability, Mouth curve ← Comfort) in INK_SOFT on #FFFDF6; a "Car class" legend bottom-right. All text readable.
-      Data: 3×3 grid of Chernoff faces with dark outlines — row 1 Economy in #009E73 (wide, flat or slight-frown mouths, small eyes), row 2 Sports in #C475FD (narrow tall faces, strong frowns), row 3 Luxury in #4467A3 (tall, larger eyes, smiles). Eyes white with dark pupils, dark brows, nose and mouth strokes.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: bold dark title "Car Ratings · chernoff-basic · python · matplotlib · anyplot.ai" at the top, about 80 % of the width; 3x3 grid of faces with dark name labels underneath (City Hatch, Compact Sedan, Eco Wagon / Roadster GT, Track Coupé, Turbo Spyder / Grand Tourer, Executive Sedan, Premium SUV); bottom-left boxed "Feature key" with two columns mapping 7 features to 7 ratings; bottom-right boxed "Car class" legend. No axes. All text readable.
+      Data: Economy faces in #009E73 (wide, frowning), Sports in #C475FD (tall and narrow, small eyes, frowning), Luxury in #4467A3 (large eyes, smiling). Faces have dark outlines, white eyes with dark pupils, dark brows, nose and mouth. On Executive Sedan the brow tips merge into the outline.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, face labels, key and legend text flip to light ink (#F0EFE8 / #B8B7B0); key and legend boxes on #242420 with light edges; face outlines flip to light ink. No dark-on-dark text.
-      Data: face fills #009E73, #C475FD, #4467A3 identical to the light render; feature strokes stay dark on the colored fills by design, visible on all three hues. Brand green clearly visible.
+      Chrome: title and face labels in light ink (#F0EFE8), legend boxes on #242420 with light text and bold light titles, legend frames in soft grey. No dark-on-dark text.
+      Data: the same green, purple and blue fills as the light render. Face outlines flip to light ink; the strokes on the faces stay dark on the colored fills and stay readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; feature key at 7.5 pt blurs in
-          the thumbnail (defect line)
+        comment: Explicit sizes (title 10 pt bold, labels and legends 9 pt); readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions
+        comment: No text collisions; labels sit clear below the faces; legends sit
+          apart from the grid
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Faces, features and legend swatches clearly visible in both themes
+        comment: Features are clear, but the Executive Sedan brow tips merge into
+          the face outline (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue are CVD-distinguishable and also separated by row;
-          dark strokes contrast with every fill
+        comment: Green, purple and blue are easy to tell apart; the class is also
+          readable from the legend and row position
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Grid uses only ~57 % of the width with wide side margins and an empty
-          bottom band (defect line)
+        comment: Square 2400x2400 canvas; the grid fills the canvas well; the legends
+          sit in a balanced band below it; nothing is clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (no data axes); observation labels and key are reader
-          text
+        comment: N/A for axes (no data axes, per the spec); the title and key labels
+          are written for a reader
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-3 in canonical order, first group #009E73; #FAF8F1
-          / #1A1A17 backgrounds, both renders theme-correct'
+        comment: 'Imprint positions 1-3 in order, first group #009E73; backgrounds
+          #FAF8F1/#1A1A17; chrome correct for each theme'
     design_excellence:
       score: 11
       max: 20
@@ -122,22 +116,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: feature key and class legend share one elevated-box
-          treatment; eyes with whites and pupils, round line caps give a finished
-          glyph'
+        comment: Bold legend titles in INK over INK_SOFT entries; eye whites in EYE_WHITE
+          with pupils; a single boxed treatment shared by both keys
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Beyond baseline: labels consistently placed under each face, key
-          and legend anchored to opposite corners; held back by the empty side margins'
+        comment: The key is set as a two-column text list with no swatches and arrow
+          separators; the grid spacing is tuned (col_step/row_step) for the label
+          gap
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: One class per row turns the grid into a direct between-class comparison
+        comment: The class profiles are designed so each row has its own expression
+          (frowning economy, narrow sports, smiling luxury), which makes the clusters
+          readable
     spec_compliance:
       score: 15
       max: 15
@@ -147,53 +143,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Chernoff faces in a grid; color by group is allowed by the Notes;
-          no unasked layers
+        comment: Chernoff faces in a grid; the color by group is allowed by the Notes;
+          no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normalization to 0-1, grid layout, observation labels, feature key,
-          group color with legend — all present
+        comment: Normalized 0-1 variables, 7 feature mappings, grid layout, observation
+          labels, a feature key, and a class color legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each variable drives one feature; grid position is layout
+        comment: Each variable maps to one feature in a fixed order; grid position
+          is layout only
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'Car Ratings · chernoff-basic · python · matplotlib · anyplot.ai';
-          legend titled 'Car class' with matching entries
+          the Car class legend matches the fills
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Faces differ visibly and show clusters, but only 4 variables (below
-          the typical 5-15) leave 3 drawn features constant (defect line)
+        comment: 9 observations x 7 variables; clusters and variation within each
+          class are visible
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Car ratings by class is plausible and neutral; labels 'Economy 1'
-          … read as placeholders (defect line)
+        comment: Car ratings (one of the spec's examples) with fictional model names;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ratings on 0-1 scale, normalized per variable; no Check values in
-          the Notes
+        comment: 'Checked: the ratings fall in 0-1 by construction (low + rand*span
+          ≤ 1.0) and are min-max scaled before mapping (lines 61-63); no check values
+          in the spec'
     code_quality:
       score: 10
       max: 10
@@ -215,19 +213,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, patches, plt, np and pd are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Appropriate complexity for hand-drawn faces; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at 2400x2400, no bbox_inches='tight'
+        comment: Saves plot-{THEME}.png with facecolor and no bbox_inches='tight'
     library_mastery:
       score: 6
       max: 10
@@ -237,19 +235,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout, add_patch with patches.Ellipse/Circle, fig.legend
-          with Patch handles, fig.text with a bbox
+        comment: matplotlib.patches Ellipse/Circle via ax.add_patch, set_aspect('equal'),
+          axis('off'), figure-level fig.legend
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: matplotlib's patch API used to compose custom glyphs on a data-coordinate
-          axes with set_aspect('equal')
-  verdict: REJECTED
+        passed: true
+        comment: fig.legend with invisible Patch handles and handlelength=0 to set
+          a text-only key; solid_capstyle='round' strokes
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
-  rendered_at: '2026-11-09T09:11:45Z'
+  rendered_at: '2026-11-09T09:17:33Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -259,7 +257,6 @@ impl_tags:
   patterns:
   - data-generation
   - explicit-figure
-  - iteration-over-groups
   dataprep:
   - normalization
   styling:
