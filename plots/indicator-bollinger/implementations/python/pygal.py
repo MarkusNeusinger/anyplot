@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-bollinger: Bollinger Bands Indicator Chart
 Library: pygal 3.1.3 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -28,7 +28,7 @@ N_STD = 2  # standard deviations between the middle and each outer band
 
 # Columns: set these to your table's column names
 DATE = "Trading date"  # role: date
-CLOSE = "Price (USD)"  # role: close
+CLOSE = "Northwind Rail (NWRL) close, USD"  # role: close
 
 # Data: replace this block with your own table, for example df = pd.read_csv("prices.csv", parse_dates=[DATE])
 np.random.seed(42)
@@ -89,7 +89,7 @@ chart = pygal.DateTimeLine(
     show_y_guides=True,
     show_dots=False,
     legend_at_bottom=True,
-    legend_at_bottom_columns=3,
+    legend_at_bottom_columns=5,
     legend_box_size=40,
     truncate_legend=-1,
     spacing=24,
@@ -110,11 +110,15 @@ chart.add(
     list(zip(band_dates, bands["upper"], strict=True)) + list(zip(band_dates[::-1], bands["lower"][::-1], strict=True)),
     fill=True,
 )
-chart.add(f"Bollinger bands (±{N_STD}σ)", list(zip(band_dates, bands["upper"], strict=True)))
+# pygal leaves only 5 px between a legend swatch and its label; an en space (not collapsed by SVG) widens the gap
+GAP = " "
+chart.add(f"{GAP}Bollinger (±{N_STD}σ)", list(zip(band_dates, bands["upper"], strict=True)))
 chart.add(None, list(zip(band_dates, bands["lower"], strict=True)))
-chart.add(f"{WINDOW}-day SMA", list(zip(band_dates, bands["sma"], strict=True)), stroke_style={"dasharray": "18, 12"})
+chart.add(
+    f"{GAP}{WINDOW}-day SMA", list(zip(band_dates, bands["sma"], strict=True)), stroke_style={"dasharray": "18, 12"}
+)
 closes = [None if pd.isna(price) else float(price) for price in prices[CLOSE]]
-chart.add("Close", list(zip(dates, closes, strict=True)), allow_interruptions=True)
+chart.add(f"{GAP}{CLOSE}", list(zip(dates, closes, strict=True)), allow_interruptions=True)
 
 # Save
 chart.render_to_file(f"plot-{THEME}.html")
