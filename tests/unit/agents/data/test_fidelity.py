@@ -12,11 +12,24 @@ import pytest
 
 from agents.anyplot.data.bindings import carry_by_name, check_bindings, default_bindings, valid_bindings
 from agents.anyplot.data.computed import mark_name_only
-from agents.anyplot.data.fidelity import KEY_ROLES, LEFT_OUT_HEAD, SEPARATE_ROLES, RepeatedKey, left_out_line, mark_keys
+from agents.anyplot.data.fidelity import (
+    COMBINED_HEAD,
+    KEY_ROLES,
+    LEFT_OUT_HEAD,
+    SEPARATE_ROLES,
+    SUM_SPECS,
+    UNREDUCED_SPECS,
+    KeyAggregate,
+    RepeatedKey,
+    combined_line,
+    key_aggregate,
+    left_out_line,
+    mark_keys,
+)
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.signs import mark_non_negative
 from agents.anyplot.data.warning_codes import binding_warning_codes
-from agents.anyplot.schemas import MAX_CHANGE_CHARS, Binding, DatasetProfile
+from agents.anyplot.schemas import MAX_CHANGE_CHARS, Binding, ColumnProfile, DatasetProfile
 from core.spec_roles import DataRole, data_bullets, mark_computed, parse_roles, spec_shape
 
 
@@ -419,6 +432,101 @@ class TestLeftOutLine:
 
         assert line == f"{LEFT_OUT_HEAD}1 row without {roles[0].name} ('{names[0]}'), and 2 more roles"
         assert len(line) <= MAX_CHANGE_CHARS
+
+
+class TestKeyAggregate:
+    """Owner decision of 2026-11-09: a repeated key that reaches a plot run is combined by the server first, as a
+    data step; which function, and when nothing is combined (`key_aggregate`)."""
+
+    @staticmethod
+    def aggregate_of(spec_id: str, text: str, **pairs: str) -> KeyAggregate | None:
+        roles, profile = roles_of(spec_id), profile_of(text)
+        bindings = bind(**pairs)
+        repeated = check_bindings(bindings, roles, profile).repeated_key
+        assert repeated is not None, spec_id
+        return key_aggregate(valid_bindings(bindings, roles, profile), repeated, spec_id)
+
+    def test_a_measurement_per_key_is_averaged(self) -> None:
+        aggregate = self.aggregate_of("line-styled", LENGTHS, x="Length", y_1="Reading")
+
+        assert aggregate == KeyAggregate(by=("Length",), values=("Reading",), how="mean")
+        assert aggregate.operation == {"op": "aggregate", "by": ["Length"], "column": "Reading", "how": "mean"}
+
+    def test_parts_of_a_whole_are_summed(self) -> None:
+        text = "Category,Amount\n" + "".join(f"{c},{1 + i}\n" for i, c in enumerate("ABCABCAB"))
+
+        aggregate = self.aggregate_of("pie-basic", text, category="Category", value="Amount")
+
+        assert aggregate is not None and aggregate.how == "sum"
+
+    def test_two_keys_and_several_values_take_one_aggregate(self) -> None:
+        text = "Hour,Day,Visits\n" + "".join(f"{h},{d},{h + i}\n" for i, d in enumerate("MTW") for h in range(4))
+        aggregate = self.aggregate_of("heatmap-basic", text + "0,M,99\n", x="Hour", y="Day", value="Visits")
+        assert aggregate is not None and (aggregate.by, aggregate.values) == (("Hour", "Day"), ("Visits",))
+
+        wide = "Step,A,B\n" + "".join(f"{i % 3},{i},{2 * i}\n" for i in range(9))
+        both = self.aggregate_of("line-multi", wide, x="Step", y1="A", y2="B")
+        assert both is not None and both.operation["columns"] == ["A", "B"] and "column" not in both.operation
+
+    def test_measures_that_need_several_functions_are_left_to_the_user(self) -> None:
+        text = "Date,Open,High,Low,Close\n" + "".join(
+            f"2024-01-0{1 + i % 3},{10 + i},{12 + i},{9 + i},{11 + i}\n" for i in range(6)
+        )
+
+        assert (
+            self.aggregate_of(
+                "candlestick-basic", text, date="Date", open="Open", high="High", low="Low", close="Close"
+            )
+            is None
+        )
+
+    def test_a_text_column_beside_the_key_is_left_to_the_user(self) -> None:
+        text = "Category,Amount,Note\n" + "".join(f"{c},{1 + i},n{i}\n" for i, c in enumerate("ABCABC"))
+        roles, profile = roles_of("bar-basic"), profile_of(text)
+        bindings = bind(category="Category", value="Amount")
+        repeated = check_bindings(bindings, roles, profile).repeated_key
+        assert repeated is not None
+        held = valid_bindings(bindings, roles, profile)
+        label = profile.columns[2]
+        assert label.dtype == "text"
+
+        assert (
+            key_aggregate(
+                [*held, ("label", DataRole("label", ("text",), False, False, "a note"), label)], repeated, "bar-basic"
+            )
+            is None
+        )
+        # An unbound text column leaves with the aggregate instead (its change line counts it).
+        assert key_aggregate(held, repeated, "bar-basic") == KeyAggregate(("Category",), ("Amount",), "mean")
+
+    def test_a_key_of_more_columns_than_an_aggregate_takes_is_left_to_the_user(self) -> None:
+        repeated = RepeatedKey(roles=("a", "b", "c"), columns=("A", "B", "C"), values=2, combinations=8, rows=20)
+
+        assert key_aggregate([], repeated, "sunburst-basic") is None
+
+    def test_a_list_beside_the_rows_is_left_to_the_user(self) -> None:
+        repeated = RepeatedKey(roles=("feature",), columns=("Feature",), values=3, combinations=3, rows=6)
+        base = ColumnProfile(name="Base", dtype="number", missing=5, unique=1)
+        held = [("base_value", DataRole("base_value", ("numeric",), True, False, "the base"), base)]
+
+        assert key_aggregate(held, repeated, "shap-waterfall") is None
+
+    def test_the_tables_name_keyed_specs_only_and_never_both(self) -> None:
+        assert SUM_SPECS <= set(KEY_ROLES) and UNREDUCED_SPECS <= set(KEY_ROLES)
+        assert not SUM_SPECS & UNREDUCED_SPECS
+
+    def test_the_line_counts_the_rows_before_and_after_and_fits_a_change_note(self) -> None:
+        aggregate = KeyAggregate(by=("Length",), values=("Reading",), how="mean")
+        assert combined_line(aggregate, 27, 9, 2) == (
+            f"{COMBINED_HEAD}2: averaged 'Reading' over 27 rows into 9, one per 'Length'"
+        )
+
+        summed = KeyAggregate(by=("Region", "Year"), values=tuple("ABC"), how="sum")
+        assert combined_line(summed, 5_000, 12, 3) == (
+            f"{COMBINED_HEAD}3: summed 3 columns over 5,000 rows into 12, one per 'Region' and 'Year'"
+        )
+        long = KeyAggregate(by=("K" * 64, "L" * 64), values=("V" * 64, "W" * 64), how="mean")
+        assert len(combined_line(long, 20_000, 19_999, 6)) <= MAX_CHANGE_CHARS
 
 
 def test_the_key_table_marks_only_listed_roles() -> None:

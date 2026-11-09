@@ -8,6 +8,13 @@
   one note, and the assistant offers it as a data step with counts and an undo, and sends such wishes to the
   data step from then on. The random draws stay for jitter only. In the persona round of 2026-11-06 a line
   chart averaged 27 measurements to 9 points in its code without a count (#12953).
+- **A plot of rows that repeat a key combines them first, as a data step.** When a bar, slice, cell or line point
+  would draw several rows of one key, the server makes the aggregate the assistant offers before the plot runs:
+  a new data version, numbered, on the data card and undoable, with the mean per key, or the sum where the marks
+  add up (slices, stacked segments, counts). The plot's "what changed" announces it with both counts, for example
+  "averaged 'Reading' over 27 rows into 9, one per 'Length'", and the plot draws every row of that version.
+  Price charts and other plots whose measures need several functions keep the warning instead. With the prompt
+  rule alone, the plot code still averaged such rows itself in both measured runs (#12953).
 - **The assistant names rows the plot draws no mark for.** The server's "The plot draws no mark where a value
   is missing" line is named in every reply to that plot, as what the plot draws and never as rows removed
   from the data, and stays on the list of notices that a short reply keeps (#12953).

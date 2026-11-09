@@ -10,7 +10,7 @@ import pytest
 import yaml
 
 from agents.anyplot import policy
-from agents.anyplot.data.fidelity import LEFT_OUT_HEAD
+from agents.anyplot.data.fidelity import COMBINED_HEAD, LEFT_OUT_HEAD
 from agents.anyplot.data.prepare import UnsupportedFamily
 from core.palette import IMPRINT, muted_for
 
@@ -439,6 +439,19 @@ class TestEveryRowDrawn:
         assert "the rows stay in the data. Never offer to fill the values in." in result
         assert "rows the plot draws no mark for (the server's line above) are still in the data" in result
         assert "Send such a wish to `prepare_data` in the first place, never as a `change_request`" in result
+
+    def test_the_root_names_a_combined_key_as_a_data_change_with_its_undo(self) -> None:
+        """Owner decision of 2026-11-09: the server combines a repeated key before the run, as a data step."""
+        root = policy.root_instruction()
+        result = root.split("After `plot_pipeline` returns", 1)[1].split("\n## ", 1)[0]
+        notices = root.split("Brevity never drops these notices", 1)[1].split("\n\n", 2)[1]
+        head = COMBINED_HEAD.removesuffix(" ")
+
+        assert f'starts with "{head}" is the server\'s data step' in result
+        assert "its result says `data_changed: true`, also when no plot shipped" in result
+        assert "as a change of the data, and add that `.undo()` brings the rows back" in result
+        assert "or the server's line on combined rows above, says so" in result
+        assert f'starts with "{head}", with its version and counts' in notices
 
     @pytest.mark.parametrize("language", ["python", "r", "julia", "javascript"])
     def test_the_rng_repair_line_allows_jitter_only(self, language: str) -> None:

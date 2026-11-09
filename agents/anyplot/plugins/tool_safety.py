@@ -323,10 +323,13 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
     gets a `<tool_notes>` block of its own under `SHOWS_PREAMBLE`, so the root tells what
     the adapter meant to do from what the plot shows. A shipped result adds two server facts:
     `data_confirmed: true` and `data_changed: false` (the pipeline draws the confirmed data
-    and changes none of it). Each round loses `ROUND_CASE_FIELDS`, which explain a feedback
+    and its code changes none of it). A run that first combined a repeated key into a new data
+    version (`combined`) says `data_changed: true` instead, shipped or not, and the first line of
+    `changes` announces the step. Each round loses `ROUND_CASE_FIELDS`, which explain a feedback
     case and would only give the reply gate ids to repeat.
     """
     fenced = {key: value for key, value in result.items() if key not in (*PIPELINE_NOTE_FIELDS, SHOWS_KEY)}
+    combined = bool(fenced.pop("combined", None))
     if isinstance(fenced.get("rounds"), list):
         # The gate ids and sandbox failure classes of a round are for a feedback case, not for the reply.
         fenced["rounds"] = [
@@ -352,10 +355,13 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
         # A shipped plot passed the gate on the user's confirmation: a server fact in the result itself,
         # so an earlier turn's "please confirm" never reads as still true (live round 6, R6-1).
         fenced["data_confirmed"] = True
-        # The pipeline never changes the user's data: only `prepare_data`, `generate_data`, `run_data_code`,
-        # `.to_long()` and `.undo()` do. A server fact next to the adapter's notes, so a note about an "Other"
+        # The plot code never changes the user's data: only `prepare_data`, `generate_data`, `run_data_code`,
+        # `.to_long()`, `.undo()` and the run's own data step for a repeated key (`combined`) do. A server fact next to the adapter's notes, so a note about an "Other"
         # group or a remainder the code draws never reads as a row added to the data (live round 7, R7-6).
-        fenced["data_changed"] = False
+        fenced["data_changed"] = combined
+    elif combined:
+        # The server's data step ran before a run that shipped nothing: the data changed all the same.
+        fenced["data_changed"] = True
     if any(result.get(key) for key in PIPELINE_NOTE_FIELDS):
         notes = {key: result.get(key) or [] for key in PIPELINE_NOTE_FIELDS}
         fenced[NOTES_KEY] = DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(notes, ensure_ascii=False))
