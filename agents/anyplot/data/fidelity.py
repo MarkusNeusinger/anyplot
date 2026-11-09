@@ -63,7 +63,8 @@ column, stored as the next data version, announced with its counts (`combined_li
   tile, a funnel stage, a Pareto count, a waterfall change): `sum`. A role bound to a column of counts is summed
   with the rest; `count` never fits, since it counts rows and drops the bound column.
 * When the server combines nothing. A spec in `UNREDUCED_SPECS`, whose measures need several functions (a candle's
-  first, highest, lowest and last price; a zone's minutes beside its bounds; a value beside its goal); a spec with a
+  first, highest, lowest and last price; a zone's minutes beside its bounds; a value beside its goal; an estimate
+  beside its interval, whose averaged bounds bound nothing); a spec with a
   bound `SEPARATE_ROLES` role, whose list lies beside the rows; a key of more than `prepare.MAX_KEYS` columns; and a
   bound column besides the key that holds no numbers. The binding warning stands then, and the root offers the step.
 """
@@ -248,6 +249,15 @@ UNREDUCED_SPECS: frozenset[str] = frozenset(
         "dot-matrix-proportional",
         "gauge-activity-rings",
         "burndown-sprint",
+        # An estimate beside its interval or its spread: the mean of the bounds is no bound of the mean.
+        "area-stacked-confidence",
+        "bar-error",
+        "bar-feature-importance",
+        "bar-permutation-importance",
+        "coefficient-confidence",
+        "line-confidence",
+        "point-basic",
+        "range-interval",
     }
 )
 """The keyed specs whose measures no single function combines: the server leaves their repeated key to the user's
@@ -464,14 +474,15 @@ _COMBINED_VERBS: dict[How, str] = {"mean": "averaged", "sum": "summed"}
 
 def combined_line(aggregate: KeyAggregate, rows: int, groups: int, version: int) -> str:
     """The server's change line for a repeated key it combined: `Rows that share a key were combined in data version
-    2: averaged 'Reading' over 27 rows into 9, one per 'Length'`, at most `MAX_CHANGE_CHARS` (three or more value
-    columns are counted, not named)."""
-    values = (
-        " and ".join(f"'{name}'" for name in aggregate.values)
-        if len(aggregate.values) <= 2
-        else f"{len(aggregate.values)} columns"
-    )
-    by = " and ".join(f"'{name}'" for name in aggregate.by)
+    2: averaged 'Reading' over 27 rows into 9, one per 'Length'`, at most `MAX_CHANGE_CHARS`. The value columns are
+    counted instead of named when there are more than two or their names would not fit; key names too long to fit
+    end in `…`, so the counts and the version always stand."""
     verb = _COMBINED_VERBS[aggregate.how]
-    line = f"{COMBINED_HEAD}{version}: {verb} {values} over {rows:,} rows into {groups:,}, one per {by}"
-    return line[:MAX_CHANGE_CHARS]
+    by = " and ".join(f"'{name}'" for name in aggregate.by)
+    named = " and ".join(f"'{name}'" for name in aggregate.values)
+    counted = f"{len(aggregate.values)} column{'s' if len(aggregate.values) != 1 else ''}"
+    for values in ([named] if len(aggregate.values) <= 2 else []) + [counted]:
+        line = f"{COMBINED_HEAD}{version}: {verb} {values} over {rows:,} rows into {groups:,}, one per {by}"
+        if len(line) <= MAX_CHANGE_CHARS:
+            return line
+    return line[: MAX_CHANGE_CHARS - 1] + "…"

@@ -12,20 +12,23 @@ import json
 import re
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import replace
+from types import SimpleNamespace
 from typing import Any
 
 import httpx
 import pytest
 
+from agents.anyplot import pipeline
 from agents.anyplot.agent import REPEATED_KEY_LINE, session_context
 from agents.anyplot.data.fidelity import COMBINED_HEAD, LEFT_OUT_HEAD
 from agents.anyplot.dev_fixture import snapshot_from_repo
+from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.plugins.tool_safety import fence_pipeline_notes
 from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.repeated_keys import combine_repeated_key
 from agents.anyplot.schemas import Binding
 from agents.anyplot.services import Services
-from agents.anyplot.session_state import CONFIRMED, DATASET_ID, confirmation_fingerprint
+from agents.anyplot.session_state import CONFIRMED, DATASET_ID, PENDING_REQUEST, confirmation_fingerprint
 from agents.anyplot.tools.session import prepare_data, set_bindings
 from agents.main import Runtime, app, get_runtime
 
@@ -199,6 +202,25 @@ class TestCombinedKey:
         assert done["dataset"]["changes"] == ["averaged Exam Score by Study Hours: 4 rows, 1 other column dropped"]
         assert await table_rows(client, sid) == drawn[1:]
 
+    async def test_a_run_that_ships_nothing_announces_the_step_and_keeps_the_kept_note(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The data changed all the same, so the failed result names the step; the new version drops a kept note,
+        and the run, which took it before the step, writes it back for the next one."""
+        unusable = {"edits": [{"find": "not in the code", "replace": "df = load_user_data()"}], "changes": ["x"]}
+        swap_models("gemini", default_script(plans=[unusable] * 6))
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, HOURS)
+        await bind_and_confirm(client, sid, LINE_BINDINGS)
+        await runtime.write_state(await runtime.session(USER, sid), {PENDING_REQUEST: "make the line thicker"})
+
+        events = await create_plot(client, sid)
+
+        plot = next(data for name, data in events if name == "plot")
+        assert plot["status"] == "failed" and plot["changes"] == [COMBINED]
+        assert next(data for name, data in events if name == "done")["dataset"]["version"] == 2
+        assert (await runtime.session(USER, sid)).state[PENDING_REQUEST] == "make the line thicker"
+
     async def test_undo_brings_the_raw_rows_back(self, client: httpx.AsyncClient, swap_models) -> None:
         swap_models("gemini", default_script())
         sid = await open_line_on_scatter_code(client)
@@ -298,6 +320,21 @@ class TestCombineRepeatedKey:
         store, box = self.confirmed("box-basic", bindings, weights)
         assert box.data_confirmed  # the repeats are the box's: confirmed data, complete bindings, nothing combined
         assert combine_repeated_key(store, SID, box, store.get(box.dataset_id, SID)) is None
+
+
+def test_a_run_re_run_on_resume_announces_the_step_of_its_first_run() -> None:
+    """ADK re-runs the pipeline node on resume (`rerun_on_resume`): the key is combined already, so the step is found
+    in the invocation's ledger, announced again, and never made a second time."""
+    store, view = pasted(HOURS, "line-basic")
+    dataset = store.get(view.dataset_id, SID)
+    ledger = RequestLedger()
+    ledger.data_step = (view.dataset_id, COMBINED)
+    services = SimpleNamespace(datasets=store)
+    ctx = SimpleNamespace(state={}, session=SimpleNamespace(id=SID))
+
+    drawn = pipeline._combine_repeated_key(ctx, services, view, dataset, ledger)  # type: ignore[arg-type]
+
+    assert drawn == (view, dataset, COMBINED) and ctx.state == {}
 
 
 class TestTheRootReadsTheStep:

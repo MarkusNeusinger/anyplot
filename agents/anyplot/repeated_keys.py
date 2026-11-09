@@ -22,7 +22,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from .data.bindings import check_bindings, valid_bindings
+from .data.bindings import carry_bindings, check_bindings, valid_bindings
 from .data.fidelity import KeyAggregate, combined_line, key_aggregate
 from .data.parse import ParseError
 from .data.prepare import PrepareArgs, PrepareError, apply_and_parse
@@ -58,8 +58,8 @@ def combine_repeated_key(
     """The aggregate of a repeated key stored as the next data version, or None when there is nothing to combine.
 
     None also when `fidelity.key_aggregate` combines nothing, when the aggregate fails or would leave bindings that
-    do not hold, or when the store is full: the run then draws the data as it is, and the warning stands. Nothing is
-    stored in those cases. The caller writes `Combined.delta` into the session state.
+    do not hold or would move, or when the store is full: the run then draws the data as it is, and the warning
+    stands. Nothing is stored in those cases. The caller writes `Combined.delta` into the session state.
     """
     roles = view.snapshot.roles()
     check = check_bindings(view.bindings, roles, dataset.profile)
@@ -79,6 +79,14 @@ def combine_repeated_key(
     after = check_bindings(view.bindings, roles, parsed.profile)
     if not after.complete or after.errors or after.repeated_key is not None:
         return None
+    # The bindings `push_version` will carry, computed the same way before anything is stored: the confirmation moves
+    # only to the bindings the user confirmed, so a table on which they would move is left as it is.
+    carried = carry_bindings(
+        view.bindings, roles, parsed.profile, dataset.profile, prepared.converted, prepared.row_numbers, prepared.splits
+    )
+    if carried != view.bindings:
+        logger.warning("repeated key not combined: the bindings would move")
+        return None
     number = view.next_version
     line = combined_line(aggregate, dataset.profile.rows, parsed.profile.rows, number)
     try:
@@ -95,8 +103,4 @@ def combine_repeated_key(
         )
     except StoreFull:
         return None
-    if version.bindings != view.bindings:
-        # The aggregate keeps every bound column under its name and type, and the bindings hold on its table (checked
-        # above), so they carry as they are. Logged, never expected: the confirmation then moves to the carried ones.
-        logger.warning("repeated key combined, but the bindings moved")
     return Combined(version, aggregate, line, list(prepared.changes))

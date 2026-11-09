@@ -170,7 +170,7 @@ from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
 from .render.gates import data_rows, evaluate
 from .render.runtimes import runtime_for
-from .repeated_keys import Combined, combine_repeated_key
+from .repeated_keys import combine_repeated_key
 from .schemas import (
     EXPECTED_TEXT,
     MAX_CHANGE_CHARS,
@@ -1789,14 +1789,12 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     memory_plan = plan_memory(ctx.state, node_input, turn=ledger.turn)
     # A key the rows repeat is combined first, as a data step with a number, a change line and an undo, so the plot
     # draws every row of the version it gets (owner decision of 2026-11-09). After the kept note was taken: a new
-    # version drops a kept note, and this run carries it.
-    combined = _combine_repeated_key(ctx, services, view, dataset, ledger)
-    if combined is not None:
-        view, dataset = read_session(ctx.state) or view, combined.version.stored
+    # version drops a kept note, and this run carries it (`settle_pending_request` writes it back if nothing ships).
+    view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger)
     run = Run(
         view=view,
         dataset=dataset,
-        data_notes=[combined.line] if combined is not None else [],
+        data_notes=[data_step] if data_step is not None else [],
         theme=theme,
         theme_asked=theme_asked,
         language=language or view.language,
@@ -1849,7 +1847,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     # The bindings the run drew with, and what became of a kept note: the root's reply rests on them, not on what an
     # earlier turn said, since the user may have rebound a column in the data panel in between.
     result = result.model_copy(update={"bindings": list(view.bindings), "kept_request": kept_request})
-    if combined is not None:
+    if data_step is not None:
         # The data changed whether the plot shipped or not: a run that ships nothing announces the step alone.
         changes = result.changes if result.status in ("ok", "needs_attention") else run.data_notes
         result = result.model_copy(update={"combined": True, "changes": changes})
@@ -1866,20 +1864,28 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
 
 def _combine_repeated_key(
     ctx: Context, services: Services, view: SessionView, dataset: StoredDataset, ledger: RequestLedger
-) -> Combined | None:
-    """The server's data step for a repeated key before the run (`repeated_keys.combine_repeated_key`), written into
-    the session state and the turn's data changes (the `done` event's card); None when nothing was combined. Never
-    raises: without the step the run draws the data as it is, and the warning stands."""
+) -> tuple[SessionView, StoredDataset, str | None]:
+    """The view and dataset the run draws, and the announcement of the server's data step for a repeated key
+    (`repeated_keys.combine_repeated_key`), or None when nothing was combined.
+
+    The step is written into the session state, the turn's data changes (the `done` event's card) and the ledger
+    (`RequestLedger.data_step`), so a run ADK re-runs on resume, which finds the key combined already, announces it
+    all the same. Never raises: without the step the run draws the data as it is, and the warning stands.
+    """
+    if ledger.data_step is not None and ledger.data_step[0] == view.dataset_id:
+        return view, dataset, ledger.data_step[1]
     try:
         combined = combine_repeated_key(services.datasets, ctx.session.id, view, dataset)
     except Exception as exc:  # a bug in the data step must not cost the user the plot; the class only
         logger.warning("combining a repeated key failed: %s", type(exc).__name__)
-        return None
-    if combined is not None:
-        for key, value in combined.delta().items():
-            ctx.state[key] = value
-        ledger.dataset_changes.extend(combined.changes)
-    return combined
+        return view, dataset, None
+    if combined is None:
+        return view, dataset, None
+    for key, value in combined.delta().items():
+        ctx.state[key] = value
+    ledger.dataset_changes.extend(combined.changes)
+    ledger.data_step = (combined.version.dataset_id, combined.line)
+    return read_session(ctx.state) or view, combined.version.stored, combined.line
 
 
 def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> None:

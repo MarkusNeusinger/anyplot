@@ -525,8 +525,37 @@ class TestKeyAggregate:
         assert combined_line(summed, 5_000, 12, 3) == (
             f"{COMBINED_HEAD}3: summed 3 columns over 5,000 rows into 12, one per 'Region' and 'Year'"
         )
+        # Long value names are counted instead; key names too long to fit end in an ellipsis, the counts stand.
+        wide = KeyAggregate(by=("Region",), values=("V" * 64, "W" * 64), how="mean")
+        assert (
+            combined_line(wide, 50, 5, 2)
+            == f"{COMBINED_HEAD}2: averaged 2 columns over 50 rows into 5, one per 'Region'"
+        )
         long = KeyAggregate(by=("K" * 64, "L" * 64), values=("V" * 64, "W" * 64), how="mean")
-        assert len(combined_line(long, 20_000, 19_999, 6)) <= MAX_CHANGE_CHARS
+        clipped = combined_line(long, 20_000, 19_999, 6)
+        assert len(clipped) == MAX_CHANGE_CHARS and clipped.endswith("…")
+        assert "averaged 2 columns over 20,000 rows into 19,999, one per 'KKK" in clipped
+
+    def test_a_column_bound_twice_is_one_value_and_more_than_ten_take_no_aggregate(self) -> None:
+        repeated = RepeatedKey(roles=("x",), columns=("Step",), values=3, combinations=3, rows=9)
+        step = ColumnProfile(name="Step", dtype="integer", missing=0, unique=3)
+        value = ColumnProfile(name="Value", dtype="number", missing=0, unique=9)
+        y, size = (DataRole(name, ("numeric",), True, False, name) for name in ("y", "size"))
+        held = [
+            ("x", DataRole("x", ("numeric",), True, False, "x", key=True), step),
+            ("y", y, value),
+            ("size", size, value),
+        ]
+
+        assert key_aggregate(held, repeated, "line-basic") == KeyAggregate(("Step",), ("Value",), "mean")
+
+        many = [held[0], *((f"y{i}", y, value.model_copy(update={"name": f"V{i}"})) for i in range(11))]
+        assert key_aggregate(many, repeated, "line-multi") is None
+
+    def test_an_estimate_beside_its_interval_is_left_to_the_user(self) -> None:
+        text = "X,Mean,Low,High\n" + "".join(f"{i % 3},{10 + i},{8 + i},{12 + i}\n" for i in range(6))
+
+        assert self.aggregate_of("line-confidence", text, x="X", y="Mean", y_lower="Low", y_upper="High") is None
 
 
 def test_the_key_table_marks_only_listed_roles() -> None:
