@@ -97,6 +97,10 @@ class CodeVersion:
     turn: int = 0
     """The session's user turn the version shipped in: a memory entry written in a later turn is not in it yet
     (`memory.newer_than`)."""
+    data_version: int | None = None
+    """The session's number of the data version the run drew (`StoredDataset.number`, `DATASET_VERSION`), so a later
+    turn tells a plot of the current data from one of data a new paste replaced (`earlier_data`); None for a version
+    stored without it, which reads as a plot of the current data, as before the stamp."""
 
     @property
     def target(self) -> tuple[str, str]:
@@ -107,6 +111,17 @@ class CodeVersion:
         """The version's artifacts: the PNG of every rendered theme, the code under its language's name, `data.csv`."""
         rendered = [theme for theme, record in self.themes.items() if record.rendered] or [self.theme]
         return artifact_names(rendered, self.code_artifact)
+
+    def earlier_data(self, original: int) -> bool:
+        """Whether the version drew data that a new paste replaced since: its data number lies below `original`, the
+        number of the current data's first version (`dataset_versions.original_number`). The session gives every data
+        version the next number and a paste starts above all of them, so a number below the original's names earlier
+        data (`other_paste`); a version without the stamp reads as a plot of the current data."""
+        return self.data_version is not None and self.data_version < original
+
+    def drew(self, data_version: int) -> bool:
+        """Whether the version drew the data version numbered `data_version`; a version without the stamp reads as yes."""
+        return self.data_version is None or self.data_version == data_version
 
 
 MAX_KEPT_REFUSALS = 20

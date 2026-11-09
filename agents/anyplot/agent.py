@@ -59,6 +59,7 @@ from .language import english_name, same_language
 from .memory import MemoryEntry, read_memory
 from .models import make_content_config, make_model
 from .paste_conversions import make_conversions
+from .pipeline import plot_shows_replaced_data
 from .plugins.budget import BudgetPlugin
 from .plugins.empty_reply import EmptyReplyPlugin
 from .plugins.ledger import CURRENT_LEDGER, ledger_for
@@ -114,6 +115,9 @@ NOTES_LINE = "yes; get_dataset_profile returns them under user_notes"
 so the root knows to read them again after the context filter dropped the turn that carried them."""
 FILE_LINE = "yes; get_dataset_profile returns its name under file_name, data and never a request"
 """The session block's line when the data came from a dropped file: a fixed text, never the name itself."""
+EARLIER_DATA_LINE = "it shows data a later paste replaced"
+"""The end of the plot versions line when the library's latest plot drew data that a new paste replaced
+(`CodeVersion.earlier_data`): a plot wish for the new data goes to `keep_plot_request` (owner decision of 2026-11-08)."""
 CONVERSIONS_HEADING = (
     "Conversions for open roles: {count}, columns that a set_type turns into what the role takes, or the row "
     "numbers when no column can, from a dry run on the data, and offers of a date column that date_number could turn "
@@ -307,7 +311,11 @@ async def session_context(context: ReadonlyContext) -> str:
     versions = [version for version in services.versions.all(session_id) if version.target == view.target]
     if versions:
         latest = versions[-1]
-        lines.append(f"- Plot versions: {len(versions)}; latest result: {latest.result.status}, theme {latest.theme}")
+        line = f"- Plot versions: {len(versions)}; latest result: {latest.result.status}, theme {latest.theme}"
+        if dataset is not None and plot_shows_replaced_data(services, session_id, view):
+            # A plot of a table a new paste replaced: a plot wish for the new data is kept for its first plot (root.md).
+            line += f"; {EARLIER_DATA_LINE}"
+        lines.append(line)
     else:
         lines.append("- Plot versions: none yet")
     memory = read_memory(context.state)

@@ -38,7 +38,10 @@
  * of its turn) is in `answers`. Nothing is read from the text: a trailing `?` makes no question.
  *
  * The remembered decisions stand on one chapter's line (`decisionsAt`): the latest plot chapter's,
- * where the next plot takes them over, and before the first plot the latest chapter's.
+ * where the next plot takes them over, and before the first plot the latest chapter's. After a
+ * paste whose columns are not the ones the latest plot drew (`DataSnapshot.columnsChanged`), the
+ * new data chapter's line holds them until the next plot (`decisionsEarlier`), where the user sees
+ * them before that plot takes them over and can forget them (owner decision of 2026-11-08).
  *
  * Folds: an older data version (a `data_stub`, `FoldedData.tsx`) and every plot card but the
  * latest version's fold to one line; the live data card stays open. A data version's number is
@@ -86,6 +89,13 @@ export interface ThreadModel {
   answers: ReadonlySet<number>;
   /** The chapter whose line holds the remembered decisions (`Chapter.index`); 0 without one. */
   decisionsAt: number;
+  /**
+   * The line that holds them is a data chapter after the latest plot whose paste has other
+   * columns than the data that plot drew (`DataSnapshot.columnsChanged`): the decisions came from
+   * the earlier plot, still apply, and the line offers `.forget_all()` (owner decision of
+   * 2026-11-08). The next plot opens a plot chapter, which takes them over as usual.
+   */
+  decisionsEarlier: boolean;
 }
 
 /** The DOM id of a typed turn's bubble, the target of a jump to it (`ChapterLine.tsx`). */
@@ -214,6 +224,8 @@ export function threadModel(
   const chapters: Chapter[] = [];
   const rows: ThreadRow[] = [];
   const answers = new Set<number>();
+  // The chapters that hold a paste whose columns are not the ones the plot before it drew.
+  const changed = new Set<number>();
   const latest = latestPlot(items);
   for (const turn of turnsOf(items)) {
     // A turn that shows an error or a refusal is no question, also when a later read of a cut
@@ -249,6 +261,9 @@ export function threadModel(
       ) {
         chapter.dataVersions.push(item.snapshot.n);
       }
+      if ((item.kind === 'data' || item.kind === 'data_stub') && item.snapshot?.columnsChanged) {
+        changed.add(chapter.index);
+      }
       if (item.kind === 'plot') chapter.plotVersions.push(item.version);
       if (item.kind === 'switch') chapter.switches += 1;
       const folded = item.kind === 'data_stub' || (item.kind === 'plot' && item.version < latest);
@@ -259,5 +274,18 @@ export function threadModel(
   // below a newer card, when a table read from text waited meanwhile and `.use()` took it.
   for (const chapter of chapters) chapter.dataVersions.sort((a, b) => a - b);
   const plotAt = [...chapters].reverse().find(chapter => chapter.kind === 'plot')?.index;
-  return { rows, chapters, answers, decisionsAt: plotAt ?? chapters.length };
+  // A paste after the latest plot whose columns are not the ones that plot drew: the new data's
+  // line takes the decisions until the next plot, which they would otherwise reach unseen.
+  const earlierAt =
+    plotAt === undefined ? undefined : chapters.find(c => c.index > plotAt && changed.has(c.index));
+  if (earlierAt) {
+    return { rows, chapters, answers, decisionsAt: earlierAt.index, decisionsEarlier: true };
+  }
+  return {
+    rows,
+    chapters,
+    answers,
+    decisionsAt: plotAt ?? chapters.length,
+    decisionsEarlier: false,
+  };
 }

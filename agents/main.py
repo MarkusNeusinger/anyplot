@@ -16,7 +16,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/sessions/{sid}/memory` | | `{entries, max_entries, written}`: the plot memory, oldest first, each `{id, kind, target, text, expect, turn}` (`memory.py`); `written` once it ever held an entry, from then on its entries alone travel | |
 | `DELETE /v1/sessions/{sid}/memory` | | the GET's shape with no entries: forget all, a blank start | `409 run_active` |
 | `DELETE /v1/sessions/{sid}/memory/{entry_id}` | | the GET's shape after the removal | `404 not_found`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, with `offer: {language, basis: "data"}` when the notes or the column names are in another language the page has not been offered yet and the user picked none, which the page offers once, `language.data_offer`), stored as the first version of new data under the session's next number (`version`, also `original_version`; `can_undo` false: the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget for `daily_limit`), `429 service_paused` (the service's day budget), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version, columns_changed, language, file_name?, tables?, table?}` (`columns_changed`: the data replaces data, and a column a binding of the replaced data used is not in it, so the page shows the remembered decisions on the new data's line; `file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, with `offer: {language, basis: "data"}` when the notes or the column names are in another language the page has not been offered yet and the user picked none, which the page offers once, `language.data_offer`), stored as the first version of new data under the session's next number (`version`, also `original_version`; `can_undo` false: the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget for `daily_limit`), `429 service_paused` (the service's day budget), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget), `429 service_paused`, `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language, via?}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`; `via`: `header`, the chip and the default, or `offer`, the button on an offer line) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), and the plot's; source `chosen` from the chip, which ends every offer, `offer` from an offer while the user picked none, with the content-free `language_offer` telemetry line (`via`, the language as a closed code); `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern, or another `via`) |
@@ -254,7 +254,13 @@ from agents.anyplot.plugins.ledger import (
     utc_stamp,
     weighted_usd,
 )
-from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, paste_table_line, scope_refusals
+from agents.anyplot.plugins.scope_guard import (
+    LOCKED_OUT,
+    SESSION_CLOSED,
+    paste_table_line,
+    scope_refusals,
+    served_library_request,
+)
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.contract import ConvertJob, PageFailed, PageUnsupported, RendererUnavailable
 from agents.anyplot.render.serial import RenderBusy
@@ -1223,7 +1229,8 @@ async def switch_library(
     if target.pair() == source.pair():
         carry = read_carry(session.state, target.pair())  # the same target again: a carry made for it stays
     else:
-        plot = source_plot(services.versions.latest_rendered(sid, target=source.pair()))
+        # A plot of earlier data carries only its asked theme to the current data (`source_plot`).
+        plot = source_plot(services.versions.latest_rendered(sid, target=source.pair()), view.dataset_version)
         pending = read_carry(session.state, source.pair())
         carry = carry_for(source=source, target=target, plot=plot, pending=pending, memory=memory)
     target_latest = services.versions.latest_rendered(sid, target=target.pair())
@@ -1651,6 +1658,10 @@ async def _ingest_paste(
             "version": ingested.number,
             "can_undo": False,
             "original_version": ingested.number,
+            # A column the replaced data was plotted by is not in this data: the page shows the remembered decisions,
+            # which every next plot still applies, on the new data's line with `.forget_all()` (owner decision of
+            # 2026-11-08). Only the user clears them.
+            "columns_changed": ingested.columns_changed,
             "language": language,
             **({"file_name": file_name} if file_name is not None else {}),
             **({"tables": parsed.tables, "table": parsed.table} if parsed.tables else {}),
@@ -1706,7 +1717,9 @@ async def _screen_notes(
     `parsed.context_lines` (a title, an export's metadata, a source line, "values in
     Fahrenheit, make it a line chart") reach the root as the user's words, so they are
     checked like a chat message: first the deterministic pre-filter (`INSTRUCTION_LIKE`),
-    then the scope judge with the scope rubric on the lines inside `<user_notes>`. It runs
+    then the scope judge with the scope rubric on the lines inside `<user_notes>`; an
+    `other_library` for notes that name only libraries served here goes on as `in_scope`,
+    as in the chat (`scope_guard.served_library_request`). It runs
     after the dataset judge, so a refused table spends no call on its notes. A hit, a
     verdict other than `in_scope` or no verdict (`JudgeUnavailable`: fail closed) drops
     every note with a warning (`without_context`), and the table is stored all the same.
@@ -1739,6 +1752,10 @@ async def _screen_notes(
         judge_output=answer.output_tokens,
         **counts,
     )
+    if answer.verdict == "other_library" and served_library_request("\n".join(lines), get_settings().libraries):
+        # "please do this in d3" around a table asks for a library the user may switch to (`served_library_request`).
+        attribution("notes_judge", ledger, verdict="served_library_in_scope", **counts)
+        answer = answer.model_copy(update={"verdict": "in_scope"})
     if answer.verdict != "in_scope":
         return without_context(parsed, NOTES_REFUSED_WARNING), None
     return parsed, answer.lang
@@ -2176,12 +2193,16 @@ async def copy_dataset(
     if origin.plot_language_choice is not None or origin_latest is not None:
         shown[PLOT_LANGUAGE] = plot_language(origin, origin_latest)
     # `.plot_all()` plots the user's tuned plot in every library (2026-11-02): the memory comes along, and a carry for
-    # this session's library from the page session's latest plot, so the fan-out's `carry_plot` takes both.
+    # this session's library from the page session's latest plot, so the fan-out's `carry_plot` takes both. A plot of
+    # data before the copied version carries only its asked theme to it (`source_plot`), as "plot the new data" keeps
+    # the theme too.
     memory = read_memory(source.state)
     carry = carry_for(
         source=Target(spec_id=origin.spec_id, library=origin.library),
         target=Target(spec_id=view.spec_id, library=view.library),
-        plot=source_plot(services.versions.latest_rendered(body.from_session, target=origin.target)),
+        plot=source_plot(
+            services.versions.latest_rendered(body.from_session, target=origin.target), origin.dataset_version
+        ),
         pending=read_carry(source.state, origin.target),
         memory=memory,
     )
@@ -2548,7 +2569,7 @@ async def post_message(
         kind="action" if body.action else "text",
         tier=tier,
         # The refusals sent before the judge (the budget, unsupported content) follow the
-        # session language, never the browser's locale; after the judge, the message's.
+        # session language, never the browser's locale, and so do the ones after the judge.
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
         site_theme=theme,
         fresh_start=body.action == "create_plot",

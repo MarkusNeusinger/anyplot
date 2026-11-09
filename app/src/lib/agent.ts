@@ -423,6 +423,13 @@ export interface DatasetParsed {
    */
   original_version?: number;
   /**
+   * The paste's answer only: the data replaces data, and a column a binding of the replaced
+   * data used is not in it. The page then shows the remembered decisions, which every next
+   * plot still applies, on the new data's chapter line with `.forget_all()`; only the user
+   * clears them. Read as true only when it is `true`; absent from an older server.
+   */
+  columns_changed?: unknown;
+  /**
    * The paste's answer only: the session language, with `offer` when the notes or the
    * column names are in another language the page has not been offered yet. Read it
    * through `plotLanguage` and `languageOffer`; absent from an older server.

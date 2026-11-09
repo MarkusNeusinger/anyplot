@@ -331,6 +331,14 @@ export const REMEMBERED_DETAILS = [
 export const REMEMBERED_FULL = 'full: forget one before a new decision fits';
 
 /**
+ * What the new data's line says of the decisions it holds after a paste with other columns
+ * than the data the latest plot drew: first behind the list's ⓘ, and the title of the line's
+ * `.forget_all()`. Nothing is removed by itself (owner decision of 2026-11-08).
+ */
+export const REMEMBERED_EARLIER =
+  'made for your earlier data, which had other columns; the next plot still keeps them';
+
+/**
  * The label a question's reply starts with (the v4 mock): the turn changed nothing, by the
  * server's word and by what the page saw. On screen with its `?` before it; a screen reader reads
  * `ANSWER_LABEL_SPOKEN` instead, and the question's bubble starts with `QUESTION_WORD`.
