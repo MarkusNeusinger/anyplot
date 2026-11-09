@@ -2,10 +2,9 @@ library: altair
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:09:18Z'
-updated: '2026-11-09T00:55:37Z'
-generated_by: claude-opus-5-5
-adopted_from: 671573dfa41f9e5747d3222d7dd509e8c3f3d2d3 (671573dfa41f9e5747d3222d7dd509e8c3f3d2d3)
-workflow_run: 42541890177
+updated: '2026-11-09T17:09:02Z'
+generated_by: claude-opus
+workflow_run: 42659749764
 issue: 3414
 language_version: 3.14.10
 library_version: 6.3.0
@@ -13,47 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Letter values are computed correctly with Tukey's depth rule (floor(log2 n) -
-    3 gives 8 levels for about 2000 observations), every box edge at quantile 0.5^(k+1)
-    / 1 - 0.5^(k+1), and the outliers are exactly the observations beyond the deepest
-    box
-  - 'Idiomatic Vega-Lite construction: mark_bar with y/y2 for the box spans, a size
-    channel with scale=None for the shrinking widths, and an ordinal color scale whose
-    domain keeps the levels in depth order in the legend'
-  - Log value axis with hand-picked 1-2-5 ticks makes the right-skewed response times
-    readable without squashing every box under the slowest outlier
-  - Legend entries name each level by its letter value and the share of the data inside
-    it (Fourths (50%) ... 1/512 (99.6%)), which explains the quantile levels as the
-    spec asks
-  - Thin page-colored strokes separate the nested boxes in both themes, and the median
-    tick flips between INK tokens so it reads on light and dark
-  - Tooltips on boxes, medians and outliers give exact bounds in the HTML view
+  - Letter values computed with Tukey's depth rule (floor(log2 n) - 3), so every category
+    stops where 4 to 8 observations remain per tail and those show as outlier points
+    at their values
+  - Box widths shrink linearly with depth and every box is centred on its category,
+    giving the characteristic stepped boxen silhouette
+  - Log value axis with hand-picked 1-2-5 ticks keeps the right-skewed response-time
+    boxes readable instead of squeezing them under the slowest outlier
+  - Legend entries name each level and the share of data it holds (Fourths (50%) ...
+    1/512 (99.6%)), explaining the quantile levels as the Notes ask
+  - 'Native Altair layering: mark_bar with y/y2 and a scale-free size channel for
+    widths, mark_tick for the median, mark_point for outliers, plus escaped, titled
+    tooltips on every layer in the HTML output'
+  - Theme tokens threaded through axis, legend, median tick and outlier stroke; both
+    renders fully readable
   weaknesses:
-  - 'VQ-07 (both): the letter-value colors leave the imprint_seq ramp: each step is
-    tinted up to 70 % toward white, so the deep levels end in pale lavender-greys
-    (about #C8D0E4) that are custom hex values rather than steps between #009E73 and
-    #4467A3, while the first three levels (Fourths, Eighths, Sixteenths) stay nearly
-    the same green in the legend → use discrete steps of imprint_seq itself, spaced
-    so that neighbouring levels differ visibly. Likely cause: the `steps = hues +
-    (255 - hues) * 0.7 * position**1.6` tint in the color block.'
-  - 'Suggestion: the legend box is much taller than its eight entries need relative
-    to the empty band below it; aligning its top with the plot''s top edge already
-    works, so a slightly larger symbol or label size could balance it against the
-    axis titles.'
+  - 'VQ-07 (both): every second letter-value level is tinted 45 % toward white, so
+    the level colours leave the imprint_seq ramp and their lightness zigzags (Fourths
+    dark, Eighths light, Sixteenths dark, 1/32 light ...) instead of stepping monotonically
+    in the levels'' natural order → plain evenly spaced steps of imprint_seq from
+    #009E73 to #4467A3, separated by the existing thin page-coloured stroke. Likely
+    cause: the `tint = np.where(np.arange(k_max) % 2 == 1, 0.45, 0.0)` lines.'
+  - 'Suggestion: the Auth Service and Cache samples mix a uniform block into the lognormal,
+    which gives them an unusually tall 1/32 box; a single heavier-tailed distribution
+    per endpoint would read more like real latency data.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, consistent across plot area and padding.
-      Chrome: bold dark title "boxen-basic · python · altair · anyplot.ai" centered over the plot; y-axis "Response Time (ms), log scale" with 1-2-5 log ticks (2 … 1,000); x-axis "Endpoint" with API Gateway, Database, Auth Service, Cache; subtle grey horizontal grid; legend "Letter value (share inside)" on an elevated off-white card at the right. All text dark and readable.
-      Data: four letter-value stacks of nested boxes, widest green #009E73 Fourths box around a dark median tick, each deeper level narrower and shifted from green through teal to pale blue/lavender; thin page-colored strokes separate the boxes; open grey circles mark the outliers beyond the deepest box at both tails. First level is #009E73.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: title "boxen-basic · python · altair · anyplot.ai" in dark ink at top centre; y-axis title "Response Time (ms), log scale" and x-axis title "Endpoint" in dark ink; tick labels (1-2-5 log ticks from 2 to 1,000; API Gateway, Database, Auth Service, Cache) in soft ink; subtle horizontal grid; legend "Letter value (share inside)" on an elevated off-white panel at the right with 8 square swatches. All readable.
+      Data: four stacks of nested boxes centred on each category, widest (Fourths, brand green #009E73) in the middle, narrowing outward through teal and blue steps to 1/512 slivers; dark median tick across each stack; hollow grey outlier circles above and below each stack. First level is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and tick labels in light ink, grid subtle light grey, legend card #242420 with light labels — no dark-on-dark text anywhere.
-      Data: box colors identical to the light render; median ticks flip to a light tone, outlier circles light grey; brand green clearly visible.
+      Chrome: title and axis titles in light ink, tick labels in light soft ink, grid subtle, legend panel elevated dark #242420 with light labels. No dark-on-dark text.
+      Data: box colours identical to the light render; median tick flips to light ink and outlier circles to light grey, both clearly visible. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -65,75 +61,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes; title, ticks, axis titles and legend readable
+        comment: Explicit font sizes; title, axis titles, ticks and legend readable
           in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; overlapping outlier circles in the tails are
-          permitted and stay distinguishable
+        comment: No text collisions; outlier circles stack only at identical tail
+          values
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes, median ticks and outlier circles clearly visible; legend swatches
-          match the boxes in both themes
+        comment: Boxes separated by a thin page-coloured stroke, median tick and outliers
+          visible in both themes; legend swatches match the boxes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue lightness ramp, no red-green reliance; levels also
-          separated by width
+        comment: Green-to-blue ramp, no red-green signal; neighbouring levels distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced layout, nothing cut off, title width well proportioned
+        comment: 3200x1800, balanced margins, legend clear of the plot, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Response Time (ms), log scale'' and ''Endpoint'' are descriptive
-          with units'
+        comment: Response Time (ms), log scale / Endpoint — descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
-        passed: false
-        comment: Ordered levels use a ramp tinted toward white beyond imprint_seq,
-          and the first three levels are near-identical (defect line); backgrounds
-          correct
+        passed: true
+        comment: 'First level #009E73 and imprint_seq endpoints, but alternate levels
+          are tinted off the ramp so lightness zigzags (defect line)'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Legend labels carrying letter value plus share inside, 1-2-5 log
-          ticks chosen for the skewed data
+        passed: true
+        comment: Log axis with curated 1-2-5 ticks and a two-line legend title giving
+          each level's share, beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Page-colored strokes separating nested boxes, x ticks and x grid
-          removed, median tick slightly overhanging the widest box
+        passed: true
+        comment: Thin page-coloured box strokes separating levels, x-axis ticks removed,
+          legend on an elevated panel with chosen offset/padding
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Log scale chosen so tail shape and skew across endpoints are comparable
-          at a glance
+        passed: true
+        comment: The log scale chosen for the skewed data makes the four endpoints'
+          centres and tail lengths comparable at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Letter-value plot with only boxes, median, outliers and level legend
+        comment: Letter-value plot; only boxes, median, outliers and legend
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nested boxes, decreasing widths, shaded levels, outliers as points,
-          axis labels and level legend all present
+        comment: Nested letter-value boxes, narrowing widths, shading per level, outliers
+          beyond the deepest level, legend explaining levels — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Box edges at their quantiles, outliers at their values, full range
-          shown
+        comment: Box edges at computed quantiles on the value axis, outliers at their
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; legend entries are reader text
+        comment: Mandated title; legend entries readable letter-value names
     data_quality:
       score: 15
       max: 15
@@ -173,22 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 8 levels per category, unequal tails, outliers on both sides, different
-          distribution shapes
+        comment: ~2000 points per category, 8 levels, outliers on both tails, differing
+          tail asymmetry
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times by endpoint, neutral and plausible
+        comment: Server response times by endpoint — the spec's own example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: depth rule floor(log2 n)-3 = 8 for n about 2000, quantile
-          bounds 0.5^(k+1), share labels 1-0.5^k (50 %, 75 %, ... 99.6 %); millisecond
-          values plausible'
+        comment: Millisecond latencies from ~2 to ~1,200 ms are plausible; quantiles
+          computed from the data
     code_quality:
       score: 10
       max: 10
@@ -198,7 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,13 +209,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Quantiles via pandas, appropriate complexity
+        comment: Quantiles via pandas quantile, layered marks; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html, current Altair 6 API
+        comment: Saves plot-{THEME}.png (padded to target) and plot-{THEME}.html
     library_mastery:
       score: 6
       max: 10
@@ -231,33 +224,33 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Layered charts, y/y2 spans, size channel with scale=None, ordinal
-          color domain ordering the legend
+        passed: true
+        comment: Declarative layer of bar/tick/point marks sharing one x encoding
+          and log scale, configure_* for theming
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Vega-Lite tooltips on all three layers for the HTML view
+        comment: Scale-free size channel driving bar widths with y/y2, and layered
+          tooltips in the HTML output
   verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
-  rendered_at: '2026-11-09T00:52:44Z'
+  rendered_at: '2026-11-09T17:05:57Z'
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
+  - custom-legend
   - hover-tooltips
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
   - groupby-aggregation
+  dataprep:
+  - quantile-computation
   styling:
   - custom-colormap
-  - edge-highlighting
-  - minimal-chrome
+  - publication-ready
