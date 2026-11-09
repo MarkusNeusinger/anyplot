@@ -2,64 +2,54 @@ library: plotnine
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:31:24Z'
-updated: '2026-05-18T02:13:22Z'
-generated_by: claude-haiku
-workflow_run: 26009312657
+updated: '2026-11-09T01:00:46Z'
+generated_by: claude-opus-5-5
+adopted_from: 0ca591aee075d91f7645ba2f225de785ff69674c (0ca591aee075d91f7645ba2f225de785ff69674c)
+workflow_run: 42542887581
 issue: 3504
-language_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 76
+quality_score: 88
 review:
   strengths:
-  - Excellent visual output with correct Okabe-Ito colors and perfect theme adaptation
-    in both light and dark renders
-  - 'All text properly sized and readable: title (24pt), labels (20pt), ticks (16pt),
-    segment values (12pt bold)'
-  - Clear data representation with stacked bars, segment labels, and total labels
-    making values immediately comprehensible
-  - Good canvas utilization with balanced spacing and well-positioned legend
-  - Realistic quarterly revenue scenario with good feature coverage and plausible
-    values
-  - Colorblind-safe palette (renders show Okabe-Ito colors)
+  - Totals come from a pandas groupby on the data and are drawn with geom_label on
+    a page-coloured box (label_size=0), so the 400 gridline never runs through the
+    388 label; every total equals its stack's sum (250, 295, 318, 388)
+  - position_stack(vjust=0.5, reverse=True) centres segment labels in their own segments
+    and matches the legend, which guide_legend(reverse=True) orders top-to-bottom
+    like the stacks
+  - Segment-label ink is picked per Imprint fill (near-black on green and purple,
+    cream on blue), so every segment label reads against its fill in both themes
+  - 'Clear hierarchy: bold 10.5 mm totals above bold 9 mm segment labels, one integer
+    format throughout, y-axis from a true zero with 14 % headroom derived from the
+    data'
+  - 'Theme tokens thread through every chrome element; segment separators in PAGE_BG
+    keep stacks crisp on both surfaces; Imprint palette in data order starting with
+    #009E73'
   weaknesses:
-  - 'VQ-07 CRITICAL: Code specifies hardcoded Python palette colors (#306998, #FFD43B,
-    #4B8BBE) instead of Okabe-Ito (#009E73, #E69F00, #0072B2). Renders show correct
-    colors, indicating code-to-output mismatch.'
-  - 'VQ-07 CRITICAL: Code lacks ANYPLOT_THEME environment variable handling and theme-adaptive
-    color tokens. Missing explicit theme configuration required by plotnine library
-    guide.'
-  - 'SC-04 CRITICAL: Title format is wrong. Says ''bar-stacked-labeled'' instead of
-    ''Python'' and ''pyplots.ai'' instead of ''anyplot.ai''. Must be: ''Quarterly
-    Revenue by Product · Python · plotnine · anyplot.ai'''
-  - 'CQ-05: Output saved as ''plot.png'' instead of ''plot-{THEME}.png''. Code does
-    not read ANYPLOT_THEME or use f-string for filename.'
-  - 'DE-01: Generic styling with default library configuration, lacking aesthetic
-    sophistication or design intentionality.'
-  - Hardcoded color='white' for segment labels (line 60) inflexible for future theme
-    variations.
+  - 'Suggestion: give the legend title a little left padding so ''Product'' does not
+    sit flush against the legend frame.'
+  - 'Suggestion: the x-axis title ''Quarter'' repeats what the Q1–Q4 ticks already
+    say; dropping it would free vertical space for the bars.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels ("Quarter", "Revenue ($ thousands)"), tick labels all dark, bold, and clearly readable
-      Data: Three stacked segments per bar - teal (Services, top), orange (Hardware, middle), blue (Software, bottom). Segment values displayed in bold white text centered within segments (120, 85, 45, etc.). Total labels (250, 295, 318, 388) in dark bold text above each bar. Legend on right shows three products.
-      Grid: Subtle horizontal gridlines, barely visible
-      Legibility verdict: PASS - all text readable against light background
+      Background: warm off-white #FAF8F1 across plot and panel.
+      Chrome: bold near-black title "Quarterly Revenue by Product · bar-stacked-labeled · python · plotnine · anyplot.ai" spanning ~82 % of width; y-axis title "Revenue ($ thousands)", x-axis title "Quarter", dark-grey ticks 0–400 and Q1–Q4; subtle horizontal gridlines only; legend "Product" (Services, Hardware, Software, top to bottom) in an elevated box with thin frame on the right. All readable.
+      Data: four stacks rising from zero — Software #009E73 bottom, Hardware #C475FD middle, Services #4467A3 top — separated by thin page-coloured lines. Centred bold segment labels (near-black on green/purple, cream on blue) and bold totals 250, 295, 318, 388 above each stack, the 388 label sitting on a page-coloured box over the 400 gridline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels all light/white, clearly readable against dark background
-      Data: Identical data colors to light render - teal, orange, blue segments unchanged (Okabe-Ito colors preserved correctly). Segment values remain white text on colored segments. Total labels appear in light color.
-      Grid: Subtle horizontal gridlines on dark background, theme-appropriate
-      Legibility verdict: PASS - all text readable, no dark-on-dark failures, colors identical to light render proving proper theme adaptation
-
-    Both renders demonstrate correct theme-adaptive chrome (background, text colors) while maintaining consistent data colors across themes.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light cream, ticks in light grey, gridlines faint; legend box on #242420 with light frame and light text. No dark-on-dark text.
+      Data: identical fill colors and segment-label inks to the light render; totals switch to cream ink on dark boxes and read clearly; separators are now dark page lines.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -67,72 +57,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All text explicitly sized: title 24pt, labels 20pt, ticks 16pt,
-          segments 12pt bold, totals 14pt bold - all readable in both themes'
+        comment: All font sizes set explicitly; title, axis, tick, segment and total
+          labels readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, adequate spacing throughout
+        comment: No text collisions; the 388 total masks the 400 gridline with a page-coloured
+          box
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, segments, and labels clearly visible and appropriately
-          sized
+        comment: Bars wide (0.68), segment separators crisp, legend swatches match
+          fills in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors with good contrast, CVD-safe
+        comment: Green/purple/blue distinguishable under CVD, values also labelled;
+          per-fill label ink keeps contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas with balanced margins, legend well-positioned
+        comment: 3200x1800, balanced proportions, headroom for totals, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units ($ thousands), X-axis descriptive
+        comment: '''Revenue ($ thousands)'' with units, ''Quarter'''
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Code specifies hardcoded Python colors (#306998, #FFD43B,
-          #4B8BBE), not Okabe-Ito. No ANYPLOT_THEME handling or theme-adaptive tokens.
-          Renders show correct colors, indicating code-to-output mismatch.'
+        passed: true
+        comment: 'Imprint order from #009E73 in data order; #FAF8F1 / #1A1A17 backgrounds;
+          both themes correct'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Looks like well-configured library default; white segment labels
-          add minor design intent but overall generic
+        passed: true
+        comment: Per-fill segment-label ink chosen for contrast, a deliberate two-level
+          bold typographic hierarchy, page-coloured segment separators
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization beyond library defaults
+        passed: true
+        comment: Total labels on page-coloured boxes so gridlines never cross digits;
+          legend reversed to mirror the stack order; zero-expand axis with data-derived
+          headroom
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed clearly but lacks visual hierarchy or narrative emphasis
+        passed: true
+        comment: Data displayed clearly; total emphasis is what the Notes ask, no
+          further hierarchy chosen
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,30 +134,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart with total labels
+        comment: Stacked bar chart with total labels, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: stacked segments, total labels above bars, legend
-          present'
+        comment: Totals above every stack, consistent integer format, headroom, bolder
+          totals, optional segment labels inside segments; all five 'A good version
+          shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Quarter on x-axis, Revenue on y-axis, Product in fill - correct
+        comment: Zero baseline, untruncated axis, segments stacked contiguously; totals
+          nudged only 1.5 % above stack top
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: 'CRITICAL: Title says ''bar-stacked-labeled'' instead of ''Python''
-          and ''pyplots.ai'' instead of ''anyplot.ai''. Spec requires: ''{Descriptive
-          Title} · Python · plotnine · anyplot.ai'''
+        passed: true
+        comment: Descriptive prefix + mandated format; legend 'Product' with readable
+          entries
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,23 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all quarters (Q1-Q4), three products, good variation in segment
-          sizes
+        comment: Unequal stacks, varying segment sizes, upper segments starting at
+          different heights
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic business scenario - quarterly revenue by product line
+        comment: Quarterly revenue by Software/Hardware/Services, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Values plausible (45-195 range for segments), Q1→Q4 growth trend
-          sensible
+        passed: true
+        comment: 'Checked totals against data: 120+85+45=250, 145+92+58=295, 168+78+72=318,
+          195+105+88=388, all match the labels'
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -195,13 +190,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear: imports → data → plot → save, no functions or classes'
+        comment: Flat script, six zones
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data, no random generation
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -210,45 +205,49 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Simple structure but lacks sophistication: hardcoded Python colors
-          (line 54), no theme handling, no environment variable support'
+        passed: true
+        comment: Totals via groupby, stacking via position_stack; nothing hand-rolled
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'Saves as ''plot.png'' (line 94) instead of ''plot-{THEME}.png''.
-          Should use: plot.save(f"plot-{os.getenv(''ANYPLOT_THEME'', ''light'')}.png",
-          ...)'
+        passed: true
+        comment: Saves plot-{THEME}.png at 3200x1800 with current plotnine 0.15 API
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: 'Correct plotnine patterns (ggplot + geom_*) but missing best practices:
-          no explicit theme tokens, no environment variable handling, relies on library
-          defaults'
+        passed: true
+        comment: 'Grammar-of-graphics layering: position_stack(vjust, reverse) shared
+          by bars and text, format_string, guides(guide_legend(reverse=True)), scale
+          limits from the data'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses geom_text with position_stack (plotnine-specific) but overall
-          usage is generic without leveraging library-specific theme capabilities
-  verdict: REJECTED
+        passed: true
+        comment: geom_label with label_size=0 as a gridline mask and a color scale
+          mapped to per-fill label ink
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-09T00:58:02Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   - groupby-aggregation
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
+  - minimal-chrome
+  - grid-styling
