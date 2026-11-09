@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: indicator-rsi
 created: '2026-01-07T21:10:12Z'
-updated: '2026-11-09T11:46:28Z'
+updated: '2026-11-09T11:53:43Z'
 generated_by: claude-opus
 workflow_run: 42610689156
 issue: 3229
@@ -12,41 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - The RSI line (#009E73, line_width=5) leads clearly over the dashed 30/70 Spans,
-    the dotted 50 centerline and the 0.10-alpha BoxAnnotation zones in both themes
-  - The y-axis is fixed with Range1d(0, 100) and its ticks sit only at 0/30/50/70/100,
-    so the threshold levels can be read straight off the axis
-  - The 14-period lookback appears both in the legend entry and in the y-axis title,
-    as the Notes ask
-  - Readings beyond each threshold carry red/blue markers with a page-colored outline,
-    which draws the eye to the overbought and oversold episodes
-  - Bokeh-native BoxAnnotation, Span, Legend/LegendItem placed above the plot via
-    add_layout(legend, 'above'); ColumnDataSource throughout
-  - 'Theme tokens thread through every chrome element: dark render has no dark-on-dark
-    text'
+  - Wilder-smoothed RSI computed from a simulated price path (SMA seed over the first
+    14 deltas, then ewm(alpha=1/14, adjust=False)) and aligned to dates[LOOKBACK:],
+    so the line begins only once the lookback is filled
+  - Y-axis fixed 0–100 with Range1d and a ticker set to exactly the semantic levels
+    0/30/50/70/100, so the horizontal grid coincides with the reference levels instead
+    of competing with them
+  - 'Threshold Spans and BoxAnnotation zones share one color per side (matte red #AE3030
+    overbought, blue #4467A3 oversold) at fill_alpha 0.10, light enough that the 5
+    px #009E73 RSI line leads in both themes'
+  - Lookback period is noted twice, in the legend entry 'RSI (14-period lookback)'
+    and the y-axis title
+  - Legend built from explicit LegendItems and placed in its own band above the plot
+    via add_layout(legend, 'above'), clear of the data; theme tokens threaded through
+    every chrome element, so the dark render has no dark-on-dark text
   weaknesses:
-  - 'CQ-04 (code): Wilder smoothing is written out as a Python for-loop over avg_gain/avg_loss
-    (lines 59-66) where pandas computes it → pd.Series(gains).ewm(alpha=1/LOOKBACK,
-    adjust=False).mean() (and the same for losses), about 8 lines shorter. Likely
-    cause: hand-rolled recursive average.'
-  - 'Suggestion: a HoverTool showing the date and RSI value would add value in the
-    interactive HTML view.'
-  - 'Suggestion: an optional price panel above the RSI panel, sharing the x_range,
-    would show the context the Notes describe as typical.'
+  - 'Suggestion: a HoverTool showing date and RSI value on the line would add inspection
+    value to the HTML output without changing the PNG.'
+  - 'Suggestion: the legend''s scatter glyphs draw smaller than the 20 px markers
+    they explain; a larger glyph would make the match more obvious.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no pure white.
-      Chrome: left-aligned bold title "indicator-rsi · python · bokeh · anyplot.ai" (~40% width) in dark ink; italic axis titles "Date" and "RSI (14-period)"; y ticks 0/30/50/70/100 and monthly x ticks Feb–Jun 2024 in soft ink; horizontal legend box at top right ("RSI (14-period lookback)", "Overbought (≥ 70)", "Oversold (≤ 30)"). All readable. No clipping.
-      Data: green #009E73 RSI line from mid-Jan to mid-Jun, peaking ~82 near late May and dipping to ~20 mid-April; red #AE3030 dots on readings ≥70, blue #4467A3 dots on readings ≤30; light red shading 70–100, light blue shading 0–30; red dashed line at 70, blue dashed at 30, grey dotted at 50; subtle horizontal grid.
+      Background: warm off-white #FAF8F1 page and plot area; overbought zone 70–100 tinted pale red, oversold zone 0–30 tinted pale blue-grey.
+      Chrome: bold dark title "indicator-rsi · python · bokeh · anyplot.ai" top-left (~46% width); horizontal legend in an elevated box at top-right above the plot ("RSI (14-period lookback)", "Overbought (≥ 70)", "Oversold (≤ 30)"); y-axis "RSI (14-period)" with ticks 0/30/50/70/100; x-axis "Date" with monthly ticks Feb–Jun 2024; all dark text, clearly readable.
+      Data: continuous #009E73 RSI line (Jan–Jun 2024) with red markers on readings ≥ 70 (late Feb, late May–mid Jun) and blue markers on readings ≤ 30 (April); dashed red line at 70, dashed blue line at 30, dotted grey centerline at 50.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title and axis titles in light ink, tick labels and legend text in soft light grey, legend box on elevated dark fill. No dark-on-dark text anywhere.
-      Data: identical colors to the light render — green line, red/blue markers, red/blue dashed thresholds; zone shading reads as faint maroon and faint slate, line stays clearly visible inside both.
+      Background: warm near-black #1A1A17; zone tints flip to dark red-brown above 70 and dark slate below 30, both still visible.
+      Chrome: title, axis titles and tick labels in light ink, legend box on the elevated dark surface with light labels; no dark-on-dark text.
+      Data: identical to light — #009E73 line, #AE3030 overbought markers and 70 line, #4467A3 oversold markers and 30 line; markers outlined in the page color; centerline in the dark muted token.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -58,49 +56,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit 50/42/34pt sizes; all text readable in both themes and at
-          thumbnail size
+        comment: All sizes explicit (title 50pt, axis titles 42pt, ticks and legend
+          34pt); readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend sits above the plot area
+        comment: No text collisions; legend sits in its own band above the plot
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 5 px line and 20 px outlined markers suit ~106 points; legend glyphs
-          visible in both themes
+        comment: 5 px line for 106 readings, 20 px threshold markers outlined in the
+          page color; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue thresholds plus labelled levels; green line contrasts on
-          both surfaces
+        comment: Red vs blue zones, also separated by position above 70 / below 30;
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing cut off
+        comment: 3200x1800, plot fills most of the canvas, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Date'' and ''RSI (14-period)'' are reader-facing'
+        comment: '''Date'' and ''RSI (14-period)''; RSI is unitless, the lookback
+          is stated'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'RSI in #009E73, semantic Imprint red/blue for overbought/oversold,
-          correct backgrounds'
+        comment: 'RSI line #009E73; Imprint red/blue for overbought/oversold; #FAF8F1
+          / #1A1A17 backgrounds, theme-correct chrome in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -108,22 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Legend set as a horizontal strip above the plot, tick marks dropped,
-          threshold-only y ticks give a clean hierarchy
+        comment: 'Beyond baseline: one color per threshold side carried through span,
+          zone tint and markers; y ticks reduced to the five semantic levels'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: y ticks chosen at 0/30/50/70/100 so the grid doubles as the level
-          guide; x grid removed for this time series
+        comment: 'Beyond baseline: grid only at the semantic levels, no x-grid, tick
+          marks removed, legend in a dedicated band above the plot clear of data'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Markers on the readings beyond each threshold, a focal choice beyond
-          the Notes, single out the overbought and oversold episodes
+        comment: Markers on readings beyond each threshold create focal points on
+          the overbought and oversold episodes
     spec_compliance:
       score: 15
       max: 15
@@ -133,26 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: RSI oscillator line chart
+        comment: RSI oscillator line chart, stand-alone panel as the Notes allow
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Fixed 0-100 axis, 30/70 lines, 50 centerline, shaded zones, lookback
-          noted; all good-version bullets met
+        comment: Y fixed 0–100, reference lines at 30/70, optional 50 centerline,
+          both zones shaded lightly, lookback noted; all 'A good version shows' bullets
+          met (price panel not drawn, conditional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Line at computed values from the first filled lookback
+        comment: Date on x, RSI on y, all readings at their computed values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend labels describe line and markers
+        comment: Mandated title format; legend entries readable and correct
     data_quality:
       score: 15
       max: 15
@@ -162,22 +163,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Data reaches both zones and spends time between them
+        comment: Shows overbought runs, an oversold run and mid-range oscillation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 120 business days of a simulated stock with trend phases
+        comment: Daily RSI over 120 business days Jan–Jun 2024 from a 14-period lookback,
+          as the spec's example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: RSI stays within 0-100 (≈20 to ≈82), 14-period Wilder lookback
-          computed from prices, no Check values in spec'
+        comment: 'Checked: Wilder smoothing (SMA seed, alpha=1/14), first reading
+          aligned to date index 14, values inside 0–100 (about 21–83)'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -185,7 +187,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,17 +202,16 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Wilder smoothing loop (lines 59-66) replaceable by pandas ewm (defect
-          line)
+        comment: Wilder RSI via pandas ewm; nothing an available call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.html + .png via Selenium, Bokeh 3 API
+        comment: plot-{THEME}.html and plot-{THEME}.png via Selenium, Bokeh 3 API
     library_mastery:
       score: 6
       max: 10
@@ -220,25 +221,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, Range1d, BoxAnnotation/Span annotations, explicit
-          Legend/LegendItem
+        comment: ColumnDataSource per subset, BoxAnnotation/Span layout models, explicit
+          Legend with LegendItems
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Bokeh BoxAnnotation and Span layout annotations with legend placed
-          in the 'above' side panel
-  verdict: REJECTED
+        comment: Legend placed outside the frame via add_layout(legend, 'above'),
+          a bokeh layout-side placement
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
-  rendered_at: '2026-11-09T11:43:49Z'
+  rendered_at: '2026-11-09T11:50:22Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - custom-legend
   - manual-ticks
+  - custom-legend
   - layer-composition
   - html-export
   patterns:
@@ -246,6 +247,8 @@ impl_tags:
   - columndatasource
   dataprep:
   - time-series
+  - cumulative-sum
   styling:
   - alpha-blending
-  - minimal-chrome
+  - edge-highlighting
+  - grid-styling
