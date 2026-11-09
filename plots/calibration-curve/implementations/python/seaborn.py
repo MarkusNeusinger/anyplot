@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 calibration-curve: Calibration Curve
 Library: seaborn 0.13.2 | Python 3.14.10
 Quality: 85/100 | Updated: 2026-11-09
@@ -46,17 +46,18 @@ N_BINS = 10  # equal-width probability bins: 0.0-0.1, 0.1-0.2, ...
 HIST_BINS = 20
 
 # Columns: set these to your table's column names
-Y_TRUE = "Observed outcome"  # role: y_true
-Y_PROBS = ["Well-calibrated", "Overconfident", "Underconfident"]  # role: y_prob
+Y_TRUE = "Defaulted"  # role: y_true
+Y_PROBS = ["Logistic regression", "Naive Bayes", "Random forest"]  # role: y_prob
 
 # Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
+# Loan-default scores for 2000 hold-out applicants from three credit-risk classifiers
 np.random.seed(42)
 n_samples = 2000
-calibrated = np.clip(np.random.beta(2, 3.5, n_samples), 0.01, 0.99)  # imbalanced: ~36 % positive class
+calibrated = np.clip(np.random.beta(2, 3.5, n_samples), 0.01, 0.99)  # imbalanced: ~36 % default
 y_true = np.random.binomial(1, calibrated)  # outcomes drawn from the calibrated probabilities
 logit = np.log(calibrated / (1 - calibrated))
-overconfident = np.clip(1 / (1 + np.exp(-2.5 * logit)), 0.01, 0.99)  # pushed towards 0 and 1
-underconfident = np.clip(0.5 + (calibrated - 0.5) * 0.45, 0.01, 0.99)  # squeezed towards 0.5
+overconfident = np.clip(1 / (1 + np.exp(-2.5 * logit)), 0.01, 0.99)  # Naive Bayes: pushed towards 0 and 1
+underconfident = np.clip(0.5 + (calibrated - 0.5) * 0.45, 0.01, 0.99)  # forest votes: squeezed towards 0.5
 df = pd.DataFrame({Y_TRUE: y_true, Y_PROBS[0]: calibrated, Y_PROBS[1]: overconfident, Y_PROBS[2]: underconfident})
 
 # Plot: reads only df and the constants above
@@ -86,8 +87,9 @@ models = list(labels.values())
 palette = dict(zip(models, IMPRINT_PALETTE, strict=False))
 markers = dict(zip(models, MARKERS, strict=False))
 
+# Square canvas: the reliability diagram is a symmetric 0-1 by 0-1 plot; the histogram below shares its x axis
 fig, (ax_cal, ax_hist) = plt.subplots(
-    1, 2, figsize=(8, 4.5), dpi=400, gridspec_kw={"width_ratios": [1.6, 1]}, layout="constrained"
+    2, 1, figsize=(6, 6), dpi=400, sharex=True, gridspec_kw={"height_ratios": [3, 1]}, layout="constrained"
 )
 
 ax_cal.plot([0, 1], [0, 1], linestyle="--", color=INK_MUTED, linewidth=1.4, label="Perfect calibration", zorder=1)
@@ -132,16 +134,13 @@ fig.suptitle("calibration-curve · python · seaborn · anyplot.ai", fontsize=12
 
 ax_cal.set_xlim(-0.02, 1.02)
 ax_cal.set_ylim(-0.02, 1.02)
-ax_cal.set_aspect("equal")
-ax_cal.set_xlabel("Mean predicted probability", fontsize=10)
-ax_cal.set_ylabel("Fraction of positives", fontsize=10)
+ax_cal.set_xlabel("")
+ax_cal.set_ylabel(f"Fraction of positives ({Y_TRUE})", fontsize=10)
 ax_cal.grid(True, linewidth=0.6)
 legend = ax_cal.legend(fontsize=7, loc="upper left", frameon=True, framealpha=0.95)
 legend.get_frame().set_linewidth(0.6)
 
-ax_hist.set_xlim(-0.02, 1.02)
-ax_hist.set_title("Prediction distribution", fontsize=10, color=INK)
-ax_hist.set_xlabel(PRED, fontsize=10)
+ax_hist.set_xlabel(f"{PRED} (curve: bin mean)", fontsize=10)
 ax_hist.set_ylabel("Count", fontsize=10)
 ax_hist.yaxis.grid(True, linewidth=0.6)
 
