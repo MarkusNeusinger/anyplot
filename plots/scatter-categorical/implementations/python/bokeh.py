@@ -4,99 +4,138 @@ Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 70/100 | Updated: 2026-05-12
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, Legend
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: one position per category, in the order the categories appear
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns: set these to your table's column names
+SPEND = "Marketing Spend ($K)"  # role: x
+ENGAGEMENT = "Customer Engagement Score (0–100)"  # role: y
+PRODUCT = "Product"  # role: category
+
+# Data: replace this block with your own table, for example df = pd.read_csv("campaigns.csv")
 np.random.seed(42)
-
-# Generate three distinct groups with different patterns
 n_per_group = 50
+clusters = {  # per product: mean and spread of spend, then of engagement
+    "Product A": (25, 5, 30, 6),
+    "Product B": (50, 7, 70, 8),
+    "Product C": (75, 6, 50, 7),
+}
+frames = []
+for product, (x_mean, x_sd, y_mean, y_sd) in clusters.items():
+    spend = np.random.normal(x_mean, x_sd, n_per_group)
+    engagement = np.random.normal(y_mean, y_sd, n_per_group)
+    frames.append(pd.DataFrame({SPEND: spend, ENGAGEMENT: engagement, PRODUCT: product}))
+df = pd.concat(frames, ignore_index=True)
 
-# Group A: Lower left cluster
-x_a = np.random.normal(25, 5, n_per_group)
-y_a = np.random.normal(30, 6, n_per_group)
-cat_a = ["Product A"] * n_per_group
-
-# Group B: Upper middle cluster
-x_b = np.random.normal(50, 7, n_per_group)
-y_b = np.random.normal(70, 8, n_per_group)
-cat_b = ["Product B"] * n_per_group
-
-# Group C: Right side, moderate y
-x_c = np.random.normal(75, 6, n_per_group)
-y_c = np.random.normal(50, 7, n_per_group)
-cat_c = ["Product C"] * n_per_group
-
-# Combine data
-x = np.concatenate([x_a, x_b, x_c])
-y = np.concatenate([y_a, y_b, y_c])
-categories = cat_a + cat_b + cat_c
-
-# Define colors for each category (Python Blue, Python Yellow, colorblind-safe red)
-color_map = {"Product A": "#306998", "Product B": "#FFD43B", "Product C": "#E74C3C"}
-
-# Create figure with interactive tools
+# Plot: reads only df and the constants above
+W, H = 3200, 1800
+title = "scatter-categorical · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=2700,
-    title="scatter-categorical · bokeh · pyplots.ai",
-    x_axis_label="Marketing Spend ($K)",
-    y_axis_label="Customer Engagement Score",
-    tools="pan,wheel_zoom,box_zoom,reset,hover,save",
-    tooltips=[("Category", "@cat"), ("X", "@x{0.1}"), ("Y", "@y{0.1}")],
+    width=W,
+    height=H,
+    title=title,
+    x_axis_label=SPEND,
+    y_axis_label=ENGAGEMENT,
+    toolbar_location=None,
+    tooltips=[(PRODUCT, f"@{{{PRODUCT}}}"), (SPEND, f"@{{{SPEND}}}{{0.1}}"), (ENGAGEMENT, f"@{{{ENGAGEMENT}}}{{0.1}}")],
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Plot each category separately for legend
-legend_items = []
+# One renderer per category, colored by its palette position, translucent with a page-colored outline
+for i, (product, rows) in enumerate(df.groupby(PRODUCT, sort=False)):
+    p.scatter(
+        x=SPEND,
+        y=ENGAGEMENT,
+        source=ColumnDataSource(rows),
+        size=24,
+        fill_color=IMPRINT_PALETTE[i],
+        fill_alpha=0.8,
+        line_color=PAGE_BG,
+        line_width=2,
+        legend_label=str(product),
+    )
 
-for cat, color in color_map.items():
-    mask = [categories[i] == cat for i in range(len(categories))]
-    cat_x = [x[i] for i in range(len(x)) if mask[i]]
-    cat_y = [y[i] for i in range(len(y)) if mask[i]]
-    cat_source = ColumnDataSource(data={"x": cat_x, "y": cat_y, "cat": [cat] * len(cat_x)})
-    r = p.scatter(x="x", y="y", source=cat_source, size=25, color=color, alpha=0.7, line_color="white", line_width=1)
-    legend_items.append((cat, [r]))
+# Style
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = PAGE_BG  # covers the page-white seam at the frame's edge
+p.outline_line_width = 2
 
-# Add legend
-legend = Legend(items=legend_items, location="top_right")
-legend.label_text_font_size = "28pt"
-legend.glyph_height = 40
-legend.glyph_width = 40
-legend.spacing = 12
-legend.padding = 15
-legend.background_fill_alpha = 0.8
-p.add_layout(legend)
-
-# Title styling
-p.title.text_font_size = "48pt"
-p.title.text_font_style = "bold"
-
-# Axis label styling
-p.xaxis.axis_label_text_font_size = "36pt"
-p.yaxis.axis_label_text_font_size = "36pt"
-
-# Tick label styling
-p.xaxis.major_label_text_font_size = "28pt"
-p.yaxis.major_label_text_font_size = "28pt"
-
-# Grid styling
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = "dashed"
-
-# Background
-p.background_fill_color = "#fafafa"
-
-# Axis styling
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.axis.axis_label_text_color = INK
+p.axis.axis_label_text_font_style = "normal"
+p.axis.major_label_text_color = INK_SOFT
+p.axis.axis_line_color = INK_SOFT
 p.axis.axis_line_width = 2
+p.axis.major_tick_line_color = INK_SOFT
 p.axis.major_tick_line_width = 2
+p.axis.minor_tick_line_color = None
+p.axis.axis_label_standoff = 24
 
-# Save PNG
-export_png(p, filename="plot.png")
+p.grid.grid_line_color = INK
+p.grid.grid_line_alpha = 0.15
+p.grid.grid_line_width = 1.5
 
-# Save interactive HTML
-output_file("plot.html", title="scatter-categorical · bokeh · pyplots.ai")
+p.legend.title = PRODUCT
+p.legend.location = "top_right"
+p.legend.title_text_font_size = "34pt"
+p.legend.title_text_color = INK
+p.legend.title_text_font_style = "bold"
+p.legend.label_text_font_size = "34pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.glyph_width = 60  # bokeh draws a legend marker at 0.4 of the glyph box: 24 px, the marks' size
+p.legend.glyph_height = 60
+p.legend.spacing = 14
+p.legend.padding = 28
+p.legend.margin = 30
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.background_fill_alpha = 1
+p.legend.border_line_color = INK_SOFT
+p.legend.border_line_alpha = 0.4
+
+# Save: the interactive HTML, then a headless-Chrome screenshot of it at the exact canvas size
+output_file(f"plot-{THEME}.html", title=title)
 save(p)
+
+opts = Options()
+for arg in ("--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", f"--window-size={W},{H}"):
+    opts.add_argument(arg)
+opts.add_argument("--hide-scrollbars")
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.execute_script("document.body.style.background = arguments[0]", PAGE_BG)  # no white hairline at the edges
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
