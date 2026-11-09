@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 87/100 | Updated: 2026-11-09
@@ -34,12 +34,12 @@ WEIGHT = "Trade volume (billion USD)"  # role: weight
 
 # Data: replace this block with your own edge list, for example df = pd.read_csv("trade.csv")
 edge_list = [
-    ("USA", "China", 550),
+    ("USA", "China", 580),
     ("USA", "Germany", 180),
     ("USA", "Japan", 220),
     ("USA", "UK", 140),
-    ("USA", "Canada", 380),
-    ("USA", "Mexico", 420),
+    ("USA", "Canada", 760),
+    ("USA", "Mexico", 840),
     ("USA", "India", 95),
     ("USA", "S.Korea", 130),
     ("China", "Germany", 200),
