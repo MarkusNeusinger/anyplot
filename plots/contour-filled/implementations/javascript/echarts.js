@@ -1,129 +1,242 @@
 // anyplot.ai
 // contour-filled: Filled Contour Plot
-// Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-04
+// Library: echarts 6.1.0 | JavaScript 22.23.4
+// Quality: 88/100 | Updated: 2026-11-09
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Combined rainfall-intensity field from two overlapping storm cells over a
-// 100 km x 100 km region, sampled on a regular grid.
-const N = 70; // grid points per axis (spec range: 30-100)
-const DOMAIN_MIN = -50;
-const DOMAIN_MAX = 50;
-const step = (DOMAIN_MAX - DOMAIN_MIN) / (N - 1);
-const coords = Array.from({ length: N }, (_, i) => DOMAIN_MIN + i * step);
+// Constants
+const LEVEL_TARGET = 10; // aim for about this many evenly stepped contour levels
 
-// Two Gaussian storm cells: [centerX, centerY, sigma, peakIntensityMmPerHr]
-// Centers are far apart relative to sigma so the two peaks read as distinct
-// lobes rather than merging into one blob.
+// Columns: set these to your data's column names
+const EAST = "Distance East–West (km)"; // role: x
+const NORTH = "Distance North–South (km)"; // role: y
+const RAIN = "Rainfall intensity (mm/hr)"; // role: z
+
+// Data: replace this block with your own records, one object per grid point
+// Combined rainfall intensity of two overlapping storm cells over a 100 km x 100 km
+// region, sampled on a regular 100 x 100 grid. Each storm cell is a Gaussian:
+// [centre east, centre north, sigma, peak intensity in mm/hr].
+const gridSize = 100;
 const storms = [
   [-25, -18, 11, 45],
   [25, 20, 13, 30],
 ];
-
-function rainfallIntensity(x, y) {
-  return storms.reduce((sum, [cx, cy, sigma, peak]) => {
-    const d2 = (x - cx) ** 2 + (y - cy) ** 2;
-    return sum + peak * Math.exp(-d2 / (2 * sigma * sigma));
-  }, 0);
-}
-
 const data = [];
-let zMax = 0;
-for (let i = 0; i < N; i++) {
-  for (let j = 0; j < N; j++) {
-    const z = rainfallIntensity(coords[i], coords[j]);
-    if (z > zMax) zMax = z;
-    data.push([i, j, Math.round(z * 10) / 10]);
+for (let i = 0; i < gridSize; i++) {
+  for (let j = 0; j < gridSize; j++) {
+    const east = Math.round((-50 + (100 * i) / (gridSize - 1)) * 100) / 100;
+    const north = Math.round((-50 + (100 * j) / (gridSize - 1)) * 100) / 100;
+    const rain = storms.reduce(
+      (sum, [cx, cy, sigma, peak]) =>
+        sum + peak * Math.exp(-((east - cx) ** 2 + (north - cy) ** 2) / (2 * sigma * sigma)),
+      0,
+    );
+    data.push({ [EAST]: east, [NORTH]: north, [RAIN]: Math.round(rain * 10) / 10 });
   }
 }
 
-// --- Axis labels (thin out to keep the grid readable) -----------------------
-const axisLabels = coords.map((v) => Math.round(v).toString());
-const tickInterval = Math.ceil(N / 8) - 1;
+// Plot: reads only data and the constants above
+// Rebuild the regular grid from the records; a missing grid point stays null.
+const xs = [...new Set(data.map((d) => d[EAST]))].sort((a, b) => a - b);
+const ys = [...new Set(data.map((d) => d[NORTH]))].sort((a, b) => a - b);
+const xIndex = new Map(xs.map((v, i) => [v, i]));
+const yIndex = new Map(ys.map((v, j) => [v, j]));
+const z = xs.map(() => ys.map(() => null));
+data.forEach((d) => {
+  z[xIndex.get(d[EAST])][yIndex.get(d[NORTH])] = d[RAIN];
+});
 
-// --- Title size (scale for length > 67 chars) --------------------------------
-const titleText =
-  "Storm Rainfall Intensity · contour-filled · javascript · echarts · anyplot.ai";
-const titleSize = Math.max(
-  15,
-  Math.round(22 * Math.min(1, 67 / titleText.length)),
-);
+// Round steps (1, 2, 2.5 or 5 times a power of ten) for the levels and both axes' ticks
+const values = data.map((d) => d[RAIN]).filter((v) => v != null);
+const zMin = Math.min(...values);
+const zMax = Math.max(...values);
+const [levelStep, xTick, yTick] = [
+  [zMax - zMin, LEVEL_TARGET],
+  [xs.at(-1) - xs[0], 4],
+  [ys.at(-1) - ys[0], 4],
+].map(([span, parts]) => {
+  const raw = span / parts;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s >= raw);
+});
 
-// --- Render ------------------------------------------------------------------
+// Evenly stepped levels that span the data's range
+const levelLow = Math.floor(zMin / levelStep) * levelStep;
+const levelCount = Math.ceil((zMax - levelLow) / levelStep);
+const levels = Array.from({ length: levelCount + 1 }, (_, k) => +(levelLow + k * levelStep).toFixed(6));
+
+// Marching triangles: every grid cell splits into two triangles, the field is linear
+// on each, so the region above a level and the level's isoline are exact polygons and
+// segments. Layer k holds the region at or above levels[k], painted in the colour of
+// band k; stacking the layers from low to high leaves each point in the colour of its
+// band, with smooth boundaries and no seams between bands.
+const layers = levels.slice(0, -1).map(() => []);
+const isolines = [];
+for (let i = 0; i + 1 < xs.length; i++) {
+  for (let j = 0; j + 1 < ys.length; j++) {
+    const a = [xs[i], ys[j], z[i][j]];
+    const b = [xs[i + 1], ys[j], z[i + 1][j]];
+    const c = [xs[i + 1], ys[j + 1], z[i + 1][j + 1]];
+    const d = [xs[i], ys[j + 1], z[i][j + 1]];
+    for (const tri of [
+      [a, b, c],
+      [a, c, d],
+    ]) {
+      if (tri.some((p) => p[2] == null)) continue;
+      const triMax = Math.max(...tri.map((p) => p[2]));
+      layers.forEach((layer, k) => {
+        const level = levels[k];
+        if (triMax < level) return;
+        const polygon = [];
+        const crossings = [];
+        tri.forEach((p, n) => {
+          const q = tri[(n + 1) % 3];
+          if (p[2] >= level) polygon.push(p);
+          if (p[2] >= level !== q[2] >= level) {
+            const s = (level - p[2]) / (q[2] - p[2]);
+            const cross = [p[0] + s * (q[0] - p[0]), p[1] + s * (q[1] - p[1])];
+            polygon.push(cross);
+            crossings.push(cross);
+          }
+        });
+        layer.push(polygon);
+        if (k > 0 && crossings.length === 2) isolines.push(crossings);
+      });
+    }
+  }
+}
+
+const titleText = "Storm Rainfall Intensity · contour-filled · javascript · echarts · anyplot.ai";
+const titleSize = Math.max(15, Math.round(22 * Math.min(1, 67 / titleText.length)));
+
+// Colour bar: one swatch per band, split by hairline gaps, centred beside the field
+const gridBox = { left: 110, top: 145, width: 880, height: 880 };
+const swatchGap = 2;
+const swatchHeight = Math.min(60, Math.floor(600 / layers.length)) - swatchGap;
+const barTop = gridBox.top + (gridBox.height - (swatchHeight + swatchGap) * layers.length) / 2;
+
+const axisStyle = {
+  nameLocation: "middle",
+  nameTextStyle: { color: t.ink, fontSize: 18 },
+  axisLabel: { color: t.inkSoft, fontSize: 15 },
+  axisLine: { show: false },
+  axisTick: { show: false },
+  splitLine: { show: false },
+};
+
 const chart = echarts.init(document.getElementById("container"));
 
 chart.setOption({
   animation: false,
   backgroundColor: "transparent",
 
-  title: {
-    text: titleText,
-    left: "center",
-    top: 18,
-    textStyle: { color: t.ink, fontSize: titleSize, fontWeight: "bold" },
-  },
+  title: [
+    {
+      text: titleText,
+      left: "center",
+      top: 24,
+      textStyle: { color: t.ink, fontSize: titleSize, fontWeight: "bold" },
+    },
+    {
+      text: RAIN.replace(" (", "\n("),
+      left: gridBox.left + gridBox.width + 40,
+      top: barTop - 58,
+      textStyle: { color: t.ink, fontSize: 15, fontWeight: "normal", lineHeight: 20 },
+    },
+  ],
 
-  grid: { left: 140, right: 240, top: 130, bottom: 120 },
+  grid: gridBox,
 
   xAxis: {
-    type: "category",
-    data: axisLabels,
-    name: "Distance East–West (km)",
-    nameLocation: "middle",
-    nameGap: 45,
-    nameTextStyle: { color: t.ink, fontSize: 18 },
-    axisLabel: { color: t.inkSoft, fontSize: 14, interval: tickInterval },
-    axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { show: false },
-    splitLine: { show: false },
+    ...axisStyle,
+    type: "value",
+    name: EAST,
+    nameGap: 40,
+    min: xs[0],
+    max: xs.at(-1),
+    interval: xTick,
   },
 
   yAxis: {
-    type: "category",
-    data: axisLabels,
-    name: "Distance North–South (km)",
-    nameLocation: "middle",
+    ...axisStyle,
+    type: "value",
+    name: NORTH,
     nameGap: 55,
-    nameTextStyle: { color: t.ink, fontSize: 18 },
-    axisLabel: { color: t.inkSoft, fontSize: 14, interval: tickInterval },
-    axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { show: false },
-    splitLine: { show: false },
+    min: ys[0],
+    max: ys.at(-1),
+    interval: yTick,
   },
 
-  // Imprint sequential colormap banded into few, high-contrast levels — the
-  // filled-contour look. Every swatch is labeled with its own range so
-  // intermediate levels can be read off precisely, not just the extremes.
+  // Piecewise colour bar on the Imprint sequential ramp, one piece per band
   visualMap: {
     type: "piecewise",
-    min: 0,
-    max: Math.ceil(zMax),
-    splitNumber: 9,
-    calculable: false,
-    orient: "vertical",
-    right: 30,
-    top: "middle",
-    itemWidth: 20,
-    itemHeight: 18,
-    itemGap: 8,
-    precision: 0,
-    formatter: (min, max) => `${Math.round(min)}–${Math.round(max)} mm/hr`,
-    textStyle: { color: t.inkSoft, fontSize: 12 },
+    seriesIndex: 0,
+    dimension: 2,
+    pieces: layers.map((_, k) => ({
+      gte: levels[k],
+      lt: levels[k + 1],
+      label: `${levels[k]}–${levels[k + 1]}`,
+    })),
     inRange: { color: t.seq },
-    backgroundColor: "transparent",
-    borderWidth: 0,
+    orient: "vertical",
+    align: "left",
+    left: gridBox.left + gridBox.width + 40,
+    top: barTop,
+    itemSymbol: "rect",
+    itemWidth: 26,
+    itemHeight: swatchHeight,
+    itemGap: swatchGap,
+    textGap: 12,
+    textStyle: { color: t.inkSoft, fontSize: 15 },
+    hoverLink: false,
   },
 
   series: [
     {
-      type: "heatmap",
-      data: data,
-      itemStyle: { borderWidth: 0 },
-      emphasis: { disabled: true },
-      label: { show: false },
+      // Filled bands: one path per layer, painted from the lowest level up
+      type: "custom",
+      silent: true,
+      encode: { x: 0, y: 1 },
+      data: layers.map((_, k) => [xs[0], ys[0], (levels[k] + levels[k + 1]) / 2]),
+      renderItem: (params, api) => ({
+        type: "path",
+        shape: {
+          pathData: layers[params.dataIndex]
+            .map(
+              (polygon) =>
+                polygon
+                  .map((p, n) => {
+                    const [px, py] = api.coord(p);
+                    return `${n ? "L" : "M"}${px.toFixed(2)} ${py.toFixed(2)}`;
+                  })
+                  .join("") + "Z",
+            )
+            .join(""),
+        },
+        style: { fill: api.visual("color") },
+      }),
+    },
+    {
+      // Thin contour lines along every inner band boundary
+      type: "custom",
+      silent: true,
+      encode: { x: 0, y: 1 },
+      data: [[xs[0], ys[0]]],
+      renderItem: (params, api) => ({
+        type: "path",
+        shape: {
+          pathData: isolines
+            .map(([p, q]) => {
+              const [px, py] = api.coord(p);
+              const [qx, qy] = api.coord(q);
+              return `M${px.toFixed(2)} ${py.toFixed(2)}L${qx.toFixed(2)} ${qy.toFixed(2)}`;
+            })
+            .join(""),
+        },
+        style: { fill: null, stroke: t.ink, lineWidth: 1, opacity: 0.4 },
+      }),
     },
   ],
 
