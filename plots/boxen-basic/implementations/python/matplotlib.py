@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: pending | Updated: 2026-05-17
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-09
 """
 
 import os
