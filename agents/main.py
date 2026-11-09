@@ -1218,7 +1218,7 @@ async def switch_library(
     if target.pair() == source.pair():
         carry = read_carry(session.state, target.pair())  # the same target again: a carry made for it stays
     else:
-        # A plot of earlier data carries nothing to the current data (`source_plot`).
+        # A plot of earlier data carries only its asked theme to the current data (`source_plot`).
         plot = source_plot(services.versions.latest_rendered(sid, target=source.pair()), view.dataset_version)
         pending = read_carry(session.state, source.pair())
         carry = carry_for(source=source, target=target, plot=plot, pending=pending, memory=memory)
@@ -2162,7 +2162,8 @@ async def copy_dataset(
         shown[PLOT_LANGUAGE] = plot_language(origin, origin_latest)
     # `.plot_all()` plots the user's tuned plot in every library (2026-11-02): the memory comes along, and a carry for
     # this session's library from the page session's latest plot, so the fan-out's `carry_plot` takes both. A plot of
-    # data before the copied version carries nothing to it (`source_plot`), as on the page's own "plot the new data".
+    # data before the copied version carries only its asked theme to it (`source_plot`), as "plot the new data" keeps
+    # the theme too.
     memory = read_memory(source.state)
     carry = carry_for(
         source=Target(spec_id=origin.spec_id, library=origin.library),

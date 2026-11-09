@@ -231,12 +231,12 @@
  * service does. A typed plot wish before the data is confirmed (also in the note sent with a paste), while the
  * library has no plot of this data (a plot of data a new paste replaced is none), is kept for its first plot as
  * the root's `keep_plot_request` keeps it, which the stream shows nothing of; that plot then remembers it. Every
- * new data version (a paste, a change, an undo) drops the carry, and a switch carries no plot of another data
- * version. The paste answer's `columns_changed` says that a column the replaced data was bound to is not in the
- * new data (by its exact name), as the service's does (owner decisions of 2026-11-08). `{action: "plot_new_data"}`
- * ("plot the new data") changes the library's latest version for the new data while it drew the current paste
- * with the same bindings, else plots from the catalogue code in the theme asked for before, and its plot names
- * which (`new_data`: `previous`, `other_paste`, `bindings_changed`, `kept_note`, `no_plot`).
+ * new data version (a paste, a change, an undo) drops the carry, and a switch takes only the asked theme of a plot
+ * of another data version. The paste answer's `columns_changed` says that a column the replaced data was bound to
+ * is not in the new data (by its exact name), as the service's does (owner decisions of 2026-11-08).
+ * `{action: "plot_new_data"}` ("plot the new data") changes the library's latest version for the new data while it
+ * drew the current paste with the same bindings, else plots from the catalogue code in the theme asked for before,
+ * and its plot names which (`new_data`: `previous`, `other_paste`, `bindings_changed`, `kept_note`, `no_plot`).
  *
  * What a turn changed: every `done` of a turn that ended well carries `turn` (`answer`, `data`, `plot`,
  * `language` or `kept`, the service's `stream.turn_outcome` for the paths the mock plays): a question, a
@@ -2715,13 +2715,13 @@ async function route(req, res) {
     // Another spec waits for the plot-type switch.
     if (body.spec_id && body.spec_id !== session.specId) return fail(res, 422, 'invalid', ref);
     // The service's `switch.carry_for` and `switch.summary` in miniature: the source's latest plot
-    // carries (its asked theme), else a carry not yet run moves on, else the memory alone. A plot of
-    // another data version than the current one carries nothing (`switch.source_plot`, 2026-11-08).
+    // carries (its asked theme), else a carry not yet run moves on, else the memory alone.
     const target = body.library;
     const latestIn = library => session.versions.findLast(item => item.library === library);
     if (target !== session.library) {
-      const latest = latestIn(session.library);
-      const plot = latest && latest.dataNumber === session.version ? latest : undefined;
+      // A plot of another data version carries its asked theme too; its texts and requests, which
+      // the mock does not carry, stay behind on the service (`switch.source_plot`, 2026-11-09).
+      const plot = latestIn(session.library);
       const pending = session.carry;
       session.carry =
         plot || pending || session.memory.length

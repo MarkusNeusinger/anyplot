@@ -94,18 +94,17 @@ def test_the_sweep_covers_every_library_with_a_runtime() -> None:
 def test_the_ggplot2_sweep_over_the_real_catalogue() -> None:
     """The R runtime over all 325 ggplot2 files (2026-10-29, PR 3b; the owner rule of the same day: a missing marker
     is `coupled`, never `blocked`): 4 clean, 306 coupled, 15 blocked, which are the 13 map specs, qrcode-basic (the
-    qrcode package and a URL) and maze-circular (`<<-`). Four map specs carried SECURITY findings too; three since
-    #12862 regenerated flowmap-origin-destination without a geodata package (2026-11-09), and it stays blocked by its
-    map spec."""
+    qrcode package and a URL) and maze-circular (`<<-`). Four map specs carry SECURITY findings too."""
     result = sweep(REPO_PLOTS, ("ggplot2",))
 
     ggplot2 = result["by_library"]["ggplot2"]
     assert (ggplot2["files"], ggplot2["eligible"]) == (325, 310)
     assert ggplot2["statuses"] == {"clean": 4, "coupled": 306, "blocked": 15, "error": 0}
-    assert ggplot2["blocked_by_category"] == {"map-spec": 13, "security": 5}
-    assert ggplot2["security_rules"] == {"banned-import": 2, "banned-name": 2, "banned-statement": 1, "url-literal": 2}
+    assert ggplot2["blocked_by_category"] == {"map-spec": 13, "security": 6}
+    assert ggplot2["security_rules"] == {"banned-import": 3, "banned-name": 2, "banned-statement": 1, "url-literal": 2}
     security = sorted(item["spec_id"] for item in result["blocked"] if "security" in item["categories"])
     assert security == [
+        "flowmap-origin-destination",
         "heatmap-geographic",
         "map-connection-lines",
         "map-projections",

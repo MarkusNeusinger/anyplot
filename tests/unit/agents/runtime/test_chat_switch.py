@@ -179,11 +179,12 @@ async def test_the_fanout_copy_brings_the_memory_and_a_carry(
     assert carry is not None and (carry.theme, carry.expected_texts) == ("dark", ["Zeit (h)"])
 
 
-async def test_the_fanout_copy_of_new_data_carries_no_plot_of_the_earlier_data(
+async def test_the_fanout_copy_of_new_data_carries_only_the_asked_theme_of_the_earlier_plot(
     client: httpx.AsyncClient, runtime: Runtime, services: Services
 ) -> None:
-    """Owner decision of 2026-11-08: the page's latest plot drew data v1, and the user pasted again before
-    `.plot_all()`; the fan-out plots the new data with the memory, never with the old plot's theme and texts."""
+    """Owner decisions of 2026-11-08 and 2026-11-09: the page's latest plot drew data v1, and the user pasted again
+    before `.plot_all()`; the fan-out plots the new data with the memory and the theme the user asked for, never with
+    the old plot's texts and requests."""
     source = await open_session(client)
     await paste(client, source)
     held = plan([], [LINE, LABEL], seq=1, turn=2)
@@ -212,9 +213,10 @@ async def test_the_fanout_copy_of_new_data_carries_no_plot_of_the_earlier_data(
     response = await copy(client, target, source)
 
     assert response.status_code == 200, response.text
-    assert response.json()["carry"]["from_plot"] is False and response.json()["carry"]["decisions"] == 2
+    assert response.json()["carry"]["from_plot"] is True and response.json()["carry"]["decisions"] == 2
     carry = read_carry(dict((await runtime.session(COPY_USER, target)).state), ("scatter-basic", "seaborn"))
-    assert carry is not None and (carry.theme, carry.requests) == (None, [])
+    # The asked theme carries (owner decision of 2026-11-09), the old plot's requests do not.
+    assert carry is not None and (carry.theme, carry.requests) == ("dark", [])
     assert carry.expected_texts == ["Zeit (h)"]  # the memory still travels
 
 

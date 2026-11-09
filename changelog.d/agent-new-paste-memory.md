@@ -11,9 +11,10 @@
   data, `.to_long()` and an undo drop the switch's carry (the theme, the texts
   and the requests of a plot of the data before), as they already drop a kept
   first-plot note, and the page ends its offer with them. A switch or the admin
-  fan-out's copy after the data changed carries no plot of the earlier data,
-  only the remembered decisions, so the public and the admin lane treat a new
-  paste alike. (#12832)
+  fan-out's copy after the data changed takes only the theme you asked for on
+  the plot of the earlier data, never its texts or requests, besides the
+  remembered decisions, so the public and the admin lane treat a new paste
+  alike. (#12832)
 - **The remembered decisions show where new data meets them.** When a paste
   lacks a column the data before it was bound to, the paste answer says
   `columns_changed`, and the new `# data` line holds the decisions until the
