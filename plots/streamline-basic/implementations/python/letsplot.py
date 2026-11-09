@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 streamline-basic: Basic Streamline Plot
 Library: letsplot 4.11.0 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09
@@ -45,16 +45,19 @@ IMPRINT_SEQ = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]]
 # Constants
 N_STREAMLINES = 8  # seed count: enough to show the pattern, few enough to stay separate
 SEED_SPAN = (0.1, 0.93)  # seeds run from the domain center toward its right edge, as fractions of the half-width
-PANEL_ASPECT = 1.67  # width / height of the panel on the 3200 x 1800 canvas, so x and y share one unit length
+PANEL_ASPECT = (
+    0.86  # width / height of the panel on the 2400 x 2400 canvas beside the color bar, so x and y share one unit length
+)
+SPEED = "Speed (m/s)"  # name of the derived speed along each streamline, shown on the color bar
 
 # Columns: set these to your table's column names
-X = "X Position"  # role: x
-Y = "Y Position"  # role: y
-U = "Horizontal velocity u"  # role: u
-V = "Vertical velocity v"  # role: v
+X = "x (m)"  # role: x
+Y = "y (m)"  # role: y
+U = "u (m/s)"  # role: u
+V = "v (m/s)"  # role: v
 
 # Data: replace this block with your own table, for example df = pd.read_csv("field.csv")
-# A 30 x 30 grid of a vortex flow field u = -y, v = x (circular streamlines), one row per grid point
+# A 30 x 30 grid of a rotating fluid vortex in a 6 m tank, u = -y, v = x (rigid rotation at 1 rad/s), one row per grid point
 grid = np.linspace(-3, 3, 30)
 grid_x, grid_y = np.meshgrid(grid, grid)
 df = pd.DataFrame({X: grid_x.ravel(), Y: grid_y.ravel(), U: -grid_y.ravel(), V: grid_x.ravel()})
@@ -68,7 +71,7 @@ x_min, x_max = field[X].min(), field[X].max()
 y_min, y_max = field[Y].min(), field[Y].max()
 center_x, center_y = (x_min + x_max) / 2, (y_min + y_max) / 2
 span = max(x_max - x_min, y_max - y_min)
-half_height = 1.05 * max((x_max - x_min) / 2 / PANEL_ASPECT, (y_max - y_min) / 2)
+half_width = 1.05 * max((x_max - x_min) / 2, (y_max - y_min) / 2 * PANEL_ASPECT)
 speeds = np.hypot(field[U], field[V])
 typical_speed = speeds[speeds > 0].median() if (speeds > 0).any() else 1.0
 t_max = 4 * span / typical_speed
@@ -113,20 +116,20 @@ for line_id, offset in enumerate(np.linspace(*SEED_SPAN, N_STREAMLINES) * (x_max
     xs = np.clip(path[0], x_min, x_max)
     ys = np.clip(path[1], y_min, y_max)
     uv = velocity(xs, ys)
-    rows.append(pd.DataFrame({X: xs, Y: ys, "Field Strength": np.hypot(uv[:, 0], uv[:, 1]), "streamline": line_id}))
+    rows.append(pd.DataFrame({X: xs, Y: ys, SPEED: np.hypot(uv[:, 0], uv[:, 1]), "streamline": line_id}))
 
 lines = pd.concat(rows, ignore_index=True)
 
 plot = (
-    ggplot(lines, aes(x=X, y=Y, group="streamline", color="Field Strength"))
+    ggplot(lines, aes(x=X, y=Y, group="streamline", color=SPEED))
     + geom_path(size=1.2, alpha=0.9)
-    + scale_color_gradient(low=IMPRINT_SEQ[0], high=IMPRINT_SEQ[1], name="Field Strength")
+    + scale_color_gradient(low=IMPRINT_SEQ[0], high=IMPRINT_SEQ[1], name=SPEED)
     + labs(x=X, y=Y, title="streamline-basic · python · letsplot · anyplot.ai")
     + coord_cartesian(
-        xlim=[center_x - half_height * PANEL_ASPECT, center_x + half_height * PANEL_ASPECT],
-        ylim=[center_y - half_height, center_y + half_height],
+        xlim=[center_x - half_width, center_x + half_width],
+        ylim=[center_y - half_width / PANEL_ASPECT, center_y + half_width / PANEL_ASPECT],
     )
-    + ggsize(800, 450)
+    + ggsize(600, 600)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -142,6 +145,6 @@ plot = (
     )
 )
 
-# Save: PNG scaled 4x to 3200 x 1800 px, plus the interactive HTML
+# Save: PNG scaled 4x to 2400 x 2400 px, plus the interactive HTML
 ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, filename=f"plot-{THEME}.html", path=".")
