@@ -1,7 +1,7 @@
 """anyplot.ai
 forest-basic: Meta-Analysis Forest Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-11
+Quality: pending | Updated: 2026-05-11
 """
 
 import os
