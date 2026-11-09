@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-split: Split Violin Plot
 Library: plotly 7.1.0 | Python 3.14.10
 Quality: 82/100 | Updated: 2026-11-09
@@ -43,8 +43,10 @@ frames = []
 for job, genders in salary_mixtures.items():
     for gender, components in genders.items():
         n = n_per_group // len(components)
-        salaries = np.concatenate([np.random.normal(mean, sd, n) for mean, sd in components])
-        frames.append(pd.DataFrame({JOB: job, SALARY: np.clip(salaries, 40000, 200000), GENDER: gender}))
+        # Truncated normal by rejection: oversample, keep draws inside the pay band, take the first n
+        draws = [np.random.normal(mean, sd, 3 * n) for mean, sd in components]
+        salaries = np.concatenate([d[(d >= 40000) & (d <= 200000)][:n] for d in draws])
+        frames.append(pd.DataFrame({JOB: job, SALARY: salaries, GENDER: gender}))
 df = pd.concat(frames, ignore_index=True)
 
 # Plot: reads only df and the constants above
@@ -59,8 +61,8 @@ for i, (gender, rows) in enumerate(df.groupby(GENDER, sort=False)):
             line=dict(color=IMPRINT_PALETTE[i], width=1.5),
             fillcolor=IMPRINT_PALETTE[i],
             opacity=0.75,
-            meanline=dict(visible=True, color=INK, width=1.5),
-            box=dict(visible=True, width=0.25, fillcolor=ELEVATED_BG, line=dict(color=INK_SOFT, width=1)),
+            meanline=dict(visible=True, color=INK, width=6),
+            box=dict(visible=True, width=0.25, fillcolor=ELEVATED_BG, line=dict(color=INK_SOFT, width=4)),
             points=False,
             spanmode="hard",
             scalemode="width",
