@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: contour-density
 created: '2026-01-01T21:29:18Z'
-updated: '2026-11-09T00:10:19Z'
+updated: '2026-11-09T00:15:53Z'
 generated_by: claude-opus-5-5
 adopted_from: 68ddebdc0340d846bc99a02c34862976a9d328b5 (68ddebdc0340d846bc99a02c34862976a9d328b5)
 workflow_run: 42538359638
@@ -13,47 +13,59 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - Nested, filled KDE contours in the imprint_seq ramp (green outer → blue inner)
-    at low opacity, so the bands deepen towards each peak, and the levels stay distinguishable
-    in both themes
-  - Each of the three housing segments sits inside its own set of rings; the bandwidth
-    (0.32 on standardised axes) keeps the clusters apart without breaking into islands
-  - The scatter overlay is small, faint and neutral grey at the exact values, so the
-    contours stay the main signal
-  - pygal XY with allow_interruptions=True and (None, None) separators draws every
-    ring of a level as one series with fill=True; per-series stroke=False/dots_size
-    and an inline CSS rule style the overlay
-  - Legend labels state the density share and which way density rises (outer/inner);
-    value formatters give readable $k/$M and comma ticks
-  - Theme tokens are threaded through Style, and both renders are theme-correct
+  - Gaussian KDE on per-axis standardised scales with a narrow bandwidth (bw_method=0.32)
+    keeps the three housing segments as separate peaks with their own inner rings,
+    while the outer rings still show how the starter and mid-range segments connect
+  - 'Six iso-density levels drawn as stacked translucent fills in discrete imprint_seq
+    steps (#009E73 to #4467A3), so the bands deepen toward each peak and the innermost
+    rings carry the strongest color'
+  - Scatter overlay of all 400 sales as small faint INK_SOFT points at their exact
+    values keeps the contours the main signal and lets the reader check them against
+    the data
+  - Legend labels give each level as a share of peak density and mark the outer and
+    inner ends, so the direction density rises is stated
+  - Uses pygal's allow_interruptions with (None, None) breaks to draw every ring of
+    a level in one series, plus value_formatter / x_value_formatter for $k / $M and
+    thousands-separated ticks
+  - 'Theme tokens threaded through Style: warm page backgrounds, INK/INK_SOFT chrome
+    and 15% rule guides read cleanly in both renders'
+  - Contours come from contourpy on a grid padded 12% past the data, so every ring
+    closes inside the plot
+  - 'Library-native interactivity: the HTML version gives hover tooltips on each observation
+    and each level'
   weaknesses:
-  - 'CQ-04 (code): lines 66–114 write out a ~48-line marching-squares contour tracer
-    (edge interpolation, saddle handling, ring chaining) → `contourpy.contour_generator(x=gx,
-    y=gy, z=density).lines(level)` (contourpy, matplotlib''s non-plotting contour
-    engine, installed with matplotlib) returns the same closed rings per level in
-    a few lines. Likely cause: a hand-rolled iso-line extraction instead of the installed
-    contour generator.'
-  - 'Suggestion: the 8 % outer ring merges the mid-range and premium segments through
-    a thin neck around 2,600 sq ft; a slightly higher outermost level would keep the
-    premium cluster''s rings visually separate.'
+  - 'VQ-03 (both): the six legend swatches all carry the single-layer 17% fill, so
+    they read as near-identical pale tints (and in the dark render the 62% and 80%
+    boxes nearly vanish into #1A1A17, only their outline visible), while the plot
+    shows the stacked bands deepening to dark teal/blue → swatches whose fill steps
+    visibly from light to strong like the bands they explain (for example a higher
+    fill-opacity on the legend boxes only). Likely cause: Style opacity=0.17 applied
+    unchanged to the legend rects.'
+  - 'CQ-04 (code): lines 81-83 interpolate the imprint_seq hex stops by hand (parsing
+    hex pairs and mixing RGB channels) → `matplotlib.colors.LinearSegmentedColormap.from_list("imprint_seq",
+    [SEQ_LOW, SEQ_HIGH])` with `matplotlib.colors.to_hex(cmap(t))` per level. Likely
+    cause: the gradient written out instead of using matplotlib''s non-plotting color
+    utilities.'
+  - 'Suggestion: a little more space between each legend swatch and its label text
+    would make the bottom legend read less cramped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1
-      Chrome: dark-ink title "contour-density · python · pygal · anyplot.ai" (~56% width), axis titles "Living area (sq ft)" / "Sale price (USD)", comma and $k/$M ticks, subtle grid, 3-column bottom legend of six density levels marked outer/inner. All readable.
-      Data: six nested filled KDE contours from #009E73 (outer, 8% of peak) to #4467A3 (inner, 80%) at low opacity, deepening towards the peaks; three housing segments with their own rings; ~400 small faint grey points at exact values.
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title "contour-density · python · pygal · anyplot.ai" centered in dark ink (~56% of width); y-axis "Sale price (USD)" with $100k–$1.1M ticks, x-axis "Living area (sq ft)" with 800–4,000 ticks; subtle light grid on both axes; 6-entry legend in 3 columns at the bottom. All text dark and readable.
+      Data: three density clusters (starter ~1,200 sq ft/$250k, mid ~2,000/$450k, premium ~3,200/$750k) shown as nested filled contours stepping from brand green #009E73 outlines (outer 8% level) to blue #4467A3 (inner 80% level); stacked translucent fills deepen toward each peak. 400 small faint grey points overlay at their exact values. The starter and mid clusters share the outer rings and have separate inner rings; the premium cluster has its own 8%/18% rings.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17
-      Chrome: light-ink title, axis titles, ticks and legend text, all readable; no dark-on-dark; subtle grid.
-      Data: identical green-to-blue contour colors as the light render; overlay points light grey and faint; brand green outer ring clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, all clearly readable; grid subtle; legend text light. No dark-on-dark text.
+      Data: same contour line colors and level steps as the light render (green to blue), fills translucent over the dark page so the bands read as dark green-teal deepening inward; scatter points light grey and faint. Data colors identical to light; only chrome flips. Legend swatches for the 62%/80% levels are nearly the page color, visible mainly by their outline.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -61,47 +73,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; title at about
-          56 % of the width
+        comment: Explicit font sizes (66/46/44); all text readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the legend sits clear below the axis title
+        comment: No text collisions; points overlap contours by design
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Contour strokes are clear; the ~400 overlay points are small and
-          faint as intended; legend swatches show outline and fill
+        comment: Contours and faint points well sized; legend swatches all near-identical
+          pale tints and the inner ones nearly vanish in dark (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: The green-to-blue ramp is CVD-safe; nesting is also carried by the
-          outlines
+        comment: Green-to-blue sequential steps plus outlines; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; balanced axis titles and ticks; nothing cut off
+        comment: 3200x1800, balanced axis labels, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Living area (sq ft) / Sale price (USD), with units
+        comment: Descriptive labels with units (sq ft, USD)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq #009E73→#4467A3 for density levels; correct #FAF8F1/#1A1A17
-          backgrounds; neutral ink for the overlay'
+        comment: 'imprint_seq steps #009E73 to #4467A3; backgrounds #FAF8F1 / #1A1A17;
+          theme-correct chrome'
     design_excellence:
       score: 10
       max: 20
@@ -111,21 +122,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: $k/$M and comma-thousands formatters, and outer/inner qualifiers
-          in the legend labels
+        comment: Stacked translucent fills that deepen into the peaks, $k/$M and thousands-separated
+          tick formatting, contour outlines over fills
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: The KDE grid is padded so every ring closes inside the plot; outline
-          plus low-opacity fill layering makes bands distinct
+        comment: Grid padded so every ring closes inside the plot, three-column bottom
+          legend, faint points subordinate to the contours
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed, no hierarchy chosen beyond the Notes
+        comment: Shows the three market segments; no hierarchy chosen beyond what
+          the spec asks
     spec_compliance:
       score: 15
       max: 15
@@ -135,26 +147,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Density contour plot with filled KDE levels
+        comment: Filled density contour plot with optional scatter overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: KDE, several nested levels, legend stating which way density rises,
-          faint scatter overlay, sequential fill with strongest color at the peak
+        comment: KDE, multiple nested levels, legend stating outer/inner, faint scatter
+          overlay, sequential fills; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at exact values; axes cover all data
+        comment: Area on x, price on y; points at exact values; full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend entries readable
+        comment: Correct title format; legend labels as share of peak density
     data_quality:
       score: 15
       max: 15
@@ -164,20 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three clusters with their own ring sets, gradients, overlay context
+        comment: Multiple peaks, merged outer rings, separate inner rings, sparse
+          tails
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Housing-market segments: area vs. sale price, neutral'
+        comment: Neutral housing-market segments
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1,200–3,200 sq ft at $250k–$750k is plausible; 400 points is inside
-          the spec's range
+        comment: Plausible areas (800-3,800 sq ft) and prices ($150k-$1M); no Check
+          values in spec
     code_quality:
       score: 9
       max: 10
@@ -205,14 +218,14 @@ review:
         score: 1
         max: 2
         passed: true
-        comment: Lines 66–114 hand-roll marching squares that contourpy.contour_generator(...).lines(level)
-          computes (defect line)
+        comment: Lines 81-83 hand-roll the hex gradient that matplotlib.colors computes
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and plot-{THEME}.html; current pygal 3 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal 3 API
     library_mastery:
       score: 7
       max: 10
@@ -222,31 +235,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY with Style tokens, per-series kwargs, value formatters,
-          legend_at_bottom_columns
+        comment: XY chart with Style object, per-series kwargs (stroke=False, dots_size,
+          fill=True), value formatters
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: allow_interruptions with None separators to draw several rings per
-          series, and inline CSS through the css option
-  verdict: REJECTED
+        comment: allow_interruptions with None breaks for multi-ring series, inline
+          CSS injection, native hover tooltips in HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
-  rendered_at: '2026-11-09T00:07:32Z'
+  rendered_at: '2026-11-09T00:12:43Z'
 impl_tags:
   dependencies:
   - scipy
+  - contourpy
   techniques:
-  - layer-composition
   - custom-legend
+  - layer-composition
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep:
   - kde
   styling:
   - alpha-blending
   - custom-colormap
+  - grid-styling
