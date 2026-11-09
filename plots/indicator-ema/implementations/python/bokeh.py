@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 Library: bokeh 3.10.1 | Python 3.14.10
 Quality: 81/100 | Updated: 2026-11-09
@@ -39,10 +39,11 @@ CLOSE = "Price (USD)"  # role: close
 np.random.seed(42)
 n_days = 120
 dates = pd.date_range("2025-01-01", periods=n_days, freq="B")  # Business days
-returns = np.random.normal(0.0008, 0.018, n_days)  # Daily returns
+drift = np.full(n_days, 0.0003)
+drift[40:80] = 0.0035  # Uptrend
+drift[80:100] = -0.0045  # Downtrend
+returns = drift + np.random.normal(0, 0.014, n_days)  # Daily returns
 price = 150 * np.cumprod(1 + returns)
-price[40:80] = price[40:80] * np.linspace(1, 1.15, 40)  # Uptrend
-price[80:100] = price[80:100] * np.linspace(1, 0.92, 20)  # Downtrend
 df = pd.DataFrame({DATE: dates, CLOSE: price})
 
 # Plot: reads only df and the constants above
@@ -83,8 +84,8 @@ p = figure(
 
 # Price is the dominant series; the EMAs are thinner overlays on the same axis
 price_line = p.line(DATE, CLOSE, source=source, line_width=6, line_color=IMPRINT_PALETTE[0])
-ema_short_line = p.line(DATE, ema_short_label, source=source, line_width=3.5, line_color=IMPRINT_PALETTE[2])
-ema_long_line = p.line(DATE, ema_long_label, source=source, line_width=3.5, line_color=IMPRINT_PALETTE[3])
+ema_short_line = p.line(DATE, ema_short_label, source=source, line_width=3.5, line_color=IMPRINT_PALETTE[1])
+ema_long_line = p.line(DATE, ema_long_label, source=source, line_width=3.5, line_color=IMPRINT_PALETTE[2])
 crossover_marks = p.scatter(
     DATE, CLOSE, source=crossover_source, size=22, marker="circle", fill_color=PAGE_BG, line_color=INK, line_width=3.5
 )
@@ -138,6 +139,7 @@ p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.glyph_width = 60
 p.legend.glyph_height = 40
+p.legend.label_standoff = 24
 p.legend.spacing = 18
 p.legend.padding = 24
 p.legend.margin = 30
