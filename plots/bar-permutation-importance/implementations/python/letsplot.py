@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-permutation-importance: Permutation Feature Importance Plot
 Library: letsplot 4.11.0 | Python 3.14.10
-Quality: 87/100 | Updated: 2026-11-09
+Quality: 85/100 | Updated: 2026-11-09
 """
 
 import os
