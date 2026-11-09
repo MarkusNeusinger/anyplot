@@ -2,57 +2,57 @@ library: plotly
 language: python
 specification_id: forest-basic
 created: '2025-12-27T19:22:00Z'
-updated: '2026-05-11T01:23:29Z'
-generated_by: claude-haiku
-workflow_run: 25644923722
+updated: '2026-11-09T00:45:21Z'
+generated_by: claude-opus-5-5
+adopted_from: 9f95938b2cc0a283e722f27ab5788ff1a9fd82a3 (9f95938b2cc0a283e722f27ab5788ff1a9fd82a3)
+workflow_run: 42541482513
 issue: 2378
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/python/plotly/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - Correct forest plot structure with all required statistical elements (CI lines,
-    point estimates, pooled diamond, reference line)
-  - Excellent theme adaptation in rendered images (warm off-white/near-black backgrounds,
-    properly contrasted light/dark text)
-  - Clear visual hierarchy and data storytelling (diamond focal point, directional
-    annotations guide interpretation)
-  - Realistic medical data example with proper study names, plausible effect sizes
-    and confidence intervals
-  - Well-sized typography with no overlapping or illegible elements in either render
-  - Proper use of plotly graph_objects API for custom forest plot construction
+  - Pooled estimate computed with statsmodels combine_effects (DerSimonian-Laird random
+    effects), with each study's variance taken from its 95% interval width, so the
+    diamond falls out of the data and is not placed by hand
+  - Native asymmetric error_x whiskers plus square markers with sizemode='area' and
+    a computed sizeref, so marker area is proportional to study weight and the largest
+    marker stays inside its own row
+  - Pooled diamond drawn as a fill='toself' polygon in the theme-adaptive neutral
+    anchor (ink), with its tips at the pooled interval bounds, in its own row 1.5
+    rows below the studies and set apart from the green study squares
+  - 'Clear hierarchy: bold pooled row label, muted ''Favors treatment / Favors control''
+    direction cues, dashed null line drawn below the data, vertical-only subtle grid
+    and no y-axis line'
+  - 'Native interactivity in the HTML: per-study hovertemplate fed by customdata (study,
+    effect, CI, weight) and hoveron=''fills'' on the diamond'
+  - Theme tokens threaded through every chrome element; both renders are fully legible
+    and the data colors are identical across themes
   weaknesses:
-  - 'Primary marker color is #306998 (Python Blue) instead of required #009E73 (Okabe-Ito
-    brand green) - hard rule violation'
-  - 'Annotations and text colors hardcoded (#306998, #666666) instead of using theme-adaptive
-    tokens (INK, INK_SOFT) - breaks dark theme legibility'
-  - Code does not read ANYPLOT_THEME environment variable; hardcodes white backgrounds
-    and colors, requiring manual fixes to produce themed renders
-  - Output files saved as plot.png instead of plot-{THEME}.png; should auto-generate
-    plot-light.png and plot-dark.png
-  - 'Pooled estimate diamond uses #FFD43B (Okabe-Ito position 7) instead of adaptive
-    neutral color for aggregates'
-  - Visual design is well-configured default but lacks exceptional aesthetic refinement
-    or advanced plotly features
+  - 'Suggestion: ordering the studies by effect size (the other ordering the Notes
+    allow) would make the spread around the pooled diamond easier to read than the
+    chronological order.'
+  - 'Suggestion: the inner plot sits a little left of the canvas center, with spare
+    space on the right and at the bottom; the right and bottom margins could be balanced.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme-adaptive surface
-      Chrome: Title "forest-basic · plotly · anyplot.ai" clearly visible (28px); study names on Y-axis readable (18px); X-axis label "Mean Difference in Blood Pressure (mmHg)" with units (22px); all text is dark-colored and easily readable against light background
-      Data: Primary data markers are blue squares (#306998, NOT the required #009E73 brand green); confidence interval lines in same blue; pooled estimate shown as yellow diamond; vertical reference line at x=0 labeled "No Effect"; directional annotations guide interpretation
-      Legibility verdict: PASS (text all readable, proper contrast)
+      Background: warm off-white #FAF8F1 across the whole canvas, not pure white.
+      Chrome: centered title "forest-basic · python · plotly · anyplot.ai" in dark ink (~35% of the width); 12 study names (Smith et al. 2018 ... Robinson et al. 2024, chronological) as dark-grey y tick labels, plus a bold "Pooled (random effects)" label; x ticks −15, −10, −5, 0; x-axis title "Mean difference in systolic blood pressure (mmHg)"; muted "No effect" label above the dashed null line at 0 and "← Favors treatment" / "Favors control →" cues below the axis. Subtle vertical grid lines. All text readable.
+      Data: brand-green #009E73 square markers of weight-proportional area with green horizontal whiskers for the 95% CIs; Anderson 2021 and Brown & Davis 2022 cross the null line; a black (ink-neutral) diamond in its own bottom row centered near −7.9 with tips at about −9.2 and −6.5. Dashed null line runs through every row and the diamond row.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme-adaptive surface
-      Chrome: All text rendered in light colors for proper contrast against dark background; title, study names, and axis labels all clearly readable with good contrast; no "dark-on-dark" failures detected
-      Data: Blue squares and yellow diamond colors remain IDENTICAL to light render (correct - data colors should not change), only chrome has flipped to light theme; all data elements clearly distinguishable from dark background; grid lines subtle but visible
-      Legibility verdict: PASS (text all light-colored and readable, proper contrast maintained)
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis title in light ink, tick labels and direction cues in light grey; grid lines subtle but visible; dashed null line in light grey. No dark-on-dark text anywhere.
+      Data: study squares and whiskers in the identical #009E73 green as the light render; the pooled diamond flips to the light neutral ink (#F0EFE8), as the theme-adaptive neutral anchor should.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,69 +60,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
-          perfectly readable in both renders
+        comment: Explicit font sizes (title 16, axis title 12, ticks 10 at scale 4);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all cleanly positioned
+        comment: No text collisions; direction cues sit between ticks and axis title
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and CI lines optimally sized for 12 studies; clearly distinguishable
+        comment: Smallest square clearly visible, largest kept within its row; 2 px
+          whiskers
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; CVD-safe palette structure
+        comment: Single green series plus neutral diamond; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout; plot fills 60-70% of canvas; balanced margins
+        comment: 3200x1800, nothing clipped, balanced labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title format correct
+        comment: Effect measure with unit (mmHg) on the x-axis
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL VIOLATION: markers use #306998 (Python Blue) instead of
-          #009E73 (Okabe-Ito brand green); annotations use hardcoded colors not theme-adaptive;
-          diamond uses position 7 instead of neutral color'
+        passed: true
+        comment: 'Studies #009E73, pooled diamond in the neutral anchor (totals role),
+          correct backgrounds in both themes'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured library default; thoughtful but not exceptional design
+        comment: 'Typographic hierarchy beyond the baseline: bold pooled label, muted
+          direction cues, square markers by area'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Some refinement visible; mostly library defaults with minimal customization
+        comment: Vertical-only grid chosen for this chart, tick marks and y-axis line
+          removed, null line layered below data, pooled row offset by 1.5 rows
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Good visual hierarchy; functional storytelling through diamond emphasis
-          and annotations
+        comment: Favors-treatment/control cues orient the reader on the null line
     spec_compliance:
       score: 15
       max: 15
@@ -132,26 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct forest plot; all subtypes present
+        comment: 'Basic forest plot: study rows, pooled diamond, null line, weight-sized
+          markers; no subgroups or extra reference lines'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features working: CIs, point estimates, pooled diamond, reference
-          line, weight-proportional sizing'
+        comment: Computed pooled diamond at the bottom, null line at 0 through all
+          rows, weight-proportional markers, chronological order, labeled effect measure;
+          all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y assignment; all data visible
+        comment: Markers at their effects, whiskers at the CI bounds, range covers
+          all intervals and the null
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed (implicit)
+        comment: Correct mandated title; legend N/A (single series, rows labeled)
     data_quality:
       score: 15
       max: 15
@@ -161,22 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all forest plot aspects: point estimates, CI variation, weight
-          variation, pooled estimate'
+        comment: Varying interval widths and weights, two studies crossing the null,
+          pooled interval narrower than any study
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real medical scenario with realistic study names and values
+        comment: Antihypertensive RCT meta-analysis, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Medically plausible effect sizes and confidence intervals
+        comment: Systolic BP reductions of 3.5-12.3 mmHg are realistic; no Check values
+          in the Notes
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -184,32 +189,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple structure; no functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly; both used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; no fake functionality
+        comment: Pooling via sm.stats.combine_effects instead of a hand-rolled DL
+          estimator
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png not plot-{THEME}.png; does not read ANYPLOT_THEME;
-          hardcodes colors
+        passed: true
+        comment: plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
       score: 7
       max: 10
@@ -219,21 +224,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct graph_objects API; forest plot justifies go usage over express
+        comment: go.Scatter with asymmetric error_x, sizemode='area'/sizeref, add_vline
+          with layer='below', paper-ref annotations
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses hover tooltips and fill='toself' for diamond; could leverage
-          more distinctive capabilities
+        comment: customdata-driven hovertemplate and fill='toself' polygon with hoveron='fills'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
+  rendered_at: '2026-11-09T00:42:34Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - statsmodels
+  - scipy
   techniques:
-  - manual-ticks
   - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
+  - grid-styling

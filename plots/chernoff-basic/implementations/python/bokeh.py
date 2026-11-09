@@ -1,255 +1,278 @@
 """ anyplot.ai
 chernoff-basic: Chernoff Faces for Multivariate Data
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 79/100 | Updated: 2026-05-15
+Library: bokeh 3.10.1 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-09
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, HoverTool, Label
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem, Range1d, Title
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Generate synthetic company performance data (4 metrics for 12 companies)
-# Metrics: Revenue Growth, Profit Margin, Customer Satisfaction, Market Share
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+EYE_WHITE = ELEVATED_BG if THEME == "light" else INK  # the eyes stay light with dark pupils in both themes
+PUPIL = INK if THEME == "light" else PAGE_BG
+
+# Imprint palette: one position per sector, in the order the sectors appear
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+FEATURES = [  # driven by the variables in METRICS, in order
+    "Face width",
+    "Face height",
+    "Eye size",
+    "Mouth curve",
+    "Brow slant",
+    "Nose width",
+]
+
+# Columns: set these to your table's column names
+COMPANY = "Company"  # role: observation_id
+SECTOR = "Sector"  # role: extra
+METRICS = [
+    "Revenue Growth (%)",
+    "Profit Margin (%)",
+    "Customer Satisfaction (score)",
+    "Market Share (%)",
+    "Debt-to-Equity (ratio)",
+    "R&D Spend (% of revenue)",
+]  # role: variable_
+
+# Data: replace this block with your own table, for example df = pd.read_csv("companies.csv")
 np.random.seed(42)
+profiles = {  # per sector: fictional companies and the plausible range of each metric, in its own unit
+    "Tech": (
+        ["Nimbus Systems", "Quantia Labs", "Corvex Software", "Helio Networks"],
+        [(8, 35), (15, 30), (70, 88), (3, 20), (0.1, 0.6), (10, 25)],
+    ),
+    "Retail": (
+        ["Marigold Stores", "Brightcart", "Urban Pantry", "Kestrel Outfitters"],
+        [(-3, 10), (2, 8), (62, 85), (2, 12), (0.5, 1.5), (0.5, 3)],
+    ),
+    "Energy": (
+        ["Northwind Power", "Basalt Petroleum", "Solvane Energy", "Ridgeline Utilities"],
+        [(-5, 12), (5, 15), (55, 75), (4, 18), (0.8, 2.0), (1, 5)],
+    ),
+}
+records = []
+for sector, (names, ranges) in profiles.items():
+    draws = np.column_stack([np.random.uniform(low, high, len(names)) for low, high in ranges])
+    for name, row in zip(names, draws, strict=True):
+        records.append({COMPANY: name, SECTOR: sector, **dict(zip(METRICS, row.round(2), strict=True))})
+df = pd.DataFrame(records)
 
-# Three company sectors with different profiles
-sectors = ["Tech", "Retail", "Energy"]
-sector_idx = np.array([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2])
+# Plot: reads only df and the constants above
+W, H = 3200, 1800
+MARGIN_SIDE, MARGIN_TOP, MARGIN_BOTTOM = 80, 230, 250  # the top band holds title and legend, the bottom one the key
+FRAME_W, FRAME_H = W - 2 * MARGIN_SIDE, H - MARGIN_TOP - MARGIN_BOTTOM
 
-# Tech companies: high growth, high margin
-tech_data = np.column_stack(
-    [
-        np.random.uniform(0.6, 1.0, 4),  # Revenue Growth
-        np.random.uniform(0.5, 0.9, 4),  # Profit Margin
-        np.random.uniform(0.6, 0.95, 4),  # Customer Satisfaction
-        np.random.uniform(0.3, 0.7, 4),  # Market Share
-    ]
-)
+# One palette position per sector; with more sectors than positions, all faces take the brand color and no legend
+sectors = list(df[SECTOR].unique())
+by_sector = len(sectors) <= len(IMPRINT_PALETTE)
+colors = {sector: IMPRINT_PALETTE[i] if by_sector else IMPRINT_PALETTE[0] for i, sector in enumerate(sectors)}
 
-# Retail companies: moderate growth, moderate margin
-retail_data = np.column_stack(
-    [
-        np.random.uniform(0.2, 0.5, 4),  # Revenue Growth
-        np.random.uniform(0.15, 0.4, 4),  # Profit Margin
-        np.random.uniform(0.5, 0.8, 4),  # Customer Satisfaction
-        np.random.uniform(0.4, 0.8, 4),  # Market Share
-    ]
-)
+# Each variable min-max scaled to 0-1, so every feature spans its full range
+values = df[METRICS].astype(float)
+span = (values.max() - values.min()).replace(0, 1)
+scaled = ((values - values.min()) / span).to_numpy()
+s_width, s_height, s_eye, s_mouth, s_brow, s_nose = scaled.T
 
-# Energy companies: low growth, variable margin
-energy_data = np.column_stack(
-    [
-        np.random.uniform(0.05, 0.3, 4),  # Revenue Growth
-        np.random.uniform(0.3, 0.6, 4),  # Profit Margin
-        np.random.uniform(0.3, 0.6, 4),  # Customer Satisfaction
-        np.random.uniform(0.5, 0.9, 4),  # Market Share
-    ]
-)
+# Grid: one cell per face, the y unit chosen so a data unit spans about the same pixels on both axes
+n_faces = len(df)
+n_cols = max(1, round(np.sqrt(n_faces * 4 / 3)))
+n_rows = int(np.ceil(n_faces / n_cols))
+cell_h = (FRAME_H / n_rows) / (FRAME_W / n_cols)
+unit = min(1.0, cell_h)
+col = np.arange(n_faces) % n_cols
+row = np.arange(n_faces) // n_cols
 
-data = np.vstack([tech_data, retail_data, energy_data])
+faces = df.copy()
+faces[[f"value_{i}" for i in range(len(METRICS))]] = values.to_numpy()  # positional copies for the hover template
+faces["cx"] = col + 0.5
+faces["cy"] = (n_rows - row - 0.5) * cell_h + 0.05 * unit
+faces["rw"] = unit * (0.17 + 0.17 * s_width)
+faces["rh"] = unit * (0.20 + 0.14 * s_height)
+faces["w"] = 2 * faces["rw"]
+faces["h"] = 2 * faces["rh"]
+faces["eye_r"] = unit * (0.02 + 0.035 * s_eye)
+faces["pupil_r"] = 0.45 * faces["eye_r"]
+faces["eye_y"] = faces["cy"] + 0.2 * faces["rh"]
+faces["eye_lx"] = faces["cx"] - 0.4 * faces["rw"]
+faces["eye_rx"] = faces["cx"] + 0.4 * faces["rw"]
+brow_y = faces["eye_y"] + faces["eye_r"] + 0.02 * unit  # sized so the brows stay inside the smallest face
+brow_half = 0.9 * faces["eye_r"]
+brow_tilt = unit * 0.045 * (s_brow - 0.5)  # a higher value lifts the outer ends into a frown
+faces["brow_l_out"], faces["brow_l_in"] = faces["eye_lx"] - brow_half, faces["eye_lx"] + brow_half
+faces["brow_r_in"], faces["brow_r_out"] = faces["eye_rx"] - brow_half, faces["eye_rx"] + brow_half
+faces["brow_out_y"], faces["brow_in_y"] = brow_y + brow_tilt, brow_y - brow_tilt
+faces["label_y"] = faces["cy"] - 0.36 * unit
 
-# Normalize each feature to 0-1
-data_norm = (data - data.min(axis=0)) / (data.max(axis=0) - data.min(axis=0) + 1e-10)
+# Nose: a wedge that widens as its variable rises; mouth: a parabola that frowns as its variable rises
+nose_w = unit * (0.02 + 0.07 * s_nose)
+nose_top = faces["cy"] + 0.02 * faces["rh"]
+nose_tip = faces["cy"] - 0.2 * faces["rh"]
+faces["nose_xs"] = list(np.column_stack([faces["cx"], faces["cx"] - nose_w / 2, faces["cx"] + nose_w / 2]))
+faces["nose_ys"] = list(np.column_stack([nose_top, nose_tip, nose_tip]))
+t = np.linspace(-1, 1, 25)
+mouth_amp = (s_mouth - 0.5) * 0.5 * faces["rh"].to_numpy()
+mouth_y = (faces["cy"] - 0.5 * faces["rh"]).to_numpy()
+faces["mouth_xs"] = list(faces["cx"].to_numpy()[:, None] + 0.5 * faces["rw"].to_numpy()[:, None] * t)
+faces["mouth_ys"] = list(mouth_y[:, None] + mouth_amp[:, None] * (1 - t**2))
 
-# Colors for sectors
-colors = ["#306998", "#FFD43B", "#8B4513"]
-
-# Store face center data for hover tooltips using ColumnDataSource
-face_centers_x = []
-face_centers_y = []
-face_labels = []
-face_revenue = []
-face_margin = []
-face_satisfaction = []
-face_market_share = []
-
-# Create figure with 4x3 grid for 12 faces
+title = "chernoff-basic · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=2700,
-    title="chernoff-basic · bokeh · pyplots.ai",
-    x_range=(-0.1, 4.1),
-    y_range=(-0.2, 3.2),
-    tools="",
+    width=W,
+    height=H,
+    title=title,
+    x_range=Range1d(0, n_cols),
+    y_range=Range1d(0, n_rows * cell_h),
+    toolbar_location=None,
+    min_border_left=MARGIN_SIDE,
+    min_border_right=MARGIN_SIDE,
+    min_border_top=MARGIN_TOP,
+    min_border_bottom=MARGIN_BOTTOM,
+)
+
+# Faces, one renderer per sector so the legend follows the data's order
+source = ColumnDataSource(faces)
+face_renderers = {}
+for sector, rows in faces.groupby(SECTOR, sort=False):
+    face_renderers[sector] = p.ellipse(
+        x="cx",
+        y="cy",
+        width="w",
+        height="h",
+        source=ColumnDataSource(rows),
+        fill_color=colors[sector],
+        fill_alpha=0.3,
+        line_color=colors[sector],
+        line_width=5,
+    )
+
+# Sector legend above the grid
+legend = Legend(
+    items=[LegendItem(label=str(sector), renderers=[r]) for sector, r in face_renderers.items()] if by_sector else [],
+    orientation="horizontal",
+    location="center",
+    label_text_font_size="34pt",
+    label_text_color=INK_SOFT,
+    glyph_width=70,
+    glyph_height=50,
+    spacing=60,
+    label_standoff=18,
+    padding=10,
+    margin=24,
+    border_line_color=None,
+    background_fill_alpha=0,
+)
+p.add_layout(legend, "above")
+
+# Facial features, drawn for all faces at once
+for eye_x in ("eye_lx", "eye_rx"):
+    p.circle(x=eye_x, y="eye_y", radius="eye_r", source=source, fill_color=EYE_WHITE, line_color=INK, line_width=3)
+    p.circle(x=eye_x, y="eye_y", radius="pupil_r", source=source, fill_color=PUPIL, line_color=None)
+for side in ("l", "r"):
+    p.segment(
+        x0=f"brow_{side}_out",
+        y0="brow_out_y",
+        x1=f"brow_{side}_in",
+        y1="brow_in_y",
+        source=source,
+        line_color=INK,
+        line_width=5,
+        line_cap="round",
+    )
+p.multi_line(xs="nose_xs", ys="nose_ys", source=source, line_color=INK, line_width=4, line_join="round")
+p.multi_line(xs="mouth_xs", ys="mouth_ys", source=source, line_color=INK, line_width=5, line_cap="round")
+p.text(
+    x="cx",
+    y="label_y",
+    text=COMPANY,
+    source=source,
+    text_align="center",
+    text_baseline="top",
+    text_font_size="32pt",
+    text_color=INK_SOFT,
+)
+
+# Key: which variable drives which feature, three entries per line, and in which direction
+entries = [f"{feature}: {metric}" for feature, metric in zip(FEATURES, METRICS, strict=False)]
+for start in range(0, len(entries), 3):
+    p.add_layout(
+        Title(
+            text="   ·   ".join(entries[start : start + 3]),
+            align="center",
+            text_font_size="30pt",
+            text_font_style="normal",
+            text_color=INK,
+            standoff=12,
+        ),
+        "below",
+    )
+p.add_layout(
+    Title(
+        text="Each variable min-max scaled across all faces: a higher value widens and lengthens the face, "
+        "enlarges the eyes, turns the mouth down, slants the brows into a frown and widens the nose",
+        align="center",
+        text_font_size="26pt",
+        text_font_style="italic",
+        text_color=INK_SOFT,
+        standoff=10,
+    ),
+    "below",
+)
+
+# Hover: the raw values behind each face
+p.add_tools(
+    HoverTool(
+        renderers=list(face_renderers.values()),
+        tooltips=[
+            (COMPANY, f"@{{{COMPANY}}}"),
+            (SECTOR, f"@{{{SECTOR}}}"),
+            *[(metric, f"@value_{i}{{0.0[0]}}") for i, metric in enumerate(METRICS)],
+        ],
+    )
 )
 
 # Style
-p.title.text_font_size = "32pt"
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
 p.title.align = "center"
-p.xaxis.visible = False
-p.yaxis.visible = False
-p.xgrid.visible = False
-p.ygrid.visible = False
-p.outline_line_color = None
-p.background_fill_color = "#FAFAFA"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = PAGE_BG  # covers the page-white seam at the frame's edge
+p.outline_line_width = 2
+p.axis.visible = False
+p.grid.visible = False
 
-# Draw faces in a 4x3 grid (inline, no helper function)
-face_size = 0.4
-for i, (features, sec_idx) in enumerate(zip(data_norm, sector_idx, strict=True)):
-    col = i % 4
-    row = 2 - i // 4  # Start from top row
-    cx = col + 0.5
-    cy = row + 0.5
-    color = colors[sec_idx]
-    label_text = f"{sectors[sec_idx]} #{i % 4 + 1}"
+# Save: the interactive HTML, then a headless-Chrome screenshot of it at the exact canvas size
+output_file(f"plot-{THEME}.html", title=title)
+save(p)
 
-    # Store data for hover tooltip
-    face_centers_x.append(cx)
-    face_centers_y.append(cy)
-    face_labels.append(label_text)
-    face_revenue.append(f"{data[i, 0] * 100:.1f}%")
-    face_margin.append(f"{data[i, 1] * 100:.1f}%")
-    face_satisfaction.append(f"{data[i, 2] * 100:.1f}%")
-    face_market_share.append(f"{data[i, 3] * 100:.1f}%")
-
-    # Features mapping:
-    # - revenue_growth (features[0]) -> face width
-    # - profit_margin (features[1]) -> face height
-    # - customer_satisfaction (features[2]) -> eye size
-    # - market_share (features[3]) -> mouth curvature
-    face_width = (0.3 + features[0] * 0.3) * face_size
-    face_height = (0.35 + features[1] * 0.25) * face_size
-    eye_size = (0.03 + features[2] * 0.05) * face_size
-    mouth_curve = features[3]
-
-    # Draw face outline (ellipse approximation using patches)
-    theta = np.linspace(0, 2 * np.pi, 50)
-    face_x = cx + face_width * np.cos(theta)
-    face_y = cy + face_height * np.sin(theta)
-    p.patch(face_x, face_y, fill_color=color, fill_alpha=0.3, line_color=color, line_width=3)
-
-    # Draw eyes
-    eye_spacing = face_width * 0.5
-    eye_y = cy + face_height * 0.25
-    eye_theta = np.linspace(0, 2 * np.pi, 30)
-
-    # Left eye
-    left_eye_x = cx - eye_spacing
-    left_ex = left_eye_x + eye_size * np.cos(eye_theta)
-    left_ey = eye_y + eye_size * np.sin(eye_theta)
-    p.patch(left_ex, left_ey, fill_color="white", line_color="#333333", line_width=2)
-
-    # Left pupil
-    pupil_size = eye_size * 0.5
-    left_px = left_eye_x + pupil_size * np.cos(eye_theta) * 0.6
-    left_py = eye_y + pupil_size * np.sin(eye_theta) * 0.6
-    p.patch(left_px, left_py, fill_color="#333333", line_color="#333333")
-
-    # Right eye
-    right_eye_x = cx + eye_spacing
-    right_ex = right_eye_x + eye_size * np.cos(eye_theta)
-    right_ey = eye_y + eye_size * np.sin(eye_theta)
-    p.patch(right_ex, right_ey, fill_color="white", line_color="#333333", line_width=2)
-
-    # Right pupil
-    right_px = right_eye_x + pupil_size * np.cos(eye_theta) * 0.6
-    right_py = eye_y + pupil_size * np.sin(eye_theta) * 0.6
-    p.patch(right_px, right_py, fill_color="#333333", line_color="#333333")
-
-    # Draw eyebrows
-    brow_y = eye_y + eye_size * 1.8
-    brow_width = eye_size * 1.2
-    eyebrow_slant = (features[0] - 0.5) * 0.02 * face_size
-
-    p.line(
-        [left_eye_x - brow_width, left_eye_x + brow_width],
-        [brow_y + eyebrow_slant, brow_y - eyebrow_slant],
-        line_color="#333333",
-        line_width=3,
-    )
-    p.line(
-        [right_eye_x - brow_width, right_eye_x + brow_width],
-        [brow_y - eyebrow_slant, brow_y + eyebrow_slant],
-        line_color="#333333",
-        line_width=3,
-    )
-
-    # Draw nose
-    nose_length = (0.02 + features[1] * 0.03) * face_size
-    nose_y_top = cy + face_height * 0.1
-    nose_y_bottom = cy - face_height * 0.1
-    p.line([cx, cx], [nose_y_top, nose_y_bottom], line_color="#333333", line_width=2)
-    p.line(
-        [cx - nose_length * 0.5, cx, cx + nose_length * 0.5],
-        [nose_y_bottom, nose_y_bottom - nose_length * 0.3, nose_y_bottom],
-        line_color="#333333",
-        line_width=2,
-    )
-
-    # Draw mouth (curved based on market_share)
-    mouth_y = cy - face_height * 0.4
-    mouth_width = face_width * 0.5
-    mouth_x = np.linspace(cx - mouth_width, cx + mouth_width, 20)
-    curve_amount = (mouth_curve - 0.5) * 0.08 * face_size
-    mouth_y_curve = mouth_y + curve_amount * (1 - ((mouth_x - cx) / mouth_width) ** 2) * 4
-    p.line(mouth_x, mouth_y_curve, line_color="#333333", line_width=3)
-
-    # Add label below face
-    label_obj = Label(
-        x=cx,
-        y=cy - face_height - 0.1,
-        text=label_text,
-        text_align="center",
-        text_font_size="20pt",
-        text_color="#333333",
-    )
-    p.add_layout(label_obj)
-
-# Create ColumnDataSource for hover tooltips (Bokeh-specific feature)
-hover_source = ColumnDataSource(
-    data={
-        "x": face_centers_x,
-        "y": face_centers_y,
-        "label": face_labels,
-        "revenue": face_revenue,
-        "margin": face_margin,
-        "satisfaction": face_satisfaction,
-        "market_share": face_market_share,
-    }
+opts = Options()
+for arg in ("--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", f"--window-size={W},{H}"):
+    opts.add_argument(arg)
+opts.add_argument("--hide-scrollbars")
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
-
-# Add invisible scatter for hover interaction
-hover_renderer = p.scatter("x", "y", source=hover_source, size=80, fill_alpha=0, line_alpha=0)
-
-# Add HoverTool for interactivity (distinctive Bokeh feature)
-hover_tool = HoverTool(
-    renderers=[hover_renderer],
-    tooltips=[
-        ("Company", "@label"),
-        ("Revenue Growth", "@revenue"),
-        ("Profit Margin", "@margin"),
-        ("Satisfaction", "@satisfaction"),
-        ("Market Share", "@market_share"),
-    ],
-)
-p.add_tools(hover_tool)
-
-# Add legend manually using patches and labels (positioned below grid)
-legend_y_base = 2.95
-legend_x_positions = [0.5, 1.5, 2.5]
-for i, (name, color) in enumerate(zip(sectors, colors, strict=True)):
-    lx_center = legend_x_positions[i]
-    theta = np.linspace(0, 2 * np.pi, 30)
-    lx = lx_center + 0.06 * np.cos(theta)
-    ly = legend_y_base + 0.06 * np.sin(theta)
-    p.patch(lx, ly, fill_color=color, fill_alpha=0.3, line_color=color, line_width=2)
-    legend_label = Label(
-        x=lx_center + 0.12, y=legend_y_base - 0.02, text=name, text_font_size="20pt", text_color="#333333"
-    )
-    p.add_layout(legend_label)
-
-# Add subtitle with feature mapping explanation (increased font size)
-subtitle = Label(
-    x=2.0,
-    y=-0.02,
-    text="Face width=Revenue Growth, Face height=Profit Margin, Eye size=Satisfaction, Mouth=Market Share",
-    text_align="center",
-    text_font_size="22pt",
-    text_color="#666666",
-)
-p.add_layout(subtitle)
-
-# Save
-export_png(p, filename="plot.png")
+driver.execute_script("document.body.style.background = arguments[0]", PAGE_BG)  # no white hairline at the edges
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

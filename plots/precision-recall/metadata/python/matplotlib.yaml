@@ -2,57 +2,57 @@ library: matplotlib
 language: python
 specification_id: precision-recall
 created: '2025-12-26T17:38:40Z'
-updated: '2026-05-10T06:02:21Z'
-generated_by: claude-haiku
-workflow_run: 25620680923
+updated: '2026-11-09T00:34:16Z'
+generated_by: claude-opus-5-5
+adopted_from: 077b271135867220bd50f03fbe3bfd476f130b27 (077b271135867220bd50f03fbe3bfd476f130b27)
+workflow_run: 42540507702
 issue: 2274
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - Correct precision-recall curve with stepped line style
-  - Includes Average Precision score in legend as required
-  - Baseline reference line clearly shows random classifier performance
-  - Iso-F1 curves with labels add interpretable context
-  - Theme backgrounds render correctly in both light and dark modes
-  - Text legibility is good across both renders with proper contrast
+  - Precision-recall curve and AP come straight from sklearn's precision_recall_curve
+    and average_precision_score, and ax.step(where='post') matches sklearn's own steps-post
+    display, so the curve runs through its computed threshold points without smoothing.
+  - The random-classifier baseline is a horizontal line at the computed positive share
+    (20 %), drawn in INK with a dash pattern, so it reads clearly against the green
+    curve in both themes and its legend entry states the value.
+  - Iso-F1 curves (0.2–0.8) are faint dotted INK_MUTED lines at zorder 1, each labelled
+    at the point where it meets precision 1, with ylim headroom (1.08) reserved for
+    those labels, so they stay subordinate to the curve.
+  - The legend reorders its handles so the classifier entry with its AP comes first
+    and the baseline second, and sits in the empty lower-left corner below the baseline.
+  - Theme tokens are threaded through every chrome element (title, labels, ticks,
+    spines, grid, legend frame and text, iso-F1 labels); both renders are fully legible
+    and the data color is identical.
+  - The data block is a tidy df read through column constants, and the positive class
+    and baseline are derived from the data rather than typed in.
   weaknesses:
-  - Title domain is 'pyplots.ai' instead of 'anyplot.ai' - violates SC-04
-  - 'Main curve color is not #009E73 (brand green) - violates hard palette rule VQ-07'
-  - Code saves as 'plot.png' instead of f'plot-{THEME}.png' - violates matplotlib.md
-    spec
-  - Missing ANYPLOT_THEME environment variable handling and theme token implementation
-    (INK, INK_SOFT, INK_MUTED colors) in code
-  - Code does not set proper text colors via theme tokens - images show adaptation
-    but code doesn't implement it
-  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
-    \ (#FAF8F1) - correct\n  Chrome: Title (reads \"pyplots.ai\" - ERROR), axis labels\
-    \ \"Recall\"/\"Precision\" (readable, dark text on light), tick labels (readable),\
-    \ legend (readable and clear)\n  Data: Stepped precision-recall curve in teal/cyan\
-    \ (should be #009E73 brand green), orange/yellow baseline (acceptable), light\
-    \ gray iso-F1 curves with labels (visible)\n  Overall layout: Good proportions,\
-    \ no overlaps, tight_layout applied correctly\n  Legibility verdict: PASS (but\
-    \ title domain is wrong)\n\nDark render (plot-dark.png):\n  Background: Warm near-black\
-    \ (#1A1A17) - correct\n  Chrome: Title text appears light-colored (readable despite\
-    \ domain error), axis labels light-colored and readable, tick labels light-colored\
-    \ and readable, legend clear\n  Data: Teal/cyan curve (same as light render -\
-    \ good consistency, but wrong color), orange/yellow baseline (consistent), light\
-    \ gray iso-F1 curves still visible\n  Text color adaptation: Image shows proper\
-    \ theme-adaptive text colors (light on dark), but code does not implement theme\
-    \ tokens - appears pipeline or manual intervention added this\n  Legibility verdict:\
-    \ PASS (text readable, but code lacks theme implementation)\n\nTheme Readiness:\n\
-    - Light render passes all theme-readability checks\n- Dark render passes all theme-readability\
-    \ checks  \n- However, code lacks proper ANYPLOT_THEME environment variable and\
-    \ color token implementation, which is a critical code-level violation even though\
-    \ images render correctly"
+  - 'Suggestion: the iso-F1 labels at 7 pt are the smallest text on the canvas and
+    blur in the 400 px thumbnail; 8 pt would match the tick labels.'
+  - 'Suggestion: the light-green area fill under the curve is not asked for by the
+    spec; dropping it would let the iso-F1 contours and the baseline read on a clean
+    background.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 across figure and axes.
+      Chrome: bold dark title "precision-recall · python · matplotlib · anyplot.ai" (~57 % of width); x-axis "Recall (true positive rate)", y-axis "Precision (positive predictive value)" in dark ink; tick labels 0.0–1.0 in INK_SOFT; subtle grid; top/right spines removed. All readable.
+      Data: a thick #009E73 stepped PR curve at precision 1.0 up to recall ~0.54, stepping down through ~0.93 at 0.77, ~0.67 at 0.95, ~0.41 at 0.99 and dropping to 0.2 at recall 1; a faint green fill under it; a dark dashed horizontal baseline at precision 0.2; four faint grey dotted iso-F1 curves labelled "F1 = 0.2/0.4/0.6/0.8" just above precision 1. Legend lower left: "Spam filter score (AP = 0.920)", "Random classifier (precision = 20%)" on an elevated frame.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels in near-white INK; tick labels in light grey INK_SOFT; spines light grey; grid subtle; legend frame #242420 with light text. No dark-on-dark text.
+      Data: identical #009E73 curve and dark-tinted green fill; baseline flips to light dashed INK; iso-F1 curves and labels in light muted grey, faint but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -60,71 +60,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark renders with good contrast
+        comment: Explicit sizes (title 12, labels 10, ticks/legend 8, iso labels 7);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements, all clearly distinguishable
+        comment: No text collisions; iso-F1 labels sit above precision 1 clear of
+          the curve; legend in empty corner
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curve, baseline, and iso-F1 lines all clearly visible
+        comment: 2.5 lw curve prominent, baseline distinct, iso curves faint but visible;
+          legend line samples match marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between data elements, CVD-safe via Okabe-Ito (though
-          wrong color chosen)
+        comment: Single green curve vs ink baseline vs dotted grey contours; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, no cut-off elements, generous whitespace
+        comment: 3200x1800, constrained layout, plot fills most of canvas, balanced
+          labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title says 'pyplots.ai' instead of 'anyplot.ai' - spec violation
+        passed: true
+        comment: Descriptive axis labels with their meaning
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark), text colors adapted
-          in renders, but main curve color is not #009E73 brand green - hard rule
-          violation'
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Adequate but generic styling; no distinctive color choices or visual
-          polish
+        comment: Three-tier line hierarchy (bold curve, dashed ink baseline, dotted
+          muted contours) and legend reordered to lead with the model
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Iso-F1 labels placed at their precision-1 intercepts with ylim headroom
+          reserved; xlim nudged so the final step is visible
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; default matplotlib appearance
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Iso-F1 curves with labels provide useful context for trade-off analysis
+        comment: Data displayed; no focal point chosen beyond the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,27 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct precision-recall curve with stepped line style
+        comment: Stepped precision-recall curve
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Includes AP score, baseline, and iso-F1 curves, but title domain
-          wrong
+        passed: true
+        comment: AP in legend, horizontal baseline at positive share, stepped line,
+          labelled iso-F1 contours behind the curve; single classifier so multi-color
+          clause does not apply
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct X/Y mapping: Recall (0-1) vs Precision (0-1)'
+        comment: Recall on x, precision on y, full 0–1 range, marks at computed values
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct but domain is 'pyplots.ai' instead of 'anyplot.ai';
-          legend is clear
+        passed: true
+        comment: Title format correct; legend entries readable with AP and baseline
+          value
     data_quality:
       score: 15
       max: 15
@@ -162,23 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: classifier curve, AP score, baseline, iso-F1
-          curves'
+        comment: Sawtooth steps, plateau at 1, steep fall at high recall, baseline
+          far below middle on imbalanced data
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Imbalanced binary classification (20% positive) is realistic and
-          neutral
+        comment: 'Spam filter on 500 e-mails with 20 % spam: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Precision-recall values and beta distributions are appropriate
+        comment: 'Checked: baseline 0.2 equals 100/500 positives, computed from data;
+          AP 0.920 from average_precision_score; curve ends at (1, 0.2) as it must'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -186,59 +190,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct, procedural code with no unnecessary functions
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and matplotlib imported
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality or over-engineering
+        comment: Uses sklearn for PR curve and AP; iso-F1 closed-form is one line
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as 'plot.png' instead of f'plot-{THEME}.png' - violates matplotlib.md
-          requirement
+        passed: true
+        comment: Saves plot-{THEME}.png without bbox_inches tight; current API
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses axes methods correctly (step, fill_between, axhline, annotate)
-          but missing ANYPLOT_THEME environment handling and theme-adaptive color
-          tokens per matplotlib.md
+        comment: Axes API throughout, ax.step(where='post') with fill_between(step='post'),
+          layout='constrained'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Includes iso-F1 curve calculation and annotation, showing beyond-basic
-          matplotlib usage
-  verdict: REJECTED
+        passed: false
+        comment: annotate with textcoords='offset points' for intercept labels; custom
+          dash tuples
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-09T00:31:27Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - sklearn
   techniques:
   - annotations
+  - layer-composition
+  - custom-legend
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
