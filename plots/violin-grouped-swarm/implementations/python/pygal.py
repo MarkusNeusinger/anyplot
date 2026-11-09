@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
 Library: pygal 3.1.3 | Python 3.14.10
-Quality: 78/100 | Updated: 2026-11-09
+Quality: 86/100 | Updated: 2026-11-09
 """
 
 import os
