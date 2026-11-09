@@ -144,7 +144,7 @@ agents = [
     "google-adk==2.13.0",
     "anthropic[vertex]>=1.8.0",
     "tree-sitter==0.26.0",
-    "tree-sitter-language-pack==1.24.0",
+    "tree-sitter-language-pack==1.24.1",
 ]
 all = [
     "anyplot[test,dev,plotting,typecheck]",
