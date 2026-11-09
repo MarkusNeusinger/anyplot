@@ -223,8 +223,8 @@ class TestRecord:
         await call(plugin, "prepare_data", {"operations": [DERIVE]}, {"status": "ok", "unexpected": 1})
 
         assert ledger.tool_calls == [
-            ToolCall("get_dataset_profile", "allowed", "error"),  # the root got `invalid_result`
-            ToolCall("prepare_data", "allowed", "changed"),  # the version is stored all the same
+            ToolCall("get_dataset_profile", "allowed", "error", "invalid_result"),  # the root got `invalid_result`
+            ToolCall("prepare_data", "allowed", "changed", "invalid_result"),  # the version is stored all the same
         ]
 
     def test_a_code_outside_the_verdicts_reads_unknown(self) -> None:

@@ -54,7 +54,9 @@ report.
 
 `attribution` writes one JSON log line per hook with ids, counts and verdicts, and
 never content: no message text, no code, no data, no tool arguments (only their
-hash).
+hash). The verdicts of the turn hooks (`TURN_HOOKS`) also go into the request's
+`guards`, for the turn's record in the feedback case (`turn_record.py`), without the
+line's ids or counts.
 """
 
 import hashlib
@@ -151,6 +153,29 @@ GuardVerdict = Literal[
 (its daily pipeline runs, which it answers before ToolSafety sees the call), `internal` (a guard failed and refused
 the call), or `unknown` for a code outside this list, so the record stays closed when a guard gains a refusal."""
 GUARD_VERDICTS: frozenset[str] = frozenset(get_args(GuardVerdict))
+SafetyCode = Literal[
+    # A refusal before the call runs (`ToolSafetyPlugin.before_tool_callback`): each one a `GuardVerdict` too.
+    "tool_not_allowed",
+    "invalid_arguments",
+    "url_or_path_not_allowed",
+    "plot_as_confirmed",
+    "one_pipeline_per_turn",
+    "switch_requested",
+    "data_changed_this_turn",
+    "summary_turn",
+    "plot_already_run",
+    "too_many_data_runs",
+    "too_many_prepare_calls",
+    "too_many_generate_calls",
+    "too_many_query_calls",
+    # A result ToolSafety refused (`after_tool_callback`), or a tool's exception (`on_tool_error_callback`).
+    "invalid_result",
+    "result_too_large",
+    "timeout",
+    "internal",
+]
+"""Every code ToolSafety answers a call with (`tool_safety.ErrorCode`), closed so that a new refusal must join this
+list, and with it `GuardVerdict` (pinned by a test), before any guard can answer with it."""
 TOOL_ALLOWED: GuardVerdict = "allowed"
 """The verdict of a root tool call no guard refused."""
 
@@ -160,19 +185,44 @@ def guard_verdict(code: object) -> GuardVerdict:
     return cast(GuardVerdict, code) if isinstance(code, str) and code in GUARD_VERDICTS else "unknown"
 
 
+TurnHook = Literal[
+    "scope_guard",
+    "output_guard",
+    "empty_reply",
+    "reply_language",
+    "shipped_reply",
+    "plot_button",
+    "budget_exempt",
+    "budget_halt",
+    "queue",
+    "session_closed",
+    "message_limit",
+]
+"""The attribution hooks whose verdicts a turn's record keeps (`RequestLedger.guards`): the scope judge and the
+output guard, the reply checks, the Budget plugin's exemption and halt, the run queue, and the `/messages` route's
+refusals before the judge (`session_closed`, its own `budget_halt`, `message_limit`). The other hooks stay out: a
+tool call's lines (`tool`, `tool_error`, `budget_pipeline`, `data_code`, `data_judge`) because the record's call
+entries carry their verdict and outcome, the pipeline's and the model's lines because the session's last run carries
+the run, and the paste routes' lines because they run outside a turn (`turn_record.OUTSIDE_HOOKS`)."""
+TURN_HOOKS: frozenset[str] = frozenset(get_args(TurnHook))
+
+
 @dataclass(frozen=True, slots=True)
 class ToolCall:
     """One root tool call of the turn: its name, the guards' verdict and what it did, closed codes only.
 
     `tool` is a root tool's name or `other` (a name the model made up); `verdict` a `GuardVerdict`; `outcome` a
-    `CallOutcome`. Never an argument, a result or a word of the user: what the turn's outcome
-    (`stream.turn_outcome`) reads, and what the feedback case bundle is to carry once it keeps a turn's calls (backend
-    PR B6; the record lives with the request and is not stored yet). The record keeps the order the guards saw the
-    calls in: ToolSafety notes each call before it runs, and the Budget plugin a pipeline run it refuses first."""
+    `CallOutcome`; `code` the closed code of its answer (`turn_record.OutcomeCode`: an error's `code`, the `reason` of
+    a stop or a failed run, or ToolSafety's refusal of the result), None for an answer without one and for a call a
+    guard refused, whose `verdict` says why. Never an argument, a result or a word of the user: what the turn's
+    outcome (`stream.turn_outcome`) reads, and what the turn's record in the feedback case carries
+    (`turn_record.TurnRecord`). The record keeps the order the guards saw the calls in: ToolSafety notes each call
+    before it runs, and the Budget plugin a pipeline run it refuses first."""
 
     tool: str
     verdict: GuardVerdict = TOOL_ALLOWED
     outcome: CallOutcome = "unfinished"
+    code: str | None = None
 
 
 def finish_name(value: Any) -> str | None:
@@ -287,11 +337,16 @@ class RequestLedger:
     tool_calls: list[ToolCall] = field(default_factory=list)
     """Every root tool call of the turn in the order the guards saw them, refused ones too, each with the guards'
     verdict and what it did (`ToolCall`), written by ToolSafety and, for a pipeline run it refuses first, the Budget
-    plugin (`open_call`, `close_call`): the turn's `done.turn` (`stream.turn_outcome`) reads it, and the feedback case
-    bundle is to carry it (B6). `tools` stays the allowed names alone, which the usage telemetry and EmptyReply read."""
+    plugin (`open_call`, `close_call`, `fail_call`): the turn's `done.turn` (`stream.turn_outcome`) reads it, and the
+    turn's record in the feedback case bundle carries it (`turn_record.py`). `tools` stays the allowed names alone,
+    which the usage telemetry, EmptyReply and the turn's caps read."""
     open_calls: dict[str, list[int]] = field(default_factory=dict, repr=False)
     """The `tool_calls` indexes still waiting for their answer, by ADK's function call id (the tool's name for a call
     without one): parallel calls of one model answer close in any order. Never logged or sent."""
+    guards: list[tuple[str, str | None]] = field(default_factory=list)
+    """The verdicts of the turn's hooks (`TURN_HOOKS`) in the order they were logged, as (hook, verdict): written by
+    `attribution` itself, so a hook's line and its verdict here never differ. The hook's other fields (counts,
+    languages, waits) never come here; the turn's record closes both names (`turn_record.GuardLine`)."""
     shipped_memory: dict[str, list[str]] | None = None
     """The plot memory a shipped version stands on, `{kept, added}`: the ids of the entries from before the run that
     it kept, and of the entries its own `remember` items added (`pipeline.memory_ids`), set once the memory is settled
@@ -374,23 +429,50 @@ class RequestLedger:
         self.tool_calls.append(ToolCall(tool, closed, "unfinished" if closed == TOOL_ALLOWED else refused))
         self.open_calls.setdefault(key, []).append(len(self.tool_calls) - 1)
 
-    def close_call(self, key: str, tool: str, outcome: CallOutcome, *, early_verdict: str) -> None:
-        """Note what an opened call did; a refused call stays `refused`. A call no `open_call` noted (its note
-        failed) goes in when it closes: refused by `early_verdict` when its answer is an error, which a plugin before
-        ToolSafety may have given, else allowed with what it did, so a change it stored still counts."""
+    def close_call(
+        self, key: str, tool: str, outcome: CallOutcome, *, early_verdict: str, code: str | None = None
+    ) -> None:
+        """Note what an opened call did and the code of its answer; a refused call stays `refused`. A call no
+        `open_call` noted (its note failed) goes in when it closes: refused by `early_verdict` when its answer is an
+        error, which a plugin before ToolSafety may have given, else allowed with what it did, so a change it stored
+        still counts."""
         waiting = self.open_calls.get(key)
         if not waiting:
             if outcome == "error":
                 self.tool_calls.append(ToolCall(tool, guard_verdict(early_verdict), "refused"))
             else:
-                self.tool_calls.append(ToolCall(tool, TOOL_ALLOWED, outcome))
+                self.tool_calls.append(ToolCall(tool, TOOL_ALLOWED, outcome, code))
             return
         index = waiting.pop(0)
         if not waiting:
             del self.open_calls[key]
         call = self.tool_calls[index]
         if call.outcome == "unfinished":
-            self.tool_calls[index] = ToolCall(call.tool, call.verdict, outcome)
+            self.tool_calls[index] = ToolCall(call.tool, call.verdict, outcome, code)
+
+    def fail_call(self, key: str, code: str) -> None:
+        """Note the error answer of an opened call that raised (`on_tool_error_callback`), before its close: a call
+        ADK could not find (a tool the request did not declare, as on the closing reply) gets no after-tool callback,
+        so it would stay `unfinished`. The call stays open; its close, when it comes, reads the same answer. Calls
+        without a function call id share their tool's key and close in order (`close_call`), so of two such calls
+        of one tool, one that raised can mark its sibling instead; ADK sets the id on every call."""
+        for index in self.open_calls.get(key, []):
+            call = self.tool_calls[index]
+            if call.outcome == "unfinished":
+                self.tool_calls[index] = ToolCall(call.tool, call.verdict, "error", code)
+                return
+
+    def note_guard(self, hook: str, verdict: Any) -> None:
+        """Note a turn hook's verdict for the turn's record (`guards`), from its attribution line (`attribution`).
+
+        A hook whose line has no `verdict` gets a fixed one: `budget_exempt` reads `exempt`, the Budget plugin's
+        `budget_halt` the refusal it set (`refusal`), which the record closes as `telemetry.RefusalCode`."""
+        if verdict is None:
+            if hook == "budget_exempt":
+                verdict = "exempt"
+            elif hook == "budget_halt" and self.refusal is not None:
+                verdict = self.refusal[0]
+        self.guards.append((hook, verdict if isinstance(verdict, str) else None))
 
     def refuse(self, code: str, text: str) -> None:
         if self.refusal is None and self.error is None:
@@ -1092,7 +1174,13 @@ def network_key(network: str) -> str:
 
 
 def attribution(hook: str, ledger: RequestLedger, **fields: Any) -> None:
-    """One content-free JSON log line for a plugin hook (`severity` is Cloud Logging's level field)."""
+    """One content-free JSON log line for a plugin hook (`severity` is Cloud Logging's level field).
+
+    A turn hook's verdict (`TURN_HOOKS`) also goes into the turn's record (`RequestLedger.note_guard`), here rather
+    than at each call site, so a new verdict of a listed hook lands in the record without an edit of its own; the
+    line itself is the same either way."""
+    if hook in TURN_HOOKS:
+        ledger.note_guard(hook, fields.get("verdict"))
     record = {
         "severity": "INFO",
         "hook": hook,
