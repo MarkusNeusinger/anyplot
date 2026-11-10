@@ -51,7 +51,10 @@ export function callSeverity(call: AgentCaseToolCall): Severity {
     return 'bad';
   }
   if (call.verdict !== 'allowed') return 'warn';
-  return ['error', 'not_ready', 'unconfirmed', 'unfinished'].includes(call.outcome) ? 'warn' : 'ok';
+  // `refused` comes with the guard's verdict; one that arrives without it is still no call that ran.
+  return ['error', 'not_ready', 'unconfirmed', 'unfinished', 'refused'].includes(call.outcome)
+    ? 'warn'
+    : 'ok';
 }
 
 /** How the turn itself ended: an error is a failure, except the client's own cancel. */
@@ -140,13 +143,13 @@ export function turnsSummary(turns: AgentCaseTurns): string {
     .join(' · ');
 }
 
-/** The turn numbers two records share: a turn refused before the scope judge takes the next turn's number. */
-export function sharedTurns(turns: AgentCaseTurns): Set<number> {
-  const seen = new Set<number>();
-  const shared = new Set<number>();
-  for (const record of turns.records) {
-    if (seen.has(record.turn)) shared.add(record.turn);
-    seen.add(record.turn);
-  }
-  return shared;
+/**
+ * The turn numbers several records share, each with how many: a turn refused
+ * before the scope judge takes the next turn's number, and so does every
+ * further one refused there (a visitor who keeps typing at the message limit).
+ */
+export function sharedTurns(turns: AgentCaseTurns): Map<number, number> {
+  const counts = new Map<number, number>();
+  for (const record of turns.records) counts.set(record.turn, (counts.get(record.turn) ?? 0) + 1);
+  return new Map([...counts].filter(([, count]) => count > 1));
 }

@@ -70,11 +70,24 @@ describe('CaseTurns', () => {
 
     // The turn refused before the judge shares its number with the next one, and says so.
     await user.click(rows[2]);
-    expect(screen.getByText(/two records share turn 3/)).toBeInTheDocument();
+    expect(screen.getByText(/2 records share turn 3/)).toBeInTheDocument();
 
     await user.click(rows[1]);
     expect(rows[1]).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText('message → prep')).not.toBeInTheDocument();
+  });
+
+  it('names what a bound left out without an empty list', async () => {
+    const user = userEvent.setup();
+    const record = turn({ guards: [], guards_dropped: 3 });
+    render(<CaseTurns turns={{ records: [record], dropped: 0 }} />);
+
+    await user.click(screen.getByRole('button'));
+
+    expect(screen.getByText('3 earlier verdicts not recorded')).toBeInTheDocument();
+    // Calls and prep ops read `none`; the guards' entry holds its note alone.
+    expect(screen.getAllByText('none')).toHaveLength(2);
+    expect(document.querySelectorAll('dl ol')).toHaveLength(0);
   });
 
   it('says why a case has no rows', () => {

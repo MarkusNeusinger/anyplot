@@ -81,6 +81,12 @@ describe('turnSeverity', () => {
     );
   });
 
+  it('flags a refused call also when its verdict did not arrive', () => {
+    const refused = { tool: 'plot_pipeline', verdict: 'allowed', outcome: 'refused', code: null };
+    expect(turnSeverity(turn({ tools: [refused] }))).toBe('warn');
+    expect(callLabel(refused)).toBe('plot_pipeline: refused');
+  });
+
   it('leaves a plot turn whose reply named no button unflagged', () => {
     const shipped = { tool: 'plot_pipeline', verdict: 'allowed', outcome: 'shipped', code: null };
     expect(turnSeverity(turn({ action: 'create_plot', kind: 'plot', tools: [shipped] }))).toBe(
@@ -140,8 +146,12 @@ describe('the matrix lines', () => {
     expect(endLine(turn({ action: 'create_plot', kind: 'plot' }))).toBe('create_plot → plot');
   });
 
-  it('finds the turn number two records share', () => {
-    expect([...sharedTurns(TURNS)]).toEqual([4]);
+  it('finds the turn numbers several records share, with how many', () => {
+    expect([...sharedTurns(TURNS)]).toEqual([[4, 2]]);
+    const limited = turn({ turn: 2, kind: 'refused', refusal: 'rate_limited', guards: [] });
+    expect([
+      ...sharedTurns({ records: [turn(), limited, limited, turn({ turn: 2 })], dropped: 0 }),
+    ]).toEqual([[2, 3]]);
   });
 
   it('writes a call with its outcome and code', () => {

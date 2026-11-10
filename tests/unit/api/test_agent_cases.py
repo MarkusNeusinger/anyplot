@@ -503,6 +503,18 @@ def test_manifest_detail_reads_the_turn_record() -> None:
     assert manifest_detail({"bundle": {"turns": {"records": []}}}, 0).turns == CaseTurns(records=(), dropped=0)
 
 
+def test_manifest_detail_keeps_the_latest_turns_of_a_longer_record() -> None:
+    """The record's own bound again: of 55 turns the latest 50 stay, and the 5 older ones count with the record's own."""
+    records = [{**PREP_TURN, "turn": number} for number in range(1, 56)]
+    manifest = {"bundle": {"turns": {"records": records, "dropped": 2}}}
+
+    turns = manifest_detail(manifest, 0).turns
+
+    assert turns is not None
+    assert [record.turn for record in turns.records] == list(range(6, 56))
+    assert turns.dropped == 2 + 5
+
+
 def test_manifest_detail_closes_the_turn_record_to_its_vocabularies() -> None:
     """Whatever the bundle holds, a value outside the record's vocabularies reads `other`, never as text."""
     noisy = {

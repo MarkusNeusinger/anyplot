@@ -75,11 +75,13 @@ function Entries({
   if (items.length === 0 && dropped === 0) return <Box sx={detailMutedSx}>none</Box>;
   return (
     <>
-      <Box component="ol" sx={{ m: 0, pl: 2.5, overflowWrap: 'anywhere' }}>
-        {items.map((item, index) => (
-          <li key={index}>{item}</li>
-        ))}
-      </Box>
+      {items.length > 0 && (
+        <Box component="ol" sx={{ m: 0, pl: 2.5, overflowWrap: 'anywhere' }}>
+          {items.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </Box>
+      )}
       {dropped > 0 && (
         <Box sx={detailMutedSx}>{`${dropped} ${note[dropped === 1 ? 0 : 1]} not recorded`}</Box>
       )}
@@ -94,7 +96,8 @@ function TurnDetails({
 }: {
   id: string;
   record: AgentCaseTurn;
-  shared: boolean;
+  /** How many records carry this turn's number, when more than one does. */
+  shared: number | undefined;
 }) {
   return (
     <Box
@@ -144,11 +147,11 @@ function TurnDetails({
           note={['later operation', 'later operations']}
         />
       </dd>
-      {shared && (
+      {shared !== undefined && (
         <>
           <dt>note</dt>
           <dd>
-            {`two records share turn ${record.turn}: a turn refused before the scope judge keeps no transcript line and takes the next turn's number`}
+            {`${shared} records share turn ${record.turn}: a turn refused before the scope judge keeps no transcript line and takes the next turn's number`}
           </dd>
         </>
       )}
@@ -269,7 +272,7 @@ export function CaseTurns({ turns }: { turns: AgentCaseTurns | null | undefined 
                   )}
                 </Box>
               </Box>
-              {expanded && <TurnDetails id={id} record={record} shared={shared.has(record.turn)} />}
+              {expanded && <TurnDetails id={id} record={record} shared={shared.get(record.turn)} />}
             </Box>
           );
         })}
