@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hive-basic: Basic Hive Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-07
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.collections import LineCollection
 
 
@@ -17,173 +18,150 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for axes (first 3 colors for 3 categories)
-AXIS_COLORS = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per axis group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Create software module dependency network data
-np.random.seed(42)
-nodes = [
-    # Core modules (axis 0)
-    {"id": "core_engine", "axis": 0, "order": 0.9, "label": "Engine"},
-    {"id": "core_config", "axis": 0, "order": 0.7, "label": "Config"},
-    {"id": "core_logger", "axis": 0, "order": 0.5, "label": "Logger"},
-    {"id": "core_cache", "axis": 0, "order": 0.3, "label": "Cache"},
-    # Utility modules (axis 1)
-    {"id": "util_parser", "axis": 1, "order": 0.85, "label": "Parser"},
-    {"id": "util_validator", "axis": 1, "order": 0.65, "label": "Validator"},
-    {"id": "util_formatter", "axis": 1, "order": 0.45, "label": "Formatter"},
-    {"id": "util_converter", "axis": 1, "order": 0.25, "label": "Converter"},
-    {"id": "util_helper", "axis": 1, "order": 0.15, "label": "Helper"},
-    # Interface modules (axis 2)
-    {"id": "iface_api", "axis": 2, "order": 0.95, "label": "API"},
-    {"id": "iface_web", "axis": 2, "order": 0.75, "label": "Web"},
-    {"id": "iface_cli", "axis": 2, "order": 0.55, "label": "CLI"},
-    {"id": "iface_sdk", "axis": 2, "order": 0.35, "label": "SDK"},
-]
+# Constants
+INNER_RADIUS = 0.15  # where the axes start, as a share of the outer ring
+OUTER_RADIUS = 0.85  # where the axes end
 
-node_lookup = {n["id"]: n for n in nodes}
+# Columns: set these to your table's column names
+EDGE_ENDS = ["Source module", "Target module"]  # role: edges
+MODULE = "Module"  # role: nodes
+GROUP = "Module type"  # role: axis_attribute
+POSITION = "Position on axis"  # role: extra
 
-# Dependencies between modules
-edges = [
-    ("core_engine", "util_parser"),
-    ("core_engine", "util_validator"),
-    ("core_config", "util_parser"),
-    ("core_logger", "util_formatter"),
-    ("core_cache", "util_helper"),
-    ("util_parser", "iface_api"),
-    ("util_validator", "iface_api"),
-    ("util_formatter", "iface_web"),
-    ("util_converter", "iface_sdk"),
-    ("util_helper", "iface_cli"),
-    ("core_engine", "iface_api"),
-    ("core_config", "iface_cli"),
-    ("core_logger", "iface_web"),
-    ("core_engine", "core_config"),
-    ("core_engine", "core_logger"),
-    ("util_parser", "util_validator"),
-    ("iface_api", "iface_sdk"),
-]
+# Data: replace this block with your own edge list (df) and node table (nodes),
+# for example df = pd.read_csv("edges.csv")
+# Software module dependency network: nodes sit on one axis per module type
+nodes = pd.DataFrame(
+    {
+        MODULE: [
+            *["Engine", "Config", "Logger", "Cache"],
+            *["Parser", "Validator", "Formatter", "Converter", "Helper"],
+            *["API", "Web", "CLI", "SDK"],
+        ],
+        GROUP: ["Core"] * 4 + ["Utility"] * 5 + ["Interface"] * 4,
+        POSITION: [0.9, 0.7, 0.5, 0.3, 0.85, 0.65, 0.45, 0.25, 0.15, 0.95, 0.75, 0.55, 0.35],
+    }
+)
+df = pd.DataFrame(
+    [
+        ("Engine", "Parser"),
+        ("Engine", "Validator"),
+        ("Config", "Parser"),
+        ("Logger", "Formatter"),
+        ("Cache", "Helper"),
+        ("Parser", "API"),
+        ("Validator", "API"),
+        ("Formatter", "Web"),
+        ("Converter", "SDK"),
+        ("Helper", "CLI"),
+        ("Engine", "API"),
+        ("Config", "CLI"),
+        ("Logger", "Web"),
+        ("Engine", "Config"),
+        ("Engine", "Logger"),
+        ("Parser", "Validator"),
+        ("API", "SDK"),
+    ],
+    columns=EDGE_ENDS,
+)
 
-# Hive plot configuration
-n_axes = 3
-axis_angles = [np.pi / 2 + i * 2 * np.pi / n_axes for i in range(n_axes)]
-axis_labels = ["Core", "Utility", "Interface"]
-inner_radius = 0.15
-outer_radius = 0.85
+# Plot: axes by group in order of appearance, radius from the position property
+groups = list(nodes[GROUP].unique())
+n_axes = len(groups)
+axis_angles = np.pi / 2 + np.arange(n_axes) * 2 * np.pi / n_axes
 
-# Plot
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+nodes["axis"] = nodes[GROUP].map({g: i for i, g in enumerate(groups)})
+nodes["angle"] = axis_angles[nodes["axis"].to_numpy()]
+nodes["radius"] = INNER_RADIUS + nodes[POSITION] * (OUTER_RADIUS - INNER_RADIUS)
+nodes["x"] = nodes["radius"] * np.cos(nodes["angle"])
+nodes["y"] = nodes["radius"] * np.sin(nodes["angle"])
+lookup = nodes.set_index(MODULE)
+
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Draw axes as thick lines
-for i in range(n_axes):
+# Radial axes with their group labels
+for i, group in enumerate(groups):
     angle = axis_angles[i]
-    x_inner = inner_radius * np.cos(angle)
-    y_inner = inner_radius * np.sin(angle)
-    x_outer = outer_radius * np.cos(angle)
-    y_outer = outer_radius * np.sin(angle)
-
-    ax.plot([x_inner, x_outer], [y_inner, y_outer], color=AXIS_COLORS[i], linewidth=6, solid_capstyle="round", zorder=1)
-
-    label_r = outer_radius + 0.08
-    label_x = label_r * np.cos(angle)
-    label_y = label_r * np.sin(angle)
+    ax.plot(
+        [INNER_RADIUS * np.cos(angle), OUTER_RADIUS * np.cos(angle)],
+        [INNER_RADIUS * np.sin(angle), OUTER_RADIUS * np.sin(angle)],
+        color=IMPRINT_PALETTE[i],
+        linewidth=3,
+        solid_capstyle="round",
+        zorder=1,
+    )
+    label_r = OUTER_RADIUS + 0.08
     ax.text(
-        label_x, label_y, axis_labels[i], fontsize=24, fontweight="bold", ha="center", va="center", color=AXIS_COLORS[i]
+        label_r * np.cos(angle),
+        label_r * np.sin(angle),
+        group,
+        fontsize=12,
+        fontweight="bold",
+        ha="center",
+        va="center",
+        color=IMPRINT_PALETTE[i],
     )
 
-# Draw edges as curved bezier curves
+# Edges as quadratic bezier curves pulled through the center
+t = np.linspace(0, 1, 50)[:, None]
 edge_lines = []
 edge_colors = []
+for source_id, target_id in zip(df[EDGE_ENDS[0]], df[EDGE_ENDS[1]], strict=True):
+    p1 = lookup.loc[source_id, ["x", "y"]].to_numpy(dtype=float)
+    p2 = lookup.loc[target_id, ["x", "y"]].to_numpy(dtype=float)
+    points = (1 - t) ** 2 * p1 + t**2 * p2
+    edge_lines.extend(np.stack([points[:-1], points[1:]], axis=1))
+    edge_colors.extend([IMPRINT_PALETTE[int(lookup.loc[source_id, "axis"])]] * (len(t) - 1))
 
-for source_id, target_id in edges:
-    source = node_lookup[source_id]
-    target = node_lookup[target_id]
+ax.add_collection(LineCollection(edge_lines, colors=edge_colors, linewidths=1.3, alpha=0.55, zorder=2))
 
-    angle1 = axis_angles[source["axis"]]
-    r1 = inner_radius + source["order"] * (outer_radius - inner_radius)
-    x1 = r1 * np.cos(angle1)
-    y1 = r1 * np.sin(angle1)
-
-    angle2 = axis_angles[target["axis"]]
-    r2 = inner_radius + target["order"] * (outer_radius - inner_radius)
-    x2 = r2 * np.cos(angle2)
-    y2 = r2 * np.sin(angle2)
-
-    # Create bezier curve through center
-    t = np.linspace(0, 1, 50)
-    curve_x = (1 - t) ** 2 * x1 + 2 * (1 - t) * t * 0 + t**2 * x2
-    curve_y = (1 - t) ** 2 * y1 + 2 * (1 - t) * t * 0 + t**2 * y2
-
-    points = np.column_stack([curve_x, curve_y])
-    segments = np.array([points[:-1], points[1:]]).transpose(1, 0, 2)
-    edge_lines.extend(segments)
-    edge_colors.extend([AXIS_COLORS[source["axis"]]] * len(segments))
-
-lc = LineCollection(edge_lines, colors=edge_colors, linewidths=2.5, alpha=0.4, zorder=2)
-ax.add_collection(lc)
-
-# Draw nodes
-for node in nodes:
-    angle = axis_angles[node["axis"]]
-    r = inner_radius + node["order"] * (outer_radius - inner_radius)
-    x = r * np.cos(angle)
-    y = r * np.sin(angle)
-    color = AXIS_COLORS[node["axis"]]
-
-    ax.scatter(x, y, s=400, c=color, edgecolors=PAGE_BG, linewidths=2, zorder=3)
-
-    # Add node label with offset based on axis position
-    offset_dist = 0.08
-    if node["axis"] == 0:
-        ha = "left"
-        label_x = x + offset_dist
-        label_y = y
-    elif node["axis"] == 1:
-        ha = "right"
-        label_x = x - offset_dist * 0.5
-        label_y = y + offset_dist * 0.3
+# Nodes and their labels
+for name, row in lookup.iterrows():
+    ax.scatter(row.x, row.y, s=100, c=IMPRINT_PALETTE[int(row.axis)], edgecolors=PAGE_BG, linewidths=1, zorder=3)
+    if row.axis == 0:
+        label_x, label_y, ha = row.x + 0.08, row.y, "left"
+    elif row.axis == 1:
+        label_x, label_y, ha = row.x - 0.04, row.y + 0.024, "right"
     else:
-        ha = "left"
-        label_x = x + offset_dist * 0.5
-        label_y = y + offset_dist * 0.3
+        label_x, label_y, ha = row.x + 0.04, row.y + 0.024, "left"
+    ax.text(label_x, label_y, name, fontsize=9, ha=ha, va="center", color=INK)
 
-    ax.text(label_x, label_y, node["label"], fontsize=18, ha=ha, va="center", color=INK)
+# Center point
+ax.scatter(0, 0, s=50, c=PAGE_BG, edgecolors=INK_SOFT, linewidths=1, zorder=4)
 
-# Draw center point
-ax.scatter(0, 0, s=200, c=PAGE_BG, edgecolors=INK_SOFT, linewidths=2, zorder=4)
-
-# Styling
+# Style
 ax.set_xlim(-1.1, 1.1)
 ax.set_ylim(-1.1, 1.1)
 ax.set_aspect("equal")
 ax.axis("off")
+ax.set_title("hive-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
 
-# Title
-ax.set_title("hive-basic · matplotlib · anyplot.ai", fontsize=28, fontweight="medium", color=INK, pad=20)
-
-# Legend
 legend_elements = [
     plt.Line2D(
         [0],
         [0],
         marker="o",
-        color="w",
-        markerfacecolor=AXIS_COLORS[i],
-        markersize=18,
+        color="none",
+        markerfacecolor=IMPRINT_PALETTE[i],
+        markersize=9,
         markeredgecolor=PAGE_BG,
-        markeredgewidth=2,
-        label=axis_labels[i],
+        markeredgewidth=1,
+        label=group,
     )
-    for i in range(n_axes)
+    for i, group in enumerate(groups)
 ]
 leg = ax.legend(
-    handles=legend_elements, loc="lower center", fontsize=18, frameon=True, ncol=3, bbox_to_anchor=(0.5, -0.05)
+    handles=legend_elements, title=GROUP, loc="lower center", fontsize=9, ncol=n_axes, bbox_to_anchor=(0.5, 0.0)
 )
-if leg:
-    leg.get_frame().set_facecolor(PAGE_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_frame().set_facecolor(PAGE_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_title().set_color(INK_SOFT)
+leg.get_title().set_fontsize(9)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.95, bottom=0.02)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
