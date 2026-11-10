@@ -247,33 +247,61 @@ def test_repair_fails_without_both_renders(tmp_path, shell):
     assert repo.read("output") == "gate=the repair left no plot-light.png and plot-dark.png\n"
 
 
-def _age_renders(repo: Repo, seconds: int) -> None:
-    """Write both renders `seconds` after the implementation file's last change (negative: before it)."""
+def _age_renders(repo: Repo, light: int, dark: int) -> None:
+    """Write each render that many seconds after the implementation file was last written (negative: before it)."""
     impl = repo.ws / IMPL
-    changed = impl.stat().st_mtime
-    for theme in ("light", "dark"):
+    written = impl.stat().st_mtime
+    for theme, seconds in (("light", light), ("dark", dark)):
         png = impl.parent / f"plot-{theme}.png"
         png.write_bytes(b"png")
-        os.utime(png, (changed + seconds, changed + seconds))
+        os.utime(png, (written + seconds, written + seconds))
+
+
+# The renders' age against the file (light, dark), and what the job summary says.
+FRESHNESS = [
+    ((60, 60), "fresh"),
+    ((-60, -60), f"stale (plot-light.png, plot-dark.png older than {LIB}{EXT})"),
+    ((-60, 60), f"stale (plot-light.png older than {LIB}{EXT})"),
+    ((60, -60), f"stale (plot-dark.png older than {LIB}{EXT})"),
+]
+FRESHNESS_IDS = ["rendered-last", "written-after-both", "light-stale", "dark-stale"]
+
+
+def _assert_freshness(result: subprocess.CompletedProcess[str], repo: Repo, expected: str) -> None:
+    """The summary line, the warning only when stale, and never a failure."""
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert repo.read("summary") == f"**Render freshness:** {expected}\n"
+    if expected == "fresh":
+        assert "render_freshness" not in result.stdout
+    else:
+        assert f"::warning::render_freshness status=stale: {expected[len('stale (') : -1]}" in result.stdout
+
+
+# `python -m core.images …` rewrites the PNGs in place, as the real module does.
+FAKE_PYTHON = '#!/bin/sh\nfor arg in "$@"; do [ -f "$arg" ] && touch "$arg"; done\nexit 0\n'
 
 
 @pytest.mark.parametrize("shell", SHELLS, ids=SHELL_IDS)
-@pytest.mark.parametrize(
-    ("seconds", "fresh"), [(60, True), (-60, False)], ids=["rendered-last", "changed-after-render"]
-)
-def test_repair_records_render_freshness_without_failing(tmp_path, shell, seconds, fresh):
+@pytest.mark.parametrize(("ages", "expected"), FRESHNESS, ids=FRESHNESS_IDS)
+def test_repair_records_render_freshness_without_failing(tmp_path, shell, ages, expected):
+    """The whole step runs: freshness is read before the processing rewrites the PNGs, and gates nothing."""
     repo = Repo(tmp_path)
-    _age_renders(repo, seconds)
-    script = str(_step("impl-repair.yml", "Process repaired image")["run"])
-    result = repo.run(script[: script.index("source .venv/bin/activate")], shell)
-    assert result.returncode == 0, result.stdout + result.stderr
+    _age_renders(repo, *ages)
+    (repo.ws / ".venv" / "bin").mkdir(parents=True)
+    (repo.ws / ".venv" / "bin" / "activate").touch()
+    (repo.bin / "python").write_text(FAKE_PYTHON, encoding="utf-8")
+    (repo.bin / "python").chmod(0o755)
+    step = _step("impl-repair.yml", "Process repaired image")
+    assert step["env"]["EXT"] == "${{ steps.lang.outputs.ext }}"  # without it every repair reads fresh
+    result = repo.run(str(step["run"]), shell)
+    _assert_freshness(result, repo, expected)
     assert repo.read("output") == ""  # never a gate
-    if fresh:
-        assert repo.read("summary") == "**Render freshness:** fresh\n"
-        assert "render_freshness" not in result.stdout
-    else:
-        assert repo.read("summary") == f"**Render freshness:** stale (plot-dark.png is older than {LIB}{EXT})\n"
-        assert f"::warning::render_freshness status=stale: (plot-dark.png is older than {LIB}{EXT})" in result.stdout
+    assert "::notice::Processed both themes after repair" in result.stdout
+    # The stub rewrote both PNGs, so a block placed after the processing would read `fresh`.
+    assert all(
+        (repo.ws / IMPL).parent.joinpath(f"plot-{t}.png").stat().st_mtime > (repo.ws / IMPL).stat().st_mtime
+        for t in ("light", "dark")
+    )
 
 
 @pytest.mark.parametrize(
@@ -307,14 +335,15 @@ BRANCH_GATE = GENERATE[
 
 @pytest.mark.parametrize("shell", SHELLS, ids=SHELL_IDS)
 class TestGenerateBranchGate:
-    def _metadata(self, repo: Repo, shell: list[str], fetch: bool = True) -> subprocess.CompletedProcess[str]:
+    def _metadata(self, repo: Repo, shell: list[str]) -> subprocess.CompletedProcess[str]:
+        """The step from the render cache to the checkout, without the token line and the bare fetch between."""
         script = 'IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"\n' + CACHE
-        return repo.run(script + ("git fetch -q origin\n" if fetch else "") + BRANCH_GATE, shell)
+        return repo.run(script + BRANCH_GATE, shell)
 
     def test_an_unreachable_origin_fails_with_its_own_message(self, tmp_path, shell):
         repo = Repo(tmp_path)
         repo.git("remote", "set-url", "origin", str(tmp_path / "gone.git"))
-        result = self._metadata(repo, shell, fetch=False)
+        result = self._metadata(repo, shell)
         assert result.returncode == 1
         assert f"::error::Could not look up {BRANCH} on origin (git ls-remote exit 128)" in result.stdout
         assert repo.git("rev-parse", "HEAD") == repo.start_sha
@@ -333,11 +362,17 @@ class TestGenerateBranchGate:
         rendered = CODE.format(score="87/100", x=9)
         repo.commit({IMPL: rendered}, "feat: implement")
         repo.push()
+        # The gate fetches the branch itself: no tracking ref is left from the push.
+        repo.git("update-ref", "-d", f"refs/remotes/origin/{BRANCH}")
+        # Another tracked file changed in the workspace: only the implementation is compared.
+        other = repo.ws / "automation" / "scripts" / "render_hash.py"
+        other.write_text(other.read_text(encoding="utf-8") + "# a local edit\n", encoding="utf-8")
         result = self._metadata(repo, shell)
         assert result.returncode == 0, result.stdout + result.stderr
         assert (repo.runner / "render-source").read_text(encoding="utf-8") == rendered
         assert (repo.ws / IMPL).read_text(encoding="utf-8") == rendered
-        assert repo.read("summary") == "**Render freshness:** fresh\n"  # no renders here, nothing to compare
+        assert repo.git("rev-parse", f"origin/{BRANCH}") == repo.git("rev-parse", "HEAD")
+        assert repo.read("summary") == ""  # no renders here, so no freshness line
 
     @pytest.mark.parametrize("case", ["unpushed-commit", "uncommitted-edit", "stale-branch"])
     def test_a_branch_that_does_not_carry_the_rendered_file_fails(self, tmp_path, shell, case):
@@ -374,22 +409,17 @@ class TestGenerateBranchGate:
         assert f"::error::{IMPL} is not on origin/{BRANCH}" in result.stdout
         assert (repo.ws / IMPL).read_text(encoding="utf-8") == rendered
 
-    @pytest.mark.parametrize(
-        ("seconds", "fresh"), [(60, True), (-60, False)], ids=["rendered-last", "changed-after-render"]
-    )
-    def test_render_freshness_is_recorded_without_failing(self, tmp_path, shell, seconds, fresh):
+    @pytest.mark.parametrize(("ages", "expected"), FRESHNESS, ids=FRESHNESS_IDS)
+    def test_render_freshness_is_recorded_without_failing(self, tmp_path, shell, ages, expected):
         repo = Repo(tmp_path)
-        _age_renders(repo, seconds)
-        result = self._metadata(repo, shell)
-        assert result.returncode == 0, result.stdout + result.stderr
-        if fresh:
-            assert repo.read("summary") == "**Render freshness:** fresh\n"
-            assert "render_freshness" not in result.stdout
-        else:
-            assert repo.read("summary") == f"**Render freshness:** stale (plot-dark.png is older than {LIB}{EXT})\n"
-            assert (
-                f"::warning::render_freshness status=stale: (plot-dark.png is older than {LIB}{EXT})" in result.stdout
-            )
+        _age_renders(repo, *ages)
+        _assert_freshness(self._metadata(repo, shell), repo, expected)
+
+    def test_one_render_alone_is_still_compared(self, tmp_path, shell):
+        repo = Repo(tmp_path)
+        _age_renders(repo, -60, 60)
+        (repo.ws / IMPL).parent.joinpath("plot-dark.png").unlink()
+        _assert_freshness(self._metadata(repo, shell), repo, f"stale (plot-light.png older than {LIB}{EXT})")
 
 
 # --- the upload steps stage render.sha256 ---------------------------------------------------------

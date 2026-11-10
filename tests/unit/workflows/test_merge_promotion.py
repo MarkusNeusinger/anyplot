@@ -241,7 +241,7 @@ def test_promotes_the_renders_with_their_count_and_cleans_staging(runner: Runner
     assert f"::notice::Promoted images to production: 4 file(s) of {SPEC}/{LANG}/{LIB}" in result.stdout
     for name in RENDERS:
         assert runner.read(PRODUCTION, name) == "new"
-    assert not (runner.gcs / PRODUCTION / "adapt").exists()  # the private records stay out
+    assert not (runner.gcs / PRODUCTION / "adapt").exists()  # the records stay out
     assert not (runner.gcs / STAGING).exists()
     assert runner.outputs() == {}
     assert runner.calls("gh") == []  # complete staging needs no file list

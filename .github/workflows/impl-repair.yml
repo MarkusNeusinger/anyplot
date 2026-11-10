@@ -514,18 +514,20 @@ jobs:
 
           # Render freshness (warn-only), read before the processing below
           # rewrites the PNGs: a render older than the file was made before the
-          # file's last change. The repair formats the file after it renders,
-          # so this records how often the bytes change afterwards; nothing
-          # fails on it.
-          FRESH=fresh
+          # file was last written. The repair formats the file after it
+          # renders, so this records how often a write follows the render (the
+          # bytes may or may not have changed); nothing fails on it.
+          STALE=""
           for theme in light dark; do
             if [ "$IMPL_DIR/${LIBRARY}${EXT}" -nt "$IMPL_DIR/plot-${theme}.png" ]; then
-              FRESH="stale (plot-${theme}.png is older than ${LIBRARY}${EXT})"
+              STALE="${STALE:+${STALE}, }plot-${theme}.png"
             fi
           done
-          echo "**Render freshness:** ${FRESH}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "$FRESH" != fresh ]; then
-            echo "::warning::render_freshness status=stale: ${FRESH#stale }"
+          if [ -n "$STALE" ]; then
+            echo "**Render freshness:** stale (${STALE} older than ${LIBRARY}${EXT})" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::render_freshness status=stale: ${STALE} older than ${LIBRARY}${EXT}"
+          else
+            echo "**Render freshness:** fresh" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           source .venv/bin/activate

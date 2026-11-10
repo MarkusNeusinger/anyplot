@@ -916,18 +916,23 @@ jobs:
           cp "${IMPL_DIR}/${LIBRARY}${EXT}" "$RUNNER_TEMP/render-source" 2>/dev/null || rm -f "$RUNNER_TEMP/render-source"
 
           # Render freshness (warn-only): a render older than the file was made
-          # before the file's last change. The generator formats the file after
-          # it renders, so this records how often the bytes change afterwards;
-          # nothing fails on it.
-          FRESH=fresh
+          # before the file was last written. The generator formats the file
+          # after it renders, so this records how often a write follows the
+          # render (the bytes may or may not have changed); nothing fails on
+          # it, and without a render there is no line.
+          STALE=""; COMPARED=0
           for theme in light dark; do
-            if [ -f "${IMPL_DIR}/plot-${theme}.png" ] && [ "${IMPL_DIR}/${LIBRARY}${EXT}" -nt "${IMPL_DIR}/plot-${theme}.png" ]; then
-              FRESH="stale (plot-${theme}.png is older than ${LIBRARY}${EXT})"
+            [ -f "${IMPL_DIR}/plot-${theme}.png" ] || continue
+            COMPARED=1
+            if [ "${IMPL_DIR}/${LIBRARY}${EXT}" -nt "${IMPL_DIR}/plot-${theme}.png" ]; then
+              STALE="${STALE:+${STALE}, }plot-${theme}.png"
             fi
           done
-          echo "**Render freshness:** ${FRESH}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "$FRESH" != fresh ]; then
-            echo "::warning::render_freshness status=stale: ${FRESH#stale }"
+          if [ -n "$STALE" ]; then
+            echo "**Render freshness:** stale (${STALE} older than ${LIBRARY}${EXT})" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::render_freshness status=stale: ${STALE} older than ${LIBRARY}${EXT}"
+          elif [ "$COMPARED" = 1 ]; then
+            echo "**Render freshness:** fresh" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           # Configure git auth (Claude's action configured it, but it's gone now)
@@ -950,8 +955,13 @@ jobs:
           # The branch must carry the file the renders came from. A ref an
           # earlier run left behind (the delete in "Create implementation
           # branch" may fail) passes the lookup above with that run's code, and
-          # the checkout below would put it under this run's renders.
+          # the checkout below would put it under this run's renders. The
+          # branch is fetched here by name, whatever the fetch above brought.
           PUSHED_FILE="${IMPL_DIR}/${LIBRARY}${EXT}"
+          if ! git fetch origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"; then
+            echo "::error::Could not fetch ${BRANCH} from origin; nothing is committed or staged"
+            exit 1
+          fi
           if ! git cat-file -e "origin/${BRANCH}:${PUSHED_FILE}" 2>/dev/null; then
             echo "::error::${PUSHED_FILE} is not on origin/${BRANCH}: this run's implementation was never pushed, so its renders are neither committed nor staged"
             exit 1

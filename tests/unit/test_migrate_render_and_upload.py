@@ -1,7 +1,7 @@
 """scripts/migrate_render_and_upload.py promotes the `plot-*` renders only, as impl-merge does.
 
 Its staging folder is the pipeline's, which may also hold `render.sha256` and
-the private `adapt/` records; neither may reach production.
+the `adapt/` records; neither may reach production.
 """
 
 from __future__ import annotations

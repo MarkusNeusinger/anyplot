@@ -125,7 +125,7 @@ impl-generate.yml
   |-- Creates branch: implementation/{spec-id}/{library}
   |-- AI generates code (Python: adaptability self-check, Step 3c)
   |     or, with source_ref, takes the file from that ref and renders it (adopt mode)
-  |-- Fails if the pushed branch doesn't carry the rendered file, or the commit changes a dependency file
+  |-- Fails if the pushed branch doesn't carry the workspace's implementation file, or the commit changes a dependency file
   |-- Creates metadata/{language}/{library}.yaml (initial)
   |-- Python: adaptability smoke run, plus the predecessor's render on a regeneration (record-only)
   |-- Tests execution
@@ -185,7 +185,7 @@ The gates fail the run:
 
 | Workflow | Step | Fails when |
 |---|---|---|
-| `impl-generate.yml` | Create library metadata file | The implementation branch doesn't exist on origin, or the implementation file on it isn't the file in the workspace. The step used to check out `origin/main` when the branch was missing, which put a regeneration's renders under the live implementation. A branch that an earlier run left behind fails the comparison, because it carries that run's code. |
+| `impl-generate.yml` | Create library metadata file | The implementation branch doesn't exist on origin, doesn't carry the implementation file, or carries a file that differs from the one in the workspace. The step used to check out `origin/main` when the branch was missing, which put a regeneration's renders under the live implementation. A branch that an earlier run left behind fails the comparison, because it carries that run's code. |
 | `impl-repair.yml` | Check the repair's push | The pushed branch has no change to the implementation file since the head the repair started from, or the file in the workspace differs from the pushed one. |
 | `impl-repair.yml` | Process repaired image | `plot-light.png` or `plot-dark.png` is missing. The step used to exit 0, so the review scored the previous renders against the repaired code. |
 
@@ -193,7 +193,7 @@ A failed repair gate takes the ordinary crash path ("Handle repair failure"): `a
 
 The render hash only warns. `impl-generate.yml` and `impl-repair.yml` stage `render.sha256` beside the PNGs: the sha256 of the implementation the renders came from, with its `Quality:` header line reset to `pending` (`automation/scripts/render_hash.py`, which applies `regen_gate.reset_header_score`, the rewrite `sanitize-source --pending` makes). The generator's own header score and the pipeline's reset to `pending` therefore never change it. impl-generate hashes the file as the generator left it in the workspace, before the checkout of the pushed branch; impl-repair hashes the file its push gate just checked. The object isn't named `plot-*`, so neither the review's download nor the promotion copies it. Like every object in the bucket it's publicly readable while it's staged; it's the hash of code that's public anyway.
 
-Both workflows also write a `**Render freshness:**` line to the job summary, `fresh` or `stale`, and a `render_freshness status=stale` warning when a PNG is older than the implementation file. A stale render was made before the file's last change. The generator and the repair format the file after they render it, so the line records how often the bytes change after the render. It doesn't fail the run.
+Both workflows also write a `**Render freshness:**` line to the job summary, `fresh` or `stale` with the PNGs it names, and a `render_freshness status=stale` warning when a PNG is older than the implementation file. A stale render was made before the file was last written; the check compares modification times, so the bytes may or may not have changed. The generator and the repair format the file after they render it, so the line records how often a write follows the render. It doesn't fail the run, and impl-generate leaves it out when the workspace holds no render.
 
 `impl-review.yml` runs "Check the render hash (warn-only)" right after it downloads the renders. It compares the staged hash with the file at the PR head and reports one of four results in the job summary:
 
