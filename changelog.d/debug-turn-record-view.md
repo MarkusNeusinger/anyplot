@@ -12,4 +12,4 @@
   line with its turn number, so a row leads to its message. A case sent
   before the record says so instead. `GET /debug/agent/cases/{id}` carries
   the record as `turns`, every code closed again to the record's
-  vocabularies, which a test pins to the agents service's.
+  vocabularies, which a test pins to the agents service's. (#13044)
