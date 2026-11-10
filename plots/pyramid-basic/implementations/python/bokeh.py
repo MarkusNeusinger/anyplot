@@ -1,14 +1,20 @@
-""" anyplot.ai
+"""anyplot.ai
 pyramid-basic: Basic Pyramid Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-04-29
 """
 
+import math
 import os
+import time
+from pathlib import Path
 
-from bokeh.io import export_png, output_file, save
+import pandas as pd
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, CustomJSTickFormatter, HoverTool, Range1d, Span
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 # Theme tokens
@@ -18,58 +24,53 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-MALE_COLOR = "#009E73"  # Okabe-Ito position 1
-FEMALE_COLOR = "#C475FD"  # Okabe-Ito position 2
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Population by age group (in thousands)
-age_groups = ["0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"]
-male_population = [45, 52, 68, 82, 75, 65, 48, 32, 15]
-female_population = [43, 50, 72, 85, 78, 70, 55, 40, 22]
-male_negative = [-v for v in male_population]
+# Columns: set these to your table's column names
+AGE_GROUP = "Age group"  # role: category
+MALE = "Male"  # role: value_left
+FEMALE = "Female"  # role: value_right
+VALUE_LABEL = "Population (thousands)"  # role: extra
 
-source_male = ColumnDataSource(data={"age": age_groups, "population": male_negative, "value": male_population})
-source_female = ColumnDataSource(data={"age": age_groups, "population": female_population, "value": female_population})
+# Data: replace this block with your own table, for example df = pd.read_csv("population.csv")
+df = pd.DataFrame(
+    {
+        AGE_GROUP: ["0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"],
+        MALE: [45, 52, 68, 82, 75, 65, 48, 32, 15],
+        FEMALE: [43, 50, 72, 85, 78, 70, 55, 40, 22],
+    }
+)
 
-# Plot
+# Plot: reads only df and the constants above
+categories = list(df[AGE_GROUP])
+limit = math.ceil(max(df[MALE].max(), df[FEMALE].max()) * 1.1 / 10) * 10  # one symmetric scale
+
 p = figure(
-    width=4800,
-    height=2700,
-    y_range=age_groups,
-    x_range=Range1d(-100, 100),
-    title="pyramid-basic · bokeh · anyplot.ai",
-    x_axis_label="Population (thousands)",
-    y_axis_label="Age Group",
+    width=3200,
+    height=1800,
+    y_range=categories,
+    x_range=Range1d(-limit, limit),
+    title="pyramid-basic · python · bokeh · anyplot.ai",
+    x_axis_label=VALUE_LABEL,
+    y_axis_label=AGE_GROUP,
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-bar_height = 0.7
-male_bars = p.hbar(
-    y="age",
-    right="population",
-    height=bar_height,
-    source=source_male,
-    color=MALE_COLOR,
-    alpha=0.85,
-    legend_label="Male",
-)
-female_bars = p.hbar(
-    y="age",
-    right="population",
-    height=bar_height,
-    source=source_female,
-    color=FEMALE_COLOR,
-    alpha=0.85,
-    legend_label="Female",
-)
+sides = [(MALE, -1, IMPRINT_PALETTE[0]), (FEMALE, 1, IMPRINT_PALETTE[1])]
+for name, sign, color in sides:
+    source = ColumnDataSource(data={"age": categories, "bar": sign * df[name], "value": df[name]})
+    bars = p.hbar(y="age", right="bar", height=0.7, source=source, color=color, alpha=0.85, legend_label=name)
+    p.add_tools(HoverTool(renderers=[bars], tooltips=[(AGE_GROUP, "@age"), (name, "@value{0,0} thousand")]))
 
-# HoverTools for interactivity
-p.add_tools(HoverTool(renderers=[male_bars], tooltips=[("Age Group", "@age"), ("Male", "@value{0,0} thousand")]))
-p.add_tools(HoverTool(renderers=[female_bars], tooltips=[("Age Group", "@age"), ("Female", "@value{0,0} thousand")]))
+# Shared central axis
+p.add_layout(Span(location=0, dimension="height", line_color=INK_SOFT, line_width=3, line_alpha=0.5))
 
-# Center line at x=0 via Span — adapts to full plot height automatically
-center_line = Span(location=0, dimension="height", line_color=INK_SOFT, line_width=2, line_alpha=0.5)
-p.add_layout(center_line)
-
-# Show absolute values on x-axis (both sides positive)
+# Magnitudes on both sides instead of negative numbers on the left
 p.xaxis.formatter = CustomJSTickFormatter(code="return Math.abs(tick).toString()")
 
 # Style
@@ -78,15 +79,15 @@ p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
 p.title.text_color = INK
-p.title.text_font_size = "32pt"
+p.title.text_font_size = "50pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
@@ -103,10 +104,30 @@ p.legend.location = "bottom_right"
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.label_text_color = INK_SOFT
-p.legend.label_text_font_size = "18pt"
+p.legend.label_text_font_size = "34pt"
 p.legend.background_fill_alpha = 0.9
 
 # Save
-export_png(p, filename=f"plot-{THEME}.png")
 output_file(f"plot-{THEME}.html")
 save(p)
+
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
