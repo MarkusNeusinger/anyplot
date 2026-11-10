@@ -509,7 +509,8 @@ const composerButtons = () =>
     .filter(button => button.textContent !== '.open()')
     .map(
       button =>
-        `${button.textContent}${button.getAttribute('aria-disabled') === 'true' ? ' (inert)' : ''}`
+        // The plot button reads by its name, without the quiet line under it.
+        `${(button.querySelector('[data-plot-label]') ?? button).textContent}${button.getAttribute('aria-disabled') === 'true' ? ' (inert)' : ''}`
     );
 
 /** The actions at the end of the status line at the frame's foot, as they read. */
@@ -1379,7 +1380,7 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('article', { name: 'Plot version 1' })).toBeInTheDocument();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask for a change, e.g. log scale on y'
+      'ask a question or a change, e.g. log scale on y'
     );
     expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();

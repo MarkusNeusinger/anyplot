@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Composer, type ComposerProps } from 'src/sections/agent-chat/Composer';
 import { STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
 import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
-import { fireEvent, render, screen, styleAt, userEvent } from 'src/test-utils';
+import { fireEvent, render, screen, styleAt, userEvent, within } from 'src/test-utils';
 
 /** The composer's props with data in step 1, its plot button active, unless a case says otherwise. */
 function composerProps(overrides: Partial<ComposerProps> = {}): ComposerProps {
@@ -113,6 +113,10 @@ describe('Composer row', () => {
     );
     expect(screen.getByRole('button', { name: 'Update plot' })).toBe(plot);
     expect(plot).toHaveTextContent('.update_plot() →');
+    // The line under the name says that the click also asks and edits the data.
+    expect(within(plot).getByTestId('plot-hint')).toHaveTextContent(
+      'ask · edit data · change plot'
+    );
     expect(plot).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -316,7 +320,7 @@ describe('Composer placeholder on a phone', () => {
       'ask about your data, or say what the first plot should do',
       'optional: what the first plot should do differently',
       'ask about your data, or say what the next plot should do',
-      'ask for a change, e.g. log scale on y',
+      'ask a question or a change, e.g. log scale on y',
       'add a note for this table, or press Enter',
     ]);
     // Below 600 px (owner, 2026-11-08): before the first plot, and once there is one.
@@ -337,8 +341,8 @@ describe('Composer placeholder on a phone', () => {
       'paste a table or drop a file',
       'ask or say what to plot',
       'ask or say what to plot',
-      'ask for a change',
-      'ask for a change',
+      'ask a question or a change',
+      'ask a question or a change',
       'add a note for this table, or press Enter',
     ]);
   });
