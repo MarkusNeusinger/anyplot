@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sparkline-basic: Basic Sparkline
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 78/100 | Updated: 2026-05-03
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 80/100 | Updated: 2026-11-10
 """
 
 import os
@@ -9,92 +9,76 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233",
-             "#AE3030", "#2ABCCD", "#954477"]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - 75 consecutive business days: a product's launch-to-maturity user trend
-# with viral spike, long-tail stabilization, and recovery — a classic adoption curve
+# Columns: set these to your table's column names
+DAY = "Day"  # role: extra
+USERS = "Active users"  # role: values
+
+# Data: replace this block with your own table, for example df = pd.read_csv("users.csv")
+# 75 consecutive days of a product's user trend: S-shaped adoption, a viral
+# launch spike, weekly engagement rhythm and noise
 np.random.seed(42)
-n_points = 75
-day = np.arange(n_points)
-
-# S-shaped adoption curve: slow start → acceleration → saturation
+day = np.arange(75)
 adoption = 40 + 60 * (1 - np.exp(-day / 20)) ** 2
-# Viral launch-week spike
 spike = 18 * np.exp(-((day - 25) ** 2) / 8)
-# Weekly engagement pattern
 weekly = 3 * np.sin(2 * np.pi * day / 5)
-noise = np.random.randn(n_points) * 1.5
-users = adoption + spike + weekly + noise
+noise = np.random.randn(day.size) * 1.5
+df = pd.DataFrame({DAY: day, USERS: adoption + spike + weekly + noise})
 
-df = pd.DataFrame({"day": day, "users": users})
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+x = alt.X(DAY.translate(ESCAPE), type="quantitative", title=None, axis=None)
+y = alt.Y(USERS.translate(ESCAPE), type="quantitative", title=None, axis=None, scale=alt.Scale(zero=False))
 
-# Min/max highlights
-min_idx = df["users"].idxmin()
-max_idx = df["users"].idxmax()
-highlights = df.iloc[[min_idx, max_idx]].copy()
-highlights["type"] = ["min", "max"]
+# Min and max dots, placed exactly on the line
+extremes = df.loc[[df[USERS].idxmin(), df[USERS].idxmax()]].assign(Mark=["min", "max"])
 
-# Semi-transparent area fill — Altair's layered chart pattern
-fill = (
-    alt.Chart(df)
-    .mark_area(color=IMPRINT[0], opacity=0.15)
+fill = alt.Chart(df).mark_area(color=IMPRINT_PALETTE[0], opacity=0.15).encode(x=x, y=y)
+line = alt.Chart(df).mark_line(color=IMPRINT_PALETTE[0], strokeWidth=2).encode(x=x, y=y)
+dots = (
+    alt.Chart(extremes)
+    .mark_circle(size=140)
     .encode(
-        x=alt.X("day:Q", axis=None),
-        y=alt.Y("users:Q", axis=None, scale=alt.Scale(zero=False)),
-    )
-)
-
-# Main line
-line = (
-    alt.Chart(df)
-    .mark_line(color=IMPRINT[0], strokeWidth=3)
-    .encode(
-        x=alt.X("day:Q", axis=None),
-        y=alt.Y("users:Q", axis=None, scale=alt.Scale(zero=False)),
-    )
-)
-
-# Highlight min (orange) and max (violet)
-points = (
-    alt.Chart(highlights)
-    .mark_circle(size=150)
-    .encode(
-        x=alt.X("day:Q", axis=None),
-        y=alt.Y("users:Q", axis=None, scale=alt.Scale(zero=False)),
+        x=x,
+        y=y,
         color=alt.Color(
-            "type:N",
-            scale=alt.Scale(domain=["min", "max"],
-                            range=[IMPRINT[1], IMPRINT[3]]),
+            "Mark:N",
             legend=None,
+            scale=alt.Scale(domain=["min", "max"], range=[IMPRINT_PALETTE[1], IMPRINT_PALETTE[3]]),
         ),
     )
 )
 
-# Combine layers
 chart = (
-    (fill + line + points)
+    (fill + line + dots)
     .properties(
-        width=1600,
-        height=320,  # ~5:1 aspect ratio
+        width=760,
+        height=152,  # 5:1 aspect
         background=PAGE_BG,
-        title=alt.Title("sparkline-basic · altair · anyplot.ai",
-                        fontSize=28, color=INK),
+        title=alt.Title("sparkline-basic · python · altair · anyplot.ai", fontSize=18, color=INK),
     )
-    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT,
-                    labelColor=INK_SOFT, titleColor=INK)
     .configure_view(strokeWidth=0)
 )
 
-# Save as PNG and HTML
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save, then pad (never crop) to the canonical 3200 x 1800 canvas
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+w, h = img.size
+if w > TW or h > TH:
+    raise SystemExit(f"altair produced {w}x{h}, exceeds target {TW}x{TH}; shrink width/height")
+canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+canvas.paste(img, ((TW - w) // 2, (TH - h) // 2))
+canvas.save(f"plot-{THEME}.png")
