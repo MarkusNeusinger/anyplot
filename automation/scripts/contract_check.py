@@ -8,28 +8,37 @@ the PR head, and on a regeneration its predecessor, with this script (rule
 step P2b). Record-only for now: it writes a job-summary line and a notice and
 always exits 0; nothing reads the result yet.
 
-Rules, each named by its key in the record:
+Each rule is a text pattern over the code, named by its key in the record. A
+rule says what the code contains, not what the render shows:
 
-- ``title``: the code carries the mandated title tail
-  ``{language} · {library} · anyplot.ai`` and names the spec id outside the
-  header (``prompts/plot-generator.md``, "Title format").
-- ``theme``: the code reads ``ANYPLOT_THEME``; a JavaScript file reads
-  ``ANYPLOT_TOKENS``, which the render harness derives from the theme.
-- ``save``: the code writes ``plot-{theme}.png`` and no bare ``plot.png``.
-  JavaScript is exempt, because the harness saves.
-- ``legacy-colour``: none of the legacy brand hexes
-  (``prompts/quality-criteria.md``, VQ-07, score 0).
-- ``colormap``: no named library colormap in a colormap position
+- ``title``: the code lacks the mandated title tail
+  ``{language} · {library} · anyplot.ai``, or never names the spec id outside
+  the header (``prompts/plot-generator.md``, "Title format").
+- ``theme``: the code never names ``ANYPLOT_THEME``; in JavaScript, neither
+  ``ANYPLOT_THEME`` nor ``ANYPLOT_TOKENS``, the two globals of the render
+  harness.
+- ``save``: the code builds no file name from ``plot-`` and a theme value, or
+  it names a bare ``plot.png``, ``plot.html`` or ``plot.svg``. JavaScript is
+  exempt, because the harness saves.
+- ``legacy-colour``: the code holds a brand hex of an earlier palette: Python
+  blue and yellow of the pyplots.ai era, or the variant-D palette
+  (``prompts/quality-criteria.md``, VQ-07, lists all but the yellow).
+- ``colormap``: a named library colormap sits in a colormap position
   (``prompts/default-style-guide.md``, "Continuous Data": only the two
   Imprint colormaps are allowed).
+- ``palette``: the code holds a six-digit hex that is neither an Imprint
+  colour, nor an anchor, nor a theme token of the style guide. The owner's
+  rule (2026-11-11): use the Imprint colours unless there is a very good
+  reason, so this rule records a deviation; whether the reason is good is
+  for a reader to judge, never for this script.
 
-Comments and the generated header never count: a rule looks at code only.
-The patterns are deliberately narrow. A rule that flags a compliant file is
-worse than no rule, so a pattern matches a colormap name only where a
-colormap goes, never a data label such as ``"Oranges"``.
+Comments and the generated header never count. The patterns are deliberately
+narrow: a rule that flags a compliant file is worse than no rule, so a
+colormap name counts only where a colormap goes, never as a data label such
+as ``"Oranges"``.
 
 Stdlib only: ``impl-review.yml`` runs a copy taken at the workflow's own ref
-with the runner's ``python3``, so a PR head cannot choose its own rules.
+with the job's pinned ``python3``, so a PR head cannot choose its own rules.
 
 Subcommand::
 
@@ -43,37 +52,60 @@ file reads as ``unreadable``, a missing predecessor as a first generation.
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import re
 import sys
+import tokenize
 from pathlib import Path
 
 
 RECORD_VERSION = 1
-RULES = ("title", "theme", "save", "legacy-colour", "colormap")
+RULES = ("title", "theme", "save", "legacy-colour", "colormap", "palette")
 LANGUAGES = ("python", "r", "julia", "javascript")
 
-# quality-criteria.md, VQ-07 score 0: Python Blue, its yellow, and the variant-D palette.
+# Python blue and yellow, then the variant-D palette. An alpha suffix (#RRGGBBAA) counts too.
 LEGACY_HEXES = ("306998", "FFD43B", "9418DB", "B71D27", "16B8F3", "D359A7", "BA843E")
-LEGACY_RE = re.compile(r"#(?:" + "|".join(LEGACY_HEXES) + r")\b", re.IGNORECASE)
+LEGACY_RE = re.compile(r"#(?:" + "|".join(LEGACY_HEXES) + r")(?:[0-9A-Fa-f]{2})?\b", re.IGNORECASE)
+
+# prompts/default-style-guide.md: the eight Imprint hues, the amber anchor, the
+# ink and muted pairs, and the page, elevated and soft-ink tokens of both
+# themes. tests/unit/automation/scripts/test_contract_check.py keeps this set
+# equal to core/palette.py and inside the style guide.
+PALETTE_HEXES = frozenset(
+    {
+        "#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314",  # Imprint
+        "#DDCC77",  # amber
+        "#1A1A17", "#F0EFE8",  # ink (and the dark page)
+        "#6B6A63", "#A8A79F",  # muted
+        "#FAF8F1", "#FFFDF6", "#242420",  # light page, elevated light, elevated dark
+        "#4A4A44", "#B8B7B0",  # soft ink
+    }
+)  # fmt: skip
+HEX_RE = re.compile(r"#[0-9A-Fa-f]{6}\b")
+PALETTE_DETAIL_CAP = 8
 
 # Named colormaps of the libraries' own registries (matplotlib, seaborn, plotly, bokeh, ColorBrewer).
 _NAMED = (
     r"(?:viridis|cividis|plasma|inferno|magma|turbo|jet|hsv|rainbow|gist_\w+|nipy_spectral|Spectral|BrBG|RdBu"
     r"|RdYlGn|RdYlBu|RdGy|PuOr|PiYG|PRGn|coolwarm|bwr|seismic|Blues|Greens|Reds|Oranges|Purples|Greys|YlOrRd"
-    r"|YlOrBr|YlGnBu|YlGn|GnBu|BuGn|BuPu|PuBu|PuRd|RdPu|OrRd|hot|cool|copper|bone|gray|grey|twilight\w*"
-    r"|cubehelix|mako|rocket|flare|crest|icefire|vlag|Portland|Jet|Hot|Electric|Bluered|Picnic|Rainbow|Viridis"
-    r"|Cividis|Plasma|Inferno|Magma|Turbo|Blackbody|Earth)(?:_r|256|\d{1,2})?"
+    r"|YlOrBr|YlGnBu|YlGn|GnBu|BuGn|BuPu|PuBu|PuRd|RdPu|OrRd|hot|cool|copper|bone|gray|grey|binary|terrain"
+    r"|ocean|twilight\w*|cubehelix|mako|rocket|flare|crest|icefire|vlag|Portland|Jet|Hot|Electric|Bluered"
+    r"|Picnic|Rainbow|Viridis|Cividis|Plasma|Inferno|Magma|Turbo|Blackbody|Earth)(?:_r|256|\d{1,2})?"
 )
+# A keyword may be the tail of a longer name (`coloraxis_colorscale`, `mpl_cm`), never of a word.
+_KW = r"(?<![A-Za-z0-9])"
 COLORMAP_RES: dict[str, tuple[re.Pattern[str], ...]] = {
     "python": tuple(
         re.compile(pattern)
         for pattern in (
-            rf"\b(?:cmap|cmap_name|colorscale|color_continuous_scale|continuous_scale|scheme|palette)\s*=\s*[\"']{_NAMED}[\"']",
+            rf"{_KW}(?:cmap|cmap_name|colorscale|color_continuous_scale|continuous_scale|palette)\s*=\s*[\"']{_NAMED}[\"']",
+            # Vega schemes are always names (Altair builds an Imprint scale from a `range`).
+            rf"{_KW}scheme\s*=\s*[\"'][A-Za-z][\w-]*[\"']",
             rf"(?:color_palette|get_cmap|scale_\w+_cmap)\(\s*[\"']{_NAMED}[\"']",
             rf"colormaps\[\s*[\"']{_NAMED}[\"']\s*\]",
-            rf"\bcm\.{_NAMED}\b",
+            rf"{_KW}cm\.{_NAMED}\b",
             r"\bscale_\w+_(?:viridis\w*|brewer|distiller)\b",
             r"\b(?:Viridis|Inferno|Magma|Plasma|Cividis|Turbo)256\b",
             r"\bbokeh\.palettes\b[^\n]*\b(?:Spectral|RdBu|BrBG|Blues|Greens|Reds)\d+",
@@ -84,10 +116,12 @@ COLORMAP_RES: dict[str, tuple[re.Pattern[str], ...]] = {
         for pattern in (
             r"\bscale_\w+_(?:viridis\w*|brewer|distiller|fermenter)\(",
             r"\b(?:rainbow|heat\.colors|terrain\.colors|topo\.colors|cm\.colors|hsv|hcl\.colors)\(",
-            r"\bbrewer\.pal\(|\bRColorBrewer::|\bviridisLite::",
+            r"\bbrewer\.pal\(|\bRColorBrewer::|\bviridisLite::|\bviridis::",
         )
     ),
-    "julia": tuple(re.compile(pattern) for pattern in (rf"colou?rmap\s*=\s*:{_NAMED}\b", rf"cgrad\(\s*:{_NAMED}\b")),
+    "julia": tuple(
+        re.compile(pattern) for pattern in (rf"colou?rmap\s*=\s*(?::|\"){_NAMED}\b", rf"cgrad\(\s*(?::|\"){_NAMED}\b")
+    ),
     "javascript": tuple(
         re.compile(pattern)
         for pattern in (
@@ -100,38 +134,28 @@ COLORMAP_RES: dict[str, tuple[re.Pattern[str], ...]] = {
     ),
 }
 
-# What reading the theme looks like: the variable's name as a string (JavaScript: the tokens object).
 THEME_RES = {
     "python": re.compile(r"[\"']ANYPLOT_THEME[\"']"),
     "r": re.compile(r"[\"']ANYPLOT_THEME[\"']"),
     "julia": re.compile(r"\"ANYPLOT_THEME\""),
-    "javascript": re.compile(r"\bANYPLOT_TOKENS\b"),
+    "javascript": re.compile(r"\bANYPLOT_(?:TOKENS|THEME)\b"),
 }
-# A themed save target: the file name is built from the theme, in any of the usual ways.
-SAVE_RES = {
-    "python": re.compile(r"plot-\{[^{}\n]*\}|plot-%s|[\"']plot-[\"']\s*\+"),
-    "r": re.compile(r"plot-%s|paste0?\(\s*[\"']plot-[\"']\s*,|plot-\{[^{}\n]*\}"),
-    "julia": re.compile(r"plot-\$\(?[A-Za-z_]\w*\)?"),
-}
+# `plot-` followed by a value: an f-string or glue field, a %s, a Julia $ interpolation, or the
+# end of the string and a `+`, `*` or `,` (concatenation, paste0, string).
+SAVE_RE = re.compile(r"plot-(?:\{|%s|\$|[\"']\s*[+*,])")
 BARE_SAVE_RE = re.compile(r"[\"'](?:\./)?plot\.(?:png|html|svg)[\"']")
+
+_STRING_QUOTES = {"python": "\"'", "r": "\"'", "julia": '"', "javascript": "\"'`"}
 
 
 def strip_header(language: str, source: str) -> str:
-    """The source without its generated header: the leading docstring or the leading comment lines.
+    """The source without its generated header: the leading comment lines and, in Python, the docstring.
 
-    The header is whatever the file starts with, however long: a Python
-    docstring, or the run of comment lines of the other languages (which
-    includes JavaScript's ``//#`` directives).
+    The header is whatever the file starts with, however long: the run of
+    comment lines (R's ``#'``, JavaScript's ``//#`` directives, a Python
+    ``# ruff: noqa`` line), then a Python docstring.
     """
-    text = source.lstrip("﻿")
-    if language == "python":
-        stripped = text.lstrip()
-        for quote in ('"""', "'''"):
-            if stripped.startswith(quote):
-                end = stripped.find(quote, len(quote))
-                return stripped[end + len(quote) :] if end != -1 else ""
-        return text
-    lines = text.split("\n")
+    lines = source.lstrip("﻿").split("\n")
     marker = "//" if language == "javascript" else "#"
     first_code = 0
     in_block = False
@@ -145,40 +169,105 @@ def strip_header(language: str, source: str) -> str:
             first_code = index + 1
             continue
         break
-    return "\n".join(lines[first_code:])
+    rest = "\n".join(lines[first_code:])
+    if language == "python":
+        for quote in ('"""', "'''"):
+            if rest.startswith(quote):
+                end = rest.find(quote, len(quote))
+                return rest[end + len(quote) :] if end != -1 else ""
+    return rest
+
+
+def _cut_comment(line: str, marker: str, quotes: str) -> str:
+    """``line`` up to the first ``marker`` outside a string literal."""
+    quote = ""
+    index = 0
+    while index < len(line):
+        char = line[index]
+        if quote:
+            if char == "\\":
+                index += 2
+                continue
+            if char == quote:
+                quote = ""
+        elif char in quotes:
+            quote = char
+        elif line.startswith(marker, index):
+            return line[:index]
+        index += 1
+    return line
+
+
+def _python_comment_columns(code: str) -> dict[int, int] | None:
+    """Row to column of every comment token, or None when the code does not tokenize."""
+    columns: dict[int, int] = {}
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(code).readline):
+            if token.type == tokenize.COMMENT:
+                columns[token.start[0]] = token.start[1]
+    except tokenize.TokenError, SyntaxError:
+        return None
+    return columns
 
 
 def strip_comments(language: str, code: str) -> str:
-    """Drop whole-line comments and trailing ``␣#␣…`` / ``␣//␣…`` comments (a hex colour keeps its ``#``)."""
+    """The code without comments: Python by its tokens, the others by the first marker outside a string.
+
+    A ``#`` or ``//`` inside a string stays (a hex colour, a URL, ``"Issue # 42"``).
+    Lines that hold nothing but a comment go, as do the lines of a JavaScript block comment.
+    """
+    lines = code.split("\n")
+    columns = _python_comment_columns(code) if language == "python" else None
+    if columns is not None:
+        for row, column in columns.items():
+            lines[row - 1] = lines[row - 1][:column]
+        return "\n".join(line for line in lines if line.strip())
+    marker = "//" if language == "javascript" else "#"
     out = []
-    for line in code.split("\n"):
-        if language == "javascript":
-            if re.match(r"\s*(?://|\*|/\*)", line):
-                continue
-            line = re.sub(r"\s//\s.*$", "", line)
-        else:
-            if re.match(r"\s*#", line):
-                continue
-            line = re.sub(r"\s#\s.*$", "", line)
-        out.append(line)
+    for line in lines:
+        if language == "javascript" and re.match(r"\s*(?:\*|/\*)", line):
+            continue
+        cut = _cut_comment(line, marker, _STRING_QUOTES[language])
+        if cut.strip():
+            out.append(cut)
     return "\n".join(out)
 
 
-def violations(source: str, *, spec_id: str, language: str, library: str) -> list[str]:
-    """The rules ``source`` breaks, in ``RULES`` order."""
+def custom_hexes(code: str) -> list[str]:
+    """The six-digit hexes of ``code`` outside the style guide's set, upper case, in order of appearance."""
+    seen: list[str] = []
+    for match in HEX_RE.findall(code):
+        value = match.upper()
+        if value not in PALETTE_HEXES and value not in seen:
+            seen.append(value)
+    return seen
+
+
+def check(source: str, *, spec_id: str, language: str, library: str) -> tuple[list[str], dict[str, list[str]]]:
+    """The rules ``source`` breaks, in ``RULES`` order, and per rule what it found (the palette rule's hexes)."""
     code = strip_comments(language, strip_header(language, source))
     found = []
+    details: dict[str, list[str]] = {}
     if f"{language} · {library} · anyplot.ai" not in code or spec_id not in code:
         found.append("title")
     if not THEME_RES[language].search(code):
         found.append("theme")
-    if language != "javascript" and (not SAVE_RES[language].search(code) or BARE_SAVE_RE.search(code)):
+    if language != "javascript" and (not SAVE_RE.search(code) or BARE_SAVE_RE.search(code)):
         found.append("save")
     if LEGACY_RE.search(code):
         found.append("legacy-colour")
     if any(pattern.search(code) for pattern in COLORMAP_RES[language]):
         found.append("colormap")
-    return found
+    hexes = custom_hexes(code)
+    if hexes:
+        found.append("palette")
+        details["palette"] = hexes[:PALETTE_DETAIL_CAP]
+    return found, details
+
+
+def violations(source: str, *, spec_id: str, language: str, library: str) -> list[str]:
+    """The rules ``source`` breaks, in ``RULES`` order."""
+    return check(source, spec_id=spec_id, language=language, library=library)[0]
 
 
 def _read(path: str | None) -> str | None:
@@ -194,8 +283,15 @@ def build_record(new: str | None, prev: str | None, *, spec_id: str, language: s
     """The record of one check: the new file's violations, the predecessor's, and the ones only the new file has."""
     record: dict = {"version": RECORD_VERSION, "spec_id": spec_id, "language": language, "library": library}
     if new is None:
-        return {**record, "status": "unreadable", "violations": [], "prev_violations": None, "new_only": []}
-    now = violations(new, spec_id=spec_id, language=language, library=library)
+        return {
+            **record,
+            "status": "unreadable",
+            "violations": [],
+            "prev_violations": None,
+            "new_only": [],
+            "details": {},
+        }
+    now, details = check(new, spec_id=spec_id, language=language, library=library)
     before = None if prev is None else violations(prev, spec_id=spec_id, language=language, library=library)
     new_only = now if before is None else [rule for rule in now if rule not in before]
     return {
@@ -204,6 +300,7 @@ def build_record(new: str | None, prev: str | None, *, spec_id: str, language: s
         "violations": now,
         "prev_violations": before,
         "new_only": new_only,
+        "details": details,
     }
 
 
@@ -216,17 +313,22 @@ def summary_line(record: dict) -> str:
     line = "**Contract check (record-only):** " + ", ".join(record["violations"])
     if record["prev_violations"] is not None:
         line += " (new in this version: " + (", ".join(record["new_only"]) or "none") + ")"
+    if record["details"].get("palette"):
+        line += "; outside the palette: " + ", ".join(f"`{value}`" for value in record["details"]["palette"])
     return line
 
 
 def notice_line(record: dict) -> str:
     """One log line, the same shape as ``canvas_gate`` and ``render_hash``."""
     prev = "n/a" if record["prev_violations"] is None else (",".join(record["prev_violations"]) or "none")
-    return (
+    line = (
         f"::notice::contract_check library={record['library']} status={record['status']} "
         f"violations={','.join(record['violations']) or 'none'} prev={prev} "
         f"new_only={','.join(record['new_only']) or 'none'}"
     )
+    if record["details"].get("palette"):
+        line += " palette_hexes=" + ",".join(record["details"]["palette"])
+    return line
 
 
 def cmd_check(args: argparse.Namespace) -> int:
@@ -246,16 +348,16 @@ def cmd_check(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     sub = parser.add_subparsers(dest="command", required=True)
-    check = sub.add_parser("check", help="check one implementation file, record-only")
-    check.add_argument("--source", required=True, help="the implementation at the PR head")
-    check.add_argument(
+    check_parser = sub.add_parser("check", help="check one implementation file, record-only")
+    check_parser.add_argument("--source", required=True, help="the implementation at the PR head")
+    check_parser.add_argument(
         "--prev", help="the predecessor from main (a regeneration); a missing file is a first generation"
     )
-    check.add_argument("--spec-id", required=True)
-    check.add_argument("--language", required=True, choices=LANGUAGES)
-    check.add_argument("--library", required=True)
-    check.add_argument("--out", help="write the record as one JSON line")
-    check.set_defaults(func=cmd_check)
+    check_parser.add_argument("--spec-id", required=True)
+    check_parser.add_argument("--language", required=True, choices=LANGUAGES)
+    check_parser.add_argument("--library", required=True)
+    check_parser.add_argument("--out", help="write the record as one JSON line")
+    check_parser.set_defaults(func=cmd_check)
     args = parser.parse_args(argv)
     return args.func(args)
 

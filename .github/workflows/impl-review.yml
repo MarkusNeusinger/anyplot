@@ -770,7 +770,8 @@ jobs:
 
       # Record-only: the generator prompt's static contract (the mandated
       # title, the theme read, the themed save target, no legacy brand colour,
-      # no library colormap), checked on the file at the PR head and, when
+      # no library colormap, no hex outside the style guide's palette),
+      # checked on the file at the PR head and, when
       # main holds one, on its predecessor (automation/scripts/contract_check.py,
       # the workflow-ref copy). It reads the head, not the workspace, like the
       # render-hash check. It writes a job-summary line and a notice; nothing

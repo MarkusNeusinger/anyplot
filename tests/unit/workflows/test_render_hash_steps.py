@@ -44,8 +44,8 @@ CODE = '""" anyplot.ai\nscatter-basic: Basic Scatter Plot\nQuality: {score} | Cr
 # object, or with a 503 when GSUTIL_FAIL=1 or for the first
 # $GSUTIL_FAIL_DOWNLOADS downloads; `cp LOCAL gs://…/render.sha256` stores the
 # file, after failing the first $GSUTIL_FAIL_HASH_UPLOADS times; every other
-# `cp` (the renders) is accepted and dropped; `rm` deletes. Every call goes to
-# $GSUTIL_LOG, one line each.
+# `cp` (the renders) is accepted and dropped; `rm` deletes, and fails like gsutil
+# when there is no such object. Every call goes to $GSUTIL_LOG, one line each.
 FAKE_GSUTIL = r"""#!/bin/bash
 printf '%s\n' "$*" >> "$GSUTIL_LOG"
 while [ $# -gt 0 ]; do
@@ -69,7 +69,9 @@ case "$cmd" in
       mkdir -p "$(dirname "$FAKE_GCS/${dst#gs://}")"
       cp "$1" "$FAKE_GCS/${dst#gs://}"
     fi ;;
-  rm) rm -f "$FAKE_GCS/${1#gs://}" ;;
+  rm)
+    [ -f "$FAKE_GCS/${1#gs://}" ] || { echo "CommandException: No URLs matched: $1" >&2; exit 1; }
+    rm "$FAKE_GCS/${1#gs://}" ;;
 esac
 exit 0
 """

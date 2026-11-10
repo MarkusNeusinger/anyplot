@@ -99,6 +99,21 @@ class TestContractCheckStep:
         assert repo.read("summary") == "**Contract check (record-only):** clean\n"
         assert "prev=n/a" in result.stdout
 
+    def test_another_language_is_read_under_its_own_path(self, tmp_path, shell):
+        """The path comes from LANGUAGE and EXT: a JavaScript file is found, and the save rule does not apply."""
+        repo = _repo(tmp_path)
+        source = (
+            "// anyplot.ai\n// scatter-basic: Basic Scatter Plot\n"
+            "const t = window.ANYPLOT_TOKENS;\n"
+            f'const TITLE = "{SPEC} · javascript · d3 · anyplot.ai";\n'
+        )
+        repo.commit({f"plots/{SPEC}/implementations/javascript/d3.js": source}, "feat: implement d3")
+        repo.push()
+        result = _run(repo, shell, LANGUAGE="javascript", LIBRARY="d3", EXT=".js")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert repo.read("summary") == "**Contract check (record-only):** clean\n"
+        assert "::notice::contract_check library=d3 status=clean violations=none prev=n/a" in result.stdout
+
     def test_a_missing_file_or_tool_never_fails_the_job(self, tmp_path, shell):
         repo = _repo(tmp_path)
         result = _run(repo, shell, SPEC_ID="no-such-spec")
