@@ -2,50 +2,46 @@ library: altair
 language: python
 specification_id: line-basic
 created: '2025-12-23T00:24:33Z'
-updated: '2026-04-29T15:42:27Z'
+updated: '2026-11-10T02:37:11Z'
 generated_by: claude-sonnet
-workflow_run: 25117106624
+workflow_run: 42743302969
 issue: 653
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - Brand green (#009E73) used correctly as single series color throughout both themes
-  - All font sizes explicitly set (28/22/18px) — fully readable at 4800x2700px
-  - Idiomatic Altair layer composition (line + points) with proper encoding classes
-  - Perfect spec, data, and code quality scores — clean, reproducible, correct
-  - Tooltips with formatted month/temperature values and HTML export alongside PNG
+  - Temporal x axis formatted as month abbreviations with tickCount='month', so every
+    tick label sits on one of the 12 monthly points
+  - y scale with zero=False spans the data instead of flattening the seasonal signal
+  - 'Single base chart with shared encodings layered as line + points: idiomatic Altair'
+  - Theme tokens threaded through title, axis labels, ticks, domain and grid; both
+    renders read cleanly
+  - Formatted tooltips (month name and year, one-decimal temperature) in the HTML
+    output
   weaknesses:
-  - Full 2-axis grid (both X and Y gridlines) — style guide prefers Y-axis-only for
-    line charts
-  - 4-sided border frame from configure_view(stroke=INK_SOFT) — top/right borders
-    should be removed
-  - December data point squeezed at right edge with no December axis label visible;
-    Altair temporal auto-ticks show weekly dates (Jan 07, Feb 04…) rather than month
-    names, misaligning with the monthly dataset
-  - No design storytelling — seasonal peak in June (~30°C) is the obvious focal point
-    but receives no visual emphasis (no annotation, no highlighted marker, no gradient
-    progression)
+  - 'Suggestion: a little x-scale padding would keep the January and December markers
+    clear of the axis line and the plot edge.'
+  - 'Suggestion: restoring .interactive() would add zoom and pan to the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "line-basic · altair · anyplot.ai" in bold dark text, clearly readable. X-axis label "Month" and Y-axis label "Temperature (°C)" both visible in dark ink. Tick labels in muted dark (#4A4A44) at 18px — readable. Full grid (both X and Y) with 0.15 opacity — subtle but present on both axes. 4-sided border frame visible around plot area.
-      Data: Single line in brand green (#009E73), strokeWidth=4, with filled circular markers (size=200) at each monthly data point. Sinusoidal annual temperature curve peaking ~30°C in June–July and troughing ~3–4°C in Dec–Jan. Axis ticks show weekly dates (Jan 07, Feb 04…) rather than month names due to Altair temporal auto-tick behavior; December data point at right edge has no corresponding axis label visible.
-      Legibility verdict: PASS — all text readable; minor concern: December point near right edge with no axis label
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, not pure white.
+      Chrome: bold dark title "line-basic · python · altair · anyplot.ai" centred above the plot; axis titles "Month" and "Temperature (°C)" in dark ink; muted dark tick labels Jan–Dec and 5–30; subtle horizontal-only grid; left and bottom axis lines only, no frame. All text readable.
+      Data: one #009E73 line with 12 small filled translucent green markers, rising from about 4 °C in Jan/Feb to a 30 °C peak in July and falling to about 3.7 °C in December, with visible irregularities (Feb plateau, Apr–May shoulder).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and axis labels rendered in light cream text — clearly visible against dark background. Tick labels in muted light (#B8B7B0). No dark-on-dark failures observed. Grid lines subtle with low opacity. 4-sided border frame adapts to light stroke color.
-      Data: Brand green (#009E73) line and markers — identical colors to light render. Same sinusoidal pattern visible. Identical layout and data positions.
-      Legibility verdict: PASS — all text readable in dark theme; theme adaptation is correct throughout
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in light cream, tick labels in light grey, grid lines subtle light at low opacity; no dark-on-dark text anywhere.
+      Data: identical #009E73 line and markers in the same positions as the light render; only the chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -53,46 +49,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px — readable in both themes'
+        comment: Title 16, axis titles 12, ticks 10 at scale 4 (library-mandated sizes);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No text collisions; month labels well spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line strokeWidth=4, markers size=200 — well adapted for 12 data points
+        comment: 12 points with size-60 filled markers and a 2.5 px line; markers
+          small enough that the line reads as a line
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green good contrast on both backgrounds, CVD-safe
+        comment: Single brand-green series with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: December data point at right edge with no December axis label; Altair
-          temporal auto-ticks show weekly dates misaligned with monthly data
+        comment: Exactly 3200x1800 via the mandated pad block; balanced margins, no
+          overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Month (X) and Temperature (°C) with units
+        comment: Month and Temperature (°C) with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first series, correct PAGE_BG in both themes, all chrome
-          theme-adaptive'
+        comment: '#009E73 single series; #FAF8F1 / #1A1A17 backgrounds; theme-adaptive
+          chrome'
     design_excellence:
       score: 9
       max: 20
@@ -102,22 +99,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default — warm background and explicit theming raise
-          it above basics, but no aesthetic ambition beyond functional
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Grid opacity/colors explicitly set but full 2-axis grid (Y-only preferred
-          for line) and 4-sided border frame reduce refinement score
+        comment: Monthly ticks formatted as %b with tickCount='month' so every label
+          sits on a data point; x grid off, view stroke removed
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Seasonal pattern is clear but no visual emphasis on peak (no annotation,
-          no highlighted marker, no gradient)
+        comment: Data displayed, no hierarchy chosen beyond the Notes (correct for
+          a -basic spec)
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +123,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with optional markers
+        comment: Single straight-segment line with optional markers; no added layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid, axis labels, markers, clean minimal design
+        comment: Clear axis labels, y grid, optional markers; C1 line in x order,
+          C3 noisy series, C5 y axis not forced to zero, C6 single line; C4 N/A (no
+          missing values)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Month→X, Temperature→Y, all 12 data points visible
+        comment: Month on x, temperature on y, all 12 points at their values, linear
+          interpolation
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact format 'line-basic · altair · anyplot.ai'; single series so
-          legend N/A
+        comment: '''line-basic · python · altair · anyplot.ai''; legend N/A for a
+          single series'
     data_quality:
       score: 15
       max: 15
@@ -156,19 +155,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full annual cycle with rising/falling trends and both extremes visible
+        comment: Rise, peak, fall and plateau-like noise across a year
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperature readings — neutral, real-world scenario
+        comment: Monthly temperature readings, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~3–30°C range, plausible northern hemisphere annual pattern
+        comment: About 3.7-30 °C, plausible temperate climate; no Check values in
+          the spec
     code_quality:
       score: 10
       max: 10
@@ -178,7 +178,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports→tokens→data→plot→save structure
+        comment: Flat six-zone script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -190,47 +190,52 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used (PIL for the mandated pad)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Altair layering idiom
+        comment: Shared base encoding for both layers; escape and pad blocks are mandated
+          by the library prompt
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0
+        comment: plot-{THEME}.png + plot-{THEME}.html, current Altair 6 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Layer composition, encoding classes (alt.X/Y/Tooltip), configure_*
-          theming, interactive() — all idiomatic Altair
+        comment: One base chart with shared encodings layered via line + points; temporal
+          axis format/tickCount instead of manual ticks
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Altair's grammar-of-graphics layer composition (line + points), interactive
-          tooltips, HTML export
+        passed: false
+        comment: Formatted temporal/quantitative tooltips in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-10T02:33:21Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
-  - grid-styling
+  - minimal-chrome
+  - alpha-blending
