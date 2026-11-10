@@ -3,14 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
-const trackPageview = vi.fn();
 const navigate = vi.fn();
 
 vi.mock('src/hooks', async () => {
   const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
-    useAnalytics: () => ({ trackEvent, trackPageview }),
+    useAnalytics: () => ({ trackEvent }),
     useAppData: () => ({
       specsData: [],
       librariesData: [
@@ -32,7 +31,6 @@ import { LibrariesPage } from 'src/pages/LibrariesPage';
 describe('LibrariesPage', () => {
   beforeEach(() => {
     trackEvent.mockClear();
-    trackPageview.mockClear();
     navigate.mockClear();
   });
 

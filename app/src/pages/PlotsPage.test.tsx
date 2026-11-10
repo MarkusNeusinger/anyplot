@@ -2,20 +2,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fireEvent, render, screen } from 'src/test-utils';
 
-const { mockHandleRandom, mockTrackEvent, mockSaveScrollPosition, state } = vi.hoisted(() => ({
-  mockHandleRandom: vi.fn(),
-  mockTrackEvent: vi.fn(),
-  mockSaveScrollPosition: vi.fn(),
-  state: {
-    activeFilters: [] as { category: string; values: string[] }[],
-    specsData: [] as { id: string; title: string }[],
-    specTitles: {} as Record<string, string>,
-  },
-}));
+const { mockHandleRandom, mockTrackEvent, mockSaveScrollPosition, mockUsePlotsScrolled, state } =
+  vi.hoisted(() => ({
+    mockHandleRandom: vi.fn(),
+    mockTrackEvent: vi.fn(),
+    mockSaveScrollPosition: vi.fn(),
+    mockUsePlotsScrolled: vi.fn(),
+    state: {
+      activeFilters: [] as { category: string; values: string[] }[],
+      specsData: [] as { id: string; title: string }[],
+      specTitles: {} as Record<string, string>,
+    },
+  }));
 
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({ trackPageview: vi.fn(), trackEvent: mockTrackEvent }),
   useInfiniteScroll: () => ({ loadMoreRef: { current: null } }),
+  usePlotsScrolled: (options: unknown) => mockUsePlotsScrolled(options),
   useFilterState: () => ({
     activeFilters: state.activeFilters,
     filterCounts: null,
@@ -129,6 +132,23 @@ describe('PlotsPage', () => {
   it('renders document title for SEO', () => {
     render(<PlotsPage />);
     expect(document.title).toBe('plots | anyplot.ai');
+  });
+
+  it('reports how far the visitor scrolled the gallery, with the list as it stands', () => {
+    render(<PlotsPage />);
+    expect(mockUsePlotsScrolled).toHaveBeenLastCalledWith({
+      displayedCount: 0,
+      total: 0,
+      filtered: false,
+      restoredOffset: 0,
+      onTrackEvent: mockTrackEvent,
+    });
+
+    state.activeFilters = [{ category: 'lib', values: ['matplotlib'] }];
+    render(<PlotsPage />);
+    expect(mockUsePlotsScrolled).toHaveBeenLastCalledWith(
+      expect.objectContaining({ filtered: true })
+    );
   });
 
   it('renders filter string in document title for SEO when filters are active', () => {

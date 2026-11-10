@@ -4,7 +4,7 @@ import { AboutPage } from 'src/pages/AboutPage';
 import { fireEvent, render, screen } from 'src/test-utils';
 
 vi.mock('src/hooks', () => ({
-  useAnalytics: () => ({ trackPageview: vi.fn(), trackEvent: vi.fn() }),
+  useAnalytics: () => ({ trackEvent: vi.fn() }),
 }));
 
 describe('AboutPage', () => {

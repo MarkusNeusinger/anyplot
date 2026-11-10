@@ -1,14 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PalettePage } from 'src/pages/PalettePage';
-import { paths } from 'src/routes/paths';
 import { act, fireEvent, render, screen, within } from 'src/test-utils';
 
-const mockTrackPageview = vi.fn();
-
 vi.mock('src/hooks', () => ({
+  // The page's sections record their own events.
   useAnalytics: () => ({
-    trackPageview: mockTrackPageview,
+    trackEvent: vi.fn(),
   }),
   useTheme: () => ({
     isDark: false,
@@ -40,7 +38,6 @@ const CVD_OPTIMAL_LABELS = [
 describe('PalettePage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    mockTrackPageview.mockReset();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   });
 
@@ -48,13 +45,6 @@ describe('PalettePage', () => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
-  });
-
-  it('emits a pageview analytics event for paths.palette on mount', () => {
-    render(<PalettePage />);
-
-    expect(mockTrackPageview).toHaveBeenCalledTimes(1);
-    expect(mockTrackPageview).toHaveBeenCalledWith(paths.palette);
   });
 
   it('shows copied ✓ for 1,499 ms and restores the hex at 1,500 ms for both a palette swatch and a semantic anchor', async () => {

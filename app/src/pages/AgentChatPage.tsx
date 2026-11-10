@@ -6,7 +6,7 @@
  * the admin API (`/debug/agent/*`), else to the public API with its bot check. The only other
  * differences are the limits, which the server enforces per tier, and the fan-out to every
  * library; every admin extra sits behind one element, the admin menu (`AdminMenu`). The old
- * address `/debug/agent` only redirects here (`AgentChatRedirect`). The query follows the
+ * address `/debug/agent` only redirects here (`agentChatRedirect`). The query follows the
  * session: a library switch writes `library` and its `language`.
  *
  * One column, chat first, two steps, data first, in one terminal-style frame (`ChatFrame`,
@@ -151,7 +151,7 @@
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
@@ -328,7 +328,7 @@ interface AdminView {
 
 export function AgentChatPage() {
   const [params, setParams] = useSearchParams();
-  const { trackPageview, trackEvent } = useAnalytics();
+  const { trackEvent } = useAnalytics();
   const laneOpen = useAgentLaneOpen();
   const adminCheck = useAgentAdmin();
   const { admin } = adminCheck;
@@ -367,8 +367,12 @@ export function AgentChatPage() {
   const language = LIB_TO_LANG[library] ?? 'python';
   const valid = SPEC_PATTERN.test(spec) && (LIBRARIES as readonly string[]).includes(library);
 
-  // Declared before the open's effect below, so the switch is on before the page records anything.
-  useEffect(() => {
+  // A layout effect: the layout records this page's pageview in its own layout effect, which
+  // runs after this one, so the switch is on before anything is recorded; and its cleanup runs
+  // before the next page's, so that page counts again. An admin's browser is known at the first
+  // render (`useAgentAdmin` starts at `checking`, never at `none`), so no pageview slips out
+  // while the check is still out.
+  useLayoutEffect(() => {
     if (!muted) return;
     setAnalyticsMuted(true);
     return () => setAnalyticsMuted(false);
@@ -406,7 +410,6 @@ export function AgentChatPage() {
     openTracked.current = true;
     const source = params.get('source');
     if (!muted) {
-      trackPageview(paths.agent);
       trackEvent('agent_open', {
         library,
         source: source && OPEN_SOURCES.has(source) ? source : 'direct',
@@ -418,7 +421,7 @@ export function AgentChatPage() {
       next.delete('source');
       setParams(next, { replace: true });
     }
-  }, [allowed, valid, params, setParams, library, spec, trackEvent, trackPageview, muted]);
+  }, [allowed, valid, params, setParams, library, spec, trackEvent, muted]);
 
   if (!CONFIG.features.agentChat) return <NotFoundPage />;
   if (deciding) return <NoIndex />;

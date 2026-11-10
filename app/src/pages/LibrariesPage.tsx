@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -44,12 +44,8 @@ const FILTERS: { id: FrameworkFilter; label: string }[] = [
 export function LibrariesPage() {
   const navigate = useNavigate();
   const { librariesData } = useAppData();
-  const { trackPageview, trackEvent } = useAnalytics();
+  const { trackEvent } = useAnalytics();
   const [frameworkFilter, setFrameworkFilter] = useState<FrameworkFilter>('all');
-
-  useEffect(() => {
-    trackPageview(paths.libraries);
-  }, [trackPageview]);
 
   const byId = new Map(librariesData.map(lib => [lib.id, lib]));
 

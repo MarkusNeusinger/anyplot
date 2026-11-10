@@ -17,8 +17,7 @@ import { colors, semanticColors, typography } from 'src/theme';
  *  event fires without a 404 ever being shown. It is still the same signal —
  *  a URL naming content that no longer exists — and it is the case a library
  *  migration actually produces, so it belongs in the same event. */
-export type NotFoundSource =
-  'catch_all' | 'spec_missing' | 'impl_missing' | 'language_params' | 'route_error';
+export type NotFoundSource = 'catch_all' | 'spec_missing' | 'impl_missing' | 'route_error';
 
 interface NotFoundPageProps {
   source?: NotFoundSource;

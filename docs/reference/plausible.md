@@ -22,6 +22,59 @@ This document provides a comprehensive overview of Plausible Analytics implement
 
 **Implementation**: Query parameters converted to URL path segments for better analytics segmentation.
 
+### When a pageview is sent
+
+Since 2026-11-11 the layout sends the pageview of every page: `RootLayout`
+(`app/src/layouts/RootLayout.tsx`) calls `trackPageview()` in a layout effect
+on every navigation, and no page sends its own. The gallery is the one other
+sender. A filter change on `/plots` rewrites the address without a navigation,
+so `useUrlSync` records that page itself. The same address is never sent twice
+in a row, whichever of the two comes second.
+
+The timing is what Plausible's scroll depth depends on. The script closes the
+page being left when the next pageview arrives, and reports that page's depth
+as the deepest offset reached over the document height it last observed, which
+a ResizeObserver keeps current. Until 2026-11-11 each page sent its own
+pageview from an effect, 150 ms late, so the call arrived after the next page
+had rendered. The depth of the page being left was then divided by the height
+of the next page: too low before a longer page, too high before a shorter one.
+Measured with the live script on 2026-11-11, a landing page left at 47 % was
+sent as 30 %, and the gallery after 12,000 px as 1,176 %. A layout effect runs
+before the browser lays the next page out, so the depth is measured against
+the page it belongs to.
+
+Three things follow from that place in the commit:
+
+- **The scroll reset comes first.** The reset on a forward navigation is a
+  layout effect declared before the pageview's, because the script takes the
+  scroll offset at the pageview as the new page's first depth.
+- **A page's own layout effects come first too.** The gallery writes the
+  filters it restores from the last visit into the address there, so that
+  visit is one pageview, of the filtered page. The agent chat switches its
+  admin mute on there (see [Agent chat](#agent-chat)).
+- **An address that only redirects is no page.** `/{spec_id}/{language}` and
+  `/debug/agent` redirect in their route's loader
+  (`app/src/routes/redirects.ts`), so the router never renders them and they
+  record nothing. The page being left also stays on screen until the
+  destination is there.
+
+Every address that becomes a page records a pageview, including one the app
+can't serve: the 404 page is recorded under the path that was asked for, next
+to its `page_not_found` event (see [Diagnostics](#diagnostics)). Until
+2026-11-11 a 404 recorded no pageview, and a spec page recorded its pageview
+only once its data had loaded.
+
+### Scroll depth
+
+Plausible measures scroll depth itself, per pageview; the app sends no scroll
+event for it. The dashboard keeps one scroll goal, "Scroll 90% on /": a visitor
+saw the whole landing page.
+
+The gallery at `/plots` loads its results in batches while the visitor
+scrolls, so that page has no fixed height and its scroll depth says nothing.
+`plots_scrolled` reports the gallery instead (see
+[Feature usage](#feature-usage)).
+
 ### Multi-language URL strategy
 
 **Cutover date**: 2026-04-20
@@ -35,6 +88,8 @@ language slots between spec and library:
 - Cross-language hub: `/{spec_id}` (lists every implementation across
   all languages).
 - Language overview: `/{spec_id}/{language}` (e.g. `/scatter-basic/python`).
+  It redirects to the hub scoped to that language,
+  `/{spec_id}?language={language}`, and is recorded as that page.
 - Implementation detail: `/{spec_id}/{language}/{library}` (e.g.
   `/scatter-basic/python/matplotlib`).
 - Interactive view is no longer a separate route — the detail page toggles
@@ -51,14 +106,23 @@ Plausible but are no longer produced.
 
 ### Filter-based pageviews
 
-Filters are appended to the page's own path as `/{category}/{value}` pairs
-(`buildPlausibleUrl()` in `app/src/hooks/useAnalytics.ts`):
+Two pages have a query that names a different page: the gallery's filters and
+a spec hub's language scope. For those, the query is appended to the page's
+own path as `/{category}/{value}` pairs (`buildPlausibleUrl()` in
+`app/src/hooks/useAnalytics.ts`):
+
 ```
 https://anyplot.ai/{pathname}/{category}/{value}/{category}/{value}/...
 ```
 
+Every other page is recorded by its path alone, whatever its query. An
+implementation page stays one page with the carousel's `?language=` scope and
+with `?view=interactive`, and its language segment is recorded in lowercase.
+The agent chat stays `/agent` with the `?spec=&library=&language=` it opens
+with.
+
 The gallery lives at `/plots`, so its filter views are recorded under
-`/plots/...`; on spec routes the spec/language/library path comes first.
+`/plots/...`; on a spec hub the spec path comes first.
 Until PR #9625 (2026-07-10) the reserved prefix was stripped, so older data
 records the same gallery filters without `/plots` (`/lib/matplotlib`).
 
@@ -105,12 +169,14 @@ counts as a boundary because OR-filtered gallery views record
 | `/stats` | Platform statistics (library scores, coverage, tags, top implementations) |
 | `/map` | Network map of specs clustered by visual similarity |
 | `/debug` | Pipeline status dashboard (spec coverage, feedback, agent cases, ping); the agent cases section sends no event of its own |
-| `/agent` | The "Use with my data" agent chat (experimental, public since 2026-11-02), one page for visitors and admins since 2026-11-06; recorded without its query string, only in builds with `VITE_ENABLE_AGENT_CHAT=true`, and only for a visitor, so only while the public lane is open: an admin's use records nothing (see [Agent chat](#agent-chat)). `/debug/agent` only redirects here since 2026-11-06 and records nothing; until then it was the admin's chat page and recorded `/debug/agent` |
-| `/{spec_id}` | Cross-language spec hub (all implementations across all languages) |
-| `/{spec_id}/{language}` | Language overview (all libraries for that language) |
+| `/agent` | The "Use with my data" agent chat (experimental, public since 2026-11-02), one page for visitors and admins since 2026-11-06; recorded without its query string, and only for a visitor: an admin's use records nothing (see [Agent chat](#agent-chat)). Since 2026-11-11 a visitor's visit is recorded whatever the page shows, also while the public lane is closed or the query names no catalogue pair; until then only a visit that opened a session was. `agent_open` still counts only those. In a build without `VITE_ENABLE_AGENT_CHAT=true` the address is the 404 page. `/debug/agent` only redirects here since 2026-11-06 and records nothing; until then it was the admin's chat page and recorded `/debug/agent` |
+| `/{spec_id}` | Cross-language spec hub (all implementations across all languages); `/{spec_id}/language/{language}` when the carousel is scoped to one language |
+| `/{spec_id}/{language}` | Records nothing: it redirects to the hub scoped to that language, which is recorded as `/{spec_id}/language/{language}` |
 | `/{spec_id}/{language}/{library}` | Implementation detail (preview ↔ interactive toggle) |
+| any other path | The 404 page, under the path that was asked for (since 2026-11-11) |
 
-**Total pageview tracking**: Automated via `trackPageview()` in all pages
+**Total pageview tracking**: `RootLayout` sends every page's pageview (see
+[When a pageview is sent](#when-a-pageview-is-sent)).
 
 ## Custom events
 
@@ -150,7 +216,10 @@ visitor", and after an expired admin session — it records no pageview and no
 event: `AgentChatPage` mutes the analytics (`app/src/analytics/mute.ts`), which
 stops every `useAnalytics` call while the page is mounted, the site's own
 events on that page included, and unmutes them when it unmounts, before the
-next page records its pageview. Until 2026-11-06 the admin chat recorded the
+next page records its pageview. The mute is a layout effect, so it is on
+before the layout sends the page's pageview, and an admin's browser is known
+at the first render: it carries the admin hint, and the check that follows
+only picks the lane. Until 2026-11-06 the admin chat recorded the
 pageview `/debug/agent` and the same events as a visitor's.
 So every event below is a visitor's, and `agent_session_saved`, whose `.save()`
 only an admin has, no longer fires in production.
@@ -195,6 +264,7 @@ not only `anyplot.ai`. See [Agent usage telemetry](agent-telemetry.md).
 | `random_filter` | `category`, `value`, `method` | useFilterState.ts | User triggers random filter |
 | `filter_remove` | `category`, `value` | useFilterState.ts | User removes a filter. `.search_all()` in the filter search sends one per filter it removes. |
 | `grid_resize` | `size` | ToolbarActions.tsx | User toggles between normal/compact view |
+| `plots_scrolled` | `share`, `results`, `filtered` | usePlotsScrolled.ts (PlotsPage.tsx) | How far a visitor got through the gallery, once per visit to `/plots` (since 2026-11-11). Sent when the visit ends: the visitor leaves the page, or the tab goes away. A visit without scrolling sends none, and the offset the page restores from an earlier visit doesn't count, only a point below it. `share` is the deepest point as a share of the result list, in percent bands: `0-10`, `10-25`, `25-50`, `50-75`, `75-100`. It is the percentage the filter bar shows, which scales the loaded part up to the whole list. `results` is the size of that list: `1-24`, `25-99`, `100-999`, `1000+`. `filtered` is `true` or `false`. When the filters change during a visit, all three describe the list the deepest point was reached in, and the event is recorded under that list's page (`/plots/lib/matplotlib`). |
 | `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx | User opens or closes a tab |
 | `plot_rotate` | `spec` | SpecsListPage.tsx | User clicks image on specs page to rotate library |
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx | User opens interactive HTML view |
@@ -216,7 +286,7 @@ not only `anyplot.ai`. See [Agent usage telemetry](agent-telemetry.md).
 
 | Event | Properties | Source | Description |
 |-------|-----------|--------|-------------|
-| `page_not_found` | `path`, `source` | NotFoundPage.tsx, SpecPage.tsx | A visitor reached a URL the app cannot serve. `path` is `window.location.pathname`. `source` says which kind of miss it was: `catch_all` (the URL matches no route at all), `spec_missing` (the spec itself does not exist), `impl_missing` (the spec exists but not that library/language pair), `language_params` (a `/{spec}/{language}` URL arrived without both segments), `route_error` (the router returned a 404 response). |
+| `page_not_found` | `path`, `source` | NotFoundPage.tsx, SpecPage.tsx | A visitor reached a URL the app cannot serve. `path` is `window.location.pathname`. `source` says which kind of miss it was: `catch_all` (the URL matches no route at all), `spec_missing` (the spec itself does not exist), `impl_missing` (the spec exists but not that library/language pair), `route_error` (the router returned a 404 response). Until 2026-11-11 the list had a fifth value, `language_params`, for a `/{spec}/{language}` URL without both segments; the route can't match such a URL, so the value never fired. |
 
 Read `source` before `path`. A `catch_all` miss is usually a bad inbound link;
 `impl_missing` is content that used to exist and no longer does, which is the
@@ -226,6 +296,11 @@ One asymmetry to know about: `impl_missing` fires without a 404 page ever being
 shown. `SpecPage.tsx` redirects those visitors to the spec hub with a language
 filter, to preserve their intent — so the event is reported from there rather
 than from `NotFoundPage.tsx`. Every other source accompanies a rendered 404.
+
+Since 2026-11-11 the address of a miss also records a pageview, under the path
+that was asked for (see [When a pageview is sent](#when-a-pageview-is-sent)).
+An `impl_missing` visit therefore records two: the implementation page that is
+gone, then the hub it was sent to.
 
 The bot-facing side of the same URLs answers HTTP 404 from `api/routers/seo.py`,
 but crawlers never run JavaScript and `app/nginx.conf` short-circuits bot user
@@ -530,6 +605,9 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `to` | New mode after toggle (`system` / `light` / `dark`) | `theme_toggle` |
 | `mode` | Spec detail view mode (`preview` / `interactive`) | `view_mode_change` |
 | `theme` | Ambient *effective* theme attached to **every** pageview & event (`dark` / `light`) — resolved from the tri-state mode so OS-followers still split cleanly | all events (set in RootLayout via `setAnalyticsAmbientProps`) |
+| `share` | Deepest point of a gallery visit as a share of the result list, in percent bands (`0-10`, `10-25`, `25-50`, `50-75`, `75-100`) | `plots_scrolled` |
+| `results` | Size of the gallery's result list at that point (`1-24`, `25-99`, `100-999`, `1000+`) | `plots_scrolled` |
+| `filtered` | Whether that list was filtered (`true` / `false`) | `plots_scrolled` |
 | `filter_lib` | Library filter value (for og:image) | `og_image_view` |
 | `filter_spec` | Specification filter value (for og:image) | `og_image_view` |
 | `filter_plot` | Plot type filter value (for og:image) | `og_image_view` |
@@ -557,6 +635,8 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `random_filter` | Custom Event | Track random filter usage |
 | `filter_remove` | Custom Event | Track filter removal |
 | `grid_resize` | Custom Event | Track view preference |
+| `plots_scrolled` | Custom Event | Track how far visitors get through the gallery, by share of the result list |
+| Scroll 90% on / | Pageview (scroll depth) | Track visitors who saw the whole landing page. The only scroll goal: the 25 %, 50 %, and 75 % goals go once this timing is live |
 | `tab_toggle` | Custom Event | Track tab interactions |
 | `external_link` | Custom Event | Track outbound clicks |
 | `internal_link` | Custom Event | Track internal navigation links |
@@ -673,6 +753,7 @@ User lands on anyplot.ai
 | `random_filter` | `category`, `value`, `method` | useFilterState.ts |
 | `filter_remove` | `category`, `value` | useFilterState.ts |
 | `grid_resize` | `size` | ToolbarActions.tsx |
+| `plots_scrolled` | `share`, `results`, `filtered` | usePlotsScrolled.ts |
 | `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx |
 | `tag_click` | `param`, `value`, `source` | SpecTabs.tsx, StatsPage.tsx |
 | `plot_rotate` | `spec` | SpecsListPage.tsx |
@@ -848,9 +929,12 @@ public stats page.
 - **Analytics shield**: the `$is_bot` and `$is_headless_client` maps and both `location = /api/event` blocks in `app/nginx.conf`
 - **Analytics hook**: `app/src/hooks/useAnalytics.ts`
 - **Admin mute**: `app/src/analytics/mute.ts`
+- **Pageview sending**: the layout effect in `app/src/layouts/RootLayout.tsx` (every navigation) and `app/src/hooks/useUrlSync.ts` (a filter change on `/plots`)
 - **Pageview building**: `buildPlausibleUrl()` in useAnalytics.ts
+- **Redirects that record nothing**: `app/src/routes/redirects.ts`
+- **Gallery scroll event**: `app/src/hooks/usePlotsScrolled.ts`, with the percentage from `app/src/utils/galleryScroll.ts`
 - **Event tracking**: Passed via `onTrackEvent` prop throughout component tree
-- **Agent chat events**: `app/src/hooks/useAgentSession.ts` (parse, plot, guardrail), `app/src/pages/AgentChatPage.tsx` (pageview, open), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
+- **Agent chat events**: `app/src/hooks/useAgentSession.ts` (parse, plot, guardrail), `app/src/pages/AgentChatPage.tsx` (open, admin mute), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`
 - **og:image events**: `track_og_image()` in `api/analytics.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
 
@@ -875,8 +959,9 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 ## Implementation checklist
 
 - [x] Plausible script loaded
-- [x] Manual pageview tracking
+- [x] Manual pageview tracking, sent by the layout at the navigation (2026-11-11)
 - [x] Filter-based URL generation
+- [x] Gallery scroll event (`plots_scrolled` with `share`, `results`, `filtered`)
 - [x] Code copy events with journey tracking (`copy_code` + `page`)
 - [x] Download tracking (`download_image` + `page`)
 - [x] Search events (`search`, `search_no_results`)
@@ -902,10 +987,11 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [ ] Register all custom properties (see table above, including `action`, `param`, `source`, `platform`, `filter_*`, and for the agent chat `status`, `size_bucket`, `changes`, `version`, `repaired`, `reason`, `include_data`, `reaction`)
 - [ ] Create goals for key events
 - [ ] Delete the `LCP`, `CLS`, and `INP` goals, whose events stopped on 2026-11-08
+- [ ] After the pageview timing of 2026-11-11 is deployed: add the `plots_scrolled` goal and the properties `share`, `results`, and `filtered`; delete the "Scroll 25% on /", "Scroll 50% on /", and "Scroll 75% on /" goals and keep "Scroll 90% on /"
 - [ ] Set up funnels (optional)
 - [ ] Create custom dashboard widgets (optional)
 
 ---
 
-**Last Updated**: 2026-11-09
+**Last Updated**: 2026-11-11
 **Status**: Production-ready with full journey tracking, server-side og:image analytics, landing-page nav tracking, theme analytics, and the analytics shield against automation

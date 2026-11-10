@@ -29,7 +29,7 @@ export function agentChatPath(
 
 /**
  * The query parameters the chat page reads, which the redirect from the old
- * admin address `/debug/agent` keeps (`AgentChatRedirect`).
+ * admin address `/debug/agent` keeps (`agentChatRedirect`).
  */
 export const AGENT_CHAT_PARAMS = ['spec', 'library', 'language', 'source'] as const;
 

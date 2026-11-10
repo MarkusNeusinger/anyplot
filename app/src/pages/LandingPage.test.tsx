@@ -3,14 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
-const trackPageview = vi.fn();
 const navigate = vi.fn();
 
 vi.mock('src/hooks', async () => {
   const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
   return {
     ...actual,
-    useAnalytics: () => ({ trackEvent, trackPageview }),
+    useAnalytics: () => ({ trackEvent }),
     useAppData: () => ({
       specsData: [],
       librariesData: [{ id: 'matplotlib', name: 'matplotlib' }],
@@ -62,13 +61,7 @@ import { LandingPage } from 'src/pages/LandingPage';
 describe('LandingPage', () => {
   beforeEach(() => {
     trackEvent.mockClear();
-    trackPageview.mockClear();
     navigate.mockClear();
-  });
-
-  it('fires a pageview for / on mount', () => {
-    render(<LandingPage />);
-    expect(trackPageview).toHaveBeenCalledWith('/');
   });
 
   it('tracks library card clicks and navigates', async () => {

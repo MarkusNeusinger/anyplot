@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom';
 
@@ -28,8 +28,8 @@ const containerSx = {
  * screens need all the vertical room the viewport can give).
  */
 export function RootLayout() {
-  const { trackEvent } = useAnalytics();
-  const { pathname, hash } = useLocation();
+  const { trackEvent, trackPageview } = useAnalytics();
+  const { pathname, search, hash } = useLocation();
   const navigationType = useNavigationType();
   const { effective } = useTheme();
   const mastheadSticks = pathname !== paths.plots;
@@ -37,8 +37,8 @@ export function RootLayout() {
   // without one; on a phone the site's button covered the composer's buttons and the replies.
   const siteFeedback = pathname !== paths.agent;
 
-  // Set synchronously during render so the first pageview from a child page's
-  // useEffect (which runs before the parent's useEffect) carries the theme prop.
+  // Set synchronously during render so the pageview below and a child page's
+  // first event carry the theme prop.
   // setAnalyticsAmbientProps merges into module state, so re-renders are safe.
   // The ambient prop tracks the *effective* theme so existing Plausible
   // dark/light breakdowns keep working regardless of mode (system/light/dark).
@@ -50,11 +50,25 @@ export function RootLayout() {
   // so browser back/forward keeps native scroll restoration; skip when a
   // hash anchor is present so in-page anchors still work. Pages with their
   // own saved-scroll restore in a later effect can still override this.
-  useEffect(() => {
+  // A layout effect, and declared before the pageview's: the script takes the
+  // scroll position at the pageview as the new page's first depth.
+  useLayoutEffect(() => {
     if (hash) return;
     if (navigationType === 'POP') return;
     window.scrollTo(0, 0);
   }, [pathname, hash, navigationType]);
+
+  // The pageview of every page, sent at the navigation itself. Plausible's
+  // script closes the page being left with this call: it reports that page's
+  // scroll depth as the deepest offset reached over the document height it
+  // last observed, and its ResizeObserver hands it the next page's height at
+  // the first layout. A layout effect runs before that layout, so the depth
+  // is still measured against the page it belongs to. It also runs after the
+  // children's layout effects, so the address is the one the page settled on
+  // (`useUrlSync`) and the chat's admin mute is already on (`AgentChatPage`).
+  useLayoutEffect(() => {
+    trackPageview();
+  }, [pathname, search, trackPageview]);
 
   // Always reset horizontal scroll on route change. If a previous page leaked
   // page-level horizontal scroll (e.g. a wide table on mobile), the offset

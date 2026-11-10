@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
@@ -23,11 +23,7 @@ export function LandingPage() {
   const potd = usePlotOfTheDay();
   const featured = useFeaturedSpecs(5);
   const navigate = useNavigate();
-  const { trackEvent, trackPageview } = useAnalytics();
-
-  useEffect(() => {
-    trackPageview('/');
-  }, [trackPageview]);
+  const { trackEvent } = useAnalytics();
 
   const handleLibraryClick = (lib: string) => {
     trackEvent('nav_click', { source: 'library_card', target: paths.plots, value: lib });

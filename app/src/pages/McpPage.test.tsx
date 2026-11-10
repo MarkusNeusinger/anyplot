@@ -1,14 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { McpPage } from 'src/pages/McpPage';
 import { render, screen } from 'src/test-utils';
-
-vi.mock('src/hooks', () => ({
-  useAnalytics: () => ({
-    trackPageview: vi.fn(),
-    trackEvent: vi.fn(),
-  }),
-}));
 
 describe('McpPage', () => {
   it('renders all section headings', () => {

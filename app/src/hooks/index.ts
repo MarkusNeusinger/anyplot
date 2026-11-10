@@ -22,6 +22,7 @@ export type {
 } from 'src/hooks/useForceGraphSimulation';
 export { useLatestRelease } from 'src/hooks/useLatestRelease';
 export { useFooterLift } from 'src/hooks/useFooterLift';
+export { usePlotsScrolled } from 'src/hooks/usePlotsScrolled';
 export * from 'src/hooks/useFeaturedSpecs';
 export * from 'src/hooks/usePlotOfTheDay';
 export * from 'src/hooks/useTypewriter';

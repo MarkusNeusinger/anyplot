@@ -5,7 +5,6 @@ import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { DEBUG_API_URL, LIBRARIES } from 'src/constants';
-import { useAnalytics } from 'src/hooks';
 import { fetchWithAuth } from 'src/lib/api';
 import { AgentCasesSection } from 'src/sections/debug/AgentCasesSection';
 import { AgentUsageSection } from 'src/sections/debug/AgentUsageSection';
@@ -110,11 +109,6 @@ const PING_HISTORY = 30;
 // show the agent chat's `.use_my_data()` entry; a refusal clears it.
 
 export function DebugPage() {
-  const { trackPageview } = useAnalytics();
-  useEffect(() => {
-    trackPageview('/debug');
-  }, [trackPageview]);
-
   const [data, setData] = useState<DebugStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

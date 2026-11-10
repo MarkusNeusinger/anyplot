@@ -50,7 +50,7 @@ export function SpecPage() {
   const { specId, language: urlLanguageRaw, library: urlLibrary } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { trackPageview, trackEvent } = useAnalytics();
+  const { trackEvent } = useAnalytics();
   const { librariesData } = useAppData();
 
   // Language ids are canonical lowercase (`python`/`r`) wherever they're
@@ -343,20 +343,6 @@ export function SpecPage() {
     });
     return `${GITHUB_URL}/issues/new?${params.toString()}`;
   }, [specId]);
-
-  // Track page view. Hub mode calls trackPageview() without an override so
-  // buildPlausibleUrl() picks up ?language= from window.location and converts
-  // it to the path-segment form (e.g. /{spec}/language/python). The URL
-  // override path used for detail mode cannot carry query strings — see
-  // useAnalytics.ts sendPageview() validation regex.
-  useEffect(() => {
-    if (!specData || !specId) return;
-    if (mode === 'hub') {
-      trackPageview();
-    } else if (mode === 'detail' && selectedLibrary) {
-      trackPageview(specPath(specId, urlLanguage, selectedLibrary));
-    }
-  }, [specData, mode, specId, urlLanguage, selectedLibrary, languageFilter, trackPageview]);
 
   // Keyboard shortcuts: left/right arrows switch libraries in detail mode
   useEffect(() => {

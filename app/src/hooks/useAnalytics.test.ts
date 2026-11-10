@@ -2,20 +2,24 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setAnalyticsMuted } from 'src/analytics/mute';
-import { setAnalyticsAmbientProps, useAnalytics } from 'src/hooks/useAnalytics';
+import {
+  buildPlausibleUrl,
+  forgetLastPageview,
+  setAnalyticsAmbientProps,
+  useAnalytics,
+} from 'src/hooks/useAnalytics';
 
 describe('useAnalytics', () => {
   const originalLocation = window.location;
 
   beforeEach(() => {
-    vi.useFakeTimers();
     window.plausible = vi.fn();
-    // Reset module-level ambient props between tests so each starts clean.
+    // Reset module-level state between tests so each starts clean.
     setAnalyticsAmbientProps({ theme: '' });
+    forgetLastPageview();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     delete window.plausible;
     // Restore location
     Object.defineProperty(window, 'location', {
@@ -25,17 +29,22 @@ describe('useAnalytics', () => {
     });
   });
 
-  function setHostname(hostname: string) {
+  /** The browser at `pathname` + `search` on a host: production unless told otherwise. */
+  function at(pathname: string, search = '', hostname = 'anyplot.ai') {
     Object.defineProperty(window, 'location', {
-      value: { ...originalLocation, hostname, search: '' },
+      value: { ...originalLocation, hostname, pathname, search },
       writable: true,
       configurable: true,
     });
   }
 
+  function pageviews() {
+    return vi.mocked(window.plausible!).mock.calls.filter(([event]) => event === 'pageview');
+  }
+
   describe('trackEvent', () => {
     it('does not call plausible in non-production', () => {
-      setHostname('localhost');
+      at('/', '', 'localhost');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
@@ -46,7 +55,7 @@ describe('useAnalytics', () => {
     });
 
     it('calls plausible with event name and props in production', () => {
-      setHostname('anyplot.ai');
+      at('/');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
@@ -59,7 +68,7 @@ describe('useAnalytics', () => {
     });
 
     it('calls plausible without props when none provided', () => {
-      setHostname('anyplot.ai');
+      at('/');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
@@ -70,7 +79,7 @@ describe('useAnalytics', () => {
     });
 
     it('strips undefined values from props', () => {
-      setHostname('anyplot.ai');
+      at('/');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
@@ -84,178 +93,143 @@ describe('useAnalytics', () => {
         props: { destination: 'github' },
       });
     });
+
+    it('names the page an event belongs to when it is sent after the visitor left it', () => {
+      // `plots_scrolled` goes out when the gallery unmounts: the address is the next page's by then.
+      at('/scatter-basic/python/matplotlib');
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackEvent(
+          'plots_scrolled',
+          { share: '25-50' },
+          'https://anyplot.ai/plots/lib/matplotlib'
+        );
+        result.current.trackEvent('suggest_spec', undefined, 'https://anyplot.ai/specs');
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('plots_scrolled', {
+        props: { share: '25-50' },
+        url: 'https://anyplot.ai/plots/lib/matplotlib',
+      });
+      expect(window.plausible).toHaveBeenCalledWith('suggest_spec', {
+        url: 'https://anyplot.ai/specs',
+      });
+    });
   });
 
   describe('trackPageview', () => {
     it('does not call plausible in non-production', () => {
-      setHostname('localhost');
+      at('/plots', '', 'localhost');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
         result.current.trackPageview();
-        vi.advanceTimersByTime(200);
       });
 
       expect(window.plausible).not.toHaveBeenCalled();
     });
 
-    it('sends pageview with URL override in production', () => {
-      setHostname('anyplot.ai');
+    it('sends the pageview at once: the call closes the page being left while it is still there', () => {
+      // A delay let the next page render first, and Plausible's script then measured the page
+      // being left against the next page's height (`RootLayout`). No timer may come back.
+      at('/specs');
       const { result } = renderHook(() => useAnalytics());
 
-      act(() => {
-        result.current.trackPageview();
-        vi.advanceTimersByTime(200);
-      });
+      result.current.trackPageview();
 
       expect(window.plausible).toHaveBeenCalledWith('pageview', {
-        url: expect.stringContaining('anyplot.ai'),
+        url: 'https://anyplot.ai/specs',
       });
     });
 
-    it('deduplicates identical consecutive pageviews', () => {
-      setHostname('anyplot.ai');
-      Object.defineProperty(window, 'location', {
-        value: { ...originalLocation, hostname: 'anyplot.ai', search: '?lib=matplotlib' },
-        writable: true,
-        configurable: true,
-      });
-      const { result } = renderHook(() => useAnalytics());
+    it('sends each address once, whichever caller comes second', () => {
+      // The layout records the navigation and the gallery its filter changes, through two
+      // instances of the hook: one must not repeat the other.
+      at('/plots', '?lib=matplotlib');
+      const layout = renderHook(() => useAnalytics());
+      const gallery = renderHook(() => useAnalytics());
 
-      act(() => {
-        result.current.trackPageview();
-        vi.advanceTimersByTime(200);
-      });
+      layout.result.current.trackPageview();
+      gallery.result.current.trackPageview();
+      layout.result.current.trackPageview();
+      expect(pageviews()).toHaveLength(1);
 
-      act(() => {
-        result.current.trackPageview();
-        vi.advanceTimersByTime(200);
-      });
-
-      // plausible should be called only once for identical URLs
-      const pageviewCalls = vi
-        .mocked(window.plausible!)
-        .mock.calls.filter(([event]) => event === 'pageview');
-      expect(pageviewCalls).toHaveLength(1);
+      // A page visited again after another one is a new pageview.
+      at('/plots', '?lib=seaborn');
+      gallery.result.current.trackPageview();
+      at('/plots', '?lib=matplotlib');
+      gallery.result.current.trackPageview();
+      expect(pageviews().map(([, options]) => options?.url)).toEqual([
+        'https://anyplot.ai/plots/lib/matplotlib',
+        'https://anyplot.ai/plots/lib/seaborn',
+        'https://anyplot.ai/plots/lib/matplotlib',
+      ]);
     });
+  });
 
-    it('is debounced by 150ms', () => {
-      setHostname('anyplot.ai');
-      const { result } = renderHook(() => useAnalytics());
-
-      act(() => {
-        result.current.trackPageview();
-      });
-
-      // Not yet fired
-      expect(window.plausible).not.toHaveBeenCalled();
-
-      act(() => {
-        vi.advanceTimersByTime(150);
-      });
-
-      expect(window.plausible).toHaveBeenCalled();
-    });
-
-    it('rejects invalid URL overrides', () => {
-      setHostname('anyplot.ai');
-      const { result } = renderHook(() => useAnalytics());
-
-      // The debounced sendPageview with invalid URL — use the underlying function
-      // trackPageview is debounced, so we access sendPageview indirectly
-      act(() => {
-        result.current.trackPageview();
-        vi.advanceTimersByTime(200);
-      });
-
-      // The call should have gone through with buildPlausibleUrl(), not the invalid URL
-      expect(window.plausible).toHaveBeenCalled();
-    });
-
-    it('keeps the /plots prefix when converting ?lang=python to path segments', () => {
-      // `/plots` is a real page — the prefix must survive so Plausible
-      // attributes the pageview to /plots, not to "/". (Dropping the
-      // reserved prefix made the site's #2 page invisible in analytics.)
-      Object.defineProperty(window, 'location', {
-        value: {
-          ...originalLocation,
-          hostname: 'anyplot.ai',
-          pathname: '/plots',
-          search: '?lang=python',
-        },
-        writable: true,
-        configurable: true,
-      });
-      const { result } = renderHook(() => useAnalytics());
-
-      act(() => {
-        result.current.trackPageview();
-        vi.advanceTimersByTime(200);
-      });
-
-      expect(window.plausible).toHaveBeenCalledWith('pageview', {
-        url: 'https://anyplot.ai/plots/lang/python',
-      });
-    });
-
-    it('records a filterless /plots visit as /plots, not as the root page', () => {
-      Object.defineProperty(window, 'location', {
-        value: {
-          ...originalLocation,
-          hostname: 'anyplot.ai',
-          pathname: '/plots',
-          search: '',
-        },
-        writable: true,
-        configurable: true,
-      });
-      const { result } = renderHook(() => useAnalytics());
-
-      act(() => {
-        result.current.trackPageview();
-        vi.advanceTimersByTime(200);
-      });
-
-      expect(window.plausible).toHaveBeenCalledWith('pageview', {
-        url: 'https://anyplot.ai/plots',
-      });
-    });
-
-    it('converts ?language=python on a spec hub to a /{spec}/language/python path segment', () => {
-      Object.defineProperty(window, 'location', {
-        value: {
-          ...originalLocation,
-          hostname: 'anyplot.ai',
-          pathname: '/biplot-pca',
-          search: '?language=python',
-        },
-        writable: true,
-        configurable: true,
-      });
-      const { result } = renderHook(() => useAnalytics());
-
-      act(() => {
-        result.current.trackPageview();
-        vi.advanceTimersByTime(200);
-      });
-
-      expect(window.plausible).toHaveBeenCalledWith('pageview', {
-        url: 'https://anyplot.ai/biplot-pca/language/python',
-      });
+  describe('buildPlausibleUrl', () => {
+    it.each([
+      // Every page is its own path.
+      ['/', '', 'https://anyplot.ai/'],
+      ['/legal', '', 'https://anyplot.ai/legal'],
+      ['/plots/', '', 'https://anyplot.ai/plots'],
+      // `/plots` is a real page — the prefix must survive so Plausible attributes the pageview
+      // to /plots, not to "/". (Dropping the reserved prefix made the site's #2 page invisible.)
+      ['/plots', '?lang=python', 'https://anyplot.ai/plots/lang/python'],
+      [
+        '/plots',
+        '?lib=matplotlib&plot=scatter',
+        'https://anyplot.ai/plots/lib/matplotlib/plot/scatter',
+      ],
+      ['/plots', '?lib=matplotlib,seaborn', 'https://anyplot.ai/plots/lib/matplotlib,seaborn'],
+      [
+        '/plots',
+        '?lib=matplotlib&lib=seaborn',
+        'https://anyplot.ai/plots/lib/matplotlib/lib/seaborn',
+      ],
+      // A query that names no filter is no page: the search pill's `?focus=search`.
+      ['/plots', '?focus=search', 'https://anyplot.ai/plots'],
+      // The spec hub and its language scope.
+      ['/biplot-pca', '', 'https://anyplot.ai/biplot-pca'],
+      ['/biplot-pca', '?language=python', 'https://anyplot.ai/biplot-pca/language/python'],
+      // An implementation page is its path alone: the carousel's language scope and the
+      // interactive view are the same page, and so is a language in another case.
+      [
+        '/scatter-basic/python/matplotlib',
+        '',
+        'https://anyplot.ai/scatter-basic/python/matplotlib',
+      ],
+      [
+        '/scatter-basic/python/matplotlib',
+        '?language=python&view=interactive',
+        'https://anyplot.ai/scatter-basic/python/matplotlib',
+      ],
+      [
+        '/scatter-basic/Python/matplotlib',
+        '',
+        'https://anyplot.ai/scatter-basic/python/matplotlib',
+      ],
+      // The chat's query names the pair it opened with, and two of its names are filter names
+      // too (`spec`, `language`): still one page.
+      [
+        '/agent',
+        '?spec=scatter-basic&library=matplotlib&language=python',
+        'https://anyplot.ai/agent',
+      ],
+      // Every other reserved page ignores its query as well.
+      ['/stats', '?lib=matplotlib', 'https://anyplot.ai/stats'],
+      // An address no route serves is recorded as it was asked for (the 404 page).
+      ['/no/such/page/here', '?lib=matplotlib', 'https://anyplot.ai/no/such/page/here'],
+    ])('records %s%s as %s', (pathname, search, url) => {
+      at(pathname, search);
+      expect(buildPlausibleUrl()).toBe(url);
     });
   });
 
   describe('ambient props', () => {
-    function setHostname(hostname: string) {
-      Object.defineProperty(window, 'location', {
-        value: { ...originalLocation, hostname, search: '' },
-        writable: true,
-        configurable: true,
-      });
-    }
-
     it('attaches ambient props to custom events', () => {
-      setHostname('anyplot.ai');
+      at('/');
       setAnalyticsAmbientProps({ theme: 'dark' });
       const { result } = renderHook(() => useAnalytics());
 
@@ -269,7 +243,7 @@ describe('useAnalytics', () => {
     });
 
     it('attaches ambient props to events fired without explicit props', () => {
-      setHostname('anyplot.ai');
+      at('/');
       setAnalyticsAmbientProps({ theme: 'light' });
       const { result } = renderHook(() => useAnalytics());
 
@@ -283,13 +257,12 @@ describe('useAnalytics', () => {
     });
 
     it('attaches ambient props to pageviews', () => {
-      setHostname('anyplot.ai');
+      at('/specs');
       setAnalyticsAmbientProps({ theme: 'dark' });
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
-        result.current.trackPageview('/specs');
-        vi.advanceTimersByTime(200);
+        result.current.trackPageview();
       });
 
       expect(window.plausible).toHaveBeenCalledWith('pageview', {
@@ -299,12 +272,11 @@ describe('useAnalytics', () => {
     });
 
     it('omits the props key when no ambient props are set', () => {
-      setHostname('anyplot.ai');
+      at('/about');
       const { result } = renderHook(() => useAnalytics());
 
       act(() => {
-        result.current.trackPageview('/about');
-        vi.advanceTimersByTime(200);
+        result.current.trackPageview();
       });
 
       expect(window.plausible).toHaveBeenCalledWith('pageview', {
@@ -313,7 +285,7 @@ describe('useAnalytics', () => {
     });
 
     it('event-level props override ambient values for the same key', () => {
-      setHostname('anyplot.ai');
+      at('/');
       setAnalyticsAmbientProps({ theme: 'dark' });
       const { result } = renderHook(() => useAnalytics());
 
@@ -327,7 +299,7 @@ describe('useAnalytics', () => {
     });
 
     it('clears a key when set to empty string', () => {
-      setHostname('anyplot.ai');
+      at('/');
       setAnalyticsAmbientProps({ theme: 'dark' });
       setAnalyticsAmbientProps({ theme: '' });
       const { result } = renderHook(() => useAnalytics());
@@ -345,27 +317,38 @@ describe('useAnalytics', () => {
     afterEach(() => setAnalyticsMuted(false));
 
     it('sends no event and no pageview while muted, and both again after', () => {
-      setHostname('anyplot.ai');
+      at('/agent');
       const { result } = renderHook(() => useAnalytics());
       setAnalyticsMuted(true);
 
       act(() => {
         result.current.trackEvent('agent_data_parsed', { format: 'csv' });
-        result.current.trackPageview('/agent');
-        vi.advanceTimersByTime(200);
+        result.current.trackPageview();
       });
       expect(window.plausible).not.toHaveBeenCalled();
 
       setAnalyticsMuted(false);
+      at('/plots');
       act(() => {
         result.current.trackEvent('nav_click');
-        result.current.trackPageview('/plots');
-        vi.advanceTimersByTime(200);
+        result.current.trackPageview();
       });
       expect(window.plausible).toHaveBeenCalledWith('nav_click', undefined);
       expect(window.plausible).toHaveBeenCalledWith('pageview', {
         url: 'https://anyplot.ai/plots',
       });
+    });
+
+    it('does not remember a pageview it never sent: the page counts once the mute is off', () => {
+      at('/agent');
+      const { result } = renderHook(() => useAnalytics());
+      setAnalyticsMuted(true);
+      result.current.trackPageview();
+      setAnalyticsMuted(false);
+
+      result.current.trackPageview();
+
+      expect(pageviews()).toHaveLength(1);
     });
   });
 });

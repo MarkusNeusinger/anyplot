@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material/styles';
 
+import { analyticsMuted } from 'src/analytics/mute';
 import { resetAgentLaneProbe } from 'src/hooks/useAgentLaneOpen';
 import { AgentChatPage, HIGHCHARTS_NOTE } from 'src/pages/AgentChatPage';
 import { EXPERIMENTAL_DETAILS, EXPERIMENTAL_LINE } from 'src/sections/agent-chat/lane';
@@ -30,7 +31,7 @@ vi.mock('src/global-config', async importOriginal => {
   };
 });
 
-const analytics = vi.hoisted(() => ({ trackEvent: vi.fn(), trackPageview: vi.fn() }));
+const analytics = vi.hoisted(() => ({ trackEvent: vi.fn() }));
 vi.mock('src/hooks/useAnalytics', () => ({ useAnalytics: () => analytics }));
 
 const json = (status: number, body: unknown) =>
@@ -101,7 +102,6 @@ beforeEach(() => {
   resetAgentLaneProbe();
   laneOpen = true;
   analytics.trackEvent.mockClear();
-  analytics.trackPageview.mockClear();
   stubFetch();
 });
 
@@ -127,7 +127,8 @@ describe('AgentChatPage on the public lane', () => {
     // No admin menu, and nothing of it, for a visitor.
     expect(screen.queryByTestId('admin-menu')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
-    expect(analytics.trackPageview).toHaveBeenCalledWith('/agent');
+    // A visitor's visit counts: the layout's pageview is not muted, and the open is recorded.
+    expect(analyticsMuted()).toBe(false);
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
       library: 'matplotlib',
       source: 'direct',
@@ -175,8 +176,8 @@ describe('AgentChatPage on the public lane', () => {
     // The public lane has no `/budget`: the visitor's view has no meters and asks none.
     expect(within(menu).queryByTestId('admin-meters')).not.toBeInTheDocument();
     expect(calls.some(call => call.url.pathname.endsWith('/budget'))).toBe(false);
-    // The owner's persona tests are no visitor's use.
-    expect(analytics.trackPageview).not.toHaveBeenCalled();
+    // The owner's persona tests are no visitor's use: no pageview from the layout, no open.
+    expect(analyticsMuted()).toBe(true);
     expect(analytics.trackEvent).not.toHaveBeenCalledWith('agent_open', expect.anything());
   });
 
