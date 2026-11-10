@@ -597,6 +597,11 @@ jobs:
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
           STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
 
+          # The render.sha256 of the code before the repair goes before the new
+          # renders arrive, so it can never sit beside them; the repaired
+          # file's is written last.
+          gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
+
           # Upload both theme PNGs + their responsive variants
           if [ -f "$IMPL_DIR/plot-light.png" ] && [ -f "$IMPL_DIR/plot-dark.png" ]; then
             gsutil -m -h "Cache-Control:public, max-age=604800" cp \
@@ -616,13 +621,23 @@ jobs:
 
           # render.sha256 of the repaired file ("Check the repair's push" made
           # sure it is the pushed one), as impl-generate stages it: from this
-          # workflow's ref, never promoted, never fatal, a stale one goes.
+          # workflow's ref, never promoted, never fatal, three upload attempts.
           TOOLS="$RUNNER_TEMP/render-tools"
           mkdir -p "$TOOLS"
+          STAGED_HASH=false
           if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
              && git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$TOOLS/regen_gate.py" \
-             && python3 "$TOOLS/render_hash.py" write --source "$IMPL_DIR/${LIBRARY}${EXT}" --out "$RUNNER_TEMP/render.sha256" \
-             && gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
+             && python3 "$TOOLS/render_hash.py" write --source "$IMPL_DIR/${LIBRARY}${EXT}" --out "$RUNNER_TEMP/render.sha256"; then
+            for attempt in 1 2 3; do
+              if gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
+                STAGED_HASH=true
+                break
+              fi
+              echo "::warning::render.sha256 upload failed (attempt ${attempt}/3)"
+              if [ "$attempt" -lt 3 ]; then sleep $((attempt * 5)); fi
+            done
+          fi
+          if [ "$STAGED_HASH" = true ]; then
             echo "::notice::Staged render.sha256"
           else
             echo "::warning::render.sha256 not staged; impl-review reports the render hash as missing"

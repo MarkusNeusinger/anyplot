@@ -135,6 +135,7 @@ impl-generate.yml
        v
 impl-review.yml
   |-- Checks the staged render.sha256 against the PR head (warn-only)
+  |-- Checks the file's static contract: title, theme, save target, colours (record-only)
   |-- Python: adaptability check of the PR's file and its predecessor (record-only)
   |-- AI evaluates code + image
   |-- Posts review comment with score
@@ -193,6 +194,8 @@ A failed repair gate takes the ordinary crash path ("Handle repair failure"): `a
 
 The render hash only warns. `impl-generate.yml` and `impl-repair.yml` stage `render.sha256` beside the PNGs: the sha256 of the implementation the renders came from, with its `Quality:` header line reset to `pending` (`automation/scripts/render_hash.py`, which applies `regen_gate.reset_header_score`, the rewrite `sanitize-source --pending` makes). The generator's own header score and the pipeline's reset to `pending` therefore never change it. impl-generate hashes the file as the generator left it in the workspace, before the checkout of the pushed branch; impl-repair hashes the file its push gate just checked. The object isn't named `plot-*`, so neither the review's download nor the promotion copies it. Like every object in the bucket it's publicly readable while it's staged; it's the hash of code that's public anyway.
 
+Both upload steps remove an earlier `render.sha256` before the new renders arrive and write the new one last, with three attempts. A hash of other code therefore never sits beside this run's renders, even when the write fails; the review then reports the hash as `missing`. The review's download of the hash gets three attempts too, so one failed read doesn't turn into `unreadable`.
+
 Both workflows also write a `**Render freshness:**` line to the job summary, `fresh` or `stale` with the PNGs it names, and a `render_freshness status=stale` warning when a PNG is older than the implementation file. A stale render was made before the file was last written; the check compares modification times, so the bytes may or may not have changed. The generator and the repair format the file after they render it, so the line records how often a write follows the render. It doesn't fail the run, and impl-generate leaves it out when the workspace holds no render.
 
 `impl-review.yml` runs "Check the render hash (warn-only)" right after it downloads the renders. It compares the staged hash with the file at the PR head and reports one of four results in the job summary:
@@ -209,6 +212,20 @@ The comment starts with `<!-- render-hash:v1 status=… head=… -->`, and a PR 
 `scripts/migrate_render_and_upload.py`, the manual re-render that promotes straight from staging, copies only the `plot-*` objects, as `impl-merge.yml` does, so a staged `render.sha256` or `adapt/` record never reaches production.
 
 The review's own header commit rewrites the whole generated header (title, library version, date), not only the score. A re-review of the same staging after that commit, such as a rescue re-dispatch, can therefore report `mismatch` although the code didn't change. A repair renders after that commit, so its hash already covers the rewritten header.
+
+#### Contract check (record-only)
+
+The generator prompt mandates a few things that show in the source without running it. `impl-review.yml` runs "Contract check (record-only)" right after the canvas gate, for every language. The step runs `automation/scripts/contract_check.py`, the copy from the workflow's own ref, on the implementation at the PR head and, when `main` holds the file, on its predecessor.
+
+| Rule | The file breaks it when |
+|---|---|
+| `title` | The code lacks the title tail `{language} · {library} · anyplot.ai`, or doesn't name the spec id outside the header. |
+| `theme` | The code never reads `ANYPLOT_THEME`. A JavaScript file reads `ANYPLOT_TOKENS` instead. |
+| `save` | The code doesn't write `plot-{theme}.png`, or still writes a bare `plot.png`. JavaScript is exempt, because the render harness saves. |
+| `legacy-colour` | The code holds one of the legacy brand hexes that `prompts/quality-criteria.md` lists under VQ-07. |
+| `colormap` | A named library colormap, such as `viridis` or `Blues`, sits in a colormap position. Only the two Imprint colormaps are allowed. |
+
+Comments and the generated header never count. The step writes a `**Contract check (record-only):**` line to the job summary: `clean`, or the rules the file breaks, and on a regeneration which of them only the new version breaks. It also prints a `contract_check` notice with the same fields. Nothing reads the result yet: the step has no `id`, it never fails the job, and the reviewer never sees its output. On `main` at 3222442c3, 919 of 4,863 files break `title`, 143 break `colormap`, and one file breaks each of the other three, so the rules that later become defect lines will be chosen from the nightly records.
 
 #### Promotion to production
 

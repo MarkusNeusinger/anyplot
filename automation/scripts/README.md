@@ -217,6 +217,15 @@ the workflow's ref); `check` compares it with the file at the PR head
 `mismatch`, `missing`, or `unreadable`. It never fails the review. See
 [Renders tied to their code](../../docs/workflows/overview.md#renders-tied-to-their-code).
 
+### `contract_check.py`
+Checks the static contract of one implementation file (stdlib only): the
+mandated title tail, the theme read, the themed save target, no legacy brand
+colour, and no named library colormap. `check` compares the file at the PR
+head with its predecessor from `main`, prints a `contract_check` notice, and
+writes a job-summary line (`impl-review.yml`, "Contract check (record-only)",
+from a copy at the workflow's ref). It always exits 0. See
+[Contract check](../../docs/workflows/overview.md#contract-check-record-only).
+
 ### `spec_characteristics_lint.py`
 Lint for the closing `## What a good version looks like` section of
 `plots/*/specification.md`. Standard library only; it imports the parser from

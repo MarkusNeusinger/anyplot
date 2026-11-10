@@ -41,23 +41,31 @@ SHELL_IDS = ["bash-e", "pipefail"]
 CODE = '""" anyplot.ai\nscatter-basic: Basic Scatter Plot\nQuality: {score} | Created: 2026-11-09\n"""\n\nx = {x}\n'
 
 # A bucket in $FAKE_GCS. `cp gs://… LOCAL` fails like gsutil on a missing
-# object, or with a 503 when GSUTIL_FAIL=1; `cp LOCAL gs://…/render.sha256`
-# stores the file; every other `cp` (the renders) is accepted and dropped;
-# `rm` deletes. Every call goes to $GSUTIL_LOG, one line each.
+# object, or with a 503 when GSUTIL_FAIL=1 or for the first
+# $GSUTIL_FAIL_DOWNLOADS downloads; `cp LOCAL gs://…/render.sha256` stores the
+# file, after failing the first $GSUTIL_FAIL_HASH_UPLOADS times; every other
+# `cp` (the renders) is accepted and dropped; `rm` deletes. Every call goes to
+# $GSUTIL_LOG, one line each.
 FAKE_GSUTIL = r"""#!/bin/bash
 printf '%s\n' "$*" >> "$GSUTIL_LOG"
 while [ $# -gt 0 ]; do
   case "$1" in -m) shift ;; -h) shift 2 ;; *) break ;; esac
 done
+nth() { n=$(( $(cat "$GSUTIL_LOG.$1" 2>/dev/null || echo 0) + 1 )); echo "$n" > "$GSUTIL_LOG.$1"; echo "$n"; }
 cmd="$1"; shift
 case "$cmd" in
   cp)
     dst="${@: -1}"
     if [[ "$1" == gs://* ]]; then
-      [ "${GSUTIL_FAIL:-0}" = "1" ] && { echo "ServiceException: 503 Backend Error" >&2; exit 1; }
+      if [ "${GSUTIL_FAIL:-0}" = "1" ] || [ "$(nth downloads)" -le "${GSUTIL_FAIL_DOWNLOADS:-0}" ]; then
+        echo "ServiceException: 503 Backend Error" >&2; exit 1
+      fi
       [ -f "$FAKE_GCS/${1#gs://}" ] || { echo "CommandException: No URLs matched: $1" >&2; exit 1; }
       cp "$FAKE_GCS/${1#gs://}" "$dst"
     elif [[ "$dst" == gs://*render.sha256 ]]; then
+      if [ "$(nth hash-uploads)" -le "${GSUTIL_FAIL_HASH_UPLOADS:-0}" ]; then
+        echo "ServiceException: 503 Backend Error" >&2; exit 1
+      fi
       mkdir -p "$(dirname "$FAKE_GCS/${dst#gs://}")"
       cp "$1" "$FAKE_GCS/${dst#gs://}"
     fi ;;
@@ -446,9 +454,35 @@ class TestUploadStagesTheHash:
         assert result.returncode == 0, result.stdout + result.stderr
         assert repo.staged_hash() == render_hash(CODE.format(score="pending", x=5).encode())
         calls = repo.read("gsutil.log").splitlines()
-        (upload,) = [c for c in calls if c.endswith(f"gs://{STAGING}/render.sha256")]
+        (upload,) = [c for c in calls if " cp " in c and c.endswith(f"gs://{STAGING}/render.sha256")]
         assert upload.startswith("-h Cache-Control:no-store cp ")
         assert not [c for c in calls if "acl" in c and "render.sha256" in c]
+
+    def test_an_earlier_hash_goes_before_the_renders_arrive(self, tmp_path, shell, workflow, step, source):
+        """A hash of other code never sits beside this run's renders, whatever happens to the write."""
+        repo = Repo(tmp_path)
+        (repo.gcs / STAGING).mkdir(parents=True)
+        (repo.gcs / STAGING / "render.sha256").write_text("f" * 64 + "\n", encoding="utf-8")
+        result = self._upload(repo, workflow, step, source, shell)
+        assert result.returncode == 0, result.stdout + result.stderr
+        calls = repo.read("gsutil.log").splitlines()
+        removed = calls.index(f"rm gs://{STAGING}/render.sha256")
+        renders = next(i for i, c in enumerate(calls) if " cp " in c and "plot-light" in c)
+        written = next(i for i, c in enumerate(calls) if " cp " in c and c.endswith("/render.sha256"))
+        assert removed < renders < written
+        assert repo.staged_hash() == render_hash(CODE.format(score="pending", x=5).encode())
+
+    @pytest.mark.parametrize(("failures", "staged"), [(2, True), (3, False)], ids=["third-attempt", "all-fail"])
+    def test_the_hash_upload_gets_three_attempts(self, tmp_path, shell, workflow, step, source, failures, staged):
+        repo = Repo(tmp_path)
+        result = self._upload(repo, workflow, step, source, shell, GSUTIL_FAIL_HASH_UPLOADS=str(failures))
+        assert result.returncode == 0, result.stdout + result.stderr  # never fatal
+        attempts = [c for c in repo.read("gsutil.log").splitlines() if " cp " in c and c.endswith("/render.sha256")]
+        assert len(attempts) == 3
+        assert result.stdout.count("::warning::render.sha256 upload failed (attempt ") == failures
+        assert ("::notice::Staged render.sha256" in result.stdout) == staged
+        assert ("::warning::render.sha256 not staged" in result.stdout) == (not staged)
+        assert (repo.staged_hash() is not None) == staged
 
     def test_without_the_tools_a_stale_hash_goes(self, tmp_path, shell, workflow, step, source):
         repo = Repo(tmp_path)
@@ -502,6 +536,32 @@ class TestReviewCheck:
         assert f"<!-- render-hash:v1 status={status} head={repo.start_sha} -->" in Path(comment[4]).read_text()
         assert repo.read("output") == f"status={status}\n"
         assert f"::warning::render_hash status={status}" in result.stdout
+
+    @staticmethod
+    def _downloads(repo: Repo) -> list[str]:
+        return [c for c in repo.read("gsutil.log").splitlines() if c.startswith("cp gs://")]
+
+    def test_a_failed_download_is_retried_before_it_reads_unreadable(self, tmp_path, shell):
+        staged = render_hash(CODE.format(score="pending", x=1).encode())
+        result, repo = self._review(tmp_path, shell, staged, GSUTIL_FAIL_DOWNLOADS="2")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert repo.read("output") == "status=match\n"
+        assert result.stdout.count("::warning::render.sha256 download failed (attempt ") == 2
+        assert len(self._downloads(repo)) == 3
+        assert not _calls(repo.gh_calls(), "pr", "comment")
+
+    def test_only_three_failed_downloads_read_unreadable(self, tmp_path, shell):
+        result, repo = self._review(tmp_path, shell, "f" * 64, GSUTIL_FAIL="1")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert repo.read("output") == "status=unreadable\n"
+        assert len(self._downloads(repo)) == 3
+
+    def test_a_missing_hash_is_an_answer_and_is_not_retried(self, tmp_path, shell):
+        result, repo = self._review(tmp_path, shell, None)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert repo.read("output") == "status=missing\n"
+        assert len(self._downloads(repo)) == 1
+        assert "download failed" not in result.stdout
 
     def test_a_lost_comment_only_warns(self, tmp_path, shell):
         result, _ = self._review(tmp_path, shell, None, GH_COMMENT_RC="1")
