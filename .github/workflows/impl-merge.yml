@@ -432,8 +432,8 @@ jobs:
           # The renders are the `plot-*` objects at the top of staging (one
           # `*` does not cross `/`). staging/.../adapt/ holds the smoke runs
           # and the predecessor's raw renders that impl-generate staged for
-          # impl-review; they stay private, and the cleanup removes them with
-          # the rest. "No match" is an answer (empty staging); any other
+          # impl-review; they are never promoted, and the cleanup removes them
+          # with the rest. "No match" is an answer (empty staging); any other
           # error is retried and then reported as a transfer failure.
           STAGED=""
           LISTED=""

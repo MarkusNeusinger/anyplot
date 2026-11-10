@@ -2,7 +2,7 @@
 
 Both steps are record-only: they run `core.smoke_run` from the workflow's own ref, write
 their JSON under `$RUNNER_TEMP/adapt`, and never fail the job. The upload steps stage the
-results privately under `staging/.../adapt/`, after clearing an earlier run's. The step
+results under `staging/.../adapt/` without an ACL call, after clearing an earlier run's. The step
 scripts run here against a scratch origin, with a stub `core/smoke_run.py` in the workflow
 ref, a different one on the implementation branch (the generator could have written it),
 and a stub `gsutil`, under `bash -e` (the Actions default) and `bash -eo pipefail`.
@@ -406,7 +406,7 @@ class Staging:
 class TestGenerateUpload:
     STEP = "Upload to GCS Staging"
 
-    def test_stale_artifacts_go_first_then_this_runs_are_staged_privately(
+    def test_stale_artifacts_go_first_then_this_runs_are_staged_without_an_acl_call(
         self, tmp_path: Path, shell: list[str]
     ) -> None:
         staging = Staging(tmp_path)
@@ -429,7 +429,7 @@ class TestGenerateUpload:
             "adapt/prev/plot-dark.png",
             "adapt/prev/plot-light.png",
         ]
-        assert not [call for call in calls if "acl" in call and "adapt" in call]  # never public
+        assert not [call for call in calls if "acl" in call and "adapt" in call]  # no ACL call
         assert any("plot-light" in call for call in calls)  # the renders still go up
 
     def test_a_cut_off_step_never_stages_the_predecessor_source(self, tmp_path: Path, shell: list[str]) -> None:
@@ -467,7 +467,8 @@ class TestRepairUpload:
             f"-h Cache-Control:no-store cp {staging.adapt}/new-smoke.json {staging.staging}/adapt/new-smoke.json"
             in calls
         )
-        assert not [call for call in calls if call.startswith("rm ")]
+        # Only the smoke record is in question here; render.sha256 has its own tests.
+        assert not [call for call in calls if call.startswith("rm ") and "/adapt/" in call]
 
     def test_without_a_record_the_stale_one_goes(self, tmp_path: Path, shell: list[str]) -> None:
         staging = Staging(tmp_path)
