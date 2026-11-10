@@ -2252,6 +2252,37 @@ class TestCli:
         assert code == 1
         assert "not frozen yet" in capsys.readouterr().err
 
+    def test_freeze_refuses_a_lock_without_the_upload(self, tmp_path, capsys):
+        lock = tmp_path / "set.lock.json"
+        argv = ["freeze", "--manifest", str(MANIFEST), "--lock", str(lock), "--staging", str(tmp_path / "staging")]
+        assert rt.main([*argv, "--write-lock", "--skip-idle-check"]) == 1
+        assert "--write-lock needs --execute" in capsys.readouterr().err
+        assert not lock.exists()
+
+    def test_freeze_writes_the_lock_only_after_the_upload_verifies(self, tmp_path, monkeypatch):
+        frozen = {
+            "lock": {"version": 1, "set": "v1", "objects": {"o.png": {"sha256": "0" * 64}}, "sources": {}, "pairs": {}},
+            "uploads": ["o.png"],
+            "commands": [["gcloud", "storage", "cp", "--no-clobber", "o.png", "gs://bucket/o.png"]],
+        }
+        uploaded: list[list[str]] = []
+        monkeypatch.setattr(rt, "freeze", lambda *args, **kwargs: frozen)
+        monkeypatch.setattr(rt.subprocess, "run", lambda command, check: uploaded.append(command))
+        lock = tmp_path / "set-v1.lock.json"  # not staging's own set.lock.json
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        argv = ["freeze", "--manifest", str(MANIFEST), "--lock", str(lock), "--staging", str(staging)]
+        argv += ["--execute", "--write-lock", "--skip-idle-check"]
+
+        monkeypatch.setattr(rt, "verify_uploaded", lambda lock: ["o.png: missing"])
+        assert rt.main(argv) == 1
+        assert uploaded == frozen["commands"]
+        assert not lock.exists()  # a failed or partial upload leaves no lock behind
+
+        monkeypatch.setattr(rt, "verify_uploaded", lambda lock: [])
+        assert rt.main(argv) == 0
+        assert json.loads(lock.read_text(encoding="utf-8"))["objects"] == frozen["lock"]["objects"]
+
     def test_plan_writes_matrix_outputs(self, tmp_path, monkeypatch):
         manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
         lock = {"version": 1, "set": "v1", "objects": {}}

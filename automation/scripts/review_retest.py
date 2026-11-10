@@ -2321,6 +2321,10 @@ def cmd_first_reviews(args: argparse.Namespace) -> int:
 
 
 def cmd_freeze(args: argparse.Namespace) -> int:
+    # The lock records objects the upload has verified: a lock for objects that
+    # are not public yet makes plan accept a set whose renders bundle cannot get.
+    if args.write_lock and not args.execute:
+        raise HarnessError("--write-lock needs --execute: the lock is written once the upload is verified")
     manifest = load_manifest(Path(args.manifest))
     repo = Path(args.repo)
     staging = Path(args.staging)
@@ -2344,13 +2348,10 @@ def cmd_freeze(args: argparse.Namespace) -> int:
                 for t, p in pair.items()
             )
         )
-    if args.write_lock:
-        Path(args.lock).write_text(lock_text, encoding="utf-8")
-        print(f"wrote {args.lock}")
     if not args.execute:
         print("\nDry run. The owner-authorized upload is exactly (no clobber, no deletes):\n")
         print("\n".join(shlex.join(c) for c in result["commands"]) or "(nothing to upload)")
-        print(f"\nRe-run with --execute{'' if args.write_lock else ' --write-lock'} to upload and write the lock.")
+        print("\nRe-run with --execute --write-lock to upload and write the lock.")
         return 0
     for command in result["commands"]:
         print(f"+ {shlex.join(command)}")
@@ -2359,6 +2360,9 @@ def cmd_freeze(args: argparse.Namespace) -> int:
     if problems:
         raise HarnessError("uploaded set does not match the lock:\n  " + "\n  ".join(problems))
     print(f"verified {len(result['lock']['objects'])} public objects against the lock")
+    if args.write_lock:
+        Path(args.lock).write_text(lock_text, encoding="utf-8")
+        print(f"wrote {args.lock}")
     return 0
 
 
