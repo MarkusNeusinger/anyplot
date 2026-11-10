@@ -120,6 +120,28 @@ describe('Composer row', () => {
     expect(plot).toHaveAttribute('aria-disabled', 'true');
   });
 
+  it.each([
+    ['create', 'Create plot', '.create_plot() →', 'confirm data · plot it'],
+    ['update', 'Update plot', '.update_plot() →', 'ask · edit data · change plot'],
+    ['new_data', 'Plot the new data', 'plot the new data', 'confirm data · plot it'],
+    ['all', 'Plot in all libraries', '.plot_all()', 'one plot per library'],
+  ] as const)(
+    'says under the %s button what one click does, for the eye only',
+    (kind, name, text, hint) => {
+      render(
+        <Composer
+          {...composerProps({ plot: { kind, active: true, confirming: false, fresh: false } })}
+        />
+      );
+      // The accessible name stays the short one: the line is hidden from a screen reader.
+      const plot = screen.getByRole('button', { name });
+      const line = within(plot).getByTestId('plot-hint');
+      expect(plot.querySelector('[data-plot-label]')).toHaveTextContent(text);
+      expect(line).toHaveTextContent(hint);
+      expect(line).toHaveAttribute('aria-hidden', 'true');
+    }
+  );
+
   it('makes the data line’s links real buttons that Tab reaches; .open() opens the file picker', async () => {
     const user = userEvent.setup();
     const onExampleData = vi.fn();
