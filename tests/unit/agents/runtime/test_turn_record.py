@@ -10,7 +10,7 @@ import json
 import logging
 import re
 from collections.abc import AsyncIterator, Iterator
-from dataclasses import fields
+from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Any, cast, get_args, get_type_hints
 
@@ -842,6 +842,29 @@ class TestBundle:
         keys = {"session", "snapshot", "transcript", "turns", "versions", "profile", "bindings", "config"}
         assert set(forms[""]) == set(forms["?version=1"]) == keys
         assert set(forms["data"]) == keys | {"data_csv"}
+
+    async def test_the_api_reads_a_record_as_this_service_wrote_it(
+        self, client: httpx.AsyncClient, swap_models
+    ) -> None:
+        """The triage's case detail closes every value of a record again (`api.agent_cases`): a real turn's record
+        comes out of it value for value, so nothing this service writes reads `other` on /debug."""
+        from api.agent_cases import manifest_detail
+
+        reply = "Your plot is ready: Exam Score against Study Hours. Now confirm your data with `.confirm()`."
+        swap_models(
+            "gemini", plotting({"call": "prepare_data", "args": {"operations": [DERIVE]}}, PLOT, {"text": reply})
+        )
+        sid = await open_session(client)
+        await turn(client, sid, action="create_plot")
+        bundle = await bundle_of(client, sid)
+
+        read = manifest_detail({"bundle": bundle}, 0).turns
+
+        assert read is not None
+        assert json.loads(json.dumps(asdict(read))) == bundle["turns"]
+        (record,) = bundle["turns"]["records"]
+        assert ("prepare_data", "plot_as_confirmed", "refused", None) in tools(record)
+        assert ("shipped_reply", "dropped") in guards(record)
 
     async def test_a_session_without_a_turn_has_an_empty_record(self, client: httpx.AsyncClient) -> None:
         sid = await open_session(client)

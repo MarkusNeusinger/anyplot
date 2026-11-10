@@ -13,7 +13,12 @@ export type Severity = 'ok' | 'warn' | 'bad';
 
 const RANK: Record<Severity, number> = { ok: 0, warn: 1, bad: 2 };
 
-/** The verdicts of a guard that say nothing happened: left out of the row, listed in the details. */
+/**
+ * The verdicts of a guard that say nothing happened: left out of the row,
+ * listed in the details. `kept` of `shipped_reply` and `plot_button` is not
+ * one of them: those checks write a line only for a reply that names the
+ * button, and `kept` says every sentence did, so the reply went out as written.
+ */
 const QUIET_VERDICTS: Record<string, readonly string[]> = {
   scope_guard: [
     'in_scope',

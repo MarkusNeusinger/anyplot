@@ -4,6 +4,7 @@ import type { AgentCaseTurn, AgentCaseTurns } from 'src/lib/agent';
 import {
   callLabel,
   endLine,
+  guardSeverity,
   sharedTurns,
   turnChips,
   turnSeverity,
@@ -78,6 +79,26 @@ describe('turnSeverity', () => {
     expect(turnSeverity(turn({ guards: [{ guard: 'empty_reply', verdict: 'no_reply' }] }))).toBe(
       'bad'
     );
+  });
+
+  it('leaves a plot turn whose reply named no button unflagged', () => {
+    const shipped = { tool: 'plot_pipeline', verdict: 'allowed', outcome: 'shipped', code: null };
+    expect(turnSeverity(turn({ action: 'create_plot', kind: 'plot', tools: [shipped] }))).toBe(
+      'ok'
+    );
+  });
+});
+
+describe('guardSeverity', () => {
+  it('flags a reply that named the button, dropped or kept whole', () => {
+    expect(guardSeverity('shipped_reply', 'dropped')).toBe('warn');
+    expect(guardSeverity('shipped_reply', 'kept')).toBe('warn');
+    expect(guardSeverity('plot_button', 'dropped')).toBe('warn');
+    expect(guardSeverity('plot_button', 'kept')).toBe('warn');
+  });
+
+  it('passes a reply about the button the user asked for', () => {
+    expect(guardSeverity('plot_button', 'asked')).toBe('ok');
   });
 });
 
