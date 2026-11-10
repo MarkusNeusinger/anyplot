@@ -44,6 +44,12 @@ ends in a number needs a space after the colon, so a ratio or a clock time (`16:
 line of a line-per-pair list that holds exactly two words without a digit names the columns; otherwise they are
 `label` and `value`.
 
+A change request is never a list (owner decision of 2026-11-09, after `x bis 2030, y bis 60` replaced a user's table
+with two `label`/`value` rows): text with a word of a plot wish (`WISH_WORDS`, `LOWERCASE_WISH_WORDS`: `bis`, `max`,
+`Titel`, `Linie`, ...) is no pair list, nor is one whose label is an axis letter alone (`x 2030`). While the session
+holds data, which a list replaces without `.undo()`, a list takes `MIN_PAIRS_WITH_DATA` pairs (the dataset route's
+`min_pairs`). The page reads the same lists (`app/src/sections/agent-chat/wishWords.json`, pinned by a test).
+
 No ADK import.
 """
 
@@ -54,6 +60,102 @@ from typing import Literal
 
 MIN_ROWS = 2
 """The fewest rows either layout reads: a single pair or a single block is no table."""
+MIN_PAIRS_WITH_DATA = 3
+"""The fewest pairs of a list while the session holds data: two are as often a change request in words."""
+WISH_WORDS: tuple[str, ...] = (
+    "please",
+    "bitte",
+    "make",
+    "set",
+    "use",
+    "change",
+    "plot",
+    "show",
+    "draw",
+    "add",
+    "remove",
+    "color",
+    "colour",
+    "title",
+    "axis",
+    "axes",
+    "legend",
+    "log",
+    "scale",
+    "from",
+    "to",
+    "between",
+    "line",
+    "lines",
+    "font",
+    "tick",
+    "ticks",
+    "grid",
+    "limit",
+    "limits",
+    "range",
+    "width",
+    "height",
+    "mach",
+    "mache",
+    "setze",
+    "zeig",
+    "zeige",
+    "zeichne",
+    "füge",
+    "ändere",
+    "achse",
+    "achsen",
+    "titel",
+    "von",
+    "bis",
+    "linie",
+    "linien",
+    "schrift",
+    "schriftgröße",
+    "gitter",
+    "farbe",
+    "breite",
+    "höhe",
+    "bereich",
+    "grenze",
+    "margin",
+    "margins",
+    "padding",
+    "dpi",
+    "opacity",
+    "alpha",
+    "bins",
+    "rand",
+    "abstand",
+    "rahmen",
+    "transparenz",
+    "deckkraft",
+)
+"""Words of a plot wish or a change request, matched as whole words in any case: the page's `wishWords.json`
+(`words`), which `tests/unit/agents/data/test_layouts.py` pins to this tuple."""
+LOWERCASE_WISH_WORDS: tuple[str, ...] = ("max", "min")
+"""Wish words matched in lowercase or in capitals (`max`, `MAX`), never capitalised: `Max` and `Min` with a capital
+are first names (`lowercase_only`)."""
+_AXIS_LABEL = re.compile(r"^[xyz]$", re.IGNORECASE)
+"""A label that is an axis letter alone: `x 2030` asks about the axis, it is no row."""
+
+
+def _word_pattern(words: tuple[str, ...], flags: int = 0) -> re.Pattern[str]:
+    """Whole words of `words`, bounded by anything that is no letter (`5bis`, `y-Achse`), as the page's `\\p{L}`."""
+    return re.compile(rf"(?<![^\W\d_])(?:{'|'.join(map(re.escape, words))})(?![^\W\d_])", flags)
+
+
+_WISH = _word_pattern(WISH_WORDS, re.IGNORECASE)
+_LOWERCASE_WISH = _word_pattern(LOWERCASE_WISH_WORDS + tuple(word.upper() for word in LOWERCASE_WISH_WORDS))
+
+
+def is_wish(text: str) -> bool:
+    """Whether the text holds a word of a plot wish or an instruction (`x bis 2030`, `y max 60`): what the user meant
+    to say, however many numbers it holds."""
+    return bool(_WISH.search(text) or _LOWERCASE_WISH.search(text))
+
+
 MIN_HEADERLESS_ROWS = 3
 """The fewest blocks of a one-cell-per-line copy without a header line above them."""
 MISSING_TOKENS: frozenset[str] = frozenset(
@@ -124,9 +226,9 @@ def _fits(kind: str, expected: str) -> bool:
     return kind == expected or "text" not in (kind, expected) and "missing" in (kind, expected)
 
 
-def read_layout(text: str) -> Layout | None:
+def read_layout(text: str, *, min_pairs: int = MIN_ROWS) -> Layout | None:
     """The table one of the two layouts reads from the text, the pair list first; None for any other shape."""
-    return pair_list_table(text) or cell_lines_table(text)
+    return pair_list_table(text, min_pairs=min_pairs) or cell_lines_table(text)
 
 
 # --- A web table copied one cell per line -------------------------------------------------
@@ -230,17 +332,18 @@ def _lines(count: int) -> str:
 # --- An inline list of label/value pairs ----------------------------------------------------
 
 
-def pair_list_table(text: str) -> Layout | None:
-    """The two-column table of a list of label/value pairs (see the module notes), or None for any other text."""
+def pair_list_table(text: str, *, min_pairs: int = MIN_ROWS) -> Layout | None:
+    """The two-column table of a list of label/value pairs (see the module notes), or None for any other text, a
+    change request (`is_wish`) included. `min_pairs`: `MIN_PAIRS_WITH_DATA` while the session holds data."""
     stripped = text.strip()
-    if not stripped:
+    if not stripped or is_wish(stripped):
         return None
     for split in (_PAIR_SPLIT_STRONG, _PAIR_SPLIT_ALL):
         pieces = [piece.strip() for piece in split.split(stripped) if piece.strip()]
         headers = [LABEL_COLUMN, VALUE_COLUMN]
         if "\n" in stripped and len(pieces) > MIN_ROWS and (names := _pair_header(pieces[0])) is not None:
             headers, pieces = names, pieces[1:]
-        rows = _pair_rows(pieces)
+        rows = _pair_rows(pieces, min_pairs)
         if rows is None:
             continue
         named = "" if headers != [LABEL_COLUMN, VALUE_COLUMN] else f", named {LABEL_COLUMN} and {VALUE_COLUMN}"
@@ -249,10 +352,10 @@ def pair_list_table(text: str) -> Layout | None:
     return None
 
 
-def _pair_rows(pieces: list[str]) -> list[list[str]] | None:
-    """The `[label, value]` rows of the pieces when every one is a pair of one form, at least `MIN_ROWS`; None at the
-    first piece that is not, so a long text that is no list costs one look at its first pieces."""
-    if len(pieces) < MIN_ROWS:
+def _pair_rows(pieces: list[str], min_pairs: int = MIN_ROWS) -> list[list[str]] | None:
+    """The `[label, value]` rows of the pieces when every one is a pair of one form, at least `min_pairs`; None at
+    the first piece that is not, so a long text that is no list costs one look at its first pieces."""
+    if len(pieces) < min_pairs:
         return None
     rows: list[list[str]] = []
     form = None
@@ -277,17 +380,17 @@ def _pair(piece: str) -> tuple[str, str, str] | None:
         # `16:9`, `at 10:30`: a ratio or a clock time, never a label and its value (`Q1:5` is one).
         if label and _number(label.split()[-1]) and not match.group("space"):
             return None
-        return ("colon", label, value) if label and _number(value) else None
+        return ("colon", label, value) if label and not _AXIS_LABEL.match(label) and _number(value) else None
     if match := _EQUALS_PAIR.match(piece):
         label, value = match.group("label").strip(), match.group("value").strip()
-        return ("equals", label, value) if label and _number(value) else None
+        return ("equals", label, value) if label and not _AXIS_LABEL.match(label) and _number(value) else None
     if match := _SPACE_PAIR.match(piece):
         label, value = match.group("label").strip(), match.group("value").strip()
         words = label.split()
         # A letter as the page's `\p{L}` reads one (`str.isalpha`: the letter categories alone).
         if not any(c.isalpha() for c in label) or len(words) > MAX_LABEL_WORDS or len(label) > MAX_LABEL_CHARS:
             return None
-        return ("space", label, value) if _number(value) else None
+        return ("space", label, value) if not _AXIS_LABEL.match(label) and _number(value) else None
     return None
 
 

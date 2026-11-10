@@ -623,19 +623,29 @@ export const ATTACHMENT_LINE =
  * plots it, while Enter only reads it. Without, `ATTACHMENT_LINE`. While the session holds data
  * of `rows` rows, the line says the attachment replaces it: a paste starts the data's versions
  * anew, so `.undo()` cannot bring the old data back, which the line says before the user sends.
+ * `subject` names what replaces it: a table typed into the box goes as data too (`boxData`).
  */
-export function attachmentWaitLine(rows: number | null, action: string | null = null): string {
+export function attachmentWaitLine(
+  rows: number | null,
+  action: string | null = null,
+  subject = 'the attached table'
+): string {
   const replaces =
     rows === null ? null : `replaces your data (${countOf(rows, 'row')}, no .undo())`;
   if (action === null) {
-    return replaces === null
+    // A typed table goes alone: the parser keeps the lines around it as its notes.
+    const note = subject === TYPED_TABLE ? '' : ', with a note if you like';
+    return replaces === null && subject !== TYPED_TABLE
       ? ATTACHMENT_LINE
-      : `the attached table ${replaces} when you press Enter ↵, with a note if you like`;
+      : `${subject} ${replaces ?? 'is read'} when you press Enter ↵${note}`;
   }
   return replaces === null
-    ? `${action} reads the attached table and plots it · Enter ↵ only reads it`
-    : `the attached table ${replaces} · ${action} reads and plots it, Enter ↵ only reads it`;
+    ? `${action} reads ${subject} and plots it · Enter ↵ only reads it`
+    : `${subject} ${replaces} · ${action} reads and plots it, Enter ↵ only reads it`;
 }
+
+/** What the status line calls a table typed into the box (`attachmentWaitLine`'s `subject`). */
+export const TYPED_TABLE = 'the table in the box';
 
 /** The status line's part while the plot button's one click reads the box's data (`plotChain.ts`). */
 export const CHAIN_READING_TEXT =

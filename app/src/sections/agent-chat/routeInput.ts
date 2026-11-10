@@ -18,6 +18,7 @@
  */
 
 import { MAX_MESSAGE_CHARS } from 'src/lib/agent';
+import wishWords from 'src/sections/agent-chat/wishWords.json';
 
 export type InputRoute = 'data' | 'message';
 
@@ -361,6 +362,30 @@ function isCellLinesTable(text: string): boolean {
   return best.every(([, , other]) => repeats(pattern, other));
 }
 
+// --- Plot wishes, which neither rule 13 nor rule 14 reads as data -----------------------
+
+/** Whole words of `words`, bounded by anything that is no letter (`5bis`, `y-Achse`). */
+function wordPattern(words: string[], flags: string): RegExp {
+  const alternation = words.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  return new RegExp(`(?:^|[^\\p{L}])(?:${alternation})(?=$|[^\\p{L}])`, flags);
+}
+
+/** The words of a plot wish or a change request (`wishWords.json`, `layouts.WISH_WORDS`). */
+const WISH_WORDS = wordPattern(wishWords.words, 'iu');
+/** `max` and `min` in lowercase or capitals: `Max` and `Min` with a capital are first names. */
+const LOWERCASE_WISH_WORDS = wordPattern(
+  [...wishWords.lowercase_only, ...wishWords.lowercase_only.map(word => word.toUpperCase())],
+  'u'
+);
+
+/**
+ * Whether the text holds a word of a plot wish or an instruction: what the user meant to say,
+ * however many numbers it holds (`y from 0 to 100`, `x bis 2030, y bis 60`).
+ */
+function isWish(text: string): boolean {
+  return WISH_WORDS.test(text) || LOWERCASE_WISH_WORDS.test(text);
+}
+
 // --- Rule 13: a list of label/value pairs (`layouts.pair_list_table`) ---------------------
 
 /** The most words of a `label value` pair's label (`layouts.MAX_LABEL_WORDS`). */
@@ -369,6 +394,11 @@ const MAX_LABEL_CHARS = 40;
 const COLON_PAIR = /^([^:=;,\t]{1,40}?)\s*:(\s*)(\S.*)$/;
 const EQUALS_PAIR = /^([^:=;,\t]{1,40}?)\s*=\s*(\S.*)$/;
 const SPACE_PAIR = /^([^:=;,\t]*\S)\s+(\S+)$/;
+
+/** The fewest pairs of a list while the session holds data (`layouts.MIN_PAIRS_WITH_DATA`). */
+const MIN_PAIRS_WITH_DATA = 3;
+/** A label that is an axis letter alone: `x 2030` asks about the axis, it is no row. */
+const AXIS_LABEL = /^[xyz]$/i;
 
 function isNumber(cell: string): boolean {
   return /\d/.test(cell) && NUMBER.test(cell);
@@ -382,15 +412,18 @@ function pairForm(piece: string): 'colon' | 'equals' | 'space' | null {
     // `16:9`, `at 10:30`: a ratio or a clock time, never a label and its value (`Q1:5` is one).
     const last = label.split(/\s+/).pop() ?? '';
     if (label && isNumber(last) && !match[2]) return null;
-    return label && isNumber(match[3].trim()) ? 'colon' : null;
+    return label && !AXIS_LABEL.test(label) && isNumber(match[3].trim()) ? 'colon' : null;
   }
   match = EQUALS_PAIR.exec(piece);
-  if (match) return match[1].trim() && isNumber(match[2].trim()) ? 'equals' : null;
+  if (match) {
+    const label = match[1].trim();
+    return label && !AXIS_LABEL.test(label) && isNumber(match[2].trim()) ? 'equals' : null;
+  }
   match = SPACE_PAIR.exec(piece);
   if (!match) return null;
   const label = match[1].trim();
   if (!/\p{L}/u.test(label) || label.split(/\s+/).length > MAX_LABEL_WORDS) return null;
-  if (label.length > MAX_LABEL_CHARS) return null;
+  if (label.length > MAX_LABEL_CHARS || AXIS_LABEL.test(label)) return null;
   return isNumber(match[2].trim()) ? 'space' : null;
 }
 
@@ -405,10 +438,13 @@ function pairHeader(line: string): boolean {
  * another separator; every piece a pair of one form with a number as its value, at least two.
  * A `label value` label holds a letter and at most three words, and a `label:value` label that
  * ends in a number needs a space after the colon, so `16:9` and `at 10:30` are never pairs,
- * while `Q1:5` and `2024: 7` are.
+ * while `Q1:5` and `2024: 7` are. A change request is never a list (`x bis 2030, y bis 60`,
+ * `Titel 2026, Schrift 14`): no word of `wishWords.json`, no axis letter alone as a label. While
+ * the session holds data, which a list would replace, it takes `MIN_PAIRS_WITH_DATA` pairs.
  */
-function isPairList(text: string): boolean {
+function isPairList(text: string, minPairs: number): boolean {
   const stripped = text.trim();
+  if (isWish(stripped)) return false;
   for (const split of [/[;\n]/, /[,;\n]/]) {
     let pieces = stripped
       .split(split)
@@ -417,7 +453,7 @@ function isPairList(text: string): boolean {
     if (stripped.includes('\n') && pieces.length > LAYOUT_MIN_ROWS && pairHeader(pieces[0])) {
       pieces = pieces.slice(1);
     }
-    if (pieces.length < LAYOUT_MIN_ROWS) continue;
+    if (pieces.length < minPairs) continue;
     // Every piece a pair of one form; the first piece that is not ends the look.
     const form = pairForm(pieces[0]);
     if (form && pieces.every(piece => pairForm(piece) === form)) return true;
@@ -430,12 +466,6 @@ function isPairList(text: string): boolean {
 /** The fewest values of rule 14, and their least share of the words. */
 const MIN_LOOSE_VALUES = 3;
 const LOOSE_VALUE_SHARE = 0.5;
-/**
- * Words of a plot wish or an instruction (English and German): a text with one of them is what
- * the user meant to say, however many numbers it holds (`y from 0 to 100`).
- */
-const WISH_WORDS =
-  /(?:^|[^\p{L}])(?:please|bitte|make|set|use|change|plot|show|draw|add|remove|colou?r|title|axis|axes|legend|log|scale|from|to|between|mach|mache|setze|zeig|zeige|zeichne|füge|ändere|achse|titel|von|bis)(?=$|[^\p{L}])/iu;
 const URL = /\bhttps?:\/\/|\bwww\./i;
 
 /**
@@ -446,7 +476,7 @@ const URL = /\bhttps?:\/\/|\bwww\./i;
  */
 function looksLikeData(text: string): boolean {
   if (text.length > MAX_MESSAGE_CHARS || URL.test(text) || /\?\s*$/m.test(text)) return false;
-  if (WISH_WORDS.test(text)) return false;
+  if (isWish(text)) return false;
   const words = text.split(/[\s,;]+/).filter(Boolean);
   const values = words.filter(isValue).length;
   return values >= MIN_LOOSE_VALUES && values >= LOOSE_VALUE_SHARE * words.length;
@@ -458,8 +488,10 @@ function looksLikeData(text: string): boolean {
  * spec; `routeInput.cases.json` names the rule each case meets. Text longer than the chat takes
  * (rule 2) is data only by a format rule (3, 6 to 10, 12, 13), never by rule 14, so long prose
  * stays in the box over the cap and never reaches a model as data (owner rule of 2026-11-09).
+ * `hasData`: the session holds data, which data from the box would replace; a short list of
+ * pairs then takes three pairs, since two are as often a change request in words.
  */
-export function routeInput(text: string): InputRoute | null {
+export function routeInput(text: string, { hasData = false } = {}): InputRoute | null {
   // 1. Nothing but space.
   if (!text.trim()) return null;
   const rows = logicalRows(text);
@@ -467,8 +499,8 @@ export function routeInput(text: string): InputRoute | null {
   if (isJson(text, rows)) return 'data';
   // 5. Code stays a message, which the chat runs; also over the cap, where the box says to shorten it.
   if (looksLikeCode(text)) return 'message';
-  // 13. Label/value pairs, inline or one per line.
-  if (isPairList(text)) return 'data';
+  // 13. Label/value pairs, inline or one per line; never a plot wish.
+  if (isPairList(text, hasData ? MIN_PAIRS_WITH_DATA : LAYOUT_MIN_ROWS)) return 'data';
   // 4. One line is a message (a formula, a request, a question), unless it is mostly values (14).
   if (rows.length >= 2) {
     const sample = rows.slice(0, SAMPLE_ROWS);

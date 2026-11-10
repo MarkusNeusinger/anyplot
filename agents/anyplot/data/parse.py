@@ -589,8 +589,12 @@ def parse_dataset(
     canonical: bool = False,
     table: int = 1,
     json_lines: bool = False,
+    min_pairs: int = LAYOUT_MIN_ROWS,
 ) -> ParsedDataset:
     """Parse pasted CSV, TSV, semicolon or pipe text, JSON, JSON Lines or a Python literal into the canonical dataset.
+
+    `min_pairs` is the fewest pairs a list of label/value pairs takes (`layouts.pair_list_table`): the dataset
+    route passes `layouts.MIN_PAIRS_WITH_DATA` while the session holds data, which the paste would replace.
 
     `json_lines` says the text came from a file named `.jsonl` or `.ndjson`: it is read as JSON
     Lines first, so a file of one record is one row (a pasted single object of values stays
@@ -672,12 +676,12 @@ def parse_dataset(
                 text, warnings, find_table=find_table, context=context, declared=declared, table=table, tables=tables
             )
         except ParseError as exc:
-            layout = read_layout(text) if layouts and exc.code == "no_table" else None
+            layout = read_layout(text, min_pairs=min_pairs) if layouts and exc.code == "no_table" else None
             if layout is None:
                 raise
             read = relayout(layout)
         else:
-            if layouts and _layout_may_read(read) and (layout := read_layout(text)) is not None:
+            if layouts and _layout_may_read(read) and (layout := read_layout(text, min_pairs=min_pairs)) is not None:
                 read = relayout(layout)
     elif table > 1:
         raise ParseError("unparseable", f"the data holds one table; there is no table {table}")

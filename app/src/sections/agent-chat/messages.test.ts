@@ -12,9 +12,22 @@ import {
   localClock,
   nextUtcMidnight,
   servicePausedText,
+  TYPED_TABLE,
 } from './messages';
 
 describe('attachmentWaitLine', () => {
+  it('says that a table typed into the box replaces the data too, and goes without a note', () => {
+    expect(attachmentWaitLine(22, 'plot the new data', TYPED_TABLE)).toBe(
+      'the table in the box replaces your data (22 rows, no .undo()) · plot the new data reads and plots it, Enter ↵ only reads it'
+    );
+    expect(attachmentWaitLine(22, null, TYPED_TABLE)).toBe(
+      'the table in the box replaces your data (22 rows, no .undo()) when you press Enter ↵'
+    );
+    expect(attachmentWaitLine(null, null, TYPED_TABLE)).toBe(
+      'the table in the box is read when you press Enter ↵'
+    );
+  });
+
   it('reads the table without data, and says it replaces the data with', () => {
     expect(attachmentWaitLine(null)).toBe(ATTACHMENT_LINE);
     expect(attachmentWaitLine(22)).toBe(

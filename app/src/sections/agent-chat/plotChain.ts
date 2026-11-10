@@ -36,15 +36,16 @@ export type BoxData = 'attachment' | 'typed' | null;
  * is read and the dataset route can take it (a refused one again), or a table typed into the box
  * (`attachTyped`). `null` for nothing to send as data. The box's text goes with an attachment as
  * its note, and like any message it never goes over the cap; a table in the box counts by the
- * dataset's own limits (`overCap`), so a long one goes too (owner rule of 2026-11-09).
+ * dataset's own limits (`overCap`), so a long one goes too (owner rule of 2026-11-09). `hasData`:
+ * the session holds data, which the box's data would replace (`routeInput`'s `hasData`).
  */
-export function boxData(attachment: Attachment | null, draft: string): BoxData {
+export function boxData(attachment: Attachment | null, draft: string, hasData = false): BoxData {
   const text = draft.trim();
   if (attachment) {
     if (text.length > MAX_MESSAGE_CHARS) return null;
     return attachment.status === 'ready' || attachment.status === 'failed' ? 'attachment' : null;
   }
-  return text && !overCap(text) && routeInput(text) === 'data' ? 'typed' : null;
+  return text && !overCap(text) && routeInput(text, { hasData }) === 'data' ? 'typed' : null;
 }
 
 /**
