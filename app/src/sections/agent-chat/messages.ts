@@ -337,7 +337,7 @@ export const NO_DATA_PLACEHOLDER = 'paste a table or drop a file';
  */
 export const PHONE_PLACEHOLDER = {
   first: 'ask or say what to plot',
-  change: 'ask for a change',
+  change: 'ask a question or a change',
 } as const;
 
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Composer, type ComposerProps } from 'src/sections/agent-chat/Composer';
 import { STATUS_LINE_ID } from 'src/sections/agent-chat/steps';
 import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
-import { fireEvent, render, screen, styleAt, userEvent } from 'src/test-utils';
+import { fireEvent, render, screen, styleAt, userEvent, within } from 'src/test-utils';
 
 /** The composer's props with data in step 1, its plot button active, unless a case says otherwise. */
 function composerProps(overrides: Partial<ComposerProps> = {}): ComposerProps {
@@ -113,8 +113,34 @@ describe('Composer row', () => {
     );
     expect(screen.getByRole('button', { name: 'Update plot' })).toBe(plot);
     expect(plot).toHaveTextContent('.update_plot() →');
+    // The line under the name says that the click also asks and edits the data.
+    expect(within(plot).getByTestId('plot-hint')).toHaveTextContent(
+      'ask · edit data · change plot'
+    );
     expect(plot).toHaveAttribute('aria-disabled', 'true');
   });
+
+  it.each([
+    ['create', 'Create plot', '.create_plot() →', 'confirm data · plot it'],
+    ['update', 'Update plot', '.update_plot() →', 'ask · edit data · change plot'],
+    ['new_data', 'Plot the new data', 'plot the new data', 'confirm data · plot it'],
+    ['all', 'Plot in all libraries', '.plot_all()', 'one plot per library'],
+  ] as const)(
+    'says under the %s button what one click does, for the eye only',
+    (kind, name, text, hint) => {
+      render(
+        <Composer
+          {...composerProps({ plot: { kind, active: true, confirming: false, fresh: false } })}
+        />
+      );
+      // The accessible name stays the short one: the line is hidden from a screen reader.
+      const plot = screen.getByRole('button', { name });
+      const line = within(plot).getByTestId('plot-hint');
+      expect(plot.querySelector('[data-plot-label]')).toHaveTextContent(text);
+      expect(line).toHaveTextContent(hint);
+      expect(line).toHaveAttribute('aria-hidden', 'true');
+    }
+  );
 
   it('makes the data line’s links real buttons that Tab reaches; .open() opens the file picker', async () => {
     const user = userEvent.setup();
@@ -316,7 +342,7 @@ describe('Composer placeholder on a phone', () => {
       'ask about your data, or say what the first plot should do',
       'optional: what the first plot should do differently',
       'ask about your data, or say what the next plot should do',
-      'ask for a change, e.g. log scale on y',
+      'ask a question or a change, e.g. log scale on y',
       'add a note for this table, or press Enter',
     ]);
     // Below 600 px (owner, 2026-11-08): before the first plot, and once there is one.
@@ -337,8 +363,8 @@ describe('Composer placeholder on a phone', () => {
       'paste a table or drop a file',
       'ask or say what to plot',
       'ask or say what to plot',
-      'ask for a change',
-      'ask for a change',
+      'ask a question or a change',
+      'ask a question or a change',
       'add a note for this table, or press Enter',
     ]);
   });

@@ -46,8 +46,9 @@ const INERT = '&:disabled, &[aria-disabled="true"]';
 const ACTIVE_HOVER = '&:hover:not(:disabled):not([aria-disabled="true"])';
 
 /**
- * The composer row's plot button (§7.4, §7.9), 44 px high in the text's size, one size in every
- * state, ghost before there is data and filled after. An inert one is `aria-disabled`: it dims,
+ * The composer row's plot button (§7.4, §7.9), at least 44 px high in the text's size with a
+ * small line under its name (`Composer.tsx`), one size in every state, ghost before there is data
+ * and filled after. An inert one is `aria-disabled`: it dims,
  * its click does nothing and it keeps the keyboard focus.
  */
 const composerButtonSx = {
