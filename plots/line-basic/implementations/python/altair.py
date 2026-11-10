@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-basic: Basic Line Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-04-29
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-10
 """
 
 import os
