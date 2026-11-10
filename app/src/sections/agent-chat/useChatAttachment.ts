@@ -186,6 +186,8 @@ export interface ChatAttachmentOptions {
   working: boolean;
   /** The admin fan-out's panel copies this data: a file waits until it closes. */
   locked: boolean;
+  /** The session holds data, which a paste would replace: the routing asks more of a pair list. */
+  hasData?: boolean;
   onConvert?: (dataBase64: string, sheet?: string) => Promise<ConvertAnswer>;
   onTrack?: (event: string, props?: Record<string, string | undefined>) => void;
 }
@@ -232,6 +234,7 @@ export function useChatAttachment({
   ready,
   working,
   locked,
+  hasData = false,
   onConvert,
   onTrack,
 }: ChatAttachmentOptions): ChatAttachment {
@@ -283,7 +286,7 @@ export function useChatAttachment({
   // reported no paste, went out as a message the assistant cannot read data from. Only `data` is
   // counted: every typed message is a `message`, which would only drown the tuning signal.
   const attachTyped = (text: string) => {
-    if (routeInput(text) !== 'data') return null;
+    if (routeInput(text, { hasData }) !== 'data') return null;
     onTrack?.('agent_input_routed', { as: 'data', via: 'typed' });
     return attachText(text, 'typed');
   };
@@ -532,7 +535,8 @@ export function useChatAttachment({
     const spanned = pastedText
       ? spannedTable(event.clipboardData?.getData('text/html') ?? '')
       : null;
-    const text = spanned !== null && routeInput(spanned) === 'data' ? spanned : pastedText;
+    const text =
+      spanned !== null && routeInput(spanned, { hasData }) === 'data' ? spanned : pastedText;
     const taken = routePaste(text, () => event.preventDefault());
     // Text the box takes: the browser inserts it and reports `insertFromPaste` next.
     pasteRouted.current = !taken && pastedText !== '';
@@ -541,7 +545,7 @@ export function useChatAttachment({
 
   // How a paste was routed, for tuning the rules (`agent_input_routed`); a data paste attaches.
   const routePaste = (text: string, take: () => void) => {
-    const route = routeInput(text);
+    const route = routeInput(text, { hasData });
     if (route) onTrack?.('agent_input_routed', { as: route, via: 'paste' });
     if (route !== 'data') return false;
     take();

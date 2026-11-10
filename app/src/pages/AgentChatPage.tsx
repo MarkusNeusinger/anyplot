@@ -218,6 +218,7 @@ import {
   DROP_HINT_TEXT,
   ERROR_TEXT,
   LEAVE_TEXT,
+  TYPED_TABLE,
   VIEW_SWITCH_TEXT,
 } from 'src/sections/agent-chat/messages';
 import {
@@ -683,6 +684,7 @@ function AgentChat({
     ready: state.phase === 'ready' && !!state.sessionId,
     working: busy,
     locked: !!fanOut,
+    hasData: !!state.dataset,
     onConvert: session.convertFile,
     onTrack: trackEvent,
   });
@@ -739,7 +741,8 @@ function AgentChat({
   // What the box holds that the plot button sends before it plots (`plotChain.ts`): an
   // attachment, or a table typed into the box. With the admin's `all` pressed too: the click
   // reads it, and the fan-out copies it once it is stored and reads clean.
-  const boxSends = useMemo(() => boxData(attachment, draft), [attachment, draft]);
+  const hasData = !!state.dataset;
+  const boxSends = useMemo(() => boxData(attachment, draft, hasData), [attachment, draft, hasData]);
   // New data in the box, or on its way after the click: the button names the plot it makes.
   const boxHoldsData = !!attachment || boxSends === 'typed' || chainView?.kind === 'reading';
   // The plot button in its fixed place: what it is, and the label the status line, the card's
@@ -779,12 +782,21 @@ function AgentChat({
     // With data, the line says the attachment replaces it; it names the plot button that reads
     // and plots it, unless the button can only read it: with `all` while the fan-out's panel is
     // open, or while the chip cannot go at all.
+    // A table typed into the box replaces the data as a paste does: while there is data the line
+    // says so before Enter or the click sends it, since `.undo()` cannot bring the data back. Not
+    // while `all` holds the box in step 2: nothing reads its text then (`plotClick`'s `locked`).
     attachmentLine: attachment
       ? attachmentWaitLine(
           state.dataset ? state.dataset.parsed.profile.rows : null,
           boxSends === 'attachment' && !(plotAll && fanOut) ? plotAction : null
         )
-      : null,
+      : boxSends === 'typed' && state.dataset && !chatLocked
+        ? attachmentWaitLine(
+            state.dataset.parsed.profile.rows,
+            plotAll && fanOut ? null : plotAction,
+            TYPED_TABLE
+          )
+        : null,
     readingLine: chainView?.kind === 'reading' ? CHAIN_READING_TEXT : null,
     // Where the one click stopped, while nothing changed since.
     stopLine:

@@ -911,6 +911,29 @@ jobs:
           for f in plot-light.png plot-dark.png plot-light.html plot-dark.html plot.png plot.html; do
             cp "${IMPL_DIR}/${f}" "/tmp/anyplot-plot-cache/${f}" 2>/dev/null || true
           done
+          # The file those renders came from, before the checkout below puts
+          # the pushed branch in its place: "Upload to GCS Staging" hashes it.
+          cp "${IMPL_DIR}/${LIBRARY}${EXT}" "$RUNNER_TEMP/render-source" 2>/dev/null || rm -f "$RUNNER_TEMP/render-source"
+
+          # Render freshness (warn-only): a render older than the file was made
+          # before the file was last written. The generator formats the file
+          # after it renders, so this records how often a write follows the
+          # render (the bytes may or may not have changed); nothing fails on
+          # it, and without a render there is no line.
+          STALE=""; COMPARED=0
+          for theme in light dark; do
+            [ -f "${IMPL_DIR}/plot-${theme}.png" ] || continue
+            COMPARED=1
+            if [ "${IMPL_DIR}/${LIBRARY}${EXT}" -nt "${IMPL_DIR}/plot-${theme}.png" ]; then
+              STALE="${STALE:+${STALE}, }plot-${theme}.png"
+            fi
+          done
+          if [ -n "$STALE" ]; then
+            echo "**Render freshness:** stale (${STALE} older than ${LIBRARY}${EXT})" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::render_freshness status=stale: ${STALE} older than ${LIBRARY}${EXT}"
+          elif [ "$COMPARED" = 1 ]; then
+            echo "**Render freshness:** fresh" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
           # Configure git auth (Claude's action configured it, but it's gone now)
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
@@ -918,14 +941,37 @@ jobs:
           # Sync with remote (Claude already pushed the code)
           git fetch origin
 
-          # Check if remote branch exists before checkout (fixes branch-not-found error)
-          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-            git checkout -B "$BRANCH" "origin/$BRANCH"
-          else
-            # Branch doesn't exist on remote - create fresh from main
-            echo "::warning::Remote branch $BRANCH not found, creating fresh from main"
-            git checkout -B "$BRANCH" origin/main
+          # The generator (or the adopt step) pushes the branch. Without it the
+          # renders belong to no pushed code, and checking out origin/main
+          # would put a regeneration's renders under the live implementation.
+          rc=0; git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1 || rc=$?
+          if [ "$rc" = 2 ]; then
+            echo "::error::Remote branch ${BRANCH} not found: the implementation was never pushed, so its renders are neither committed nor staged"
+            exit 1
+          elif [ "$rc" != 0 ]; then
+            echo "::error::Could not look up ${BRANCH} on origin (git ls-remote exit ${rc}); nothing is committed or staged"
+            exit 1
           fi
+          # The branch must carry the file the renders came from. A ref an
+          # earlier run left behind (the delete in "Create implementation
+          # branch" may fail) passes the lookup above with that run's code, and
+          # the checkout below would put it under this run's renders. The
+          # branch is fetched here by name, whatever the fetch above brought.
+          PUSHED_FILE="${IMPL_DIR}/${LIBRARY}${EXT}"
+          if ! git fetch origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"; then
+            echo "::error::Could not fetch ${BRANCH} from origin; nothing is committed or staged"
+            exit 1
+          fi
+          if ! git cat-file -e "origin/${BRANCH}:${PUSHED_FILE}" 2>/dev/null; then
+            echo "::error::${PUSHED_FILE} is not on origin/${BRANCH}: this run's implementation was never pushed, so its renders are neither committed nor staged"
+            exit 1
+          fi
+          rc=0; git diff --quiet "origin/${BRANCH}" -- "$PUSHED_FILE" || rc=$?
+          if [ "$rc" != 0 ]; then
+            echo "::error::${PUSHED_FILE} in the workspace is not the file on origin/${BRANCH} (git diff exit ${rc}): the branch holds an earlier run's code, or the last edit was never pushed, so the renders belong to no pushed code"
+            exit 1
+          fi
+          git checkout -B "$BRANCH" "origin/$BRANCH"
 
           # An implementation PR never changes dependency files, and impl-merge.yml
           # refuses one that does. #9398 (qrcode-basic, makie) committed the
@@ -1270,7 +1316,7 @@ jobs:
       # Step 3 renders), so impl-review's gate can measure render identity on
       # raw renders from one environment, before "Process plot images"
       # quantizes anything. Results land in $RUNNER_TEMP/adapt and "Upload to
-      # GCS Staging" stages them privately under adapt/. Record-only: no exit
+      # GCS Staging" stages them under adapt/, never promoted. Record-only: no exit
       # code gates, continue-on-error keeps a crash or a timeout from failing
       # the job, and a missing artifact reads as `missing` in impl-review (no
       # repair trigger, design "No repair trigger"). The other languages have
@@ -1509,8 +1555,9 @@ jobs:
 
           # Adaptability artifacts from "Adaptability smoke run (record-only)".
           # An earlier run of this pair is cleared first, unconditionally, so a
-          # kept regeneration's prev-* and pair.json never outlive it. They stay
-          # private (no AllUsers ACL) and impl-merge never promotes them.
+          # kept regeneration's prev-* and pair.json never outlive it. They get
+          # no ACL call (the bucket's uniform access makes every object readable
+          # anyway), and impl-merge never promotes them.
           # rsync, not `cp -r dir/*`: copying a directory into a destination
           # subdirectory that does not exist yet drops the directory's name
           # (gsutil's naming rule), so new/plot-light.png and
@@ -1541,6 +1588,23 @@ jobs:
           echo "png_url_dark=${PUBLIC_URL}/plot-dark.png"   >> $GITHUB_OUTPUT
           echo "uploaded=true" >> $GITHUB_OUTPUT
           echo "::notice::Uploaded plot-light + plot-dark (+responsive variants)"
+
+          # render.sha256: the hash of the file the renders came from, which
+          # impl-review compares with the PR head (automation/scripts/render_hash.py,
+          # from this workflow's ref). Readable like every object in the bucket
+          # (it is the hash of public code) and never promoted (not plot-*).
+          # Never fatal; a stale hash goes, so the review reports it missing.
+          TOOLS="$RUNNER_TEMP/render-tools"
+          mkdir -p "$TOOLS"
+          if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
+             && git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$TOOLS/regen_gate.py" \
+             && python3 "$TOOLS/render_hash.py" write --source "$RUNNER_TEMP/render-source" --out "$RUNNER_TEMP/render.sha256" \
+             && gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
+            echo "::notice::Staged render.sha256"
+          else
+            echo "::warning::render.sha256 not staged; impl-review reports the render hash as missing"
+            gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
+          fi
 
           # Upload HTML for interactive libraries (one per theme)
           for theme in light dark; do

@@ -2375,6 +2375,22 @@ async def test_free_text_is_transcribed_and_stored_only_when_confirmed(
     assert after is not None and after.dataset_id is not None
 
 
+async def test_over_stored_data_a_pair_list_takes_three_pairs_and_no_change_request(
+    client: httpx.AsyncClient, judge
+) -> None:
+    """The live regression of 2026-11-09: `x bis 2030, y bis 60` replaced a table with two `label`/`value` rows."""
+    sid = await open_session(client)  # with data
+    judge.transcriptions = [_reading(["Name", "Wert"], [["Apples", "7"], ["Pears", "12"]])]
+
+    two = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Apples 7, Pears 12"})
+    assert two.status_code == 200 and two.json()["transcribed"] is True  # an offer for `.use()`, nothing stored
+    three = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Apples 7, Pears 12, Plums 5"}
+    )
+    assert three.status_code == 200 and three.json()["profile"]["source_format"] == "pair_list"
+    assert three.json()["profile"]["rows"] == 3
+
+
 async def test_a_plain_list_is_transcribed_but_json_and_tables_are_not(client: httpx.AsyncClient, judge) -> None:
     sid = await open_session(client, with_data=False)
     judge.transcriptions = [_reading(["Tier", "Anzahl"], [["Hund", "7"], ["Katze", "3"]])]

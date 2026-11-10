@@ -172,6 +172,7 @@ from agents.anyplot import telemetry, turn_record
 from agents.anyplot.code import treesitter
 from agents.anyplot.data.bindings import check_bindings, label_siblings
 from agents.anyplot.data.classify import classify_paste, request_for_chat
+from agents.anyplot.data.layouts import MIN_PAIRS_WITH_DATA, MIN_ROWS
 from agents.anyplot.data.parse import (
     CONSTANT_NOTE_SUFFIX,
     MAX_COMPUTED_BYTES,
@@ -1566,7 +1567,11 @@ async def _ingest_paste(
         # A confirmed transcription is the service's own CSV, which the user has seen row by row: no row is left out.
         # A dropped `.jsonl` or `.ndjson` file is JSON Lines by its name, so a file of one record is one row.
         json_lines = body.source is not None and body.source.lower().rstrip().endswith((".jsonl", ".ndjson"))
-        parsed = parse_dataset(body.text, find_table=not body.confirmed, table=body.table or 1, json_lines=json_lines)
+        # A short list of pairs over data the session holds is as often a change request in words (`layouts.py`).
+        min_pairs = MIN_PAIRS_WITH_DATA if view.dataset_id else MIN_ROWS
+        parsed = parse_dataset(
+            body.text, find_table=not body.confirmed, table=body.table or 1, json_lines=json_lines, min_pairs=min_pairs
+        )
     except ParseError as exc:
         facts.cause = exc.code
         if exc.code == "too_long":

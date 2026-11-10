@@ -484,11 +484,13 @@ the documented safe state.
 
 ## Security rules (Pro, since 2026-11-09)
 
-> **Status (2026-11-09):** the managed rules, the transform rule, and the smoke
-> bypass are live, and the crawler block rule is deleted, so no crawler is
-> blocked at the edge. A Managed Challenge for two ASNs is planned once the
-> nginx analytics shield (#12860) is deployed. Whether Super Bot Fight Mode
-> challenges "definitely automated" traffic is an open owner decision.
+> **Status (2026-11-09):** the managed rules, the transform rule, the smoke
+> bypass, and the Managed Challenge for four hosting-network ASNs are live, and
+> the crawler block rule is deleted, so no crawler is blocked at the edge. The
+> ASN challenge is the one mechanism against the crawler farm: the nginx
+> user-agent entry that #12860 added for it was removed the same day. Whether
+> Super Bot Fight Mode challenges "definitely automated" traffic is an open
+> owner decision.
 
 On 2026-11-09 the `anyplot.ai` zone moved to the Cloudflare Pro plan, and the
 rules in this section were applied through the Cloudflare API with the scoped
@@ -502,8 +504,11 @@ disagree, the dashboard is right and this section needs an update.
 
 No rule may hard-block traffic that could be a human. Two responses are
 allowed instead: a Managed Challenge, an interstitial that a real browser
-passes, and hiding the traffic on the analytics side, which has to be narrow,
-dated, and measured.
+passes, and hiding the traffic on the analytics side. The second may only name
+automation by its own token, as nginx's analytics shield does, and never
+matches a browser's user agent: a person it caught would vanish from the
+numbers without anyone seeing it
+([The analytics shield](../../docs/reference/plausible.md#the-analytics-shield)).
 
 ### Managed rules (WAF)
 
@@ -577,6 +582,7 @@ The smoke bypass is the first rule of the custom ruleset.
 |---|---|---|---|---|
 | Smoke bypass | `6a18892a4acf4461a38afe4e12ef6c00` | Skip, phase `http_request_sbfm` | the site hosts with the right `X-Smoke-Token` (see [The smoke bypass](#the-smoke-bypass)) | active since 2026-11-09 |
 | Skip Bot Fight Mode for api | `56271bc6b54d4e1897af4447c72e425f` | Skip, phase `http_request_sbfm` | `http.host eq "api.anyplot.ai"`, so Super Bot Fight Mode never challenges API and MCP clients | active |
+| Hosting-network challenge | `34be33ecb34f4c21935ca75e3f9c0d3a` | Managed Challenge | four hosting-network ASNs on the site hosts, verified bots excluded (see [A Managed Challenge for hosting-network ASNs](#a-managed-challenge-for-hosting-network-asns)) | active since 2026-11-09 |
 | Block public agent chat | `56aee2fcb6b547bb914a59bbc4da5e12` | Block | the public agent chat | disabled |
 
 The AI Crawl Control block rule is gone. On 2026-11-09 it was first narrowed
@@ -670,16 +676,39 @@ page instead of the site and check nothing; the script marks such a page as a
   hosts and nothing more. To rotate it, change the rule's value and the `.env`
   line together.
 
-### Planned: a Managed Challenge for two ASNs
+### A Managed Challenge for hosting-network ASNs
 
-Once the nginx analytics shield (#12860) is deployed, a custom rule answers
-this expression with a Managed Challenge. It is not applied as of 2026-11-09.
+Since 2026-11-09, custom rule `34be33ecb34f4c21935ca75e3f9c0d3a` in the custom
+ruleset `0f3e161fc09f4d62b6af6eea7fe838a9` answers this expression with a
+Managed Challenge (rule version 2, which added the last two ASNs at 20:44 UTC):
 
 ```text
-(ip.src.asnum in {132203 394380}) and not cf.client.bot and (http.host in {"anyplot.ai" "www.anyplot.ai" "python.anyplot.ai"})
+(ip.src.asnum in {132203 394380 136907 45090}) and not cf.client.bot and (http.host in {"anyplot.ai" "www.anyplot.ai" "python.anyplot.ai"})
 ```
 
-`not cf.client.bot` keeps verified bots out of the challenge.
+| ASN | Network |
+|---|---|
+| 132203 | Tencent Cloud |
+| 45090 | Tencent |
+| 394380 | Leaseweb |
+| 136907 | Huawei Cloud |
+
+- **Why.** Since 2026-11-03 a crawler farm has loaded spec pages around the
+  clock from a new exit IP on almost every request. It runs the page's
+  JavaScript, so its events reach Plausible as a browser's
+  ([The Windows 10 Chrome farm](../../docs/reference/plausible.md#the-windows-10-chrome-farm-2026-11-09)).
+  The rule started with Tencent Cloud and Leaseweb. Huawei Cloud and
+  Tencent's second ASN joined the same day after the farm's Singapore wave,
+  which came 38 % from Huawei Cloud and 18 % from Tencent in a sample of 60
+  addresses.
+- **What it leaves alone.** The farm's residential share, deliberately:
+  residential addresses are shared with people, so a rule there would
+  challenge visitors. `not cf.client.bot` keeps verified bots out too.
+- **Why here and not in nginx.** A person on one of these networks, on a VPN
+  or a cloud desktop, sees the challenge and can pass it. A user-agent entry in
+  nginx drops a person's events without anyone seeing it. The one #12860 added
+  for this farm, Windows 10 Chrome 100 to 139, was removed the same day in
+  favour of this rule, and the farm had already moved to Chrome 148 to 150.
 
 ### Verify the rules
 

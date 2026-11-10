@@ -3228,9 +3228,11 @@ def cmd_decide(args: argparse.Namespace) -> int:
 
 
 def cmd_sanitize_source(args: argparse.Namespace) -> int:
-    text = Path(args.source).read_text(encoding="utf-8")
+    # newline="": line endings stay as they are, so the file impl-generate
+    # commits hashes like the one it rendered (render_hash.py).
+    text = Path(args.source).read_text(encoding="utf-8", newline="")
     rewrite = reset_header_score if args.pending else sanitize_source
-    Path(args.out).write_text(rewrite(text), encoding="utf-8")
+    Path(args.out).write_text(rewrite(text), encoding="utf-8", newline="")
     return 0
 
 

@@ -1,5 +1,5 @@
 {
-  "about": "Shared cases of the composer's paste routing (routeInput.ts). route is what the page does with pasted text: data becomes an attachment that Enter sends to the dataset route, message stays typed text, null is nothing to route. server is what the dataset route's classify_paste answers for the same text (agents/anyplot/data/classify.py): null for text the parser reads, else code, formula or data_request. routeInput.test.ts asserts route; tests/unit/agents/test_route_cases.py asserts server. parsed, when present, is the table the server's parser reads from the text (agents/anyplot/data/layouts.py: its source format, its row count and its column names), which test_route_cases.py asserts too; a data case without it may be text the parser leaves to the transcriber (rule 14). Use invented data only. repeat, when present, repeats text that many times. lines are single lines with the code veto's verdict, which both sides must give: strong (an import, a definition, an R assignment, a known data call, an arrow function) and shaped (strong, or a comment, a brace, return, a line ending in ; { or :).",
+  "about": "Shared cases of the composer's paste routing (routeInput.ts). route is what the page does with pasted text: data becomes an attachment that Enter sends to the dataset route, message stays typed text, null is nothing to route. server is what the dataset route's classify_paste answers for the same text (agents/anyplot/data/classify.py): null for text the parser reads, else code, formula or data_request. routeInput.test.ts asserts route; tests/unit/agents/test_route_cases.py asserts server. parsed, when present, is the table the server's parser reads from the text (agents/anyplot/data/layouts.py: its source format, its row count and its column names), which test_route_cases.py asserts too; a data case without it may be text the parser leaves to the transcriber (rule 14). has_data, when true, routes the case while the session holds data (routeInput's hasData; the dataset route's min_pairs on the server). layout, when present and null, is text the server's layout reader must not read as a table either (layouts.read_layout): a change request such as x bis 2030, y bis 60. Use invented data only. repeat, when present, repeats text that many times. lines are single lines with the code veto's verdict, which both sides must give: strong (an import, a definition, an R assignment, a known data call, an arrow function) and shaped (strong, or a comment, a brace, return, a line ending in ; { or :).",
   "cases": [
     { "id": 1, "text": "month,sales\nJan,5\nFeb,7", "route": "data", "rule": "7a", "server": null },
     {
@@ -376,6 +376,116 @@
       "route": "message",
       "rule": "4",
       "server": null
+    },
+    {
+      "id": 65,
+      "text": "x bis 2030, y bis 60",
+      "route": "message",
+      "rule": "13w",
+      "server": null,
+      "layout": null,
+      "has_data": true
+    },
+    {
+      "id": 66,
+      "text": "y-Achse 0 bis 3500, Linie 2500",
+      "route": "message",
+      "rule": "13w",
+      "server": null,
+      "layout": null,
+      "has_data": true
+    },
+    {
+      "id": 67,
+      "text": "Titel 2026, Schrift 14",
+      "route": "message",
+      "rule": "13w",
+      "server": null,
+      "layout": null,
+      "has_data": true
+    },
+    {
+      "id": 68,
+      "text": "y max 60, x max 2030",
+      "route": "message",
+      "rule": "13w",
+      "server": null,
+      "layout": null,
+      "has_data": true
+    },
+    {
+      "id": 69,
+      "text": "x bis 2030, y bis 60",
+      "route": "message",
+      "rule": "13w",
+      "server": null,
+      "layout": null
+    },
+    {
+      "id": 70,
+      "text": "x 2030, y 60",
+      "route": "message",
+      "rule": "13w",
+      "server": null,
+      "layout": null
+    },
+    {
+      "id": 71,
+      "text": "y bis 60",
+      "route": "message",
+      "rule": "4",
+      "server": null,
+      "has_data": true
+    },
+    {
+      "id": 72,
+      "text": "log y, ticks 5",
+      "route": "message",
+      "rule": "4",
+      "server": "formula",
+      "has_data": true
+    },
+    {
+      "id": 73,
+      "text": "make y 0 to 60, line at 42",
+      "route": "message",
+      "rule": "4",
+      "server": null,
+      "has_data": true
+    },
+    {
+      "id": 74,
+      "text": "Apples 7, Pears 12",
+      "route": "message",
+      "rule": "13d",
+      "server": null,
+      "has_data": true
+    },
+    {
+      "id": 75,
+      "text": "Apples 7, Pears 12, Plums 5",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "has_data": true,
+      "parsed": { "format": "pair_list", "rows": 3, "columns": ["label", "value"] }
+    },
+    {
+      "id": 76,
+      "text": "Max 7, Lisa 5, Tim 2",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "has_data": true,
+      "parsed": { "format": "pair_list", "rows": 3, "columns": ["label", "value"] }
+    },
+    {
+      "id": 77,
+      "text": "Hund 7\nKatze 3",
+      "route": "data",
+      "rule": "13",
+      "server": null,
+      "parsed": { "format": "pair_list", "rows": 2, "columns": ["label", "value"] }
     }
   ],
   "lines": [

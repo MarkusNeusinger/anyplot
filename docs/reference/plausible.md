@@ -314,44 +314,40 @@ response so the client doesn't retry. The shield exists since audit 2026-07-08
 Server-side events are a separate path, see
 [Two things Plausible will silently drop](#two-things-plausible-will-silently-drop).
 
-### The Windows 10 Chrome farm
+Both maps name a client by its own token: a crawler's name, a headless
+browser, an HTTP library, or an empty user agent. Neither matches a browser's
+user agent, whatever its version, because a farm that wears one shares it with
+real visitors, and nginx would drop their events without anyone seeing it.
+Such a farm's traffic from hosting networks is challenged at the Cloudflare
+edge instead, where a person who gets caught sees the challenge and can pass
+it. Its traffic through residential addresses is deliberately left alone,
+because those addresses are shared with people, so that share can still reach
+the dashboard. See "Security rules" in
+[`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#a-managed-challenge-for-hosting-network-asns).
+`tests/unit/api/test_analytics_event_proxy.py` fails if a browser's user agent
+loses its events, and it carries the shapes farms have worn.
+
+### The Windows 10 Chrome farm (2026-11-09)
 
 Since 2026-11-03 a crawler farm has loaded about 17 spec pages per hour around
-the clock. It rotates Windows 10 Chrome user agents, versions 103 to 138, some
-with a full build number (`Chrome/104.0.5112.81`) and some truncated to
-`Safari/537.3`, and it sends almost every request from a new exit IP: about
-64 % from Tencent Cloud (AS132203), the rest through residential proxies. It
-runs the page's JavaScript, so its events arrive as a browser's, and the
-automation list of `$is_headless_client` caught 6 of 16,195 event posts in
-44 hours. Plausible's own filter dropped the data-center share but counted the
-residential one: in the 7 days before 2026-11-08 the farm made up 675 of 1,451
-dashboard visitors. Because the IP changed between requests, one page load of
-the farm became up to three Plausible visitors: `TTFB`, `FCP`, and the
-pageview, each from another IP.
+the clock, from a new exit IP on almost every request: about 64 % from Tencent
+Cloud (AS132203), the rest through residential proxies. It runs the page's
+JavaScript, so its events arrive as a browser's. In the 7 days before
+2026-11-08 it made up 675 of 1,451 dashboard visitors.
 
-Since 2026-11-08 `$is_headless_client` carries one more entry, which matches
-`Windows NT 10.0; Win64; x64` with Chrome 100 to 139 and a tail that ends in
-`Safari/537.3` or `Safari/537.36`:
+On 2026-11-09, #12860 added an entry to `$is_headless_client` that matched the
+farm's user agents, Windows 10 Chrome 100 to 139. It was removed the same day:
 
-- Edge and Opera add `Edg/` or `OPR/` after `Safari/537.36`, so the anchored
-  tail keeps them out.
-- Windows 7 and 8.1 send `Windows NT 6.x`.
-- Chrome 140 and later is not matched. Brave and Vivaldi send Chrome's user
-  agent unchanged, so only their old builds fall under the entry.
+- The farm moved to Chrome 148 to 150 on Windows and macOS that day, so the
+  entry no longer matched it and caught 14 events all day.
+- The entry kept dropping the events of real visitors on a pinned old Chrome,
+  about 1.8 % of visits (37 of 2,069 in the 28 days before 2026-11-08).
 
-The entry costs real visitors on Windows 10 or 11 (both send
-`Windows NT 10.0`) with a pinned old Chrome: about 2 % of visits (37 of 2,069
-in the 28 days before 2026-11-08) are no longer counted. `tests/unit/api/test_analytics_shield.py` holds the map against the
-farm's user agents and against current browsers.
-
-To review the entry:
-
-1. Open the dashboard's browser-version breakdown for Chrome on Windows.
-2. Keep the ceiling about 15 versions below stable Chrome: 139 against stable
-   156 on 2026-11-08. Raise it to 14x once stable passes about 165, or sooner
-   only if the farm's pool moves past 139.
-3. Change the version cases in `tests/unit/api/test_analytics_shield.py` in
-   the same pull request.
+The one mechanism against the farm is now the Cloudflare Managed Challenge for
+four hosting-network ASNs: Tencent (132203 and 45090), Leaseweb (394380), and
+Huawei Cloud (136907), with verified bots excluded. The farm's residential
+share is deliberately left alone. See
+[A Managed Challenge for hosting-network ASNs](../../infra/cloudflare/README.md#a-managed-challenge-for-hosting-network-asns).
 
 ---
 
@@ -911,5 +907,5 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 
 ---
 
-**Last Updated**: 2026-11-08
+**Last Updated**: 2026-11-09
 **Status**: Production-ready with full journey tracking, server-side og:image analytics, landing-page nav tracking, theme analytics, and the analytics shield against automation

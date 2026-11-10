@@ -19,9 +19,10 @@
  *   Shift+Enter is a new line. On a touch screen, whose keyboard names Enter "return", a small
  *   `↵` inside the box sends too. It has no `.send()` beside it any more. A browser cuts a long
  *   placeholder without an ellipsis, so on a phone the placeholders with data are short ones
- *   (`PHONE_PLACEHOLDER`): "ask or say what to plot", "ask for a change".
+ *   (`PHONE_PLACEHOLDER`): "ask or say what to plot", "ask a question or a change".
  * - The plot button, filled from the moment data is stored or waits in the box, quiet and inert
- *   before: `.create_plot() →` (confirms the data and the bindings as shown, then plots, with the
+ *   before, two lines, its name over a quiet line on what one click does (`PLOT_BUTTON`):
+ *   `.create_plot() →` (confirms the data and the bindings as shown, then plots, with the
  *   box's text as the request), `.update_plot() →` once the library has a plot (sends the box's
  *   text, inert while the box is empty), `plot the new data` after a change to data the user had
  *   confirmed (acts with an empty box), `.plot_all()` while the admin's fan-out is on. A switch
@@ -69,14 +70,17 @@ import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
 import { colors, fontSize, typography } from 'src/theme';
 
 /**
- * The plot button's words and its accessible name, per kind. The arrow says that the click sends
- * the box's text along; `.plot_all()` opens the fan-out's panel instead.
+ * The plot button's words, the quiet line under them and its accessible name, per kind. The arrow
+ * says that the click sends the box's text along; `.plot_all()` opens the fan-out's panel instead.
+ * The line under the name says what one click does: `.update_plot() →` sends the box's text as
+ * Enter does, so it answers a question and changes the data as well as the plot, which its name
+ * alone does not say. Every kind has a line, so the button is one height in every state.
  */
-const PLOT_BUTTON: Record<PlotButtonKind, { text: string; name: string }> = {
-  create: { text: '.create_plot() →', name: 'Create plot' },
-  update: { text: '.update_plot() →', name: 'Update plot' },
-  new_data: { text: NEW_DATA_PLOT, name: 'Plot the new data' },
-  all: { text: '.plot_all()', name: 'Plot in all libraries' },
+const PLOT_BUTTON: Record<PlotButtonKind, { text: string; hint: string; name: string }> = {
+  create: { text: '.create_plot() →', hint: 'confirm data · plot it', name: 'Create plot' },
+  update: { text: '.update_plot() →', hint: 'ask · edit data · change plot', name: 'Update plot' },
+  new_data: { text: NEW_DATA_PLOT, hint: 'confirm data · plot it', name: 'Plot the new data' },
+  all: { text: '.plot_all()', hint: 'one plot per library', name: 'Plot in all libraries' },
 };
 
 /** The hidden help the plot button names when its click starts from the catalogue plot. */
@@ -364,7 +368,7 @@ export function Composer(props: ComposerProps) {
                         ? `ask about your data, or say what the ${hasPlot ? 'next' : 'first'} plot should do`
                         : !hasPlot
                           ? 'optional: what the first plot should do differently'
-                          : 'ask for a change, e.g. log scale on y'
+                          : 'ask a question or a change, e.g. log scale on y'
             }
             value={draft}
             rows={1}
@@ -463,15 +467,37 @@ export function Composer(props: ComposerProps) {
           aria-describedby={plot.fresh ? `${STATUS_LINE_ID} ${PLOT_HELP_ID}` : STATUS_LINE_ID}
           sx={{
             ...(hasData || attachment || plot.active ? composerFilledSx : composerGhostSx),
-            // From `sm` up as wide as its longest name (`plot the new data`, mono), so a new name
-            // moves nothing beside it; below `sm` a line of its own at the full width, in the
-            // same size, since it no longer shares the line with the box.
-            minWidth: 'calc(17ch + 26px)',
+            display: 'inline-flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            rowGap: '2px',
+            // From `sm` up as wide as its longest line (the 29 characters of `update`'s hint in
+            // the small size, 27 of the button's own), so a new name moves nothing beside it;
+            // below `sm` a line of its own at the full width, in the same size, since it no
+            // longer shares the line with the box.
+            minWidth: 'calc(27ch + 26px)',
             flex: { xs: '1 1 100%', sm: 'none' },
             ml: 'auto',
           }}
         >
-          {plotText}
+          <Box component="span" data-plot-label>
+            {plotText}
+          </Box>
+          {/* What one click does. The accessible name stays the short one, and the box's
+              placeholder says the same to a screen reader, so the line is for the eye only. */}
+          <Box
+            component="span"
+            aria-hidden
+            data-testid="plot-hint"
+            sx={{
+              fontSize: smallText,
+              fontWeight: 400,
+              color: 'color-mix(in srgb, currentColor 78%, transparent)',
+            }}
+          >
+            {plotWords.hint}
+          </Box>
         </Box>
       </Box>
       {plot.fresh && (

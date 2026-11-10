@@ -509,7 +509,8 @@ const composerButtons = () =>
     .filter(button => button.textContent !== '.open()')
     .map(
       button =>
-        `${button.textContent}${button.getAttribute('aria-disabled') === 'true' ? ' (inert)' : ''}`
+        // The plot button reads by its name, without the quiet line under it.
+        `${(button.querySelector('[data-plot-label]') ?? button).textContent}${button.getAttribute('aria-disabled') === 'true' ? ' (inert)' : ''}`
     );
 
 /** The actions at the end of the status line at the frame's foot, as they read. */
@@ -1379,7 +1380,7 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('article', { name: 'Plot version 1' })).toBeInTheDocument();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask for a change, e.g. log scale on y'
+      'ask a question or a change, e.g. log scale on y'
     );
     expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
@@ -1528,9 +1529,16 @@ describe('AgentChatPage gating', () => {
     // is back where the user was, with no turn in between.
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(currentStep()).toBe(2);
-    expect(screen.getByTestId('data-step')).toHaveTextContent('data v1 fits');
+    // The discarded text is back in the box, where it is a list of pairs again: the line says,
+    // before Enter or the button sends it, that it would replace the data with no way back.
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      'step 2 of 2 · the table in the box replaces your data (2 rows, no .undo()) · plot the new data reads and plots it, Enter ↵ only reads it'
+    );
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
     expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
+    // Without it, the step's own line is back.
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: '' } });
+    expect(screen.getByTestId('data-step')).toHaveTextContent('data v1 fits');
   });
 
   it('leaves the composer focus alone when step 2 returns by itself', async () => {
@@ -3959,6 +3967,40 @@ describe('AgentChatPage attachment', () => {
       await turnEnded();
       fireEvent.change(message(), { target: { value: 'word '.repeat(450) } });
       expect(screen.getByTestId('message-counter')).toBeInTheDocument();
+    });
+
+    it.each([
+      'x bis 2030, y bis 60',
+      'y-Achse 0 bis 3500, Linie 2500',
+      'Titel 2026, Schrift 14',
+      'y max 60, x max 2030',
+    ])('keeps the change request %s over a plot a message, never new data', async text => {
+      // The live regression of 2026-11-09: it replaced the table with two `label`/`value` rows.
+      await openChat();
+      await parseAndPlot();
+      const posts = datasetPosts().length;
+      fireEvent.change(message(), { target: { value: text } });
+      const update = screen.getByRole('button', { name: 'Update plot' });
+      expect(update).not.toHaveAttribute('aria-disabled');
+      expect(step()).not.toHaveTextContent('replaces your data');
+      fireEvent.keyDown(message(), { key: 'Enter' });
+      await waitFor(() => expect(confirmAndTurns()).toContain(`text: ${text}`));
+      expect(datasetPosts()).toHaveLength(posts);
+    });
+
+    it('says that a table typed over the data replaces it, before it goes', async () => {
+      await openChat();
+      await parseAndPlot();
+      // Two pairs over data are no list (they are as often a request); three are.
+      fireEvent.change(message(), { target: { value: 'Apples 7, Pears 12' } });
+      expect(step()).not.toHaveTextContent('replaces your data');
+      fireEvent.change(message(), { target: { value: 'Apples 7, Pears 12, Plums 5' } });
+      expect(step()).toHaveTextContent(
+        'step 2 of 2 · the table in the box replaces your data (2 rows, no .undo()) · plot the new data reads and plots it, Enter ↵ only reads it'
+      );
+      expect(screen.getByRole('button', { name: 'Plot the new data' })).not.toHaveAttribute(
+        'aria-disabled'
+      );
     });
 
     it('reads a pasted table with all pressed, then plots it in every library', async () => {
