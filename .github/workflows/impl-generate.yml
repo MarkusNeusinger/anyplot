@@ -915,6 +915,21 @@ jobs:
           # the pushed branch in its place: "Upload to GCS Staging" hashes it.
           cp "${IMPL_DIR}/${LIBRARY}${EXT}" "$RUNNER_TEMP/render-source" 2>/dev/null || rm -f "$RUNNER_TEMP/render-source"
 
+          # Render freshness (warn-only): a render older than the file was made
+          # before the file's last change. The generator formats the file after
+          # it renders, so this records how often the bytes change afterwards;
+          # nothing fails on it.
+          FRESH=fresh
+          for theme in light dark; do
+            if [ -f "${IMPL_DIR}/plot-${theme}.png" ] && [ "${IMPL_DIR}/${LIBRARY}${EXT}" -nt "${IMPL_DIR}/plot-${theme}.png" ]; then
+              FRESH="stale (plot-${theme}.png is older than ${LIBRARY}${EXT})"
+            fi
+          done
+          echo "**Render freshness:** ${FRESH}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$FRESH" != fresh ]; then
+            echo "::warning::render_freshness status=stale: ${FRESH#stale }"
+          fi
+
           # Configure git auth (Claude's action configured it, but it's gone now)
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
@@ -930,6 +945,20 @@ jobs:
             exit 1
           elif [ "$rc" != 0 ]; then
             echo "::error::Could not look up ${BRANCH} on origin (git ls-remote exit ${rc}); nothing is committed or staged"
+            exit 1
+          fi
+          # The branch must carry the file the renders came from. A ref an
+          # earlier run left behind (the delete in "Create implementation
+          # branch" may fail) passes the lookup above with that run's code, and
+          # the checkout below would put it under this run's renders.
+          PUSHED_FILE="${IMPL_DIR}/${LIBRARY}${EXT}"
+          if ! git cat-file -e "origin/${BRANCH}:${PUSHED_FILE}" 2>/dev/null; then
+            echo "::error::${PUSHED_FILE} is not on origin/${BRANCH}: this run's implementation was never pushed, so its renders are neither committed nor staged"
+            exit 1
+          fi
+          rc=0; git diff --quiet "origin/${BRANCH}" -- "$PUSHED_FILE" || rc=$?
+          if [ "$rc" != 0 ]; then
+            echo "::error::${PUSHED_FILE} in the workspace is not the file on origin/${BRANCH} (git diff exit ${rc}): the branch holds an earlier run's code, or the last edit was never pushed, so the renders belong to no pushed code"
             exit 1
           fi
           git checkout -B "$BRANCH" "origin/$BRANCH"
@@ -1277,7 +1306,7 @@ jobs:
       # Step 3 renders), so impl-review's gate can measure render identity on
       # raw renders from one environment, before "Process plot images"
       # quantizes anything. Results land in $RUNNER_TEMP/adapt and "Upload to
-      # GCS Staging" stages them privately under adapt/. Record-only: no exit
+      # GCS Staging" stages them under adapt/, never promoted. Record-only: no exit
       # code gates, continue-on-error keeps a crash or a timeout from failing
       # the job, and a missing artifact reads as `missing` in impl-review (no
       # repair trigger, design "No repair trigger"). The other languages have
@@ -1516,8 +1545,9 @@ jobs:
 
           # Adaptability artifacts from "Adaptability smoke run (record-only)".
           # An earlier run of this pair is cleared first, unconditionally, so a
-          # kept regeneration's prev-* and pair.json never outlive it. They stay
-          # private (no AllUsers ACL) and impl-merge never promotes them.
+          # kept regeneration's prev-* and pair.json never outlive it. They get
+          # no ACL call (the bucket's uniform access makes every object readable
+          # anyway), and impl-merge never promotes them.
           # rsync, not `cp -r dir/*`: copying a directory into a destination
           # subdirectory that does not exist yet drops the directory's name
           # (gsutil's naming rule), so new/plot-light.png and
@@ -1551,7 +1581,8 @@ jobs:
 
           # render.sha256: the hash of the file the renders came from, which
           # impl-review compares with the PR head (automation/scripts/render_hash.py,
-          # from this workflow's ref). Private and never promoted (not plot-*).
+          # from this workflow's ref). Readable like every object in the bucket
+          # (it is the hash of public code) and never promoted (not plot-*).
           # Never fatal; a stale hash goes, so the review reports it missing.
           TOOLS="$RUNNER_TEMP/render-tools"
           mkdir -p "$TOOLS"

@@ -125,11 +125,11 @@ impl-generate.yml
   |-- Creates branch: implementation/{spec-id}/{library}
   |-- AI generates code (Python: adaptability self-check, Step 3c)
   |     or, with source_ref, takes the file from that ref and renders it (adopt mode)
-  |-- Fails if the branch was never pushed, or the commit changes a dependency file
+  |-- Fails if the pushed branch doesn't carry the rendered file, or the commit changes a dependency file
   |-- Creates metadata/{language}/{library}.yaml (initial)
   |-- Python: adaptability smoke run, plus the predecessor's render on a regeneration (record-only)
   |-- Tests execution
-  |-- Uploads preview to GCS staging, with render.sha256 (adaptability records under a private adapt/ prefix)
+  |-- Uploads preview to GCS staging, with render.sha256 (adaptability records under an adapt/ prefix, never promoted)
   |-- Creates PR --> main
        |
        v
@@ -168,7 +168,7 @@ Python implementations follow the Data block convention of [Adaptable catalogue 
 | Workflow | Step | What it does |
 |---|---|---|
 | `impl-generate.yml` | Adaptability smoke run (record-only) | Runs the new source on perturbed tables (`core/smoke_run.py run`). On a regeneration it also renders the predecessor next to the new source in the same runner (`pair`) and runs the smoke run on it. It records the results under `$RUNNER_TEMP/adapt` without gating. |
-| `impl-generate.yml` | Upload to GCS Staging | Clears `staging/{spec}/python/{library}/adapt/` and stages this run's smoke results, pair record, raw pair renders, and the generator's self-check log there, privately and never promoted. |
+| `impl-generate.yml` | Upload to GCS Staging | Clears `staging/{spec}/python/{library}/adapt/` and stages this run's smoke results, pair record, raw pair renders, and the generator's self-check log there. They're never promoted, but like every object in the bucket they're publicly readable. |
 | `impl-repair.yml` | Adaptability smoke run (record-only) | Reruns the smoke run on the repaired file. |
 | `impl-repair.yml` | Upload repaired plot to GCS staging | Replaces `adapt/new-smoke.json`, or removes the stale one when the repair run wrote none. |
 | `impl-review.yml` | Set up Python | Pins the job's `python3` to `.python-version`, which the regen tools and the checker mirror need to parse PEP 758 `except A, B:`. |
@@ -185,13 +185,15 @@ The gates fail the run:
 
 | Workflow | Step | Fails when |
 |---|---|---|
-| `impl-generate.yml` | Create library metadata file | The implementation branch doesn't exist on origin. The step used to check out `origin/main` instead, which put a regeneration's renders under the live implementation. |
+| `impl-generate.yml` | Create library metadata file | The implementation branch doesn't exist on origin, or the implementation file on it isn't the file in the workspace. The step used to check out `origin/main` when the branch was missing, which put a regeneration's renders under the live implementation. A branch that an earlier run left behind fails the comparison, because it carries that run's code. |
 | `impl-repair.yml` | Check the repair's push | The pushed branch has no change to the implementation file since the head the repair started from, or the file in the workspace differs from the pushed one. |
 | `impl-repair.yml` | Process repaired image | `plot-light.png` or `plot-dark.png` is missing. The step used to exit 0, so the review scored the previous renders against the repaired code. |
 
 A failed repair gate takes the ordinary crash path ("Handle repair failure"): `ai-rejected` comes back, the attempt is retried once, and the PR comment names the gate.
 
-The render hash only warns. `impl-generate.yml` and `impl-repair.yml` stage `render.sha256` beside the PNGs: the sha256 of the implementation the renders came from, with its `Quality:` header line reset to `pending` (`automation/scripts/render_hash.py`, which applies `regen_gate.reset_header_score`, the rewrite `sanitize-source --pending` makes). The generator's own header score and the pipeline's reset to `pending` therefore never change it. impl-generate hashes the file as the generator left it in the workspace, before the checkout of the pushed branch; impl-repair hashes the file its push gate just checked. The object isn't named `plot-*`, so neither the review's download nor the promotion copies it, and it's never public.
+The render hash only warns. `impl-generate.yml` and `impl-repair.yml` stage `render.sha256` beside the PNGs: the sha256 of the implementation the renders came from, with its `Quality:` header line reset to `pending` (`automation/scripts/render_hash.py`, which applies `regen_gate.reset_header_score`, the rewrite `sanitize-source --pending` makes). The generator's own header score and the pipeline's reset to `pending` therefore never change it. impl-generate hashes the file as the generator left it in the workspace, before the checkout of the pushed branch; impl-repair hashes the file its push gate just checked. The object isn't named `plot-*`, so neither the review's download nor the promotion copies it. Like every object in the bucket it's publicly readable while it's staged; it's the hash of code that's public anyway.
+
+Both workflows also write a `**Render freshness:**` line to the job summary, `fresh` or `stale`, and a `render_freshness status=stale` warning when a PNG is older than the implementation file. A stale render was made before the file's last change. The generator and the repair format the file after they render it, so the line records how often the bytes change after the render. It doesn't fail the run.
 
 `impl-review.yml` runs "Check the render hash (warn-only)" right after it downloads the renders. It compares the staged hash with the file at the PR head and reports one of four results in the job summary:
 

@@ -499,6 +499,7 @@ jobs:
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
 
@@ -509,6 +510,22 @@ jobs:
             echo "::error::Missing plot-{light,dark}.png after repair"
             ls -la "$IMPL_DIR/" || true
             exit 1
+          fi
+
+          # Render freshness (warn-only), read before the processing below
+          # rewrites the PNGs: a render older than the file was made before the
+          # file's last change. The repair formats the file after it renders,
+          # so this records how often the bytes change afterwards; nothing
+          # fails on it.
+          FRESH=fresh
+          for theme in light dark; do
+            if [ "$IMPL_DIR/${LIBRARY}${EXT}" -nt "$IMPL_DIR/plot-${theme}.png" ]; then
+              FRESH="stale (plot-${theme}.png is older than ${LIBRARY}${EXT})"
+            fi
+          done
+          echo "**Render freshness:** ${FRESH}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$FRESH" != fresh ]; then
+            echo "::warning::render_freshness status=stale: ${FRESH#stale }"
           fi
 
           source .venv/bin/activate
@@ -597,7 +614,7 @@ jobs:
 
           # render.sha256 of the repaired file ("Check the repair's push" made
           # sure it is the pushed one), as impl-generate stages it: from this
-          # workflow's ref, private, never fatal, a stale one goes.
+          # workflow's ref, never promoted, never fatal, a stale one goes.
           TOOLS="$RUNNER_TEMP/render-tools"
           mkdir -p "$TOOLS"
           if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
@@ -610,8 +627,8 @@ jobs:
             gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
           fi
 
-          # The smoke run of the repaired file replaces the staged one (private,
-          # never promoted). Without a new one the stale record from before the
+          # The smoke run of the repaired file replaces the staged one (never
+          # promoted). Without a new one the stale record from before the
           # repair goes, so impl-review reads `missing`, never a result for code
           # that no longer exists.
           if [ "$LANGUAGE" = "python" ]; then

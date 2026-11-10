@@ -6,8 +6,10 @@ a missing-PNG branch that exited 0, and a generation that checked out
 origin/main under cached renders when the branch was never pushed. Now
 impl-repair fails unless it pushed a change to the implementation and the
 workspace holds that file, and fails without both renders; impl-generate fails
-without the pushed branch. Both stage `render.sha256`, and impl-review compares
-it with the file at the PR head, warn-only.
+unless the pushed branch carries the file in the workspace. Both stage
+`render.sha256`, and impl-review compares it with the file at the PR head,
+warn-only. Both also record, warn-only, whether a render is older than the
+implementation file.
 
 The step scripts run here under `bash -e` (the Actions default) and
 `bash -eo pipefail`, against a scratch origin whose workflow-ref commit carries
@@ -245,6 +247,35 @@ def test_repair_fails_without_both_renders(tmp_path, shell):
     assert repo.read("output") == "gate=the repair left no plot-light.png and plot-dark.png\n"
 
 
+def _age_renders(repo: Repo, seconds: int) -> None:
+    """Write both renders `seconds` after the implementation file's last change (negative: before it)."""
+    impl = repo.ws / IMPL
+    changed = impl.stat().st_mtime
+    for theme in ("light", "dark"):
+        png = impl.parent / f"plot-{theme}.png"
+        png.write_bytes(b"png")
+        os.utime(png, (changed + seconds, changed + seconds))
+
+
+@pytest.mark.parametrize("shell", SHELLS, ids=SHELL_IDS)
+@pytest.mark.parametrize(
+    ("seconds", "fresh"), [(60, True), (-60, False)], ids=["rendered-last", "changed-after-render"]
+)
+def test_repair_records_render_freshness_without_failing(tmp_path, shell, seconds, fresh):
+    repo = Repo(tmp_path)
+    _age_renders(repo, seconds)
+    script = str(_step("impl-repair.yml", "Process repaired image")["run"])
+    result = repo.run(script[: script.index("source .venv/bin/activate")], shell)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert repo.read("output") == ""  # never a gate
+    if fresh:
+        assert repo.read("summary") == "**Render freshness:** fresh\n"
+        assert "render_freshness" not in result.stdout
+    else:
+        assert repo.read("summary") == f"**Render freshness:** stale (plot-dark.png is older than {LIB}{EXT})\n"
+        assert f"::warning::render_freshness status=stale: (plot-dark.png is older than {LIB}{EXT})" in result.stdout
+
+
 @pytest.mark.parametrize(
     ("markers", "expected"),
     [
@@ -297,14 +328,68 @@ class TestGenerateBranchGate:
         assert repo.git("rev-parse", "HEAD") == repo.start_sha  # nothing was checked out
         assert 'git checkout -B "$BRANCH" origin/main' not in GENERATE
 
-    def test_the_render_source_is_the_workspace_file_before_the_checkout(self, tmp_path, shell):
+    def test_the_pushed_file_passes_and_is_the_render_source(self, tmp_path, shell):
         repo = Repo(tmp_path)
         rendered = CODE.format(score="87/100", x=9)
-        repo.commit({IMPL: rendered}, "rendered, committed, never pushed")
+        repo.commit({IMPL: rendered}, "feat: implement")
+        repo.push()
         result = self._metadata(repo, shell)
         assert result.returncode == 0, result.stdout + result.stderr
         assert (repo.runner / "render-source").read_text(encoding="utf-8") == rendered
-        assert (repo.ws / IMPL).read_text(encoding="utf-8") == CODE.format(score="72/100", x=1)
+        assert (repo.ws / IMPL).read_text(encoding="utf-8") == rendered
+        assert repo.read("summary") == "**Render freshness:** fresh\n"  # no renders here, nothing to compare
+
+    @pytest.mark.parametrize("case", ["unpushed-commit", "uncommitted-edit", "stale-branch"])
+    def test_a_branch_that_does_not_carry_the_rendered_file_fails(self, tmp_path, shell, case):
+        """The ref exists, but it holds other code than the renders came from.
+
+        `stale-branch` is a ref an earlier run left behind: this run cut its
+        branch from main again, and its own push never landed.
+        """
+        repo = Repo(tmp_path)
+        rendered = CODE.format(score="87/100", x=9)
+        if case == "stale-branch":
+            repo.git("checkout", "-q", "-B", BRANCH, "main")
+        if case == "uncommitted-edit":
+            (repo.ws / IMPL).write_text(rendered, encoding="utf-8")
+        else:
+            repo.commit({IMPL: rendered}, "feat: implement (the push never landed)")
+        head = repo.git("rev-parse", "HEAD")
+        result = self._metadata(repo, shell)
+        assert result.returncode == 1
+        assert f"::error::{IMPL} in the workspace is not the file on origin/{BRANCH} (git diff exit 1)" in result.stdout
+        assert (repo.runner / "render-source").read_text(encoding="utf-8") == rendered
+        # Nothing was checked out: the workspace still holds this run's file.
+        assert repo.git("rev-parse", "HEAD") == head
+        assert (repo.ws / IMPL).read_text(encoding="utf-8") == rendered
+
+    def test_a_pushed_branch_without_the_implementation_fails(self, tmp_path, shell):
+        repo = Repo(tmp_path)
+        rendered = (repo.ws / IMPL).read_text(encoding="utf-8")
+        repo.git("rm", "-q", "--cached", IMPL)
+        repo.git("commit", "-q", "-m", "chore: the branch loses the file")
+        repo.push()
+        result = self._metadata(repo, shell)
+        assert result.returncode == 1
+        assert f"::error::{IMPL} is not on origin/{BRANCH}" in result.stdout
+        assert (repo.ws / IMPL).read_text(encoding="utf-8") == rendered
+
+    @pytest.mark.parametrize(
+        ("seconds", "fresh"), [(60, True), (-60, False)], ids=["rendered-last", "changed-after-render"]
+    )
+    def test_render_freshness_is_recorded_without_failing(self, tmp_path, shell, seconds, fresh):
+        repo = Repo(tmp_path)
+        _age_renders(repo, seconds)
+        result = self._metadata(repo, shell)
+        assert result.returncode == 0, result.stdout + result.stderr
+        if fresh:
+            assert repo.read("summary") == "**Render freshness:** fresh\n"
+            assert "render_freshness" not in result.stdout
+        else:
+            assert repo.read("summary") == f"**Render freshness:** stale (plot-dark.png is older than {LIB}{EXT})\n"
+            assert (
+                f"::warning::render_freshness status=stale: (plot-dark.png is older than {LIB}{EXT})" in result.stdout
+            )
 
 
 # --- the upload steps stage render.sha256 ---------------------------------------------------------
@@ -325,7 +410,7 @@ class TestUploadStagesTheHash:
         path.write_text(CODE.format(score="87/100", x=5), encoding="utf-8")
         return repo.run(str(_step(workflow, step)["run"]), shell, **env)
 
-    def test_the_hash_of_the_rendered_file_is_staged_privately(self, tmp_path, shell, workflow, step, source):
+    def test_the_hash_of_the_rendered_file_is_staged_without_an_acl_call(self, tmp_path, shell, workflow, step, source):
         repo = Repo(tmp_path)
         result = self._upload(repo, workflow, step, source, shell)
         assert result.returncode == 0, result.stdout + result.stderr
