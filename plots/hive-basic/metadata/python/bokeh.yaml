@@ -2,39 +2,60 @@ library: bokeh
 language: python
 specification_id: hive-basic
 created: '2025-12-24T22:18:42Z'
-updated: '2026-05-07T01:06:13Z'
-generated_by: claude-haiku
-workflow_run: 25469882020
+updated: '2026-11-11T02:48:42Z'
+generated_by: claude-sonnet
+workflow_run: 42947779565
 issue: 1879
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/bokeh/plot-dark.html
-quality_score: 91
+quality_score: 77
 review:
   strengths:
-  - Proper theme adaptation with correct color tokens in both light and dark renders
-  - Skillful use of Bezier curves for edge visualization with appropriate alpha blending
-  - Clear visual hierarchy with radial axes color-coded to match their data series
-  - Clean, reproducible code with deterministic seeding and idiomatic Bokeh patterns
-  - Thoughtfully positioned node labels perpendicular to axes avoiding overlap
-  - Proper font sizing and contrast for full-resolution readability in both themes
-  - 'Excellent spec compliance: all required hive plot elements correctly implemented'
-  weaknesses: []
+  - 'Hive layout follows deterministic rules: nodes sit by degree rank on their group''s
+    axis, so the same network always draws the same way'
+  - Edges are quadratic curves pulled toward the centre at alpha 0.4, thinner than
+    the nodes and colored by source axis, so bands stay traceable
+  - Theme tokens thread through every text element; both renders read cleanly with
+    identical Imprint data colors
+  - Data block uses tidy pandas tables and column constants, and axes are derived
+    from the data rather than hard-coded
+  weaknesses:
+  - 'SC-02 (both): the render names node size = degree but nothing says the distance
+    from the centre is the degree rank (C2 asks for a caption, legend or axis note
+    naming the position property) → add a short note such as ''Distance from centre
+    = degree rank''. Likely cause: only the size legend title carries the property.'
+  - 'DQ-03 (code): the Degree column contradicts the edge list it labels: core_main
+    is given 8 but has 5 edges (-3), core_init 7 vs 3 (-4), core_config 5 vs 2 (-3),
+    api_web 6 vs 3 (-3), core_base 4 vs 1 (-3) → compute degree from the edge list
+    (pd.concat of both edge columns, value_counts) so positions, sizes and the legend''s
+    Low/High show real degrees. Likely cause: DEGREE values typed into the nodes table.'
+  - 'CQ-04 (code): lines 166-178 evaluate the quadratic Bezier by hand on 30 samples
+    and draw one p.line per edge → `p.quadratic(x0=..., y0=..., x1=..., y1=..., cx=...,
+    cy=..., source=edge_source)` with the same control point (0.2 × endpoint sum),
+    about 8 lines shorter. Likely cause: curve math carried over instead of bokeh''s
+    quadratic glyph.'
+  - 'DE-02 (dark): a thin full rectangular frame encloses the plot area in the dark
+    render, a box the style guide''s no-decorative-border rule excludes → no frame.
+    Likely cause: the plot outline or border not suppressed for the dark theme (check
+    outline_line_color / the HTML body styling).'
+  - 'Suggestion: drop the node-size encoding, which repeats the degree the position
+    already shows, so the plot stays the plain basic variant.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) exactly as specified.
-      Chrome: Title "hive-basic · bokeh · anyplot.ai" in dark text (28pt, readable). Axis labels "Core", "Utility", "Interface" in bold dark text (22pt, readable). Node labels (short names like "main", "io", "rest") in 18pt dark text, positioned perpendicular to axes with proper offset to avoid overlap.
-      Data: Three radial axes in #009E73 (green), #D55E00 (orange), #0072B2 (blue) – correct Okabe-Ito positions 1-3. Nodes scaled by degree (20-84px), edges are Bezier curves with alpha=0.4 in matching axis colors. Legend "Node Size = Degree" with symbol examples (Low/Medium/High) in 18-20pt dark text.
-      Legibility verdict: PASS. All text is readable against the light background. No text-on-text collisions. Data colors are distinct and visible.
+      Background: warm off-white #FAF8F1, no frame.
+      Chrome: title 'hive-basic · python · bokeh · anyplot.ai' top-left in dark ink (~40% of width); bold group labels Utility (upper left), Core (upper right), Interface (bottom); node labels (log, io, validate, parse, cache, helper / main, init, data, config, base / cli, graphql, web, rest) in dark ink beside the nodes; size legend 'Node size = degree' with Low (2), Medium (5), High (8) grey circles at upper left. All readable.
+      Data: three radial axes in #009E73 (Core), #C475FD (Utility), #4467A3 (Interface); 15 nodes sized by degree with page-colored outlines; 26 translucent curved edges colored by source axis. First series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) exactly as specified.
-      Chrome: Title in light text (light #F0EFE8 equivalent), readable at 28pt. Axis labels "Core", "Utility", "Interface" in bold light text (22pt), all readable. Node labels in 18pt light text, positioned identically to light render, no dark-on-dark failures.
-      Data: The three axis colors are identical to light render (#009E73, #D55E00, #0072B2) – only chrome has flipped. Nodes and edges are visible with proper contrast. Legend maintains good contrast in light text.
-      Legibility verdict: PASS. All text is readable against the dark background. No dark-on-dark failures detected. No elements are invisible or washed out.
+      Background: warm near-black #1A1A17; a thin grey rectangular frame encloses the plot area.
+      Chrome: title, group labels, node labels and legend in light ink; no dark-on-dark text. Legend circles light grey, visible.
+      Data: axis, node and edge colors identical to the light render; edges read darker on the dark page through alpha but stay traceable. Green #009E73 well visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -45,76 +66,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, legend all properly sized (28pt,
-          22pt, 18pt) and readable in both themes
+        comment: Title 50pt, group labels 36pt bold, node labels 26pt, legend 26-30pt;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Node labels positioned perpendicular to axes with 140px offset; no
-          collisions; legend properly spaced
+        comment: Node labels sit beside their nodes on the outer side; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node sizes range 36-84px based on degree; all markers clearly distinguishable
-          from background
+        comment: 15 sparse nodes at 26-62 px with page-colored outline; edges at 3
+          px and alpha 0.4; legend circles visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-3 used; colorblind-safe palette; adequate contrast
-          in both themes
+        comment: Green/purple/blue Imprint positions 1-3, CVD-safe, plus axis position
+          separates groups
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 16:9 (4800×2700) appropriate for radial plot; generous
-          margins; nothing cut off
+        comment: 3200x1800, whole radial shape and all labels on canvas; empty corners
+          are permitted (C5)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive and meaningful
+        comment: N/A for numeric axes; each radial axis carries its group name
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order 1-3; backgrounds #FAF8F1/#1A1A17;
-          both renders theme-correct'
+        comment: 'Imprint positions 1-3 in order, first #009E73; backgrounds #FAF8F1/#1A1A17'
     design_excellence:
-      score: 14
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Color-coded axes, Bezier curves, theme-adaptive styling, educational
-          legend design
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, bold group
+          labels; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
         passed: true
-        comment: Subtle alpha on axes, thoughtful label positioning, Bezier curves
-          over straight lines, white node edges for definition
+        comment: Dark render draws a full rectangular frame around the plot area (defect
+          line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clear three-tier architecture evident; node degree encoded in size;
-          color flow guides viewer through hierarchy
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -122,31 +140,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hive plot with radial axes, nodes positioned by axis attribute,
-          edges clearly shown
+        comment: 'Correct hive plot: 3 radial axes, nodes on axes, curved edges between
+          axes'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Nodes with IDs, axis assignment (module type), edges (source→target),
-          meaningful degree-based positioning
+        passed: false
+        comment: No caption or note says the distance from the centre is the degree
+          rank; the legend only names node size (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Polar coordinates correctly calculated; all 16 nodes visible; all
-          26 edges rendered
+        comment: Nodes at their rank positions on the correct axis; all 15 nodes and
+          26 edges drawn
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format 'hive-basic · bokeh · anyplot.ai'; axis labels match colors;
-          size legend explains encoding
+        comment: Title matches the mandated format; size legend labelled 'Node size
+          = degree'
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -154,24 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All hive plot aspects shown: multiple axes, edges, degree variation,
-          diverse connection patterns'
+        comment: Three axes, edges between every axis pair, a spread of degrees
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software dependency network is realistic and neutral; authentic module
-          names and relationships
+        comment: Software module dependency network with readable module names, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 16 nodes, 26 edges, balanced axes; degree values 2-8 are sensible
-          for module dependencies
+        passed: false
+        comment: Degree column contradicts the edge list, e.g. core_main 8 vs 5 edges,
+          core_init 7 vs 3 (defect line)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -179,63 +195,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward procedural code; no unnecessary abstractions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42); deterministic layout
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, time, Path, numpy, bokeh, selenium); no unused
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake interactivity; appropriate complexity; clean naming
+        passed: false
+        comment: Quadratic Bezier written out by hand where bokeh's quadratic glyph
+          draws it (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html; current Bokeh API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the Selenium pattern;
+          current API
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: ColumnDataSource for data, Label for annotations, scatter with semantic
-          columns, theme-adaptive styling per Bokeh conventions
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ColumnDataSource with size field, Label annotations, Bezier curve
-          calculation, Selenium screenshot for headless rendering
+        comment: ColumnDataSource per group, Label annotations; default idiomatic
+          level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-11T02:44:48Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - bezier-curves
-  - annotations
   - custom-legend
+  - annotations
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   - columndatasource
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - groupby-aggregation
   styling:
   - alpha-blending
-  - publication-ready
+  - minimal-chrome
