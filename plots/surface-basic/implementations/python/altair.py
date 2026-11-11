@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 surface-basic: Basic 3D Surface Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-05
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -18,136 +19,115 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - create a smooth surface z = sin(x) * cos(y)
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Grid setup - 50x50 for smoother surface
-n_points = 50
-x = np.linspace(-3, 3, n_points)
-y = np.linspace(-3, 3, n_points)
-X, Y = np.meshgrid(x, y)
+# Constants
+ELEVATION = 25  # camera elevation in degrees
+AZIMUTH = 45  # camera azimuth in degrees
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
 
-# Surface function
-Z = np.sin(X) * np.cos(Y)
+# Columns: set these to your table's column names
+X = "x"  # role: x
+Y = "y"  # role: y
+Z = "z"  # role: z
 
-# 3D to 2D projection (elevation=25, azimuth=45)
-elev_rad = np.radians(25)
-azim_rad = np.radians(45)
+# Data: replace this block with your own long table of x, y, z, for example df = pd.read_csv("surface.csv")
+grid = np.linspace(-3, 3, 50)
+gx, gy = np.meshgrid(grid, grid)
+df = pd.DataFrame({X: gx.ravel(), Y: gy.ravel(), Z: (np.sin(gx) * np.cos(gy)).ravel()})
 
-# Rotation around z-axis (azimuth)
-X_rot = X * np.cos(azim_rad) - Y * np.sin(azim_rad)
-Y_rot = X * np.sin(azim_rad) + Y * np.cos(azim_rad)
+# Plot: reads only df and the constants above
+xs = np.sort(df[X].unique())
+ys = np.sort(df[Y].unique())
+surface = df.pivot_table(index=Y, columns=X, values=Z).reindex(index=ys, columns=xs).to_numpy()
+gx, gy = np.meshgrid(xs, ys)
 
-# Rotation around x-axis (elevation) and project
-X_proj = X_rot
-Z_proj = Y_rot * np.sin(elev_rad) + Z * np.cos(elev_rad)
+# Oblique projection: rotate about the vertical axis, then tilt towards the viewer
+elev, azim = np.radians(ELEVATION), np.radians(AZIMUTH)
+depth = gx * np.sin(azim) + gy * np.cos(azim)
+screen_x = gx * np.cos(azim) - gy * np.sin(azim)
+screen_y = depth * np.sin(elev) + surface * np.cos(elev)
 
-# Build facets with overlapping boundaries to reduce edge artifacts
-rect_data = []
-overlap = 0.02
-for i in range(n_points - 1):
-    for j in range(n_points - 1):
-        # Get projected quad corners
-        corners_x = [X_proj[i, j], X_proj[i, j + 1], X_proj[i + 1, j], X_proj[i + 1, j + 1]]
-        corners_z = [Z_proj[i, j], Z_proj[i, j + 1], Z_proj[i + 1, j], Z_proj[i + 1, j + 1]]
 
-        # Add slight overlap to reduce visual gaps
-        x1 = min(corners_x) - overlap
-        x2 = max(corners_x) + overlap
-        y1 = min(corners_z) - overlap
-        y2 = max(corners_z) + overlap
+def corners(a):
+    """Stack the four corners of every grid cell: shape (4, rows-1, cols-1)."""
+    return np.stack([a[:-1, :-1], a[:-1, 1:], a[1:, :-1], a[1:, 1:]])
 
-        # Average z for color (original Z, not projected)
-        avg_z = (Z[i, j] + Z[i, j + 1] + Z[i + 1, j + 1] + Z[i + 1, j]) / 4
 
-        # Depth for sorting (painter's algorithm - back to front)
-        depth = (Y_rot[i, j] + Y_rot[i, j + 1] + Y_rot[i + 1, j + 1] + Y_rot[i + 1, j]) / 4
+# One rectangle per grid cell, widened slightly so neighbours leave no seams
+cell_x, cell_y = corners(screen_x), corners(screen_y)
+seam = 0.1 * np.median(np.diff(xs))
+cells = pd.DataFrame(
+    {
+        "x1": cell_x.min(axis=0).ravel() - seam,
+        "x2": cell_x.max(axis=0).ravel() + seam,
+        "y1": cell_y.min(axis=0).ravel() - seam,
+        "y2": cell_y.max(axis=0).ravel() + seam,
+        Z: corners(surface).mean(axis=0).ravel(),
+        "depth": corners(depth).mean(axis=0).ravel(),
+    }
+)
+# Painter's algorithm: far cells first, nearer cells paint over them
+cells = cells.sort_values("depth", ascending=False).reset_index(drop=True)
+cells["order"] = cells.index
 
-        rect_data.append({"x1": x1, "x2": x2, "y1": y1, "y2": y2, "z": avg_z, "depth": depth})
+axis_style = {
+    "labelFontSize": 18,
+    "titleFontSize": 22,
+    "labelColor": INK_SOFT,
+    "titleColor": INK,
+    "domainColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridColor": INK,
+    "gridOpacity": 0.1,
+}
 
-# Sort by depth (back to front)
-rect_data.sort(key=lambda r: r["depth"], reverse=True)
-
-# Assign order for rendering
-for idx, r in enumerate(rect_data):
-    r["order"] = idx
-
-df_rects = pd.DataFrame(rect_data)
-
-# Create surface chart with filled rectangles
-surface = (
-    alt.Chart(df_rects)
+chart = (
+    alt.Chart(cells)
     .mark_rect(strokeWidth=0.3, stroke=INK_SOFT, strokeOpacity=0.15)
     .encode(
-        x=alt.X(
-            "x1:Q",
-            axis=alt.Axis(
-                title="X axis (projected)",
-                labelFontSize=18,
-                titleFontSize=22,
-                labelColor=INK_SOFT,
-                titleColor=INK,
-                domainColor=INK_SOFT,
-                tickColor=INK_SOFT,
-                gridOpacity=0.10,
-                gridColor=INK,
-            ),
-        ),
-        y=alt.Y(
-            "y1:Q",
-            axis=alt.Axis(
-                title="Z axis (height)",
-                labelFontSize=18,
-                titleFontSize=22,
-                labelColor=INK_SOFT,
-                titleColor=INK,
-                domainColor=INK_SOFT,
-                tickColor=INK_SOFT,
-                gridOpacity=0.10,
-                gridColor=INK,
-            ),
-        ),
-        x2=alt.X2("x2:Q"),
-        y2=alt.Y2("y2:Q"),
+        x=alt.X("x1", type="quantitative", title=f"{X} (projected, {AZIMUTH}° view)", axis=alt.Axis(**axis_style)),
+        y=alt.Y("y1", type="quantitative", title=f"{Z} (height)", axis=alt.Axis(**axis_style)),
+        x2="x2",
+        y2="y2",
         color=alt.Color(
-            "z:Q",
-            scale=alt.Scale(scheme="viridis"),
+            Z.translate(ESCAPE),
+            type="quantitative",
+            title=Z,
+            scale=alt.Scale(range=[IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]]),
             legend=alt.Legend(
-                title="Surface Value",
                 titleFontSize=20,
                 labelFontSize=16,
-                fillColor=ELEVATED_BG,
-                strokeColor=INK_SOFT,
                 labelColor=INK_SOFT,
                 titleColor=INK,
+                gradientLength=240,
+                gradientThickness=22,
             ),
         ),
-        order=alt.Order("order:Q"),
+        order=alt.Order("order", type="quantitative"),
         tooltip=[
-            alt.Tooltip("z:Q", title="Surface value", format=".3f"),
-            alt.Tooltip("x1:Q", title="X coordinate", format=".2f"),
-            alt.Tooltip("y1:Q", title="Z coordinate", format=".2f"),
+            alt.Tooltip(Z.translate(ESCAPE), type="quantitative", title=Z, format=".3f"),
+            alt.Tooltip("x1", type="quantitative", title=f"{X} (projected)", format=".2f"),
+            alt.Tooltip("y1", type="quantitative", title=f"{Z} (projected)", format=".2f"),
         ],
     )
-)
-
-# Add pan and zoom interactivity
-pan_zoom = alt.selection_interval(bind="scales", encodings=["x", "y"])
-
-# Combine into final chart with interactivity
-chart = (
-    surface.add_params(pan_zoom)
+    .add_params(alt.selection_interval(bind="scales"))
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title("surface-basic · altair · anyplot.ai", fontSize=28, color=INK),
+        width=620,
+        height=320,
+        title=alt.Title("surface-basic · python · altair · anyplot.ai", fontSize=24, color=INK),
         background=PAGE_BG,
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
-    .configure_axis(grid=True, gridOpacity=0.10)
-    .configure_title(color=INK)
 )
 
-# Save outputs
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save outputs, padded (never cropped) to the 3200 x 1800 target
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+img.thumbnail((TW, TH))  # long column names can widen the chart: scale down, never crop
+canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+canvas.paste(img, ((TW - img.width) // 2, (TH - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
