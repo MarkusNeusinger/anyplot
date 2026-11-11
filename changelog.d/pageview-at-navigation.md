@@ -7,7 +7,7 @@
   filter bar shows), `results` is the size of that list (`1-24`, `25-99`,
   `100-999`, `1000+`), and `filtered` says whether it was filtered. The gallery
   loads in batches, so the page has no fixed height and Plausible's own scroll
-  depth says nothing about it.
+  depth says nothing about it. (#13046)
 
 ### Changed
 
@@ -19,11 +19,12 @@
   asked for; a visitor's visit to `/agent` counts whatever the page shows,
   also while the public lane is closed (`agent_open` still counts sessions
   only); and a spec page counts when it is opened, not once its data loaded.
+  (#13046)
 - **An address that only redirects is no page.** `/{spec}/{language}` and
   `/debug/agent` redirect in their route's loader now
   (`app/src/routes/redirects.ts`), so the router never renders them: no
   pageview, no history entry, and the page being left stays on screen until
-  the destination is there.
+  the destination is there. (#13046)
 
 ### Fixed
 
@@ -40,7 +41,8 @@
   so the new page starts at the top. On Back and forward, where the browser
   restores the offset itself and Chrome does so only afterwards, the pageview
   is sent from the top and the offset put back before anything is painted.
+  (#13046)
 - **Back to the gallery starts from the top before the gallery restores its
   own offset.** The gallery turns the browser's scroll restoration off, so on
   Back the offset of the page being left stood until the gallery's restore, or
-  for good when it had none to restore.
+  for good when it had none to restore. (#13046)
