@@ -25,12 +25,13 @@ from agents.anyplot.memory import MEMORY_SEQ, memory_delta, plan, read_memory
 from agents.anyplot.opening import store_dataset
 from agents.anyplot.schemas import PlotResult, RememberItem
 from agents.anyplot.services import CodeVersion, Services, get_services
-from agents.anyplot.session_state import PENDING_REQUEST
+from agents.anyplot.session_state import PENDING_BASE, PENDING_REQUEST
 from agents.anyplot.switch import CARRY, read_carry, source_plot
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import SCATTER_PLAN, VERDICT_OK, default_script
 from .test_dataset_versions import SID, SNAPSHOT, opened, view_of
+from .test_plot_new_data import plot_new_data
 from .test_service_flow import (
     HEADERS,
     USER,
@@ -255,8 +256,10 @@ async def test_a_change_of_the_plot_of_replaced_data_is_kept_for_the_new_data(
     assert (await _session_state(client, sid))[PENDING_REQUEST] == NOTE
 
 
-async def test_a_change_of_the_plot_of_this_paste_stays_unkept(client: httpx.AsyncClient, swap_models) -> None:
-    """The same change on unconfirmed data of the plot's own paste names a plot that is there: not kept, as before."""
+async def test_a_change_of_the_plot_of_this_paste_is_kept_as_a_change(client: httpx.AsyncClient, swap_models) -> None:
+    """The same change on unconfirmed data of the plot's own paste names a plot that is there. It was not kept until
+    2026-11-11, on the ground that the root repeats it once the data is confirmed; the plot button, which confirms,
+    brings no request. It is kept as a change of that plot, and the user's next plot draws it."""
     change = {"change_request": NOTE, "base": "previous"}
     fake = swap_models(
         "gemini",
@@ -265,10 +268,12 @@ async def test_a_change_of_the_plot_of_this_paste_stays_unkept(client: httpx.Asy
                 {"call": "plot_pipeline", "args": {}},
                 {"text": "Here."},
                 {"call": "plot_pipeline", "args": change},
-                {"text": "Confirm the data first."},
+                {"text": "Kept for the next plot."},
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "Here with the title."},
             ],
-            "adapter": [{"json": SCATTER_PLAN}],
-            "reviewer": [{"json": VERDICT_OK}],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
         },
     )
     sid = await open_session(client)
@@ -278,7 +283,14 @@ async def test_a_change_of_the_plot_of_this_paste_stays_unkept(client: httpx.Asy
 
     await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "title: Pendulum 2026"})
 
-    assert tool_answers(fake, "plot_pipeline")[-1].get("request_kept") is None
+    assert tool_answers(fake, "plot_pipeline")[-1].get("request_kept") is True
+    state = await _session_state(client, sid)
+    assert (state[PENDING_REQUEST], state[PENDING_BASE]) == (NOTE, "previous")
+
+    # Other bindings start the plot of the changed data from the catalogue code: the kept change goes into that one.
+    shown = await plot_new_data(client, sid)
+    assert shown["new_data"] == "bindings_changed" and NOTE in adapter_inputs(fake)[1]
+    assert tool_answers(fake, "plot_pipeline")[-1]["kept_request"] == "used"
     assert (await _session_state(client, sid)).get(PENDING_REQUEST) is None
 
 

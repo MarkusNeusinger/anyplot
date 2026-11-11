@@ -132,13 +132,23 @@ column the note was written for, and the run drops it (`pipeline.pending_fate`).
 PENDING_REMEMBER = PREFIX + "pending_remember"
 """The plot memory decisions that came with `PENDING_REQUEST` (`KeepRequestArgs.remember`), kept and dropped with it;
 the first-plot run that takes the note stores them in the memory once it ships (`pipeline.take_pending_request`)."""
+PENDING_BASE = PREFIX + "pending_base"
+"""`previous` while the kept request is a change of the library's plot of the current data, not a first plot's note:
+the library has that plot, and the request waited because the data or the bindings waited for the user's check
+(`pipeline.hold_request`; persona round of 2026-11-11: "drop these rows and use a log scale" changed the data, and
+the log scale reached no plot, because a change of an existing plot was never kept). The page's "plot the new data"
+then draws it on the latest version together with the new data (`pipeline.take_pending_request`), where a first
+plot's note makes that run a fresh start (`pipeline.new_data_base`). Unset for a first plot's note; kept and dropped
+with `PENDING_REQUEST`."""
 PENDING_CLEARED: dict[str, Any] = {
     PENDING_REQUEST: None,
     PENDING_EXPECTED_TEXTS: None,
     PENDING_BINDINGS: None,
     PENDING_REMEMBER: None,
+    PENDING_BASE: None,
 }
-"""The state delta that drops a kept first-plot note and its texts: every new data version carries it (a binding
+"""The state delta that drops a kept note, a first plot's or a change of the plot, and its texts: every new data
+version carries it, except in the turn that kept it, which puts it back (`_settle_kept_note`) (a binding
 write no longer does: the run judges the bindings, `pipeline.pending_fate`; a library switch no longer does either,
 2026-11-02)."""
 LAST_RUN = PREFIX + "last_run"

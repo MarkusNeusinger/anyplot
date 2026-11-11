@@ -371,7 +371,8 @@ class TestNarrowedBindings:
 
 
 class TestPendingRequest:
-    """A first plot's note that stopped on `not_ready` is kept for the next run."""
+    """A plot's request that stopped on `not_ready` is kept for the next run: a first plot's note, and since
+    2026-11-11 a change of the plot the library has (`test_plot_new_data.py` holds what becomes of that one)."""
 
     @pytest.mark.parametrize(
         ("reason", "args", "kept"),
@@ -380,7 +381,8 @@ class TestPendingRequest:
             ("incomplete_bindings", PipelineArgs(change_request="log y"), "log y"),
             ("no_dataset", PipelineArgs(change_request="log y"), None),
             ("data_unconfirmed", PipelineArgs(), None),
-            ("data_unconfirmed", PipelineArgs(change_request="bigger", base="previous"), None),
+            ("data_unconfirmed", PipelineArgs(change_request="bigger", base="previous"), "bigger"),
+            ("no_dataset", PipelineArgs(change_request="bigger", base="previous"), None),
         ],
     )
     def test_keep(self, reason: Any, args: PipelineArgs, kept: str | None) -> None:
