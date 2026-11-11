@@ -36,7 +36,7 @@ Lint + type gates, the same three CI runs (`Run Linting` job):
 
 ```bash
 uv run --extra dev ruff check . && uv run --extra dev ruff format --check .
-uv run --extra typecheck mypy api core --pretty
+uv run --extra typecheck --extra agents mypy api core agents --pretty
 ```
 
 Both ruff halves matter — CI checks them separately; fixing lint
@@ -107,6 +107,6 @@ To check against **real** data, don't reach for the DB from a script
 ## Troubleshooting
 
 - `mypy: command not found` / spawn failure → run it as
-  `uv run --extra typecheck mypy api core --pretty`.
+  `uv run --extra typecheck --extra agents mypy api core agents --pretty`.
 - Integration tests fail with PostgreSQL-only SQL → the code bypassed
   the dual-backend types; route through `core/database/types.py`.
