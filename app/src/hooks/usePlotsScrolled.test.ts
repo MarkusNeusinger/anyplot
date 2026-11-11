@@ -19,10 +19,17 @@ interface List {
   displayedCount: number;
   total: number;
   filtered: boolean;
+  loading: boolean;
   restoredOffset: number;
 }
 
-const ALL: List = { displayedCount: 36, total: 3600, filtered: false, restoredOffset: 0 };
+const ALL: List = {
+  displayedCount: 36,
+  total: 3600,
+  filtered: false,
+  loading: false,
+  restoredOffset: 0,
+};
 
 function visit(list: List = ALL) {
   const onTrackEvent = vi.fn();
@@ -90,7 +97,7 @@ describe('usePlotsScrolled', () => {
 
     // A filter narrows the list to 40 results, all loaded, and the visitor reaches its end.
     window.history.replaceState({}, '', '/plots?lib=matplotlib');
-    rerender({ displayedCount: 40, total: 40, filtered: true, restoredOffset: 0 });
+    rerender({ ...ALL, displayedCount: 40, total: 40, filtered: true });
     scrollTo(3000, 4000);
 
     // The filter goes again; the top of the full list is no deeper.
@@ -149,6 +156,39 @@ describe('usePlotsScrolled', () => {
     scrollTo(300, 1400);
     unmount();
     expect(onTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('takes no sample while the list for new filters is still loading', () => {
+    // The filters and the address change at once, the counts only when the answer is there:
+    // a sample in between would report the new filter with the old list's size.
+    const { rerender, unmount, onTrackEvent } = visit();
+    window.history.replaceState({}, '', '/plots?lib=matplotlib');
+    rerender({ ...ALL, filtered: true, loading: true });
+    scrollTo(3000, 4000);
+
+    // The answer: 40 results, all on the page, and the visitor is at their top.
+    rerender({ ...ALL, displayedCount: 40, total: 40, filtered: true });
+    scrollTo(100, 4000);
+
+    unmount();
+    expect(onTrackEvent).toHaveBeenCalledWith(
+      'plots_scrolled',
+      { share: '0-10', results: '25-99', filtered: 'true' },
+      'https://anyplot.ai/plots/lib/matplotlib'
+    );
+  });
+
+  it('counts a gallery opened with a trailing slash', () => {
+    // The router serves `/plots/` as it serves `/plots`, and the pageview records both as `/plots`.
+    window.history.replaceState({}, '', '/plots/');
+    const { unmount, onTrackEvent } = visit();
+    scrollTo(3000, 4000);
+    unmount();
+    expect(onTrackEvent).toHaveBeenCalledWith(
+      'plots_scrolled',
+      { share: '0-10', results: '1000+', filtered: 'false' },
+      'https://anyplot.ai/plots'
+    );
   });
 });
 

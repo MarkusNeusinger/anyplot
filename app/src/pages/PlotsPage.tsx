@@ -107,6 +107,7 @@ export function PlotsPage() {
     displayedCount: displayedImages.length,
     total: allImages.length,
     filtered: !noFilters,
+    loading,
     restoredOffset: homeStateRef.current.scrollY,
     onTrackEvent: trackEvent,
   });

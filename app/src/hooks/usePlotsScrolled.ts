@@ -15,7 +15,7 @@
 import { useEffect, useRef } from 'react';
 
 import { buildPlausibleUrl } from 'src/hooks/useAnalytics';
-import { paths } from 'src/routes/paths';
+import { isPlotsPath } from 'src/routes/paths';
 import { galleryScrollPercent } from 'src/utils/galleryScroll';
 
 /** The share of the result list above the deepest point, as a band of percent. */
@@ -41,6 +41,8 @@ interface UsePlotsScrolledOptions {
   /** Results the list has in all. */
   total: number;
   filtered: boolean;
+  /** The list for the filters in the address is not there yet. */
+  loading: boolean;
   /** The offset the page restores from an earlier visit, as it stood when this visit began. */
   restoredOffset: number;
   onTrackEvent: (name: string, props?: Record<string, string>, url?: string) => void;
@@ -58,14 +60,15 @@ export function usePlotsScrolled({
   displayedCount,
   total,
   filtered,
+  loading,
   restoredOffset,
   onTrackEvent,
 }: UsePlotsScrolledOptions): void {
   // The list and the callback through refs, the offset from the first render only: the effect
   // must live as long as the visit, and its cleanup is what sends the event. Saving the scroll
   // position for the next visit re-renders the page with a new offset just before it unmounts.
-  const list = useRef({ displayedCount, total, filtered });
-  list.current = { displayedCount, total, filtered };
+  const list = useRef({ displayedCount, total, filtered, loading });
+  list.current = { displayedCount, total, filtered, loading };
   const track = useRef(onTrackEvent);
   track.current = onTrackEvent;
   const floor = useRef(restoredOffset);
@@ -77,9 +80,11 @@ export function usePlotsScrolled({
     const sample = () => {
       // The address moves on before this page unmounts, and the next page's scroll reset or
       // clamped offset still reaches this listener: that is no scrolling of the gallery.
-      if (window.location.pathname !== paths.plots) return;
+      if (!isPlotsPath(window.location.pathname)) return;
       const now = list.current;
-      if (now.total === 0 || window.scrollY <= floor.current) return;
+      // While new filters load, the address and `filtered` are the new list's and the counts
+      // still the old one's: a sample then would describe a list that never existed.
+      if (now.loading || now.total === 0 || window.scrollY <= floor.current) return;
       const percent = galleryScrollPercent({
         scrollY: window.scrollY,
         docHeight: document.documentElement.scrollHeight,

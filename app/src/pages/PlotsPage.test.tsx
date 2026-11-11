@@ -140,6 +140,7 @@ describe('PlotsPage', () => {
       displayedCount: 0,
       total: 0,
       filtered: false,
+      loading: false,
       restoredOffset: 0,
       onTrackEvent: mockTrackEvent,
     });

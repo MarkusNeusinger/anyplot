@@ -56,6 +56,11 @@ export const RESERVED_TOP_LEVEL = new Set([
   'robots.txt',
 ]);
 
+/** Whether a pathname is the gallery's: the router serves `/plots/` as it serves `/plots`. */
+export function isPlotsPath(pathname: string): boolean {
+  return pathname.replace(/\/+$/, '') === '/plots';
+}
+
 /**
  * Parse the language segment from a pathname, returns undefined if not present
  * or if the first segment is reserved.

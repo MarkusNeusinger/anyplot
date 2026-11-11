@@ -12,7 +12,7 @@ import { useTheme } from 'src/hooks/useLayoutContext';
 import { Footer } from 'src/layouts/Footer';
 import { MastheadRule } from 'src/layouts/MastheadRule';
 import { NavBar } from 'src/layouts/NavBar';
-import { paths } from 'src/routes/paths';
+import { isPlotsPath, paths } from 'src/routes/paths';
 
 const containerSx = {
   px: { xs: 2, sm: 4, md: 8, lg: 12 },
@@ -58,7 +58,7 @@ export function RootLayout() {
   // scroll position at the pageview as the new page's first depth.
   useLayoutEffect(() => {
     if (hash) return;
-    if (navigationType === 'POP' && pathname !== paths.plots) return;
+    if (navigationType === 'POP' && !isPlotsPath(pathname)) return;
     window.scrollTo(0, 0);
   }, [pathname, hash, navigationType]);
 
