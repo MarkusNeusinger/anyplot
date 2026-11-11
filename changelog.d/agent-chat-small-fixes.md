@@ -11,3 +11,4 @@
   shows as strong text instead of asterisks, never inside a word or code.
   After the user rebinds a role by hand, the assistant reads that binding
   as the user's choice instead of calling its earlier words a mistake.
+  (#13062)
