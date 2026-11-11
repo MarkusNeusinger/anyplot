@@ -464,7 +464,7 @@ class TestAdaptStepWiring:
     def test_order_canvas_gate_then_mirror_then_the_review(self):
         names = [s.get("name") for s in _steps("impl-review.yml")]
         canvas = names.index("Canvas dimension gate")
-        assert names[canvas + 1 : canvas + 3] == [ADAPT, "React with eyes emoji"]
+        assert names[canvas + 1 : canvas + 4] == ["Contract check (record-only)", ADAPT, "React with eyes emoji"]
         assert names.index("Regen context") < names.index(ADAPT)
         assert names.index("Download plot images from staging") < names.index(ADAPT)
         assert names.index(ADAPT) < names.index("Hide the previous review") < names.index("Run AI Quality Review")

@@ -333,13 +333,14 @@ jobs:
           # The adaptability checker and its record builder join them for the
           # same reason: a PR head must not choose the rules it is checked by.
           # So does the JavaScript header writer (impl_header.py), which
-          # "Update metadata and implementation header" imports, and the
-          # render-hash check.
+          # "Update metadata and implementation header" imports, the
+          # render-hash check and the contract check.
           mkdir -p "$RUNNER_TEMP/regen-tools"
           cp automation/scripts/regen_gate.py automation/scripts/close_issue_if_complete.py \
              automation/scripts/review_provenance.py automation/scripts/regen_writeback.py \
              automation/scripts/adaptability_check.py automation/scripts/adapt_record.py \
              automation/scripts/impl_header.py automation/scripts/render_hash.py \
+             automation/scripts/contract_check.py \
              "$RUNNER_TEMP/regen-tools/"
           # The reviewer's step-10 self-check (`check-feedback`) runs this
           # same workflow-ref copy of the gate.
@@ -570,14 +571,23 @@ jobs:
           SRC="$RUNNER_TEMP/render-head-source"
           BODY="$RUNNER_TEMP/render-hash-comment.md"
           rm -f "$HASH" "$SRC" "$BODY"
+          # Three attempts, like the render download: one failed read must not
+          # turn into `unreadable`. "No URLs matched" is an answer (no hash).
           FETCH_ERROR=""
-          if ! gsutil cp "gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/render.sha256" "$HASH" 2> "$RUNNER_TEMP/render-hash.err"; then
-            rm -f "$HASH"
-            if ! grep -q "No URLs matched" "$RUNNER_TEMP/render-hash.err"; then
-              FETCH_ERROR=$(head -c 300 "$RUNNER_TEMP/render-hash.err" | tr '\n' ' ')
-              FETCH_ERROR="${FETCH_ERROR:-gsutil cp failed without output}"
+          for attempt in 1 2 3; do
+            FETCH_ERROR=""
+            if gsutil cp "gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/render.sha256" "$HASH" 2> "$RUNNER_TEMP/render-hash.err"; then
+              break
             fi
-          fi
+            rm -f "$HASH"
+            if grep -q "No URLs matched" "$RUNNER_TEMP/render-hash.err"; then
+              break
+            fi
+            FETCH_ERROR=$(head -c 300 "$RUNNER_TEMP/render-hash.err" | tr '\n' ' ')
+            FETCH_ERROR="${FETCH_ERROR:-gsutil cp failed without output}"
+            echo "::warning::render.sha256 download failed (attempt ${attempt}/3): ${FETCH_ERROR}"
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 5)); fi
+          done
           git show "${HEAD_SHA}:plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}" > "$SRC" 2>/dev/null || rm -f "$SRC"
           python3 "$RUNNER_TEMP/regen-tools/render_hash.py" check --hash "$HASH" --source "$SRC" --head "$HEAD_SHA" \
             --fetch-error="$FETCH_ERROR" --run-url "$RUN_URL" --comment-out "$BODY"
@@ -757,6 +767,35 @@ jobs:
           Path("/tmp/anyplot-canvas-gate.txt").write_text(weakness, encoding="utf-8")
           print(f"::warning::Canvas gate FAILED — wrote synthetic weakness to /tmp/anyplot-canvas-gate.txt: {weakness}")
           PY
+
+      # Record-only: the generator prompt's static contract (the mandated
+      # title, the theme read, the themed save target, no legacy brand colour,
+      # no library colormap, no hex outside the style guide's palette),
+      # checked on the file at the PR head and, when
+      # main holds one, on its predecessor (automation/scripts/contract_check.py,
+      # the workflow-ref copy). It reads the head, not the workspace, like the
+      # render-hash check. It writes a job-summary line and a notice; nothing
+      # reads the result yet, the step has no id, and it never fails the job.
+      - name: Contract check (record-only)
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
+        run: |
+          NEW="$RUNNER_TEMP/contract-new-source"
+          PREV="$RUNNER_TEMP/contract-prev-source"
+          rm -f "$NEW" "$PREV"
+          IMPL="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
+          git show "${HEAD_SHA}:${IMPL}" > "$NEW" 2>/dev/null || rm -f "$NEW"
+          git show "origin/main:${IMPL}" > "$PREV" 2>/dev/null || rm -f "$PREV"
+          python3 "$RUNNER_TEMP/regen-tools/contract_check.py" check --source "$NEW" --prev "$PREV" \
+            --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY" \
+            || echo "::warning::contract check did not run"
+          rm -f "$NEW" "$PREV"
 
       # Record-only (docs/concepts/adaptable-code.md, "Pipeline changes"). The
       # checker mirror runs on the PR's implementation and, on a regeneration,
