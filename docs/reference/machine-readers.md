@@ -2,8 +2,8 @@
 
 > **Status (2026-11-11):** both writers are in the repository: the API (`api/machine_reads.py`) and the site's
 > nginx (`app/nginx.conf`). All nine steps of [Set up the Google Cloud side](#set-up-the-google-cloud-side) are
-> done. Steps 1 to 8 since 2026-11-09: the log bucket, the sink, the `_Default` exclusion, the linked dataset,
-> the views, the two `READER` entries, and the trigger substitution. Step 9, the Worker redeploy, since
+> done: steps 1 to 8 on 2026-11-09 (the log bucket, the sink, the `_Default` exclusion, the linked dataset, the
+> views, the two `READER` entries, and the trigger substitution), and step 9, the Worker redeploy, on
 > 2026-11-11. The two
 > readers, the public tile on `/stats` and the owner's section on `/debug`, are in the repository too (see
 > [Where the numbers appear](#where-the-numbers-appear)); because the trigger already carries the dataset, the
@@ -434,25 +434,29 @@ All of these are read-only.
 
 6. After step 9, a forged verdict on the apex path arrives unverified too. The first request is the one that
    tells: no edge rule touches nginx's copy header, so only the redeployed Worker removes it, and
-   `/llms-full.txt` is a hop path, where the API would read it. Note the minute, then send:
+   `/llms-full.txt` is a hop path, where the API would read it. Note the time, then send:
 
    ```bash
-   curl -sS -o /dev/null -H 'X-Prerender-Bot-Category: AI Crawler' \
+   date -u +%Y-%m-%dT%H:%M:%SZ
+   curl -sS -o /dev/null -w '%{http_code}\n' -H 'X-Prerender-Bot-Category: AI Crawler' \
      -A 'Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)' https://anyplot.ai/api/llms-full.txt
-   curl -sS -o /dev/null -H 'X-Verified-Bot-Category: AI Crawler' \
+   curl -sS -o /dev/null -w '%{http_code}\n' -H 'X-Verified-Bot-Category: AI Crawler' \
      -A 'Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)' https://anyplot.ai/api/specs
    ```
 
-   Then read the two lines:
+   Both must print `200`: a request the edge or the API refused proves nothing about the header. Then read the
+   two lines, with the time you noted in place of the one below, so no other reader's line can stand in for them:
 
    ```bash
-   gcloud logging read 'jsonPayload.log_type="machine_read" AND jsonPayload.assistant="ahrefs"' --project=anyplot \
-     --bucket=machine-reads --location=europe-west4 --view=_AllLogs --freshness=10m --limit=10 \
-     --format='table(timestamp, jsonPayload.writer, jsonPayload.route, jsonPayload.verified_category)'
+   gcloud logging read 'jsonPayload.log_type="machine_read" AND jsonPayload.assistant="ahrefs"
+       AND jsonPayload.writer="api" AND jsonPayload.route=("llms_full" OR "specs_list")
+       AND timestamp>="2026-11-11T07:37:46Z"' --project=anyplot \
+     --bucket=machine-reads --location=europe-west4 --view=_AllLogs --limit=10 \
+     --format='table(timestamp, jsonPayload.route, jsonPayload.status, jsonPayload.verified_category)'
    ```
 
-   The `anyplot-api` lines of that minute, `route: llms_full` and `route: specs_list`, must both carry an empty
-   `verified_category`.
+   Exactly two lines must come back, `route: llms_full` and `route: specs_list`, both with `status: 200` and an
+   empty `verified_category`.
 
 7. The daily `bot-serving-check` run at 06:23 UTC shows up as `source: synthetic`, never as a live Googlebot.
 
