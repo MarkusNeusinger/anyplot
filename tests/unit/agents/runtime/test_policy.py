@@ -547,7 +547,8 @@ class TestOtherInstructions:
         assert examples["Wie bekomme ich das Bild in meine PowerPoint?"] == "in_scope"
         assert examples["How do I get the picture onto my phone?"] == "in_scope"
         assert examples["How do I create a chart in PowerPoint?"] == "out_of_scope"
-        assert "never `needs_data`: the figure stands in the message" in rubric
+        assert "A figure the user states themselves" in rubric and "the figure stands in the message" in rubric
+        assert "as a reference line, a target or a threshold" in rubric
         assert examples["Why does the plot show 7.6 for Basel? My own report says 7.2."] == "in_scope"
 
     def test_example_data_is_in_scope_and_only_real_figures_need_data(self) -> None:
