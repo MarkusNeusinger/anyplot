@@ -212,6 +212,54 @@ def _withheld(code: str | None = None) -> types.Content:
     return types.Content(role="user", parts=[types.Part(text=withheld_text(code))])
 
 
+WITHHELD_TEXTS: frozenset[str] = frozenset({WITHHELD, *(withheld_text(code) for code in JUDGED_REFUSALS)})
+"""Every stored form of a withheld message."""
+HALT_QUOTE = f"[{HALT_AUTHOR}] said:"
+"""The words ADK puts before a halt event's text in the root's request. The event's author is `model`, another agent
+for the root, so ADK hands its text over as a user content: a preamble part, then one part per text that starts with
+these words and quotes it (`google.adk.flows.llm_flows.context._fencing`; a test builds one through ADK itself)."""
+
+
+def is_refused_turn(content: types.Content) -> bool:
+    """Whether a content of the root's request belongs to a turn the service refused: the placeholder of a withheld
+    message, or the halt event's quoted text that answered it (a fixed refusal, or the outage text)."""
+    if content.role != "user":
+        return False
+    texts = [part.text for part in content.parts or [] if part.text and not part.thought]
+    if "".join(texts) in WITHHELD_TEXTS:
+        return True
+    # ADK's preamble, then nothing but quoted halt texts: a user's own message is one part and has no preamble.
+    return len(texts) > 1 and all(text.startswith(HALT_QUOTE) for text in texts[1:])
+
+
+def without_refused_turns(contents: list[types.Content]) -> list[types.Content]:
+    """The root's request without the turns the service refused before the root ran.
+
+    A refused turn left two user contents in the root's context: the placeholder and the quoted refusal. The next
+    message followed them as a third, so the root read one user turn that held a refusal ahead of the message, and
+    the root, whose prompt tells it to refuse what is out of scope, sent that fixed text again for a message the
+    judge had passed (persona round of 2026-11-11, two of the six typed turns right after a refusal). The judge's own
+    context has skipped fixed replies since they "primed it to refuse the next message alike" (`judge_context`);
+    this is the same for the root. Only the request changes: the session's events stay, so the judge's context and
+    the count of refusals read what they read. Only the scope guard halts a run (`before_run_callback`), and every
+    halt comes with a withheld message, so no other event is written by `HALT_AUTHOR`.
+    """
+    kept = [content for content in contents if not is_refused_turn(content)]
+    return kept or contents
+
+
+def withheld_messages(events: Sequence[Event]) -> int:
+    """How many of the session's user messages were withheld, whatever the reason: what the session block tells the
+    root in place of the turns `without_refused_turns` takes out."""
+    return sum(
+        1
+        for event in events
+        if event.author == USER_AUTHOR
+        and event.content is not None
+        and "".join(part.text or "" for part in event.content.parts or []) in WITHHELD_TEXTS
+    )
+
+
 SESSION_CLOSED = "session_closed"
 """The refusal code (and `refusals.yaml` entry) of a session closed after `AGENT_SESSION_REFUSALS` refusals."""
 COUNTED_PLACEHOLDER = withheld_text("out_of_scope")

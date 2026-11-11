@@ -189,6 +189,7 @@ TurnHook = Literal[
     "scope_guard",
     "output_guard",
     "empty_reply",
+    "root_refusal",
     "reply_language",
     "shipped_reply",
     "plot_button",
@@ -315,6 +316,9 @@ class RequestLedger:
     empty_reasked: bool = False
     """The empty-reply plugin asked the root again for a final reply without text: at most once per turn
     (`plugins/empty_reply.py`)."""
+    refusal_reasked: bool = False
+    """The root-refusal plugin asked the root again for a message the scope judge passed and the root answered with a
+    fixed refusal: at most once per turn (`plugins/root_refusal.py`)."""
     reply_shortened: bool = False
     """The output guard asked the root for a shorter reply in this invocation: at most once per turn
     (`ScopeGuardPlugin._guard_reply`)."""

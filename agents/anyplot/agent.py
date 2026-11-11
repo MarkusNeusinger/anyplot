@@ -64,7 +64,8 @@ from .plugins.budget import BudgetPlugin
 from .plugins.empty_reply import EmptyReplyPlugin
 from .plugins.ledger import CURRENT_LEDGER, ledger_for
 from .plugins.reply_language import ReplyLanguagePlugin
-from .plugins.scope_guard import ScopeGuardPlugin
+from .plugins.root_refusal import RootRefusalPlugin
+from .plugins.scope_guard import ScopeGuardPlugin, withheld_messages, without_refused_turns
 from .plugins.shipped_reply import ShippedReplyPlugin
 from .plugins.tool_safety import ToolSafetyPlugin
 from .policy import fence, root_instruction
@@ -180,6 +181,14 @@ MEMORY_HEADING = (
     "after a switch (id, kind and target, text; plot_pipeline's remember adds, forget removes by id)"
 )
 """The session block's line over the plot memory (`memory.py`, 2026-11-02); the entries follow in a data fence."""
+WITHHELD_LINE = (
+    "- Withheld: {count} of the user's earlier messages were refused by the service before you ran, each with a fixed "
+    "reply; they are not in this conversation, and no message you see is one of them"
+)
+"""The session block's line for a session with refused turns, which the root's request no longer holds
+(`scope_guard.without_refused_turns`): the count alone, so "why did you refuse?" still has a true answer, and the
+statement that the messages the root sees are others. It says nothing about why (the scope judge, the budget, an
+outage), and nothing about what the root should answer: its own refusal of a message stays its own decision."""
 
 
 def memory_line(entry: MemoryEntry) -> str:
@@ -318,6 +327,9 @@ async def session_context(context: ReadonlyContext) -> str:
         lines.append(line)
     else:
         lines.append("- Plot versions: none yet")
+    withheld = withheld_messages(context.session.events)
+    if withheld:
+        lines.append(WITHHELD_LINE.format(count=withheld))
     memory = read_memory(context.state)
     if memory:
         # The entries are the root's own words for the user's requests: listed with their ids, inside a data fence.
@@ -420,9 +432,12 @@ def build_plugins() -> list[BasePlugin]:
         BudgetPlugin(),
         ToolSafetyPlugin(),
         EmptyReplyPlugin(),
+        RootRefusalPlugin(),
         ShippedReplyPlugin(),
         ReplyLanguagePlugin(),
-        ContextFilterPlugin(num_invocations_to_keep=CONTEXT_INVOCATIONS),
+        # The filter comes last and edits the request ReplyLanguage has kept, in place, so a second ask of any
+        # reply check starts from the same cleaned contents.
+        ContextFilterPlugin(num_invocations_to_keep=CONTEXT_INVOCATIONS, custom_filter=without_refused_turns),
     ]
     settings = get_settings()
     if settings.dev_fixture and settings.is_development:

@@ -2818,7 +2818,7 @@ async def test_an_open_role_lists_its_conversion_and_the_conversion_fills_it(
     assert pasted.status_code == 200, pasted.text
     assert pasted.json()["bindings"] == [{"role": "x", "column": "Hours"}]  # y has no number column yet
 
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     block = await session_context(context)  # type: ignore[arg-type]
     assert "- Bindings: incomplete; missing roles: y;" in block
     assert "- Conversions for open roles: 1, columns that a set_type turns into what the role takes" in block
@@ -2845,7 +2845,7 @@ async def test_an_open_role_lists_its_conversion_and_the_conversion_fills_it(
     assert f"<user_data>\n{made}, which y takes\n</user_data>" in seen
     assert "Conversions for open roles:" not in seen and "- Bindings: complete" in seen
     assert [name for name, _ in parse_sse(turn.text)].count("message") == 1
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     after = await session_context(context)  # type: ignore[arg-type]
     assert "- Bindings: complete" in after and "Conversions for open roles" not in after
     assert "Conversions the server made" not in after  # summarized: a later turn never hears of them again
@@ -2919,7 +2919,7 @@ async def test_a_free_date_column_is_offered_for_an_open_measure_and_made_only_o
     language = await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "de"})
     assert language.status_code == 200, language.text
 
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     block = await session_context(context)  # type: ignore[arg-type]
     assert "offers of a date column that date_number could turn into numbers" in block
     assert "y: column 'Subscription Date' (dates): date_number would turn its 3 dates into numbers" in block
@@ -2935,7 +2935,7 @@ async def test_a_free_date_column_is_offered_for_an_open_measure_and_made_only_o
         "earliest date, which is 0; Subscription Date stays as it is"
     ]
     assert done["bindings"] == [{"role": "x", "column": "Index"}, {"role": "y", "column": "Subscription Date (Tage)"}]
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     assert "Conversions for open roles" not in await session_context(context)  # type: ignore[arg-type]
 
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
@@ -2959,7 +2959,7 @@ async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
     )
     assert pasted.json()["bindings"] == [{"role": "x", "column": "value"}]
 
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     block = await session_context(context)  # type: ignore[arg-type]
     assert "y takes 'value', which x holds now" in block
 
@@ -2980,7 +2980,7 @@ async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
     assert undone.status_code == 200 and [column["name"] for column in undone.json()["profile"]["columns"]] == ["value"]
     # The column stays on y, so x is the open role now, and the offer still stands.
     assert undone.json()["bindings"] == [{"role": "y", "column": "value"}]
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     assert "a new column 'index' with the row numbers 1 to 6 takes x" in await session_context(context)  # type: ignore[arg-type]
 
 
@@ -3197,7 +3197,7 @@ async def test_prepare_data_refuses_without_a_dataset_during_a_run_and_bad_opera
     assert await prepare_data([rename], context) == {"status": "not_ready", "reason": "no_dataset"}
 
     sid = await open_session(client)
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     context.invocation_id = "inv-prep-2"
     too_many = await prepare_data([rename] * 6, context)
     assert too_many["status"] == "error" and too_many["code"] == "invalid_operations"
@@ -3361,7 +3361,7 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
 
     from agents.anyplot.tools.session import get_dataset_profile
 
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     profile = await get_dataset_profile(context)
     assert "<user_data>" in profile["to_long"] and '"names_to": "Category"' in profile["to_long"]
     # The new names are generated text, so a language change renames them (live round 9 of 2026-10-16), and
@@ -3403,7 +3403,7 @@ async def test_generate_data_refuses_during_a_run_bad_arguments_and_formulas_it_
     from agents.anyplot.tools.session import generate_data
 
     sid = await open_session(client, with_data=False)
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     context.invocation_id = "inv-gen-1"
     variables = [{"start": "-pi", "stop": "pi"}]
     sine = [{"name": "y", "expression": "sin(x)"}]
@@ -4414,7 +4414,7 @@ async def test_notes_that_pass_the_scope_judge_are_stored_returned_and_reach_the
 
     from agents.anyplot.tools.session import get_dataset_profile
 
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     profile = await get_dataset_profile(context)
     assert profile["user_notes"].endswith("<user_notes>\n" + "\n".join(NOTES) + "\n</user_notes>")
     assert "<user_data>" in profile["profile"]
@@ -4906,7 +4906,7 @@ async def test_a_name_that_reads_like_a_wish_reaches_the_root_as_data_never_as_a
 
     from agents.anyplot.tools.session import get_dataset_profile
 
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     profile = await get_dataset_profile(context)
     assert "Pwned" not in profile["user_notes"] and "<user_data>\n" + wish in profile["file_name"]
     block = await session_context(context)  # type: ignore[arg-type]

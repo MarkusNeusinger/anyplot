@@ -160,6 +160,7 @@ HOOK_VERDICTS: dict[str, frozenset[str]] = {
     "scope_guard": SCOPE_VERDICTS,
     "output_guard": frozenset({"reply_too_long", "shortened", "reply_cut"}),
     "empty_reply": frozenset({"reasked", "empty_kept", "no_reply"}),
+    "root_refusal": frozenset({"reasked", "kept"}),
     "reply_language": frozenset({"mismatch", "reasked", "reask_failed", "error", "not_offered"}),
     "shipped_reply": frozenset({"dropped", "kept"}),
     "plot_button": frozenset({"dropped", "kept", "asked"}),
