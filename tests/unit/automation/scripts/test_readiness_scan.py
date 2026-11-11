@@ -359,3 +359,54 @@ def test_a_missing_file_is_recorded_not_raised(tmp_path):
     result = _run(tree, tmp_path, "--new", "absent.py", "--prev", "absent-too.py", "--spec-id", SPEC, "--library", LIB)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "verdict=unreadable new=missing prev=n/a" in result.stdout
+
+
+# --- the command, in this process ------------------------------------------------------------------
+
+
+def test_scan_prints_the_line_and_writes_the_summary_and_the_record(tmp_path, monkeypatch, capsys):
+    (tmp_path / "new.py").write_text(BANNED_NAME, encoding="utf-8")
+    (tmp_path / "prev.py").write_text(CLEAN, encoding="utf-8")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary"))
+    arguments = ["scan", "--new", str(tmp_path / "new.py"), "--prev", str(tmp_path / "prev.py")]
+    code = readiness_scan.main([*arguments, "--spec-id", SPEC, "--library", LIB, "--out", str(tmp_path / "r.json")])
+    assert code == 0
+    assert capsys.readouterr().out.strip() == (
+        "::warning::readiness_scan spec=scatter-basic lib=matplotlib verdict=regression new=blocked prev=clean "
+        "added=security:banned-name removed=none"
+    )
+    assert (tmp_path / "summary").read_text(encoding="utf-8") == (
+        "**Readiness (record-only):** regression: security:banned-name (new blocked, predecessor clean)\n"
+    )
+    record = json.loads((tmp_path / "r.json").read_text(encoding="utf-8"))
+    assert record["added"] == ["security:banned-name"] and record["new"]["findings"] == {"banned-name": 1}
+
+
+@pytest.mark.parametrize("content", [None, b"\xff\xfe not utf-8"], ids=["missing", "not-utf-8"])
+def test_scan_reads_an_unreadable_file_as_no_file(tmp_path, monkeypatch, capsys, content):
+    """No summary file and no --out: the line alone, and still exit 0."""
+    if content is not None:
+        (tmp_path / "new.py").write_bytes(content)
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    code = readiness_scan.main(["scan", "--new", str(tmp_path / "new.py"), "--spec-id", SPEC, "--library", LIB])
+    assert code == 0
+    assert "verdict=unreadable new=missing prev=n/a added=none removed=none" in capsys.readouterr().out
+    assert sorted(path.name for path in tmp_path.iterdir()) == ([] if content is None else ["new.py"])
+
+
+def test_a_validator_that_crashes_is_a_key_of_its_own(monkeypatch):
+    """The scan blocks a file whose validator fails; the key says so instead of naming no rule at all."""
+    from agents.anyplot.code import validate
+
+    def boom(code: str, *, library: str) -> list:
+        raise RuntimeError("validator down")
+
+    monkeypatch.setattr(validate, "validate_security", boom)
+    side = _side(BANNED_IMPORT)  # the scan keeps its own reference, so it still reports the finding
+    assert side["status"] == "blocked"
+    assert side["refusals"] == ["security:validator-failed"] and side["findings"] == {}
+
+
+def test_a_name_that_is_no_identifier_never_reaches_the_record():
+    assert readiness_scan._token("banned-import") == "banned-import"
+    assert readiness_scan._token("Not an identifier: x = 1") == "other"
