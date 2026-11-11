@@ -1,0 +1,11 @@
+{
+  "dataset_text": "Bezirk\t2024\t2025\nAltmarkt\t22.497\t26.215\nHafenkai\t41.377\t57.902\nNordring\t24.512\t20.222\nSüdhang\t49.927\t48.449\nBahnhof\t33.585\t39.303\nWestend\t35.682\t38.799\nOberdorf\t12.480\t10.093\nNeubau Ost\t36.803\t45.511\nCampus\t45.454\t38.790*\nStadtpark\t49.000\t58.953\n",
+  "message": "Die Punkte sind Tausenderpunkte, und das Sternchen bei Campus heisst vorläufig. Lies beide Jahre als Zahlen.",
+  "expected_operations": [
+    {"op": "set_type", "column": "2024", "type": "number", "decimal": ","},
+    {"op": "set_type", "column": "2025", "type": "number", "decimal": ","}
+  ],
+  "locale": "de",
+  "spec_id": "bar-horizontal",
+  "tags": ["set_type", "decimal", "thousands", "footnote_mark"]
+}

@@ -471,6 +471,16 @@ LEADING_ZEROS = "that leading zeros are no part of the value"
 """The guess of a number reading whose cells have leading zeros (`_number_guess`): such a part stays text."""
 TEXT_READING = "kept as text"
 """The change-line words of a new column of a text operation that reads as neither numbers nor dates."""
+DECIMAL_MARK = "the decimal mark"
+"""The guess of a number reading whose cells read as numbers with either decimal mark, to other values
+(`_number_guess`: `1.234` is 1.234 or 1234)."""
+OPEN_MARK_READING = (
+    'kept as text, since its cells read as numbers with either decimal mark: set_type to number with "decimal" '
+    "reads them"
+)
+"""The change-line words of a text operation's new column whose number reading would be a guess of the decimal mark
+(`_typed`). Typed by that guess, `38.790` would be stored as 38.79, and no later operation could read the thousands
+back: the zero is gone from the canonical text."""
 _SIGNS = ("-", "\N{MINUS SIGN}")
 """The separators that may also be a minus sign: one that starts a part right before a digit is its sign."""
 _TIME_SUFFIXES = ("", " %H:%M", " %H:%M:%S", "T%H:%M", "T%H:%M:%S")
@@ -1280,10 +1290,14 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
             if op.decimal != "," or pasted is None:
                 # The canonical text of a number is a dot decimal (`7.000` is stored as `7`); re-reading it under a
                 # decimal comma would be wrong. Only the cells as pasted can be read again.
-                if op.decimal == ",":
-                    return frame, (
-                        f"{op.column}: already numbers, nothing changed; its dots can be read as thousands "
-                        "separators only from the pasted data: undo to the pasted data first"
+                if op.decimal == "," and carried.decimal != ",":
+                    # Refused, never a line of a call that goes on: the operations after it would compute with the
+                    # decimal reading, and the call would store that as the next version.
+                    raise PrepareError(
+                        "type_mismatch",
+                        f"column '{op.column}' already holds numbers read with a decimal point; its dots can be read "
+                        "as thousands separators only from the pasted data, before any other operation changes the "
+                        "column: undo to the pasted data first, or read the text column these numbers came from",
                     )
                 return frame, f"{op.column}: already numbers, nothing changed"
             if carried.rows_changed or len(pasted) != len(frame):
@@ -1331,7 +1345,12 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         change += f", {_count(conversion.failed, 'cell')} could not be read and {_be(conversion.failed)} now missing"
     if op.name is not None:
         change += f"; {op.column} stays as it is"
-    return result, _with_notice(change, conversion.notice)
+    notice = conversion.notice
+    if op.type == "number" and op.decimal is None and _mark_open(_texts(series), conversion):
+        # The reading took the dataset's mark for cells the other mark reads too: said here, where the root can
+        # still act on it, as the parser says it of a pasted column (`parse.AMBIGUOUS_DOTS`).
+        notice = "; ".join(part for part in (notice, _open_mark_note(conversion.used)) if part)
+    return result, _with_notice(change, notice)
 
 
 def _check_new_column(frame: pd.DataFrame, op: SetType, kind: Kind) -> None:
@@ -1369,6 +1388,8 @@ class Conversion:
     order: str | None = None
     guess: str | None = None
     unit: str | None = None
+    used: str | None = None
+    """The decimal mark a number reading used: the requested one, or the other when the cells read better with it."""
 
 
 def _number_conversion(series: pd.Series, requested: str) -> Conversion:
@@ -1384,7 +1405,30 @@ def _number_conversion(series: pd.Series, requested: str) -> Conversion:
     if rounded and guess is None:
         # Digits past what a number holds (an account number of 20 digits) would be lost: the parser kept it text.
         guess = "that values with more digits than a number holds may be rounded"
-    return Conversion(converted, failed, reading, "; ".join(notices), guess=guess, unit=unit)
+    return Conversion(converted, failed, reading, "; ".join(notices), guess=guess, unit=unit, used=used)
+
+
+def _mark_open(texts: Iterable[Any], conversion: Conversion) -> bool:
+    """Whether a number reading took for its decimal mark a mark that could as well separate thousands in every cell:
+    `38.790` read with a decimal point is 38.79, and with a decimal comma 38790.
+
+    The other way round is no such guess: a mark the reading took for a thousands separator between three-digit
+    groups (`1.200` in a file of decimal commas, `1,234` in one of decimal points) is how that file writes numbers.
+    """
+    used = conversion.used
+    return (
+        conversion.guess == DECIMAL_MARK
+        and used is not None
+        and any(isinstance(text, str) and used in text for text in texts)
+    )
+
+
+def _open_mark_note(used: str | None) -> str:
+    """What a `set_type` to numbers without `decimal` says of cells whose decimal mark could separate thousands
+    (`_mark_open`): the reading it took and how to get the other, since the text is gone once the column holds
+    numbers."""
+    marks, other = ("dots", ",") if used == "." else ("commas", ".")
+    return f'{marks} read as the decimal mark; if they separate thousands, undo this and set "decimal": "{other}"'
 
 
 def _number_guess(series: pd.Series, used: str) -> str | None:
@@ -1401,7 +1445,7 @@ def _number_guess(series: pd.Series, used: str) -> str | None:
     first, _, failed = _read_numbers(list(texts), used)
     second, _, other_failed = _read_numbers(list(texts), other)
     if not failed and not other_failed and first != second:
-        return "the decimal mark"
+        return DECIMAL_MARK
     return None
 
 
@@ -3055,7 +3099,9 @@ def _typed(texts: pd.Series, decimal: str) -> _Typed:
     `10 kg`, `CHF 1'200`), never behind a word `set_type` would take off as a unit when asked to (`Q1`, `x3`
     are labels). Numbers with leading zeros stay text, as the parser keeps them (`007` is a code), a number
     behind a month name (`Nov 2026`) is a date, and a column with a cell of digits alone is never one
-    (pandas reads `00123` as the year 123).
+    (pandas reads `00123` as the year 123). Cells whose decimal mark could as well separate thousands
+    (`_mark_open`) stay text too, with `OPEN_MARK_READING`: the parser keeps the pasted cells of such a column
+    to read them again, and a new column has none.
     """
     present = int(texts.notna().sum())
     if not present:
@@ -3067,6 +3113,8 @@ def _typed(texts: pd.Series, decimal: str) -> _Typed:
         if failed <= MAX_FAILED_SHARE * present and not (number.unit and _names_month(number.unit)):
             if number.guess == LEADING_ZEROS:
                 return _Typed(texts, "text", TEXT_READING)
+            if _mark_open(texts, number):
+                return _Typed(texts, "text", OPEN_MARK_READING)
             return _Typed(number.values, "number", number.reading, failed, number.notice)
     if any(isinstance(text, str) and _DIGITS_ONLY.fullmatch(text) for text in texts):
         return _Typed(texts, "text", TEXT_READING)
@@ -3087,10 +3135,28 @@ def _attempt(convert: Callable[[], Conversion]) -> Conversion | None:
         return None
 
 
-def _source_texts(frame: pd.DataFrame, column: str, carried: _Carried) -> pd.Series:
-    """The canonical cell texts of `column`, which a text operation reads whatever the column's type."""
+def _source_texts(frame: pd.DataFrame, column: str, carried: _Carried, literals: Iterable[str] = ()) -> pd.Series:
+    """The cell texts of `column` that a text operation reads, whatever the column's type; `literals` are the texts
+    the operation looks for in them.
+
+    A number column's canonical text is not what was pasted (`7.000` is stored as `7`, `38.790` as `38.79`), so an
+    operation on its decimal marks would drop digits without a word. It reads the cells as pasted while they still
+    lie one per row (`_Carried.pasted_cells`, as `set_type` with a decimal comma does), and is refused otherwise
+    when it looks for a `.` or a `,`.
+    """
     _require(frame, column)
     series = frame[column]
+    if _kind(series) == "number":
+        pasted = carried.pasted_cells.get(column)
+        if pasted is not None and not carried.rows_changed and len(pasted) == len(frame):
+            return pd.Series([cell or None for cell in pasted], index=frame.index, name=column, dtype="object")
+        if any("." in literal or "," in literal for literal in literals):
+            raise PrepareError(
+                "type_mismatch",
+                f"column '{column}' holds numbers, stored without the marks and the trailing zeros they were written "
+                "with (`7.000` is `7`), so a text operation on its `.` or `,` would lose digits: use the text "
+                "column these numbers came from, or undo to the pasted data first",
+            )
     return _texts(series, _with_time(series, carried))
 
 
@@ -3186,7 +3252,7 @@ def _pieces(text: str, separator: str, parts: int) -> list[str]:
 
 
 def _split(frame: pd.DataFrame, op: Split, carried: _Carried) -> tuple[pd.DataFrame, str]:
-    texts = _source_texts(frame, op.column, carried)
+    texts = _source_texts(frame, op.column, carried, [op.separator])
     names = list(op.names)
     _check_new_columns(frame, names)
     parts: list[list[str | None]] = [[] for _ in names]
@@ -3292,7 +3358,7 @@ def _extract(frame: pd.DataFrame, op: Extract, carried: _Carried) -> tuple[pd.Da
 def _strip(frame: pd.DataFrame, op: Strip, carried: _Carried) -> tuple[pd.DataFrame, str]:
     if op.prefix is None and op.suffix is None:
         raise PrepareError("invalid_operation", "strip needs a prefix, a suffix or both")
-    texts = _source_texts(frame, op.column, carried)
+    texts = _source_texts(frame, op.column, carried, [op.prefix or "", op.suffix or ""])
     _check_new_columns(frame, [op.name])
     prefix, suffix = op.prefix or "", op.suffix or ""
     cells: list[str | None] = []
@@ -3337,7 +3403,7 @@ def _strip(frame: pd.DataFrame, op: Strip, carried: _Carried) -> tuple[pd.DataFr
 
 
 def _replace(frame: pd.DataFrame, op: Replace, carried: _Carried) -> tuple[pd.DataFrame, str]:
-    texts = _source_texts(frame, op.column, carried)
+    texts = _source_texts(frame, op.column, carried, [op.old])
     _check_new_columns(frame, [op.name])
     cells: list[str | None] = []
     present = changed = 0
