@@ -2,44 +2,61 @@ library: altair
 language: python
 specification_id: surface-basic
 created: '2025-12-23T21:54:58Z'
-updated: '2026-05-05T16:57:51Z'
-generated_by: claude-haiku
-workflow_run: 25389855358
+updated: '2026-11-11T02:39:28Z'
+generated_by: claude-sonnet
+workflow_run: 42946659936
 issue: 1013
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - Expert implementation of 3D projection mathematics using Altair's capabilities
-  - Perfect theme adaptation with viridis colors identical across light/dark themes
-    and proper chrome theming
-  - Strong text legibility with explicitly-sized fonts delivering excellent readability
-    at 4800×2700
-  - Comprehensive 3D surface with good feature coverage showing peaks, valleys, and
-    zero crossings
-  - Clean, idiomatic Altair code following recommended patterns
-  - Sophisticated painter's algorithm using depth-based sorting to handle occlusion
+  - Correct 3200x1800 canvas padded (never cropped) per the library contract, with
+    balanced margins in both themes
+  - imprint_seq green-to-blue ramp for continuous z, identical in both themes, with
+    theme-adaptive chrome throughout
+  - Painter's algorithm driven by Altair's native alt.Order channel gives correct
+    occlusion of near peaks over far valleys
+  - Vectorised numpy projection replaces per-cell Python loops; adaptable column constants
+    with escaped fields
+  - Native interval selection bound to scales provides pan/zoom and formatted tooltips
+    in the HTML view
   weaknesses:
-  - Design Excellence could be elevated with custom refinements beyond library defaults
-  - Data storytelling is minimal with no visual hierarchy or emphasis to guide the
-    viewer
+  - 'SC-02 (both): only two axes are drawn — the horizontal one is a projected screen
+    coordinate and there is no y axis at all — so the spec''s ''all three axes drawn
+    and labeled'' (C3) is missed → draw the x, y and z axes of the projected 3D box
+    with their own ticks and labels. Likely cause: the chart reuses Altair''s 2D x/y
+    axes for the projected screen coordinates.'
+  - 'SC-02 (both): the surface''s silhouette is stair-stepped along every edge because
+    each grid cell is drawn as its axis-aligned bounding rectangle, so the surface
+    reads faceted at its outline (C4) → draw each cell as its projected quadrilateral
+    (a polygon per cell). Likely cause: mark_rect with x1/x2/y1/y2 from the min/max
+    of the cell corners (lines 59-70).'
+  - 'SC-03 (both): the vertical axis is titled ''z (height)'' but its ticks show the
+    projected screen_y = depth·sin(25°) + z·cos(25°), so the z = 1.0 peaks read at
+    about 1.5 and the z = −1.0 troughs at about −1.5 (+0.5 off) → ticks that read
+    z values, or an axis title naming the projected coordinate. Likely cause: alt.Y(''y1'')
+    encodes screen_y under the title f''{Z} (height)''.'
+  - 'CQ-01 (code): a helper function corners() (lines 53-55) breaks the linear script
+    → inline the np.stack of the four corner slices. Likely cause: `def corners(a)`.'
+  - 'Suggestion: a slightly higher elevation (about 35°) would separate the near ridge
+    from the far trough more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1), not pure white. PASS
-      Chrome: Title "surface-basic · altair · anyplot.ai" clearly visible at top in dark text (28px). X-axis labeled "X axis (projected)" with range -5 to 5. Y-axis labeled "Z axis (height)" with range -2 to 2. All tick labels in dark color with excellent contrast. Colorbar on right with "Surface Value" title, clearly readable. Grid lines subtle but visible (10% opacity). PASS
-      Data: Viridis colormap applied - purple (low) → teal (mid) → yellow/bright green (high). Surface shows sin(x)*cos(y) function with multiple peaks and valleys. All data points visible. PASS
-      Legibility verdict: PASS - All text readable, no contrast failures
+      Background: warm off-white #FAF8F1, exact 3200x1800 canvas.
+      Chrome: title 'surface-basic · python · altair · anyplot.ai' in dark ink at the top; x axis 'x (projected, 45° view)' with ticks -5.0 to 5.0; y axis 'z (height)' with ticks -2.0 to 2.0; subtle grid; colour bar 'z' on the right with labels 0.5 / 0.0 / -0.5. All text dark and readable.
+      Data: the sin(x)cos(y) surface as 2,401 depth-sorted cells in an oblique 45°/25° view; two blue peaks and two green valleys, green (#009E73, low) to blue (#4467A3, high) imprint_seq ramp; edges stair-stepped; faint cell mesh.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17), not pure black. PASS
-      Chrome: Title in light text (off-white/light gray) with excellent contrast against dark background. Axis labels "X axis (projected)" and "Z axis (height)" in light text, clearly readable. All tick labels properly themed in light color. No dark-on-dark failures detected. Colorbar with "Surface Value" in light text, properly readable. Grid lines subtle but visible. PASS
-      Data: Viridis colormap is IDENTICAL to light render - purple, teal, yellow/green colors unchanged. This proves correct theme-adaptive implementation without data color drift. All surface elements clearly visible and distinguishable from dark background. PASS
-      Legibility verdict: PASS - All text readable, proper light-on-dark contrast, no dark-on-dark failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink; grid subtle; colour bar title and labels light. No dark-on-dark text.
+      Data: identical green-to-blue colours and geometry as the light render; only chrome flipped; the faint cell mesh reads slightly lighter on dark.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,52 +67,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px; perfectly readable in both light and dark themes'
+        comment: Explicit sizes (title 24, axis titles 22, ticks 18, legend 16/20
+          at scale 4); all text readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; axis labels, title, and legend all
-          have clear separation and breathing room
+        comment: No text collides with other text or with the surface
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 50×50 grid with 2,401 rectangles; painter's algorithm depth-sorting
-          provides optimal adaptation to data density
+        comment: 2,401 cells fill the surface without gaps; faint 0.15-opacity cell
+          strokes do not hide the color
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and specifically designed
-          for colorblind safety
+        comment: Two-stop green-to-blue ramp, CVD-safe, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills approximately 65% of canvas with balanced and generous
-          margins on all sides
+        comment: Exact 3200x1800 canvas, balanced margins, title about 58 % of the
+          width, colour bar clear of the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axes with context; colorbar title clearly explains data
-          mapping
+        comment: Axis titles and colour bar title present and readable; the mismatch
+          between title and tick values is scored in SC-03
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous data; backgrounds #FAF8F1 (light) and #1A1A17
-          (dark); data colors identical across themes; all chrome properly theme-adaptive'
+        comment: 'imprint_seq (#009E73 to #4467A3) for continuous z; #FAF8F1 / #1A1A17
+          backgrounds; data colours identical across themes'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -103,24 +118,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional and well-configured defaults with thoughtful color and
-          spacing, but lacks exceptional custom design or unique styling
+        comment: 'Style-guide baseline: theme tokens, explicit font hierarchy; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Subtle grid (opacity 0.10), fine stroke details (strokeWidth 0.3,
-          strokeOpacity 0.15), good whitespace management
+        comment: Tick density cut to 0.5 / 1.0 steps for this chart and a hairline
+          cell mesh at 0.15 opacity that shows curvature without hiding the colour
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but lacks visual hierarchy, emphasis techniques,
-          or focal points to guide viewer narrative
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -128,29 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D surface plot using mathematical function; appropriate
-          visualization for spec
+        comment: A single 3D surface via oblique projection, no extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All features present: smooth colormap, axis labels for all dimensions,
-          colorbar, appropriate grid resolution (50×50), interactive pan/zoom'
+        passed: false
+        comment: Misses C3 (only two screen axes, no y axis, x axis is a projected
+          coordinate) and partly C4 (stair-stepped silhouette from axis-aligned cell
+          rectangles); smooth colormap, colour bar and rotation-free pan/zoom present
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X and Y correctly mapped to projected coordinates; color correctly
-          maps to surface values; all data visible
+        passed: false
+        comment: Vertical axis titled z (height) but its ticks show projected screen_y
+          = depth*sin25 + z*cos25, so z=1 peaks read near 1.5
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct (spec-id · library · anyplot.ai); legend labels
-          match data
+        comment: Title 'surface-basic · python · altair · anyplot.ai' correct; colour
+          bar titled z, the quantity
     data_quality:
       score: 15
       max: 15
@@ -160,85 +174,91 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'sin(x)*cos(y) shows full range: multiple peaks, valleys, zero crossings,
-          positive and negative values'
+        comment: sin(x)cos(y) shows two peaks, two valleys and saddles together
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic mathematical function; real, intellectually honest, neutral,
-          scientifically appropriate exemplar
+        comment: The mathematical function the spec names as its first application;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Naturally correct proportions for trigonometric function; grid range
-          [-3, 3] well-chosen for visualization
+        comment: 50x50 grid on [-3, 3], z in [-1, 1]; colour bar spans -1 to 1 as
+          computed
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear flow: imports → theme → data → chart → save; no unnecessary
-          functions or classes'
+        passed: false
+        comment: A helper function corners() (lines 53-55) in an otherwise linear
+          script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, altair, numpy, pandas; no extraneous dependencies'
+        comment: All imports (os, altair, numpy, pandas, PIL) used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no over-engineering or fake
-          UI elements
+        comment: Vectorised numpy projection and cell construction; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct format: plot-{THEME}.png and .html with proper scale_factor=3.0'
+        comment: Saves plot-{THEME}.png padded to 3200x1800 and plot-{THEME}.html;
+          current Altair 6 API
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Expert use of Altair API: proper mark_rect encoding, x2/y2 for rectangles,
-          selection_interval for interactivity, configure methods'
+        passed: false
+        comment: Idiomatic x/x2/y/y2 rect encoding with alt.Order driving the painter's
+          draw order, typed encodings with escaped fields
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Creative 3D-to-2D projection via matrix math, painter's algorithm
-          depth-sorting, rect-based surface rendering—distinctive to Altair
+        passed: false
+        comment: Vega-Lite native interval selection bound to scales gives pan/zoom
+          in the HTML; tooltips with formatted values
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-11T02:35:21Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - colorbar
+  - 3d-projection
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - matrix-construction
+  - long-to-wide
   dataprep: []
   styling:
   - custom-colormap
