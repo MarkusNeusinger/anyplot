@@ -137,6 +137,24 @@ describe('SpecOverview', () => {
     expect(interactiveLinks).toHaveLength(1);
   });
 
+  it('counts an opened interactive view as interactive_open, without opening the card', async () => {
+    const user = userEvent.setup();
+    const onTrackEvent = vi.fn();
+    const onImplClick = vi.fn();
+    render(
+      <SpecOverview {...defaultProps} onTrackEvent={onTrackEvent} onImplClick={onImplClick} />
+    );
+
+    await user.click(screen.getByRole('link', { name: /open interactive/i }));
+
+    expect(onTrackEvent).toHaveBeenCalledWith('interactive_open', {
+      spec: 'scatter-basic',
+      library: 'plotly',
+    });
+    // The link is its own target: the card under it is not clicked.
+    expect(onImplClick).not.toHaveBeenCalled();
+  });
+
   it('shows skeleton when an implementation has no preview_url', () => {
     const implNoPreview = makeImpl({
       library_id: 'bokeh',

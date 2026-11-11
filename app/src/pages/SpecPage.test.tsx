@@ -54,8 +54,26 @@ vi.mock('src/sections/spec-detail/SpecTabs', () => ({
   ),
 }));
 
+// The overview hands its first card's copy and download to the page, as a card's buttons do.
+type OverviewImpl = { library_id: string; code?: string | null };
 vi.mock('src/sections/spec-detail/SpecOverview', () => ({
-  SpecOverview: () => <div data-testid="spec-overview">SpecOverview</div>,
+  SpecOverview: ({
+    implementations,
+    onCopyCode,
+    onDownload,
+  }: {
+    implementations: OverviewImpl[];
+    onCopyCode: (impl: OverviewImpl) => void;
+    onDownload: (impl: OverviewImpl) => void;
+  }) => (
+    <div data-testid="spec-overview">
+      SpecOverview
+      <button onClick={() => onDownload(implementations[0])}>download first</button>
+      <button onClick={() => onCopyCode({ ...implementations[0], code: 'print(1)' })}>
+        copy first
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock('src/sections/spec-detail/SpecDetailView', () => ({
@@ -211,6 +229,29 @@ describe('SpecPage', () => {
       expect(screen.getByTestId('spec-overview')).toBeInTheDocument();
     });
     expect(screen.queryByTestId('spec-detail-view')).not.toBeInTheDocument();
+  });
+
+  it('records a download and a copy from the hub under the page kind of the hub', async () => {
+    // The same value the hub's pageview carries, so one `page` breakdown covers both.
+    mockParams = { specId: 'scatter-basic' };
+    mockFetchSuccess();
+    // `userEvent.setup()` gives the page a clipboard to copy to.
+    const user = userEvent.setup();
+    render(<SpecPage />);
+
+    await user.click(await screen.findByRole('button', { name: 'download first' }));
+    expect(mockTrackEvent).toHaveBeenCalledWith(
+      'download_image',
+      expect.objectContaining({ spec: 'scatter-basic', page: 'spec_overview' })
+    );
+
+    await user.click(screen.getByRole('button', { name: 'copy first' }));
+    await waitFor(() =>
+      expect(mockTrackEvent).toHaveBeenCalledWith(
+        'copy_code',
+        expect.objectContaining({ spec: 'scatter-basic', method: 'image', page: 'spec_overview' })
+      )
+    );
   });
 
   it('renders detail mode when library in URL params', async () => {

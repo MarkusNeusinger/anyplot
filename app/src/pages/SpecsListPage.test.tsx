@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeContext } from 'src/hooks/useLayoutContext';
 import { SpecsListPage } from 'src/pages/SpecsListPage';
-import { render, screen, waitFor } from 'src/test-utils';
+import { fireEvent, render, screen, waitFor } from 'src/test-utils';
+
+const analytics = vi.hoisted(() => ({ trackEvent: vi.fn() }));
 
 vi.mock('src/hooks', () => ({
-  useAnalytics: () => ({
-    trackEvent: vi.fn(),
-  }),
+  useAnalytics: () => analytics,
   useAppData: () => ({
     specsData: [
       { id: 'bar-basic', title: 'Basic Bar Chart', description: 'A simple bar chart' },
@@ -161,6 +161,25 @@ describe('SpecsListPage', () => {
 
     const img = await screen.findByRole('img', { name: 'Basic Bar Chart' });
     expect(img).toHaveAttribute('src', `https://example.com/bar-basic/matplotlib/${file}`);
+  });
+
+  it('shows the next library on a click on the image, a use of plot_rotate', async () => {
+    analytics.trackEvent.mockClear();
+    mockFetchSuccess();
+    render(<SpecsListPage />);
+    const img = await screen.findByRole('img', { name: 'Basic Bar Chart' });
+    const before = img.getAttribute('src');
+
+    fireEvent.click(img);
+
+    // Two libraries hold this spec, so the other one's image is shown.
+    await waitFor(() =>
+      expect(screen.getByRole('img', { name: 'Basic Bar Chart' })).not.toHaveAttribute(
+        'src',
+        before
+      )
+    );
+    expect(analytics.trackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'plot_rotate' });
   });
 
   it('renders the shared scroll-to-top button', async () => {
