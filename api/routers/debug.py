@@ -583,6 +583,8 @@ async def shared_links(db: AsyncSession = Depends(require_db)) -> SharedLinksDet
     try:
         return await read_shared_links(LinkShareRepository(db))
     except SQLAlchemyError as exc:
+        # The failed statement left the session's transaction aborted: end it here, not in the dependency's commit.
+        await db.rollback()
         logger.warning("shared links query failed: %s", type(exc).__name__)
         return SharedLinksDetail(status="unavailable")
 

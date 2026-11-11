@@ -509,7 +509,7 @@ Who fetched decides what the fetch is:
 | One of the preview platforms below | A share on that platform |
 | Anything else: a scanner, a browser that opens the image, an app the list doesn't know | `other`, which the public numbers leave out |
 
-Three rules keep the number honest:
+Four rules keep the number honest and the counter harmless:
 
 - **Only the production service counts** (`settings.is_production`). A test or
   a local request for an image counts nothing.
@@ -520,6 +520,10 @@ Three rules keep the number honest:
   covers the table not being there yet: the migration reaches production
   through `sync-postgres.yml`, which can run after the deploy of the code that
   writes.
+- **The writes never crowd out the API.** They hold at most two of the API's 15
+  database connections (`WRITE_CONNECTIONS`); the others wait their turn, a few
+  milliseconds each. Beyond 256 writes waiting (`MAX_PENDING_WRITES`) a fetch is
+  not counted: that many is a flood, not sharing.
 
 ### Platforms
 

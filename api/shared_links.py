@@ -117,6 +117,18 @@ _REAL_WHATSAPP = re.compile(r"whatsapp/\d+\.\d+\.\d+", re.IGNORECASE)
 # so the collector could otherwise drop one before it ran.
 _WRITES: set[asyncio.Task[None]] = set()
 
+# How many of the API's database connections the counter may hold at once. The
+# pool has 15 for everything (`core/database/connection.py`), and a burst of
+# previews must not make a visitor's request wait for one. The other writes
+# wait their turn; one takes a few milliseconds.
+WRITE_CONNECTIONS = 2
+_WRITE_SLOTS = asyncio.Semaphore(WRITE_CONNECTIONS)
+
+# Writes in flight or waiting. A fetch beyond that is not counted: this many
+# waiting is a flood, and a count lost in a flood costs less than a queue
+# without an end.
+MAX_PENDING_WRITES = 256
+
 
 def _whatsapp(user_agent: str) -> str | None:
     """`whatsapp` for the real app, `whatsapp-lite` for an app that borrows its name, else None."""
@@ -166,7 +178,7 @@ async def _count(
     deploy of the code that writes.
     """
     try:
-        async with get_db_context() as session:
+        async with _WRITE_SLOTS, get_db_context() as session:
             await LinkShareRepository(session).count(
                 day=day,
                 platform=platform,
@@ -191,6 +203,8 @@ def record_share(request: Request, *, page: str, spec_id: str = "", language: st
         return
     user_agent = request.headers.get("user-agent", "")
     if detect_ai_agent(user_agent) is not None:
+        return
+    if len(_WRITES) >= MAX_PENDING_WRITES:
         return
     write = asyncio.create_task(
         _count(

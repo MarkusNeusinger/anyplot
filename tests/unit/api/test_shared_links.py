@@ -235,6 +235,62 @@ class TestRecordShare:
 
         counted.assert_not_called()
 
+    async def test_the_writes_hold_at_most_two_database_connections(self) -> None:
+        """A burst of previews waits its turn: the pool's other connections stay with the API's requests."""
+        open_now = 0
+        most_open = 0
+        counted = 0
+
+        class Session:
+            async def __aenter__(self) -> MagicMock:
+                nonlocal open_now, most_open
+                open_now += 1
+                most_open = max(most_open, open_now)
+                await asyncio.sleep(0)  # let the other writes run while this one holds its connection
+                return MagicMock()
+
+            async def __aexit__(self, *exc: object) -> None:
+                nonlocal open_now
+                open_now -= 1
+
+        async def count(**_key: object) -> None:
+            nonlocal counted
+            await asyncio.sleep(0)
+            counted += 1
+
+        with (
+            patch.object(settings, "environment", "production"),
+            patch.object(shared_links, "_WRITE_SLOTS", asyncio.Semaphore(shared_links.WRITE_CONNECTIONS)),
+            patch.object(shared_links, "get_db_context", side_effect=Session),
+            patch.object(shared_links.LinkShareRepository, "count", side_effect=count),
+        ):
+            for _ in range(12):
+                record_share(_request(SLACK), page="home")
+            await self._settle()
+
+        assert most_open == shared_links.WRITE_CONNECTIONS == 2
+        assert counted == 12  # every fetch of the burst is counted, only later
+
+    async def test_a_flood_is_not_queued_without_end(self, counted: AsyncMock) -> None:
+        """Beyond the bound a fetch is not counted: the queue of waiting writes has an end."""
+        release = asyncio.Event()
+
+        async def wait(*_key: object) -> None:
+            await release.wait()
+
+        counted.side_effect = wait
+        with patch.object(settings, "environment", "production"), patch.object(shared_links, "MAX_PENDING_WRITES", 3):
+            for _ in range(8):
+                record_share(_request(SLACK), page="home")
+            await asyncio.sleep(0)
+            assert len(shared_links._WRITES) == 3
+            release.set()
+            await self._settle()
+            await asyncio.sleep(0)  # the done callbacks that take the writes off the list
+
+        assert counted.await_count == 3
+        assert not shared_links._WRITES
+
     async def test_a_failed_write_reaches_nobody(self) -> None:
         """The image is already out. A missing table is the case that will happen: the migration
         reaches production after the merge, which can be later than the deploy."""
@@ -470,14 +526,17 @@ class TestDebugEndpoint:
         async def missing(_repository: object) -> SharedLinksDetail:
             raise ProgrammingError("SELECT", {}, Exception('relation "link_shares" does not exist'))
 
+        session = AsyncMock()
         with (
             patch("api.dependencies.is_db_configured", return_value=True),
             patch("api.routers.debug.read_shared_links", side_effect=missing),
         ):
-            response = self._client(AsyncMock()).get("/debug/shared-links")
+            response = self._client(session).get("/debug/shared-links")
 
         assert response.status_code == 200
         assert response.json() == {**SharedLinksDetail(status="unavailable").model_dump()}
+        # The aborted transaction is ended by the route, not left to whoever uses the session next.
+        session.rollback.assert_awaited_once()
 
     def test_refuses_a_visitor(self) -> None:
         with patch("api.dependencies.is_db_configured", return_value=True):
