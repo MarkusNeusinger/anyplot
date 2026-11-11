@@ -13,7 +13,13 @@ vi.mock('src/hooks', async () => {
     useAppData: () => ({
       specsData: [],
       librariesData: [
-        { id: 'matplotlib', name: 'Matplotlib', language: 'python', framework: 'none' },
+        {
+          id: 'matplotlib',
+          name: 'Matplotlib',
+          language: 'python',
+          framework: 'none',
+          documentation_url: 'https://matplotlib.org',
+        },
         { id: 'muix', name: 'MUI X Charts', language: 'javascript', framework: 'react' },
       ],
       stats: { specs: 100, plots: 900, libraries: 15, lines_of_code: 50000 },
@@ -38,6 +44,30 @@ describe('LibrariesPage', () => {
     render(<LibrariesPage />);
     expect(screen.getByText('muix')).toBeInTheDocument();
     expect(screen.getByText('matplotlib')).toBeInTheDocument();
+  });
+
+  it('lets a click on a docs link reach the document, where the tracker counts outbound links', () => {
+    // The tracker script listens on the document. A handler that stopped the click would hide the
+    // link from it, and the app sends no link event of its own.
+    const seen = vi.fn();
+    const stay = (event: MouseEvent) => {
+      seen(event.target);
+      event.preventDefault(); // jsdom does not navigate; keep it from trying
+    };
+    document.addEventListener('click', stay);
+    try {
+      render(<LibrariesPage />);
+      const docs = screen.getByRole('link', { name: 'docs ↗' });
+      expect(docs).toHaveAttribute('href', 'https://matplotlib.org');
+
+      docs.click();
+
+      expect(seen).toHaveBeenCalledWith(docs);
+      expect(navigate).not.toHaveBeenCalled();
+      expect(trackEvent).not.toHaveBeenCalled();
+    } finally {
+      document.removeEventListener('click', stay);
+    }
   });
 
   it('shows a React framework badge on the muix card', () => {

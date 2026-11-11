@@ -163,7 +163,6 @@ export function LibrariesPage() {
                       href={meta.documentation_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={e => e.stopPropagation()}
                       sx={{
                         color: 'var(--ink-muted)',
                         textDecoration: 'none',

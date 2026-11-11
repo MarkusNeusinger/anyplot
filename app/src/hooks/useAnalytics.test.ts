@@ -198,6 +198,8 @@ describe('useAnalytics', () => {
       at('/');
       const { result } = renderHook(() => useAnalytics());
 
+      // @ts-expect-error -- the type refuses `ui_feature` without its feature; this line fails
+      // to compile if it ever stops doing so. A caller that got around the type sends nothing.
       result.current.trackEvent('ui_feature');
       result.current.trackEvent('ui_feature', { feature: 'feedback_open' });
 

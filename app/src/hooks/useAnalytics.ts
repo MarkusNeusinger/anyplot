@@ -48,8 +48,14 @@ export interface EventProps {
   [key: string]: string | undefined;
 }
 
-/** `trackEvent`, for the components that receive it as a prop. */
-export type TrackEvent = (name: AnalyticsEvent, props?: EventProps, url?: string) => void;
+/**
+ * `trackEvent`, for the components that receive it as a prop. `ui_feature` has to name its
+ * feature: without one the event would say nothing, so the compiler refuses the call.
+ */
+export interface TrackEvent {
+  (name: 'ui_feature', props: EventProps & { feature: UiFeature }, url?: string): void;
+  (name: Exclude<AnalyticsEvent, 'ui_feature'>, props?: EventProps, url?: string): void;
+}
 
 // The last pageview sent, for the whole app rather than per hook instance: the layout records
 // every navigation and the gallery its filter changes, and neither may repeat the other's.
@@ -227,13 +233,14 @@ export function useAnalytics() {
 
   // `url` names the page an event belongs to when it is sent after the visitor
   // left it; without one the script takes the current address.
-  const trackEvent = useCallback<TrackEvent>(
-    (name, props, url) => {
+  const trackEvent: TrackEvent = useCallback(
+    (name: AnalyticsEvent, props?: EventProps, url?: string) => {
       if (!isProduction || analyticsMuted()) return;
       const now = Date.now();
       const feature = name === 'ui_feature' ? props?.feature : undefined;
       if (name === 'ui_feature') {
-        // Without a feature the event says nothing; a second use in the same visit adds nothing.
+        // Without a feature the event says nothing (the type refuses the call; a caller that
+        // got around it sends nothing); a second use in the same visit adds nothing.
         if (!feature || !firstUseThisVisit(feature, now)) return;
       }
       noteSent(now);

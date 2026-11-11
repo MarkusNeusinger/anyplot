@@ -20,7 +20,11 @@ event is one a reader from outside understands.
   admin's own chat messages.
   Outbound links and file downloads keep the script's defaults: the script
   records a click on a link to another site as `Outbound Link: Click`, with the
-  link's address, and the app sends no link event of its own.
+  link's address, and the app sends no link event of its own. The script
+  listens on the document, so it doesn't see a click whose handler stops the
+  event (`stopPropagation`): don't stop a click on an outbound link. One link
+  does, the docs link inside a library's tooltip on a spec hub, which a click
+  would otherwise take for a click on the card; it is not counted.
 - Production-only: Only tracks on `anyplot.ai` domain
 - Privacy-focused: No cookies, GDPR-compliant
 
