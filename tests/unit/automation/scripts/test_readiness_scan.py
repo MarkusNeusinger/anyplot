@@ -226,18 +226,27 @@ def test_a_record_holds_identifiers_only():
 # --- the command, as the workflows run it ----------------------------------------------------------
 
 
-def _archived_paths(workflow: str) -> list[str]:
-    """The paths the workflow's own `git archive "$GITHUB_SHA" … | tar` line names, read from the step script."""
+PACKAGE_FILES = ("agents/__init__.py", "agents/anyplot/__init__.py")
+
+
+def _step_script(workflow: str) -> str:
     document = yaml.safe_load((ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8"))
     steps = [step for job in document["jobs"].values() for step in job.get("steps", [])]
     (script,) = [str(step["run"]) for step in steps if step.get("name") == "Readiness scan (record-only)"]
-    match = re.search(r'git archive "\$GITHUB_SHA" (.+?) \| tar ', script.replace("\\\n", " "), re.DOTALL)
+    return script
+
+
+def _archived_paths(workflow: str) -> list[str]:
+    """The paths the workflow's own `git archive "$GITHUB_SHA" … | tar` line names, read from the step script."""
+    match = re.search(
+        r'git archive "\$GITHUB_SHA" (.+?) \| tar ', _step_script(workflow).replace("\\\n", " "), re.DOTALL
+    )
     assert match, "the step no longer extracts the validator with git archive"
     return match.group(1).split()
 
 
-def _bare_tree(tmp_path: Path, workflow: str = "impl-generate.yml") -> Path:
-    """What the workflow step extracts from its ref, path for path: nothing the step does not name is copied."""
+def _bare_tree(tmp_path: Path, workflow: str = "impl-generate.yml", *, package_files: bool = True) -> Path:
+    """What the workflow step builds, path for path: the archived paths, then the two empty package files."""
     tree = tmp_path / "readiness-tools"
     for relative in _archived_paths(workflow):
         source, target = ROOT / relative, tree / relative
@@ -246,6 +255,11 @@ def _bare_tree(tmp_path: Path, workflow: str = "impl-generate.yml") -> Path:
             shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__"))
         else:
             shutil.copy(source, target)
+    assert not any((tree / relative).exists() for relative in PACKAGE_FILES)  # the archive never brings the real ones
+    if package_files:
+        assert ': > "$TOOLS/agents/__init__.py"; : > "$TOOLS/agents/anyplot/__init__.py"' in _step_script(workflow)
+        for relative in PACKAGE_FILES:
+            (tree / relative).touch()
     return tree
 
 
@@ -261,14 +275,14 @@ def _run(tree: Path, cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
 
 @pytest.mark.parametrize("workflow", ["impl-generate.yml", "impl-repair.yml"])
 def test_the_bare_copy_scans_without_the_agent_runtime(tmp_path, workflow):
-    """No `agents/__init__.py` and no `agents/anyplot/__init__.py`: the ADK import of the package never runs.
+    """The package files of the copy are empty, so the ADK import of the real `agents/anyplot/__init__.py` never runs.
 
     The tree holds exactly the paths the workflow's `git archive` line names, so a path the validator needs and
     the step forgets fails here. The workspace holds a hostile `core` and `agents`, as a generator could leave
     them; `-I` keeps the working directory off the import path, so the copy's own tree is what gets imported.
     """
     tree = _bare_tree(tmp_path, workflow)
-    assert not (tree / "agents" / "__init__.py").exists() and not (tree / "agents" / "anyplot" / "__init__.py").exists()
+    assert [(tree / relative).read_text() for relative in PACKAGE_FILES] == ["", ""]
     workspace = tmp_path / "ws"
     for package in ("core", "agents"):
         (workspace / package).mkdir(parents=True)
@@ -286,6 +300,58 @@ def test_the_bare_copy_scans_without_the_agent_runtime(tmp_path, workflow):
     assert (workspace / "summary").read_text(encoding="utf-8").startswith("**Readiness (record-only):** regression: ")
     record = json.loads((workspace / "r.json").read_text(encoding="utf-8"))
     assert record["version"] == 1 and record["verdict"] == "regression"
+
+
+HOSTILE = 'raise SystemExit("a foreign agents package was imported")\n'
+# Runs the copy's scanner with one more directory at the END of the import path, where site-packages sits.
+DRIVER = (
+    "import runpy, sys\n"
+    "sys.path.append(sys.argv.pop(1))\n"
+    "script = sys.argv.pop(1)\n"
+    "sys.argv[0] = script\n"
+    "runpy.run_path(script, run_name='__main__')\n"
+)
+
+
+def _run_with_site_packages(tree: Path, site: Path, cwd: Path) -> subprocess.CompletedProcess[str]:
+    (cwd / "new.py").write_text(CLEAN, encoding="utf-8")
+    script = str(tree / "automation" / "scripts" / "readiness_scan.py")
+    return subprocess.run(
+        [sys.executable, "-I", "-c", DRIVER, str(site), script, "scan", "--new", "new.py"]
+        + ["--spec-id", SPEC, "--library", LIB],
+        capture_output=True,
+        text=True,
+        cwd=cwd,
+        env={"PATH": "/usr/bin:/bin"},
+    )
+
+
+def test_a_regular_agents_package_in_site_packages_does_not_win_the_import(tmp_path):
+    """`openai-agents` installs a top-level `agents`; a session could leave one too. The copy's package files win."""
+    site = tmp_path / "site-packages"
+    (site / "agents").mkdir(parents=True)
+    (site / "agents" / "__init__.py").write_text(HOSTILE, encoding="utf-8")
+    result = _run_with_site_packages(_bare_tree(tmp_path), site, tmp_path)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "verdict=first_generation new=clean" in result.stdout
+
+
+def test_without_its_package_files_the_copy_would_lose_the_import(tmp_path):
+    """Why the step writes them: as namespace packages the extracted directories lose to a regular package."""
+    site = tmp_path / "site-packages"
+    (site / "agents").mkdir(parents=True)
+    (site / "agents" / "__init__.py").write_text(HOSTILE, encoding="utf-8")
+    result = _run_with_site_packages(_bare_tree(tmp_path, package_files=False), site, tmp_path)
+    assert result.returncode != 0
+    assert "a foreign agents package was imported" in result.stderr
+
+
+def test_a_validator_from_outside_the_scripts_tree_stops_the_scan(tmp_path, monkeypatch):
+    """A scan by another validator than this ref's would be a wrong record; no record is the honest answer."""
+    monkeypatch.setattr(readiness_scan, "TREE", tmp_path)
+    monkeypatch.setattr(sys, "path", list(sys.path))  # scan_side puts TREE on the path
+    with pytest.raises(ImportError, match="was imported from outside"):
+        scan_side(CLEAN, spec_id=SPEC, library=LIB)
 
 
 def test_a_missing_file_is_recorded_not_raised(tmp_path):

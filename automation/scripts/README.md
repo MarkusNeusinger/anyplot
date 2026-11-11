@@ -233,9 +233,11 @@ validator and records the refusals only the new file has (`regression`,
 `none`, `first_generation`, `excluded`, or `unreadable`). `impl-generate.yml`
 and `impl-repair.yml` run it in "Readiness scan (record-only)" from a copy at
 the workflow's ref, next to a bare copy of the validator
-(`agents/anyplot/code`, its two schema modules, and `core/`), so nothing of
-the agent runtime is imported. It reads the files and never runs them, writes
-`adapt/readiness.json`, and always exits 0. See
+(`agents/anyplot/code`, its two schema modules, and `core/`, with empty
+`agents/__init__.py` files), so nothing of the agent runtime is imported. It
+reads the files and never runs them, writes `adapt/readiness.json`, and exits
+0 for every verdict; it stops only when a validator module comes from outside
+its own tree. See
 [Readiness scan](../../docs/workflows/overview.md#readiness-scan-record-only).
 
 ### `spec_characteristics_lint.py`

@@ -8,7 +8,8 @@ add a construct the validator refuses and so turn a pair the chat could use
 into one it refuses, while the render gets better. This script scans the new
 file and the predecessor with that validator and records what the new file
 adds (rule step P2b, the readiness-regression gate). Record-only for now: it
-prints one line, writes a job-summary line and a record, and always exits 0.
+prints one line, writes a job-summary line and a record, and exits 0 for
+every verdict.
 
 A *refusal key* names why the validator blocks a file: ``security:<rule>`` for
 every rule of the SECURITY profile the file breaks, read from the validator's
@@ -31,9 +32,12 @@ that the generate and repair jobs do not carry.
 
 ``impl-generate.yml`` and ``impl-repair.yml`` run a copy from the workflow's
 own ref, next to a bare copy of the validator (``agents/anyplot/code``, the
-two schema modules it imports, and ``core/``). Without ``agents/__init__.py``
-the directories are namespace packages, so nothing of the agent runtime is
-imported, and the implementation is never executed::
+two schema modules it imports, and ``core/``). The step puts empty
+``__init__.py`` files into ``agents/`` and ``agents/anyplot/`` there: the real
+ones import the agent runtime, and without any the two would be namespace
+packages, which lose the import to a regular ``agents`` package anywhere else
+on the path. The scan refuses to go on when a validator module comes from
+outside its own tree, and the implementation is never executed::
 
     readiness_scan.py scan --new NEW --spec-id S --library B [--prev PREV] [--out RECORD.json]
 
@@ -85,11 +89,16 @@ def scan_side(code: str, *, spec_id: str, library: str) -> dict:
     """
     if str(TREE) not in sys.path:
         sys.path.insert(0, str(TREE))
-    from agents.anyplot.code.normalise import SUPPORTED_LIBRARIES, normalise
-    from agents.anyplot.code.readiness import scan
-    from agents.anyplot.code.validate import validate_security
-    from core.spec_roles import MAP_SPECS
-    from core.utils import strip_noqa_comments
+    from agents.anyplot.code import normalise as normalise_module
+    from agents.anyplot.code import readiness, validate
+    from core import spec_roles, utils
+
+    for module in (normalise_module, readiness, validate, spec_roles, utils):
+        if TREE not in Path(module.__file__ or "").resolve().parents:
+            raise ImportError(f"{module.__name__} was imported from outside {TREE}: not this ref's validator")
+    SUPPORTED_LIBRARIES, normalise = normalise_module.SUPPORTED_LIBRARIES, normalise_module.normalise
+    scan, validate_security = readiness.scan, validate.validate_security
+    MAP_SPECS, strip_noqa_comments = spec_roles.MAP_SPECS, utils.strip_noqa_comments
 
     if library not in SUPPORTED_LIBRARIES:
         return _side("unsupported")

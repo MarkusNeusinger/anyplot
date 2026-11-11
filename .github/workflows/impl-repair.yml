@@ -581,7 +581,9 @@ jobs:
       # A repair can add one as easily as a generation. The predecessor is the
       # live implementation, when main holds one (a forced regeneration reaches
       # repair; a first generation has none). The validator is a bare tree from
-      # this workflow's ref, and `-I` keeps the PR branch off the import path.
+      # this workflow's ref with empty agents/__init__.py files (the real ones
+      # import the agent runtime), and `-I` keeps the PR branch off the import
+      # path.
       # Record-only: no exit code gates.
       - name: Readiness scan (record-only)
         if: success() && steps.lang.outputs.language == 'python'
@@ -603,6 +605,10 @@ jobs:
             echo "::warning::readiness_scan could not copy the validator from ${GITHUB_SHA}; no readiness record is staged"
             exit 0
           fi
+          # Empty package files: as namespace packages (no __init__.py) the
+          # extracted agents/ and agents/anyplot/ would lose the import to a
+          # regular `agents` package in the venv's site-packages.
+          : > "$TOOLS/agents/__init__.py"; : > "$TOOLS/agents/anyplot/__init__.py"
           IMPL="plots/${SPEC_ID}/implementations/python/${LIBRARY}.py"
           # The predecessor's header holds its stored score, so the copy goes
           # right after the scan.

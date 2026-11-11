@@ -56,6 +56,7 @@ call = {
     "isolated": bool(sys.flags.isolated),
     "prev_text": prev.read_text() if prev.exists() else None,
     "tree": sorted(str(p.relative_to(pathlib.Path(__file__).parents[2])) for p in pathlib.Path(__file__).parents[2].rglob("*") if p.is_file()),
+    "package_files": [(pathlib.Path(__file__).parents[2] / p).read_text() for p in ("agents/__init__.py", "agents/anyplot/__init__.py")],
 }
 with open(os.environ["STUB_LOG"], "a") as handle:
     handle.write(json.dumps(call) + "\\n")
@@ -201,6 +202,8 @@ class TestScanStep:
         assert runner.run(workflow, shell).returncode == 0
         (call,) = runner.calls()
         assert call["tree"] == [
+            "agents/__init__.py",
+            "agents/anyplot/__init__.py",
             "agents/anyplot/code/__init__.py",
             "agents/anyplot/code/readiness.py",
             "agents/anyplot/language.py",
@@ -208,6 +211,9 @@ class TestScanStep:
             SCANNER,
             "core/__init__.py",
         ]
+        # The step writes the two package files itself, empty: regular packages win the import over
+        # anything named `agents` in site-packages, and the ref's own files (the agent runtime) stay out.
+        assert call["package_files"] == ["", ""]
 
     def test_a_first_generation_has_no_predecessor(self, tmp_path, shell, workflow):
         runner = Runner(tmp_path, regeneration=False)
