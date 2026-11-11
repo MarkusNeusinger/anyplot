@@ -8,4 +8,4 @@
   brings no request. The chat now keeps such a change while the data or the
   bindings wait for the user's check, and "plot the new data" draws it on
   the latest plot together with the new data. A note for a first plot
-  behaves as before.
+  behaves as before. (#13061)
