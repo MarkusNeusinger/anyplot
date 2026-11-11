@@ -151,7 +151,7 @@ import re
 import secrets
 import sys
 import time
-from collections.abc import AsyncGenerator, AsyncIterator, Callable, Collection
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Collection, Sequence
 from dataclasses import asdict, dataclass, field, replace
 from typing import Annotated, Any, Literal, TextIO, get_args
 
@@ -307,6 +307,7 @@ from agents.anyplot.session_state import (
     PLOT_LANGUAGE,
     SUMMARY_PENDING,
     TELEMETRY_SOURCE,
+    USER_BOUND,
     CatalogueSnapshot,
     SessionView,
     apply_bindings,
@@ -1937,6 +1938,30 @@ def _binding_pairs(bindings: list[dict[str, Any]]) -> set[tuple[Any, Any]]:
     return {(item.get("role"), item.get("column")) for item in bindings}
 
 
+def _hand_bound(noted: object, before: Sequence[Binding], after: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """`USER_BOUND` after a `PUT /bindings` that changed something: of the bindings in force after it (`after`), the
+    pairs noted since the root's last turn (`noted`) and the pairs this PUT set, which the session did not hold
+    (`before`). A pair the user has since taken back is in neither, so it leaves the note."""
+    held = _binding_pairs([binding.model_dump() for binding in before])
+    known = _binding_pairs([item for item in noted if isinstance(item, dict)]) if isinstance(noted, list) else set()
+    return [
+        {"role": role, "column": column}
+        for role, column in ((item.get("role"), item.get("column")) for item in after)
+        if (role, column) in known or (role, column) not in held
+    ]
+
+
+async def _hand_bound_seen(runtime: Runtime, user: str, sid: str) -> None:
+    """Drop the note of the bindings the user set by hand (`USER_BOUND`) after a turn that ended well: its root read
+    them in the session block. Never raises: the turn's answer stands, and the note shows once more."""
+    try:
+        session = await runtime.session(user, sid)
+        if session.state.get(USER_BOUND) is not None:
+            await runtime.write_state(session, {USER_BOUND: None})
+    except Exception as exc:
+        logger.warning("hand-bound note not dropped: %s", type(exc).__name__)
+
+
 @app.put("/v1/sessions/{sid}/bindings", dependencies=v1_dependencies)
 async def put_bindings(
     sid: SessionId,
@@ -1962,12 +1987,16 @@ async def put_bindings(
         return JSONResponse(
             status_code=422, content={"detail": "invalid", "errors": check.errors[:20]}, headers=_NO_STORE
         )
+    # The page also PUTs the parse's own defaults after every paste (to learn `complete`), which changes nothing: only
+    # a PUT whose bindings differ from the ones the session held counts, so that echo never reads as a manual change.
+    by_hand = _binding_pairs(delta[BINDINGS]) != _binding_pairs([binding.model_dump() for binding in view.bindings])
+    if by_hand:
+        # For the root's next turn: which pairs the user set, so it reads them as the user's choice (`USER_BOUND`).
+        delta = {**delta, USER_BOUND: _hand_bound(session.state.get(USER_BOUND), view.bindings, delta[BINDINGS])}
     # Other bindings than the user confirmed leave the confirmation's fingerprint behind: step 1 again.
     await runtime.write_state(session, delta)
-    # The next `chat_turn` line says the user changed a binding by hand, and the warnings' closed codes. The page
-    # also PUTs the parse's own defaults after every paste (to learn `complete`), which changes nothing: only a PUT
-    # whose bindings differ from the ones the session held counts, so that echo never reads as a manual change.
-    if _binding_pairs(delta[BINDINGS]) != _binding_pairs([binding.model_dump() for binding in view.bindings]):
+    if by_hand:
+        # The next `chat_turn` line says the user changed a binding by hand, and the warnings' closed codes.
         telemetry.marks(sid).manual_binding_changed = True
     telemetry.note_binding_warnings(sid, check.warnings)
     return JSONResponse(
@@ -2783,6 +2812,9 @@ async def post_message(
                 summarized = {dataset_id for dataset_id in (started_on, ledger.conversions_made) if dataset_id}
                 await _summarized(runtime, user, sid, summarized)
             await _settle_kept_note(runtime, user, sid, ledger)
+            if failure is None and ledger.refusal is None:
+                # The root ran and answered: it has read which bindings the user set by hand.
+                await _hand_bound_seen(runtime, user, sid)
             # Read while the run is still active: no undo or paste can slip in between the run's end
             # and the `done` that reports its dataset, so the version and the change lines agree.
             sync = await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger)

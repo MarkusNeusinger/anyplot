@@ -69,7 +69,7 @@ from .plugins.shipped_reply import ShippedReplyPlugin
 from .plugins.tool_safety import ToolSafetyPlugin
 from .policy import fence, root_instruction
 from .services import get_services
-from .session_state import plot_language, read_conversions_made, read_session
+from .session_state import plot_language, read_conversions_made, read_session, user_bound
 from .settings import get_settings
 from .sub_agents.adapter import ADAPTERS
 from .sub_agents.reviewer import reviewer
@@ -166,6 +166,15 @@ PLOT_ACTION_LINE = (
 """The session block's line on the turns of the plot actions (`RequestLedger.plot_action`: `create_plot`, `carry_plot`,
 also in each session of the admin fan-out, and `plot_new_data`), which root.md's rule for those turns no longer opens with:
 the server adds the remembered decisions, and the turn may only read and plot (`tool_safety.PLOT_ACTION_TOOLS`)."""
+USER_BOUND_LINE = (
+    "- Bindings the user set by hand in the data panel since your last reply: {count}, listed below as role: column. "
+    "They are the user's choice and they are in force: nothing you said before was wrong for it, so do not apologise "
+    "or correct yourself; describe the data and the plot by them"
+)
+"""The session block's line over the bindings the user changed by a click since the root's last turn
+(`session_state.USER_BOUND`). The root saw only that the bindings differed from what it had said and took the
+difference for its own mistake ("I was wrong earlier", persona round of 2026-11-11). The pairs follow in a data
+fence, since they name the user's columns."""
 BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under bindings"
 """Where the root reads the bindings themselves. The live tests of 2026-10-14/15 caught the summary
 describing other bindings than the real ones twice ("Staatsangehörigkeit for series" while series was
@@ -248,6 +257,10 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(
                 f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid{BINDINGS_HINT}"
             )
+        by_user = user_bound(context.state, view.bindings)
+        if by_user:
+            lines.append(USER_BOUND_LINE.format(count=len(by_user)))
+            lines.append(fence("user_data", "\n".join(f"{binding.role}: {binding.column}" for binding in by_user)))
         fit = check.fit_warnings
         if fit:
             # The lines name the user's columns, so they stand inside a data fence.

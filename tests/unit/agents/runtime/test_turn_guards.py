@@ -142,11 +142,41 @@ class TestCaps:
         assert TURN_CAPS == {
             "prepare_data": TurnCap(2, "too_many_prepare_calls"),
             "generate_data": TurnCap(2, "too_many_generate_calls"),
-            "query_data": TurnCap(3, "too_many_query_calls"),
+            "query_data": TurnCap(3, "too_many_query_calls", spare=3),
             "run_data_code": TurnCap(2, "too_many_data_runs"),
             "plot_pipeline": TurnCap(1, "one_pipeline_per_turn"),
         }
         assert set(VALID) == set(TURN_CAPS)
+
+    @pytest.mark.parametrize(
+        ("errors", "answered", "allowed"),
+        [(3, 0, True), (3, 2, True), (3, 3, False), (2, 1, True), (5, 0, True), (6, 0, False), (4, 2, False)],
+    )
+    async def test_a_question_that_answered_an_error_is_no_question_answered(
+        self, errors: int, answered: int, allowed: bool
+    ) -> None:
+        """Persona round of 2026-11-11: three `query_data` calls answered errors, and the fourth, the one that would
+        have worked, met the cap of three. Up to three errored calls come on top; six calls bound the turn."""
+        calls = [ToolCall("query_data", outcome="error")] * errors + [ToolCall("query_data", outcome="ok")] * answered
+        with turn(tools=["query_data"] * len(calls), tool_calls=list(calls)):
+            refusal = await before("query_data", VALID["query_data"])
+
+        assert (refusal is None) is allowed
+        assert allowed or (refusal or {}).get("code") == "too_many_query_calls"
+
+    async def test_a_data_writers_error_still_counts(self) -> None:
+        """`prepare_data`'s cap is the change and one retry after its error: no call comes on top."""
+        calls = [ToolCall("prepare_data", outcome="error")] * 2
+        with turn(tools=["prepare_data"] * 2, tool_calls=list(calls)):
+            refusal = await before("prepare_data", VALID["prepare_data"])
+
+        assert (refusal or {}).get("code") == "too_many_prepare_calls"
+
+    def test_the_cap_message_names_no_tool_and_no_limit(self) -> None:
+        """The first wording named both, and the root told the user that "the query tool hit its call limit"."""
+        for name, cap in TURN_CAPS.items():
+            message = CAP_MESSAGE.format(tool=name, calls=cap.calls)
+            assert name not in message and "per turn" not in message and not re.search(r"\d", message)
 
     @pytest.mark.parametrize("tier", ["public", "admin"])
     @pytest.mark.parametrize("name", sorted(TURN_CAPS))

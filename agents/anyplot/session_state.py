@@ -16,6 +16,7 @@ agents service knows about the catalogue pair, since it has no database access.
 
 import hashlib
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Self
 
@@ -381,6 +382,25 @@ class ConversionsMade(BaseModel):
     """One line per conversion, for the session block (`conversions.Candidate.made`); they name the user's columns."""
     operations: list[dict[str, Any]] = Field(min_length=1, max_length=16)
     """The operations applied, in order, as the conversion lines listed them."""
+
+
+USER_BOUND = PREFIX + "user_bound"
+"""The bindings the user set by hand in the data panel since the root's last turn that ended well, as `{role, column}`
+pairs (`PUT /bindings` adds a pair whenever it changes one; the turn's end drops them, `agents/main.py`). The session
+block lists the ones still in force (`user_bound`), so the root reads a binding that differs from what it said as the
+user's choice: in the persona round of 2026-11-11 it wrote "I was wrong earlier" after the user had rebound a role
+by a click."""
+
+
+def user_bound(state: Any, bindings: Sequence[Binding]) -> list[Binding]:
+    """The bindings in force that the user set by hand since the root's last turn (`USER_BOUND`), in the order of
+    `bindings`. A pair the root or a new paste has since replaced is no longer the user's, and a stored value that
+    is no list of pairs counts as none."""
+    raw = state.get(USER_BOUND)
+    if not isinstance(raw, list):
+        return []
+    noted = {(item.get("role"), item.get("column")) for item in raw if isinstance(item, dict)}
+    return [binding for binding in bindings if (binding.role, binding.column) in noted]
 
 
 def read_conversions_made(state: Any) -> ConversionsMade | None:

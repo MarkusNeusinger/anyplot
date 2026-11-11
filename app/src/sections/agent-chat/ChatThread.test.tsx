@@ -219,6 +219,33 @@ describe('ChatThread', () => {
     ]);
   });
 
+  it('sets the passages of a reply between asterisk pairs off as strong, never inside a word or code', () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        {
+          id: 1,
+          kind: 'assistant',
+          text:
+            '**Total: 1,716** over 9 rows, (**net**) of returns.\n' +
+            '**Next:** check `2**10` and a**b**c; 2 ** 3 and ** alone ** stay, so does **open.',
+        },
+      ],
+    });
+    const reply = screen.getByText(/over 9 rows/);
+    expect(reply).toHaveTextContent(
+      'Total: 1,716 over 9 rows, (net) of returns. Next: check 2**10 and a**b**c; 2 ** 3 and ** alone ** stay, so does **open.'
+    );
+    expect([...reply.querySelectorAll('strong')].map(strong => strong.textContent)).toEqual([
+      'Total: 1,716',
+      'net',
+      'Next:',
+    ]);
+    expect([...reply.querySelectorAll('code')].map(code => code.textContent)).toEqual(['2**10']);
+  });
+
   it('shows a stop as a quiet notice', () => {
     renderThread({
       ...initialAgentState('matplotlib'),
