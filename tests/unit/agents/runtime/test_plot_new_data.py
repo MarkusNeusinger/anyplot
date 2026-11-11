@@ -163,6 +163,9 @@ def test_the_kept_change_stands_after_the_servers_request_and_reads_back() -> No
     assert joined.startswith(DATA_CHANGE_REQUEST) and joined.endswith(f"{KEPT_CHANGE_LINE}\n{WISH}")
     assert users_request(joined) == WISH and users_request(WISH) == WISH
     assert new_data_request("  ") == DATA_CHANGE_REQUEST and users_request(DATA_CHANGE_REQUEST) == ""
+    # Only the two forms the server builds are the server's: a request that merely begins with its sentence stays.
+    begun = f"{DATA_CHANGE_REQUEST} Also make the markers red."
+    assert users_request(begun) == begun and users_request(f"{DATA_CHANGE_REQUEST}\n{WISH}") != WISH
     # The user's part is never cut to make room: the longest one still fits what the adapter and the reviewer take.
     assert len(new_data_request("x" * MAX_CHANGE_REQUEST_CHARS)) <= MAX_RUN_REQUEST_CHARS
 

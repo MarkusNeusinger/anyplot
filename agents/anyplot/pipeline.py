@@ -261,6 +261,8 @@ version it ships keeps it out of its lineage's requests (`lineage_requests`)."""
 KEPT_CHANGE_LINE = "The user also asked for this change of the plot, which comes on top of the new data:"
 """What stands between `DATA_CHANGE_REQUEST` and a change of the plot that was kept while the data waited
 (`new_data_request`)."""
+KEPT_CHANGE_HEAD = f"{DATA_CHANGE_REQUEST}\n{KEPT_CHANGE_LINE}\n"
+"""Everything of the server's in such a request: the user's change follows it."""
 
 
 def new_data_request(kept: str) -> str:
@@ -271,15 +273,16 @@ def new_data_request(kept: str) -> str:
     request may pass `MAX_CHANGE_REQUEST_CHARS`, which bounds what the root sends (`MAX_RUN_REQUEST_CHARS` bounds
     this). `users_request` reads the user's part back."""
     kept = kept.strip()
-    return f"{DATA_CHANGE_REQUEST}\n{KEPT_CHANGE_LINE}\n{kept}" if kept else DATA_CHANGE_REQUEST
+    return f"{KEPT_CHANGE_HEAD}{kept}" if kept else DATA_CHANGE_REQUEST
 
 
 def users_request(change_request: str) -> str:
-    """The user's own part of a run's change request: all of it, or what follows the server's `DATA_CHANGE_REQUEST`
-    and `KEPT_CHANGE_LINE` (`new_data_request`), which no user wrote."""
-    if not change_request.startswith(DATA_CHANGE_REQUEST):
-        return change_request
-    return change_request[len(DATA_CHANGE_REQUEST) :].strip().removeprefix(KEPT_CHANGE_LINE).strip()
+    """The user's own part of a run's change request: all of it, nothing of the server's `DATA_CHANGE_REQUEST`
+    alone, or what follows the head `new_data_request` puts before a kept change. Only those two exact forms are
+    the server's: a request that merely begins with the server's sentence is the user's as it stands."""
+    if change_request == DATA_CHANGE_REQUEST:
+        return ""
+    return change_request.removeprefix(KEPT_CHANGE_HEAD)
 
 
 MEASURED_LINE = (
