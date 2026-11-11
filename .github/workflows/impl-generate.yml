@@ -1368,6 +1368,56 @@ jobs:
           echo "::notice::adapt_smoke spec=${SPEC_ID} lib=${LIBRARY} staged=$(cd "$OUT" && find . -type f | sed 's|^\./||' | sort | tr '\n' ' ')"
 
       # ========================================================================
+      # Readiness scan (record-only, Python only)
+      # ========================================================================
+      # The agent chat adapts a catalogue file only when its validator accepts
+      # it. A regeneration can add a construct the validator refuses and so
+      # turn a pair the chat could use into one it refuses. This step scans
+      # the new file and its predecessor from origin/main with that validator
+      # and records the refusals only the new file has
+      # (automation/scripts/readiness_scan.py). The validator comes from this
+      # workflow's ref as a bare tree: agents/anyplot/code, the two schema
+      # modules it imports, and core/. The real agents/__init__.py files import
+      # the agent runtime, so the step writes empty ones instead; `-I` keeps
+      # the workspace, which the generator wrote, off the import path; and the
+      # implementation is read, never run. The record
+      # lands beside the smoke run in $RUNNER_TEMP/adapt, which "Upload to GCS
+      # Staging" stages under adapt/. Record-only: no exit code gates. The
+      # other languages' profiles need tree-sitter grammars this job lacks.
+      - name: Readiness scan (record-only)
+        if: steps.inputs.outputs.language == 'python'
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LIBRARY: ${{ steps.inputs.outputs.library }}
+        run: |
+          # The interpreter is the workspace's .venv, which the generator's
+          # session could have changed: no way to mint an OIDC token from here.
+          unset ACTIONS_ID_TOKEN_REQUEST_URL ACTIONS_ID_TOKEN_REQUEST_TOKEN
+          OUT="$RUNNER_TEMP/adapt"; TOOLS="$RUNNER_TEMP/readiness-tools"
+          PREV="$RUNNER_TEMP/readiness-prev-source"
+          rm -rf "$TOOLS" "$PREV" "$OUT/readiness.json"; mkdir -p "$OUT" "$TOOLS"
+          if ! git archive "$GITHUB_SHA" agents/anyplot/code agents/anyplot/schemas.py agents/anyplot/language.py \
+                 core automation/scripts/readiness_scan.py | tar -x -C "$TOOLS" \
+             || [ ! -f "$TOOLS/automation/scripts/readiness_scan.py" ]; then
+            echo "::warning::readiness_scan could not copy the validator from ${GITHUB_SHA}; no readiness record is staged"
+            exit 0
+          fi
+          # Empty package files: as namespace packages (no __init__.py) the
+          # extracted agents/ and agents/anyplot/ would lose the import to a
+          # regular `agents` package in the venv's site-packages.
+          : > "$TOOLS/agents/__init__.py"; : > "$TOOLS/agents/anyplot/__init__.py"
+          IMPL="plots/${SPEC_ID}/implementations/python/${LIBRARY}.py"
+          # The predecessor's header holds its stored score, so the copy goes
+          # right after the scan.
+          git show "origin/main:${IMPL}" > "$PREV" 2>/dev/null || rm -f "$PREV"
+          .venv/bin/python -I "$TOOLS/automation/scripts/readiness_scan.py" scan --new "$IMPL" --prev "$PREV" \
+            --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$OUT/readiness.json" \
+            || echo "::warning::readiness_scan did not run; no readiness record is staged"
+          rm -f "$PREV"
+
+      # ========================================================================
       # Process images: optimize + thumbnail
       # ========================================================================
       - name: Process plot images (light + dark)
