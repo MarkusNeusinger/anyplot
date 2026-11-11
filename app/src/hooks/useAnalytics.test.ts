@@ -350,5 +350,26 @@ describe('useAnalytics', () => {
 
       expect(pageviews()).toHaveLength(1);
     });
+
+    it('records the page before a muted one again when the visitor comes back to it', () => {
+      // An admin goes from a page to the chat and back: the chat is a page all the same, so
+      // the way back is a new pageview, not a repeat of the last one sent.
+      at('/legal');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+
+      setAnalyticsMuted(true);
+      at('/agent');
+      result.current.trackPageview();
+      setAnalyticsMuted(false);
+
+      at('/legal');
+      result.current.trackPageview();
+
+      expect(pageviews().map(([, options]) => options?.url)).toEqual([
+        'https://anyplot.ai/legal',
+        'https://anyplot.ai/legal',
+      ]);
+    });
   });
 });

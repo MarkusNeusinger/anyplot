@@ -105,7 +105,13 @@ export function useAnalytics() {
   // itself: the layout does on every navigation (`RootLayout`), and the gallery
   // when a filter changes its address without one (`useUrlSync`).
   const trackPageview = useCallback(() => {
-    if (!isProduction || analyticsMuted()) return;
+    if (!isProduction) return;
+    if (analyticsMuted()) {
+      // A muted page is a page all the same: coming back from it to the page before it is a
+      // new pageview, not a repeat of the last one sent.
+      lastPageviewUrl = '';
+      return;
+    }
 
     const url = buildPlausibleUrl();
     if (url === lastPageviewUrl) return;

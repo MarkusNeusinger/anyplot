@@ -94,6 +94,10 @@ function renderApp(url: string) {
   return router;
 }
 
+function setScrollY(y: number) {
+  Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+}
+
 /** The pageviews sent so far, as the paths Plausible records. */
 function pageviews(): string[] {
   return vi
@@ -110,11 +114,15 @@ describe('RootLayout pageviews', () => {
     window.plausible = vi.fn();
     forgetLastPageview();
     pagePainted.mockClear();
-    scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    // jsdom lays nothing out: `scrollTo(x, y)` moves the offset the layout reads back.
+    scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(((x?: unknown, y?: number) => {
+      if (typeof x === 'number') setScrollY(y ?? 0);
+    }) as typeof window.scrollTo);
   });
 
   afterEach(() => {
     scrollSpy.mockRestore();
+    setScrollY(0);
     setAnalyticsMuted(false);
     setAnalyticsAmbientProps({ theme: '' });
     delete window.plausible;
@@ -154,6 +162,46 @@ describe('RootLayout pageviews', () => {
     await act(() => router.navigate('/legal'));
     await act(() => router.navigate(-1));
     expect(pageviews()).toEqual(['/', '/legal', '/']);
+  });
+
+  it('sends the pageview of a page reached by Back from the top, and puts the offset back', async () => {
+    // Back keeps the browser's scroll restoration, and Chrome applies it after this effect: the
+    // offset is still the one of the page being left, which the script would take as the page's
+    // first depth. Measured with the live script: a landing page restored at 35 % was sent as 98 %.
+    const router = renderApp('/');
+    await act(() => router.navigate('/legal'));
+    setScrollY(1200);
+    scrollSpy.mockClear();
+
+    await act(() => router.navigate(-1));
+
+    const moved = (y: number) =>
+      scrollSpy.mock.invocationCallOrder[
+        scrollSpy.mock.calls.findIndex((call: unknown[]) => call[0] === 0 && call[1] === y)
+      ];
+    const sends = vi.mocked(window.plausible!).mock.invocationCallOrder;
+    const sent = sends[sends.length - 1];
+    expect(pageviews()).toEqual(['/', '/legal', '/']);
+    expect(moved(0)).toBeLessThan(sent);
+    expect(sent).toBeLessThan(moved(1200));
+    // The visitor is where the browser had them.
+    expect(window.scrollY).toBe(1200);
+  });
+
+  it('starts the gallery from the top on Back too, and leaves its offset to the gallery', async () => {
+    // The gallery turns the browser's restoration off and restores its own offset. The offset
+    // of the page being left would stand until then and count as scrolling of the gallery:
+    // measured, a second `plots_scrolled` for a visitor who came back and scrolled nothing.
+    const router = renderApp('/plots');
+    await act(() => router.navigate('/legal'));
+    setScrollY(1200);
+    scrollSpy.mockClear();
+
+    await act(() => router.navigate(-1));
+
+    expect(scrollSpy).toHaveBeenCalledWith(0, 0);
+    expect(scrollSpy).not.toHaveBeenCalledWith(0, 1200);
+    expect(window.scrollY).toBe(0);
   });
 
   it('records a query that names a page, and none that does not', async () => {

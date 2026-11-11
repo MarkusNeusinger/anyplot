@@ -50,11 +50,15 @@ export function RootLayout() {
   // so browser back/forward keeps native scroll restoration; skip when a
   // hash anchor is present so in-page anchors still work. Pages with their
   // own saved-scroll restore in a later effect can still override this.
+  // The gallery is such a page, and it turns the browser's restoration off
+  // (`PlotsPage`): there the reset also runs on POP, or the offset of the page
+  // being left would stand until the gallery restores its own, and count as
+  // the visitor's scrolling of the gallery (`usePlotsScrolled`).
   // A layout effect, and declared before the pageview's: the script takes the
   // scroll position at the pageview as the new page's first depth.
   useLayoutEffect(() => {
     if (hash) return;
-    if (navigationType === 'POP') return;
+    if (navigationType === 'POP' && pathname !== paths.plots) return;
     window.scrollTo(0, 0);
   }, [pathname, hash, navigationType]);
 
@@ -66,9 +70,19 @@ export function RootLayout() {
   // is still measured against the page it belongs to. It also runs after the
   // children's layout effects, so the address is the one the page settled on
   // (`useUrlSync`) and the chat's admin mute is already on (`AgentChatPage`).
+  //
+  // Back and forward keep the browser's own scroll restoration, which some
+  // browsers apply before this effect and Chrome after it, so the offset here
+  // may still be the one of the page being left. The pageview is therefore
+  // sent from the top, and the offset put back in the same breath: nothing is
+  // painted in between, the visitor sees no difference, and the script learns
+  // the page's real offset from the scroll event that follows.
   useLayoutEffect(() => {
+    const offset = navigationType === 'POP' ? window.scrollY : 0;
+    if (offset > 0) window.scrollTo(0, 0);
     trackPageview();
-  }, [pathname, search, trackPageview]);
+    if (offset > 0) window.scrollTo(0, offset);
+  }, [pathname, search, navigationType, trackPageview]);
 
   // Always reset horizontal scroll on route change. If a previous page leaked
   // page-level horizontal scroll (e.g. a wide table on mobile), the offset

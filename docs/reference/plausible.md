@@ -43,7 +43,7 @@ sent as 30 %, and the gallery after 12,000 px as 1,176 %. A layout effect runs
 before the browser lays the next page out, so the depth is measured against
 the page it belongs to.
 
-Three things follow from that place in the commit:
+Four things follow from that place in the commit:
 
 - **The scroll reset comes first.** The reset on a forward navigation is a
   layout effect declared before the pageview's, because the script takes the
@@ -57,6 +57,15 @@ Three things follow from that place in the commit:
   (`app/src/routes/redirects.ts`), so the router never renders them and they
   record nothing. The page being left also stays on screen until the
   destination is there.
+- **Back and forward send the pageview from the top.** They keep the
+  browser's own scroll restoration, which Chrome applies after the layout
+  effect, so the offset at that moment is still the one of the page being
+  left. The layout scrolls to the top, sends the pageview, and puts the offset
+  back before anything is painted; the script learns the page's real offset
+  from the scroll event that follows. Without this, a landing page restored at
+  35 % was sent as 98 % (measured on 2026-11-11). The gallery is the exception:
+  it turns the browser's restoration off and restores its own offset, so a
+  navigation to `/plots` always starts from the top, Back included.
 
 Every address that becomes a page records a pageview, including one the app
 can't serve: the 404 page is recorded under the path that was asked for, next

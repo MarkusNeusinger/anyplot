@@ -37,4 +37,10 @@
   30 %, an implementation page left at 63 % as 92 %, and the gallery after
   12,000 px as 1,176 %; all three are now sent as they are. The pageview goes
   out before the browser lays the next page out, and after the scroll reset,
-  so the new page starts at the top.
+  so the new page starts at the top. On Back and forward, where the browser
+  restores the offset itself and Chrome does so only afterwards, the pageview
+  is sent from the top and the offset put back before anything is painted.
+- **Back to the gallery starts from the top before the gallery restores its
+  own offset.** The gallery turns the browser's scroll restoration off, so on
+  Back the offset of the page being left stood until the gallery's restore, or
+  for good when it had none to restore.
