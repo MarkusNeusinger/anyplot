@@ -28,9 +28,10 @@ from api.agent_usage import DATASET_PATTERN, usage_query
 from api.cache import cache_key, get_or_set_cache
 from api.dependencies import require_db
 from api.machine_reads_query import MachineReadersResponse, empty_public, read_public
+from api.shared_links import SharedLinksResponse, load_public
 from core.config import settings
 from core.constants import LIBRARY_NAMES, SUPPORTED_LIBRARIES
-from core.database import ImplRepository, Spec, SpecRepository
+from core.database import ImplRepository, Spec, SpecRepository, is_db_configured
 from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
 
@@ -843,3 +844,29 @@ async def get_machine_readers() -> MachineReadersResponse:
     except Exception as exc:  # a cold miss that failed: answered, never kept
         logger.warning("machine readers query failed: %s", type(exc).__name__)
         return empty_public("unavailable")
+
+
+# =============================================================================
+# 6. Shared links
+# =============================================================================
+
+
+@router.get("/shared-links", response_model=SharedLinksResponse)
+async def get_shared_links() -> SharedLinksResponse:
+    """Links to the site shared per UTC day for the last 28 days, by platform, and the most shared plot pages.
+
+    Counts only, from the share counters (`api/shared_links.py`, `docs/reference/plausible.md`): a share is the
+    fetch of a page's preview image by a messenger or a social network. Fetches by other clients are not in these
+    numbers. `not_configured` without a database; `unavailable` when it does not answer or the table is not there
+    yet, never kept, so the next load tries again. An answer is kept and refreshed in the background after an
+    hour; a failed refresh keeps the last answer.
+    """
+    if not is_db_configured():
+        return SharedLinksResponse(status="not_configured")
+    try:
+        return await get_or_set_cache(
+            cache_key("insights", "shared-links", "28d"), load_public, refresh_after=3600, refresh_factory=load_public
+        )
+    except Exception as exc:  # a cold miss that failed: answered, never kept
+        logger.warning("shared links query failed: %s", type(exc).__name__)
+        return SharedLinksResponse(status="unavailable")

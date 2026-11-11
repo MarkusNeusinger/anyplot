@@ -79,6 +79,7 @@ describe('LegalPage', () => {
       ],
       ['assistant telemetry', 'up to 180 days'],
       ['machine readers', 'up to 180 days'],
+      ['shared links', 'no time limit: counts per day, platform and page'],
       ['feedback case files', '180 days'],
       ['feedback entries, case rows', 'until you ask to delete them'],
     ];
@@ -138,6 +139,14 @@ describe('LegalPage', () => {
     expect(machineReaders).toHaveTextContent(/one content-free\s+line/);
     expect(machineReaders).toHaveTextContent(/whether Cloudflare verified it/);
     expect(machineReaders).toHaveTextContent(/no IP address, no user-agent/);
+    // The share counter, under the anchor /legal#shared-links lands on (the tile on /stats links
+    // it): what a row holds, each thing it never holds, and that it has no time limit.
+    const sharedLinks = document.getElementById('shared-links');
+    expect(sharedLinks).toHaveTextContent(/fetches a page.s preview image/);
+    expect(sharedLinks).toHaveTextContent(/the day, the platform and the page/);
+    expect(sharedLinks).toHaveTextContent(/no IP address, no\s+user-agent, no time of day/);
+    expect(sharedLinks).toHaveTextContent(/nothing about who shared/);
+    expect(sharedLinks).toHaveTextContent(/kept\s+without a time limit/);
   });
 
   // The data assistant's section, each claim pinned with the qualifier that

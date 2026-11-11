@@ -19,6 +19,7 @@ import { LibraryCoverage, type LibraryStats } from 'src/sections/debug/LibraryCo
 import { MachineReadersSection } from 'src/sections/debug/MachineReadersSection';
 import { ProblemAreas, type ProblemSpec } from 'src/sections/debug/ProblemAreas';
 import { RecentActivity, type RecentActivityData } from 'src/sections/debug/RecentActivity';
+import { SharedLinksSection } from 'src/sections/debug/SharedLinksSection';
 import type { SortDir } from 'src/sections/debug/SortableHeader';
 import { SpecMatrix, SpecStatus } from 'src/sections/debug/SpecMatrix';
 import { debugControlSx } from 'src/sections/debug/styles';
@@ -476,6 +477,9 @@ export function DebugPage() {
 
       {/* Machine readers: crawlers, AI assistants and MCP clients, 7 or 30 days */}
       <MachineReadersSection token={adminToken} reloadCounter={reloadCounter} />
+
+      {/* Shared links: the share counters of the last 28 days, with the fetches /stats leaves out */}
+      <SharedLinksSection token={adminToken} reloadCounter={reloadCounter} />
 
       {/* Agent cases: the triage of the agent chat's quick feedback */}
       <AgentCasesSection token={adminToken} reloadCounter={reloadCounter} />

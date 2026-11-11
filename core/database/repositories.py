@@ -4,16 +4,18 @@ Repository classes for database access.
 Provides abstraction layer between API and database models.
 """
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any, Generic, TypeVar
 
 from sqlalchemy import ColumnElement, String, and_, case, cast, func, or_, select, text, type_coerce, update
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import insert as postgresql_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
 
 from core.constants import LIBRARY_LANGUAGES
-from core.database.models import AgentFeedback, Feedback, Impl, Language, Library, Spec
+from core.database.models import AgentFeedback, Feedback, Impl, Language, Library, LinkShare, Spec
 from core.plot_votes import PLOT_VOTE_REACTIONS, VOTE_SORTS, naive_utc
 
 
@@ -861,3 +863,96 @@ class AgentFeedbackRepository(BaseRepository[AgentFeedback]):
         """Every row, oldest first (the sync CLI; the table is small)."""
         result = await self.session.execute(select(AgentFeedback).order_by(AgentFeedback.id))
         return list(result.scalars().all())
+
+
+class LinkShareRepository:
+    """The share counters: one upsert per preview fetch, and the sums the tile reads.
+
+    No `BaseRepository`: a row has no id of its own, its seven key columns are the key.
+    """
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def count(
+        self,
+        *,
+        day: date,
+        platform: str,
+        verified: bool,
+        page: str,
+        spec_id: str = "",
+        language: str = "",
+        library_id: str = "",
+    ) -> None:
+        """Add one fetch to its counter, in one statement; the caller commits.
+
+        An `INSERT ... ON CONFLICT DO UPDATE` on the primary key, so two fetches
+        of the same page in the same instant both count: a read followed by a
+        write would lose one of them. PostgreSQL and the SQLite of the tests
+        spell it the same way, each through its own dialect's `insert`.
+        """
+        insert = postgresql_insert if self.session.get_bind().dialect.name == "postgresql" else sqlite_insert
+        statement = insert(LinkShare).values(
+            day=day,
+            platform=platform,
+            verified=verified,
+            page=page,
+            spec_id=spec_id,
+            language=language,
+            library_id=library_id,
+            fetches=1,
+        )
+        await self.session.execute(
+            statement.on_conflict_do_update(
+                index_elements=[
+                    LinkShare.day,
+                    LinkShare.platform,
+                    LinkShare.verified,
+                    LinkShare.page,
+                    LinkShare.spec_id,
+                    LinkShare.language,
+                    LinkShare.library_id,
+                ],
+                set_={"fetches": LinkShare.fetches + 1},
+            )
+        )
+
+    async def by_day_and_platform(self, since: date, until: date) -> list[tuple[date, str, bool, int]]:
+        """The fetches of the days *since* to *until*, both included, oldest first.
+
+        One entry per day, platform and verdict: (day, platform, verified, fetches).
+        """
+        result = await self.session.execute(
+            select(LinkShare.day, LinkShare.platform, LinkShare.verified, func.sum(LinkShare.fetches))
+            .where(LinkShare.day >= since, LinkShare.day <= until)
+            .group_by(LinkShare.day, LinkShare.platform, LinkShare.verified)
+            .order_by(LinkShare.day, LinkShare.platform, LinkShare.verified)
+        )
+        return [(day, platform, bool(verified), int(fetches)) for day, platform, verified, fetches in result.all()]
+
+    async def top_plots(
+        self, since: date, until: date, *, without_platform: str, limit: int
+    ) -> list[tuple[str, str, str, int]]:
+        """The most shared plot pages of the days *since* to *until*: (spec_id, language, library_id, fetches).
+
+        The same days as `by_day_and_platform`, so the list and the daily sums
+        describe one window. A spec's hub and each of its implementation pages
+        are entries of their own (`language` and `library_id` are empty for
+        the hub). Fetches of *without_platform* are left out. Ties go by id, so
+        the order is stable.
+        """
+        fetches = func.sum(LinkShare.fetches)
+        result = await self.session.execute(
+            select(LinkShare.spec_id, LinkShare.language, LinkShare.library_id, fetches)
+            .where(
+                LinkShare.day >= since,
+                LinkShare.day <= until,
+                LinkShare.platform != without_platform,
+                LinkShare.spec_id != "",
+            )
+            .group_by(LinkShare.spec_id, LinkShare.language, LinkShare.library_id)
+            .order_by(fetches.desc(), LinkShare.spec_id, LinkShare.language, LinkShare.library_id)
+            .limit(limit)
+        )
+        return [(spec_id, language, library_id, int(total)) for spec_id, language, library_id, total in result.all()]

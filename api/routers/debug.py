@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections import Counter
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, s
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.agent_usage import USAGE_WINDOWS, AgentUsage, AgentUsageDaily, UsageQuery, read_daily, read_usage, usage_query
@@ -22,11 +24,15 @@ from api.dependencies import require_db
 from api.exceptions import raise_validation_error
 from api.machine_reads_query import DETAIL_WINDOWS, MachineReadsDetail, read_detail
 from api.secret_compare import secret_matches
+from api.shared_links import SharedLinksDetail
+from api.shared_links import read_detail as read_shared_links
 from core.config import settings
 from core.constants import LIBRARY_NAMES, SUPPORTED_LIBRARIES
-from core.database import FEEDBACK_STATUSES, FeedbackRepository, SpecRepository
+from core.database import FEEDBACK_STATUSES, FeedbackRepository, LinkShareRepository, SpecRepository
 from core.plot_votes import VOTE_SORTS
 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/debug", tags=["debug"])
 
@@ -563,6 +569,24 @@ async def machine_readers(
     if days not in DETAIL_WINDOWS:
         raise_validation_error(f"days must be one of {', '.join(map(str, DETAIL_WINDOWS))}")
     return await run_in_threadpool(read_detail, query, settings.machine_reads_dataset, days)
+
+
+@router.get("/shared-links", response_model=SharedLinksDetail, dependencies=[Depends(require_admin)])
+async def shared_links(db: AsyncSession = Depends(require_db)) -> SharedLinksDetail:
+    """The share counters of the last 28 UTC days, with the fetches the public tile leaves out.
+
+    The public numbers of `/insights/shared-links`, read fresh, plus `other`: the preview images fetched by a
+    client that is neither a preview platform nor a known crawler. A rising `other` is how a platform missing from
+    the list shows itself (`api/shared_links.py`). `unavailable` with zeros when the query fails, which includes
+    the table not being there yet.
+    """
+    try:
+        return await read_shared_links(LinkShareRepository(db))
+    except SQLAlchemyError as exc:
+        # The failed statement left the session's transaction aborted: end it here, not in the dependency's commit.
+        await db.rollback()
+        logger.warning("shared links query failed: %s", type(exc).__name__)
+        return SharedLinksDetail(status="unavailable")
 
 
 class CacheInvalidateResponse(BaseModel):

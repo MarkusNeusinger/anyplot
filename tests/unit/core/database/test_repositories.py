@@ -4,6 +4,7 @@ Tests for database repository classes.
 Uses in-memory SQLite to test repository operations.
 """
 
+from datetime import date
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -23,6 +24,7 @@ from core.database.repositories import (
     ImplRepository,
     LanguageRepository,
     LibraryRepository,
+    LinkShareRepository,
     SpecRepository,
     _spec_category_filter,
 )
@@ -517,3 +519,43 @@ class TestAgentFeedbackCreateCaseLock:
         statements = await _create_case_statements(sqlite.dialect())
         assert not any("pg_advisory_xact_lock" in sql for sql, _ in statements)
         assert "FROM agent_feedback" in statements[0][0]
+
+
+class TestLinkShareCount:
+    """The share counter is one statement on either engine: an upsert on the seven key columns.
+
+    The integration tests run it on SQLite; this pins what PostgreSQL is sent, which no test executes.
+    """
+
+    @staticmethod
+    async def _statement(dialect: Dialect) -> str:
+        session = MagicMock(spec=AsyncSession)
+        session.get_bind.return_value.dialect = dialect
+        session.execute = AsyncMock()
+        await LinkShareRepository(session).count(
+            day=date(2026, 11, 11),
+            platform="slack",
+            verified=True,
+            page="spec_detail",
+            spec_id="scatter-basic",
+            language="python",
+        )
+        session.execute.assert_awaited_once()
+        return str(session.execute.await_args.args[0].compile(dialect=dialect))
+
+    @pytest.mark.parametrize("dialect", [postgresql.dialect(), sqlite.dialect()], ids=["postgresql", "sqlite"])
+    async def test_adds_one_on_a_conflict_of_the_whole_key(self, dialect: Dialect) -> None:
+        sql = " ".join((await self._statement(dialect)).split())
+        columns = "day, platform, verified, page, spec_id, language, library_id"
+        assert sql.startswith(f"INSERT INTO link_shares ({columns}, fetches)")
+        assert f"ON CONFLICT ({columns}) DO UPDATE SET fetches" in sql
+        # The row's own count plus one, never the inserted value: two fetches in one instant both count.
+        assert "= (link_shares.fetches +" in sql
+
+    async def test_commits_nothing_itself(self) -> None:
+        """The caller's session context commits; a share write is one statement in one transaction."""
+        session = MagicMock(spec=AsyncSession)
+        session.get_bind.return_value.dialect = postgresql.dialect()
+        session.execute = AsyncMock()
+        await LinkShareRepository(session).count(day=date(2026, 11, 11), platform="other", verified=False, page="home")
+        session.commit.assert_not_called()

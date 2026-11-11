@@ -110,7 +110,7 @@ class TestStaticOgImage:
         """Home OG image should return 200 with PNG content."""
         with (
             patch("api.routers.og_images._get_static_og_image", return_value=FAKE_PNG),
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
         ):
             response = client.get("/og/home.png")
 
@@ -118,25 +118,32 @@ class TestStaticOgImage:
         assert response.headers["content-type"] == "image/png"
         assert response.content == FAKE_PNG
 
-    def test_home_og_image_with_filter_params(self, client) -> None:
-        """Home OG image should pass filter params for tracking."""
+    def test_home_og_image_counts_one_share_whatever_the_query(self, client) -> None:
+        """A filtered home link is the home page: the query is no part of what is counted."""
         with (
             patch("api.routers.og_images._get_static_og_image", return_value=FAKE_PNG),
-            patch("api.routers.og_images.track_og_image") as mock_track,
+            patch("api.routers.og_images.record_share") as mock_share,
         ):
             response = client.get("/og/home.png?lib=plotly&dom=statistics")
 
         assert response.status_code == 200
-        mock_track.assert_called_once()
-        call_kwargs = mock_track.call_args
-        assert call_kwargs.kwargs.get("page") == "home"
-        assert call_kwargs.kwargs.get("filters") is not None
+        mock_share.assert_called_once()
+        assert mock_share.call_args.kwargs == {"page": "home", "spec_id": "", "language": "", "library_id": ""}
+
+    def test_preview_images_are_cached_for_five_minutes(self, client) -> None:
+        """A fetch the edge answers from its cache is a share nobody counts, so the time is short."""
+        with (
+            patch("api.routers.og_images._get_static_og_image", return_value=FAKE_PNG),
+            patch("api.routers.og_images.record_share"),
+        ):
+            for path in ("/og/home.png", "/og/plots.png"):
+                assert client.get(path).headers["cache-control"] == "public, max-age=300"
 
     def test_plots_og_image_success(self, client) -> None:
         """Plots OG image should return 200 with PNG content."""
         with (
             patch("api.routers.og_images._get_static_og_image", return_value=FAKE_PNG),
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
         ):
             response = client.get("/og/plots.png")
 
@@ -151,7 +158,7 @@ class TestStaticOgImage:
         with (
             patch("api.routers.og_images.create_home_og_image", side_effect=RuntimeError("PIL broken")),
             patch("pathlib.Path.read_bytes", return_value=FAKE_PNG),
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
         ):
             response = client.get("/og/home.png")
 
@@ -164,7 +171,7 @@ class TestStaticOgImage:
         with (
             patch("api.routers.og_images.create_home_og_image", side_effect=RuntimeError("PIL broken")),
             patch("pathlib.Path.read_bytes", side_effect=FileNotFoundError("not found")),
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
         ):
             response = client.get("/og/home.png")
 
@@ -306,7 +313,7 @@ class TestBrandedImplImage:
         mock_repo.get_by_id = AsyncMock(return_value=spec)
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share") as mock_share,
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.set_cache"),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
@@ -317,6 +324,29 @@ class TestBrandedImplImage:
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
+        assert response.headers["cache-control"] == "public, max-age=300"
+        # The served image is one share of that implementation's page.
+        mock_share.assert_called_once()
+        assert mock_share.call_args.kwargs == {
+            "page": "spec_detail",
+            "spec_id": "scatter-basic",
+            "language": "python",
+            "library_id": "matplotlib",
+        }
+
+    def test_branded_impl_image_from_the_cache_counts_too(self, db_client) -> None:
+        """The image this service kept from an earlier render is a preview someone saw all the same."""
+        client, _ = db_client
+
+        with (
+            patch("api.routers.og_images.record_share") as mock_share,
+            patch("api.routers.og_images.get_cache", return_value=FAKE_PNG),
+        ):
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
+
+        assert response.status_code == 200
+        mock_share.assert_called_once()
+        assert mock_share.call_args.kwargs["page"] == "spec_detail"
 
     def test_branded_impl_image_renders_from_800px_variant(self, db_client) -> None:
         """A cache miss for a prod-shaped preview downloads only the 800px derivative."""
@@ -329,7 +359,7 @@ class TestBrandedImplImage:
         http = _fake_http_client({small_url: 200, LIGHT_URL: 200})
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.set_cache"),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
@@ -347,7 +377,7 @@ class TestBrandedImplImage:
         client, _ = db_client
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=FAKE_PNG),
         ):
             response = client.get("/og/scatter-basic/python/matplotlib.png")
@@ -359,7 +389,7 @@ class TestBrandedImplImage:
         """Should return 503 when DB is not available."""
         with (
             patch(DB_CONFIG_PATCH, return_value=False),
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=None),
         ):
             response = client.get("/og/scatter-basic/python/matplotlib.png")
@@ -374,13 +404,15 @@ class TestBrandedImplImage:
         mock_repo.get_by_id = AsyncMock(return_value=None)
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share") as mock_share,
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
         ):
             response = client.get("/og/nonexistent/python/matplotlib.png")
 
         assert response.status_code == 404
+        # No image, no preview anyone saw: a miss counts nothing. Until 2026-11-11 it was an event.
+        mock_share.assert_not_called()
 
     def test_branded_impl_image_impl_not_found(self, db_client) -> None:
         """Should return 404 when spec exists but library impl is missing."""
@@ -393,7 +425,7 @@ class TestBrandedImplImage:
         mock_repo.get_by_id = AsyncMock(return_value=spec)
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
         ):
@@ -412,7 +444,7 @@ class TestBrandedImplImage:
         mock_repo.get_by_id = AsyncMock(return_value=spec)
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
         ):
@@ -431,7 +463,7 @@ class TestBrandedImplImage:
         mock_repo.get_by_id = AsyncMock(return_value=spec)
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
             patch(
@@ -467,7 +499,7 @@ class TestSpecCollageImage:
         mock_repo.get_by_id = AsyncMock(return_value=spec)
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share") as mock_share,
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.set_cache"),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
@@ -478,6 +510,15 @@ class TestSpecCollageImage:
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
+        assert response.headers["cache-control"] == "public, max-age=300"
+        # The served collage is one share of the spec's hub: no language, no library.
+        mock_share.assert_called_once()
+        assert mock_share.call_args.kwargs == {
+            "page": "spec_overview",
+            "spec_id": "scatter-basic",
+            "language": "",
+            "library_id": "",
+        }
 
     def test_spec_collage_renders_from_800px_variants(self, db_client) -> None:
         """Every collage source on a cache miss is the 800px derivative, never the original."""
@@ -497,7 +538,7 @@ class TestSpecCollageImage:
         http = _fake_http_client(dict.fromkeys(expected, 200))
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.set_cache"),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
@@ -516,7 +557,7 @@ class TestSpecCollageImage:
         client, _ = db_client
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=FAKE_PNG),
         ):
             response = client.get("/og/scatter-basic.png")
@@ -528,7 +569,7 @@ class TestSpecCollageImage:
         """Should return 503 when DB is not available."""
         with (
             patch(DB_CONFIG_PATCH, return_value=False),
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=None),
         ):
             response = client.get("/og/scatter-basic.png")
@@ -543,13 +584,14 @@ class TestSpecCollageImage:
         mock_repo.get_by_id = AsyncMock(return_value=None)
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share") as mock_share,
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
         ):
             response = client.get("/og/nonexistent.png")
 
         assert response.status_code == 404
+        mock_share.assert_not_called()
 
     def test_spec_collage_no_previews(self, db_client) -> None:
         """Should return 404 when all impls lack preview_url."""
@@ -562,7 +604,7 @@ class TestSpecCollageImage:
         mock_repo.get_by_id = AsyncMock(return_value=spec)
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
         ):
@@ -581,7 +623,7 @@ class TestSpecCollageImage:
         mock_repo.get_by_id = AsyncMock(return_value=spec)
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
             patch(

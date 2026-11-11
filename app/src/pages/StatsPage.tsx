@@ -14,6 +14,8 @@ import { ApiError, apiGet, endpoints } from 'src/lib/api';
 import { paths, specPath } from 'src/routes/paths';
 import { type MachineReadersResponse, readMachineReaders } from 'src/sections/stats/machineReaders';
 import { MachineReadersTile } from 'src/sections/stats/MachineReadersTile';
+import { readSharedLinks, type SharedLinksResponse } from 'src/sections/stats/sharedLinks';
+import { SharedLinksTile } from 'src/sections/stats/SharedLinksTile';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
@@ -150,6 +152,7 @@ export function StatsPage() {
   const [machineReaders, setMachineReaders] = useState<MachineReadersResponse | null | undefined>(
     undefined
   );
+  const [sharedLinks, setSharedLinks] = useState<SharedLinksResponse | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -177,6 +180,14 @@ export function StatsPage() {
     apiGet<unknown>(endpoints.insightsMachineReaders)
       .then(body => setMachineReaders(readMachineReaders(body)))
       .catch(() => setMachineReaders(null));
+  }, []);
+
+  // And so do the shared links: no database, a table that is not there yet or an
+  // unreadable answer each fall through to the tile's placeholder.
+  useEffect(() => {
+    apiGet<unknown>(endpoints.insightsSharedLinks)
+      .then(body => setSharedLinks(readSharedLinks(body)))
+      .catch(() => setSharedLinks(null));
   }, []);
 
   if (loading)
@@ -386,6 +397,10 @@ export function StatsPage() {
         {/* Machine readers (last 28 days): verified crawlers and AI assistants,
             from the content-free machine-read telemetry in BigQuery. */}
         <MachineReadersTile answer={machineReaders} formatNum={formatNum} />
+
+        {/* Shared links (last 28 days): the preview images messengers and social
+            networks fetch when a person shares a link, counted per day. */}
+        <SharedLinksTile answer={sharedLinks} formatNum={formatNum} />
 
         {/* Library Stats — dual mini histograms per library */}
         <Box sx={{ mt: 4 }}>

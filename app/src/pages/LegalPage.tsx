@@ -277,6 +277,15 @@ export function LegalPage() {
                   </Box>,
                 ],
                 [
+                  'shared links',
+                  <Box component="span" id="shared-links" sx={ANCHOR_SX}>
+                    when a messenger or a social network fetches a page&apos;s preview image, one
+                    counter goes up: the day, the platform and the page. no IP address, no
+                    user-agent, no time of day, nothing about who shared. the counts are kept
+                    without a time limit.
+                  </Box>,
+                ],
+                [
                   'edge',
                   'Cloudflare uses your IP address to rate-limit, filter bots and absorb DDoS attacks.',
                 ],
@@ -325,6 +334,7 @@ export function LegalPage() {
                 ],
                 ['assistant telemetry', 'up to 180 days'],
                 ['machine readers', 'up to 180 days'],
+                ['shared links', 'no time limit: counts per day, platform and page'],
                 ['feedback case files', '180 days'],
                 ['feedback entries, case rows', 'until you ask to delete them'],
               ]}

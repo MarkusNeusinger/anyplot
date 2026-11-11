@@ -165,15 +165,32 @@ const mockMachineReaders = {
   generated_at: '2026-11-09T13:50:00Z',
 };
 
+const mockSharedLinks = {
+  status: 'ok',
+  window_days: 28,
+  total: 6,
+  days: Array.from({ length: 28 }, (_, offset) => ({
+    date: new Date(Date.UTC(2026, 9, 13 + offset)).toISOString().slice(0, 10),
+    shares: offset === 27 ? 4 : offset === 20 ? 2 : 0,
+  })),
+  platforms: [
+    { platform: 'whatsapp', shares: 4 },
+    { platform: 'teams', shares: 2 },
+  ],
+  top: [{ spec_id: 'scatter-basic', language: 'python', library: 'matplotlib', shares: 4 }],
+};
+
 /**
- * StatsPage performs three independent fetches: /insights/dashboard,
- * /insights/visitors and /insights/machine-readers. Route by URL so no
- * response is silently replaced by the dashboard payload (and vice versa).
- * A `null` machine readers payload answers 403, a non-retryable status.
+ * StatsPage performs four independent fetches: /insights/dashboard,
+ * /insights/visitors, /insights/machine-readers and /insights/shared-links.
+ * Route by URL so no response is silently replaced by the dashboard payload
+ * (and vice versa). A `null` machine readers or shared links payload answers
+ * 403, a non-retryable status.
  */
 function mockFetchSuccess(
   visitorsPayload: { points: Array<{ date: string; visitors: number }> } | null = mockVisitors,
-  machineReadersPayload: unknown = mockMachineReaders
+  machineReadersPayload: unknown = mockMachineReaders,
+  sharedLinksPayload: unknown = mockSharedLinks
 ) {
   vi.stubGlobal(
     'fetch',
@@ -189,6 +206,13 @@ function mockFetchSuccess(
           machineReadersPayload === null
             ? { ok: false, status: 403 }
             : { ok: true, json: () => Promise.resolve(machineReadersPayload) }
+        );
+      }
+      if (url.includes('/insights/shared-links')) {
+        return Promise.resolve(
+          sharedLinksPayload === null
+            ? { ok: false, status: 403 }
+            : { ok: true, json: () => Promise.resolve(sharedLinksPayload) }
         );
       }
       return Promise.resolve({
@@ -482,7 +506,8 @@ describe('StatsPage', () => {
       ).toBeInTheDocument();
     });
     expect(screen.getByText('machine readers')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'legal.privacy()' })).toHaveAttribute(
+    // Each tile links the privacy text under its own anchor; this is the machine readers'.
+    expect(screen.getAllByRole('link', { name: 'legal.privacy()' })[0]).toHaveAttribute(
       'href',
       '/legal#machine-readers'
     );
@@ -565,6 +590,48 @@ describe('StatsPage', () => {
     });
     expect(screen.getByText('specifications')).toBeInTheDocument();
     expect(screen.getByText(/unique visitors · last 28 days · 44 total/)).toBeInTheDocument();
+  });
+
+  it('shows the shared links tile from its own request, under the machine readers', async () => {
+    mockFetchSuccess();
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('shared-links-day')).toHaveLength(28);
+    });
+    expect(
+      screen.getByText(/link previews on messengers and social networks · last 28 days · 6 shares/)
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(/whatsapp 4\s*teams 2/);
+    expect(screen.getByRole('link', { name: 'scatter-basic · matplotlib' })).toHaveAttribute(
+      'href',
+      '/scatter-basic/python/matplotlib'
+    );
+    const calls = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
+    expect(calls.filter(url => url.includes('/insights/shared-links'))).toHaveLength(1);
+    // The machine readers' strip comes first in the page, then this one.
+    const strips = screen.getAllByRole('group').map(group => group.getAttribute('aria-label'));
+    expect(strips.indexOf('machine readers per day')).toBeLessThan(
+      strips.indexOf('shared links per day')
+    );
+  });
+
+  it.each([
+    ['a failed request', null],
+    ['a database that is not configured', { status: 'not_configured', days: [] }],
+    ['a table that is not there yet', { status: 'unavailable', days: [] }],
+  ])('shows the shared links placeholder for %s and the rest of the page', async (_, payload) => {
+    mockFetchSuccess(mockVisitors, mockMachineReaders, payload);
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('shared link data unavailable')).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId('shared-links-day')).not.toBeInTheDocument();
+    expect(screen.getByText('specifications')).toBeInTheDocument();
+    expect(screen.getAllByTestId('machine-readers-day')).toHaveLength(28);
   });
 
   it('routes tag links to /plots and fires tag_click on click', async () => {
