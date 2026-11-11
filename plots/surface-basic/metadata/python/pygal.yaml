@@ -2,56 +2,64 @@ library: pygal
 language: python
 specification_id: surface-basic
 created: '2026-05-05T16:57:53Z'
-updated: '2026-05-05T17:17:07Z'
-generated_by: claude-haiku
-workflow_run: 25390054582
+updated: '2026-11-11T02:53:23Z'
+generated_by: claude-sonnet
+workflow_run: 42947008432
 issue: 1013
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/pygal/plot-dark.html
-quality_score: 74
+quality_score: 78
 review:
   strengths:
-  - Excellent code quality and clean structure
-  - Proper theme adaptation with correct color tokens for both light and dark renders
-  - Explicit font sizing (28px title, 22px labels, 18px ticks) scales well at 4800×2700px
-  - Correct Okabe-Ito palette compliance with proper color order and first-series
-    brand green (#009E73)
-  - Deterministic output with seed; both PNG and HTML formats rendered correctly
-  - Professional styling using pygal.Style system with theme-aware chrome (backgrounds,
-    text, grid)
+  - Projects the 31x31 grid obliquely onto pygal.XY, so a library without 3D shows
+    peaks and valleys together from a 35° azimuth / 32° elevation view
+  - 'Continuous height uses the imprint_seq ramp (#009E73 -> #4467A3) on both mesh
+    and colour bar, identical in both themes'
+  - 'Theme tokens drive all chrome; text readable on #FAF8F1 and #1A1A17'
+  - Overrides pygal's fixed 10 px print_labels stylesheet through inline CSS so tick
+    text matches the tick size
+  - Data block ends in a tidy long df with column-role constants; the plot reads only
+    df and the constants
   weaknesses:
-  - Specification requires a 3D surface plot; pygal's 2D scatter plot with color-binned
-    height values does not convey the continuous 3D surface nature of the spec
-  - Missing colorbar — spec explicitly requests one to show value scale
-  - Categorical color mapping (7 height bins) instead of smooth continuous gradient
-    as implied by spec's 'smooth colormap' requirement
-  - Generic axis labels ('X Axis', 'Y Axis') lack descriptive context or units for
-    mathematical coordinates
-  - Point overlap at high density (1,225 points on scatter) reduces ability to distinguish
-    individual surface values; true 3D visualization would resolve this
-  - Design excellence minimal — uses library defaults with no custom aesthetic sophistication
-    or visual hierarchy
+  - 'SC-02 (both): the surface is a see-through wireframe — every grid cell is open
+    page colour and the far mesh shows through the near slopes, so it does not read
+    as one continuous surface without gaps between facets (C1) → fill each grid cell
+    as a polygon in its height colour, drawn far to near so near faces cover far ones.
+    Likely cause: edges added as two-point line series only (lines 86-97), no filled
+    cells.'
+  - 'SC-04 (both): title ''surface-basic · pygal · anyplot.ai'' lacks the language
+    segment → ''surface-basic · python · pygal · anyplot.ai''. Likely cause: title
+    string on line 178.'
+  - 'SC-03 (both): z-axis ticks labelled ''0.3'' and ''-0.3'' sit at +/-0.333 (np.linspace(z_lo,
+    z_hi, 4)), so the labels misstate their positions by 0.03 → place ticks at round
+    values (e.g. -1, -0.5, 0, 0.5, 1). Likely cause: np.linspace tick positions with
+    one-decimal rounding in tick(), lines 109-112.'
+  - 'CQ-04 (code): the colour bar is 192 separate series (12 bins x 16 parallel 2-point
+    strokes, lines 142-145) → one series per bin with a wide stroke via stroke_style={''width'':
+    ...}. Likely cause: hand-filled bar from hairlines.'
+  - 'CQ-01 (code): four helper functions, of which tick() and bin_of() are one-line
+    expressions → inline those two. Likely cause: helper defs at lines 77-83.'
+  - 'Suggestion: the x and y ''-5'' ticks sit next to each other at the front corner;
+    nudging their offsets apart would make it clearer which axis each belongs to.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines visible
-      Chrome: Title "surface-basic · pygal · anyplot.ai" at top, axis labels "X Axis" and "Y Axis" on left and bottom. All text is dark and clearly readable against light background.
-      Data: Color-binned scatter plot representing surface height using Okabe-Ito palette (Height 0 in brand green #009E73, through Height 6 in yellow #F0E442). Approximately 1,225 points showing the 35×35 mathematical surface sampled at z = sin(√(X²+Y²)) * cos(X*0.5).
-      Legend: Shows 7 height bins with corresponding colors
-      Legibility verdict: PASS - All text is clearly readable; however, point overlap at high density partially obscures individual values
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas, no guides.
+      Chrome: title 'surface-basic · pygal · anyplot.ai' centred at top in dark ink; muted grey base box and z axis with ticks 1 / 0.3 / -0.3 / -1, x and y ticks -5 / 0 / 5 along the front edges, axis letters x, y, z, and a colour bar on the right labelled z with 1 / 0 / -1. All text dark and readable.
+      Data: wireframe mesh of z = sin(r)*cos(x/2) over a 31x31 grid, oblique view; strokes coloured by height from brand green #009E73 (valleys) to blue #4467A3 (peaks). The wireframe is see-through: far mesh lines show through near slopes, cells are open.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with visible grid lines
-      Chrome: Title clearly visible at top with light text. Axis labels and tick marks rendered in light color (#F0EFE8) against dark background. All text is readable, no dark-on-dark failures detected.
-      Data: Identical color distribution to light render (data colors unchanged: brand green #009E73 through #F0E442). Grid and borders adapt to dark theme. All 1,225 points remain visible.
-      Legend: Present with same height bin labels
-      Legibility verdict: PASS - All text is readable against dark surface; brand green and other colors maintain visibility; proper theme adaptation confirms
+      Background: warm near-black #1A1A17.
+      Chrome: title, ticks, axis letters and colour-bar labels in light ink #F0EFE8; base box and z axis in light grey. No dark-on-dark text.
+      Data: same green-to-blue ramp and mesh, identical to the light render; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,51 +67,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title (28px), labels (22px), ticks
-          (18px) all clearly readable in both themes
+        comment: Title 56 px, ticks and axis letters 44 px; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; data point overlap is inherent to scatter representation,
-          not a text legibility issue
+        comment: No text collides with text or mesh; mesh crossings are inherent to
+          the 3D view (C5)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 1,225 data points rendered with dots_size=6; colors distinct
-          and visible, though point overlap at high density reduces individual clarity
+        comment: 4 px mesh strokes on a 31x31 grid read clearly; colour-bar steps
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good contrast between all series and
-          backgrounds; no red-green sole signal
+        comment: Green-to-blue ramp, no red-green signal, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px canvas fully utilized; scatter plot fills 50-70% with
-          balanced margins; all elements visible
+        comment: 3200x1800 canvas; surface and colour bar balanced, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title correct format; axis labels 'X Axis' and 'Y Axis' are generic
-          without units or descriptive context
+        passed: true
+        comment: Axes named x, y, z — the function's own variables; dimensionless,
+          so no units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: backgrounds #FAF8F1 (light) and #1A1A17 (dark); first series
-          #009E73; multi-series follows Okabe-Ito order; chrome theme-correct in both
-          renders'
+        comment: 'Continuous height uses imprint_seq #009E73 -> #4467A3; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
       score: 8
       max: 20
@@ -113,118 +117,113 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses Okabe-Ito palette (standard, not custom); styling is professional
-          but minimal; no intentional visual hierarchy or sophisticated design choices
+        comment: 'Style-guide baseline: theme tokens, explicit sizes; nothing beyond'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization; no spine removal, standard
-          grid styling, adequate but basic whitespace
+        comment: No guides, muted base frame — the style-guide baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Color gradient shows height variation, but visualization is a data
-          dump without clear focal point or narrative emphasis
+        comment: Surface displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 9
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Spec requires 3D surface plot; implementation uses 2D scatter plot
-          with color-binned height values (correct base type, but missing 3D variant)
+        passed: true
+        comment: 3D surface via oblique projection of the grid onto pygal.XY; no unasked
+          layers
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
         passed: false
-        comment: 'Mathematical function ✓, axis labels ✓, height encoding ✓; missing:
-          colorbar (spec requires), continuous smooth colormap (uses categorical bins
-          instead)'
+        comment: 'Smooth colormap, x/y/z labels, colour bar, oblique view (C3) present;
+          C1 missed: see-through wireframe with open cells, no filled continuous surface
+          (defect line). Rotation is not available in pygal'
       - id: SC-03
         name: Data Mapping
         score: 2
         max: 3
         passed: false
-        comment: X/Y coordinates mapped correctly; Z mapped to color/series rather
-          than height axis; all data visible but not in 3D space
+        comment: Grid points sit at their projected (x, y, z); z-axis ticks labelled
+          0.3/-0.3 sit at +/-0.333 (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format perfect ('surface-basic · pygal · anyplot.ai'); legend
-          present with 'Height 0' through 'Height 6' labels
+        passed: false
+        comment: Title lacks the python language segment (defect line); no legend
+          needed (colour bar instead)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Mathematical surface function generates full range of z values; binning
-          captures elevation variation well; all aspects represented
+        comment: Peaks, ridges and valleys of sin(r)*cos(x/2) all shown over a 31x31
+          grid
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Deterministic mathematical function; seeded (np.random.seed(42));
-          neutral scientific context
+        comment: Mathematical test function, one of the spec's named applications;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: X/Y range [-5, 5] appropriate for function; Z values properly normalized;
-          all physically sensible
+        comment: x, y in [-5, 5], z in about [-1, 1] as the function yields; no Check
+          values in the spec
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear flow: imports → data → style → chart → render; no unnecessary
-          functions/classes'
+        passed: false
+        comment: Four helper functions (lerp_hex, project, tick, bin_of); tick and
+          bin_of are one-liners (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output; consistent across
-          runs
+        comment: Fully deterministic grid
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, pathlib, sys, numpy, pygal, matplotlib.colors.Normalize,
-          pygal.style.Style'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic; sys.path workaround documented; no fake UI or over-engineering
+        passed: false
+        comment: Colour bar built from 192 one-line series (12 bins x 16 parallel
+          strokes), lines 142-145 (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API;
-          renders both correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal 3 API
     library_mastery:
       score: 5
       max: 10
@@ -233,27 +232,34 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Proper use of pygal.XY, Style configuration, chart.add(), render
-          methods; follows recommended patterns but doesn't leverage advanced features
+        passed: false
+        comment: pygal.XY with Style, per-series options; projection math is necessarily
+          hand-rolled
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Uses pygal's Style system for theme adaptation (distinctive); HTML
-          rendering leverages pygal's SVG/JS capabilities; but doesn't explore dual-axes,
-          callbacks, or advanced interactivity
+        passed: false
+        comment: print_labels with dict values and inline CSS override of pygal's
+          label stylesheet, lines 171-174
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-11T02:49:08Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  - annotations
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
-  - binning
+  - long-to-wide
+  - iteration-over-groups
   dataprep:
   - binning
-  - normalization
   styling:
   - custom-colormap
+  - minimal-chrome
