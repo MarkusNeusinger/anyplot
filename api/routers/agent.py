@@ -57,6 +57,7 @@ from api.agent_cases import (
     BundleError,
     CaseBucket,
     CaseRound,
+    CaseTurns,
     GcsCaseBucket,
     NoChatData,
     Submission,
@@ -580,6 +581,10 @@ SpecId = Annotated[str, Field(pattern=SPEC_ID_PATTERN)]
 LibraryId = Annotated[str, AfterValidator(_check_library)]
 Locale = Annotated[str, Field(max_length=16, pattern=r"^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$")]
 Text = Annotated[str, Field(min_length=1)]
+# A message of spaces alone would be a turn without a transcript line: the agents service numbers a turn by its
+# user line (`turn_record.py`), and the bundle's transcript leaves a blank line out, so a case's record and
+# transcript would name different turns from there on.
+MessageText = Annotated[str, Field(min_length=1, pattern=r"\S")]
 
 
 class _StrictBody(BaseModel):
@@ -647,7 +652,7 @@ class Binding(_StrictBody):
 
 
 class MessageBody(_StrictBody):
-    text: Text | None = None
+    text: MessageText | None = None
     # `create_plot` starts step 2 (the fresh plot, also `.start_over()`); `carry_plot` plots in the library the user
     # switched to with the decisions made so far; `plot_new_data` is "plot the new data" after a data change, from the
     # latest plot when the agents service's guard allows it; `summarize_data` asks the assistant for the step-1
@@ -1864,6 +1869,45 @@ class CaseLastRunOut(BaseModel):
     rounds: list[CaseRoundOut]
 
 
+class CaseToolCallOut(BaseModel):
+    """One root tool call of a turn: the guards' verdict, what the call did, and the code of its answer."""
+
+    tool: str
+    verdict: str
+    outcome: str
+    code: str | None
+
+
+class CaseGuardLineOut(BaseModel):
+    """One turn hook's verdict."""
+
+    guard: str
+    verdict: str
+
+
+class CaseTurnOut(BaseModel):
+    """One chat turn of the session's turn record: closed codes and counts only, never a word of the user."""
+
+    turn: int
+    action: str
+    kind: str
+    refusal: str | None
+    error: str | None
+    tools: list[CaseToolCallOut]
+    tools_dropped: int
+    guards: list[CaseGuardLineOut]
+    guards_dropped: int
+    prep_ops: list[str]
+    prep_ops_dropped: int
+
+
+class CaseTurnsOut(BaseModel):
+    """The session's latest turns in turn order, and how many older ones the record no longer held."""
+
+    records: list[CaseTurnOut]
+    dropped: int
+
+
 class CaseDetail(CaseItem):
     """The row plus what the case's `manifest.json` in the bucket adds.
 
@@ -1873,7 +1917,9 @@ class CaseDetail(CaseItem):
     (`snapshot_library_version`). `rounds` are the case's version's rounds, `session_versions`
     the versions the session held and `last_run` how its latest plot run ended, so a case on
     the chat, which holds no version, still says whether a plot existed or the run failed; the
-    three are empty or null for a manifest from before the agents service sent them.
+    three are empty or null for a manifest from before the agents service sent them. `turns` is
+    the session's turn record: each turn's tool calls and guard verdicts as closed codes, null
+    for a manifest from before the agents service kept one.
     """
 
     expired: bool
@@ -1890,6 +1936,7 @@ class CaseDetail(CaseItem):
     rounds: list[CaseRoundOut]
     session_versions: int | None
     last_run: CaseLastRunOut | None
+    turns: CaseTurnsOut | None
     siblings: list[str]
 
 
@@ -2037,6 +2084,7 @@ async def get_agent_case(case_id: CaseId, ctx: Ctx, cases: Cases, db: Db) -> Cas
             rounds=[],
             session_versions=None,
             last_run=None,
+            turns=None,
             siblings=siblings,
         )
     detail = manifest_detail(manifest, row.result_version)
@@ -2069,7 +2117,33 @@ async def get_agent_case(case_id: CaseId, ctx: Ctx, cases: Cases, db: Db) -> Cas
             if detail.last_run is not None
             else None
         ),
+        turns=_turns_out(detail.turns) if detail.turns is not None else None,
         siblings=siblings,
+    )
+
+
+def _turns_out(turns: CaseTurns) -> CaseTurnsOut:
+    return CaseTurnsOut(
+        records=[
+            CaseTurnOut(
+                turn=item.turn,
+                action=item.action,
+                kind=item.kind,
+                refusal=item.refusal,
+                error=item.error,
+                tools=[
+                    CaseToolCallOut(tool=call.tool, verdict=call.verdict, outcome=call.outcome, code=call.code)
+                    for call in item.tools
+                ],
+                tools_dropped=item.tools_dropped,
+                guards=[CaseGuardLineOut(guard=line.guard, verdict=line.verdict) for line in item.guards],
+                guards_dropped=item.guards_dropped,
+                prep_ops=list(item.prep_ops),
+                prep_ops_dropped=item.prep_ops_dropped,
+            )
+            for item in turns.records
+        ],
+        dropped=turns.dropped,
     )
 
 

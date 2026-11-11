@@ -850,6 +850,40 @@ export interface AgentCaseLastRun {
   rounds: AgentCaseRound[];
 }
 
+/** One root tool call of a turn: the guards' `verdict` (`allowed` or a refusal), what it did, its answer's code. */
+export interface AgentCaseToolCall {
+  tool: string;
+  verdict: string;
+  /** `ok`, `changed`, `kept`, `shipped`, `failed`, `not_ready`, `unconfirmed`, `error`, `refused`, `unfinished`. */
+  outcome: string;
+  code: string | null;
+}
+
+/** One chat turn of the case's turn record: closed codes and counts only, never a word of the user. */
+export interface AgentCaseTurn {
+  /** The transcript's N-th user line; a turn refused before the scope judge shares the next turn's number. */
+  turn: number;
+  /** `text` for a message, else the page's action (`create_plot`, `summarize_data`, ...). */
+  action: string;
+  /** How the turn ended: `plot`, `prep`, `formula`, `code`, `example`, `talk`, `refused`, `error`. */
+  kind: string;
+  refusal: string | null;
+  error: string | null;
+  tools: AgentCaseToolCall[];
+  tools_dropped: number;
+  /** The turn hooks' verdicts in order, the latest 24. */
+  guards: { guard: string; verdict: string }[];
+  guards_dropped: number;
+  prep_ops: string[];
+  prep_ops_dropped: number;
+}
+
+/** The session's latest turns in turn order, and how many older ones the record no longer held. */
+export interface AgentCaseTurns {
+  records: AgentCaseTurn[];
+  dropped: number;
+}
+
 /**
  * One case: the row plus what its `manifest.json` adds. With `expired` the
  * lifecycle rule has deleted the files: every field read from the manifest is
@@ -876,6 +910,8 @@ export interface AgentCaseDetail extends AgentCase {
   session_versions?: number | null;
   /** How the session's latest plot run ended; `null` before any run and for an older case. */
   last_run?: AgentCaseLastRun | null;
+  /** The session's turn record; `null` for a case sent before the agents service kept one, absent from an older API. */
+  turns?: AgentCaseTurns | null;
   /** Other rows of the same session hash and result version, oldest first. */
   siblings: string[];
 }

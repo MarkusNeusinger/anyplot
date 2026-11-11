@@ -919,6 +919,18 @@ class TestBodies:
         assert response.status_code == 422
         assert upstream.requests == []
 
+    @pytest.mark.parametrize("text", ["   ", "\n\t", " "])
+    def test_a_message_of_spaces_alone_is_refused(self, client, upstream, text) -> None:
+        """Such a message would be a turn without a transcript line, and the turn record numbers turns by that line."""
+        response = client.post("/debug/agent/sessions/s1/messages", json={"text": text}, headers=CLIENT_HEADERS)
+        assert response.status_code == 422
+        assert upstream.requests == []
+
+    def test_a_message_with_spaces_around_it_goes_through(self, client, upstream) -> None:
+        response = client.post("/debug/agent/sessions/s1/messages", json={"text": " hi "}, headers=CLIENT_HEADERS)
+        assert response.status_code == 200
+        assert len(upstream.requests) == 1
+
     def test_bindings_forwarded_as_list(self, client, upstream) -> None:
         bindings = [
             {"role": "x", "column": "Datum"},
@@ -1987,6 +1999,25 @@ ROUNDS = [
     },
 ]
 """The rounds of the bundle's version: a crash in the first, a shipped repair the review found an overlap in."""
+TURNS = {
+    "records": [
+        {
+            "turn": 1,
+            "action": "create_plot",
+            "kind": "plot",
+            "refusal": None,
+            "error": None,
+            "tools": [{"tool": "plot_pipeline", "verdict": "allowed", "outcome": "shipped", "code": None}],
+            "tools_dropped": 0,
+            "guards": [{"guard": "shipped_reply", "verdict": "dropped"}],
+            "guards_dropped": 0,
+            "prep_ops": [],
+            "prep_ops_dropped": 0,
+        }
+    ],
+    "dropped": 0,
+}
+"""The bundle's turn record: the page's plot action, whose reply lost its confirm sentence."""
 
 
 def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "dark"), data_csv: str | None = None):
@@ -2006,6 +2037,7 @@ def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "da
             {"role": "user", "text": "log scale on y"},
             {"role": "assistant", "text": "Done."},
         ],
+        "turns": TURNS,
         "versions": [
             {
                 "number": number,
@@ -2836,6 +2868,7 @@ class TestCases:
             "turn": 2,
             "rounds": ROUNDS,
         }
+        assert body["turns"] == TURNS
         assert cases.downloads == [case_object(CASE_ID, "manifest.json")]
 
     def test_detail_diffs_against_the_catalogue_without_the_export_header(self, client, cases, rows, catalogue) -> None:
@@ -2892,6 +2925,7 @@ class TestCases:
             "config",
             "session_versions",
             "last_run",
+            "turns",
         ):
             assert body[field] is None, field
         assert (body["residual_defects"], body["changes"], body["bindings"], body["rounds"]) == ([], [], [], [])

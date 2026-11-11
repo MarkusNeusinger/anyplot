@@ -10,6 +10,7 @@ import json
 import logging
 import re
 from collections.abc import AsyncIterator, Iterator
+from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Any, cast, get_args, get_type_hints
 
@@ -25,6 +26,7 @@ from agents.anyplot.plugins.ledger import (
     CURRENT_LEDGER,
     GUARD_VERDICTS,
     TURN_HOOKS,
+    CallOutcome,
     MessageLimit,
     RequestLedger,
     SafetyCode,
@@ -38,12 +40,15 @@ from agents.anyplot.settings import get_settings
 from agents.anyplot.tools import session as session_tools
 from agents.anyplot.turn_record import (
     HOOK_VERDICTS,
+    MAX_KEPT_TURNS,
     MAX_RECORD_GUARDS,
     MAX_RECORD_PREP_OPS,
     MAX_RECORD_TOOLS,
     OUTCOME_CODES,
     OUTSIDE_HOOKS,
+    GuardLine,
     HookVerdict,
+    RecordedCall,
     TurnRecord,
     TurnRecords,
     build,
@@ -142,6 +147,35 @@ class TestClosedSets:
 
         assert len(written) > 20
         assert written - OUTCOME_CODES == set()
+
+    def test_the_api_reads_the_record_in_the_same_vocabularies_and_fields(self) -> None:
+        """The triage's case detail does not import the agents package and closes every value again: pinned equal
+        here, the fields too, so a field the record gains is a decision for the view as well."""
+        from api import agent_cases
+
+        def names(kind: Any) -> set[str]:
+            return {field.name for field in fields(kind)}
+
+        assert agent_cases.TURN_ACTIONS == set(get_args(telemetry.TurnAction)) | {"other"}
+        assert agent_cases.TURN_KINDS == set(get_args(telemetry.TurnKind))
+        assert agent_cases.TURN_REFUSALS == set(get_args(telemetry.RefusalCode))
+        assert agent_cases.TURN_ERRORS == set(get_args(telemetry.ErrorCode))
+        assert agent_cases.TURN_TOOLS == telemetry.TOOL_NAMES | {"other"}
+        assert agent_cases.CALL_VERDICTS == GUARD_VERDICTS
+        assert agent_cases.CALL_OUTCOMES == set(get_args(CallOutcome))
+        assert agent_cases.CALL_CODES == OUTCOME_CODES
+        assert agent_cases.TURN_GUARDS == TURN_HOOKS
+        assert agent_cases.GUARD_VERDICTS == set(get_args(HookVerdict))
+        assert agent_cases.PREP_OPS == telemetry.PREP_OPS
+        assert names(agent_cases.CaseTurn) == set(TurnRecord.model_fields)
+        assert names(agent_cases.CaseToolCall) == set(RecordedCall.model_fields)
+        assert names(agent_cases.CaseGuardLine) == set(GuardLine.model_fields)
+        assert (agent_cases._MAX_TURN_TOOLS, agent_cases._MAX_TURN_GUARDS, agent_cases._MAX_TURN_PREP_OPS) == (
+            MAX_RECORD_TOOLS,
+            MAX_RECORD_GUARDS,
+            MAX_RECORD_PREP_OPS,
+        )
+        assert agent_cases._MAX_TURNS == MAX_KEPT_TURNS
 
 
 # --- the record from a ledger ---------------------------------------------------------------
@@ -808,6 +842,29 @@ class TestBundle:
         keys = {"session", "snapshot", "transcript", "turns", "versions", "profile", "bindings", "config"}
         assert set(forms[""]) == set(forms["?version=1"]) == keys
         assert set(forms["data"]) == keys | {"data_csv"}
+
+    async def test_the_api_reads_a_record_as_this_service_wrote_it(
+        self, client: httpx.AsyncClient, swap_models
+    ) -> None:
+        """The triage's case detail closes every value of a record again (`api.agent_cases`): a real turn's record
+        comes out of it value for value, so nothing this service writes reads `other` on /debug."""
+        from api.agent_cases import manifest_detail
+
+        reply = "Your plot is ready: Exam Score against Study Hours. Now confirm your data with `.confirm()`."
+        swap_models(
+            "gemini", plotting({"call": "prepare_data", "args": {"operations": [DERIVE]}}, PLOT, {"text": reply})
+        )
+        sid = await open_session(client)
+        await turn(client, sid, action="create_plot")
+        bundle = await bundle_of(client, sid)
+
+        read = manifest_detail({"bundle": bundle}, 0).turns
+
+        assert read is not None
+        assert json.loads(json.dumps(asdict(read))) == bundle["turns"]
+        (record,) = bundle["turns"]["records"]
+        assert ("prepare_data", "plot_as_confirmed", "refused", None) in tools(record)
+        assert ("shipped_reply", "dropped") in guards(record)
 
     async def test_a_session_without_a_turn_has_an_empty_record(self, client: httpx.AsyncClient) -> None:
         sid = await open_session(client)
