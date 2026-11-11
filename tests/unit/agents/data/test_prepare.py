@@ -3041,9 +3041,9 @@ class TestStripAndReplace:
         assert cells(prepare(pasted, digits), 2) == ["1234", "7000", "12"]
         code, message = failure(pasted, {"op": "sort", "column": "Stadt"}, digits)
         assert code == "type_mismatch" and "column 'Einwohner' holds numbers" in message
-        assert failure("p,v\n12.50,1\n7.25,2\n", {"op": "extract", "column": "p", "keep": "digits", "name": "d"})[0] == (
-            "type_mismatch"
-        )
+        assert failure("p,v\n12.50,1\n7.25,2\n", {"op": "extract", "column": "p", "keep": "digits", "name": "d"})[
+            0
+        ] == ("type_mismatch")
 
     def test_a_cell_no_mark_reads_leaves_the_mark_open(self) -> None:
         """One cell of words among ten says nothing about the mark: the column stays text, and a `set_type` that
@@ -3052,7 +3052,9 @@ class TestStripAndReplace:
         text = "k\tn\n" + "".join(f"{name}\t{count}*\n" for name, count in zip("abcdefghij", counts, strict=True))
 
         stripped = prepare(text, {"op": "strip", "column": "n", "suffix": "*", "name": "c"})
-        assert dtypes(stripped)["c"] == "text" and "kept as text, since its cells read as numbers" in stripped.changes[0]
+        assert (
+            dtypes(stripped)["c"] == "text" and "kept as text, since its cells read as numbers" in stripped.changes[0]
+        )
 
         read = prepare(text, {"op": "set_type", "column": "n", "type": "number"})
         assert "1 cell could not be read and is now missing" in read.changes[0]
