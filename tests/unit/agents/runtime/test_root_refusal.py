@@ -18,7 +18,8 @@ from agents.anyplot.plugins.root_refusal import JUDGE_PASSED, RETRY_LINE, RootRe
 from agents.anyplot.plugins.scope_guard import (
     GUARD_UNAVAILABLE_TEXT,
     HALT_AUTHOR,
-    is_refused_turn,
+    is_quoted_halt,
+    is_withheld,
     withheld_messages,
     withheld_text,
     without_refused_turns,
@@ -54,12 +55,12 @@ class TestRefusedTurns:
         content = halt(REFUSAL)
 
         assert content.role == "user" and len(content.parts or []) == 2
-        assert is_refused_turn(content)
-        assert is_refused_turn(halt(GUARD_UNAVAILABLE_TEXT))
+        assert is_quoted_halt(content) and not is_withheld(content)
+        assert is_quoted_halt(halt(GUARD_UNAVAILABLE_TEXT))
 
     @pytest.mark.parametrize("code", [None, "out_of_scope", "needs_data", "other_library"])
-    def test_every_placeholder_of_a_withheld_message_is_a_refused_turn(self, code: str | None) -> None:
-        assert is_refused_turn(user(withheld_text(code)))
+    def test_every_placeholder_of_a_withheld_message_reads_as_one(self, code: str | None) -> None:
+        assert is_withheld(user(withheld_text(code))) and not is_quoted_halt(user(withheld_text(code)))
 
     @pytest.mark.parametrize(
         "content",
@@ -68,21 +69,38 @@ class TestRefusedTurns:
             user("[model] said: nothing of the kind"),  # a user's own words, one part and no preamble
             user("[message withheld by scope policy: out_of_scope] is what the page showed, why?"),
             model(REFUSAL),
+            model(withheld_text()),
             types.Content(
                 role="user",
                 parts=[types.Part(function_response=types.FunctionResponse(name="query_data", response={"rows": 3}))],
             ),
         ],
     )
-    def test_what_the_user_the_root_and_the_tools_wrote_stays(self, content: types.Content) -> None:
-        assert not is_refused_turn(content)
+    def test_what_the_user_the_root_and_the_tools_wrote_is_neither(self, content: types.Content) -> None:
+        assert not is_withheld(content) and not is_quoted_halt(content)
 
     def test_the_request_loses_the_refused_turns_and_nothing_else(self) -> None:
         first, reply, asked = user("which columns?"), model("Two columns."), user("make the bars blue")
-        contents = [first, reply, user(withheld_text("out_of_scope")), halt(REFUSAL), asked]
+        refused = [user(withheld_text("out_of_scope")), halt(REFUSAL)]
+        outage = [user(withheld_text()), halt(GUARD_UNAVAILABLE_TEXT)]
 
-        assert without_refused_turns(contents) == [first, reply, asked]
+        assert without_refused_turns([first, reply, *refused, asked]) == [first, reply, asked]
+        assert without_refused_turns([first, reply, *refused, *outage, asked]) == [first, reply, asked]
         assert without_refused_turns([first, reply, asked]) == [first, reply, asked]
+
+    def test_only_the_pair_is_a_refused_turn(self) -> None:
+        """A message of the user's own that reads like a placeholder and passed the judge has the root's reply after
+        it, and a quoted block without a placeholder before it is no halt of a withheld message: both stay."""
+        typed, reply, asked = (
+            user(withheld_text()),
+            model("That is the page's note for a withheld message."),
+            user("ok"),
+        )
+        alone = [user("which columns?"), halt(REFUSAL), asked]
+
+        assert without_refused_turns([typed, reply, asked]) == [typed, reply, asked]
+        assert without_refused_turns([typed]) == [typed]
+        assert without_refused_turns(alone) == alone
 
     def test_a_request_of_refused_turns_alone_stays_as_it_is(self) -> None:
         """Never an empty request: the root is not called for a refused turn, so this is no case of the service."""
@@ -93,13 +111,18 @@ class TestRefusedTurns:
     def test_the_withheld_messages_are_counted_from_the_sessions_events(self) -> None:
         events = [
             Event(author="user", content=user("which columns?")),
+            Event(author="anyplot", content=model("Two columns.")),
             Event(author="user", content=user(withheld_text("out_of_scope"))),
             Event(author=HALT_AUTHOR, content=model(REFUSAL)),
             Event(author="user", content=user(withheld_text())),
+            Event(author="user"),  # a state write between the two, without content
+            Event(author=HALT_AUTHOR, content=model(GUARD_UNAVAILABLE_TEXT)),
+            Event(author="user", content=user(withheld_text())),  # typed by the user and passed: the root answered
+            Event(author="anyplot", content=model("That is the page's note for a withheld message.")),
             Event(author="user", content=user("make the bars blue")),
         ]
 
-        assert withheld_messages(events) == 2 and withheld_messages(events[:1]) == 0
+        assert withheld_messages(events) == 2 and withheld_messages(events[:2]) == 0
 
 
 @dataclass

@@ -29,9 +29,11 @@
   pipeline through `ctx.run_node`, so a walk from the root would miss them;
   `ALL_AGENTS` lists every agent for the registry test.
 * `app` carries the plugins in their fixed order, `ScopeGuard → Budget → ToolSafety →
-  EmptyReply → ShippedReply → ReplyLanguage → ContextFilter(6)` (EmptyReply after Budget,
-  which books the empty response, and before the two checks that read the answer it puts
-  in that response's place), behind the development-only fixture seed when
+  EmptyReply → RootRefusal → ShippedReply → ReplyLanguage → ContextFilter(6)` (EmptyReply
+  and RootRefusal after Budget, which books the response they ask for again, and before
+  the two checks that read the answer they put in that response's place; the filter also
+  takes the refused turns out of the root's request, `without_refused_turns`), behind the
+  development-only fixture seed when
   `AGENT_DEV_FIXTURE` is set, and, on Claude only, a context-cache config so ADK
   marks Claude prompt-cache breakpoints. `adk web agents` finds `app` in this module.
 """

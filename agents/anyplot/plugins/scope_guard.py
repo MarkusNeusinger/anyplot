@@ -220,16 +220,20 @@ for the root, so ADK hands its text over as a user content: a preamble part, the
 these words and quotes it (`google.adk.flows.llm_flows.context._fencing`; a test builds one through ADK itself)."""
 
 
-def is_refused_turn(content: types.Content) -> bool:
-    """Whether a content of the root's request belongs to a turn the service refused: the placeholder of a withheld
-    message, or the halt event's quoted text that answered it (a fixed refusal, or the outage text)."""
-    if content.role != "user":
-        return False
-    texts = [part.text for part in content.parts or [] if part.text and not part.thought]
-    if "".join(texts) in WITHHELD_TEXTS:
-        return True
-    # ADK's preamble, then nothing but quoted halt texts: a user's own message is one part and has no preamble.
-    return len(texts) > 1 and all(text.startswith(HALT_QUOTE) for text in texts[1:])
+def _texts(content: types.Content) -> list[str]:
+    return [part.text for part in content.parts or [] if part.text and not part.thought]
+
+
+def is_withheld(content: types.Content) -> bool:
+    """Whether a content of the root's request reads as the placeholder of a withheld message."""
+    return content.role == "user" and "".join(_texts(content)) in WITHHELD_TEXTS
+
+
+def is_quoted_halt(content: types.Content) -> bool:
+    """Whether a content of the root's request is a halt event as ADK hands it over: its preamble, then nothing but
+    quoted texts of `HALT_AUTHOR`. A user's own message is one part and has no preamble."""
+    texts = _texts(content)
+    return content.role == "user" and len(texts) > 1 and all(text.startswith(HALT_QUOTE) for text in texts[1:])
 
 
 def without_refused_turns(contents: list[types.Content]) -> list[types.Content]:
@@ -241,21 +245,34 @@ def without_refused_turns(contents: list[types.Content]) -> list[types.Content]:
     judge had passed (persona round of 2026-11-11, two of the six typed turns right after a refusal). The judge's own
     context has skipped fixed replies since they "primed it to refuse the next message alike" (`judge_context`);
     this is the same for the root. Only the request changes: the session's events stay, so the judge's context and
-    the count of refusals read what they read. Only the scope guard halts a run (`before_run_callback`), and every
-    halt comes with a withheld message, so no other event is written by `HALT_AUTHOR`.
+    the count of refusals read what they read.
+
+    A refused turn is the pair, and only the pair goes: the placeholder with the quoted halt right after it. Only the
+    scope guard halts a run (`before_run_callback`), every halt answers a withheld message, and ADK's trimming never
+    parts the two (consecutive user contents start one invocation). So a message of the user's own that reads like a
+    placeholder and passed the judge stays, since the root's reply follows it, and a quoted block without its
+    placeholder stays as well.
     """
-    kept = [content for content in contents if not is_refused_turn(content)]
+    kept: list[types.Content] = []
+    index = 0
+    while index < len(contents):
+        refused = index + 1 < len(contents) and is_withheld(contents[index]) and is_quoted_halt(contents[index + 1])
+        if not refused:
+            kept.append(contents[index])
+        index += 2 if refused else 1
     return kept or contents
 
 
 def withheld_messages(events: Sequence[Event]) -> int:
     """How many of the session's user messages were withheld, whatever the reason: what the session block tells the
-    root in place of the turns `without_refused_turns` takes out."""
+    root in place of the turns `without_refused_turns` takes out. Counted as that filter reads them: a placeholder
+    with the halt event right after it."""
+    spoken = [event for event in events if event.content is not None and event.content.parts]
     return sum(
         1
-        for event in events
+        for event, following in zip(spoken, spoken[1:], strict=False)
         if event.author == USER_AUTHOR
-        and event.content is not None
+        and following.author == HALT_AUTHOR
         and "".join(part.text or "" for part in event.content.parts or []) in WITHHELD_TEXTS
     )
 
