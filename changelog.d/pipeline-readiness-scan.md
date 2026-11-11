@@ -7,4 +7,4 @@
   new file has. Record-only: one log line, a job-summary line, and
   `adapt/readiness.json` in staging; nothing reads it yet. On the six
   regenerations of 2026-11-11 it finds two regressions, one of which turned
-  a file the chat accepted into one it refuses.
+  a file the chat accepted into one it refuses. (#13054)
