@@ -82,6 +82,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { LIB_TO_LANG } from 'src/constants';
 import type { FeedbackInput, PlotVersion } from 'src/hooks/useAgentSession';
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import { useCopyCode } from 'src/hooks/useCopyCode';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import {
@@ -168,7 +169,7 @@ export interface ResultCardProps {
   onRequestTheme: (version: number, theme: Theme) => void;
   /** One file of the version; `theme` picks the theme of `plot.html`, which the server builds on demand. */
   onFetchArtifact: (version: number, name: ArtifactName, theme?: Theme) => Promise<Blob>;
-  onTrack: (event: string, props?: Record<string, string | undefined>) => void;
+  onTrack: TrackEvent;
   /**
    * The usage beacon, called once a copy or a download succeeded, with the
    * action and this card's version only; fire and forget.

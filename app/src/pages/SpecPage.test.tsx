@@ -243,20 +243,22 @@ describe('SpecPage', () => {
     );
   });
 
-  it('reports impl_missing when the URL names an implementation that is gone', async () => {
+  it('sends the visitor to the hub when the URL names an implementation that is gone', async () => {
     // The shape a library migration leaves behind: the spec exists, the
     // library/language pair does not. The visitor is redirected to the hub
-    // rather than shown a 404, so this event is the only trace it leaves.
+    // rather than shown a 404. No event: the address they asked for is the
+    // pageview the layout recorded when the navigation began.
     mockParams = { specId: 'scatter-basic', language: 'python', library: 'highcharts' };
     mockFetchSuccess();
     render(<SpecPage />);
 
     await waitFor(() => {
-      expect(mockTrackEvent).toHaveBeenCalledWith('page_not_found', {
-        path: window.location.pathname,
-        source: 'impl_missing',
-      });
+      expect(mockNavigate).toHaveBeenCalledWith(
+        { pathname: '/scatter-basic', search: '?language=python' },
+        { replace: true }
+      );
     });
+    expect(mockTrackEvent).not.toHaveBeenCalled();
   });
 
   it('puts .use_my_data() beside the carousel only for an eligible pair', async () => {
@@ -368,17 +370,6 @@ describe('SpecPage', () => {
 
     await screen.findByTestId('spec-overview');
     expect(screen.queryByRole('button', { name: 'Use with my data' })).not.toBeInTheDocument();
-  });
-
-  it('does not report a miss when the implementation exists', async () => {
-    mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
-    mockFetchSuccess();
-    render(<SpecPage />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('spec-detail-view')).toBeInTheDocument();
-    });
-    expect(mockTrackEvent).not.toHaveBeenCalledWith('page_not_found', expect.anything());
   });
 
   it('renders description text', async () => {

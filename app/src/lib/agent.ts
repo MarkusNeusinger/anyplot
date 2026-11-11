@@ -2323,22 +2323,6 @@ export function browserLocale(): string {
     : 'en';
 }
 
-/** Low-cardinality size bucket for analytics; never the size itself. */
-export function sizeBucket(bytes: number): string {
-  if (bytes < 1024) return 'lt_1kb';
-  if (bytes < 10 * 1024) return '1_10kb';
-  if (bytes < 50 * 1024) return '10_50kb';
-  if (bytes <= 200 * 1024) return '50_200kb';
-  if (bytes <= MAX_DATASET_BYTES) return '200kb_1mb';
-  return 'over_1mb';
-}
-
-/** Low-cardinality count bucket for analytics (`1`, `2`, `3+`); below 1 reads as `1`. */
-export function countBucket(count: number): '1' | '2' | '3+' {
-  if (count <= 1) return '1';
-  return count === 2 ? '2' : '3+';
-}
-
 export function utf8Bytes(text: string): number {
   return new TextEncoder().encode(text).length;
 }

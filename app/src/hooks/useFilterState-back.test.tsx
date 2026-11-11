@@ -114,14 +114,8 @@ describe('useFilterState after Back', () => {
     act(() => result.current.handleClearFilters());
 
     await waitFor(() => expect(result.current.activeFilters).toEqual([]));
-    expect(onTrackEvent).toHaveBeenCalledTimes(2);
-    expect(onTrackEvent).toHaveBeenCalledWith('filter_remove', {
-      category: 'lib',
-      value: 'seaborn',
-    });
-    expect(onTrackEvent).toHaveBeenCalledWith('filter_remove', {
-      category: 'plot',
-      value: 'bar,line',
-    });
+    // One use of the feature, however many groups it removed.
+    expect(onTrackEvent).toHaveBeenCalledTimes(1);
+    expect(onTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'filter_remove' });
   });
 });

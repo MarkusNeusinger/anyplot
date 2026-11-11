@@ -50,7 +50,7 @@ export function useMapSearch({
     setSearchQuery('');
     setSearchOpen(false);
     searchInputRef.current?.blur();
-    trackEvent('map_search_select', { spec: spec.id });
+    trackEvent('ui_feature', { feature: 'map_search_select' });
   };
 
   return {

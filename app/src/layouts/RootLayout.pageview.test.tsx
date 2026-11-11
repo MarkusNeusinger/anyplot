@@ -129,11 +129,11 @@ describe('RootLayout pageviews', () => {
     jsdom.reconfigure({ url: 'http://localhost:3000/' });
   });
 
-  it('records the page the app loads on, with the theme', () => {
+  it('records the page the app loads on, with the theme and the kind of page', () => {
     renderApp('/legal');
     expect(window.plausible).toHaveBeenCalledWith('pageview', {
       url: 'https://anyplot.ai/legal',
-      props: { theme: 'dark' },
+      props: { theme: 'dark', page: 'other' },
     });
     expect(pageviews()).toEqual(['/legal']);
   });

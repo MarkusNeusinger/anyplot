@@ -8,7 +8,6 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
-import { useAnalytics } from 'src/hooks';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { ApiError, apiGet, endpoints } from 'src/lib/api';
 import { paths, specPath } from 'src/routes/paths';
@@ -144,7 +143,6 @@ function statsLibLabel(lib: Pick<LibraryStats, 'id' | 'name'>): string {
 }
 
 export function StatsPage() {
-  const { trackEvent } = useAnalytics();
   const { isDark } = useTheme();
   const [data, setData] = useState<DashboardData | null>(null);
   const [visitors, setVisitors] = useState<VisitorPoint[] | null>(null);
@@ -740,12 +738,6 @@ export function StatsPage() {
                   '&:hover': { opacity: 0.85 },
                   transition: 'opacity 0.15s ease',
                 }}
-                onClick={() =>
-                  trackEvent('stats_top_impl_click', {
-                    spec: impl.spec_id,
-                    library: impl.library_id,
-                  })
-                }
               >
                 <Box
                   sx={{
@@ -882,10 +874,6 @@ export function StatsPage() {
                         key={tag}
                         component={RouterLink}
                         to={param ? paths.plotsFiltered(param, tag) : paths.plots}
-                        onClick={() => {
-                          if (param)
-                            trackEvent('tag_click', { param, value: tag, source: 'stats' });
-                        }}
                         sx={{
                           fontFamily: typography.fontFamily,
                           fontSize: size,

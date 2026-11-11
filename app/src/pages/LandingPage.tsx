@@ -26,7 +26,7 @@ export function LandingPage() {
   const { trackEvent } = useAnalytics();
 
   const handleLibraryClick = (lib: string) => {
-    trackEvent('nav_click', { source: 'library_card', target: paths.plots, value: lib });
+    trackEvent('nav_click', { source: 'library_card', target: paths.plots, library: lib });
     navigate(paths.plotsFiltered('lib', lib));
   };
 

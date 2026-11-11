@@ -1,10 +1,11 @@
 import type { ImageSize } from 'src/constants';
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import { ToolbarActions } from 'src/sections/plots-gallery/ToolbarActions';
 
 export interface FilterSizeToggleProps {
   imageSize: ImageSize;
   onImageSizeChange: (size: ImageSize) => void;
-  onTrackEvent: (event: string, props?: Record<string, string>) => void;
+  onTrackEvent: TrackEvent;
 }
 
 /**

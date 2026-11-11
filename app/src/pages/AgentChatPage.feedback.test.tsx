@@ -228,11 +228,6 @@ describe('AgentChatPage quick feedback', () => {
         result_version: 1,
       },
     ]);
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_result_feedback', {
-      reaction: 'thumbs_down',
-      include_data: 'yes',
-      subject: 'result',
-    });
     // The beacon carries the action, the version and the reaction; never the message.
     await waitFor(() =>
       expect(outcomes).toEqual([
@@ -276,10 +271,6 @@ describe('AgentChatPage quick feedback', () => {
     expect(within(form).getByRole('button', { name: 'Bug' })).toHaveAttribute(
       'aria-pressed',
       'true'
-    );
-    expect(analytics.trackEvent).not.toHaveBeenCalledWith(
-      'agent_result_feedback',
-      expect.anything()
     );
     // Nothing was stored, so nothing is reported.
     expect(outcomes).toEqual([]);

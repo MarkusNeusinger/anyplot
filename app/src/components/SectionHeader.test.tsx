@@ -25,7 +25,7 @@ describe('SectionHeader', () => {
     expect(screen.getByText('libraries')).toBeInTheDocument();
   });
 
-  it('tracks nav_click when the action link is clicked', async () => {
+  it('tracks nav_click when the action link is clicked on the landing page', async () => {
     const user = userEvent.setup();
     render(<SectionHeader prompt="❯" title="specs" linkText="specs.all()" linkTo="/specs" />);
 
@@ -36,7 +36,22 @@ describe('SectionHeader', () => {
     });
   });
 
-  it('renders an external link and tracks external_link with the hostname', async () => {
+  it('sends no nav_click from another page: the event is about the landing page', async () => {
+    const user = userEvent.setup();
+    window.history.pushState({}, '', '/stats');
+    try {
+      render(
+        <SectionHeader prompt="❯" title="shared links" linkText="legal.privacy()" linkTo="/legal" />
+      );
+
+      await user.click(screen.getByText('legal.privacy()'));
+      expect(trackEvent).not.toHaveBeenCalled();
+    } finally {
+      window.history.pushState({}, '', '/');
+    }
+  });
+
+  it('renders an external link and sends no event for it: the script counts outbound links', async () => {
     const user = userEvent.setup();
     render(
       <SectionHeader
@@ -53,9 +68,6 @@ describe('SectionHeader', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
 
     await user.click(link);
-    expect(trackEvent).toHaveBeenCalledWith('external_link', {
-      source: 'section_header',
-      destination: 'plausible.io',
-    });
+    expect(trackEvent).not.toHaveBeenCalled();
   });
 });

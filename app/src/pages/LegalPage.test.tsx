@@ -355,27 +355,27 @@ describe('LegalPage', () => {
     expect(citadelLink).toHaveAttribute('rel', 'noopener');
   });
 
-  it('tracks external link clicks for other projects', () => {
-    trackEvent.mockClear();
-    render(<LegalPage />);
+  it('sends no event for an outbound link: the tracker script counts those itself', () => {
+    const plausible = vi.fn();
+    vi.stubGlobal('plausible', plausible);
+    try {
+      render(<LegalPage />);
 
-    fireEvent.click(screen.getByRole('link', { name: 'kurrentschrift.ink' }));
-    fireEvent.click(screen.getByRole('link', { name: 'cite-citadel' }));
+      for (const name of [
+        'kurrentschrift.ink',
+        'cite-citadel',
+        'markus-neusinger',
+        '@MarkusNeusinger',
+        'MarkusNeusinger',
+      ]) {
+        const link = screen.getByRole('link', { name });
+        expect(link).toHaveAttribute('href', expect.stringMatching(/^https:\/\//));
+        fireEvent.click(link);
+      }
 
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'kurrentschrift' });
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'cite_citadel' });
-  });
-
-  it('tracks external link clicks for linkedin, x and github', () => {
-    trackEvent.mockClear();
-    render(<LegalPage />);
-
-    fireEvent.click(screen.getByRole('link', { name: 'markus-neusinger' }));
-    fireEvent.click(screen.getByRole('link', { name: '@MarkusNeusinger' }));
-    fireEvent.click(screen.getByRole('link', { name: 'MarkusNeusinger' }));
-
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'linkedin' });
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'x' });
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'github_personal' });
+      expect(plausible).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

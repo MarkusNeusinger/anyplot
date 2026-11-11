@@ -5,7 +5,6 @@ import Link from '@mui/material/Link';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
-import { useAnalytics } from 'src/hooks';
 import { paths } from 'src/routes/paths';
 import { codeBlockStyle, colors, proseLinkStyle, textStyle, typography } from 'src/theme';
 
@@ -47,16 +46,9 @@ const inlineCodeSx = {
 } as const;
 
 export function AboutPage() {
-  const { trackEvent } = useAnalytics();
-
   // An in-prose link to another page of the site, through the router.
-  const proseLink = (to: string, destination: string, label: string) => (
-    <Link
-      component={RouterLink}
-      to={to}
-      onClick={() => trackEvent('internal_link', { destination, source: 'about' })}
-      sx={proseLinkStyle}
-    >
+  const proseLink = (to: string, label: string) => (
+    <Link component={RouterLink} to={to} sx={proseLinkStyle}>
       {label}
     </Link>
   );
@@ -118,8 +110,7 @@ export function AboutPage() {
               compliance, data quality, code quality, and library mastery — blind to any earlier
               score. a first review needs 90; below that, ai repairs the defects the review named
               and the plot is reviewed again, up to four times. the{' '}
-              {proseLink(paths.stats, 'stats', 'stats page')} shows the score distribution per
-              library.
+              {proseLink(paths.stats, 'stats page')} shows the score distribution per library.
             </Box>
           </Box>
         </Box>
@@ -130,7 +121,7 @@ export function AboutPage() {
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
               experimental, open to everyone since 2 november 2026.{' '}
-              {proseLink(paths.plots, 'plots', 'pick any plot')}, choose{' '}
+              {proseLink(paths.plots, 'pick any plot')}, choose{' '}
               <Box component="code" sx={inlineCodeSx}>
                 .use_my_data()
               </Box>
@@ -151,9 +142,9 @@ export function AboutPage() {
               the same catalogue, served to ai coding assistants over the model context protocol.
               six tools search specs by tag, return a spec with its implementations, and fetch one
               library&apos;s code, so your assistant starts from code that already rendered and
-              passed review. setup on the {proseLink(paths.mcp, 'mcp', 'mcp page')}; the{' '}
-              {proseLink(paths.stats, 'stats', 'stats page')} shows, per day, how many assistants
-              and crawlers read the catalogue and how many came on behalf of a person.
+              passed review. setup on the {proseLink(paths.mcp, 'mcp page')}; the{' '}
+              {proseLink(paths.stats, 'stats page')} shows, per day, how many assistants and
+              crawlers read the catalogue and how many came on behalf of a person.
             </Box>
           </Box>
         </Box>
@@ -171,8 +162,8 @@ export function AboutPage() {
               the default.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
-              see the {proseLink(paths.palette, 'palette', 'palette page')} for the full reference
-              and usage rules.
+              see the {proseLink(paths.palette, 'palette page')} for the full reference and usage
+              rules.
             </Box>
           </Box>
         </Box>
@@ -207,17 +198,7 @@ export function AboutPage() {
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               curious about the stack, costs, or analytics? see{' '}
-              <Link
-                component={RouterLink}
-                to={`${paths.legal}#transparency`}
-                onClick={() =>
-                  trackEvent('internal_link', {
-                    destination: 'legal_transparency',
-                    source: 'about',
-                  })
-                }
-                sx={proseLinkStyle}
-              >
+              <Link component={RouterLink} to={`${paths.legal}#transparency`} sx={proseLinkStyle}>
                 transparency
               </Link>{' '}
               on the legal page.
@@ -246,12 +227,6 @@ export function AboutPage() {
                 href={`${GITHUB_URL}/issues/new?template=request-new-plot.yml`}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() =>
-                  trackEvent('external_link', {
-                    destination: 'github_plot_request',
-                    source: 'about',
-                  })
-                }
                 sx={ctaSx}
               >
                 request_plot()
@@ -260,9 +235,6 @@ export function AboutPage() {
                 href={`${GITHUB_URL}/issues/new?labels=bug`}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() =>
-                  trackEvent('external_link', { destination: 'github_bug', source: 'about' })
-                }
                 sx={ctaSx}
               >
                 report_bug()
@@ -271,12 +243,6 @@ export function AboutPage() {
                 href={`${GITHUB_URL}/discussions`}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() =>
-                  trackEvent('external_link', {
-                    destination: 'github_discussions',
-                    source: 'about',
-                  })
-                }
                 sx={ctaSx}
               >
                 discuss()
@@ -285,9 +251,6 @@ export function AboutPage() {
                 href={`${GITHUB_URL}/releases`}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() =>
-                  trackEvent('external_link', { destination: 'github_releases', source: 'about' })
-                }
                 sx={ctaSx}
               >
                 changelog()

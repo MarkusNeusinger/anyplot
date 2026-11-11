@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 import type { ImageSize } from 'src/constants';
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import {
   FilterChips,
   type RandomAnimation,
@@ -34,7 +35,7 @@ export interface FilterBarProps {
   onRemoveFilter: (groupIndex: number, value: string) => void;
   onRemoveGroup: (groupIndex: number) => void;
   onClearFilters: () => void;
-  onTrackEvent: (event: string, props?: Record<string, string>) => void;
+  onTrackEvent: TrackEvent;
 }
 
 /**

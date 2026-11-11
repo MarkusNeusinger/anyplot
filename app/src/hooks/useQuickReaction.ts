@@ -61,12 +61,9 @@ export function useQuickReaction() {
         return false;
       }
       trackEvent('feedback_submitted', {
-        path: path || undefined,
-        reaction,
-        has_contact: 'false',
-        spec_id: target.specId,
+        source: 'plot_vote',
+        spec: target.specId,
         library: target.libraryId,
-        mode: 'plot_overlay',
       });
       return true;
     },

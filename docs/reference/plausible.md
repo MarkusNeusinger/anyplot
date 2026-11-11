@@ -1,6 +1,10 @@
 # Plausible analytics tracking
 
-This document provides a comprehensive overview of Plausible Analytics implementation for anyplot.ai, including all tracked events, user interactions, and the required Plausible dashboard configuration.
+How anyplot.ai uses Plausible Analytics: how pageviews are sent, the custom
+events and their properties, what the dashboard needs, and what is
+deliberately not tracked. The dashboard at
+[plausible.io/anyplot.ai](https://plausible.io/anyplot.ai) is public, so every
+event is one a reader from outside understands.
 
 ## Setup
 
@@ -14,7 +18,9 @@ This document provides a comprehensive overview of Plausible Analytics implement
   `Form: Submission` goal counted chat messages that the chat's own events
   already count: 144 of its 146 events in the 28 days before were the
   admin's own chat messages.
-  Outbound links and file downloads keep the script's defaults.
+  Outbound links and file downloads keep the script's defaults: the script
+  records a click on a link to another site as `Outbound Link: Click`, with the
+  link's address, and the app sends no link event of its own.
 - Production-only: Only tracks on `anyplot.ai` domain
 - Privacy-focused: No cookies, GDPR-compliant
 
@@ -68,10 +74,31 @@ Four things follow from that place in the commit:
   navigation to `/plots` always starts from the top, Back included.
 
 Every address that becomes a page records a pageview, including one the app
-can't serve: the 404 page is recorded under the path that was asked for, next
-to its `page_not_found` event (see [Diagnostics](#diagnostics)). Until
+can't serve: the 404 page is recorded under the path that was asked for, so a
+missing page shows under the dashboard's pages with that path. Until
 2026-11-11 a 404 recorded no pageview, and a spec page recorded its pageview
-only once its data had loaded.
+only once its data had loaded. Until 2026-11-12 a 404 also sent a
+`page_not_found` event (see [Events that ended](#events-that-ended)).
+
+### The `page` property
+
+Since 2026-11-12 every pageview carries the kind of page as `page`
+(`pageKind()` in `app/src/hooks/useAnalytics.ts`), so the dashboard and its
+funnels can group pages by kind without a path pattern:
+
+| `page` | The address |
+|--------|-------------|
+| `home` | `/` |
+| `plots` | `/plots`, with any filters |
+| `spec_overview` | `/{spec_id}`, a spec's hub |
+| `spec_detail` | `/{spec_id}/{language}/{library}`, one implementation |
+| `agent_chat` | `/agent` |
+| `other` | Every other page, and an address that names nothing |
+
+`copy_code` and `download_image` send the same values, so one `page`
+breakdown covers the pageviews and the two conversions. A spec that doesn't
+exist is recorded as the kind its address has: the layout sends the pageview
+at the navigation, before the page knows what it holds.
 
 ### Scroll depth
 
@@ -82,7 +109,7 @@ saw the whole landing page.
 The gallery at `/plots` loads its results in batches while the visitor
 scrolls, so that page has no fixed height and its scroll depth says nothing.
 `plots_scrolled` reports the gallery instead (see
-[Feature usage](#feature-usage)).
+[Gallery scroll](#gallery-scroll-plots_scrolled)).
 
 ### Multi-language URL strategy
 
@@ -189,34 +216,88 @@ counts as a boundary because OR-filtered gallery views record
 
 ## Custom events
 
+The app sends eleven custom events, and no others. The set is closed in the
+code: `AnalyticsEvent` in `app/src/hooks/useAnalytics.ts` names them, every
+component receives the sender as that type, and the compiler refuses a name
+that isn't in it. Before 2026-11-12 the app sent 42 event names, 23 of them
+without a goal, so they were counted and shown nowhere.
+
+| Event | Properties | Sent by | Counts |
+|-------|------------|---------|--------|
+| `copy_code` | `spec`, `library`, `method`, `page` | `ImageCard.tsx`, `SpecPage.tsx`, `SpecTabs/CodeTab.tsx`, `agent-chat/ResultCard.tsx` | A visitor copies an implementation's code: the primary conversion |
+| `download_image` | `spec`, `library`, `page` | `SpecPage.tsx` | A visitor downloads a plot's PNG |
+| `interactive_open` | `spec`, `library` | `SpecOverview.tsx` | A visitor opens an implementation's interactive view from the spec hub. Until 2026-11-12 the event was named `open_interactive` |
+| `search` | `query`, `category` | `FilterBar/FilterSearch.tsx` | A visitor searches the gallery and picks a result |
+| `search_no_results` | `query` | `FilterBar/FilterSearch.tsx` | A search finds nothing: what the catalogue lacks |
+| `feedback_submitted` | `source`, `spec`, `library` | `FeedbackWidget.tsx`, `useQuickReaction.ts` | A visitor sends feedback or votes on a plot |
+| `agent_open` | `spec`, `library`, `source` | `AgentChatPage.tsx` | A visitor opens the agent chat for a plot |
+| `agent_plot_rendered` | `spec`, `library`, `status`, `repaired` | `useAgentSession.ts` | The agent chat ends a plot run |
+| `plots_scrolled` | `share`, `results`, `filtered` | `usePlotsScrolled.ts` | How far a visitor got through the gallery |
+| `ui_feature` | `feature` | Twelve places, see [Feature use](#feature-use-ui_feature) | A visitor uses a feature of the interface, once per feature and visit |
+| `nav_click` | `source`, `target`, `spec`, `library` | The landing page, see [Landing page clicks](#landing-page-clicks-nav_click) | A visitor goes on from an element of the landing page |
+
+Every property holds a value from a closed list or a catalogue id, with one
+exception: `query` is what a visitor typed (see [Search](#search)). Every
+pageview and event also carries the ambient `theme` (`dark` or `light`), the
+theme in effect, which `RootLayout` sets through `setAnalyticsAmbientProps`.
+
 ### Conversions
 
-| Event Name | Properties | Where | Description |
-|------------|-----------|-------|-------------|
-| `copy_code` | `spec`, `library`, `method`, `page` | ImageCard.tsx, SpecPage.tsx, SpecTabs.tsx, agent-chat/ResultCard.tsx | User copies code to clipboard |
-| `download_image` | `spec`, `library`, `page` | SpecPage.tsx | User downloads PNG image |
+`copy_code` says how the code was copied in `method`:
 
-**Copy methods**:
-- `card`: Quick copy button on image card (home grid)
-- `image`: Copy button on main image (spec page)
-- `tab`: Copy button in Code tab
-- `agent`: Copy button on an agent chat result card (the adapted code)
+- `card`: the copy button on a gallery card
+- `image`: the copy button on a plot image of a spec page
+- `tab`: the copy button in the code tab
+- `agent`: the copy button on an agent chat result card (the adapted code)
 
-**Page values** (for user journey tracking):
-- `home`: HomePage grid view
-- `spec_overview`: SpecPage showing all library implementations
-- `spec_detail`: SpecPage showing single library implementation
-- `agent_chat`: the agent chat at `/agent` (a visitor's; an admin's use records nothing since 2026-11-06)
+`copy_code` and `download_image` say where in `page`, with the values of
+[the `page` property](#the-page-property). To see whether visitors copy from
+the gallery or after opening a plot, break `copy_code` down by `page`.
+
+### Search
+
+`search` fires when a visitor picks a search result, with the `category` of
+the result (`lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`,
+`prep`, `style`). `search_no_results` fires when a query of at least two
+characters finds nothing inside the active filters, 200 ms after the last
+keystroke. Such a query also fires it when the dropdown offers `.search_all()`,
+because the same query finds matches without the filters.
+
+`query` is the one property a visitor writes, and the public dashboard lists
+it. `normalizeQuery()` therefore sends it in lowercase, with single spaces,
+and cut at 40 characters (`MAX_QUERY_LENGTH`): "Scatter", "scatter " and
+"SCATTER" are one entry, catalogue words and spec names fit, and a long text
+pasted into the box by mistake doesn't stand there in full.
+
+### Feedback
+
+`feedback_submitted` fires when the server stored a feedback entry. `source`
+says which control sent it:
+
+- `widget_quick`: a one-tap 👍 or 👎 from the feedback button's quick stack
+- `widget_form`: the feedback form
+- `plot_vote`: a 👍 or 👎 on a plot, which also carries the `library` the vote
+  is about
+
+`spec` is set on a spec page. The reaction, the text and the contact are in
+the database, not in the event.
 
 ### Agent chat
 
 The "Use with my data" chat (`app/src/pages/AgentChatPage.tsx`, design in
-[Agent network design](../concepts/agent-network.md)) records enum properties
-only. No event carries message text, pasted data, column names, code or a
-dataset size: the size travels as a bucket. The events exist only in builds
-with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
-`anyplot.ai`. The feedback form's `# include data.csv` box starts unticked, so
-`include_data` reads `no` unless the user ticked the box.
+[Agent network design](../concepts/agent-network.md)) sends two events, with
+enum properties only. No event carries message text, pasted data, column
+names, code or a dataset size. The events exist only in builds with
+`VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
+`anyplot.ai`.
+
+| Event | What its properties say |
+|-------|-------------------------|
+| `agent_open` | The chat page opened for a visitor. `source` is `plot_page` when a plot page's `.use_my_data() →` led there, `spec_hub` when the spec hub's header entry did, `plot_of_the_day` when the landing page's plot of the day did, `landing` (a line that led there on 2026-11-02 only), and `direct` otherwise: a typed URL, a bookmark, a reload |
+| `agent_plot_rendered` | A turn's `plot` event arrived. `status` is `ok`, `needs_attention`, `failed`, or `not_ready`; `repaired` is `yes` when the run needed its repair round, else `no`. A plot the server refuses before the run sends no `plot` event, so it fires none |
+
+`copy_code` on a result card carries `method: agent` and `page: agent_chat`
+plus the `spec` and `library` of the version.
 
 **An admin's use is not counted.** Since 2026-11-06 one page at `/agent` serves
 visitors and admins (`/debug/agent` only redirects there). While the page
@@ -230,143 +311,114 @@ before the layout sends the page's pageview, and an admin's browser is known
 at the first render: it carries the admin hint, and the check that follows
 only picks the lane. Until 2026-11-06 the admin chat recorded the
 pageview `/debug/agent` and the same events as a visitor's.
-So every event below is a visitor's, and `agent_session_saved`, whose `.save()`
-only an admin has, no longer fires in production.
 
-| Event Name | Properties | Where | Description |
-|------------|-----------|-------|-------------|
-| `agent_open` | `library`, `source`, `spec` | AgentChatPage.tsx | The chat page opened for a visitor (until 2026-11-06 also for an admin). `source` is `plot_page` when the plot page's entry led there (`.use_my_data() →` beside the library carousel or beside the code tab's copy button; the `.adapt()` button on the image until 2026-11-02, under the same value), `spec_hub` when the spec hub's header entry did (`.use_my_data() →` at the top of `/{spec-id}`, which opens matplotlib where it is among the cards shown, else the first of them), `landing` when the landing page's line did (public lane, on 2026-11-02 only: the line now leads to `/plots`, tracked as `nav_click{source: hero_use_my_data}`; the chat still accepts the value), `plot_of_the_day` when the landing page's plot of the day did (`.use_my_data()` beside `github.open()` in its header, since 2026-11-04, for that plot's spec and library), `direct` otherwise (a typed URL, a bookmark, a reload) |
-| `agent_data_parsed` | `status`, `size_bucket` | useAgentSession.ts | The pasted data came back from the parse. `status` ∈ `ok`, `too_long`, `unparseable`, `data_refused`, `error` (any other refusal; until 2026-11-04 also a formula or code the server answered with `422 formula` or `422 code`), `data_request` (since 2026-11-01: the text asked for data instead of holding it, such as "Beispieldaten"; the server answered `422 data_request` and the page sent the text to the chat as the user's message, where the assistant generates example data), `formula` and `code` (since 2026-11-04: the server answered `422 formula` or `422 code`; within 2,000 characters the page sent the text to the chat as the user's message, where the assistant computes the formula or runs the code, and longer code stayed in the data box with a line that asks to shorten it), `transcribed` (the text was not a table, a model read it into one and the page asks the user to confirm it; nothing is stored yet), `discarded` (the user dropped such a table; `.use()` instead parses it again and reports `ok`); `size_bucket` ∈ `lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `over_200kb` (the last one is refused in the browser before anything is sent) |
-| `agent_data_confirmed` | `size_bucket` | useAgentSession.ts | The user ended step 1: the stored data and its bindings fit, and the server confirmed them. Since 2026-11-04 it fires inside the plot button's click (`.create_plot()`, `plot the new data`, `.update_plot()` on unconfirmed data, `.plot_all()`, and a switch's carry, which the plot button runs since 2026-11-07), which confirms first and starts the plot only on success, so it counts the clicks on unconfirmed data whose confirmation went through, not a separate step; until then `.confirm()` was a button of its own. Fires again after each new parse, binding change, data change or undo that the user confirms. `size_bucket` as for `agent_data_parsed`; data the assistant generated from a formula without a paste counts as `lt_1kb` |
-| `agent_data_prepared` | `changes` | useAgentSession.ts | The assistant changed the data in a turn (its `prepare_data`, for example "read Anteil as numbers" or "sum per month") or computed it from a formula (its `generate_data`, for example "sin(x) from -pi to pi"): the turn's `done` carried a new data version, which the data panel shows with its change lines and, when an earlier version exists, `.undo()`. A generated table in a session without data is the session's first data, with nothing to undo, and fires this event too, and so does the data panel's `.to_long()` (a wide table made long, no model call). `changes` ∈ `1`, `2`, `3+`, the number of change lines (one per operation; a generated table has one, plus one per series with undefined values) |
-| `agent_data_undo` | `version` | useAgentSession.ts | The user took back the assistant's last change to the data with `.undo()`, and the server restored the version before it. `version` ∈ `1` (back at the paste), `2`, `3+`: the restored version's place among its data's versions in the order they were made, the paste being 1. Since 2026-11-08 the server numbers versions once per session, across pastes, so the page counts the place from the data's first number (`version - original_version + 1`) and `1` still means back at the paste; an undone version's number is never given again, so after an undo and a new change the places count on (paste, change, undo, change, change, undo is `3+`, where the old count said `2`) |
-| `agent_data_file` | `kind`, `encoding`, `outcome` | useChatAttachment.ts, DataPanel.tsx | A file reached the chat: dropped on it, chosen with `.open()` in the line above the message box (in the composer's row from 2026-11-05 to 2026-11-07) or pasted as a file, and became the message box's attachment (since 2026-11-05; the data card's box until then, since 2026-10-15). A text file is read in the browser; a spreadsheet, Parquet, Feather, Arrow or NumPy file goes to the server, which converts it in the renderer's sandbox (since the binary-file step of 2026-10-15). Enter afterwards reports `agent_data_parsed` as for a paste. `kind` ∈ `text`, `spreadsheet`, `parquet`, `arrow`, `numpy`, `hdf5`, `pickle`, `pdf`, `archive`, `binary` (by the file's first bytes in the browser; `binary` for anything else that is not text), `unknown` (refused before it was read), and for a file the server converted the format it found: `xlsx`, `xlsm`, `xlsb`, `xls`, `ods`, `parquet`, `feather`, `arrow`, `npy`, `npz`; `encoding` ∈ `utf-8`, `utf-8-bom`, `utf-16le`, `utf-16be`, `windows-1252`, `none` (a binary file); `outcome` ∈ `attached` (the file became the attachment; since 2026-11-05), `removed` (× on a file's attachment; since 2026-11-05), `filled`, `replaced` and `kept` (the data card's box and its `.replace()` and `.keep()`, until 2026-11-05), `sheet` (another sheet or `.npz` array chosen in the data card's sheet picker and read again), `refused` (a format never read, an empty file, or a file the server refused: encrypted, damaged, over a cap), `failed` (the server could not convert it now: rate limit, no render slot, renderer unavailable, network), `too_large` (over 4 MB as a text file or 5 MB as a binary one, or over 1 MB as text), `busy` (a step was running, or another file was still being read), `unreadable` (the browser could not read it). The file's name and its sheet names are never sent |
-| `agent_input_routed` | `as`, `via` | useChatAttachment.ts | How the message box took a paste, a file or a typed table (since 2026-11-05), for tuning the paste routing (`routeInput.ts`): `as` ∈ `data` (the attachment, which Enter sends to the dataset route) or `message` (typed text, which Enter sends as a turn); `via` ∈ `paste` (pasted text, routed by its shape), `file` (a file, always `data`) or `typed` (since 2026-11-05: the box's own text on Enter, a table typed by hand or pasted without a paste event; always `data`, since a typed message fires nothing). Fires once per paste, file or typed table, never with its text; an empty paste fires nothing |
-| `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts | A turn's `plot` event arrived. `status` ∈ `ok`, `needs_attention`, `failed`, `not_ready`; `repaired` is `yes` when the run needed its repair round (two attempts), else `no`. Since 2026-11-08 a plot the server refuses before the run (in a turn that changed the data, or on a paste's summary turn while the data is unconfirmed) sends no `plot` event, so it fires none; a `not_ready` from the run itself still does |
-| `agent_guardrail_block` | `reason` | useAgentSession.ts | A guardrail stopped a request. `reason` ∈ `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `budget` (the user's own daily token budget), `service_paused` (since 2026-11-02: the whole service spent its day budget, from a turn's refusal or the dataset route's `429`), `unsupported_content`, `rate_limited` and `daily_limit` (the user's message limits per minute and per day, and since 2026-10-14 the paste limits, which the data panel reports from the dataset route's `429`), `session_closed` (the session closed after three scope refusals), `other_library` (a request for this plot in another library or language, answered with a pointer to the catalogue), `locked_out` (the user is paused for the day after three attack verdicts; these are the stream's fixed refusals), `data_refused` (the pre-filter or the dataset judge refused the pasted data: text addressed to an AI, or the judge's verdict; personal data is never a reason), `guard_unavailable` (the scope check could not answer and failed closed), `other` (a refusal code the page does not know yet) |
-| `agent_session_saved` | `include_data` | useAgentSession.ts | The admin saved the session as a JSON file with `.save()`, in the admin menu since 2026-11-06 (in the chat header's "⋯" menu from 2026-11-02, admin lane only), and the download started. `include_data` is `yes` when the `# include data.csv` box was ticked (unticked by default since 2026-11-06), so the file holds each version's data file, else `no`. A failed save fires nothing. Since 2026-11-06 an admin's use records nothing, so the event no longer reaches Plausible in production; the save's outcome beacon (below) still reaches the usage telemetry |
-| `agent_result_feedback` | `reaction`, `include_data`, `subject` | useAgentSession.ts | The user sent quick feedback with the feedback form's own `.send()`, on a result version from its result card or on the chat itself from the form that `.feedback()` at the end of the chat's status line opens (below the composer until 2026-11-07), and the BFF stored it as a feedback case. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea`, the site feedback's set; `include_data` is `yes` when the `# include data.csv` box was ticked (unticked by default; until 2026-11-06 ticked by default for an admin), so the case holds the data file, else `no`; `subject` is `result` for a version and `chat` for the chat (since 2026-10-12, for a session that made no plot). An edit that replaces a sent case fires again. A failed send fires nothing; the text never travels |
-| `agent_turn_resumed` | `outcome` | useAgentSession.ts | A turn's stream was cut after its first event (it failed, as with an HTTP/3 error between the browser and the edge, or ended without `done`), and the page read the rest of the turn again (`GET /agent/session/turn`, after 1, 2, 4 and 8 seconds). `outcome` ∈ `resumed` (a read reached the turn's `done`, so the page showed how the turn ended, its plot or its own error, instead of the cut's error), `gone` (the server holds another turn, or the session ended) or `failed` (every read failed, or the read found the turn cancelled because the agents service saw its stream end; the page showed the error). The event measures the connection, not the turn: a turn that ended in its own error after a resumed read still counts as `resumed`. Once per cut; a stop or a closed page fires nothing. The origin's logs cannot see such a cut, so this is how often the edge loses a stream |
+**What a session did step by step is not on the public dashboard.** The chat's
+pastes, files, confirmations, data changes, refusals, saves, feedback and cut
+streams are content-free lines of the server's usage telemetry in BigQuery
+(`data_input`, `chat_turn`, `pipeline_run`, `outcome`, `plot_switch`,
+`language_offer`): see [Agent usage telemetry](agent-telemetry.md). Until
+2026-11-12 ten more Plausible events repeated part of it from the browser (see
+[Events that ended](#events-that-ended)); most of the chat's sessions were the
+owner's own, and the numbers sat on a public dashboard nobody could read them
+from. A copy, a download, a save and a sent feedback still send the outcome
+beacon (`POST /debug/agent/sessions/{sid}/outcome`), which is not a Plausible
+event and fires on every host.
 
-`copy_code` on a result card carries `method: agent` and `page: agent_chat`
-plus the `spec` and `library` of the version.
+### Gallery scroll (`plots_scrolled`)
 
-These Plausible events count page interactions in the browser. Since 2026-10-16
-the chat also has a server-side usage telemetry in BigQuery, with its own
-content-free events (`data_input`, `chat_turn`, `pipeline_run`, `outcome`): the
-copy, download, save and feedback actions above additionally send an outcome
-beacon (`POST /debug/agent/sessions/{sid}/outcome`) that the agents service writes
-as an `outcome` line. That beacon is not a Plausible event and fires on every host,
-not only `anyplot.ai`. See [Agent usage telemetry](agent-telemetry.md).
+How far a visitor got through the gallery, once per visit to `/plots` (since
+2026-11-11). The event is sent when the visit ends: the visitor leaves the
+page, or the tab goes away. A visit without scrolling sends none, and the
+offset the page restores from an earlier visit doesn't count, only a point
+below it.
 
-### Discovery
+- `share` is the deepest point as a share of the result list, in percent
+  bands: `0-10`, `10-25`, `25-50`, `50-75`, `75-100`. It is the percentage the
+  filter bar shows, which scales the loaded part up to the whole list.
+- `results` is the size of that list: `1-24`, `25-99`, `100-999`, `1000+`.
+- `filtered` is `true` or `false`.
 
-| Event Name | Properties | Where | Description |
-|------------|-----------|-------|-------------|
-| `search` | `query`, `category` | FilterBar/FilterSearch.tsx | User searches and selects value |
-| `search_no_results` | `query` | FilterBar/FilterSearch.tsx | Search query of at least 2 characters returns no results inside the active filters (debounced 200ms). `query` is the text as typed, before the search drops generic words. Such a query also fires it when the dropdown offers `.search_all()`, because the same query finds matches without the filters. |
+When the filters change during a visit, all three describe the list the
+deepest point was reached in, and the event is recorded under that list's page
+(`/plots/lib/matplotlib`).
 
-### Feature usage
+### Feature use (`ui_feature`)
 
-| Event Name | Properties | Where | Description |
-|------------|-----------|-------|-------------|
-| `random_filter` | `category`, `value`, `method` | useFilterState.ts | User triggers random filter |
-| `filter_remove` | `category`, `value` | useFilterState.ts | User removes a filter. `.search_all()` in the filter search sends one per filter it removes. |
-| `grid_resize` | `size` | ToolbarActions.tsx | User toggles between normal/compact view |
-| `plots_scrolled` | `share`, `results`, `filtered` | usePlotsScrolled.ts (PlotsPage.tsx) | How far a visitor got through the gallery, once per visit to `/plots` (since 2026-11-11). Sent when the visit ends: the visitor leaves the page, or the tab goes away. A visit without scrolling sends none, and the offset the page restores from an earlier visit doesn't count, only a point below it. `share` is the deepest point as a share of the result list, in percent bands: `0-10`, `10-25`, `25-50`, `50-75`, `75-100`. It is the percentage the filter bar shows, which scales the loaded part up to the whole list. `results` is the size of that list: `1-24`, `25-99`, `100-999`, `1000+`. `filtered` is `true` or `false`. When the filters change during a visit, all three describe the list the deepest point was reached in, and the event is recorded under that list's page (`/plots/lib/matplotlib`). |
-| `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx | User opens or closes a tab |
-| `plot_rotate` | `spec` | SpecsListPage.tsx | User clicks image on specs page to rotate library |
-| `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx | User opens interactive HTML view |
-| `suggest_spec` | - | SpecsListPage.tsx | User clicks the `spec.suggest()` link on the specs list page. The mirror link on the landing page emits `nav_click` with `source: suggest_spec_link` instead. |
-| `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks the "report issue ↗" link on a spec hub page. The in-plot `.report()` flag was replaced by the 👍/👎 vote buttons, so `library` is now only set when the hub page has a library selected. |
-| `tag_click` | `param`, `value`, `source` | SpecTabs.tsx, StatsPage.tsx | User clicks a tag chip to filter (`source` ∈ `spec_detail`, `stats`) |
-| `theme_toggle` | `to` | MastheadRule.tsx | User cycles tri-state theme mode (`to` ∈ `system`, `light`, `dark`). The cycle order is `system → light → dark → system`. |
-| `view_mode_change` | `mode`, `library` | SpecDetailView.tsx | User toggles preview ↔ interactive view inside a spec detail. `mode` ∈ `preview`, `interactive`. Fires on every toggle in either direction (cf. `open_interactive`, which only fires when the interactive HTML is opened in a new tab). |
-| `library_click` | `source`, `library` | LibrariesPage.tsx | User clicks a library card on `/libraries` to navigate to its filtered plots view. `source` is `libraries_page` from this entry point. |
-| `library_filter` | `source`, `framework` | LibrariesPage.tsx | User clicks a language/framework filter chip on `/libraries` (`framework` carries the chip id; register the prop in the dashboard for breakdowns) |
-| `stats_top_impl_click` | `spec`, `library` | StatsPage.tsx | User clicks a "top implementation" thumbnail on `/stats` to jump into its spec detail. |
-| `map_node_click` | `spec` | MapPage.tsx | User clicks a node on `/map` (or, on touch, second tap on an already-pinned node) to navigate to its spec detail. |
-| `map_node_pin` | `spec` | MapPage.tsx | Touch device only: first tap on a node opens the preview panel + pin marker without navigating. A second tap on the same node fires `map_node_click` and navigates. |
-| `map_search_select` | `spec` | MapPage.tsx | User picks a result from the `/map` search dropdown (`⌘K` / `Ctrl+K` opens it). The camera flies to the node and the preview panel opens. |
-| `feedback_opened` | `path` | FeedbackWidget.tsx | User clicks the floating feedback FAB and the quick mini-stack of 👍 / 👎 / 💬 appears (issue #5662). `path` is `window.location.pathname + search` at open time. |
-| `feedback_submitted` | `path`, `reaction`?, `has_contact`, `spec_id`?, `library`?, `mode` | FeedbackWidget.tsx, SpecDetailView.tsx (via useQuickReaction.ts) | User submits a feedback entry. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea` (omitted if none selected). `mode` is `"quick"` for a one-tap 👍/👎 from the mini-stack, `"full"` for a submit from the detailed dialog, and `"plot_overlay"` for a 👍 (top-left) / 👎 (bottom-left) tap directly on the plot in a spec detail view — that one also carries `library`, because the vote is about one implementation and the server stores `library_id` + `language` with it. `has_contact` is `"true"`/`"false"` — the contact field is now a free-form name/email/handle, not strictly an email. `spec_id` is set when the current route resolves to a spec page. |
+One event answers one question per feature of the interface: is it used at
+all? `feature` names the feature, and the event carries nothing else. It is
+sent once per feature and visit, so the goal's unique visitors and its events
+both read as "visits that used it", and a visitor who toggles a tab forty
+times weighs as much as one who did it once.
 
-### Diagnostics
+| `feature` | The use | Sent by |
+|-----------|---------|---------|
+| `tab_toggle` | Opens or closes a tab under a plot (code, specification, implementation, quality) | `SpecTabs/index.tsx` |
+| `view_mode_change` | Switches an implementation between its preview and its interactive view | `SpecDetailView.tsx` |
+| `grid_resize` | Switches the gallery between normal and compact cards | `ToolbarActions.tsx` |
+| `filter_remove` | Removes a filter in the gallery, one or all at once | `useFilterState.ts` |
+| `random_filter` | Asks the gallery for a random filter (the shuffle icon or the space bar) | `useFilterState.ts` |
+| `plot_rotate` | Clicks an image on `/specs` to see the next library's version | `SpecsListPage.tsx` |
+| `library_filter` | Filters `/libraries` by language or framework | `LibrariesPage.tsx` |
+| `theme_toggle` | Cycles the theme (system, light, dark) | `MastheadRule.tsx` |
+| `feedback_open` | Opens the feedback button's quick stack | `FeedbackWidget.tsx` |
+| `map_node_click` | Clicks a node on `/map` and goes to its spec | `MapPage.tsx` |
+| `map_node_pin` | On touch, taps a node on `/map` to pin its preview | `MapPage.tsx` |
+| `map_search_select` | Picks a result of the `/map` search | `sections/map/useMapSearch.ts` |
 
-| Event | Properties | Source | Description |
-|-------|-----------|--------|-------------|
-| `page_not_found` | `path`, `source` | NotFoundPage.tsx, SpecPage.tsx | A visitor reached a URL the app cannot serve. `path` is `window.location.pathname`. `source` says which kind of miss it was: `catch_all` (the URL matches no route at all), `spec_missing` (the spec itself does not exist), `impl_missing` (the spec exists but not that library/language pair), `route_error` (the router returned a 404 response). Until 2026-11-11 the list had a fifth value, `language_params`, for a `/{spec}/{language}` URL without both segments; the route can't match such a URL, so the value never fired. |
+The list is `UI_FEATURES` in `useAnalytics.ts`, and `feature` is typed with
+it. Until 2026-11-12 each feature was an event of its own with its own
+properties (which tab, which filter, which theme): twelve goals, or none, for
+one question.
 
-Read `source` before `path`. A `catch_all` miss is usually a bad inbound link;
-`impl_missing` is content that used to exist and no longer does, which is the
-pattern a library migration leaves behind and the one worth alerting on.
+**A visit is Plausible's.** Plausible ends a visit after 30 minutes without a
+pageview or an event. `trackEvent` keeps the features the current visit used
+in memory and starts over after the same 30 minutes without anything sent, so
+a tab left open overnight counts a feature again the next day. Nothing is
+stored in the browser: a reload starts over too, which can count a feature
+twice in one visit and never a visitor twice.
 
-One asymmetry to know about: `impl_missing` fires without a 404 page ever being
-shown. `SpecPage.tsx` redirects those visitors to the spec hub with a language
-filter, to preserve their intent — so the event is reported from there rather
-than from `NotFoundPage.tsx`. Every other source accompanies a rendered 404.
+### Landing page clicks (`nav_click`)
 
-Since 2026-11-11 the address of a miss also records a pageview, under the path
-that was asked for (see [When a pageview is sent](#when-a-pageview-is-sent)).
-An `impl_missing` visit therefore records two: the implementation page that is
-gone, then the hub it was sent to.
+`nav_click` says which element of the landing page a visitor went on from:
+`source` names the element and `target` where it leads. Some sources also
+carry `spec` and `library`.
 
-The bot-facing side of the same URLs answers HTTP 404 from `api/routers/seo.py`,
-but crawlers never run JavaScript and `app/nginx.conf` short-circuits bot user
-agents with `return 202` on `/api/event` (see
-[The analytics shield](#the-analytics-shield)), so nothing they do appears
-here — this event covers humans only.
+| `source` | Element | Leads to |
+|----------|---------|----------|
+| `hero_cta_browse`, `hero_mcp`, `hero_github` | The hero's call to action and its two secondary links (`HeroSection.tsx`) | `/plots`, `/mcp`, GitHub |
+| `hero_use_my_data` | `# new: pick any plot, then .use_my_data() →` under the hero, shown while the agent chat's public lane is open | `/plots` |
+| `potd_terminal_image`, `potd_terminal_filename`, `potd_terminal_github` | The plot of the day in its terminal frame (`PlotOfTheDayTerminal.tsx`), with `spec` and `library` | The plot's page, GitHub |
+| `featured_thumb` | A plot of the featured grid, with `spec` | The spec's hub |
+| `library_card` | A library card, with `library` | `/plots` filtered to the library |
+| `section_header` | The link of a section header: `specs.all()`, `libraries.all()`, `palette.explore()`, `map.explore()` | `/specs`, `/libraries`, `/palette`, `/map` |
+| `map_teaser_preview` | The map teaser's image | `/map` |
+| `specs_more_link` | `+ N more in the catalogue →` | `/specs` |
+| `suggest_spec_link` | `spec.suggest()` | A GitHub issue form |
+| `masthead_branch`, `masthead_release` | `main` and the version in the masthead, which only the landing page shows | GitHub |
 
-### Navigation clicks (`nav_click`)
+Until 2026-11-12 the event also fired for the menu bar, the logo, the
+breadcrumb and the gallery's `{spec_id}.compare()` link, on every page: 76 %
+of its events were menu clicks, which the pageview that follows already
+records. `SectionHeader` is used on other pages too (the tiles on `/stats`)
+and sends the event only on the landing page.
 
-A single event captures every clickable surface on the chrome, the editorial
-landing page and the gallery so we can answer "where do users go, from which
-page, and via which UI element". One event, one event-property pair: `source` (which UI
-element was clicked) + `target` (where it leads). Some sources additionally
-carry `spec`, `library`, or `value` for richer breakdowns.
+### Events that ended
 
-| `source` value | Where | Target |
-|----------------|-------|--------|
-| `nav_specs` / `nav_plots` / `nav_map` / `nav_libraries` / `nav_stats` / `nav_palette` / `nav_mcp` | NavBar.tsx | top-level menu bar |
-| `nav_logo` | NavBar.tsx | logo → `/` |
-| `nav_search` | NavBar.tsx | `plots.search()` button → `/plots?focus=search` |
-| `masthead_logo` / `masthead_branch` / `masthead_release` | MastheadRule.tsx | masthead `~/anyplot.ai · main · v1.x.x` |
-| `breadcrumb` | MastheadRule.tsx | breadcrumb segments on non-landing routes |
-| `hero_cta_browse` / `hero_mcp` / `hero_github` | HeroSection.tsx | hero call-to-action + secondary links |
-| `hero_use_my_data` | HeroSection.tsx | `# new: pick any plot, then .use_my_data() →` under the hero CTAs, shown only while the agent chat's public lane is open → `/plots` |
-| `potd_terminal_image` / `potd_terminal_filename` / `potd_terminal_github` | PlotOfTheDayTerminal.tsx | hero terminal-framed POTD |
-| `featured_thumb` | LandingPage.tsx | featured plot grid |
-| `library_card` | LandingPage.tsx | library cards (carries `value=<library_id>`) |
-| `section_header` | SectionHeader.tsx | `specs.all()` / `libraries.all()` / `palette.explore()` headers |
-| `specs_more_link` | LandingPage.tsx | `+ N more in the catalogue →` |
-| `suggest_spec_link` | LandingPage.tsx | `spec.suggest()` GitHub-issue link |
-| `gallery_spec_hub` | PlotsPage.tsx | `{spec_id}.compare() →` above the grid when `/plots` is filtered to exactly one spec (carries `spec`) → `/{spec_id}` |
+Their history stays visible in Plausible; their goals and properties are
+removed from the dashboard (see [Dashboard checklist](#dashboard-checklist)).
 
-**Random methods**:
-- `click`: Shuffle icon clicked
-- `space`: Spacebar pressed
-- `doubletap`: Mobile double-tap gesture
-
-**Grid sizes**:
-- `normal`: Larger cards (1-3 columns)
-- `compact`: Smaller cards (2-6 columns)
-
-**Tab toggle actions**:
-- `open`: User opened a tab
-- `close`: User closed a tab
-
-**Tab names**: `code`, `specification`, `implementation`, `quality`
-
-### External and internal link events
-
-| Event Name | Properties | Where | Description |
-|------------|-----------|-------|-------------|
-| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx, AboutPage.tsx, LibrariesPage.tsx, SectionHeader.tsx | User clicks external link |
-| `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx, AboutPage.tsx | User clicks internal link |
-
-**External destinations (Footer)**: `github`, `github_issue_chooser`, `linkedin`
-**External destinations (LegalPage)**: `linkedin`, `x`, `github_personal`, `kurrentschrift`, `cite_citadel`
-**Internal destinations (Footer)**: `about`, `legal`
+| Ended | Event | Where its number is now |
+|-------|-------|-------------------------|
+| 2026-11-12 | `tab_toggle`, `view_mode_change`, `grid_resize`, `filter_remove`, `random_filter`, `plot_rotate`, `library_filter`, `theme_toggle`, `feedback_opened`, `map_node_click`, `map_node_pin`, `map_search_select` | `ui_feature`, by `feature` (`feedback_opened` as `feedback_open`) |
+| 2026-11-12 | `open_interactive` | Renamed `interactive_open` |
+| 2026-11-12 | `external_link` | The script's `Outbound Link: Click`, which records the same click with the link's address |
+| 2026-11-12 | `internal_link`, `tag_click`, `library_click`, `stats_top_impl_click`, and `nav_click` from the menu, the logo, the breadcrumb and the gallery | The pageview of the page the link leads to |
+| 2026-11-12 | `suggest_spec`, `report_issue` | `Outbound Link: Click`: both are links to GitHub |
+| 2026-11-12 | `page_not_found` | The pageview of the address that was asked for. An implementation that is gone redirects to the spec's hub, so it records two pageviews: the address asked for, then the hub |
+| 2026-11-12 | `agent_data_parsed`, `agent_data_confirmed`, `agent_data_prepared`, `agent_data_undo`, `agent_data_file`, `agent_input_routed`, `agent_guardrail_block`, `agent_session_saved`, `agent_result_feedback`, `agent_turn_resumed` | The server's usage telemetry ([Agent usage telemetry](agent-telemetry.md)) |
+| 2026-11-11 | `og_image_view` | The share counters in the database ([Shared links](#shared-links)) |
+| 2026-11-08 | `LCP`, `CLS`, `INP`, `FCP`, `TTFB`, and the script's `Form: Submission` | Nowhere: see [Core Web Vitals are not tracked](#core-web-vitals-are-not-tracked) and [Setup](#setup) |
+| earlier | `potd_dismiss`, and the `nav_click` sources `potd_image`, `potd_title`, `potd_source_link` | Nowhere: the dismissible plot-of-the-day banner is gone |
 
 ### Core Web Vitals are not tracked
 
@@ -395,8 +447,8 @@ event never reaches Plausible. Nothing is blocked: such a client still gets
 every page, it is just not counted, and the `202` mirrors Plausible's accepted
 response so the client doesn't retry. The shield exists since audit 2026-07-08
 (High #7), when synthetic traffic inflated visitor counts by about 40 %.
-Server-side events are a separate path, see
-[Two things Plausible will silently drop](#two-things-plausible-will-silently-drop).
+The API itself sends Plausible nothing since 2026-11-11 (see
+[Shared links](#shared-links)).
 
 Both maps name a client by its own token: a crawler's name, a headless
 browser, an HTTP library, or an empty user agent. Neither matches a browser's
@@ -588,312 +640,76 @@ not what the five minutes cost: the images stay in the API's own cache.
 
 ## Plausible dashboard configuration
 
-### Required custom properties
+Plausible shows a custom event only as a goal, and a property only once it is
+registered, so the dashboard holds exactly what the app sends. The Sites API
+can read both lists (`GET /api/v1/sites/goals` and
+`/api/v1/sites/custom-props` with the Stats API key); writing them needs an
+Enterprise plan, so you change them in the dashboard.
 
-To see event properties in Plausible dashboard, you **MUST** register them as custom properties.
+### Goals
 
-**Go to**: Plausible Dashboard → Site Settings → Custom Properties → Add Property
+**Go to**: Site settings → Goals → Add goal
 
-#### Properties to register
+| Goal | Type | Says |
+|------|------|------|
+| `copy_code` | Custom event | Code copies, the primary conversion |
+| `download_image` | Custom event | Image downloads |
+| `interactive_open` | Custom event | Interactive views opened from a spec hub |
+| `search` | Custom event | Searches that led to a result |
+| `search_no_results` | Custom event | Searches that found nothing: content gaps |
+| `feedback_submitted` | Custom event | Feedback entries and plot votes |
+| `agent_open` | Custom event | Opens of the agent chat, and where they came from |
+| `agent_plot_rendered` | Custom event | Agent chat plot runs, by outcome |
+| `plots_scrolled` | Custom event | How far visitors get through the gallery |
+| `ui_feature` | Custom event | Which features of the interface are used |
+| `nav_click` | Custom event | Which element of the landing page visitors go on from |
+| Visit /plots | Pageview, `/plots*` | Visitors who reached the gallery, with any filters |
+| Scroll 90% on / | Pageview, scroll depth | Visitors who saw the whole landing page |
+| Outbound Link: Click | The script's own | Clicks on links to other sites |
 
-| Property | Description | Used By Events |
-|----------|-------------|----------------|
-| `spec` | Plot specification ID | `copy_code`, `download_image`, `plot_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `agent_open`, `agent_plot_rendered` |
-| `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `feedback_submitted` (plot-overlay votes only), `agent_open`, `agent_plot_rendered` |
-| `method` | Action method (card, image, tab, agent, click, space, doubletap) | `copy_code`, `random_filter` |
-| `page` | Page context (home, plots, spec_overview, spec_detail, agent_chat) | `copy_code`, `download_image` |
-| `status` | Outcome of an agent chat step (`ok`, `needs_attention`, `failed`, `not_ready`; for a parse also `too_long`, `unparseable`, `data_refused`, `error`, `data_request`, `formula`, `code`, `transcribed`, `discarded`) | `agent_data_parsed`, `agent_plot_rendered` |
-| `size_bucket` | Size class of pasted data (`lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `200kb_1mb`, `over_1mb`; `over_200kb` until the paste cap rose to 1 MB on 2026-10-14), never the size | `agent_data_parsed`, `agent_data_confirmed` |
-| `changes` | How many change lines an assistant's data change or generated table carried (`1`, `2`, `3+`) | `agent_data_prepared` |
-| `version` | The data version an undo restored, by its place in its data (`1` is the paste, `2`, `3+`), never the session's number for it | `agent_data_undo` |
-| `kind` | What a file brought into the agent chat was, by its first bytes (`text`, `spreadsheet`, `parquet`, `arrow`, `numpy`, `hdf5`, `pickle`, `pdf`, `archive`, `binary`, `unknown`), or the format the server found when it converted the file (`xlsx`, `xlsm`, `xlsb`, `xls`, `ods`, `parquet`, `feather`, `arrow`, `npy`, `npz`) | `agent_data_file` |
-| `encoding` | The text encoding the browser read a dropped file with (`utf-8`, `utf-8-bom`, `utf-16le`, `utf-16be`, `windows-1252`, `none`) | `agent_data_file` |
-| `outcome` | What happened to a dropped file (`attached`, `removed`, `sheet`, `refused`, `failed`, `too_large`, `busy`, `unreadable`; `filled`, `replaced` and `kept` until 2026-11-05), or to a cut turn the page read again (`resumed`, `gone`, `failed`) | `agent_data_file`, `agent_turn_resumed` |
-| `as` | How the agent chat's message box took a paste, a file or a typed table (`data`: an attachment for the dataset route; `message`: typed text) | `agent_input_routed` |
-| `via` | Where that input came from (`paste`, `file`, `typed`) | `agent_input_routed` |
-| `repaired` | Whether an agent run needed its repair round (`yes` / `no`) | `agent_plot_rendered` |
-| `reason` | Why a guardrail stopped an agent chat request (`out_of_scope`, `needs_data`, `budget`, `service_paused`, `unsupported_content`, `rate_limited`, `daily_limit`, `session_closed`, `other_library`, `locked_out`, `data_refused`, `guard_unavailable`, `other`) | `agent_guardrail_block` |
-| `include_data` | Whether a saved agent chat session, or a feedback case, carries the data file (`yes` / `no`) | `agent_session_saved`, `agent_result_feedback` |
-| `reaction` | The reaction of a feedback entry or of an agent result's quick feedback (`thumbs_up`, `thumbs_down`, `bug`, `idea`) | `feedback_submitted`, `agent_result_feedback` |
-| `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
-| `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
-| `query` | Search query text | `search`, `search_no_results` |
-| `destination` | Link-target slug — external: `github`, `github_issue_chooser`, `github_personal`, `github_bug`, `github_discussions`, `github_plot_request`, `github_releases`, `linkedin`, `x`, `kurrentschrift`, `cite_citadel`, `library_docs`; internal: `about`, `legal`, `legal_transparency`, `palette`, `stats`, `plots`, `mcp`. `SectionHeader` external links emit the target **hostname** instead (e.g. `plausible.io`). Grep `destination:` in `app/src` for the authoritative list. | `external_link`, `internal_link` |
-| `tab` | Tab name (code, specification, implementation, quality) | `tab_toggle` |
-| `action` | Toggle action (open, close) | `tab_toggle` |
-| `size` | Grid size (normal, compact) | `grid_resize` |
-| `param` | URL parameter name for tag | `tag_click` |
-| `source` | Source UI element / page context | `tag_click`, `nav_click`, `agent_open` (`plot_page` / `spec_hub` / `landing` / `plot_of_the_day` / `direct`) |
-| `framework` | Library id clicked in the libraries-page filter (needs dashboard registration to appear in breakdowns) | `library_filter` |
-| `target` | Click destination (route or external label) | `nav_click` |
-| `subject` | What an agent chat quick feedback is about (`result`: a result version, `chat`: the chat itself) | `agent_result_feedback` |
-| `to` | New mode after toggle (`system` / `light` / `dark`) | `theme_toggle` |
-| `mode` | Spec detail view mode (`preview` / `interactive`) | `view_mode_change` |
-| `theme` | Ambient *effective* theme attached to **every** pageview & event (`dark` / `light`) — resolved from the tri-state mode so OS-followers still split cleanly | all events (set in RootLayout via `setAnalyticsAmbientProps`) |
-| `share` | Deepest point of a gallery visit as a share of the result list, in percent bands (`0-10`, `10-25`, `25-50`, `50-75`, `75-100`) | `plots_scrolled` |
-| `results` | Size of the gallery's result list at that point (`1-24`, `25-99`, `100-999`, `1000+`) | `plots_scrolled` |
-| `filtered` | Whether that list was filtered (`true` / `false`) | `plots_scrolled` |
+### Custom properties
 
-### Goals configuration
+**Go to**: Site settings → Custom properties → Add property
 
-**Go to**: Plausible Dashboard → Site Settings → Goals → Add Goal
+| Property | Values | Sent with |
+|----------|--------|-----------|
+| `spec` | A specification id, such as `scatter-basic` | `copy_code`, `download_image`, `interactive_open`, `feedback_submitted`, `agent_open`, `agent_plot_rendered`, `nav_click` |
+| `library` | A library id: `matplotlib`, `seaborn`, `plotly`, `bokeh`, `altair`, `plotnine`, `pygal`, `letsplot`, `ggplot2`, `makie`, `chartjs`, `d3`, `echarts`, `highcharts`, `muix` (`LIBRARIES_METADATA` in `core/constants.py`) | The same events as `spec` |
+| `method` | `card`, `image`, `tab`, `agent` | `copy_code` |
+| `page` | `home`, `plots`, `spec_overview`, `spec_detail`, `agent_chat`, `other` | Every pageview, `copy_code`, `download_image` |
+| `source` | For `nav_click` the element (see [Landing page clicks](#landing-page-clicks-nav_click)); for `agent_open` `plot_page`, `spec_hub`, `plot_of_the_day`, `landing`, `direct`; for `feedback_submitted` `widget_quick`, `widget_form`, `plot_vote` | `nav_click`, `agent_open`, `feedback_submitted` |
+| `target` | A path of the site, or `github` and other labels of an outbound element | `nav_click` |
+| `query` | The search text: lowercase, single spaces, at most 40 characters | `search`, `search_no_results` |
+| `category` | `lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`, `prep`, `style` | `search` |
+| `status` | `ok`, `needs_attention`, `failed`, `not_ready` | `agent_plot_rendered` |
+| `repaired` | `yes`, `no` | `agent_plot_rendered` |
+| `share` | `0-10`, `10-25`, `25-50`, `50-75`, `75-100` | `plots_scrolled` |
+| `results` | `1-24`, `25-99`, `100-999`, `1000+` | `plots_scrolled` |
+| `filtered` | `true`, `false` | `plots_scrolled` |
+| `feature` | The twelve of [Feature use](#feature-use-ui_feature) | `ui_feature` |
+| `theme` | `dark`, `light`: the theme in effect, resolved from the three-state mode | Every pageview and event |
 
-#### Recommended goals
+### Funnels and breakdowns
 
-| Goal Name | Type | Description |
-|-----------|------|-------------|
-| `copy_code` | Custom Event | Track code copies (primary conversion) |
-| `download_image` | Custom Event | Track image downloads |
-| `search` | Custom Event | Track successful searches |
-| `search_no_results` | Custom Event | Track failed searches (content gaps) |
-| `random_filter` | Custom Event | Track random filter usage |
-| `filter_remove` | Custom Event | Track filter removal |
-| `grid_resize` | Custom Event | Track view preference |
-| `plots_scrolled` | Custom Event | Track how far visitors get through the gallery, by share of the result list |
-| Scroll 90% on / | Pageview (scroll depth) | Track visitors who saw the whole landing page. The only scroll goal: the 25 %, 50 %, and 75 % goals go once this timing is live |
-| `tab_toggle` | Custom Event | Track tab interactions |
-| `external_link` | Custom Event | Track outbound clicks |
-| `internal_link` | Custom Event | Track internal navigation links |
-| `open_interactive` | Custom Event | Track interactive mode usage |
-| `suggest_spec` | Custom Event | Track spec suggestion clicks |
-| `report_issue` | Custom Event | Track issue report clicks |
-| `tag_click` | Custom Event | Track tag filter clicks |
-| `plot_rotate` | Custom Event | Track plot image rotation on specs page |
-| `nav_click` | Custom Event | Track which UI element on the chrome, the landing page or the gallery leads users where |
-| `theme_toggle` | Custom Event | Track dark/light theme switches |
-| `view_mode_change` | Custom Event | Track preview ↔ interactive toggles in spec detail |
-| `library_click` | Custom Event | Track library-card clicks on the libraries page |
-| `library_filter` | Custom Event | Track language/framework filter-chip clicks on the libraries page |
-| `stats_top_impl_click` | Custom Event | Track clicks on top-quality implementation thumbnails on /stats |
-| `map_node_click` | Custom Event | Track navigation clicks from `/map` into a spec detail |
-| `map_node_pin` | Custom Event | Track touch users opening the preview panel on `/map` (first tap) |
-| `map_search_select` | Custom Event | Track use of the `/map` search-and-fly-to feature |
-| `agent_open` | Custom Event | Track opens of the agent chat (admin and public) and where they came from |
-| `agent_data_parsed` | Custom Event | Track parse outcomes of pasted data in the agent chat |
-| `agent_data_confirmed` | Custom Event | Track how often users confirm their data before the agent chat plots it |
-| `agent_data_prepared` | Custom Event | Track how often the agent chat's assistant changes the data in step 1 or computes it from a formula |
-| `agent_data_undo` | Custom Event | Track how often users take back the assistant's change to their data |
-| `agent_data_file` | Custom Event | Track which files users bring into the agent chat, and how often the browser refuses one |
-| `agent_input_routed` | Custom Event | Track how the agent chat's message box routes a paste, a file or a typed table: as data or as a message |
-| `agent_plot_rendered` | Custom Event | Track agent chat plot outcomes and repair rounds |
-| `agent_guardrail_block` | Custom Event | Track agent chat refusals and failed-closed guard checks |
-| `agent_session_saved` | Custom Event | Track how often admins save an agent chat session as a file, and with the data or without |
-| `agent_result_feedback` | Custom Event | Track quick feedback on agent chat results by reaction, and how often the case holds the data |
-| `agent_turn_resumed` | Custom Event | Track how often the agent chat's stream is cut mid-turn, and how often the page reads the result anyway |
+The questions the dashboard answers, and where:
 
-### Funnels (optional)
-
-**Example funnel**: Home → Spec → Copy
-
-1. Pageview `/` (home)
-2. Pageview `/{spec_id}/{language}/{library}` (spec detail)
-3. `copy_code` event
-
-### Dashboard widgets
-
-Recommended custom widgets:
-
-1. **Top Specs Copied**: `copy_code` breakdown by `spec`
-2. **Popular Libraries**: `copy_code` breakdown by `library`
-3. **Copy Journey**: `copy_code` breakdown by `page`
-4. **Search Terms**: `search` breakdown by `query`
-5. **Missing Content**: `search_no_results` breakdown by `query`
-6. **View Preference**: `grid_resize` breakdown by `size`
-
----
-
-## User journey tracking
-
-### Understanding the `page` property
-
-The `page` property tracks **where** users perform actions to understand their journey:
-
-```
-User lands on anyplot.ai
-    │
-    ├─→ Home (grid view)
-    │   └─→ copy_code { page: 'home' }
-    │
-    ├─→ Cross-Language Hub (/{spec_id})
-    │   └─→ copy_code { page: 'spec_hub' }
-    │
-    ├─→ Language Overview (/{spec_id}/{language})
-    │   └─→ copy_code { page: 'spec_overview' }
-    │   └─→ download_image { page: 'spec_overview' }
-    │
-    └─→ Implementation Detail (/{spec_id}/{language}/{library})
-        └─→ copy_code { page: 'spec_detail' }
-        └─→ download_image { page: 'spec_detail' }
-        └─→ open_interactive { spec, language, library }
-```
-
-### Journey examples in Plausible
-
-**Q: Do users copy from search results or spec pages?**
-- Filter `copy_code` by `page` property
-- `home` = direct from search/browse
-- `spec_overview` = after viewing all implementations
-- `spec_detail` = after deep-diving into one library
-
-**Q: Which library implementations are most downloaded?**
-- Filter `download_image` by `library` property
-- Filter by `page` to see if users download from overview or detail
-
----
-
-## Complete event reference
-
-### Events summary table
-
-| Event | Properties | Code Location |
-|-------|------------|---------------|
-| `copy_code` | `spec`, `library`, `method`, `page` | ImageCard.tsx, SpecPage.tsx, SpecTabs.tsx, agent-chat/ResultCard.tsx |
-| `download_image` | `spec`, `library`, `page` | SpecPage.tsx |
-| `agent_open` | `library`, `source`, `spec` | AgentChatPage.tsx |
-| `agent_data_parsed` | `status`, `size_bucket` | useAgentSession.ts |
-| `agent_data_confirmed` | `size_bucket` | useAgentSession.ts |
-| `agent_data_prepared` | `changes` | useAgentSession.ts |
-| `agent_data_undo` | `version` | useAgentSession.ts |
-| `agent_data_file` | `kind`, `encoding`, `outcome` | useChatAttachment.ts, DataPanel.tsx |
-| `agent_input_routed` | `as`, `via` | useChatAttachment.ts |
-| `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts |
-| `agent_guardrail_block` | `reason` | useAgentSession.ts |
-| `agent_session_saved` | `include_data` | useAgentSession.ts |
-| `agent_result_feedback` | `reaction`, `include_data`, `subject` | useAgentSession.ts |
-| `agent_turn_resumed` | `outcome` | useAgentSession.ts |
-| `search` | `query`, `category` | FilterBar/FilterSearch.tsx |
-| `search_no_results` | `query` | FilterBar/FilterSearch.tsx |
-| `random_filter` | `category`, `value`, `method` | useFilterState.ts |
-| `filter_remove` | `category`, `value` | useFilterState.ts |
-| `grid_resize` | `size` | ToolbarActions.tsx |
-| `plots_scrolled` | `share`, `results`, `filtered` | usePlotsScrolled.ts |
-| `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx |
-| `tag_click` | `param`, `value`, `source` | SpecTabs.tsx, StatsPage.tsx |
-| `plot_rotate` | `spec` | SpecsListPage.tsx |
-| `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx |
-| `suggest_spec` | - | SpecsListPage.tsx (LandingPage mirror attributed via `nav_click` with `source: suggest_spec_link`) |
-| `report_issue` | `spec`, `library`? | SpecPage.tsx |
-| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx, AboutPage.tsx, LibrariesPage.tsx, SectionHeader.tsx |
-| `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx, AboutPage.tsx |
-| `nav_click` | `source`, `target`, `spec`?, `library`?, `value`? | NavBar, MastheadRule, HeroSection, SectionHeader, PlotOfTheDayTerminal, LandingPage, PlotsPage |
-| `theme_toggle` | `to` | MastheadRule.tsx |
-| `view_mode_change` | `mode`, `library` | SpecDetailView.tsx |
-| `library_click` | `source`, `library` | LibrariesPage.tsx |
-| `library_filter` | `source`, `framework` | LibrariesPage.tsx |
-| `stats_top_impl_click` | `spec`, `library` | StatsPage.tsx |
-| `map_node_click` | `spec` | MapPage.tsx |
-| `map_node_pin` | `spec` | MapPage.tsx |
-| `map_search_select` | `spec` | MapPage.tsx |
-| `feedback_opened` | `path` | FeedbackWidget.tsx |
-| `feedback_submitted` | `path`, `reaction`?, `has_contact`, `spec_id`?, `library`?, `mode` | FeedbackWidget.tsx, SpecDetailView.tsx |
-| `page_not_found` | `path`, `source` | NotFoundPage.tsx, SpecPage.tsx |
-
-**Total: 39 client-side + 1 server-side = 40 events** (the twelve `agent_*`
-events exist only in builds with `VITE_ENABLE_AGENT_CHAT=true`)
-
-> Removed events: `potd_dismiss` (and the `nav_click` sources `potd_image` /
-> `potd_title` / `potd_source_link`) died with the dismissible
-> `PlotOfTheDay.tsx` banner — the POTD now lives in `PlotOfTheDayTerminal.tsx`
-> and only emits the `potd_terminal_*` `nav_click` sources. Historical
-> `potd_dismiss` data remains visible in Plausible; the goal can be deleted
-> from the dashboard.
->
-> `LCP`, `CLS`, `INP`, `FCP`, and `TTFB`, with their `value` and `rating`
-> properties, stopped on 2026-11-08 together with `reportWebVitals.ts` and the
-> `web-vitals` dependency (see
-> [Core Web Vitals are not tracked](#core-web-vitals-are-not-tracked)). So did
-> the script's automatic `Form: Submission` goal. Their history stays visible
-> in Plausible; the `LCP`, `CLS`, and `INP` goals can be deleted from the
-> dashboard.
-
-> Every pageview and event additionally carries a `theme` ambient prop (`dark` /
-> `light`). Set in `RootLayout` via `setAnalyticsAmbientProps` whenever the user
-> toggles the theme — register `theme` as a custom property to see the
-> dark-vs-light split per URL.
-
----
-
-## Property values reference
-
-### `spec` values
-Any valid specification ID (e.g., `scatter-basic`, `heatmap-correlation`, `bar-grouped`)
-
-### `library` values
-```
-matplotlib | seaborn | plotly | bokeh | altair | plotnine | pygal | letsplot
-ggplot2 | makie | chartjs | d3 | echarts | highcharts | muix
-```
-(Canonical source: `LIBRARIES_METADATA` in `core/constants.py`.)
-
-### `method` values
-```
-card      # ImageCard copy button (home grid)
-image     # SpecPage image copy button
-tab       # SpecTabs code tab copy button
-agent     # Agent chat result card copy button
-click     # Random icon clicked
-space     # Spacebar pressed
-doubletap # Mobile double-tap
-```
-
-### `page` values
-```
-home          # HomePage grid view
-spec_overview # SpecPage showing all libraries
-spec_detail   # SpecPage showing single library
-agent_chat    # Agent chat result card (copy_code only)
-```
-
-### `category` values
-```
-# Spec-level (WHAT is visualized)
-lib   # library filter
-spec  # specification filter
-plot  # plot_type filter
-data  # data_type filter
-dom   # domain filter
-feat  # features filter
-
-# Impl-level (HOW it is implemented)
-dep   # dependencies filter
-tech  # techniques filter
-pat   # patterns filter
-prep  # dataprep filter
-style # styling filter
-```
-
-### `tab` values
-```
-code           # Python code tab
-specification  # Spec details tab
-implementation # AI implementation review tab
-quality        # Quality score breakdown tab
-```
-
-### `destination` values
-```
-github          # GitHub repository link (Footer)
-stats           # Plausible stats dashboard link (Footer)
-linkedin        # LinkedIn profile link (Footer, LegalPage)
-x               # X/Twitter profile link (LegalPage)
-github_personal # Personal GitHub link (LegalPage)
-mcp             # MCP documentation page (internal link, Footer)
-legal           # Legal page (internal link, Footer)
-```
-
-### `size` values
-```
-normal   # Larger cards (1-3 columns)
-compact  # Smaller cards (2-6 columns)
-```
-
----
+- **Which plots and libraries are copied?** `copy_code` by `spec` and by
+  `library`.
+- **Do visitors copy from the gallery or after opening a plot?** `copy_code`
+  by `page`.
+- **What is searched, and what is missing?** `search` and `search_no_results`
+  by `query`.
+- **Which features are used at all?** `ui_feature` by `feature`.
+- **Where does the landing page send visitors?** `nav_click` by `source`.
+- **How many visits get from a kind of page to a copy?** A funnel of pageview
+  steps filtered by `page` (`home`, then `spec_detail`) and `copy_code`. The
+  gallery is the page goal "Visit /plots".
 
 ## Reading stats — backend → Plausible Stats API
 
-In addition to *sending* events, the backend reads aggregate visitor data
-from Plausible to render the unique-visitors chart at the top of the
-public stats page.
+The backend sends Plausible nothing. It reads aggregate visitor data from
+Plausible to render the unique-visitors chart at the top of the public stats
+page.
 
 - **Endpoint**: `GET /insights/visitors` (in `api/routers/insights.py`)
 - **Upstream call**: `POST https://plausible.io/api/v2/query` with body
@@ -917,16 +733,29 @@ public stats page.
 
 - **Plausible setup**: `app/index.html` (the inline script at the end of `<head>`)
 - **Analytics shield**: the `$is_bot` and `$is_headless_client` maps and both `location = /api/event` blocks in `app/nginx.conf`
-- **Analytics hook**: `app/src/hooks/useAnalytics.ts`
+- **Analytics hook**: `app/src/hooks/useAnalytics.ts`: the closed event set (`AnalyticsEvent`, `TrackEvent`), `UI_FEATURES` and the once-per-visit rule, `normalizeQuery()`, `pageKind()`, `buildPlausibleUrl()`
 - **Admin mute**: `app/src/analytics/mute.ts`
 - **Pageview sending**: the layout effect in `app/src/layouts/RootLayout.tsx` (every navigation) and `app/src/hooks/useUrlSync.ts` (a filter change on `/plots`)
-- **Pageview building**: `buildPlausibleUrl()` in useAnalytics.ts
 - **Redirects that record nothing**: `app/src/routes/redirects.ts`
 - **Gallery scroll event**: `app/src/hooks/usePlotsScrolled.ts`, with the percentage from `app/src/utils/galleryScroll.ts`
-- **Event tracking**: Passed via `onTrackEvent` prop throughout component tree
-- **Agent chat events**: `app/src/hooks/useAgentSession.ts` (parse, plot, guardrail), `app/src/pages/AgentChatPage.tsx` (open, admin mute), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
+- **Event sending**: a component calls `useAnalytics().trackEvent`, or receives it as an `onTrackEvent` or `onTrack` prop of the type `TrackEvent`
+- **Agent chat events**: `app/src/pages/AgentChatPage.tsx` (`agent_open`, admin mute), `app/src/hooks/useAgentSession.ts` (`agent_plot_rendered`), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`
 - **Shared links** (not in Plausible): `record_share()` in `api/shared_links.py`, called by `api/routers/og_images.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
+
+## Add or change an event
+
+1. Decide whether it needs an event at all. A click on a link is recorded by
+   the pageview it leads to, or by `Outbound Link: Click`. A use of a feature
+   is a value of `ui_feature`: add it to `UI_FEATURES`.
+2. For a new event, add its name to `AnalyticsEvent` in
+   `app/src/hooks/useAnalytics.ts`. The compiler then accepts it everywhere.
+3. Send only values from a closed list or catalogue ids. Reuse a registered
+   property before you add one.
+4. Describe the event here, and add the goal and any new property to
+   [Plausible dashboard configuration](#plausible-dashboard-configuration).
+5. After the deploy, register the goal and the property in Plausible, and
+   delete what the change retired.
 
 ## Testing
 
@@ -944,45 +773,42 @@ public stats page.
 window.plausible = function(...args) { console.log('Plausible:', args); };
 ```
 
----
-
-## Implementation checklist
-
-- [x] Plausible script loaded
-- [x] Manual pageview tracking, sent by the layout at the navigation (2026-11-11)
-- [x] Filter-based URL generation
-- [x] Gallery scroll event (`plots_scrolled` with `share`, `results`, `filtered`)
-- [x] Code copy events with journey tracking (`copy_code` + `page`)
-- [x] Download tracking (`download_image` + `page`)
-- [x] Search events (`search`, `search_no_results`)
-- [x] Random filter events (`random_filter`)
-- [x] Filter removal tracking (`filter_remove`)
-- [x] Grid size toggle tracking (`grid_resize`)
-- [x] Tab interaction events (`tab_toggle`)
-- [x] Tag click events (`tag_click`)
-- [x] External link events (`external_link`)
-- [x] Internal link events (`internal_link`)
-- [x] Feature link events (`open_interactive`, `suggest_spec`, `report_issue`)
-- [x] Plot rotation (`plot_rotate`)
-- [x] Shared links counted in the database, not in Plausible (`og_image_view` ended on 2026-11-11)
-- [x] Landing-page navigation tracking (`nav_click`)
-- [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
-- [x] Agent chat events (`agent_open`, `agent_data_parsed`, `agent_data_confirmed`, `agent_data_prepared`, `agent_data_undo`, `agent_data_file`, `agent_plot_rendered`, `agent_guardrail_block`, `agent_session_saved`), enum properties only
-- [ ] Agent chat paste routing (`agent_input_routed` with `as` and `via`): register the goal and the two properties in Plausible after the deploy
-- [x] Agent chat quick feedback (`agent_result_feedback`), with the feedback control
-- [ ] Agent chat cut streams (`agent_turn_resumed` with `outcome`): register the goal in Plausible after the deploy
-
-### Plausible dashboard checklist
-
-- [ ] Register all custom properties (see table above, including `action`, `param`, `source`, and for the agent chat `status`, `size_bucket`, `changes`, `version`, `repaired`, `reason`, `include_data`, `reaction`)
-- [ ] Create goals for key events
-- [ ] Delete the `LCP`, `CLS`, and `INP` goals, whose events stopped on 2026-11-08
-- [x] After the pageview timing of 2026-11-11 was deployed: the `plots_scrolled` goal and the properties `share`, `results`, and `filtered` added; the "Scroll 25% on /", "Scroll 50% on /", and "Scroll 75% on /" goals deleted, "Scroll 90% on /" kept; the page goal "Visit /plots" (`/plots*`) in place of "Visit /specs" (checked through the Sites API on 2026-11-11)
-- [ ] After the share counter is deployed: delete the `og_image_view` goal and the properties `platform`, `language`, and the eleven `filter_*` entries, which no event sends any more
-- [ ] Set up funnels (optional)
-- [ ] Create custom dashboard widgets (optional)
+To read what the live tracker script sends without recording anything, serve
+a local build under `https://anyplot.ai` by request interception and answer
+`/api/event` yourself.
 
 ---
 
-**Last Updated**: 2026-11-11
-**Status**: Production-ready with full journey tracking, landing-page nav tracking, theme analytics, and the analytics shield against automation; shared links are counted in the database, not here
+## Dashboard checklist
+
+The goals and properties change in phases, each after the deploy that stops
+or starts its events: deleting a goal before its event stops only hides the
+event.
+
+- [x] Phase 1, after the vitals events stopped (2026-11-08): the `LCP`, `CLS`,
+  and `INP` goals and the properties `rating` and `value` deleted
+- [x] Phase 2, after the pageview timing (2026-11-11): the `plots_scrolled`
+  goal and the properties `share`, `results`, and `filtered` added; the
+  "Scroll 25% on /", "Scroll 50% on /", and "Scroll 75% on /" goals deleted,
+  "Scroll 90% on /" kept; the page goal "Visit /plots" (`/plots*`) in place of
+  "Visit /specs"
+- [x] Phase 3, after the share counter (2026-11-11): the `og_image_view` goal
+  and the properties `platform`, `language`, and the eleven `filter_*` entries
+  deleted
+- [ ] Phase 5, after the event set of 2026-11-12 is deployed:
+  - Add the goals `ui_feature`, `interactive_open`, `feedback_submitted`,
+    `agent_open`, and `agent_plot_rendered`
+  - Add the properties `feature`, `status`, and `repaired`
+  - Delete the goals `tab_toggle`, `plot_rotate`, `grid_resize`,
+    `filter_remove`, `random_filter`, `theme_toggle`, `internal_link`,
+    `external_link`, `tag_click`, `suggest_spec`, `report_issue`, and
+    `open_interactive`
+  - Delete the properties `action`, `destination`, `framework`, `from`,
+    `has_contact`, `input_method`, `mode`, `open`, `param`, `reaction`,
+    `size`, `spec_id`, `tab`, and `to`
+  - Rebuild or delete the funnels that use a deleted goal
+
+---
+
+**Last Updated**: 2026-11-12
+**Status**: Eleven custom events, each a dashboard goal; pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here

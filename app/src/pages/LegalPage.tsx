@@ -12,7 +12,6 @@ import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
-import { useAnalytics } from 'src/hooks';
 import {
   fontSize,
   proseLinkStyle,
@@ -72,7 +71,6 @@ function FactTable({
 }
 
 export function LegalPage() {
-  const { trackEvent } = useAnalytics();
   const { hash } = useLocation();
 
   // The route loads lazily, after the browser has looked for the fragment and not found it, so a
@@ -104,7 +102,6 @@ export function LegalPage() {
           href="https://www.linkedin.com/in/markus-neusinger/"
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent('external_link', { destination: 'linkedin' })}
           sx={proseLinkStyle}
         >
           markus-neusinger
@@ -115,7 +112,6 @@ export function LegalPage() {
           href="https://x.com/MarkusNeusinger"
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent('external_link', { destination: 'x' })}
           sx={proseLinkStyle}
         >
           @MarkusNeusinger
@@ -126,7 +122,6 @@ export function LegalPage() {
           href="https://github.com/MarkusNeusinger"
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent('external_link', { destination: 'github_personal' })}
           sx={proseLinkStyle}
         >
           MarkusNeusinger
@@ -140,13 +135,7 @@ export function LegalPage() {
       <Typography sx={subheadingStyle}>other projects</Typography>
       <Typography sx={textStyle}>
         {/* no noreferrer — own sites, keep the referrer for their analytics */}
-        <Link
-          href="https://kurrentschrift.ink"
-          target="_blank"
-          rel="noopener"
-          onClick={() => trackEvent('external_link', { destination: 'kurrentschrift' })}
-          sx={proseLinkStyle}
-        >
+        <Link href="https://kurrentschrift.ink" target="_blank" rel="noopener" sx={proseLinkStyle}>
           kurrentschrift.ink
         </Link>{' '}
         — read and write old german cursive
@@ -155,7 +144,6 @@ export function LegalPage() {
           href="https://github.com/MarkusNeusinger/cite-citadel"
           target="_blank"
           rel="noopener"
-          onClick={() => trackEvent('external_link', { destination: 'cite_citadel' })}
           sx={proseLinkStyle}
         >
           cite-citadel

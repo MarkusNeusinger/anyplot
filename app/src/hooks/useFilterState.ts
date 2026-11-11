@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import { useFilterFetch } from 'src/hooks/useFilterFetch';
 import { useHomeState } from 'src/hooks/useLayoutContext';
 import { parseUrlFilters, useUrlSync } from 'src/hooks/useUrlSync';
@@ -35,7 +36,7 @@ export function imagesContentKey(images: readonly PlotImage[]): string {
 
 interface UseFilterStateOptions {
   onTrackPageview: () => void;
-  onTrackEvent: (event: string, props?: Record<string, string>) => void;
+  onTrackEvent: TrackEvent;
 }
 
 interface UseFilterStateReturn {
@@ -62,7 +63,7 @@ interface UseFilterStateReturn {
   handleRemoveFilter: (groupIndex: number, value: string) => void;
   handleRemoveGroup: (groupIndex: number) => void;
   handleClearFilters: () => void;
-  handleRandom: (method?: 'click' | 'space' | 'doubletap') => void;
+  handleRandom: () => void;
 
   // Animation state for random
   randomAnimation: { index: number; phase: 'out' | 'in'; oldLabel?: string } | null;
@@ -216,9 +217,8 @@ export function useFilterState({
   // Remove a filter value from a specific group
   const handleRemoveFilter = useCallback(
     (groupIndex: number, value: string) => {
-      const group = activeFiltersRef.current[groupIndex];
-      if (group) {
-        onTrackEvent('filter_remove', { category: group.category, value });
+      if (activeFiltersRef.current[groupIndex]) {
+        onTrackEvent('ui_feature', { feature: 'filter_remove' });
       }
       setActiveFilters(prev => {
         const newFilters = [...prev];
@@ -239,74 +239,70 @@ export function useFilterState({
   // Remove entire group by index
   const handleRemoveGroup = useCallback(
     (groupIndex: number) => {
-      const group = activeFiltersRef.current[groupIndex];
-      if (group) {
-        onTrackEvent('filter_remove', { category: group.category, value: group.values.join(',') });
+      if (activeFiltersRef.current[groupIndex]) {
+        onTrackEvent('ui_feature', { feature: 'filter_remove' });
       }
       setActiveFilters(prev => prev.filter((_, i) => i !== groupIndex));
     },
     [onTrackEvent]
   );
 
-  // Remove every group at once (the search's `.search_all()`); each removed
-  // group is reported like a single removal.
+  // Remove every group at once (the search's `.search_all()`): a use of the
+  // same feature as a single removal.
   const handleClearFilters = useCallback(() => {
-    for (const group of activeFiltersRef.current) {
-      onTrackEvent('filter_remove', { category: group.category, value: group.values.join(',') });
+    if (activeFiltersRef.current.length > 0) {
+      onTrackEvent('ui_feature', { feature: 'filter_remove' });
     }
     setActiveFilters([]);
   }, [onTrackEvent]);
 
   // Random filter - replaces last filter slot (or adds first one)
-  const handleRandom = useCallback(
-    (method: 'click' | 'space' | 'doubletap' = 'click') => {
-      const currentFilters = activeFiltersRef.current;
-      // Use contextual counts if filters exist, otherwise global
-      const countsToUse = currentFilters.length > 0 ? filterCounts : globalCounts;
-      if (!countsToUse) return;
+  const handleRandom = useCallback(() => {
+    const currentFilters = activeFiltersRef.current;
+    // Use contextual counts if filters exist, otherwise global
+    const countsToUse = currentFilters.length > 0 ? filterCounts : globalCounts;
+    if (!countsToUse) return;
 
-      const availableCategories = FILTER_CATEGORIES.filter(cat => {
-        const counts = countsToUse[cat];
-        return counts && Object.keys(counts).length > 0;
-      });
+    const availableCategories = FILTER_CATEGORIES.filter(cat => {
+      const counts = countsToUse[cat];
+      return counts && Object.keys(counts).length > 0;
+    });
 
-      if (availableCategories.length === 0) return;
+    if (availableCategories.length === 0) return;
 
-      const randomCategory =
-        availableCategories[Math.floor(Math.random() * availableCategories.length)];
-      const values = Object.keys(countsToUse[randomCategory]);
+    const randomCategory =
+      availableCategories[Math.floor(Math.random() * availableCategories.length)];
+    const values = Object.keys(countsToUse[randomCategory]);
 
-      if (values.length === 0) return;
+    if (values.length === 0) return;
 
-      const randomValue = values[Math.floor(Math.random() * values.length)];
-      const newFilter = { category: randomCategory, values: [randomValue] };
+    const randomValue = values[Math.floor(Math.random() * values.length)];
+    const newFilter = { category: randomCategory, values: [randomValue] };
 
-      // Get old label before changing
-      const newIndex = currentFilters.length === 0 ? 0 : currentFilters.length - 1;
-      const oldGroup = currentFilters[newIndex];
-      const oldLabel = oldGroup ? `${oldGroup.category}:${oldGroup.values.join(',')}` : '';
+    // Get old label before changing
+    const newIndex = currentFilters.length === 0 ? 0 : currentFilters.length - 1;
+    const oldGroup = currentFilters[newIndex];
+    const oldLabel = oldGroup ? `${oldGroup.category}:${oldGroup.values.join(',')}` : '';
 
-      // Start animation with old label, change filter immediately (so images load)
-      setRandomAnimation({ index: newIndex, phase: 'out', oldLabel });
-      setActiveFilters(prev => {
-        if (prev.length === 0) {
-          return [newFilter];
-        }
-        return [...prev.slice(0, -1), newFilter];
-      });
+    // Start animation with old label, change filter immediately (so images load)
+    setRandomAnimation({ index: newIndex, phase: 'out', oldLabel });
+    setActiveFilters(prev => {
+      if (prev.length === 0) {
+        return [newFilter];
+      }
+      return [...prev.slice(0, -1), newFilter];
+    });
 
-      // Switch to 'in' phase at halfway point
-      setTimeout(() => {
-        setRandomAnimation({ index: newIndex, phase: 'in' });
-      }, 500);
+    // Switch to 'in' phase at halfway point
+    setTimeout(() => {
+      setRandomAnimation({ index: newIndex, phase: 'in' });
+    }, 500);
 
-      // Clear animation state
-      setTimeout(() => setRandomAnimation(null), 1000);
+    // Clear animation state
+    setTimeout(() => setRandomAnimation(null), 1000);
 
-      onTrackEvent('random_filter', { category: randomCategory, value: randomValue, method });
-    },
-    [filterCounts, globalCounts, onTrackEvent]
-  );
+    onTrackEvent('ui_feature', { feature: 'random_filter' });
+  }, [filterCounts, globalCounts, onTrackEvent]);
 
   return {
     // State

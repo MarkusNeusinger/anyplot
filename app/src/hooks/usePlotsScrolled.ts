@@ -14,7 +14,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { buildPlausibleUrl } from 'src/hooks/useAnalytics';
+import { buildPlausibleUrl, type TrackEvent } from 'src/hooks/useAnalytics';
 import { isPlotsPath } from 'src/routes/paths';
 import { galleryScrollPercent } from 'src/utils/galleryScroll';
 
@@ -45,7 +45,7 @@ interface UsePlotsScrolledOptions {
   loading: boolean;
   /** The offset the page restores from an earlier visit, as it stood when this visit began. */
   restoredOffset: number;
-  onTrackEvent: (name: string, props?: Record<string, string>, url?: string) => void;
+  onTrackEvent: TrackEvent;
 }
 
 interface Deepest {

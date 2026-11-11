@@ -242,7 +242,7 @@ describe('MapPage', () => {
     onNodeClick({ id: 'scatter-basic' });
 
     expect(mockNavigate).toHaveBeenCalledWith('/scatter-basic');
-    expect(mockTrackEvent).toHaveBeenCalledWith('map_node_click', { spec: 'scatter-basic' });
+    expect(mockTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'map_node_click' });
   });
 
   it('drawNode paints a fallback rect when a node has no preloaded image', async () => {
@@ -420,7 +420,7 @@ describe('MapPage', () => {
       onNodeClick({ id: 'scatter-basic' });
     });
     expect(mockNavigate).not.toHaveBeenCalled();
-    expect(mockTrackEvent).toHaveBeenCalledWith('map_node_pin', { spec: 'scatter-basic' });
+    expect(mockTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'map_node_pin' });
 
     // Second tap on the same node: navigate. After the first tap React
     // re-rendered MapPage with the new pinnedId, so lastFgProps.current
@@ -430,7 +430,7 @@ describe('MapPage', () => {
       onNodeClick({ id: 'scatter-basic' });
     });
     expect(mockNavigate).toHaveBeenCalledWith('/scatter-basic');
-    expect(mockTrackEvent).toHaveBeenCalledWith('map_node_click', { spec: 'scatter-basic' });
+    expect(mockTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'map_node_click' });
   });
 
   it('registers an outlier-squash force on the simulation via onRenderFramePre', async () => {

@@ -49,20 +49,6 @@ import {
 } from 'src/sections/agent-chat/messages';
 import { routeInput } from 'src/sections/agent-chat/routeInput';
 
-/** What happened to a dropped, chosen or pasted file, for `agent_data_file`. */
-export type FileOutcome =
-  | 'filled'
-  | 'replaced'
-  | 'kept'
-  | 'attached'
-  | 'removed'
-  | 'refused'
-  | 'too_large'
-  | 'busy'
-  | 'unreadable'
-  | 'failed'
-  | 'sheet';
-
 /** A binary file the server converted: kept in the browser for the sheet picker, which converts it again. */
 export interface ConvertedFile {
   name: string;
@@ -189,7 +175,6 @@ export interface ChatAttachmentOptions {
   /** The session holds data, which a paste would replace: the routing asks more of a pair list. */
   hasData?: boolean;
   onConvert?: (dataBase64: string, sheet?: string) => Promise<ConvertAnswer>;
-  onTrack?: (event: string, props?: Record<string, string | undefined>) => void;
 }
 
 export interface ChatAttachment {
@@ -236,7 +221,6 @@ export function useChatAttachment({
   locked,
   hasData = false,
   onConvert,
-  onTrack,
 }: ChatAttachmentOptions): ChatAttachment {
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -250,11 +234,6 @@ export function useChatAttachment({
   const pasteRouted = useRef(false);
   const reading = attachment?.status === 'reading';
   const dropReady = ready && !working && !locked && !reading;
-
-  const trackFile = (kind: string, encoding: FileEncoding | null, outcome: FileOutcome) => {
-    onTrack?.('agent_data_file', { kind, encoding: encoding ?? 'none', outcome });
-    if (outcome === 'attached') onTrack?.('agent_input_routed', { as: 'data', via: 'file' });
-  };
 
   const next = () => {
     seq.current += 1;
@@ -287,7 +266,6 @@ export function useChatAttachment({
   // counted: every typed message is a `message`, which would only drown the tuning signal.
   const attachTyped = (text: string) => {
     if (routeInput(text, { hasData }) !== 'data') return null;
-    onTrack?.('agent_input_routed', { as: 'data', via: 'typed' });
     return attachText(text, 'typed');
   };
 
@@ -307,7 +285,6 @@ export function useChatAttachment({
     // A read in flight belongs to this attachment: its answer must not bring it back.
     next();
     setNotice(null);
-    if (attachment?.via === 'file') trackFile(attachment.kind, attachment.encoding, 'removed');
     setAttachment(null);
   };
 
@@ -331,7 +308,6 @@ export function useChatAttachment({
     if (!onConvert) {
       setAttachment(null);
       setNotice(describeFileRefusal(file.name, 'binary'));
-      trackFile(file.browserKind, null, 'refused');
       return;
     }
     const readingLine = sheet
@@ -372,7 +348,6 @@ export function useChatAttachment({
           failure.damage
         )
       );
-      trackFile(file.browserKind, null, failure.code.startsWith('file_') ? 'refused' : 'failed');
       return;
     }
     if (id !== seq.current) return;
@@ -404,7 +379,6 @@ export function useChatAttachment({
       error: null,
       readingLine: null,
     });
-    trackFile(answer.kind, null, 'attached');
   };
 
   // A drop, `.open()` or a pasted file: refused while the session works, read in the browser or
@@ -413,12 +387,10 @@ export function useChatAttachment({
     // A file the server still reads keeps its place: the next one is refused, not swapped in.
     if (reading) {
       setNotice(FILE_CONVERTING_TEXT);
-      trackFile('unknown', null, 'busy');
       return;
     }
     if (!ready || working || locked) {
       setNotice(locked && !working ? FILE_LOCKED_TEXT : FILE_BUSY_TEXT);
-      trackFile('unknown', null, 'busy');
       return;
     }
     const id = next();
@@ -429,7 +401,6 @@ export function useChatAttachment({
     } catch {
       if (id !== seq.current) return;
       setNotice(describeFileRefusal(file.name, 'unreadable'));
-      trackFile('unknown', null, 'unreadable');
       return;
     }
     if (id !== seq.current) return;
@@ -444,11 +415,6 @@ export function useChatAttachment({
     if (!read.ok) {
       const code = read.reason === 'binary' ? read.kind : read.reason;
       setNotice(describeFileRefusal(file.name, code));
-      trackFile(
-        read.kind,
-        read.encoding,
-        read.reason === 'too_large' || read.reason === 'too_large_binary' ? 'too_large' : 'refused'
-      );
       return;
     }
     setAttachment({
@@ -467,7 +433,6 @@ export function useChatAttachment({
       error: null,
       readingLine: null,
     });
-    trackFile('text', read.encoding, 'attached');
   };
 
   // While the chat is mounted, a file dropped beside its drop target must not make the browser
@@ -543,11 +508,9 @@ export function useChatAttachment({
     return taken;
   };
 
-  // How a paste was routed, for tuning the rules (`agent_input_routed`); a data paste attaches.
+  // A data paste attaches; anything else stays the box's text.
   const routePaste = (text: string, take: () => void) => {
-    const route = routeInput(text, { hasData });
-    if (route) onTrack?.('agent_input_routed', { as: route, via: 'paste' });
-    if (route !== 'data') return false;
+    if (routeInput(text, { hasData }) !== 'data') return false;
     take();
     attachText(text);
     return true;

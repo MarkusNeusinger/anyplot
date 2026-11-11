@@ -66,7 +66,7 @@ describe('GridSizeToggle', () => {
     await user.click(screen.getByRole('button'));
 
     expect(onImageSizeChange).toHaveBeenCalledWith('compact');
-    expect(onTrackEvent).toHaveBeenCalledWith('grid_resize', { size: 'compact' });
+    expect(onTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'grid_resize' });
   });
 
   it('toggles to normal when already compact', async () => {

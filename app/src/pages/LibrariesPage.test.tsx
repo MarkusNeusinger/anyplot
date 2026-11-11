@@ -57,10 +57,7 @@ describe('LibrariesPage', () => {
     // muix stays (framework: react); matplotlib (framework: none) is filtered out.
     expect(screen.getByText('muix')).toBeInTheDocument();
     expect(screen.queryByText('matplotlib')).not.toBeInTheDocument();
-    expect(trackEvent).toHaveBeenCalledWith('library_filter', {
-      source: 'libraries_page',
-      framework: 'react',
-    });
+    expect(trackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'library_filter' });
   });
 
   it('restores the full list when "all libraries" is reselected', async () => {
