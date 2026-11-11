@@ -128,6 +128,7 @@ impl-generate.yml
   |-- Fails if the pushed branch doesn't carry the workspace's implementation file, or the commit changes a dependency file
   |-- Creates metadata/{language}/{library}.yaml (initial)
   |-- Python: adaptability smoke run, plus the predecessor's render on a regeneration (record-only)
+  |-- Python: readiness scan against the predecessor (record-only)
   |-- Tests execution
   |-- Uploads preview to GCS staging, with render.sha256 (adaptability records under an adapt/ prefix, never promoted)
   |-- Creates PR --> main
@@ -153,6 +154,7 @@ impl-review.yml
        |                                       |-- Fixes implementation
        |                                       |-- Fails without a pushed code change or without both renders
        |                                       |-- Python: reruns the adaptability smoke run (record-only)
+       |                                       |-- Python: readiness scan against the predecessor (record-only)
        |                                       |-- Stages the repaired renders with render.sha256
        |                                       |-- Re-triggers impl-review.yml
        |
@@ -171,12 +173,34 @@ Python implementations follow the Data block convention of [Adaptable catalogue 
 | `impl-generate.yml` | Adaptability smoke run (record-only) | Runs the new source on perturbed tables (`core/smoke_run.py run`). On a regeneration it also renders the predecessor next to the new source in the same runner (`pair`) and runs the smoke run on it. It records the results under `$RUNNER_TEMP/adapt` without gating. |
 | `impl-generate.yml` | Upload to GCS Staging | Clears `staging/{spec}/python/{library}/adapt/` and stages this run's smoke results, pair record, raw pair renders, and the generator's self-check log there. They're never promoted, but like every object in the bucket they're publicly readable. |
 | `impl-repair.yml` | Adaptability smoke run (record-only) | Reruns the smoke run on the repaired file. |
-| `impl-repair.yml` | Upload repaired plot to GCS staging | Replaces `adapt/new-smoke.json`, or removes the stale one when the repair run wrote none. |
+| `impl-repair.yml` | Upload repaired plot to GCS staging | Replaces `adapt/new-smoke.json` and `adapt/readiness.json`, or removes the stale one when the repair run wrote none. |
 | `impl-review.yml` | Set up Python | Pins the job's `python3` to `.python-version`, which the regen tools and the checker mirror need to parse PEP 758 `except A, B:`. |
 | `impl-review.yml` | Adaptability check (record-only) | Runs the workflow-ref checker mirror on the PR's Python file and, on a regeneration, on its predecessor. It combines each with the staged smoke run into `/tmp/anyplot-adapt-new.json` and `/tmp/anyplot-adapt-prev.json`, asks the gate whether the adapt route holds (`regen_gate.py adapt-route`), and skips the review only when the route holds and the owner's `ADAPT_REVIEW_FREE` switch is on. |
 | `impl-review.yml` | Add carried quality score label | On a review-free adapt merge, labels the PR with the stored score that carries over. |
 
 `impl-merge.yml` promotes only the `plot-*` files from staging, so `adapt/` never reaches production; its cleanup removes `adapt/` with the rest of staging.
+
+#### Readiness scan (record-only)
+
+The agent chat adapts a catalogue file only when its validator accepts the file: the SECURITY profile, the theme block, and the save target (`agents/anyplot/code/readiness.py`). A regeneration or a repair can add a construct the validator refuses. The render then gets better while the pair stops working in the chat. `impl-generate.yml` and `impl-repair.yml` therefore run "Readiness scan (record-only)" right after the smoke run, for Python implementations.
+
+The step copies the validator from the workflow's own ref as a bare tree: `agents/anyplot/code`, the two schema modules it imports, and `core/`. Without `agents/__init__.py` those directories are namespace packages, so nothing of the agent runtime is imported. It then runs `automation/scripts/readiness_scan.py` on the new file and on the implementation on `main`. The script reads both files and never runs them.
+
+A refusal key names why the validator blocks a file: `security:<rule>` for every rule of the SECURITY profile the file breaks, and the reason's category otherwise, such as `no-theme` or `savefig-target`. The verdict compares the keys of both files:
+
+| Verdict | Meaning |
+|---|---|
+| `regression` | The new file is refused for a key the predecessor wasn't refused for. A predecessor the chat accepted has no key, so every key of the new file counts. |
+| `none` | The new file adds no key. It may have fewer than before. |
+| `first_generation` | `main` holds no predecessor. |
+| `excluded` | A map spec. The chat refuses those whatever the code holds. |
+| `unreadable` | No new file, or a library without a Python profile. |
+
+The step prints one `readiness_scan` line, a warning for a regression and a notice otherwise, and writes a `**Readiness (record-only):**` line to the job summary. The record goes to `adapt/readiness.json` in staging, beside the smoke run, and holds identifiers only, never code. Nothing reads it yet, and the step never fails the job.
+
+The scan covers Python only. The profiles of R, Julia, and JavaScript need tree-sitter grammars that these jobs don't carry.
+
+On the six regenerations of 2026-11-11 the scan finds two regressions. `surface-basic` in altair went from accepted to refused (`security:banned-attribute`), and `surface-basic` in pygal traded `security:banned-import` for `security:banned-attribute` and `security:banned-keyword`. The other four added nothing, and two of those moved from coupled to clean.
 
 #### Renders tied to their code
 

@@ -227,6 +227,17 @@ writes a job-summary line (`impl-review.yml`, "Contract check (record-only)",
 from a copy at the workflow's ref). It always exits 0. See
 [Contract check](../../docs/workflows/overview.md#contract-check-record-only).
 
+### `readiness_scan.py`
+Scans a Python implementation and its predecessor with the agent chat's
+validator and records the refusals only the new file has (`regression`,
+`none`, `first_generation`, `excluded`, or `unreadable`). `impl-generate.yml`
+and `impl-repair.yml` run it in "Readiness scan (record-only)" from a copy at
+the workflow's ref, next to a bare copy of the validator
+(`agents/anyplot/code`, its two schema modules, and `core/`), so nothing of
+the agent runtime is imported. It reads the files and never runs them, writes
+`adapt/readiness.json`, and always exits 0. See
+[Readiness scan](../../docs/workflows/overview.md#readiness-scan-record-only).
+
 ### `spec_characteristics_lint.py`
 Lint for the closing `## What a good version looks like` section of
 `plots/*/specification.md`. Standard library only; it imports the parser from

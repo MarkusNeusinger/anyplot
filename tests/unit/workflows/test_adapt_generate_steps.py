@@ -184,7 +184,9 @@ class TestWiring:
         assert names.count(SMOKE_STEP) == 1
         index = names.index(SMOKE_STEP)
         assert names[index - 1] == "Create library metadata file"
-        assert names[index + 1] == "Process plot images (light + dark)"
+        # The readiness scan reads the same file and adds its record to the same folder; neither
+        # touches the PNGs, which are processed only afterwards.
+        assert names[index + 1 : index + 3] == ["Readiness scan (record-only)", "Process plot images (light + dark)"]
         assert index < names.index("Upload to GCS Staging")
 
     def test_repair_runs_it_after_the_repaired_image_and_before_the_upload(self) -> None:
@@ -467,19 +469,22 @@ class TestRepairUpload:
             f"-h Cache-Control:no-store cp {staging.adapt}/new-smoke.json {staging.staging}/adapt/new-smoke.json"
             in calls
         )
-        # Only the smoke record is in question here; render.sha256 has its own tests.
-        assert not [call for call in calls if call.startswith("rm ") and "/adapt/" in call]
+        # Only the smoke record is in question here; render.sha256 and the
+        # readiness record have their own tests.
+        assert f"rm {staging.staging}/adapt/new-smoke.json" not in calls
 
     def test_without_a_record_the_stale_one_goes(self, tmp_path: Path, shell: list[str]) -> None:
         staging = Staging(tmp_path)
         calls = staging.run("impl-repair.yml", self.STEP, shell, GSUTIL_RM_MISSES="1")
-        assert calls[-1] == f"rm {staging.staging}/adapt/new-smoke.json"
+        assert f"rm {staging.staging}/adapt/new-smoke.json" in calls
+        assert not [call for call in calls if " cp " in call and "new-smoke.json" in call]
 
     def test_a_failed_upload_removes_the_stale_record(self, tmp_path: Path, shell: list[str]) -> None:
         staging = Staging(tmp_path)
         (staging.adapt / "new-smoke.json").write_text("{}", encoding="utf-8")
         calls = staging.run("impl-repair.yml", self.STEP, shell, GSUTIL_FAIL_CP="1")
-        assert calls[-1] == f"rm {staging.staging}/adapt/new-smoke.json"
+        failed = next(i for i, call in enumerate(calls) if " cp " in call and call.endswith("/adapt/new-smoke.json"))
+        assert calls[failed + 1] == f"rm {staging.staging}/adapt/new-smoke.json"
         assert "::warning::adapt/new-smoke.json not staged" in staging.stdout
 
     def test_other_languages_touch_no_adapt_record(self, tmp_path: Path, shell: list[str]) -> None:

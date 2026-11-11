@@ -259,6 +259,9 @@ def test_no_claude_workflow_runs_on_pull_request_events():
         ("impl-generate.yml", "Adopt implementation from source ref"),
         ("impl-generate.yml", "Adaptability smoke run (record-only)"),
         ("impl-repair.yml", "Adaptability smoke run (record-only)"),
+        # The scan reads the code without running it, but on the workspace's .venv, which the session could change.
+        ("impl-generate.yml", "Readiness scan (record-only)"),
+        ("impl-repair.yml", "Readiness scan (record-only)"),
     ],
 )
 def test_steps_running_model_written_code_get_no_oidc_request(filename, name):

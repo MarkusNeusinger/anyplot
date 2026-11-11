@@ -575,6 +575,43 @@ jobs:
             --spec "plots/${SPEC_ID}/specification.md" --spec-id "$SPEC_ID" --library "$LIBRARY" \
             --out "$OUT/new-smoke.json" || true
 
+      # The readiness scan of the repaired file against the implementation on
+      # origin/main, as impl-generate runs it (automation/scripts/readiness_scan.py):
+      # which refusals of the agent chat's validator only the repaired file has.
+      # A repair can add one as easily as a generation. The predecessor is the
+      # live implementation, when main holds one (a forced regeneration reaches
+      # repair; a first generation has none). The validator is a bare tree from
+      # this workflow's ref, and `-I` keeps the PR branch off the import path.
+      # Record-only: no exit code gates.
+      - name: Readiness scan (record-only)
+        if: success() && steps.lang.outputs.language == 'python'
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          SPEC_ID: ${{ inputs.specification_id }}
+          LIBRARY: ${{ inputs.library }}
+        run: |
+          # The interpreter is the workspace's .venv, which the repair's
+          # session could have changed: no way to mint an OIDC token from here.
+          unset ACTIONS_ID_TOKEN_REQUEST_URL ACTIONS_ID_TOKEN_REQUEST_TOKEN
+          OUT="$RUNNER_TEMP/adapt"; TOOLS="$RUNNER_TEMP/readiness-tools"
+          PREV="$RUNNER_TEMP/readiness-prev-source"
+          rm -rf "$TOOLS" "$PREV" "$OUT/readiness.json"; mkdir -p "$OUT" "$TOOLS"
+          if ! git archive "$GITHUB_SHA" agents/anyplot/code agents/anyplot/schemas.py agents/anyplot/language.py \
+                 core automation/scripts/readiness_scan.py | tar -x -C "$TOOLS" \
+             || [ ! -f "$TOOLS/automation/scripts/readiness_scan.py" ]; then
+            echo "::warning::readiness_scan could not copy the validator from ${GITHUB_SHA}; no readiness record is staged"
+            exit 0
+          fi
+          IMPL="plots/${SPEC_ID}/implementations/python/${LIBRARY}.py"
+          # The predecessor's header holds its stored score, so the copy goes
+          # right after the scan.
+          git show "origin/main:${IMPL}" > "$PREV" 2>/dev/null || rm -f "$PREV"
+          .venv/bin/python -I "$TOOLS/automation/scripts/readiness_scan.py" scan --new "$IMPL" --prev "$PREV" \
+            --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$OUT/readiness.json" \
+            || echo "::warning::readiness_scan did not run; no readiness record is staged"
+          rm -f "$PREV"
+
       - name: Authenticate to GCP
         if: success()
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
@@ -655,6 +692,15 @@ jobs:
             else
               [ -s "$SMOKE" ] && echo "::warning::adapt/new-smoke.json not staged; impl-review records it as missing"
               gsutil rm "${STAGING_PATH}/adapt/new-smoke.json" 2>/dev/null || true
+            fi
+            # The readiness record of the repaired file, the same way: staged,
+            # or the record of the code before the repair goes.
+            READY="$RUNNER_TEMP/adapt/readiness.json"
+            if [ -s "$READY" ] && gsutil -h "Cache-Control:no-store" cp "$READY" "${STAGING_PATH}/adapt/readiness.json"; then
+              echo "::notice::Staged the repaired file's adapt/readiness.json"
+            else
+              [ -s "$READY" ] && echo "::warning::adapt/readiness.json not staged"
+              gsutil rm "${STAGING_PATH}/adapt/readiness.json" 2>/dev/null || true
             fi
           fi
 
