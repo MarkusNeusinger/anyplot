@@ -196,7 +196,7 @@ A refusal key names why the validator blocks a file: `security:<rule>` for every
 | `excluded` | A map spec. The chat refuses those whatever the code holds. |
 | `unreadable` | No new file, or a library without a Python profile. |
 
-The step prints one `readiness_scan` line, a warning for a regression and a notice otherwise, and writes a `**Readiness (record-only):**` line to the job summary. The record goes to `adapt/readiness.json` in staging, beside the smoke run, and holds identifiers only, never code. Nothing reads it yet, and the step never fails the job.
+The step prints one `readiness_scan` line, a warning for a regression and a notice otherwise, and writes a `**Readiness (record-only):**` line to the job summary. The record goes to `adapt/readiness.json` in staging, beside the smoke run. It holds identifiers and counts only, never code: for each file its status, its keys, and how often each SECURITY rule fires. The verdict compares keys, so a rule that fires more often than before is no regression; the count is there for a later reading. Nothing reads it yet, and the step never fails the job.
 
 The scan covers Python only. The profiles of R, Julia, and JavaScript need tree-sitter grammars that these jobs don't carry.
 

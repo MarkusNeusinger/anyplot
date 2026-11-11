@@ -7,12 +7,14 @@ so a test that reads `plots/` would pin a verdict that moves.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 from automation.scripts import readiness_scan
 from automation.scripts.readiness_scan import build_record, log_line, scan_side, summary_line
@@ -72,7 +74,16 @@ def _record(new: str | None, prev: str | None, spec_id: str = SPEC, library: str
 
 def test_an_accepted_file_has_no_refusal_key():
     side = _side(CLEAN)
-    assert side == {"status": "clean", "refusals": [], "spec_refused": False, "coupled": []}
+    assert side == {"status": "clean", "refusals": [], "spec_refused": False, "coupled": [], "findings": {}}
+
+
+def test_a_rule_that_fires_more_often_is_counted_but_is_no_new_key():
+    twice = BANNED_IMPORT.replace("import json", "import json\nimport socket")
+    assert _side(BANNED_IMPORT)["findings"] == {"banned-import": 1}
+    assert _side(twice)["findings"] == {"banned-import": 2}
+    record = _record(twice, BANNED_IMPORT)
+    assert record["verdict"] == "none" and record["added"] == []
+    assert (record["new"]["findings"], record["prev"]["findings"]) == ({"banned-import": 2}, {"banned-import": 1})
 
 
 @pytest.mark.parametrize(
@@ -122,6 +133,21 @@ def test_a_map_spec_is_refused_whatever_the_code_holds():
 
 def test_a_library_without_a_python_profile_is_unsupported():
     assert _side(CLEAN, library="ggplot2")["status"] == "unsupported"
+
+
+def test_a_file_the_normaliser_cannot_take_is_an_error_and_a_map_spec_stays_excluded(monkeypatch):
+    from agents.anyplot.code import normalise as normalise_module
+
+    def boom(code: str, *, library: str) -> str:
+        raise ValueError("cannot normalise")
+
+    monkeypatch.setattr(normalise_module, "normalise", boom)
+    side = _side(CLEAN)
+    assert (side["status"], side["refusals"], side["spec_refused"]) == ("error", ["error:valueerror"], False)
+    assert _record(CLEAN, None)["verdict"] == "first_generation"
+    on_map = _side(CLEAN, spec_id="choropleth-basic")
+    assert (on_map["status"], on_map["spec_refused"]) == ("error", True)
+    assert _record(CLEAN, None, spec_id="choropleth-basic")["verdict"] == "excluded"
 
 
 # --- the record ----------------------------------------------------------------------------------
@@ -200,15 +226,26 @@ def test_a_record_holds_identifiers_only():
 # --- the command, as the workflows run it ----------------------------------------------------------
 
 
-def _bare_tree(tmp_path: Path) -> Path:
-    """What the workflow step extracts from its ref: the validator and core, without any `agents/__init__.py`."""
+def _archived_paths(workflow: str) -> list[str]:
+    """The paths the workflow's own `git archive "$GITHUB_SHA" … | tar` line names, read from the step script."""
+    document = yaml.safe_load((ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8"))
+    steps = [step for job in document["jobs"].values() for step in job.get("steps", [])]
+    (script,) = [str(step["run"]) for step in steps if step.get("name") == "Readiness scan (record-only)"]
+    match = re.search(r'git archive "\$GITHUB_SHA" (.+?) \| tar ', script.replace("\\\n", " "), re.DOTALL)
+    assert match, "the step no longer extracts the validator with git archive"
+    return match.group(1).split()
+
+
+def _bare_tree(tmp_path: Path, workflow: str = "impl-generate.yml") -> Path:
+    """What the workflow step extracts from its ref, path for path: nothing the step does not name is copied."""
     tree = tmp_path / "readiness-tools"
-    shutil.copytree(ROOT / "agents" / "anyplot" / "code", tree / "agents" / "anyplot" / "code")
-    for name in ("schemas.py", "language.py"):
-        shutil.copy(ROOT / "agents" / "anyplot" / name, tree / "agents" / "anyplot" / name)
-    shutil.copytree(ROOT / "core", tree / "core", ignore=shutil.ignore_patterns("__pycache__"))
-    (tree / "automation" / "scripts").mkdir(parents=True)
-    shutil.copy(SCRIPT, tree / "automation" / "scripts" / "readiness_scan.py")
+    for relative in _archived_paths(workflow):
+        source, target = ROOT / relative, tree / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if source.is_dir():
+            shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__"))
+        else:
+            shutil.copy(source, target)
     return tree
 
 
@@ -222,13 +259,15 @@ def _run(tree: Path, cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_the_bare_copy_scans_without_the_agent_runtime(tmp_path):
+@pytest.mark.parametrize("workflow", ["impl-generate.yml", "impl-repair.yml"])
+def test_the_bare_copy_scans_without_the_agent_runtime(tmp_path, workflow):
     """No `agents/__init__.py` and no `agents/anyplot/__init__.py`: the ADK import of the package never runs.
 
-    The workspace holds a hostile `core` and `agents`, as a generator could leave them; `-I` keeps the working
-    directory off the import path, so the copy's own tree is what gets imported.
+    The tree holds exactly the paths the workflow's `git archive` line names, so a path the validator needs and
+    the step forgets fails here. The workspace holds a hostile `core` and `agents`, as a generator could leave
+    them; `-I` keeps the working directory off the import path, so the copy's own tree is what gets imported.
     """
-    tree = _bare_tree(tmp_path)
+    tree = _bare_tree(tmp_path, workflow)
     assert not (tree / "agents" / "__init__.py").exists() and not (tree / "agents" / "anyplot" / "__init__.py").exists()
     workspace = tmp_path / "ws"
     for package in ("core", "agents"):

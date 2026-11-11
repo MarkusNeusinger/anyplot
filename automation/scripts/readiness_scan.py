@@ -60,34 +60,59 @@ def _token(value: str) -> str:
     return value if _TOKEN.match(value) else "other"
 
 
+def _side(
+    status: str,
+    *,
+    refusals: set[str] | None = None,
+    spec_refused: bool = False,
+    coupled: set[str] | None = None,
+    findings: dict[str, int] | None = None,
+) -> dict:
+    return {
+        "status": status,
+        "refusals": sorted(refusals or ()),
+        "spec_refused": spec_refused,
+        "coupled": sorted(coupled or ()),
+        "findings": dict(sorted((findings or {}).items())),
+    }
+
+
 def scan_side(code: str, *, spec_id: str, library: str) -> dict:
-    """The validator's verdict on one file: its status, its refusal keys, and whether the spec itself is refused."""
+    """The validator's verdict on one file: its status, its refusal keys, and whether the spec itself is refused.
+
+    ``findings`` counts how often each SECURITY rule fires. The verdict compares keys only, so a rule that fires
+    more often than before is no regression; the count is in the record for whoever reads it later.
+    """
     if str(TREE) not in sys.path:
         sys.path.insert(0, str(TREE))
     from agents.anyplot.code.normalise import SUPPORTED_LIBRARIES, normalise
     from agents.anyplot.code.readiness import scan
     from agents.anyplot.code.validate import validate_security
+    from core.spec_roles import MAP_SPECS
     from core.utils import strip_noqa_comments
 
     if library not in SUPPORTED_LIBRARIES:
-        return {"status": "unsupported", "refusals": [], "spec_refused": False, "coupled": []}
+        return _side("unsupported")
+    map_spec = spec_id in MAP_SPECS  # refused whatever the code holds, also when the code cannot be read
     try:
         normalised = normalise(strip_noqa_comments(code) or "", library=library)
     except Exception as exc:  # a file the normaliser cannot take: the chat cannot open it either
-        key = f"error:{_token(type(exc).__name__.lower())}"
-        return {"status": "error", "refusals": [key], "spec_refused": False, "coupled": []}
+        return _side("error", refusals={f"error:{_token(type(exc).__name__.lower())}"}, spec_refused=map_spec)
     result = scan(normalised, spec_id=spec_id, library=library, enabled_libraries=[library])
-    categories = [_token(reason.split(":", 1)[0].strip()) for reason in result.reasons]
+    categories = {_token(reason.split(":", 1)[0].strip()) for reason in result.reasons}
     if result.status != "blocked":
-        return {"status": result.status, "refusals": [], "spec_refused": False, "coupled": sorted(set(categories))}
-    keys = {category for category in categories if category not in ("map-spec", "security")}
+        return _side(result.status, coupled=categories)
+    keys = categories - {"map-spec", "security"}
+    counts: dict[str, int] = {}
     if "security" in categories:
         try:
-            rules = {_token(finding.rule) for finding in validate_security(normalised, library=library)}
+            for finding in validate_security(normalised, library=library):
+                rule = _token(finding.rule)
+                counts[rule] = counts.get(rule, 0) + 1
         except Exception:  # the scan fails closed on a crashing validator, and so does the key
-            rules = set()
-        keys |= {f"security:{rule}" for rule in rules} or {"security:validator-failed"}
-    return {"status": "blocked", "refusals": sorted(keys), "spec_refused": "map-spec" in categories, "coupled": []}
+            counts = {}
+        keys |= {f"security:{rule}" for rule in counts} or {"security:validator-failed"}
+    return _side("blocked", refusals=keys, spec_refused=map_spec, findings=counts)
 
 
 def build_record(new: str | None, prev: str | None, *, spec_id: str, library: str) -> dict:
