@@ -1,9 +1,10 @@
 # Machine readers
 
-> **Status (2026-11-09):** both writers are in the repository: the API (`api/machine_reads.py`) and the site's
-> nginx (`app/nginx.conf`). Steps 1 to 8 of [Set up the Google Cloud side](#set-up-the-google-cloud-side) are
-> done since 2026-11-09: the log bucket, the sink, the `_Default` exclusion, the linked dataset, the views, the
-> two `READER` entries, and the trigger substitution. Step 9, the Worker redeploy, waits for the owner. The two
+> **Status (2026-11-11):** both writers are in the repository: the API (`api/machine_reads.py`) and the site's
+> nginx (`app/nginx.conf`). All nine steps of [Set up the Google Cloud side](#set-up-the-google-cloud-side) are
+> done. Steps 1 to 8 since 2026-11-09: the log bucket, the sink, the `_Default` exclusion, the linked dataset,
+> the views, the two `READER` entries, and the trigger substitution. Step 9, the Worker redeploy, since
+> 2026-11-11. The two
 > readers, the public tile on `/stats` and the owner's section on `/debug`, are in the repository too (see
 > [Where the numbers appear](#where-the-numbers-appear)); because the trigger already carries the dataset, the
 > API deploy that ships them fills both at once.
@@ -263,7 +264,7 @@ right after the merge.
 |---|---|
 | 1 to 3 (bucket, sink, `_Default` exclusion) | Done on 2026-11-09 at 08:40 UTC on the owner's OK, and read back: the bucket is `ACTIVE` with 180 days and analytics on; the sink and the exclusion carry the filter below |
 | 4 to 8 (link, views dataset, views, `READER` entries, trigger substitution) | Done on 2026-11-09 on the owner's OK, after the writers merged; the `deploy-api` trigger carries `_MACHINE_READS_DATASET=anyplot.machine_reads` |
-| 9 (Worker redeploy) | Pending the owner |
+| 9 (Worker redeploy) | Done on 2026-11-11 by the owner in the dashboard, and checked at 07:37 UTC with check 6 of [Verify on day one](#verify-on-day-one): both forged verdicts on the apex path arrived with an empty `verified_category` |
 
 1. Create the log bucket:
 
@@ -431,9 +432,31 @@ All of these are read-only.
    The `anyplot-app` line of that minute must carry `assistant: ahrefs` and `route: legal` and an empty
    `verified_category`: Cloudflare's Set removed the forged value.
 
-6. The daily `bot-serving-check` run at 06:23 UTC shows up as `source: synthetic`, never as a live Googlebot.
+6. After step 9, a forged verdict on the apex path arrives unverified too. The first request is the one that
+   tells: no edge rule touches nginx's copy header, so only the redeployed Worker removes it, and
+   `/llms-full.txt` is a hop path, where the API would read it. Note the minute, then send:
 
-7. In the first week, compare each vendor's total with the request log's tallies: about 2,500 Googlebot pages,
+   ```bash
+   curl -sS -o /dev/null -H 'X-Prerender-Bot-Category: AI Crawler' \
+     -A 'Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)' https://anyplot.ai/api/llms-full.txt
+   curl -sS -o /dev/null -H 'X-Verified-Bot-Category: AI Crawler' \
+     -A 'Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)' https://anyplot.ai/api/specs
+   ```
+
+   Then read the two lines:
+
+   ```bash
+   gcloud logging read 'jsonPayload.log_type="machine_read" AND jsonPayload.assistant="ahrefs"' --project=anyplot \
+     --bucket=machine-reads --location=europe-west4 --view=_AllLogs --freshness=10m --limit=10 \
+     --format='table(timestamp, jsonPayload.writer, jsonPayload.route, jsonPayload.verified_category)'
+   ```
+
+   The `anyplot-api` lines of that minute, `route: llms_full` and `route: specs_list`, must both carry an empty
+   `verified_category`.
+
+7. The daily `bot-serving-check` run at 06:23 UTC shows up as `source: synthetic`, never as a live Googlebot.
+
+8. In the first week, compare each vendor's total with the request log's tallies: about 2,500 Googlebot pages,
    about 5,600 ClaudeBot reads, and about 7,400 ExaSearchBot shell fetches a week, which nginx writes.
 
 ## What a line can't see

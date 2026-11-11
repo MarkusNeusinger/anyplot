@@ -24,8 +24,12 @@ custom rules) have no file here; they are recorded in
 **The `.js` is the source, not a draft.** Change it here and deploy it; change
 it in the dashboard and pull it back here.
 
-> **Deployed state (2026-09-27).** The Worker was redeployed from the current
-> `.js` after #11221; the Transform Rule covers `anyplot.ai`, `www.anyplot.ai`,
+> **Deployed state (2026-11-11).** The Worker was last redeployed from the
+> current `.js` on 2026-11-11, after #12962 added the two verdict-header
+> deletes; the forged-header check passed afterwards (check 6 of "Verify on day
+> one" in [Machine readers](../../docs/reference/machine-readers.md)). The rest
+> of this note is the state of 2026-09-27, when the Worker was redeployed after
+> #11221: the Transform Rule covers `anyplot.ai`, `www.anyplot.ai`,
 > and `api.anyplot.ai`. Both gates are armed: `anyplot-app` runs with
 > `ORIGIN_GATE=on`, the direct `*.run.app` URLs of both services answer 403,
 > and `/health`, `/_health` and `/api/event` report `ok` through the edge.
