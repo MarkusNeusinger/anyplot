@@ -2,45 +2,61 @@ library: plotly
 language: python
 specification_id: surface-basic
 created: '2025-12-23T21:54:38Z'
-updated: '2026-05-05T16:56:28Z'
-generated_by: claude-haiku
-workflow_run: 25389653481
+updated: '2026-11-11T02:37:22Z'
+generated_by: claude-sonnet
+workflow_run: 42946311029
 issue: 1013
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 78
 review:
   strengths:
-  - Perfect visual quality with excellent text legibility in both light and dark themes
-  - Flawless spec compliance with all required features present and correct
-  - Professional theme token implementation throughout (background, text, grid colors)
-  - Clean, reproducible, and well-structured code with proper seed management
-  - Proper use of Plotly's interactive 3D capabilities and idiomatic patterns
-  - Correct title format and proper axis/legend labeling
+  - 'Uses the Imprint sequential ramp (imprint_seq, #009E73 -> #4467A3) for the continuous
+    surface, identical across both themes'
+  - Single smooth 40x40 go.Surface from an oblique camera shows peaks, ring valley
+    and saddles together without holes or faceting
+  - 'Chrome threaded through theme tokens: title, axis titles, ticks and color bar
+    text readable on #FAF8F1 and #1A1A17'
+  - Tidy long table pivoted with pandas pivot_table into the grid, so the file adapts
+    to a user's own CSV
+  - HTML export keeps Plotly's native 3D rotation and hover for exploring the surface
   weaknesses:
-  - 'Design Excellence below optimal: implementation follows Plotly defaults without
-    additional stylistic customization (no custom color adjustments or emphasis techniques)'
-  - 'Visual hierarchy could be enhanced: while the surface is clear, there''s room
-    for more sophisticated visual storytelling through color contrast or size emphasis'
+  - 'VQ-05 (both): the 3D scene fills only the central ~40 % of the 3200 px width,
+    leaving a ~550 px empty band between the surface and the color bar and a tall
+    gap under the title → let the scene fill the plot area (scene domain x about [0,
+    0.9], or a closer camera eye about 1.25,1.25,1.0). Likely cause: default scene
+    domain with camera eye (1.5, 1.5, 1.2).'
+  - 'VQ-06 (both): axis titles ''X Axis'', ''Y Axis'', ''Z Value'' name the axis rather
+    than the quantity → reader text such as ''x'', ''y'', ''z = f(x, y)''. Likely
+    cause: the X, Y, Z column constants on lines 26-28.'
+  - 'VQ-07 (dark): scene zero lines render near-white and cut through the walls and
+    floor, far brighter than the 0.15-alpha grid → zero lines in INK_SOFT or GRID
+    like the chrome mapping in the library prompt. Likely cause: zerolinecolor not
+    set in the axis dicts.'
+  - 'CQ-01 (code): lines 61-68 define a helper function def axis(label) → a shared
+    dict literal (axis_style = {...}) merged per axis with {**axis_style, ''title'':
+    ...}, no function. Likely cause: the per-axis style was factored into a function.'
+  - 'Suggestion: a subtle lighting or contours.z highlight setting on the surface
+    could deepen the shading of the slopes without adding a layer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), providing neutral surface for the 3D plot
-      Chrome: Title "surface-basic · plotly · anyplot.ai" is prominently displayed in dark text (28px). Axis labels (X Axis, Y Axis, Z Value) are clearly readable in dark text (22px). Tick labels are rendered in softer dark tone (18px). Colorbar title "Z Value" is properly labeled with size 20. All text has excellent contrast against light background.
-      Data: 3D surface rendered with Viridis colorscale, colors range from purple (low ~-0.8) to yellow (high ~1.2). Surface clearly shows combined sinusoidal and exponential mathematical function. Grid is subtle but visible.
-      Legibility verdict: PASS - All text is fully readable, no contrast issues, proper visual hierarchy
+      Background: warm off-white #FAF8F1 across paper and scene walls, not pure white
+      Chrome: title 'surface-basic · python · plotly · anyplot.ai' centered in dark ink; axis titles 'X Axis', 'Y Axis', 'Z Value' and tick labels (-4..4, -1..1) in dark/soft ink, all readable; scene grid faint but visible; color bar 'Z Value' with ticks -0.5..1 on the right
+      Data: one smooth 40x40 surface colored by height from brand green #009E73 (valleys) to blue #4467A3 (peaks); no holes or facets; oblique view shows central double peak, ring valley and edge ridges
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), providing proper dark theme surface
-      Chrome: Title remains clearly visible in light text. Axis labels rendered in light text (22px). Tick labels in softer light tone (18px). All text properly adapted to dark background with no dark-on-dark contrast failures. Grid visible and subtle at same opacity as light render.
-      Data: Viridis colorscale maintains identical colors from light render (purple to yellow) - data colors do NOT change between themes, only chrome adapts. Surface geometry and function representation identical to light version.
-      Legibility verdict: PASS - All text fully readable in dark theme, proper light text colors, no dark-on-dark issues, perfect theme adaptation
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title, axis titles and ticks in light ink, all readable, no dark-on-dark; grid visible at low alpha; near-white zero lines cross the walls and floor, brighter than the grid
+      Data: surface colors identical to the light render (green -> blue imprint_seq); only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -48,66 +64,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable at full size in both themes
+        comment: Title 16, axis titles 12, ticks 10 (plotly baseline at 800x450 scale
+          4); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions or overlapping elements
+        comment: No text collisions; axis titles clear of tick labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3D surface, colorbar, and grid all clearly visible
+        comment: Smooth 40x40 surface clearly visible; grid faint but visible in light,
+          visible in dark
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colorscale is CVD-safe
+        comment: Green-to-blue ramp with lightness step, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Good proportions, nothing cut off
+        passed: false
+        comment: Canvas 3200x1800 correct; the 3D scene fills only the central ~40%
+          of the width with a wide empty band before the color bar (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Correct title format with all axes labeled
+        passed: false
+        comment: Axis titles 'X Axis', 'Y Axis', 'Z Value' name the axis, not the
+          quantity (defect line)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Viridis for continuous data, correct theme backgrounds, proper chrome
-          adaptation
+        passed: false
+        comment: 'imprint_seq (#009E73 -> #4467A3) and correct backgrounds; dark render
+          shows near-white default zero lines through the scene walls (defect line)'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Professional theme tokens, good camera angle, relies on defaults
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, explicit font sizes; nothing
+          beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid and spacing, could be more refined
+        passed: false
+        comment: Grid and background rules met; no refinement beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear function demonstration, could emphasize hierarchy more
+        passed: false
+        comment: Surface displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -117,25 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D surface plot
+        comment: Single continuous 3D surface; no extra layers (C6 met)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: colormap, labels, colorbar, rotation'
+        comment: Smooth colormap, x/y/z labels, color bar, rotation in HTML, oblique
+          view (C1-C4 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correct and properly scaled
+        comment: x/y/z mapped from the pivoted grid; full domain shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format with colorbar legend
+        comment: Title 'surface-basic · python · plotly · anyplot.ai' correct; color
+          bar titled with the z column
     data_quality:
       score: 15
       max: 15
@@ -145,70 +168,76 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of surface plot features shown
+        comment: Peaks, valleys and saddles all shown; 40x40 grid in range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical function is realistic and appropriate
+        comment: Mathematical function surface, an application the spec lists; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges and balance
+        comment: z spans about -0.9 to 1.4, consistent with the formula; no check
+          values in spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No unnecessary functions
+        passed: false
+        comment: Imports -> tokens -> constants -> Data -> Plot -> Save; adaptable
+          checker passes, but a def axis() helper is defined (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set, deterministic
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI
+        comment: Appropriate complexity; pivot_table rebuilds the grid
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file format and API
+        comment: Saves plot-{THEME}.png and .html; current API
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Proper use of go.Figure, go.Surface, update_layout
+        passed: false
+        comment: go.Surface with scene dict and camera; correct, nothing beyond the
+          library prompt
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: Leverages 3D surface, interactivity, custom camera
+        passed: false
+        comment: Interactive WebGL rotation is required by the Notes; nothing beyond
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
+  rendered_at: '2026-11-11T02:33:20Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -217,7 +246,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - long-to-wide
   dataprep: []
   styling:
-  - theme-adaptive
+  - custom-colormap
