@@ -202,6 +202,9 @@ def test_javascript_is_exempt_from_the_save_rule():
         ("javascript", "const ramp", 'const link = "https://anyplot.ai/scatter-basic";\nconst ramp'),
         # JavaScript may read the theme itself instead of the tokens.
         ("javascript", "window.ANYPLOT_TOKENS", 'tokensFor(window.ANYPLOT_THEME === "dark")'),
+        # A commented-out block never counts, whatever its lines start with.
+        ("javascript", "const ramp", "/*\nconst old = d3.interpolateViridis;\nconst c = '#440154';\n*/\nconst ramp"),
+        ("julia", "fig = Figure()", 'fig = Figure()\n#=\nheatmap!(ax, z, colormap = :viridis, color = "#306998")\n=#'),
         # Comments never count, with or without a space after the marker.
         ("python", "fig, ax = plt.subplots()", 'fig, ax = plt.subplots()\n# old: cmap="viridis", color="#306998"'),
         ("python", 'color="#009E73")', 'color="#009E73")  # was #306998'),
@@ -266,6 +269,17 @@ def test_an_unterminated_docstring_leaves_no_code():
         ("r", "x <- '#AE3030' # red\n#' doc\n", "x <- '#AE3030' "),
         ("julia", 'x = "#4467A3" #blue\ny = a\' #transpose\n', 'x = "#4467A3" \ny = a\' '),
         ("javascript", 'const u = "https://x"; // link\n/* block\n * more\n */\nconst v = `a // b`;\n', None),
+        # A block comment goes whole, whatever its lines start with, and an inline one leaves its line.
+        (
+            "javascript",
+            "const a = 1;\n/*\nconst cmap = d3.interpolateViridis;\n*/\nconst b = 2;\n",
+            "const a = 1;\nconst b = 2;",
+        ),
+        ("javascript", "const a = /* was 3 */ 1;\n", "const a =  1;"),
+        ("javascript", 'const accept = "image/*"; const t = 1; // "*/"\n', 'const accept = "image/*"; const t = 1; '),
+        ("javascript", "const s = `line // one\n/* two */`; // gone\n", "const s = `line // one\n/* two */`; "),
+        ("julia", 'a = 1\n#=\ncolormap = :viridis\n=#\nb = "#= no =#"\n', 'a = 1\nb = "#= no =#"'),
+        ("julia", "a = 1 #= inline =# + 2\n", "a = 1  + 2"),
     ],
 )
 def test_strip_comments_keeps_markers_inside_strings(language, code, expected):

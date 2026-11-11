@@ -145,8 +145,6 @@ THEME_RES = {
 SAVE_RE = re.compile(r"plot-(?:\{|%s|\$|[\"']\s*[+*,])")
 BARE_SAVE_RE = re.compile(r"[\"'](?:\./)?plot\.(?:png|html|svg)[\"']")
 
-_STRING_QUOTES = {"python": "\"'", "r": "\"'", "julia": '"', "javascript": "\"'`"}
-
 
 def strip_header(language: str, source: str) -> str:
     """The source without its generated header: the leading comment lines and, in Python, the docstring.
@@ -178,24 +176,51 @@ def strip_header(language: str, source: str) -> str:
     return rest
 
 
-def _cut_comment(line: str, marker: str, quotes: str) -> str:
-    """``line`` up to the first ``marker`` outside a string literal."""
+# Per language: the line-comment marker, the block-comment delimiters, and the string quotes.
+_COMMENT_SYNTAX: dict[str, tuple[str, tuple[str, str] | None, str]] = {
+    "python": ("#", None, "\"'"),
+    "r": ("#", None, "\"'"),
+    "julia": ("#", ("#=", "=#"), '"'),
+    "javascript": ("//", ("/*", "*/"), "\"'`"),
+}
+
+
+def _scan_out_comments(code: str, marker: str, block: tuple[str, str] | None, quotes: str) -> str:
+    """``code`` without line comments and block comments, read character by character.
+
+    A marker inside a string literal is text, not a comment. A quote that is
+    still open at the end of its line closes there (an apostrophe in JSX text,
+    Julia's transpose), except a backtick: a template literal spans lines.
+    """
+    out: list[str] = []
     quote = ""
     index = 0
-    while index < len(line):
-        char = line[index]
+    size = len(code)
+    while index < size:
+        char = code[index]
         if quote:
-            if char == "\\":
+            out.append(char)
+            if char == "\\" and index + 1 < size:
+                out.append(code[index + 1])
                 index += 2
                 continue
-            if char == quote:
+            if char == quote or (char == "\n" and quote != "`"):
                 quote = ""
-        elif char in quotes:
+            index += 1
+            continue
+        if block and code.startswith(block[0], index):
+            end = code.find(block[1], index + len(block[0]))
+            index = size if end == -1 else end + len(block[1])
+            continue
+        if code.startswith(marker, index):
+            end = code.find("\n", index)
+            index = size if end == -1 else end
+            continue
+        if char in quotes:
             quote = char
-        elif line.startswith(marker, index):
-            return line[:index]
+        out.append(char)
         index += 1
-    return line
+    return "".join(out)
 
 
 def _python_comment_columns(code: str) -> dict[int, int] | None:
@@ -211,26 +236,20 @@ def _python_comment_columns(code: str) -> dict[int, int] | None:
 
 
 def strip_comments(language: str, code: str) -> str:
-    """The code without comments: Python by its tokens, the others by the first marker outside a string.
+    """The code without comments: Python by its tokens, the others by a scan that knows strings.
 
     A ``#`` or ``//`` inside a string stays (a hex colour, a URL, ``"Issue # 42"``).
-    Lines that hold nothing but a comment go, as do the lines of a JavaScript block comment.
+    Line comments and whole block comments go (JavaScript ``/* */``, Julia
+    ``#= =#``), over as many lines as they span, and so do the lines they leave empty.
     """
-    lines = code.split("\n")
     columns = _python_comment_columns(code) if language == "python" else None
     if columns is not None:
+        lines = code.split("\n")
         for row, column in columns.items():
             lines[row - 1] = lines[row - 1][:column]
-        return "\n".join(line for line in lines if line.strip())
-    marker = "//" if language == "javascript" else "#"
-    out = []
-    for line in lines:
-        if language == "javascript" and re.match(r"\s*(?:\*|/\*)", line):
-            continue
-        cut = _cut_comment(line, marker, _STRING_QUOTES[language])
-        if cut.strip():
-            out.append(cut)
-    return "\n".join(out)
+    else:
+        lines = _scan_out_comments(code, *_COMMENT_SYNTAX[language]).split("\n")
+    return "\n".join(line for line in lines if line.strip())
 
 
 def custom_hexes(code: str) -> list[str]:
