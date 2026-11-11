@@ -116,9 +116,11 @@ const INLINE_CODE = /`([^`\n]+)`/g;
  * A passage of a reply between two pairs of asterisks, on one line: the assistant's Markdown for
  * strong text, which the page showed as asterisks. It opens after the line's start or a character
  * that is no letter, digit or asterisk, and closes before one, with no space inside its ends: so a
- * product such as `2**10` or `a ** b` stays as written, and so does a pair inside a word.
+ * product such as `2**10` or `a ** b` stays as written, and so does a pair inside a word. A single
+ * asterisk inside stays a character of the passage (`**Revenue = Quantity * Price**`).
  */
-const STRONG = /(^|[^\p{L}\p{N}*])\*\*([^\s*](?:[^*\n]*[^\s*])?)\*\*(?![\p{L}\p{N}*])/gmu;
+const STRONG =
+  /(^|[^\p{L}\p{N}*])\*\*([^\s*](?:(?:[^*\n]|\*(?!\*))*[^\s*])?)\*\*(?![\p{L}\p{N}*])/gmu;
 
 /** A passage of a reply outside backticks, with its strong passages set off and the asterisks gone. */
 function strongParts(text: string, keyBase: number): ReactNode[] {

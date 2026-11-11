@@ -229,18 +229,19 @@ describe('ChatThread', () => {
           id: 1,
           kind: 'assistant',
           text:
-            '**Total: 1,716** over 9 rows, (**net**) of returns.\n' +
+            '**Total: 1,716** over 9 rows, (**net**) of returns, **Revenue = Quantity * Price**.\n' +
             '**Next:** check `2**10` and a**b**c; 2 ** 3 and ** alone ** stay, so does **open.',
         },
       ],
     });
     const reply = screen.getByText(/over 9 rows/);
     expect(reply).toHaveTextContent(
-      'Total: 1,716 over 9 rows, (net) of returns. Next: check 2**10 and a**b**c; 2 ** 3 and ** alone ** stay, so does **open.'
+      'Total: 1,716 over 9 rows, (net) of returns, Revenue = Quantity * Price. Next: check 2**10 and a**b**c; 2 ** 3 and ** alone ** stay, so does **open.'
     );
     expect([...reply.querySelectorAll('strong')].map(strong => strong.textContent)).toEqual([
       'Total: 1,716',
       'net',
+      'Revenue = Quantity * Price',
       'Next:',
     ]);
     expect([...reply.querySelectorAll('code')].map(code => code.textContent)).toEqual(['2**10']);

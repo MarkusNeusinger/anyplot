@@ -1266,8 +1266,9 @@ MAX_OFFSET_COLUMNS = 2
 
 def _offsets_note(dropped: pd.DataFrame, kept: pd.DataFrame) -> str:
     """What a `drop_rows` line adds when a number column is below 0 only in the rows it dropped, while rows that stay
-    are above 0: those rows took amounts off (returns, cancellations, credits), so the column's total over the rows
-    kept went up, which a count of dropped rows does not say.
+    are above 0, and the dropped rows together are below 0 there: those rows took amounts off (returns,
+    cancellations, credits), so the column's total over the rows kept went up, which a count of dropped rows does
+    not say. Dropped rows that add up to 0 or more took nothing off on balance, and get no note.
 
     In the persona round of 2026-11-11 the user had the cancelled invoices taken off. Their quantities were negative,
     so the total rose from the net to the gross figure, and the root called the higher one right when the user
@@ -1279,6 +1280,7 @@ def _offsets_note(dropped: pd.DataFrame, kept: pd.DataFrame) -> str:
         for column in kept.columns
         if _kind(kept[column]) == "number"
         and bool(dropped[column].lt(0).fillna(False).any())
+        and float(dropped[column].sum()) < 0
         and not bool(kept[column].lt(0).fillna(False).any())
         and bool(kept[column].gt(0).fillna(False).any())
     ][:MAX_OFFSET_COLUMNS]

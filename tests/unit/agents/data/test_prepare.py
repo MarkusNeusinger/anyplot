@@ -333,6 +333,13 @@ class TestDropRows:
     def test_any_other_drop_says_only_what_it_dropped(self, table: str, condition: dict[str, Any]) -> None:
         assert prepare(table, condition).changes == ["dropped 1 row where Art = 'C'"]
 
+    def test_dropped_rows_that_add_up_to_more_than_zero_took_nothing_off(self) -> None:
+        """One dropped row is below 0, but the dropped rows together are above it: the total over the rows kept is
+        lower than before, so a note that it is higher would be false."""
+        table = "Art,Menge\nA,10\nA,4\nC,-5\nC,50\n"
+
+        assert prepare(table, drop("Art", "eq", "C")).changes == ["dropped 2 rows where Art = 'C'"]
+
     def test_the_note_names_two_columns_at_most(self) -> None:
         table = "Art,Menge,Betrag,Rabatt\nA,10,45,1\nA,6,27,2\nC,-6,-27,-1\n"
 
