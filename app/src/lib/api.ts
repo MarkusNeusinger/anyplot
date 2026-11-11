@@ -33,6 +33,7 @@ export const endpoints = {
   feedback: '/feedback',
   insightsDashboard: '/insights/dashboard',
   insightsMachineReaders: '/insights/machine-readers',
+  insightsSharedLinks: '/insights/shared-links',
   insightsVisitors: '/insights/visitors',
   languages: '/languages',
   libraries: '/libraries',

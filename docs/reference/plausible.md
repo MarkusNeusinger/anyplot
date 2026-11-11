@@ -455,116 +455,130 @@ assistant, or an MCP client, written to Cloud Logging and read in BigQuery:
 [Machine readers](machine-readers.md). The `kind` taxonomy and the vendor
 table, `AI_AGENTS` in `api/analytics.py`, are described there.
 
-### og:image is split by who fetched it
+### A crawler's fetch of a preview image is a machine read
 
-A social or messenger preview means a person shared a link, a product signal
-that belongs with the human numbers, so `og_image_view` on `anyplot.ai`
-records it. A search or AI crawler fetching the same image is not a share, and
-since `robots.txt` began permitting `/og/` those arrive in volume: on the main
-site they would drown the sharing signal and inflate visitor counts. So
-`track_og_image` returns early when `detect_ai_agent` recognises the user
-agent. A crawler's image fetch sends nothing to Plausible, and the API writes
-its machine-read line instead, with `surface` `og`. Anything `detect_ai_agent`
-doesn't recognise (Twitter, Facebook, Slack, WhatsApp, …) is a share and stays
-on `anyplot.ai`.
+A search or AI crawler that fetches a page's og:image shared nothing. Since
+`robots.txt` began permitting `/og/` those fetches arrive in volume: in the
+week before 2026-11-11 the API served about 2,400 preview images, and about
+2,250 of them went to crawlers (PerplexityBot, Googlebot-Image, AhrefsBot,
+bingbot, and Amazonbot lead). The API writes its machine-read line for each,
+with `surface` `og`, and the share counter below counts none of them:
+`detect_ai_agent` decides which is which.
 
-Plausible discards an event and still answers `202 ok` in two cases, both
-found by probe events against the live API:
+## Shared links
 
-- **A bot user agent.** The same event sent as `Claude-User` never appeared,
-  sent as a browser user agent it did. Whether that also costs some preview
-  events (a preview fetcher sends its own crawler-like user agent) has not
-  been measured.
-- **Our own IP instead of the visitor's.** The
-  [Events API docs](https://plausible.io/docs/events-api) state that Plausible
-  uses "the first valid IP address from the list" and that if you "forward a
-  server, hosting provider, or CDN IP address instead of the actual visitor
-  IP, Plausible's bot filtering will drop the event". The event therefore
-  carries `visitor_ip`, **not** the rate limiter's `client_ip`, which returns
-  the rightmost forwarded entry, our own infrastructure. `visitor_ip` takes
-  `cf-connecting-ip` first, which Cloudflare overwrites, then the leftmost
-  public forwarded entry, so a forged private address at the front of the list
-  is skipped. `api/request_context.py` documents why the two must stay
-  separate.
+A messenger or a social network that shows a link's preview fetches the page's
+og:image from the API. It runs no JavaScript, so no page analytics sees it: the
+fetch is the one trace a share leaves. Since 2026-11-11 the API counts it
+itself, in the database, and nothing about it goes to Plausible.
 
-## Server-side og:image tracking
+Until then every preview image sent an `og_image_view` event to Plausible, with
+the fetcher's address and user agent. That measured little. Plausible drops
+every user agent it knows as a bot, so Slack, X, LinkedIn, and Teams never
+showed; of 402 events in the 28 days before the change, 371 had the platform
+`unknown` and 31 were WhatsApp. Tests and local requests sent real events, and
+so did a fetch that ended in a 404.
 
-Social media bots (Twitter, WhatsApp, Teams, etc.) don't execute JavaScript, so og:image requests can only be tracked server-side.
+### What is counted
 
-### Architecture
+`api/shared_links.py` adds one to a counter after the API served a preview
+image. A counter is a row of the `link_shares` table (see
+[Database](database.md)): the UTC day, the platform, and the page, with the
+plot it shows. A row holds no address, no user agent, and no time of day, so
+it says how often a page was shared and never by whom. The rows are kept
+without a time limit.
 
-All og:images are routed through the API for tracking:
+A row also says whether Cloudflare verified the fetcher as a bot it knows
+(`verified`, from the `X-Verified-Bot-Category` header that
+[Machine readers](machine-readers.md#verified-or-not) describes; a request to
+the raw `*.run.app` origin is never verified, because only the edge sets that
+header). The platform's name is read from the user agent, which a client
+writes itself, and the row keeps no user agent: the verdict is the one thing
+left that tells a platform's own fetch from a scanner that signs as one. It is
+a diagnosis, not a filter. WhatsApp and Signal fetch the preview from the
+sender's own phone, which nobody can verify, so the public numbers count a
+share whatever the verdict, and `/debug` shows the verified part beside each
+total. A platform Cloudflare does verify, such as Slack or LinkedIn, whose
+shares are mostly unverified is being imitated.
 
-```
-Bot requests page → nginx detects bot → SEO proxy serves HTML with og:image URL
-                                                            ↓
-                                          https://api.anyplot.ai/og/{endpoint}.png
-                                                            ↓
-                                          track_og_image() → Plausible Events API
-                                                            ↓
-                                          Return image (fire-and-forget tracking)
-```
+Who fetched decides what the fetch is:
 
-**Implementation**: `api/analytics.py` (server-side Plausible tracking)
+| Fetched by | Counted as |
+|---|---|
+| A crawler or an AI assistant (`detect_ai_agent`) | Nothing here: a machine read, see above |
+| One of the preview platforms below | A share on that platform |
+| Anything else: a scanner, a browser that opens the image, an app the list doesn't know | `other`, which the public numbers leave out |
 
-### og:image event
+Three rules keep the number honest:
 
-| Event Name | Properties | Description |
-|------------|------------|-------------|
-| `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | Bot requested og:image |
+- **Only the production service counts** (`settings.is_production`). A test or
+  a local request for an image counts nothing.
+- **Only a served image counts.** A fetch that ends in a 404 is no preview
+  anyone saw.
+- **The write never delays or fails the image.** It runs in the background, and
+  a failure is logged with the exception's class and goes no further. That
+  covers the table not being there yet: the migration reaches production
+  through `sync-postgres.yml`, which can run after the deploy of the code that
+  writes.
 
-### Properties
+### Platforms
 
-| Property | Values | Description |
-|----------|--------|-------------|
-| `page` | `home`, `plots`, `spec_overview`, `spec_detail` | Page type |
-| `platform` | See list below | Detected platform from User-Agent |
-| `spec` | Specification ID | Only for spec pages |
-| `language` | Language slug (e.g. `python`) | Only for spec detail pages |
-| `library` | Library ID | Only for spec detail pages |
-| `filter_*` | Filter value | Dynamic props for filtered URLs (e.g., `filter_lib`, `filter_dom`) |
+The platform is one name from a closed set, read from the user agent, which is
+then dropped. WhatsApp and Messages are asked first; after them the first
+matching token wins (`SHARE_TOKENS`):
 
-### Platform detection (27 platforms)
+| Platform | Token in the user agent | Note |
+|---|---|---|
+| `imessage` | `facebookexternalhit` and `twitterbot` together | Apple's Messages signs as both crawlers at once (`… facebookexternalhit/1.1 Facebot Twitterbot/1.0`), which neither does itself |
+| `telegram` | `telegrambot` | Asked before Twitter: Telegram signs as `TelegramBot (like TwitterBot)` |
+| `twitter`, `facebook`, `linkedin`, `pinterest`, `reddit`, `tumblr`, `mastodon` | `twitterbot`, `facebookexternalhit`, `linkedinbot`, `pinterestbot`, `redditbot`, `tumblr`, `mastodon` | Social networks |
+| `slack` | `slackbot`, `slack-imgproxy` | Slack reads the page as Slackbot-LinkExpanding and fetches the image through its image proxy |
+| `discord`, `viber`, `snapchat` | `discordbot`, `viber`, `snapchat` | Messengers |
+| `teams` | `skypeuripreview`, `microsoft teams` | Microsoft's preview service still signs as SkypeUriPreview; Skype closed in May 2025 |
+| `github` | `github-camo` | GitHub's image proxy, for an image linked in a README, an issue, or a comment |
+| `embedly`, `quora`, `outbrain`, `rogerbot`, `showyoubot` | The name itself (`quora link preview` for Quora) | Link preview services |
+| `whatsapp` | `WhatsApp/` with a full version, such as `WhatsApp/2.23.18.78 i` | The real app |
+| `whatsapp-lite` | `WhatsApp` without a full version | An app that borrows the name to pass rate limits, which Signal does ([Signal-Android #10060](https://github.com/signalapp/Signal-Android/issues/10060)); the tile shows it as "signal & similar" |
+| `other` | Nothing above, and no crawler | Not a share |
 
-**Social Media**: twitter, facebook, linkedin, pinterest, reddit, tumblr, mastodon
+The tokens `slack-imgproxy`, `skypeuripreview`, and `github-camo` come from a
+week of the API's request log (2026-11-04 to 2026-11-11): the image itself is
+often fetched by a proxy that doesn't carry the name of the bot that read the
+page. A new platform shows up as a rising `other` on `/debug`; the request log
+names it, and it gets a row here and a token in `SHARE_TOKENS`.
 
-**Messaging Apps**: slack, discord, telegram, whatsapp, signal, viber, skype, teams, snapchat
+### Preview images and their cache
 
-**Search Engines**: google, bing, yandex, duckduckgo, baidu, apple. `detect_ai_agent` recognises all six, so their fetches are machine reads and never reach Plausible; the values stay in `detect_platform` for completeness.
+| Endpoint | Image | Counted as page |
+|----------|-------|-----------------|
+| `/og/home.png` | Static image of the home page | `home`, whatever the query |
+| `/og/plots.png` | Static image of the plots page | `plots` |
+| `/og/{spec_id}.png` | Collage of a spec's best implementations | `spec_overview`, with the spec |
+| `/og/{spec_id}/{language}/{library}.png` | One implementation, branded | `spec_detail`, with spec, language, and library |
 
-**Link Preview Services**: embedly, quora, outbrain, rogerbot, showyoubot
+Every preview image answers `Cache-Control: public, max-age=300`. A fetch the
+edge answers from its cache never reaches the API, so it is a share nobody
+counts. Until 2026-11-11 the images were cached for an hour (plot pages) and a
+day (home and plots), so most repeated previews were invisible. Rendering is
+not what the five minutes cost: the images stay in the API's own cache.
 
-**Fallback**: unknown
+### Where the numbers appear
 
-#### WhatsApp variant detection
+- **`/stats`, the "shared links" tile** (`GET /insights/shared-links`): the
+  shares of the last 28 UTC days as one bar per day, the platforms with their
+  totals, and the five most shared plot pages. A spec's hub and one
+  implementation of it are entries of their own. `other` is not in these
+  numbers. The answer is kept for an hour.
+- **`/debug`, the "shared links" section** (`GET /debug/shared-links`, admin
+  only): the same numbers read fresh, plus `other`, and beside each platform's
+  total and beside `other` how many of the fetches Cloudflare verified.
 
-Some apps (Signal, others) use a WhatsApp User-Agent to bypass rate limits ([Issue #10060](https://github.com/signalapp/Signal-Android/issues/10060)). We distinguish real WhatsApp from spoofed requests by version format:
+### What the count can't see
 
-| Platform | User-Agent Example | Detection |
-|----------|-------------------|-----------|
-| `whatsapp` | `WhatsApp/2.23.18.78 i` | 3+ part version = verified WhatsApp |
-| `whatsapp-lite` | `WhatsApp` or `WhatsApp/2` | Simplified UA = Signal or other spoofers |
-
-### API endpoints
-
-| Endpoint | Description | Tracking |
-|----------|-------------|----------|
-| `/og/home.png` | Static og:image for home page | `page=home`, `filter_*` from query params |
-| `/og/plots.png` | Static og:image for plots page | `page=plots` |
-| `/og/{spec_id}.png` | Collage og:image for spec overview | `page=spec_overview`, `spec` |
-| `/og/{spec_id}/{language}/{library}.png` | Branded og:image for implementation | `page=spec_detail`, `spec`, `language`, `library` |
-
-### Filter tracking for shared URLs
-
-When users share filtered URLs (e.g., `https://anyplot.ai/?lib=plotly&dom=statistics`), the filters are passed to the og:image endpoint:
-
-```
-og:image URL: https://api.anyplot.ai/og/home.png?lib=plotly,matplotlib&dom=statistics
-                                                  ↓
-Tracked props: { page: "home", platform: "twitter", filter_lib: "plotly,matplotlib", filter_dom: "statistics" }
-```
-
-**Note**: Each filter category becomes a separate prop (`filter_lib`, `filter_dom`, etc.) to handle comma-separated values.
+- A preview the platform still holds from an earlier share. Most platforms keep
+  a link's preview for hours or days and fetch it once for many readers.
+- A fetch the edge answered from its cache, within the five minutes.
+- Who shared, where, or to how many people: one fetch is one count.
 
 ---
 
@@ -580,11 +594,10 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 
 | Property | Description | Used By Events |
 |----------|-------------|----------------|
-| `spec` | Plot specification ID | `copy_code`, `download_image`, `plot_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `og_image_view`, `agent_open`, `agent_plot_rendered` |
-| `language` | Language slug (`python`, `r`, `julia`, `javascript`) | `og_image_view` |
-| `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view`, `feedback_submitted` (plot-overlay votes only), `agent_open`, `agent_plot_rendered` |
+| `spec` | Plot specification ID | `copy_code`, `download_image`, `plot_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `agent_open`, `agent_plot_rendered` |
+| `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `feedback_submitted` (plot-overlay votes only), `agent_open`, `agent_plot_rendered` |
 | `method` | Action method (card, image, tab, agent, click, space, doubletap) | `copy_code`, `random_filter` |
-| `page` | Page context (home, plots, spec_overview, spec_detail, agent_chat) | `copy_code`, `download_image`, `og_image_view` |
+| `page` | Page context (home, plots, spec_overview, spec_detail, agent_chat) | `copy_code`, `download_image` |
 | `status` | Outcome of an agent chat step (`ok`, `needs_attention`, `failed`, `not_ready`; for a parse also `too_long`, `unparseable`, `data_refused`, `error`, `data_request`, `formula`, `code`, `transcribed`, `discarded`) | `agent_data_parsed`, `agent_plot_rendered` |
 | `size_bucket` | Size class of pasted data (`lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `200kb_1mb`, `over_1mb`; `over_200kb` until the paste cap rose to 1 MB on 2026-10-14), never the size | `agent_data_parsed`, `agent_data_confirmed` |
 | `changes` | How many change lines an assistant's data change or generated table carried (`1`, `2`, `3+`) | `agent_data_prepared` |
@@ -598,7 +611,6 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `reason` | Why a guardrail stopped an agent chat request (`out_of_scope`, `needs_data`, `budget`, `service_paused`, `unsupported_content`, `rate_limited`, `daily_limit`, `session_closed`, `other_library`, `locked_out`, `data_refused`, `guard_unavailable`, `other`) | `agent_guardrail_block` |
 | `include_data` | Whether a saved agent chat session, or a feedback case, carries the data file (`yes` / `no`) | `agent_session_saved`, `agent_result_feedback` |
 | `reaction` | The reaction of a feedback entry or of an agent result's quick feedback (`thumbs_up`, `thumbs_down`, `bug`, `idea`) | `feedback_submitted`, `agent_result_feedback` |
-| `platform` | Bot/platform name (twitter, whatsapp, teams, etc.) | `og_image_view` |
 | `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
 | `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
 | `query` | Search query text | `search`, `search_no_results` |
@@ -617,17 +629,6 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `share` | Deepest point of a gallery visit as a share of the result list, in percent bands (`0-10`, `10-25`, `25-50`, `50-75`, `75-100`) | `plots_scrolled` |
 | `results` | Size of the gallery's result list at that point (`1-24`, `25-99`, `100-999`, `1000+`) | `plots_scrolled` |
 | `filtered` | Whether that list was filtered (`true` / `false`) | `plots_scrolled` |
-| `filter_lib` | Library filter value (for og:image) | `og_image_view` |
-| `filter_spec` | Specification filter value (for og:image) | `og_image_view` |
-| `filter_plot` | Plot type filter value (for og:image) | `og_image_view` |
-| `filter_data` | Data type filter value (for og:image) | `og_image_view` |
-| `filter_dom` | Domain filter value (for og:image) | `og_image_view` |
-| `filter_feat` | Features filter value (for og:image) | `og_image_view` |
-| `filter_dep` | Dependencies filter value (for og:image) | `og_image_view` |
-| `filter_tech` | Techniques filter value (for og:image) | `og_image_view` |
-| `filter_pat` | Patterns filter value (for og:image) | `og_image_view` |
-| `filter_prep` | Dataprep filter value (for og:image) | `og_image_view` |
-| `filter_style` | Styling filter value (for og:image) | `og_image_view` |
 
 ### Goals configuration
 
@@ -663,7 +664,6 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `map_node_click` | Custom Event | Track navigation clicks from `/map` into a spec detail |
 | `map_node_pin` | Custom Event | Track touch users opening the preview panel on `/map` (first tap) |
 | `map_search_select` | Custom Event | Track use of the `/map` search-and-fly-to feature |
-| `og_image_view` | Custom Event | Track og:image requests from social media bots |
 | `agent_open` | Custom Event | Track opens of the agent chat (admin and public) and where they came from |
 | `agent_data_parsed` | Custom Event | Track parse outcomes of pasted data in the agent chat |
 | `agent_data_confirmed` | Custom Event | Track how often users confirm their data before the agent chat plots it |
@@ -783,7 +783,6 @@ User lands on anyplot.ai
 | `feedback_opened` | `path` | FeedbackWidget.tsx |
 | `feedback_submitted` | `path`, `reaction`?, `has_contact`, `spec_id`?, `library`?, `mode` | FeedbackWidget.tsx, SpecDetailView.tsx |
 | `page_not_found` | `path`, `source` | NotFoundPage.tsx, SpecPage.tsx |
-| `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
 
 **Total: 39 client-side + 1 server-side = 40 events** (the twelve `agent_*`
 events exist only in builds with `VITE_ENABLE_AGENT_CHAT=true`)
@@ -835,32 +834,10 @@ doubletap # Mobile double-tap
 
 ### `page` values
 ```
-home          # HomePage grid view (client) or og:image home endpoint (server)
-plots         # PlotsPage (server og:image only)
+home          # HomePage grid view
 spec_overview # SpecPage showing all libraries
 spec_detail   # SpecPage showing single library
 agent_chat    # Agent chat result card (copy_code only)
-```
-
-### `platform` values (server-side og:image tracking only)
-```
-# Social Media
-twitter | facebook | linkedin | pinterest | reddit | tumblr | mastodon
-
-# Messaging Apps
-# NB: Signal spoofs the WhatsApp UA (see line 260 above), so the analytics
-# pipeline never emits `signal` as a platform value — Signal traffic surfaces
-# as `whatsapp-lite`.
-slack | discord | telegram | whatsapp | whatsapp-lite | viber | skype | teams | snapchat
-
-# Search Engines
-google | bing | yandex | duckduckgo | baidu | apple
-
-# Link Preview Services
-embedly | quora | outbrain | rogerbot | showyoubot
-
-# Fallback
-unknown
 ```
 
 ### `category` values
@@ -945,7 +922,7 @@ public stats page.
 - **Event tracking**: Passed via `onTrackEvent` prop throughout component tree
 - **Agent chat events**: `app/src/hooks/useAgentSession.ts` (parse, plot, guardrail), `app/src/pages/AgentChatPage.tsx` (open, admin mute), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`
-- **og:image events**: `track_og_image()` in `api/analytics.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
+- **Shared links** (not in Plausible): `record_share()` in `api/shared_links.py`, called by `api/routers/og_images.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
 
 ## Testing
 
@@ -983,7 +960,7 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Internal link events (`internal_link`)
 - [x] Feature link events (`open_interactive`, `suggest_spec`, `report_issue`)
 - [x] Plot rotation (`plot_rotate`)
-- [x] Server-side og:image tracking (`og_image_view`) with platform detection
+- [x] Shared links counted in the database, not in Plausible (`og_image_view` ended on 2026-11-11)
 - [x] Landing-page navigation tracking (`nav_click`)
 - [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
 - [x] Agent chat events (`agent_open`, `agent_data_parsed`, `agent_data_confirmed`, `agent_data_prepared`, `agent_data_undo`, `agent_data_file`, `agent_plot_rendered`, `agent_guardrail_block`, `agent_session_saved`), enum properties only
@@ -993,14 +970,15 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 
 ### Plausible dashboard checklist
 
-- [ ] Register all custom properties (see table above, including `action`, `param`, `source`, `platform`, `filter_*`, and for the agent chat `status`, `size_bucket`, `changes`, `version`, `repaired`, `reason`, `include_data`, `reaction`)
+- [ ] Register all custom properties (see table above, including `action`, `param`, `source`, and for the agent chat `status`, `size_bucket`, `changes`, `version`, `repaired`, `reason`, `include_data`, `reaction`)
 - [ ] Create goals for key events
 - [ ] Delete the `LCP`, `CLS`, and `INP` goals, whose events stopped on 2026-11-08
-- [ ] After the pageview timing of 2026-11-11 is deployed: add the `plots_scrolled` goal and the properties `share`, `results`, and `filtered`; delete the "Scroll 25% on /", "Scroll 50% on /", and "Scroll 75% on /" goals and keep "Scroll 90% on /"
+- [x] After the pageview timing of 2026-11-11 was deployed: the `plots_scrolled` goal and the properties `share`, `results`, and `filtered` added; the "Scroll 25% on /", "Scroll 50% on /", and "Scroll 75% on /" goals deleted, "Scroll 90% on /" kept; the page goal "Visit /plots" (`/plots*`) in place of "Visit /specs" (checked through the Sites API on 2026-11-11)
+- [ ] After the share counter is deployed: delete the `og_image_view` goal and the properties `platform`, `language`, and the eleven `filter_*` entries, which no event sends any more
 - [ ] Set up funnels (optional)
 - [ ] Create custom dashboard widgets (optional)
 
 ---
 
 **Last Updated**: 2026-11-11
-**Status**: Production-ready with full journey tracking, server-side og:image analytics, landing-page nav tracking, theme analytics, and the analytics shield against automation
+**Status**: Production-ready with full journey tracking, landing-page nav tracking, theme analytics, and the analytics shield against automation; shared links are counted in the database, not here

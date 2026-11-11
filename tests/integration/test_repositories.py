@@ -5,15 +5,19 @@ Tests actual database operations with SQLite in-memory database.
 Tests Repository layer interaction with database (no HTTP layer).
 """
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 import pytest
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
+from core.database.models import LinkShare
 from core.database.repositories import (
     AgentFeedbackRepository,
     FeedbackRepository,
     ImplRepository,
     LibraryRepository,
+    LinkShareRepository,
     SpecRepository,
 )
 
@@ -868,3 +872,138 @@ class TestAgentFeedbackRepository:
         await repo.create_case(_case_row(C))
         await repo.create_case(_case_row(A))
         assert [row.id for row in await repo.list_all()] == [A, C]
+
+
+class TestLinkShareRepository:
+    """The share counters against a real engine: the upsert counts, and the two reads agree on a window."""
+
+    DAY = date(2026, 11, 11)
+
+    async def _rows(self, session) -> list[tuple]:
+        result = await session.execute(
+            select(
+                LinkShare.day,
+                LinkShare.platform,
+                LinkShare.verified,
+                LinkShare.page,
+                LinkShare.spec_id,
+                LinkShare.language,
+                LinkShare.library_id,
+                LinkShare.fetches,
+            ).order_by(LinkShare.platform, LinkShare.verified, LinkShare.spec_id, LinkShare.library_id)
+        )
+        return [tuple(row) for row in result.all()]
+
+    async def test_the_same_page_on_the_same_day_is_one_row_that_counts(self, test_session):
+        repo = LinkShareRepository(test_session)
+        key = {
+            "day": self.DAY,
+            "platform": "slack",
+            "verified": True,
+            "page": "spec_detail",
+            "spec_id": "scatter-basic",
+        }
+        for _ in range(3):
+            await repo.count(**key, language="python", library_id="matplotlib")
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [
+            (self.DAY, "slack", True, "spec_detail", "scatter-basic", "python", "matplotlib", 3)
+        ]
+
+    async def test_a_verified_and_an_unverified_fetch_are_counted_apart(self, test_session):
+        """The verdict is the one thing left that tells a platform's own fetch from a client signing as it."""
+        repo = LinkShareRepository(test_session)
+        key = {"day": self.DAY, "platform": "slack", "page": "home"}
+        await repo.count(**key, verified=True)
+        await repo.count(**key, verified=False)
+        await repo.count(**key, verified=False)
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [
+            (self.DAY, "slack", False, "home", "", "", "", 2),
+            (self.DAY, "slack", True, "home", "", "", "", 1),
+        ]
+
+    async def test_a_page_without_a_plot_counts_too(self, test_session):
+        """The home page has no spec, language or library: empty strings, so the key still conflicts.
+
+        With NULLs every fetch would be a row of its own, and the count would stay at one.
+        """
+        repo = LinkShareRepository(test_session)
+        key = {"day": self.DAY, "platform": "whatsapp", "verified": False}
+        await repo.count(**key, page="home")
+        await repo.count(**key, page="home")
+        await repo.count(**key, page="spec_overview", spec_id="scatter-basic")
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [
+            (self.DAY, "whatsapp", False, "home", "", "", "", 2),
+            (self.DAY, "whatsapp", False, "spec_overview", "scatter-basic", "", "", 1),
+        ]
+
+    async def test_every_part_of_the_key_makes_a_row_of_its_own(self, test_session):
+        repo = LinkShareRepository(test_session)
+        base = {
+            "day": self.DAY,
+            "platform": "slack",
+            "verified": True,
+            "page": "spec_detail",
+            "spec_id": "scatter-basic",
+        }
+        await repo.count(**base, language="python", library_id="matplotlib")
+        await repo.count(**base, language="python", library_id="seaborn")
+        await repo.count(**{**base, "platform": "teams"}, language="python", library_id="matplotlib")
+        await repo.count(**{**base, "day": self.DAY - timedelta(days=1)}, language="python", library_id="matplotlib")
+        await test_session.commit()
+
+        assert len(await self._rows(test_session)) == 4
+
+    async def test_a_page_outside_the_closed_set_is_refused_by_the_table(self, test_session):
+        repo = LinkShareRepository(test_session)
+        with pytest.raises(IntegrityError):
+            await repo.count(day=self.DAY, platform="slack", verified=True, page="legal")
+            await test_session.commit()
+        await test_session.rollback()
+
+    async def test_both_reads_cover_the_same_days(self, test_session):
+        repo = LinkShareRepository(test_session)
+        since, until = self.DAY - timedelta(days=2), self.DAY
+
+        async def add(
+            day: date, platform: str, spec_id: str = "", library_id: str = "", times: int = 1, verified: bool = True
+        ) -> None:
+            page = "spec_detail" if library_id else ("spec_overview" if spec_id else "home")
+            for _ in range(times):
+                await repo.count(
+                    day=day,
+                    platform=platform,
+                    verified=verified,
+                    page=page,
+                    spec_id=spec_id,
+                    language="python" if library_id else "",
+                    library_id=library_id,
+                )
+
+        await add(self.DAY, "slack", "scatter-basic", "matplotlib", times=2)
+        await add(self.DAY, "slack", "scatter-basic", "matplotlib", verified=False)
+        await add(self.DAY, "other", "scatter-basic", "matplotlib", times=5, verified=False)
+        await add(since, "whatsapp", "heatmap-basic", times=4, verified=False)
+        await add(since, "whatsapp", verified=False)
+        await add(since - timedelta(days=1), "slack", "bar-basic", times=9)  # the day before the window
+        await add(until + timedelta(days=1), "slack", "bar-basic", times=9)  # the day after it
+        await test_session.commit()
+
+        assert await repo.by_day_and_platform(since, until) == [
+            (since, "whatsapp", False, 5),
+            (self.DAY, "other", False, 5),
+            (self.DAY, "slack", False, 1),
+            (self.DAY, "slack", True, 2),
+        ]
+        # Named platforms only, plot pages only, most shared first, whatever the verdict; the hub is an entry
+        # of its own.
+        assert await repo.top_plots(since, until, without_platform="other", limit=5) == [
+            ("heatmap-basic", "", "", 4),
+            ("scatter-basic", "python", "matplotlib", 3),
+        ]
+        assert await repo.top_plots(since, until, without_platform="other", limit=1) == [("heatmap-basic", "", "", 4)]

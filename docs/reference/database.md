@@ -39,6 +39,9 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 - Site feedback from the feedback widget and the plot votes (`feedback`), with its triage status
 - One row per quick-feedback case of the agent chat (`agent_feedback`): the reaction, the message, hashed user and session ids, the run's metadata, and the triage state (status, tags, expected outcome, promotion, supersession); never the conversation, code, images or data
 
+**Shared links:**
+- One counter per day, platform, and page for the link previews that messengers and social networks fetch (`link_shares`): a count, with no address, no user agent, and no time of day
+
 **Other:**
 - Library information (name, version, docs URL)
 
@@ -238,6 +241,21 @@ CREATE TABLE agent_feedback
 CREATE INDEX ix_agent_feedback_session_version ON agent_feedback (session_hash, result_version);
 CREATE INDEX ix_agent_feedback_spec_library ON agent_feedback (spec_id, library_id);
 CREATE INDEX ix_agent_feedback_tags ON agent_feedback USING GIN (tags);
+
+-- Shared links: one counter per day, platform and page
+CREATE TABLE link_shares (
+    day DATE NOT NULL,
+    platform VARCHAR(32) NOT NULL,          -- A preview platform's name, or "other"
+    verified BOOLEAN NOT NULL,              -- Cloudflare verified the fetcher as a bot it knows
+    page VARCHAR(20) NOT NULL,              -- home, plots, spec_overview, spec_detail
+    spec_id VARCHAR(100) NOT NULL,          -- "" where the page has none
+    language VARCHAR(50) NOT NULL,          -- "" where the page has none
+    library_id VARCHAR(50) NOT NULL,        -- "" where the page has none
+    fetches INTEGER NOT NULL,
+    PRIMARY KEY (day, platform, verified, page, spec_id, language, library_id),
+    CONSTRAINT ck_link_shares_page_valid
+        CHECK (page IN ('home','plots','spec_overview','spec_detail'))
+);
 ```
 
 **Note**: Tags are stored as JSONB in the `specs` table (not a separate table).
@@ -383,6 +401,24 @@ Every column but the triage state copies the field of the same name in the case'
   "updated_at": "2026-10-12T14:30:06"
 }
 ```
+
+---
+
+### `link_shares`
+
+**Purpose**: Count how often a link to the site was shared. A messenger or a social network fetches a page's preview image when a person shares its link; the API adds one to the row of that day, platform, and page after it served the image (`api/shared_links.py`). The "shared links" tile on `/stats` and the section on `/debug` read the sums. The full description is in [Plausible analytics tracking](plausible.md#shared-links).
+
+**Key Fields**:
+- `day` - The UTC day of the fetch. No time of day is stored
+- `platform` - One name from a closed set in the code (`whatsapp`, `teams`, `slack`, ...), or `other` for a client that is neither a preview platform nor a known crawler. The column has no CHECK, because the set grows with every platform that learns to preview links
+- `verified` - Whether Cloudflare verified the fetcher as a bot it knows. The platform's name comes from a user agent the client wrote and the row keeps no user agent, so this is what tells a platform's own fetch from a client that signs as one. Part of the key, so the two are counted apart; the public numbers add them up
+- `page` - `home`, `plots`, `spec_overview` (a spec's hub), or `spec_detail` (one implementation)
+- `spec_id`, `language`, `library_id` - The plot the page shows; the empty string where the page has none, never NULL
+- `fetches` - The count
+
+**Why the key columns are never NULL**: the seven of them are the primary key, and the counter is one `INSERT ... ON CONFLICT DO UPDATE SET fetches = fetches + 1`. A NULL in a key conflicts with nothing, so every fetch would add a row and the count would stay at one.
+
+**What a row never holds**: an address, a user agent, or anything else of the request. The rows are kept without a time limit.
 
 ---
 

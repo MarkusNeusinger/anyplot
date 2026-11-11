@@ -13,9 +13,9 @@ from fastapi.responses import Response
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.analytics import track_og_image
 from api.cache import cache_key, get_cache, set_cache
 from api.dependencies import optional_db
+from api.shared_links import record_share
 from core.database import SpecRepository
 from core.images import RESPONSIVE_SIZES, create_branded_og_image, create_home_og_image, create_og_collage
 
@@ -94,34 +94,31 @@ async def _render(fn: Callable[..., _R], /, *args: Any, **kwargs: Any) -> _R:
 
 router = APIRouter(prefix="/og", tags=["og-images"])
 
+# Five minutes, at the edge and in a client. A fetch the edge answers from its
+# cache never reaches this service, so it is a share nobody counts
+# (`api/shared_links.py`); with an hour or a day, as before, most were. Rendering
+# is not what the short time costs: the images stay in this service's own cache.
+PREVIEW_CACHE = "public, max-age=300"
+
+
+def _preview(
+    request: Request, content: bytes, *, page: str, spec_id: str = "", language: str = "", library_id: str = ""
+) -> Response:
+    """The response of a preview image that is there, counted as a share on its way out."""
+    record_share(request, page=page, spec_id=spec_id, language=language, library_id=library_id)
+    return Response(content=content, media_type="image/png", headers={"Cache-Control": PREVIEW_CACHE})
+
 
 @router.get("/home.png")
 async def get_home_og_image(request: Request) -> Response:
-    """OG image for home page with tracking.
-
-    Supports filter params (e.g., ?lib=plotly&dom=statistics) for tracking shared filtered URLs.
-    """
-    # Capture filter params for tracking (e.g., ?lib=plotly&dom=statistics)
-    filters = dict(request.query_params) if request.query_params else None
-    track_og_image(request, page="home", filters=filters)
-
-    return Response(
-        content=await _render(_get_static_og_image),
-        media_type="image/png",
-        headers={"Cache-Control": "public, max-age=86400"},
-    )
+    """OG image for the home page."""
+    return _preview(request, await _render(_get_static_og_image), page="home")
 
 
 @router.get("/plots.png")
 async def get_plots_og_image(request: Request) -> Response:
-    """OG image for plots page with tracking."""
-    track_og_image(request, page="plots")
-
-    return Response(
-        content=await _render(_get_static_og_image),
-        media_type="image/png",
-        headers={"Cache-Control": "public, max-age=86400"},
-    )
+    """OG image for the plots page."""
+    return _preview(request, await _render(_get_static_og_image), page="plots")
 
 
 _http_client: httpx.AsyncClient | None = None
@@ -199,8 +196,7 @@ async def get_branded_impl_image(
 
     Returns a 1200x630 PNG with anyplot.ai header and the plot image.
     """
-    # Track og:image request (fire-and-forget)
-    track_og_image(request, page="spec_detail", spec=spec_id, language=language, library=library)
+    share = {"page": "spec_detail", "spec_id": spec_id, "language": language, "library_id": library}
 
     # Check cache first
     # Spec_id sits before the version so `clear_spec_cache(spec_id)` (which
@@ -208,7 +204,7 @@ async def get_branded_impl_image(
     key = cache_key("og", spec_id, OG_VERSION, language, library)
     cached = get_cache(key)
     if cached:
-        return Response(content=cached, media_type="image/png", headers={"Cache-Control": "public, max-age=3600"})
+        return _preview(request, cached, **share)
 
     if db is None:
         raise HTTPException(status_code=503, detail="Database not available")
@@ -235,9 +231,7 @@ async def get_branded_impl_image(
         # Cache the result
         set_cache(key, branded_bytes)
 
-        return Response(
-            content=branded_bytes, media_type="image/png", headers={"Cache-Control": "public, max-age=3600"}
-        )
+        return _preview(request, branded_bytes, **share)
 
     except httpx.HTTPError as e:
         raise HTTPException(status_code=502, detail=f"Failed to fetch image: {e}") from e
@@ -252,14 +246,11 @@ async def get_spec_collage_image(
     Returns a 1200x630 PNG with anyplot.ai branding and a 2x3 grid of implementations,
     sorted by quality_score descending.
     """
-    # Track og:image request (fire-and-forget)
-    track_og_image(request, page="spec_overview", spec=spec_id)
-
     # Check cache first
     key = cache_key("og", spec_id, OG_VERSION, "collage")
     cached = get_cache(key)
     if cached:
-        return Response(content=cached, media_type="image/png", headers={"Cache-Control": "public, max-age=3600"})
+        return _preview(request, cached, page="spec_overview", spec_id=spec_id)
 
     if db is None:
         raise HTTPException(status_code=503, detail="Database not available")
@@ -293,9 +284,7 @@ async def get_spec_collage_image(
         # Cache the result
         set_cache(key, collage_bytes)
 
-        return Response(
-            content=collage_bytes, media_type="image/png", headers={"Cache-Control": "public, max-age=3600"}
-        )
+        return _preview(request, collage_bytes, page="spec_overview", spec_id=spec_id)
 
     except httpx.HTTPError as e:
         raise HTTPException(status_code=502, detail=f"Failed to fetch images: {e}") from e

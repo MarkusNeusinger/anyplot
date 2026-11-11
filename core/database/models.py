@@ -4,7 +4,7 @@ SQLAlchemy ORM models for anyplot.
 Defines database tables for specs, libraries, and impls.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -12,6 +12,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -359,6 +360,49 @@ class AgentFeedback(Base):
         Index("ix_agent_feedback_session_version", "session_hash", "result_version"),
         Index("ix_agent_feedback_spec_library", "spec_id", "library_id"),
         Index("ix_agent_feedback_tags", "tags", postgresql_using="gin"),
+    )
+
+
+# The pages that have a preview image of their own (`api/routers/og_images.py`).
+SHARE_PAGES = ("home", "plots", "spec_overview", "spec_detail")
+
+
+class LinkShare(Base):
+    """How often a link to the site was shared: one counter per day, platform and page.
+
+    A messenger or a social network fetches the page's preview image when a
+    person shares its link, and that fetch is counted here
+    (`api/shared_links.py`). The row is a count and nothing else: no address,
+    no user agent, no time of day, so it says how often a page was shared and
+    never by whom. That is why the rows are kept without a limit.
+
+    The seven key columns are the primary key. `spec_id`, `language` and
+    `library_id` are the empty string where the page has none, never NULL: a
+    NULL in a key conflicts with nothing, so the counter's upsert would add a
+    row per fetch instead of counting.
+    """
+
+    __tablename__ = "link_shares"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    # The preview platform's name from the closed set of `api/shared_links.py`,
+    # or `other` for a client that is neither one of them nor a known crawler.
+    # No CHECK: the set grows with every platform that learns to preview links.
+    platform: Mapped[str] = mapped_column(String(32), primary_key=True)
+    # Whether Cloudflare verified the fetcher as the bot it claims to be. The
+    # platform is read from the user agent, which anyone can write: this is
+    # what tells a platform's own fetch from a client that only signs as one.
+    # Part of the key, so the two are counted apart.
+    verified: Mapped[bool] = mapped_column(Boolean, primary_key=True)
+    page: Mapped[str] = mapped_column(String(20), primary_key=True)
+    spec_id: Mapped[str] = mapped_column(String(MAX_SPEC_ID_LENGTH), primary_key=True, default="")
+    language: Mapped[str] = mapped_column(String(MAX_LANGUAGE_ID_LENGTH), primary_key=True, default="")
+    library_id: Mapped[str] = mapped_column(String(MAX_LIBRARY_ID_LENGTH), primary_key=True, default="")
+    fetches: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    __table_args__ = (
+        # No index of its own: every read is a window of days, and the primary key starts with `day`.
+        CheckConstraint("page IN ('home','plots','spec_overview','spec_detail')", name="ck_link_shares_page_valid"),
     )
 
 

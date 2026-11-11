@@ -1341,18 +1341,18 @@ class TestOgImagesRouter:
 
     def test_get_home_og_image(self, client: TestClient) -> None:
         """Should return static og:image for home page."""
-        with patch("api.routers.og_images.track_og_image"):
+        with patch("api.routers.og_images.record_share"):
             with patch("api.routers.og_images._get_static_og_image", return_value=b"fake-image"):
                 response = client.get("/og/home.png")
                 assert response.status_code == 200
                 assert response.headers["content-type"] == "image/png"
-                assert "max-age=86400" in response.headers["cache-control"]
+                assert "max-age=300" in response.headers["cache-control"]
 
     def test_og_images_are_cross_origin_readable(self, client: TestClient) -> None:
         """og cards are public images for foreign origins — chat UIs fetching
         them in-page got no ACAO at all because the global CORSMiddleware only
         answers the site's own origins (live verification 2026-08-19)."""
-        with patch("api.routers.og_images.track_og_image"):
+        with patch("api.routers.og_images.record_share"):
             with patch("api.routers.og_images._get_static_og_image", return_value=b"fake-image"):
                 response = client.get("/og/home.png", headers={"Origin": "https://chat.openai.com"})
                 assert response.status_code == 200
@@ -1367,19 +1367,19 @@ class TestOgImagesRouter:
         assert response.headers["access-control-allow-origin"] == "*"
 
     def test_get_home_og_image_with_filters(self, client: TestClient) -> None:
-        """Should pass filter params to tracking."""
-        with patch("api.routers.og_images.track_og_image") as mock_track:
+        """A filtered home link counts as the home page; the query is not recorded."""
+        with patch("api.routers.og_images.record_share") as mock_track:
             with patch("api.routers.og_images._get_static_og_image", return_value=b"fake-image"):
                 response = client.get("/og/home.png?lib=plotly&dom=statistics")
                 assert response.status_code == 200
                 mock_track.assert_called_once()
                 call_kwargs = mock_track.call_args[1]
                 assert call_kwargs["page"] == "home"
-                assert call_kwargs["filters"] == {"lib": "plotly", "dom": "statistics"}
+                assert "filters" not in call_kwargs
 
     def test_get_plots_og_image(self, client: TestClient) -> None:
         """Should return static og:image for plots page."""
-        with patch("api.routers.og_images.track_og_image") as mock_track:
+        with patch("api.routers.og_images.record_share") as mock_track:
             with patch("api.routers.og_images._get_static_og_image", return_value=b"fake-image"):
                 response = client.get("/og/plots.png")
                 assert response.status_code == 200
@@ -1396,7 +1396,7 @@ class TestOgImagesRouter:
         og_module._STATIC_OG_IMAGE = None
 
         with (
-            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.record_share"),
             patch("api.routers.og_images.create_home_og_image", side_effect=RuntimeError("PIL broken")),
             patch("pathlib.Path.read_bytes", side_effect=FileNotFoundError("not found")),
         ):
@@ -1513,7 +1513,7 @@ class TestOgImagesRouter:
             response = client.get("/og/scatter-basic/python/matplotlib.png")
             assert response.status_code == 200
             assert response.headers["content-type"] == "image/png"
-            assert response.headers["cache-control"] == "public, max-age=3600"
+            assert response.headers["cache-control"] == "public, max-age=300"
             assert response.content == fake_branded_bytes
 
     def test_get_spec_collage_success(self, db_client) -> None:
@@ -1548,7 +1548,7 @@ class TestOgImagesRouter:
             response = client.get("/og/scatter-basic.png")
             assert response.status_code == 200
             assert response.headers["content-type"] == "image/png"
-            assert response.headers["cache-control"] == "public, max-age=3600"
+            assert response.headers["cache-control"] == "public, max-age=300"
             assert response.content == fake_collage_bytes
 
     def test_get_branded_impl_image_cached_has_cache_control(self, db_client) -> None:
@@ -1559,7 +1559,7 @@ class TestOgImagesRouter:
         with patch("api.routers.og_images.get_cache", return_value=cached_bytes):
             response = client.get("/og/scatter-basic/python/matplotlib.png")
             assert response.status_code == 200
-            assert response.headers["cache-control"] == "public, max-age=3600"
+            assert response.headers["cache-control"] == "public, max-age=300"
 
     def test_get_spec_collage_cached_has_cache_control(self, db_client) -> None:
         """Cached collage response should include Cache-Control header."""
@@ -1569,7 +1569,7 @@ class TestOgImagesRouter:
         with patch("api.routers.og_images.get_cache", return_value=cached_bytes):
             response = client.get("/og/scatter-basic.png")
             assert response.status_code == 200
-            assert response.headers["cache-control"] == "public, max-age=3600"
+            assert response.headers["cache-control"] == "public, max-age=300"
 
 
 class TestPlotsRouter:

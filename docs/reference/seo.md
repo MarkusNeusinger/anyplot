@@ -393,8 +393,8 @@ page's own render, or on the hub the render of the best-scoring implementation.
 On an implementation page the `SoftwareSourceCode` node is also the page's
 `mainEntity`, with the render as its `image`.
 
-`og:image` stays the card, because link previews and the `og_image_view`
-analytics event depend on it. So on a page with a render, `og:image` and
+`og:image` stays the card, because link previews and the share counter
+(`api/shared_links.py`) depend on it. So on a page with a render, `og:image` and
 `primaryImageOfPage` name different images on purpose: the new signal adds a
 clean candidate, it doesn't withdraw the card, and Google weighs the signals
 itself. A page without a render gets no `primaryImageOfPage`, so that signal

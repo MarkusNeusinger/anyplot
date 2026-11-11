@@ -410,6 +410,46 @@ Admin-gated like the other `/debug/*` routes; `days=7` (default) or `days=30`, a
 
 Both machine-reader routes read the dataset named by `MACHINE_READS_DATASET` (`<project>.<dataset>` of the views, `anyplot.machine_reads`; the queries read its linked log dataset, the name plus `_logs`). In production it comes from the `_MACHINE_READS_DATASET` substitution of the `deploy-api` trigger, which `api/cloudbuild.yaml` writes on every deploy.
 
+### GET `/insights/shared-links`
+
+**Purpose**: Links to the site shared per day for the shared links tile on the stats page
+
+Reads the share counters in the database (`api/shared_links.py`, [Shared links](plausible.md#shared-links)) for today and the 27 UTC days before it, oldest first, zero-filled. A share is the fetch of a page's preview image by a messenger or a social network. Fetches by clients that are neither a preview platform nor a known crawler (`other`) are not in these numbers.
+
+```json
+{
+  "status": "ok",
+  "window_days": 28,
+  "total": 5,
+  "days": [
+    {"date": "2026-11-11", "shares": 5}
+  ],
+  "platforms": [
+    {"platform": "whatsapp", "shares": 3},
+    {"platform": "teams", "shares": 2}
+  ],
+  "top": [
+    {"spec_id": "scatter-basic", "language": "python", "library": "matplotlib", "shares": 3},
+    {"spec_id": "scatter-basic", "language": null, "library": null, "shares": 2}
+  ]
+}
+```
+
+`platforms` is sorted by shares, largest first. `top` lists up to five plot pages; a spec's hub (`language` and `library` are `null`) and one implementation of it are entries of their own.
+
+Always `200`. `status` is `not_configured` without a database, and `unavailable` when it doesn't answer or the `link_shares` table isn't there yet; both come with zeros and empty lists, and neither is kept, so the next request tries again. An `ok` answer is cached with stale-while-revalidate (1h refresh).
+
+### GET `/debug/shared-links`
+
+**Purpose**: The share counters with the fetches the public tile leaves out, for the shared links section on the debug page
+
+Admin only. The answer of `/insights/shared-links`, read fresh, plus two fields:
+
+- `other`: the number of preview images fetched in the window by a client that is neither a preview platform nor a known crawler. A rising `other` is how a platform missing from the list shows itself.
+- `verified`: an object from a platform's name (or `other`) to how many of its fetches Cloudflare verified as a bot it knows, such as `{"slack": 12, "other": 2}`. A platform with none is absent. A platform Cloudflare verifies whose shares are mostly unverified is being imitated; WhatsApp and Signal are never verified.
+
+`status` is `unavailable` with zeros when the query fails.
+
 ### GET `/specs/{spec_id}/{library}/code`
 
 **Purpose**: Lightweight endpoint for implementation code
@@ -471,11 +511,11 @@ Used by nginx to serve correct meta tags to social media bots.
 
 ## OG image endpoints
 
-All endpoints are under `/og/` prefix.
+All endpoints are under `/og/` prefix. Every image answers `Cache-Control: public, max-age=300`, and a served image is counted as a shared link unless a crawler fetched it ([Shared links](plausible.md#shared-links)).
 
 ### GET `/og/home.png`
 
-**Purpose**: OG image for home page (with tracking)
+**Purpose**: OG image for home page
 
 ---
 
