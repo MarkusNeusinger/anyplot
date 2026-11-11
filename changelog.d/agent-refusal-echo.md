@@ -9,4 +9,4 @@
   and the count of refusals read what they read before. Behind it, a reply
   check asks the assistant once more when it still answers a passed message
   with a fixed refusal. The turn record names the new check as `root_refusal`
-  (`reasked` or `kept`).
+  (`reasked` or `kept`). (#13057)
