@@ -202,6 +202,8 @@ describe('useAnalytics', () => {
       // to compile if it ever stops doing so. A caller that got around the type sends nothing.
       result.current.trackEvent('ui_feature');
       result.current.trackEvent('ui_feature', { feature: 'feedback_open' });
+      // @ts-expect-error -- the type refuses a property beside the feature, likewise.
+      result.current.trackEvent('ui_feature', { feature: 'feedback_open', action: 'open' });
 
       expect(window.plausible).toHaveBeenCalledTimes(1);
       expect(window.plausible).toHaveBeenCalledWith('ui_feature', {

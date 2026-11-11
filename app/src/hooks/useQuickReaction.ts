@@ -16,7 +16,7 @@ import {
  *
  * Headless counterpart to the FeedbackWidget's quick-stack: same endpoint,
  * same session correlation and the same `feedback_submitted` analytics event
- * (with `mode: "plot_overlay"`), but it leaves all UI to the caller so the
+ * (with `source: "plot_vote"`), but it leaves all UI to the caller so the
  * buttons can sit directly on the plot. Unlike the widget it names the
  * implementation (`library_id`, `language`) so votes can be counted per image.
  * Each vote carries a fresh Turnstile token (`src/lib/turnstile.ts`): the

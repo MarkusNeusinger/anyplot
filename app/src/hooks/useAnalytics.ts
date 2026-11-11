@@ -49,11 +49,12 @@ export interface EventProps {
 }
 
 /**
- * `trackEvent`, for the components that receive it as a prop. `ui_feature` has to name its
- * feature: without one the event would say nothing, so the compiler refuses the call.
+ * `trackEvent`, for the components that receive it as a prop. `ui_feature` names its feature
+ * and nothing else: without a feature the event would say nothing, and with more than it the
+ * twelve features would again be twelve kinds of event. The compiler refuses both.
  */
 export interface TrackEvent {
-  (name: 'ui_feature', props: EventProps & { feature: UiFeature }, url?: string): void;
+  (name: 'ui_feature', props: { feature: UiFeature }, url?: string): void;
   (name: Exclude<AnalyticsEvent, 'ui_feature'>, props?: EventProps, url?: string): void;
 }
 
