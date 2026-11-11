@@ -7,4 +7,4 @@
   so, and "Verify on day one" gains the check that proved it: a forged
   `X-Prerender-Bot-Category` on `/api/llms-full.txt` and a forged
   `X-Verified-Bot-Category` on `/api/specs` both arrive with an empty
-  `verified_category`.
+  `verified_category`. (#13053)
