@@ -23,7 +23,7 @@ vi.mock('react-router-dom', async () => {
 // effect that lists trackEvent as a dependency into an infinite render loop —
 // so the mock has to hold the same contract.
 const mockTrackEvent = vi.fn();
-const mockAnalytics = { trackPageview: vi.fn(), trackEvent: mockTrackEvent };
+const mockAnalytics = { trackEvent: mockTrackEvent };
 
 vi.mock('src/hooks', () => ({
   useAnalytics: () => mockAnalytics,

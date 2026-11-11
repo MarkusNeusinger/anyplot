@@ -7,7 +7,13 @@ import Box from '@mui/material/Box';
 
 import { ScrollToTopFab } from 'src/components/ScrollToTopFab';
 import type { ImageSize } from 'src/constants';
-import { isFiltersEmpty, useAnalytics, useFilterState, useInfiniteScroll } from 'src/hooks';
+import {
+  isFiltersEmpty,
+  useAnalytics,
+  useFilterState,
+  useInfiniteScroll,
+  usePlotsScrolled,
+} from 'src/hooks';
 import { useAppData, useHomeState } from 'src/hooks';
 import { specPath } from 'src/routes/paths';
 import { FilterBar } from 'src/sections/plots-gallery/FilterBar';
@@ -96,6 +102,15 @@ export function PlotsPage() {
 
   const noFilters = isFiltersEmpty(activeFilters);
   const specTotal = useMemo(() => countDistinctSpecs(allImages), [allImages]);
+
+  usePlotsScrolled({
+    displayedCount: displayedImages.length,
+    total: allImages.length,
+    filtered: !noFilters,
+    loading,
+    restoredOffset: homeStateRef.current.scrollY,
+    onTrackEvent: trackEvent,
+  });
 
   useEffect(() => {
     localStorage.setItem('imageSize', imageSize);

@@ -91,22 +91,40 @@ describe('useUrlSync', () => {
     window.history.replaceState({}, '', '/');
   });
 
-  it('updates URL', () => {
+  it('writes the filters it starts with to the address, and leaves that pageview to the layout', () => {
+    // The visit's first pageview is the navigation's, which the layout sends once this hook
+    // has put the remembered filters into the address (`RootLayout.pageview.test.tsx`).
     const onTrackPageview = vi.fn();
     const filters: ActiveFilters = [{ category: 'lib', values: ['matplotlib'] }];
 
     renderHook(() => useUrlSync({ activeFilters: filters, onTrackPageview }));
 
     expect(window.location.search).toBe('?lib=matplotlib');
-    expect(onTrackPageview).toHaveBeenCalled();
+    expect(onTrackPageview).not.toHaveBeenCalled();
+  });
+
+  it('records a pageview for every filter change after that', () => {
+    const onTrackPageview = vi.fn();
+    const { rerender } = renderHook(
+      ({ activeFilters }: { activeFilters: ActiveFilters }) =>
+        useUrlSync({ activeFilters, onTrackPageview }),
+      { initialProps: { activeFilters: [{ category: 'lib', values: ['matplotlib'] }] } }
+    );
+
+    rerender({ activeFilters: [{ category: 'lib', values: ['seaborn'] }] });
+    expect(window.location.search).toBe('?lib=seaborn');
+    expect(onTrackPageview).toHaveBeenCalledTimes(1);
+
+    rerender({ activeFilters: [] });
+    expect(window.location.search).toBe('');
+    expect(onTrackPageview).toHaveBeenCalledTimes(2);
   });
 
   it('clears the query string when no filters are active', () => {
-    const onTrackPageview = vi.fn();
+    window.history.replaceState({}, '', '/?lib=matplotlib');
 
-    renderHook(() => useUrlSync({ activeFilters: [], onTrackPageview }));
+    renderHook(() => useUrlSync({ activeFilters: [], onTrackPageview: vi.fn() }));
 
     expect(window.location.search).toBe('');
-    expect(onTrackPageview).toHaveBeenCalled();
   });
 });

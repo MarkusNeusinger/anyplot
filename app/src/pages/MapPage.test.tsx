@@ -16,7 +16,6 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
-    trackPageview: vi.fn(),
     trackEvent: mockTrackEvent,
   }),
 }));

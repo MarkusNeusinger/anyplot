@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   agentChatPath,
+  isPlotsPath,
   langFromPath,
   paths,
   RESERVED_TOP_LEVEL,
@@ -54,6 +55,19 @@ describe('langFromPath', () => {
 
   it('returns undefined when the first segment is a reserved route', () => {
     expect(langFromPath('/plots/python')).toBeUndefined();
+  });
+});
+
+describe('isPlotsPath', () => {
+  it('is the gallery with and without a trailing slash, as the router serves it', () => {
+    expect(isPlotsPath(paths.plots)).toBe(true);
+    expect(isPlotsPath('/plots/')).toBe(true);
+  });
+
+  it('is no other page', () => {
+    expect(isPlotsPath('/')).toBe(false);
+    expect(isPlotsPath('/plots/python')).toBe(false);
+    expect(isPlotsPath('/plots-of-the-day')).toBe(false);
   });
 });
 

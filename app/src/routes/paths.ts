@@ -29,7 +29,7 @@ export function agentChatPath(
 
 /**
  * The query parameters the chat page reads, which the redirect from the old
- * admin address `/debug/agent` keeps (`AgentChatRedirect`).
+ * admin address `/debug/agent` keeps (`agentChatRedirect`).
  */
 export const AGENT_CHAT_PARAMS = ['spec', 'library', 'language', 'source'] as const;
 
@@ -55,6 +55,11 @@ export const RESERVED_TOP_LEVEL = new Set([
   'sitemap.xml',
   'robots.txt',
 ]);
+
+/** Whether a pathname is the gallery's: the router serves `/plots/` as it serves `/plots`. */
+export function isPlotsPath(pathname: string): boolean {
+  return pathname.replace(/\/+$/, '') === '/plots';
+}
 
 /**
  * Parse the language segment from a pathname, returns undefined if not present

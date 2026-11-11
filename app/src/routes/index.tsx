@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -8,8 +8,7 @@ import { RouteErrorBoundary } from 'src/components/RouteErrorBoundary';
 import { AppDataProvider } from 'src/layouts/Layout';
 import { RootLayout } from 'src/layouts/RootLayout';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
-import { AgentChatRedirect } from 'src/routes/AgentChatRedirect';
-import { specPath } from 'src/routes/paths';
+import { agentChatRedirect, specLanguageRedirect } from 'src/routes/redirects';
 
 const LazyFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -22,17 +21,6 @@ const lazySpec = () =>
     Component: m.SpecPage,
     HydrateFallback: LazyFallback,
   }));
-
-function SpecLanguageRedirect() {
-  const { specId, language } = useParams();
-  if (!specId || !language) return <NotFoundPage source="language_params" />;
-  return (
-    <Navigate
-      to={{ pathname: specPath(specId), search: `?language=${encodeURIComponent(language)}` }}
-      replace
-    />
-  );
-}
 
 // A pathless child route with errorElement lets us keep the layout chrome
 // (masthead/navbar/footer) when a child page fails to load. Errors in the
@@ -103,7 +91,7 @@ const router = createBrowserRouter([
           // VITE_ENABLE_AGENT_CHAT both paths still answer with the 404 page
           // instead of falling through to `:specId/:language`.
           import.meta.env.VITE_ENABLE_AGENT_CHAT === 'true'
-            ? { path: 'debug/agent', element: <AgentChatRedirect /> }
+            ? { path: 'debug/agent', loader: agentChatRedirect }
             : { path: 'debug/agent', element: <NotFoundPage /> },
           // The agent chat, one page for visitors and admins: it detects the admin
           // and picks the lane itself, and says so while the public lane is closed.
@@ -115,7 +103,7 @@ const router = createBrowserRouter([
               }
             : { path: 'agent', element: <NotFoundPage /> },
           { path: ':specId', lazy: lazySpec },
-          { path: ':specId/:language', element: <SpecLanguageRedirect /> },
+          { path: ':specId/:language', loader: specLanguageRedirect },
           { path: ':specId/:language/:library', lazy: lazySpec },
           { path: '*', element: <NotFoundPage source="catch_all" /> },
         ],

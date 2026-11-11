@@ -6,7 +6,6 @@ import { render, screen, waitFor } from 'src/test-utils';
 
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
-    trackPageview: vi.fn(),
     trackEvent: vi.fn(),
   }),
   useAppData: () => ({

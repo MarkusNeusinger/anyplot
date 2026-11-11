@@ -4,7 +4,7 @@
  * Handles URL parsing and building.
  */
 
-import { useEffect } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 
 import type { ActiveFilters } from 'src/types';
 import { FILTER_CATEGORIES } from 'src/types';
@@ -57,12 +57,21 @@ interface UseUrlSyncOptions {
 
 /**
  * Hook to synchronize active filters with URL.
+ *
+ * A layout effect: the layout records the navigation's pageview in its own
+ * layout effect, which runs after this one, so a visit that restores the
+ * remembered filters is one pageview, of the filtered page. That first run
+ * therefore records nothing itself. From then on a filter change is a page of
+ * its own, and no navigation tells the layout about it.
  */
 export function useUrlSync({ activeFilters, onTrackPageview }: UseUrlSyncOptions): void {
-  useEffect(() => {
+  const synced = useRef(false);
+
+  useLayoutEffect(() => {
     const newUrl = buildFilterUrl(activeFilters);
     window.history.replaceState({}, '', newUrl);
 
-    onTrackPageview();
+    if (synced.current) onTrackPageview();
+    synced.current = true;
   }, [activeFilters, onTrackPageview]);
 }

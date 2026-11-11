@@ -72,12 +72,8 @@ function FactTable({
 }
 
 export function LegalPage() {
-  const { trackPageview, trackEvent } = useAnalytics();
+  const { trackEvent } = useAnalytics();
   const { hash } = useLocation();
-
-  useEffect(() => {
-    trackPageview('/legal');
-  }, [trackPageview]);
 
   // The route loads lazily, after the browser has looked for the fragment and not found it, so a
   // fresh load of /legal#assistant (the chat's notice opens one in a new tab) would stay at the top.

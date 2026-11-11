@@ -1,3 +1,5 @@
+import { useLayoutEffect } from 'react';
+
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -32,7 +34,7 @@ vi.mock('src/global-config', async importOriginal => {
 });
 
 // Stable identities, like the real hook (effects depend on them).
-const analytics = vi.hoisted(() => ({ trackEvent: vi.fn(), trackPageview: vi.fn() }));
+const analytics = vi.hoisted(() => ({ trackEvent: vi.fn() }));
 vi.mock('src/hooks/useAnalytics', () => ({ useAnalytics: () => analytics }));
 
 const json = (status: number, body: unknown) =>
@@ -655,7 +657,6 @@ beforeEach(() => {
   lastVersion = 0;
   dataFirst = 1;
   analytics.trackEvent.mockClear();
-  analytics.trackPageview.mockClear();
   stubFetch();
 });
 
@@ -693,8 +694,8 @@ describe('AgentChatPage gating', () => {
     expect(called.filter(path => path === '/debug/agent/status')).toHaveLength(1);
     // The one admin-only element, at the header row's end.
     expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin ▾$/);
-    // The admin's own use is no visitor's: no pageview and no `agent_open`; the source still goes.
-    expect(analytics.trackPageview).not.toHaveBeenCalled();
+    // The admin's own use is no visitor's: no `agent_open` (and no pageview, which the layout
+    // sends and the mute below holds back); the source still goes.
     expect(analytics.trackEvent).not.toHaveBeenCalledWith('agent_open', expect.anything());
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(PAGE));
     // The title in plain words is the link back, in the frame's header row (`← title` until v4).
@@ -720,6 +721,29 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     await screen.findByText(/the assistant is closed right now/);
     expect(analyticsMuted()).toBe(false);
+  });
+
+  it("is muted for an admin by the time the layout records the page's pageview", () => {
+    // The layout sends every page's pageview in a layout effect, which runs after its
+    // children's (`RootLayout`): the page's mute must be a layout effect too, or an admin's
+    // visit would count before the switch is on. The admin check is still out here.
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const mutedAtPageview: boolean[] = [];
+    function Layout() {
+      useLayoutEffect(() => {
+        mutedAtPageview.push(analyticsMuted());
+      }, []);
+      return <AgentChatPage />;
+    }
+    const router = createMemoryRouter([{ path: '/agent', element: <Layout /> }], {
+      initialEntries: [PAGE],
+    });
+    render(
+      <ThemeProvider theme={theme}>
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    );
+    expect(mutedAtPageview).toEqual([true]);
   });
 
   it('names the tab after the spec title, not its id', async () => {

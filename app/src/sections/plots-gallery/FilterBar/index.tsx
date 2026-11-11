@@ -14,7 +14,7 @@ import { FilterSearch } from 'src/sections/plots-gallery/FilterBar/FilterSearch'
 import { FilterSizeToggle } from 'src/sections/plots-gallery/FilterBar/FilterSizeToggle';
 import { fontSize, semanticColors, typography } from 'src/theme';
 import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
-import { formatGalleryTotals } from 'src/utils';
+import { formatGalleryTotals, galleryScrollPercent } from 'src/utils';
 
 export interface FilterBarProps {
   activeFilters: ActiveFilters;
@@ -73,15 +73,15 @@ export function FilterBar({
   useEffect(() => {
     const calculatePercent = () => {
       const scrollY = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight;
-      const windowHeight = window.innerHeight;
-
-      // Estimate total height based on ratio of loaded vs total plots
-      const loadRatio = displayedCount > 0 && currentTotal > 0 ? currentTotal / displayedCount : 1;
-      const estimatedTotalHeight = (docHeight - windowHeight) * loadRatio;
-
-      const percent = Math.round((scrollY / estimatedTotalHeight) * 100);
-      setScrollPercent(Math.min(100, Math.max(0, percent || 0)));
+      setScrollPercent(
+        galleryScrollPercent({
+          scrollY,
+          docHeight: document.documentElement.scrollHeight,
+          viewportHeight: window.innerHeight,
+          displayedCount,
+          total: currentTotal,
+        })
+      );
 
       // Detect if bar is in sticky mode (scrolled past threshold).
       // On /plots the masthead+navbar flow with content (~120px), so the FilterBar

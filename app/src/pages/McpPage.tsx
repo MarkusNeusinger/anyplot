@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
@@ -11,7 +9,6 @@ import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
-import { useAnalytics } from 'src/hooks';
 import {
   codeBlockStyle,
   proseLinkStyle,
@@ -34,12 +31,6 @@ const inlineCodeSx = {
 };
 
 export function McpPage() {
-  const { trackPageview } = useAnalytics();
-
-  useEffect(() => {
-    trackPageview('/mcp');
-  }, [trackPageview]);
-
   return (
     <>
       <>

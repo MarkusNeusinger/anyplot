@@ -13,7 +13,7 @@ import { useAnalytics } from 'src/hooks';
 import { useAppData, useHomeState } from 'src/hooks';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { ApiError, apiGet, endpoints } from 'src/lib/api';
-import { paths, specPath } from 'src/routes/paths';
+import { specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import type { PlotImage } from 'src/types';
 import { buildSrcSet, getFallbackSrc, SPECS_SIZES } from 'src/utils/responsiveImage';
@@ -42,13 +42,8 @@ function initRotationIndices(specs: SpecListItem[]): Record<string, number> {
 export function SpecsListPage() {
   const { specsData } = useAppData();
   const { saveScrollPosition } = useHomeState();
-  const { trackPageview, trackEvent } = useAnalytics();
+  const { trackEvent } = useAnalytics();
   const { isDark } = useTheme();
-
-  // Track specs page view
-  useEffect(() => {
-    trackPageview(paths.specs);
-  }, [trackPageview]);
 
   const [allImages, setAllImages] = useState<PlotImage[]>([]);
   const [loading, setLoading] = useState(true);

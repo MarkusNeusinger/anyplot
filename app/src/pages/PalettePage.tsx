@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
-import { useAnalytics, useTheme } from 'src/hooks';
+import { useTheme } from 'src/hooks';
 import { type Lang, PALETTE, type Swatch } from 'src/pages/PalettePage.helpers';
-import { paths } from 'src/routes/paths';
 import { ContinuousCmapsSection } from 'src/sections/palette/ContinuousCmapsSection';
 import { CopySnippetsSection } from 'src/sections/palette/CopySnippetsSection';
 import { DeltaESection } from 'src/sections/palette/DeltaESection';
@@ -31,7 +30,6 @@ const CVD_OPTIMAL_ORDER: number[] = [0, 1, 7, 6, 4, 5, 2, 3];
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function PalettePage() {
-  const { trackPageview } = useAnalytics();
   const { isDark } = useTheme();
   const [lang, setLang] = useState<Lang>('python');
   const [oklch, setOklch] = useState(false);
@@ -55,10 +53,6 @@ export function PalettePage() {
         // Silently ignore — clipboard API can fail in insecure contexts.
       });
   };
-
-  useEffect(() => {
-    trackPageview(paths.palette);
-  }, [trackPageview]);
 
   const sortedPalette: Swatch[] = useMemo(
     () => (sort === 'imprint' ? PALETTE : CVD_OPTIMAL_ORDER.map(i => PALETTE[i])),

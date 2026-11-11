@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-
 import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -49,11 +47,7 @@ const inlineCodeSx = {
 } as const;
 
 export function AboutPage() {
-  const { trackPageview, trackEvent } = useAnalytics();
-
-  useEffect(() => {
-    trackPageview(paths.about);
-  }, [trackPageview]);
+  const { trackEvent } = useAnalytics();
 
   // An in-prose link to another page of the site, through the router.
   const proseLink = (to: string, destination: string, label: string) => (

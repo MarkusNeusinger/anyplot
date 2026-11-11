@@ -1,9 +1,19 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback } from 'react';
 
 import { analyticsMuted } from 'src/analytics/mute';
+import { paths, RESERVED_TOP_LEVEL } from 'src/routes/paths';
 
 interface EventProps {
   [key: string]: string | undefined;
+}
+
+// The last pageview sent, for the whole app rather than per hook instance: the layout records
+// every navigation and the gallery its filter changes, and neither may repeat the other's.
+let lastPageviewUrl = '';
+
+/** Forgets the last pageview. For tests: the state above is the module's and outlives one. */
+export function forgetLastPageview(): void {
+  lastPageviewUrl = '';
 }
 
 // Module-level ambient props attached to every pageview and custom event.
@@ -20,29 +30,35 @@ export function setAnalyticsAmbientProps(props: Record<string, string>): void {
   ambientProps = merged;
 }
 
-function debounce<T extends (...args: never[]) => void>(fn: T, delay: number): T {
-  let timeoutId: ReturnType<typeof setTimeout>;
-  return ((...args: Parameters<T>) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  }) as T;
-}
+const ORIGIN = 'https://anyplot.ai';
 
-// Converts query params to path segments for Plausible
+// The page the current address is recorded as in Plausible.
+//
+// Every page is its own path, without the query. Two pages have a query that
+// names a different page, and for those the query becomes path segments: the
+// gallery's filters and a spec hub's language scope.
 // Supports repeated params (AND) and comma-separated values (OR)
-// /?lib=matplotlib&lib=seaborn → /lib/matplotlib/lib/seaborn
-// /?lib=matplotlib,seaborn → /lib/matplotlib,seaborn
-function buildPlausibleUrl(): string {
+// /plots?lib=matplotlib&lib=seaborn → /plots/lib/matplotlib/lib/seaborn
+// /plots?lib=matplotlib,seaborn → /plots/lib/matplotlib,seaborn
+export function buildPlausibleUrl(): string {
+  // Preserve the full current pathname so filter segments are appended after
+  // it — for the spec hub AND for real reserved pages like /plots. Dropping
+  // the reserved prefix recorded every filterless /plots visit as "/" and made
+  // the site's #2 page invisible in Plausible.
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  const pathPrefix = parts.length > 0 ? `/${parts.join('/')}` : '';
+  const specRoute = parts.length > 0 && !RESERVED_TOP_LEVEL.has(parts[0]);
+
+  // An implementation page: the language in lowercase, as everywhere else the
+  // app compares it, so `/scatter-basic/Python/matplotlib` is no second page.
+  if (specRoute && parts.length === 3) {
+    return `${ORIGIN}/${parts[0]}/${parts[1].toLowerCase()}/${parts[2]}`;
+  }
+  const queryNamesThePage = pathPrefix === paths.plots || (specRoute && parts.length === 1);
+  if (!queryNamesThePage) return `${ORIGIN}${pathPrefix || '/'}`;
+
   const params = new URLSearchParams(window.location.search);
   const segments: string[] = [];
-
-  // Preserve the full current pathname so filter segments are appended after
-  // it — for spec routes (/:specId/:language[/:library]) AND for real reserved
-  // pages like /plots. Dropping the reserved prefix recorded every filterless
-  // /plots visit as "/" and made the site's #2 page invisible in Plausible.
-  const pathname = window.location.pathname;
-  const parts = pathname.split('/').filter(Boolean);
-  const pathPrefix = parts.length > 0 ? `/${parts.join('/')}` : '';
 
   // Defined order of the filter categories (incl. impl-level tags).
   // - `language` covers the spec-hub carousel scope (`/{spec}?language=python`)
@@ -78,48 +94,47 @@ function buildPlausibleUrl(): string {
   }
 
   return segments.length > 0
-    ? `https://anyplot.ai${pathPrefix}/${segments.join('/')}`
-    : `https://anyplot.ai${pathPrefix || '/'}`;
+    ? `${ORIGIN}${pathPrefix}/${segments.join('/')}`
+    : `${ORIGIN}${pathPrefix || '/'}`;
 }
 
 export function useAnalytics() {
-  const lastPageviewRef = useRef<string>('');
   const isProduction = typeof window !== 'undefined' && window.location.hostname === 'anyplot.ai';
 
-  const sendPageview = useCallback(
-    (urlOverride?: string) => {
-      if (!isProduction || analyticsMuted()) return;
+  // Records the page the address names now, at once. No page calls this for
+  // itself: the layout does on every navigation (`RootLayout`), and the gallery
+  // when a filter changes its address without one (`useUrlSync`).
+  const trackPageview = useCallback(() => {
+    if (!isProduction) return;
+    if (analyticsMuted()) {
+      // A muted page is a page all the same: coming back from it to the page before it is a
+      // new pageview, not a repeat of the last one sent.
+      lastPageviewUrl = '';
+      return;
+    }
 
-      let url: string;
-      if (urlOverride) {
-        // Validate urlOverride: must start with "/" and contain only safe characters
-        if (!/^\/[\w\-/]*$/.test(urlOverride)) {
-          return; // Invalid URL, skip tracking
-        }
-        url = `https://anyplot.ai${urlOverride}`;
-      } else {
-        url = buildPlausibleUrl();
-      }
+    const url = buildPlausibleUrl();
+    if (url === lastPageviewUrl) return;
+    lastPageviewUrl = url;
 
-      if (url === lastPageviewRef.current) return;
-      lastPageviewRef.current = url;
+    const props = Object.keys(ambientProps).length > 0 ? { ...ambientProps } : undefined;
+    window.plausible?.('pageview', props ? { url, props } : { url });
+  }, [isProduction]);
 
-      const props = Object.keys(ambientProps).length > 0 ? { ...ambientProps } : undefined;
-      window.plausible?.('pageview', props ? { url, props } : { url });
-    },
-    [isProduction]
-  );
-
-  const trackPageview = useMemo(() => debounce(sendPageview, 150), [sendPageview]);
-
+  // `url` names the page an event belongs to when it is sent after the visitor
+  // left it; without one the script takes the current address.
   const trackEvent = useCallback(
-    (name: string, props?: EventProps) => {
+    (name: string, props?: EventProps, url?: string) => {
       if (!isProduction || analyticsMuted()) return;
       const cleanProps = props
         ? Object.fromEntries(Object.entries(props).filter(([, v]) => v !== undefined))
         : {};
       const merged = { ...ambientProps, ...cleanProps } as Record<string, string>;
-      window.plausible?.(name, Object.keys(merged).length > 0 ? { props: merged } : undefined);
+      const options = {
+        ...(Object.keys(merged).length > 0 ? { props: merged } : {}),
+        ...(url ? { url } : {}),
+      };
+      window.plausible?.(name, Object.keys(options).length > 0 ? options : undefined);
     },
     [isProduction]
   );

@@ -142,7 +142,7 @@ function statsLibLabel(lib: Pick<LibraryStats, 'id' | 'name'>): string {
 }
 
 export function StatsPage() {
-  const { trackPageview, trackEvent } = useAnalytics();
+  const { trackEvent } = useAnalytics();
   const { isDark } = useTheme();
   const [data, setData] = useState<DashboardData | null>(null);
   const [visitors, setVisitors] = useState<VisitorPoint[] | null>(null);
@@ -152,10 +152,6 @@ export function StatsPage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    trackPageview(paths.stats);
-  }, [trackPageview]);
 
   useEffect(() => {
     apiGet<DashboardData>(endpoints.insightsDashboard)

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -41,16 +41,11 @@ const MAP_DESCRIPTION =
   'Interactive map of all anyplot specifications, clustered by tag similarity.';
 
 export function MapPage() {
-  const { trackPageview, trackEvent } = useAnalytics();
+  const { trackEvent } = useAnalytics();
   const navigate = useNavigate();
 
   // refs
   const fgRef = useRef<ForceGraphHandle>(null);
-
-  // 1. page view
-  useEffect(() => {
-    trackPageview('/map');
-  }, [trackPageview]);
 
   const { containerRef, size } = useMapResize();
 
