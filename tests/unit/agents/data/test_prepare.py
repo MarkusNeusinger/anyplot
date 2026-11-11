@@ -470,6 +470,19 @@ class TestSetTypeNumber:
         renamed = prepare(text, dropped, {"op": "rename", "column": "Alt", "name": "Einwohner"})
         assert cells(renamed, 1) == ["5", "6", "7"]
 
+    def test_a_pasted_number_column_made_text_is_its_cells_as_pasted(self) -> None:
+        """`7.000` is stored as the number 7: as text it is `7.000` again, and back to numbers with a decimal comma
+        in the same call it is 7000, where the stored text gave 7."""
+        as_text = prepare(self.AMBIGUOUS_DOTS, {"op": "set_type", "column": "Einwohner", "type": "text"})
+        assert cells(as_text, 1) == ["1.234", "7.000", "12"]
+
+        back = prepare(
+            self.AMBIGUOUS_DOTS,
+            {"op": "set_type", "column": "Einwohner", "type": "text"},
+            {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","},
+        )
+        assert cells(back, 1) == ["1234", "7000", "12"]
+
     def test_a_declared_missing_mark_stays_missing_when_the_dots_are_read_again(self) -> None:
         prepared = prepare(
             "Fehlwerte: -999\nStadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;-999\nThun;980\n",
@@ -3019,6 +3032,41 @@ class TestStripAndReplace:
         assert guessed.changes[0].endswith(
             'dots read as the decimal mark; if they separate thousands, undo this and set "decimal": ","'
         )
+
+    def test_the_digits_of_a_number_column_need_its_cells_as_pasted(self) -> None:
+        """The digits of `7.000` are 7000, and of the stored `7` only 7: read from the pasted cells, else refused."""
+        pasted = "Stadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;12\n"
+        digits = {"op": "extract", "column": "Einwohner", "keep": "digits", "name": "d"}
+
+        assert cells(prepare(pasted, digits), 2) == ["1234", "7000", "12"]
+        code, message = failure(pasted, {"op": "sort", "column": "Stadt"}, digits)
+        assert code == "type_mismatch" and "column 'Einwohner' holds numbers" in message
+        assert failure("p,v\n12.50,1\n7.25,2\n", {"op": "extract", "column": "p", "keep": "digits", "name": "d"})[0] == (
+            "type_mismatch"
+        )
+
+    def test_a_cell_no_mark_reads_leaves_the_mark_open(self) -> None:
+        """One cell of words among ten says nothing about the mark: the column stays text, and a `set_type` that
+        names no mark still says which one it took."""
+        counts = ("26.215", "38.790", "57.902", "48.449", "39.303", "38.799", "10.093", "45.511", "58.953", "k. A.")
+        text = "k\tn\n" + "".join(f"{name}\t{count}*\n" for name, count in zip("abcdefghij", counts, strict=True))
+
+        stripped = prepare(text, {"op": "strip", "column": "n", "suffix": "*", "name": "c"})
+        assert dtypes(stripped)["c"] == "text" and "kept as text, since its cells read as numbers" in stripped.changes[0]
+
+        read = prepare(text, {"op": "set_type", "column": "n", "type": "number"})
+        assert "1 cell could not be read and is now missing" in read.changes[0]
+        assert read.changes[0].endswith('undo this and set "decimal": ","')
+
+    def test_decimal_commas_that_could_separate_thousands_stay_text_too(self) -> None:
+        """The same in a file of decimal commas: `38,790` is 38.79 there, and 38790 with a decimal point."""
+        text = "Ort;Wert;Zahl\nA;3,5;26,215\nB;4,0;38,790*\n"
+        star = {"op": "strip", "column": "Zahl", "suffix": "*", "name": "n"}
+        prepared = prepare(text, star)
+
+        assert dtypes(prepared)["n"] == "text" and cells(prepared, 3) == ["26,215", "38,790"]
+        read = prepare(text, star, {"op": "set_type", "column": "n", "type": "number", "decimal": "."})
+        assert cells(read, 3) == ["26215", "38790"]
 
     def test_a_mark_the_file_reads_as_thousands_is_no_open_mark(self) -> None:
         """In a file of decimal commas a dot between three-digit groups separates thousands: the part is a number."""

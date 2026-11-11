@@ -1280,7 +1280,9 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         carried.text_columns.add(op.column)
         if kind == "text":
             return frame, f"{op.column}: already text, nothing changed"
-        result[op.column] = _texts(series, _with_time(series, carried))
+        # A pasted number column whose dots are open becomes its cells as pasted (`7.000`, not the stored `7`), so
+        # a `set_type` back to numbers with a decimal comma later in the call still reads the thousands.
+        result[op.column] = _source_texts(frame, op.column, carried)
         carried.with_time.pop(op.column, None)
         carried.date_order.pop(op.column, None)
         return result, f"{op.column}: {_count(present, 'cell')} now text"
@@ -1295,9 +1297,10 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
                     # decimal reading, and the call would store that as the next version.
                     raise PrepareError(
                         "type_mismatch",
-                        f"column '{op.column}' already holds numbers read with a decimal point; its dots can be read "
-                        "as thousands separators only from the pasted data, before any other operation changes the "
-                        "column: undo to the pasted data first, or read the text column these numbers came from",
+                        f"column '{op.column}' already holds numbers read with a decimal point, stored without the "
+                        "trailing zeros they were written with (`7.000` is `7`); a decimal comma can read them again "
+                        "only from the pasted data, before any other operation changes the column: undo to the "
+                        "pasted data first, or read the text column these numbers came from",
                     )
                 return frame, f"{op.column}: already numbers, nothing changed"
             if carried.rows_changed or len(pasted) != len(frame):
@@ -1310,9 +1313,9 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
             # a declared mark the parse blanked) stays missing, as it is in the column.
             series = pd.Series([cell or None for cell in pasted], index=frame.index, name=op.column, dtype="object")
             present = int(series.notna().sum())
-        # A text column read here holds the cells it holds: a number column that a `set_type` to text in the same
-        # call turned into its canonical dot decimals reads `1.234` as 1234 under a decimal comma but `7` (pasted
-        # `7.000`) as 7. Only the number path above reads the cells as pasted; root.md never asks for that pair.
+        # A text column read here holds the cells it holds. A pasted number column that a `set_type` to text in the
+        # same call turned into text holds its cells as pasted (`7.000`), so a decimal comma reads 7000 here too; one
+        # whose rows changed first holds its canonical dot decimals, and `7` (pasted `7.000`) stays 7.
         conversion = _number_conversion(series, op.decimal or carried.decimal)
     else:
         if kind == "datetime":
@@ -1434,7 +1437,7 @@ def _open_mark_note(used: str | None) -> str:
 def _number_guess(series: pd.Series, used: str) -> str | None:
     """What a read as numbers guessed: that leading zeros are no part of the value (`007`, a code the parser kept
     text), thousands separators of spaces or apostrophes (`123 456` may be an id), or the decimal mark, when the
-    other mark reads every cell too, to other values (`1,234` is 1.234 or 1234). Flash pre-check of 2026-11-01:
+    other mark reads the same cells too, to other values (`1,234` is 1.234 or 1234). Flash pre-check of 2026-11-01:
     without the first, a postal code column read as certain numbers for an open role."""
     texts = [ascii_minus([text])[0][0] for text in _texts(series) if isinstance(text, str)]
     if any(_LEADING_ZERO.search(text.strip()) for text in texts):
@@ -1442,9 +1445,11 @@ def _number_guess(series: pd.Series, used: str) -> str | None:
     if any(_GROUP_INSIDE.search(text.strip()) for text in texts):
         return "that spaces or apostrophes separate thousands"
     other = "," if used == "." else "."
-    first, _, failed = _read_numbers(list(texts), used)
-    second, _, other_failed = _read_numbers(list(texts), other)
-    if not failed and not other_failed and first != second:
+    first, _, _ = _read_numbers(list(texts), used)
+    second, _, _ = _read_numbers(list(texts), other)
+    # A cell neither mark reads says nothing about the mark; one that only a single mark reads settles it (`1.5`
+    # is no thousands group), so the guess needs both readings to fail on the same cells.
+    if [number is None for number in first] == [number is None for number in second] and first != second:
         return DECIMAL_MARK
     return None
 
@@ -3321,7 +3326,8 @@ def _kept(text: str, keep: Keep) -> str:
 
 
 def _extract(frame: pd.DataFrame, op: Extract, carried: _Carried) -> tuple[pd.DataFrame, str]:
-    texts = _source_texts(frame, op.column, carried)
+    # The digits of a number drop its decimal mark: on a number column that is an operation on the mark.
+    texts = _source_texts(frame, op.column, carried, ["."] if op.keep == "digits" else ())
     _check_new_columns(frame, [op.name])
     present = int(texts.notna().sum())
     result = frame.copy()
