@@ -333,6 +333,14 @@ class TestDropRows:
     def test_any_other_drop_says_only_what_it_dropped(self, table: str, condition: dict[str, Any]) -> None:
         assert prepare(table, condition).changes == ["dropped 1 row where Art = 'C'"]
 
+    def test_whole_numbers_past_the_int64_range_keep_their_sign(self) -> None:
+        """pandas' Int64 sum of these two wraps around to a positive number; the dropped rows are far below 0."""
+        table = f"Art,Menge\nA,10\nA,4\nC,{-(2**63)}\nC,-1\n"
+
+        (line,) = prepare(table, drop("Art", "eq", "C")).changes
+
+        assert line.endswith("so its total over the rows kept is higher than before")
+
     def test_dropped_rows_that_add_up_to_more_than_zero_took_nothing_off(self) -> None:
         """One dropped row is below 0, but the dropped rows together are above it: the total over the rows kept is
         lower than before, so a note that it is higher would be false."""

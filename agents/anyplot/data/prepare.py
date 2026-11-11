@@ -1264,6 +1264,14 @@ MAX_OFFSET_COLUMNS = 2
 """How many columns the note of `_offsets_note` names."""
 
 
+def _adds_up_below_zero(cells: pd.Series) -> bool:
+    """Whether a number column's cells add up to less than 0. Whole numbers are summed as Python integers: pandas'
+    Int64 sum wraps around silently past 2**63, which would turn a large negative total into a positive one."""
+    if is_integer_dtype(cells.dtype):
+        return sum(int(value) for value in cells.dropna()) < 0
+    return float(cells.sum()) < 0
+
+
 def _offsets_note(dropped: pd.DataFrame, kept: pd.DataFrame) -> str:
     """What a `drop_rows` line adds when a number column is below 0 only in the rows it dropped, while rows that stay
     are above 0, and the dropped rows together are below 0 there: those rows took amounts off (returns,
@@ -1280,7 +1288,7 @@ def _offsets_note(dropped: pd.DataFrame, kept: pd.DataFrame) -> str:
         for column in kept.columns
         if _kind(kept[column]) == "number"
         and bool(dropped[column].lt(0).fillna(False).any())
-        and float(dropped[column].sum()) < 0
+        and _adds_up_below_zero(dropped[column])
         and not bool(kept[column].lt(0).fillna(False).any())
         and bool(kept[column].gt(0).fillna(False).any())
     ][:MAX_OFFSET_COLUMNS]
