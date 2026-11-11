@@ -2,43 +2,50 @@ library: seaborn
 language: python
 specification_id: hive-basic
 created: '2025-12-24T22:18:37Z'
-updated: '2026-05-07T01:02:46Z'
-generated_by: claude-haiku
-workflow_run: 25469757703
+updated: '2026-11-11T02:44:45Z'
+generated_by: claude-sonnet
+workflow_run: 42947445784
 issue: 1879
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 84
 review:
   strengths:
-  - Flawless theme adaptation with data colors identical between renders
-  - Professional typography and layout with explicitly sized text elements
-  - Perfect legibility in both light and dark themes with no contrast failures
-  - Excellent use of Okabe-Ito palette with proper canonical ordering
-  - Clear, reproducible implementation with deterministic data generation
-  - Sophisticated hive plot design effectively solving the hairball problem through
-    radial axes and edge transparency
+  - Colored bold axis labels match their node group, so axis, nodes and legend read
+    as one system in both themes
+  - Legend title names the radial encoding ('Distance from center = degree (connections)')
+  - sns.lineplot with units= and estimator=None draws all Bezier edges from one tidy
+    frame
+  - Per-group degree scaling via groupby().transform keeps positions rule-based and
+    reproducible
+  - Exact 2400x2400 canvas with theme-correct chrome in both renders
   weaknesses:
-  - Design Excellence could leverage more sophisticated visual techniques like size
-    variation or focal color emphasis
-  - Library Mastery could explore more distinctive seaborn features beyond the core
-    high-level API usage
+  - 'DQ-03 (code): the radial property is labeled ''Degree (connections)'' but its
+    values are random integers 1-14 from rng.integers, while each node has only 1-4
+    edges in df (M0 shows 4) → compute degree from the edge list so a node''s distance
+    matches its drawn connections. Likely cause: DEGREE column filled with rng.integers(1,
+    15, 30) instead of counting SOURCE/TARGET occurrences.'
+  - 'Suggestion: the four within-group edges (M0–M1, M2–M3, M10–M11, M20–M21) run
+    along their axis and are indistinguishable from it; dropping them or noting them
+    would keep the plot to between-axis links.'
+  - 'Suggestion: a slightly larger legend font (9–10 pt) would balance the 12 pt axis
+    labels on the square canvas.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - perfect for light theme
-      Chrome: Title "hive-basic · seaborn · anyplot.ai" in bold 24pt dark text (#1A1A17), axis labels (CORE, UTILITY, INTERFACE) in bold colored text, legend with proper frame and styling - all clearly readable
-      Data: Three radial axes at 120° intervals with nodes positioned by degree along each axis. Core modules in green (#009E73), Utility in orange (#D55E00), Interface in blue (#0072B2). Edges as subtle gray Bezier curves with alpha=0.2. 30 nodes total with size 400 and alpha=0.9 - clearly visible
-      Legibility verdict: PASS - All elements perfectly readable, no overlap, excellent contrast
+      Background: warm off-white #FAF8F1, 2400x2400 square
+      Chrome: bold dark title 'hive-basic · python · seaborn · anyplot.ai' at top (~65% width); axis labels CORE (top), UTILITY (lower left), INTERFACE (lower right) in bold caps in their group colors; legend at bottom center on elevated #FFFDF6 with dark text, title 'Distance from center = degree (connections)'. All readable.
+      Data: three faint grey spokes at 120°; core nodes #009E73 on the vertical axis, utility #C475FD, interface #4467A3, each with a page-colored outline; ~29 thin grey translucent quadratic Bezier edges bending toward the center; tied degrees stack nodes on the same spot.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - exactly as required for dark theme
-      Chrome: Title in light text (#F0EFE8), axis labels in corresponding light-theme INK colors, legend text in secondary light color (#B8B7B0) - all clearly readable against dark background. No dark-on-dark failures detected
-      Data: Identical data colors to light render confirming proper theme-invariant coloring. Green (#009E73), orange (#D55E00), and blue (#0072B2) remain vibrant and distinct. Edges in appropriate light gray with correct transparency
-      Legibility verdict: PASS - All elements perfectly readable, strong contrast, no dark-on-dark issues, brand colors prominent
+      Background: warm near-black #1A1A17
+      Chrome: title in light #F0EFE8, axis labels in the same group colors, legend on #242420 with light text and light frame; no dark-on-dark text.
+      Data: node colors identical to the light render; outlines flip to the dark page color; edges in light grey at the same alpha remain traceable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,69 +56,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 24pt, labels 18pt), perfectly readable
-          in both themes
+        comment: Title 12pt, axis labels 12pt bold, legend 8pt; all readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Nodes well-spaced along axes, no colliding text elements
+        comment: No text collisions; tied nodes stacking on an axis is covered by
+          the spec's crowding permission
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes optimally sized (s=400, alpha=0.9), edges visible with appropriate
-          transparency
+        comment: Nodes s=130 with page-colored outline, edges 0.9 lw at alpha 0.25
+          suit 30 nodes / 29 edges
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with distinct, high-contrast colors
+        comment: Green / lavender / blue distinguishable under CVD; groups also separated
+          by axis position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600×3600 format perfectly balanced with generous margins
+        comment: 2400x2400 square, title ~65% width, hive centered, legend clear below
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; axis labels are descriptive
+        comment: Axes labeled with their group names; legend title names the radial
+          property
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette correct, backgrounds and text colors properly theme-adaptive
+        comment: 'Imprint positions 1-3 in canonical order, #FAF8F1 / #1A1A17 backgrounds,
+          chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Custom palette and intentional color hierarchy, professional polish,
-          but not quite publication-ready
+        passed: false
+        comment: Axis labels set in bold caps in their group's color, tying axis,
+          nodes and legend together
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Axes removed, subtle styling, generous whitespace
+        passed: false
+        comment: Page-colored node outlines separate stacked nodes; faint spokes sit
+          behind lighter edges
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through color; plot tells the story of module
-          dependencies
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -121,27 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hive plot with 3 radial axes
+        comment: Hive plot with 3 radial axes, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present and working correctly
+        comment: C1 labeled axes, C2 degree positions with legend title naming it,
+          C3 curved translucent edges, C4 basic scope all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angular and radial positions correctly encode type and degree
+        comment: Nodes at their scaled degree on their group's axis; no layout algorithm
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match spec
+        comment: Title 'hive-basic · python · seaborn · anyplot.ai'; legend entries
+          readable
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -149,19 +162,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all connection types and balanced node distribution
+        comment: All three axis pairs connected, balanced 10/10/10 groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software module dependency network is real and neutral
+        comment: Software module dependency network, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 30 nodes and degree 1-15 are appropriate for visualization
+        passed: false
+        comment: Radial 'degree (connections)' values are random 1-14 and do not match
+          the 1-4 edges drawn per node (defect line)
     code_quality:
       score: 10
       max: 10
@@ -171,31 +185,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure, no over-engineering
+        comment: Linear script with column constants and data block
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and appropriately complex
+        comment: groupby transform for per-group scaling; vectorised Bezier per edge
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png naming and current API
+        comment: plot-{THEME}.png at dpi 400, no bbox_inches
     library_mastery:
       score: 6
       max: 10
@@ -204,26 +218,34 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good use of sns.scatterplot(), sns.lineplot(), sns.set_theme() with
-          rc customization
+        passed: false
+        comment: sns.lineplot with units= and estimator=None draws every edge from
+          one tidy frame; scatterplot hue/hue_order
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses theme-adaptive styling but mostly required features for plot
-          type
+        comment: units= grouping in lineplot is a seaborn-specific idiom; little else
+          beyond the mandate
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-11T02:41:20Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - bezier-curves
+  - custom-legend
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
+  - groupby-aggregation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
