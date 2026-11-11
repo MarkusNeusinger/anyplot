@@ -581,6 +581,10 @@ SpecId = Annotated[str, Field(pattern=SPEC_ID_PATTERN)]
 LibraryId = Annotated[str, AfterValidator(_check_library)]
 Locale = Annotated[str, Field(max_length=16, pattern=r"^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$")]
 Text = Annotated[str, Field(min_length=1)]
+# A message of spaces alone would be a turn without a transcript line: the agents service numbers a turn by its
+# user line (`turn_record.py`), and the bundle's transcript leaves a blank line out, so a case's record and
+# transcript would name different turns from there on.
+MessageText = Annotated[str, Field(min_length=1, pattern=r"\S")]
 
 
 class _StrictBody(BaseModel):
@@ -648,7 +652,7 @@ class Binding(_StrictBody):
 
 
 class MessageBody(_StrictBody):
-    text: Text | None = None
+    text: MessageText | None = None
     # `create_plot` starts step 2 (the fresh plot, also `.start_over()`); `carry_plot` plots in the library the user
     # switched to with the decisions made so far; `plot_new_data` is "plot the new data" after a data change, from the
     # latest plot when the agents service's guard allows it; `summarize_data` asks the assistant for the step-1

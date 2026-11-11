@@ -13,3 +13,10 @@
   before the record says so instead. `GET /debug/agent/cases/{id}` carries
   the record as `turns`, every code closed again to the record's
   vocabularies, which a test pins to the agents service's. (#13044)
+
+### Changed
+
+- **The chat refuses a message of spaces alone.** `POST …/messages` answers
+  `422` for a `text` without a visible character. The page never sent one; a
+  hand-made request could, and its turn left no transcript line, so a case's
+  turn record and transcript named different turns from there on. (#13044)

@@ -919,6 +919,18 @@ class TestBodies:
         assert response.status_code == 422
         assert upstream.requests == []
 
+    @pytest.mark.parametrize("text", ["   ", "\n\t", " "])
+    def test_a_message_of_spaces_alone_is_refused(self, client, upstream, text) -> None:
+        """Such a message would be a turn without a transcript line, and the turn record numbers turns by that line."""
+        response = client.post("/debug/agent/sessions/s1/messages", json={"text": text}, headers=CLIENT_HEADERS)
+        assert response.status_code == 422
+        assert upstream.requests == []
+
+    def test_a_message_with_spaces_around_it_goes_through(self, client, upstream) -> None:
+        response = client.post("/debug/agent/sessions/s1/messages", json={"text": " hi "}, headers=CLIENT_HEADERS)
+        assert response.status_code == 200
+        assert len(upstream.requests) == 1
+
     def test_bindings_forwarded_as_list(self, client, upstream) -> None:
         bindings = [
             {"role": "x", "column": "Datum"},
