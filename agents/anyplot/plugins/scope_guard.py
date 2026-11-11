@@ -267,14 +267,15 @@ def withheld_messages(events: Sequence[Event]) -> int:
     """How many of the session's user messages were withheld, whatever the reason: what the session block tells the
     root in place of the turns `without_refused_turns` takes out. Counted as that filter reads them: a placeholder
     with the halt event right after it."""
-    spoken = [event for event in events if event.content is not None and event.content.parts]
-    return sum(
-        1
-        for event, following in zip(spoken, spoken[1:], strict=False)
-        if event.author == USER_AUTHOR
-        and following.author == HALT_AUTHOR
-        and "".join(part.text or "" for part in event.content.parts or []) in WITHHELD_TEXTS
-    )
+    count = 0
+    before: Event | None = None  # the last event with content: a state write stands between the two at times
+    for event in events:
+        if event.content is None or not event.content.parts:
+            continue
+        if event.author == HALT_AUTHOR and before is not None and before.author == USER_AUTHOR:
+            count += before.content is not None and is_withheld(before.content)
+        before = event
+    return count
 
 
 SESSION_CLOSED = "session_closed"
