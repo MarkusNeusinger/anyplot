@@ -74,6 +74,13 @@ export function platformLabel(platform: string): string {
   return PLATFORM_LABELS[platform] ?? platform;
 }
 
+/**
+ * The hint the tile's word "unverified" carries: read alone, the word sounds like doubt about
+ * the shares, although an app that fetches from the sender's phone is never verified.
+ */
+export const UNVERIFIED_HINT =
+  'Cloudflare could not verify the fetcher. that is no verdict on a share: WhatsApp and Signal fetch the preview from the sender’s own phone, which nobody can verify.';
+
 const count = (value: unknown): number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
 

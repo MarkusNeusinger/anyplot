@@ -641,14 +641,17 @@ not what the five minutes cost: the images stay in the API's own cache.
   it knows, largest first. "unverified shares" is one number, the rest of
   every platform together: without a verdict a platform's name is only what
   the client wrote, so the tile puts no name on it (`/debug` has the split).
-  A line without a share isn't shown. While the answer names no verdict (an
-  API revision older than the page), the tile shows the platforms in one
-  line, "by platform". A spec's sum holds its hub and all of its
-  implementation pages; a library's sum holds its implementation pages across
-  specs. A share of a hub counts for no library, so the libraries add up to
-  less than the specs. `other` is not in these numbers. The tile holds no
-  explanation of its own; the legal page it links says what a share is and
-  what "unverified" doesn't mean. The answer is kept for an hour.
+  The word "unverified" is a button with a hint, which a pointer, a keyboard,
+  and a tap open: Cloudflare could not verify the fetcher, and that is no
+  verdict on a share, because WhatsApp and Signal fetch the preview from the
+  sender's own phone. A line without a share isn't shown. While the answer
+  names no verdict (an API revision older than the page), the tile shows the
+  platforms in one line, "by platform". A spec's sum holds its hub and all of
+  its implementation pages; a library's sum holds its implementation pages
+  across specs. A share of a hub counts for no library, so the libraries add
+  up to less than the specs. `other` is not in these numbers. Apart from that
+  hint the tile holds no explanation of its own; the legal page it links says
+  what a share is. The answer is kept for an hour.
 - **`/debug`, the "shared links" section** (`GET /debug/shared-links`, admin
   only): the same numbers read fresh, plus the five most shared plot pages (a
   hub and each implementation as entries of their own), `other`, and beside
@@ -661,6 +664,13 @@ not what the five minutes cost: the images stay in the API's own cache.
   a link's preview for hours or days and fetch it once for many readers.
 - A fetch the edge answered from its cache, within the five minutes.
 - Who shared, where, or to how many people: one fetch is one count.
+- Whether two fetches belong to one share. A platform can fetch a preview
+  more than once: Teams asked for the same page twice within two seconds on
+  2026-11-11, the one such pair among its 23 fetches from 2026-11-10 to
+  2026-11-12, and it fetches the home page's preview again every few hours,
+  which the log can't tell from new shares. The count is the fetches, so it
+  runs under the shares where a platform still holds the preview and over
+  them where it asks again.
 
 ---
 

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { SharedLinksResponse } from 'src/sections/stats/sharedLinks';
+import { type SharedLinksResponse, UNVERIFIED_HINT } from 'src/sections/stats/sharedLinks';
 import { SharedLinksTile } from 'src/sections/stats/SharedLinksTile';
 import { CHART_PX, MIN_BAR_PX, STRIP_BAR } from 'src/sections/stats/stripGeometry';
-import { render, screen, within } from 'src/test-utils';
+import { render, screen, userEvent, waitFor, within } from 'src/test-utils';
+
+type User = ReturnType<typeof userEvent.setup>;
 
 const formatNum = (value: number): string => value.toLocaleString('en-US');
 
@@ -95,6 +97,51 @@ describe('SharedLinksTile', () => {
     // An app that fetches from the sender's phone is never verified, and its share still counts.
     expect(screen.getByTestId('shared-links-unverified').textContent).toBe('unverified shares: 5');
     expect(screen.queryByTestId('shared-links-platforms')).not.toBeInTheDocument();
+  });
+
+  it('explains the word unverified as a hint that describes it', () => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    // A button, so a keyboard and a finger reach it; the hint describes the word, and the
+    // word keeps its own name.
+    const term = screen.getByRole('button', { name: 'unverified' });
+    expect(term).toBe(screen.getByTestId('shared-links-unverified-term'));
+    expect(term).toHaveAttribute('type', 'button');
+    expect(term).toHaveAccessibleDescription(UNVERIFIED_HINT);
+    expect(UNVERIFIED_HINT).toMatch(/no verdict on a share/);
+    expect(UNVERIFIED_HINT).toMatch(
+      /WhatsApp and Signal fetch the preview from the sender’s own phone/
+    );
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['a pointer over the word', (user: User, term: HTMLElement) => user.hover(term)],
+    // A tap ends as a click: the tooltip's own touch timer opens for a long press only.
+    ['a tap or a click on it', (user: User, term: HTMLElement) => user.click(term)],
+    [
+      'a keyboard that reaches it',
+      async (user: User) => {
+        // The strip's days come before the word in the tab order: start on the last of them.
+        const days = screen.getAllByTestId('shared-links-day');
+        days[days.length - 1].focus();
+        await user.tab();
+      },
+    ],
+  ])('opens the hint for %s, and Escape closes it', async (_, reach) => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+    const user = userEvent.setup();
+    const term = screen.getByTestId('shared-links-unverified-term');
+
+    await reach(user, term);
+
+    // By its text: a day of the strip has a tooltip of its own.
+    expect(await screen.findByText(UNVERIFIED_HINT)).toBeInTheDocument();
+    expect(term).toHaveAccessibleDescription(UNVERIFIED_HINT);
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByText(UNVERIFIED_HINT)).not.toBeInTheDocument());
   });
 
   it('gives a platform with both kinds its verified part, and its rest to the sum', () => {
