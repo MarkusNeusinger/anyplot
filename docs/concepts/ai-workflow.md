@@ -1,7 +1,8 @@
 # How anyplot is built with AI agents
 
 > **Status (2026-11-05):** the workflow as practiced on this date. The active-day count in "Where it falls
-> short" was taken on 2026-11-04 from `git log`.
+> short" was taken on 2026-11-04 from `git log`; the pull-request floor beside it is raised at every
+> release.
 
 Models write anyplot's code; I lead them. This page describes how that works: who does what, what I bring
 to it, the path a change takes to production, how a correction becomes a rule, and where the approach
@@ -115,7 +116,7 @@ for every line; the stories live in the guardrails file. Three examples:
 
 ## Where it falls short
 
-- **One prompt and waiting doesn't work yet.** Since the first commit on 2025-11-18, more than 850 pull
+- **One prompt and waiting doesn't work yet.** Since the first commit on 2025-11-18, more than 950 pull
   requests from my account have merged, and up to 2026-11-04, 208 of those 351 days had a commit under
   my name.
 - **Models make confident mistakes.** A reply described an axis value the plot didn't draw, a summary

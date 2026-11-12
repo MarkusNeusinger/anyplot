@@ -22,7 +22,7 @@ I'm [Markus Neusinger](https://linkedin.com/in/markus-neusinger/), a physicist w
 - **I know when to push back.** The models know a lot. The job is knowing which question to ask, when to make a model research a point properly, and when a confident answer is wrong. Security is a good example: I know what has to hold, private data and no way to abuse the service, and asking the right question is often enough for a model to find what still needs hardening.
 - **I split, assign, test, and send back.** Work goes to Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs. I test what comes back and return it until it's right.
 
-This isn't one prompt and a wait. Since November 2025, more than 850 pull requests from my account have merged, and what I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
+This isn't one prompt and a wait. Since November 2025, more than 950 pull requests from my account have merged, and what I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
 
 [![A grid of catalogue plots, one spec in each library, with the catalogue's spec, library, and language counts](docs/assets/readme-showcase.png)](https://anyplot.ai/plots)
 

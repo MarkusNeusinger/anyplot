@@ -9,6 +9,1582 @@ only a release folds them in. How entries and releases get here is in
 
 ## [Unreleased]
 
+## [4.1.0] — 2026-11-11 — Fine-tuning
+
+### Added
+
+- **The pipeline records when a new version stops working in the agent
+  chat.** impl-generate and impl-repair scan a Python implementation and its
+  predecessor on `main` with the chat's validator
+  (`automation/scripts/readiness_scan.py`) and record the refusals only the
+  new file has. Record-only: one log line, a job-summary line, and
+  `adapt/readiness.json` in staging; nothing reads it yet. On the six
+  regenerations of 2026-11-11 it finds two regressions, one of which turned
+  a file the chat accepted into one it refuses. (#13054)
+- **"Shared links" on the stats page.** A tile with the links to the site
+  shared over the last 28 days: one bar per day, the platforms with their
+  totals, and the five most shared plot pages. The owner's debug page shows the
+  same numbers plus the preview fetches that are no share. The numbers come
+  from `GET /insights/shared-links` and `GET /debug/shared-links`. (#13055)
+- **Share counters in the database.** A messenger or a social network fetches a
+  page's preview image when a person shares its link, and the API now counts
+  that fetch itself: one row of the new `link_shares` table per day, platform,
+  and page, with no address, no user agent, and no time of day. The rows are
+  kept without a time limit, and the legal page says so. Only the production
+  service counts, and only an image it served. (#13055)
+- **Each counter says whether Cloudflare verified the fetcher.** The platform's
+  name is read from a user agent the client wrote, and the row keeps no user
+  agent, so the verdict is what tells a platform's own fetch from a scanner
+  that signs as one. The debug page shows the verified part beside each total;
+  the public numbers count a share whatever the verdict, because WhatsApp and
+  Signal fetch the preview from the sender's phone, which nobody can verify.
+  (#13055)
+- **The review records whether an implementation keeps the generator's
+  static contract.** impl-review runs `automation/scripts/contract_check.py`
+  on the file at the PR head and, on a regeneration, on its predecessor. Six
+  rules: the mandated title tail, the theme read, the themed save target, no
+  legacy brand colour, no named library colormap, and no hex outside the
+  style guide's palette. Record-only: it writes a job-summary line and a
+  notice, and nothing reads the result yet. On `main`, 919 of 4,863 files
+  break the title rule, 499 hold a hex outside the palette, and 151 use a
+  library colormap, so the rules that become defect lines are chosen from the
+  nightly records. The palette rule only records: a colour outside the
+  Imprint palette is allowed when there is a very good reason. (#13045)
+- **`/debug` shows a feedback case's turn record.** The case detail gains a
+  `# turns` block: one row per turn with the page's action or a message, how
+  the turn ended, and as chips the guards that fired and the tool calls,
+  identical neighbours folded (`get_dataset_profile ×2`). A failed render, a
+  broken tool or a lost reply marks its row red; a refusal, a refused call
+  such as `plot_as_confirmed`, a cap or a reply check that changed the reply
+  marks it amber. Selecting a row opens the turn's whole record: every call
+  with its verdict, outcome and code, every guard verdict in order, the
+  `prep_ops`, and what the bounds left out. The transcript labels each user
+  line with its turn number, so a row leads to its message. A case sent
+  before the record says so instead. `GET /debug/agent/cases/{id}` carries
+  the record as `turns`, every code closed again to the record's
+  vocabularies, which a test pins to the agents service's. (#13044)
+- **`plots_scrolled`: how far a visitor gets through the gallery.** One
+  Plausible event per visit to `/plots`, sent when the visit ends, and none for
+  a visit without scrolling. `share` is the deepest point as a share of the
+  result list (`0-10`, `10-25`, `25-50`, `50-75`, `75-100`, the percentage the
+  filter bar shows), `results` is the size of that list (`1-24`, `25-99`,
+  `100-999`, `1000+`), and `filtered` says whether it was filtered. The gallery
+  loads in batches, so the page has no fixed height and Plausible's own scroll
+  depth says nothing about it. (#13046)
+- **The review warns when the staged renders don't come from the code under
+  review.** impl-generate and impl-repair stage `render.sha256` beside the
+  PNGs: the sha256 of the implementation they rendered, with its `Quality:`
+  header line reset to `pending`. impl-review compares it with the file at the
+  PR head and, on a mismatch or a missing hash, posts a comment and a
+  job-summary line. Warn-only for a first night: the review, its score, and the
+  verdict stay as they were. Both workflows also record, warn-only, whether a
+  render is older than the implementation file. The catalogue audit of
+  2026-11-08 traced 50 findings to renders that didn't come from the merged
+  code. (#13034)
+- **Machine readers on the stats page.** A new tile right after the visitors
+  strip shows, per UTC day of the last 28, the requests of crawlers and AI
+  assistants that Cloudflare verified, split into reads for a person, AI index
+  and training reads, and search engines, with the MCP requests of every client
+  beside them and a footnote naming the unverified requests of named vendors
+  that are not counted. It reads `GET /insights/machine-readers`, counts only,
+  from the machine-read lines in BigQuery; a failed query answers
+  `unavailable` and is never cached, so the tile recovers on the next load.
+  The About page and the README point at it. (#13015)
+- **A machine readers section on `/debug`.** `GET /debug/machine-readers`
+  (admin, 7 or 30 days) answers every live line whatever its verdict, status
+  or surface: the totals, one row per vendor and purpose with Cloudflare's
+  category, the counts per surface, the 404s and its five most requested
+  routes, and one row per day by audience. The section draws them as tiles, one
+  matrix that opens a row to its routes, and a per-day table. (#13015)
+- **One working line at the foot of the agent chat, with the plot's clock.** Every turn in flight
+  says what it does now beside the site's loader, on both lanes: `drawing your plot · 0:42`, from
+  the second try on with the try (`second try`, or `try 2 of 2` from the server's round cap),
+  `waiting · you are 3rd` while the own turn waits in the run queue, the words of a turn without
+  plot work, and `writing the reply` below the card. It replaces the thread's in-progress line,
+  the progress timeline below the thread and the queue counter, so one position shows on screen.
+  The status line counts the same clock beside `usually 1–3 min`, hidden from the plot button's
+  description, and a shipped card keeps it as `ready in 1:12`. A phone reads `drawing · 0:42`.
+  (#12950)
+- **The service's mood on the chat window's tab.** `~/anyplot.ai/agent · ● quiet`, `● busy` or
+  `● resting until 01:00` on the visitor's own clock, the same for every visitor and for an
+  admin, from the one reader of `/status`, which reads again after each run, when the tab becomes
+  visible again and every 60 s while it is visible. A `service_paused` refusal rests it at once.
+  It replaces the pause note above the composer. On a phone the resting mood reads
+  `● back at 01:00`. (#12950)
+- **The progress grid and the admin meters in the admin menu.** The running turn's grid moved
+  from below the thread into the admin menu, and on the admin lane the menu shows
+  `now 2 runs · today 62 %`, read again as it opens, also during a run. The day budget's share is
+  one function for the debug page and the chat, so the two never disagree. (#12950)
+- **Machine-read lines: one content-free record per crawler, AI assistant or
+  MCP read.** The API (`api/machine_reads.py`) and the site's nginx
+  (`log_format machine_read` in `app/nginx.conf`) write one JSON line per
+  machine request, whoever answered it: the vendor and its purpose from
+  `AI_AGENTS`, Cloudflare's verified bot category or none, a closed route
+  name, the catalogue ids of a served answer, and the status, never an IP
+  address, a user agent, a query string or a raw path. MCP requests write one
+  line per JSON-RPC request with the tool's name. nginx copies the edge's
+  verdict onto its prerender hop, because the Transform Rule removes it there;
+  the apex Worker deletes it, so the apex path can't be forged into a verified
+  read. Two BigQuery views (`api/telemetry/views/`) and the one-time Cloud
+  Logging and BigQuery setup are in `docs/reference/machine-readers.md`; the
+  legal page names the record, its fields and its 180-day retention. (#12962)
+- **A feedback case shows what the chat assistant called and what its guards said, turn by turn.** The session bundle,
+  and with it every stored case, carries `turns`: per turn its number, how it ended, every tool call in order (refused
+  ones too) with the guard's verdict, what the call did and the code of its answer, and the verdicts of the scope
+  judge, the output guard, the reply checks, the budget and the run queue. The persona round of 2026-11-06 had to
+  infer several root causes because a case held none of this. Closed codes only, no argument, result, id or time; the
+  record keeps the latest 50 turns per session and is never matched against log lines. (#12948)
+- **The zone's security rules are written down.** The Cloudflare Pro rules
+  applied on 2026-11-09 live only in the dashboard, so `infra/cloudflare/README.md`
+  now records each one with its purpose and, where the rule has them, its ID,
+  phase, expression, and action: the
+  Cloudflare Managed Ruleset and the OWASP Core Ruleset at paranoia level 1, both
+  answering with a Managed Challenge and the first sparing the free-text routes;
+  the transform rule that hands `cf.verified_bot_category` to the API; the smoke
+  bypass and the other custom, rate-limit, and cache rules; the Super Bot Fight
+  Mode settings, with the switch to Managed Challenge left as an open decision;
+  and the principle that no rule hard-blocks traffic that could be a human. The
+  AI Crawl Control block rule was deleted the same night, so no crawler is
+  blocked at the edge; `docs/reference/seo.md` follows. (#12864)
+- **The site smoke gets past Super Bot Fight Mode.** With `SMOKE_TOKEN` set,
+  `scripts/site-smoke.mjs` sends `X-Smoke-Token` to the site hosts' own pages and
+  nowhere else, never under `/api`, where the Worker and nginx pass headers on to
+  the API and Plausible. So the Cloudflare skip rule lets the headless run through even
+  if automated traffic is challenged. A page Cloudflare challenges anyway reads
+  `SKIP` and the run exits 2, because a challenge page says nothing about the
+  site; before, it would have read as an outage. A change to the script now also
+  runs CI's app-image smoke. (#12864)
+- **Questions in the agent chat are a turn kind of their own.** A typed
+  message that changed nothing gets a small `?` beside its bubble, and its
+  reply starts with `? answer · nothing changed`; the chapter line counts its
+  questions (`# data · 2 questions`), a button that moves the focus to each in
+  turn with a short green highlight. "Nothing changed" has to hold by the
+  server's word (`done.turn`, new on the page) and by what the turn's stream
+  showed, so a plot, a data version, a switch or a chosen language always wins
+  over the server's `answer`, a wish kept for the first plot never reads as a
+  question, and the memory read after the turn still vetoes. The note typed
+  with an attachment is never one: its reply summarizes the data that just
+  came. (#12826)
+- **A plot card names the remembered decisions it kept.** The open card's
+  first line reads `kept: y = 7 line · x label · new: log scale on y` (under
+  the image on a phone), from the ids the server sends with each version
+  (`plot.memory`). The label keeps the request the version answered, so a
+  folded version still says what it was for. The texts stay with the version,
+  so a later `.forget()` never rewrites an older card, and a version whose
+  memory the server did not name shows no line, never `kept 0`. (#12826)
+- **A project skill audits the live catalogue and repairs what the owner
+  picks.** `audit-catalogue` turns the MUI X 9 night's ad-hoc loop into rounds.
+  `select_candidates.py` selects pairs read-only, from thumbs-down votes (one
+  per visitor session, split at the last update), low or capped stored scores
+  and kept defects, stale library versions or GCS renders (checked with a
+  cache-buster), agent-validator refusals, or a library sweep. An audit
+  workflow looks at both renders, the spec and the merged review, and a
+  skeptic tries to refute every high or medium finding. `build_page.py` turns
+  what survives into a private Artifact page with ids the owner picks from.
+  Only then do fixes happen in fresh worktrees, checked by `check_fix.py`
+  (scope, header, validator, a local render for Python and JavaScript in a
+  scrubbed environment). `dispatch.sh` adopts them from their full SHA, one
+  bulk-generate run at a time, so it never cancels a pending run such as
+  daily-regen's, and only under an OK bound to a token over the queue and its
+  planned SHAs; a gallery shows the owner each fix next to production first.
+  R and Julia go through a forced regeneration, stale renders through a
+  re-render from `main`, and spec causes through a spec issue the owner files.
+  `verify_merged.py` then checks every merged pair on the live site: the code
+  on `main` against the fix, the metadata, the database row, both PNGs and the
+  `_800.webp` the site shows, and the API. A pair whose fix a pipeline repair
+  changed goes to a skeptic's re-audit instead of passing, and passes only
+  once that re-audit judges the merged pair clean. (#12825)
+- **A binding warning with counts when a plot's key repeats.** For the 90 specs whose plot draws one value per
+  key, such as a bar per category, a cell per pair or a point per x of each series, the binding check warns
+  when the bound key columns hold fewer keys than the rows that need a mark, for example `x: column 'Length'
+  holds 9 values in 27 rows`. The bindings route, `set_bindings` and the session block carry it, and the
+  assistant offers the counted `aggregate` instead of letting the plot code average the rows without a count,
+  as a persona-test line chart did with 27 measurements. Scatter, box, histogram, strip and other plots where
+  repeats are the point never warn, and no default binding changes (#12824).
+- **A server line in "what changed" for rows the plot cannot draw.** When a bound column of a mark has empty
+  cells, the shipped plot's changes say how many rows draw no mark, per role, for example `2 rows without y
+  ('Exam Score')`, for all 15 libraries. It counts only the required roles that place a mark, never a label, an
+  optional role or a spec's shorter list beside the rows, such as event dates, and it leaves the status as it
+  is (#12824).
+- **The chat stream says what a turn changed, which decisions a plot kept, and the round cap.** A turn that ends
+  well closes with `done.turn` (`answer`, `data`, `plot`, `switch`, `language`, `kept` or `memory`), which the
+  agents service derives from a new per-turn record of the assistant's tool calls (closed tool names, the guards'
+  verdicts and a closed outcome per call, never an argument) instead of from the reply. A stored version's `plot`
+  event carries `memory: {kept, added}`, the plot memory entry ids it stands on, and every pipeline step's `status`
+  carries `max_attempts`. The page can then tell a question from a turn that only kept a wish for the first plot,
+  label a version `kept 3`, and say "try 2 of 3" from the server's numbers; an older page ignores all three.
+  (#12607)
+- **The chat rebuilds from your original table.** `prepare_data` and
+  `query_data` take `from_version`: the current version (the default), the
+  original table as pasted or opened, or a version number the session block
+  lists with the change that made it. "The first 20 after all" after a top
+  10 is one call from the original, stored as the next version on top, and
+  its first change line says where it started ("from your original table:
+  kept the first 20 of 487 rows"); a question reads the pace per run after
+  a weekly sum the same way. The history is never rewritten, the user
+  confirms the new data, and `.undo()` stays one step back. The original
+  stays in the store past the five-version undo history, and a version of
+  data a new paste replaced is refused with a closed code (`other_paste`).
+  It came from the persona tests of 2026-11-06, where the chat sent users to
+  `.undo()` or a new paste three times. (#12600)
+- **Derived columns in the data step.** `prepare_data` takes four new
+  operations: `compute` adds a number column from an expression over number
+  columns (a product, a power, a log, a unit conversion), checked by the
+  whitelist `generate_data` already runs, computed exactly for whole
+  numbers and in exact decimals for plain arithmetic (`19.99 * 3` is
+  59.97); `diff` adds the change from the row one or n places before;
+  `rolling` adds a mean or a sum over the last n rows; and `blank` empties
+  missing-value codes such as `-0.99` in place while the rows stay. The
+  first rows of each group, a missing input, a division by zero and a value
+  outside a function's domain leave a cell empty, and the change line counts
+  each. It came from the persona tests of 2026-11-06, where five of ten
+  personas got no plot because a column could not be derived. (#12597)
+- **The last value per month, over several columns.** `aggregate` takes
+  `columns`, two to ten value columns with one reduction, and the reductions
+  `first` and `last`, by time within each period of a date key, so the last meter
+  reading of each month is one operation. (#12597)
+- **The top N rows.** `keep_rows` keeps the first n rows in their current
+  order, so "the top 10 by revenue" is a sort and a `keep_rows`; the change
+  line counts the rows kept and dropped. (#12597)
+- **Several values into one category.** A condition takes `values`, an "any
+  of" list for `eq` and `contains`, so `classify` puts `Miete` and `Strom`
+  into one label, and its change line names how many rows fell to the
+  fallback and their three largest groups. (#12597)
+- **The chat names what it cannot do.** A change no operation can make, such
+  as filling in values, is the `unsupported` operation: it changes nothing,
+  answers a fixed sentence in the session language that never sends the user
+  to a spreadsheet, and counts the gap by its family in the `chat_turn`
+  telemetry (`capability_gap`). (#12597)
+- **`agent_turn_resumed`.** A Plausible event with `outcome` (`resumed`, `gone`, `failed`) counts every chat turn
+  whose stream was cut after its first event, and whether the page read its result anyway. The origin's logs cannot
+  see a cut between the browser and the edge, so this event is how often it happens. (#12572)
+- **A decimal comma reads ambiguous dots again from the pasted cells.** A pasted number column of whole numbers
+  and `1.234` shapes that nothing else in the file settles now reads as decimals with a warning ("dots read as
+  decimal points; say so in the chat if they separate thousands"), and the paste keeps the column's cells as
+  written. When the user says the dots separate thousands, the assistant's `set_type` with a decimal comma reads
+  the column again from those cells, so `7.000` becomes 7000 rather than 7, while the rows are still the paste's.
+  (#12565)
+- **`agent_input_routed`.** A Plausible event with `as` (`data`, `message`) and `via` (`paste`, `file`) counts how
+  the message box takes each paste and file, for tuning the routing. `agent_data_file` gains the outcomes
+  `attached` and `removed`; `filled`, `replaced` and `kept` end with the data card's box. (#12565)
+- **The README says who builds anyplot and how.** A "How I build anyplot" section on its first screen
+  says who leads the models and how. "Engineering highlights" names seven decisions, each with its
+  reason and a link to the code that carries it out. An "Architecture" section draws the services and
+  the pipeline as two Mermaid diagrams. Before this, the README described the system in passive voice
+  and never said what the human behind it does. (#12559)
+- **A showcase image in the README, drawn from live data, and a test that keeps the README honest.**
+  `scripts/readme_showcase.py` lays out one spec per library from the `_800` light previews. Its
+  counts come from `/stats` and the library registry, and its type is MonoLisa with the script
+  italic; the script stops rather than fall back to another font. It replaces the ridgeline preview
+  card and links to `/plots`. `tests/unit/test_readme_claims.py` reads each value the highlights, the
+  architecture and the About page state from its source and fails when the text no longer matches:
+  the rubric's criteria and points, the review bar and its step, the pipeline's bounds, the session
+  idle time, the default model, the library count and the MCP tools. It also checks every relative
+  link and in-page anchor. The pull-request count is now a floor ("more than 850"), a multiple of 50
+  at most one step below a count the test records with its date. The release procedure redraws the
+  image, updates that count and raises the floor, and `/write-docs` lists the duty. (#12559)
+- **A docs page on how anyplot is built with AI agents.** `docs/concepts/ai-workflow.md` covers who does
+  what, the path of a change from idea to production, how a repeated mistake becomes a rule or a test,
+  a worked example (#12557), and the limits of the approach. The README links it for the full story.
+  (#12559)
+- **The About page explains the review, the agent chat, and the MCP server.** One short section each,
+  linked to `/stats`, `/plots`, and `/mcp`, mirrored in the bot HTML of `/about` so crawlers read the
+  same text. (#12559)
+- **`.use_my_data()` on the landing page's plot of the day.** It sits beside `github.open()` in the
+  card's header and opens the chat for that plot's spec and library. It shows only when the eligibility
+  check names a lane, with one request per view, and the chat records `agent_open{source:
+  plot_of_the_day}`. (#12559)
+- **Dates as numbers in the data step.** `prepare_data` takes a `date_number`
+  operation that adds a number column beside a date column: the calendar
+  year, the whole days since the column's earliest date, the Unix time in
+  seconds (UTC, with the change line saying how a date without a time and a
+  time without an offset were read), or a decimal year. A missing date stays
+  empty, the change line counts the dates and the empty cells, the new column
+  fills an open role that takes numbers, and `.undo()` takes it back. It came
+  from the owner's test of a customers table on `scatter-basic`, where
+  "convert subscription date to integer" had no operation and `y` stayed
+  open. (#12558)
+- **An open number role offers a free date column.** When a required role
+  that takes numbers only stays open and a date column is free, the session
+  block lists `date_number` as an offer, never made unasked: the unit is the
+  user's choice, so the assistant names it in one statement, and a request
+  without a unit takes the days since the first date. (#12558)
+- **The assistant answers a request for another plot type.** Asked for a violin plot or for the plots that would
+  suit the data, it says in one or two sentences that switching the plot type in the chat is planned but not
+  possible yet, may name a kind of plot that fits the data, and points to the catalogue at anyplot.ai/plots, where
+  each plot's page leads to its own chat and the data is pasted again. It never says the catalogue has a
+  particular type, since it does not know the catalogue. The scope judge reads such requests as in scope, with four
+  new cases in the scope eval and four in the prep eval, in English and German. (#12557)
+- **Text operations in the data step.** `prepare_data` takes four more
+  operations with literal texts only, never a pattern: `split` a column at a
+  separator into 2 to 10 new columns (`10–25` gives 10 and 25; a leading
+  minus stays a sign), `extract` only the number, the digits or the letters of
+  each cell, `strip` a prefix or a suffix, and `replace` a text. Each writes
+  new columns beside its source, typed as `set_type` reads them (the dataset's
+  decimal mark, its thousands rules, at most a tenth of failing cells, which
+  the change line counts), and the steps chain in one call, so a column of
+  ranges no longer sends the user to a spreadsheet. (#12556)
+- **A column of ranges fills a lower and upper bound pair left open.** When
+  `min_value` and `max_value` (or `ci_lower` and `ci_upper`, `low` and `high`)
+  have no columns and a text column holds two numbers around one dash in every
+  cell, the first never above the second, the session block lists its `split`
+  as a certain conversion, and the service binds the two new columns to the
+  pair. ISO dates, negative numbers, decimal commas, thousands separators, ids
+  and spans of years keep their reading. (#12556)
+- **`.example_data()` in the agent chat.** While a session has no data, a line above the composer offers
+  `# no data at hand?  .example_data()`, which asks the assistant for a made-up table to try the plot and counts the
+  seconds while it works. It is a turn action (`example_data`), not the words "example data": the first typed message
+  sets the session language, so typed English would have kept a German visitor in English, while the action leaves
+  the language to the visitor's own first message. The assistant's prompt names the new control, the picture of the
+  catalogue plot in the header and the columns ⓘ, so it can point visitors to them. (#12553)
+- **A project skill triages the agent chat's feedback cases in rounds.**
+  `triage-agent-cases` lists the open cases read-only, copies their files to a
+  private directory outside every checkout, and classifies each one as fixed
+  (with the PR), in progress (with a failure-class tag and a general fix) or
+  won't solve, in a private report. After the owner's OK for the round,
+  `apply_triage.py` writes the statuses and tags in one transaction, after a
+  snapshot of the rows, and refuses a row someone changed since the round read
+  it. The cases hold users' data, so nothing of them reaches the repository.
+  (#12551)
+- **A feedback case explains itself.** Each pipeline round now carries the ids
+  of the gates its renders failed (`R1`, `G8`) and the closed class of a crash
+  (`key`, `timeout`), and every session bundle names how many versions the
+  session held and how its latest plot run ended. A chat case, which holds no
+  version, now tells a plot the page missed from a run that failed, and the
+  `/debug` case view shows a line per round and the session's line. All of it
+  is closed codes and counts, never a message or a cell of the data. (#12552)
+- **The chat header shows the plot it adapts.** A thumbnail of the catalogue
+  plot sits beside the spec's title on `/agent`, in the library in use and the
+  site theme, and opens large in a dialog; the columns the plot expects stand
+  behind an ⓘ after the title, closed by default. The visitor keeps in view
+  what the data should become without leaving the chat (#12549).
+- **`.use_my_data() →` on the spec hub and in the code tab.** The hub page
+  `/{spec-id}`, where links from the landing page, `/specs`, `/map` and the
+  README arrive, offers the chat in its header, with one eligibility request
+  per view (matplotlib where it is among the cards shown, else the first of
+  them), and the plot page's code tab offers it beside `.copy()`. The chat
+  records these opens as `agent_open{source: spec_hub}` and `plot_page`
+  (#12549).
+
+### Changed
+
+- **Preview images are cached for five minutes**, not for an hour (plot pages)
+  or a day (home and plots). A fetch the edge answers from its cache never
+  reaches the API, so most repeated previews went uncounted. (#13055)
+- **Platforms are named for what fetched.** Telegram signs as
+  `TelegramBot (like TwitterBot)` and was counted as Twitter, and Apple's
+  Messages signs as Facebook and Twitter at once. Slack fetches the
+  image through `Slack-ImgProxy` and GitHub through `github-camo`, and neither
+  had a name. Microsoft's preview service still signs as SkypeUriPreview and is
+  counted as Teams, since Skype closed in May 2025. (#13055)
+- **Machine readers: the apex Worker deletes the verdict headers.** The owner
+  redeployed `anyplot-api-proxy` on 2026-11-11, step 9 of the machine-readers
+  runbook and its last one, so a caller of `anyplot.ai/api/*` can no longer
+  label itself a verified bot in the telemetry. The runbook's state table says
+  so, and "Verify on day one" gains the check that proved it: a forged
+  `X-Prerender-Bot-Category` on `/api/llms-full.txt` and a forged
+  `X-Verified-Bot-Category` on `/api/specs` both arrive with an empty
+  `verified_category`. (#13053)
+- **The chat refuses a message of spaces alone.** `POST …/messages` answers
+  `422` for a `text` without a visible character. The page never sent one; a
+  hand-made request could, and its turn left no transcript line, so a case's
+  turn record and transcript named different turns from there on. (#13044)
+- **The layout sends every page's pageview, at the navigation.** `RootLayout`
+  records the page in a layout effect; the pages no longer send their own,
+  150 ms late, from an effect. Only the gallery still records a page itself,
+  when a filter changes its address without a navigation. Three visible
+  consequences: the 404 page now records a pageview, under the path that was
+  asked for; a visitor's visit to `/agent` counts whatever the page shows,
+  also while the public lane is closed (`agent_open` still counts sessions
+  only); and a spec page counts when it is opened, not once its data loaded.
+  (#13046)
+- **An address that only redirects is no page.** `/{spec}/{language}` and
+  `/debug/agent` redirect in their route's loader now
+  (`app/src/routes/redirects.ts`), so the router never renders them: no
+  pageview, no history entry, and the page being left stays on screen until
+  the destination is there. (#13046)
+- **The agent chat's plot button says what one click does.** Under its name stands a small line:
+  `ask · edit data · change plot` under `.update_plot() →`, whose click sends the message box's
+  text as Enter does and so also answers a question or changes the data, and
+  `confirm data · plot it` under `.create_plot() →` and `plot the new data`. The box's placeholder
+  after the first plot reads "ask a question or a change". It stays one button; the name alone
+  suggested that a question needs another way. (#13043)
+- **The agents' tree-sitter grammars are baked into the image, and the service
+  never downloads one.** tree-sitter-language-pack moves from 0.13.0 to 1.24.0,
+  whose wheel ships no grammars and whose `get_language` downloads a 23 MB bundle
+  on first use. `agents/Dockerfile` now fetches the bundle at build time and keeps
+  the four grammars the code profiles read (6.2 MB) in a root-owned directory. The
+  service loads them through the pack's `LanguageRegistry`, which never downloads,
+  and stops at its start when one is missing. A checkout and CI fetch them once
+  with `uv run python -m tools.tree_sitter_grammars`. (#12943)
+- **Each `role: column` pair on the data card changes its own column.** The
+  bindings line under the preview (`direction: day (UTC) · frequency: new
+  chats`) only listed the bindings, and `.change()` at its end was easy to
+  miss. Now each pair is a button with a dotted underline: a click opens the
+  dropdowns with that role's dropdown focused and its list open, or a family's
+  `+ y` focused. Escape inside the dropdowns closes them and returns the focus
+  to the pair. While the dropdowns would not answer, during a step or with the
+  fan-out's panel open, the pairs stay plain text. `.change()` still opens
+  every dropdown. On a phone each pair is a 32 px target, and the rows of a
+  line that wraps never overlap. (#13005)
+- **Shorter message box placeholders on a phone.** A phone cuts a placeholder without an
+  ellipsis, so below 600 px the box reads "ask or say what to plot" before the first plot and
+  "ask for a change" after it; the wider screen keeps its longer words. (#12950)
+- **`AI_AGENTS` names 18 more crawler tokens and a new `seo` purpose.**
+  Amazonbot, meta-externalagent, Google-CloudVertexBot, ExaSearchBot,
+  Keenable, Bytespider, CCBot, Qwant, PetalBot, the Sogou spider and six SEO
+  tools join the table, and xAI-SearchBot is an index read instead of a
+  user-directed one. A crawler's og:image fetch now sends nothing to
+  Plausible; social and messenger previews still count on anyplot.ai. (#12962)
+- **`visitor_ip` reports a public address only, `cf-connecting-ip` first.**
+  The one remaining consumer, the og:image event, gets Cloudflare's
+  unforgeable address before the forwarded list, and a forged private or
+  reserved address at the front of that list is skipped. (#12962)
+- **"plot the new data" keeps what you tuned when it can.** The button has an
+  action of its own now (`plot_new_data`). When the data comes from the paste
+  the library's latest plot drew and the same columns stand in the same roles,
+  the run changes that plot for the new data, with one request the server
+  writes, so a title, colours or limits the remembered decisions never held
+  stay. A new paste, a binding change or a reshape still starts from the
+  catalogue plot with the remembered decisions, and now keeps the theme you
+  asked for. The plot's `new_data` says which, the card's label names it
+  (`new data on v3`), and `.start_over()` stands beside the button whenever
+  the library has a plot. The usage telemetry counts the base per run.
+  (#12834)
+- **The plot code draws every row it gets, in all four languages.** The shared adapter rule no longer lets
+  the plot code group, pivot or filter the user's rows: it splits them into series and groups, computes the
+  statistic its plot type draws (quartiles, bins, a density, a fit) and the computed roles, but never filters
+  by a value, cuts to the first or largest rows, samples, drops duplicates or averages the rows of one key.
+  A change request, an earlier request or a plot-memory decision that asks for such a change is left out with
+  one note, and the assistant offers it as a data step with counts and an undo, and sends such wishes to the
+  data step from then on. The random draws stay for jitter only. In the persona round of 2026-11-06 a line
+  chart averaged 27 measurements to 9 points in its code without a count (#12953).
+- **A plot of rows that repeat a key combines them first, as a data step.** When a bar, slice, cell or line point
+  would draw several rows of one key, the server makes the aggregate the assistant offers before the plot runs:
+  a new data version, numbered, on the data card and undoable, with the mean per key, or the sum where the marks
+  add up (slices, stacked segments, counts). The plot's "what changed" announces it with both counts, for example
+  "averaged 'Reading' over 27 rows into 9, one per 'Length'", and the plot draws every row of that version.
+  Price charts and other plots whose measures need several functions keep the warning instead. With the prompt
+  rule alone, the plot code still averaged such rows itself in both measured runs (#12953).
+- **The assistant names rows the plot draws no mark for.** The server's "The plot draws no mark where a value
+  is missing" line is named in every reply to that plot, as what the plot draws and never as rows removed
+  from the data, and stays on the list of notices that a short reply keeps (#12953).
+- **Eval cases can take data steps before the plot.** A matrix case's `before_operations` are stored as the
+  session's next data versions through the server's own code, with no model call. The 45 `n5000` cases of
+  `bar-grouped`, `heatmap-basic` and `pie-basic` use it for the aggregate the assistant offers on their
+  repeated keys, since their plot code no longer aggregates the raw records itself (#12953).
+- **A plot wish pasted with new data reaches the plot of that data.** The
+  assistant's `keep_plot_request` refused a note once the library had a plot,
+  so a title typed with a second paste never reached its plot. A plot of data
+  that a later paste replaced is no plot of the current data now: the note is
+  kept for the first plot of the new data, also when the assistant sends it as
+  a change of the old plot, and the session block tells the assistant so. Each
+  shipped version records the data version it drew. (#12832)
+- **New data drops what a library switch carried.** A paste, a change of the
+  data, `.to_long()` and an undo drop the switch's carry (the theme, the texts
+  and the requests of a plot of the data before), as they already drop a kept
+  first-plot note, and the page ends its offer with them. A switch or the admin
+  fan-out's copy after the data changed takes only the theme you asked for on
+  the plot of the earlier data, never its texts or requests, besides the
+  remembered decisions, so the public and the admin lane treat a new paste
+  alike. (#12832)
+- **The remembered decisions show where new data meets them.** When a paste
+  lacks a column the data before it was bound to, the paste answer says
+  `columns_changed`, and the new `# data` line holds the decisions until the
+  next plot: `3 earlier decisions ▾ · .forget_all()`. One click forgets them
+  all; ignored, they stay, since only the user clears the memory. (#12832)
+- **The agent chat stays English until you pick another language.** A message
+  or a paste in another language no longer switches the replies and the plot:
+  the chat offers that language once, in one line,
+  `# German detected in your message · .switch()` (or `in your data`), and
+  ignoring the line keeps everything English. `.switch()` sets the replies and
+  the plot labels (`PUT /language` with `via: offer`); with a plot on screen
+  the next version comes in the new language, and after the switch the chat may
+  offer English back once. A pick in the header's language menu, or a request
+  in the chat such as "auf Deutsch bitte", ends the offers. The fixed refusals
+  use the session language now, never the message's, and the reply-language
+  check asks again when the assistant answers an English session in the
+  language it offered. The page is English, so a visitor who never asked for
+  German should not get German replies; the offer replaces the
+  `# reply language: de` notice, which repeated for every paste and first
+  message. The agents service's content-free usage telemetry counts the offers
+  and the picks as the `language_offer` event (`via`: `shown`, `offer` or
+  `header`, and the language as a closed code); the page sends no Plausible
+  event for them, since most chat sessions are the owner's and the Plausible
+  dashboard is public. (#12865)
+- **The chat assistant's turn bounds are code, not prompt sentences.** Each turn may call `prepare_data` and
+  `generate_data` twice, `query_data` three times, `run_data_code` twice and the plot pipeline once. The call after a
+  cap is refused with a fixed message that tells the assistant to answer with what it has, so the "never more than
+  twice" sentences left its instructions. (#12853)
+- **No plot run in a turn that changed the data, or on a paste's summary turn.** The server refuses the plot call
+  before the run (on a summary turn while the data is unconfirmed), keeps the first plot's wish, and records the stop
+  as before. The chat shows no failed plot card for such a turn, and the daily run count no longer counts it, nor a
+  plot call made after a library switch was asked for. (#12853)
+- **The plot buttons' turns tell the assistant what to call.** On "create the plot" turns, the session facts say to
+  call the plot pipeline with no arguments, so the instructions no longer open that rule with it. (#12853)
+- **robots.txt welcomes every crawler, Bytespider included.** The group that
+  declined Bytespider on bandwidth grounds is gone from `app/public/robots.txt`,
+  matching the deletion of its Cloudflare block on 2026-11-09: the owner decided
+  that every crawler is welcome, and blocking returns only on evidence from the
+  request logs. The deploy smoke in `app/cloudbuild.yaml` and the daily
+  `bot-serving-check` now recognise the static file by its `Sitemap:` line, which
+  the API's own robots.txt lacks while it shares `User-agent: *` and the
+  Content-Signal line, so a misrouted request still fails them.
+  `docs/reference/seo.md` and the `app/nginx.conf` comment follow. (#12868)
+- **The plot button sends, reads and plots in one click.** With a file opened with `.open()`, a
+  pasted table or a typed table in the message box, `.create_plot() →` (after a plot
+  `plot the new data`) is active: it sends the data as Enter would, with the typed text as its note, and
+  once the reading comes back clean the page confirms the data and starts the plot by itself.
+  A reading that is not clean (a required role without a column, a warning on the data card or
+  from the server's binding check, a question back from the assistant, a refusal, an error or a
+  stop) halts at the data card, and the status line says what to look at. Typing or another
+  click while the reading runs ends the chain, which never plots twice. Enter still only sends.
+  Until now the button stayed greyed out with an attachment in the box, and only Enter read it.
+  (#12833)
+- **Plot votes count per version of the image.** A 👍/👎 belongs to the image it was cast on: once a plot is
+  regenerated (its `updated` changes), only the votes from that moment on count for the current version, and the
+  earlier ones stay in the table as votes on an earlier version; nothing is deleted. A visitor who rated the old
+  image may rate the new one once: the page keeps its vote per spec, language, library and version, so the old
+  thumb no longer stays inked on the new image, and the API's one-vote-per-session guard looks only at the current
+  version. A vote stored before this change inks nothing and blocks nothing. One rule in `core/plot_votes.py`
+  serves the API, the debug list and the audit skill's selector, which now counts a session once on each side of
+  the update. (#12830)
+- **`/debug` ranks the plots by their votes.** The "votes per plot" list has one row per implementation with the
+  current version's 👍, 👎 and their total, the earlier versions' counts beside them and the newest vote, sorted
+  by thumbs down, thumbs up or total from the column headers. It counts one vote per visitor and version and shows
+  counts only. `GET /debug/feedback/votes` serves it and replaces `GET /debug/feedback/top`, whose two lists grouped
+  the rows of one reaction by page path. (#12830)
+- **The remembered decisions moved from above the composer to the latest
+  `# plot` line.** `3 decisions ▾` there unfolds their list under the line,
+  each with `.forget()`, then `.forget_all()` and the ⓘ, as the v4 design
+  draws it; the `# remembered` heading with `.hide()` and `.show()` is gone.
+  The list moves with its open state and the focus when a newer plot chapter
+  opens, and a removal is still announced outside the thread's log. (#12826)
+- **The prep eval scores a case by the table its turn leaves.** The session's data version after the turn must
+  equal the table the case's expected operations make from the same version through the same server code
+  (`apply_and_parse`, the `generate_data` parse): the same columns in order, dtypes, row count and cells, numbers
+  within a 1e-9 relative tolerance, rows in their order unless the case sets `row_order: "any"`. Another sequence
+  that makes the same table now matches: guard 2a of #12599 had read `de-hard-kette-gesamtzeile` as a miss when
+  the root left out a `drop_columns` that the `aggregate` made anyway. The exact operation match stays as the
+  diagnostic `ops_exact`, and it still decides a case that expects no data call, a `run_data_code` case, a
+  `refuse` case and a case with `strict_operations: true`. A miss names what differs (`table_miss`, columns at
+  most, never a cell), `check_cases` refuses an expectation that leaves its table as it is, and a unit test runs
+  every table-scored fixture with a root that makes exactly its operations. (#12617)
+- **One number per data version, the same on the card and for the assistant.**
+  The agents service numbers every data version once per session, across
+  pastes, picks, changes, `.to_long()`, copies and computed tables, and never
+  gives a number twice: a paste, a change, an undo and a change are v1, v2, v1
+  and v3, and a second paste is v4. The data card shows that number, and after
+  an undo it carries the number of the version it went back to
+  (`data v1 · back to v1`). Until now the page counted versions itself while
+  the server's number started over with every paste, so since `from_version` a
+  user who asked for "v2" could get a different table from the one the card
+  called v2. Every dataset answer and `done.dataset` now carries `can_undo`,
+  which the page reads for `.undo()` instead of guessing from the number, and
+  `original_version`, from which the `agent_data_undo` bucket still counts the
+  paste as 1. (#12616)
+- **The adaptability checker reads the roles the plot computes.** `COMPUTED_ROLES` and `mark_computed` moved
+  from the agent to `core/spec_roles.py`, and `spec_context` applies them, so the checker, its workflow mirror
+  and the smoke run no longer ask for column constants of the 27 roles of 13 specs that the agent already
+  treats as computed, such as the Bollinger bands and the moving averages. `CHECKER_VERSION` is 2, so a
+  record says which reading produced it (#12612).
+- **The EMA chart accepts both pairs its spec names.** `EMA 50` and `EMA 200`, the golden cross of the spec's
+  first application, bind without a window warning beside the example's 12 and 26, and the adapter's brief
+  names the window it computes an open EMA with: 26 by default, 200 beside a bound `EMA 50` (#12612).
+- **A changed `specification.md` runs the unit tests.** The role audit reads every spec's Data bullets, and a
+  spec PR used to skip pytest, which left a failure to the next Python PR (#12612).
+- **The gallery search ignores generic words and accents.** On `/plots`, the search drops words
+  that only say "a chart" or join two terms (chart, plot, graph, diagram, and, with, of, and their
+  German, French, Spanish, Italian, Portuguese, Dutch and Polish forms, such as Diagramm,
+  graphique, de or wykres) before it matches. A query of nothing but such words still searches as
+  typed. `bar chart` now ranks `type:bar` first where it ranked the spec "Bar Chart with Error
+  Bars" first, and `line chart` finds the line specs where it found three bar and indicator specs.
+  Fuse folds accents and ß on both sides, so `scätter` finds `scatter`. No dictionary translates
+  the query: the catalogue's words stay English, so a German `balken` still finds nothing. (#12608)
+- **The gallery counter names its units.** It reads `37% · 8 specs · 120 plots` instead of
+  `37% · 120`, at both widths. A tag on 8 specs in 15 libraries showed 120 without saying that the
+  number counts plots. (#12608)
+- **The agent chat reads in chapters, and the data card stays open.** A `# data`
+  or `# plot` line opens each stretch of the talk where it turns from the data to
+  the plot and back, and a change of the data after a plot opens a new `# data`
+  chapter with the card in it. The thread reads in time order (the owner's
+  decisions of 2026-11-07): a change asked for in the chat puts the card right
+  after the request, before the reply, and the card's own `.undo()`,
+  `.to_long()` or a picker moves it to the thread's end, before and after a plot
+  alike, each older version folded with its own summary under it. Every data
+  version gets its
+  number on the card's border (`data v3 · made long · 48 rows × 4 cols`), and
+  every older version folds to that label, which opens it read-only. The page
+  names a version only by that number: the card's change lines, its full view
+  and the status line (`data v3 fits · 48 rows · 4 columns`) no longer show the
+  server's version, which starts over with every paste. A library switch is a
+  line of its own that names the decisions it keeps. The pinned header above the
+  thread and its `.show()` and `.hide()` are gone: the card stays open in both
+  steps. The keyboard focus follows a card that moves, and the page keeps the
+  focus clear of the site's sticky masthead. (#12604)
+- **On a phone the plot button stands under the message box.** Below the
+  page's phone width (the theme's `sm`, 600 px) the composer row stacks the
+  box on a line of its own and the plot button under it at the full width, so
+  the box's placeholder reads at 390 px instead of "ask about yo…". From `sm`
+  up nothing changes. The order stays box first for the eye, the DOM and Tab;
+  the plot button keeps one text size at every width, and the assistant's
+  instructions say "the plot button by the message box", true at both widths.
+  (#12603)
+- **The agent chat's cards carry their label on the border.** The data card
+  and every plot card are framed like the chat window, with what they hold on
+  the top border: `data · 48 rows × 4 cols`, and `plot v2 · matplotlib · title
+  in German`, the version, its library and the request it answered (cut to 40
+  characters; `first plot` or `.start_over()` when there was none). A plot
+  card's label is its toggle, and every version but the latest folds to that
+  one line (`▸ plot v1 · matplotlib · first plot`); `.expand()` and
+  `.collapse()` went with the header row. The data card heads each preview
+  column with its name and type (`month · date`, `units · number`), and says
+  its bindings in one line (`x (across): month · y (up): revenue · color:
+  region`) with `.change()`, which opens the dropdowns; they open by
+  themselves while a required role has no column or the server refused the
+  bindings. On a phone the card shows no preview table: `.view_all()` and
+  `.change()` stand on its last line, and a plot card's image actions stand by
+  their names (`.download()`, `.copy_png()`, `.open()`) on the line right under
+  the image. The data card's dropdowns and the start item's columns ⓘ name a
+  role's kinds in the chips' words (`numbers or dates`, not `numeric /
+  datetime`), the status line asks to check the data, not the preview, at
+  every width, and the assistant's list of the page's controls says where each
+  download sits. (#12601)
+- **The agent chat's session keeps an item per data version, per switch and
+  per turn outcome, with nothing on the page changed yet.** Every data version
+  gets an item with a snapshot of what it held (rows, columns, preview,
+  profile, file, sheet, change lines), numbered per session as `data v3`,
+  since the server's version starts over with every paste. A version a turn
+  made leaves a stub where the card stood and moves the card, under its id, to
+  the thread's end; a version from the card's own controls (`.undo()`,
+  `.to_long()`, the pickers) puts the stub above the card, which stays in
+  place, unless a plot stands below the card, in which case the card moves
+  below it too. A library switch adds an item with the decisions it carries,
+  and a typed turn carries what it changed (data, plot, switch, language,
+  memory, or nothing, which marks a question), read from the stream until the
+  server names it. `threadModel.ts` reads chapters, folds and counts from the
+  items for the chapter lines to come, and the thread still renders one card
+  per paste: a long session replayed through both reducers renders byte for
+  byte as before. (#12598)
+- **The prep eval covers the new operations.** Eleven cases on invented data,
+  one per persona need and one for the top N, and the Fahrenheit case now
+  expects a `compute`. A
+  `compute` matches by the values it computes, whatever short names and form
+  the expression has. The first run matched 91 of 96 cases for $0.27. (#12597)
+- **The agent chat opens with what the plot needs.** The thread's first item
+  reads "You came from **Basic Scatter Plot**. It needs", then the spec's
+  roles as chips in the words of someone with a table, not a dtype
+  (`x · numbers`, `numbers or dates`, `y · numbers, one or more` for a family,
+  `series · categories, optional`), beside the catalogue plot's thumbnail in
+  the library in use, and ends with "drop a file or paste a table below". The
+  thumbnail, the columns ⓘ (now after the chips) and the how-to ⓘ moved there
+  from the header row, which keeps the title, the library and the language.
+  The item repeats no control, since `.example_data()` and `.open()` stand in
+  the line above the message box; it is a message in the thread, so it stays
+  first and scrolls up with the talk once data arrives. On a phone it is
+  compact: a smaller thumbnail beside the first line, the chips below it.
+  (#12596)
+- **The agent chat's composer is the message box and the plot button.** The
+  box with a brand-green border and a `❯` and the plot button share one row,
+  on a phone too; one quiet line right above them holds `.example_data()` and
+  `.open()` as links, `# no data at hand? .example_data() · .open() a file`,
+  highlighted in green until the first data arrives, then muted, `# other
+  data? .open() · .example_data()`. Nothing comes, goes or moves: a state
+  changes how the line reads, fills the plot button once there is data, and
+  makes a control inert with `aria-disabled`, so a focused one keeps the focus
+  and a second key press does nothing. Targets are 44 px. Before data the box
+  reads "paste a table or drop a file". (#12594)
+- **The plot button keeps its place and changes its name.** It stands quiet
+  and inert before data, reads `.create_plot() →` with data, `.update_plot() →`
+  once the library has a plot (it sends the box's text and waits while the box
+  is empty), `plot the new data` after a change to confirmed data or a new
+  paste, and `.plot_all()` with the admin fan-out on. After a library switch it
+  keeps its name, and the status line names the decisions its plot keeps, in
+  place of the "plot in seaborn with your 3 decisions" button. (#12594)
+- **Enter sends, and `.send()` is gone.** On a touch screen, whose keyboard
+  labels Enter "return", a small `↵` inside the message box sends too.
+  (#12594)
+- **`.stop()`, `.start_over()` and `.feedback()` stand at the end of the
+  status line.** `.stop()` is a button of its own that Tab reaches, and hands
+  its focus to the message box when the run ends; `.start_over()` waits there
+  once the library has a plot, and `.feedback()` before the first plot opens
+  the chat's feedback form above the line. While a plot runs the line reads
+  `drawing your plot · usually 1–3 min`, and the admin fan-out's locked line
+  moved into it from above the box. (#12594)
+- **A reply never sends the user to the plot button.** `root.md` told the
+  assistant in four places to say "press `.create_plot()`" while its reply
+  rules forbade it; the instructions now leave the button to the status line,
+  and ShippedReply drops a sentence that names `.create_plot()`,
+  `.update_plot()` or `.plot_all()` in any turn, logged as `plot_button`,
+  unless the user's own message asked about the button. Its sentence split no
+  longer ends a sentence after an abbreviation such as "e.g." or "z. B.".
+  (#12594)
+- **One chat page for visitors and admins.** The agent chat lives at `/agent`
+  for everyone: the page detects an admin (the admin hint from `/debug` plus a
+  successful admin call) and then calls the admin API, else the public API with
+  its bot check. The admin's chat looks and behaves exactly like a visitor's,
+  so the owner sees every problem a visitor meets; the server still enforces
+  each tier's limits. `/debug/agent` only redirects to `/agent`, keeping the
+  pair in the link, so an old bookmark still opens the admin's chat, and the
+  admin signs in on `/debug`. (#12589)
+- **Every admin extra sits behind one admin menu.** `admin ▾` at the header
+  row's end, where the `⋯` menu stood, holds the fan-out toggle
+  `all 15 libraries` (in place of the library menu's `all` and the URL's
+  `&all=1`), `.save()`, a "view as visitor" switch that runs the public lane
+  exactly for the tab, and the admin's diagnostics. An expired admin session
+  falls back to the visitor's chat, and the menu says so with a link to
+  `/debug`. (#12589)
+- **An admin sees what a visitor sees.** The experimental notice, the feedback
+  form's consent line and its unticked `# include data.csv` box show for an
+  admin too, `.save()` starts unticked as well, and a switched-off service
+  reads the same; a parity test fails on any other difference in the page.
+  (#12589)
+- **An admin's use of the chat no longer counts as a visitor's.** While the
+  page serves an admin, on either lane, it sends no pageview and no event, the
+  Web Vitals included; the pageview `/debug/agent` is gone. (#12589)
+- **A reload after no answer is a plain reload.** `/agent` is not behind
+  Cloudflare Access, so the page no longer reloads by itself for it, and the
+  link reads `reload` instead of `reload to sign in again`. (#12589)
+- **The agent chat is one terminal-style window.** The chat at `/agent` and
+  `/debug/agent` stands in one frame with the tab label `~/anyplot.ai/agent` on
+  its top border, after the hero panel's construction, with dashed rules under
+  the header row and above the composer. The opening, an ineligible pair and an
+  error show in the same frame, and the admin fan-out's panel stays below it.
+  This is the first slice of the approved v4 design. (#12587)
+- **The header row speaks in plain words.** The spec's title is the link back,
+  without the arrow; the library chip reads `seaborn ▾` and the language chip
+  names the reply language in its own words, `Deutsch ▾`. The library's
+  language and how the reply language was set stay in the accessible names,
+  which start with the words on screen, so a voice command finds the chips.
+  The how-to ⓘ moved from the `# chat` label, which is gone, into the row.
+  (#12587)
+- **One status line at the frame's foot names the step.** `>>> step 1 of 2 · …`
+  replaces the step header above the chat and the step lines above the message
+  box, and stays the plot button's description: what the button waits for, the
+  plot that runs and its `.stop()`, what to check, or the confirmed data's
+  shape. After a lost confirmation it reads `back to step 1 of 2 · …`. (#12587)
+- **The experimental notice is one muted line above the chat.** On the public
+  lane it reads `// experimental AI · answers can be wrong ⓘ`, right-aligned on
+  a wide screen, without the green rule, and stays in place while the session
+  opens. (#12587)
+- **A lost confirmation is announced once, and a refusal reads in plain words.** After a change to the data or the
+  bindings the user had confirmed, or when the server no longer held the confirmation, the thread showed a notice
+  ("# data changed · check it, then plot the new data", "# bindings changed · check them, then .create_plot()",
+  "# check the data again, then .create_plot()") right above the composer's step line, which said the same; the
+  step line is now the one line (the data card's own header stays). A refusal is labelled in plain words
+  ("can't fetch data", "outside this chat", "chat paused", ...) instead of "refusal · needs_data", with the code
+  behind the label's ⓘ; the admin fan-out panel keeps "refused · needs_data" with the same plain label under it.
+  (#12586)
+- **The assistant's replies are shorter and never walk through the page.** In the agent chat, a reply
+  is one or two short sentences with the counts that matter, four at most with a notice it must
+  carry. It no longer tells the user to check the data panel or press `.create_plot()`, which the line
+  above the message box already says, nor what the notes do not hold. It no longer counts the plot's
+  labels the server checked, and a note the server made from a column with one value in every row
+  reads `Currency: USD (the same in every row)` in the data card, which the reply states as a fact of
+  the data rather than as the user's note. (#12576)
+- **The result card's notes read in plain words.** One line per issue, such as `some labels overlap`,
+  replaces the review's lines with their rubric ids, pixel counts and code; the lines in full stay
+  behind the notes' ⓘ. (#12576)
+- **A repair round reads as the normal course.** In the progress grid, a review that found things to
+  fix keeps a dot and says `3 things to fix` in a neutral ink, where it showed a red `✗ review: 3
+  findings`; a repair round says `fixing text size, layout`, and the shipped round's `~ 1 note left`
+  points at the card's notes. A failed render or code check keeps its red ✗. (#12576)
+- **The thread names the buttons the user pressed.** A plot turn shows as `.create_plot()`,
+  `.start_over()` or `plot in plotly with your 3 decisions`, not as the action `.carry_plot()` the
+  page sends, and the summary after a paste, which no button sends, shows no line. Inline code in a
+  reply shows as code, without its backticks. (#12576)
+- **The thread says the reply is on its way.** A plot's card arrives seconds before the reply to it;
+  in that gap a line below the card reads `writing the reply` beside the loader, and the reply takes
+  its place, starting where the line started. (#12576)
+- **The line above the message box says how to stop a running plot.** While a plot runs it reads
+  `# plotting… .stop() to cancel` in place of the step's line, which still invited the click that
+  started the run. (#12576)
+- **A series family's columns are chips in one row.** The `y` of line-multi,
+  area-stacked and every other spec with a variadic family had one dropdown per
+  series plus an empty one for the next, so eight series made nine rows. Now
+  each bound column is a chip with a `×` that removes it, followed by `+ y ▾`, a
+  menu of the columns left. Columns the role cannot take stay in the menu,
+  greyed out with the reason. The row keeps its name and kinds, wraps at a
+  phone's width under the role's name, and keeps the keyboard in the row after a
+  change. The server still gets `y1` to `yn`. (#12580)
+- **Every release runs the agent evals first.** `/release` gains a step before the release PR
+  opens: the prep and scope evals always, and the matrix smoke when the window changed the plot
+  pipeline. The results go into the PR body as "Agent evals", and the next release compares against
+  them. No CI job runs these suites, because they call the real models. A regression on main
+  surfaced on 2026-11-05 only because a sibling PR happened to run its eval; a release is now the
+  fixed point where every prompt and model change of the window is measured together. (#12579)
+- **A binding dropdown greys out the columns its role cannot take.** In the
+  data panel of "Use with my data", a column whose type the role refuses
+  stays listed with the reason, `Industry (text) · not numeric`, and cannot
+  be picked, where picking it brought a red refusal and the dropdown snapped
+  back. The page mirrors the server's type table, and a test keeps the two
+  equal. (#12574)
+- **An attachment that replaces the data says so before it is sent.** While
+  the session holds data, the line above the message box reads
+  `# the attached table replaces your data (22 rows, no .undo()) when you
+  send it`, since a paste starts the data's versions anew. (#12574)
+- **The agent chat shows a request id only where a report needs it.** An
+  error line keeps its ` · ref <id>` for a fault of the server or the
+  connection (a 5xx, no answer, a stream's error). A refusal (a 4xx), such
+  as a binding the server refused, a paste the parser cannot read, or a
+  limit, names its cause in the text and shows no id, which only puzzled
+  visitors. (#12573)
+- **The data card stands in the thread after its paste.** A sent attachment is the user's line in the
+  agent chat's thread, as its chip named it (`▤ table · 4 lines · 46 B`), and the data card follows it,
+  with the summary below. A later paste gets its line and a card of its own, and the card it replaced
+  stays as a line with its shape (`# earlier data · 2 rows · 2 columns · replaced below`). A table read
+  from text waits in a card at its paste: `.use()` makes it the data card, `.discard()` a
+  `# table discarded` line. A change to the data, an undo, `.to_long()` and the table and sheet pickers
+  update the card where it is. Once the data is confirmed, the header pinned above the thread leads to
+  the card: `.show()` opens it at its place and scrolls there, `.hide()` goes back. (#12570)
+- **The loader of a running turn keeps its place.** The thread's in-progress line (`working on your
+  message`) is laid out as the progress timeline is, the loader first and the words beside it (on a phone
+  below it), so when a typed change reaches its first pipeline step and the timeline takes over, the loader
+  stays where it is. It jumped 232 px to the left and 3 px down before. (#12570)
+- **The summary comes into view after a tall card.** The first reply after a data card scrolls into
+  view as it arrives while the focus is in the message box, so on a phone it no longer lands below the
+  fold. (#12570)
+- **The server makes a paste's certain conversions for open roles.** On the
+  summary turn of a paste (the summary action, or the note sent with it), the
+  server applies the operations of every `certain` line of "Conversions for
+  open roles" itself before the assistant's first call: a column of years
+  read as dates, prices read as numbers, a column of ranges split into its two
+  bounds, or the row numbers on an open axis. They land in one data version of
+  their own, so one `.undo()` takes back exactly these conversions, and the
+  original columns stay. The assistant names each in the summary with its count
+  and the new column's name, and never repeats or drops one, also when the
+  note asks to keep the column as it is: the original stays beside the new
+  column, and the assistant says that `.undo()` takes it back. The conversions
+  run behind the scope guard, so a refused note changes nothing. `uncertain`
+  lines stay the assistant's one question, a `date_number` offer still waits
+  for the user's request, and a later turn never makes a line by itself. The
+  assistant used to make these lines with its own `prepare_data` call, and the
+  prep eval's `en-note-rename-year-column` failed 3 of 3 runs: the date column
+  was skipped, or made and dropped again. Now it passes 3 of 3, with the
+  summary's row count and the conversion in every reply. (#12568)
+- **The summary turn stays the summary after the assistant changes the
+  data.** The session block's "pasted just now" line now holds for every model
+  call of that turn. Before, the reply after the assistant's own `prepare_data`
+  lost the line and answered the note without the summary. (#12568)
+- **One chat field for everything.** The agent chat's message box takes the data now: a table pasted into it, or a
+  file opened with `.open()` beside it, dropped anywhere on the chat or pasted as a file, waits above the text as an
+  attachment with its name, its lines and its size, and Enter sends it. One line, code, prose, a formula or a
+  request for data stays typed text, by rules the page and the server share as 41 test cases. The data card loses
+  its text box, its counter, `.parse()`, `.open()`, `.replace()`, `.keep()` and its drop zone, and shows once there
+  is data; a workbook's sheet picker reads the stored file again. A table over 1 MB or 20,050 lines turns the
+  attachment red, and so does one the server refused, with the reason under it. While an attachment waits, the plot
+  buttons wait too. (#12565)
+- **The note typed with a paste is its first turn.** Text typed beside an attachment goes with it: once the data is
+  stored, the assistant summarizes it in two sentences and acts on the note in the same reply ("nur 2024", "the
+  decimal mark is a comma", a title for the first plot, a question about the data) instead of a summary first and
+  the note after. A note the scope judge refused is followed by the summary, which skips the judge; when nothing
+  was stored (a table read from text, a refusal), the note goes back into the box, and `.discard()` of a table read
+  from text gives back what it came from: short pasted text into the box, a file or a longer text as the
+  attachment. The scope judge reads the note alone; the paste's notes and file name reach the assistant beside it.
+  (#12565)
+- **The message box no longer cuts a long text.** Over 2,000 characters the counter turns red and nothing sends
+  until it fits. Enter sends (also with Ctrl or ⌘), Shift+Enter is a new line, and an input method's composition
+  keeps Enter for itself. A draft or an attachment not sent yet makes a reload ask first. (#12565)
+- **The assistant sends the user to the message box.** Its prompt names the attachment and `.open()` in the
+  composer, never the data card's box or `.parse()`; a small table typed as a message gets the answer that data
+  comes as a paste of at least two rows or a file. (#12565)
+- **Model routing moves from `CLAUDE.md` to `agentic/docs/agent-operations.md`.**
+  The subagent model tiers, the Gemini lane, the Gemini check before a code PR
+  opens, and the second-opinion rule now live in the new document; `CLAUDE.md`
+  keeps one rule that points to it and makes it binding, the two `agy`
+  prohibitions, and the delegate-brief duties. No rule changes meaning, and
+  `tests/unit/test_agent_instructions.py` pins the moved rules in their new place
+  (#12566).
+- **Comments say why, not who.** A new rule in `CLAUDE.md` and
+  `.github/copilot-instructions.md`: provenance (who asked, which review found
+  it, the date) goes into the commit or the PR, and code migrates on touch.
+  Comments under `api/` and `app/src/` drop their reviewer names, owner-decision
+  notes, and dates that only recorded when something was decided or found; dates
+  that bound old data or date a measurement stay (#12566).
+- **The map's ForceGraph2D instance is typed.** `ForceGraphHandle` names the
+  methods the map calls instead of `any`, which removes the last two
+  `eslint-disable` comments in `app/src` (#12566).
+- **Two series of a family trade columns instead of one dropping out.** In
+  the data panel, picking for one member of a numbered series family
+  (`y1`, `y2`, ...) the column another member holds now swaps the two:
+  with `y1` on Sales and `y2` on Cost, setting `y2` to Sales puts `y1` on
+  Cost, and both series stay in the plot. Until now the other member was
+  cleared and the family closed up, so Cost left the plot. A member without
+  a column, the next member's `— add a column —`, has nothing to trade, so
+  the column still moves there. (#12567)
+- **One column can play several roles in the data step.** Some plots need the
+  same variable twice: the y and the size of a bubble, the value and the colour
+  of a bar, a value and its label, a treemap's size and colour. A column you
+  bind by hand in the data panel, or that the assistant binds on your request,
+  now keeps every role it serves: picking it for a second role no longer
+  clears the first, and the binding check accepts it with no warning. The
+  adapter prompt tells the plot code to select such a column once and use it
+  for both roles, since a table with the same column twice breaks pandas. The
+  default bindings and the automatic conversions still give each column one
+  role, and inside a numbered series family (`y1`, `y2`, ...) a column stays
+  once, because the same series twice is never meant. (#12564)
+- **The prep eval counts a closing invitation as a reply miss.** A reply whose
+  last sentence or clause asks the user to choose ("Choose …", "Pick one …",
+  "tell me which …", "Wähle …") misses on the same terms as a closing
+  question, and an open role the session block offered a date column for no
+  longer excuses either. On the earlier wording 2 of 5 summary replies of the
+  owner's case closed so; on the final one, 0 of 6. (#12558)
+- **One click from checked data to the plot.** `.confirm()` is gone: from the moment data is stored,
+  `.create_plot()` stands at the composer's right end as the filled button, confirms the data and its bindings as
+  the card shows them and starts the plot in the same click, with the typed text as the plot's request when the
+  box holds any. A refused confirmation starts nothing and shows under the composer. The line above the message
+  box says what the click still waits for: a table read from text to decide on, or a column for a required role.
+  After a change to confirmed data `.create_plot()` is filled again, also when the library already has a plot.
+  `.send()` shows only while the box holds text, and Enter never confirms. The admin's `.plot_all()` and the plot
+  after a library switch confirm the same way. At phone width the buttons wrap below the box and stay at its right
+  end. The assistant's prompt and the session block send the user to `.create_plot()` instead of `.confirm()`.
+  (#12557)
+- **A pasted formula or code goes to the chat by itself.** The data box no longer offers `.send()` when the server
+  answers `422 formula` or `422 code`: the page sends the text to the chat as your message at once, as it already
+  did for a request for data, and empties the box. Code over the chat's 2,000 characters stays in the box with a
+  line that asks to shorten it. `agent_data_parsed` reports such pastes as `formula` or `code` instead of `error`.
+  (#12557)
+- **The site's loader marks the chat's waits.** The three-dot `LoaderSpinner` of the plots gallery, in a new inline
+  size, replaces the pulsing ellipsis while a session opens, in the thread's in-progress line, beside a plot run's
+  progress and over the data box while a file is read or the data is parsed, one moving indicator per wait: the
+  lines that only say what waits lost their ellipsis, and a question or a summary waiting in the queue shows the
+  in-progress line and the queue counter without the progress grid. `.example_data()` steps aside while its turn
+  runs, keeping its room, so "making example data" shows once, in the thread. The loader, in the gallery too, drops
+  the ochre: a resting pair in the theme's warm gray of muted text and a runner that turns green while it crosses
+  them. Its dots stand still under reduced motion, the runner green, and each size has keyframes of its own, so two
+  sizes on one page no longer share one animation. (#12557)
+- **A network's share of the agent dataset store is 32 MiB.** `AGENT_IP_DATASET_BYTES`
+  falls from 64 to 32 MiB of the store's 256 MiB, so eight networks, not four, are
+  needed to fill it for everyone else (#12555).
+- **The chat header's columns ⓘ lists the spec's roles.** Opening a session now answers the spec's data roles
+  (`POST /sessions` gains `roles`), and the ⓘ after the title names them as the data card's dropdowns do, with
+  their kinds and whether a role is optional, takes one column per series or is computed by the plot; the spec's
+  `data` bullets remain the fallback. (#12553)
+- **The data box names code instead of example data.** Its placeholder now reads "or code that makes data (python,
+  javascript, …)" and "or a formula", since `.example_data()` took over example data, and the card's ⓘ says that
+  you can paste code or a formula that makes data too, up to 2,000 characters. (#12553)
+- **The public chat's notice says less in its line and more behind its ⓘ.** The line is now
+  `experimental AI · answers can be wrong`; the ⓘ adds that the chat and the data live only in server memory and are
+  deleted after an hour idle, that nothing is saved unless you send feedback, and that Claude runs via Google Cloud
+  Vertex AI in the EU and is not trained on what you send, as the legal page says. (#12553)
+- **The triage rules of a case live in `core`.** `core.agent_cases.triage_updates`
+  holds what `PATCH /debug/agent/cases/{id}` checks (tags, the promotion's
+  plot, data and expected outcome), and the route and the skill's script both
+  call it, so the two never drift apart. The route answers as before. (#12551)
+- **`CHANGELOG.md` opens with its format line, not the process.** The thirty lines on fragments,
+  the release cut, the GitHub release and the exempt classes moved into `changelog.d/README.md`,
+  rule for rule, under task headings; the changelog keeps the format, the versioning line and a
+  link there (#12547).
+- **The agent chat's data panel is split into six files.** `DataPanel.tsx` keeps the panel's state and layout;
+  the file intake moves to the `useFileIntake.ts` hook, the card's content to `DataCard.tsx` and its building
+  blocks to `dataCardParts.tsx`, the sticky summary header to `PinnedData.tsx`, and the count formatter they share
+  to `countOf.ts`. Behavior and rendered output
+  are unchanged: a jsdom snapshot diff of 43 panel states against the base showed 0 differing lines. (#12550)
+- **The chat's reply-language line and remembered list are one short line
+  each.** `# reply language: en` and `# remembered · 2 decisions` keep only
+  what they state; where the language came from, that a plot keeps its own,
+  and what the remembered decisions do stand behind an ⓘ, as the experimental
+  notice does it (#12549).
+- **The site's `.use_my_data()` entries open the public chat for admins too.**
+  While the public lane is open, an admin lands on `/agent` like every visitor,
+  so the chat is tested as visitors see and use it; `/debug/agent` stays the
+  admin's page for `all` and `.save()`, and the entries' target only while the
+  public lane is closed (#12549).
+- **Dependencies:** 17 Dependabot PRs. `tree-sitter-language-pack` 0.13.0 →
+  1.24.0, a major version with the code change in the same PR (#12943, see its
+  own entry), then 1.24.1 (#13032). `anthropic` 1.15.0 → 2.3.0, a major version
+  (#12535), and on to 2.6.0 in the python-minor group (#12940), which also
+  takes `pandas` 3.1.1, `pyarrow` 26.0.1, `fastmcp` 4.1.6, `pydantic` 2.14.3,
+  `ruff` 0.17.4, `cachetools` and `python-calamine`. The earlier python-minor
+  group (#12532) takes `fastapi` 0.141.1 → 0.162.0, `pytest` 9.2.0, `mypy`
+  2.4.1, `selenium` 4.52.0, `pg8000`, `pydantic-settings` and `pandas-stubs`.
+  `types-pyyaml` twice (#12534, #12942) and `pytest-asyncio` 1.4.1.post1
+  (#12941). In `app/` `jsdom` 30.1.3 → 31.0.0, a major version (#12937),
+  `react-router-dom` 7.18.5 (#12529), and the npm-minor group (#12554:
+  `eslint` 10.14.0 and `globals`; #12936: `vitest` 5.1.0 with its coverage
+  plugin). For the JavaScript renderers `@mui/x-charts` 9.16.0 → 9.17.0
+  (#12531), `d3` 7.9.0 → 7.9.2 (#12935) and `playwright` 1.64.1 → 1.65.0
+  (#12934); and the actions group (#12533, #12938: `claude-code-action`
+  1.0.269, CodeQL 4.39.3).
+
+### Removed
+
+- **`og_image_view` no longer goes to Plausible.** The event carried the
+  fetcher's address and user agent to Plausible and measured little: Plausible
+  drops every user agent it knows as a bot, so of 402 events in 28 days, 371
+  had the platform `unknown` and 31 were WhatsApp, and tests, local requests,
+  and fetches that ended in a 404 all sent real events. The code that picked
+  the visitor's address for it (`visitor_ip`) is gone with it. (#13055)
+- **The nginx user-agent entry for the Windows 10 Chrome crawler farm.** The `$is_headless_client` entry
+  from #12860 matched Windows 10 Chrome 100 to 139 and answered those clients' Plausible events with an
+  empty `202`. The farm moved to Chrome 148 to 150 on Windows and macOS the same day, so the entry caught
+  14 events all day, while it kept dropping the events of about 1.8 % of real visits, people on a pinned
+  old Chrome. The Cloudflare Managed Challenge for four hosting-network ASNs (Tencent, Leaseweb, Huawei
+  Cloud) is the one mechanism against the farm now, and a person it catches sees the challenge and can
+  pass it; `infra/cloudflare/README.md` records it as applied. `app/nginx.conf` holds no entry that
+  matches a browser's user agent, and a unit test fails if one comes back. (#13033)
+- **The Plausible bot site `bots.anyplot.ai`.** `bot_fetch`, `asset_fetch` and
+  the machine side of `og_image_view` are no longer sent: the site saw about
+  1.7 % of real crawler reads and was mostly a scanner's spoofed user agents.
+  The machine-read lines replace it. (#12962)
+- **Core Web Vitals no longer go to Plausible.** The site stops sending `LCP`, `CLS`, `INP`, `FCP` and
+  `TTFB` as custom events, and the `web-vitals` dependency goes with them. They were 44 % of the billable
+  events (17,044 of 38,818 in 28 days), `FCP` and `TTFB` had no dashboard goal, and every one of them
+  un-bounced its visit: visits with a vitals event bounced at 0 %, visits without at 88 %, so the
+  dashboard's bounce rate of about 5 % was an artifact and rises to a realistic value from here. Core Web
+  Vitals come from PageSpeed Insights when needed, and the privacy text on `/legal` no longer lists them.
+  (#12860)
+- **The automatic `Form: Submission` goal is off.** `formSubmissions: false` in the Plausible init: the
+  agent chat's message box is a form, so the goal counted chat messages that the chat's own events
+  already count, 144 of its 146 events the admin's own. (#12860)
+- **The public `GET /agent/session/bundle`.** No page has called it since the public
+  chat dropped `.save()`; the admin lane's `GET /debug/agent/sessions/{sid}/bundle`
+  stays (#12555).
+
+### Fixed
+
+- **A render hash of other code goes before new renders arrive.**
+  impl-generate and impl-repair remove an earlier `render.sha256` before they
+  upload the renders and write the new one last, with three attempts. They
+  used to remove it only after a failed write, and when that removal failed
+  too, the old hash stayed beside the new renders. (#13045)
+- **One failed read of the render hash no longer reads as `unreadable`.**
+  impl-review downloads `render.sha256` with three attempts, as it downloads
+  the renders. (#13045)
+- **Plausible's scroll depth is measured against the page it belongs to.**
+  Plausible's script closes the page being left when the next pageview
+  arrives, and divides the deepest scroll offset by the document height it
+  last observed. The late pageview arrived after the next page had rendered,
+  so the depth of the page being left was divided by the next page's height:
+  too low before a longer page, too high before a shorter one. Measured with
+  the live script on the same clicks, a landing page left at 47 % was sent as
+  30 %, an implementation page left at 63 % as 92 %, and the gallery after
+  12,000 px as 1,176 %; all three are now sent as they are. The pageview goes
+  out before the browser lays the next page out, and after the scroll reset,
+  so the new page starts at the top. On Back and forward, where the browser
+  restores the offset itself and Chrome does so only afterwards, the pageview
+  is sent from the top and the offset put back before anything is painted.
+  (#13046)
+- **Back to the gallery starts from the top before the gallery restores its
+  own offset.** The gallery turns the browser's scroll restoration off, so on
+  Back the offset of the page being left stood until the gallery's restore, or
+  for good when it had none to restore. (#13046)
+- **A repair can no longer send unchanged code back to review.** impl-repair
+  fails unless its push changed the implementation file and the workspace holds
+  the pushed file, and it fails without both theme renders, where it used to
+  exit 0 and leave the previous renders under the repaired code. The crash
+  comment names the gate that failed. (#13034)
+- **A generation whose code was never pushed fails.** impl-generate used to
+  check out `origin/main` when the branch was missing, which put a
+  regeneration's renders under the live implementation. It now also fails when
+  the implementation file on the pushed branch isn't the file in the
+  workspace, which is the case when an earlier run left its branch behind.
+  (#13034)
+- **The manual re-render script promotes only the renders.**
+  `scripts/migrate_render_and_upload.py` copied everything in staging to
+  production; it now copies the `plot-*` objects, as impl-merge does, so a
+  staged `render.sha256` or `adapt/` record never reaches production.
+  (#13034)
+- **`regen_gate.py sanitize-source` keeps line endings.** It used to rewrite
+  CRLF as LF, so a CRLF file was committed in a form other than the one
+  rendered. (#13034)
+- **A change request in words no longer replaces the data.** Since #13019, a
+  short request with two "label number" parts, such as `x bis 2030, y bis 60`
+  or `Titel 2026, Schrift 14`, routed as a list of pairs. It replaced the
+  user's table with two `label`/`value` rows, and there is no `.undo()` back.
+  Text with a word of a plot wish (`bis`, `max`, `Titel`, `Linie`, `Schrift`,
+  `ticks` and more) is now never a pair list, on the page and in the server's
+  reader, which share one word list (`wishWords.json`, pinned by a test). An
+  axis letter alone is no label either. While the session holds data, a list
+  needs three pairs; on a fresh page two still count (`Apples 7, Pears 12`).
+  A table typed into the box over data now gets the same "replaces your data
+  (N rows, no .undo())" line as an attachment before it goes. (#13035)
+- **A web table copied one cell per line, and an inline list such as
+  `a:7,b:12,c:5`, are data now.** Both are shapes from the owner's live session.
+  The page sent them to the chat as a message, the plot button stayed grey,
+  and the assistant answered that it cannot read data from a message. The page
+  now routes them as data (`routeInput.ts`, rules 12 and 13), and the server's
+  parser reads them by code (`layouts.py`, source formats `cell_lines` and
+  `pair_list`). The parser takes the header from a line split at ` · `, leaves
+  out a label block below the rows, keeps a range such as `62–100` as one text
+  cell, and adds a warning that says how it read the text. Short text of up to
+  2,000 characters that is mostly values goes to the server's transcriber,
+  which offers its table for `.use()`. Longer text counts only in a format the
+  parser knows: the transcriber now reads at most 2,000 characters (4,000
+  before), so long free text never reaches a model as data. A ratio, a time, a
+  URL, code and prose stay messages. (#13019)
+- **The plot button takes pasted data whenever Enter would.** One pure rule
+  (`plotClick` in `plotChain.ts`) now decides both whether the button is
+  active and what its click does, so the two can no longer disagree. With the
+  admin's `all` pressed, a pasted table left `.plot_all()` inert and only Enter
+  read it. Now the one click reads the table and opens the fan-out once it
+  reads clean. A table typed over stored data is read first too, never plotted
+  as the old data's fan-out or sent as a plot request. A table in the message
+  box goes by the dataset's own limits, so a long one goes as data with Enter
+  and with the button. (#13019)
+- **No more claims that BigQuery's result cache answers repeated telemetry
+  queries.** The linked `_AllLogs` view changes with every line, so the
+  process caches are the only caches; `api/agent_usage.py` and
+  `docs/reference/agent-telemetry.md` say so now. The trigger step of both
+  telemetry setups uses the export, edit and import route, because
+  `gcloud builds triggers update github` refuses the second-generation
+  `deploy-api` trigger. (#13015)
+- **Workflow label checks cannot lose a match to SIGPIPE.** The 15 checks of the form `echo "$LABELS" | grep -q`
+  in impl-review, impl-merge, sync-labels, report-validate and spec-create now hand grep the labels as a
+  here-string. Bash's `echo` writes a multi-line value one line per write, so `grep -q` could match, exit and
+  leave `echo` to die on a closed pipe; under `pipefail`, the shell the workflow tests use, the check then read
+  as false, and the verdict step failed now and then with "neither ai-approved nor ai-rejected". Live runs use
+  `bash -e` and were unaffected. A test now refuses the pattern in every workflow file (#13012).
+- **The regen gate's record and summary and the verdict step's scratch files live in `$RUNNER_TEMP`.** Under
+  fixed `/tmp` paths, which every workflow test on a machine shares, a gate summary left by one test was posted
+  by the next; each test now gets a `$RUNNER_TEMP` of its own. Files the reviewer reads stay in `/tmp` (#13012).
+- **The feedback case's turn record knows the newer guard verdicts.** The record's closed verdict sets predated the served-library lift and the language offer, so those guard lines read `other` and two unit tests failed on `main`. (#12991)
+- **The renderer's replay tests wait for the join instead of guessing its time.** The page test gave the first build
+  a fixed 50 ms to start and never waited for the replay to join it. A page is not kept for replays, so on a loaded
+  machine a late replay built the page a second time and the test failed. Both replay tests, the page's and the
+  render's, now wait until the build runs and the service logs the replay's join of the build in flight. (#12977)
+- **The chat recognises a library however you write its name.** "erstell das
+  bitte mal in d3" and "d3.js" got the pointer to the catalogue as another
+  library, and only "D3.js" switched the plot. A code check now lets every
+  request through that names only libraries the chat serves, in any case, with
+  or without `.js` or `.jl`, with any separator, and in the well-known short
+  forms (`ggplot`, `mpl`, `mui x`, `CairoMakie`, `apache echarts`); the library
+  switch reads the name the same way. One table in `core/library_names.py`
+  holds the names. A request for a tool outside the catalogue (Vega-Lite,
+  Excel, Plots.jl) still gets the pointer, and an attack or a data request that
+  names a library keeps its refusal. In the scope eval the judge itself refused
+  4 of 12 such requests, all of which now go through. (#12855)
+- **The site's preview images keep a plot's background instead of turning it black.** The smaller PNG and WebP variants dropped the alpha channel, so a render that paints only its panel showed black bars beside the plot; transparent pixels now take the theme's card surface. (#12863)
+- **A data change whose result the server refused still counts as the turn's answer.** The empty-reply check read
+  only results that passed the size and key checks, so an empty reply after such a change ended as "no reply" although
+  the data had changed. (#12853)
+- **A crawler farm no longer counts as visitors.** Since 2026-11-03 a farm has loaded about 17 spec pages
+  an hour from a new exit IP on almost every request, with plain Windows 10 Chrome 103 to 138 user
+  agents, so the nginx analytics shield caught 6 of 16,195 of its event posts in 44 hours, and its
+  residential share made up 675 of 1,451 dashboard visitors in 7 days. One more `$is_headless_client`
+  entry matches exactly that shape (Windows 10, Chrome 100 to 139, an anchored `Safari/537.3x` tail),
+  which keeps Edge, Opera, Windows 7/8.1 and Chrome 140+ out and costs about 2 % of real visits, those on
+  a pinned old Chrome. A unit test holds the map against the farm's user agents and current browsers, and
+  `docs/reference/plausible.md` carries the review rule for the version ceiling. (#12860)
+- **The catalogue corpus tests hold rules, not the counts of one day.** The corpus tests of the ggplot2, Makie,
+  plotly and bokeh profiles, the Python theme-token check and the tree-sitter file gates pinned the catalogue as
+  it stood between 2026-10-10 and 2026-10-31: file counts (325, 1,617), split counts (4 clean, 306 coupled, 15
+  blocked), rewrite counts (34 dpi rewrites, 122 renamed keywords), lists of flagged files and of non-token theme
+  conditionals. Two regenerations on 2026-11-09 broke four of them: flowmap-origin-destination's ggplot2 file
+  (#12862) dropped the `maps` package, and map-marker-clustered's bokeh file (#12859) saves `curdoc()` and
+  screenshots the figure's element. About 140 more regenerations were due the same night. Main never ran these
+  tests, because a merge that changes only implementation files skips pytest, so every Python PR inherited the
+  failure (#12877). The tests now check each file:
+  - a file is blocked exactly when its spec is a map spec, the SECURITY profile flags it or its structure fails,
+    and the sweeps' counts, eligible shares and Markdown rows follow from those files;
+  - the SECURITY profiles flag no file or rule beyond the known ones, and every import of an unavailable
+    package, every `<<-`, every URL string and every call of a denied name is a finding;
+  - each detected convention (theme tokens, markers, column constants, the palette, the protected save) and
+    each `data-block` and `deprecated-api` hint matches a plain reading of the file's text;
+  - the normalisers make only their known rewrites, each where the text calls for it, and leave no catalogue
+    header or title behind;
+  - every plotly and bokeh file ends on the pinned figure save or carries the normaliser's note on why not, and a
+    bokeh file left alone exports through a browser screenshot of its own;
+  - every theme conditional built only from literals, `THEME` and the file's tokens is a token;
+  - the parse gates read every merged implementation, the specs whose metadata names one.
+- **The audit skill's candidate selector reads every stored review.** Some reviews keep a plain number beside the checklist's categories, and the selector stopped on the first one instead of skipping it. (#12827)
+- **The prep eval runs again.** Scoring a case by the version its turn starts from had failed on every run since the server began numbering data versions; the eval now looks the version up the way the agent does. (#12823)
+- **A merge whose renders never reach production now fails instead of
+  passing.** `impl-merge.yml` promoted #12800 (waterfall-basic, MUI X)
+  with nothing copied: the copy failed with its error hidden, the step
+  deleted staging anyway and reported "Promoted images to production",
+  so the site showed the previous code's images under the new review.
+  The promotion now lists staging first, fails when either theme render
+  is missing and the PR changed its implementation, retries a failed
+  listing or copy and then fails with staging kept, and names the number
+  of files it copied. A new step comments the fixing command on the
+  merged PR: a re-render of the merged file in adopt mode, a forced
+  regeneration for R and Julia, or a re-dispatch of `impl-merge.yml`
+  when only the transfer failed. The step no longer sets object ACLs,
+  which the bucket's uniform bucket-level access rejects on every call.
+  (#12819)
+- **Prices no longer bind as a MACD line or an RSI, and raw measurements no longer as control-chart
+  summaries.** A new name-only role class binds `macd`, `rsi` and the sample means, ranges, limits and
+  center line of `spc-xbar-r` only to a column whose name holds them (`MACD_12_26_9`, `RSI 14`, `X-bar`,
+  `UCL`), in the default bindings, in the bindings filled after a data change and in the columns a
+  conversion makes. Before, a price table drew its opening prices as the MACD line or as an RSI on a 0 to
+  100 axis, and `Sample, X1, ..., X5` drew the first measurement as the sample mean and the next ones as
+  the range and the limits, each with complete bindings and no warning. Now the role stays missing and the
+  page asks for its column (#12612).
+- **Search after Back finds spec titles again.** Back to `/plots` restores the gallery from the
+  layout's saved state without a fetch, and that state did not hold the spec titles. The search then
+  matched spec IDs only: `bar chart`, `pie chart` and `line chart` found nothing, and the spec
+  tooltips in the dropdown were empty. (#12608)
+- **An empty search inside the filters says why.** When a search finds nothing because the active
+  filters hide every match, the dropdown offers `.search_all()` under `results.empty()`, with the
+  number of matches in all plots. It removes the filters and keeps the query; a bare Enter never
+  picks it. (#12608)
+- **The JavaScript catalogue tests hold rules, not the counts of one day.** Five corpus tests pinned the
+  catalogue as it stood on 2026-10-30 and 2026-10-31: the readiness split (93 clean MUI X files), the
+  detected conventions (1,602 `t` tokens, 1,344 `// Data` markers), the normaliser's rewrites (893 directives
+  written out), the 8 files the SECURITY profile flags and which eval specs' MUI X files are clean. Every MUI X
+  9 regeneration broke them. Main never
+  ran them, because a merge that changes only implementation files skips pytest, so every Python PR inherited
+  the failure (#12647). The tests now check each file:
+  - the blocked files are exactly the map specs and the known SECURITY cases that still hold their reason;
+  - the SECURITY profile flags no file or rule beyond the known ones, and every URL string and every overlong
+    quoted string of the code is a finding;
+  - a clean file has the adaptable-code layout, and the `data-block` hint appears exactly when that layout is
+    incomplete;
+  - `deprecated-api` appears only in MUI X 7 files, and in every file that imports `ChartContainer`;
+  - each detected convention matches a plain reading of the file's text and the harness's own orientation
+    pattern;
+  - the normaliser makes only its known rewrites.
+
+  The eval matrix's MUI X 7 preflight tests build their own MUI X 7 file instead of reading `scatter-basic`'s,
+  which the MUI X 9 pass rewrote.
+- **A pair the regen gate kept on a regression or a technical failure comes
+  back after the attempt window.** The pair-mode picker aged a kept pair from
+  its keep, so after the 30 days it queued behind about 4,700 pairs, years at
+  the nightly rate. That parked live implementations the regeneration had
+  clearly beaten except for one regression (funnel-basic/bokeh kept at 83
+  against 69). A `regen:kept` PR whose gate record has the code `regression`,
+  or a technical one such as `canvas_failed` or `script_crashed`, now holds its
+  pair for the window and then lets it return at its age from before the keep,
+  usually its metadata `updated`. The second such keep in a row ages the pair
+  like a plain keep, so a pair that keeps failing doesn't come back every 30
+  days. Every other keep code still ages the pair. The picker reads the records
+  from the workflow's own verdict comments in one extra listing; when that
+  listing fails, every keep ages its pair as before. (#12605)
+- **The agent chat reads headers in comment lines and under an export's metadata.** A
+  data file that opens with `#`, `%` or `//` comment lines keeps them as notes, and when
+  its table has no header line, the last one or two comment lines name the columns,
+  placed by the columns' character ranges, so a monthly series whose header wraps over
+  two `#` lines reads `decimal date` and `monthly average` instead of `#`, `date`,
+  `alized`. A statistics export's header of years under key-value metadata is the header
+  again, a key-value line no longer joins a header, a `:` cell is missing in a number
+  column, and a column of flags (`p`, `e`, `ep`) beside a year stays as `<year> flag` with a
+  warning that counts the flags. A title above a header of years no longer turns the
+  table into one column of text. (#12602)
+- **A statistics export's legend below the table stays out of the rows.** A
+  spreadsheet export pads every line to the table's width, so the legend under the
+  table (`:,not available`, `p,provisional`) read as rows without values and turned a
+  year column into text. Such rows now extend the table only up to a blank line; the
+  legend after it is kept as notes below the table, so the assistant can say what `:`
+  and the flags mean. (#12602)
+- **A pasted Markdown table keeps its column names.** The row of dashes under a Markdown
+  table's header (`|---|:---:|`), as chat assistants write it, became part of the names
+  (`Month -------`, `:------`) or a row of a column of names. It is now left out as
+  layout when it stands directly under the header; a row of dashes further down the
+  table stays a row. (#12602)
+- **No row numbers nobody asked for after a data change.** Once the
+  assistant has changed the data in a turn, the session block no longer
+  lists the conversion candidates for an open role for the rest of that
+  turn. Recomputed on the new version, the row-number fallback reappeared
+  as a certain line, and a chain of a drop, an aggregate and a sort gained a
+  `row_number` column in about half the prep-eval runs. The conversions the
+  server made stay listed, and the next turn lists the candidates again.
+  (#12599)
+- **A data change no longer fills a role that was open before it.** The
+  rule from the plot-button fix that has the assistant bind a required role
+  itself now applies only to a role the turn's own data change left open. A
+  role that was open before the turn follows the conversion lines again, so
+  "drop the Total row" no longer adds a row-number column for an empty axis.
+  The prep eval caught it: from that fix on, 7 of 8 runs of the drop cases
+  added a `row_number`, against 0 of 9 before it. (#12595)
+- **The admin fan-out starts one plot per library.** A render between a
+  library's finished plot and the panel's freeing of its place could start a
+  second plot there, which held the card at `adapting…`; a run now starts once
+  per grant of a place. This was the flaky `FanOut` test in CI. (#12594)
+- **A click on the plot button plots.** In two persona tests the user pressed
+  the plot button right after a data change and got "not confirmed yet": the
+  assistant had bound the new derived column inside the plot turn, which voided
+  the click's confirmation. A turn of `.create_plot()` (also "plot the new data"
+  and `.start_over()`), the switch offer's carry and `.plot_all()` now plots the
+  data and bindings the click confirmed: the agents service refuses every tool
+  that would change something in it, and the assistant plots all the same. A
+  column you ask to have plotted is bound in the data turn that makes it, so the
+  data panel shows it before the click, and the assistant no longer asks you to
+  bind a column it can bind itself. (#12593)
+- **A note sent with a re-paste is read as the table's note.** The assistant
+  answered it with the rule for a table typed into the message ("I can't read
+  data from the message itself"), although the table had arrived as the
+  message's attachment. The session facts now say that the table came in as an
+  attachment and is stored. (#12593)
+- **A long reply is shortened, never refused.** A reply of the assistant over
+  1,200 characters became the fixed "only this plot and your data" refusal
+  unless the turn drew a plot, so an on-topic summary of a pasted bank export
+  and an on-topic answer about the user's data came back refused in the persona
+  tests. The output guard now asks the assistant once for a shorter reply, the
+  way the reply-language check asks again, and sends that one or the reply cut
+  at 1,200 characters. (#12590)
+- **A turn without a reply says so.** When the assistant's final answer held no
+  text, the turn sent nothing but its end, and a paste with a note got no reply
+  at all while the paste counted as summarized. The service now asks once more;
+  a second empty answer, or a reply the output sanitiser empties, ends the turn
+  with the new `error` code `no_reply`, which the chat shows as the turn, and
+  the paste stays unsummarized for the next message. (#12590)
+- **A note typed with a paste is read beside its table.** The scope judge saw
+  such a note alone and refused a question about the pasted table as general
+  advice. It now gets the plot's title and the table's column names (never a
+  cell) with the note, and an off-topic or data-fetch verdict on a paste's note
+  goes on to the assistant, which reads the note beside the table; off-topic
+  ones at most five times per user and day (`AGENT_PASTE_NOTE_RESCUES`). An
+  attack is refused as before, and a request for another library still gets
+  its pointer to the catalogue. (#12590)
+- **Indicator lines the plot can compute no longer take a price column.** The
+  SMAs of `indicator-sma`, the EMAs of `indicator-ema` and the Ichimoku lines
+  were required roles, so a stock table bound `Open`, `High` and `Low` as the
+  three moving averages and the chat had nothing left to compute. They are now
+  computed roles like the Bollinger bands: bound when a column clearly holds
+  one (`SMA 50`, `Long MA`, `EMA 12`, `Tenkan-sen`, `MACD Signal`), otherwise
+  computed by the plot code from the close or the high and low. The same
+  holds for every catalogue role with a fixed formula over the spec's other
+  roles: the MACD signal line and histogram, the ideal burndown line, a
+  climograph's annual mean and total, the total error of a bias-variance
+  curve, chain-ladder development factors, Weibull plotting positions, a SHAP
+  waterfall's prediction and a decision tree's rollback. A test audits the
+  role wording of every spec, so a new role worded as a formula fails until it
+  is listed or named as data with the reason. An EMA or weighted average is
+  no longer read as a simple moving average. (#12588)
+- **A kept plot wish survives its own turn and the user's back-and-forth.**
+  In "Use with my data", a wish kept before the data is confirmed ("top 10")
+  is now judged against the bindings when the plot runs, not at every
+  binding write, so unbinding and binding the same column on the way no
+  longer drops it. The turn that keeps a wish holds it for the bindings and
+  data it ends with, whatever order the assistant kept, bound and changed
+  them in. A wish written for a column the user has since rebound is still
+  dropped, as before. (#12585)
+- **The assistant describes the plot by the columns it drew.** The plot
+  result tells the assistant which columns each role took and whether a kept
+  wish was used or dropped. It stops calling a plot of `Stock` unfit for an
+  earlier "distribution of the prices" after the user rebound the values by
+  hand, and stops naming the old binding. (#12585)
+- **The plot is checked only for texts the user wrote.** A title or number
+  format the plot must show has to stand, as a whole, in the user's own
+  words: the message of that turn or the notes pasted with the data (case,
+  spacing, quote marks and the kind of dash aside). On the page's
+  `.create_plot()` and "plot in …" buttons the assistant can no longer
+  re-send a request from an earlier turn; the kept wish and the plot memory
+  carry the user's words. (#12585)
+- **The plot memory holds each decision once.** A decision that differs only
+  in case, spacing or a closing punctuation mark is the same one, and the
+  assistant leaves a listed decision out in any wording, passing a change
+  with the entry it replaces. (#12585)
+- **A request to read a column as numbers converts that column.** When the
+  session block lists a conversion for an open role on the column the user
+  names ("read Anteil as numbers"), the assistant now reads the column itself
+  as numbers or dates, instead of copying the line's new column beside it. The
+  new column is only for a conversion nobody asked for, such as the ones the
+  server makes on a paste. A reading that guesses (the day and month order, the
+  century, the decimal mark) still gets its one question first, and a date
+  column's offer stays a `date_number`. A column read in place fills the open
+  role that waits for it, exactly as the named conversion did, and never takes
+  a role that is already bound. In the prep eval, `de-percent-not-count` and
+  `en-percent-unit-mixed` went from 1 of 10 runs on `main` to 10 of 10, and
+  the full set scored 83 of 85. (#12582)
+- **A note sent with a file is never refused as a request for data.** The scope judge sees the note alone, so
+  "unemployment rate per country" with a Eurostat file read as a request to fetch figures and got the data
+  refusal in red. A `needs_data` verdict on the note sent with a paste now goes on as in scope, and the root's
+  instructions say that such a note never gets the data refusal. A refused note's summary now runs too: the page
+  read the note's ended turn as still running and never sent it. (#12578)
+- **A table typed into the message box is read as data.** Only a paste was routed, so a CSV table typed by hand
+  went out as a message the assistant cannot read data from. Enter now routes the box's own text like a paste:
+  a table goes to the dataset route at once, and × on a refused one puts it back into the box. (#12578)
+- **One quiet line after a data change, and the button says what it does.** A data change followed by a plot the
+  server refused showed the same instruction four times, once in red with the raw code `data_unconfirmed`. The
+  refused plot adds no row now, the data change names itself in one notice ("data changed · check it, then plot
+  the new data"), the plot button reads "plot the new data", and the root no longer calls the plot in the turn of
+  its own data change or repeats the instruction in its reply. (#12578)
+- **The data refusals name the message box and `.open()`.** The `needs_data` and `unsupported_content` refusals
+  pointed to the data panel's field, which the one message box replaced; all 11 languages now name the message
+  box and `.open()`. (#12578)
+- **A summary or a question no longer shows its queue position after the wait.**
+  A turn without pipeline steps kept its `queue 1/2` badge until the reply,
+  because nothing told the page the wait was over. The agents service now sends
+  `status{step:"started"}` once, when a run that waited takes its slot. The API
+  passes it on both lanes, and a turn read again after a cut replays it. The
+  page clears the badge on it. A plot run that leaves the queue before its first
+  step shows `starting…` in its progress grid again. (#12577)
+- **A web table with grouped columns arrives whole.** A table copied from a
+  web page whose header spans two rows (`Density` over `/km2` and `/mi2`)
+  is read from the clipboard's HTML with its spans expanded, so the parser
+  joins the two header lines into `Density /km2` instead of refusing the
+  copy. Only the cells' text is kept, and the copied page is never run.
+  (#12574)
+- **An id no longer labels the bars, and a founding year is no longer the
+  measure.** The default bindings of "Use with my data" rank a text column
+  of record ids (every value distinct, named like `Organization Id`, `UUID`
+  or `EAN`) after every other text column for a category or label, and read
+  a year named for an event of each row (`Founded`, `Year built`, `Baujahr`)
+  as no measure and no time key. A table of organizations now binds
+  `Name` and `Number of employees` to a bar chart, where it bound
+  `Organization Id` and `Founded`. A lone id column still labels, and
+  codes such as `iso3` keep their rank. (#12571)
+- **A header in two lines is joined or named, never misread.** A grouped
+  header copied from a spreadsheet or an expanded web table (`Density` over
+  `/km2` and `/mi2`) becomes one name per column, `Density /km2`, with a
+  warning. A browser's text copy that lost the spans is refused with that
+  cause instead of a hint about quotes that did not apply, and a header
+  shorter than rows that all agree says so. (#12571)
+- **A replacing paste keeps the plot's axes.** New data that replaces the
+  old carries each binding to the new column of the same name or meaning
+  (`Land area km2` to `Area km2`), so `x` stays the area instead of
+  flipping to the first number column. The other roles get the defaults.
+  (#12571)
+- **A result card's image actions stay off the plot on a phone.** Below 600 px
+  the copy, download and open icons move from the image's top right corner,
+  where the plot's title stands, into the card's header row. (#12575)
+- **The site's feedback button no longer covers the agent chat.** The chat has
+  a feedback row on every result and one for a session without a plot. On a
+  phone the site's button covered `.send()`, `.open()` and the replies' right
+  edge, so the agent chat no longer shows it. (#12575)
+- **One plot button after a library switch with nothing to carry.** An offer
+  without decisions showed `.create_plot()` and "plot in seaborn", which did the
+  same. Now `.create_plot()` stands alone and still takes the switch's carry
+  along. With decisions, the quiet button beside the offer reads
+  `.start_over()`. (#12575)
+- **Popovers no longer shift the page.** A popover's scroll lock never stopped
+  the page from scrolling, because the page clips its horizontal overflow at
+  the root. It only padded the body, so the masthead and the right-aligned
+  controls jumped 15 px as the library or language menu opened. (#12575)
+- **A file chosen with `.open()` hands the focus to the message box.** Enter
+  then sends the file instead of opening the chooser again. (#12575)
+- **A refused `.copy()` says so.** When the browser refuses the clipboard, the
+  button reads `.copy() failed · select the code` for 2 s, a screen reader hears
+  it, and the code opens so it can be selected by hand. Before, nothing
+  changed on the page. (#12575)
+- **The result card takes the progress grid's place.** A run's card used to
+  land above the grid while the reply was still being written, pushing the grid
+  and the composer down until the turn ended. Now the card replaces the grid,
+  and anything the run sends into the thread before its card waits for it. The
+  agent BFF mock gains `MOCK_REPLY_MS`, the time the reply takes after the plot.
+  (#12575)
+- **A cut chat stream no longer hides a plot the server made.** On 2026-11-05 an HTTP/3 error ended a chartjs turn's
+  stream 104 s into a 126 s run. Both origin hops ran the turn to its end and stored version 1, but the page showed
+  "the server did not answer", and the retry made a version 2. Now every turn event carries the SSE id
+  `<run_id>.<n>`, and the session keeps its latest turn's events. A new `GET /agent/session/turn` (and
+  `/debug/agent/sessions/{sid}/turn`) with `Last-Event-ID` streams the rest of the turn, live until it ends. When a
+  stream fails or ends without `done`, the page keeps the loader with a quiet "connection lost · reconnecting…" line
+  and reads the turn again after 1, 2, 4 and 8 s. It shows the error only when every read failed, and the next click
+  of the same request reads that turn first instead of making the same plot twice. The agents stream now writes a
+  `: ping` after every 15 s without an event, as the BFF route already did, and a test pins the BFF's ping. A client
+  that the agents service sees go still cancels the run. (#12572)
+- **The progress grid stands still from `.create_plot()` to the result.** After
+  the data card folded, the run's `starting…` or `queued · 1 of 2` line above
+  the grid went away at the first step, and the grid jumped up one line beside
+  the loader (27 px at desktop and phone width). With each step, the cells
+  after the active one also slid right by about 11 px, because a step still to
+  come had no marker. Now where the run stands shows in the first try's outcome
+  cell. Every marker has a slot of the same width, and the label and first step
+  columns are sized for `second try` and `repairing` from the start. While the
+  run lasts the page also has no scroll anchoring, which had scrolled the page
+  by a repair round's new row (25 px at desktop width, 65 px at phone width).
+  The agent BFF mock gains `MOCK_START_MS`, which holds a run before its first
+  step, and `MOCK_REPAIR=1`, which gives a first plot a repair round. (#12569)
+- **One queue position, which moves nothing.** A plot run names its place in
+  the queue only in the progress grid's first row. The badge above the composer
+  used to come and go there too, moving the grid and the composer 33.5 px down
+  and back. A turn without the grid keeps the badge, now beside its in-progress
+  line and out of the flow. (#12569)
+- **The bindings say why they wait in their heading.** While the assistant
+  works or the data is parsed, the heading reads `# bindings — wait while the
+  assistant works` (or `… the data is parsed`) and then swaps back. The
+  separate line under it read as the heading twice and moved the dropdowns
+  as it came and went (25.5 px at desktop width, 45 px on a phone). (#12569)
+- **Two flaky tests no longer turn main red.** The adaptability checker's
+  design-example test read live catalogue files, so the nightly regeneration
+  of line-basic's seaborn file broke it; the two examples now come from
+  fixtures under `tests/unit/core/fixtures/adaptability/design/`. The
+  validator's per-file CPU budget now measures only the validator's own thread
+  with the garbage collector paused: the process-wide CPU time also counted
+  the test worker's other threads and heap collections, which pushed 3 ms files
+  past the 1 s budget (`network-weighted/matplotlib`,
+  `heatmap-periodic-table/plotnine`). (#12563)
+- **The default bindings no longer invert a range.** A lower and upper bound
+  pair is never bound by default to two columns whose lower one starts above
+  the largest value of the upper one, where every row's minimum would lie
+  above its maximum; the pair stays open, so the conversion check runs. Bound
+  so by hand, the pair is the user's choice: it stays valid, survives every
+  change of the data and carries one neutral warning line. (#12556)
+- **The docs describe the agent chat and the catalogue as they are.** The agent network design,
+  `agents/README.md`, the docs index, the app architecture and the project guide now say the chat
+  is public and experimental at `/agent` since 2026-11-02 for all 15 libraries, with the admin
+  tools at `/debug/agent`. The style guide names four languages, the current page color and
+  border alpha with recomputed contrast ratios, the curated catalogue next to the chat, and the
+  seven mobile nav items; the API and repository references show the current response and metadata
+  shapes, and per-library metadata lives under `metadata/{language}/` (#12547).
+- **The deploy-agents trigger filter and the Vite pin are documented as they run.** The header of
+  `agents/cloudbuild.yaml` gives the trigger's ignore list that lets prompt-only changes deploy and
+  the export and import route for changing it, and the Dependabot ignore for `vite` names the
+  8.3.5 pin, the outage of #12225 and its fix in #12235 (#12547).
+- **Pictograms, waffles, dot matrices and parliaments no longer read as made-up
+  data.** The render gate that counts more point marks than rows (G8) now skips
+  the plot types that draw one mark per unit of a count, so a pictogram of 11
+  rows that draws 77 icons is no longer sent to a repair to "draw marks only
+  from df". Every other plot keeps the check, and the ceiling on plotted points
+  still holds for all. (#12552)
+- **The reply after a shipped plot no longer asks to confirm the data.** A code
+  check drops every sentence that names `.confirm()` from the assistant's reply
+  in a turn whose plot shipped, because a shipped plot was drawn from confirmed
+  data. The rest of the reply stays word for word, and the check costs no model
+  call. (#12552)
+- **The assistant knows that the data panel opens files.** Its list of the page's controls left out `.open()`,
+  dropping or pasting a file, and the sheet and table dropdowns, and said the page had no upload, so a user who
+  asked to load an Excel file was told it could not be done. The data panel's bullet in
+  `agents/anyplot/prompts/root.md` now names them with the formats and size caps (CSV, TSV, JSON or plain text up
+  to 1 MB; Excel, ODS, Parquet, Feather, Arrow or NumPy up to 5 MB), plus `.replace()`, `.keep()` and `.view_all()`
+  with its full view's buttons, and the disclaimer under the list covers only the settings the page does not have.
+  `tests/unit/agents/test_prompt_controls.py` now checks the other direction too: every button the data card
+  renders is named in that bullet. (#12548)
+- **`/specs` thumbnails follow the site theme, and every library has its short
+  name.** The spec list showed the light render in dark mode; it now picks the
+  render the gallery cards pick. The compact gallery cards and the mobile
+  library carousel read the shared 15-library abbreviation map, so MUI X,
+  ggplot2 and Makie show `mui.tsx`, `gg.r` and `mk.jl` instead of their full ids
+  (#12546).
+- **Links and copy that pointed at the wrong place or said the wrong thing.**
+  `libraries.all()` on the landing page opens `/libraries`, not `/plots`; the
+  palette link on `/about` navigates inside the app instead of reloading the
+  page; `request_plot()` opens the plot request form instead of a blank issue
+  with a label and a title prefix. The `/plots` description drops its stale
+  "2,600+" count and `/specs` no longer calls the specifications Python-only;
+  `/mcp` lists every tag filter `search_specs_by_tags` takes; `llms.txt` names
+  the "Use with my data" chat (#12546).
+- **Page metadata matches the bot HTML.** Spec pages name Julia and JavaScript
+  in the `SoftwareSourceCode` language, carry the bot's breadcrumb (home, spec,
+  library), and share the spec card as `og:image` on the hub. The shell's
+  `og:image` is the card the bot serves for `/`, and its `theme-color` is the
+  page background. `/map` is titled `map | anyplot.ai` with a canonical URL, and
+  the chat tab names the plot instead of its spec id (#12546).
+- **Toggle state reaches assistive technology on `/palette` and `/map`.** The
+  sort buttons carry `aria-pressed`, and the legend and weights toggles carry
+  `aria-expanded` (#12546).
+
+### Security
+
+- **Cloudflare Turnstile on the calls that open or store something for a visitor.**
+  Opening a public chat session, a public chat feedback case and a site feedback
+  entry (the widget and the plot pages' 👍/👎) now need a Turnstile token in
+  `X-Turnstile-Token`, which `api/turnstile.py` redeems at Cloudflare's siteverify
+  and fails closed on: `403 bot_check_failed` for a missing, refused or reused
+  token, `503 bot_check_unavailable` when siteverify cannot answer. The page renders
+  the widget in Managed mode, invisible unless Cloudflare asks for a click, loads
+  Cloudflare's script only for those calls and takes a fresh token for each, and a
+  failed check reads as one line with a retry. Production keeps the public chat's
+  door shut without `TURNSTILE_SECRET_KEY` and refuses Cloudflare's test secrets,
+  and the deploy smoke proves the secret against siteverify with Cloudflare's dummy
+  token. The site's CSP allows `challenges.cloudflare.com` for scripts and frames
+  only, and `/legal` names what the check reads and stores (closes #7249) (#12555).
+
+*Catalog: no new specs and no new implementations; 398 regenerations (#12544 to
+#13052). 380 were forced through adopt mode on 2026-11-08 and 2026-11-09. 209 of
+those PRs finish the MUI X 9 migration: they take the remaining 196 MUI X
+implementations (11 of them more than once) from @mui/x-charts 7.29.1 to 9.17.0, so all 323
+now run on version 9. The other 171 PRs come from the first catalogue audit round
+and cover 167 pairs in 14 libraries: 68 fixes picked from its findings, 99 legacy
+regenerations, and four pairs fixed a second time after the re-audit (`pygal` 31,
+`letsplot` 23, `bokeh` 22, `matplotlib` 20, `plotly` 17, `plotnine` 16, `seaborn`
+16, `altair` 14, and 12 across `echarts`, `highcharts`, `ggplot2`, `chartjs`,
+`makie` and `d3`). 18 are daily-regen improvements (`seaborn` 4; `pygal`, `bokeh`
+and `altair` 3 each; `plotly` and `plotnine` 2 each; `letsplot` 1), and two kept
+regenerations stored their re-score (#12562, #13041).*
+
 ## [4.0.0] — 2026-11-03 — Your data
 
 ### Added
@@ -6424,7 +8000,8 @@ interactive HTML previews.
   Actions workflows (spec creation, impl generation, AI review, auto-merge); Cloud Run +
   Cloud SQL + GCS; 1,081 unit tests.
 
-[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v4.1.0...HEAD
+[4.1.0]: https://github.com/MarkusNeusinger/anyplot/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.6.0...v4.0.0
 [3.6.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.4.0...v3.5.0

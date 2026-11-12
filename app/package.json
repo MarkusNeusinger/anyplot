@@ -1,6 +1,6 @@
 {
   "name": "anyplot-website",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "anyplot Frontend - AI-powered plotting examples",
   "private": true,
   "type": "module",
