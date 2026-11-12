@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hive-basic: Basic Hive Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 95/100 | Updated: 2026-05-07
@@ -19,6 +19,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_color_manual,
+    scale_size_continuous,
     theme,
     theme_void,
     xlim,
@@ -26,19 +27,30 @@ from plotnine import (
 )
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
-COLOR_2 = "#C475FD"
-COLOR_3 = "#4467A3"
 
-np.random.seed(42)
+# Imprint palette: all eight positions, one per axis group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
+# Constants
+FIRST_AXIS_ANGLE = 90  # degrees; the first group points up, the others follow clockwise
+INNER_RADIUS = 0.1  # distance from the center of the lowest degree
+OUTER_RADIUS = 0.95  # distance from the center of the highest degree
+
+# Columns: set these to your tables' column names
+NODE = "Module"  # role: nodes
+GROUP = "Module type"  # role: axis_attribute
+DEGREE = "Degree"  # role: extra
+EDGE_ENDS = ["Source", "Target"]  # role: edges
+
+# Data: replace this block with your own tables, for example df = pd.read_csv("edges.csv")
 nodes = pd.DataFrame(
     {
-        "id": [
+        NODE: [
             "auth",
             "db",
             "core",
@@ -61,36 +73,13 @@ nodes = pd.DataFrame(
             "grpc",
             "websocket",
         ],
-        "category": [
-            "core",
-            "core",
-            "core",
-            "core",
-            "core",
-            "core",
-            "core",
-            "utility",
-            "utility",
-            "utility",
-            "utility",
-            "utility",
-            "utility",
-            "utility",
-            "interface",
-            "interface",
-            "interface",
-            "interface",
-            "interface",
-            "interface",
-            "interface",
-        ],
-        "degree": [8, 7, 9, 6, 5, 4, 6, 5, 6, 4, 5, 4, 3, 4, 6, 5, 4, 5, 5, 3, 4],
+        GROUP: ["core"] * 7 + ["utility"] * 7 + ["interface"] * 7,
+        DEGREE: [8, 7, 9, 6, 5, 4, 6, 5, 6, 4, 5, 4, 3, 4, 6, 5, 4, 5, 5, 3, 4],
     }
 )
-
-edges = pd.DataFrame(
+df = pd.DataFrame(
     {
-        "source": [
+        EDGE_ENDS[0]: [
             "api",
             "api",
             "api",
@@ -122,7 +111,7 @@ edges = pd.DataFrame(
             "kernel",
             "runtime",
         ],
-        "target": [
+        EDGE_ENDS[1]: [
             "auth",
             "db",
             "logger",
@@ -157,137 +146,94 @@ edges = pd.DataFrame(
     }
 )
 
-axis_angles = {"core": 90, "utility": 210, "interface": 330}
-axis_colors = {"core": BRAND, "utility": COLOR_2, "interface": COLOR_3}
+# Plot: reads only df, nodes and the constants above
+groups = nodes[GROUP].unique().tolist()
+angles = {g: np.radians(FIRST_AXIS_ANGLE + 360 * i / len(groups)) for i, g in enumerate(groups)}
+group_colors = {g: IMPRINT_PALETTE[i] for i, g in enumerate(groups)}
 
-max_degree = nodes["degree"].max()
+# Node positions: on the axis of the group, distance from the center set by degree
+top_degree = nodes[DEGREE].max()
+pos = nodes.copy()
+pos["radius"] = INNER_RADIUS + (pos[DEGREE] / top_degree) * (OUTER_RADIUS - INNER_RADIUS)
+pos["angle"] = pos[GROUP].map(angles)
+pos["x"] = pos["radius"] * np.cos(pos["angle"])
+pos["y"] = pos["radius"] * np.sin(pos["angle"])
 
-nodes_by_category = {}
-for cat in ["core", "utility", "interface"]:
-    cat_nodes = nodes[nodes["category"] == cat].sort_values("degree", ascending=False).reset_index(drop=True)
-    nodes_by_category[cat] = cat_nodes
+# Perpendicular label positions beside each node
+# (alternating sides along the axis keeps neighbouring labels apart)
+label_offset = 0.05
+rank = pos.groupby(GROUP)[DEGREE].rank(method="first")
+side = np.where(rank % 2 == 0, 1, -1)
+dist = label_offset + 0.09 * (((rank - 1) // 2) % 2)  # every other pair sits further out
+pos["lx"] = pos["x"] + side * dist * np.cos(pos["angle"] + np.pi / 2)
+pos["ly"] = pos["y"] + side * dist * np.sin(pos["angle"] + np.pi / 2)
+# text grows away from the axis, so same-side neighbours never run into each other
+pos["ha"] = np.where(pos["lx"] >= pos["x"], "left", "right")
 
-positions = []
-for cat, cat_nodes in nodes_by_category.items():
-    angle_deg = axis_angles[cat]
-    angle_rad = np.radians(angle_deg)
+# Axes and axis labels
+axis_len = 1.0
+axis_df = pd.DataFrame(
+    {
+        "x": 0.0,
+        "y": 0.0,
+        "xend": [axis_len * np.cos(angles[g]) for g in groups],
+        "yend": [axis_len * np.sin(angles[g]) for g in groups],
+        GROUP: groups,
+    }
+)
+label_df = pd.DataFrame(
+    {
+        "x": [1.2 * np.cos(angles[g]) for g in groups],
+        "y": [1.2 * np.sin(angles[g]) for g in groups],
+        "label": [g.upper() for g in groups],
+        GROUP: groups,
+    }
+)
 
-    for _idx, row in cat_nodes.iterrows():
-        base_radius = 0.25 + (row["degree"] / max_degree) * 0.70
-
-        x = base_radius * np.cos(angle_rad)
-        y = base_radius * np.sin(angle_rad)
-
-        node_size = 6 + (row["degree"] / max_degree) * 16
-
-        positions.append(
-            {
-                "id": row["id"],
-                "x": x,
-                "y": y,
-                "category": row["category"],
-                "degree": row["degree"],
-                "node_size": node_size,
-            }
+# Edges: quadratic Bezier curves pulled toward the center, cut into short segments
+lookup = pos.set_index(NODE)
+n_steps = 20
+t = np.linspace(0, 1, n_steps + 1)
+curves = []
+for src, tgt in zip(df[EDGE_ENDS[0]], df[EDGE_ENDS[1]], strict=True):
+    p0 = lookup.loc[src, ["x", "y"]].to_numpy(dtype=float)
+    p2 = lookup.loc[tgt, ["x", "y"]].to_numpy(dtype=float)
+    same_axis = lookup.loc[src, GROUP] == lookup.loc[tgt, GROUP]
+    p1 = (0.3 if same_axis else 0.15) * (p0 + p2) / 2
+    pts = ((1 - t) ** 2)[:, None] * p0 + (2 * (1 - t) * t)[:, None] * p1 + (t**2)[:, None] * p2
+    curves.append(
+        pd.DataFrame(
+            {"x": pts[:-1, 0], "y": pts[:-1, 1], "xend": pts[1:, 0], "yend": pts[1:, 1], GROUP: lookup.loc[src, GROUP]}
         )
-
-node_positions = pd.DataFrame(positions)
-
-axis_lines = []
-for cat, angle in axis_angles.items():
-    angle_rad = np.radians(angle)
-    axis_lines.append(
-        {"x": 0, "y": 0, "xend": 1.0 * np.cos(angle_rad), "yend": 1.0 * np.sin(angle_rad), "category": cat}
     )
-axis_df = pd.DataFrame(axis_lines)
-
-edge_data = []
-for _, row in edges.iterrows():
-    src_match = node_positions[node_positions["id"] == row["source"]]
-    tgt_match = node_positions[node_positions["id"] == row["target"]]
-
-    if len(src_match) == 0 or len(tgt_match) == 0:
-        continue
-
-    src_pos = src_match.iloc[0]
-    tgt_pos = tgt_match.iloc[0]
-
-    src_cat = src_pos["category"]
-    tgt_cat = tgt_pos["category"]
-
-    if src_cat == tgt_cat:
-        mid_factor = 0.3
-    else:
-        mid_factor = 0.15
-
-    ctrl_x = mid_factor * (src_pos["x"] + tgt_pos["x"]) / 2
-    ctrl_y = mid_factor * (src_pos["y"] + tgt_pos["y"]) / 2
-
-    n_points = 20
-    for i in range(n_points):
-        t0 = i / n_points
-        t1 = (i + 1) / n_points
-
-        x0 = (1 - t0) ** 2 * src_pos["x"] + 2 * (1 - t0) * t0 * ctrl_x + t0**2 * tgt_pos["x"]
-        y0 = (1 - t0) ** 2 * src_pos["y"] + 2 * (1 - t0) * t0 * ctrl_y + t0**2 * tgt_pos["y"]
-        x1 = (1 - t1) ** 2 * src_pos["x"] + 2 * (1 - t1) * t1 * ctrl_x + t1**2 * tgt_pos["x"]
-        y1 = (1 - t1) ** 2 * src_pos["y"] + 2 * (1 - t1) * t1 * ctrl_y + t1**2 * tgt_pos["y"]
-
-        edge_data.append(
-            {
-                "x": x0,
-                "y": y0,
-                "xend": x1,
-                "yend": y1,
-                "src_cat": src_cat,
-                "tgt_cat": tgt_cat,
-                "edge_color": axis_colors[src_cat],
-            }
-        )
-
-edge_df = pd.DataFrame(edge_data)
-
-axis_labels = []
-for cat, angle in axis_angles.items():
-    angle_rad = np.radians(angle)
-    axis_labels.append(
-        {"x": 1.18 * np.cos(angle_rad), "y": 1.18 * np.sin(angle_rad), "label": cat.upper(), "category": cat}
-    )
-label_df = pd.DataFrame(axis_labels)
-
-node_labels = []
-for _, row in node_positions.iterrows():
-    angle_deg = axis_angles[row["category"]]
-    angle_rad = np.radians(angle_deg)
-
-    offset = 0.18
-    perp_angle = angle_rad + np.pi / 2
-    label_x = row["x"] + offset * np.cos(perp_angle)
-    label_y = row["y"] + offset * np.sin(perp_angle)
-
-    node_labels.append({"x": label_x, "y": label_y, "label": row["id"], "category": row["category"]})
-node_labels_df = pd.DataFrame(node_labels)
+edge_df = pd.concat(curves, ignore_index=True)
 
 plot = (
     ggplot()
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend", color="src_cat"), data=edge_df, size=1.5, alpha=0.5)
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend", color="category"), data=axis_df, size=3.5, alpha=0.8)
-    + geom_point(aes(x="x", y="y", color="category", size="node_size"), data=node_positions, alpha=0.95)
-    + geom_text(aes(x="x", y="y", label="label"), data=node_labels_df, size=10, color=INK)
-    + geom_text(aes(x="x", y="y", label="label", color="category"), data=label_df, size=18)
-    + scale_color_manual(values=axis_colors)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend", color=GROUP), data=edge_df, size=0.55, alpha=0.5)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend", color=GROUP), data=axis_df, size=1.3, alpha=0.8)
+    + geom_point(aes(x="x", y="y", color=GROUP, size=DEGREE), data=pos, alpha=0.95)
+    + geom_text(aes(x="lx", y="ly", label=NODE), data=pos[pos["ha"] == "left"], size=5.5, color=INK, ha="left")
+    + geom_text(aes(x="lx", y="ly", label=NODE), data=pos[pos["ha"] == "right"], size=5.5, color=INK, ha="right")
+    + geom_text(aes(x="x", y="y", label="label", color=GROUP), data=label_df, size=11, fontweight="bold")
+    + scale_color_manual(values=group_colors, limits=groups)
+    + scale_size_continuous(range=(2.5, 8))
     + coord_fixed(ratio=1)
-    + xlim(-1.6, 1.6)
-    + ylim(-1.6, 1.6)
-    + labs(title="hive-basic · plotnine · anyplot.ai")
+    + xlim(-1.45, 1.45)
+    + ylim(-1.45, 1.45)
+    + labs(
+        title="hive-basic · python · plotnine · anyplot.ai",
+        caption="Distance from the center = module degree (number of connections)",
+    )
     + theme_void()
     + theme(
-        figure_size=(16, 16),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=28, color=INK, weight="bold"),
+        plot_title=element_text(size=14, color=INK, weight="bold"),
+        plot_caption=element_text(size=10, color=INK_SOFT),
         legend_position="none",
-        plot_margin=0.01,
+        plot_margin=0.02,
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
