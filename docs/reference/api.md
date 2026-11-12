@@ -425,8 +425,8 @@ Reads the share counters in the database (`api/shared_links.py`, [Shared links](
     {"date": "2026-11-11", "shares": 5}
   ],
   "platforms": [
-    {"platform": "whatsapp", "shares": 3},
-    {"platform": "teams", "shares": 2}
+    {"platform": "whatsapp", "shares": 3, "verified": 0},
+    {"platform": "teams", "shares": 2, "verified": 2}
   ],
   "top_specs": [
     {"spec_id": "scatter-basic", "shares": 5}
@@ -437,7 +437,7 @@ Reads the share counters in the database (`api/shared_links.py`, [Shared links](
 }
 ```
 
-`platforms`, `top_specs` and `top_libraries` are sorted by shares, largest first. `top_specs` lists up to five specs; a spec's sum holds its hub and all of its implementation pages. `top_libraries` lists up to five libraries; a library's sum holds its implementation pages across specs. A share of a hub counts for no library, so the libraries add up to less than the specs.
+`platforms`, `top_specs` and `top_libraries` are sorted by shares, largest first. A platform's `verified` is the part of its `shares` whose fetch Cloudflare verified as a bot it knows, never more than `shares`. The rest isn't a verdict on the share: WhatsApp and Signal fetch the preview from the sender's own phone and are never verified. A platform Cloudflare does verify whose shares are mostly unverified is being imitated. `top_specs` lists up to five specs; a spec's sum holds its hub and all of its implementation pages. `top_libraries` lists up to five libraries; a library's sum holds its implementation pages across specs. A share of a hub counts for no library, so the libraries add up to less than the specs.
 
 Always `200`. `status` is `not_configured` without a database, and `unavailable` when it doesn't answer or the `link_shares` table isn't there yet; both come with zeros and empty lists, and the API keeps neither, so the next request that reaches it tries again. Like every `/insights/*` answer, such an answer still carries `Cache-Control: public, max-age=300, stale-while-revalidate=3600`, so a browser or the edge can show it for five more minutes. An `ok` answer is cached with stale-while-revalidate (1h refresh).
 
@@ -449,7 +449,7 @@ Admin only. The answer of `/insights/shared-links`, read fresh, plus three field
 
 - `top`: up to five plot pages, most shared first, such as `{"spec_id": "scatter-basic", "language": "python", "library": "matplotlib", "shares": 3}`. A spec's hub (`language` and `library` are `null`) and one implementation of it are entries of their own.
 - `other`: the number of preview images fetched in the window by a client that is neither a preview platform nor a known crawler. A rising `other` is how a platform missing from the list shows itself.
-- `verified`: an object from a platform's name (or `other`) to how many of its fetches Cloudflare verified as a bot it knows, such as `{"slack": 12, "other": 2}`. A platform with none is absent. A platform Cloudflare verifies whose shares are mostly unverified is being imitated; WhatsApp and Signal are never verified.
+- `other_verified`: how many of `other` Cloudflare verified as a bot it knows. A verified fetcher under `other` is a preview platform the list doesn't name yet.
 
 `status` is `unavailable` with zeros when the query fails.
 

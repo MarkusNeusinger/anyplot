@@ -5,22 +5,34 @@
  *
  * - Bars: one per day, the day's sum of shares, drawn like the visitors strip and the machine
  *   readers tile above it (`DayStrip`).
- * - Below: the window's sums as short lines. The shares by platform, the most shared specs (a
+ * - Below: the window's sums as short lines, worded like the machine readers tile's. The shares
+ *   whose fetch Cloudflare verified, by platform, and the rest as one sum under no name
+ *   (`byVerdict`): a platform's name is read from a user agent anyone can write, and an app
+ *   that fetches from the sender's phone is never verified. Then the most shared specs (a
  *   spec's hub and all of its implementations together, linked to the hub) and the most shared
  *   libraries (a library's implementations across specs, linked to the gallery filtered by it).
  * - What a share is and what the count cannot see is on the legal page the header links.
  * - Loading, a failed request and any answer but `ok` are one muted line each.
  */
 
+import { useState } from 'react';
+
 import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { paths, specPath } from 'src/routes/paths';
 import { DayStrip } from 'src/sections/stats/DayStrip';
-import { platformLabel, type SharedLinksResponse } from 'src/sections/stats/sharedLinks';
+import {
+  byVerdict,
+  platformLabel,
+  type SharedLinksPart,
+  type SharedLinksResponse,
+  UNVERIFIED_HINT,
+} from 'src/sections/stats/sharedLinks';
 import { CHART_PX } from 'src/sections/stats/stripGeometry';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
@@ -37,6 +49,28 @@ const entryLinkSx = {
   color: 'var(--ink)',
   textDecoration: 'none',
   '&:hover': { color: colors.primary, textDecoration: 'underline' },
+  '&:focus-visible': {
+    outline: `2px solid ${colors.primary}`,
+    outlineOffset: 2,
+    borderRadius: '2px',
+  },
+} as const;
+
+/**
+ * A word with a hint: a button that reads as the line's own text, dotted like a term with a
+ * note.
+ */
+const hintTermSx = {
+  font: 'inherit',
+  letterSpacing: 'inherit',
+  color: 'inherit',
+  background: 'none',
+  border: 0,
+  p: 0,
+  m: 0,
+  textDecoration: 'underline dotted',
+  textUnderlineOffset: '3px',
+  cursor: 'help',
   '&:focus-visible': {
     outline: `2px solid ${colors.primary}`,
     outlineOffset: 2,
@@ -125,19 +159,35 @@ function SharedLinksSums({
     shares: entry.shares,
   }));
   if (platforms.length === 0 && specs.length === 0 && libraries.length === 0) return null;
+  const verdict = byVerdict(platforms);
 
   return (
     <Box
       component="ul"
       sx={{ ...smallSx, listStyle: 'none', m: 0, mt: 0.75, p: 0, lineHeight: 1.6 }}
     >
-      {platforms.length > 0 && (
-        <li data-testid="shared-links-platforms">
-          by platform:{' '}
-          {platforms
-            .map(entry => `${platformLabel(entry.platform)} ${formatNum(entry.shares)}`)
-            .join(' · ')}
-        </li>
+      {verdict ? (
+        <>
+          <PlatformLine
+            testId="shared-links-verified"
+            label="cloudflare verified"
+            parts={verdict.verified}
+            formatNum={formatNum}
+          />
+          {verdict.unverified > 0 && (
+            <li data-testid="shared-links-unverified">
+              <UnverifiedTerm /> shares: {formatNum(verdict.unverified)}
+            </li>
+          )}
+        </>
+      ) : (
+        // An answer without the verdicts: one line that claims nothing about them.
+        <PlatformLine
+          testId="shared-links-platforms"
+          label="by platform"
+          parts={platforms}
+          formatNum={formatNum}
+        />
       )}
       <SumLine
         testId="shared-links-specs"
@@ -152,6 +202,67 @@ function SharedLinksSums({
         formatNum={formatNum}
       />
     </Box>
+  );
+}
+
+/**
+ * The word "unverified" with its hint (`UNVERIFIED_HINT`), which describes the word and leaves
+ * its name alone (`describeChild`).
+ *
+ * - A pointer and a keyboard open the hint the tooltip's own way.
+ * - A tap opens it through the click. The tooltip's touch timer runs between the finger's
+ *   down and up, so it opens for a long press and misses a tap.
+ * - It closes when the pointer or the focus leaves, on Escape, and some seconds after a touch:
+ *   long enough to read two sentences, where the default is 1.5 s.
+ * - It opens under the word, over the "most shared" lines, so the verified line above stays
+ *   readable beside it.
+ */
+function UnverifiedTerm() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Tooltip
+      title={UNVERIFIED_HINT}
+      arrow
+      describeChild
+      placement="bottom-start"
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => setOpen(false)}
+      leaveTouchDelay={8000}
+    >
+      <Box
+        component="button"
+        type="button"
+        data-testid="shared-links-unverified-term"
+        onClick={() => setOpen(true)}
+        sx={hintTermSx}
+      >
+        unverified
+      </Box>
+    </Tooltip>
+  );
+}
+
+/** One line of platforms with their sums; no line without a platform. */
+function PlatformLine({
+  testId,
+  label,
+  parts,
+  formatNum,
+}: {
+  testId: string;
+  label: string;
+  parts: SharedLinksPart[];
+  formatNum: (value: number) => string;
+}) {
+  if (parts.length === 0) return null;
+  return (
+    <li data-testid={testId}>
+      {label}:{' '}
+      {parts
+        .map(entry => `${platformLabel(entry.platform)} ${formatNum(entry.shares)}`)
+        .join(' · ')}
+    </li>
   );
 }
 

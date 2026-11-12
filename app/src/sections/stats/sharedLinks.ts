@@ -12,6 +12,17 @@ export interface SharedLinksDay {
 export interface SharedLinksPlatform {
   platform: string;
   shares: number;
+  /**
+   * The part of the shares whose fetch Cloudflare verified as a bot it knows, never more than
+   * `shares`. `null` when the answer names no verdict (an API revision older than the page).
+   */
+  verified: number | null;
+}
+
+/** A platform with the shares one of the tile's lines gives it. */
+export interface SharedLinksPart {
+  platform: string;
+  shares: number;
 }
 
 /** A plot page: a spec's hub (no language, no library) or one implementation of it. */
@@ -63,8 +74,40 @@ export function platformLabel(platform: string): string {
   return PLATFORM_LABELS[platform] ?? platform;
 }
 
+/**
+ * The hint the tile's word "unverified" carries: read alone, the word sounds like doubt about
+ * the shares, although an app that fetches from the sender's phone is never verified.
+ */
+export const UNVERIFIED_HINT =
+  'Cloudflare could not verify the fetcher. that is no verdict on a share: WhatsApp and Signal fetch the preview from the sender’s own phone, which nobody can verify.';
+
 const count = (value: unknown): number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+
+/** A counted part of *whole*: never more than it, and `null` for anything but a number. */
+const part = (value: unknown, whole: number): number | null =>
+  typeof value === 'number' ? Math.min(count(value), whole) : null;
+
+/**
+ * The platforms' shares told apart by Cloudflare's verdict on each fetch: the verified part
+ * per platform, largest first, and the rest as one sum. Without a verdict a platform's name
+ * is only what the client wrote, so the rest is counted and stands under no name, like the
+ * unverified requests of the machine readers tile. `null` when a platform comes without a
+ * verdict, so the tile calls no share unverified that it knows nothing about.
+ */
+export function byVerdict(
+  platforms: SharedLinksPlatform[]
+): { verified: SharedLinksPart[]; unverified: number } | null {
+  const verified: SharedLinksPart[] = [];
+  let unverified = 0;
+  for (const entry of platforms) {
+    if (entry.verified === null) return null;
+    if (entry.verified > 0) verified.push({ platform: entry.platform, shares: entry.verified });
+    unverified += entry.shares - entry.verified;
+  }
+  // A stable sort: platforms with the same part keep the answer's order.
+  return { verified: verified.sort((a, b) => b.shares - a.shares), unverified };
+}
 
 const text = (value: unknown): string | null =>
   typeof value === 'string' && value !== '' ? value : null;
@@ -83,20 +126,11 @@ export interface SharedLinksDetail extends SharedLinksResponse {
   /** Preview images fetched by a client that is neither a preview platform nor a known crawler. */
   other: number;
   /**
-   * Per platform, and for `other`, how many of its fetches Cloudflare verified as a bot it
-   * knows. A platform with none is absent.
+   * How many of `other` Cloudflare verified as a bot it knows: a platform the list lacks.
+   * `null` when the answer does not say (an API revision older than the page).
    */
-  verified: Record<string, number>;
+  other_verified: number | null;
 }
-
-const counts = (value: unknown): Record<string, number> =>
-  value && typeof value === 'object' && !Array.isArray(value)
-    ? Object.fromEntries(
-        Object.entries(value)
-          .map(([name, entry]): [string, number] => [name, count(entry)])
-          .filter(([, entry]) => entry > 0)
-      )
-    : {};
 
 /**
  * The detail as the debug section reads it: the numbers for `ok`, the status itself for an
@@ -121,14 +155,15 @@ export function readSharedLinksDetail(
           shares: count(entry.shares),
         })),
       other: count(record.other),
-      verified: counts(record.verified),
+      other_verified: part(record.other_verified, count(record.other)),
     }
   );
 }
 
 /**
  * The answer as the tile reads it; `null` for anything but an `ok` answer with days. An answer
- * without the two lists (an API revision older than the page) reads as one with empty lists.
+ * without the two lists (an API revision older than the page) reads as one with empty lists,
+ * and a platform without its verified part as one with no verdict.
  */
 export function readSharedLinks(body: unknown): SharedLinksResponse | null {
   if (!body || typeof body !== 'object') return null;
@@ -145,7 +180,11 @@ export function readSharedLinks(body: unknown): SharedLinksResponse | null {
     days,
     platforms: records(record.platforms)
       .filter(entry => text(entry.platform) !== null && count(entry.shares) > 0)
-      .map(entry => ({ platform: entry.platform as string, shares: count(entry.shares) })),
+      .map(entry => ({
+        platform: entry.platform as string,
+        shares: count(entry.shares),
+        verified: part(entry.verified, count(entry.shares)),
+      })),
     top_specs: records(record.top_specs)
       .filter(entry => text(entry.spec_id) !== null && count(entry.shares) > 0)
       .map(entry => ({ spec_id: entry.spec_id as string, shares: count(entry.shares) })),

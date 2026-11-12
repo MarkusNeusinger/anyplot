@@ -857,7 +857,8 @@ async def get_shared_links() -> SharedLinksResponse:
 
     Counts only, from the share counters (`api/shared_links.py`, `docs/reference/plausible.md`): a share is the
     fetch of a page's preview image by a messenger or a social network. Fetches by other clients are not in these
-    numbers. `not_configured` without a database; `unavailable` when it does not answer or the table is not there
+    numbers. Every platform says which part of its shares Cloudflare verified; the rest counts all the same, because
+    an app that fetches from the sender's phone is never verified. `not_configured` without a database; `unavailable` when it does not answer or the table is not there
     yet, never kept, so the next load tries again. An answer is kept and refreshed in the background after an
     hour; a failed refresh keeps the last answer.
     """

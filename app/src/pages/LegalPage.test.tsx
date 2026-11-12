@@ -79,7 +79,7 @@ describe('LegalPage', () => {
       ],
       ['assistant telemetry', 'up to 180 days'],
       ['machine readers', 'up to 180 days'],
-      ['shared links', 'no time limit: counts per day, platform and page'],
+      ['shared links', 'no time limit: counts per day, platform and page, verified or not'],
       ['feedback case files', '180 days'],
       ['feedback entries, case rows', 'until you ask to delete them'],
     ];
@@ -144,6 +144,10 @@ describe('LegalPage', () => {
     const sharedLinks = document.getElementById('shared-links');
     expect(sharedLinks).toHaveTextContent(/fetches a page.s preview image/);
     expect(sharedLinks).toHaveTextContent(/the day, the platform and the page/);
+    // The tile tells verified shares from the rest, so the row says what the rest is not.
+    expect(sharedLinks).toHaveTextContent(/whether Cloudflare\s+verified the fetcher/);
+    expect(sharedLinks).toHaveTextContent(/unverified is no verdict on a share/);
+    expect(sharedLinks).toHaveTextContent(/from the sender.s own phone/);
     expect(sharedLinks).toHaveTextContent(/no IP address, no\s+user-agent, no time of day/);
     expect(sharedLinks).toHaveTextContent(/nothing about who shared/);
     expect(sharedLinks).toHaveTextContent(/kept\s+without a time limit/);

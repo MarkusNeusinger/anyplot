@@ -577,8 +577,9 @@ async def shared_links(db: AsyncSession = Depends(require_db)) -> SharedLinksDet
 
     The public numbers of `/insights/shared-links`, read fresh, plus `other`: the preview images fetched by a
     client that is neither a preview platform nor a known crawler. A rising `other` is how a platform missing from
-    the list shows itself (`api/shared_links.py`). `unavailable` with zeros when the query fails, which includes
-    the table not being there yet.
+    the list shows itself, and `other_verified` says how many of those Cloudflare verified
+    (`api/shared_links.py`). `unavailable` with zeros when the query fails, which includes the table not being
+    there yet.
     """
     try:
         return await read_shared_links(LinkShareRepository(db))
