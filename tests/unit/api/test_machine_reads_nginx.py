@@ -282,3 +282,5 @@ class TestTheLogLine:
         for name in ("@seo_proxy", "@seo_proxy_python"):
             assert "proxy_connect_timeout 3s;" in blocks[name], name
             assert "proxy_read_timeout 10s;" in blocks[name], name
+            # Without it a timed-out GET goes to the API's next address, 10 s more for each one.
+            assert "proxy_next_upstream_timeout 10s;" in blocks[name], name

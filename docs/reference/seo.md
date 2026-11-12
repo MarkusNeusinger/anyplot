@@ -232,6 +232,7 @@ location @seo_proxy {
     proxy_pass https://api.anyplot.ai/seo-proxy$request_uri;
     proxy_connect_timeout 3s;
     proxy_read_timeout 10s;
+    proxy_next_upstream_timeout 10s;
 }
 ```
 
@@ -245,7 +246,10 @@ keep a crawler from costing a person anything:
   within 3 seconds and wait 10 seconds for the answer, where nginx's default is
   60 seconds each. A crawler page takes 40 ms at the median, and the slowest of
   the 3,718 served from 2026-11-09 to 2026-11-12 took 2.3 seconds. Past the
-  limit the crawler gets nginx's 504 and comes back later. There is no fallback
+  limit the crawler gets nginx's 504 and comes back later.
+  `proxy_next_upstream_timeout 10s` keeps that limit whole: the API's host
+  name resolves to several addresses, and without it nginx would ask the next
+  one after a timeout, with another 10 seconds for each. There is no fallback
   to the app shell: a shell with the home page's title in place of a plot page
   is worse for an index than a 5xx. The sitemap and `llms-full.txt` hops keep
   nginx's default, because a cold generation of either can be slow.
