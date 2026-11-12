@@ -86,44 +86,48 @@ describe('SharedLinksTile', () => {
     expect(bars[0]).not.toHaveStyle({ backgroundColor: STRIP_BAR.color });
   });
 
-  it('lists the platforms in two lines, by what cloudflare verified, each largest first', () => {
+  it('names the platforms cloudflare verified and sums the rest under no name', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
 
     expect(screen.getByTestId('shared-links-verified').textContent).toBe(
-      'verified by cloudflare: teams 2'
+      'cloudflare verified: teams 2'
     );
     // An app that fetches from the sender's phone is never verified, and its share still counts.
-    expect(screen.getByTestId('shared-links-unverified').textContent).toBe(
-      'unverified: whatsapp 4 · signal & similar 1'
-    );
+    expect(screen.getByTestId('shared-links-unverified').textContent).toBe('unverified shares: 5');
     expect(screen.queryByTestId('shared-links-platforms')).not.toBeInTheDocument();
   });
 
-  it('shows a platform with both kinds in both lines, with the part that belongs to each', () => {
+  it('gives a platform with both kinds its verified part, and its rest to the sum', () => {
     const mixed = {
       ...ANSWER,
       platforms: [
         { platform: 'teams', shares: 1200, verified: 1150 },
         { platform: 'slack', shares: 60, verified: 60 },
-        { platform: 'whatsapp', shares: 34, verified: 0 },
+        { platform: 'whatsapp', shares: 1034, verified: 0 },
       ],
     };
     render(<SharedLinksTile answer={mixed} formatNum={formatNum} />);
 
     expect(screen.getByTestId('shared-links-verified').textContent).toBe(
-      'verified by cloudflare: teams 1,150 · slack 60'
+      'cloudflare verified: teams 1,150 · slack 60'
     );
     expect(screen.getByTestId('shared-links-unverified').textContent).toBe(
-      'unverified: teams 50 · whatsapp 34'
+      'unverified shares: 1,084'
     );
   });
 
   it('shows one of the two lines alone when every share is of its kind', () => {
     const verified = { ...ANSWER, platforms: [{ platform: 'teams', shares: 2, verified: 2 }] };
-    render(<SharedLinksTile answer={verified} formatNum={formatNum} />);
+    const view = render(<SharedLinksTile answer={verified} formatNum={formatNum} />);
 
     expect(screen.getByTestId('shared-links-verified')).toBeInTheDocument();
     expect(screen.queryByTestId('shared-links-unverified')).not.toBeInTheDocument();
+
+    const unverified = { ...ANSWER, platforms: [{ platform: 'whatsapp', shares: 3, verified: 0 }] };
+    view.rerender(<SharedLinksTile answer={unverified} formatNum={formatNum} />);
+
+    expect(screen.queryByTestId('shared-links-verified')).not.toBeInTheDocument();
+    expect(screen.getByTestId('shared-links-unverified').textContent).toBe('unverified shares: 3');
   });
 
   it('calls no share unverified when the answer names no verdict', () => {

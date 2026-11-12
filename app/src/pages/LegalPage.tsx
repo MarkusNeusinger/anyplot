@@ -324,7 +324,10 @@ export function LegalPage() {
                 ],
                 ['assistant telemetry', 'up to 180 days'],
                 ['machine readers', 'up to 180 days'],
-                ['shared links', 'no time limit: counts per day, platform and page'],
+                [
+                  'shared links',
+                  'no time limit: counts per day, platform and page, verified or not',
+                ],
                 ['feedback case files', '180 days'],
                 ['feedback entries, case rows', 'until you ask to delete them'],
               ]}

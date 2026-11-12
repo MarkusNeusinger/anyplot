@@ -119,23 +119,21 @@ describe('readSharedLinks', () => {
 });
 
 describe('byVerdict', () => {
-  it('tells every platform’s shares apart by the verdict, each line largest first', () => {
+  it('gives every platform its verified part, largest first, and sums the rest', () => {
     expect(
       byVerdict([
-        { platform: 'teams', shares: 1200, verified: 1150 },
         { platform: 'whatsapp', shares: 300, verified: 0 },
         { platform: 'slack', shares: 60, verified: 60 },
+        { platform: 'teams', shares: 1200, verified: 1150 },
       ])
     ).toEqual({
+      // WhatsApp has no verified share and so no entry; Teams leads by its verified part.
       verified: [
         { platform: 'teams', shares: 1150 },
         { platform: 'slack', shares: 60 },
       ],
-      // Teams has more shares than WhatsApp, but fewer that are unverified.
-      unverified: [
-        { platform: 'whatsapp', shares: 300 },
-        { platform: 'teams', shares: 50 },
-      ],
+      // WhatsApp's 300 and the 50 of Teams that came without a verdict.
+      unverified: 350,
     });
   });
 
@@ -149,8 +147,8 @@ describe('byVerdict', () => {
     expect(lines?.verified.map(entry => entry.platform)).toEqual(['linkedin', 'discord']);
   });
 
-  it('is two empty lines for a window without a share', () => {
-    expect(byVerdict([])).toEqual({ verified: [], unverified: [] });
+  it('is no platform and no rest for a window without a share', () => {
+    expect(byVerdict([])).toEqual({ verified: [], unverified: 0 });
   });
 
   it('is null as soon as one platform comes without a verdict', () => {
@@ -188,7 +186,11 @@ describe('readSharedLinksDetail', () => {
   });
 
   it('reads an answer without the pages as one with none', () => {
-    expect(readSharedLinksDetail(ANSWER)).toMatchObject({ top: [], other: 0, other_verified: 0 });
+    expect(readSharedLinksDetail(ANSWER)).toMatchObject({
+      top: [],
+      other: 0,
+      other_verified: null,
+    });
   });
 });
 

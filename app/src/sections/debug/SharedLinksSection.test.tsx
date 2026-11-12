@@ -54,13 +54,13 @@ describe('readSharedLinksDetail', () => {
     expect(readSharedLinksDetail({ ...DETAIL, other: -3 })).toMatchObject({ other: 0 });
   });
 
-  it('reads the verified part of other: at most other, and a missing or broken one as none', () => {
+  it('reads the verified part of other: at most other, and a missing or broken one as unknown', () => {
     expect(readSharedLinksDetail(DETAIL)).toMatchObject({ other_verified: 12 });
     expect(readSharedLinksDetail({ ...DETAIL, other_verified: undefined })).toMatchObject({
-      other_verified: 0,
+      other_verified: null,
     });
     expect(readSharedLinksDetail({ ...DETAIL, other_verified: 'many' })).toMatchObject({
-      other_verified: 0,
+      other_verified: null,
     });
     expect(readSharedLinksDetail({ ...DETAIL, other_verified: 9999 })).toMatchObject({
       other_verified: 5678,
@@ -90,11 +90,14 @@ describe('SharedLinksSection', () => {
     );
   });
 
-  it('shows a platform without the verified part when the answer names no verdict', async () => {
-    // An API revision older than the page: no count is better than a zero nobody measured.
+  it('shows a total without the verified part when the answer names no verdict', async () => {
+    // An API revision older than the page, which kept the verdicts in an object of their own:
+    // no count is better than a zero nobody measured.
     answerWith({
       ...DETAIL,
+      other_verified: undefined,
       platforms: DETAIL.platforms.map(({ platform, shares }) => ({ platform, shares })),
+      verified: { teams: 1150, other: 12 },
     });
 
     render(<SharedLinksSection token="admin-token" reloadCounter={0} />);
@@ -105,6 +108,9 @@ describe('SharedLinksSection', () => {
       );
     });
     expect(screen.getByTestId('shared-links-platforms')).not.toHaveTextContent('verified');
+    expect(screen.getByTestId('shared-links-totals')).toHaveTextContent(
+      '1,234 by named platforms (on /stats) · 5,678 other (not counted as shares)'
+    );
   });
 
   it.each([

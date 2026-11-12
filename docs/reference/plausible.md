@@ -558,10 +558,11 @@ writes itself, and the row keeps no user agent: the verdict is the one thing
 left that tells a platform's own fetch from a scanner that signs as one. It is
 a label, not a filter. WhatsApp and Signal fetch the preview from the sender's
 own phone, which nobody can verify, so the public numbers count a share
-whatever the verdict and say which part Cloudflare verified: the tile lists
-the platforms in two lines, and `/debug` shows the verified part beside each
-total. A platform Cloudflare does verify, such as Slack or LinkedIn, whose
-shares are mostly unverified is being imitated.
+whatever the verdict and say which part Cloudflare verified: the tile names
+the platforms of the verified shares and sums the rest in one number, and
+`/debug` shows the verified part beside each platform's total. A platform
+Cloudflare does verify, such as Slack or LinkedIn, whose shares are mostly
+unverified is being imitated.
 
 Who fetched decides what the fetch is:
 
@@ -633,19 +634,21 @@ not what the five minutes cost: the images stay in the API's own cache.
 
 - **`/stats`, the "shared links" tile** (`GET /insights/shared-links`): the
   shares of the last 28 UTC days as one bar per day, in the green of the
-  visitors strip, and under it lines with 28-day sums: the platforms in two
-  lines, the five most shared specs, and the five most shared libraries. The
-  first platform line, "verified by cloudflare", holds the shares whose fetch
-  Cloudflare verified as a bot it knows, and the second, "unverified", the
-  rest; a platform with both kinds stands in both, and a line without a share
-  isn't shown. While the answer names no verdict (an API revision older than
-  the page), the tile shows the platforms in one line, "by platform". A
-  spec's sum holds its hub and all of its implementation pages; a library's
-  sum holds its implementation pages across specs. A share of a hub counts for
-  no library, so the libraries add up to less than the specs. `other` is not
-  in these numbers. The tile holds no explanation of its own; the legal page
-  it links says what a share is and what "unverified" doesn't mean. The answer
-  is kept for an hour.
+  visitors strip, and under it lines with 28-day sums, worded like the machine
+  readers tile's: "cloudflare verified", "unverified shares", the five most
+  shared specs, and the five most shared libraries. "cloudflare verified"
+  lists the platforms with the shares whose fetch Cloudflare verified as a bot
+  it knows, largest first. "unverified shares" is one number, the rest of
+  every platform together: without a verdict a platform's name is only what
+  the client wrote, so the tile puts no name on it (`/debug` has the split).
+  A line without a share isn't shown. While the answer names no verdict (an
+  API revision older than the page), the tile shows the platforms in one
+  line, "by platform". A spec's sum holds its hub and all of its
+  implementation pages; a library's sum holds its implementation pages across
+  specs. A share of a hub counts for no library, so the libraries add up to
+  less than the specs. `other` is not in these numbers. The tile holds no
+  explanation of its own; the legal page it links says what a share is and
+  what "unverified" doesn't mean. The answer is kept for an hour.
 - **`/debug`, the "shared links" section** (`GET /debug/shared-links`, admin
   only): the same numbers read fresh, plus the five most shared plot pages (a
   hub and each implementation as entries of their own), `other`, and beside

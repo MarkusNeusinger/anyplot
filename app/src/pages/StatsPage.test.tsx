@@ -621,11 +621,9 @@ describe('StatsPage', () => {
       screen.getByText(/link previews on messengers and social networks · last 28 days · 6 shares/)
     ).toBeInTheDocument();
     expect(screen.getByTestId('shared-links-verified')).toHaveTextContent(
-      'verified by cloudflare: teams 2'
+      'cloudflare verified: teams 2'
     );
-    expect(screen.getByTestId('shared-links-unverified')).toHaveTextContent(
-      'unverified: whatsapp 4'
-    );
+    expect(screen.getByTestId('shared-links-unverified')).toHaveTextContent('unverified shares: 4');
     expect(screen.getByTestId('shared-links-specs')).toHaveTextContent(
       'most shared specs: scatter-basic 4'
     );

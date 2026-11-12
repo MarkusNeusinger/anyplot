@@ -5,12 +5,12 @@
  *
  * - Bars: one per day, the day's sum of shares, drawn like the visitors strip and the machine
  *   readers tile above it (`DayStrip`).
- * - Below: the window's sums as short lines. The shares by platform in two lines, those whose
- *   fetch Cloudflare verified as the platform's own and those it did not (`byVerdict`): the
- *   platform's name is read from a user agent anyone can write, and an app that fetches from
- *   the sender's phone is never verified. Then the most shared specs (a spec's hub and all of
- *   its implementations together, linked to the hub) and the most shared libraries (a library's
- *   implementations across specs, linked to the gallery filtered by it).
+ * - Below: the window's sums as short lines, worded like the machine readers tile's. The shares
+ *   whose fetch Cloudflare verified, by platform, and the rest as one sum under no name
+ *   (`byVerdict`): a platform's name is read from a user agent anyone can write, and an app
+ *   that fetches from the sender's phone is never verified. Then the most shared specs (a
+ *   spec's hub and all of its implementations together, linked to the hub) and the most shared
+ *   libraries (a library's implementations across specs, linked to the gallery filtered by it).
  * - What a share is and what the count cannot see is on the legal page the header links.
  * - Loading, a failed request and any answer but `ok` are one muted line each.
  */
@@ -144,16 +144,15 @@ function SharedLinksSums({
         <>
           <PlatformLine
             testId="shared-links-verified"
-            label="verified by cloudflare"
+            label="cloudflare verified"
             parts={verdict.verified}
             formatNum={formatNum}
           />
-          <PlatformLine
-            testId="shared-links-unverified"
-            label="unverified"
-            parts={verdict.unverified}
-            formatNum={formatNum}
-          />
+          {verdict.unverified > 0 && (
+            <li data-testid="shared-links-unverified">
+              unverified shares: {formatNum(verdict.unverified)}
+            </li>
+          )}
         </>
       ) : (
         // An answer without the verdicts: one line that claims nothing about them.

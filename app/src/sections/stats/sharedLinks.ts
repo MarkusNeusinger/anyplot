@@ -19,7 +19,7 @@ export interface SharedLinksPlatform {
   verified: number | null;
 }
 
-/** A platform's part of one of the tile's two platform lines. */
+/** A platform with the shares one of the tile's lines gives it. */
 export interface SharedLinksPart {
   platform: string;
   shares: number;
@@ -82,25 +82,24 @@ const part = (value: unknown, whole: number): number | null =>
   typeof value === 'number' ? Math.min(count(value), whole) : null;
 
 /**
- * The platforms' shares told apart by Cloudflare's verdict on each fetch, each line largest
- * first: a platform with both kinds stands in both. `null` when a platform comes without a
+ * The platforms' shares told apart by Cloudflare's verdict on each fetch: the verified part
+ * per platform, largest first, and the rest as one sum. Without a verdict a platform's name
+ * is only what the client wrote, so the rest is counted and stands under no name, like the
+ * unverified requests of the machine readers tile. `null` when a platform comes without a
  * verdict, so the tile calls no share unverified that it knows nothing about.
  */
 export function byVerdict(
   platforms: SharedLinksPlatform[]
-): { verified: SharedLinksPart[]; unverified: SharedLinksPart[] } | null {
+): { verified: SharedLinksPart[]; unverified: number } | null {
   const verified: SharedLinksPart[] = [];
-  const unverified: SharedLinksPart[] = [];
+  let unverified = 0;
   for (const entry of platforms) {
     if (entry.verified === null) return null;
     if (entry.verified > 0) verified.push({ platform: entry.platform, shares: entry.verified });
-    if (entry.shares > entry.verified) {
-      unverified.push({ platform: entry.platform, shares: entry.shares - entry.verified });
-    }
+    unverified += entry.shares - entry.verified;
   }
   // A stable sort: platforms with the same part keep the answer's order.
-  const largestFirst = (a: SharedLinksPart, b: SharedLinksPart): number => b.shares - a.shares;
-  return { verified: verified.sort(largestFirst), unverified: unverified.sort(largestFirst) };
+  return { verified: verified.sort((a, b) => b.shares - a.shares), unverified };
 }
 
 const text = (value: unknown): string | null =>
@@ -119,8 +118,11 @@ export interface SharedLinksDetail extends SharedLinksResponse {
   top: SharedLinksPlot[];
   /** Preview images fetched by a client that is neither a preview platform nor a known crawler. */
   other: number;
-  /** How many of `other` Cloudflare verified as a bot it knows: a platform the list lacks. */
-  other_verified: number;
+  /**
+   * How many of `other` Cloudflare verified as a bot it knows: a platform the list lacks.
+   * `null` when the answer does not say (an API revision older than the page).
+   */
+  other_verified: number | null;
 }
 
 /**
@@ -146,7 +148,7 @@ export function readSharedLinksDetail(
           shares: count(entry.shares),
         })),
       other: count(record.other),
-      other_verified: part(record.other_verified, count(record.other)) ?? 0,
+      other_verified: part(record.other_verified, count(record.other)),
     }
   );
 }
