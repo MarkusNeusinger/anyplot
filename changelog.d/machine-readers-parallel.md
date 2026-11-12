@@ -6,3 +6,4 @@
   made 8,878 reads on 2026-11-10 that Cloudflare verified as `AI Search` and
   that counted under `other`, because the table didn't know it. It runs a
   browser, so it reads a page through the app and needs no prerendered copy.
+  (#13070)
