@@ -46,8 +46,10 @@ A request is a machine's by one of three signs:
    repeats the table in the same order, and `tests/unit/api/test_machine_reads_nginx.py` holds the two
    together.
 2. It carries a verdict of Cloudflare's (see [Verified or not](#verified-or-not)).
-3. Its path says so: every `/seo-proxy/*` request is a machine read, because nginx sends only crawlers in its
-   `$is_bot` map there; every JSON-RPC request to the MCP server is one too.
+3. Its path says so: every `/seo-proxy/*` request is a machine read, because nginx sends only the clients it
+   prerenders there (`$prerender`: a crawler in its `$is_bot` map, or a bot Cloudflare verified in a category
+   the site prerenders, [Bot detection](seo.md#bot-detection)); every JSON-RPC request to the MCP server is one
+   too.
 
 nginx adds a fourth sign for what it answers itself: a crawler in its `$is_bot` map. It never writes a line for
 a static asset (`/assets/*`, images, fonts, scripts).
@@ -468,7 +470,11 @@ All of these are read-only.
 7. The daily `bot-serving-check` run at 06:23 UTC shows up as `source: synthetic`, never as a live Googlebot.
 
 8. In the first week, compare each vendor's total with the request log's tallies: about 2,500 Googlebot pages,
-   about 5,600 ClaudeBot reads, and about 7,400 ExaSearchBot shell fetches a week, which nginx writes.
+   about 5,600 ClaudeBot reads, and about 7,400 ExaSearchBot shell fetches a week, which nginx writes. Since the
+   site prerenders by Cloudflare's category (2026-11-12, [Bot detection](seo.md#bot-detection)), a verified
+   ExaSearchBot or ShapBot read is a `page` line the API writes, no longer a `shell` line of nginx; ShapBot's
+   API reads, about 1.7 per page while it rendered the app itself, end with it, so the public tile's bars step
+   down on that day.
 
 ## What a line can't see
 
