@@ -178,7 +178,8 @@ const mockSharedLinks = {
     { platform: 'whatsapp', shares: 4 },
     { platform: 'teams', shares: 2 },
   ],
-  top: [{ spec_id: 'scatter-basic', language: 'python', library: 'matplotlib', shares: 4 }],
+  top_specs: [{ spec_id: 'scatter-basic', shares: 4 }],
+  top_libraries: [{ library: 'matplotlib', shares: 3 }],
 };
 
 /**
@@ -622,9 +623,11 @@ describe('StatsPage', () => {
     expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(
       'by platform: whatsapp 4 · teams 2'
     );
-    expect(screen.getByRole('link', { name: 'scatter-basic / matplotlib' })).toHaveAttribute(
-      'href',
-      '/scatter-basic/python/matplotlib'
+    expect(screen.getByTestId('shared-links-specs')).toHaveTextContent(
+      'most shared specs: scatter-basic 4'
+    );
+    expect(screen.getByTestId('shared-links-libraries')).toHaveTextContent(
+      'most shared libraries: matplotlib 3'
     );
     const calls = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
     expect(calls.filter(url => url.includes('/insights/shared-links'))).toHaveLength(1);

@@ -22,6 +22,18 @@ export interface SharedLinksPlot {
   shares: number;
 }
 
+/** A spec's shares: its hub and all of its implementation pages together. */
+export interface SharedLinksSpec {
+  spec_id: string;
+  shares: number;
+}
+
+/** A library's shares: its implementation pages, whatever the spec. */
+export interface SharedLinksLibrary {
+  library: string;
+  shares: number;
+}
+
 export interface SharedLinksResponse {
   status: 'ok' | 'not_configured' | 'unavailable';
   window_days: number;
@@ -30,8 +42,13 @@ export interface SharedLinksResponse {
   days: SharedLinksDay[];
   /** Largest first. */
   platforms: SharedLinksPlatform[];
-  /** The most shared plot pages, largest first. */
-  top: SharedLinksPlot[];
+  /** The most shared specs, largest first. */
+  top_specs: SharedLinksSpec[];
+  /**
+   * The most shared libraries, largest first. A share of a spec's hub counts for no library, so
+   * these add up to less than the specs.
+   */
+  top_libraries: SharedLinksLibrary[];
 }
 
 /**
@@ -61,6 +78,8 @@ const records = (value: unknown): Record<string, unknown>[] =>
 
 /** The answer of `GET /debug/shared-links`: the public numbers plus what they leave out. */
 export interface SharedLinksDetail extends SharedLinksResponse {
+  /** The most shared plot pages, largest first: a hub and each implementation on their own. */
+  top: SharedLinksPlot[];
   /** Preview images fetched by a client that is neither a preview platform nor a known crawler. */
   other: number;
   /**
@@ -90,10 +109,27 @@ export function readSharedLinksDetail(
   const record = body as Record<string, unknown>;
   if (record.status === 'not_configured' || record.status === 'unavailable') return record.status;
   const numbers = readSharedLinks(body);
-  return numbers && { ...numbers, other: count(record.other), verified: counts(record.verified) };
+  return (
+    numbers && {
+      ...numbers,
+      top: records(record.top)
+        .filter(entry => text(entry.spec_id) !== null && count(entry.shares) > 0)
+        .map(entry => ({
+          spec_id: entry.spec_id as string,
+          language: text(entry.language),
+          library: text(entry.library),
+          shares: count(entry.shares),
+        })),
+      other: count(record.other),
+      verified: counts(record.verified),
+    }
+  );
 }
 
-/** The answer as the tile reads it; `null` for anything but an `ok` answer with days. */
+/**
+ * The answer as the tile reads it; `null` for anything but an `ok` answer with days. An answer
+ * without the two lists (an API revision older than the page) reads as one with empty lists.
+ */
 export function readSharedLinks(body: unknown): SharedLinksResponse | null {
   if (!body || typeof body !== 'object') return null;
   const record = body as Record<string, unknown>;
@@ -110,13 +146,11 @@ export function readSharedLinks(body: unknown): SharedLinksResponse | null {
     platforms: records(record.platforms)
       .filter(entry => text(entry.platform) !== null && count(entry.shares) > 0)
       .map(entry => ({ platform: entry.platform as string, shares: count(entry.shares) })),
-    top: records(record.top)
+    top_specs: records(record.top_specs)
       .filter(entry => text(entry.spec_id) !== null && count(entry.shares) > 0)
-      .map(entry => ({
-        spec_id: entry.spec_id as string,
-        language: text(entry.language),
-        library: text(entry.library),
-        shares: count(entry.shares),
-      })),
+      .map(entry => ({ spec_id: entry.spec_id as string, shares: count(entry.shares) })),
+    top_libraries: records(record.top_libraries)
+      .filter(entry => text(entry.library) !== null && count(entry.shares) > 0)
+      .map(entry => ({ library: entry.library as string, shares: count(entry.shares) })),
   };
 }

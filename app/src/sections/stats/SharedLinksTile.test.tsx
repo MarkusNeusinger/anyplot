@@ -23,9 +23,13 @@ const ANSWER: SharedLinksResponse = {
     { platform: 'teams', shares: 2 },
     { platform: 'whatsapp-lite', shares: 1 },
   ],
-  top: [
-    { spec_id: 'scatter-basic', language: 'python', library: 'matplotlib', shares: 3 },
-    { spec_id: 'heatmap-basic', language: null, library: null, shares: 2 },
+  top_specs: [
+    { spec_id: 'scatter-basic', shares: 5 },
+    { spec_id: 'heatmap-basic', shares: 2 },
+  ],
+  top_libraries: [
+    { library: 'matplotlib', shares: 3 },
+    { library: 'ggplot2', shares: 1 },
   ],
 };
 
@@ -90,16 +94,35 @@ describe('SharedLinksTile', () => {
     );
   });
 
-  it('links the most shared plot pages: an implementation and a hub are entries of their own', () => {
+  it('lists the most shared specs, each a link to its hub', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
 
-    const top = screen.getByTestId('shared-links-top');
-    const links = within(top).getAllByRole('link');
+    const specs = screen.getByTestId('shared-links-specs');
+    const links = within(specs).getAllByRole('link');
     expect(links.map(link => [link.textContent, link.getAttribute('href')])).toEqual([
-      ['scatter-basic / matplotlib', '/scatter-basic/python/matplotlib'],
+      ['scatter-basic', '/scatter-basic'],
       ['heatmap-basic', '/heatmap-basic'],
     ]);
-    expect(top.textContent).toBe('most shared: scatter-basic / matplotlib 3 · heatmap-basic 2');
+    expect(specs.textContent).toBe('most shared specs: scatter-basic 5 · heatmap-basic 2');
+  });
+
+  it('lists the most shared libraries, each a link to the gallery filtered by it', () => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    const libraries = screen.getByTestId('shared-links-libraries');
+    const links = within(libraries).getAllByRole('link');
+    expect(links.map(link => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['matplotlib', '/plots?lib=matplotlib'],
+      ['ggplot2', '/plots?lib=ggplot2'],
+    ]);
+    expect(libraries.textContent).toBe('most shared libraries: matplotlib 3 · ggplot2 1');
+  });
+
+  it('shows no libraries line when only hubs were shared', () => {
+    render(<SharedLinksTile answer={{ ...ANSWER, top_libraries: [] }} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-specs')).toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-libraries')).not.toBeInTheDocument();
   });
 
   it('holds no paragraph of its own: what a share is stands on the legal page it links', () => {
@@ -117,7 +140,8 @@ describe('SharedLinksTile', () => {
       ...ANSWER,
       total: 0,
       platforms: [],
-      top: [],
+      top_specs: [],
+      top_libraries: [],
       days: DAYS.map(day => ({ ...day, shares: 0 })),
     };
     render(<SharedLinksTile answer={quiet} formatNum={formatNum} />);
@@ -125,7 +149,8 @@ describe('SharedLinksTile', () => {
     expect(screen.getByText(/last 28 days · 0 shares/)).toBeInTheDocument();
     expect(screen.getAllByTestId('shared-links-bar')).toHaveLength(28);
     expect(screen.queryByTestId('shared-links-platforms')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('shared-links-top')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-specs')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-libraries')).not.toBeInTheDocument();
   });
 
   it.each([

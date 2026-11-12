@@ -627,14 +627,18 @@ not what the five minutes cost: the images stay in the API's own cache.
 
 - **`/stats`, the "shared links" tile** (`GET /insights/shared-links`): the
   shares of the last 28 UTC days as one bar per day, in the green of the
-  visitors strip, and under it two lines: the platforms with their 28-day
-  sums, and the five most shared plot pages. A spec's hub and one
-  implementation of it are entries of their own. `other` is not in these
+  visitors strip, and under it three lines with 28-day sums: the platforms,
+  the five most shared specs, and the five most shared libraries. A spec's sum
+  holds its hub and all of its implementation pages; a library's sum holds its
+  implementation pages across specs. A share of a hub counts for no library,
+  so the libraries add up to less than the specs. `other` is not in these
   numbers. The tile holds no explanation of its own; the legal page it links
   says what a share is. The answer is kept for an hour.
 - **`/debug`, the "shared links" section** (`GET /debug/shared-links`, admin
-  only): the same numbers read fresh, plus `other`, and beside each platform's
-  total and beside `other` how many of the fetches Cloudflare verified.
+  only): the same numbers read fresh, plus the five most shared plot pages (a
+  hub and each implementation as entries of their own), `other`, and beside
+  each platform's total and beside `other` how many of the fetches Cloudflare
+  verified.
 
 ### What the count can't see
 

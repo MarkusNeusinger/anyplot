@@ -5,8 +5,9 @@
  *
  * - Bars: one per day, the day's sum of shares, drawn like the visitors strip and the machine
  *   readers tile above it (`DayStrip`).
- * - Below: the window's sums as short lines. The shares by platform, and the most shared plot
- *   pages as links. A spec's hub and one implementation of it are entries of their own.
+ * - Below: the window's sums as short lines. The shares by platform, the most shared specs (a
+ *   spec's hub and all of its implementations together, linked to the hub) and the most shared
+ *   libraries (a library's implementations across specs, linked to the gallery filtered by it).
  * - What a share is and what the count cannot see is on the legal page the header links.
  * - Loading, a failed request and any answer but `ok` are one muted line each.
  */
@@ -19,11 +20,7 @@ import Typography from '@mui/material/Typography';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { paths, specPath } from 'src/routes/paths';
 import { DayStrip } from 'src/sections/stats/DayStrip';
-import {
-  platformLabel,
-  type SharedLinksPlot,
-  type SharedLinksResponse,
-} from 'src/sections/stats/sharedLinks';
+import { platformLabel, type SharedLinksResponse } from 'src/sections/stats/sharedLinks';
 import { CHART_PX } from 'src/sections/stats/stripGeometry';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
@@ -35,18 +32,24 @@ const smallSx = {
   color: semanticColors.mutedText,
 } as const;
 
-/** The page a list entry leads to. */
-const plotPath = (plot: SharedLinksPlot): string =>
-  plot.language && plot.library
-    ? specPath(plot.spec_id, plot.language, plot.library)
-    : specPath(plot.spec_id);
+const entryLinkSx = {
+  fontFamily: typography.mono,
+  color: 'var(--ink)',
+  textDecoration: 'none',
+  '&:hover': { color: colors.primary, textDecoration: 'underline' },
+  '&:focus-visible': {
+    outline: `2px solid ${colors.primary}`,
+    outlineOffset: 2,
+    borderRadius: '2px',
+  },
+} as const;
 
-/**
- * How an entry is named: `scatter-basic` or `scatter-basic / matplotlib`. The slash keeps the
- * two halves of one entry apart from the middle dot that separates the entries of the line.
- */
-const plotName = (plot: SharedLinksPlot): string =>
-  plot.library ? `${plot.spec_id} / ${plot.library}` : plot.spec_id;
+/** One entry of a "most shared" line: its name, where the name leads, and its 28-day sum. */
+interface SumEntry {
+  name: string;
+  to: string;
+  shares: number;
+}
 
 export interface SharedLinksTileProps {
   /** `undefined` while loading, `null` when the request failed or the answer is not `ok`. */
@@ -109,8 +112,19 @@ function SharedLinksSums({
   answer: SharedLinksResponse;
   formatNum: (value: number) => string;
 }) {
-  const { platforms, top } = answer;
-  if (platforms.length === 0 && top.length === 0) return null;
+  const { platforms } = answer;
+  // A spec leads to its hub, a library to the gallery filtered by it.
+  const specs = answer.top_specs.map(entry => ({
+    name: entry.spec_id,
+    to: specPath(entry.spec_id),
+    shares: entry.shares,
+  }));
+  const libraries = answer.top_libraries.map(entry => ({
+    name: entry.library,
+    to: paths.plotsFiltered('lib', entry.library),
+    shares: entry.shares,
+  }));
+  if (platforms.length === 0 && specs.length === 0 && libraries.length === 0) return null;
 
   return (
     <Box
@@ -125,34 +139,47 @@ function SharedLinksSums({
             .join(' · ')}
         </li>
       )}
-      {top.length > 0 && (
-        <li data-testid="shared-links-top">
-          most shared:{' '}
-          {top.map((plot, index) => (
-            <span key={plotPath(plot)}>
-              {index > 0 && ' · '}
-              <Box
-                component={RouterLink}
-                to={plotPath(plot)}
-                sx={{
-                  fontFamily: typography.mono,
-                  color: 'var(--ink)',
-                  textDecoration: 'none',
-                  '&:hover': { color: colors.primary, textDecoration: 'underline' },
-                  '&:focus-visible': {
-                    outline: `2px solid ${colors.primary}`,
-                    outlineOffset: 2,
-                    borderRadius: '2px',
-                  },
-                }}
-              >
-                {plotName(plot)}
-              </Box>{' '}
-              {formatNum(plot.shares)}
-            </span>
-          ))}
-        </li>
-      )}
+      <SumLine
+        testId="shared-links-specs"
+        label="most shared specs"
+        entries={specs}
+        formatNum={formatNum}
+      />
+      <SumLine
+        testId="shared-links-libraries"
+        label="most shared libraries"
+        entries={libraries}
+        formatNum={formatNum}
+      />
     </Box>
+  );
+}
+
+/** One "most shared" line: every entry a link with its sum; no line without an entry. */
+function SumLine({
+  testId,
+  label,
+  entries,
+  formatNum,
+}: {
+  testId: string;
+  label: string;
+  entries: SumEntry[];
+  formatNum: (value: number) => string;
+}) {
+  if (entries.length === 0) return null;
+  return (
+    <li data-testid={testId}>
+      {label}:{' '}
+      {entries.map((entry, index) => (
+        <span key={entry.name}>
+          {index > 0 && ' · '}
+          <Box component={RouterLink} to={entry.to} sx={entryLinkSx}>
+            {entry.name}
+          </Box>{' '}
+          {formatNum(entry.shares)}
+        </span>
+      ))}
+    </li>
   );
 }

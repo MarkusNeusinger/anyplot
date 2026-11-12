@@ -853,7 +853,7 @@ async def get_machine_readers() -> MachineReadersResponse:
 
 @router.get("/shared-links", response_model=SharedLinksResponse)
 async def get_shared_links() -> SharedLinksResponse:
-    """Links to the site shared per UTC day for the last 28 days, by platform, and the most shared plot pages.
+    """Links to the site shared per UTC day for the last 28 days, by platform, and the most shared specs and libraries.
 
     Counts only, from the share counters (`api/shared_links.py`, `docs/reference/plausible.md`): a share is the
     fetch of a page's preview image by a messenger or a social network. Fetches by other clients are not in these
