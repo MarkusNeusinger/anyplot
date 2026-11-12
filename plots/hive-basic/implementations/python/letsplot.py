@@ -1,56 +1,79 @@
-# ruff: noqa: F403, F405
-"""anyplot.ai
+""" anyplot.ai
 hive-basic: Basic Hive Plot
-Library: lets-plot | Python 3.13
-Quality: pending | Created: 2025-12-24
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 76/100 | Updated: 2026-11-12
 """
 
 import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *
+from lets_plot import (
+    LetsPlot,
+    aes,
+    coord_fixed,
+    element_rect,
+    element_text,
+    geom_path,
+    geom_point,
+    geom_text,
+    ggplot,
+    ggsave,
+    ggsize,
+    labs,
+    scale_color_manual,
+    scale_fill_manual,
+    scale_size,
+    theme,
+    theme_void,
+)
 
 
 LetsPlot.setup_html()
 
-# Theme tokens (see prompts/default-style-guide.md)
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette for categorical node types (positions 1-3)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per axis group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Software module dependency network with 3 module types
-np.random.seed(42)
+# Constants
+R_MIN, R_MAX = 0.3, 0.95  # radial span of the nodes on each axis, as a share of the axis length
+AXIS_START, AXIS_END = 0.2, 1.0  # radial span of the drawn axis lines
+CURVE_PULL = 0.15  # Bezier control point sits this share of the way from the center to the endpoints' sum
 
-# Define nodes with axis assignments (core, utility, interface modules)
-nodes = [
-    # Core modules (axis 0)
-    {"id": "core_main", "axis": "Core", "degree": 8},
-    {"id": "core_data", "axis": "Core", "degree": 6},
-    {"id": "core_config", "axis": "Core", "degree": 5},
-    {"id": "core_logger", "axis": "Core", "degree": 4},
-    {"id": "core_cache", "axis": "Core", "degree": 3},
-    # Utility modules (axis 1)
-    {"id": "util_parser", "axis": "Utility", "degree": 5},
-    {"id": "util_validator", "axis": "Utility", "degree": 4},
-    {"id": "util_formatter", "axis": "Utility", "degree": 6},
-    {"id": "util_crypto", "axis": "Utility", "degree": 3},
-    {"id": "util_compress", "axis": "Utility", "degree": 2},
-    {"id": "util_encode", "axis": "Utility", "degree": 4},
-    # Interface modules (axis 2)
-    {"id": "api_rest", "axis": "Interface", "degree": 7},
-    {"id": "api_graphql", "axis": "Interface", "degree": 5},
-    {"id": "api_websocket", "axis": "Interface", "degree": 4},
-    {"id": "api_grpc", "axis": "Interface", "degree": 3},
-]
+# Columns: set these to your table's column names
+SOURCE = "Source module"  # role: edges
+TARGET = "Target module"  # role: extra
+SOURCE_TYPE = "Source type"  # role: axis_attribute
+TARGET_TYPE = "Target type"  # role: extra
+SOURCE_DEGREE = "Source connections"  # role: extra
+TARGET_DEGREE = "Target connections"  # role: extra
 
-# Define edges between modules
-edges = [
+# Data: replace this block with your own edge list, for example df = pd.read_csv("dependencies.csv")
+# Each row is one edge with the axis group and degree of both of its end nodes.
+module_info = {
+    "core_main": ("Core", 8),
+    "core_data": ("Core", 6),
+    "core_config": ("Core", 5),
+    "core_logger": ("Core", 4),
+    "core_cache": ("Core", 3),
+    "util_parser": ("Utility", 5),
+    "util_validator": ("Utility", 4),
+    "util_formatter": ("Utility", 6),
+    "util_crypto": ("Utility", 3),
+    "util_compress": ("Utility", 2),
+    "util_encode": ("Utility", 7),
+    "api_rest": ("Interface", 7),
+    "api_graphql": ("Interface", 5),
+    "api_websocket": ("Interface", 4),
+    "api_grpc": ("Interface", 3),
+}
+edge_pairs = [
     ("core_main", "core_data"),
     ("core_main", "core_config"),
     ("core_main", "core_logger"),
@@ -75,129 +98,107 @@ edges = [
     ("api_rest", "api_graphql"),
     ("util_formatter", "util_encode"),
 ]
+df = pd.DataFrame(
+    {
+        SOURCE: [s for s, _ in edge_pairs],
+        TARGET: [t for _, t in edge_pairs],
+        SOURCE_TYPE: [module_info[s][0] for s, _ in edge_pairs],
+        TARGET_TYPE: [module_info[t][0] for _, t in edge_pairs],
+        SOURCE_DEGREE: [module_info[s][1] for s, _ in edge_pairs],
+        TARGET_DEGREE: [module_info[t][1] for _, t in edge_pairs],
+    }
+)
 
-# Convert nodes to DataFrame and assign positions
-nodes_df = pd.DataFrame(nodes)
+# Plot: axis angles are fixed by group order, node distance from the center is fixed by degree
+nodes = pd.concat(
+    [
+        df[[SOURCE, SOURCE_TYPE, SOURCE_DEGREE]].set_axis(["module", "group", "degree"], axis=1),
+        df[[TARGET, TARGET_TYPE, TARGET_DEGREE]].set_axis(["module", "group", "degree"], axis=1),
+    ]
+).drop_duplicates("module")
+groups = list(dict.fromkeys(nodes["group"]))
+angles = {g: i * 2 * np.pi / len(groups) for i, g in enumerate(groups)}
+degree_span = (nodes["degree"].max() - nodes["degree"].min()) or 1
 
-# Define axis angles (radial positions for 3 axes, evenly spaced)
-axis_angles = {"Core": 0, "Utility": 2 * np.pi / 3, "Interface": 4 * np.pi / 3}
-axis_to_color_idx = {"Core": 0, "Utility": 1, "Interface": 2}
+nodes["radius"] = R_MIN + (R_MAX - R_MIN) * (nodes["degree"] - nodes["degree"].min()) / degree_span
+nodes["x"] = nodes["radius"] * np.cos(nodes["group"].map(angles))
+nodes["y"] = nodes["radius"] * np.sin(nodes["group"].map(angles))
+lookup = nodes.set_index("module")
 
-# Sort nodes by degree within each axis and assign radial position
-nodes_df = nodes_df.sort_values(["axis", "degree"], ascending=[True, False])
-nodes_df["radial_pos"] = 0.0
+# Edges as quadratic Bezier curves pulled toward the center
+t = np.linspace(0, 1, 24)
+curves = []
+for source, target in zip(df[SOURCE], df[TARGET], strict=True):
+    sx, sy = lookup.loc[source, ["x", "y"]]
+    tx, ty = lookup.loc[target, ["x", "y"]]
+    cx, cy = (sx + tx) * CURVE_PULL, (sy + ty) * CURVE_PULL
+    same_group = lookup.loc[source, "group"] == lookup.loc[target, "group"]
+    curves.append(
+        pd.DataFrame(
+            {
+                "x": (1 - t) ** 2 * sx + 2 * (1 - t) * t * cx + t**2 * tx,
+                "y": (1 - t) ** 2 * sy + 2 * (1 - t) * t * cy + t**2 * ty,
+                "edge": f"{source}-{target}",
+                "Edge type": f"Within {lookup.loc[source, 'group']}" if same_group else "Between axes",
+            }
+        )
+    )
+edges = pd.concat(curves, ignore_index=True)
 
-for axis in axis_angles.keys():
-    mask = nodes_df["axis"] == axis
-    n_nodes = mask.sum()
-    # Position nodes along radius (0.3 to 1.0 to leave center space)
-    nodes_df.loc[mask, "radial_pos"] = np.linspace(0.3, 0.95, n_nodes)
+axis_lines = pd.concat(
+    [
+        pd.DataFrame(
+            {
+                "x": np.array([AXIS_START, AXIS_END]) * np.cos(a),
+                "y": np.array([AXIS_START, AXIS_END]) * np.sin(a),
+                "group": g,
+            }
+        )
+        for g, a in angles.items()
+    ],
+    ignore_index=True,
+)
+labels = pd.DataFrame(
+    {
+        "x": [1.22 * np.cos(a) for a in angles.values()],
+        "y": [1.22 * np.sin(a) for a in angles.values()],
+        "label": list(angles),
+    }
+)
 
-# Calculate x, y coordinates for each node
-nodes_df["angle"] = nodes_df["axis"].map(axis_angles)
-nodes_df["x"] = nodes_df["radial_pos"] * np.cos(nodes_df["angle"])
-nodes_df["y"] = nodes_df["radial_pos"] * np.sin(nodes_df["angle"])
+edge_colors = {f"Within {g}": IMPRINT_PALETTE[i] for i, g in enumerate(groups)}
+edge_colors["Between axes"] = INK_SOFT
+reach = 1.45
 
-# Create node position lookup
-node_positions = nodes_df.set_index("id")[["x", "y"]].to_dict("index")
-
-# Create edge data with Bezier curve approximation (quadratic)
-edge_data = []
-for source, target in edges:
-    if source not in node_positions or target not in node_positions:
-        continue
-    src_pos = node_positions[source]
-    tgt_pos = node_positions[target]
-
-    # Get axis info
-    src_axis = nodes_df.loc[nodes_df["id"] == source, "axis"].values[0]
-    tgt_axis = nodes_df.loc[nodes_df["id"] == target, "axis"].values[0]
-
-    # Create curved path using quadratic Bezier through center offset
-    # Control point closer to center for nice curves
-    ctrl_x = (src_pos["x"] + tgt_pos["x"]) * 0.15
-    ctrl_y = (src_pos["y"] + tgt_pos["y"]) * 0.15
-
-    # Generate points along the Bezier curve
-    t = np.linspace(0, 1, 20)
-    bx = (1 - t) ** 2 * src_pos["x"] + 2 * (1 - t) * t * ctrl_x + t**2 * tgt_pos["x"]
-    by = (1 - t) ** 2 * src_pos["y"] + 2 * (1 - t) * t * ctrl_y + t**2 * tgt_pos["y"]
-
-    # Determine edge type for coloring
-    if src_axis == tgt_axis:
-        edge_type = f"Within {src_axis}"
-    else:
-        edge_type = "Between axes"
-
-    for i in range(len(t)):
-        edge_data.append({"x": bx[i], "y": by[i], "edge_id": f"{source}-{target}", "edge_type": edge_type})
-
-edges_df = pd.DataFrame(edge_data)
-
-# Create axis lines data
-axis_lines = []
-for axis, angle in axis_angles.items():
-    # Line from center to outer edge (start at 0.2 to extend past nodes)
-    r_vals = np.linspace(0.2, 1.0, 50)
-    x_vals = r_vals * np.cos(angle)
-    y_vals = r_vals * np.sin(angle)
-    for i in range(len(r_vals)):
-        axis_lines.append({"x": x_vals[i], "y": y_vals[i], "axis": axis})
-axis_lines_df = pd.DataFrame(axis_lines)
-
-# Create axis labels data - position labels further from center to avoid clipping
-label_positions = []
-for axis, angle in axis_angles.items():
-    # Position labels at outer edge, with adjustments for visibility
-    r = 1.05
-    x = r * np.cos(angle)
-    y = r * np.sin(angle)
-    label_positions.append({"x": x, "y": y, "label": axis, "axis": axis})
-labels_df = pd.DataFrame(label_positions)
-
-# Map edges to colors using Okabe-Ito palette
-edge_color_map = {}
-for axis in axis_angles.keys():
-    edge_color_map[f"Within {axis}"] = IMPRINT[axis_to_color_idx[axis]]
-edge_color_map["Between axes"] = INK_SOFT
-
-# Build the plot
 plot = (
     ggplot()
-    # Axis lines (theme-adaptive gray)
-    + geom_path(aes(x="x", y="y", group="axis"), data=axis_lines_df, color=INK_SOFT, size=1.5, alpha=0.4)
-    # Edges with curves (reduced alpha for better center visibility)
-    + geom_path(aes(x="x", y="y", group="edge_id", color="edge_type"), data=edges_df, size=1.0, alpha=0.5)
-    # Nodes
+    + geom_path(aes(x="x", y="y", group="group"), data=axis_lines, color=INK_SOFT, size=0.8, alpha=0.5)
+    + geom_path(aes(x="x", y="y", group="edge", color="Edge type"), data=edges, size=0.5, alpha=0.5)
     + geom_point(
-        aes(x="x", y="y", fill="axis", size="degree"), data=nodes_df, color=INK_SOFT, stroke=1.0, shape=21, alpha=0.9
+        aes(x="x", y="y", fill="group", size="degree"), data=nodes, color=INK_SOFT, stroke=0.6, shape=21, alpha=0.9
     )
-    # Axis labels (separate layer, not in legend)
-    + geom_text(
-        aes(x="x", y="y", label="label"), data=labels_df, size=14, fontface="bold", color=INK, show_legend=False
+    + geom_text(aes(x="x", y="y", label="label"), data=labels, size=7, fontface="bold", color=INK, show_legend=False)
+    + scale_fill_manual(values=IMPRINT_PALETTE, breaks=groups)
+    + scale_color_manual(values=edge_colors)
+    + scale_size(range=[3, 7])
+    + coord_fixed(ratio=1, xlim=(-reach, reach), ylim=(-reach, reach))
+    + labs(
+        title="hive-basic · python · letsplot · anyplot.ai",
+        fill="Module type",
+        size="Connections (distance from center)",
     )
-    # Color scales using Okabe-Ito palette
-    + scale_fill_manual(values=IMPRINT)
-    + scale_color_manual(values=edge_color_map)
-    + scale_size(range=[5, 12])
-    # Styling - expand limits to show axis labels
-    + coord_fixed(ratio=1, xlim=(-1.3, 1.3), ylim=(-1.3, 1.3))
-    + labs(title="hive-basic · letsplot · anyplot.ai", fill="Module Type", size="Connections", color="Edge Type")
     + theme_void()
     + theme(
-        plot_title=element_text(size=24, hjust=0.5, face="bold", color=INK),
-        legend_title=element_text(size=16, color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
+        plot_title=element_text(size=16, hjust=0.5, face="bold", color=INK),
+        legend_title=element_text(size=11, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="right",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_margin=[40, 40, 40, 40],
+        plot_margin=[20, 20, 20, 20],
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (4800 × 2700 px with scale factor)
-ggsave(plot, f"plot-{THEME}.png", scale=3)
-
-# Save as HTML for interactive version
+ggsave(plot, f"plot-{THEME}.png", scale=4)
 ggsave(plot, f"plot-{THEME}.html")
