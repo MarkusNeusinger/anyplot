@@ -9,8 +9,8 @@
   1,000 pages), so a crawler reading the catalogue no longer pushes filters,
   the sitemap and the stats out of the API's shared cache. A path that can't
   be a spec id, and a library that doesn't exist or belongs to another
-  language, are a 404 without a database query.
+  language, are a 404 without a database query. (#13072)
 - **The debug page's machine readers matrix counts prerendered pages and
   shell reads apart.** `pages` was the sum of both, which hid a crawler that
   was answered with the app's empty shell; `shell` is a column of its own, in
-  `GET /debug/machine-readers` and in the table.
+  `GET /debug/machine-readers` and in the table. (#13072)
