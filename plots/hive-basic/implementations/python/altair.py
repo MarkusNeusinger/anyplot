@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 hive-basic: Basic Hive Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-07
@@ -9,221 +9,166 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1 — first categorical series
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
-# Data: Software module dependency network
-nodes_data = [
-    # Core modules (axis 0) — foundational components
-    {"id": "core_main", "name": "Main", "axis": "Core", "importance": 1.0},
-    {"id": "core_db", "name": "Database", "axis": "Core", "importance": 0.80},
-    {"id": "core_config", "name": "Config", "axis": "Core", "importance": 0.60},
-    {"id": "core_logger", "name": "Logger", "axis": "Core", "importance": 0.40},
-    {"id": "core_cache", "name": "Cache", "axis": "Core", "importance": 0.20},
-    # Utility modules (axis 1) — helper components
-    {"id": "util_http", "name": "HTTP", "axis": "Utility", "importance": 1.0},
-    {"id": "util_file", "name": "FileIO", "axis": "Utility", "importance": 0.75},
-    {"id": "util_string", "name": "String", "axis": "Utility", "importance": 0.50},
-    {"id": "util_date", "name": "DateTime", "axis": "Utility", "importance": 0.25},
-    # Interface modules (axis 2) — external-facing components
-    {"id": "iface_api", "name": "REST API", "axis": "Interface", "importance": 1.0},
-    {"id": "iface_web", "name": "WebUI", "axis": "Interface", "importance": 0.66},
-    {"id": "iface_cli", "name": "CLI", "axis": "Interface", "importance": 0.33},
+# Imprint palette: all eight positions, one per axis group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+MIN_RADIUS = 0.25  # nearest a node sits to the center
+MAX_RADIUS = 0.85  # farthest a node sits from the center
+AXIS_START_ANGLE = 30  # degrees of the first axis; the others follow at equal spacing
+
+# Columns: set these to your table's column names
+MODULE = "Module"  # role: nodes
+MODULE_TYPE = "Module type"  # role: axis_attribute
+IMPORTANCE = "Importance (share of dependents)"  # role: extra
+SOURCE = "Source"  # role: edges
+TARGET = "Target"  # role: extra
+
+# Data: replace this block with your own tables, for example df = pd.read_csv("edges.csv")
+nodes = pd.DataFrame(
+    {
+        MODULE: ["Main", "Database", "Config", "Logger", "Cache"]
+        + ["HTTP", "FileIO", "String", "DateTime"]
+        + ["REST API", "WebUI", "CLI"],
+        MODULE_TYPE: ["Core"] * 5 + ["Utility"] * 4 + ["Interface"] * 3,
+        IMPORTANCE: [1.0, 0.80, 0.60, 0.40, 0.20] + [1.0, 0.75, 0.50, 0.25] + [1.0, 0.66, 0.33],
+    }
+)
+df = pd.DataFrame(
+    {
+        SOURCE: ["Main", "Main", "Config", "Config", "Logger", "Logger", "Cache", "Database"]
+        + ["Main", "Main", "Config", "Database", "Logger"]
+        + ["HTTP", "HTTP", "String", "FileIO", "DateTime"],
+        TARGET: ["String", "FileIO", "FileIO", "String", "DateTime", "FileIO", "DateTime", "String"]
+        + ["REST API", "CLI", "REST API", "REST API", "WebUI"]
+        + ["REST API", "WebUI", "CLI", "CLI", "WebUI"],
+    }
+)
+
+# Plot: reads only the tables and the constants above
+groups = list(nodes[MODULE_TYPE].unique())
+angle = {g: np.radians(AXIS_START_ANGLE + 360 / len(groups) * i) for i, g in enumerate(groups)}
+color_scale = alt.Scale(domain=groups, range=IMPRINT_PALETTE)
+
+# Node positions: direction from the axis group, distance from the importance
+radius = MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * nodes[IMPORTANCE] / nodes[IMPORTANCE].max()
+theta = nodes[MODULE_TYPE].map(angle)
+nodes["x"] = radius * np.cos(theta)
+nodes["y"] = radius * np.sin(theta)
+position = nodes.set_index(MODULE)[["x", "y"]]
+
+# Labels sit beside their node: right on the right half, left on the left half, alternating in between
+cos_t = np.cos(theta)
+rank = nodes.groupby(MODULE_TYPE, sort=False).cumcount()
+nodes["side"] = np.where(cos_t > 0.1, "right", np.where(cos_t < -0.1, "left", np.where(rank % 2 == 0, "right", "left")))
+
+# Edges as quadratic Bezier curves whose control point is pulled toward the center
+t = np.linspace(0, 1, 30)
+curve_rows = []
+for i, (src, dst) in enumerate(zip(df[SOURCE], df[TARGET], strict=True)):
+    p0 = position.loc[src].to_numpy()
+    p2 = position.loc[dst].to_numpy()
+    p1 = 0.2 * (p0 + p2)
+    pts = ((1 - t) ** 2)[:, None] * p0 + (2 * (1 - t) * t)[:, None] * p1 + (t**2)[:, None] * p2
+    curve_rows.append(pd.DataFrame({"x": pts[:, 0], "y": pts[:, 1], "step": t, "edge": i, "link": f"{src} → {dst}"}))
+curves = pd.concat(curve_rows, ignore_index=True)
+
+# Axis lines and their labels
+axes = pd.DataFrame(
+    {
+        "group": groups,
+        "x2": [0.95 * np.cos(angle[g]) for g in groups],
+        "y2": [0.95 * np.sin(angle[g]) for g in groups],
+        "lx": [1.14 * np.cos(angle[g]) for g in groups],
+        "ly": [1.14 * np.sin(angle[g]) for g in groups],
+    }
+)
+axes["x"] = 0.0
+axes["y"] = 0.0
+
+view = alt.Scale(domain=[-1.12, 1.12])
+xy = {"x": alt.X("x:Q", scale=view, axis=None), "y": alt.Y("y:Q", scale=view, axis=None)}
+group_color = alt.Color("group:N", scale=color_scale, legend=None)
+
+edge_layer = (
+    alt.Chart(curves)
+    .mark_line(strokeWidth=1.2, opacity=0.3, color=INK_SOFT)
+    .encode(**xy, order="step:Q", detail="edge:N", tooltip=["link:N"])
+)
+axis_layer = (
+    alt.Chart(axes).mark_rule(strokeWidth=2.5, opacity=0.75).encode(**xy, x2="x2:Q", y2="y2:Q", color=group_color)
+)
+node_layer = (
+    alt.Chart(nodes.rename(columns={MODULE_TYPE: "group"}))
+    .mark_circle(size=150, opacity=0.95, stroke=PAGE_BG, strokeWidth=1.5)
+    .encode(
+        **xy,
+        color=group_color,
+        tooltip=[
+            alt.Tooltip(f"{MODULE}:N", title=MODULE),
+            alt.Tooltip("group:N", title=MODULE_TYPE),
+            alt.Tooltip(f"{IMPORTANCE}:Q", title=IMPORTANCE),
+        ],
+    )
+)
+label_layers = [
+    alt.Chart(nodes[nodes["side"] == side])
+    .mark_text(
+        fontSize=11,
+        fontWeight="bold",
+        align="left" if side == "right" else "right",
+        dx=11 if side == "right" else -11,
+        color=INK,
+    )
+    .encode(**xy, text=f"{MODULE}:N")
+    for side in ("right", "left")
 ]
-
-edges_data = [
-    # Core to Utility connections
-    ("core_main", "util_string"),
-    ("core_main", "util_file"),
-    ("core_config", "util_file"),
-    ("core_config", "util_string"),
-    ("core_logger", "util_date"),
-    ("core_logger", "util_file"),
-    ("core_cache", "util_date"),
-    ("core_db", "util_string"),
-    # Core to Interface connections
-    ("core_main", "iface_api"),
-    ("core_main", "iface_cli"),
-    ("core_config", "iface_api"),
-    ("core_db", "iface_api"),
-    ("core_logger", "iface_web"),
-    # Utility to Interface connections
-    ("util_http", "iface_api"),
-    ("util_http", "iface_web"),
-    ("util_string", "iface_cli"),
-    ("util_file", "iface_cli"),
-    ("util_date", "iface_web"),
-]
-
-# Axis configuration: three axes at 120-degree separation using Okabe-Ito
-axis_config = {
-    "Core": {"angle": 30, "color": IMPRINT[0]},  # Bluish green
-    "Utility": {"angle": 150, "color": IMPRINT[1]},  # Vermillion
-    "Interface": {"angle": 270, "color": IMPRINT[2]},  # Blue
-}
-
-# Build node DataFrame with positions
-nodes_df = pd.DataFrame(nodes_data)
-min_radius = 0.25
-max_radius = 0.85
-
-node_positions = {}
-nodes_df["x"] = 0.0
-nodes_df["y"] = 0.0
-
-for idx, row in nodes_df.iterrows():
-    axis = row["axis"]
-    angle_rad = np.radians(axis_config[axis]["angle"])
-    radius = min_radius + (max_radius - min_radius) * row["importance"]
-    nodes_df.at[idx, "x"] = radius * np.cos(angle_rad)
-    nodes_df.at[idx, "y"] = radius * np.sin(angle_rad)
-    nodes_df.at[idx, "color"] = axis_config[axis]["color"]
-    node_positions[row["id"]] = (nodes_df.at[idx, "x"], nodes_df.at[idx, "y"])
-
-# Build edges DataFrame with coordinates
-edges_list = []
-for source, target in edges_data:
-    if source in node_positions and target in node_positions:
-        x1, y1 = node_positions[source]
-        x2, y2 = node_positions[target]
-        source_axis = nodes_df[nodes_df["id"] == source]["axis"].values[0]
-        target_axis = nodes_df[nodes_df["id"] == target]["axis"].values[0]
-        edges_list.append(
-            {
-                "x": x1,
-                "y": y1,
-                "x2": x2,
-                "y2": y2,
-                "source": source,
-                "target": target,
-                "connection": f"{source_axis} → {target_axis}",
-            }
-        )
-
-edges_df = pd.DataFrame(edges_list)
-
-# Axis lines (from center outward)
-axis_lines = []
-for axis_name, config in axis_config.items():
-    angle_rad = np.radians(config["angle"])
-    axis_lines.append(
-        {"x": 0, "y": 0, "x2": 0.95 * np.cos(angle_rad), "y2": 0.95 * np.sin(angle_rad), "axis": axis_name}
-    )
-axis_df = pd.DataFrame(axis_lines)
-
-# Axis labels positioned at the end of axes
-axis_labels = []
-for axis_name, config in axis_config.items():
-    angle_rad = np.radians(config["angle"])
-    label_dist = 1.12
-    axis_labels.append({"x": label_dist * np.cos(angle_rad), "y": label_dist * np.sin(angle_rad), "label": axis_name})
-axis_labels_df = pd.DataFrame(axis_labels)
-
-# Plot layers: edges, axes, nodes, labels
-
-# Edge lines with transparency
-edges_chart = (
-    alt.Chart(edges_df)
-    .mark_rule(strokeWidth=2, opacity=0.30)
+axis_label_layer = (
+    alt.Chart(axes)
+    .mark_text(fontSize=15, fontWeight="bold")
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[-1.2, 1.2]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-1.2, 1.2]), axis=None),
-        x2="x2:Q",
-        y2="y2:Q",
-        color=alt.value(INK_SOFT),
-        tooltip=["source:N", "target:N", "connection:N"],
+        x=alt.X("lx:Q", scale=view, axis=None),
+        y=alt.Y("ly:Q", scale=view, axis=None),
+        text="group:N",
+        color=group_color,
     )
 )
 
-# Axis lines (radial axes)
-axis_chart = (
-    alt.Chart(axis_df)
-    .mark_rule(strokeWidth=4, opacity=0.7)
-    .encode(
-        x="x:Q",
-        y="y:Q",
-        x2="x2:Q",
-        y2="y2:Q",
-        color=alt.Color(
-            "axis:N", scale=alt.Scale(domain=["Core", "Utility", "Interface"], range=IMPRINT), legend=None
+chart = (
+    alt.layer(edge_layer, axis_layer, node_layer, *label_layers, axis_label_layer)
+    .properties(
+        width=460,
+        height=460,
+        background=PAGE_BG,
+        title=alt.Title(
+            text="hive-basic · python · altair · anyplot.ai",
+            subtitle=f"Distance from the center = {IMPORTANCE.lower()}",
+            fontSize=16,
+            subtitleFontSize=11,
+            anchor="middle",
+            color=INK,
+            subtitleColor=INK_SOFT,
         ),
     )
-)
-
-# Node circles
-nodes_chart = (
-    alt.Chart(nodes_df)
-    .mark_circle(size=600, opacity=0.95, stroke=PAGE_BG, strokeWidth=3)
-    .encode(
-        x="x:Q",
-        y="y:Q",
-        color=alt.Color(
-            "axis:N", scale=alt.Scale(domain=["Core", "Utility", "Interface"], range=IMPRINT), legend=None
-        ),
-        tooltip=["name:N", "axis:N", "importance:Q"],
-    )
-)
-
-# Node labels with proper positioning
-node_labels_data = nodes_df.copy()
-label_offset = 0.12
-
-for idx, row in node_labels_data.iterrows():
-    axis = row["axis"]
-    if axis == "Core":
-        # Right side labels
-        node_labels_data.at[idx, "label_x"] = row["x"] + label_offset
-        node_labels_data.at[idx, "label_y"] = row["y"]
-    elif axis == "Utility":
-        # Left side labels
-        node_labels_data.at[idx, "label_x"] = row["x"] - label_offset
-        node_labels_data.at[idx, "label_y"] = row["y"]
-    else:  # Interface
-        # Bottom — alternate sides
-        node_labels_data.at[idx, "label_x"] = row["x"] + (label_offset if row["importance"] > 0.5 else -label_offset)
-        node_labels_data.at[idx, "label_y"] = row["y"]
-
-node_labels = (
-    alt.Chart(node_labels_data)
-    .mark_text(fontSize=18, fontWeight="bold")
-    .encode(x="label_x:Q", y="label_y:Q", text="name:N", color=alt.value(INK))
-)
-
-# Axis labels (Core, Utility, Interface)
-axis_label_chart = (
-    alt.Chart(axis_labels_df)
-    .mark_text(fontSize=36, fontWeight="bold")
-    .encode(
-        x="x:Q",
-        y="y:Q",
-        text="label:N",
-        color=alt.Color(
-            "label:N", scale=alt.Scale(domain=["Core", "Utility", "Interface"], range=IMPRINT), legend=None
-        ),
-    )
-)
-
-# Combine all layers
-hive_chart = (
-    (edges_chart + axis_chart + nodes_chart + node_labels + axis_label_chart)
-    .properties(width=1600, height=1600, background=PAGE_BG)
     .configure_view(strokeWidth=0, fill=PAGE_BG)
-    .configure_axis(grid=False)
 )
 
-# Add title
-chart = hive_chart.properties(
-    title=alt.Title(text="hive-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK)
-)
-
-# Save to both PNG and HTML with theme suffix
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save: pad (never crop) to the 2400 x 2400 square canvas
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+TARGET_SIZE = (2400, 2400)
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_SIZE[0] or img.height > TARGET_SIZE[1]:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds target {TARGET_SIZE}; shrink width/height")
+canvas = Image.new("RGB", TARGET_SIZE, PAGE_BG)
+canvas.paste(img, ((TARGET_SIZE[0] - img.width) // 2, (TARGET_SIZE[1] - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
