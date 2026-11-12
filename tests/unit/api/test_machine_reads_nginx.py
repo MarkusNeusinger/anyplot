@@ -275,3 +275,12 @@ class TestTheLogLine:
                 "proxy_set_header X-Forwarded-Host $host;",
             ):
                 assert header in body, (name, header)
+
+    def test_a_crawler_page_hop_gives_up_long_before_nginxs_minute(self) -> None:
+        """One instance, 80 slots shared with people: a hanging API must not hold them for 60 s each."""
+        blocks = dict(re.findall(r"^    location ([^{\n]+?) *\{(.*?)\n    \}", CONF, re.DOTALL | re.MULTILINE))
+        for name in ("@seo_proxy", "@seo_proxy_python"):
+            assert "proxy_connect_timeout 3s;" in blocks[name], name
+            assert "proxy_read_timeout 10s;" in blocks[name], name
+            # Without it a timed-out GET goes to the API's next address, 10 s more for each one.
+            assert "proxy_next_upstream_timeout 10s;" in blocks[name], name

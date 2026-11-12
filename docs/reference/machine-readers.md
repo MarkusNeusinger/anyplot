@@ -256,7 +256,10 @@ UTC days, today included, whatever its surface, status, or verdict:
   (`claude` is a person's assistant, an index, and a training crawler). A row carries the category Cloudflare gave
   most of its verified lines, the counts per surface, the 404s, and its five most requested routes. A route key is
   the route name followed by the catalogue ids of a served answer, such as
-  `spec_detail scatter-basic/python/matplotlib`.
+  `spec_detail scatter-basic/python/matplotlib`. Page reads are two counts: `pages` got the prerendered page,
+  `shell` the app's empty shell, which holds nothing for a client that runs no JavaScript. A row with a category
+  and a `shell` count is a crawler Cloudflare knows that the site answers with nothing to read. Until 2026-11-12
+  `pages` was the sum of both.
 - `daily`: one row per UTC day, newest first, with the verified lines by audience (`other` holds `preview` and
   every other category), the unverified lines, and the MCP requests.
 

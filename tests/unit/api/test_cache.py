@@ -16,7 +16,9 @@ from api.cache import (
     get_cache,
     get_cache_stats,
     get_or_set_cache,
+    get_page_cache,
     set_cache,
+    set_page_cache,
 )
 
 
@@ -469,3 +471,68 @@ class TestTTLCacheMaxsizeOverflow:
         assert cache["c"] == 3
         assert cache["d"] == 4
         assert len(cache) == 3
+
+
+class TestPageCache:
+    """The crawler pages' own cache: apart from the shared one, cleared with it."""
+
+    @pytest.fixture(autouse=True)
+    def _empty(self):
+        clear_cache()
+        yield
+        clear_cache()
+
+    def test_a_page_is_read_back_and_is_no_entry_of_the_shared_cache(self) -> None:
+        set_page_cache("seo:scatter-basic", "<html>hub</html>")
+
+        assert get_page_cache("seo:scatter-basic") == "<html>hub</html>"
+        assert get_cache("seo:scatter-basic") is None
+        assert get_cache_stats()["size"] == 0 and get_cache_stats()["pages"] == 1
+
+    def test_a_shared_entry_is_no_page(self) -> None:
+        set_cache("seo:scatter-basic", "value")
+        assert get_page_cache("seo:scatter-basic") is None
+
+    def test_a_sweep_over_the_catalogue_evicts_pages_and_no_api_answer(self) -> None:
+        """What the cache is for: more pages than it holds leave every shared entry in place."""
+        set_cache("sitemap", "<urlset/>")
+        set_cache("filter:lib=matplotlib", {"total": 3})
+        pages_maxsize = get_cache_stats()["pages_maxsize"]
+
+        for index in range(pages_maxsize + 50):
+            set_page_cache(f"seo:spec-{index}", "<html/>")
+
+        stats = get_cache_stats()
+        assert stats["pages"] == pages_maxsize
+        assert stats["size"] == 2
+        assert get_cache("sitemap") == "<urlset/>" and get_cache("filter:lib=matplotlib") == {"total": 3}
+        # The oldest pages went, the newest stayed.
+        assert get_page_cache("seo:spec-0") is None
+        assert get_page_cache(f"seo:spec-{pages_maxsize + 49}") == "<html/>"
+
+    def test_clear_cache_empties_the_pages_too(self) -> None:
+        """The flush after a database sync must reach them, or a regenerated plot keeps its old page for a day."""
+        set_page_cache("seo:scatter-basic", "<html/>")
+        clear_cache()
+        assert get_page_cache("seo:scatter-basic") is None and get_cache_stats()["pages"] == 0
+
+    def test_a_pattern_reaches_the_pages(self) -> None:
+        set_page_cache("seo:scatter-basic", "<html/>")
+        set_page_cache("seo:scatter-basic:python:matplotlib", "<html/>")
+        set_page_cache("seo:heatmap-basic", "<html/>")
+        set_cache("spec:scatter-basic", "value")
+
+        assert clear_cache_by_pattern("seo:scatter-basic") == 2
+        assert get_page_cache("seo:scatter-basic") is None
+        assert get_page_cache("seo:scatter-basic:python:matplotlib") is None
+        assert get_page_cache("seo:heatmap-basic") == "<html/>"
+        assert get_cache("spec:scatter-basic") == "value"
+
+    def test_clearing_a_spec_drops_its_pages(self) -> None:
+        set_page_cache("seo:scatter-basic", "<html/>")
+        set_page_cache("seo:heatmap-basic", "<html/>")
+
+        clear_spec_cache("scatter-basic")
+
+        assert get_page_cache("seo:scatter-basic") is None
+        assert get_page_cache("seo:heatmap-basic") == "<html/>"

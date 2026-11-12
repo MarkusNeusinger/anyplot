@@ -145,6 +145,11 @@ class Settings(BaseSettings):
     cache_maxsize: int = 1000
     """Maximum number of cache entries"""
 
+    prerender_cache_maxsize: int = 1000
+    """Maximum number of prerendered crawler pages kept (`/seo-proxy/{spec}` and its implementation pages).
+    A cache of its own, so a crawler reading the catalogue can't push the API's own answers out of `cache_maxsize`.
+    Most pages are read about once a day, so a size that held the whole catalogue would add memory and few hits."""
+
     cache_invalidate_token: str | None = None
     """Shared secret required by the POST /debug/cache/invalidate endpoint.
     When unset, the endpoint is disabled (503). Set via Secret Manager in Cloud Run
