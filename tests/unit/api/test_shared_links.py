@@ -77,7 +77,8 @@ class TestSharePlatform:
                 "teams",
             ),
             ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Microsoft Teams", "teams"),
-            ("Snapchat/12.0", "snapchat"),
+            # Snap's fetcher as its documentation gives it (developers.snap.com/robots).
+            ("Snap URL Preview Service; bot; snapchat; https://developers.snap.com/robots", "snapchat"),
             ("github-camo (f7b8fdd5)", "github"),
             ("Mozilla/5.0 (compatible; Embedly/0.2; +http://support.embed.ly/)", "embedly"),
             ("Quora Link Preview/1.0", "quora"),
@@ -123,6 +124,9 @@ class TestSharePlatform:
             "Mozilla/5.0 (compatible; YandexBot/3.0)",
             # An app the table does not know yet.
             "Bluesky Cardyb/1.1; +mailto:support@bsky.app",
+            # Snapchat's in-app browser: a person who opened the image, not Snap's preview fetcher.
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+            "Version/13.0.3 Mobile/15E148 Snapchat/10.72.0.2 (like Safari/604.1)",
         ],
     )
     def test_everything_else_is_other(self, user_agent: str) -> None:
