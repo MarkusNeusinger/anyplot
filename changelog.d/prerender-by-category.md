@@ -18,4 +18,4 @@
   DataForSEO, Majestic, Moz, Haloscan) join the token list instead. The
   analytics shield on `/api/event` keeps reading the user agent alone. The
   daily bot serving check and the deploy smoke probe both sides of the
-  verdict at the origin.
+  verdict at the origin. (#13073)
