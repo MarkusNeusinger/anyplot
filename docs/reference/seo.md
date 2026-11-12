@@ -160,6 +160,7 @@ the API.
 |-----|-------------------|---------|
 | Exa | `exasearchbot` | AI search index (`index`) |
 | Keenable | `keenable-user`, `keenable` | a person's agent / AI search index |
+| Parallel | `shap-user`, `shapbot` | a person's agent / AI search index. ShapBot runs a browser (Lightpanda), so it reads the page through the shell and the app's own API calls |
 | Google Vertex AI agents | `google-cloudvertexbot` | builds an agent's grounding on the site owner's request (`index`) |
 | ByteDance | `bytespider` | training crawler (`training`) |
 | Common Crawl | `ccbot` | training corpus (`training`) |
