@@ -96,10 +96,10 @@ describe('SharedLinksTile', () => {
     const top = screen.getByTestId('shared-links-top');
     const links = within(top).getAllByRole('link');
     expect(links.map(link => [link.textContent, link.getAttribute('href')])).toEqual([
-      ['scatter-basic · matplotlib', '/scatter-basic/python/matplotlib'],
+      ['scatter-basic / matplotlib', '/scatter-basic/python/matplotlib'],
       ['heatmap-basic', '/heatmap-basic'],
     ]);
-    expect(top.textContent).toBe('most shared: scatter-basic · matplotlib 3 · heatmap-basic 2');
+    expect(top.textContent).toBe('most shared: scatter-basic / matplotlib 3 · heatmap-basic 2');
   });
 
   it('holds no paragraph of its own: what a share is stands on the legal page it links', () => {

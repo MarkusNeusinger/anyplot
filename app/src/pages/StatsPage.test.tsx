@@ -622,7 +622,7 @@ describe('StatsPage', () => {
     expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(
       'by platform: whatsapp 4 · teams 2'
     );
-    expect(screen.getByRole('link', { name: 'scatter-basic · matplotlib' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'scatter-basic / matplotlib' })).toHaveAttribute(
       'href',
       '/scatter-basic/python/matplotlib'
     );

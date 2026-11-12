@@ -35,14 +35,18 @@ const smallSx = {
   color: semanticColors.mutedText,
 } as const;
 
-/** The page a list entry leads to, and how it is named: `scatter-basic` or `scatter-basic · matplotlib`. */
+/** The page a list entry leads to. */
 const plotPath = (plot: SharedLinksPlot): string =>
   plot.language && plot.library
     ? specPath(plot.spec_id, plot.language, plot.library)
     : specPath(plot.spec_id);
 
+/**
+ * How an entry is named: `scatter-basic` or `scatter-basic / matplotlib`. The slash keeps the
+ * two halves of one entry apart from the middle dot that separates the entries of the line.
+ */
 const plotName = (plot: SharedLinksPlot): string =>
-  plot.library ? `${plot.spec_id} · ${plot.library}` : plot.spec_id;
+  plot.library ? `${plot.spec_id} / ${plot.library}` : plot.spec_id;
 
 export interface SharedLinksTileProps {
   /** `undefined` while loading, `null` when the request failed or the answer is not `ok`. */
