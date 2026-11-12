@@ -2,46 +2,50 @@ library: altair
 language: python
 specification_id: hive-basic
 created: '2025-12-24T22:18:58Z'
-updated: '2026-05-07T01:09:39Z'
-generated_by: claude-haiku
-workflow_run: 25469946653
+updated: '2026-11-12T02:35:09Z'
+generated_by: claude-sonnet
+workflow_run: 43141615658
 issue: 1879
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/altair/plot-dark.html
-quality_score: 94
+quality_score: 85
 review:
   strengths:
-  - Excellent visual quality with explicit font sizing and no readability issues in
-    either theme
-  - 'Perfect theme adaptation: data colors identical across light and dark renders,
-    chrome correctly flipped, no dark-on-dark failures'
-  - Sophisticated design with custom axis layout, node positioning by importance,
-    color-coded axes, transparent edges
-  - Complete spec compliance with correct title format and accurate data mapping
-  - 'Strong Altair mastery: creative layer composition and encoding to implement non-standard
-    hive plot'
+  - Edges are smooth quadratic curves pulled toward the center, thin (1.2 px) and
+    translucent (opacity 0.3), so the three link bands stay traceable in both themes
+  - The subtitle names the radial encoding ('Distance from the center = importance'),
+    so the node positions are readable without a legend
+  - One Imprint color scale drives axes, nodes and axis-group labels, which double
+    as the legend; data colors are identical in both renders and only chrome flips
+  - Idiomatic alt.layer composition with order/detail encodings drawing one path per
+    edge, plus native tooltips on nodes and edges in the HTML output
+  - Canvas padded (never cropped) to exactly 2400x2400
   weaknesses:
-  - DE-03 (Data Storytelling) could emphasize narrative through strategic visual highlights
-    or annotations beyond basic hierarchy
-  - LM-02 (Distinctive Features) hive plot is somewhat a manual coordinate workaround;
-    Altair lacks native polar/radial support, though implementation cleverly leverages
-    available strengths
+  - 'DQ-03 (code): the importance values are typed as even steps (Core 1.0/0.80/0.60/0.40/0.20,
+    Utility 1.0/0.75/0.50/0.25) that do not follow from the drawn edges, although
+    the subtitle names them a share of dependents (Database sits above Config with
+    2 links against 3; FileIO, String and DateTime each have one outgoing link yet
+    sit at 0.75/0.50/0.25) → compute the property from the edge table (e.g. degree
+    or dependents per node normalized within the group) so the caption is true. Likely
+    cause: the hand-written IMPORTANCE list.'
+  - 'Suggestion: edge width by weight, which the Data allows, would add a second readable
+    dimension to the link bands.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white; correct theme surface
-      Chrome: Title "hive-basic · altair · anyplot.ai" (fontSize=28) clearly visible in dark text; axis labels "Core", "Utility", "Interface" (fontSize=36, bold) in color-coded large text; node labels positioned with offsets to avoid overlap; all text readable with no contrast failures
-      Data: Three radial axes at 120-degree angles colored with Okabe-Ito palette (#009E73 green for Core, #D55E00 orange for Utility, #0072B2 blue for Interface); 12 nodes positioned along axes by importance (radius); 17 edges as semi-transparent gray lines (opacity=0.30); all data elements clearly visible and well-defined
-      Legibility verdict: PASS — All text explicitly sized and readable at full resolution
+      Background: warm off-white #FAF8F1 across the full 2400x2400 canvas
+      Chrome: bold dark title 'hive-basic · python · altair · anyplot.ai' with a soft-gray subtitle 'Distance from the center = importance (share of dependents)'; axis-group labels Core (green, upper right), Utility (purple, upper left), Interface (blue, bottom) in bold; dark bold node labels beside each node; all readable
+      Data: three radial axes from a common center at 30°, 150° and 270°; 5 Core nodes in #009E73, 4 Utility nodes in #C475FD, 3 Interface nodes in #4467A3, each ringed in the page color; 18 thin translucent gray curved edges bowing toward the center between axes
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black; correct theme surface
-      Chrome: Title in light-colored text, readable; axis labels in light color, readable; node labels all in light text with strong contrast against dark background; no dark-on-dark failures
-      Data: Node and axis colors remain identical to light render (#009E73, #D55E00, #0072B2), confirming palette stays constant and only chrome flips; edges still visible with light gray opacity; brand green (#009E73) clearly visible and vibrant
-      Legibility verdict: PASS — All text readable, no theme-adaptation failures, both renders equally polished
+      Background: warm near-black #1A1A17
+      Chrome: title and node labels in light ink, subtitle in light gray, axis-group labels in their axis colors; no dark-on-dark text
+      Data: node and axis colors identical to the light render; edges a lighter gray at the same opacity and still visible; brand green clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,73 +56,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 28px, axis labels 36px, node labels
-          18px); readable at full resolution in both themes
+        comment: Title 16 pt, axis-group labels 15 pt bold, node labels 11 pt bold
+          at scale 4; all readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Node labels positioned with offsets; axis labels at distance; no
-          overlapping text
+        comment: No text collides with text; node labels sit beside their nodes, clear
+          of the axis lines; edges under labels are translucent
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 nodes clearly visible; edges well-adapted to 17 connections; optimal
-          sizing
+        comment: 12 nodes at size 150 with a page-colored ring stand out; 18 edges
+          at 1.2 px, opacity 0.3 stay thinner and lighter than the nodes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe; good contrast; no red-green dependence
+        comment: Green / purple / blue groups are CVD-distinguishable and each axis
+          also carries a text label
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×4800 px; plot fills canvas well with balanced margins; no cut-off
+        comment: 2400x2400 canvas (gate passed), title well under 90% of the width,
+          radial shape centered; empty corners are permitted by the spec
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct 'hive-basic · altair · anyplot.ai'; axis labels
-          descriptive
+        comment: Groups labeled at axis ends; subtitle names the radial property
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follows Okabe-Ito order; backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark); theme-adaptive chrome perfect'
+        comment: 'Core #009E73, Utility #C475FD, Interface #4467A3 in Imprint order;
+          backgrounds #FAF8F1 / #1A1A17; identical data colors in both renders'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom Okabe-Ito palette, intentional axis layout, node positioning
-          by importance, bold typography hierarchy, professional polish
+        comment: 'Above baseline: axis-group labels typeset in their axis color as
+          the legend, subtitle in INK_SOFT under a bold title, nodes ringed in the
+          page color'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Generous margins, balanced whitespace, careful label positioning
-          with offsets, node stroke definition
+        comment: Label placement chosen per axis direction (right/left half, alternating
+          on the vertical axis) so no label crosses its axis
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy (axis labels large, node importance in radius);
-          three-tier architecture narrative; no annotations
+        passed: false
+        comment: Data displayed cleanly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +133,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hive plot with three radial axes
+        comment: 'Correct hive plot: three radial axes, nodes on axes, curved edges;
+          no unasked layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present and working
+        comment: C1 axes from a common center labeled by group; C2 radius from one
+          property named in the subtitle; C3 smooth translucent curves; C4 basic variant
+          only
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Coordinates correctly calculated; all data visible
+        comment: Nodes at radius set by importance on their group's axis; all nodes
+          and edges visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend implicit in axis and node labels
+        comment: Title 'hive-basic · python · altair · anyplot.ai'; legend N/A, groups
+          labeled on the axes
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -156,20 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all hive plot aspects; diverse connections; multiple connection
-          types
+        comment: Shows all three inter-axis link bands (Core–Utility, Core–Interface,
+          Utility–Interface) and a spread of radii on each axis
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real software dependency scenario; neutral domain; meaningful labels
+        comment: Plausible, neutral software-module dependency network with real module
+          names
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 12 nodes, 17 edges; importance values plausible; logical dependencies
+        passed: false
+        comment: Importance values are typed as even steps and do not follow from
+          the drawn edges although the subtitle calls them a share of dependents (defect
+          line); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -179,60 +192,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save; no functions/classes
+        comment: 'Flat script: tokens, data, layout computation, layers, save; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; no random elements
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports (os, altair, numpy, pandas, PIL) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering or fake functionality
+        comment: Vectorized node layout, compact quadratic Bezier for edges; no dead
+          code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and current API
+        comment: Saves plot-{THEME}.png (padded to 2400x2400) and plot-{THEME}.html;
+          current Altair 6 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of Altair's high-level API with proper encodings and layer
-          composition
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Clever layer composition with multiple mark types; radial coordinate
-          system; interactive tooltips
+        comment: Idiomatic alt.layer with shared scales, order/detail encodings to
+          draw one path per edge, one color scale reused by axes, nodes and labels
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Native tooltips on edges (link) and nodes (module, type, importance)
+          in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-12T02:30:52Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - annotations
+  - bezier-curves
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
+  - minimal-chrome
+  - edge-highlighting
