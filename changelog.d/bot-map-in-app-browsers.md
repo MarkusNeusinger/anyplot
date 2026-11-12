@@ -9,3 +9,4 @@
   is gone: Signal's fetcher signs as WhatsApp, so the word matched no fetcher.
   The site's request log held no such request in the 30 days before, so nobody
   was served the wrong page. The share counter reads Snapchat the same way.
+  (#13069)
