@@ -10,4 +10,4 @@
   verify, and the legal page says so. `GET /insights/shared-links` gives each
   platform its `verified` part; in `GET /debug/shared-links` that replaces
   the `verified` object, and `other_verified` is the verified part of
-  `other`.
+  `other`. (#13074)
