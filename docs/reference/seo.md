@@ -230,8 +230,41 @@ location / {
 # Named location for bot proxy
 location @seo_proxy {
     proxy_pass https://api.anyplot.ai/seo-proxy$request_uri;
+    proxy_connect_timeout 3s;
+    proxy_read_timeout 10s;
 }
 ```
+
+### What bounds the crawler path
+
+The site's nginx is one instance with 80 request slots that people and
+crawlers share, and each prerendered page is a request to the API. Four things
+keep a crawler from costing a person anything:
+
+- **The hop gives up early.** `@seo_proxy` and `@seo_proxy_python` connect
+  within 3 seconds and wait 10 seconds for the answer, where nginx's default is
+  60 seconds each. A crawler page takes 40 ms at the median, and the slowest of
+  the 3,718 served from 2026-11-09 to 2026-11-12 took 2.3 seconds. Past the
+  limit the crawler gets nginx's 504 and comes back later. There is no fallback
+  to the app shell: a shell with the home page's title in place of a plot page
+  is worse for an index than a 5xx. The sitemap and `llms-full.txt` hops keep
+  nginx's default, because a cold generation of either can be slow.
+- **An impossible path is a 404 without a query.** `/seo-proxy/{spec_id}` and
+  `/seo-proxy/{spec_id}/{language}/{library}` check the shape of the spec id,
+  and the implementation route checks that the library exists and belongs to
+  the language, before they ask the database. Every scanner probe that carries
+  a crawler's user agent (`/.env`, `/wp-login.php`) arrives on the first route.
+- **The pages have a cache of their own.** The API keeps up to 1,000 of them
+  for a day (`prerender_cache_maxsize` in `core/config.py`), apart from the
+  cache of its other answers. One crawler reading the catalogue writes a few
+  thousand pages within the hour; in a shared cache that pushed out the
+  filters, the sitemap and the stats, and each of those is a database read on
+  a person's next request. Most pages are read about once a day, so a cache
+  that held the whole catalogue would add memory and few hits. The flush after
+  a database sync (`POST /debug/cache/invalidate`) empties both caches.
+- **The debug page shows who got nothing.** The machine readers section counts
+  a vendor's prerendered pages and its shell reads in two columns
+  ([Machine readers](machine-readers.md#the-debug-section)).
 
 ### The crawler path only exists behind the edge
 

@@ -618,8 +618,9 @@ async def invalidate_cache(x_cache_token: str | None = Header(default=None)) -> 
 
     stats_before = get_cache_stats()
     clear_cache()
+    # Both caches are emptied: the shared one and the crawler pages' own.
     return CacheInvalidateResponse(
-        cleared=stats_before["size"], maxsize=stats_before["maxsize"], ttl=stats_before["ttl"]
+        cleared=stats_before["size"] + stats_before["pages"], maxsize=stats_before["maxsize"], ttl=stats_before["ttl"]
     )
 
 

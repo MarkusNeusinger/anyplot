@@ -53,6 +53,14 @@ class _LockPruningTTLCache(TTLCache):
 # traffic such as /plots/filter or /og/* keys).
 _cache: _LockPruningTTLCache = _LockPruningTTLCache(maxsize=settings.cache_maxsize, ttl=settings.cache_ttl)
 
+# The prerendered crawler pages (`/seo-proxy/{spec}` and its implementation
+# pages) have a cache of their own. One crawler reading the catalogue writes a
+# few thousand of them within the hour; in the shared cache above such a sweep
+# pushed out the API's own answers (filters, sitemap, stats), and each of those
+# is a database read on a person's next request. No locks: the page routes read
+# and write it directly, without `get_or_set_cache`.
+_page_cache: TTLCache = TTLCache(maxsize=settings.prerender_cache_maxsize, ttl=settings.cache_ttl)
+
 # Per-key locks for stampede protection. Plain dict; lifecycle is bound to
 # `_cache` via `_LockPruningTTLCache.__delitem__`. Refresh-locks stored under
 # `_refresh:<key>` never have a corresponding cache entry and are pruned by
@@ -125,6 +133,16 @@ def cache_age(key: str) -> float | None:
     return time.monotonic() - entry[1] if entry is not None else None
 
 
+def get_page_cache(key: str) -> str | None:
+    """A prerendered crawler page from the pages' own cache, or None."""
+    return _page_cache.get(key)
+
+
+def set_page_cache(key: str, value: str) -> None:
+    """Keep a prerendered crawler page in the pages' own cache."""
+    _page_cache[key] = value
+
+
 def clear_cache() -> None:
     """
     Clear entire cache.
@@ -136,6 +154,7 @@ def clear_cache() -> None:
         >>> clear_cache()  # Invalidates all cached responses
     """
     _cache.clear()
+    _page_cache.clear()
     # Per-entry locks are pruned by _LockPruningTTLCache.__delitem__, but
     # also clear refresh-locks (`_refresh:*`) that have no cache entry and
     # any locks for cold-miss attempts whose factory never called set_cache.
@@ -162,7 +181,12 @@ def clear_cache_by_pattern(pattern: str) -> int:
     # _LockPruningTTLCache.__delitem__ also prunes _locks[key].
     for key in keys_to_delete:
         del _cache[key]
-    return len(keys_to_delete)
+    # The crawler pages live in their own cache under the same key scheme
+    # (`seo:{spec_id}`…), so a pattern reaches them too.
+    pages_to_delete = [key for key in _page_cache.keys() if pattern in key]
+    for key in pages_to_delete:
+        del _page_cache[key]
+    return len(keys_to_delete) + len(pages_to_delete)
 
 
 def clear_spec_cache(spec_id: str) -> int:
@@ -225,13 +249,20 @@ def get_cache_stats() -> dict:
     Get cache statistics.
 
     Returns:
-        Dict with cache size, maxsize, and TTL
+        Dict with the shared cache's size, maxsize and TTL, and the size and
+        maxsize of the crawler pages' own cache (`pages`, `pages_maxsize`)
 
     Example:
         >>> get_cache_stats()
-        {"size": 42, "maxsize": 1000, "ttl": 600}
+        {"size": 42, "maxsize": 1000, "ttl": 600, "pages": 310, "pages_maxsize": 1000}
     """
-    return {"size": len(_cache), "maxsize": _cache.maxsize, "ttl": _cache.ttl}
+    return {
+        "size": len(_cache),
+        "maxsize": _cache.maxsize,
+        "ttl": _cache.ttl,
+        "pages": len(_page_cache),
+        "pages_maxsize": _page_cache.maxsize,
+    }
 
 
 # ---------------------------------------------------------------------------

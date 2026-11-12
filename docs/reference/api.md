@@ -396,7 +396,7 @@ Admin-gated like the other `/debug/*` routes; `days=7` (default) or `days=30`, a
     {
       "assistant": "ahrefs", "kind": "seo", "category": "Search Engine Optimization",
       "requests": 25, "verified": 25, "unverified": 0,
-      "pages": 3, "code": 0, "og": 2, "mcp": 0, "not_found": 1,
+      "pages": 3, "shell": 17, "code": 0, "og": 2, "mcp": 0, "not_found": 1,
       "top_paths": [{"key": "plots_filter", "count": 3}]
     }
   ],
@@ -406,7 +406,7 @@ Admin-gated like the other `/debug/*` routes; `days=7` (default) or `days=30`, a
 }
 ```
 
-`vendors` holds one row per vendor and purpose, most requests first, with its five most requested routes; `daily` holds every day of the window, newest first. `status` is `not_configured` or `unavailable` as for `/insights/machine-readers`, with zeros and empty lists. An `ok` answer is kept for 10 minutes per window.
+`vendors` holds one row per vendor and purpose, most requests first, with its five most requested routes; `pages` counts the page reads answered with the prerendered page and `shell` those answered with the app's empty shell. `daily` holds every day of the window, newest first. `status` is `not_configured` or `unavailable` as for `/insights/machine-readers`, with zeros and empty lists. An `ok` answer is kept for 10 minutes per window.
 
 Both machine-reader routes read the dataset named by `MACHINE_READS_DATASET` (`<project>.<dataset>` of the views, `anyplot.machine_reads`; the queries read its linked log dataset, the name plus `_logs`). In production it comes from the `_MACHINE_READS_DATASET` substitution of the `deploy-api` trigger, which `api/cloudbuild.yaml` writes on every deploy.
 

@@ -10,13 +10,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.cache import cache_key, get_cache, get_or_set_cache, set_cache
+from api.cache import cache_key, get_or_set_cache, get_page_cache, set_page_cache
 from api.dependencies import optional_db
 from api.routers.stats import _compute_stats, _refresh_stats
 from api.schemas import StatsResponse
 from core import palette
 from core.config import settings
-from core.constants import LANGUAGE_NAMES, LANGUAGES_METADATA, LIBRARIES_METADATA, LIBRARY_NAMES
+from core.constants import LANGUAGE_NAMES, LANGUAGES_METADATA, LIBRARIES_METADATA, LIBRARY_LANGUAGES, LIBRARY_NAMES
 from core.database import ImplRepository, SpecRepository
 from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
@@ -1488,6 +1488,11 @@ async def seo_stats(db: AsyncSession | None = Depends(optional_db)):
 @router.get("/seo-proxy/{spec_id}")
 async def seo_spec_hub(spec_id: str, db: AsyncSession | None = Depends(optional_db)):
     """Bot-optimized cross-language spec hub."""
+    # A path that can't be a spec id is answered here: every scanner probe
+    # (`/.env`, `/wp-login.php`) arrives on this route, and none of them is
+    # worth a query.
+    if not _SPEC_ID_RE.fullmatch(spec_id):
+        raise HTTPException(status_code=404, detail="Spec not found")
     if db is None:
         # Degraded mode: without the catalogue we cannot tell a real spec from
         # an invented one, so this page must not be indexable — serving it
@@ -1504,7 +1509,7 @@ async def seo_spec_hub(spec_id: str, db: AsyncSession | None = Depends(optional_
         )
 
     key = cache_key("seo", spec_id)
-    cached = get_cache(key)
+    cached = get_page_cache(key)
     if cached:
         return HTMLResponse(cached)
 
@@ -1517,7 +1522,7 @@ async def seo_spec_hub(spec_id: str, db: AsyncSession | None = Depends(optional_
     image = f"https://api.anyplot.ai/og/{spec_id}.png" if has_previews else DEFAULT_HOME_IMAGE
 
     result = _build_spec_hub_html(spec, image)
-    set_cache(key, result)
+    set_page_cache(key, result)
     return HTMLResponse(result)
 
 
@@ -1563,6 +1568,13 @@ async def seo_spec_implementation(
     spec_id: str, language: str, library: str, db: AsyncSession | None = Depends(optional_db)
 ):
     """Bot-optimized implementation detail."""
+    # Answered without a query: a path that can't be a spec id, and a library
+    # that doesn't exist or belongs to another language. Such a pair has no
+    # row, so the database could only say the same 404.
+    if not _SPEC_ID_RE.fullmatch(spec_id):
+        raise HTTPException(status_code=404, detail="Spec not found")
+    if LIBRARY_LANGUAGES.get(library) != language:
+        raise HTTPException(status_code=404, detail="Implementation not found")
     if db is None:
         # Same reasoning as the hub route — unverifiable, so not indexable.
         return HTMLResponse(
@@ -1576,7 +1588,7 @@ async def seo_spec_implementation(
         )
 
     key = cache_key("seo", spec_id, language, library)
-    cached = get_cache(key)
+    cached = get_page_cache(key)
     if cached:
         return HTMLResponse(cached)
 
@@ -1605,5 +1617,5 @@ async def seo_spec_implementation(
     code_impl = await ImplRepository(db).get_code(spec_id, library, language)
     code = strip_noqa_comments(code_impl.code) if code_impl and code_impl.code else None
     result = _build_impl_html(spec, impl, code, image)
-    set_cache(key, result)
+    set_page_cache(key, result)
     return HTMLResponse(result)

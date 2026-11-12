@@ -67,6 +67,7 @@ DETAIL_ROW: dict[str, Any] = {
             "verified": 25,
             "unverified": 0,
             "pages": 3,
+            "shell": 17,
             "code": 0,
             "og": 2,
             "mcp": 0,
@@ -169,6 +170,13 @@ class TestQueries:
     def test_the_owner_query_keeps_every_surface(self) -> None:
         assert "surface IN ('page', 'shell', 'code', 'spec', 'mcp')" not in detail_sql(DATASET)
 
+    def test_the_owner_query_counts_prerendered_pages_and_shells_apart(self) -> None:
+        """One sum of both hid which crawler was answered with a page that holds nothing to read."""
+        sql = detail_sql(DATASET)
+        assert "COUNTIF(surface = 'page') AS pages," in sql
+        assert "COUNTIF(surface = 'shell') AS shell," in sql
+        assert "surface IN ('page', 'shell')" not in sql
+
 
 class TestWindows:
     def test_the_tile_starts_at_utc_midnight_27_days_back_all_day(self) -> None:
@@ -245,6 +253,9 @@ class TestReadDetail:
         assert detail.vendors[0].category is None
         assert [path.key for path in detail.vendors[0].top_paths] == ["code icicle-basic/altair"]
         assert detail.vendors[1].not_found == 1
+        # Prerendered pages and shells are two counts; a row without the newer one reads as none.
+        assert (detail.vendors[1].pages, detail.vendors[1].shell) == (3, 17)
+        assert (detail.vendors[0].pages, detail.vendors[0].shell) == (14, 0)
         assert [day.date for day in detail.daily] == [f"2026-11-0{n}" for n in range(9, 2, -1)]
         assert detail.daily[0].seo == 30 and detail.daily[1].model_dump()["unverified"] == 0
         assert fake.calls[0][1] == datetime(2026, 11, 3, tzinfo=UTC)
