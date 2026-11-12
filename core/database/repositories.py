@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, undefer
+from sqlalchemy.orm import InstrumentedAttribute, selectinload, undefer
 
 from core.constants import LIBRARY_LANGUAGES
 from core.database.models import AgentFeedback, Feedback, Impl, Language, Library, LinkShare, Spec
@@ -956,3 +956,40 @@ class LinkShareRepository:
             .limit(limit)
         )
         return [(spec_id, language, library_id, int(total)) for spec_id, language, library_id, total in result.all()]
+
+    async def top_specs(self, since: date, until: date, *, without_platform: str, limit: int) -> list[tuple[str, int]]:
+        """The most shared specs of the days *since* to *until*: (spec_id, fetches).
+
+        A spec's hub and all of its implementation pages count together, so the
+        sum is how often any page of the spec was shared.
+        """
+        return await self._top_by(LinkShare.spec_id, since, until, without_platform=without_platform, limit=limit)
+
+    async def top_libraries(
+        self, since: date, until: date, *, without_platform: str, limit: int
+    ) -> list[tuple[str, int]]:
+        """The most shared libraries of the days *since* to *until*: (library_id, fetches).
+
+        The implementation pages of a library count together, whatever the
+        spec. A hub belongs to no library and counts for none, so these sums
+        add up to less than the specs' whenever a hub was shared.
+        """
+        return await self._top_by(LinkShare.library_id, since, until, without_platform=without_platform, limit=limit)
+
+    async def _top_by(
+        self, column: InstrumentedAttribute[str], since: date, until: date, *, without_platform: str, limit: int
+    ) -> list[tuple[str, int]]:
+        """The fetches of the window summed over one key column, largest first; rows without the key are left out.
+
+        The same window and the same exclusion as `top_plots`. Ties go by name,
+        so the order is stable.
+        """
+        fetches = func.sum(LinkShare.fetches)
+        result = await self.session.execute(
+            select(column, fetches)
+            .where(LinkShare.day >= since, LinkShare.day <= until, LinkShare.platform != without_platform, column != "")
+            .group_by(column)
+            .order_by(fetches.desc(), column)
+            .limit(limit)
+        )
+        return [(name, int(total)) for name, total in result.all()]

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeContext, type ThemeContextValue } from 'src/hooks/useLayoutContext';
 import { StatsPage } from 'src/pages/StatsPage';
+import { STRIP_BAR } from 'src/sections/stats/stripGeometry';
 import { render, screen, userEvent, waitFor, within } from 'src/test-utils';
 
 const darkThemeValue: ThemeContextValue = {
@@ -177,7 +178,8 @@ const mockSharedLinks = {
     { platform: 'whatsapp', shares: 4 },
     { platform: 'teams', shares: 2 },
   ],
-  top: [{ spec_id: 'scatter-basic', language: 'python', library: 'matplotlib', shares: 4 }],
+  top_specs: [{ spec_id: 'scatter-basic', shares: 4 }],
+  top_libraries: [{ library: 'matplotlib', shares: 3 }],
 };
 
 /**
@@ -494,7 +496,7 @@ describe('StatsPage', () => {
     });
   });
 
-  it('renders the machine readers tile: header, total, legend, footnote and 28 days', async () => {
+  it('renders the machine readers tile: header, total, 28 days and the sums in three lines', async () => {
     mockFetchSuccess();
 
     render(<StatsPage />);
@@ -511,37 +513,54 @@ describe('StatsPage', () => {
       'href',
       '/legal#machine-readers'
     );
-    const legend = screen.getByTestId('machine-readers-legend');
-    expect(legend).toHaveTextContent('for a person 2');
-    expect(legend).toHaveTextContent('ai index & training 17');
-    expect(legend).toHaveTextContent('search engines 3');
-    expect(legend).toHaveTextContent('· 4 over mcp (all clients)');
-    const footnote = screen.getByTestId('machine-readers-footnote');
-    expect(footnote).toHaveTextContent('requests that reached the server');
-    expect(footnote).toHaveTextContent('people are counted in visitors above');
-    expect(footnote).toHaveTextContent(
-      "26 requests that carried a crawler's name without that verification are not counted."
-    );
-    expect(footnote).not.toHaveTextContent(/spoof/);
+    // The window's sums, one line each: the verified requests by audience (they add up to the
+    // total above), the MCP requests of every client on a line of their own, and the unverified.
+    const sums = within(screen.getByTestId('machine-readers-totals')).getAllByRole('listitem');
+    expect(sums.map(line => line.textContent)).toEqual([
+      'cloudflare verified: for a person 2 · ai index & training 17 · search engines 3',
+      'mcp requests: 4',
+      'unverified requests: 26',
+    ]);
+    expect(screen.getByTestId('machine-readers-totals')).not.toHaveTextContent(/spoof/);
 
+    // A day is its sum of verified requests, nothing else.
     const days = screen.getAllByTestId('machine-readers-day');
     expect(days).toHaveLength(28);
-    expect(days[27]).toHaveAttribute(
-      'aria-label',
-      '2026-11-09: 21 requests · 2 for a person · 16 ai index & training · 3 search engines'
-    );
-    expect(days[7]).toHaveAttribute(
-      'aria-label',
-      '2026-10-20: 1 request · 0 for a person · 1 ai index & training · 0 search engines'
-    );
-    // Each day is a named, focusable image, so a keyboard and a screen reader reach its numbers.
+    expect(days[27]).toHaveAttribute('aria-label', '2026-11-09: 21 requests');
+    expect(days[7]).toHaveAttribute('aria-label', '2026-10-20: 1 request');
+    // Each day is a named, focusable image, so a keyboard and a screen reader reach its number.
     const strip = screen.getByRole('group', { name: 'machine readers per day' });
-    expect(
-      within(strip).getByRole('img', {
-        name: '2026-11-09: 21 requests · 2 for a person · 16 ai index & training · 3 search engines',
-      })
-    ).toHaveAttribute('tabindex', '0');
+    expect(within(strip).getByRole('img', { name: '2026-11-09: 21 requests' })).toHaveAttribute(
+      'tabindex',
+      '0'
+    );
     expect(within(strip).getAllByRole('img')).toHaveLength(28);
+  });
+
+  it('draws the machine readers and the shared links in the visitors strip’s green', async () => {
+    mockFetchSuccess();
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('shared-links-day')).toHaveLength(28);
+    });
+    // One series each, so one colour: the darker brand green at half strength, as the visitors.
+    const busiest = (testId: string) =>
+      screen
+        .getAllByTestId(testId)
+        .reduce((tallest, bar) =>
+          parseFloat(bar.style.height || getComputedStyle(bar).height) >
+          parseFloat(tallest.style.height || getComputedStyle(tallest).height)
+            ? bar
+            : tallest
+        );
+    for (const testId of ['machine-readers-bar', 'shared-links-bar']) {
+      expect(busiest(testId)).toHaveStyle({
+        backgroundColor: STRIP_BAR.color,
+        opacity: String(STRIP_BAR.opacity),
+      });
+    }
   });
 
   it.each([
@@ -575,9 +594,7 @@ describe('StatsPage', () => {
       expect(screen.getAllByTestId('machine-readers-day')).toHaveLength(28);
     });
     expect(screen.getByText(/last 28 days · 0 requests/)).toBeInTheDocument();
-    expect(screen.getByTestId('machine-readers-legend')).toHaveTextContent(
-      '· 0 over mcp (all clients)'
-    );
+    expect(screen.getByTestId('machine-readers-totals')).toHaveTextContent('mcp requests: 0');
   });
 
   it('still renders the dashboard when the machine readers request fails', async () => {
@@ -603,10 +620,14 @@ describe('StatsPage', () => {
     expect(
       screen.getByText(/link previews on messengers and social networks · last 28 days · 6 shares/)
     ).toBeInTheDocument();
-    expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(/whatsapp 4\s*teams 2/);
-    expect(screen.getByRole('link', { name: 'scatter-basic · matplotlib' })).toHaveAttribute(
-      'href',
-      '/scatter-basic/python/matplotlib'
+    expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(
+      'by platform: whatsapp 4 · teams 2'
+    );
+    expect(screen.getByTestId('shared-links-specs')).toHaveTextContent(
+      'most shared specs: scatter-basic 4'
+    );
+    expect(screen.getByTestId('shared-links-libraries')).toHaveTextContent(
+      'most shared libraries: matplotlib 3'
     );
     const calls = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
     expect(calls.filter(url => url.includes('/insights/shared-links'))).toHaveLength(1);

@@ -1007,3 +1007,47 @@ class TestLinkShareRepository:
             ("scatter-basic", "python", "matplotlib", 3),
         ]
         assert await repo.top_plots(since, until, without_platform="other", limit=1) == [("heatmap-basic", "", "", 4)]
+
+    async def test_specs_sum_hub_and_implementations_and_libraries_sum_across_specs(self, test_session):
+        repo = LinkShareRepository(test_session)
+        since, until = self.DAY - timedelta(days=2), self.DAY
+
+        async def add(day: date, platform: str, spec_id: str = "", library_id: str = "", times: int = 1) -> None:
+            page = "spec_detail" if library_id else ("spec_overview" if spec_id else "home")
+            for _ in range(times):
+                await repo.count(
+                    day=day,
+                    platform=platform,
+                    verified=True,
+                    page=page,
+                    spec_id=spec_id,
+                    language="python" if library_id else "",
+                    library_id=library_id,
+                )
+
+        await add(self.DAY, "slack", "scatter-basic", "matplotlib", times=2)
+        await add(self.DAY, "teams", "scatter-basic", "plotly")
+        await add(since, "whatsapp", "scatter-basic", times=3)  # the hub: the spec's, no library's
+        await add(since, "whatsapp", "heatmap-basic", "matplotlib", times=4)
+        await add(self.DAY, "slack", "bar-basic", "bokeh", times=4)
+        await add(self.DAY, "slack")  # the home page: neither a spec nor a library
+        await add(self.DAY, "other", "scatter-basic", "matplotlib", times=50)  # no share
+        await add(since - timedelta(days=1), "slack", "scatter-basic", "plotly", times=9)  # the day before the window
+        await test_session.commit()
+
+        # Ties go by name: bar-basic before heatmap-basic.
+        assert await repo.top_specs(since, until, without_platform="other", limit=5) == [
+            ("scatter-basic", 6),
+            ("bar-basic", 4),
+            ("heatmap-basic", 4),
+        ]
+        assert await repo.top_libraries(since, until, without_platform="other", limit=5) == [
+            ("matplotlib", 6),
+            ("bokeh", 4),
+            ("plotly", 1),
+        ]
+        assert await repo.top_specs(since, until, without_platform="other", limit=1) == [("scatter-basic", 6)]
+        assert await repo.top_libraries(since, until, without_platform="other", limit=2) == [
+            ("matplotlib", 6),
+            ("bokeh", 4),
+        ]

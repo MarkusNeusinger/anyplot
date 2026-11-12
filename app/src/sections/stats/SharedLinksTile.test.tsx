@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { CHART_PX, MIN_BAR_PX } from 'src/sections/stats/machineReaders';
 import type { SharedLinksResponse } from 'src/sections/stats/sharedLinks';
 import { SharedLinksTile } from 'src/sections/stats/SharedLinksTile';
+import { CHART_PX, MIN_BAR_PX, STRIP_BAR } from 'src/sections/stats/stripGeometry';
 import { render, screen, within } from 'src/test-utils';
 
 const formatNum = (value: number): string => value.toLocaleString('en-US');
@@ -23,9 +23,13 @@ const ANSWER: SharedLinksResponse = {
     { platform: 'teams', shares: 2 },
     { platform: 'whatsapp-lite', shares: 1 },
   ],
-  top: [
-    { spec_id: 'scatter-basic', language: 'python', library: 'matplotlib', shares: 3 },
-    { spec_id: 'heatmap-basic', language: null, library: null, shares: 2 },
+  top_specs: [
+    { spec_id: 'scatter-basic', shares: 5 },
+    { spec_id: 'heatmap-basic', shares: 2 },
+  ],
+  top_libraries: [
+    { library: 'matplotlib', shares: 3 },
+    { library: 'ggplot2', shares: 1 },
   ],
 };
 
@@ -71,37 +75,64 @@ describe('SharedLinksTile', () => {
     expect(screen.getByText('2026-11-11')).toBeInTheDocument();
   });
 
-  it('lists the platforms with their totals, largest first, as text', () => {
+  it('draws its bars in the strips’ one green, and a day without a share as the muted floor', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
 
-    expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(
-      /^whatsapp 4\s*teams 2\s*signal & similar 1$/
+    const bars = screen.getAllByTestId('shared-links-bar');
+    expect(bars[26]).toHaveStyle({
+      backgroundColor: STRIP_BAR.color,
+      opacity: String(STRIP_BAR.opacity),
+    });
+    expect(bars[0]).not.toHaveStyle({ backgroundColor: STRIP_BAR.color });
+  });
+
+  it('lists the platforms with their 28-day sums, largest first, in one line', () => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-platforms').textContent).toBe(
+      'by platform: whatsapp 4 · teams 2 · signal & similar 1'
     );
   });
 
-  it('links the most shared plot pages: an implementation and a hub are entries of their own', () => {
+  it('lists the most shared specs, each a link to its hub', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
 
-    const top = screen.getByTestId('shared-links-top');
-    const links = within(top).getAllByRole('link');
+    const specs = screen.getByTestId('shared-links-specs');
+    const links = within(specs).getAllByRole('link');
     expect(links.map(link => [link.textContent, link.getAttribute('href')])).toEqual([
-      ['scatter-basic · matplotlib', '/scatter-basic/python/matplotlib'],
+      ['scatter-basic', '/scatter-basic'],
       ['heatmap-basic', '/heatmap-basic'],
     ]);
-    expect(
-      within(top)
-        .getAllByRole('listitem')
-        .map(item => item.textContent)
-    ).toEqual(['scatter-basic · matplotlib 3', 'heatmap-basic 2']);
+    expect(specs.textContent).toBe('most shared specs: scatter-basic 5 · heatmap-basic 2');
   });
 
-  it('says what a share is and what the count cannot see', () => {
+  it('lists the most shared libraries, each a link to the gallery filtered by it', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
 
-    const footnote = screen.getByTestId('shared-links-footnote');
-    expect(footnote).toHaveTextContent(/fetches a page.s preview\s+image/);
-    expect(footnote).toHaveTextContent(/nothing about who shared/);
-    expect(footnote).toHaveTextContent(/still holds from an earlier share is not seen/);
+    const libraries = screen.getByTestId('shared-links-libraries');
+    const links = within(libraries).getAllByRole('link');
+    expect(links.map(link => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['matplotlib', '/plots?lib=matplotlib'],
+      ['ggplot2', '/plots?lib=ggplot2'],
+    ]);
+    expect(libraries.textContent).toBe('most shared libraries: matplotlib 3 · ggplot2 1');
+  });
+
+  it('shows no libraries line when only hubs were shared', () => {
+    render(<SharedLinksTile answer={{ ...ANSWER, top_libraries: [] }} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-specs')).toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-libraries')).not.toBeInTheDocument();
+  });
+
+  it('holds no paragraph of its own: what a share is stands on the legal page it links', () => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    expect(screen.queryByTestId('shared-links-footnote')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'legal.privacy()' })).toHaveAttribute(
+      'href',
+      '/legal#shared-links'
+    );
   });
 
   it('shows no platform line and no list for a window without a share', () => {
@@ -109,7 +140,8 @@ describe('SharedLinksTile', () => {
       ...ANSWER,
       total: 0,
       platforms: [],
-      top: [],
+      top_specs: [],
+      top_libraries: [],
       days: DAYS.map(day => ({ ...day, shares: 0 })),
     };
     render(<SharedLinksTile answer={quiet} formatNum={formatNum} />);
@@ -117,7 +149,8 @@ describe('SharedLinksTile', () => {
     expect(screen.getByText(/last 28 days · 0 shares/)).toBeInTheDocument();
     expect(screen.getAllByTestId('shared-links-bar')).toHaveLength(28);
     expect(screen.queryByTestId('shared-links-platforms')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('shared-links-top')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-specs')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-libraries')).not.toBeInTheDocument();
   });
 
   it.each([
