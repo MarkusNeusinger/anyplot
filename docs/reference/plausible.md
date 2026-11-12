@@ -454,6 +454,11 @@ response so the client doesn't retry. The shield exists since audit 2026-07-08
 The API itself sends Plausible nothing since 2026-11-11 (see
 [Shared links](#shared-links)).
 
+Cloudflare's verdict on a request plays no part here. It decides who gets the
+prerendered page (`$prerender`, [Bot detection](seo.md#bot-detection)), and a
+prerendered page holds no script that could send an event; the shield keeps
+reading the user agent alone.
+
 Both maps name a client by its own token: a crawler's name, a headless
 browser, an HTTP library, or an empty user agent. Neither matches a browser's
 user agent, whatever its version, because a farm that wears one shares it with

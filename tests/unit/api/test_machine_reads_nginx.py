@@ -86,6 +86,15 @@ def is_bot(user_agent: str) -> str:
     return evaluate("is_bot", user_agent)
 
 
+def prerender(user_agent: str, category: str = "") -> str:
+    """`$prerender` for one request: the token map and Cloudflare's verdict, each evaluated from the request.
+
+    *category* is the value of the `X-Verified-Bot-Category` header as the edge sets it, empty for none.
+    """
+    listed = evaluate("prerender_category", evaluate("machine_category", category))
+    return evaluate("prerender", f"{is_bot(user_agent)}:{listed}")
+
+
 def writes_a_line(*, user_agent: str, request_uri: str, category: str = "", upstream_status: str = "") -> bool:
     """`$log_machine_read` for one request, every map in its key evaluated from the request."""
     agent = evaluate("machine_agent", evaluate("machine_who", user_agent))
@@ -189,11 +198,126 @@ class TestTheClosedSets:
         assert evaluate("machine_source", "anyplot.ai") == "live"
 
     @pytest.mark.parametrize(
-        ("is_bot_value", "route", "surface"),
+        ("prerender_value", "route", "surface"),
         [("1", "legal", "page"), ("0", "legal", "shell"), ("1", "robots", "machine_file"), ("0", "other", "other")],
     )
-    def test_a_prerender_path_crawler_is_never_called_a_shell_read(self, is_bot_value, route, surface) -> None:
-        assert evaluate("machine_surface", f"{is_bot_value}:{route}") == surface
+    def test_a_prerender_path_crawler_is_never_called_a_shell_read(self, prerender_value, route, surface) -> None:
+        assert evaluate("machine_surface", f"{prerender_value}:{route}") == surface
+
+    def test_the_surface_follows_who_gets_the_prerendered_page(self) -> None:
+        """A verified crawler without a token is prerendered, so what nginx answers it itself is a `page` too."""
+        source, _ = _map("machine_surface")
+        assert source == "$prerender:$machine_route"
+
+
+# The categories whose bots get the prerendered page on Cloudflare's word alone. The reason for each one left
+# out is in app/nginx.conf, above `map $machine_category $prerender_category`.
+PRERENDER_CATEGORIES = {
+    "Academic Research",
+    "Aggregator",
+    "AI Crawler",
+    "AI Search",
+    "Archiver",
+    "Feed Fetcher",
+    "Page Preview",
+    "Search Engine Crawler",
+}
+SHELL_CATEGORIES = sorted(set(VERIFIED_CATEGORIES) - PRERENDER_CATEGORIES)
+
+LIGHTHOUSE = (
+    "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/150.0.0.0 Mobile Safari/537.36 Chrome-Lighthouse"
+)
+
+
+class TestWhoGetsThePrerenderedPage:
+    """`$prerender`: a bot by its own token, or a verified bot of a category that reads content."""
+
+    def test_the_category_list_is_closed_and_cloudflares(self) -> None:
+        source, entries = _map("prerender_category")
+        assert source == "$machine_category"
+        assert dict(entries).get("default") == "0", "a category Cloudflare adds later must start off"
+        listed = {key for key, value in entries if key != "default"}
+        assert all(value == "1" for key, value in entries if key != "default")
+        assert listed == PRERENDER_CATEGORIES
+        assert listed < set(VERIFIED_CATEGORIES)
+
+    def test_it_reads_the_token_map_and_the_category_list(self) -> None:
+        source, entries = _map("prerender")
+        assert source == "$is_bot:$prerender_category"
+        assert dict(entries) == {"default": "1", "0:0": "0"}
+
+    @pytest.mark.parametrize("user_agent", BROWSERS)
+    @pytest.mark.parametrize("category", sorted(PRERENDER_CATEGORIES))
+    def test_a_verified_content_reader_is_served_whatever_its_user_agent(self, user_agent: str, category: str) -> None:
+        """Cloudflare keeps the members: ExaSearchBot and ShapBot have no token here and got the empty shell."""
+        assert prerender(user_agent, category) == "1"
+
+    @pytest.mark.parametrize("user_agent", BROWSERS)
+    @pytest.mark.parametrize("category", ["", *SHELL_CATEGORIES, "A Category Of Next Year"])
+    def test_everyone_else_in_a_browser_gets_the_app(self, user_agent: str, category: str) -> None:
+        """No verdict, a verdict of a category that tests what people get, and one nginx doesn't know."""
+        assert prerender(user_agent, category) == "0", (user_agent, category)
+
+    def test_the_categories_left_out_are_the_ones_named(self) -> None:
+        assert SHELL_CATEGORIES == [
+            "AI Assistant",
+            "Accessibility",
+            "Advertising & Marketing",
+            "Monitoring & Analytics",
+            "Other",
+            "Search Engine Optimization",
+            "Security",
+            "Social Media Marketing",
+            "Webhooks",
+        ]
+
+    @pytest.mark.parametrize(
+        "user_agent",
+        [
+            "Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
+            "WhatsApp/2.23.20.0",
+            "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+        ],
+    )
+    @pytest.mark.parametrize("category", ["", "Monitoring & Analytics", "AI Assistant", "Search Engine Crawler"])
+    def test_a_token_is_served_with_or_without_a_verdict(self, user_agent: str, category: str) -> None:
+        """Perplexity's indexer and the phones' preview fetchers arrive unverified: the list stays for them."""
+        assert prerender(user_agent, category) == "1"
+
+    @pytest.mark.parametrize(
+        "user_agent",
+        [
+            "Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)",
+            "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)",
+            "Mozilla/5.0 (compatible; DataForSeoBot/1.0; +https://dataforseo.com/dataforseo-bot)",
+            "Mozilla/5.0 (compatible; MJ12bot/v1.4.8; http://mj12bot.com/)",
+            "Mozilla/5.0 (compatible; DotBot/1.2; +https://opensiteexplorer.org/dotbot; help@moz.com)",
+            "Mozilla/5.0 (compatible; HaloBot/1.0; +https://www.haloscan.com/bot)",
+        ],
+    )
+    def test_an_seo_crawler_is_served_by_its_token_not_by_its_category(self, user_agent: str) -> None:
+        assert is_bot(user_agent) == "1"
+        assert prerender(user_agent, "Search Engine Optimization") == "1"
+        assert prerender(user_agent) == "1"
+        assert evaluate("machine_who", user_agent).endswith(":seo")
+
+    def test_every_seo_row_of_the_vendor_table_has_its_token_in_the_map(self) -> None:
+        """Their category is left out for the speed tests' sake, so a new SEO vendor needs a token here too."""
+        seo_tokens = [token for token, _vendor, purpose in AI_AGENTS if purpose == "seo"]
+        assert len(seo_tokens) >= 6
+        for token in seo_tokens:
+            assert is_bot(f"Mozilla/5.0 (compatible; {token}/1.0)") == "1", token
+
+    def test_a_speed_test_in_the_seo_category_measures_the_app(self) -> None:
+        """Lighthouse, GTmetrix and Pingdom share the category with the SEO crawlers and drive a real browser."""
+        assert is_bot(LIGHTHOUSE) == "0"
+        assert prerender(LIGHTHOUSE, "Search Engine Optimization") == "0"
+
+    def test_only_the_page_routing_reads_it(self) -> None:
+        """The analytics 202 names automation by its own token and never by an edge verdict."""
+        assert re.findall(r"if \(\$(\w+)\) \{\s*return 418;\s*\}", CONF) == ["prerender"] * 3
+        assert re.findall(r"if \(\$(is_bot|prerender\w*)\) \{ return 202; \}", CONF) == ["is_bot"] * 2
 
 
 class TestWhoWritesTheLine:
@@ -206,7 +330,10 @@ class TestWhoWritesTheLine:
         assert not writes_a_line(user_agent=user_agent, request_uri=request_uri, upstream_status="502")
 
     def test_a_shell_served_crawler_writes_one(self) -> None:
-        assert writes_a_line(user_agent="Mozilla/5.0 (compatible; AhrefsBot/7.0)", request_uri="/box-basic")
+        """A vendor the table names that has neither a token in `$is_bot` nor a verdict gets the shell, and a line."""
+        petalbot = "Mozilla/5.0 (compatible; PetalBot;+https://webmaster.petalsearch.com/site/petalbot)"
+        assert prerender(petalbot) == "0"
+        assert writes_a_line(user_agent=petalbot, request_uri="/box-basic")
 
     def test_static_assets_are_never_written(self) -> None:
         assert not writes_a_line(user_agent="Mozilla/5.0 (compatible; AhrefsBot/7.0)", request_uri="/assets/a.js")

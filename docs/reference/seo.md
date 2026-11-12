@@ -50,9 +50,71 @@ Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with 
 
 ## Bot detection
 
+A request gets the prerendered page for one of two reasons, and nginx's
+`$prerender` variable is their "or":
+
+- **Its user agent carries a token of the `$is_bot` map**
+  ([Detected bots](#detected-bots)). The list is kept by hand.
+- **Cloudflare verified it as a bot of a category that reads content**
+  ([By Cloudflare's verdict](#by-cloudflares-verdict)). Cloudflare keeps the
+  members, so a new search or AI crawler is served from the day it is verified.
+
+### By Cloudflare's verdict
+
+The edge sets `X-Verified-Bot-Category` on every request it proxies
+([Verified or not](machine-readers.md#verified-or-not)), and a client's own
+copy of the header never passes the edge. nginx's `$prerender_category` map
+turns eight of Cloudflare's 17 categories into "prerender", whatever the user
+agent says:
+
+| Prerendered on Cloudflare's word | Typical members |
+|---|---|
+| Search Engine Crawler | Googlebot, Bingbot, ExaSearchBot, Qwant |
+| AI Search | OAI-SearchBot, Parallel's ShapBot |
+| AI Crawler | GPTBot, ClaudeBot |
+| Page Preview | the link preview fetchers of Slack, Discord, Facebook |
+| Archiver | Internet Archive, Common Crawl |
+| Aggregator | Pinterest |
+| Feed Fetcher | feed readers |
+| Academic Research | library and research crawlers |
+
+The list is closed and everything else is off, because "verified" doesn't mean
+"never a person", and not every bot should see this page:
+
+| Not prerendered by category | Why |
+|---|---|
+| AI Assistant | Since 2026-07-01 Cloudflare's signed agents are verified too. Some are remote browsers a person directs (ChatGPT agent, Browserbase, Anchor Browser), and that person must get the app. The assistants' text fetchers are in `$is_bot` by their own tokens. |
+| Search Engine Optimization | Cloudflare files Google Lighthouse, GTmetrix, and Pingdom here, which measure the page a person gets. The SEO tools' crawlers are in `$is_bot` by their own tokens. |
+| Monitoring & Analytics, Security, Accessibility | They exist to test what people get. A monitor on the prerendered page can't see a blank app. |
+| Advertising & Marketing | It judges the landing page a person gets. |
+| Social Media Marketing, Webhooks, Other | Off until someone has looked at what they hold. |
+| A category Cloudflare adds later | nginx reads an unknown category as `other`, which is off. |
+
+Only the page routing reads `$prerender`. The analytics shield on `/api/event`
+keeps reading `$is_bot` alone: a rule that hides traffic from the numbers may
+only name automation by its own token
+([The principle](../../infra/cloudflare/README.md#the-principle)).
+
+What the change was for, measured in the machine-read lines of the seven days
+to 2026-11-12: Cloudflare-verified bots fetched 13,525 pages and got the empty
+app shell, because their tokens weren't in the map. ExaSearchBot made 7,971 of
+them and runs no JavaScript, so it read nothing; Parallel's ShapBot made 3,954
+and rendered the app in a browser of its own, at about 1.7 API reads per page.
+The category list covers 12,032 of the 13,525 and the six SEO tokens another
+1,467. The remaining 26 (Security 23, Accessibility 2, Advertising & Marketing
+1) keep the app on purpose.
+
+To check the verified path, ask the raw origin, where the gate's secret stands
+for the edge: `bot-serving-check.yml` and the deploy smoke in
+`app/cloudbuild.yaml` send a browser's user agent with
+`X-Verified-Bot-Category: Search Engine Crawler` and expect the page's
+canonical link, and with `Monitoring & Analytics` and expect the app shell.
+Through the edge the header can't be set by a client, so a manual probe there
+proves nothing either way.
+
 ### Detected bots
 
-nginx detects 56 User-Agent patterns (counted 2026-11-12), organized by category:
+nginx detects 62 User-Agent patterns (counted 2026-11-12), organized by category:
 
 **Social Media:**
 | Bot | User-Agent Pattern |
@@ -178,23 +240,37 @@ citing anyplot would describe the empty SPA shell. The map decides **what** a
 crawler is served, never **whether** it may fetch — that is the robots.txt +
 Cloudflare question in [AI crawler policy](#ai-crawler-policy).
 
-**Counted, but served the SPA shell:** these crawlers are not in the map, so
-they receive the shell. Each read is still a machine-read line, written by
-nginx ([Machine readers](machine-readers.md)), with the purpose in brackets.
-Prerendering one of them is a serving decision of its own: ExaSearchBot alone
-fetches about 7,400 shell pages a week, which would become DB-backed renders on
-the API.
+**SEO tools:**
+| Bot | User-Agent Pattern |
+|-----|-------------------|
+| Semrush | `semrushbot` |
+| Ahrefs | `ahrefsbot` |
+| DataForSEO | `dataforseobot` |
+| Majestic | `mj12bot` |
+| Moz | `dotbot` |
+| Haloscan | `halobot` |
+
+They are in the map since 2026-11-12, by token and not by Cloudflare's
+category, which they share with the speed tests
+([By Cloudflare's verdict](#by-cloudflares-verdict)). A new SEO vendor in
+`AI_AGENTS` needs its token here too; a test holds the two together.
+
+**Counted, without a token in the map:** these crawlers are named in the
+vendor table but not here. Each gets the prerendered page when Cloudflare
+verifies it in a prerendered category, and the app shell otherwise. Either
+read is a machine-read line ([Machine readers](machine-readers.md)), with the
+purpose in brackets; the debug page's `shell` column shows who still reads
+nothing.
 
 | Bot | User-Agent Pattern | Purpose |
 |-----|-------------------|---------|
-| Exa | `exasearchbot` | AI search index (`index`) |
+| Exa | `exasearchbot` | AI search index (`index`); verified as Search Engine Crawler |
 | Keenable | `keenable-user`, `keenable` | a person's agent / AI search index |
-| Parallel | `shap-user`, `shapbot` | a person's agent / AI search index. ShapBot runs a browser (Lightpanda), so it reads the page through the shell and the app's own API calls |
+| Parallel | `shap-user`, `shapbot` | a person's agent / AI search index; ShapBot is verified as AI Search. Until 2026-11-12 it read the page through the shell in a browser of its own (Lightpanda) and the app's API calls |
 | Google Vertex AI agents | `google-cloudvertexbot` | builds an agent's grounding on the site owner's request (`index`) |
 | ByteDance | `bytespider` | training crawler (`training`) |
 | Common Crawl | `ccbot` | training corpus (`training`) |
-| Qwant · Petal · Sogou | `qwantbot`, `petalbot`, `sogou web spider` | search engines (`search`) |
-| SEO tools | `semrushbot`, `ahrefsbot`, `dataforseobot`, `mj12bot`, `dotbot`, `halobot` | search-marketing indexes (`seo`) |
+| Qwant · Petal · Sogou | `qwantbot`, `petalbot`, `sogou web spider` | search engines (`search`); Qwant is verified as Search Engine Crawler |
 
 **Link Preview Services:**
 | Bot | User-Agent Pattern |
@@ -218,10 +294,24 @@ map $http_user_agent $is_bot {
     # ... more bots
 }
 
+# Cloudflare's verdict: the categories that read content
+map $machine_category $prerender_category {
+    default 0;
+    "Search Engine Crawler" 1;
+    "AI Search" 1;
+    # ... six more
+}
+
+# A token, or a verified bot of a listed category
+map "$is_bot:$prerender_category" $prerender {
+    default 1;
+    "0:0" 0;
+}
+
 # SPA routing with bot detection
 location / {
     error_page 418 = @seo_proxy;
-    if ($is_bot) {
+    if ($prerender) {
         return 418;  # Trigger proxy to backend
     }
     try_files $uri $uri/ /index.html;

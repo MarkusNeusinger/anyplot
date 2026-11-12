@@ -429,6 +429,20 @@ jobs:
           check "$HUMAN" "$ORIGIN/"       '<div id="root">'
           check "$HUMAN" "$ORIGIN/$SPEC"  '<div id="root">'
 
+          # Cloudflare's verdict, without a crawler's user agent. A bot the
+          # edge verified in a category the site prerenders
+          # ($prerender_category in app/nginx.conf) gets the page whatever its
+          # user agent says; one of any other category keeps the app. The
+          # probe can set the header because it asks the raw origin, where the
+          # gate's secret stands for the edge: behind the edge a client's own
+          # copy is replaced by Cloudflare's, so nobody else can.
+          BARE_HDR=("${HDR[@]}")
+          HDR=("${BARE_HDR[@]}" -H "X-Verified-Bot-Category: Search Engine Crawler")
+          check "$HUMAN" "$ORIGIN/$SPEC" "<link rel=\"canonical\" href=\"https://anyplot.ai/$SPEC\" />"
+          HDR=("${BARE_HDR[@]}" -H "X-Verified-Bot-Category: Monitoring & Analytics")
+          check "$HUMAN" "$ORIGIN/$SPEC" '<div id="root">'
+          HDR=("${BARE_HDR[@]}")
+
           exit $fail
 
       # The alarm. One issue with a fixed title carries the whole history of
