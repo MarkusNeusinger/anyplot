@@ -215,15 +215,21 @@ audiences: `for_person`, `index_training`, and `search`. The `seo`, `preview`, a
 out. Only those three audience fields are verified-only. Two more counts stand beside them:
 
 - `mcp`, on each point and in `totals`, counts the served MCP requests of every client, verified or not, because
-  an MCP client other than Claude is never a verified bot. The tile shows the 28-day total, labelled "over mcp
-  (all clients)".
+  an MCP client other than Claude is never a verified bot. The tile shows the 28-day total on a line of its own,
+  "mcp requests".
 - `unverified`, in `totals` only, counts the served reads in the same three audiences by a named vendor
-  (`assistant != 'other'`) that Cloudflare didn't verify. The tile's footnote names them as not counted. A line
-  without a vendor name, such as a python MCP client or a crawler only Cloudflare named, is never in it, so
-  "carried a crawler's name" holds.
+  (`assistant != 'other'`) that Cloudflare didn't verify. The tile shows the 28-day total on its last line,
+  "unverified requests". A line without a vendor name, such as a python MCP client or a crawler only Cloudflare
+  named, is never in it.
+
+The tile draws one bar per day: the day's sum over the three audiences, in the green of the visitors strip
+(`app/src/sections/stats/DayStrip.tsx`). Under the bars it gives the window's sums in three lines and no other
+text: "cloudflare verified" with the three audiences, which add up to the bars; "mcp requests"; and "unverified
+requests". Until 2026-11-12 a bar was split into the audiences in three colours, with a legend and a footnote
+sentence under it.
 
 The public numbers rest on the verdict: a vendor Cloudflare doesn't verify, such as Perplexity's indexer on
-2026-11-09, is in the footnote, never in the bars.
+2026-11-09, is on the "unverified requests" line, never in the bars.
 
 `status` is `not_configured` while `MACHINE_READS_DATASET` is unset or not a dataset name, answered before the
 cache, and `unavailable` when the BigQuery client can't start or the query fails on a cold cache, answered and
@@ -508,6 +514,7 @@ broken install.
 | `api/machine_reads_query.py` | The two readers' queries, windows, answers, and the owner's process cache |
 | `api/routers/insights.py`, `api/routers/debug.py` | `GET /insights/machine-readers` and `GET /debug/machine-readers` |
 | `app/src/sections/stats/MachineReadersTile.tsx`, `app/src/sections/stats/machineReaders.ts` | The tile on `/stats` and its client-side check of the answer |
+| `app/src/sections/stats/DayStrip.tsx`, `app/src/sections/stats/stripGeometry.ts` | The bar strip the tile shares with the shared links tile, and the height, floor and green of every day strip on `/stats` |
 | `app/src/sections/debug/MachineReadersSection.tsx` | The section on `/debug` |
 | `tests/unit/api/test_machine_reads.py`, `tests/unit/api/test_machine_reads_nginx.py` | The two writers, held to the same keys and sets |
 | `tests/unit/api/test_machine_reads_query.py`, `TestInsightsRouter` in `tests/unit/api/test_routers.py` | The two readers |

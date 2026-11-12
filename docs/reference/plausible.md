@@ -625,10 +625,12 @@ not what the five minutes cost: the images stay in the API's own cache.
 ### Where the numbers appear
 
 - **`/stats`, the "shared links" tile** (`GET /insights/shared-links`): the
-  shares of the last 28 UTC days as one bar per day, the platforms with their
-  totals, and the five most shared plot pages. A spec's hub and one
+  shares of the last 28 UTC days as one bar per day, in the green of the
+  visitors strip, and under it two lines: the platforms with their 28-day
+  sums, and the five most shared plot pages. A spec's hub and one
   implementation of it are entries of their own. `other` is not in these
-  numbers. The answer is kept for an hour.
+  numbers. The tile holds no explanation of its own; the legal page it links
+  says what a share is. The answer is kept for an hour.
 - **`/debug`, the "shared links" section** (`GET /debug/shared-links`, admin
   only): the same numbers read fresh, plus `other`, and beside each platform's
   total and beside `other` how many of the fetches Cloudflare verified.

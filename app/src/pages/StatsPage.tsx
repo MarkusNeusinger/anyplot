@@ -15,6 +15,7 @@ import { type MachineReadersResponse, readMachineReaders } from 'src/sections/st
 import { MachineReadersTile } from 'src/sections/stats/MachineReadersTile';
 import { readSharedLinks, type SharedLinksResponse } from 'src/sections/stats/sharedLinks';
 import { SharedLinksTile } from 'src/sections/stats/SharedLinksTile';
+import { STRIP_BAR } from 'src/sections/stats/stripGeometry';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
@@ -357,11 +358,11 @@ export function StatsPage() {
                       sx={{
                         flex: 1,
                         height: `${Math.max((point.visitors / maxVisitors) * 100, 3)}%`,
-                        bgcolor: colors.primaryDark,
-                        opacity: 0.5,
+                        bgcolor: STRIP_BAR.color,
+                        opacity: STRIP_BAR.opacity,
                         borderRadius: '2px 2px 0 0',
                         minHeight: 2,
-                        '&:hover': { opacity: 0.8 },
+                        '&:hover': { opacity: STRIP_BAR.activeOpacity },
                         transition: 'opacity 0.15s ease',
                       }}
                     />
@@ -676,11 +677,11 @@ export function StatsPage() {
                     sx={{
                       flex: 1,
                       height: `${Math.max((point.count / maxDaily) * 100, 3)}%`,
-                      bgcolor: colors.primaryDark,
-                      opacity: 0.5,
+                      bgcolor: STRIP_BAR.color,
+                      opacity: STRIP_BAR.opacity,
                       borderRadius: '2px 2px 0 0',
                       minHeight: 2,
-                      '&:hover': { opacity: 0.8 },
+                      '&:hover': { opacity: STRIP_BAR.activeOpacity },
                       transition: 'opacity 0.15s ease',
                     }}
                   />

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { CHART_PX, MIN_BAR_PX } from 'src/sections/stats/machineReaders';
 import type { SharedLinksResponse } from 'src/sections/stats/sharedLinks';
 import { SharedLinksTile } from 'src/sections/stats/SharedLinksTile';
+import { CHART_PX, MIN_BAR_PX, STRIP_BAR } from 'src/sections/stats/stripGeometry';
 import { render, screen, within } from 'src/test-utils';
 
 const formatNum = (value: number): string => value.toLocaleString('en-US');
@@ -71,11 +71,22 @@ describe('SharedLinksTile', () => {
     expect(screen.getByText('2026-11-11')).toBeInTheDocument();
   });
 
-  it('lists the platforms with their totals, largest first, as text', () => {
+  it('draws its bars in the strips’ one green, and a day without a share as the muted floor', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
 
-    expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(
-      /^whatsapp 4\s*teams 2\s*signal & similar 1$/
+    const bars = screen.getAllByTestId('shared-links-bar');
+    expect(bars[26]).toHaveStyle({
+      backgroundColor: STRIP_BAR.color,
+      opacity: String(STRIP_BAR.opacity),
+    });
+    expect(bars[0]).not.toHaveStyle({ backgroundColor: STRIP_BAR.color });
+  });
+
+  it('lists the platforms with their 28-day sums, largest first, in one line', () => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-platforms').textContent).toBe(
+      'by platform: whatsapp 4 · teams 2 · signal & similar 1'
     );
   });
 
@@ -88,20 +99,17 @@ describe('SharedLinksTile', () => {
       ['scatter-basic · matplotlib', '/scatter-basic/python/matplotlib'],
       ['heatmap-basic', '/heatmap-basic'],
     ]);
-    expect(
-      within(top)
-        .getAllByRole('listitem')
-        .map(item => item.textContent)
-    ).toEqual(['scatter-basic · matplotlib 3', 'heatmap-basic 2']);
+    expect(top.textContent).toBe('most shared: scatter-basic · matplotlib 3 · heatmap-basic 2');
   });
 
-  it('says what a share is and what the count cannot see', () => {
+  it('holds no paragraph of its own: what a share is stands on the legal page it links', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
 
-    const footnote = screen.getByTestId('shared-links-footnote');
-    expect(footnote).toHaveTextContent(/fetches a page.s preview\s+image/);
-    expect(footnote).toHaveTextContent(/nothing about who shared/);
-    expect(footnote).toHaveTextContent(/still holds from an earlier share is not seen/);
+    expect(screen.queryByTestId('shared-links-footnote')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'legal.privacy()' })).toHaveAttribute(
+      'href',
+      '/legal#shared-links'
+    );
   });
 
   it('shows no platform line and no list for a window without a share', () => {
