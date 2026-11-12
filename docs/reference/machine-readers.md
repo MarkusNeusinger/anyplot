@@ -109,6 +109,13 @@ substring-based: `claude-user`, `claude-searchbot`, and `claudebot` mean three d
 
 A new crawler joins the table from the 30-day request log, never from these lines, which hold no user agent.
 
+Parallel's ShapBot joined that way on 2026-11-12. On 2026-11-10 the lines held 8,878 reads with Cloudflare's
+category `AI Search` and no vendor, 3,335 of them shell reads within one hour. The request log of that hour named
+the user agent, `… compatible; ShapBot/0.1.0`, which
+[Parallel documents](https://docs.parallel.ai/resources/crawler). ShapBot runs a browser, so each shell read is
+followed by the app's own API reads under the same user agent: for this vendor a page read is about 2.7 lines.
+Plausible's hourly pageviews show no trace of the burst.
+
 ## Verified or not
 
 A Cloudflare Transform Rule (rule `19e144356aac49f3820233f564cf880f`, phase `http_request_late_transform`) sets

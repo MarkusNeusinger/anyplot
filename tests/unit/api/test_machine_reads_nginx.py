@@ -127,6 +127,7 @@ class TestOneVendorTable:
             ("Sogou web spider/4.0(+http://www.sogou.com/docs/help/webmasters.htm#07)", "sogou", "search"),
             ("Mozilla/5.0 (compatible; Googlebot/2.1)", "google", "search"),
             ("Mozilla/5.0 (compatible; Claude-User/1.0)", "claude", "user_directed"),
+            ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ShapBot/0.1.0", "parallel", "index"),
             ("Twitterbot/1.0", "other", "unknown"),
         ],
     )

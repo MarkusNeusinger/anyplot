@@ -70,6 +70,12 @@ AI_AGENTS: tuple[tuple[str, str, str], ...] = (
     ("exasearchbot", "exa", "index"),
     ("keenable-user", "keenable", "user_directed"),
     ("keenable", "keenable", "index"),
+    # Parallel documents Shap-User (a person's agent asked for one page) and
+    # ShapBot, which indexes pages for its web APIs. ShapBot runs a browser
+    # (Lightpanda), so the shell serves it the page: each of its page reads is
+    # followed by the app's own API reads under the same user agent.
+    ("shap-user", "parallel", "user_directed"),
+    ("shapbot", "parallel", "index"),
     ("bytespider", "bytedance", "training"),
     ("ccbot", "commoncrawl", "training"),
     # SEO tools: crawlers that index the web for search-marketing products.
