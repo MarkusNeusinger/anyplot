@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from api.cache import clear_cache
+from api.cache import clear_cache, get_cache, get_page_cache, set_cache, set_page_cache
 from api.main import app, fastapi_app
 from api.routers.debug import require_admin
 from core.config import settings
@@ -433,6 +433,18 @@ class TestRequireAdmin:
             # Without X-Admin-Token, cache invalidate still works given correct X-Cache-Token.
             response = auth_client.post("/debug/cache/invalidate", headers={"X-Cache-Token": "cachesecret"})
         assert response.status_code == 200
+
+    def test_cache_invalidate_empties_and_counts_both_caches(self, auth_client) -> None:
+        """The flush after a database sync: the shared answers and the crawler pages, which have a cache of their own."""
+        clear_cache()
+        set_cache("stats", {"specs": 3})
+        set_page_cache("seo:scatter-basic", "<html/>")
+        with patch.object(settings, "cache_invalidate_token", "cachesecret"):
+            response = auth_client.post("/debug/cache/invalidate", headers={"X-Cache-Token": "cachesecret"})
+
+        assert response.status_code == 200
+        assert response.json()["cleared"] == 2
+        assert get_cache("stats") is None and get_page_cache("seo:scatter-basic") is None
 
 
 class TestRequireAdminCfAccess:
