@@ -87,6 +87,54 @@ AUTOMATION = [
 ]
 
 
+# A person reading the page inside an app: the app's in-app browser is Safari or Chrome with the app's own name
+# appended. An `$is_bot` entry that names the app, not its preview fetcher, answers that person with the
+# prerendered page and drops their events, and nothing shows it.
+IN_APP_BROWSERS = [
+    # Snapchat on iOS, as reported from a live request, and the shape its Android WebView takes.
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+    "Version/13.0.3 Mobile/15E148 Snapchat/10.72.0.2 (like Safari/604.1)",
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/AP2A.240805.005; wv) AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36 Snapchat/12.92.0.46 (Pixel 8; Android 14; gzip)",
+    # Facebook and Instagram.
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 "
+    "[FBAN/FBIOS;FBAV/470.0.0.37.103;FBDV/iPhone14,5;FBMD/iPhone;FBSN/iOS;FBSV/17.5;FBLC/en_US]",
+    "Mozilla/5.0 (Linux; Android 14; SM-S918B Build/UP1A.231005.007; wv) AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Version/4.0 Chrome/126.0.6478.134 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/470.0.0.37.103;]",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 "
+    "Instagram 339.0.3.12.91 (iPhone14,5; iOS 17_5; en_US; en; scale=3.00; 1170x2532; 619461904)",
+    # X, LinkedIn, Pinterest and Telegram.
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 "
+    "Twitter for iPhone/10.50",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 "
+    "[LinkedInApp]/9.29.8291",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 "
+    "[Pinterest/iOS]",
+    "Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.134 Mobile "
+    "Safari/537.36 Telegram-Android/11.0.0 (Samsung SM-S918B; Android 14; SDK 34; HIGH)",
+]
+
+# The fetchers the same apps send for a link's preview: these read no JavaScript and need the prerendered page.
+PREVIEW_FETCHERS = [
+    "Snap URL Preview Service; bot; snapchat; https://developers.snap.com/robots",
+    "WhatsApp/2.23.18.78 i",
+    # Signal signs as WhatsApp without a full version.
+    "WhatsApp/2",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) SkypeUriPreview Preview/0.5 skype-url-preview@microsoft.com",
+    "TelegramBot (like TwitterBot)",
+    "Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)",
+    "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)",
+    "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+    "Twitterbot/1.0",
+    "LinkedInBot/1.0 (compatible; Mozilla/5.0; Apache-HttpClient +http://www.linkedin.com)",
+    "Tumblr/14.0.835.186",
+    "http.rb/5.1.1 (Mastodon/4.2.0; +https://mastodon.social/)",
+    # Apple's Messages borrows two crawlers' names at once.
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 "
+    "Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0",
+]
+
+
 def _dropping_maps(location: str) -> list[str]:
     """The map variables whose value 1 makes this location answer 202 instead of proxying."""
     code = _code(location)
@@ -132,6 +180,30 @@ def test_a_browser_event_reaches_plausible(user_agent):
         "every real visitor who sends it vanishes from Plausible with no error anywhere. A farm wearing this "
         "user agent belongs at the Cloudflare edge, not in an nginx map."
     )
+
+
+@pytest.mark.parametrize("user_agent", IN_APP_BROWSERS)
+def test_a_person_in_an_in_app_browser_is_no_crawler(user_agent):
+    """`$is_bot` decides two things at once: the prerendered page instead of the app, and a dropped event."""
+    assert evaluate("is_bot", user_agent) == "0", (
+        f"{user_agent!r} is an app's in-app browser, a person, and `$is_bot` matches it: they get the prerendered "
+        "page and vanish from Plausible. Name the app's preview fetcher in the map, not the app."
+    )
+    assert not _drops(user_agent)
+
+
+@pytest.mark.parametrize("user_agent", PREVIEW_FETCHERS)
+def test_a_preview_fetcher_gets_the_prerendered_page(user_agent):
+    assert evaluate("is_bot", user_agent) == "1", (
+        f"{user_agent!r} fetches a link's preview and reads no JavaScript: without `$is_bot` it gets the empty "
+        "shell, and every shared link shows the home page's title."
+    )
+
+
+def test_no_entry_names_an_app_whose_fetcher_signs_otherwise():
+    """Snap's fetcher signs as "Snap URL Preview Service" and Signal's as WhatsApp: the apps' names match people."""
+    assert evaluate("is_bot", "Snapchat/12.92.0.46") == "0"
+    assert evaluate("is_bot", "Signal-Desktop/7.20.0") == "0"
 
 
 @pytest.mark.parametrize("user_agent", AUTOMATION)

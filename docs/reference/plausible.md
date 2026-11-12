@@ -593,7 +593,8 @@ matching token wins (`SHARE_TOKENS`):
 | `telegram` | `telegrambot` | Asked before Twitter: Telegram signs as `TelegramBot (like TwitterBot)` |
 | `twitter`, `facebook`, `linkedin`, `pinterest`, `reddit`, `tumblr`, `mastodon` | `twitterbot`, `facebookexternalhit`, `linkedinbot`, `pinterestbot`, `redditbot`, `tumblr`, `mastodon` | Social networks |
 | `slack` | `slackbot`, `slack-imgproxy` | Slack reads the page as Slackbot-LinkExpanding and fetches the image through its image proxy |
-| `discord`, `viber`, `snapchat` | `discordbot`, `viber`, `snapchat` | Messengers |
+| `discord`, `viber` | `discordbot`, `viber` | Messengers |
+| `snapchat` | `snap url preview` | Snap's fetcher signs as `Snap URL Preview Service; bot; snapchat; …`; the app's in-app browser, a person, carries `Snapchat/<version>` and is `other` |
 | `teams` | `skypeuripreview`, `microsoft teams` | Microsoft's preview service still signs as SkypeUriPreview; Skype closed in May 2025 |
 | `github` | `github-camo` | GitHub's image proxy, for an image linked in a README, an issue, or a comment |
 | `embedly`, `quora`, `outbrain`, `rogerbot`, `showyoubot` | The name itself (`quora link preview` for Quora) | Link preview services |

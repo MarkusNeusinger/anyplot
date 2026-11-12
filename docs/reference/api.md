@@ -374,7 +374,7 @@ Reads the machine-read telemetry in BigQuery (`api/machine_reads_query.py`) for 
 }
 ```
 
-Always `200`. `status` is `not_configured` while `MACHINE_READS_DATASET` is unset or not a `<project>.<dataset>` name, and `unavailable` when BigQuery doesn't answer; both come with empty `points` and zero totals, and neither is cached, so the next request tries again. An `ok` answer is cached with stale-while-revalidate (1h refresh); a failed refresh keeps the last answer. See [Machine readers](machine-readers.md#where-the-numbers-appear).
+Always `200`. `status` is `not_configured` while `MACHINE_READS_DATASET` is unset or not a `<project>.<dataset>` name, and `unavailable` when BigQuery doesn't answer; both come with empty `points` and zero totals, and the API keeps neither, so the next request that reaches it tries again. Like every `/insights/*` answer, such an answer still carries `Cache-Control: public, max-age=300, stale-while-revalidate=3600`, so a browser or the edge can show it for five more minutes. An `ok` answer is cached with stale-while-revalidate (1h refresh); a failed refresh keeps the last answer. See [Machine readers](machine-readers.md#where-the-numbers-appear).
 
 ### GET `/debug/machine-readers`
 
@@ -437,7 +437,7 @@ Reads the share counters in the database (`api/shared_links.py`, [Shared links](
 
 `platforms` is sorted by shares, largest first. `top` lists up to five plot pages; a spec's hub (`language` and `library` are `null`) and one implementation of it are entries of their own.
 
-Always `200`. `status` is `not_configured` without a database, and `unavailable` when it doesn't answer or the `link_shares` table isn't there yet; both come with zeros and empty lists, and neither is kept, so the next request tries again. An `ok` answer is cached with stale-while-revalidate (1h refresh).
+Always `200`. `status` is `not_configured` without a database, and `unavailable` when it doesn't answer or the `link_shares` table isn't there yet; both come with zeros and empty lists, and the API keeps neither, so the next request that reaches it tries again. Like every `/insights/*` answer, such an answer still carries `Cache-Control: public, max-age=300, stale-while-revalidate=3600`, so a browser or the edge can show it for five more minutes. An `ok` answer is cached with stale-while-revalidate (1h refresh).
 
 ### GET `/debug/shared-links`
 

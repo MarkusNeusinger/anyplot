@@ -52,7 +52,7 @@ Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with 
 
 ### Detected bots
 
-nginx detects 57 User-Agent patterns (counted 2026-11-09), organized by category:
+nginx detects 56 User-Agent patterns (counted 2026-11-12), organized by category:
 
 **Social Media:**
 | Bot | User-Agent Pattern |
@@ -71,12 +71,41 @@ nginx detects 57 User-Agent patterns (counted 2026-11-09), organized by category
 | Slack | `slackbot` |
 | Discord | `discordbot` |
 | Telegram | `telegrambot` |
-| WhatsApp | `whatsapp` |
-| Signal | `signal` |
+| WhatsApp, Signal | `whatsapp` |
 | Viber | `viber` |
 | Skype/Teams | `skypeuripreview` |
 | Microsoft Teams | `microsoft teams` |
-| Snapchat | `snapchat` |
+| Snapchat | `snap url preview` |
+
+**An entry names the app's preview fetcher, never the app.** An app's in-app
+browser is Safari or Chrome with the app's name appended to the user agent,
+and the person in it must get the page a browser gets, with its analytics: a
+match in this map serves the prerendered page and drops the Plausible event
+(see [The analytics shield](plausible.md#the-analytics-shield)).
+`tests/unit/api/test_analytics_event_proxy.py` holds the in-app browsers no
+entry may match and the fetchers that must still match. Checked on 2026-11-12:
+
+- **Snapchat**: the fetcher signs as
+  `Snap URL Preview Service; bot; snapchat; …`
+  ([Snap's documentation](https://developers.snap.com/robots)), and the in-app
+  browser carries `Snapchat/<version>`. Until 2026-11-12 the entry was
+  `snapchat`, which matched both.
+- **Signal**: its fetcher signs as `WhatsApp/2`
+  ([Signal-Android #10060](https://github.com/signalapp/Signal-Android/issues/10060)),
+  so the `whatsapp` entry serves it. The entry `signal` matched no fetcher and
+  was removed on 2026-11-12.
+- **Viber**: the fetcher is the sender's own phone and signs as its WebView
+  with `Viber/<version>`, the shape an in-app browser has too. The two can't be
+  told apart by user agent, so the entry stays for the previews. A person in
+  Viber's in-app browser would get the prerendered page.
+- **Facebook, Instagram, X, LinkedIn, Pinterest, Telegram**: their in-app
+  browsers carry tokens of their own (`FBAN`, `Instagram`, `Twitter for
+  iPhone`, `LinkedInApp`, `Pinterest/iOS`, `Telegram-Android`) that no entry
+  matches.
+
+In the 30 days before 2026-11-12 the site's request log held no request from
+Snapchat, Signal, Viber, Tumblr, or Teams under these names, so nobody was
+served the wrong page; the map was wrong for the day someone is.
 
 **User-directed AI fetchers:**
 
@@ -160,6 +189,7 @@ the API.
 |-----|-------------------|---------|
 | Exa | `exasearchbot` | AI search index (`index`) |
 | Keenable | `keenable-user`, `keenable` | a person's agent / AI search index |
+| Parallel | `shap-user`, `shapbot` | a person's agent / AI search index. ShapBot runs a browser (Lightpanda), so it reads the page through the shell and the app's own API calls |
 | Google Vertex AI agents | `google-cloudvertexbot` | builds an agent's grounding on the site owner's request (`index`) |
 | ByteDance | `bytespider` | training crawler (`training`) |
 | Common Crawl | `ccbot` | training corpus (`training`) |

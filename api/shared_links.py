@@ -89,7 +89,10 @@ SHARE_TOKENS: tuple[tuple[str, str], ...] = (
     # in May 2025, so what it fetches is a link shared in Teams.
     ("skypeuripreview", "teams"),
     ("microsoft teams", "teams"),
-    ("snapchat", "snapchat"),
+    # Snap's fetcher, "Snap URL Preview Service; bot; snapchat; ...". Not the
+    # token "snapchat": the app's in-app browser carries "Snapchat/<version>",
+    # and a person who opens the image there shared nothing.
+    ("snap url preview", "snapchat"),
     # GitHub shows an image linked in a README, an issue or a comment through
     # its image proxy.
     ("github-camo", "github"),
