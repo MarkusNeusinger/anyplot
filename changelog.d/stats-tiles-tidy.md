@@ -9,3 +9,4 @@
   tile gives the platforms' 28-day sums and the most shared plots in one line
   each, without its explanatory paragraph, which the legal page it links
   holds. The shared links bars were a brighter green than the other strips.
+  (#13071)
