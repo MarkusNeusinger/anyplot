@@ -12,6 +12,17 @@ export interface SharedLinksDay {
 export interface SharedLinksPlatform {
   platform: string;
   shares: number;
+  /**
+   * The part of the shares whose fetch Cloudflare verified as a bot it knows, never more than
+   * `shares`. `null` when the answer names no verdict (an API revision older than the page).
+   */
+  verified: number | null;
+}
+
+/** A platform's part of one of the tile's two platform lines. */
+export interface SharedLinksPart {
+  platform: string;
+  shares: number;
 }
 
 /** A plot page: a spec's hub (no language, no library) or one implementation of it. */
@@ -66,6 +77,32 @@ export function platformLabel(platform: string): string {
 const count = (value: unknown): number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
 
+/** A counted part of *whole*: never more than it, and `null` for anything but a number. */
+const part = (value: unknown, whole: number): number | null =>
+  typeof value === 'number' ? Math.min(count(value), whole) : null;
+
+/**
+ * The platforms' shares told apart by Cloudflare's verdict on each fetch, each line largest
+ * first: a platform with both kinds stands in both. `null` when a platform comes without a
+ * verdict, so the tile calls no share unverified that it knows nothing about.
+ */
+export function byVerdict(
+  platforms: SharedLinksPlatform[]
+): { verified: SharedLinksPart[]; unverified: SharedLinksPart[] } | null {
+  const verified: SharedLinksPart[] = [];
+  const unverified: SharedLinksPart[] = [];
+  for (const entry of platforms) {
+    if (entry.verified === null) return null;
+    if (entry.verified > 0) verified.push({ platform: entry.platform, shares: entry.verified });
+    if (entry.shares > entry.verified) {
+      unverified.push({ platform: entry.platform, shares: entry.shares - entry.verified });
+    }
+  }
+  // A stable sort: platforms with the same part keep the answer's order.
+  const largestFirst = (a: SharedLinksPart, b: SharedLinksPart): number => b.shares - a.shares;
+  return { verified: verified.sort(largestFirst), unverified: unverified.sort(largestFirst) };
+}
+
 const text = (value: unknown): string | null =>
   typeof value === 'string' && value !== '' ? value : null;
 
@@ -82,21 +119,9 @@ export interface SharedLinksDetail extends SharedLinksResponse {
   top: SharedLinksPlot[];
   /** Preview images fetched by a client that is neither a preview platform nor a known crawler. */
   other: number;
-  /**
-   * Per platform, and for `other`, how many of its fetches Cloudflare verified as a bot it
-   * knows. A platform with none is absent.
-   */
-  verified: Record<string, number>;
+  /** How many of `other` Cloudflare verified as a bot it knows: a platform the list lacks. */
+  other_verified: number;
 }
-
-const counts = (value: unknown): Record<string, number> =>
-  value && typeof value === 'object' && !Array.isArray(value)
-    ? Object.fromEntries(
-        Object.entries(value)
-          .map(([name, entry]): [string, number] => [name, count(entry)])
-          .filter(([, entry]) => entry > 0)
-      )
-    : {};
 
 /**
  * The detail as the debug section reads it: the numbers for `ok`, the status itself for an
@@ -121,14 +146,15 @@ export function readSharedLinksDetail(
           shares: count(entry.shares),
         })),
       other: count(record.other),
-      verified: counts(record.verified),
+      other_verified: part(record.other_verified, count(record.other)) ?? 0,
     }
   );
 }
 
 /**
  * The answer as the tile reads it; `null` for anything but an `ok` answer with days. An answer
- * without the two lists (an API revision older than the page) reads as one with empty lists.
+ * without the two lists (an API revision older than the page) reads as one with empty lists,
+ * and a platform without its verified part as one with no verdict.
  */
 export function readSharedLinks(body: unknown): SharedLinksResponse | null {
   if (!body || typeof body !== 'object') return null;
@@ -145,7 +171,11 @@ export function readSharedLinks(body: unknown): SharedLinksResponse | null {
     days,
     platforms: records(record.platforms)
       .filter(entry => text(entry.platform) !== null && count(entry.shares) > 0)
-      .map(entry => ({ platform: entry.platform as string, shares: count(entry.shares) })),
+      .map(entry => ({
+        platform: entry.platform as string,
+        shares: count(entry.shares),
+        verified: part(entry.verified, count(entry.shares)),
+      })),
     top_specs: records(record.top_specs)
       .filter(entry => text(entry.spec_id) !== null && count(entry.shares) > 0)
       .map(entry => ({ spec_id: entry.spec_id as string, shares: count(entry.shares) })),

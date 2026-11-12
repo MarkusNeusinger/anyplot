@@ -268,9 +268,11 @@ export function LegalPage() {
                   'shared links',
                   <Box component="span" id="shared-links" sx={ANCHOR_SX}>
                     when a messenger or a social network fetches a page&apos;s preview image, one
-                    counter goes up: the day, the platform and the page. no IP address, no
-                    user-agent, no time of day, nothing about who shared. the counts are kept
-                    without a time limit.
+                    counter goes up: the day, the platform and the page, and whether Cloudflare
+                    verified the fetcher as a bot it knows. no IP address, no user-agent, no time of
+                    day, nothing about who shared. unverified is no verdict on a share: WhatsApp and
+                    Signal fetch the preview from the sender&apos;s own phone, which nobody can
+                    verify. the counts are kept without a time limit.
                   </Box>,
                 ],
                 [

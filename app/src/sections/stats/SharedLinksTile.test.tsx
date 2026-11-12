@@ -19,9 +19,9 @@ const ANSWER: SharedLinksResponse = {
   total: 7,
   days: DAYS,
   platforms: [
-    { platform: 'whatsapp', shares: 4 },
-    { platform: 'teams', shares: 2 },
-    { platform: 'whatsapp-lite', shares: 1 },
+    { platform: 'whatsapp', shares: 4, verified: 0 },
+    { platform: 'teams', shares: 2, verified: 2 },
+    { platform: 'whatsapp-lite', shares: 1, verified: 0 },
   ],
   top_specs: [
     { spec_id: 'scatter-basic', shares: 5 },
@@ -86,12 +86,59 @@ describe('SharedLinksTile', () => {
     expect(bars[0]).not.toHaveStyle({ backgroundColor: STRIP_BAR.color });
   });
 
-  it('lists the platforms with their 28-day sums, largest first, in one line', () => {
+  it('lists the platforms in two lines, by what cloudflare verified, each largest first', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-verified').textContent).toBe(
+      'verified by cloudflare: teams 2'
+    );
+    // An app that fetches from the sender's phone is never verified, and its share still counts.
+    expect(screen.getByTestId('shared-links-unverified').textContent).toBe(
+      'unverified: whatsapp 4 · signal & similar 1'
+    );
+    expect(screen.queryByTestId('shared-links-platforms')).not.toBeInTheDocument();
+  });
+
+  it('shows a platform with both kinds in both lines, with the part that belongs to each', () => {
+    const mixed = {
+      ...ANSWER,
+      platforms: [
+        { platform: 'teams', shares: 1200, verified: 1150 },
+        { platform: 'slack', shares: 60, verified: 60 },
+        { platform: 'whatsapp', shares: 34, verified: 0 },
+      ],
+    };
+    render(<SharedLinksTile answer={mixed} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-verified').textContent).toBe(
+      'verified by cloudflare: teams 1,150 · slack 60'
+    );
+    expect(screen.getByTestId('shared-links-unverified').textContent).toBe(
+      'unverified: teams 50 · whatsapp 34'
+    );
+  });
+
+  it('shows one of the two lines alone when every share is of its kind', () => {
+    const verified = { ...ANSWER, platforms: [{ platform: 'teams', shares: 2, verified: 2 }] };
+    render(<SharedLinksTile answer={verified} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-verified')).toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-unverified')).not.toBeInTheDocument();
+  });
+
+  it('calls no share unverified when the answer names no verdict', () => {
+    // An API revision older than the page: the platforms in one line, as before.
+    const older = {
+      ...ANSWER,
+      platforms: ANSWER.platforms.map(entry => ({ ...entry, verified: null })),
+    };
+    render(<SharedLinksTile answer={older} formatNum={formatNum} />);
 
     expect(screen.getByTestId('shared-links-platforms').textContent).toBe(
       'by platform: whatsapp 4 · teams 2 · signal & similar 1'
     );
+    expect(screen.queryByTestId('shared-links-verified')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-unverified')).not.toBeInTheDocument();
   });
 
   it('lists the most shared specs, each a link to its hub', () => {
@@ -149,6 +196,8 @@ describe('SharedLinksTile', () => {
     expect(screen.getByText(/last 28 days · 0 shares/)).toBeInTheDocument();
     expect(screen.getAllByTestId('shared-links-bar')).toHaveLength(28);
     expect(screen.queryByTestId('shared-links-platforms')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-verified')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-unverified')).not.toBeInTheDocument();
     expect(screen.queryByTestId('shared-links-specs')).not.toBeInTheDocument();
     expect(screen.queryByTestId('shared-links-libraries')).not.toBeInTheDocument();
   });

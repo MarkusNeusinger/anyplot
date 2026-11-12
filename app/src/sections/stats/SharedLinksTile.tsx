@@ -5,9 +5,12 @@
  *
  * - Bars: one per day, the day's sum of shares, drawn like the visitors strip and the machine
  *   readers tile above it (`DayStrip`).
- * - Below: the window's sums as short lines. The shares by platform, the most shared specs (a
- *   spec's hub and all of its implementations together, linked to the hub) and the most shared
- *   libraries (a library's implementations across specs, linked to the gallery filtered by it).
+ * - Below: the window's sums as short lines. The shares by platform in two lines, those whose
+ *   fetch Cloudflare verified as the platform's own and those it did not (`byVerdict`): the
+ *   platform's name is read from a user agent anyone can write, and an app that fetches from
+ *   the sender's phone is never verified. Then the most shared specs (a spec's hub and all of
+ *   its implementations together, linked to the hub) and the most shared libraries (a library's
+ *   implementations across specs, linked to the gallery filtered by it).
  * - What a share is and what the count cannot see is on the legal page the header links.
  * - Loading, a failed request and any answer but `ok` are one muted line each.
  */
@@ -20,7 +23,12 @@ import Typography from '@mui/material/Typography';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { paths, specPath } from 'src/routes/paths';
 import { DayStrip } from 'src/sections/stats/DayStrip';
-import { platformLabel, type SharedLinksResponse } from 'src/sections/stats/sharedLinks';
+import {
+  byVerdict,
+  platformLabel,
+  type SharedLinksPart,
+  type SharedLinksResponse,
+} from 'src/sections/stats/sharedLinks';
 import { CHART_PX } from 'src/sections/stats/stripGeometry';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
@@ -125,19 +133,36 @@ function SharedLinksSums({
     shares: entry.shares,
   }));
   if (platforms.length === 0 && specs.length === 0 && libraries.length === 0) return null;
+  const verdict = byVerdict(platforms);
 
   return (
     <Box
       component="ul"
       sx={{ ...smallSx, listStyle: 'none', m: 0, mt: 0.75, p: 0, lineHeight: 1.6 }}
     >
-      {platforms.length > 0 && (
-        <li data-testid="shared-links-platforms">
-          by platform:{' '}
-          {platforms
-            .map(entry => `${platformLabel(entry.platform)} ${formatNum(entry.shares)}`)
-            .join(' · ')}
-        </li>
+      {verdict ? (
+        <>
+          <PlatformLine
+            testId="shared-links-verified"
+            label="verified by cloudflare"
+            parts={verdict.verified}
+            formatNum={formatNum}
+          />
+          <PlatformLine
+            testId="shared-links-unverified"
+            label="unverified"
+            parts={verdict.unverified}
+            formatNum={formatNum}
+          />
+        </>
+      ) : (
+        // An answer without the verdicts: one line that claims nothing about them.
+        <PlatformLine
+          testId="shared-links-platforms"
+          label="by platform"
+          parts={platforms}
+          formatNum={formatNum}
+        />
       )}
       <SumLine
         testId="shared-links-specs"
@@ -152,6 +177,29 @@ function SharedLinksSums({
         formatNum={formatNum}
       />
     </Box>
+  );
+}
+
+/** One line of platforms with their sums; no line without a platform. */
+function PlatformLine({
+  testId,
+  label,
+  parts,
+  formatNum,
+}: {
+  testId: string;
+  label: string;
+  parts: SharedLinksPart[];
+  formatNum: (value: number) => string;
+}) {
+  if (parts.length === 0) return null;
+  return (
+    <li data-testid={testId}>
+      {label}:{' '}
+      {parts
+        .map(entry => `${platformLabel(entry.platform)} ${formatNum(entry.shares)}`)
+        .join(' · ')}
+    </li>
   );
 }
 

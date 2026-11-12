@@ -12,7 +12,9 @@
  *   knows. The platform's name is read from a user agent anyone can write, so
  *   this is what shows a client that only signs as a platform: a platform
  *   Cloudflare verifies, with shares that are mostly unverified. WhatsApp and
- *   Signal fetch from the sender's phone and are never verified.
+ *   Signal fetch from the sender's phone and are never verified. A platform
+ *   whose verdict the answer lacks (an API revision older than the page)
+ *   stands without that part.
  * - Loading, no database, a failed request and an empty window are one line each.
  */
 
@@ -68,15 +70,17 @@ export function SharedLinksSection({ token, reloadCounter }: SharedLinksSectionP
         <>
           <Typography data-testid="shared-links-totals" sx={listTextSx}>
             {number(detail.total)} by named platforms (on /stats) · {number(detail.other)} other
-            (not counted as shares, {number(detail.verified.other ?? 0)} verified)
+            (not counted as shares, {number(detail.other_verified)} verified)
           </Typography>
           {detail.platforms.length > 0 && (
             <Typography data-testid="shared-links-platforms" sx={{ ...listMutedSx, mt: 0.5 }}>
               {detail.platforms
-                .map(
-                  entry =>
-                    `${platformLabel(entry.platform)} ${number(entry.shares)} (${number(detail.verified[entry.platform] ?? 0)} verified)`
-                )
+                .map(entry => {
+                  const total = `${platformLabel(entry.platform)} ${number(entry.shares)}`;
+                  return entry.verified === null
+                    ? total
+                    : `${total} (${number(entry.verified)} verified)`;
+                })
                 .join(' · ')}
             </Typography>
           )}

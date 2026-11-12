@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  byVerdict,
   platformLabel,
   readSharedLinks,
   readSharedLinksDetail,
@@ -17,8 +18,8 @@ const ANSWER = {
   total: 5,
   days: DAYS,
   platforms: [
-    { platform: 'whatsapp', shares: 3 },
-    { platform: 'teams', shares: 2 },
+    { platform: 'whatsapp', shares: 3, verified: 0 },
+    { platform: 'teams', shares: 2, verified: 2 },
   ],
   top_specs: [{ spec_id: 'scatter-basic', shares: 5 }],
   top_libraries: [{ library: 'matplotlib', shares: 3 }],
@@ -36,10 +37,38 @@ describe('readSharedLinks', () => {
       window_days: ANSWER.window_days,
       total: ANSWER.total,
       days: ANSWER.days,
-      platforms: ANSWER.platforms,
+      platforms: ANSWER.platforms.map(({ platform, shares }) => ({ platform, shares })),
       top: [{ spec_id: 'scatter-basic', language: null, library: null, shares: 5 }],
     };
-    expect(readSharedLinks(older)).toEqual({ ...ANSWER, top_specs: [], top_libraries: [] });
+    expect(readSharedLinks(older)).toEqual({
+      ...ANSWER,
+      // The same revision named no verdict either.
+      platforms: ANSWER.platforms.map(entry => ({ ...entry, verified: null })),
+      top_specs: [],
+      top_libraries: [],
+    });
+  });
+
+  it('reads a verified part as at most the shares, and anything but a number as no verdict', () => {
+    const answer = readSharedLinks({
+      ...ANSWER,
+      platforms: [
+        { platform: 'teams', shares: 5, verified: 9 },
+        { platform: 'slack', shares: 3, verified: 1.8 },
+        { platform: 'discord', shares: 2, verified: -1 },
+        { platform: 'whatsapp', shares: 2, verified: 'none' },
+        // An API revision older than the page names no verdict at all.
+        { platform: 'telegram', shares: 1 },
+      ],
+    });
+
+    expect(answer?.platforms).toEqual([
+      { platform: 'teams', shares: 5, verified: 5 },
+      { platform: 'slack', shares: 3, verified: 1 },
+      { platform: 'discord', shares: 2, verified: 0 },
+      { platform: 'whatsapp', shares: 2, verified: null },
+      { platform: 'telegram', shares: 1, verified: null },
+    ]);
   });
 
   it.each([
@@ -89,6 +118,51 @@ describe('readSharedLinks', () => {
   });
 });
 
+describe('byVerdict', () => {
+  it('tells every platform’s shares apart by the verdict, each line largest first', () => {
+    expect(
+      byVerdict([
+        { platform: 'teams', shares: 1200, verified: 1150 },
+        { platform: 'whatsapp', shares: 300, verified: 0 },
+        { platform: 'slack', shares: 60, verified: 60 },
+      ])
+    ).toEqual({
+      verified: [
+        { platform: 'teams', shares: 1150 },
+        { platform: 'slack', shares: 60 },
+      ],
+      // Teams has more shares than WhatsApp, but fewer that are unverified.
+      unverified: [
+        { platform: 'whatsapp', shares: 300 },
+        { platform: 'teams', shares: 50 },
+      ],
+    });
+  });
+
+  it('keeps the answer’s order between platforms with the same part', () => {
+    const lines = byVerdict([
+      { platform: 'linkedin', shares: 4, verified: 4 },
+      { platform: 'whatsapp', shares: 4, verified: 0 },
+      { platform: 'discord', shares: 4, verified: 4 },
+    ]);
+
+    expect(lines?.verified.map(entry => entry.platform)).toEqual(['linkedin', 'discord']);
+  });
+
+  it('is two empty lines for a window without a share', () => {
+    expect(byVerdict([])).toEqual({ verified: [], unverified: [] });
+  });
+
+  it('is null as soon as one platform comes without a verdict', () => {
+    expect(
+      byVerdict([
+        { platform: 'teams', shares: 2, verified: 2 },
+        { platform: 'whatsapp', shares: 1, verified: null },
+      ])
+    ).toBeNull();
+  });
+});
+
 describe('readSharedLinksDetail', () => {
   it('adds the plot pages one by one: an empty language or library is the hub', () => {
     const detail = readSharedLinksDetail({
@@ -99,7 +173,7 @@ describe('readSharedLinksDetail', () => {
         { language: 'python', shares: 9 },
       ],
       other: 7,
-      verified: { teams: 2 },
+      other_verified: 2,
     });
 
     expect(detail).toMatchObject({
@@ -109,12 +183,12 @@ describe('readSharedLinksDetail', () => {
         { spec_id: 'scatter-basic', language: 'python', library: 'matplotlib', shares: 3 },
       ],
       other: 7,
-      verified: { teams: 2 },
+      other_verified: 2,
     });
   });
 
   it('reads an answer without the pages as one with none', () => {
-    expect(readSharedLinksDetail(ANSWER)).toMatchObject({ top: [], other: 0, verified: {} });
+    expect(readSharedLinksDetail(ANSWER)).toMatchObject({ top: [], other: 0, other_verified: 0 });
   });
 });
 

@@ -13,15 +13,15 @@ const DETAIL = {
     shares: offset === 27 ? 1234 : 0,
   })),
   platforms: [
-    { platform: 'teams', shares: 1200 },
-    { platform: 'whatsapp-lite', shares: 34 },
+    { platform: 'teams', shares: 1200, verified: 1150 },
+    { platform: 'whatsapp-lite', shares: 34, verified: 0 },
   ],
   top: [
     { spec_id: 'scatter-basic', language: 'python', library: 'matplotlib', shares: 900 },
     { spec_id: 'heatmap-basic', language: null, library: null, shares: 334 },
   ],
   other: 5678,
-  verified: { teams: 1150, other: 12 },
+  other_verified: 12,
 };
 
 function answerWith(body: unknown, ok = true) {
@@ -54,16 +54,16 @@ describe('readSharedLinksDetail', () => {
     expect(readSharedLinksDetail({ ...DETAIL, other: -3 })).toMatchObject({ other: 0 });
   });
 
-  it('reads the verified fetches per platform, and a missing or broken entry as none', () => {
-    expect(readSharedLinksDetail(DETAIL)).toMatchObject({ verified: { teams: 1150, other: 12 } });
-    expect(readSharedLinksDetail({ ...DETAIL, verified: undefined })).toMatchObject({
-      verified: {},
+  it('reads the verified part of other: at most other, and a missing or broken one as none', () => {
+    expect(readSharedLinksDetail(DETAIL)).toMatchObject({ other_verified: 12 });
+    expect(readSharedLinksDetail({ ...DETAIL, other_verified: undefined })).toMatchObject({
+      other_verified: 0,
     });
-    expect(
-      readSharedLinksDetail({ ...DETAIL, verified: { teams: 'many', slack: -1, other: 2.9 } })
-    ).toMatchObject({ verified: { other: 2 } });
-    expect(readSharedLinksDetail({ ...DETAIL, verified: ['teams'] })).toMatchObject({
-      verified: {},
+    expect(readSharedLinksDetail({ ...DETAIL, other_verified: 'many' })).toMatchObject({
+      other_verified: 0,
+    });
+    expect(readSharedLinksDetail({ ...DETAIL, other_verified: 9999 })).toMatchObject({
+      other_verified: 5678,
     });
   });
 });
@@ -88,6 +88,23 @@ describe('SharedLinksSection', () => {
     expect(screen.getByTestId('shared-links-top')).toHaveTextContent(
       'most shared: scatter-basic · matplotlib 900, heatmap-basic 334'
     );
+  });
+
+  it('shows a platform without the verified part when the answer names no verdict', async () => {
+    // An API revision older than the page: no count is better than a zero nobody measured.
+    answerWith({
+      ...DETAIL,
+      platforms: DETAIL.platforms.map(({ platform, shares }) => ({ platform, shares })),
+    });
+
+    render(<SharedLinksSection token="admin-token" reloadCounter={0} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(
+        'teams 1,200 · signal & similar 34'
+      );
+    });
+    expect(screen.getByTestId('shared-links-platforms')).not.toHaveTextContent('verified');
   });
 
   it.each([

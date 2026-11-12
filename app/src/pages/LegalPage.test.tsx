@@ -144,6 +144,10 @@ describe('LegalPage', () => {
     const sharedLinks = document.getElementById('shared-links');
     expect(sharedLinks).toHaveTextContent(/fetches a page.s preview image/);
     expect(sharedLinks).toHaveTextContent(/the day, the platform and the page/);
+    // The tile tells verified shares from the rest, so the row says what the rest is not.
+    expect(sharedLinks).toHaveTextContent(/whether Cloudflare\s+verified the fetcher/);
+    expect(sharedLinks).toHaveTextContent(/unverified is no verdict on a share/);
+    expect(sharedLinks).toHaveTextContent(/from the sender.s own phone/);
     expect(sharedLinks).toHaveTextContent(/no IP address, no\s+user-agent, no time of day/);
     expect(sharedLinks).toHaveTextContent(/nothing about who shared/);
     expect(sharedLinks).toHaveTextContent(/kept\s+without a time limit/);

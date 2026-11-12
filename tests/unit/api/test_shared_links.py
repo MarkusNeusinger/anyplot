@@ -412,7 +412,7 @@ class TestReadDetail:
         assert all(day.shares == 0 for day in detail.days)
         assert detail.total == 0 and detail.platforms == [] and detail.top == [] and detail.other == 0
         assert detail.top_specs == [] and detail.top_libraries == []
-        assert detail.verified == {}
+        assert detail.other_verified == 0
 
     async def test_other_is_kept_apart_from_every_number(self) -> None:
         detail = await read_detail(FakeRepository(ROWS), TODAY)  # type: ignore[arg-type]
@@ -430,7 +430,12 @@ class TestReadDetail:
         """A share counts whatever the verdict: WhatsApp fetches from the sender's phone, which nobody verifies."""
         detail = await read_detail(FakeRepository(ROWS), TODAY)  # type: ignore[arg-type]
 
-        assert detail.verified == {"linkedin": 4, OTHER: 2, "slack": 1}  # whatsapp has none, so it is absent
+        assert [(entry.platform, entry.shares, entry.verified) for entry in detail.platforms] == [
+            ("linkedin", 4, 4),
+            ("whatsapp", 4, 0),
+            ("slack", 2, 1),  # one of its two fetches was verified, one was not
+        ]
+        assert detail.other_verified == 2
         assert detail.total == 10 and detail.other == 49
 
     async def test_top_plots_are_pages_shared_by_named_platforms(self) -> None:
@@ -485,12 +490,15 @@ DETAIL = SharedLinksDetail(
     status="ok",
     total=10,
     days=[],
-    platforms=[{"platform": "whatsapp", "shares": 4}],  # type: ignore[list-item]
+    platforms=[  # type: ignore[list-item]
+        {"platform": "whatsapp", "shares": 4},
+        {"platform": "slack", "shares": 2, "verified": 1},
+    ],
     top_specs=[{"spec_id": "scatter-basic", "shares": 5}],  # type: ignore[list-item]
     top_libraries=[{"library": "matplotlib", "shares": 3}],  # type: ignore[list-item]
     top=[{"spec_id": "scatter-basic", "shares": 2}],  # type: ignore[list-item]
     other=49,
-    verified={"slack": 1, OTHER: 2},
+    other_verified=2,
 )
 
 
@@ -514,11 +522,15 @@ class TestPublicEndpoint:
         assert response.status_code == 200
         body = response.json()
         assert body["status"] == "ok" and body["total"] == 10 and body["window_days"] == 28
-        assert body["platforms"] == [{"platform": "whatsapp", "shares": 4}]
+        # Every platform says which part of its shares Cloudflare verified: the tile's two lines.
+        assert body["platforms"] == [
+            {"platform": "whatsapp", "shares": 4, "verified": 0},
+            {"platform": "slack", "shares": 2, "verified": 1},
+        ]
         assert body["top_specs"] == [{"spec_id": "scatter-basic", "shares": 5}]
         assert body["top_libraries"] == [{"library": "matplotlib", "shares": 3}]
-        # The pages one by one, like `other` and the verdicts, are the owner's section's.
-        assert "top" not in body and "other" not in body and "verified" not in body
+        # The pages one by one, like `other` and its verdicts, are the owner's section's.
+        assert "top" not in body and "other" not in body and "other_verified" not in body
 
     def test_is_not_configured_without_a_database(self) -> None:
         with patch("api.routers.insights.is_db_configured", return_value=False):
@@ -571,7 +583,8 @@ class TestDebugEndpoint:
             body = self._client(AsyncMock()).get("/debug/shared-links").json()
 
         assert body["status"] == "ok" and body["other"] == 49 and body["total"] == 10
-        assert body["verified"] == {"slack": 1, "other": 2}
+        assert body["other_verified"] == 2
+        assert body["platforms"][1] == {"platform": "slack", "shares": 2, "verified": 1}
         assert body["top"] == [{"spec_id": "scatter-basic", "language": None, "library": None, "shares": 2}]
         assert body["top_specs"] == [{"spec_id": "scatter-basic", "shares": 5}]
 

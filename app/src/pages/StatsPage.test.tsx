@@ -175,8 +175,8 @@ const mockSharedLinks = {
     shares: offset === 27 ? 4 : offset === 20 ? 2 : 0,
   })),
   platforms: [
-    { platform: 'whatsapp', shares: 4 },
-    { platform: 'teams', shares: 2 },
+    { platform: 'whatsapp', shares: 4, verified: 0 },
+    { platform: 'teams', shares: 2, verified: 2 },
   ],
   top_specs: [{ spec_id: 'scatter-basic', shares: 4 }],
   top_libraries: [{ library: 'matplotlib', shares: 3 }],
@@ -620,8 +620,11 @@ describe('StatsPage', () => {
     expect(
       screen.getByText(/link previews on messengers and social networks · last 28 days · 6 shares/)
     ).toBeInTheDocument();
-    expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(
-      'by platform: whatsapp 4 · teams 2'
+    expect(screen.getByTestId('shared-links-verified')).toHaveTextContent(
+      'verified by cloudflare: teams 2'
+    );
+    expect(screen.getByTestId('shared-links-unverified')).toHaveTextContent(
+      'unverified: whatsapp 4'
     );
     expect(screen.getByTestId('shared-links-specs')).toHaveTextContent(
       'most shared specs: scatter-basic 4'
