@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 hive-basic: Basic Hive Plot
-Library: lets-plot | Python 3.13
-Quality: pending | Created: 2025-12-24
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 76/100 | Updated: 2026-11-12
 """
 
 import os
