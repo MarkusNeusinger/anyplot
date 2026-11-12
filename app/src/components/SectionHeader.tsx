@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 
 import { useAnalytics } from 'src/hooks';
+import { pageKind } from 'src/hooks/useAnalytics';
 import { colors, typography } from 'src/theme';
 
 interface SectionHeaderBaseProps {
@@ -25,18 +26,16 @@ type SectionHeaderProps = SectionHeaderBaseProps & SectionHeaderLinkProps;
 
 const titleFontSize = { xs: '1.5rem', sm: '1.875rem', md: 'clamp(1.875rem, 3.5vw, 2.5rem)' };
 
-/** Derive a low-cardinality identifier (hostname) for analytics dimensions. */
-function externalDestination(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
-  }
-}
-
 export function SectionHeader(props: SectionHeaderProps) {
   const { prompt, title, linkText, linkTo, linkHref } = props;
   const { trackEvent } = useAnalytics();
+  // `nav_click` says which element of the landing page a visitor went on from. The same header
+  // on another page (the tiles on /stats) is no such element.
+  const trackLandingLink = (target: string) => {
+    if (pageKind(window.location.pathname) === 'home') {
+      trackEvent('nav_click', { source: 'section_header', target });
+    }
+  };
   const linkSx = {
     fontFamily: typography.mono,
     fontSize: '12px',
@@ -93,29 +92,12 @@ export function SectionHeader(props: SectionHeaderProps) {
         {title}
       </Box>
       {linkText && linkTo && (
-        <Box
-          component={Link}
-          to={linkTo}
-          onClick={() => trackEvent('nav_click', { source: 'section_header', target: linkTo })}
-          sx={linkSx}
-        >
+        <Box component={Link} to={linkTo} onClick={() => trackLandingLink(linkTo)} sx={linkSx}>
           {linkText}
         </Box>
       )}
       {linkText && linkHref && !linkTo && (
-        <Box
-          component="a"
-          href={linkHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() =>
-            trackEvent('external_link', {
-              source: 'section_header',
-              destination: externalDestination(linkHref),
-            })
-          }
-          sx={linkSx}
-        >
+        <Box component="a" href={linkHref} target="_blank" rel="noopener noreferrer" sx={linkSx}>
           {linkText}
         </Box>
       )}

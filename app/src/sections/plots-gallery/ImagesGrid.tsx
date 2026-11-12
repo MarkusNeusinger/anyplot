@@ -6,6 +6,7 @@ import Grid from '@mui/material/Grid';
 
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { ImageSize } from 'src/constants';
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { ImageCard } from 'src/sections/plots-gallery/ImageCard';
 import { overlaySurfaceColor } from 'src/theme';
@@ -27,7 +28,7 @@ interface ImagesGridProps {
   imageSize: ImageSize;
   onTooltipToggle: (id: string | null) => void;
   onCardClick: (image: PlotImage) => void;
-  onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;
+  onTrackEvent?: TrackEvent;
 }
 
 export function ImagesGrid({

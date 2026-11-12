@@ -148,11 +148,9 @@ describe('useAgentSession: quick feedback', () => {
       includeData: true,
       caseId: '20261012T143005Z-1a2b3c4d',
     });
-    expect(trackEvent).toHaveBeenCalledWith('agent_result_feedback', {
-      reaction: 'thumbs_down',
-      include_data: 'yes',
-      subject: 'result',
-    });
+    // The send is the server's to count (the beacon above), not the public dashboard's: the
+    // only event of the session is its plot.
+    expect(trackEvent.mock.calls.map(([name]) => name)).toEqual(['agent_plot_rendered']);
   });
 
   it('stores the chat itself as version 0 before any plot, and an edit replaces it', async () => {
@@ -175,12 +173,6 @@ describe('useAgentSession: quick feedback', () => {
       includeData: false,
       caseId: '20261012T143005Z-1a2b3c4d',
     });
-    expect(trackEvent).toHaveBeenCalledWith('agent_result_feedback', {
-      reaction: 'idea',
-      include_data: 'no',
-      subject: 'chat',
-    });
-
     await act(() =>
       result.current.sendFeedback(0, { reaction: 'bug', message: '', includeData: false })
     );
@@ -215,11 +207,6 @@ describe('useAgentSession: quick feedback', () => {
       includeData: false,
       caseId: '20261012T143100Z-99999999',
     });
-    expect(trackEvent).toHaveBeenLastCalledWith('agent_result_feedback', {
-      reaction: 'thumbs_up',
-      include_data: 'no',
-      subject: 'result',
-    });
   });
 
   it('rejects with the code and ref of a failed send and records nothing', async () => {
@@ -238,7 +225,6 @@ describe('useAgentSession: quick feedback', () => {
     expect(error).toBeInstanceOf(AgentApiError);
     expect(error).toMatchObject({ status: 502, code: 'storage', ref: 'ref-st' });
     expect(result.current.state.versions[1].feedback).toBeUndefined();
-    expect(trackEvent).not.toHaveBeenCalledWith('agent_result_feedback', expect.anything());
     expect(result.current.state.phase).toBe('ready');
   });
 

@@ -107,10 +107,10 @@ export function MapPage() {
     if (!hasHover && pinnedId !== node.id) {
       setPinnedId(node.id);
       setHoverId(node.id);
-      trackEvent('map_node_pin', { spec: node.id });
+      trackEvent('ui_feature', { feature: 'map_node_pin' });
       return;
     }
-    trackEvent('map_node_click', { spec: node.id });
+    trackEvent('ui_feature', { feature: 'map_node_click' });
     navigate(specPath(node.id));
   };
 

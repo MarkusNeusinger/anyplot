@@ -98,8 +98,8 @@ export function FeedbackWidget() {
   };
 
   // Read freshly at each call site so client-side navigations (which don't
-  // remount the widget) don't poison the next `feedback_opened` track or the
-  // submitted `path` field — useMemo with [mode] would only refresh on open,
+  // remount the widget) don't poison the submitted `path` field — useMemo with
+  // [mode] would only refresh on open,
   // not on the route changes that happened while the widget was closed.
   const getCurrentPath = (): string =>
     typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
@@ -132,7 +132,7 @@ export function FeedbackWidget() {
       preloadTurnstile();
       // The toast shares the slot above the FAB with the quick stack.
       setThanksVisible(false);
-      trackEvent('feedback_opened', { path: getCurrentPath() || undefined });
+      trackEvent('ui_feature', { feature: 'feedback_open' });
     } else {
       setMode('closed');
     }
@@ -181,11 +181,8 @@ export function FeedbackWidget() {
       );
       setThanksVisible(true);
       trackEvent('feedback_submitted', {
-        path: getCurrentPath() || undefined,
-        reaction: r,
-        has_contact: 'false',
-        spec_id: specIdFromPath(window.location.pathname),
-        mode: 'quick',
+        source: 'widget_quick',
+        spec: specIdFromPath(window.location.pathname),
       });
     } catch {
       // Non-2xx or network failure — drop silently. The quick interaction has
@@ -216,11 +213,8 @@ export function FeedbackWidget() {
       );
 
       trackEvent('feedback_submitted', {
-        path: getCurrentPath() || undefined,
-        reaction: reaction ?? undefined,
-        has_contact: contact.trim() ? 'true' : 'false',
-        spec_id: specIdFromPath(window.location.pathname),
-        mode: 'full',
+        source: 'widget_form',
+        spec: specIdFromPath(window.location.pathname),
       });
       setSubmitted(true);
     } catch (err) {

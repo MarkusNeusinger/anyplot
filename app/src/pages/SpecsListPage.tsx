@@ -120,7 +120,7 @@ export function SpecsListPage() {
         ...prev,
         [specId]: ((prev[specId] || 0) + 1) % totalImages,
       }));
-      trackEvent('plot_rotate', { spec: specId });
+      trackEvent('ui_feature', { feature: 'plot_rotate' });
     },
     [trackEvent]
   );
@@ -182,7 +182,6 @@ export function SpecsListPage() {
             href={`${GITHUB_URL}/issues/new?template=request-new-plot.yml`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackEvent('suggest_spec')}
             sx={{
               fontFamily: typography.mono,
               fontSize: fontSize.sm,

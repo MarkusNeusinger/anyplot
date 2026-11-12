@@ -61,7 +61,7 @@ describe('useQuickReaction', () => {
     expect(headers[TURNSTILE_HEADER]).toBe('tok-v');
     expect(analytics.trackEvent).toHaveBeenCalledWith(
       'feedback_submitted',
-      expect.objectContaining({ mode: 'plot_overlay' })
+      expect.objectContaining({ source: 'plot_vote' })
     );
   });
 

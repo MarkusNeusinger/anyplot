@@ -167,7 +167,7 @@ export function PlotsPage() {
 
       if (e.key === ' ') {
         e.preventDefault();
-        handleRandom('space');
+        handleRandom();
       } else if (e.key === 'Enter' && searchInputRef.current) {
         e.preventDefault();
         searchInputRef.current.focus();
@@ -248,11 +248,6 @@ export function PlotsPage() {
               // Like a card click: Back from the spec page must restore the
               // offset the user left at, not one saved by an earlier click.
               saveScrollPosition();
-              trackEvent('nav_click', {
-                source: 'gallery_spec_hub',
-                target: specPath(singleSpec),
-                spec: singleSpec,
-              });
             }}
             // The visible words come first, in order (WCAG 2.5.3 Label in
             // Name), but without the `.()` punctuation, which screen readers

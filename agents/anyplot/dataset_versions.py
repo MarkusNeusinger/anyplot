@@ -230,8 +230,8 @@ def dataset_payload(
 
     `version` is the version's number in the session (`StoredDataset.number`), which the page's card shows;
     `can_undo` whether `POST .../dataset/undo` has a version to restore (`SessionView.can_undo`), so no client reads
-    it from the number; `original_version` the number of the current data's first version, from which the page
-    counts how far an undo went back (its `agent_data_undo` bucket).
+    it from the number; `original_version` the number of the current data's first version, from which a client can
+    count how far an undo went back.
     """
     payload: dict[str, Any] = {
         "preview": [list(row) for row in stored.preview],

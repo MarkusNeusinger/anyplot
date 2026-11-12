@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import InputBase from '@mui/material/InputBase';
 import Tooltip from '@mui/material/Tooltip';
 
+import { normalizeQuery, type TrackEvent } from 'src/hooks/useAnalytics';
 import { type DropdownItem, FilterMenu } from 'src/sections/plots-gallery/FilterBar/FilterMenu';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
@@ -20,7 +21,7 @@ export interface FilterSearchProps {
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   onAddFilter: (category: FilterCategory, value: string) => void;
   onClearFilters: () => void;
-  onTrackEvent: (event: string, props?: Record<string, string>) => void;
+  onTrackEvent: TrackEvent;
 }
 
 /**
@@ -100,8 +101,9 @@ export function FilterSearch({
     (category: FilterCategory, value: string) => {
       onAddFilter(category, value);
       // Track search if query was used (filter changes tracked via pageview)
-      if (searchQuery.trim()) {
-        onTrackEvent('search', { query: searchQuery.trim(), category });
+      const query = normalizeQuery(searchQuery);
+      if (query) {
+        onTrackEvent('search', { query, category });
       }
       setSelectedCategory(null);
       setSearchQuery('');
@@ -157,7 +159,7 @@ export function FilterSearch({
   // Track searches with no results (debounced, to discover missing specs)
   const lastTrackedQueryRef = useRef<string>('');
   useEffect(() => {
-    const query = searchQuery.trim();
+    const query = normalizeQuery(searchQuery);
     // Only track if: query >= 2 chars, no results, not already tracked this query
     if (query.length >= 2 && searchResults.length === 0 && query !== lastTrackedQueryRef.current) {
       const timer = setTimeout(() => {

@@ -122,6 +122,30 @@ describe('SpecDetailView', () => {
     expect(screen.getByRole('button', { name: /show interactive/i })).toBeInTheDocument();
   });
 
+  it('switches between the preview and the interactive view, each a use of view_mode_change', async () => {
+    const user = userEvent.setup();
+    const onViewModeChange = vi.fn();
+    const onTrackEvent = vi.fn();
+    const props = {
+      ...defaultProps,
+      currentImpl: implC,
+      selectedLibrary: 'plotly',
+      onViewModeChange,
+      onTrackEvent,
+    };
+    const { rerender } = render(<SpecDetailView {...props} />);
+
+    await user.click(screen.getByRole('button', { name: /show interactive/i }));
+    expect(onViewModeChange).toHaveBeenLastCalledWith('interactive');
+    expect(onTrackEvent).toHaveBeenLastCalledWith('ui_feature', { feature: 'view_mode_change' });
+
+    rerender(<SpecDetailView {...props} viewMode="interactive" />);
+    await user.click(screen.getByRole('button', { name: /show static preview/i }));
+    expect(onViewModeChange).toHaveBeenLastCalledWith('preview');
+    expect(onTrackEvent).toHaveBeenCalledTimes(2);
+    expect(onTrackEvent).toHaveBeenLastCalledWith('ui_feature', { feature: 'view_mode_change' });
+  });
+
   it('keeps the "use with my data" entry off the image (it sits beside the carousel)', () => {
     render(<SpecDetailView {...defaultProps} />);
     expect(screen.queryByRole('button', { name: /use with my data/i })).not.toBeInTheDocument();

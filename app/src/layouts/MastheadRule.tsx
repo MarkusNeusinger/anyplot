@@ -121,9 +121,8 @@ export function MastheadRule() {
   // cold load. Keep it truthful: the build-time project version, not a literal.
   const version = releaseTag ?? `v${CONFIG.appVersion}`;
 
-  const NEXT_MODE = { system: 'light', light: 'dark', dark: 'system' } as const;
   const handleThemeToggle = () => {
-    trackEvent('theme_toggle', { to: NEXT_MODE[mode] });
+    trackEvent('ui_feature', { feature: 'theme_toggle' });
     cycle();
   };
 
@@ -210,12 +209,7 @@ export function MastheadRule() {
             spec-id + lang + lib without truncating. Short single-segment
             breadcrumbs override this and keep the marker on xs (see
             keepRootMarkerOnXs above). */}
-        <Box
-          component={RouterLink}
-          to={paths.home}
-          onClick={() => trackEvent('nav_click', { source: 'masthead_logo', target: paths.home })}
-          sx={{ ...linkSx, display: rootMarkerDisplay }}
-        >
+        <Box component={RouterLink} to={paths.home} sx={{ ...linkSx, display: rootMarkerDisplay }}>
           ~/anyplot.ai
         </Box>
 
@@ -280,14 +274,7 @@ export function MastheadRule() {
                   {' · '}
                 </Box>
                 {seg.to ? (
-                  <Box
-                    component={RouterLink}
-                    to={seg.to}
-                    onClick={() =>
-                      trackEvent('nav_click', { source: 'breadcrumb', target: seg.to })
-                    }
-                    sx={linkSx}
-                  >
+                  <Box component={RouterLink} to={seg.to} sx={linkSx}>
                     {labelEl}
                   </Box>
                 ) : (

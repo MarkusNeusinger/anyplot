@@ -55,13 +55,12 @@ export function LibrariesPage() {
       : LIBRARIES.filter(name => LIB_TO_FRAMEWORK[name] === frameworkFilter);
 
   const handleLibraryClick = (name: string) => {
-    trackEvent('library_click', { source: 'libraries_page', library: name });
     navigate(paths.plotsFiltered('lib', name));
   };
 
   const handleFilterClick = (id: FrameworkFilter) => {
     setFrameworkFilter(id);
-    trackEvent('library_filter', { source: 'libraries_page', framework: id });
+    trackEvent('ui_feature', { feature: 'library_filter' });
   };
 
   return (
@@ -164,10 +163,6 @@ export function LibrariesPage() {
                       href={meta.documentation_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={e => {
-                        e.stopPropagation();
-                        trackEvent('external_link', { destination: 'library_docs', library: name });
-                      }}
                       sx={{
                         color: 'var(--ink-muted)',
                         textDecoration: 'none',

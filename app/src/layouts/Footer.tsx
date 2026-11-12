@@ -7,12 +7,6 @@ import { GITHUB_URL } from 'src/constants';
 import { paths } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
-interface FooterProps {
-  onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;
-  selectedSpec?: string;
-  selectedLibrary?: string;
-}
-
 const linkSx = {
   color: semanticColors.mutedText,
   textDecoration: 'none',
@@ -37,12 +31,7 @@ const linkSx = {
 
 const ISSUE_CHOOSER_URL = `${GITHUB_URL}/issues/new/choose`;
 
-export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterProps) {
-  const track = (destination: string) => () =>
-    onTrackEvent?.('external_link', { destination, spec: selectedSpec, library: selectedLibrary });
-  const trackInternal = (destination: string) => () =>
-    onTrackEvent?.('internal_link', { destination, spec: selectedSpec, library: selectedLibrary });
-
+export function Footer() {
   return (
     <Box
       component="footer"
@@ -61,23 +50,11 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
         letterSpacing: '0.08em',
       }}
     >
-      <Link
-        href={GITHUB_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={track('github')}
-        sx={linkSx}
-      >
+      <Link href={GITHUB_URL} target="_blank" rel="noopener noreferrer" sx={linkSx}>
         github
       </Link>
       <span>·</span>
-      <Link
-        href={ISSUE_CHOOSER_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={track('github_issue_chooser')}
-        sx={linkSx}
-      >
+      <Link href={ISSUE_CHOOSER_URL} target="_blank" rel="noopener noreferrer" sx={linkSx}>
         report
       </Link>
       <Box component="span" sx={{ display: { xs: 'none', md: 'contents' } }}>
@@ -86,18 +63,17 @@ export function Footer({ onTrackEvent, selectedSpec, selectedLibrary }: FooterPr
           href="https://www.linkedin.com/in/markus-neusinger/"
           target="_blank"
           rel="noopener noreferrer"
-          onClick={track('linkedin')}
           sx={linkSx}
         >
           markus neusinger
         </Link>
       </Box>
       <span>·</span>
-      <Link component={RouterLink} to={paths.about} onClick={trackInternal('about')} sx={linkSx}>
+      <Link component={RouterLink} to={paths.about} sx={linkSx}>
         about
       </Link>
       <span>·</span>
-      <Link component={RouterLink} to={paths.legal} onClick={trackInternal('legal')} sx={linkSx}>
+      <Link component={RouterLink} to={paths.legal} sx={linkSx}>
         legal
       </Link>
     </Box>

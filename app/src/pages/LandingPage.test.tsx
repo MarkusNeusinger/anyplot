@@ -72,7 +72,7 @@ describe('LandingPage', () => {
     expect(trackEvent).toHaveBeenCalledWith('nav_click', {
       source: 'library_card',
       target: '/plots',
-      value: 'matplotlib',
+      library: 'matplotlib',
     });
     expect(navigate).toHaveBeenCalledWith('/plots?lib=matplotlib');
   });

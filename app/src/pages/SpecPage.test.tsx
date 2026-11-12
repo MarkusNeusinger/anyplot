@@ -54,8 +54,26 @@ vi.mock('src/sections/spec-detail/SpecTabs', () => ({
   ),
 }));
 
+// The overview hands its first card's copy and download to the page, as a card's buttons do.
+type OverviewImpl = { library_id: string; code?: string | null };
 vi.mock('src/sections/spec-detail/SpecOverview', () => ({
-  SpecOverview: () => <div data-testid="spec-overview">SpecOverview</div>,
+  SpecOverview: ({
+    implementations,
+    onCopyCode,
+    onDownload,
+  }: {
+    implementations: OverviewImpl[];
+    onCopyCode: (impl: OverviewImpl) => void;
+    onDownload: (impl: OverviewImpl) => void;
+  }) => (
+    <div data-testid="spec-overview">
+      SpecOverview
+      <button onClick={() => onDownload(implementations[0])}>download first</button>
+      <button onClick={() => onCopyCode({ ...implementations[0], code: 'print(1)' })}>
+        copy first
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock('src/sections/spec-detail/SpecDetailView', () => ({
@@ -213,6 +231,29 @@ describe('SpecPage', () => {
     expect(screen.queryByTestId('spec-detail-view')).not.toBeInTheDocument();
   });
 
+  it('records a download and a copy from the hub under the page kind of the hub', async () => {
+    // The same value the hub's pageview carries, so one `page` breakdown covers both.
+    mockParams = { specId: 'scatter-basic' };
+    mockFetchSuccess();
+    // `userEvent.setup()` gives the page a clipboard to copy to.
+    const user = userEvent.setup();
+    render(<SpecPage />);
+
+    await user.click(await screen.findByRole('button', { name: 'download first' }));
+    expect(mockTrackEvent).toHaveBeenCalledWith(
+      'download_image',
+      expect.objectContaining({ spec: 'scatter-basic', page: 'spec_overview' })
+    );
+
+    await user.click(screen.getByRole('button', { name: 'copy first' }));
+    await waitFor(() =>
+      expect(mockTrackEvent).toHaveBeenCalledWith(
+        'copy_code',
+        expect.objectContaining({ spec: 'scatter-basic', method: 'image', page: 'spec_overview' })
+      )
+    );
+  });
+
   it('renders detail mode when library in URL params', async () => {
     mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
     mockFetchSuccess();
@@ -243,20 +284,22 @@ describe('SpecPage', () => {
     );
   });
 
-  it('reports impl_missing when the URL names an implementation that is gone', async () => {
+  it('sends the visitor to the hub when the URL names an implementation that is gone', async () => {
     // The shape a library migration leaves behind: the spec exists, the
     // library/language pair does not. The visitor is redirected to the hub
-    // rather than shown a 404, so this event is the only trace it leaves.
+    // rather than shown a 404. No event: the address they asked for is the
+    // pageview the layout recorded when the navigation began.
     mockParams = { specId: 'scatter-basic', language: 'python', library: 'highcharts' };
     mockFetchSuccess();
     render(<SpecPage />);
 
     await waitFor(() => {
-      expect(mockTrackEvent).toHaveBeenCalledWith('page_not_found', {
-        path: window.location.pathname,
-        source: 'impl_missing',
-      });
+      expect(mockNavigate).toHaveBeenCalledWith(
+        { pathname: '/scatter-basic', search: '?language=python' },
+        { replace: true }
+      );
     });
+    expect(mockTrackEvent).not.toHaveBeenCalled();
   });
 
   it('puts .use_my_data() beside the carousel only for an eligible pair', async () => {
@@ -368,17 +411,6 @@ describe('SpecPage', () => {
 
     await screen.findByTestId('spec-overview');
     expect(screen.queryByRole('button', { name: 'Use with my data' })).not.toBeInTheDocument();
-  });
-
-  it('does not report a miss when the implementation exists', async () => {
-    mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
-    mockFetchSuccess();
-    render(<SpecPage />);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('spec-detail-view')).toBeInTheDocument();
-    });
-    expect(mockTrackEvent).not.toHaveBeenCalledWith('page_not_found', expect.anything());
   });
 
   it('renders description text', async () => {

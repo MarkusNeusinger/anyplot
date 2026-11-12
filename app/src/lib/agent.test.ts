@@ -11,7 +11,6 @@ import {
   caseListQuery,
   codeArtifact,
   convertAnswer,
-  countBucket,
   hasPage,
   isPlotAction,
   laneOf,
@@ -25,7 +24,6 @@ import {
   publicRoute,
   readBudget,
   renderedThemes,
-  sizeBucket,
   switchCarry,
   toAgentApiError,
   toBase64,
@@ -1532,20 +1530,6 @@ describe('library switch and plot memory readers', () => {
 });
 
 describe('helpers', () => {
-  it('buckets sizes without exposing them', () => {
-    expect(sizeBucket(10)).toBe('lt_1kb');
-    expect(sizeBucket(5 * 1024)).toBe('1_10kb');
-    expect(sizeBucket(20 * 1024)).toBe('10_50kb');
-    expect(sizeBucket(200 * 1024)).toBe('50_200kb');
-    expect(sizeBucket(200 * 1024 + 1)).toBe('200kb_1mb');
-    expect(sizeBucket(1024 * 1024)).toBe('200kb_1mb');
-    expect(sizeBucket(1024 * 1024 + 1)).toBe('over_1mb');
-  });
-
-  it('buckets counts without exposing them', () => {
-    expect([0, 1, 2, 3, 12].map(countBucket)).toEqual(['1', '1', '2', '3+', '3+']);
-  });
-
   it('names the rendered themes from the artifacts', () => {
     expect(renderedThemes(['plot-dark.png', 'plot.py'])).toEqual(['dark']);
     expect(renderedThemes(['plot.py'])).toEqual([]);

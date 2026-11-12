@@ -46,22 +46,23 @@ describe('MastheadRule', () => {
     releaseTag = 'v1.2.3';
   });
 
-  it('fires theme_toggle event with the next mode and cycles', async () => {
+  it('counts the theme toggle as a used feature and cycles', async () => {
     const user = userEvent.setup();
     render(<MastheadRule />);
 
     // mode='system' → next is 'light'
     await user.click(screen.getByLabelText('Switch to light theme'));
-    expect(trackEvent).toHaveBeenCalledWith('theme_toggle', { to: 'light' });
+    expect(trackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'theme_toggle' });
     expect(cycle).toHaveBeenCalled();
   });
 
-  it('tracks nav_click on the masthead logo, branch, and release links', async () => {
+  it('tracks nav_click on the landing page links, branch and release, not on the root marker', async () => {
     const user = userEvent.setup();
     render(<MastheadRule />);
 
+    // The root marker stands on every page: it is no landing-page element.
     await user.click(screen.getByText('~/anyplot.ai'));
-    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'masthead_logo', target: '/' });
+    expect(trackEvent).not.toHaveBeenCalled();
 
     await user.click(screen.getByText('main'));
     expect(trackEvent).toHaveBeenCalledWith('nav_click', {

@@ -105,7 +105,7 @@ const router = createBrowserRouter([
           { path: ':specId', lazy: lazySpec },
           { path: ':specId/:language', loader: specLanguageRedirect },
           { path: ':specId/:language/:library', lazy: lazySpec },
-          { path: '*', element: <NotFoundPage source="catch_all" /> },
+          { path: '*', element: <NotFoundPage /> },
         ],
       },
     ],

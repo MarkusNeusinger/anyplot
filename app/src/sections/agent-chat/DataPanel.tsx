@@ -147,8 +147,6 @@ interface DataPanelProps {
   onUndo: () => void;
   /** `.to_long()`: apply the wide-table offer as the next data version. */
   onToLong?: () => void;
-  /** Analytics: `agent_data_file{kind, encoding, outcome}`; never the file's name. */
-  onTrack?: (event: string, props?: Record<string, string | undefined>) => void;
   /**
    * A dropped binary data file read on the server (`POST .../dataset/convert`); `sheet`
    * asks for another sheet of the same file. Without it, such files are refused.
@@ -184,7 +182,6 @@ export function DataPanel({
   onBind,
   onUndo,
   onToLong,
-  onTrack,
   onConvert,
   locked = false,
   onLoadData,
@@ -238,7 +235,6 @@ export function DataPanel({
     try {
       const answer = await onConvert(file.base64, sheet);
       if (seq !== sheetSeq.current) return;
-      onTrack?.('agent_data_file', { kind: answer.kind, encoding: 'none', outcome: 'sheet' });
       onParse(answer.text, convertedSource(file.name, answer), undefined, {
         ...file,
         kind: answer.kind,
@@ -262,7 +258,6 @@ export function DataPanel({
           failure.damage
         )
       );
-      onTrack?.('agent_data_file', { kind: file.browserKind, encoding: 'none', outcome: 'failed' });
     } finally {
       if (seq === sheetSeq.current) setSheetLine(null);
     }

@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Footer } from 'src/layouts/Footer';
 import { render, screen, userEvent } from 'src/test-utils';
 
 describe('Footer', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('renders footer links', () => {
     render(<Footer />);
 
@@ -19,94 +23,16 @@ describe('Footer', () => {
     expect(screen.getByText('markus neusinger')).toBeInTheDocument();
   });
 
-  it('calls onTrackEvent when clicking github link', async () => {
-    const onTrackEvent = vi.fn();
+  it('sends no event for a link: the tracker script counts the outbound ones itself', async () => {
+    const plausible = vi.fn();
+    vi.stubGlobal('plausible', plausible);
     const user = userEvent.setup();
-
-    render(<Footer onTrackEvent={onTrackEvent} />);
-
-    await user.click(screen.getByText('github'));
-    expect(onTrackEvent).toHaveBeenCalledWith(
-      'external_link',
-      expect.objectContaining({ destination: 'github' })
-    );
-  });
-
-  it('calls onTrackEvent when clicking report link', async () => {
-    const onTrackEvent = vi.fn();
-    const user = userEvent.setup();
-
-    render(<Footer onTrackEvent={onTrackEvent} />);
-
-    await user.click(screen.getByText('report'));
-    expect(onTrackEvent).toHaveBeenCalledWith(
-      'external_link',
-      expect.objectContaining({ destination: 'github_issue_chooser' })
-    );
-  });
-
-  it('renders without onTrackEvent', () => {
     render(<Footer />);
-    expect(screen.getByText('github')).toBeInTheDocument();
-  });
-
-  it('calls onTrackEvent when clicking linkedin link', async () => {
-    const onTrackEvent = vi.fn();
-    const user = userEvent.setup();
-
-    render(<Footer onTrackEvent={onTrackEvent} />);
-
-    await user.click(screen.getByText('markus neusinger'));
-    expect(onTrackEvent).toHaveBeenCalledWith(
-      'external_link',
-      expect.objectContaining({ destination: 'linkedin' })
-    );
-  });
-
-  it('calls onTrackEvent when clicking about link', async () => {
-    const onTrackEvent = vi.fn();
-    const user = userEvent.setup();
-
-    render(<Footer onTrackEvent={onTrackEvent} />);
 
     await user.click(screen.getByText('about'));
-    expect(onTrackEvent).toHaveBeenCalledWith(
-      'internal_link',
-      expect.objectContaining({ destination: 'about' })
-    );
-  });
-
-  it('calls onTrackEvent when clicking legal link', async () => {
-    const onTrackEvent = vi.fn();
-    const user = userEvent.setup();
-
-    render(<Footer onTrackEvent={onTrackEvent} />);
-
     await user.click(screen.getByText('legal'));
-    expect(onTrackEvent).toHaveBeenCalledWith(
-      'internal_link',
-      expect.objectContaining({ destination: 'legal' })
-    );
-  });
 
-  it('passes selectedSpec and selectedLibrary to tracking', async () => {
-    const onTrackEvent = vi.fn();
-    const user = userEvent.setup();
-
-    render(
-      <Footer
-        onTrackEvent={onTrackEvent}
-        selectedSpec="scatter-basic"
-        selectedLibrary="matplotlib"
-      />
-    );
-
-    await user.click(screen.getByText('github'));
-    expect(onTrackEvent).toHaveBeenCalledWith('external_link', {
-      destination: 'github',
-      spec: 'scatter-basic',
-      library: 'matplotlib',
-    });
+    expect(plausible).not.toHaveBeenCalled();
   });
 
   it('renders github link to repo home', () => {

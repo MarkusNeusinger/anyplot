@@ -133,10 +133,9 @@ export function SpecTabs({
   // to be re-fetched on every tag click on a SpecTabs page.
   const handleTagClick = useCallback(
     (paramName: string, value: string) => {
-      onTrackEvent?.('tag_click', { param: paramName, value, source: 'spec_detail' });
       navigate(paths.plotsFiltered(paramName, value));
     },
-    [navigate, onTrackEvent]
+    [navigate]
   );
 
   const toggleCategory = useCallback((category: string) => {
@@ -144,27 +143,9 @@ export function SpecTabs({
   }, []);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    // In overview mode, only Spec tab exists at index 0
-    const tabNames = overviewMode
-      ? ['specification']
-      : ['code', 'specification', 'implementation', 'quality'];
-
+    onTrackEvent?.('ui_feature', { feature: 'tab_toggle' });
     // Toggle: clicking same tab collapses it
-    if (tabIndex === newValue) {
-      onTrackEvent?.('tab_toggle', {
-        action: 'close',
-        tab: tabNames[tabIndex],
-        library: libraryId || undefined,
-      });
-      setTabIndex(null);
-    } else {
-      setTabIndex(newValue);
-      onTrackEvent?.('tab_toggle', {
-        action: 'open',
-        tab: tabNames[newValue],
-        library: libraryId || undefined,
-      });
-    }
+    setTabIndex(tabIndex === newValue ? null : newValue);
   };
 
   // In overview mode, use different tab indexing (only Spec tab at index 0)

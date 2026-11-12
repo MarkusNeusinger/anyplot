@@ -74,19 +74,12 @@ describe('SpecTabs', () => {
     // Click to open
     await user.click(specTab);
     expect(screen.getByText('Basic Scatter Plot')).toBeInTheDocument();
-    expect(onTrackEvent).toHaveBeenCalledWith('tab_toggle', {
-      action: 'open',
-      tab: 'specification',
-      library: 'matplotlib',
-    });
+    expect(onTrackEvent).toHaveBeenLastCalledWith('ui_feature', { feature: 'tab_toggle' });
 
-    // Click again to collapse
+    // Click again to collapse: a use of the same feature, with nothing about the tab.
     await user.click(specTab);
-    expect(onTrackEvent).toHaveBeenCalledWith('tab_toggle', {
-      action: 'close',
-      tab: 'specification',
-      library: 'matplotlib',
-    });
+    expect(onTrackEvent).toHaveBeenCalledTimes(2);
+    expect(onTrackEvent).toHaveBeenLastCalledWith('ui_feature', { feature: 'tab_toggle' });
   });
 
   // -------------------------------------------------------
@@ -405,18 +398,14 @@ describe('SpecTabs', () => {
     expect(screen.getByText('A scatter plot showing data points')).toBeVisible();
   });
 
-  it('collapses the default-open Code tab on click and tracks the close', async () => {
+  it('collapses the default-open Code tab on click and counts the tabs as used', async () => {
     const user = userEvent.setup();
     const onTrackEvent = vi.fn();
     render(<SpecTabs {...baseProps} onTrackEvent={onTrackEvent} />);
 
     await user.click(screen.getByRole('tab', { name: /code/i }));
 
-    expect(onTrackEvent).toHaveBeenCalledWith('tab_toggle', {
-      action: 'close',
-      tab: 'code',
-      library: 'matplotlib',
-    });
+    expect(onTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'tab_toggle' });
   });
 
   // -------------------------------------------------------
@@ -443,7 +432,7 @@ describe('SpecTabs', () => {
   // -------------------------------------------------------
   // 16. Tag click handler navigates
   // -------------------------------------------------------
-  it('fires onTrackEvent and navigates on tag click', async () => {
+  it('sends no event for a tag click', async () => {
     const user = userEvent.setup();
     const onTrackEvent = vi.fn();
     // Mock window.location.href setter to prevent jsdom navigation errors.
@@ -466,11 +455,8 @@ describe('SpecTabs', () => {
 
     await user.click(screen.getByText('scatter'));
 
-    expect(onTrackEvent).toHaveBeenCalledWith('tag_click', {
-      param: 'plot',
-      value: 'scatter',
-      source: 'spec_detail',
-    });
+    // The gallery's pageview names the filter the tag leads to.
+    expect(onTrackEvent).not.toHaveBeenCalled();
   });
 
   // -------------------------------------------------------

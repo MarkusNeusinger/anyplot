@@ -634,7 +634,7 @@ describe('StatsPage', () => {
     expect(screen.getAllByTestId('machine-readers-day')).toHaveLength(28);
   });
 
-  it('routes tag links to /plots and fires tag_click on click', async () => {
+  it('routes tag links to /plots and sends no event for a click', async () => {
     // Regression: pre-fix the href pointed at /?plot=scatter, which landed
     // on LandingPage and silently dropped the filter intent. Filter routing
     // lives on /plots after the page split, so the link must target that.
@@ -655,18 +655,9 @@ describe('StatsPage', () => {
     const timeSeriesLink = screen.getByText('time series').closest('a');
     expect(timeSeriesLink).toHaveAttribute('href', '/plots?data=time%20series');
 
+    // A tag is a link like any other: the gallery's pageview names the filter it leads to.
     await user.click(scatterLink!);
-    expect(mockTrackEvent).toHaveBeenCalledWith('tag_click', {
-      param: 'plot',
-      value: 'scatter',
-      source: 'stats',
-    });
-
     await user.click(timeSeriesLink!);
-    expect(mockTrackEvent).toHaveBeenCalledWith('tag_click', {
-      param: 'data',
-      value: 'time series',
-      source: 'stats',
-    });
+    expect(mockTrackEvent).not.toHaveBeenCalled();
   });
 });

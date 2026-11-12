@@ -115,13 +115,10 @@ export function SpecPage() {
             i => i.library_id === urlLibrary && i.language === urlLanguage
           );
           if (!matched) {
-            // The URL names an implementation that does not exist — the shape a
+            // The URL names an implementation that does not exist, the shape a
             // library migration leaves behind. The visitor is redirected rather
-            // than shown a 404, so nothing else in the app would ever record it.
-            trackEvent('page_not_found', {
-              path: window.location.pathname,
-              source: 'impl_missing',
-            });
+            // than shown a 404; the address they asked for was recorded as a
+            // pageview when the navigation began.
             navigate(
               {
                 pathname: specPath(specId!),
@@ -148,7 +145,7 @@ export function SpecPage() {
 
     fetchSpec();
     return () => controller.abort();
-  }, [specId, urlLanguage, urlLibrary, navigate, trackEvent, reloadKey]);
+  }, [specId, urlLanguage, urlLibrary, navigate, reloadKey]);
 
   // Implementations the carousel cycles through. In detail mode, this is what
   // `<LibraryPills>` walks via prev/next. ALL impls of the spec by default; if
@@ -281,7 +278,7 @@ export function SpecPage() {
       trackEvent('download_image', {
         spec: specId,
         library: impl.library_id,
-        page: mode === 'detail' ? 'spec_detail' : 'spec_hub',
+        page: mode === 'detail' ? 'spec_detail' : 'spec_overview',
       });
     },
     [specId, trackEvent, mode]
@@ -299,7 +296,7 @@ export function SpecPage() {
           spec: specId,
           library: impl.library_id,
           method: 'image',
-          page: mode === 'detail' ? 'spec_detail' : 'spec_hub',
+          page: mode === 'detail' ? 'spec_detail' : 'spec_overview',
         });
         setTimeout(() => setCodeCopied(null), 2000);
       } catch (err) {
@@ -395,7 +392,7 @@ export function SpecPage() {
   }
 
   if (error === 'Spec not found' || (!error && !specData)) {
-    return <NotFoundPage source="spec_missing" />;
+    return <NotFoundPage />;
   }
   if (error) {
     return (
@@ -533,9 +530,6 @@ export function SpecPage() {
               href={buildReportUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() =>
-                trackEvent('report_issue', { spec: specId, library: selectedLibrary || undefined })
-              }
               sx={{
                 fontFamily: typography.mono,
                 fontSize: fontSize.sm,

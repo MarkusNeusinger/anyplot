@@ -114,14 +114,87 @@ describe('useFilterState after Back', () => {
     act(() => result.current.handleClearFilters());
 
     await waitFor(() => expect(result.current.activeFilters).toEqual([]));
+    // One use of the feature, however many groups it removed.
+    expect(onTrackEvent).toHaveBeenCalledTimes(1);
+    expect(onTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'filter_remove' });
+  });
+
+  it('removes one value, then the group with its last value, as uses of filter_remove', async () => {
+    window.history.replaceState({}, '', '/plots?lib=matplotlib,seaborn&plot=bar');
+    const onTrackEvent = vi.fn();
+    const { Wrapper } = createLayout();
+    const { result } = renderHook(
+      () => useFilterState({ onTrackPageview: () => {}, onTrackEvent }),
+      { wrapper: Wrapper }
+    );
+
+    act(() => result.current.handleRemoveFilter(0, 'seaborn'));
+    await waitFor(() =>
+      expect(result.current.activeFilters).toEqual([
+        { category: 'lib', values: ['matplotlib'] },
+        { category: 'plot', values: ['bar'] },
+      ])
+    );
+    act(() => result.current.handleRemoveFilter(0, 'matplotlib'));
+    await waitFor(() =>
+      expect(result.current.activeFilters).toEqual([{ category: 'plot', values: ['bar'] }])
+    );
+
     expect(onTrackEvent).toHaveBeenCalledTimes(2);
-    expect(onTrackEvent).toHaveBeenCalledWith('filter_remove', {
-      category: 'lib',
-      value: 'seaborn',
-    });
-    expect(onTrackEvent).toHaveBeenCalledWith('filter_remove', {
-      category: 'plot',
-      value: 'bar,line',
-    });
+    expect(onTrackEvent).toHaveBeenLastCalledWith('ui_feature', { feature: 'filter_remove' });
+    // A group that is not there is no use of anything.
+    act(() => result.current.handleRemoveFilter(5, 'bar'));
+    expect(onTrackEvent).toHaveBeenCalledTimes(2);
+  });
+
+  it('removes a whole group as a use of filter_remove', async () => {
+    window.history.replaceState({}, '', '/plots?lib=matplotlib,seaborn&plot=bar');
+    const onTrackEvent = vi.fn();
+    const { Wrapper } = createLayout();
+    const { result } = renderHook(
+      () => useFilterState({ onTrackPageview: () => {}, onTrackEvent }),
+      { wrapper: Wrapper }
+    );
+
+    act(() => result.current.handleRemoveGroup(0));
+    await waitFor(() =>
+      expect(result.current.activeFilters).toEqual([{ category: 'plot', values: ['bar'] }])
+    );
+
+    expect(onTrackEvent).toHaveBeenCalledTimes(1);
+    expect(onTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'filter_remove' });
+  });
+
+  it('picks a random filter from the catalogue and counts it as a use of random_filter', async () => {
+    const onTrackEvent = vi.fn();
+    const { Wrapper } = createLayout();
+    const { result } = renderHook(
+      () => useFilterState({ onTrackPageview: () => {}, onTrackEvent }),
+      { wrapper: Wrapper }
+    );
+    // Nothing to pick from before the counts are there.
+    act(() => result.current.handleRandom());
+    expect(onTrackEvent).not.toHaveBeenCalled();
+    await waitFor(() => expect(result.current.globalCounts).toEqual(emptyCounts));
+
+    // The first of the categories that hold a value, and its first value.
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    act(() => result.current.handleRandom());
+
+    await waitFor(() =>
+      expect(result.current.activeFilters).toEqual([{ category: 'lang', values: ['python'] }])
+    );
+    expect(result.current.randomAnimation).toMatchObject({ index: 0, phase: 'out' });
+    expect(onTrackEvent).toHaveBeenCalledTimes(1);
+    expect(onTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'random_filter' });
+
+    // A second roll replaces the filter it set, and is a use like the first.
+    await waitFor(() => expect(result.current.filterCounts).toEqual(emptyCounts));
+    vi.mocked(Math.random).mockReturnValue(0.99);
+    act(() => result.current.handleRandom());
+    await waitFor(() =>
+      expect(result.current.activeFilters).toEqual([{ category: 'plot', values: ['bar'] }])
+    );
+    expect(onTrackEvent).toHaveBeenCalledTimes(2);
   });
 });
