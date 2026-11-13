@@ -246,8 +246,10 @@ SET_OPERATIONS: dict[str, str] = {
 """Per operation, the list field whose order carries no meaning (compared as a set); a condition list is sorted by
 `_sorted_conditions`, and an "any of" list of values in any condition is a set too. An `aggregate` names `columns`
 only for two or more value columns, whose order is only the order of the result's columns."""
-CONDITION_OPERATIONS = frozenset({"drop_rows", "blank"})
+CONDITION_OPERATIONS = frozenset({"drop_rows", "blank", "keep_rows"})
 """The operations whose `where` is one list of conditions that must all hold."""
+MAX_REPLY_NAMES = 6
+"""The texts one case may ask its reply to contain (`PrepCase.reply_names`)."""
 COMPUTE_PROBE_ROWS = 8
 """The rows of invented values two `compute` expressions are compared on (`comparison_key`)."""
 COMPUTE_PROBES: tuple[tuple[float, float, float], ...] = ((150.5, 7.913, 21.7), (1.5, 0.913, 2.17))
@@ -335,6 +337,10 @@ class PrepCase(BaseModel):
     in the title): the turn must send it to the plot with one of `PLOT_TOOLS`, and the plot must keep or draw it
     (`score_plot_request`). The data operations are scored as in every case, so a table the turn sorted for such an
     order is a miss by its rows."""
+    reply_names: list[str] = Field(default_factory=list, max_length=MAX_REPLY_NAMES)
+    """Texts of the fixture's own data the reply has to contain, each as written: what the user must hear about and
+    the table cannot show, such as the rows a top N left out of a tie. A reply without one of them is the reply miss
+    `unnamed` (`measure_reply`)."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -452,7 +458,7 @@ def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> 
         data = operation.model_dump(exclude_none=True)
         if data["op"] == "set_type" and data.get("decimal") == decimal:
             data.pop("decimal")
-        if data["op"] in CONDITION_OPERATIONS:
+        if data["op"] in CONDITION_OPERATIONS and "where" in data:  # a `keep_rows` with `n` has none
             data["where"] = _sorted_conditions(data["where"])
         elif data["op"] == "classify":  # the rules keep their order (the first that holds wins), their conditions not
             for rule in data["rules"]:
@@ -813,7 +819,7 @@ def describe(line: str) -> str:
     if op == "unsupported":
         return f"unsupported {data['family']}"
     if op == "keep_rows":
-        return f"keep_rows {data['n']}"
+        return f"keep_rows {_conditions(data['where'])}" if data.get("where") else f"keep_rows {data['n']}"
     if op == "sort":
         return f"sort {data['column']} {'desc' if data.get('descending') else 'asc'}"
     if op == "pivot_longer":
@@ -863,9 +869,9 @@ class CaseResult:
     closing_invitation: bool = False
     """The last sentence of the last reply text, or its last clause, asks the user to choose (`INVITATION`)."""
     reply_miss: str | None = None
-    """`closing_question` or `closing_invitation` (one the turn was not blocked for, see `measure_reply`), `long`
-    (over `MAX_REPLY_WORDS`), or `no_row_count` (a summary turn whose reply names no row count of the data,
-    `names_count`)."""
+    """`unnamed` (the reply leaves out a text the case asks for, `PrepCase.reply_names`), `closing_question` or
+    `closing_invitation` (one the turn was not blocked for, see `measure_reply`), `long` (over `MAX_REPLY_WORDS`),
+    or `no_row_count` (a summary turn whose reply names no row count of the data, `names_count`)."""
     roles_open: bool = False
     """The turn left a required role of the spec without a column, so the plot cannot be drawn until the user binds
     one or brings other data: the reply may close with a question about it."""
@@ -1009,7 +1015,11 @@ class CaseRunner:
             if summary_turn and pasted_rows is not None:
                 rows.add(pasted_rows)
             measure_reply(
-                result, texts, blocked=bool(BLOCKED_TAGS.intersection(case.tags)), rows=rows if summary_turn else None
+                result,
+                texts,
+                blocked=bool(BLOCKED_TAGS.intersection(case.tags)),
+                rows=rows if summary_turn else None,
+                names=case.reply_names,
             )
         finally:
             result.latency_s = round(time.monotonic() - started, 3)
@@ -1278,7 +1288,12 @@ def names_count(reply: str, count: int) -> bool:
 
 
 def measure_reply(
-    result: CaseResult, texts: Sequence[str], *, blocked: bool, rows: Collection[int] | None = None
+    result: CaseResult,
+    texts: Sequence[str],
+    *,
+    blocked: bool,
+    rows: Collection[int] | None = None,
+    names: Sequence[str] = (),
 ) -> None:
     """The reply's shape: its words and questions, whether it closes with a question, and its reply miss.
 
@@ -1289,7 +1304,9 @@ def measure_reply(
     (`closes_with_invitation`) is a miss on the same terms. A turn without a reply text (a refusal) is measured as
     none. `rows`, on a summary turn (the summary action, or the note sent with the paste), are the row counts its
     summary may name: the paste's, and the last version's when the turn made one; a reply that names neither has
-    no summary (`no_row_count`).
+    no summary (`no_row_count`). `names` are the texts the case asks the reply to contain (`PrepCase.reply_names`):
+    a reply that leaves one out is `unnamed`, whatever its shape, since what it left out is what the user had to
+    hear.
     """
     from agents.anyplot.telemetry import ends_with_question
 
@@ -1301,7 +1318,9 @@ def measure_reply(
     result.closing_question = ends_with_question(texts[-1])
     result.closing_invitation = closes_with_invitation(texts[-1])
     waiting = blocked or result.failed_calls or (result.roles_open and not result.offered)
-    if result.closing_question and not waiting:
+    if any(name not in reply for name in names):
+        result.reply_miss = "unnamed"
+    elif result.closing_question and not waiting:
         result.reply_miss = "closing_question"
     elif result.closing_invitation and not waiting:
         result.reply_miss = "closing_invitation"

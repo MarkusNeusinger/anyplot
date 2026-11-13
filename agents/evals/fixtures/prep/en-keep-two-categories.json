@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Category,Month,Amount\nRent,Jan,1200\nPower,Jan,90\nFood,Jan,410\nRent,Feb,1200\nPower,Feb,85\nFood,Feb,395\nFun,Feb,60\n",
+  "message": "Keep only the rows for Rent and Power.",
+  "expected_operations": [
+    {"op": "keep_rows", "where": [{"column": "Category", "test": "eq", "values": ["Rent", "Power"]}]}
+  ],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["keep_rows", "keep_where"]
+}

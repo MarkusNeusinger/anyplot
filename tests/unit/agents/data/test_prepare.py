@@ -298,7 +298,7 @@ class TestDropRows:
         assert prepared.changes == ["dropped 1 row where Anteil is missing"]
 
     def test_not_missing_keeps_the_rows_where_a_cell_is_missing(self) -> None:
-        """Rows can only be dropped, so "the rows where Anteil is missing" drops the ones where it is not."""
+        """A `drop_rows` reaches "the rows where Anteil is missing" by dropping the ones where it is not."""
         prepared = prepare(SALES, drop("Anteil", "not_missing"))
 
         assert cells(prepared, 1) == ["Katze"] and cells(prepared, 2) == [""]
@@ -370,12 +370,61 @@ class TestDropRows:
 
         assert rows(prepare(text, drop("flag", "eq", "TRUE")))[1:] == ["False,2", ",3"]
         assert failure(text, drop("flag", "gt", "true"))[0] == "invalid_operation"
+        assert failure(text, drop("flag", "ge", "true"))[0] == "invalid_operation"
+        assert failure(text, drop("flag", "le", "false"))[0] == "invalid_operation"
         assert failure(text, drop("flag", "eq", "yes"))[0] == "invalid_operation"
 
     def test_text_orders_as_text(self) -> None:
         prepared = prepare(SALES, drop("Tier", "gt", "Hund"))
 
         assert cells(prepared, 1) == ["Hund", "Hund", "Hund", "Gesamt"]
+        assert cells(prepare(SALES, drop("Tier", "ge", "Hund")), 1) == ["Gesamt"]
+
+    def test_at_least_and_at_most_take_the_value_itself_in(self) -> None:
+        """`gt` and `lt` leave the value itself out, so "800 or more" had no form of its own."""
+        at_least = prepare(SALES, drop("Umsatz", "ge", 800))
+        at_most = prepare(SALES, drop("Umsatz", "le", "800"))
+
+        assert cells(at_least, 3) == ["300.25", "150"]
+        assert at_least.changes == ["dropped 4 rows where Umsatz ≥ 800"]
+        assert cells(at_most, 3) == ["1200.5", "999.75", "3450.5"]
+        assert at_most.changes == ["dropped 3 rows where Umsatz ≤ 800"]
+
+    def test_a_missing_cell_is_neither_at_least_nor_at_most(self) -> None:
+        text = "k,v\na,1\nb,\nc,3\n"
+
+        assert rows(prepare(text, drop("v", "ge", 0)))[1:] == ["b,"]
+        assert rows(prepare(text, drop("v", "le", 5)))[1:] == ["b,"]
+
+    def test_a_date_without_a_time_is_the_whole_day(self) -> None:
+        """ "Until the 31st" takes in that day's rows whatever their time, and "after the 31st" none of them: midnight
+        alone would cut the day's rows in two, and `le` and `gt` would both hold for the rows after it."""
+        text = "t,v\n2024-01-30T08:00:00,1\n2024-01-31T00:00:00,2\n2024-01-31T10:00:00,3\n2024-02-01T00:00:00,4\n"
+
+        assert cells(prepare(text, drop("t", "le", "2024-01-31")), 1) == ["4"]
+        assert cells(prepare(text, drop("t", "gt", "2024-01-31")), 1) == ["1", "2", "3"]
+        # The start of a range is the day's first moment either way, and so is the end `lt` names.
+        assert cells(prepare(text, drop("t", "ge", "2024-01-31")), 1) == ["1"]
+        assert cells(prepare(text, drop("t", "lt", "2024-01-31")), 1) == ["2", "3", "4"]
+        # A value with a time is that moment.
+        assert cells(prepare(text, drop("t", "le", "2024-01-31T00:00:00")), 1) == ["3", "4"]
+        assert cells(prepare(text, drop("t", "gt", "2024-01-31T00:00:00")), 1) == ["1", "2"]
+
+    def test_the_last_day_of_the_calendar_is_a_whole_day_too(self) -> None:
+        """The day after it is past what `datetime` holds; the comparison still answers, and never crashes."""
+        text = "t,v\n2024-01-30,1\n2024-01-31,2\n"
+
+        assert failure(text, drop("t", "le", "9999-12-31"))[0] == "empty_result"
+        assert len(rows(prepare(text, drop("t", "gt", "9999-12-31")))) == 3
+
+    def test_a_day_is_never_guessed_into_a_column_with_utc_offsets(self) -> None:
+        """Which zone's day a date alone means there would be a guess, and a day is not 24 hours where the clocks
+        change: the value is refused before the whole-day reading, as for every other test."""
+        text = "t,v\n2024-03-30T10:00:00+01:00,1\n2024-03-31T10:00:00+02:00,2\n"
+
+        for test in ("le", "gt", "ge", "lt"):
+            code, message = failure(text, drop("t", test, "2024-03-31"))
+            assert code == "invalid_operation" and "give the value with one" in message
 
     def test_nothing_matching_is_a_change_line_too(self) -> None:
         prepared = prepare(SALES, drop("Tier", "eq", "Pferd"))
@@ -2560,6 +2609,27 @@ class TestFidelity:
         assert rows(prepare(text, drop("id", "eq", f"{2**53}.5"))) == unchanged  # a fraction equals no whole number
         assert rows(prepare(text, drop("id", "gt", str(2**64)))) == unchanged  # past int64: above every cell
         assert failure(text, drop("id", "lt", str(2**64)))[0] == "empty_result"
+
+    def test_at_least_and_at_most_on_whole_numbers_compare_exactly(self) -> None:
+        text = f"id,v\n{2**53},1\n{2**53 + 1},2\n{2**63 - 1},3\n"
+        unchanged = ["id,v", f"{2**53},1", f"{2**53 + 1},2", f"{2**63 - 1},3"]
+
+        assert rows(prepare(text, drop("id", "ge", str(2**53 + 1)))) == ["id,v", f"{2**53},1"]
+        assert rows(prepare(text, drop("id", "le", str(2**53)))) == ["id,v", f"{2**53 + 1},2", f"{2**63 - 1},3"]
+        # A fraction equals no whole number, so "at least 2**53 + 0.5" starts at the next one.
+        assert rows(prepare(text, drop("id", "ge", f"{2**53}.5"))) == ["id,v", f"{2**53},1"]
+        assert rows(prepare(text, drop("id", "le", f"{2**53}.5"))) == ["id,v", f"{2**53 + 1},2", f"{2**63 - 1},3"]
+        # Past int64 on either side: at least a value above every cell holds for none, at most it for all.
+        assert rows(prepare(text, drop("id", "ge", str(2**64)))) == unchanged
+        assert failure(text, drop("id", "le", str(2**64)))[0] == "empty_result"
+        assert failure(text, drop("id", "ge", str(-(2**64))))[0] == "empty_result"
+        assert rows(prepare(text, drop("id", "le", str(-(2**64))))) == unchanged
+        # A fraction past int64, and one whose next whole number is: compared, never overflowed.
+        for value in (f"{2**64}.5", f"{2**63 - 1}.5"):
+            assert rows(prepare(text, drop("id", "ge", value))) == unchanged
+            assert rows(prepare(text, drop("id", "gt", value))) == unchanged
+            assert failure(text, drop("id", "le", value))[0] == "empty_result"
+            assert failure(text, drop("id", "lt", value))[0] == "empty_result"
 
     def test_an_exponent_past_the_decimal_range_is_read_as_its_float(self) -> None:
         prepared = from_text(

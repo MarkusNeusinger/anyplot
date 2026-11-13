@@ -235,7 +235,12 @@ The operations:
     and never fills: `prepare_data` still never invents or fills in a value.
   * `keep_rows`: the first `n` rows in their current order, the rest dropped and counted
     ("kept the first 10 of 487 rows, 477 dropped"); after a `sort`, the top N (owner decision
-    of 2026-11-07). A table of `n` rows or fewer keeps every row, and the line says so.
+    of 2026-11-07). A table of `n` rows or fewer keeps every row, and the line says so. The
+    cut stays at `n`, and when it falls among rows of one value in the column the call's
+    last `sort` ranked the rows by, the line counts and names the tied rows on each side
+    (`_tie_note`). With `where` in place of `n` it keeps the rows for which 1 to 3 conditions
+    all hold, a selection said positively ("only Miete and Strom", "only January"): its line
+    counts both sides and the dropped rows that had no value to test (`_unvalued_note`).
   * `unsupported`: names a change no operation can make by a closed `family` (fill in
     values, edit single cells, add rows, combine tables, a text pattern, a window over
     time, other). It changes nothing: `apply_operations` refuses it as
@@ -246,10 +251,13 @@ The operations:
 Values in conditions are never evaluated: a condition compares text with text for a
 text column, numbers for a numeric column (the value is a dot-decimal number, which
 the model may also pass as a JSON number), moments for a datetime column (the value is
-an ISO date or date-time), `true`/`false` for a boolean column. A missing cell matches
-only `is_missing`, and `not_missing` holds for every other cell: rows can only be dropped,
-so "the rows where X is missing" is a `drop_rows` of the ones where it is not, which had
-no form before 2026-11-11. `contains` searches the cell's canonical text, case-sensitively.
+an ISO date or date-time), `true`/`false` for a boolean column. The order tests are `gt`,
+`lt`, `ge` (at least) and `le` (at most). A date without a time is the whole day for `le`
+and `gt`: "until the 31st" takes in that day's rows whatever their time and "after the
+31st" none of them, where midnight alone would cut the day's rows in two. A missing cell
+matches only `is_missing`, and `not_missing` holds for every other cell, so "the rows
+where X is missing" can be dropped or kept. `contains` searches the cell's canonical text,
+case-sensitively.
 `values` in place of `value` is an "any of" list (1 to 20) for `eq` and `contains`: the
 condition holds when the cell equals one of them or contains one, and each value is read
 as `value` is.
@@ -291,7 +299,7 @@ import warnings
 from collections import Counter
 from collections.abc import Callable, Collection, Hashable, Iterable, Sequence
 from dataclasses import dataclass, field, replace
-from datetime import UTC, datetime, timedelta, tzinfo
+from datetime import UTC, date, datetime, timedelta, tzinfo
 from decimal import ROUND_FLOOR, InvalidOperation, localcontext
 from decimal import Decimal as ExactDecimal
 from typing import Annotated, Any, Literal, Self
@@ -364,9 +372,15 @@ SHOWN_ANY_VALUES = 3  # of an "any of" list, the values a change line quotes bef
 FALLBACK_GROUPS = 3  # the largest groups of a `classify` fallback that its change line names
 _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 
-Test = Literal["eq", "ne", "contains", "is_missing", "not_missing", "gt", "lt"]
+Test = Literal["eq", "ne", "contains", "is_missing", "not_missing", "gt", "lt", "ge", "le"]
 ANY_OF_TESTS: frozenset[str] = frozenset(("eq", "contains"))
 """The tests an "any of" list (`Condition.values`) takes: a cell equal to one of the values, or one that contains one."""
+ORDER_TESTS: frozenset[str] = frozenset(("gt", "lt", "ge", "le"))
+"""The tests that compare by order, which a boolean column has none of."""
+VALUE_FREE_TESTS: frozenset[str] = frozenset(("is_missing", "not_missing"))
+"""The tests that ask whether a cell is there, and take no value."""
+SHOWN_TIED_ROWS = 3  # of the rows of a tie on each side of a top N's cut, the ones its change line names
+TIED_NAME_CHARS = 20  # of one such row's name in that line, which names up to twice `SHOWN_TIED_ROWS` of them
 TargetType = Literal["number", "datetime", "text"]
 DateFormat = Literal[
     "DD.MM.YYYY",
@@ -509,7 +523,7 @@ _FLOAT_MAX_WHOLE = int(sys.float_info.max)
 2**1023 and every other whole number up to it is kept, written as the float holds it (`_whole_value`)."""
 _DECIMAL_DIGITS = 100
 """The digits a `rolling` window adds its decimal cells with: exact for cells within some 80 orders of magnitude."""
-_TEST_SIGNS: dict[str, str] = {"eq": "=", "ne": "≠", "gt": ">", "lt": "<"}
+_TEST_SIGNS: dict[str, str] = {"eq": "=", "ne": "≠", "gt": ">", "lt": "<", "ge": "≥", "le": "≤"}
 
 # The parser's number shape: a dot decimal with an optional exponent, ASCII digits only.
 _NUMBER = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
@@ -607,6 +621,9 @@ class _Carried:
     language: str = DEFAULT_LANGUAGE
     pasted_cells: dict[str, list[str]] = field(default_factory=dict)  # `ParsedDataset.pasted_cells`, renamed along
     rows_changed: bool = False  # an operation of this call dropped, grouped, sorted or reshaped the rows
+    # The column this call's last `sort` ordered the rows by, while only row filters followed it: what a top N
+    # ranks by, so its cut can be checked for a tie. None after any other operation.
+    sorted_by: str | None = None
 
     @classmethod
     def of(cls, parsed: ParsedDataset, language: str = DEFAULT_LANGUAGE) -> "_Carried":
@@ -1000,10 +1017,19 @@ class Blank(_Strict):
 
 
 class KeepRows(_Strict):
-    """The first `n` rows in their current order; the rest are dropped. After a `sort`, the top N."""
+    """The rows to keep, said positively; the rest are dropped. Either the first `n` rows in their current order
+    (after a `sort`, the top N), or every row for which all conditions of `where` hold ("only Miete and Strom",
+    "only this month"), which `drop_rows` could only say as the negation of each condition."""
 
     op: Literal["keep_rows"]
-    n: int = Field(ge=1, le=MAX_ROWS)
+    n: int | None = Field(default=None, ge=1, le=MAX_ROWS)
+    where: list[Condition] | None = Field(default=None, min_length=1, max_length=MAX_CONDITIONS)
+
+    @model_validator(mode="after")
+    def _one_way(self) -> Self:
+        if (self.n is None) == (self.where is None):
+            raise ValueError("keep_rows takes n (the first n rows) or where (the rows that match), one of the two")
+        return self
 
 
 class Unsupported(_Strict):
@@ -1068,6 +1094,9 @@ class PrepareArgs(BaseModel):
 
 _ROW_CHANGING = (DropRows, Aggregate, Sort, PivotLonger, PivotWider, KeepRows)
 """The operations after which a row of the frame is no longer the pasted row of the same place."""
+_ROW_FILTERS = (DropRows, KeepRows)
+"""The operations that only take rows out: the rows left keep their order and their cells, so a `sort` before them
+still says what the rows are ranked by."""
 
 
 # --- Applying ---------------------------------------------------------------------------------
@@ -1102,6 +1131,10 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation], languag
         if isinstance(operation, _ROW_CHANGING):
             # The pasted cells sit one per pasted row: after this, a row of the frame is no longer theirs.
             carried.rows_changed = True
+        if isinstance(operation, Sort):
+            carried.sorted_by = operation.column
+        elif not isinstance(operation, _ROW_FILTERS):
+            carried.sorted_by = None
         changes.append(_clip(change, MAX_NOTE_CHARS))
     csv_text = _write(frame, carried)
     if len(csv_text.encode("utf-8")) > MAX_COMPUTED_BYTES:
@@ -1201,7 +1234,7 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
         case Blank():
             return _blank(frame, operation, carried)
         case KeepRows():
-            return _keep_rows(frame, operation)
+            return _keep_rows(frame, operation, carried)
         case Unsupported():  # `apply_operations` refuses it before any operation runs
             raise PrepareError("unsupported_operation", f"no operation can {UNSUPPORTED_WORDS[operation.family]}")
 
@@ -1903,16 +1936,101 @@ def _sort(frame: pd.DataFrame, op: Sort) -> tuple[pd.DataFrame, str]:
     return ordered.reset_index(drop=True), f"sorted by {op.column}, {order}"
 
 
-def _keep_rows(frame: pd.DataFrame, op: KeepRows) -> tuple[pd.DataFrame, str]:
-    """The first `n` rows in their current order, the others dropped and counted: after a `sort`, the top N.
+def _keep_rows(frame: pd.DataFrame, op: KeepRows, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """The first `n` rows in their current order, the others dropped and counted: after a `sort`, the top N. With
+    `where` in place of `n`, the rows that match (`_keep_where`).
 
     A table of `n` rows or fewer keeps every row, and the line says so: nothing is dropped and nothing is refused.
     """
-    total = len(frame)
-    if op.n >= total:
-        return frame, f"kept all {_count(total, 'row')}; there were no more than {op.n}"
-    kept = frame.iloc[: op.n].reset_index(drop=True)
-    return kept, f"kept the first {op.n} of {_count(total, 'row')}, {total - op.n} dropped"
+    if op.where is not None:
+        return _keep_where(frame, op.where, carried)
+    total, n = len(frame), op.n or 0
+    if n >= total:
+        return frame, f"kept all {_count(total, 'row')}; there were no more than {n}"
+    kept = frame.iloc[:n].reset_index(drop=True)
+    line = f"kept the first {n} of {_count(total, 'row')}, {total - n} dropped"
+    return kept, line + _tie_note(frame, n, carried, MAX_NOTE_CHARS - len(line))
+
+
+def _keep_where(frame: pd.DataFrame, where: Sequence[Condition], carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """The rows for which every condition holds, the others dropped and counted.
+
+    No matching row is refused, as a `drop_rows` that matches every row is. When every row matches, every row
+    stays and the line says so.
+    """
+    mask, clauses = _rows_where(frame, where, carried)
+    total, matching = len(frame), int(mask.sum())
+    if not matching:
+        raise PrepareError("empty_result", "no row matches the conditions; no row would remain")
+    words = " and ".join(clauses)
+    if matching == total:
+        return frame, f"kept all {_count(total, 'row')}; every one matches {words}"
+    kept, dropped = frame[mask].reset_index(drop=True), frame[~mask]
+    head = f"kept {matching} of {_count(total, 'row')} where "
+    tail = f", {total - matching} dropped" + _unvalued_note(dropped, where) + _offsets_note(dropped, kept)
+    # The conditions give way, never the counts: the caller wrote the conditions, and the line's own clip would cut
+    # from the end, where the rows without a value and the amounts below 0 are counted.
+    return kept, head + _clip(words, max(MAX_NOTE_CHARS - len(head) - len(tail), 1)) + tail
+
+
+def _unvalued_note(dropped: pd.DataFrame, where: Sequence[Condition]) -> str:
+    """What a `keep_rows` line adds when rows it dropped have no value in a tested column.
+
+    An empty cell matches no test on a value, so "only 2024" also drops the rows without a date. They did not fail
+    the test, they had nothing to test, and the count of dropped rows alone does not say so.
+    """
+    parts = []
+    for column in _distinct([condition.column for condition in where if condition.test not in VALUE_FREE_TESTS]):
+        empty = int(dropped[column].isna().sum())
+        if empty:
+            parts.append(f"{empty} of them {'has' if empty == 1 else 'have'} no {column}")
+    return f"; {' and '.join(parts)}" if parts else ""
+
+
+def _tie_note(frame: pd.DataFrame, n: int, carried: _Carried, room: int) -> str:
+    """What a top N's line adds when its cut falls among rows of one value in the column the rows were sorted by.
+
+    The cut stays at `n`: which of the tied rows are in is the order they had before the sort, nothing the user
+    chose. The note counts the tied rows on each side and names them by the first text column, so the reply can
+    say so and the user can ask for more rows or for every row down to that value. Past `room` characters the
+    names are left out, so the line's clip never cuts the counts: without the names the line stays under
+    `MAX_NOTE_CHARS` for the longest column name and value there can be.
+    """
+    column = carried.sorted_by
+    if column is None or column not in frame.columns:
+        return ""
+    series = frame[column]
+    last = series.iloc[n - 1]
+    tied = series.isna() if pd.isna(last) else _bools(series == last)
+    inside, outside = int(tied.iloc[:n].sum()), int(tied.iloc[n:].sum())
+    if not outside:
+        return ""
+    shown = _cell_text(last, bool(_with_time(series, carried)))
+    if shown is None:
+        value = f"no {column}"
+    else:
+        shown = _clip(shown, MAX_CELL_CHARS)
+        value = f"{column} '{shown}'" if _kind(series) == "text" else f"{column} {shown}"
+    head = f"; the cut falls among {inside + outside} rows with {value}: "
+    counted = f"{head}{inside} kept and {outside} dropped"
+    label = next((str(name) for name in frame.columns if name != column and _kind(frame[name]) == "text"), None)
+    if label is None:
+        return counted
+    # By position, never by label: a boolean Series as a mask is aligned on the index first.
+    names, mask = frame[label], tied.to_numpy(dtype=bool)
+    kept = _tied_names(names.iloc[:n][mask[:n]], label)
+    dropped = _tied_names(names.iloc[n:][mask[n:]], label)
+    named = f"{head}{inside} kept{kept} and {outside} dropped{dropped}"
+    return named if len(named) <= room else counted
+
+
+def _tied_names(cells: pd.Series, label: str) -> str:
+    """` (Stadt 'Köln' and 'Basel')`: the tied rows of one side by their label, at most `SHOWN_TIED_ROWS` of them."""
+    names = [f"'{_clip(cell, TIED_NAME_CHARS)}'" if isinstance(cell, str) else "(empty)" for cell in cells]
+    listed = names[:SHOWN_TIED_ROWS]
+    if len(names) > len(listed):
+        listed.append(f"{len(names) - len(listed)} more")
+    return f" ({label} {_listed(listed)})"
 
 
 def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -3504,7 +3622,7 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
         for item in condition.values:
             hit |= _matches(series, condition.model_copy(update={"value": item, "values": None}), with_time)
         return hit
-    if test in ("is_missing", "not_missing"):
+    if test in VALUE_FREE_TESTS:
         if value is not None:
             raise PrepareError("invalid_operation", f"the condition {test} on column '{column}' takes no value")
         return series.isna() if test == "is_missing" else series.notna()
@@ -3525,11 +3643,16 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
     if kind == "number":
         target = _number(value, column)
     elif kind == "datetime":
-        target = _moment(value, column, series.dt.tz)
+        moment = _moment(value, column, series.dt.tz)
+        if test in ("le", "gt") and _names_a_day(value):
+            # A date without a time is the whole day: "until the 31st" keeps that day's rows whatever their time,
+            # and "after the 31st" leaves all of them out. Midnight alone would cut the day's rows in two.
+            moment, test = moment + pd.Timedelta(days=1), "lt" if test == "le" else "ge"
+        target = moment
     elif kind == "boolean":
         if value.casefold() not in ("true", "false"):
             raise PrepareError("invalid_operation", f"the value for column '{column}' must be true or false")
-        if test in ("gt", "lt"):
+        if test in ORDER_TESTS:
             raise PrepareError("invalid_operation", f"column '{column}' is boolean; {test} does not apply")
         target = value.casefold() == "true"
     else:
@@ -3540,6 +3663,10 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
         return _bools(series != target) & series.notna()
     if test == "gt":
         return _bools(series > target)
+    if test == "ge":
+        return _bools(series >= target)
+    if test == "le":
+        return _bools(series <= target)
     return _bools(series < target)
 
 
@@ -3578,8 +3705,9 @@ def _whole_matches(series: pd.Series, test: str, value: str, column: str) -> pd.
     equal `9007199254740992` (review of #12196).
 
     The value is read as an exact decimal. A whole value compares as a Python integer; a
-    value with a fraction is never equal to a cell, and `gt` / `lt` compare with the
-    whole number below or above it (`gt 2.5` is `gt 2`, `lt 2.5` is `lt 3`).
+    value with a fraction is never equal to a cell, so the order tests compare with the
+    whole number below or above it (`gt 2.5` and `ge 2.5` are `gt 2`, `lt 2.5` and `le 2.5`
+    are `lt 3`).
     """
     _number(value, column)  # the same refusal as any number column for a value that is no number
     exact = ExactDecimal(value.strip())
@@ -3588,19 +3716,32 @@ def _whole_matches(series: pd.Series, test: str, value: str, column: str) -> pd.
         whole = int(exact)
         if not _INT64_MIN <= whole <= _INT64_MAX:  # past every cell: equal to none, above or below all
             above = whole > _INT64_MAX
-            hit = test == "ne" or (test == "lt" and above) or (test == "gt" and not above)
+            hit = test == "ne" or (test in ("lt", "le") and above) or (test in ("gt", "ge") and not above)
             return present.astype(bool) if hit else pd.Series(False, index=series.index)
         if test == "eq":
             return _bools(series == whole)
         if test == "ne":
             return _bools(series != whole) & present
-        return _bools(series > whole) if test == "gt" else _bools(series < whole)
+        if test == "gt":
+            return _bools(series > whole)
+        if test == "ge":
+            return _bools(series >= whole)
+        return _bools(series <= whole) if test == "le" else _bools(series < whole)
     if test == "eq":
         return pd.Series(False, index=series.index)
     if test == "ne":
         return present.astype(bool)
     floor = int(exact.to_integral_value(rounding=ROUND_FLOOR))
-    return _bools(series > floor) if test == "gt" else _bools(series < floor + 1)
+    return _bools(series > floor) if test in ("gt", "ge") else _bools(series < floor + 1)
+
+
+def _names_a_day(value: str) -> bool:
+    """Whether a condition's date value is a date alone (`2024-01-31`), with no time of day."""
+    try:
+        date.fromisoformat(value.strip())
+    except ValueError:
+        return False
+    return True
 
 
 def _moment(value: str, column: str, zone: tzinfo | None = None) -> pd.Timestamp:

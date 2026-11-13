@@ -126,7 +126,27 @@ class TestFixtures:
         # ask for the plot alone or beside a data change, the calendar order of month names among them, and three
         # name the table, which stays a `sort`. The rule names no word of any language, so three French cases, a
         # language the rules hold no example of, check that it carries: an order, a figure and a sort of the table.
-        assert len(cases) == 117
+        # And the rows to keep said positively (`keep_where`): six cases name the rows that stay (some categories, a
+        # period, a threshold, one of them French, two of them moved from a `drop_rows` with the opposite test), and
+        # one top N whose cut falls among equal values (`tie`), which stays at N.
+        assert len(cases) == 122
+        kept = [item for item in cases if "keep_where" in item.tags]
+        assert sorted(item.id for item in kept) == [
+            "de-hard-zwei-filter-zaehlen",
+            "de-notiz-nur-2024",
+            "de-nur-januar-2024",
+            "en-keep-at-least",
+            "en-keep-two-categories",
+            "fr-garder-deux-villes",
+        ]
+        assert all(any(op["op"] == "keep_rows" and "where" in op for op in item.expected_operations) for item in kept)
+        (tie,) = [item for item in cases if "tie" in item.tags]
+        assert tie.expected_operations[-1] == {"op": "keep_rows", "n": 2}
+        # The table cannot show which rows the cut left out of the tie, so the reply is asked to name them.
+        assert tie.reply_names == ["Basel", "Genf"] and all(
+            name in (tie.dataset_text or "") for name in tie.reply_names
+        )
+        assert [item.id for item in cases if item.reply_names] == [tie.id]
         wishes = [item for item in cases if item.plot_request]
         assert sorted(item.id for item in wishes) == [
             "de-groesste-zuerst",
@@ -156,6 +176,7 @@ class TestFixtures:
         ]
         assert all(item.expected_operations[-1]["op"] == "sort" and not item.plot_request for item in named)
         assert sorted(item.id for item in cases if item.locale == "fr") == [
+            "fr-garder-deux-villes",
             "fr-plus-grands-d-abord",
             "fr-total-dans-le-titre",
             "fr-trier-le-tableau",
@@ -303,6 +324,10 @@ class TestFixtures:
                 for operation, change in zip(operations, prepared.changes, strict=True):
                     if operation["op"] == "drop_rows":
                         assert not change.startswith("dropped 0 rows"), (item.id, change)
+                    if operation["op"] == "keep_rows":  # and an expected `keep_rows` must take a row out
+                        assert not change.startswith("kept all"), (item.id, change)
+                if "tie" in item.tags:  # the case is about a cut among equal values, which its line must name
+                    assert "the cut falls among" in prepared.changes[-1], item.id
         check_cases(load_cases(DEFAULT_CASES))
 
     def test_a_bad_directory_or_fixture_is_a_setup_error(self, tmp_path: Path) -> None:
@@ -398,9 +423,25 @@ class TestCanonical:
             canonical_operations([{"op": "aggregate", "by": ["b", "a"], "column": "v", "how": "sum"}], ".")
         )
 
+    def test_the_rows_to_keep_are_a_set_of_conditions_or_a_count(self) -> None:
+        january = [
+            {"column": "t", "test": "ge", "value": "2024-01-01"},
+            {"column": "t", "test": "le", "value": "2024-01-31"},
+        ]
+
+        one = canonical_operations([{"op": "keep_rows", "where": january}], ".")
+        other = canonical_operations([{"op": "keep_rows", "where": january[::-1]}], ".")
+        first = canonical_operations([{"op": "keep_rows", "n": 3}], ".")
+
+        assert one == other
+        assert [describe(line) for line in one] == ["keep_rows t ge '2024-01-01' and t le '2024-01-31'"]
+        assert [describe(line) for line in first] == ["keep_rows 3"]
+
     def test_an_invalid_operation_raises(self) -> None:
         with pytest.raises(ValidationError):
             canonical_operations([{"op": "rename", "column": "a"}], ".")
+        with pytest.raises(ValidationError):
+            canonical_operations([{"op": "keep_rows"}], ".")
 
     def test_describe(self) -> None:
         lines = canonical_operations(
@@ -898,6 +939,22 @@ class TestReplyShape:
         talk = CaseResult("s-003", [], [])
         prep.measure_reply(talk, ["Renamed it."], blocked=False)
         assert talk.reply_miss is None  # no summary turn: no count to name
+
+    def test_a_reply_that_leaves_out_what_the_case_asks_it_to_name_is_a_miss(self) -> None:
+        """A top N's table cannot show the rows its cut left out of a tie: only the reply can, so the case asks for
+        their names, and a reply without one misses whatever its shape."""
+        named = CaseResult("t-001", [], [])
+        told = "Die 2 umsatzstärksten sind Bern und Köln. Köln teilt sich 800 mit Basel und Genf, die nicht dabei sind."
+        prep.measure_reply(named, [told], blocked=False, names=["Basel", "Genf"])
+        assert named.reply_miss is None
+
+        silent = CaseResult("t-002", [], [])
+        prep.measure_reply(silent, ["Ich habe die 2 umsatzstärksten Städte behalten."], blocked=False, names=["Basel"])
+        assert silent.reply_miss == "unnamed"
+
+        half = CaseResult("t-003", [], [])
+        prep.measure_reply(half, ["Basel fällt weg. Passt das?"], blocked=False, names=["Basel", "Genf"])
+        assert half.reply_miss == "unnamed" and half.closing_question  # the missing name is the miss that counts
 
     @pytest.mark.parametrize(
         ("text", "invitation"),

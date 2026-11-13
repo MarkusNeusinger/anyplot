@@ -2,7 +2,7 @@
   "dataset_text": "Jahr,Monat,Umsatz\n2023,11,3\n2023,12,4\n2024,1,5\n2024,2,7\n2024,3,6\n",
   "message": "nur 2024",
   "first_turn": true,
-  "expected_operations": [{"op": "drop_rows", "where": [{"column": "Jahr", "test": "ne", "value": 2024}]}],
+  "expected_operations": [{"op": "keep_rows", "where": [{"column": "Jahr", "test": "eq", "value": 2024}]}],
   "locale": "de",
-  "tags": ["note", "drop_rows"]
+  "tags": ["note", "keep_rows", "keep_where"]
 }

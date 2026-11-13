@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Student,Score\nAda,91\nBen,58\nCleo,75\nDev,60\nEli,44\n",
+  "message": "Keep only the students with a score of at least 60.",
+  "expected_operations": [
+    {"op": "keep_rows", "where": [{"column": "Score", "test": "ge", "value": 60}]}
+  ],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["keep_rows", "keep_where"]
+}
