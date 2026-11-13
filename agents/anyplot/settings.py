@@ -47,7 +47,7 @@ another provider, model or location.
 | `AGENT_PUBLIC_QUEUE_MAX_WAITING` | `10` | Waiting entries the public lane may hold in the run queue; one more ends its turn with `error{code:"capacity"}`, so open public streams keep to a share of anyplot-api's request slots |
 | `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; more get the `rate_limited` refusal before the scope judge runs. An admin is exempt |
 | `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; more get the `daily_limit` refusal before the scope judge runs. An admin is exempt |
-| `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals (`out_of_scope` or `attack`, not `needs_data`, and `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`) after which the session is closed: the last of them and every later turn, and every paste, get the `session_closed` refusal |
+| `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals (`attack`, not `out_of_scope` or `needs_data`, and `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`) after which the session is closed: the last of them and every later turn, and every paste, get the `session_closed` refusal |
 | `AGENT_OTHER_LIBRARY_COUNTS` | `false` | Whether an `other_library` refusal (this plot in another library or language) counts toward `AGENT_SESSION_REFUSALS` |
 | `AGENT_SESSION_CLOSE_WARNING` | `true` | The counted refusal one before the closing one carries the fixed `close_warning` suffix |
 | `AGENT_USER_PASTES_PER_MINUTE` | `10` | Dataset pastes per user within any 60 seconds, across sessions; more get `429 rate_limited` before any parser or model reads the paste |
@@ -394,10 +394,11 @@ class AgentSettings(BaseSettings):
     exempt."""
 
     session_refusals: PositiveInt = 3
-    """Scope-judge refusals of type `out_of_scope` or `attack` after which a session is closed
-    (`AGENT_SESSION_REFUSALS`): the refusal that reaches it and every later turn of the session answer
-    `session_closed`, and the user starts a new session. `needs_data` refusals never count. Counted from the
-    session's withheld messages, so it ends with the session."""
+    """Scope-judge refusals of type `attack` after which a session is closed (`AGENT_SESSION_REFUSALS`): the
+    refusal that reaches it and every later turn of the session answer `session_closed`, and the user starts a
+    new session. An off-topic message (`out_of_scope`) is refused and counts toward nothing, and neither does
+    `needs_data`: a refusal the judge got wrong must not bring a chat that nobody attacked closer to closing.
+    Counted from the session's withheld messages, so it ends with the session."""
 
     other_library_counts: bool = False
     """Whether an `other_library` refusal (this plot in another library or language, answered with a fixed
@@ -589,8 +590,8 @@ class AgentSettings(BaseSettings):
     paste_note_rescues: PositiveInt = 5
     """Notes typed with a paste per user and day whose `out_of_scope` verdict goes on as `in_scope`
     (`AGENT_PASTE_NOTE_RESCUES`; the anonymous users of one network share twice as many). Such a note reaches the
-    root uncounted, so the cap bounds that channel; past it the verdict stands, and the note is refused and counted
-    toward the session's refusals as any message. Every tier, like the strikes."""
+    root uncounted, so the cap bounds that channel; past it the verdict stands and the note is refused, as any
+    off-topic message is, without counting toward the session's refusals. Every tier, like the strikes."""
 
     session_idle_s: PositiveInt = 3600
     """Idle seconds before the sweeper drops a session (`AGENT_SESSION_IDLE_S`)."""

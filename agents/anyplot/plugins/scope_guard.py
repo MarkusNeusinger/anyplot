@@ -44,21 +44,24 @@
   after the judge's. A rescued `out_of_scope` counts toward no refusal, so at most
   `AGENT_PASTE_NOTE_RESCUES` go on per user and day (`UsageBook.note_rescue_ok`, twice
   as many per network); past that the verdict stands (`paste_note_rescues_spent`) and
-  the note is refused and counted as any message. `attack` refuses the note as any
-  message, and `other_library` gets its fixed pointer to the catalogue;
+  the note is refused as any off-topic message is, which counts toward nothing.
+  `attack` refuses the note as any message, strike and count included, and
+  `other_library` gets its fixed pointer to the catalogue;
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
   above refuses the user with the `locked_out` refusal for the rest of the day (a
   spent token budget keeps the `budget` refusal);
-* the session's `AGENT_SESSION_REFUSALS`-th counted refusal (`counted_codes`: `out_of_scope`
-  or `attack`, and `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`; `needs_data`
-  never counts, `scope_refusals`) closes the session: that refusal goes out as
+* the session's `AGENT_SESSION_REFUSALS`-th counted refusal (`counted_codes`: `attack`, and
+  `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`; an off-topic `out_of_scope` and
+  `needs_data` never count, `scope_refusals`) closes the session: that refusal goes out as
   `session_closed` instead, and the `/messages` route answers every later turn of the
   session with the same refusal before the judge runs (the paste route with
   `403 session_closed`), so the user starts a new session. With
   `AGENT_SESSION_CLOSE_WARNING` the counted refusal one before it carries the fixed
-  `close_warning` suffix. The strikes above are per user and day and count `attack`
-  only; this count is per session and needs no state of its own;
+  `close_warning` suffix. The strikes above are per user and day, once per distinct
+  message text; this count is per session, counts every `attack` verdict, and needs no
+  state of its own: an attack is stored under its own placeholder (`ATTACK`), which the
+  judge's context reads as the out-of-scope one (`judge_placeholder`);
 * the judge's `lang` for an in-scope typed message never sets the session language:
   when it names another language, the page offers it
   once (`language.offer`), and the user's click on the offer sets it. There is no offer
@@ -189,6 +192,12 @@ LOCKED_OUT = "locked_out"
 """The refusal code (and `refusals.yaml` entry) of a user past `AGENT_ATTACK_STRIKES` today."""
 JUDGED_REFUSALS = frozenset(REFUSAL_CODES.values())
 """The refusal codes a withheld placeholder may carry (`withheld_text`)."""
+ATTACK = "attack"
+"""The verdict a session's refusals count (`counted_codes`). Its reply is the out-of-scope one, and so is its
+placeholder wherever a model reads it (`judge_placeholder`); only the session's stored event says `attack`."""
+STORED_REFUSALS = JUDGED_REFUSALS | {ATTACK}
+"""What a stored placeholder may carry: the refusal codes, and `attack`, which the count tells from an off-topic
+message that shares its reply (`scope_refusals`)."""
 
 
 def refusal_code(verdict: str) -> str:
@@ -201,19 +210,30 @@ def withheld_text(code: str | None = None) -> str:
 
     `[message withheld by scope policy: needs_data]` keeps the earlier verdict for the judge's next
     context, so "do it anyway" after a `needs_data` refusal gets `needs_data` again, without a
-    natural-language refusal text in that context (which primed the judge, `judge_context`). Only
-    the refusal codes appear (`attack` is `out_of_scope` there too); a refusal before the judge
-    (`budget`, `unsupported_content`) or an outage keeps the bare `WITHHELD`.
+    natural-language refusal text in that context (which primed the judge, `judge_context`). The
+    judge reads only the refusal codes: a stored `attack` is `out_of_scope` in its context
+    (`judge_placeholder`). A refusal before the judge (`budget`, `unsupported_content`) or an
+    outage keeps the bare `WITHHELD`.
     """
-    return f"{WITHHELD[:-1]}: {code}]" if code in JUDGED_REFUSALS else WITHHELD
+    return f"{WITHHELD[:-1]}: {code}]" if code in STORED_REFUSALS else WITHHELD
 
 
 def _withheld(code: str | None = None) -> types.Content:
     return types.Content(role="user", parts=[types.Part(text=withheld_text(code))])
 
 
-WITHHELD_TEXTS: frozenset[str] = frozenset({WITHHELD, *(withheld_text(code) for code in JUDGED_REFUSALS)})
+WITHHELD_TEXTS: frozenset[str] = frozenset({WITHHELD, *(withheld_text(code) for code in STORED_REFUSALS)})
 """Every stored form of a withheld message."""
+
+
+def judge_placeholder(text: str) -> str:
+    """A stored user turn as the judge reads it: the placeholder of an `attack` as the out-of-scope one.
+
+    The count needs the two apart in the session's events; the judge's context keeps the one form it had before,
+    so a verdict on the next message is not primed by the word."""
+    return withheld_text(REFUSAL_CODES[ATTACK]) if text == withheld_text(ATTACK) else text
+
+
 HALT_QUOTE = f"[{HALT_AUTHOR}] said:"
 """The words ADK puts before a halt event's text in the root's request. The event's author is `model`, another agent
 for the root, so ADK hands its text over as a user content: a preamble part, then one part per text that starts with
@@ -280,23 +300,24 @@ def withheld_messages(events: Sequence[Event]) -> int:
 
 SESSION_CLOSED = "session_closed"
 """The refusal code (and `refusals.yaml` entry) of a session closed after `AGENT_SESSION_REFUSALS` refusals."""
-COUNTED_PLACEHOLDER = withheld_text("out_of_scope")
-"""The stored form of every `out_of_scope` and `attack` refusal: what `scope_refusals` always counts."""
+COUNTED_PLACEHOLDER = withheld_text(ATTACK)
+"""The stored form of every `attack` refusal: what `scope_refusals` always counts."""
 
 
 def counted_codes(other_library_counts: bool | None = None) -> frozenset[str]:
-    """The refusal codes that count toward closing a session: `out_of_scope` (which `attack` shares), and
-    `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`. `needs_data` never counts."""
+    """The stored codes that count toward closing a session: `attack`, and `other_library` only with
+    `AGENT_OTHER_LIBRARY_COUNTS`. An off-topic message (`out_of_scope`) is refused and counts toward nothing, and
+    neither does `needs_data`."""
     if other_library_counts is None:
         other_library_counts = get_settings().other_library_counts
-    return frozenset({"out_of_scope", "other_library"} if other_library_counts else {"out_of_scope"})
+    return frozenset({ATTACK, "other_library"} if other_library_counts else {ATTACK})
 
 
 def scope_refusals(events: Sequence[Event], counted: frozenset[str] | None = None) -> int:
     """The session's counted scope-judge refusals (`counted_codes`), counted from its withheld messages.
 
-    `out_of_scope` and `attack` store the same placeholder (`withheld_text("out_of_scope")`), a
-    `needs_data` or `other_library` refusal its own, and a refusal sent before the judge (budget,
+    An `attack` stores a placeholder of its own (`withheld_text(ATTACK)`), as an `out_of_scope`, a
+    `needs_data` and an `other_library` refusal do, and a refusal sent before the judge (budget,
     unsupported content, the message limits, a closed session) the bare one or nothing, so only the
     counted kinds match. The count lives in the session's own events: it ends with the session, and no
     state is written for it.
@@ -325,8 +346,10 @@ def session_turns(invocation_context: InvocationContext) -> list[Turn]:
         if event.author not in (USER_AUTHOR, ROOT_AGENT, HALT_AUTHOR) or not event.content or not event.content.parts:
             continue
         text = "".join(part.text or "" for part in event.content.parts if part.text and not part.thought).strip()
-        if text:
-            turns.append(("user" if event.author == USER_AUTHOR else "assistant", text))
+        if text and event.author == USER_AUTHOR:
+            turns.append(("user", judge_placeholder(text)))
+        elif text:
+            turns.append(("assistant", text))
     return turns
 
 
@@ -512,10 +535,13 @@ class ScopeGuardPlugin(BasePlugin):
                     KeptRefusal(verdict.verdict, verdict.lang, text, datetime.now(UTC).isoformat(timespec="seconds")),
                 )
             code = refusal_code(verdict.verdict)
+            # The reply is the code's; the stored placeholder tells an attack from an off-topic message, which
+            # shares that reply and counts toward nothing.
+            stored = ATTACK if verdict.verdict == ATTACK else code
             shown = code
             text_out = refusal(code, ledger.lang)
             counted = counted_codes(settings.other_library_counts)
-            if code in counted:
+            if stored in counted:
                 count = scope_refusals(invocation_context.session.events, counted) + 1
                 if count >= settings.session_refusals:
                     shown = SESSION_CLOSED  # the route refuses every later turn of the session before the judge
@@ -527,7 +553,7 @@ class ScopeGuardPlugin(BasePlugin):
                     text_out = f"{text_out} {refusal(CLOSE_WARNING, ledger.lang)}"
                     attribution("scope_guard", ledger, verdict=CLOSE_WARNING, refusals=count)
             ledger.refuse(shown, text_out)
-            return _withheld(code)
+            return _withheld(stored)
         await self._offer(invocation_context, ledger, verdict, text)
         return None
 
