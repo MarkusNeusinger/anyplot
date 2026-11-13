@@ -10,4 +10,4 @@
   session, the warning before the last one stays, and the per-user strikes
   with their lock-out for the day are unchanged. The session stores such a
   message under a marker of its own for the count; the scope check's own
-  context reads it as before.
+  context reads it as before. (#13082)
