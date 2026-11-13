@@ -92,7 +92,7 @@ refusal right after `ready`: `locked_out` for a user past the day's `attack` str
 `service_paused` for everyone else once the service's day budget is spent
 (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`; a paste or a conversion `429 service_paused`),
 `session_closed` in a session the scope judge closed (`AGENT_SESSION_REFUSALS`
-refusals of type `out_of_scope` or `attack`), and `rate_limited` or `daily_limit` past
+refusals of type `attack`), and `rate_limited` or `daily_limit` past
 the user's message limits (`AGENT_USER_MESSAGES_PER_MINUTE`,
 `AGENT_USER_MESSAGES_PER_DAY`, counted in the usage book; actions count too). An admin is
 exempt from the user's daily token budget and both message limits; the strikes, the global
