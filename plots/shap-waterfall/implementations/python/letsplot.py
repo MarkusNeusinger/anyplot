@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 shap-waterfall: SHAP Waterfall Plot for Feature Attribution
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-07
@@ -16,83 +16,81 @@ LetsPlot.setup_html()
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-POS_COLOR = "#AE3030"  # imprint red — positive SHAP (increases predicted risk)
-NEG_COLOR = "#4467A3"  # Okabe-Ito blue — negative SHAP (decreases predicted risk)
+# Imprint palette: red for positive SHAP (raises risk), blue for negative (lowers risk)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+POS_COLOR = IMPRINT_PALETTE[4]
+NEG_COLOR = IMPRINT_PALETTE[2]
 
-# Data — loan default risk model explaining one applicant's prediction
-# Features already sorted by absolute SHAP magnitude (largest at top)
-feature_names = [
-    "Payment History",
-    "Debt-to-Income Ratio",
-    "Annual Income",
-    "Credit Score",
-    "Loan Amount",
-    "Employment Years",
-    "Age",
-    "Open Accounts",
-    "Housing Status",
-    "Loan Purpose",
-    "Savings Balance",
-    "Marital Status",
-]
-shap_values = np.array([0.18, 0.12, -0.11, -0.09, 0.08, -0.06, -0.05, 0.04, -0.03, 0.02, -0.02, 0.01])
-base_value = 0.35
-final_value = round(base_value + float(shap_values.sum()), 4)
+# Columns: set these to your table's column names
+FEATURE = "Feature"  # role: feature
+SHAP_VALUE = "SHAP value (change in readmission probability)"  # role: shap_value
+BASE_VALUE = "Base value"  # role: base_value
 
-n = len(feature_names)
-y_pos = list(range(n, 0, -1))  # largest contributor at top (y=n), smallest at bottom (y=1)
-
-# Cumulative waterfall positions
-cumulative = base_value
-bar_starts = np.empty(n)
-bar_ends = np.empty(n)
-for i, sv in enumerate(shap_values):
-    bar_starts[i] = cumulative
-    cumulative += sv
-    bar_ends[i] = cumulative
-
-# Main bars DataFrame
-df_bars = pd.DataFrame(
+# Data: replace this block with your own table, for example df = pd.read_csv("shap.csv")
+# One patient's 30-day hospital readmission risk, explained feature by feature
+df = pd.DataFrame(
     {
-        "y": y_pos,
-        "ymin": [y - 0.38 for y in y_pos],
-        "ymax": [y + 0.38 for y in y_pos],
-        "xmin": np.minimum(bar_starts, bar_ends),
-        "xmax": np.maximum(bar_starts, bar_ends),
-        "direction": ["positive" if sv >= 0 else "negative" for sv in shap_values],
-        "shap_value": shap_values,
-        "feature": feature_names,
+        FEATURE: [
+            "Prior Admissions (12 mo)",
+            "Home Care Arranged",
+            "Age",
+            "Comorbidity Count",
+            "Length of Stay",
+            "Medication Count",
+            "Discharge Weekday",
+            "Hemoglobin Level",
+            "Insurance Type",
+            "Emergency Admission",
+            "Distance to Hospital",
+            "Smoking Status",
+        ],
+        SHAP_VALUE: [0.09, -0.07, 0.06, 0.05, -0.04, 0.04, -0.03, 0.03, -0.02, 0.02, -0.01, 0.01],
+        BASE_VALUE: 0.15,
     }
 )
 
-# SHAP value labels: positive bars get text to the right, negative to the left
-df_bars["text_x"] = np.where(
-    shap_values >= 0, np.maximum(bar_starts, bar_ends) + 0.007, np.minimum(bar_starts, bar_ends) - 0.007
-)
-df_bars["label"] = [f"+{sv:.3f}" if sv >= 0 else f"{sv:.3f}" for sv in shap_values]
+# Plot: reads only df and the constants above
+table = df.reindex(df[SHAP_VALUE].abs().sort_values(ascending=False, kind="stable").index).reset_index(drop=True)
+n = len(table)
+base_value = float(table[BASE_VALUE].iloc[0])
+final_value = base_value + float(table[SHAP_VALUE].sum())
 
-df_pos = df_bars[df_bars["shap_value"] >= 0]
-df_neg = df_bars[df_bars["shap_value"] < 0]
+# Cumulative waterfall positions; the largest contributor sits at the top
+ends = base_value + table[SHAP_VALUE].cumsum()
+starts = ends - table[SHAP_VALUE]
+chain = np.concatenate([[base_value], ends.to_numpy()])
+span = chain.max() - chain.min()
 
-# Vertical connector segments in the gap between consecutive bars
+half = 0.38
+table["y"] = np.arange(n, 0, -1)
+table["ymin"] = table["y"] - half
+table["ymax"] = table["y"] + half
+table["xmin"] = np.minimum(starts, ends)
+table["xmax"] = np.maximum(starts, ends)
+table["direction"] = np.where(table[SHAP_VALUE] >= 0, "positive", "negative")
+table["label"] = table[SHAP_VALUE].map(lambda v: f"{v:+.2f}")
+table["text_x"] = np.where(table[SHAP_VALUE] >= 0, table["xmax"] + 0.02 * span, table["xmin"] - 0.02 * span)
+df_pos = table[table[SHAP_VALUE] >= 0]
+df_neg = table[table[SHAP_VALUE] < 0]
+
+# Dotted connectors in the gap between consecutive bars
 df_conn = pd.DataFrame(
-    {
-        "x": bar_ends[:-1],
-        "xend": bar_ends[:-1],
-        "y": [y - 0.38 for y in y_pos[:-1]],
-        "yend": [y + 0.38 for y in y_pos[1:]],
-    }
+    {"x": ends.to_numpy()[:-1], "y": table["y"].to_numpy()[:-1] - half, "yend": table["y"].to_numpy()[1:] + half}
 )
 
-# Reference line annotation labels (floated above all bars)
-# Base: left-aligned from reference line; Predicted: centered over its line
-df_ref_base = pd.DataFrame({"x": [base_value + 0.003], "y": [n + 1.1], "label": [f"Base = {base_value:.2f}"]})
-df_ref_pred = pd.DataFrame({"x": [final_value], "y": [n + 1.1], "label": [f"Predicted = {final_value:.2f}"]})
+# Reference-line labels above the top bar
+label_y = n + 1.0
+df_ref_base = pd.DataFrame({"x": [base_value - 0.02 * span], "y": [label_y], "label": [f"Base = {base_value:.2f}"]})
+df_ref_pred = pd.DataFrame(
+    {"x": [final_value + 0.02 * span], "y": [label_y], "label": [f"Predicted = {final_value:.2f}"]}
+)
+
+title = "Hospital Readmission Risk  ·  shap-waterfall  ·  python  ·  letsplot  ·  anyplot.ai"
+title_size = round(16 * min(1.0, 67 / len(title)))
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -101,40 +99,36 @@ anyplot_theme = theme(
     panel_grid_major_x=element_line(color=INK_MUTED, size=0.15),
     panel_grid_major_y=element_blank(),
     panel_grid_minor=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text_y=element_text(color=INK_SOFT, size=16),
-    axis_text_x=element_text(color=INK_SOFT, size=14),
+    axis_title=element_text(color=INK, size=12),
+    axis_text_y=element_text(color=INK_SOFT, size=11),
+    axis_text_x=element_text(color=INK_SOFT, size=10),
     axis_line_x=element_line(color=INK_SOFT, size=0.5),
     axis_line_y=element_blank(),
     axis_ticks=element_blank(),
-    plot_title=element_text(color=INK, size=24),
+    plot_title=element_text(color=INK, size=title_size),
     legend_position="none",
 )
 
 plot = (
     ggplot()
-    + geom_vline(xintercept=float(base_value), color=INK_SOFT, size=0.9, linetype="dashed")
-    + geom_rect(data=df_bars, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="direction"))
+    + geom_vline(xintercept=base_value, color=INK_SOFT, size=0.5, linetype="dashed")
+    + geom_rect(data=table, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="direction"))
     + geom_segment(
-        data=df_conn, mapping=aes(x="x", xend="xend", y="y", yend="yend"), color=INK_SOFT, size=0.5, linetype="dotted"
+        data=df_conn, mapping=aes(x="x", xend="x", y="y", yend="yend"), color=INK_SOFT, size=0.4, linetype="dotted"
     )
-    + geom_text(data=df_pos, mapping=aes(x="text_x", y="y", label="label"), color=INK_MUTED, size=10, hjust=0)
-    + geom_text(data=df_neg, mapping=aes(x="text_x", y="y", label="label"), color=INK_MUTED, size=10, hjust=1)
-    + geom_text(data=df_ref_base, mapping=aes(x="x", y="y", label="label"), color=INK, size=11, hjust=0)
-    + geom_text(data=df_ref_pred, mapping=aes(x="x", y="y", label="label"), color=INK, size=11, hjust=0.5)
-    + geom_vline(xintercept=float(final_value), color=INK, size=1.2)
+    + geom_text(data=df_pos, mapping=aes(x="text_x", y="y", label="label"), color=INK_SOFT, size=4.5, hjust=0)
+    + geom_text(data=df_neg, mapping=aes(x="text_x", y="y", label="label"), color=INK_SOFT, size=4.5, hjust=1)
+    + geom_text(data=df_ref_base, mapping=aes(x="x", y="y", label="label"), color=INK, size=5, hjust=1)
+    + geom_text(data=df_ref_pred, mapping=aes(x="x", y="y", label="label"), color=INK, size=5, hjust=0)
+    + geom_vline(xintercept=final_value, color=INK, size=0.7)
     + scale_fill_manual(values={"positive": POS_COLOR, "negative": NEG_COLOR})
-    + scale_x_continuous(limits=[0.28, 0.72], expand=[0, 0])
-    + scale_y_continuous(breaks=y_pos, labels=feature_names, limits=[0.5, n + 1.5])
-    + labs(
-        x="SHAP Value  ·  Impact on Predicted Default Probability",
-        y="",
-        title="Credit Default Risk  ·  shap-waterfall  ·  letsplot  ·  anyplot.ai",
-    )
-    + ggsize(1600, 900)
+    + scale_x_continuous(limits=[chain.min() - 0.45 * span, chain.max() + 0.45 * span], expand=[0, 0])
+    + scale_y_continuous(breaks=table["y"].tolist(), labels=table[FEATURE].tolist(), limits=[0.5, n + 1.5])
+    + labs(x=SHAP_VALUE, y="", title=title)
+    + ggsize(800, 450)
     + theme_minimal()
     + anyplot_theme
 )
 
-ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
 ggsave(plot, f"plot-{THEME}.html", path=".")
