@@ -457,22 +457,31 @@ class TestSetTypeNumber:
         assert "undo to the pasted data first" in str(raised.value)
 
     def test_the_cells_as_pasted_go_with_their_column_never_to_a_later_one_of_its_name(self) -> None:
-        """Dropped, the column takes its pasted cells along: `Alt` renamed to `Einwohner` keeps 5, 6 and 7."""
+        """Dropped, the column takes its pasted cells along: `Alt` renamed to `Einwohner`, or a column derived under
+        that name, has none to read again, so the decimal comma is refused and 1.234 never lands on it."""
         text = "Stadt;Einwohner;Alt;Neu\nBern;1.234;5;1\nBasel;7.000;6;1\nChur;12;7;1\n"
         reading = {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","}
-        renamed = prepare(
-            text,
-            {"op": "drop_columns", "columns": ["Einwohner"]},
-            {"op": "rename", "column": "Alt", "name": "Einwohner"},
-            reading,
-        )
-        assert cells(renamed, 1) == ["5", "6", "7"]
-        assert renamed.changes[-1].startswith("Einwohner: already numbers, nothing changed")
+        dropped = {"op": "drop_columns", "columns": ["Einwohner"]}
 
-        derived = prepare(
-            text, {"op": "drop_columns", "columns": ["Einwohner"]}, derive("Einwohner", "sum", "Alt", "Neu"), reading
+        for later in ({"op": "rename", "column": "Alt", "name": "Einwohner"}, derive("Einwohner", "sum", "Alt", "Neu")):
+            code, message = failure(text, dropped, later, reading)
+            assert code == "type_mismatch" and "only from the pasted data" in message
+
+        renamed = prepare(text, dropped, {"op": "rename", "column": "Alt", "name": "Einwohner"})
+        assert cells(renamed, 1) == ["5", "6", "7"]
+
+    def test_a_pasted_number_column_made_text_is_its_cells_as_pasted(self) -> None:
+        """`7.000` is stored as the number 7: as text it is `7.000` again, and back to numbers with a decimal comma
+        in the same call it is 7000, where the stored text gave 7."""
+        as_text = prepare(self.AMBIGUOUS_DOTS, {"op": "set_type", "column": "Einwohner", "type": "text"})
+        assert cells(as_text, 1) == ["1.234", "7.000", "12"]
+
+        back = prepare(
+            self.AMBIGUOUS_DOTS,
+            {"op": "set_type", "column": "Einwohner", "type": "text"},
+            {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","},
         )
-        assert cells(derived, 3) == ["6", "7", "8"]
+        assert cells(back, 1) == ["1234", "7000", "12"]
 
     def test_a_declared_missing_mark_stays_missing_when_the_dots_are_read_again(self) -> None:
         prepared = prepare(
@@ -482,19 +491,27 @@ class TestSetTypeNumber:
 
         assert cells(prepared, 1) == ["1234", "7000", "", "980"]
 
-    def test_a_number_column_without_cells_as_pasted_stays_and_says_why(self) -> None:
-        """A column that reads one way, or a later version's: the decimal comma has nothing to read."""
+    def test_a_number_column_without_cells_as_pasted_stays_or_is_refused(self) -> None:
+        """A column read the way the request names stays as it is. A later version's column, whose dots the request
+        wants read as thousands, has no cells to read again: refused, never a line of a call that goes on to compute
+        with the decimal reading and store it."""
         plain = prepare(SALES, {"op": "set_type", "column": "Umsatz", "type": "number", "decimal": "."})
         assert plain.changes == ["Umsatz: already numbers, nothing changed"]
+        comma = prepare(SALES, {"op": "set_type", "column": "Umsatz", "type": "number", "decimal": ","})
+        assert comma.changes == ["Umsatz: already numbers, nothing changed"]  # a file of decimal commas, read so
 
         later = replace(parse_dataset(self.AMBIGUOUS_DOTS), pasted_cells={})
-        operation = {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","}
-        kept = apply_operations(later, OPERATIONS.validate_python([operation]))
-        assert kept.csv == later.csv
-        assert kept.changes == [
-            "Einwohner: already numbers, nothing changed; its dots can be read as thousands separators only from "
-            "the pasted data: undo to the pasted data first"
-        ]
+        operations = OPERATIONS.validate_python(
+            [
+                {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","},
+                {"op": "compute", "name": "Doppelt", "expression": "e * 2", "inputs": {"e": "Einwohner"}},
+            ]
+        )
+        with pytest.raises(PrepareError) as raised:
+            apply_operations(later, operations)
+        assert raised.value.code == "type_mismatch"
+        assert "already holds numbers read with a decimal point" in raised.value.message
+        assert "undo to the pasted data first" in raised.value.message
 
     def test_a_uniform_unit_column_is_typed_at_parse_and_a_mixed_one_by_set_type(self) -> None:
         """The division of labour: when every cell carries the same unit, the parser reads numbers at the paste and
@@ -2939,11 +2956,128 @@ class TestStripAndReplace:
         with pytest.raises(ValidationError):
             OPERATIONS.validate_python([{"op": "replace", "column": "t", "old": "x", "new": "a\nb", "name": "r"}])
 
-    def test_a_number_column_is_read_as_its_canonical_text(self) -> None:
-        """`1,5` in a decimal-comma file is the number 1.5, written `1.5`: a comma to replace is not there any more."""
-        assert failure(
-            "p;v\n1,5;1\n2,5;2\n", {"op": "replace", "column": "p", "old": ",", "new": ".", "name": "n"}
-        ) == ("invalid_operation", "no cell of column 'p' holds ','")
+    def test_a_mark_of_a_number_column_is_no_text_to_work_on(self) -> None:
+        """`1,5` in a decimal-comma file is the number 1.5, stored `1.5`, and `12.50` is stored `12.5`: an operation
+        on the `.` or `,` of such a column would work on another text than the user's, so it is refused."""
+        for text, old in (("p;v\n1,5;1\n2,5;2\n", ","), ("p,v\n12.50,1\n7.25,2\n", ".")):
+            code, message = failure(text, {"op": "replace", "column": "p", "old": old, "name": "n"})
+            assert code == "type_mismatch" and "column 'p' holds numbers" in message
+        code, _ = failure("p,v\n12.50,1\n7.25,2\n", split("p", ".", "whole", "part"))
+        assert code == "type_mismatch"
+
+    def test_a_number_column_keeps_its_other_text_operations(self) -> None:
+        """A text operation that looks for no mark reads the canonical text as before."""
+        prepared = prepare("p,v\n-12,1\n-7,2\n", {"op": "strip", "column": "p", "prefix": "-", "name": "n"})
+
+        assert cells(prepared, 2) == ["12", "7"]
+
+    def test_a_pasted_number_column_is_read_as_pasted(self) -> None:
+        """A column whose dots could be decimals or thousands keeps its cells as pasted: removing the dots works on
+        `7.000`, never on the stored `7`."""
+        prepared = prepare(
+            "Stadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;12\n",
+            {"op": "replace", "column": "Einwohner", "old": ".", "name": "n"},
+        )
+
+        assert cells(prepared, 2) == ["1234", "7000", "12"]
+        with pytest.raises(PrepareError) as raised:  # after a sort a row of the frame is no pasted row any more
+            prepare(
+                "Stadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;12\n",
+                {"op": "sort", "column": "Stadt"},
+                {"op": "replace", "column": "Einwohner", "old": ".", "name": "n"},
+            )
+        assert raised.value.code == "type_mismatch"
+
+    FOOTNOTE = (
+        "District\t2024\t2025\nOld Town\t22.497\t26.215\nHarbour\t41.377\t57.902\n"
+        "University\t45.454\t38.790*\nPark\t49.000\t58.953\n"
+    )
+    """Invented counts with thousands dots and one footnote star, which keeps `2025` text at the paste."""
+
+    def test_a_result_whose_decimal_mark_is_open_stays_text_for_set_type(self) -> None:
+        """`38.790` with its star taken off is 38.79 or 38790: typed by a guess, the zero would be gone for good."""
+        prepared = prepare(
+            self.FOOTNOTE,
+            {"op": "strip", "column": "2025", "suffix": "*", "name": "c"},
+            {"op": "set_type", "column": "c", "type": "number", "decimal": ","},
+        )
+
+        assert cells(prepared, 3) == ["26215", "57902", "38790", "58953"]
+        assert prepared.changes[0] == (
+            "new column c: '*' off the end of 1 of 4 cells of 2025; c kept as text, since its cells read as numbers "
+            'with either decimal mark: set_type to number with "decimal" reads them; 2025 stays as it is'
+        )
+        assert prepared.changes[1] == "c: 4 cells read as numbers"
+
+    def test_the_dots_of_such_a_result_are_removed_from_its_text(self) -> None:
+        prepared = prepare(
+            self.FOOTNOTE,
+            {"op": "strip", "column": "2025", "suffix": "*", "name": "c"},
+            {"op": "replace", "column": "c", "old": ".", "name": "n"},
+        )
+
+        assert cells(prepared, 3) == ["26.215", "57.902", "38.790", "58.953"]  # text, as written
+        assert cells(prepared, 4) == ["26215", "57902", "38790", "58953"]
+        assert dtypes(prepared)["c"] == "text" and dtypes(prepared)["n"] == "integer"
+
+    def test_set_type_says_which_mark_it_took_when_none_was_named(self) -> None:
+        """The one operation that reads the column directly: with the mark named it reads the thousands, the star
+        taken off; without, it takes the dataset's mark and says how to get the other reading."""
+        named = prepare(self.FOOTNOTE, {"op": "set_type", "column": "2025", "type": "number", "decimal": ","})
+        assert cells(named, 2) == ["26215", "57902", "38790", "58953"]
+        assert named.changes == ["2025: 4 cells read as numbers, unit '*' removed"]
+
+        guessed = prepare(self.FOOTNOTE, {"op": "set_type", "column": "2025", "type": "number"})
+        assert cells(guessed, 2) == ["26.215", "57.902", "38.79", "58.953"]
+        assert guessed.changes[0].endswith(
+            'dots read as the decimal mark; if they separate thousands, undo this and set "decimal": ","'
+        )
+
+    def test_the_digits_of_a_number_column_need_its_cells_as_pasted(self) -> None:
+        """The digits of `7.000` are 7000, and of the stored `7` only 7: read from the pasted cells, else refused."""
+        pasted = "Stadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;12\n"
+        digits = {"op": "extract", "column": "Einwohner", "keep": "digits", "name": "d"}
+
+        assert cells(prepare(pasted, digits), 2) == ["1234", "7000", "12"]
+        code, message = failure(pasted, {"op": "sort", "column": "Stadt"}, digits)
+        assert code == "type_mismatch" and "column 'Einwohner' holds numbers" in message
+        assert failure("p,v\n12.50,1\n7.25,2\n", {"op": "extract", "column": "p", "keep": "digits", "name": "d"})[
+            0
+        ] == ("type_mismatch")
+
+    def test_a_cell_no_mark_reads_leaves_the_mark_open(self) -> None:
+        """One cell of words among ten says nothing about the mark: the column stays text, and a `set_type` that
+        names no mark still says which one it took."""
+        counts = ("26.215", "38.790", "57.902", "48.449", "39.303", "38.799", "10.093", "45.511", "58.953", "k. A.")
+        text = "k\tn\n" + "".join(f"{name}\t{count}*\n" for name, count in zip("abcdefghij", counts, strict=True))
+
+        stripped = prepare(text, {"op": "strip", "column": "n", "suffix": "*", "name": "c"})
+        assert (
+            dtypes(stripped)["c"] == "text" and "kept as text, since its cells read as numbers" in stripped.changes[0]
+        )
+
+        read = prepare(text, {"op": "set_type", "column": "n", "type": "number"})
+        assert "1 cell could not be read and is now missing" in read.changes[0]
+        assert read.changes[0].endswith('undo this and set "decimal": ","')
+
+    def test_decimal_commas_that_could_separate_thousands_stay_text_too(self) -> None:
+        """The same in a file of decimal commas: `38,790` is 38.79 there, and 38790 with a decimal point."""
+        text = "Ort;Wert;Zahl\nA;3,5;26,215\nB;4,0;38,790*\n"
+        star = {"op": "strip", "column": "Zahl", "suffix": "*", "name": "n"}
+        prepared = prepare(text, star)
+
+        assert dtypes(prepared)["n"] == "text" and cells(prepared, 3) == ["26,215", "38,790"]
+        read = prepare(text, star, {"op": "set_type", "column": "n", "type": "number", "decimal": "."})
+        assert cells(read, 3) == ["26215", "38790"]
+
+    def test_a_mark_the_file_reads_as_thousands_is_no_open_mark(self) -> None:
+        """In a file of decimal commas a dot between three-digit groups separates thousands: the part is a number."""
+        prepared = prepare(
+            "Ort;Wert;Menge\nA;3,5;1.200 Stk\nB;4,0;900\n",
+            {"op": "strip", "column": "Menge", "suffix": "Stk", "name": "n"},
+        )
+
+        assert cells(prepared, 3) == ["1200", "900"] and "n read as numbers" in prepared.changes[0]
 
 
 class TestTextChains:
