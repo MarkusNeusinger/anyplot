@@ -9,3 +9,4 @@
   so the first plot follows the reply language. With a plot on the page
   nothing changes: the plot keeps its language until the user asks for its
   text in another one, and a plot language the user chose by itself stays.
+  (#13081)
