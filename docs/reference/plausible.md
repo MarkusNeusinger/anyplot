@@ -237,7 +237,7 @@ without a goal, so they were counted and shown nowhere.
 | `agent_open` | `spec`, `library`, `source` | `AgentChatPage.tsx` | A visitor opens the agent chat for a plot |
 | `agent_plot_rendered` | `spec`, `library`, `status`, `repaired` | `useAgentSession.ts` | The agent chat ends a plot run |
 | `plots_scrolled` | `share`, `results`, `filtered` | `usePlotsScrolled.ts` | How far a visitor got through the gallery |
-| `ui_feature` | `feature` | Twelve places, see [Feature use](#feature-use-ui_feature) | A visitor uses a feature of the interface, once per feature and visit |
+| `ui_feature` | `feature` | Thirteen places, see [Feature use](#feature-use-ui_feature) | A visitor uses a feature of the interface, once per feature and visit |
 | `nav_click` | `source`, `target`, `spec`, `library` | The landing page, see [Landing page clicks](#landing-page-clicks-nav_click) | A visitor goes on from an element of the landing page |
 
 Every property holds a value from a closed list or a catalogue id, with one
