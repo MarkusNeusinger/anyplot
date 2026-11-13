@@ -2688,6 +2688,87 @@ class TestInsightsRouter:
             assert response.status_code == 200
             assert captured["payload"]["date_range"] == [expected_start_iso, today_iso]
 
+    def test_visitors_engaged_visits_are_the_visits_that_did_not_bounce(self, client: TestClient) -> None:
+        """A day's engaged visits are its visits minus the bounced ones, from the day the bounce rate holds.
+
+        A crawler farm loads one page per visit: 606 visitors at 87 % bounce are 80 engaged visits. Before
+        2026-11-10 web-vitals events kept every visit from bouncing, so those days carry no number at all.
+        """
+        from datetime import datetime as _dt
+        from datetime import timezone as _tz
+
+        frozen_now = _dt(2026, 11, 13, 12, 0, 0, tzinfo=_tz.utc)
+        captured: dict = {}
+
+        class _MockResp:
+            status_code = 200
+
+            def raise_for_status(self) -> None:
+                return None
+
+            def json(self) -> dict:
+                return {
+                    "results": [
+                        {"dimensions": ["2026-11-08"], "metrics": [264, 275, 18]},
+                        {"dimensions": ["2026-11-09"], "metrics": [259, 280, 41]},
+                        {"dimensions": ["2026-11-10"], "metrics": [292, 303, 80]},
+                        {"dimensions": ["2026-11-11"], "metrics": [0, 0, None]},  # nothing to divide
+                        {"dimensions": ["2026-11-12 00:00:00"], "metrics": [515, 526, 87.4]},
+                        {"dimensions": ["2026-11-13"], "metrics": [606, 614, 87]},
+                    ]
+                }
+
+        class _MockClient:
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *_args):
+                return False
+
+            async def post(self, *_args, **kwargs):
+                captured["payload"] = kwargs.get("json")
+                return _MockResp()
+
+        class _FrozenDatetime(_dt):
+            @classmethod
+            def now(cls, tz=None):  # type: ignore[override]
+                return frozen_now if tz is _tz.utc else frozen_now.replace(tzinfo=None)
+
+        with (
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.settings") as mock_settings,
+            patch("api.routers.insights.httpx.AsyncClient", return_value=_MockClient()),
+            patch("api.routers.insights.datetime", _FrozenDatetime),
+        ):
+            mock_settings.plausible_api_key = "test-key"
+            mock_settings.plausible_site_id = "anyplot.ai"
+            mock_settings.plausible_api_url = "https://plausible.io/api/v2/query"
+            body = client.get("/insights/visitors").json()
+
+        assert captured["payload"]["metrics"] == ["visitors", "visits", "bounce_rate"]
+        assert body["engaged_since"] == "2026-11-10"
+        by_day = {point["date"]: point for point in body["points"]}
+        assert len(by_day) == 28
+        # Before the day the bounce rate holds: the visits are there, the engaged ones are not a number.
+        assert by_day["2026-11-08"] == {"date": "2026-11-08", "visitors": 264, "visits": 275, "engaged": None}
+        assert by_day["2026-11-09"]["engaged"] is None
+        assert by_day["2026-10-17"] == {"date": "2026-10-17", "visitors": 0, "visits": 0, "engaged": None}
+        # From that day on: visits * (100 - bounce) / 100, rounded.
+        assert by_day["2026-11-10"] == {"date": "2026-11-10", "visitors": 292, "visits": 303, "engaged": 61}
+        assert by_day["2026-11-11"] == {"date": "2026-11-11", "visitors": 0, "visits": 0, "engaged": 0}
+        assert by_day["2026-11-12"]["engaged"] == 66
+        assert by_day["2026-11-13"] == {"date": "2026-11-13", "visitors": 606, "visits": 614, "engaged": 80}
+
+    @pytest.mark.parametrize(
+        ("visits", "bounce_rate", "engaged"),
+        [(0, 0, 0), (10, 0, 10), (10, 100, 0), (614, 87, 80), (3, 33, 2), (5, 150, 0), (5, -20, 5)],
+        ids=["no-visit", "none-bounced", "all-bounced", "a-farm-day", "rounded", "above-100", "below-0"],
+    )
+    def test_engaged_visits_stay_between_none_and_all(self, visits: int, bounce_rate: float, engaged: int) -> None:
+        from api.routers.insights import _engaged_visits
+
+        assert _engaged_visits(visits, bounce_rate) == engaged
+
     # --- /insights/machine-readers: the machine-read telemetry's public tile -------------------
 
     class _MachineReadsQuery:

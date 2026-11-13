@@ -192,6 +192,20 @@ describe('SpecDetailView', () => {
     expect(screen.getByRole('button', { name: 'Zoom in' })).toBeInTheDocument();
   });
 
+  it('counts zooming in as a use of the plot, and zooming out as nothing more', async () => {
+    // The zoom opens no page: without the event, a visitor who lands here, looks closer and
+    // leaves would be one who did nothing.
+    const onTrackEvent = vi.fn();
+    const user = userEvent.setup();
+    render(<SpecDetailView {...defaultProps} onTrackEvent={onTrackEvent} />);
+
+    await user.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(onTrackEvent).toHaveBeenCalledExactlyOnceWith('ui_feature', { feature: 'plot_zoom' });
+
+    await user.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(onTrackEvent).toHaveBeenCalledTimes(1);
+  });
+
   it('adapts overlay action buttons to a dark surface in dark mode', () => {
     // Light mode (default context): bright surface so buttons read on a light preview.
     const { unmount } = render(<SpecDetailView {...defaultProps} />);

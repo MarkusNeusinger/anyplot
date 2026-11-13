@@ -222,9 +222,9 @@ describe('useAnalytics', () => {
       expect(features()).toEqual(['theme_toggle']);
     });
 
-    it('holds twelve features, each named once', () => {
+    it('holds thirteen features, each named once', () => {
       expect(new Set(UI_FEATURES).size).toBe(UI_FEATURES.length);
-      expect(UI_FEATURES).toHaveLength(12);
+      expect(UI_FEATURES).toHaveLength(13);
     });
   });
 

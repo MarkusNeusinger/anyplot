@@ -1,7 +1,6 @@
 /**
  * One bar per UTC day, with the first and the last date under it: the strip of the stats page's
- * machine readers and shared links tiles, drawn like the visitors strip above them
- * (`stripGeometry.ts`).
+ * visitors, machine readers and shared links tiles (`stripGeometry.ts`).
  *
  * One series, so one colour and no legend: the tile's title says what a bar is. A bar's height
  * alone encodes the day's number (`columnPx`). Each day's full-height column is its own hover and
@@ -20,6 +19,11 @@ import { colors, fontSize, semanticColors, typography } from 'src/theme';
 export interface DayStripDay {
   date: string;
   value: number;
+  /**
+   * What follows the date in the column's name in place of `describe(value)`: for a day that
+   * has no number, such as one before the counting began, so it does not read as a zero.
+   */
+  description?: string;
 }
 
 export interface DayStripProps {
@@ -56,7 +60,11 @@ export function DayStrip({ days, label, describe, testId }: DayStripProps) {
         }}
       >
         {days.map(day => (
-          <Tooltip key={day.date} title={`${day.date}: ${describe(day.value)}`} arrow>
+          <Tooltip
+            key={day.date}
+            title={`${day.date}: ${day.description ?? describe(day.value)}`}
+            arrow
+          >
             {/* Focusable, so a keyboard reaches each day's number as a pointer does; the
                 Tooltip names the column (`aria-label`), which `role="img"` lets assistive
                 technology read. */}
