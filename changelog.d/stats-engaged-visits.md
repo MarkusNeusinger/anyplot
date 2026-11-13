@@ -10,10 +10,10 @@
   its `visits` and `engaged` visits. The count starts on 2026-11-10: before
   it, web-vitals events kept every visit from bouncing, so those days draw
   the floor and are named "not counted", and the header says "since
-  2026-11-10" until the 28-day window has moved past them.
+  2026-11-10" until the 28-day window has moved past them. (#13088)
 
 ### Added
 
 - **Zooming into a plot counts as a use (`ui_feature`, `plot_zoom`).** The
   zoom opens no page and sent nothing, so a visitor who landed on a plot,
-  looked closer, and left counted as one who did nothing.
+  looked closer, and left counted as one who did nothing. (#13088)
