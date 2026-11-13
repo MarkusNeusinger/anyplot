@@ -237,9 +237,11 @@ FailureReason = Literal["validation", "render", "deadline", "budget", "busy", "e
 """`busy`: a model call was still refused for its quota (429) or an overload (529) after its retries
 (`models.model_busy`), so the run stopped; the user can try again shortly. `error`: any other failure the run could
 not recover from."""
-NotReadyReason = Literal["no_dataset", "incomplete_bindings", "data_unconfirmed"]
+NotReadyReason = Literal["no_dataset", "incomplete_bindings", "data_unconfirmed", "combine_choice"]
 """`data_unconfirmed`: the dataset and its bindings are there, but the user has not confirmed
-them in the data panel yet (step 1 of two, owner rule of 2026-10-11)."""
+them in the data panel yet (step 1 of two, owner rule of 2026-10-11). `combine_choice`: rows share the key the
+plot draws one value per, the plot type leaves open whether they sum or average, and the call named neither
+(`PipelineArgs.combine`): the root asks the user, and only the tool guard stops a call for it, before the run."""
 NewDataBase = Literal["previous", "other_paste", "other_data", "bindings_changed", "kept_note", "no_plot"]
 """Where the page's "plot the new data" starts (`pipeline.new_data_base`, owner decision of 2026-11-08): `previous`,
 the library's latest version, which drew a version of the same paste with the same bindings; else the catalogue plot,
@@ -430,6 +432,10 @@ class PipelineArgs(_ServerContract):
     """The lasting decisions of this change for the plot memory (`memory.py`, 2026-11-02): the run hands them to the
     adapter with the memory's entries, and stores them once it ships. The root cannot call a tool after a shipped
     plot (the Budget plugin strips the tools of that closing call), so they travel with the run."""
+    combine: Literal["sum", "mean"] | None = None
+    """How rows that share the plot's key combine into one value each, as the user said: `sum` or `mean`. Only
+    after the user chose; a call that needs the choice and names none is stopped with `combine_choice`, and the
+    answer goes into the next call. Left out when no key repeats."""
 
 
 class KeepRequestArgs(_ServerContract):

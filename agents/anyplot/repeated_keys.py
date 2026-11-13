@@ -23,7 +23,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .data.bindings import carry_bindings, check_bindings, valid_bindings
-from .data.fidelity import KeyAggregate, combined_line, key_aggregate
+from .data.fidelity import How, KeyAggregate, combined_line, function_is_open, key_aggregate
 from .data.parse import ParseError
 from .data.prepare import PrepareArgs, PrepareError, apply_and_parse
 from .data.store import DatasetStore, StoredDataset, StoreFull
@@ -52,20 +52,36 @@ class Combined:
         }
 
 
+def planned_aggregate(view: SessionView, dataset: StoredDataset, how: How | None = None) -> KeyAggregate | None:
+    """The aggregate a plot run would make for the key the confirmed data repeats, or None when it would make none
+    (`fidelity.key_aggregate`'s rule, and never on data the user has not confirmed)."""
+    roles = view.snapshot.roles()
+    check = check_bindings(view.bindings, roles, dataset.profile)
+    if check.repeated_key is None or not view.data_confirmed:
+        return None
+    return key_aggregate(valid_bindings(view.bindings, roles, dataset.profile), check.repeated_key, view.spec_id, how)
+
+
+def choice_is_open(view: SessionView, dataset: StoredDataset) -> bool:
+    """Whether a plot run would combine rows by a function nobody chose: a key repeats, the run would combine it,
+    and the plot type leaves open whether the rows sum or average (`fidelity.function_is_open`). The tool guard
+    then stops a call that names no function, and the root asks the user."""
+    return planned_aggregate(view, dataset) is not None and function_is_open(view.spec_id)
+
+
 def combine_repeated_key(
-    store: DatasetStore, session_id: str, view: SessionView, dataset: StoredDataset
+    store: DatasetStore, session_id: str, view: SessionView, dataset: StoredDataset, how: How | None = None
 ) -> Combined | None:
     """The aggregate of a repeated key stored as the next data version, or None when there is nothing to combine.
+
+    `how` is the function the user chose (`PipelineArgs.combine`); without one the spec's rule decides.
 
     None also when `fidelity.key_aggregate` combines nothing, when the aggregate fails or would leave bindings that
     do not hold or would move, or when the store is full: the run then draws the data as it is, and the warning
     stands. Nothing is stored in those cases. The caller writes `Combined.delta` into the session state.
     """
     roles = view.snapshot.roles()
-    check = check_bindings(view.bindings, roles, dataset.profile)
-    if check.repeated_key is None or not view.data_confirmed:
-        return None
-    aggregate = key_aggregate(valid_bindings(view.bindings, roles, dataset.profile), check.repeated_key, view.spec_id)
+    aggregate = planned_aggregate(view, dataset, how)
     if aggregate is None:
         return None
     try:

@@ -100,7 +100,10 @@ async def before(name: str, args: dict[str, Any], agent: str = "anyplot") -> dic
     return await ToolSafetyPlugin().before_tool_callback(
         tool=SimpleNamespace(name=name),  # type: ignore[arg-type]
         tool_args=args,
-        tool_context=SimpleNamespace(invocation_id="inv-1", agent_name=agent),  # type: ignore[arg-type]
+        # No session opened: a plot call finds no dataset, so nothing waits for a choice.
+        tool_context=SimpleNamespace(  # type: ignore[arg-type]
+            invocation_id="inv-1", agent_name=agent, state={}, session=SimpleNamespace(id="s1")
+        ),
     )
 
 

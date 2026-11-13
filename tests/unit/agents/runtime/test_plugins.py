@@ -100,6 +100,7 @@ class FakeContext:
     agent_name: str = "anyplot"
     session: FakeSession = field(default_factory=FakeSession)
     session_service: FakeSessionService = field(default_factory=FakeSessionService)
+    state: dict[str, Any] = field(default_factory=dict)  # no session opened: a plot call finds no dataset
 
 
 @dataclass

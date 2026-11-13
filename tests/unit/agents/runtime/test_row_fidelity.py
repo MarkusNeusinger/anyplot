@@ -20,12 +20,12 @@ import pytest
 
 from agents.anyplot import pipeline
 from agents.anyplot.agent import REPEATED_KEY_LINE, session_context
-from agents.anyplot.data.fidelity import COMBINED_HEAD, LEFT_OUT_HEAD
+from agents.anyplot.data.fidelity import COMBINED_HEAD, LEFT_OUT_HEAD, function_is_open
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.plugins.tool_safety import fence_pipeline_notes
 from agents.anyplot.render.backends.fake import FakeBackend
-from agents.anyplot.repeated_keys import combine_repeated_key
+from agents.anyplot.repeated_keys import choice_is_open, combine_repeated_key
 from agents.anyplot.schemas import Binding
 from agents.anyplot.services import Services
 from agents.anyplot.session_state import CONFIRMED, DATASET_ID, PENDING_REQUEST, confirmation_fingerprint
@@ -33,10 +33,10 @@ from agents.anyplot.tools.session import prepare_data, set_bindings
 from agents.main import Runtime, app, get_runtime
 
 from .conftest import CASES
-from .fakes import SCATTER_PLAN, default_script
+from .fakes import ROOT_REPLY, SCATTER_PLAN, default_script
 from .test_from_version import context_for, write_back
 from .test_paste_conversions import SID, open_spec, paste, pasted
-from .test_service_flow import HEADERS, USER, create_plot, permissive_queue
+from .test_service_flow import HEADERS, USER, create_plot, permissive_queue, say
 
 
 LENGTHS = "Length,Reading\n" + "".join(f"{10 + 5 * (i % 9)},{20 + (i * 7) % 13}.5\n" for i in range(27))
@@ -147,7 +147,30 @@ class TestRowsWithoutAValue:
 HOURS = "Student,Study Hours,Exam Score\n" + "".join(f"S{i:02d},{2 + 2 * (i % 4)},{50 + 3 * i}\n" for i in range(12))
 """12 invented students over 4 study hours, three per hour; `Student` names each one and is bound to nothing."""
 COMBINED = f"{COMBINED_HEAD}2: averaged 'Exam Score' over 12 rows into 4, one per 'Study Hours'"
+SUMMED = f"{COMBINED_HEAD}2: summed 'Exam Score' over 12 rows into 4, one per 'Study Hours'"
 LINE_BINDINGS = [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}]
+QUESTION = "The scores repeat per hour: sum or average them?"
+
+
+def asked_then_chosen(how: str = "mean", **kwargs: Any) -> dict[str, list[Any]]:
+    """The root's two turns on a key that repeats: the button's call is stopped for the user's choice and the root
+    asks; the typed answer's call names the function and plots."""
+    script = default_script(**kwargs)
+    script["root"] = [
+        {"call": "plot_pipeline", "args": {}},
+        {"text": QUESTION},
+        {"call": "plot_pipeline", "args": {"combine": how}},
+        {"text": ROOT_REPLY},
+    ]
+    return script
+
+
+async def plot_with_choice(client: httpx.AsyncClient, sid: str, answer: str = "average them") -> list[Any]:
+    """The plot button, which makes no plot while the choice is open, then the turn of the typed answer."""
+    asked = await create_plot(client, sid)
+    assert [data["text"] for name, data in asked if name == "message"] == [QUESTION]
+    assert not any(name == "plot" for name, _ in asked)  # a stop before the run shows the page no plot card
+    return await say(client, sid, answer)
 
 
 async def open_line_on_scatter_code(client: httpx.AsyncClient) -> str:
@@ -182,12 +205,12 @@ class TestCombinedKey:
     async def test_the_run_combines_the_key_announces_it_and_draws_the_new_version(
         self, client: httpx.AsyncClient, swap_models, backend: FakeBackend
     ) -> None:
-        swap_models("gemini", default_script())
+        swap_models("gemini", asked_then_chosen("mean"))
         sid = await open_line_on_scatter_code(client)
         await paste(client, sid, HOURS)
         await bind_and_confirm(client, sid, LINE_BINDINGS)
 
-        events = await create_plot(client, sid)
+        events = await plot_with_choice(client, sid)
 
         plot = next(data for name, data in events if name == "plot")
         assert plot["status"] == "ok" and plot["residual_defects"] == []
@@ -208,25 +231,97 @@ class TestCombinedKey:
         """The data changed all the same, so the failed result names the step; the new version drops a kept note,
         and the run, which took it before the step, writes it back for the next one."""
         unusable = {"edits": [{"find": "not in the code", "replace": "df = load_user_data()"}], "changes": ["x"]}
-        swap_models("gemini", default_script(plans=[unusable] * 6))
+        swap_models("gemini", asked_then_chosen("mean", plans=[unusable] * 6))
         sid = await open_line_on_scatter_code(client)
         await paste(client, sid, HOURS)
         await bind_and_confirm(client, sid, LINE_BINDINGS)
         await runtime.write_state(await runtime.session(USER, sid), {PENDING_REQUEST: "make the line thicker"})
 
-        events = await create_plot(client, sid)
+        events = await plot_with_choice(client, sid)
 
         plot = next(data for name, data in events if name == "plot")
         assert plot["status"] == "failed" and plot["changes"] == [COMBINED]
         assert next(data for name, data in events if name == "done")["dataset"]["version"] == 2
         assert (await runtime.session(USER, sid)).state[PENDING_REQUEST] == "make the line thicker"
 
-    async def test_undo_brings_the_raw_rows_back(self, client: httpx.AsyncClient, swap_models) -> None:
-        swap_models("gemini", default_script())
+    async def test_the_button_alone_makes_no_plot_and_no_data_version_while_the_choice_is_open(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend
+    ) -> None:
+        """A line of scores per hour may want the sum or the mean, and the plot type cannot tell: the call is stopped
+        before the run, the root asks, and nothing is combined, rendered or stored until the user says which. The
+        button names no function, so a choice the root passes with it is dropped as the root's own."""
+        script = asked_then_chosen("mean")
+        script["root"][0] = {"call": "plot_pipeline", "args": {"combine": "mean"}}
+        fake = swap_models("gemini", script)
         sid = await open_line_on_scatter_code(client)
         await paste(client, sid, HOURS)
         await bind_and_confirm(client, sid, LINE_BINDINGS)
-        await create_plot(client, sid)
+
+        events = await create_plot(client, sid)
+
+        assert [data["text"] for name, data in events if name == "message"] == [QUESTION]
+        assert not any(name == "plot" for name, _ in events) and backend.jobs == []
+        assert "dataset" not in next(data for name, data in events if name == "done")
+        assert await table_rows(client, sid) == HOURS.strip().splitlines()[1:]
+        answer = next(
+            part.function_response.response
+            for content in fake.requests[-1].contents
+            for part in content.parts or []
+            if part.function_response is not None and part.function_response.name == "plot_pipeline"
+        )
+        assert (answer["status"], answer["code"], answer["reason"]) == ("error", "combine_choice", "combine_choice")
+        assert "whether to sum or to average them" in answer["message"]
+
+    async def test_the_users_sum_is_the_function_of_the_step(
+        self, client: httpx.AsyncClient, swap_models, backend: FakeBackend
+    ) -> None:
+        swap_models("gemini", asked_then_chosen("sum"))
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, HOURS)
+        await bind_and_confirm(client, sid, LINE_BINDINGS)
+
+        events = await plot_with_choice(client, sid, "sum them")
+
+        plot = next(data for name, data in events if name == "plot")
+        assert plot["status"] == "ok" and plot["changes"] == [SUMMED, *SCATTER_PLAN["changes"]]
+        drawn = backend.jobs[-1].data_csv.strip().splitlines()
+        assert drawn[1:] == ["2,186", "4,195", "6,204", "8,213"]  # three scores per hour, added up
+        done = next(data for name, data in events if name == "done")
+        assert done["dataset"]["changes"] == ["summed Exam Score by Study Hours: 4 rows, 1 other column dropped"]
+
+    async def test_a_request_sent_with_the_stopped_call_is_kept_for_the_plot(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """A typed wish whose plot waits for the choice is kept like one that waits for the user's check."""
+        script = asked_then_chosen("sum")
+        script["root"][0] = {"call": "plot_pipeline", "args": {"change_request": "log scale on y"}}
+        fake = swap_models("gemini", script)
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, HOURS)
+        await bind_and_confirm(client, sid, LINE_BINDINGS)
+
+        await say(client, sid, "plot it with a log scale on y")
+
+        assert (await runtime.session(USER, sid)).state[PENDING_REQUEST] == "log scale on y"
+        answer = next(
+            part.function_response.response
+            for content in fake.requests[-1].contents
+            for part in content.parts or []
+            if part.function_response is not None and part.function_response.name == "plot_pipeline"
+        )
+        assert answer["request_kept"] is True
+
+        events = await say(client, sid, "sum them")
+
+        assert next(data for name, data in events if name == "plot")["status"] == "ok"
+        assert (await runtime.session(USER, sid)).state.get(PENDING_REQUEST) is None  # the plot took the wish
+
+    async def test_undo_brings_the_raw_rows_back(self, client: httpx.AsyncClient, swap_models) -> None:
+        swap_models("gemini", asked_then_chosen("mean"))
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, HOURS)
+        await bind_and_confirm(client, sid, LINE_BINDINGS)
+        await plot_with_choice(client, sid)
 
         undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
 
@@ -274,13 +369,14 @@ class TestCombinedKey:
     async def test_a_second_run_on_the_combined_version_combines_nothing(
         self, client: httpx.AsyncClient, swap_models
     ) -> None:
-        swap_models("gemini", {**default_script(), "root": default_script()["root"] * 2})
+        script = asked_then_chosen("mean")
+        swap_models("gemini", {**script, "root": [*script["root"], *default_script()["root"]]})
         sid = await open_line_on_scatter_code(client)
         await paste(client, sid, HOURS)
         await bind_and_confirm(client, sid, LINE_BINDINGS)
-        await create_plot(client, sid)
+        await plot_with_choice(client, sid)
 
-        again = await create_plot(client, sid)
+        again = await create_plot(client, sid)  # no key repeats any more: the button plots, and nothing is asked
 
         plot = next(data for name, data in again if name == "plot")
         assert not any(change.startswith(COMBINED_HEAD) for change in plot["changes"])
@@ -320,6 +416,31 @@ class TestCombineRepeatedKey:
         store, box = self.confirmed("box-basic", bindings, weights)
         assert box.data_confirmed  # the repeats are the box's: confirmed data, complete bindings, nothing combined
         assert combine_repeated_key(store, SID, box, store.get(box.dataset_id, SID)) is None
+        assert not choice_is_open(box, store.get(box.dataset_id, SID))  # nothing to combine, nothing to ask
+
+    def test_the_users_function_replaces_the_plot_types(self) -> None:
+        store, view = self.confirmed("line-basic", LINE_BINDINGS)
+
+        summed = combine_repeated_key(store, SID, view, store.get(view.dataset_id, SID), "sum")
+
+        assert summed is not None and (summed.aggregate.how, summed.line) == ("sum", SUMMED)
+
+    def test_the_choice_is_open_where_the_plot_type_does_not_say_that_rows_add_up(self) -> None:
+        """A line or a plain bar draws a measurement per key, an amount or a rate: the user says which. The slices of
+        a pie add up by what a pie is, so nothing is asked there. Unconfirmed data is never combined, so never asked
+        about either."""
+        store, line = self.confirmed("line-basic", LINE_BINDINGS)
+        assert function_is_open("line-basic") and function_is_open("bar-basic")
+        assert choice_is_open(line, store.get(line.dataset_id, SID))
+        assert not choice_is_open(replace(line, confirmed=None), store.get(line.dataset_id, SID))
+
+        shares = "Party,Votes\n" + "".join(f"{'ABC'[i % 3]},{100 + i}\n" for i in range(9))
+        bindings = [{"role": "category", "column": "Party"}, {"role": "value", "column": "Votes"}]
+        store, pie = self.confirmed("pie-basic", bindings, shares)
+        assert not function_is_open("pie-basic")
+        assert not choice_is_open(pie, store.get(pie.dataset_id, SID))
+        combined = combine_repeated_key(store, SID, pie, store.get(pie.dataset_id, SID))
+        assert combined is not None and combined.aggregate.how == "sum"
 
 
 def test_a_run_re_run_on_resume_announces_the_step_of_its_first_run() -> None:

@@ -88,7 +88,8 @@ from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS, LanguageTarget
 from ..memory import ForgetArgs
 from ..pipeline import load_inputs, run_args, stop_not_ready
 from ..policy import DATA_PREAMBLE, fence
-from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, PipelineArgs, PlotResult, SwitchArgs
+from ..repeated_keys import choice_is_open
+from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, NotReadyReason, PipelineArgs, PlotResult, SwitchArgs
 from ..services import get_services
 from ..session_state import read_session
 from ..turn_record import result_code
@@ -153,7 +154,15 @@ the first wording did ("has used up its query_data calls (3 per turn)"), and the
 CAP_CODES = frozenset(cap.code for cap in TURN_CAPS.values())
 DATA_CHANGED: ErrorCode = "data_changed_this_turn"
 SUMMARY_TURN: ErrorCode = "summary_turn"
+COMBINE_CHOICE: ErrorCode = "combine_choice"
 STOP_MESSAGES: dict[str, str] = {
+    COMBINE_CHOICE: (
+        "No plot was made: rows share the key this plot draws one value per, and the plot type does not say whether "
+        "they add up. Ask the user in one short question whether to sum or to average them, with the key and the "
+        "counts of the repeated-key warning. Never choose for the user. On the answer, call `plot_pipeline` with "
+        '`combine` set to `"sum"` or `"mean"`; when `request_kept` is true, this call\'s request is kept and that '
+        "plot carries it, so leave it out of that call."
+    ),
     DATA_CHANGED: (
         "No plot was made: this turn changed the data, and a plot waits until the user has checked the new version. "
         "Reply with the data change and its counts. When `reason` is `incomplete_bindings`, name the roles that still "
@@ -165,8 +174,8 @@ STOP_MESSAGES: dict[str, str] = {
         "column; when `request_kept` is true, say in a few words that the wish is kept for the first plot."
     ),
 }
-"""The two refusals of `plot_pipeline` before the run (`pipeline_bound`), whose result also says what the run would
-have found (`reason`, the `NotReadyReason`) and whether the call's first-plot request was kept (`request_kept`)."""
+"""The refusals of `plot_pipeline` before the run (`pipeline_bound`), whose result also says what the run would
+have found (`reason`, the `NotReadyReason`) and whether the call's request was kept (`request_kept`)."""
 DATA_CHANGE_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
 """The root's tools that store a new data version: after one in a turn, a plot waits for the user's check."""
 MAX_DATA_CODE_CHARS = 6_000
@@ -409,17 +418,20 @@ def data_confirmed(tool_context: ToolContext) -> bool:
     return view is not None and view.data_confirmed
 
 
-def pipeline_bound(ledger: RequestLedger, tool_context: ToolContext) -> ErrorCode | None:
+def pipeline_bound(
+    ledger: RequestLedger, tool_context: ToolContext, arguments: dict[str, Any] | None = None
+) -> ErrorCode | None:
     """The turn's bound on a `plot_pipeline` call, or None; ToolSafety refuses the call with it, and Budget counts no
     daily run for it.
 
     In order: the turn's one run (`one_pipeline_per_turn`), a switch the page carries out after the turn, which plots
-    there (`switch_requested`), the turn's own data change (`data_changed_this_turn`), and the summary turn of a paste
-    while the data is unconfirmed (`summary_turn`). The last two stop before the run with what a run would have found
-    (`refuse_before_run`). A data change needs no look at the confirmation: a stored version is never confirmed in
-    its turn, and one still under way leaves the old version confirmed until it stores the new one, which a run in the
-    same model answer would race. A summary turn on confirmed data still plots (a summary turn again after a failed
-    one, whose plot click had confirmed the data)."""
+    there (`switch_requested`), the turn's own data change (`data_changed_this_turn`), the summary turn of a paste
+    while the data is unconfirmed (`summary_turn`), and rows that share the plot's key where the plot type leaves open
+    whether they sum or average and the call's `arguments` name neither (`combine_choice`). The last three stop before
+    the run with what a run would have found (`refuse_before_run`). A data change needs no look at the confirmation:
+    a stored version is never confirmed in its turn, and one still under way leaves the old version confirmed until it
+    stores the new one, which a run in the same model answer would race. A summary turn on confirmed data still plots
+    (a summary turn again after a failed one, whose plot click had confirmed the data)."""
     code = capped(ledger, PIPELINE_TOOL)
     if code is not None:
         return code
@@ -430,13 +442,26 @@ def pipeline_bound(ledger: RequestLedger, tool_context: ToolContext) -> ErrorCod
         return DATA_CHANGED
     if ledger.summary_turn and not data_confirmed(tool_context):
         return SUMMARY_TURN
+    # A button brings no choice (`pipeline.run_args` drops one the root passes with it): only a typed turn names it.
+    chosen = None if ledger.kind == "action" else (arguments or {}).get("combine")
+    if not chosen and combine_is_open(tool_context):
+        return COMBINE_CHOICE
     return None
 
 
-def turn_bound(ledger: RequestLedger, name: str, tool_context: ToolContext) -> ErrorCode | None:
+def combine_is_open(tool_context: ToolContext) -> bool:
+    """Whether a plot of the session's confirmed data would combine rows by a function nobody chose
+    (`repeated_keys.choice_is_open`). False for a session that is not ready for a plot: the run says why itself."""
+    view, dataset, reason = load_inputs(tool_context, get_services())
+    return reason is None and view is not None and dataset is not None and choice_is_open(view, dataset)
+
+
+def turn_bound(
+    ledger: RequestLedger, name: str, tool_context: ToolContext, arguments: dict[str, Any] | None = None
+) -> ErrorCode | None:
     """The refusal of a call the turn's caps and bounds stop, or None: checked once, after the arguments' verdict."""
     if name == PIPELINE_TOOL:
-        return pipeline_bound(ledger, tool_context)
+        return pipeline_bound(ledger, tool_context, arguments)
     if name == SWITCH_TOOL and ledger.calls_of(PIPELINE_TOOL) >= 1:
         # The turn already ran a plot in this library; the user asks again (Flash review, 2026-11-02).
         return "plot_already_run"
@@ -454,8 +479,9 @@ def refuse_before_run(
     args = run_args(ledger, PipelineArgs.model_validate(arguments))
     view, _, reason = load_inputs(tool_context, get_services())
     # `load_inputs` finds no reason only on confirmed data: here a data change still under way, whose new version the
-    # user has not confirmed yet.
-    result = stop_not_ready(tool_context, ledger, args, view, reason or "data_unconfirmed")
+    # user has not confirmed yet, or confirmed data whose rows share a key that the call named no function for.
+    waits_for: NotReadyReason = "combine_choice" if code == COMBINE_CHOICE else "data_unconfirmed"
+    result = stop_not_ready(tool_context, ledger, args, view, reason or waits_for)
     refusal: dict[str, Any] = {**tool_error(code), "message": STOP_MESSAGES[code], "reason": result.reason}
     if result.request_kept:
         refusal["request_kept"] = True
@@ -601,7 +627,7 @@ class ToolSafetyPlugin(BasePlugin):
                 verdict = PLOT_ACTION_REFUSAL
             if verdict is None:
                 # After the arguments' verdict: the caps and the turn's bounds, all counted from the allowed calls.
-                verdict = turn_bound(ledger, tool.name, tool_context)
+                verdict = turn_bound(ledger, tool.name, tool_context, tool_args)
             refusal = None if verdict is None else self.refusal(ledger, tool_context, tool.name, tool_args, verdict)
             attribution(
                 "tool", ledger, agent=agent, tool=tool.name, args=argument_hash(tool_args), verdict=verdict or "allowed"
