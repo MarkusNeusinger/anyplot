@@ -808,6 +808,12 @@ class TestSessionLanguage:
         assert "your replies stay in the session language" in root
         assert 'When the user asks for your replies in another language ("answer in French")' in root
         assert 'call it with `applies_to` `"replies"`' in root and 'call it with `applies_to` `"both"`' in root
+        # Before the first plot, a request for the replies alone pins no plot language: the first plot follows the
+        # replies, so the root says so.
+        assert (
+            "Without a plot, the next plot uses the new language, also after a request for your replies alone" in root
+        )
+        assert "unless the user asked for the plot's text in another language before" in root
         # The default for a request that names no target is both, as the chip does (owner, 2026-11-01).
         assert 'or for a language without saying for what ("auf Deutsch bitte", "switch to German")' in root
         assert '"make the title German"' in root

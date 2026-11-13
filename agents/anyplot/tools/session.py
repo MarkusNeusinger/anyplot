@@ -22,9 +22,11 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 * `set_language(language, applies_to)`: the reply language (the session language,
   `session_state.LANGUAGE`, with the source `chosen`), the plot's text
   (`session_state.PLOT_LANGUAGE`) or both (the default), validated like the language
-  route (`language.py`); refused while the pipeline runs. `replies` stores the plot
-  language as it resolves at that moment, so a first plot does not follow the new reply
-  language. Since 2026-11-01 the two are apart: the live test of that day had "Make
+  route (`language.py`); refused while the pipeline runs. With a plot in the session,
+  `replies` stores the plot language as it resolves at that moment, so the plot the user
+  has keeps its language. Before the first plot it stores none: the first plot follows
+  the new reply language, unless the user asked for the plot's text by itself. Since
+  2026-11-01 the two are apart: the live test of that day had "Make
   the title German" turn the replies German too. Its result carries no value, only
   whether the reply language `changed` (`de` against `Deutsch` is no change), for the
   reply, and whether the plot is `plot_outdated`: this library's latest rendered
@@ -340,20 +342,22 @@ async def set_language(language: str, tool_context: ToolContext, applies_to: str
         return _error("invalid_language")
     versions = get_services().versions
     replies = applies_to in ("both", "replies")
-    plot = value
+    plot: str | None = value
     if applies_to == "replies":
-        # The plot keeps its language as it resolves now, also before the first plot, which would otherwise follow
-        # the new reply language (`plot_language`).
-        plot = plot_language(view, versions.latest_language(tool_context.session.id))
+        # With a plot in the session, the plot keeps its language as it resolves now. Before the first plot nothing
+        # is written for it: the first plot follows the new reply language (`plot_language`), unless the user asked
+        # for the plot's text by itself before, a choice that stays as it is.
+        drawn = versions.latest_language(tool_context.session.id)
+        plot = plot_language(view, drawn) if drawn is not None else None
     changed = replies and not same_language(view.language, value)
     # The plot the user sees is this library's latest render; its text may be in another language than the
     # plot language (made before a choice in another library), so the rewrite is decided against it.
     latest = versions.latest_rendered(tool_context.session.id, target=view.target)
-    plot_outdated = latest is not None and not same_language(latest.language, plot)
+    plot_outdated = latest is not None and plot is not None and not same_language(latest.language, plot)
     # A request for the replies' language is a pick, final either way: no language is offered after it. One for the
     # plot's text alone leaves the replies and their source, so a German "Beschriftung auf Deutsch" in an English
     # session still offers German replies. Nothing but a pick writes the plot's language.
-    delta = {**(language_delta(value, "chosen") if replies else {}), PLOT_LANGUAGE: plot}
+    delta = {**(language_delta(value, "chosen") if replies else {}), **({} if plot is None else {PLOT_LANGUAGE: plot})}
     for key, item in delta.items():
         tool_context.state[key] = item
     return {"status": "ok", "source": "chosen", "changed": changed, "plot_outdated": plot_outdated}
