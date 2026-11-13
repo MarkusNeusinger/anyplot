@@ -93,7 +93,7 @@ class TestAdapterInstruction:
 class TestAdapterPromptPerLanguage:
     """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
 
-    PYTHON_SHA256 = "39378764d4c32adeee1d3f17635d1c3404812ffd76336eeb9ae09a9c8efac639"
+    PYTHON_SHA256 = "367d018ae3185b695e4cf5f771794b10dd83f18506c31583f9022a5696835e0e"
     """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
     since 2026-11-01 with the `changes` notes in plain words and in the reply language (19,615 characters), since
     2026-11-02 with a date column on a label role written as labels (20,006 characters), with the plot memory's
@@ -102,7 +102,7 @@ class TestAdapterPromptPerLanguage:
     with the window the brief names for an open computed role (21,260 characters), since 2026-11-09 with the
     plot drawing every row, a change of the rows left to the data step, and jitter without sampling the rows
     (23,155 characters), and since 2026-11-13 with a color the user names drawn as that color and a bound value
-    drawn as it is (24,226 characters)."""
+    drawn as it is (24,369 characters)."""
 
     def test_the_python_adapter_prompt_matches_its_pinned_hash(self) -> None:
         """Golden: the Python libraries' adapters read exactly the pinned prompt. It was the one they read before R
@@ -113,7 +113,7 @@ class TestAdapterPromptPerLanguage:
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
             "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
         )
-        assert len(prompt) == 24_226 and "{{" not in prompt
+        assert len(prompt) == 24_369 and "{{" not in prompt
 
     HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
     """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""
@@ -415,7 +415,8 @@ class TestAColorTheUserNames:
         assert 'by a word ("orange", "dark red") or by a value (`#FF8800`)' in prompt
         # A name is written as one fixed value, so the same word gives the same color in all 15 libraries.
         assert "as the hex value that the name has in CSS (`orange` is `#FFA500`)" in prompt
-        assert "under a name of its own beside the palette list, which stays as it is" in prompt
+        # JavaScript plots read the palette from the page's tokens and have no list in their code.
+        assert "under a name of its own; where the code has a palette list, put it beside the list" in prompt
         assert "Never draw the nearest palette color in its place" in prompt
 
     def test_the_root_hands_the_color_on_as_the_user_named_it(self) -> None:
@@ -423,7 +424,9 @@ class TestAColorTheUserNames:
 
         assert "colors (the Imprint palette by itself, and any color the user names, as that color)" in root
         assert "colors within the Imprint palette" not in root
-        assert 'goes into it as the user named it ("orange bars", "the line in #FF8800")' in root
+        assert 'goes into the `change_request` as the user named it ("orange bars", "the line in #FF8800")' in root
+        # A color asked for before the first plot, or while the data waits, is handed on the same way.
+        assert "for a first plot, a change and a request kept with `keep_plot_request` alike" in root
         assert "never put a palette color in its place" in root
         assert "never tell the user that only palette colors are possible" in root
 
@@ -440,6 +443,8 @@ class TestEveryValueDrawnAsItIs:
         assert "A bound value is drawn as it is in `df`" in prompt
         assert "never its absolute value, its negation, a clipped or capped value" in prompt
         assert "unless the spec's plot type computes its marks from the rows" in prompt
+        # A plot type's own geometry stays allowed: one side of a population pyramid is drawn mirrored.
+        assert "the spec itself describes the geometry that places them (the mirrored side of a pyramid" in prompt
         assert "or the change request or a standing decision asks for it" in prompt
         assert "A negative amount is drawn below zero wherever the plot has a zero line" in prompt
         assert "carry it out in the code and say so in `changes`, with the column it concerns" in prompt
