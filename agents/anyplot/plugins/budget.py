@@ -173,7 +173,7 @@ class BudgetPlugin(BasePlugin):
             ledger = ledger_for(tool_context.invocation_id)
             if ToolSafetyPlugin.check(tool.name, tool_args, tool_context.agent_name) is not None:
                 return None  # ToolSafety refuses an invalid call; it is not a run
-            if pipeline_bound(ledger, tool_context) is not None:
+            if pipeline_bound(ledger, tool_context, tool_args) is not None:
                 return None  # ToolSafety refuses it within the turn's bounds (a second call, a switch); no run either
             usage = get_services().usage
             settings = get_settings()

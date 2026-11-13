@@ -527,6 +527,7 @@ RUN_REASONS = frozenset(
         "no_dataset",
         "incomplete_bindings",
         "data_unconfirmed",
+        "combine_choice",
     }
 )
 _GATE_ID = re.compile(r"^(?:R[0-9](?:-[a-z_]{1,24})?|G[0-9]{1,2})$")
@@ -599,12 +600,13 @@ TURN_TOOLS = frozenset(
 )
 CALL_VERDICTS = frozenset(
     "allowed tool_not_allowed invalid_arguments url_or_path_not_allowed plot_as_confirmed one_pipeline_per_turn"
-    " switch_requested data_changed_this_turn summary_turn plot_already_run too_many_data_runs too_many_prepare_calls"
+    " switch_requested data_changed_this_turn summary_turn combine_choice plot_already_run too_many_data_runs"
+    " too_many_prepare_calls"
     " too_many_generate_calls too_many_query_calls budget internal unknown".split()
 )
 CALL_OUTCOMES = frozenset("ok changed kept shipped failed not_ready unconfirmed error refused unfinished".split())
 CALL_CODES = frozenset(
-    "budget busy capacity code_error daily_limit data_changed_this_turn data_refused data_unconfirmed deadline"
+    "budget busy capacity code_error combine_choice daily_limit data_changed_this_turn data_refused data_unconfirmed deadline"
     " empty_result error guard_unavailable incomplete_bindings internal invalid_arguments invalid_bindings invalid_code"
     " invalid_expression invalid_language invalid_operation invalid_operations invalid_range invalid_result"
     " library_unavailable memory_full no_dataset no_numbers one_pipeline_per_turn other other_paste plot_already_run"

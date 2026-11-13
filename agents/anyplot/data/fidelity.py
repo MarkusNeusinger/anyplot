@@ -443,9 +443,16 @@ VALUE_DTYPES: frozenset[str] = frozenset({"integer", "number"})
 """The profile types of the value columns an aggregate of a repeated key averages or sums."""
 
 
-def key_aggregate(held: Sequence[Held], repeated: RepeatedKey, spec_id: str) -> KeyAggregate | None:
+def key_aggregate(
+    held: Sequence[Held], repeated: RepeatedKey, spec_id: str, how: How | None = None
+) -> KeyAggregate | None:
     """The `aggregate` that combines the rows sharing `repeated`'s key, or None when the server combines nothing (the
     module docstring has the rule): by the key's columns, of every other bound column, each once, in binding order.
+
+    `how` is the function the user chose, and it counts only where the plot type leaves the choice open
+    (`function_is_open`): the slices of a pie add up whatever a call names, so a spec whose marks add up
+    (`SUM_SPECS`) is always summed. Without a choice an open spec takes `mean`, which only a run that was not asked
+    reaches (the tool guard asks first).
 
     `held` are the valid bindings (`bindings.valid_bindings`), so every bound column the plot reads survives the
     aggregate under its name and the bindings carry over; the columns nothing binds leave with it, as the aggregate's
@@ -466,7 +473,15 @@ def key_aggregate(held: Sequence[Held], repeated: RepeatedKey, spec_id: str) -> 
         values.append(column.name)
     if not values or len(values) > MAX_AGGREGATE_COLUMNS:
         return None
-    return KeyAggregate(by=repeated.columns, values=tuple(values), how="sum" if spec_id in SUM_SPECS else "mean")
+    chosen: How = (how or "mean") if function_is_open(spec_id) else "sum"
+    return KeyAggregate(by=repeated.columns, values=tuple(values), how=chosen)
+
+
+def function_is_open(spec_id: str) -> bool:
+    """Whether the plot type leaves open how rows that share a key combine: every spec whose marks do not add up by
+    their nature. A bar of amounts sums and a bar of rates averages, and the spec cannot tell which the user's
+    column is, so the user is asked instead of getting a mean nobody chose."""
+    return spec_id not in SUM_SPECS
 
 
 _COMBINED_VERBS: dict[How, str] = {"mean": "averaged", "sum": "summed"}

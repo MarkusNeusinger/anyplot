@@ -140,6 +140,7 @@ GuardVerdict = Literal[
     "switch_requested",
     "data_changed_this_turn",
     "summary_turn",
+    "combine_choice",
     "plot_already_run",
     "too_many_data_runs",
     "too_many_prepare_calls",
@@ -163,6 +164,7 @@ SafetyCode = Literal[
     "switch_requested",
     "data_changed_this_turn",
     "summary_turn",
+    "combine_choice",
     "plot_already_run",
     "too_many_data_runs",
     "too_many_prepare_calls",
@@ -284,6 +286,9 @@ class RequestLedger:
     with the paste): the root's before-agent callback makes the paste's `certain` conversions (`paste_conversions.py`),
     and ToolSafety refuses the turn's `plot_pipeline` before the run while the data is unconfirmed (`summary_turn`).
     False without a route (`adk web`)."""
+    choice_asked: bool = False
+    """ToolSafety stopped a `plot_pipeline` call of this turn for the user's choice of sum or mean (`combine_choice`):
+    the answer is the user's, so a second call of the turn is stopped too, whatever function it names."""
     paste_note: bool = False
     """The turn's typed text is the note sent with a paste not summarized yet: words about the data that came with it,
     so while that table is stored (`paste_table`) the scope guard refuses it only as an `attack` (or with the fixed

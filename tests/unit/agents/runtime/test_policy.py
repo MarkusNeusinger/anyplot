@@ -12,7 +12,7 @@ import yaml
 from agents.anyplot import policy
 from agents.anyplot.data.fidelity import COMBINED_HEAD, LEFT_OUT_HEAD
 from agents.anyplot.data.prepare import UnsupportedFamily
-from agents.anyplot.plugins.tool_safety import TURN_CAPS, TurnCap
+from agents.anyplot.plugins.tool_safety import COMBINE_CHOICE, STOP_MESSAGES, TURN_CAPS, TurnCap
 from core.palette import IMPRINT, muted_for
 
 
@@ -533,6 +533,28 @@ class TestEveryRowDrawn:
         assert "as a change of the data, and add that `.undo()` brings the rows back" in result
         assert "or the server's line on combined rows above, says so" in result
         assert f'starts with "{head}", with its version and counts' in notices
+
+    def test_the_root_asks_sum_or_mean_and_never_chooses(self) -> None:
+        """Where the plot type leaves open how rows that share a key combine, the user says which: a mean nobody
+        chose had cost two test users an extra data step and an extra plot each."""
+        root = policy.root_instruction()
+
+        assert "- `plot_pipeline(change_request, base, theme, expected_texts, remember, combine)`" in root
+        assert '`combine`: `"sum"` or `"mean"`, only after the user said how rows that share the plot\'s key' in root
+        assert "answers `combine_choice` and makes no plot" in root
+        assert "ask the user in one short question whether to sum or to average them, never choose yourself" in root
+        # No question where the plot type itself says it: the slices of a pie add up.
+        assert "the server sums them and asks nothing" in root
+        assert "by the function the user chose where the plot type leaves it open (`combine`)" in root
+        # The answer to a stopped plot continues that plot. The data step is for a wish made before any plot was
+        # asked for: taken there, the answer would change the data and leave the plot to another tap.
+        assert "When a `plot_pipeline` call was stopped for this choice (`combine_choice`)" in root
+        assert "call `plot_pipeline` with `combine`, which combines the rows and plots in one step, never" in root
+        assert "Otherwise, when the user says which, or asks for one value per key and names the function" in root
+        # The stopped call's own answer tells the root the same, and that a kept request needs no repeating.
+        message = STOP_MESSAGES[COMBINE_CHOICE]
+        assert "Ask the user in one short question whether to sum or to average them" in message
+        assert "Never choose for the user" in message and "when `request_kept` is true" in message
 
     @pytest.mark.parametrize("language", ["python", "r", "julia", "javascript"])
     def test_the_rng_repair_line_allows_jitter_only(self, language: str) -> None:

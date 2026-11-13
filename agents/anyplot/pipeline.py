@@ -759,8 +759,9 @@ def load_inputs(
     return view, dataset, None
 
 
-PENDING_REASONS: frozenset[str] = frozenset({"data_unconfirmed", "incomplete_bindings"})
-"""The `not_ready` reasons a plot's request waits through: the user confirms or binds, then plots again."""
+PENDING_REASONS: frozenset[str] = frozenset({"data_unconfirmed", "incomplete_bindings", "combine_choice"})
+"""The `not_ready` reasons a plot's request waits through: the user confirms or binds, then plots again, or says
+whether rows that share a key sum or average, and the next call carries that choice."""
 
 
 def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason | None) -> bool:
@@ -804,6 +805,18 @@ def change_waits(state: Any) -> bool:
     return note_waits(state) and state.get(PENDING_BASE) == "previous"
 
 
+def continue_stopped_change(state: Any, args: PipelineArgs) -> PipelineArgs:
+    """The arguments of a call that answers the question of sum or mean (`combine`), on the plot its stopped call
+    meant.
+
+    The guard kept that call's request. When it was a change of the plot the library has (`change_waits`), the
+    answer's call goes on that plot too: it names a function and seldom a base, and a kept change drawn on the
+    catalogue plot would lose every edit the plot carries. Any other call is returned as it is."""
+    if args.combine is not None and args.base == "catalogue" and change_waits(state):
+        return args.model_copy(update={"base": "previous"})
+    return args
+
+
 def hold_request(state: Any, args: PipelineArgs) -> None:
     """Keep a plot's `change_request` for the next run, joined to one kept already (`merged_request`).
 
@@ -838,7 +851,9 @@ def run_args(ledger: RequestLedger, args: PipelineArgs) -> PipelineArgs:
         # texts or decisions the root passes on that turn come from its memory of earlier turns, which may hold a
         # request the user has since overtaken by rebinding a column, as the root re-sent "the prices" after values
         # had been bound to Stock by hand.
-        args = args.model_copy(update={"change_request": "", "expected_texts": [], "remember": []})
+        # The same holds for how rows that share a key combine: a button says neither sum nor mean, so a choice the
+        # root passes with it is the root's own, and the call is stopped for the user's (`combine_choice`).
+        args = args.model_copy(update={"change_request": "", "expected_texts": [], "remember": [], "combine": None})
     return in_users_words(args, ledger.user_words)
 
 
@@ -1922,7 +1937,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     services = get_services()
     settings = get_settings()
     ledger = ledger_for(ctx.invocation_id)
-    node_input = run_args(ledger, node_input)
+    node_input = continue_stopped_change(ctx.state, run_args(ledger, node_input))
     view, dataset, not_ready = load_inputs(ctx, services)
     if not_ready is not None or view is None or dataset is None:
         yield _result_event(stop_not_ready(ctx, ledger, node_input, view, not_ready or "no_dataset"))
@@ -1988,7 +2003,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     # A key the rows repeat is combined first, as a data step with a number, a change line and an undo, so the plot
     # draws every row of the version it gets (owner decision of 2026-11-09). After the kept note was taken: a new
     # version drops a kept note, and this run carries it (`settle_pending_request` writes it back if nothing ships).
-    view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger)
+    view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger, node_input.combine)
     run = Run(
         view=view,
         dataset=dataset,
@@ -2064,10 +2079,19 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
 
 
 def _combine_repeated_key(
-    ctx: Context, services: Services, view: SessionView, dataset: StoredDataset, ledger: RequestLedger
+    ctx: Context,
+    services: Services,
+    view: SessionView,
+    dataset: StoredDataset,
+    ledger: RequestLedger,
+    how: Literal["sum", "mean"] | None = None,
 ) -> tuple[SessionView, StoredDataset, str | None]:
     """The view and dataset the run draws, and the announcement of the server's data step for a repeated key
     (`repeated_keys.combine_repeated_key`), or None when nothing was combined.
+
+    `how` is the function the user chose for it (`PipelineArgs.combine`). A call that needs the choice and names
+    none never gets here through the root: the tool guard stops it and the root asks (`tool_safety.pipeline_bound`,
+    `combine_choice`). A run started without the guard combines by the plot type's rule.
 
     The step is written into the session state, the turn's data changes (the `done` event's card) and the ledger
     (`RequestLedger.data_step`), so a run ADK re-runs on resume, which finds the key combined already, announces it
@@ -2076,7 +2100,7 @@ def _combine_repeated_key(
     if ledger.data_step is not None and ledger.data_step[0] == view.dataset_id:
         return view, dataset, ledger.data_step[1]
     try:
-        combined = combine_repeated_key(services.datasets, ctx.session.id, view, dataset)
+        combined = combine_repeated_key(services.datasets, ctx.session.id, view, dataset, how)
     except Exception as exc:  # a bug in the data step must not cost the user the plot; the class only
         logger.warning("combining a repeated key failed: %s", type(exc).__name__)
         return view, dataset, None
