@@ -36,7 +36,9 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   2026-10-16), with its lasting decisions for the plot memory, stored once that plot ships.
   It answers `request_kept`, the only basis on which the root may say a
   request is kept; `false` with `plot_exists` when this library already has a plot of
-  the current data. A plot of data a new paste replaced is none (`CodeVersion.earlier_data`,
+  the current data and the data is confirmed. While the data or the bindings wait for the
+  user's check, a change of that plot is kept as one (`PENDING_BASE`, since 2026-11-11), and
+  "plot the new data" draws it on the latest version. A plot of data a new paste replaced is none (`CodeVersion.earlier_data`,
   owner decision of 2026-11-08): the note pasted with the new data is kept for that data's
   first plot. Refused while the pipeline runs.
 * `forget(entry_id)`: removes an entry of the user's plot memory (`memory.py`, since
@@ -135,7 +137,15 @@ from ..language import LANGUAGE_TARGETS, is_valid, normalise, refusal_lang, same
 from ..memory import ForgetArgs, MemoryRefused, memory_delta, read_memory
 from ..memory import forget as memory_forget
 from ..opening import store_dataset
-from ..pipeline import has_request, hold_request, in_users_words, plot_shows_replaced_data, run_pipeline
+from ..pipeline import (
+    PENDING_REASONS,
+    has_request,
+    hold_request,
+    in_users_words,
+    load_inputs,
+    plot_shows_replaced_data,
+    run_pipeline,
+)
 from ..plugins.ledger import attribution, ledger_for
 from ..plugins.tool_safety import (
     DATA_CODE_TOOL,
@@ -143,6 +153,7 @@ from ..plugins.tool_safety import (
     MAX_FILE_NAME_RESULT_BYTES,
     MAX_NOTES_RESULT_BYTES,
     QUERY_TOOL,
+    changed_data,
     result_limit,
     result_size,
 )
@@ -354,7 +365,7 @@ async def keep_plot_request(
     expected_texts: list[str] | None = None,
     remember: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Keep a request for this library's first plot of the current data without starting a run: the next "Create plot" draws it. Use it for a plot wish before the data is confirmed (a title, a scale), typed or in the pasted notes, also when the library has a plot of data pasted before. `change_request` is a short English description (at most 600 characters); `expected_texts` lists the texts and number formats the user wrote out, verbatim; `remember` the request's lasting decisions, as for plot_pipeline. Returns request_kept: true when the server keeps it; false, with a reason, when this library already has a plot of the current data (plot_exists: then call plot_pipeline with base "previous" once the data is confirmed), or when nothing is left to keep once the texts the user did not write are left out (nothing_to_keep)."""
+    """Keep a request for this library's next plot of the current data without starting a run: the user's next plot draws it. Use it while the data or the bindings wait for the user's check: for a plot wish before the first plot (a title, a scale), typed or in the pasted notes, also when the library has a plot of data pasted before, and for a change of the plot this library has when the data changed, also in the turn that changed it (after the data tool). `change_request` is a short English description (at most 600 characters); `expected_texts` lists the texts and number formats the user wrote out, verbatim; `remember` the request's lasting decisions, as for plot_pipeline. Returns request_kept: true when the server keeps it; false, with a reason, when this library has a plot of the current data and the data is confirmed (plot_exists: then call plot_pipeline with base "previous"), or when nothing is left to keep once the texts the user did not write are left out (nothing_to_keep)."""
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
@@ -368,14 +379,20 @@ async def keep_plot_request(
         return _error("invalid_arguments")
     services = get_services()
     latest = services.versions.latest_rendered(tool_context.session.id, target=view.target)
-    # A change of an existing plot is no first-plot note: the root repeats it once the data is confirmed. A plot of
-    # data a new paste replaced is no plot of this data: the note pasted with the new data is for its first plot
-    # (owner decision of 2026-11-08), which the fresh run of the plot button takes (`take_pending_request`).
-    if latest is not None and not plot_shows_replaced_data(services, tool_context.session.id, view):
-        return {"status": "ok", "request_kept": False, "reason": "plot_exists"}
+    # A plot of data a new paste replaced is no plot of this data: the note pasted with the new data is for its first
+    # plot (owner decision of 2026-11-08), which the fresh run of the plot button takes (`take_pending_request`).
+    exists = latest is not None and not plot_shows_replaced_data(services, tool_context.session.id, view)
     ledger = ledger_for(tool_context.invocation_id)
+    # A change of a plot of the current data runs at once while the data is confirmed: nothing to keep. While the
+    # data or the bindings wait for the user's check, also after this turn's own change of the data, whose new
+    # version is never confirmed in its turn, it is kept as that change (`PENDING_BASE`), and "plot the new data"
+    # draws it on the latest version.
+    waits = changed_data(ledger) or load_inputs(tool_context, services)[2] in PENDING_REASONS
+    if exists and not waits:
+        return {"status": "ok", "request_kept": False, "reason": "plot_exists"}
+    kept = PipelineArgs(**args.model_dump(), base="previous") if exists else PipelineArgs(**args.model_dump())
     # A text the user never wrote is no text to check the plot for: only what stands in their words is kept.
-    note = in_users_words(PipelineArgs(**args.model_dump()), ledger.user_words)
+    note = in_users_words(kept, ledger.user_words)
     if not has_request(note):
         return {"status": "ok", "request_kept": False, "reason": "nothing_to_keep"}
     hold_request(tool_context.state, note)

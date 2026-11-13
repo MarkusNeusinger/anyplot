@@ -215,6 +215,7 @@ from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_ser
 from .session_state import (
     BINDINGS,
     LAST_RUN,
+    PENDING_BASE,
     PENDING_BINDINGS,
     PENDING_EXPECTED_TEXTS,
     PENDING_REMEMBER,
@@ -257,6 +258,33 @@ DATA_CHANGE_REQUEST = (
 the server as `LANGUAGE_REWRITE_REQUEST` is (owner decision of 2026-11-08): the action brings no request of its own,
 and without one the adapter would not know that the data changed. It is the server's, never the user's, so the
 version it ships keeps it out of its lineage's requests (`lineage_requests`)."""
+KEPT_CHANGE_LINE = "The user also asked for this change of the plot, which comes on top of the new data:"
+"""What stands between `DATA_CHANGE_REQUEST` and a change of the plot that was kept while the data waited
+(`new_data_request`)."""
+KEPT_CHANGE_HEAD = f"{DATA_CHANGE_REQUEST}\n{KEPT_CHANGE_LINE}\n"
+"""Everything of the server's in such a request: the user's change follows it."""
+
+
+def new_data_request(kept: str) -> str:
+    """The change request of "plot the new data" from the latest version: the server's `DATA_CHANGE_REQUEST`, and
+    after it the change of the plot the user asked for while the data waited (`PENDING_BASE` `previous`).
+
+    The two stand in one request because the adapter gets one; the user's part is never cut to make room, so the
+    request may pass `MAX_CHANGE_REQUEST_CHARS`, which bounds what the root sends (`MAX_RUN_REQUEST_CHARS` bounds
+    this). `users_request` reads the user's part back."""
+    kept = kept.strip()
+    return f"{KEPT_CHANGE_HEAD}{kept}" if kept else DATA_CHANGE_REQUEST
+
+
+def users_request(change_request: str) -> str:
+    """The user's own part of a run's change request: all of it, nothing of the server's `DATA_CHANGE_REQUEST`
+    alone, or what follows the head `new_data_request` puts before a kept change. Only those two exact forms are
+    the server's: a request that merely begins with the server's sentence is the user's as it stands."""
+    if change_request == DATA_CHANGE_REQUEST:
+        return ""
+    return change_request.removeprefix(KEPT_CHANGE_HEAD)
+
+
 MEASURED_LINE = (
     "Measured: the server's checks found the lines below in this render's code or image; fix each of them, "
     "or the plot goes to a repair round."
@@ -732,23 +760,27 @@ def load_inputs(
 
 
 PENDING_REASONS: frozenset[str] = frozenset({"data_unconfirmed", "incomplete_bindings"})
-"""The `not_ready` reasons a first plot's request waits through: the user confirms or binds, then plots again."""
+"""The `not_ready` reasons a plot's request waits through: the user confirms or binds, then plots again."""
 
 
 def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason | None) -> bool:
-    """Keep a first plot's `change_request` that stopped on `reason` for the next run (`PENDING_REQUEST`);
+    """Keep a plot's `change_request` that stopped on `reason` for the next run (`PENDING_REQUEST`);
     whether this run's own request or texts were kept (`PlotResult.request_kept`).
 
     A live test of 2026-10-15: the user's step-2 note ("only co2_per_capita, title ...") made
     the root change the bindings, which asked for `.confirm()` again; the plot stopped on
     `data_unconfirmed`, and the title never reached the plot that the next `.create_plot()`
-    drew. A change of an existing version (`base="previous"`) is not kept: it names a plot
-    that is there, and the root repeats it once the reason is gone.
+    drew.
 
     Live round 9 of 2026-10-16: a title asked for before `.confirm()` is the same case, and the root
     keeps it only through this path (`root.md`); the result's `request_kept` says that it did.
+
+    Since 2026-11-11 a change of an existing version (`base="previous"`) is kept as well, as what it is
+    (`PENDING_BASE`). It used to wait for the root to repeat it "once the reason is gone", but the reason goes with
+    the user's click on the plot button, which brings no request: "drop these rows and use a log scale" changed the
+    data, the plot of the new data came without the log scale, and the root had promised it.
     """
-    if reason not in PENDING_REASONS or args.base == "previous" or not has_request(args):
+    if reason not in PENDING_REASONS or not has_request(args):
         return False
     hold_request(state, args)
     return True
@@ -762,13 +794,28 @@ def plot_shows_replaced_data(services: Services, session_id: str, view: SessionV
     return latest is not None and latest.earlier_data(original_number(services.datasets, session_id, view))
 
 
-def hold_request(state: Any, args: PipelineArgs) -> None:
-    """Keep a first plot's `change_request` for the next run, joined to one kept already (`merged_request`).
+def note_waits(state: Any) -> bool:
+    """Whether a kept request waits for the next run."""
+    return any(state.get(key) is not None for key in (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_REMEMBER))
 
-    Also the path of a run that passed the check but got no slot in the run queue (`capacity`,
+
+def change_waits(state: Any) -> bool:
+    """Whether the kept request is a change of the library's plot (`PENDING_BASE`), not a first plot's note."""
+    return note_waits(state) and state.get(PENDING_BASE) == "previous"
+
+
+def hold_request(state: Any, args: PipelineArgs) -> None:
+    """Keep a plot's `change_request` for the next run, joined to one kept already (`merged_request`).
+
+    Also the path of a first-plot run that passed the check but got no slot in the run queue (`capacity`,
     or a cancelled wait): its note waits for the next `.create_plot()` like a blocked one's.
+
+    A change of the library's plot (`base="previous"`) is kept as one (`PENDING_BASE`) unless a first plot's note
+    already waits: a fresh start the user asked for stays one, and the change joins its note.
     """
-    if has_request(args) and args.base != "previous":
+    if has_request(args):
+        first_plot_waits = note_waits(state) and not change_waits(state)
+        state[PENDING_BASE] = "previous" if args.base == "previous" and not first_plot_waits else None
         state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request) or None
         state[PENDING_EXPECTED_TEXTS] = chosen_texts(state.get(PENDING_EXPECTED_TEXTS), args) or None
         remembered = merged_remember(state.get(PENDING_REMEMBER), args.remember)
@@ -957,15 +1004,18 @@ KeptRequestFate = Literal["used", "dropped"]
 
 
 def pending_fate(state: Any, args: PipelineArgs) -> KeptRequestFate | None:
-    """What a first-plot run does with the kept note: `used`, `dropped`, or None when there is none to take.
+    """What a run does with the kept note: `used`, `dropped`, or None when there is none for it to take.
 
     A note was written for the bindings of its moment (`PENDING_BINDINGS`). It is `used` while the bindings in
     force keep every one of them, roles open then being free to fill (`fills_open_roles`), and `dropped` when the
     user rebound a column it was written for: "the distribution of the prices" kept, then values bound to Stock
     by hand, is no request about Stock (owner decision of 2026-10-15, judged here at the run since a write on the
-    way decides nothing). A note stored without its bindings is used. A change of an existing version takes none.
+    way decides nothing). A note stored without its bindings is used. A change of an existing version takes only a
+    kept change of that plot (`change_waits`), never a first plot's note.
     """
-    if args.base == "previous" or not any(state.get(key) is not None for key in PENDING_KEYS):
+    if not any(state.get(key) is not None for key in PENDING_KEYS):
+        return None
+    if args.base == "previous" and not change_waits(state):
         return None
     held = state.get(PENDING_BINDINGS)
     if held is None:
@@ -989,25 +1039,31 @@ def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
     """The run's arguments with a kept request (`keep_pending_request`) in front of its own.
 
     A run on the catalogue plot without a request of its own (the bare `.create_plot()`) takes
-    the kept one; one with its own request takes both (`merged_request`); a change of an
-    existing version takes none. The state keeps the request until the run ends
-    (`settle_pending_request`), so a run that fails loses no note (review of 2026-10-15).
+    the kept one; one with its own request takes both (`merged_request`). A change of an
+    existing version takes only a kept change of that plot (`change_waits`), never a first plot's note. The state
+    keeps the request until the run ends (`settle_pending_request`), so a run that fails loses no note (review of
+    2026-10-15).
+
+    "Plot the new data" from the latest version brings the server's `DATA_CHANGE_REQUEST`, which is no word of the
+    user's: the kept change is validated on its own and stands after it (`new_data_request`), and the kept texts
+    count as a bare run's (`chosen_texts`).
     """
-    pending = state.get(PENDING_REQUEST)
-    texts = state.get(PENDING_EXPECTED_TEXTS)
-    if (pending is None and texts is None and state.get(PENDING_REMEMBER) is None) or args.base == "previous":
+    if not note_waits(state) or (args.base == "previous" and not change_waits(state)):
         return args
+    servers = args.change_request == DATA_CHANGE_REQUEST
+    own = args.model_copy(update={"change_request": ""}) if servers else args
     # Validated like the root's own arguments: a stored value never reaches the run unchecked.
     joined = {
-        **args.model_dump(),
-        "change_request": merged_request(pending, args.change_request),
-        "expected_texts": chosen_texts(texts, args),
-        "remember": [item.model_dump() for item in merged_remember(state.get(PENDING_REMEMBER), args.remember)],
+        **own.model_dump(),
+        "change_request": merged_request(state.get(PENDING_REQUEST), own.change_request),
+        "expected_texts": chosen_texts(state.get(PENDING_EXPECTED_TEXTS), own),
+        "remember": [item.model_dump() for item in merged_remember(state.get(PENDING_REMEMBER), own.remember)],
     }
     try:
-        return PipelineArgs.model_validate(joined)
+        taken = PipelineArgs.model_validate(joined)
     except ValidationError:
         return args
+    return taken.model_copy(update={"change_request": new_data_request(taken.change_request)}) if servers else taken
 
 
 def rewrite_request(args: PipelineArgs, language_changed: bool) -> PipelineArgs:
@@ -1065,24 +1121,35 @@ def _assignments(bindings: Sequence[Binding]) -> list[tuple[str, str | None]]:
 def lineage_requests(run: Run) -> list[str]:
     """The requests a version the run ships carries out (`CodeVersion.requests`): its base's standing ones and the
     run's own change request, never the server's `DATA_CHANGE_REQUEST`, which no user wrote and which a later change
-    must not read as one of the user's standing decisions."""
-    own = [] if run.change_request == DATA_CHANGE_REQUEST else [run.change_request]
-    return standing_requests([*run.user_requests, *own])
+    must not read as one of the user's standing decisions: of a request that joins it to a kept change of the plot,
+    only the user's part (`users_request`)."""
+    return standing_requests([*run.user_requests, users_request(run.change_request)])
 
 
-PENDING_KEYS = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_BINDINGS, PENDING_REMEMBER)
+PENDING_KEYS = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_BINDINGS, PENDING_REMEMBER, PENDING_BASE)
 
 
-def settle_pending_request(state: Any, args: PipelineArgs, shipped: bool) -> None:
-    """After a run, the kept note as the run leaves it; only a first-plot run touches it, as only it took it.
+def settle_pending_request(
+    state: Any, args: PipelineArgs, shipped: bool, *, kept_change: dict[str, Any] | None = None
+) -> None:
+    """After a run, the kept note as the run leaves it; only a run that took it touches it.
 
     A shipped first plot used the kept request and texts, so they go. A first-plot run that
     shipped nothing keeps what it ran with (`take_pending_request` joined the kept and its own)
-    for the next one. A change of an existing version (`base="previous"`) took nothing, so it
-    leaves the note as it is (review of 2026-10-15), except that stored texts that no longer
-    pass the validator are cleaned (`kept_texts`).
+    for the next one. A change of an existing version (`base="previous"`) that took a kept change of that plot
+    (`kept_change`, the note as the run found it) drops it once it ships. When it ships nothing the note stays as
+    it was, put back if the run's own data step dropped it with the new version: what the run added, its own
+    request or the server's, is no part of the note. One that took nothing leaves a first plot's note as it is
+    (review of 2026-10-15), except that stored texts that no longer pass the validator are cleaned (`kept_texts`).
     """
     if args.base == "previous":
+        if kept_change is not None:
+            if shipped:
+                drop_pending_request(state)
+            elif not note_waits(state):
+                for key, value in kept_change.items():
+                    state[key] = value
+            return
         stored = state.get(PENDING_EXPECTED_TEXTS)
         if stored is not None and kept_texts(stored) != stored:
             state[PENDING_EXPECTED_TEXTS] = kept_texts(stored) or None
@@ -1865,8 +1932,10 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     if ledger.run_slot is not None and not await ledger.run_slot():
         # No slot: the route failed the turn with `capacity`, or the user cancelled the wait. Either way the run is
         # aborted, a cancelled path, so no result: the stream ends with the error, or with `done` after a cancel.
-        # A kept request stays for the next run, and this run's own joins it, so neither is lost.
-        hold_request(ctx.state, node_input)
+        # A kept request stays for the next run, and a first plot's own joins it, so neither is lost. A change of an
+        # existing plot is not kept here: its data is confirmed, so the user asks again and the root runs it.
+        if node_input.base != "previous":
+            hold_request(ctx.state, node_input)
         ledger.pipeline_active = False
         return
     # The page's "plot the new data": from the library's latest version with the server's request while it drew the
@@ -1876,7 +1945,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     new_data: NewDataBase | None = None
     if ledger.new_data:
         original = original_number(services.datasets, ctx.session.id, view)
-        note_kept = any(ctx.state.get(key) is not None for key in PENDING_KEYS)
+        # A first plot's note makes this run a fresh start; a kept change of the plot joins it on the latest version.
+        note_kept = any(ctx.state.get(key) is not None for key in PENDING_KEYS) and not change_waits(ctx.state)
         new_data = new_data_base(latest, view, original, dataset.source, note_kept=note_kept)
         base: dict[str, Any] = {"base": "catalogue"}
         if new_data == "previous":
@@ -1889,6 +1959,12 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     kept_request = pending_fate(ctx.state, node_input)
     if kept_request == "dropped":
         drop_pending_request(ctx.state)
+    # A kept change of the plot as this run takes it, to settle it by: the run's own data step may drop it meanwhile.
+    kept_change = (
+        {key: ctx.state.get(key) for key in PENDING_KEYS}
+        if node_input.base == "previous" and change_waits(ctx.state)
+        else None
+    )
     node_input = take_pending_request(ctx.state, node_input)
     previous = (
         services.versions.latest_rendered(ctx.session.id, target=view.target) if node_input.base == "previous" else None
@@ -1976,7 +2052,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         # The data changed whether the plot shipped or not: a run that ships nothing announces the step alone.
         changes = result.changes if result.status in ("ok", "needs_attention") else run.data_notes
         result = result.model_copy(update={"combined": True, "changes": changes})
-    settle_pending_request(ctx.state, own_input, ledger.plot_shipped)
+    settle_pending_request(ctx.state, own_input, ledger.plot_shipped, kept_change=kept_change)
     settle_memory(ctx.state, run, ledger.plot_shipped)
     # The memory the stored version stands on, for its `plot` event: known only once settled with the version.
     ledger.shipped_memory = memory_ids(run) if ledger.plot_shipped and result.version is not None else None

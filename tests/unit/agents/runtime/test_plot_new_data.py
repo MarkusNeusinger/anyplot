@@ -20,11 +20,35 @@ import pytest
 from agents.anyplot import telemetry
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.dataset_versions import push_version
-from agents.anyplot.pipeline import DATA_CHANGE_REQUEST, Run, lineage_requests, new_data_base, run_theme
+from agents.anyplot.pipeline import (
+    DATA_CHANGE_REQUEST,
+    KEPT_CHANGE_LINE,
+    PENDING_KEYS,
+    Run,
+    change_waits,
+    hold_request,
+    keep_pending_request,
+    lineage_requests,
+    new_data_base,
+    new_data_request,
+    pending_fate,
+    run_theme,
+    settle_pending_request,
+    take_pending_request,
+    users_request,
+)
+from agents.anyplot.plugins.tool_safety import DATA_CHANGED
 from agents.anyplot.render.backends.fake import FakeBackend
-from agents.anyplot.schemas import Binding, PlotResult
+from agents.anyplot.schemas import MAX_CHANGE_REQUEST_CHARS, MAX_RUN_REQUEST_CHARS, Binding, PipelineArgs, PlotResult
 from agents.anyplot.services import CodeVersion, Services, get_services
-from agents.anyplot.session_state import PENDING_REQUEST, read_session
+from agents.anyplot.session_state import (
+    BINDINGS,
+    PENDING_BASE,
+    PENDING_CLEARED,
+    PENDING_EXPECTED_TEXTS,
+    PENDING_REQUEST,
+    read_session,
+)
 from agents.main import ACTION_MESSAGES, PLOT_ACTIONS, Runtime, app, get_runtime
 
 from .fakes import SCATTER_PLAN, VERDICT_OK
@@ -37,6 +61,7 @@ from .test_service_flow import (
     open_session,
     parse_sse,
     permissive_queue,
+    tool_responses,
 )
 
 
@@ -45,6 +70,8 @@ Y = Binding(role="y", column="Exam Score")
 KEEP_PLAN: dict[str, Any] = {"edits": [], "title": "Exam Score by Study Hours", "changes": ["Kept the plot"]}
 PREVIOUS_MARK = 'title = "Exam Score by Study Hours"'
 """A line of the shipped version's working code (`SCATTER_PLAN`) that the catalogue code lacks."""
+WISH = "log scale on y"
+"""A change of the plot the user asks for in a message that also changes the data."""
 
 
 def version(**overrides: Any) -> CodeVersion:
@@ -118,6 +145,106 @@ def test_the_server_request_stays_out_of_the_lineage() -> None:
     assert lineage_requests(cast(Run, ran)) == standing
     ran.change_request = "red markers"
     assert lineage_requests(cast(Run, ran)) == [*standing, "red markers"]
+    # A kept change of the plot that joined the server's request: only the user's part is a standing request.
+    ran.change_request = new_data_request(WISH)
+    assert lineage_requests(cast(Run, ran)) == [*standing, WISH]
+
+
+# --- a change of the plot kept while the data waited -------------------------------------------
+
+
+def previous(request: str = WISH, **fields: Any) -> PipelineArgs:
+    return PipelineArgs(change_request=request, base="previous", **fields)
+
+
+def test_the_kept_change_stands_after_the_servers_request_and_reads_back() -> None:
+    joined = new_data_request(WISH)
+
+    assert joined.startswith(DATA_CHANGE_REQUEST) and joined.endswith(f"{KEPT_CHANGE_LINE}\n{WISH}")
+    assert users_request(joined) == WISH and users_request(WISH) == WISH
+    assert new_data_request("  ") == DATA_CHANGE_REQUEST and users_request(DATA_CHANGE_REQUEST) == ""
+    # Only the two forms the server builds are the server's: a request that merely begins with its sentence stays.
+    begun = f"{DATA_CHANGE_REQUEST} Also make the markers red."
+    assert users_request(begun) == begun and users_request(f"{DATA_CHANGE_REQUEST}\n{WISH}") != WISH
+    # The user's part is never cut to make room: the longest one still fits what the adapter and the reviewer take.
+    assert len(new_data_request("x" * MAX_CHANGE_REQUEST_CHARS)) <= MAX_RUN_REQUEST_CHARS
+
+
+@pytest.mark.parametrize("reason", ["data_unconfirmed", "incomplete_bindings"])
+def test_a_change_of_the_plot_is_kept_as_one_while_the_data_waits(reason: Any) -> None:
+    state: dict[str, Any] = {BINDINGS: [X.model_dump(), Y.model_dump()]}
+
+    assert keep_pending_request(state, previous(expected_texts=["Scores 2026"]), reason)
+
+    assert (state[PENDING_REQUEST], state[PENDING_BASE]) == (WISH, "previous")
+    assert state[PENDING_EXPECTED_TEXTS] == ["Scores 2026"] and change_waits(state)
+    # On data that is ready nothing waits: the run draws the change at once.
+    assert not keep_pending_request({}, previous(), None)
+
+
+def test_a_first_plots_note_stays_one_when_a_change_joins_it() -> None:
+    """A fresh start the user asked for stays one: the note is taken by the fresh run, with the change in it."""
+    state: dict[str, Any] = {}
+    hold_request(state, PipelineArgs(change_request="title: Cohort 2026"))
+    hold_request(state, previous())
+
+    assert state[PENDING_REQUEST] == f"title: Cohort 2026\n{WISH}" and state.get(PENDING_BASE) is None
+    assert not change_waits(state)
+    # And a change that waits first becomes a first plot's note with the fresh start asked for after it.
+    later: dict[str, Any] = {}
+    hold_request(later, previous())
+    hold_request(later, PipelineArgs(change_request="start again, title: Cohort 2026"))
+    assert later.get(PENDING_BASE) is None and not change_waits(later)
+
+
+def test_plot_the_new_data_takes_the_kept_change_after_the_servers_request() -> None:
+    state: dict[str, Any] = {}
+    hold_request(state, previous(expected_texts=["Scores 2026"]))
+    action = PipelineArgs(base="previous").model_copy(update={"change_request": DATA_CHANGE_REQUEST})
+
+    taken = take_pending_request(state, action)
+
+    assert taken.change_request == new_data_request(WISH) and taken.expected_texts == ["Scores 2026"]
+    assert pending_fate(state, action) == "used" and state[PENDING_REQUEST] == WISH  # kept until the run ends
+    # An undo back to the plotted data brings no request of the server's: the kept change stands alone.
+    assert take_pending_request(state, PipelineArgs(base="previous")).change_request == WISH
+    # A typed change of the plot takes it in front of its own; a fresh start takes it as any note.
+    assert take_pending_request(state, previous("blue markers")).change_request == f"{WISH}\nblue markers"
+    assert take_pending_request(state, PipelineArgs()).change_request == WISH
+
+
+def test_a_change_of_the_plot_takes_no_first_plots_note() -> None:
+    state: dict[str, Any] = {}
+    hold_request(state, PipelineArgs(change_request="title: Cohort 2026"))
+    change = previous("blue markers")
+
+    assert take_pending_request(state, change) == change and pending_fate(state, change) is None
+    settle_pending_request(state, change, shipped=True)
+    assert state[PENDING_REQUEST] == "title: Cohort 2026"
+
+
+def test_the_kept_change_goes_with_the_plot_that_drew_it_and_stays_with_one_that_did_not() -> None:
+    state: dict[str, Any] = {}
+    hold_request(state, previous())
+    found = {key: state.get(key) for key in PENDING_KEYS}
+    ran = take_pending_request(state, previous("blue markers"))
+
+    settle_pending_request(state, ran, shipped=False, kept_change=found)
+    assert (state[PENDING_REQUEST], state[PENDING_BASE]) == (WISH, "previous")  # not the run's joined request
+    # The run's own data step stored a new version, which drops a kept note: the run puts it back.
+    state.update(PENDING_CLEARED)
+    settle_pending_request(state, ran, shipped=False, kept_change=found)
+    assert (state[PENDING_REQUEST], state[PENDING_BASE]) == (WISH, "previous")
+
+    settle_pending_request(state, ran, shipped=True, kept_change=found)
+    assert all(state.get(key) is None for key in PENDING_KEYS)
+
+
+def test_only_a_first_plots_note_makes_the_new_data_a_fresh_start() -> None:
+    """`note_kept` is a first plot's note; a kept change of the plot leaves the latest version as the base."""
+    same = FakeView([X, Y])
+    assert new_data_base(version(), same, 1, None, note_kept=False) == "previous"
+    assert new_data_base(version(), same, 1, None, note_kept=True) == "kept_note"
 
 
 def test_the_action_is_a_plot_button_with_its_own_message() -> None:
@@ -272,6 +399,106 @@ async def test_a_waiting_note_starts_fresh_and_reaches_the_plot(
     second = adapter_inputs(fake)[1]
     assert PREVIOUS_MARK not in second and "title: Cohort 2026" in second
     assert (await _session_state(client, sid)).get(PENDING_REQUEST) is None
+
+
+@pytest.mark.parametrize("tool", ["plot_pipeline", "keep_plot_request"])
+async def test_a_change_asked_for_with_a_data_change_reaches_the_plot_of_the_new_data(
+    client: httpx.AsyncClient, swap_models, tool: str
+) -> None:
+    """Persona round of 2026-11-11: one message changed the data and asked for a log scale. The plot of the new data
+    came without it, since a change of an existing plot was never kept, and the root had said it was noted. Either
+    call after the data tool keeps it now: the keep tool, which `root.md` names, or a plot call the server refuses
+    in a turn that changed the data."""
+    sort = {"call": "prepare_data", "args": {"operations": [{"op": "sort", "column": "Exam Score"}]}}
+    args = {"change_request": WISH, "base": "previous"} if tool == "plot_pipeline" else {"change_request": WISH}
+    change = {"call": tool, "args": args}
+    plot = {"call": "plot_pipeline", "args": {}}
+    fake = swap_models(
+        "gemini",
+        {
+            "root": [
+                plot,
+                {"text": "Here."},
+                sort,
+                change,
+                {"text": "Sorted."},
+                plot,
+                {"text": "Here is the new data."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": KEEP_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+        },
+    )
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    asked = await client.post(
+        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "sort by score and use a log scale on y"}
+    )
+
+    assert not any(name == "plot" for name, _ in parse_sse(asked.text))
+    answer = tool_responses(fake, tool)[-1]
+    if tool == "plot_pipeline":
+        assert (answer["code"], answer["reason"], answer["request_kept"]) == (DATA_CHANGED, "data_unconfirmed", True)
+    else:
+        assert answer == {"status": "ok", "request_kept": True}
+    state = await _session_state(client, sid)
+    assert (state[PENDING_REQUEST], state[PENDING_BASE]) == (WISH, "previous")
+
+    shown = await plot_new_data(client, sid)
+
+    assert (shown["status"], shown["version"], shown["new_data"]) == ("ok", 2, "previous")
+    second = adapter_inputs(fake)[1]
+    assert PREVIOUS_MARK in second and DATA_CHANGE_REQUEST in second
+    assert KEPT_CHANGE_LINE in second and WISH in second
+    assert tool_responses(fake, "plot_pipeline")[-1]["kept_request"] == "used"
+    stored = get_services().versions.latest_rendered(sid)
+    assert stored is not None and stored.requests == [WISH] and stored.data_version == 2
+    state = await _session_state(client, sid)
+    assert state.get(PENDING_REQUEST) is None and state.get(PENDING_BASE) is None
+
+
+async def test_the_keep_tool_keeps_a_change_of_the_plot_only_while_the_data_waits(
+    client: httpx.AsyncClient, runtime: Runtime, services: Services, swap_models
+) -> None:
+    keep = {"call": "keep_plot_request", "args": {"change_request": WISH}}
+    plot = {"call": "plot_pipeline", "args": {}}
+    fake = swap_models(
+        "gemini",
+        {
+            "root": [
+                plot,
+                {"text": "Here."},
+                keep,
+                {"text": "Not kept."},
+                keep,
+                {"text": "Kept."},
+                plot,
+                {"text": "."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": KEEP_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+        },
+    )
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    # On confirmed data the change runs at once, so the tool keeps nothing and says why.
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "log scale on y please"})
+    assert tool_responses(fake, "keep_plot_request")[-1] == {
+        "status": "ok",
+        "request_kept": False,
+        "reason": "plot_exists",
+    }
+
+    await change_data(runtime, services, sid)
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "log scale on y please"})
+
+    assert tool_responses(fake, "keep_plot_request")[-1] == {"status": "ok", "request_kept": True}
+    state = await _session_state(client, sid)
+    assert (state[PENDING_REQUEST], state[PENDING_BASE]) == (WISH, "previous")
+    shown = await plot_new_data(client, sid)
+    assert shown["new_data"] == "previous" and WISH in adapter_inputs(fake)[1]
 
 
 async def test_the_plot_event_of_every_other_run_names_no_base(client: httpx.AsyncClient, swap_models) -> None:
