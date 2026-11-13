@@ -549,6 +549,11 @@ class TestOtherInstructions:
         assert examples["How do I create a chart in PowerPoint?"] == "out_of_scope"
         assert "A figure the user states themselves" in rubric and "the figure stands in the message" in rubric
         assert "as a reference line, a target or a threshold" in rubric
+        # The rule stays with a figure the user brings: its first wording ("needs_data only when the message wants
+        # figures it does not state") made the judge refuse a question about the table's own entries (scope eval of
+        # 2026-11-13, `in-079`).
+        assert "This rule is about a figure the user brings" in rubric
+        assert "wants figures it does not state" not in rubric
         assert examples["Why does the plot show 7.6 for Basel? My own report says 7.2."] == "in_scope"
 
     def test_example_data_is_in_scope_and_only_real_figures_need_data(self) -> None:
