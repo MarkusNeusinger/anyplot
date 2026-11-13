@@ -92,6 +92,27 @@ describe('VisitorsTile', () => {
     expect(screen.getByTestId('visitors-all').textContent).toBe('all visits: 1,803');
   });
 
+  it('names a later day without a number "not counted", and keeps it out of both sums', () => {
+    // A day whose answer had visits and no bounce rate: no number, never "every visit engaged".
+    const gap = readVisitors({
+      points: ANSWER.points.map((point, index) =>
+        index === 26 ? { ...point, engaged: null } : point
+      ),
+      engaged_since: dateOf(SINCE_INDEX),
+    });
+    render(<VisitorsTile answer={gap} formatNum={formatNum} />);
+
+    const days = within(
+      screen.getByRole('group', { name: 'visits with a second page or an interaction per day' })
+    ).getAllByRole('img');
+    expect(days[26]).toHaveAccessibleName('2026-11-12: not counted');
+    // 61 + 76 + 80, against 303 + 360 + 614.
+    expect(screen.getByTestId('visitors-header').textContent).toBe(
+      'visits with a second page or an interaction · since 2026-11-10 · 217 total'
+    );
+    expect(screen.getByTestId('visitors-all').textContent).toBe('all visits: 1,277');
+  });
+
   it('explains the word "all" as a hint: what else is in that number', async () => {
     render(<VisitorsTile answer={ANSWER} formatNum={formatNum} />);
 

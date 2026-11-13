@@ -96,7 +96,9 @@ export function VisitorsTile({ answer, formatNum }: VisitorsTileProps) {
                 value: point.engaged ?? 0,
                 description:
                   point.engaged === null
-                    ? since
+                    ? // A day before the counting began says so. A later day without a number
+                      // is one whose answer had no bounce rate.
+                      since && point.date < since
                       ? `not counted before ${since}`
                       : 'not counted'
                     : undefined,

@@ -2697,7 +2697,7 @@ class TestInsightsRouter:
         from datetime import datetime as _dt
         from datetime import timezone as _tz
 
-        frozen_now = _dt(2026, 11, 13, 12, 0, 0, tzinfo=_tz.utc)
+        frozen_now = _dt(2026, 11, 15, 12, 0, 0, tzinfo=_tz.utc)
         captured: dict = {}
 
         class _MockResp:
@@ -2715,6 +2715,8 @@ class TestInsightsRouter:
                         {"dimensions": ["2026-11-11"], "metrics": [0, 0, None]},  # nothing to divide
                         {"dimensions": ["2026-11-12 00:00:00"], "metrics": [515, 526, 87.4]},
                         {"dimensions": ["2026-11-13"], "metrics": [606, 614, 87]},
+                        {"dimensions": ["2026-11-14"], "metrics": [100, 120]},  # a row without the rate
+                        {"dimensions": ["2026-11-15"], "metrics": [90, 95, None]},  # visits, and no rate
                     ]
                 }
 
@@ -2752,19 +2754,44 @@ class TestInsightsRouter:
         # Before the day the bounce rate holds: the visits are there, the engaged ones are not a number.
         assert by_day["2026-11-08"] == {"date": "2026-11-08", "visitors": 264, "visits": 275, "engaged": None}
         assert by_day["2026-11-09"]["engaged"] is None
-        assert by_day["2026-10-17"] == {"date": "2026-10-17", "visitors": 0, "visits": 0, "engaged": None}
+        assert by_day["2026-10-19"] == {"date": "2026-10-19", "visitors": 0, "visits": 0, "engaged": None}
         # From that day on: visits * (100 - bounce) / 100, rounded.
         assert by_day["2026-11-10"] == {"date": "2026-11-10", "visitors": 292, "visits": 303, "engaged": 61}
         assert by_day["2026-11-11"] == {"date": "2026-11-11", "visitors": 0, "visits": 0, "engaged": 0}
         assert by_day["2026-11-12"]["engaged"] == 66
         assert by_day["2026-11-13"] == {"date": "2026-11-13", "visitors": 606, "visits": 614, "engaged": 80}
+        # Visits without a bounce rate: no number, never "every visit was engaged".
+        assert by_day["2026-11-14"] == {"date": "2026-11-14", "visitors": 100, "visits": 120, "engaged": None}
+        assert by_day["2026-11-15"] == {"date": "2026-11-15", "visitors": 90, "visits": 95, "engaged": None}
 
     @pytest.mark.parametrize(
         ("visits", "bounce_rate", "engaged"),
-        [(0, 0, 0), (10, 0, 10), (10, 100, 0), (614, 87, 80), (3, 33, 2), (5, 150, 0), (5, -20, 5)],
-        ids=["no-visit", "none-bounced", "all-bounced", "a-farm-day", "rounded", "above-100", "below-0"],
+        [
+            (0, 0, 0),
+            (0, None, 0),
+            (10, 0, 10),
+            (10, 100, 0),
+            (614, 87, 80),
+            (3, 33, 2),
+            (5, 150, 0),
+            (5, -20, 5),
+            (5, None, None),
+        ],
+        ids=[
+            "no-visit",
+            "no-visit-no-rate",
+            "none-bounced",
+            "all-bounced",
+            "a-farm-day",
+            "rounded",
+            "above-100",
+            "below-0",
+            "visits-without-a-rate",
+        ],
     )
-    def test_engaged_visits_stay_between_none_and_all(self, visits: int, bounce_rate: float, engaged: int) -> None:
+    def test_engaged_visits_stay_between_none_and_all(
+        self, visits: int, bounce_rate: float | None, engaged: int | None
+    ) -> None:
         from api.routers.insights import _engaged_visits
 
         assert _engaged_visits(visits, bounce_rate) == engaged

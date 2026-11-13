@@ -127,8 +127,9 @@ class VisitorPoint(BaseModel):
     `engaged` is the day's visits with a second page or an interaction: the visits Plausible does
     not count as bounced. A visit that bounced is one page and nothing else, which is a reader who
     found what they came for and also what a crawler farm's page load looks like. It is `None` for
-    a day before `ENGAGED_SINCE`. Plausible answers the bounce rate in whole percent, so the number
-    is right to about one in two hundred of the day's visits.
+    a day before `ENGAGED_SINCE`, and for a day whose answer has visits and no bounce rate.
+    Plausible answers the bounce rate in whole percent, so the number is right to about one in two
+    hundred of the day's visits.
     """
 
     date: str  # ISO "YYYY-MM-DD"
@@ -742,14 +743,22 @@ async def get_related_specs(
 # =============================================================================
 
 
-def _engaged_visits(visits: int, bounce_rate: float) -> int:
-    """The visits Plausible did not count as bounced, from its two public numbers."""
+def _engaged_visits(visits: int, bounce_rate: float | None) -> int | None:
+    """The visits Plausible did not count as bounced, from its two public numbers.
+
+    A day without a visit has none. A day with visits and no bounce rate has no such number:
+    a missing rate read as zero would call every one of its visits engaged.
+    """
+    if visits == 0:
+        return 0
+    if bounce_rate is None:
+        return None
     return max(0, min(visits, round(visits * (100 - bounce_rate) / 100)))
 
 
-def _number(value: object) -> float:
-    """A metric as a number; Plausible answers `None` where a day has nothing to divide."""
-    return float(value) if isinstance(value, int | float) and not isinstance(value, bool) else 0.0
+def _number(value: object) -> float | None:
+    """A metric as a number, or `None` for anything else, such as a rate with nothing to divide."""
+    return float(value) if isinstance(value, int | float) and not isinstance(value, bool) else None
 
 
 async def _fetch_plausible_visitors() -> VisitorsResponse:
@@ -801,7 +810,7 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
         return VisitorsResponse(points=[])
 
     # Plausible v2 response: {"results": [{"dimensions": ["YYYY-MM-DD"], "metrics": [visitors, visits, bounce]}, ...]}
-    by_date: dict[str, tuple[int, int, float]] = {}
+    by_date: dict[str, tuple[int, int, float | None]] = {}
     for row in data.get("results", []):
         dims = row.get("dimensions") or []
         metrics = row.get("metrics") or []
@@ -810,16 +819,16 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
         # The time:day dimension can come back as "YYYY-MM-DD" or an ISO datetime —
         # normalize to a plain ISO date so the join with the zero-filled axis works.
         day_str = str(dims[0])[:10]
-        # A row shorter than the three metrics is an answer this code does not know: its
-        # visits stay 0, and with them the engaged visits.
+        # A metric the row lacks, or one that is no number, is no number here either: a count
+        # reads as zero, and a missing bounce rate leaves the day without engaged visits.
         numbers = [_number(value) for value in metrics[:3]]
-        numbers += [0.0] * (3 - len(numbers))
-        by_date[day_str] = (int(numbers[0]), int(numbers[1]), numbers[2])
+        numbers += [None] * (3 - len(numbers))
+        by_date[day_str] = (int(numbers[0] or 0), int(numbers[1] or 0), numbers[2])
 
     points = []
     for offset in range(27, -1, -1):
         day = today - timedelta(days=offset)
-        visitors, visits, bounce_rate = by_date.get(day.isoformat(), (0, 0, 0.0))
+        visitors, visits, bounce_rate = by_date.get(day.isoformat(), (0, 0, None))
         points.append(
             VisitorPoint(
                 date=day.isoformat(),
