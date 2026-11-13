@@ -13,4 +13,4 @@
   came from a search engine in a week, nine were on 151 or older. The rule
   lives in Cloudflare; `infra/cloudflare/README.md` is its written record,
   and `docs/reference/plausible.md` says how to read the dashboard around a
-  farm.
+  farm. (#13087)
