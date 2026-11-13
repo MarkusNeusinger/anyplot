@@ -93,7 +93,7 @@ class TestAdapterInstruction:
 class TestAdapterPromptPerLanguage:
     """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
 
-    PYTHON_SHA256 = "367d018ae3185b695e4cf5f771794b10dd83f18506c31583f9022a5696835e0e"
+    PYTHON_SHA256 = "f54ea739c805cc148d5b1ad8ef93f0495e9884760db1c482c1be5b41f761616a"
     """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
     since 2026-11-01 with the `changes` notes in plain words and in the reply language (19,615 characters), since
     2026-11-02 with a date column on a label role written as labels (20,006 characters), with the plot memory's
@@ -102,7 +102,7 @@ class TestAdapterPromptPerLanguage:
     with the window the brief names for an open computed role (21,260 characters), since 2026-11-09 with the
     plot drawing every row, a change of the rows left to the data step, and jitter without sampling the rows
     (23,155 characters), and since 2026-11-13 with a color the user names drawn as that color and a bound value
-    drawn as it is (24,369 characters)."""
+    drawn as it is (24,574 characters)."""
 
     def test_the_python_adapter_prompt_matches_its_pinned_hash(self) -> None:
         """Golden: the Python libraries' adapters read exactly the pinned prompt. It was the one they read before R
@@ -113,7 +113,7 @@ class TestAdapterPromptPerLanguage:
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
             "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
         )
-        assert len(prompt) == 24_369 and "{{" not in prompt
+        assert len(prompt) == 24_574 and "{{" not in prompt
 
     HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
     """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""
@@ -414,7 +414,12 @@ class TestAColorTheUserNames:
         assert "A color the user names is the user's choice and is drawn as that color" in prompt
         assert 'by a word ("orange", "dark red") or by a value (`#FF8800`)' in prompt
         # A name is written as one fixed value, so the same word gives the same color in all 15 libraries.
-        assert "as the hex value that the name has in CSS (`orange` is `#FFA500`)" in prompt
+        assert "the one CSS gives that color name (`orange` is `#FFA500`" in prompt
+        # CSS has no name for every word: "dark red" is the keyword `darkred`, and a word without a keyword gets the
+        # value a person would read it as, named in `changes` so the user can correct it.
+        assert '"dark red" is the keyword `darkred`, `#8B0000`' in prompt
+        assert "for a word CSS has no name for, the hex value that reads as that color to a person" in prompt
+        assert "Say in `changes` which hex value you drew, so the user can correct it" in prompt
         # JavaScript plots read the palette from the page's tokens and have no list in their code.
         assert "under a name of its own; where the code has a palette list, put it beside the list" in prompt
         assert "Never draw the nearest palette color in its place" in prompt
