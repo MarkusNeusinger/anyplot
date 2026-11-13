@@ -272,6 +272,34 @@ class TestCombinedKey:
         assert (answer["status"], answer["code"], answer["reason"]) == ("error", "combine_choice", "combine_choice")
         assert "whether to sum or to average them" in answer["message"]
 
+    async def test_the_root_cannot_answer_its_own_question_in_the_same_turn(
+        self, client: httpx.AsyncClient, swap_models, backend: FakeBackend
+    ) -> None:
+        """A call stopped for the choice is not retried with one: the turn that was told to ask makes no plot,
+        whatever function its second call names. The answer comes with the user's next message."""
+        script = default_script()
+        script["root"] = [
+            {"call": "plot_pipeline", "args": {}},
+            {"call": "plot_pipeline", "args": {"combine": "mean"}},
+            {"text": QUESTION},
+        ]
+        fake = swap_models("gemini", script)
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, HOURS)
+        await bind_and_confirm(client, sid, LINE_BINDINGS)
+
+        events = await say(client, sid, "plot it")
+
+        assert not any(name == "plot" for name, _ in events) and backend.jobs == []
+        codes = [
+            part.function_response.response["code"]
+            for content in fake.requests[-1].contents
+            for part in content.parts or []
+            if part.function_response is not None and part.function_response.name == "plot_pipeline"
+        ]
+        assert codes == ["combine_choice", "combine_choice"]
+        assert await table_rows(client, sid) == HOURS.strip().splitlines()[1:]
+
     async def test_the_users_sum_is_the_function_of_the_step(
         self, client: httpx.AsyncClient, swap_models, backend: FakeBackend
     ) -> None:

@@ -443,7 +443,8 @@ def pipeline_bound(
     if ledger.summary_turn and not data_confirmed(tool_context):
         return SUMMARY_TURN
     # A button brings no choice (`pipeline.run_args` drops one the root passes with it): only a typed turn names it.
-    chosen = None if ledger.kind == "action" else (arguments or {}).get("combine")
+    # Nor does a second call of a turn whose first one was stopped for it: the root would be answering for the user.
+    chosen = None if ledger.kind == "action" or ledger.choice_asked else (arguments or {}).get("combine")
     if not chosen and combine_is_open(tool_context):
         return COMBINE_CHOICE
     return None
@@ -481,6 +482,8 @@ def refuse_before_run(
     # `load_inputs` finds no reason only on confirmed data: here a data change still under way, whose new version the
     # user has not confirmed yet, or confirmed data whose rows share a key that the call named no function for.
     waits_for: NotReadyReason = "combine_choice" if code == COMBINE_CHOICE else "data_unconfirmed"
+    if code == COMBINE_CHOICE:
+        ledger.choice_asked = True
     result = stop_not_ready(tool_context, ledger, args, view, reason or waits_for)
     refusal: dict[str, Any] = {**tool_error(code), "message": STOP_MESSAGES[code], "reason": result.reason}
     if result.request_kept:
