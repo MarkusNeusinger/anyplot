@@ -1501,11 +1501,12 @@ token budget (`budget`), when the whole service has spent its day budget
 zone), past 10 messages in a minute (`rate_limited`) or 200
 in a UTC day (`daily_limit`), counting typed messages and the page's actions
 alike, or when the session is closed (`session_closed`). The scope check closes
-a session at the third message it reads as an attempt to misuse the service. An
-off-topic question gets the `out_of_scope` refusal and never counts, a
-`needs_data` refusal never counts, and by default neither does an `other_library` answer (a request for
-this plot in another library or language, which points you to the plot's
-catalogue page; it counts when the service sets `AGENT_OTHER_LIBRARY_COUNTS=true`). The
+a session at its third counted refusal. By default only a message it reads as an
+attempt to misuse the service counts. An off-topic question gets the
+`out_of_scope` refusal and never counts, and neither does a `needs_data`
+refusal. An `other_library` answer (a request for this plot in another library
+or language, which points you to the plot's catalogue page) counts only when
+the service sets `AGENT_OTHER_LIBRARY_COUNTS=true`. The counted
 refusal before the closing one ends with a warning sentence ("One more request
 outside this scope will close this chat."). A closed session answers every turn
 with `session_closed`, and its data panel takes no paste (`403 session_closed`);
