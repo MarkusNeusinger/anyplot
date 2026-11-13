@@ -1966,8 +1966,11 @@ def _keep_where(frame: pd.DataFrame, where: Sequence[Condition], carried: _Carri
     if matching == total:
         return frame, f"kept all {_count(total, 'row')}; every one matches {words}"
     kept, dropped = frame[mask].reset_index(drop=True), frame[~mask]
-    line = f"kept {matching} of {_count(total, 'row')} where {words}, {total - matching} dropped"
-    return kept, line + _unvalued_note(dropped, where) + _offsets_note(dropped, kept)
+    head = f"kept {matching} of {_count(total, 'row')} where "
+    tail = f", {total - matching} dropped" + _unvalued_note(dropped, where) + _offsets_note(dropped, kept)
+    # The conditions give way, never the counts: the caller wrote the conditions, and the line's own clip would cut
+    # from the end, where the rows without a value and the amounts below 0 are counted.
+    return kept, head + _clip(words, max(MAX_NOTE_CHARS - len(head) - len(tail), 1)) + tail
 
 
 def _unvalued_note(dropped: pd.DataFrame, where: Sequence[Condition]) -> str:

@@ -5,6 +5,7 @@
     {"op": "sort", "column": "Umsatz", "descending": true},
     {"op": "keep_rows", "n": 2}
   ],
+  "reply_names": ["Basel", "Genf"],
   "locale": "de",
   "spec_id": "bar-basic",
   "tags": ["keep_rows", "top_n", "sort", "tie"]

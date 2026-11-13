@@ -593,6 +593,8 @@ class TestTheRowsToKeep:
         assert "offer the next step, a larger `n` or every row down to that value" in root
         # Which test reaches "down to that value" depends on the direction of the ranking.
         assert "`ge` that value after a descending sort, `le` after an ascending one" in root
+        # Rows without a value tie by having none, and no comparison reaches them.
+        assert "only a larger `n` takes more of them in, since an empty cell matches no comparison" in root
 
 
 class TestOtherInstructions:

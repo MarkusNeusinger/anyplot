@@ -142,6 +142,11 @@ class TestFixtures:
         assert all(any(op["op"] == "keep_rows" and "where" in op for op in item.expected_operations) for item in kept)
         (tie,) = [item for item in cases if "tie" in item.tags]
         assert tie.expected_operations[-1] == {"op": "keep_rows", "n": 2}
+        # The table cannot show which rows the cut left out of the tie, so the reply is asked to name them.
+        assert tie.reply_names == ["Basel", "Genf"] and all(
+            name in (tie.dataset_text or "") for name in tie.reply_names
+        )
+        assert [item.id for item in cases if item.reply_names] == [tie.id]
         wishes = [item for item in cases if item.plot_request]
         assert sorted(item.id for item in wishes) == [
             "de-groesste-zuerst",
@@ -934,6 +939,22 @@ class TestReplyShape:
         talk = CaseResult("s-003", [], [])
         prep.measure_reply(talk, ["Renamed it."], blocked=False)
         assert talk.reply_miss is None  # no summary turn: no count to name
+
+    def test_a_reply_that_leaves_out_what_the_case_asks_it_to_name_is_a_miss(self) -> None:
+        """A top N's table cannot show the rows its cut left out of a tie: only the reply can, so the case asks for
+        their names, and a reply without one misses whatever its shape."""
+        named = CaseResult("t-001", [], [])
+        told = "Die 2 umsatzstärksten sind Bern und Köln. Köln teilt sich 800 mit Basel und Genf, die nicht dabei sind."
+        prep.measure_reply(named, [told], blocked=False, names=["Basel", "Genf"])
+        assert named.reply_miss is None
+
+        silent = CaseResult("t-002", [], [])
+        prep.measure_reply(silent, ["Ich habe die 2 umsatzstärksten Städte behalten."], blocked=False, names=["Basel"])
+        assert silent.reply_miss == "unnamed"
+
+        half = CaseResult("t-003", [], [])
+        prep.measure_reply(half, ["Basel fällt weg. Passt das?"], blocked=False, names=["Basel", "Genf"])
+        assert half.reply_miss == "unnamed" and half.closing_question  # the missing name is the miss that counts
 
     @pytest.mark.parametrize(
         ("text", "invitation"),

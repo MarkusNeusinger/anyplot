@@ -800,6 +800,23 @@ class TestKeepRowsThatMatch:
         assert cells(prepared, 0) == ["Bern", "Köln", "Basel", "Genf"]
         assert prepared.changes == ["kept 4 of 6 rows where Umsatz ≥ 800, 2 dropped; 1 of them has no Umsatz"]
 
+    def test_long_conditions_give_way_to_the_counts(self) -> None:
+        """The line's clip cuts from the end, where the rows without a value are counted: three long conditions
+        would have pushed that count out, so the conditions are shortened instead."""
+        stadt, land, umsatz = (f"{name} {'x' * 50}" for name in ("Stadt", "Land", "Umsatz"))
+        text = f"{stadt},{land},{umsatz}\nBern,CH,1200\nKöln,DE,800\nWien,AT,300\nGraz,AT,\n"
+        where = [
+            {"column": stadt, "test": "ne", "value": "y" * 60},
+            {"column": land, "test": "ne", "value": "z" * 60},
+            {"column": umsatz, "test": "ge", "value": 800},
+        ]
+
+        (line,) = prepare(text, keep(*where)).changes
+
+        assert line.startswith(f"kept 2 of 4 rows where {stadt} ≠ '")
+        assert line.endswith(f"…, 2 dropped; 1 of them has no {umsatz}")
+        assert len(line) == MAX_NOTE_CHARS
+
     def test_each_tested_column_is_counted_once_and_a_test_for_empty_cells_never(self) -> None:
         text = "k,a,b\nw,1,\nx,,2\ny,,\nz,5,6\n"
         both = [{"column": "a", "test": "ge", "value": 5}, {"column": "a", "test": "le", "value": 9}]
