@@ -466,6 +466,11 @@ class TestEveryRowDrawn:
         # No question where the plot type itself says it: the slices of a pie add up.
         assert "the server sums them and asks nothing" in root
         assert "by the function the user chose where the plot type leaves it open (`combine`)" in root
+        # The answer to a stopped plot continues that plot. The data step is for a wish made before any plot was
+        # asked for: taken there, the answer would change the data and leave the plot to another tap.
+        assert "When a `plot_pipeline` call was stopped for this choice (`combine_choice`)" in root
+        assert "call `plot_pipeline` with `combine`, which combines the rows and plots in one step, never" in root
+        assert "Otherwise, when the user says which, or asks for one value per key and names the function" in root
         # The stopped call's own answer tells the root the same, and that a kept request needs no repeating.
         message = STOP_MESSAGES[COMBINE_CHOICE]
         assert "Ask the user in one short question whether to sum or to average them" in message
