@@ -72,11 +72,16 @@ def missing_from(line: str, model: type[BaseModel], seen: set[type[BaseModel]]) 
 
 
 def test_a_line_that_leaves_something_out_is_caught() -> None:
-    """The check itself: a `drop_rows` line without the "any of" list and two tests fails."""
+    """The check itself: a `drop_rows` line without the "any of" list and three tests fails."""
     (drop_rows,) = [model for model in MODELS if op_name(model) == "drop_rows"]
     line = '  - `{"op": "drop_rows", "where": [{"column": ..., "test": ..., "value": ...}]}` (`eq`, `ne`, `lt`, `gt`)'
 
-    assert set(missing_from(line, drop_rows, set())) == {"test value contains", "test value is_missing", "field values"}
+    assert set(missing_from(line, drop_rows, set())) == {
+        "test value contains",
+        "test value is_missing",
+        "test value not_missing",
+        "field values",
+    }
 
 
 def test_every_model_has_its_line() -> None:

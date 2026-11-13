@@ -247,7 +247,9 @@ Values in conditions are never evaluated: a condition compares text with text fo
 text column, numbers for a numeric column (the value is a dot-decimal number, which
 the model may also pass as a JSON number), moments for a datetime column (the value is
 an ISO date or date-time), `true`/`false` for a boolean column. A missing cell matches
-only `is_missing`. `contains` searches the cell's canonical text, case-sensitively.
+only `is_missing`, and `not_missing` holds for every other cell: rows can only be dropped,
+so "the rows where X is missing" is a `drop_rows` of the ones where it is not, which had
+no form before 2026-11-11. `contains` searches the cell's canonical text, case-sensitively.
 `values` in place of `value` is an "any of" list (1 to 20) for `eq` and `contains`: the
 condition holds when the cell equals one of them or contains one, and each value is read
 as `value` is.
@@ -362,7 +364,7 @@ SHOWN_ANY_VALUES = 3  # of an "any of" list, the values a change line quotes bef
 FALLBACK_GROUPS = 3  # the largest groups of a `classify` fallback that its change line names
 _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 
-Test = Literal["eq", "ne", "contains", "is_missing", "gt", "lt"]
+Test = Literal["eq", "ne", "contains", "is_missing", "not_missing", "gt", "lt"]
 ANY_OF_TESTS: frozenset[str] = frozenset(("eq", "contains"))
 """The tests an "any of" list (`Condition.values`) takes: a cell equal to one of the values, or one that contains one."""
 TargetType = Literal["number", "datetime", "text"]
@@ -729,7 +731,7 @@ class _Strict(BaseModel):
 
 
 class Condition(_Strict):
-    """One test on one column; `value` is required for every test but `is_missing`.
+    """One test on one column; `value` is required for every test but `is_missing` and `not_missing`.
 
     A JSON number as the value (`{"test": "gt", "value": 100}`) is read as its text,
     so a numeric comparison needs no quoting. `values` in place of `value` is an "any
@@ -1264,7 +1266,49 @@ def _drop_rows(frame: pd.DataFrame, op: DropRows, carried: _Carried) -> tuple[pd
     if dropped == len(frame):
         raise PrepareError("empty_result", "every row matches the conditions; no row would remain")
     kept = frame[~mask].reset_index(drop=True)
-    return kept, f"dropped {_count(dropped, 'row')} where {' and '.join(clauses)}"
+    line = f"dropped {_count(dropped, 'row')} where {' and '.join(clauses)}"
+    return kept, line + _offsets_note(frame[mask], kept)
+
+
+MAX_OFFSET_COLUMNS = 2
+"""How many columns the note of `_offsets_note` names."""
+
+
+def _adds_up_below_zero(cells: pd.Series) -> bool:
+    """Whether a number column's cells add up to less than 0. Whole numbers are summed as Python integers: pandas'
+    Int64 sum wraps around silently past 2**63, which would turn a large negative total into a positive one."""
+    if is_integer_dtype(cells.dtype):
+        return sum(int(value) for value in cells.dropna()) < 0
+    return float(cells.sum()) < 0
+
+
+def _offsets_note(dropped: pd.DataFrame, kept: pd.DataFrame) -> str:
+    """What a `drop_rows` line adds when a number column is below 0 only in the rows it dropped, while rows that stay
+    are above 0, and the dropped rows together are below 0 there: those rows took amounts off (returns,
+    cancellations, credits), so the column's total over the rows kept went up, which a count of dropped rows does
+    not say. Dropped rows that add up to 0 or more took nothing off on balance, and get no note.
+
+    In the persona round of 2026-11-11 the user had the cancelled invoices taken off. Their quantities were negative,
+    so the total rose from the net to the gross figure, and the root called the higher one right when the user
+    doubted it. The note states the sign, which holds for every such table, where a sum of each column would be a
+    figure for every drop.
+    """
+    names = [
+        str(column)
+        for column in kept.columns
+        if _kind(kept[column]) == "number"
+        and bool(dropped[column].lt(0).fillna(False).any())
+        and _adds_up_below_zero(dropped[column])
+        and not bool(kept[column].lt(0).fillna(False).any())
+        and bool(kept[column].gt(0).fillna(False).any())
+    ][:MAX_OFFSET_COLUMNS]
+    if not names:
+        return ""
+    one = len(names) == 1
+    return (
+        f"; {' and '.join(names)} {'is' if one else 'are'} below 0 only in rows that were dropped, so "
+        f"{'its total' if one else 'their totals'} over the rows kept {'is' if one else 'are'} higher than before"
+    )
 
 
 def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -3460,16 +3504,17 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
         for item in condition.values:
             hit |= _matches(series, condition.model_copy(update={"value": item, "values": None}), with_time)
         return hit
-    if test == "is_missing":
+    if test in ("is_missing", "not_missing"):
         if value is not None:
-            raise PrepareError("invalid_operation", f"the condition is_missing on column '{column}' takes no value")
-        return series.isna()
+            raise PrepareError("invalid_operation", f"the condition {test} on column '{column}' takes no value")
+        return series.isna() if test == "is_missing" else series.notna()
     if value is None:
         raise PrepareError("invalid_operation", f"the condition {test} on column '{column}' needs a value")
     if not value:
         raise PrepareError(
             "invalid_operation",
-            f"the condition {test} on column '{column}' needs a value; is_missing finds empty cells",
+            f"the condition {test} on column '{column}' needs a value; is_missing finds empty cells, not_missing "
+            "the others",
         )
     if test == "contains":
         return _bools(_texts(series, with_time).str.contains(value, regex=False))
@@ -3501,6 +3546,8 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
 def _describe(condition: Condition, kind: Kind) -> str:
     if condition.test == "is_missing":
         return f"{condition.column} is missing"
+    if condition.test == "not_missing":
+        return f"{condition.column} is not missing"
     if condition.values is not None:
         # `Kategorie is 'Miete' or 'Strom'`, `Text contains 'REWE', 'EDEKA', 'LIDL' or 2 more`.
         quoted = condition.test == "contains" or kind == "text"

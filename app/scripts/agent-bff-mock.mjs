@@ -1387,8 +1387,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('message', {
           text:
             session.language === 'de'
-              ? 'Die x-Achse zeigt die Spalte, die du x zugeordnet hast; die Markergröße ist das Argument s= von ax.scatter, Zeile 18 von plot.py.'
-              : 'The x axis uses the column you bound to x; the marker size is the s= argument of ax.scatter, line 18 of plot.py.',
+              ? 'Die x-Achse zeigt die Spalte, die du x zugeordnet hast; **die Markergröße** ist das Argument `s=` von `ax.scatter`, Zeile 18 von `plot.py`.'
+              : 'The x axis uses the column you bound to x; **the marker size** is the `s=` argument of `ax.scatter`, line 18 of `plot.py`.',
         });
         return;
       }

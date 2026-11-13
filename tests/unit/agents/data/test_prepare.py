@@ -297,6 +297,67 @@ class TestDropRows:
         assert len(rows(prepared)) == 6
         assert prepared.changes == ["dropped 1 row where Anteil is missing"]
 
+    def test_not_missing_keeps_the_rows_where_a_cell_is_missing(self) -> None:
+        """Rows can only be dropped, so "the rows where Anteil is missing" drops the ones where it is not."""
+        prepared = prepare(SALES, drop("Anteil", "not_missing"))
+
+        assert cells(prepared, 1) == ["Katze"] and cells(prepared, 2) == [""]
+        assert prepared.changes == ["dropped 5 rows where Anteil is not missing"]
+        assert "takes no value" in failure(SALES, drop("Anteil", "not_missing", "x"))[1]
+
+    def test_a_drop_of_the_only_rows_below_zero_says_that_the_total_went_up(self) -> None:
+        """Persona round of 2026-11-11: the cancelled invoices held negative quantities, so taking them off raised
+        the total from the net to the gross figure, and nothing said so."""
+        invoices = "Beleg,Art,Menge,Preis\nR1,A,10,4.5\nR2,A,6,4.5\nR3,C,-6,4.5\nR4,A,3,2\nR5,C,-1,2\n"
+
+        prepared = prepare(invoices, drop("Art", "eq", "C"))
+
+        assert prepared.changes == [
+            "dropped 2 rows where Art = 'C'; Menge is below 0 only in rows that were dropped, so its total over the "
+            "rows kept is higher than before"
+        ]
+
+    @pytest.mark.parametrize(
+        ("table", "condition"),
+        [
+            # A row below 0 stays as well: the sign does not tell the dropped rows from the kept ones.
+            ("Art,Menge\nA,10\nA,-2\nC,-6\n", drop("Art", "eq", "C")),
+            # Nothing below 0 was dropped.
+            ("Art,Menge\nA,10\nA,-2\nC,6\n", drop("Art", "eq", "C")),
+            # No row that stays is above 0: a column of losses, not of amounts that were taken off.
+            ("Art,Menge\nA,0\nA,0\nC,-6\n", drop("Art", "eq", "C")),
+            # The dropped rows hold no value there.
+            ("Art,Menge\nA,10\nA,4\nC,\n", drop("Art", "eq", "C")),
+        ],
+    )
+    def test_any_other_drop_says_only_what_it_dropped(self, table: str, condition: dict[str, Any]) -> None:
+        assert prepare(table, condition).changes == ["dropped 1 row where Art = 'C'"]
+
+    def test_whole_numbers_past_the_int64_range_keep_their_sign(self) -> None:
+        """pandas' Int64 sum of these two wraps around to a positive number; the dropped rows are far below 0."""
+        table = f"Art,Menge\nA,10\nA,4\nC,{-(2**63)}\nC,-1\n"
+
+        (line,) = prepare(table, drop("Art", "eq", "C")).changes
+
+        assert line.endswith("so its total over the rows kept is higher than before")
+
+    def test_dropped_rows_that_add_up_to_more_than_zero_took_nothing_off(self) -> None:
+        """One dropped row is below 0, but the dropped rows together are above it: the total over the rows kept is
+        lower than before, so a note that it is higher would be false."""
+        table = "Art,Menge\nA,10\nA,4\nC,-5\nC,50\n"
+
+        assert prepare(table, drop("Art", "eq", "C")).changes == ["dropped 2 rows where Art = 'C'"]
+
+    def test_the_note_names_two_columns_at_most(self) -> None:
+        table = "Art,Menge,Betrag,Rabatt\nA,10,45,1\nA,6,27,2\nC,-6,-27,-1\n"
+
+        (line,) = prepare(table, drop("Art", "eq", "C")).changes
+
+        assert line.endswith(
+            "; Menge and Betrag are below 0 only in rows that were dropped, so their totals over the rows kept are "
+            "higher than before"
+        )
+
     def test_a_missing_cell_matches_no_comparison(self) -> None:
         kept_by_ne = prepare(SALES, drop("Anteil", "ne", "7"))
         kept_by_contains = prepare(SALES, drop("Anteil", "contains", "%"))

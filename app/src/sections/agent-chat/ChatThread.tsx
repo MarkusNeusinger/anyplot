@@ -113,12 +113,39 @@ import { colors, typography } from 'src/theme';
 /** A passage of a reply in backticks, on one line: code, a column or a button the reply names. */
 const INLINE_CODE = /`([^`\n]+)`/g;
 
-/** A reply's text with its passages in backticks set off as code, never with the backticks. */
+/**
+ * A passage of a reply between two pairs of asterisks, on one line: the assistant's Markdown for
+ * strong text, which the page showed as asterisks. It opens after the line's start or a character
+ * that is no letter, digit or asterisk, and closes before one, with no space inside its ends: so a
+ * product such as `2**10` or `a ** b` stays as written, and so does a pair inside a word. A single
+ * asterisk inside stays a character of the passage (`**Revenue = Quantity * Price**`).
+ */
+const STRONG =
+  /(^|[^\p{L}\p{N}*])\*\*([^\s*](?:(?:[^*\n]|\*(?!\*))*[^\s*])?)\*\*(?![\p{L}\p{N}*])/gmu;
+
+/** A passage of a reply outside backticks, with its strong passages set off and the asterisks gone. */
+function strongParts(text: string, keyBase: number): ReactNode[] {
+  const parts: ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(STRONG)) {
+    const start = match.index + match[1].length;
+    if (start > last) parts.push(text.slice(last, start));
+    parts.push(<strong key={`strong-${keyBase}-${start}`}>{match[2]}</strong>);
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+
+/**
+ * A reply's text with its passages in backticks set off as code, never with the backticks, and its
+ * strong passages set off outside them: asterisks inside code stay code.
+ */
 function ReplyText({ text }: { text: string }) {
   const parts: ReactNode[] = [];
   let last = 0;
   for (const match of text.matchAll(INLINE_CODE)) {
-    if (match.index > last) parts.push(text.slice(last, match.index));
+    if (match.index > last) parts.push(...strongParts(text.slice(last, match.index), last));
     parts.push(
       <Box component="code" key={match.index} sx={inlineCodeSx}>
         {match[1]}
@@ -126,7 +153,7 @@ function ReplyText({ text }: { text: string }) {
     );
     last = match.index + match[0].length;
   }
-  parts.push(text.slice(last));
+  parts.push(...strongParts(text.slice(last), last));
   return <>{parts}</>;
 }
 

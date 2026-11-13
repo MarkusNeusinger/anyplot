@@ -52,6 +52,7 @@ from .session_state import (
     DATASET_TOP,
     DATASET_VERSION,
     PENDING_CLEARED,
+    USER_BOUND,
     CatalogueSnapshot,
     initial_state,
 )
@@ -146,6 +147,8 @@ class IngestedDataset:
             DATASET_COPIED_FROM: None,
             **PENDING_CLEARED,
             CARRY: None,
+            # The bindings of a new paste are the parse's: what the user set by hand was for the data it replaces.
+            USER_BOUND: None,
         }
 
 

@@ -95,7 +95,7 @@ when unset. Lint gate before commit, both halves:
 
 ```bash
 uv run --extra dev ruff check . && uv run --extra dev ruff format --check .
-uv run --extra typecheck mypy api core --pretty
+uv run --extra typecheck --extra agents mypy api core agents --pretty
 ```
 
 ## Gotchas

@@ -119,27 +119,37 @@ MAX_DATA_CODE_CALLS = 2
 
 @dataclass(frozen=True, slots=True)
 class TurnCap:
-    """How many calls of a tool one turn may make (`calls`), and the code of the refusal after them."""
+    """How many calls of a tool one turn may make (`calls`), the code of the refusal after them, and how many calls
+    that answered an error the turn may make on top (`spare`)."""
 
     calls: int
     code: ErrorCode
+    spare: int = 0
 
 
 TURN_CAPS: dict[str, TurnCap] = {
     PREPARE_TOOL: TurnCap(2, "too_many_prepare_calls"),
     GENERATE_TOOL: TurnCap(2, "too_many_generate_calls"),
-    QUERY_TOOL: TurnCap(3, "too_many_query_calls"),
+    QUERY_TOOL: TurnCap(3, "too_many_query_calls", spare=3),
     DATA_CODE_TOOL: TurnCap(MAX_DATA_CODE_CALLS, "too_many_data_runs"),
     PIPELINE_TOOL: TurnCap(1, "one_pipeline_per_turn"),
 }
 """The per-turn caps, each counted from the turn's allowed calls (`RequestLedger.calls_of`), so a refused call never
 counts: a data call and one retry after its error, a third question about the data, and one plot run, the "one repair
-round" bound. The tools without a cap here are bounded by the turn's model calls."""
+round" bound. The tools without a cap here are bounded by the turn's model calls.
+
+A question about the data that answered an error is no question answered: up to three of them come on top of the
+three (`spare`), so six calls bound the turn. In the persona round of 2026-11-11 a count of missing values took three
+calls that each answered an error (`invalid_operation` twice, `unknown_column`), and the fourth, the one that would
+have worked, met the cap. The data writers keep their count: their cap is "a call and one retry after its error"."""
 CAP_MESSAGE = (
-    "This turn has used up its {tool} calls ({calls} per turn), so this call did not run. Answer with what the turn's "
-    "results hold, and say plainly what could not be done."
+    "No further call of this kind runs in this turn, so this call did not run. Answer with what the turn's results "
+    "hold. Say plainly what you could not find out or do, in the user's own terms: the question or the change, never "
+    "a tool, a call or a limit."
 )
-"""The message of every cap refusal: fixed text and the server's own tool name, never a word of the user's."""
+"""The message of every cap refusal: fixed text, never a word of the user's. It names neither the tool nor the count:
+the first wording did ("has used up its query_data calls (3 per turn)"), and the root passed that on to the user
+("the query tool hit its call limit")."""
 CAP_CODES = frozenset(cap.code for cap in TURN_CAPS.values())
 DATA_CHANGED: ErrorCode = "data_changed_this_turn"
 SUMMARY_TURN: ErrorCode = "summary_turn"
@@ -369,9 +379,17 @@ def tool_error(code: ErrorCode) -> dict[str, Any]:
 
 
 def capped(ledger: RequestLedger, name: str) -> ErrorCode | None:
-    """The cap refusal of a call of `name` when the turn has made all the calls its cap allows (`TURN_CAPS`)."""
+    """The cap refusal of a call of `name` when the turn has made all the calls its cap allows (`TURN_CAPS`): its
+    allowed calls, less the ones that answered an error within the cap's `spare`. A call still under way counts."""
     cap = TURN_CAPS.get(name)
-    return cap.code if cap is not None and ledger.calls_of(name) >= cap.calls else None
+    if cap is None:
+        return None
+    errored = sum(
+        1
+        for call in ledger.tool_calls
+        if call.tool == name and call.verdict == TOOL_ALLOWED and call.outcome == "error"
+    )
+    return cap.code if ledger.calls_of(name) - min(errored, cap.spare) >= cap.calls else None
 
 
 def changed_data(ledger: RequestLedger) -> bool:
