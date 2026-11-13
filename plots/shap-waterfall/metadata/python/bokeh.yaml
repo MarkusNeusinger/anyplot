@@ -2,12 +2,12 @@ library: bokeh
 language: python
 specification_id: shap-waterfall
 created: '2026-05-07T11:47:53Z'
-updated: '2026-05-07T12:05:50Z'
+updated: '2026-11-13T02:38:09Z'
 generated_by: claude-sonnet
-workflow_run: 25493326395
+workflow_run: 43352514240
 issue: 5237
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/bokeh/plot-light.html
@@ -15,41 +15,42 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-wate
 quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance — all SHAP waterfall features implemented correctly including
-    connector lines, base/final reference lines, semantic color coding, and value
-    labels
-  - 'Excellent data quality: realistic credit default scenario with plausible SHAP
-    magnitudes and interpretable feature names'
-  - Clean, reproducible code following KISS principles with proper theme-adaptive
-    chrome in both light/dark renders
-  - Connector dashed lines between bar endpoints elegantly guide the eye through the
-    cumulative flow
-  - Both renders pass theme-readability checks with no dark-on-dark failures
+  - 'Cumulative chain computed with cumsum/shift in pandas and drawn as hbar from
+    a ColumnDataSource: every segment starts where its neighbor ends, running unbroken
+    from 0.35 to 0.28'
+  - Features ordered by |SHAP| with the largest at the top via a reversed categorical
+    y range
+  - Base value (dashed soft ink) and prediction (solid ink, bold label) reference
+    lines with labels in dedicated headroom, readable in both themes
+  - Signed value labels inside every bar, legible even for the ±0.02 segments
+  - Theme tokens threaded through all chrome; Imprint red/blue identical in both renders
   weaknesses:
-  - Prediction annotation at bottom is clipped at canvas boundary — placed with y_offset=-28
-    below last feature bar; increase bottom margin or flip offset above bar
-  - 'Right-side canvas whitespace: bars extend to ~55% of horizontal width; tighten
-    x_range around actual data extent'
-  - No spine removal — top and right spines present; set p.outline_line_color=None
-    and keep left/bottom axes explicit
-  - 'VQ-07 partial: bar colors use Okabe-Ito positions 2+3 not starting with brand
-    #009E73; spec requires semantic red/blue which is used, but a legend explaining
-    vermillion=positive/blue=negative is missing'
+  - 'VQ-03 (both): the dashed connector segments between bars are drawn at line_width=2
+    with alpha 0.7 in INK_SOFT and read as hairlines on a 3200 px canvas, worst on
+    the dark surface, → about line_width 3-4 at alpha 0.9 (+1 to +2 px). Likely cause:
+    p.segment line_width=2, line_alpha=0.7.'
+  - 'VQ-05 (both): the longest y tick labels (''Employment Duration'', ''Debt-to-Income
+    Ratio'') start 3-5 px from the left canvas edge, and the y range padding leaves
+    an empty band of about 100 px below the last bar → at least 30 px left margin
+    (+25 px) and a smaller bottom padding. Likely cause: min_border_left=40 with y_range.range_padding=0.25
+    applied to both ends.'
+  - 'Suggestion: a HoverTool listing the feature, its SHAP value and the running total
+    would add value to the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Credit Default Risk · shap-waterfall · bokeh · anyplot.ai" in bold dark ink (#1A1A17) at top-left; feature names on y-axis in gray (#4A4A44); x-axis tick labels in gray (#4A4A44); x-axis label "Cumulative Default Probability" in dark ink — all readable
-      Data: 12 horizontal waterfall bars — Okabe-Ito vermillion (#D55E00) for positive SHAP contributions, Okabe-Ito blue (#0072B2) for negative; near-white bold labels inside bars; dashed connector lines between bar endpoints; dashed vertical baseline at 0.35 and solid vertical line at final prediction 0.28; base value and prediction annotations visible
-      Legibility verdict: PASS — caveat: "Prediction: 0.28" annotation at bottom edge is partially clipped
+      Background: warm off-white #FAF8F1, no outline box.
+      Chrome: bold dark title 'Credit Default Risk · shap-waterfall · python · bokeh · anyplot.ai' (~63 % of width); y tick labels (12 feature names) in soft gray; x ticks 0.2-0.4 and italic axis title 'Cumulative Default Probability' in dark ink; faint vertical x grid. All readable.
+      Data: 12 horizontal waterfall bars, Imprint blue #4467A3 for negative and Imprint red #AE3030 for positive SHAP, ordered by |SHAP| (Credit Score -0.18 at top, Education Level -0.02 at bottom); bold near-white signed value labels inside each bar; thin dashed connectors; dashed base line at 0.35 labeled 'Base value: 0.35' to its right, solid dark prediction line at 0.28 labeled bold 'Prediction: 0.28' to its left, both labels above the first bar.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light cream (#F0EFE8); feature names and tick labels in medium gray (#B8B7B0); all text light-colored and readable; no dark-on-dark failures observed; reference lines adapt to lighter ink
-      Data: Bar colors are identical to light render (same vermillion/blue — only chrome flips); bar value labels remain visible as near-white on colored bars
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+      Background: warm near-black #1A1A17.
+      Chrome: title in light cream, tick labels and axis title light gray; no dark-on-dark text. Prediction line flips to light ink, base line light dashed.
+      Data: bar colors identical to the light render; near-white value labels readable on both bar colors; connectors very faint.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -57,52 +58,54 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title 28pt, axis label 22pt, tick/bar
-          labels 18pt; readable in both themes'
+        comment: 'Title 50pt, axis title 42pt, ticks 34/30pt, bar labels 28pt bold:
+          all readable in both themes and in the 400 px thumbnail'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Feature names and bar labels clear; prediction annotation (y_offset=-28
-          below last bar) is clipped at canvas bottom edge
+        comment: 'No text collisions: reference labels sit in the headroom above the
+          first bar, value labels fit inside every bar'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
-        passed: true
-        comment: Bars well-sized; connector dashed lines present but very subtle
+        passed: false
+        comment: Bars clear in both themes; the dashed connector segments are hairline-faint,
+          especially on the dark surface (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Vermillion and blue are CVD-safe; white bar labels have strong contrast
-          on colored bars
+        comment: Imprint red vs blue, high luminance contrast, CVD-safe; near-white
+          labels contrast with both bar colors
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: Right side has notable empty space (bars extend to ~55% of horizontal
-          width); bottom annotation clipped
+        passed: false
+        comment: Correct 3200x1800 canvas; y tick labels run to within a few px of
+          the left canvas edge and an empty band of about 100 px sits below the last
+          bar (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Cumulative Default Probability on x-axis descriptive; feature names
-          serve as y-axis labels
+        comment: '''Cumulative Default Probability'' is descriptive (probability,
+          unitless); feature names on y'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17); chrome tokens applied; bar
-          colors are Okabe-Ito pos 2+3 following spec semantic requirement, but do
-          not start with brand #009E73'
+        comment: 'Positive #AE3030 and negative #4467A3 are Imprint colors in the
+          spec''s semantic red/blue mapping; #FAF8F1 / #1A1A17 backgrounds, chrome
+          flips correctly'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -110,22 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default: connector lines, semantic color encoding, distinct
-          dash patterns for reference lines, bold prediction label; lacks spine removal'
+        comment: 'Beyond baseline: bold near-white value labels inside bars, deliberate
+          type hierarchy between bold INK prediction and soft-ink base label'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: x-grid subtle (10% alpha), y-grid removed; no spine removal, 4-sided
-          outline present
+        comment: Outline removed, y grid off, x grid at 10 % alpha; reference labels
+          placed in purpose-made headroom on the outer side of each line
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Cumulative flow clear; two-color semantic encoding; reference lines
-          anchor base/final; missing legend for color convention
+        comment: Prediction emphasised as a solid INK line with bold label against
+          a muted dashed base line, giving the eye the end point first
     spec_compliance:
       score: 15
       max: 15
@@ -135,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal SHAP waterfall with cumulative bar segments
+        comment: Correct horizontal SHAP waterfall
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: cumulative bars, color coding, base/final reference
-          lines, value labels, connector lines, annotations'
+        comment: 'All Notes and C1-C5 met: cumulative chain, |SHAP| ordering, red/blue,
+          labeled base/prediction lines, value on each bar, connectors'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Features on y-axis ordered by |SHAP| magnitude, cumulative probability
-          on x-axis, all 12 features visible
+        comment: Bars span exactly start->end of each cumulative step; x range covers
+          the chain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains shap-waterfall · bokeh · anyplot.ai pattern; no legend
-          required for semantic 2-color scheme
+        comment: Title 'Credit Default Risk · shap-waterfall · python · bokeh · anyplot.ai'
+          correct; legend N/A (semantic two-color mapping explained by signed labels)
     data_quality:
       score: 15
       max: 15
@@ -166,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both positive and negative contributions, wide magnitude range (-0.18
-          to +0.15), full waterfall structure demonstrated
+        comment: Positive and negative contributions, large and small magnitudes,
+          chain doubles back
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit default risk model; realistic domain-specific feature names;
-          neutral business context
+        comment: Credit default model for one applicant, neutral and plausible feature
+          names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: base_value=0.35, final=0.28; SHAP magnitudes plausible for individual-instance
-          explanation
+        comment: Base 0.35, final 0.28 = 0.35 + sum(SHAP) = 0.35 - 0.07 checked in
+          code and on the axis; no Check values in spec
     code_quality:
       score: 10
       max: 10
@@ -191,36 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → cumulative computation → plot → save; no
-          functions or classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded; fully deterministic
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; standard lib and plotting dependencies only
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; sys.path manipulation is documented best practice
-          for this environment
+        comment: cumsum/shift for the chain, no hand-rolled loop
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and screenshots as plot-{THEME}.png via Selenium;
-          correct bokeh 3.x INLINE pattern
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current bokeh 3.x API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -228,23 +228,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses hbar, segment, text with categorical y_range, Span model, INLINE
-          resources — solid Bokeh patterns
+        comment: ColumnDataSource with column-name glyph fields, FactorRange from
+          a list, Range1d, Span annotations, hbar/segment/text glyphs
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Span model and INLINE resources are distinctively Bokeh; p.text with
-          categorical y-coordinates is Bokeh-specific; could add HoverTool or ColumnDataSource
+        comment: Span annotation models for the reference lines and the self-contained
+          INLINE HTML; no hover tool
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-13T02:34:26Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
+  - layer-composition
   - html-export
-  patterns: []
+  patterns:
+  - columndatasource
   dataprep:
   - cumulative-sum
   styling:
