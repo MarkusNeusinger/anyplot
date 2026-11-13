@@ -463,11 +463,11 @@ Both maps name a client by its own token: a crawler's name, a headless
 browser, an HTTP library, or an empty user agent. Neither matches a browser's
 user agent, whatever its version, because a farm that wears one shares it with
 real visitors, and nginx would drop their events without anyone seeing it.
-Such a farm's traffic from hosting networks is challenged at the Cloudflare
-edge instead, where a person who gets caught sees the challenge and can pass
-it. Its traffic through residential addresses is deliberately left alone,
-because those addresses are shared with people, so that share can still reach
-the dashboard. See "Security rules" in
+Such a farm is challenged at the Cloudflare edge instead, where a person who
+gets caught sees the challenge and can pass it: by network for four hosting
+providers, and since 2026-11-13 by user agent for the desktop Chrome versions
+the farm wears and few people still use. What passes both rules can still
+reach the dashboard. See "Security rules" in
 [`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#a-managed-challenge-for-hosting-network-asns).
 `tests/unit/api/test_analytics_event_proxy.py` fails if a browser's user agent
 loses its events, and it carries the shapes farms have worn.
@@ -488,11 +488,27 @@ farm's user agents, Windows 10 Chrome 100 to 139. It was removed the same day:
 - The entry kept dropping the events of real visitors on a pinned old Chrome,
   about 1.8 % of visits (37 of 2,069 in the 28 days before 2026-11-08).
 
-The one mechanism against the farm is now the Cloudflare Managed Challenge for
-four hosting-network ASNs: Tencent (132203 and 45090), Leaseweb (394380), and
-Huawei Cloud (136907), with verified bots excluded. The farm's residential
-share is deliberately left alone. See
+From that day the one mechanism against the farm was the Cloudflare Managed
+Challenge for four hosting-network ASNs: Tencent (132203 and 45090), Leaseweb
+(394380), and Huawei Cloud (136907), with verified bots excluded. The farm's
+residential share, then about 25 to 30 dashboard visitors a day, was left
+alone. See
 [A Managed Challenge for hosting-network ASNs](../../infra/cloudflare/README.md#a-managed-challenge-for-hosting-network-asns).
+
+That share grew. From 2026-11-10 to 2026-11-13 the dashboard counted 188, 225,
+433, and 488 visitors a day on desktop Chrome 100 to 155, at a 93 % bounce
+rate and visits of 0 to 3 seconds, against 82 to 128 other visitors a day.
+Since 2026-11-13 a second Managed Challenge answers a desktop user agent with
+Chrome 151 or older, which is where the farm sits and where few people still
+are. See
+[A Managed Challenge for outdated desktop Chrome](../../infra/cloudflare/README.md#a-managed-challenge-for-outdated-desktop-chrome).
+
+To read the dashboard around a farm, filter by the interaction goals (Goal is
+`copy_code`, `download_image`, `interactive_open`, `search`,
+`search_no_results`, `feedback_submitted`, `agent_open`,
+`agent_plot_rendered`, `ui_feature`, `nav_click`, or `Outbound Link: Click`).
+A farm that only loads pages triggers none of them: that count stayed at 15 to
+22 visitors a day from 2026-11-09 to 2026-11-13.
 
 ---
 

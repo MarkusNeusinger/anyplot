@@ -488,13 +488,13 @@ the documented safe state.
 
 ## Security rules (Pro, since 2026-11-09)
 
-> **Status (2026-11-09):** the managed rules, the transform rule, the smoke
-> bypass, and the Managed Challenge for four hosting-network ASNs are live, and
-> the crawler block rule is deleted, so no crawler is blocked at the edge. The
-> ASN challenge is the one mechanism against the crawler farm: the nginx
-> user-agent entry that #12860 added for it was removed the same day. Whether
-> Super Bot Fight Mode challenges "definitely automated" traffic is an open
-> owner decision.
+> **Status (2026-11-13):** the managed rules, the transform rule, the smoke
+> bypass, and two Managed Challenges against the crawler farm are live: one for
+> four hosting-network ASNs (2026-11-09) and one for outdated desktop Chrome
+> (2026-11-13). The crawler block rule is deleted, so no crawler is blocked at
+> the edge. The nginx user-agent entry that #12860 added for the farm was
+> removed on 2026-11-09. Whether Super Bot Fight Mode challenges "definitely
+> automated" traffic is an open owner decision.
 
 On 2026-11-09 the `anyplot.ai` zone moved to the Cloudflare Pro plan, and the
 rules in this section were applied through the Cloudflare API with the scoped
@@ -513,6 +513,9 @@ automation by its own token, as nginx's analytics shield does, and never
 matches a browser's user agent: a person it caught would vanish from the
 numbers without anyone seeing it
 ([The analytics shield](../../docs/reference/plausible.md#the-analytics-shield)).
+A Managed Challenge may match one, as the rule for
+[outdated desktop Chrome](#a-managed-challenge-for-outdated-desktop-chrome)
+does: the person it catches sees the challenge and passes it.
 
 ### Managed rules (WAF)
 
@@ -587,6 +590,7 @@ The smoke bypass is the first rule of the custom ruleset.
 | Smoke bypass | `6a18892a4acf4461a38afe4e12ef6c00` | Skip, phase `http_request_sbfm` | the site hosts with the right `X-Smoke-Token` (see [The smoke bypass](#the-smoke-bypass)) | active since 2026-11-09 |
 | Skip Bot Fight Mode for api | `56271bc6b54d4e1897af4447c72e425f` | Skip, phase `http_request_sbfm` | `http.host eq "api.anyplot.ai"`, so Super Bot Fight Mode never challenges API and MCP clients | active |
 | Hosting-network challenge | `34be33ecb34f4c21935ca75e3f9c0d3a` | Managed Challenge | four hosting-network ASNs on the site hosts, verified bots excluded (see [A Managed Challenge for hosting-network ASNs](#a-managed-challenge-for-hosting-network-asns)) | active since 2026-11-09 |
+| Outdated desktop Chrome challenge | `7b86c77995c44d63b6bc681443b62322` | Managed Challenge | a desktop user agent with Chrome 151 or older on the site hosts, verified bots excluded (see [A Managed Challenge for outdated desktop Chrome](#a-managed-challenge-for-outdated-desktop-chrome)) | active since 2026-11-13 |
 | Block public agent chat | `56aee2fcb6b547bb914a59bbc4da5e12` | Block | the public agent chat | disabled |
 
 The AI Crawl Control block rule is gone. On 2026-11-09 it was first narrowed
@@ -705,14 +709,84 @@ Managed Challenge (rule version 2, which added the last two ASNs at 20:44 UTC):
   Tencent's second ASN joined the same day after the farm's Singapore wave,
   which came 38 % from Huawei Cloud and 18 % from Tencent in a sample of 60
   addresses.
-- **What it leaves alone.** The farm's residential share, deliberately:
-  residential addresses are shared with people, so a rule there would
-  challenge visitors. `not cf.client.bot` keeps verified bots out too.
+- **What it leaves alone.** The farm's residential share: residential
+  addresses are shared with people, so a rule on those networks would
+  challenge visitors whatever their browser. Since 2026-11-13 the rule in the
+  next section reaches that share by its user agent instead.
+  `not cf.client.bot` keeps verified bots out too.
 - **Why here and not in nginx.** A person on one of these networks, on a VPN
   or a cloud desktop, sees the challenge and can pass it. A user-agent entry in
   nginx drops a person's events without anyone seeing it. The one #12860 added
   for this farm, Windows 10 Chrome 100 to 139, was removed the same day in
   favour of this rule, and the farm had already moved to Chrome 148 to 150.
+
+### A Managed Challenge for outdated desktop Chrome
+
+Since 2026-11-13, custom rule `7b86c77995c44d63b6bc681443b62322` in the same
+custom ruleset, placed after the hosting-network challenge, answers this
+expression with a Managed Challenge (rule version 2, which moved the cut-off
+from Chrome 153 to Chrome 151 at 23:12 UTC, seven minutes after version 1):
+
+```text
+(http.host in {"anyplot.ai" "www.anyplot.ai" "python.anyplot.ai"}) and not cf.client.bot and (http.user_agent contains "Windows NT" or http.user_agent contains "Macintosh" or http.user_agent contains "X11; Linux") and (http.user_agent contains "Chrome/10" or http.user_agent contains "Chrome/11" or http.user_agent contains "Chrome/12" or http.user_agent contains "Chrome/13" or http.user_agent contains "Chrome/14" or http.user_agent contains "Chrome/150." or http.user_agent contains "Chrome/151.") and not (http.user_agent contains "HeadlessChrome" or http.user_agent contains "compatible;" or http.user_agent contains "Mobile" or http.user_agent contains "Edg/" or http.user_agent contains "OPR/" or http.user_agent contains "Vivaldi" or http.user_agent contains "YaBrowser")
+```
+
+In words: a site host, no verified bot, a desktop system in the user agent, a
+Chrome version from 100 to 151, and none of the tokens that mark something
+other than plain Chrome.
+
+- **Why.** The hosting-network rule leaves the farm's residential share
+  alone. On 2026-11-09 that share was about 25 to 30 dashboard visitors a day.
+  From 2026-11-10 to 2026-11-13, Plausible counted 188, 225, 433, and 488
+  visitors a day on Chrome 100 to 155, at a 93 % bounce rate and visits of 0
+  to 3 seconds, against 82 to 128 other visitors a day. At the edge, pages
+  were requested about 2,300 times a day with these user agents. About 1,000
+  of those requests were already challenged. Google Cloud (AS396982), which
+  isn't in the hosting-network rule, sent 398 of them, and most of the rest
+  came from residential providers and small hosting networks.
+- **Why by user agent.** No network rule reaches residential addresses
+  without challenging the people behind them. The farm's Chrome versions are
+  the one thing it doesn't share with most visitors, and a person who does
+  share them sees the challenge and passes it
+  ([The principle](#the-principle)). The hosting-network rule shows what the
+  farm does with a challenge: of 880 issued in the 24 hours to 2026-11-13
+  23:05 UTC, 15 were solved.
+- **The cut-off.** Chrome has shipped a new major version every two weeks
+  since Chrome 153 (2026-08-26), and every four weeks before. Of 208 desktop
+  Chrome visitors who came from a search engine in the seven days to
+  2026-11-13, 50 % were on Chrome 157, 35 % on 156, 6 % on 155, and 3 % on
+  154. Nine were on 151 or older, and five of those had the farm's own
+  pattern, one page and no time on it. Of the 1,314 farm-pattern visitors on
+  Chrome 154 or older from 2026-11-10 to 2026-11-13, 1,289 were on 151 or
+  older and 21 on 154. The owner chose "the most used version minus five" on
+  2026-11-13, so Chrome 152 and newer pass. A cut-off at 152 or 153 catches
+  the same 98 % of the farm and challenges more people.
+- **What it leaves alone.**
+  - Phones and tablets (`Mobile`), where an in-app browser often carries an
+    older Chrome.
+  - Browsers built on Chromium that name themselves: Edge, Opera, Vivaldi, and
+    Yandex Browser.
+  - A client that says it is headless (`HeadlessChrome`). That is what
+    `scripts/site-smoke.mjs` sends, and nginx's analytics shield already drops
+    such a client's events by that token.
+  - Crawlers with a Chrome token in their user agent (`compatible;`, and no
+    desktop system token), and verified bots.
+  - `api.anyplot.ai`.
+- **The list is fixed.** The Pro plan has no regular expressions in rule
+  expressions, so the versions are `contains` terms: `Chrome/10` to
+  `Chrome/14` cover 100 to 149, and 150 and 151 are named. As Chrome moves on,
+  fewer people are left on these versions, so the rule gets laxer by itself
+  and never stricter. It needs a change only when the farm moves to newer
+  versions. Following Chrome's current version automatically would take a
+  scheduled job with a token that can edit firewall rules, and no such job
+  exists.
+- **Checked on 2026-11-13.** Requests for `/scatter-basic` with a browser's
+  user agent: Chrome 116, 148, 150, and 151 on Windows and macOS get `403`
+  with `cf-mitigated: challenge`. Chrome 152, 153, 154, and 157, Android
+  Chrome 150, Edge 150, and headless Chrome 149 get `200`. With the cut-off
+  still at 153, Opera on Chromium 148, Googlebot's desktop user agent,
+  Firefox, Safari, and Chrome 148 on the API host got `200` too. The site
+  smoke passed with the rule in place.
 
 ### Verify the rules
 
