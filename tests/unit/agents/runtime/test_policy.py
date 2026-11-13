@@ -524,8 +524,10 @@ class TestOtherInstructions:
         # its neighbour, another chart in another library (out_of_scope); 19 since 2026-10-29: a question about R
         # code (in scope), since the session's code can be any served library's; 20 since 2026-11-01: a request for
         # example data in one word (in scope), which the data panel sends to the chat; 21: whether another plot type
-        # would suit the data (in scope), which the root answers as planned but not possible yet.
-        assert 6 <= len(examples) <= 21
+        # would suit the data (in scope), which the root answers as planned but not possible yet; 25 since
+        # 2026-11-11: getting the plot out of the page, in German and in English, and a figure the user states (in
+        # scope), with their neighbour, how the other software works (out_of_scope).
+        assert 6 <= len(examples) <= 25
         assert {verdict for _, verdict in examples} == {
             "in_scope",
             "out_of_scope",
@@ -533,6 +535,26 @@ class TestOtherInstructions:
             "attack",
             "other_library",
         }
+
+    def test_getting_the_plot_out_and_a_figure_the_user_states_are_in_scope(self) -> None:
+        """Persona round of 2026-11-11: "how do I get this into my PowerPoint" was refused as other software, and a
+        value questioned with the user's own figure beside it as data to fetch."""
+        rubric = policy.scope_rubric()
+        examples = dict(re.findall(r"^\| (.+) \| `(\w+)` \|$", rubric, flags=re.MULTILINE))
+
+        assert "how to save, download, copy, print or share the finished plot" in rubric
+        assert "also when it names other software or a device" in rubric
+        assert examples["Wie bekomme ich das Bild in meine PowerPoint?"] == "in_scope"
+        assert examples["How do I get the picture onto my phone?"] == "in_scope"
+        assert examples["How do I create a chart in PowerPoint?"] == "out_of_scope"
+        assert "A figure the user states themselves" in rubric and "the figure stands in the message" in rubric
+        assert "as a reference line, a target or a threshold" in rubric
+        # The rule stays with a figure the user brings: its first wording ("needs_data only when the message wants
+        # figures it does not state") made the judge refuse a question about the table's own entries (scope eval of
+        # 2026-11-13, `in-079`).
+        assert "This rule is about a figure the user brings" in rubric
+        assert "wants figures it does not state" not in rubric
+        assert examples["Why does the plot show 7.6 for Basel? My own report says 7.2."] == "in_scope"
 
     def test_example_data_is_in_scope_and_only_real_figures_need_data(self) -> None:
         """Owner request of 2026-11-01: "Beispieldaten" in the data field goes to the chat, where the root makes it up."""

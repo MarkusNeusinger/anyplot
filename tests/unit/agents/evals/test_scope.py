@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import re
 from collections import Counter
 from pathlib import Path
 from types import SimpleNamespace
@@ -103,6 +104,30 @@ class TestCaseFile:
         assert len(cases) >= 6 and all(item.expected == "in_scope" and item.group == "inscope" for item in cases)
         assert {item.lang for item in cases} >= {"de", "en", "fr", "es", "it"}
         assert not any("my data" in item.text.lower() or "meinen daten" in item.text.lower() for item in cases)
+
+    def test_getting_the_plot_out_of_the_page_is_in_scope_and_other_software_is_not(self) -> None:
+        """Persona round of 2026-11-11: "how do I get this into my PowerPoint" and "onto my phone", asked in German,
+        were refused `out_of_scope`, one of them as the refusal before the chat closes. The contrast cases keep a
+        question about the other software itself, and text to send with the plot, out of scope."""
+        cases = load_cases(DEFAULT_CASES)
+        export = [item for item in cases if "export" in item.tags]
+        contrast = [item for item in cases if "export_contrast" in item.tags]
+
+        assert len(export) >= 8 and all(item.expected == "in_scope" and item.group == "inscope" for item in export)
+        assert sum(item.lang == "de" for item in export) >= 4 and any(item.last_turns for item in export)
+        assert len(contrast) >= 3 and all(item.expected == "out_of_scope" for item in contrast)
+
+    def test_a_figure_the_user_states_is_in_scope_and_one_to_fetch_is_not(self) -> None:
+        """Persona round of 2026-11-11: a question whether a value is right, with the user's own figure from their
+        spreadsheet beside it, was refused `needs_data`. The figure stands in the message; a figure the message only
+        points at (a file, an office, "the current" rate) is still data to fetch."""
+        cases = load_cases(DEFAULT_CASES)
+        stated = [item for item in cases if "own_figure" in item.tags]
+        contrast = [item for item in cases if "own_figure_contrast" in item.tags]
+
+        assert len(stated) >= 6 and all(item.expected == "in_scope" and item.group == "inscope" for item in stated)
+        assert {item.lang for item in stated} >= {"de", "en"} and all(re.search(r"\d", item.text) for item in stated)
+        assert len(contrast) >= 3 and all(item.expected == "needs_data" for item in contrast)
 
     def test_a_filter_on_the_users_table_is_in_scope_and_one_on_an_outside_source_is_not(self) -> None:
         """Live miss of 2026-10-15: keeping orders from a named place read as data to fetch. Its contrast names a
