@@ -93,7 +93,7 @@ class TestAdapterInstruction:
 class TestAdapterPromptPerLanguage:
     """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
 
-    PYTHON_SHA256 = "f54ea739c805cc148d5b1ad8ef93f0495e9884760db1c482c1be5b41f761616a"
+    PYTHON_SHA256 = "a1d2438763b414a28c060bacfea3ef90f405a88e4fc30e69429816bfe629cd65"
     """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
     since 2026-11-01 with the `changes` notes in plain words and in the reply language (19,615 characters), since
     2026-11-02 with a date column on a label role written as labels (20,006 characters), with the plot memory's
@@ -101,8 +101,8 @@ class TestAdapterPromptPerLanguage:
     column on two roles selected once, and the pandas form of that rule (21,194 characters), since 2026-11-08
     with the window the brief names for an open computed role (21,260 characters), since 2026-11-09 with the
     plot drawing every row, a change of the rows left to the data step, and jitter without sampling the rows
-    (23,155 characters), and since 2026-11-13 with a color the user names drawn as that color and a bound value
-    drawn as it is (24,574 characters)."""
+    (23,155 characters), and since 2026-11-13 with a color the user names (a word as the palette's nearest color,
+    the color itself on request, a value as given) and a bound value drawn as it is (25,448 characters)."""
 
     def test_the_python_adapter_prompt_matches_its_pinned_hash(self) -> None:
         """Golden: the Python libraries' adapters read exactly the pinned prompt. It was the one they read before R
@@ -113,7 +113,7 @@ class TestAdapterPromptPerLanguage:
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
             "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
         )
-        assert len(prompt) == 24_574 and "{{" not in prompt
+        assert len(prompt) == 25_448 and "{{" not in prompt
 
     HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
     """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""
@@ -403,36 +403,62 @@ class TestAdapterPromptPerLanguage:
 
 
 class TestAColorTheUserNames:
-    """A color the user names is drawn as that color, by a word or by a value: the palette is the choice for every
-    color the user did not name. "Orange" had come out as the palette's nearest entry, an ochre, while a hex value
-    was taken as given."""
+    """A color the user names is the user's choice, in three steps: a color word is drawn as the palette's nearest
+    color, and the reply says so and asks; the color itself is drawn once the user asks for it; a value is drawn
+    exactly as given. "Orange" had come out as the palette's ochre without a word, and the user had no way to the
+    orange itself."""
 
     @pytest.mark.parametrize("language", ["python", "r", "julia", "javascript"])
-    def test_every_language_draws_the_named_color(self, language: str) -> None:
+    def test_a_color_word_is_the_palettes_nearest_color_and_the_notes_say_so(self, language: str) -> None:
+        prompt = policy.adapter_prompt(language)
+        rule = prompt.split("A color the user names is the user's choice", 1)[1]
+
+        # The palette's colors carry names, so "the nearest" has one answer in all 15 libraries.
+        names = ("green", "purple", "blue", "ochre", "red", "cyan", "rose", "lime")
+        for name, value in zip(names, IMPRINT, strict=True):
+            assert f"{name} `{value}`" in rule
+        assert "A color word, in whatever language" in rule
+        assert "is drawn as the palette color nearest to it (orange as ochre, pink as rose)" in rule
+        # The first series is the palette's green already: the two groups trade colors, and none is drawn twice.
+        assert "a group that had that color takes the one the named group had" in rule
+        # The note is what lets the reply ask, and the user find the way to the color itself.
+        assert "Say in `changes` which palette color you drew, with its hex value" in rule
+        assert "that it is the palette's nearest to the color the user named" in rule
+
+    @pytest.mark.parametrize("language", ["python", "r", "julia", "javascript"])
+    def test_the_color_itself_is_drawn_when_the_user_asks_for_it(self, language: str) -> None:
         prompt = policy.adapter_prompt(language)
 
-        assert "A color the user names is the user's choice and is drawn as that color" in prompt
-        assert 'by a word ("orange", "dark red") or by a value (`#FF8800`)' in prompt
+        assert "Draw the color itself, never the palette's, in three cases" in prompt
+        # Not every library reads every notation, so a value is written as hex.
+        assert "the user gives a value (`#FF8800`, or the same in another notation)" in prompt
+        assert "drawn exactly as given and written as its hex value" in prompt
+        assert "makes clear that the palette's color is not what the user wants" in prompt
+        assert "or the palette has no color near the word (black, white, grey)" in prompt
         # A name is written as one fixed value, so the same word gives the same color in all 15 libraries.
         assert "the one CSS gives that color name (`orange` is `#FFA500`" in prompt
         # CSS has no name for every word: "dark red" is the keyword `darkred`, and a word without a keyword gets the
         # value a person would read it as, named in `changes` so the user can correct it.
         assert '"dark red" is the keyword `darkred`, `#8B0000`' in prompt
         assert "for a word CSS has no name for, the hex value that reads as that color to a person" in prompt
-        assert "Say in `changes` which hex value you drew, so the user can correct it" in prompt
+        assert "say in `changes` which hex value you drew" in prompt
         # JavaScript plots read the palette from the page's tokens and have no list in their code.
         assert "under a name of its own; where the code has a palette list, put it beside the list" in prompt
-        assert "Never draw the nearest palette color in its place" in prompt
 
-    def test_the_root_hands_the_color_on_as_the_user_named_it(self) -> None:
+    def test_the_root_hands_the_color_on_and_asks_about_the_palettes_color(self) -> None:
         root = policy.root_instruction()
 
-        assert "colors (the Imprint palette by itself, and any color the user names, as that color)" in root
+        assert "colors (the Imprint palette by itself, and any color the user names)" in root
         assert "colors within the Imprint palette" not in root
         assert 'goes into the `change_request` as the user named it ("orange bars", "the line in #FF8800")' in root
         # A color asked for before the first plot, or while the data waits, is handed on the same way.
         assert "for a first plot, a change and a request kept with `keep_plot_request` alike" in root
-        assert "never put a palette color in its place" in root
+        assert "The plot draws a color word as the palette's nearest color" in root
+        assert "ask whether that is fine or the user wants the color itself; a yes changes nothing" in root
+        # The wish for the color itself has to outlast the turn, or the next run draws the palette's again.
+        assert "hand that on as the user said it, also in the `remember` text" in root
+        assert "A value is drawn exactly as given, with no question" in root
+        assert "Never put another color in the request yourself" in root
         assert "never tell the user that only palette colors are possible" in root
 
 
