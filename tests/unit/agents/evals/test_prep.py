@@ -39,6 +39,7 @@ from agents.evals.prep import (
     run_cases,
     score,
     score_from_version,
+    score_plot_request,
     verdict_of,
 )
 from agents.main import Runtime
@@ -120,8 +121,31 @@ class TestFixtures:
         # inline list of pairs, the owner's live cases in invented data. And the change request that the pair list
         # read as new data the same day (`change_request`): the root changes no data for it. Since 2026-11-11, one
         # with thousands dots and a footnote mark on one cell (`footnote_mark`): `set_type` with a decimal comma
-        # reads both columns, where a detour through `strip` and `replace` had lost a digit.
-        assert len(cases) == 107
+        # reads both columns, where a detour through `strip` and `replace` had lost a digit. Since 2026-11-13, an
+        # order of the plot's marks and a figure shown with the plot go to the plot (`plot_request`): seven cases
+        # ask for the plot alone or beside a data change, and three name the table or its rows, which stay a `sort`.
+        assert len(cases) == 114
+        wishes = [item for item in cases if item.plot_request]
+        assert sorted(item.id for item in wishes) == [
+            "de-groesste-zuerst",
+            "de-hard-kette-gesamtzeile",
+            "de-sortieren-absteigend",
+            "de-summe-in-legende",
+            "en-hard-messy-export",
+            "en-mean-as-line",
+            "en-order-bars-biggest-first",
+            "en-order-categories-named",
+            "en-total-in-title",
+            "en-two-operations",
+        ]
+        assert all("plot_request" in item.tags for item in wishes)
+        # A wish for the plot never comes with a `sort` of the table, and three of them change the data as well.
+        assert not any(op.get("op") == "sort" for item in wishes for op in item.expected_operations)
+        assert sum(1 for item in wishes if item.expected_operations) == 3
+        assert sum(1 for item in wishes if "extra_figure" in item.tags) == 3
+        named = [item for item in cases if "table_named" in item.tags]
+        assert sorted(item.id for item in named) == ["de-tabelle-sortieren", "en-hard-rename-filter-sort"]
+        assert all(item.expected_operations[-1]["op"] == "sort" and not item.plot_request for item in named)
         assert sorted(item.id for item in cases if "layout" in item.tags) == [
             "de-wunsch-achsen-bis",
             "en-summary-inline-pairs",
@@ -1053,12 +1077,19 @@ class TestRun:
                 if operation is not None:
                     formula = {key: value for key, value in operation.items() if key != "op"}
                     calls.append({"call": "generate_data", "args": formula})
+            if item.plot_request:
+                # The order or the figure beside the data change: kept for the plot, as the root's rule has it.
+                calls.append({"call": "keep_plot_request", "args": {"change_request": "largest first"}})
             root_turns.append([*calls, {"text": "Done: 4 rows."}])
         swap_models("anthropic-vertex", script_for(*root_turns))
 
         results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
 
-        failed = [(result.id, result.table_miss, result.failed_calls) for result in results if not result.match]
+        failed = [
+            (result.id, result.table_miss, result.failed_calls, result.plot_request_miss)
+            for result in results
+            if not result.match
+        ]
         assert failed == []
         assert all(result.ops_exact for result in results)
 
@@ -1157,6 +1188,43 @@ class TestRun:
         score_from_version(result, expected, current=2)
 
         assert result.version_miss is miss and result.match is not miss
+
+    @pytest.mark.parametrize(
+        ("calls", "wanted", "miss"),
+        [
+            (["keep_plot_request"], True, False),
+            (["prepare_data", "keep_plot_request"], True, False),  # a data change, and the order kept for the plot
+            (["plot_pipeline"], True, False),  # run on the plot the session has
+            (["prepare_data"], True, True),  # the wish went to the table
+            ([], True, True),
+            (["prepare_data"], False, False),  # no expectation, no score
+        ],
+    )
+    def test_the_plot_request_score(self, calls: list[str], wanted: bool, miss: bool) -> None:
+        result = CaseResult("p", [], [], match=True, tool_calls=calls)
+
+        score_plot_request(result, wanted)
+
+        assert result.plot_request_miss is miss and result.match is not miss
+
+    def test_a_missed_plot_request_is_counted_and_named(self) -> None:
+        wish = PrepCase(
+            id="p-001",
+            dataset_text=HOURS,
+            message="biggest first",
+            expected_operations=[],
+            locale="en",
+            plot_request=True,
+        )
+        missed = CaseResult("p-001", [], [], match=True, ops_exact=True, tool_calls=["get_dataset_profile"])
+        score_plot_request(missed, wish.plot_request)
+
+        scored = score([wish], [missed])
+
+        assert scored["summary"]["plot_request_misses"] == 1
+        assert [(item["id"], item["plot_request_miss"]) for item in scored["misses"]] == [("p-001", True)]
+        assert scored["misses"][0]["tool_calls"] == ["get_dataset_profile"]
+        assert "miss, no plot request" in prep.table([wish], [missed])
 
     def test_a_named_gap_is_the_roots_answer_and_no_failed_call(self, services: Services, swap_models) -> None:
         """`unsupported_operation` is what the root asked for: compared like an operation, never a failure."""

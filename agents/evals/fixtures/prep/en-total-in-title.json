@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Category,Amount\nRent,1200\nFood,460\nTransport,180\nLeisure,240\n",
+  "message": "Show the total amount in the title.",
+  "expected_operations": [],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["extra_figure", "plot_request"],
+  "plot_request": true
+}
