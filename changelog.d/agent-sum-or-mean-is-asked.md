@@ -10,3 +10,4 @@
   combined or drawn until then, and a wish sent with the plot request is
   kept for that plot. Plot types whose marks add up by what they are, such
   as a pie or a stacked bar, are summed without a question, as before.
+  (#13085)
