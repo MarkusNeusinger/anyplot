@@ -364,14 +364,38 @@ class TestSetLanguageTool:
             "de",
         )
 
-    async def test_the_replies_alone_keep_the_first_plot_in_the_language_it_would_have_had(self) -> None:
-        """Before any plot the plot follows the session language, so `replies` stores the one it resolves to now."""
-        context = tool_context(opened(**language_delta("de", "offer")), "inv-lang-11")
+    async def test_before_the_first_plot_the_plot_follows_the_new_reply_language(self) -> None:
+        """A user who asks for German answers before any plot gets a German first plot: `replies` stores no plot
+        language while the session has no plot. A stored one would pin the first plot to the language the session
+        started in, and a German title the user typed would come back translated into English."""
+        context = tool_context(opened(), "inv-lang-11")
 
-        await set_language("English", context, applies_to="replies")
+        result = await set_language("Deutsch", context, applies_to="replies")
+
+        assert result == {"status": "ok", "source": "chosen", "changed": True, "plot_outdated": False}
+        assert PLOT_LANGUAGE not in context.state
+        view = read_session(context.state)
+        assert view is not None and (view.language, plot_language(view, None)) == ("de", "de")
+
+    async def test_before_the_first_plot_a_chosen_plot_language_stays(self) -> None:
+        """The plot's text was asked for by itself first: a later request for the replies leaves that choice."""
+        context = tool_context(opened(), "inv-lang-13")
+        await set_language("English", context, applies_to="plot")
+
+        await set_language("fr", context, applies_to="replies")
 
         view = read_session(context.state)
-        assert view is not None and (view.language, plot_language(view, None)) == ("en", "de")
+        assert view is not None and (view.language, view.plot_language_choice) == ("fr", "en")
+        assert plot_language(view, None) == "en"
+
+    async def test_a_plot_of_another_library_keeps_its_language_too(self, services: Services) -> None:
+        """The session has a plot, in whatever library: the plot language is stored as it resolves now."""
+        context = tool_context(opened(), "inv-lang-14")
+        services.versions.add("s1", rendered(1, "seaborn", "en"))
+
+        await set_language("de", context, applies_to="replies")
+
+        assert (context.state[LANGUAGE], context.state[PLOT_LANGUAGE]) == ("de", "en")
 
     async def test_an_unknown_target_writes_nothing(self) -> None:
         context = tool_context(opened(), "inv-lang-12")
