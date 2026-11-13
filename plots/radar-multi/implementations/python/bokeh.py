@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-multi: Multi-Series Radar Chart
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-07
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 77/100 | Updated: 2026-11-13
 """
 
 import os
