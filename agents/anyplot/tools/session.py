@@ -511,7 +511,8 @@ async def prepare_data(
 
     Each operation is an object with "op" and its fields, column names exactly as the profile lists them:
     rename (column, name); drop_columns (columns); drop_rows (where: conditions on single columns that must all hold,
-    each {column, test, value}, or with values: a list of which any one may match, for test eq or contains);
+    each {column, test, value}, or with values: a list of which any one may match, for test eq or contains; test is
+    eq|ne|contains|is_missing|not_missing|gt|lt|ge|le);
     set_type (column, type number|datetime|text, date_format, decimal); aggregate (by, column or columns: several
     value columns, how sum|mean|count|min|max|first|last, period hour|day|week|month|quarter|year; first and last
     take a group's first and last value, by time within a period of a date key); sort (column, descending); pivot_longer
@@ -538,8 +539,10 @@ async def prepare_data(
     {"q": "Quantity", "p": "Price"} for q * p); diff (name, column, order, within, lag; adds the change of column from
     the row lag places before, default 1, in the order of a number or date column order); rolling (name, column, how
     mean|sum, window, order, within; adds the mean or sum over window rows, each row and the ones before it); blank
-    (columns, where; empties the cells of columns in the rows where the conditions hold, the rows stay); keep_rows (n;
-    keeps the first n rows in their current order: the top 10 by revenue is a sort descending, then keep_rows 10);
+    (columns, where; empties the cells of columns in the rows where the conditions hold, the rows stay); keep_rows (n
+    or where, one of the two; n keeps the first n rows in their current order: the top 10 by revenue is a sort
+    descending, then keep_rows 10; where keeps the rows for which the conditions hold: only some categories, only a
+    period as ge its start and le its end);
     unsupported
     (family fill_values|edit_cells|add_rows|combine_tables|text_pattern|time_window|other; alone, for a change no
     operation can make: it changes nothing and answers unsupported_operation with a fixed message to send). Steps
@@ -636,7 +639,7 @@ async def query_data(
     """Answer a question about the user's data without changing it: the operations are applied to a copy and the first rows of the result come back as a small table; nothing is stored, and the data, its version and its confirmation stay as they are.
 
     operations: zero to five operations of the same set as prepare_data, applied in order (keep only some rows with
-    drop_rows on the others, such as test ne on the year asked about; a top N is a sort with limit; a share, a percent
+    keep_rows and where, such as test eq on the year asked about; a top N is a sort with limit; a share, a percent
     change or an index is a derive, a change from the row before a diff, another formula a compute; a total or a mean
     per group an aggregate). columns: the columns to return, at most 8
     (default: the first 8). limit: the rows to return, 1 to 25 (default 10). from_version: the version to read,

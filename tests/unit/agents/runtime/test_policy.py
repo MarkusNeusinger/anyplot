@@ -566,6 +566,33 @@ class TestEveryRowDrawn:
         assert "only for jitter, never to sample the rows" in line and "subsampling" not in line
 
 
+class TestTheRowsToKeep:
+    """The rows that stay are named as the user named them: a selection said as the negation of each condition is a
+    silently wrong selection when one negation is wrong. And a top N whose cut falls among equal values says so."""
+
+    def test_the_root_names_the_rows_to_keep_and_never_their_opposite(self) -> None:
+        root = policy.root_instruction()
+
+        assert "one call takes `n` or `where`, never both" in root
+        assert "whenever the user names the rows to keep, call it with what the user named" in root
+        assert "never a `drop_rows` with the opposite test" in root
+        # A period is its first and its last day, since a date without a time means the whole day.
+        assert '"only January 2024" is `ge` `2024-01-01` and `le` `2024-01-31` on the date column' in root
+        assert "a date without a time means the whole day" in root
+        # A question keeps its rows the same way.
+        assert "Keep the rows asked about with `keep_rows` and `where`" in root
+        assert "by dropping the others" not in root
+
+    def test_the_root_says_what_the_count_alone_would_hide(self) -> None:
+        root = policy.root_instruction()
+
+        assert "says how many dropped rows had no value in a tested column, which is why they left: say so" in root
+        assert "says when the cut of a top N falls among rows with the same value" in root
+        assert "since which of them stayed was no choice of the user" in root
+        # The cut stays at N: the way to more rows is the user's next message, never a second call of the turn.
+        assert "offer the next step, a larger `n` or every row down to that value" in root
+
+
 class TestOtherInstructions:
     def test_reviewer_has_checklist_theme_check_and_style_guide(self) -> None:
         text = policy.reviewer_instruction()

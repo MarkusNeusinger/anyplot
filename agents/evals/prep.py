@@ -246,7 +246,7 @@ SET_OPERATIONS: dict[str, str] = {
 """Per operation, the list field whose order carries no meaning (compared as a set); a condition list is sorted by
 `_sorted_conditions`, and an "any of" list of values in any condition is a set too. An `aggregate` names `columns`
 only for two or more value columns, whose order is only the order of the result's columns."""
-CONDITION_OPERATIONS = frozenset({"drop_rows", "blank"})
+CONDITION_OPERATIONS = frozenset({"drop_rows", "blank", "keep_rows"})
 """The operations whose `where` is one list of conditions that must all hold."""
 COMPUTE_PROBE_ROWS = 8
 """The rows of invented values two `compute` expressions are compared on (`comparison_key`)."""
@@ -452,7 +452,7 @@ def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> 
         data = operation.model_dump(exclude_none=True)
         if data["op"] == "set_type" and data.get("decimal") == decimal:
             data.pop("decimal")
-        if data["op"] in CONDITION_OPERATIONS:
+        if data["op"] in CONDITION_OPERATIONS and "where" in data:  # a `keep_rows` with `n` has none
             data["where"] = _sorted_conditions(data["where"])
         elif data["op"] == "classify":  # the rules keep their order (the first that holds wins), their conditions not
             for rule in data["rules"]:
@@ -813,7 +813,7 @@ def describe(line: str) -> str:
     if op == "unsupported":
         return f"unsupported {data['family']}"
     if op == "keep_rows":
-        return f"keep_rows {data['n']}"
+        return f"keep_rows {_conditions(data['where'])}" if data.get("where") else f"keep_rows {data['n']}"
     if op == "sort":
         return f"sort {data['column']} {'desc' if data.get('descending') else 'asc'}"
     if op == "pivot_longer":

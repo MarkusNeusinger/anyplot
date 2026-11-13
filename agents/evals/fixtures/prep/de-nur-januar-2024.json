@@ -1,0 +1,16 @@
+{
+  "dataset_text": "Zeitpunkt,Betrag\n2023-12-28T09:15:00,40\n2024-01-03T11:40:00,25\n2024-01-17T08:05:00,60\n2024-01-31T18:30:00,15\n2024-02-02T10:00:00,80\n",
+  "message": "Ich brauche nur die Zeilen vom Januar 2024.",
+  "expected_operations": [
+    {
+      "op": "keep_rows",
+      "where": [
+        {"column": "Zeitpunkt", "test": "ge", "value": "2024-01-01"},
+        {"column": "Zeitpunkt", "test": "le", "value": "2024-01-31"}
+      ]
+    }
+  ],
+  "locale": "de",
+  "spec_id": "line-basic",
+  "tags": ["keep_rows", "keep_where", "period"]
+}

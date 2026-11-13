@@ -736,6 +736,225 @@ class TestKeepRows:
         with pytest.raises(ValidationError):
             OPERATIONS.validate_python([{"op": "keep_rows", "n": n}])
 
+    @pytest.mark.parametrize(
+        "fields",
+        [
+            {},
+            {"n": 2, "where": [{"column": "Stadt", "test": "eq", "value": "Bern"}]},
+            {"where": []},
+            {"where": [{"column": "Stadt", "test": "eq", "value": "Bern"}] * 4},
+        ],
+    )
+    def test_it_takes_the_first_n_or_the_rows_that_match_and_never_both(self, fields: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([{"op": "keep_rows", **fields}])
+
+
+CITIES = "Stadt,Land,Umsatz\nBern,CH,1200\nKöln,DE,800\nBasel,CH,800\nGenf,CH,800\nWien,AT,300\nGraz,AT,\n"
+
+
+def keep(*where: dict[str, Any]) -> dict[str, Any]:
+    return {"op": "keep_rows", "where": list(where)}
+
+
+def top(n: int, column: str = "Umsatz") -> list[dict[str, Any]]:
+    return [{"op": "sort", "column": column, "descending": True}, {"op": "keep_rows", "n": n}]
+
+
+class TestKeepRowsThatMatch:
+    """A selection said positively. `drop_rows` could only say it as the negation of each condition: "only Bern and
+    Wien" had no form at all, and a wrong negation is a silently wrong selection."""
+
+    def test_the_rows_of_some_categories(self) -> None:
+        prepared = prepare(CITIES, keep(any_of("Stadt", "eq", "Bern", "Wien")))
+
+        assert rows(prepared) == ["Stadt,Land,Umsatz", "Bern,CH,1200", "Wien,AT,300"]
+        assert prepared.changes == ["kept 2 of 6 rows where Stadt is 'Bern' or 'Wien', 4 dropped"]
+
+    def test_all_conditions_must_hold(self) -> None:
+        where = [{"column": "Land", "test": "eq", "value": "CH"}, {"column": "Umsatz", "test": "le", "value": 800}]
+        prepared = prepare(CITIES, keep(*where))
+
+        assert cells(prepared, 0) == ["Basel", "Genf"]
+        assert prepared.changes == [
+            "kept 2 of 6 rows where Land = 'CH' and Umsatz ≤ 800, 4 dropped; 1 of them has no Umsatz"
+        ]
+
+    def test_a_period_is_its_first_and_its_last_day(self) -> None:
+        text = "t,v\n2023-12-31T23:00:00,1\n2024-01-01T00:00:00,2\n2024-01-31T18:30:00,3\n2024-02-01T00:00:00,4\n"
+        january = [
+            {"column": "t", "test": "ge", "value": "2024-01-01"},
+            {"column": "t", "test": "le", "value": "2024-01-31"},
+        ]
+
+        prepared = prepare(text, keep(*january))
+
+        assert cells(prepared, 1) == ["2", "3"]
+        assert prepared.changes == ["kept 2 of 4 rows where t ≥ 2024-01-01 and t ≤ 2024-01-31, 2 dropped"]
+
+    def test_the_line_says_how_many_dropped_rows_had_no_value_to_test(self) -> None:
+        """Graz has no revenue: it did not fail "at least 800", it had nothing to test, and the count alone would
+        hide that."""
+        prepared = prepare(CITIES, keep({"column": "Umsatz", "test": "ge", "value": 800}))
+
+        assert cells(prepared, 0) == ["Bern", "Köln", "Basel", "Genf"]
+        assert prepared.changes == ["kept 4 of 6 rows where Umsatz ≥ 800, 2 dropped; 1 of them has no Umsatz"]
+
+    def test_each_tested_column_is_counted_once_and_a_test_for_empty_cells_never(self) -> None:
+        text = "k,a,b\nw,1,\nx,,2\ny,,\nz,5,6\n"
+        both = [{"column": "a", "test": "ge", "value": 5}, {"column": "a", "test": "le", "value": 9}]
+        both.append({"column": "b", "test": "ge", "value": 6})
+
+        assert prepare(text, keep(*both)).changes == [
+            "kept 1 of 4 rows where a ≥ 5 and a ≤ 9 and b ≥ 6, 3 dropped; 2 of them have no a and 2 of them have no b"
+        ]
+        assert prepare(text, keep({"column": "a", "test": "not_missing"})).changes == [
+            "kept 2 of 4 rows where a is not missing, 2 dropped"
+        ]
+
+    def test_rows_below_zero_that_leave_are_named_as_for_a_drop(self) -> None:
+        invoices = "Beleg,Art,Menge\nR1,A,10\nR2,A,6\nR3,C,-6\nR4,A,3\n"
+
+        (line,) = prepare(invoices, keep({"column": "Art", "test": "eq", "value": "A"})).changes
+
+        assert line == (
+            "kept 3 of 4 rows where Art = 'A', 1 dropped; Menge is below 0 only in rows that were dropped, so its "
+            "total over the rows kept is higher than before"
+        )
+
+    def test_no_matching_row_is_refused(self) -> None:
+        code, message = failure(CITIES, keep({"column": "Land", "test": "eq", "value": "FR"}))
+
+        assert code == "empty_result"
+        assert message == "no row matches the conditions; no row would remain"
+
+    def test_a_table_whose_every_row_matches_keeps_every_row(self) -> None:
+        prepared = prepare(CITIES, keep({"column": "Stadt", "test": "not_missing"}))
+
+        assert len(rows(prepared)) == 7
+        assert prepared.changes == ["kept all 6 rows; every one matches Stadt is not missing"]
+
+    def test_an_unknown_column_and_a_value_of_the_wrong_kind_are_refused(self) -> None:
+        assert failure(CITIES, keep({"column": "Ort", "test": "eq", "value": "Bern"}))[0] == "unknown_column"
+        assert failure(CITIES, keep({"column": "Umsatz", "test": "ge", "value": "viel"}))[0] == "invalid_operation"
+
+    def test_the_pasted_cells_are_no_longer_the_rows(self) -> None:
+        operations = [
+            keep({"column": "k", "test": "eq", "value": "a"}),
+            {"op": "set_type", "column": "v", "type": "number", "decimal": ","},
+        ]
+        parsed = parse_dataset("k;v\na;1.234\nb;7.000\n")
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parsed, OPERATIONS.validate_python(operations))
+
+        assert caught.value.code == "type_mismatch"
+
+
+class TestTopNTies:
+    """A top N cuts at N (owner decision of 2026-11-13). When the cut falls among rows of one value, which of them
+    stay is the order they had before the sort, so the line counts and names them."""
+
+    def test_a_cut_among_equal_values_names_the_rows_on_each_side(self) -> None:
+        prepared = prepare(CITIES, *top(2))
+
+        assert cells(prepared, 0) == ["Bern", "Köln"]
+        assert prepared.changes[1] == (
+            "kept the first 2 of 6 rows, 4 dropped; the cut falls among 3 rows with Umsatz 800: "
+            "1 kept (Stadt 'Köln') and 2 dropped (Stadt 'Basel' and 'Genf')"
+        )
+
+    @pytest.mark.parametrize("n", [1, 4, 5])
+    def test_a_cut_between_two_values_says_nothing_more(self, n: int) -> None:
+        prepared = prepare(CITIES, *top(n))
+
+        assert prepared.changes[1] == f"kept the first {n} of 6 rows, {6 - n} dropped"
+
+    def test_rows_without_a_value_tie_with_each_other(self) -> None:
+        text = "Stadt,Umsatz\nBern,5\nGraz,\nLinz,\nWels,\n"
+
+        prepared = prepare(text, *top(2))
+
+        assert prepared.changes[1] == (
+            "kept the first 2 of 4 rows, 2 dropped; the cut falls among 3 rows with no Umsatz: "
+            "1 kept (Stadt 'Graz') and 2 dropped (Stadt 'Linz' and 'Wels')"
+        )
+
+    def test_a_tie_of_texts_quotes_the_value(self) -> None:
+        text = "Stadt,Land\nBern,CH\nWien,AT\nGenf,CH\nGraz,AT\n"
+
+        prepared = prepare(text, {"op": "sort", "column": "Land", "descending": False}, {"op": "keep_rows", "n": 1})
+
+        assert prepared.changes[1] == (
+            "kept the first 1 of 4 rows, 3 dropped; the cut falls among 2 rows with Land 'AT': "
+            "1 kept (Stadt 'Wien') and 1 dropped (Stadt 'Graz')"
+        )
+
+    def test_a_table_without_a_text_column_counts_the_rows_only(self) -> None:
+        text = "id,v\n1,7\n2,7\n3,7\n4,1\n"
+
+        prepared = prepare(text, *top(2, "v"))
+
+        assert prepared.changes[1] == (
+            "kept the first 2 of 4 rows, 2 dropped; the cut falls among 3 rows with v 7: 2 kept and 1 dropped"
+        )
+
+    def test_a_long_tie_names_three_rows_of_each_side_and_stays_within_the_note_limit(self) -> None:
+        names = [f"{'x' * 40}{index}" for index in range(12)]
+        text = "Name,Wert\n" + "".join(f"{name},5\n" for name in names)
+
+        prepared = prepare(text, *top(6, "Wert"))
+
+        (line,) = prepared.changes[1:]
+        assert "6 kept (Name '" in line and "' and 3 more) and 6 dropped (Name '" in line
+        assert line.endswith("and 3 more)")
+        assert "x" * 19 + "…'" in line and "x" * 20 not in line
+        assert len(line) <= MAX_NOTE_CHARS
+
+    def test_names_that_would_not_fit_are_left_out_so_the_counts_are_never_cut(self) -> None:
+        header = "Bezeichnung der Niederlassung laut Handelsregister"
+        names = [f"{'x' * 40}{index}" for index in range(12)]
+        text = f"{header},{'Jahresumsatz in CHF ohne MwSt'}\n" + "".join(f"{name},5\n" for name in names)
+
+        prepared = prepare(text, *top(6, "Jahresumsatz in CHF ohne MwSt"))
+
+        assert prepared.changes[1] == (
+            "kept the first 6 of 12 rows, 6 dropped; the cut falls among 12 rows with Jahresumsatz in CHF ohne MwSt 5: "
+            "6 kept and 6 dropped"
+        )
+
+    def test_the_rows_taken_out_after_the_sort_keep_its_order(self) -> None:
+        operations = [
+            {"op": "sort", "column": "Umsatz", "descending": True},
+            drop("Land", "eq", "DE"),
+            {"op": "keep_rows", "n": 2},
+        ]
+
+        prepared = prepare(CITIES, *operations)
+
+        assert cells(prepared, 0) == ["Bern", "Basel"]
+        assert prepared.changes[2].endswith(
+            "the cut falls among 2 rows with Umsatz 800: 1 kept (Stadt 'Basel') and 1 dropped (Stadt 'Genf')"
+        )
+
+    @pytest.mark.parametrize(
+        "operations",
+        [
+            # No sort in this call: the rows are in the order of the table, which ranks them by nothing known.
+            [{"op": "keep_rows", "n": 2}],
+            # The sort is no longer the last word on the rows.
+            [
+                {"op": "sort", "column": "Umsatz", "descending": True},
+                {"op": "rename", "column": "Umsatz", "name": "Revenue"},
+                {"op": "keep_rows", "n": 2},
+            ],
+        ],
+    )
+    def test_a_cut_of_rows_not_ranked_by_this_call_says_nothing_more(self, operations: list[dict[str, Any]]) -> None:
+        prepared = prepare(CITIES, *operations)
+
+        assert prepared.changes[-1] == "kept the first 2 of 6 rows, 4 dropped"
+
 
 class TestUnsupported:
     def test_a_gap_refuses_the_whole_call_before_anything_runs(self) -> None:

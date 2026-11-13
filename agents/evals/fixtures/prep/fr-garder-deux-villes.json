@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Ville,Ventes\nLyon,310\nNantes,455\nLille,120\nNice,390\nParis,980\n",
+  "message": "Garde seulement Lyon et Nice.",
+  "expected_operations": [
+    {"op": "keep_rows", "where": [{"column": "Ville", "test": "eq", "values": ["Lyon", "Nice"]}]}
+  ],
+  "locale": "fr",
+  "spec_id": "bar-basic",
+  "tags": ["keep_rows", "keep_where"]
+}
