@@ -805,6 +805,18 @@ def change_waits(state: Any) -> bool:
     return note_waits(state) and state.get(PENDING_BASE) == "previous"
 
 
+def continue_stopped_change(state: Any, args: PipelineArgs) -> PipelineArgs:
+    """The arguments of a call that answers the question of sum or mean (`combine`), on the plot its stopped call
+    meant.
+
+    The guard kept that call's request. When it was a change of the plot the library has (`change_waits`), the
+    answer's call goes on that plot too: it names a function and seldom a base, and a kept change drawn on the
+    catalogue plot would lose every edit the plot carries. Any other call is returned as it is."""
+    if args.combine is not None and args.base == "catalogue" and change_waits(state):
+        return args.model_copy(update={"base": "previous"})
+    return args
+
+
 def hold_request(state: Any, args: PipelineArgs) -> None:
     """Keep a plot's `change_request` for the next run, joined to one kept already (`merged_request`).
 
@@ -1925,7 +1937,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     services = get_services()
     settings = get_settings()
     ledger = ledger_for(ctx.invocation_id)
-    node_input = run_args(ledger, node_input)
+    node_input = continue_stopped_change(ctx.state, run_args(ledger, node_input))
     view, dataset, not_ready = load_inputs(ctx, services)
     if not_ready is not None or view is None or dataset is None:
         yield _result_event(stop_not_ready(ctx, ledger, node_input, view, not_ready or "no_dataset"))

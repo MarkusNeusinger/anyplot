@@ -449,9 +449,10 @@ def key_aggregate(
     """The `aggregate` that combines the rows sharing `repeated`'s key, or None when the server combines nothing (the
     module docstring has the rule): by the key's columns, of every other bound column, each once, in binding order.
 
-    `how` is the function the user chose. Without one the spec decides: `sum` for a spec whose marks add up
-    (`SUM_SPECS`), else `mean`, which is then the open choice the user is asked about before a plot
-    (`function_is_open`).
+    `how` is the function the user chose, and it counts only where the plot type leaves the choice open
+    (`function_is_open`): the slices of a pie add up whatever a call names, so a spec whose marks add up
+    (`SUM_SPECS`) is always summed. Without a choice an open spec takes `mean`, which only a run that was not asked
+    reaches (the tool guard asks first).
 
     `held` are the valid bindings (`bindings.valid_bindings`), so every bound column the plot reads survives the
     aggregate under its name and the bindings carry over; the columns nothing binds leave with it, as the aggregate's
@@ -472,9 +473,8 @@ def key_aggregate(
         values.append(column.name)
     if not values or len(values) > MAX_AGGREGATE_COLUMNS:
         return None
-    return KeyAggregate(
-        by=repeated.columns, values=tuple(values), how=how or ("mean" if function_is_open(spec_id) else "sum")
-    )
+    chosen: How = (how or "mean") if function_is_open(spec_id) else "sum"
+    return KeyAggregate(by=repeated.columns, values=tuple(values), how=chosen)
 
 
 def function_is_open(spec_id: str) -> bool:

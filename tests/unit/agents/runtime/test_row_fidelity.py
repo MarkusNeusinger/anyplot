@@ -26,9 +26,9 @@ from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.plugins.tool_safety import fence_pipeline_notes
 from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.repeated_keys import choice_is_open, combine_repeated_key
-from agents.anyplot.schemas import Binding
+from agents.anyplot.schemas import Binding, PipelineArgs
 from agents.anyplot.services import Services
-from agents.anyplot.session_state import CONFIRMED, DATASET_ID, PENDING_REQUEST, confirmation_fingerprint
+from agents.anyplot.session_state import CONFIRMED, DATASET_ID, PENDING_BASE, PENDING_REQUEST, confirmation_fingerprint
 from agents.anyplot.tools.session import prepare_data, set_bindings
 from agents.main import Runtime, app, get_runtime
 
@@ -468,8 +468,22 @@ class TestCombineRepeatedKey:
         store, pie = self.confirmed("pie-basic", bindings, shares)
         assert not function_is_open("pie-basic")
         assert not choice_is_open(pie, store.get(pie.dataset_id, SID))
-        combined = combine_repeated_key(store, SID, pie, store.get(pie.dataset_id, SID))
+        # The slices add up whatever a call names: a function passed for a pie is not taken.
+        combined = combine_repeated_key(store, SID, pie, store.get(pie.dataset_id, SID), "mean")
         assert combined is not None and combined.aggregate.how == "sum"
+
+    def test_the_answer_goes_on_the_plot_its_stopped_call_meant(self) -> None:
+        """The stopped call was a change of the plot the library has, kept as that: the call that brings the user's
+        function continues it on that plot, where a catalogue base would lose every edit the plot carries. A first
+        plot's kept note, and a call without a function, keep the base they name."""
+        answer = PipelineArgs(combine="sum")
+        kept_change = {PENDING_REQUEST: "thicker line", PENDING_BASE: "previous"}
+        first_plot_note = {PENDING_REQUEST: "thicker line"}
+
+        assert pipeline.continue_stopped_change(kept_change, answer).base == "previous"
+        assert pipeline.continue_stopped_change(first_plot_note, answer).base == "catalogue"
+        assert pipeline.continue_stopped_change(kept_change, PipelineArgs()).base == "catalogue"
+        assert pipeline.continue_stopped_change({}, answer) == answer
 
 
 def test_a_run_re_run_on_resume_announces_the_step_of_its_first_run() -> None:
