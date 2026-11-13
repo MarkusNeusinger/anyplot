@@ -591,6 +591,8 @@ class TestTheRowsToKeep:
         assert "since which of them stayed was no choice of the user" in root
         # The cut stays at N: the way to more rows is the user's next message, never a second call of the turn.
         assert "offer the next step, a larger `n` or every row down to that value" in root
+        # Which test reaches "down to that value" depends on the direction of the ranking.
+        assert "`ge` that value after a descending sort, `le` after an ascending one" in root
 
 
 class TestOtherInstructions:

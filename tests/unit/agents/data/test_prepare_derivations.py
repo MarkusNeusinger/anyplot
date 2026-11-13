@@ -22,7 +22,7 @@ from agents.anyplot.data.prepare import (
     PrepareError,
     apply_operations,
 )
-from agents.anyplot.schemas import MAX_COLUMNS, MAX_NOTE_CHARS
+from agents.anyplot.schemas import MAX_CELL_CHARS, MAX_COLUMN_NAME_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS
 
 from .test_prepare import OPERATIONS, cells, classify, derive, drop, dtypes, failure, prepare, reparse, rows
 
@@ -922,6 +922,18 @@ class TestTopNTies:
             "kept the first 6 of 12 rows, 6 dropped; the cut falls among 12 rows with Jahresumsatz in CHF ohne MwSt 5: "
             "6 kept and 6 dropped"
         )
+
+    def test_the_counts_fit_the_note_for_the_longest_names_and_values_there_are(self) -> None:
+        """Without the names the line has to fit as it is: nothing shorter is left to fall back to."""
+        ranked, label = "r" * MAX_COLUMN_NAME_CHARS, "l" * MAX_COLUMN_NAME_CHARS
+        value = "v" * 60  # longer than the line quotes
+        text = f"{label},{ranked}\n" + "".join(f"{'n' * 40}{index},{value}\n" for index in range(12))
+
+        prepared = prepare(text, *top(6, ranked))
+
+        (line,) = prepared.changes[1:]
+        assert line.endswith(": 6 kept and 6 dropped") and len(line) <= MAX_NOTE_CHARS
+        assert f"with {ranked} '{'v' * (MAX_CELL_CHARS - 1)}…'" in line
 
     def test_the_rows_taken_out_after_the_sort_keep_its_order(self) -> None:
         operations = [

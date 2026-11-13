@@ -1990,7 +1990,8 @@ def _tie_note(frame: pd.DataFrame, n: int, carried: _Carried, room: int) -> str:
     The cut stays at `n`: which of the tied rows are in is the order they had before the sort, nothing the user
     chose. The note counts the tied rows on each side and names them by the first text column, so the reply can
     say so and the user can ask for more rows or for every row down to that value. Past `room` characters the
-    names are left out, so the line's clip never cuts the counts.
+    names are left out, so the line's clip never cuts the counts: without the names the line stays under
+    `MAX_NOTE_CHARS` for the longest column name and value there can be.
     """
     column = carried.sorted_by
     if column is None or column not in frame.columns:
@@ -2012,9 +2013,10 @@ def _tie_note(frame: pd.DataFrame, n: int, carried: _Carried, room: int) -> str:
     label = next((str(name) for name in frame.columns if name != column and _kind(frame[name]) == "text"), None)
     if label is None:
         return counted
-    names = frame[label]
-    kept = _tied_names(names.iloc[:n][tied.iloc[:n]], label)
-    dropped = _tied_names(names.iloc[n:][tied.iloc[n:]], label)
+    # By position, never by label: a boolean Series as a mask is aligned on the index first.
+    names, mask = frame[label], tied.to_numpy(dtype=bool)
+    kept = _tied_names(names.iloc[:n][mask[:n]], label)
+    dropped = _tied_names(names.iloc[n:][mask[n:]], label)
     named = f"{head}{inside} kept{kept} and {outside} dropped{dropped}"
     return named if len(named) <= room else counted
 

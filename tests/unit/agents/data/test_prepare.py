@@ -417,6 +417,15 @@ class TestDropRows:
         assert failure(text, drop("t", "le", "9999-12-31"))[0] == "empty_result"
         assert len(rows(prepare(text, drop("t", "gt", "9999-12-31")))) == 3
 
+    def test_a_day_is_never_guessed_into_a_column_with_utc_offsets(self) -> None:
+        """Which zone's day a date alone means there would be a guess, and a day is not 24 hours where the clocks
+        change: the value is refused before the whole-day reading, as for every other test."""
+        text = "t,v\n2024-03-30T10:00:00+01:00,1\n2024-03-31T10:00:00+02:00,2\n"
+
+        for test in ("le", "gt", "ge", "lt"):
+            code, message = failure(text, drop("t", test, "2024-03-31"))
+            assert code == "invalid_operation" and "give the value with one" in message
+
     def test_nothing_matching_is_a_change_line_too(self) -> None:
         prepared = prepare(SALES, drop("Tier", "eq", "Pferd"))
 
@@ -2615,6 +2624,12 @@ class TestFidelity:
         assert failure(text, drop("id", "le", str(2**64)))[0] == "empty_result"
         assert failure(text, drop("id", "ge", str(-(2**64))))[0] == "empty_result"
         assert rows(prepare(text, drop("id", "le", str(-(2**64))))) == unchanged
+        # A fraction past int64, and one whose next whole number is: compared, never overflowed.
+        for value in (f"{2**64}.5", f"{2**63 - 1}.5"):
+            assert rows(prepare(text, drop("id", "ge", value))) == unchanged
+            assert rows(prepare(text, drop("id", "gt", value))) == unchanged
+            assert failure(text, drop("id", "le", value))[0] == "empty_result"
+            assert failure(text, drop("id", "lt", value))[0] == "empty_result"
 
     def test_an_exponent_past_the_decimal_range_is_read_as_its_float(self) -> None:
         prepared = from_text(
