@@ -245,7 +245,7 @@ class TestCombinedKey:
         assert (await runtime.session(USER, sid)).state[PENDING_REQUEST] == "make the line thicker"
 
     async def test_the_button_alone_makes_no_plot_and_no_data_version_while_the_choice_is_open(
-        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend, services: Services
     ) -> None:
         """A line of scores per hour may want the sum or the mean, and the plot type cannot tell: the call is stopped
         before the run, the root asks, and nothing is combined, rendered or stored until the user says which. The
@@ -271,6 +271,7 @@ class TestCombinedKey:
         )
         assert (answer["status"], answer["code"], answer["reason"]) == ("error", "combine_choice", "combine_choice")
         assert "whether to sum or to average them" in answer["message"]
+        assert services.usage.user_runs(USER) == 0  # a call stopped before the run uses up none of the day's runs
 
     async def test_the_root_cannot_answer_its_own_question_in_the_same_turn(
         self, client: httpx.AsyncClient, swap_models, backend: FakeBackend
