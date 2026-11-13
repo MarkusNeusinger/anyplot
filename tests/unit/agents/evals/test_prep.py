@@ -1204,18 +1204,18 @@ class TestRun:
         assert result.version_miss is miss and result.match is not miss
 
     @pytest.mark.parametrize(
-        ("calls", "wanted", "miss"),
+        ("wishes", "kept", "wanted", "miss"),
         [
-            (["keep_plot_request"], True, False),
-            (["prepare_data", "keep_plot_request"], True, False),  # a data change, and the order kept for the plot
-            (["plot_pipeline"], True, False),  # run on the plot the session has
-            (["prepare_data"], True, True),  # the wish went to the table
-            ([], True, True),
-            (["prepare_data"], False, False),  # no expectation, no score
+            (1, 1, True, False),  # a wish sent to the plot, and kept for it or drawn
+            (2, 1, True, False),
+            (1, 0, True, True),  # sent, but the server kept nothing: the order is nowhere
+            (0, 1, True, True),  # a bare plot call carries no wish, whatever it answered
+            (0, 0, True, True),  # the wish went to the table, or nowhere
+            (0, 0, False, False),  # no expectation, no score
         ],
     )
-    def test_the_plot_request_score(self, calls: list[str], wanted: bool, miss: bool) -> None:
-        result = CaseResult("p", [], [], match=True, tool_calls=calls)
+    def test_the_plot_request_score(self, wishes: int, kept: int, wanted: bool, miss: bool) -> None:
+        result = CaseResult("p", [], [], match=True, plot_wishes=wishes, plot_wishes_kept=kept)
 
         score_plot_request(result, wanted)
 
@@ -1223,11 +1223,29 @@ class TestRun:
 
     def test_a_plot_request_never_turns_a_miss_into_a_match(self) -> None:
         """The wish reached the plot, but the data was wrong: the case stays a miss."""
-        result = CaseResult("p", [], [], match=False, tool_calls=["prepare_data", "keep_plot_request"])
+        result = CaseResult("p", [], [], match=False, plot_wishes=1, plot_wishes_kept=1)
 
         score_plot_request(result, True)
 
         assert result.plot_request_miss is False and result.match is False
+
+    def test_a_wish_counts_only_when_the_plot_has_it(self, services: Services, swap_models) -> None:
+        """Read from the turn itself: a `keep_plot_request` with a request the server kept is a wish at the plot; a
+        bare `plot_pipeline` call, as a plot button makes it, names nothing and is none."""
+        cases = [
+            case("w-001", "biggest first", [], plot_request=True),
+            case("w-002", "biggest first", [], plot_request=True),
+        ]
+        root_turns = [
+            [{"call": "keep_plot_request", "args": {"change_request": "largest first"}}, {"text": "Kept: 4 rows."}],
+            [{"call": "plot_pipeline", "args": {}}, {"text": "No plot yet: 4 rows."}],
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+
+        kept, bare = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert (kept.plot_wishes, kept.plot_wishes_kept, kept.plot_request_miss, kept.match) == (1, 1, False, True)
+        assert (bare.plot_wishes, bare.plot_request_miss, bare.match) == (0, True, False)
 
     def test_a_plot_request_case_compares_the_rows_in_their_order(self) -> None:
         """`row_order: "any"` would hide a table that was sorted for the plot's order, so such a case refuses it."""
