@@ -8,7 +8,7 @@
   first to its last day, or everything at least or at most a value (`ge`
   and `le` are new comparisons). The change line counts both sides and says
   how many of the dropped rows had no value to test, which the count alone
-  would hide. This is the engine step before views of the plot.
+  would hide. This is the engine step before views of the plot. (#13086)
 
 ### Changed
 
@@ -16,7 +16,8 @@
   revenue" used to cut silently through three cities with the same
   revenue: which of them stayed was the order they had before the sort.
   The cut still falls at N, and the change line now names the tied rows on
-  each side, so the assistant can say so and offer more rows.
+  each side, so the assistant can say so and offer more rows. (#13086)
 - **A date without a time means the whole day.** "Until 31 January" now
   takes in every row of the 31st whatever its time, and "after 31 January"
   none of them. Before, "after" took the day's rows past midnight in.
+  (#13086)
