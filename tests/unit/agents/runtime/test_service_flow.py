@@ -4153,6 +4153,37 @@ async def test_the_roots_set_language_sets_chosen(client: httpx.AsyncClient, swa
         assert responses == [{"status": "ok", "source": "chosen", "changed": True, "plot_outdated": False}]
 
 
+async def test_a_request_for_the_replies_before_the_first_plot_makes_that_plot_follow(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """ "Antworte bitte auf Deutsch" before any plot sets the replies alone and writes no plot language, so the first
+    plot's adapter is asked for German text and the session's first version is German. A plot language stored at
+    that moment would have kept the first plot English."""
+    script = {
+        "root": [
+            {"call": "set_language", "args": {"language": "de", "applies_to": "replies"}},
+            {"text": "Gern, ab jetzt auf Deutsch."},
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+
+    events = await say(client, sid, "Antworte bitte auf Deutsch.")
+
+    assert done_language(events) == {"language": "de", "source": "chosen"}
+    assert PLOT_LANGUAGE not in await _session_state(client, sid)
+
+    await create_plot(client, sid)
+
+    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in adapter_inputs(fake)[0]
+    assert [version.language for version in get_services().versions.all(sid)] == ["de"]
+
+
 async def test_set_language_on_a_session_already_in_that_language_is_no_change(
     client: httpx.AsyncClient, swap_models
 ) -> None:
