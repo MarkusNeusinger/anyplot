@@ -343,6 +343,9 @@ class PrepCase(BaseModel):
             raise ValueError("earlier changes come before a message on summarized data")
         if self.row_order == "any" and not self.scored_by_table:
             raise ValueError("row_order is for a case scored by its table")
+        if self.row_order == "any" and self.plot_request:
+            # The order of the rows is how such a case sees a table that was sorted for the plot's order.
+            raise ValueError("a plot_request case compares the rows in their order")
         return self
 
     @property

@@ -122,8 +122,8 @@ class TestFixtures:
         # read as new data the same day (`change_request`): the root changes no data for it. Since 2026-11-11, one
         # with thousands dots and a footnote mark on one cell (`footnote_mark`): `set_type` with a decimal comma
         # reads both columns, where a detour through `strip` and `replace` had lost a digit. Since 2026-11-13, an
-        # order of the plot's marks and a figure shown with the plot go to the plot (`plot_request`): eleven cases
-        # ask for the plot alone or beside a data change, the calendar order of month names among them, and two
+        # order of the plot's marks and a figure shown with the plot go to the plot (`plot_request`): thirteen cases
+        # ask for the plot alone or beside a data change, the calendar order of month names among them, and three
         # name the table, which stays a `sort`. The rule names no word of any language, so three French cases, a
         # language the rules hold no example of, check that it carries: an order, a figure and a sort of the table.
         assert len(cases) == 117
@@ -1220,6 +1220,27 @@ class TestRun:
         score_plot_request(result, wanted)
 
         assert result.plot_request_miss is miss and result.match is not miss
+
+    def test_a_plot_request_never_turns_a_miss_into_a_match(self) -> None:
+        """The wish reached the plot, but the data was wrong: the case stays a miss."""
+        result = CaseResult("p", [], [], match=False, tool_calls=["prepare_data", "keep_plot_request"])
+
+        score_plot_request(result, True)
+
+        assert result.plot_request_miss is False and result.match is False
+
+    def test_a_plot_request_case_compares_the_rows_in_their_order(self) -> None:
+        """`row_order: "any"` would hide a table that was sorted for the plot's order, so such a case refuses it."""
+        with pytest.raises(ValidationError, match="compares the rows in their order"):
+            PrepCase(
+                id="p-002",
+                dataset_text=HOURS,
+                message="drop the notes and sort by hours",
+                expected_operations=[RENAME],
+                locale="en",
+                plot_request=True,
+                row_order="any",
+            )
 
     def test_a_missed_plot_request_is_counted_and_named(self) -> None:
         wish = PrepCase(
