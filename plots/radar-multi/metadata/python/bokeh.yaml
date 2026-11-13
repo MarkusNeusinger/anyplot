@@ -2,48 +2,65 @@ library: bokeh
 language: python
 specification_id: radar-multi
 created: '2025-12-25T19:09:27Z'
-updated: '2026-05-07T16:57:23Z'
-generated_by: claude-haiku
-workflow_run: 25509719487
+updated: '2026-11-13T02:53:57Z'
+generated_by: claude-sonnet
+workflow_run: 43354019053
 issue: 2026
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/bokeh/plot-dark.html
-quality_score: 91
+quality_score: 77
 review:
   strengths:
-  - Perfect visual quality with fully readable text in both light and dark themes
-  - All required features correctly implemented with proper gridlines, axis labels,
-    legend, and transparency
-  - Proper theme adaptation using token-based color system (PAGE_BG, INK, INK_SOFT)
-  - Idiomatic Bokeh usage with ColumnDataSource and LabelSet for flexible positioning
-  - Clean, reproducible code with no unnecessary complexity
-  - Correct Okabe-Ito palette with brand green (#009E73) as first series
-  - Well-proportioned square layout with appropriate spacing and margins
+  - Imprint palette positions 1–3 in canonical order, identical in both renders, with
+    theme tokens threaded through text, rings, spokes and legend
+  - Vertex markers with page-colored rims make every data value readable even where
+    polygons overlap
+  - Value scale derived from the data (rings 20–100) and categories/series read from
+    a tidy DataFrame, so the chart adapts to new data
+  - Square 2400x2400 canvas with the radar centered and labels comfortably inside
+    the frame
   weaknesses:
-  - Design is functional but relies on standard radar chart styling without distinctive
-    visual touches
-  - Limited exploration of Bokeh's interactive features (though not required by spec)
-  - Could enhance data storytelling with visual emphasis, hierarchy, or selective
-    annotation of key comparisons
+  - 'VQ-04 (both): Product A''s green outline and vertex markers are drawn before
+    Product B and C''s translucent fills, so inside Product C''s polygon (Price Value,
+    Support, Features) they read teal-blue instead of #009E73 and blur into Product
+    C → draw every outline and vertex marker above all fills. Likely cause: patch
+    and scatter for each series added in one loop iteration (lines 129–145).'
+  - 'SC-02 (both): the ring value labels are offset by top*0.1 (10 units) up and right,
+    so each sits about halfway to the next ring — ''80'' reads closer to the 100 ring
+    and ''100'' floats above every ring → place each label at its ring''s radius,
+    offset sideways from the spoke only. Likely cause: the + top * 0.1 added to y
+    in line 120.'
+  - 'DQ-02 (both): the series are labelled ''Product A'', ''Product B'', ''Product
+    C'', which read as abstract placeholders → name them as plausible products (e.g.
+    three laptop or headphone models). Likely cause: the keys of the scores dict (lines
+    40–42).'
+  - 'CQ-04 (code): line 30 GRID_STEP = 20 is never read, and its comment says it sets
+    the ring interval while lines 61–64 compute grid_step → remove. Likely cause:
+    a constant left over from a replaced approach.'
+  - 'Suggestion: the dark render shows a thin grey rectangle about 5 px inside the
+    canvas edge; setting min_border and the root frame to the page color would remove
+    it.'
+  - 'Suggestion: a HoverTool on the vertex scatter would give exact scores in the
+    HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct page surface color
-      Chrome: Title "radar-multi · bokeh · anyplot.ai" (32pt, dark text), six axis labels in dark text at outer edge (24pt), grid value labels (20pt) all clearly visible and readable. Legend in top right with product labels (22pt) is clear.
-      Data: Three polygons in Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2) with alpha=0.25 fill and alpha=0.9 outlines. Vertex markers with white edges clearly distinguish each series. Circular gridlines (20, 40, 60, 80, 100) and radial lines visible but subtle.
-      Legibility verdict: PASS — All text readable against light background; no dark-on-dark or light-on-light failures.
+      Background: warm off-white #FAF8F1 (pixel-checked).
+      Chrome: title "radar-multi · python · bokeh · anyplot.ai" in dark bold text centered at the top; six bold dark axis labels (Performance at top, then clockwise Reliability, Features, Support, Price Value, Ease of Use) outside the rings; ring values 20–100 in soft grey to the right of the top spoke, each sitting about half a ring step above its ring; legend box top-right with Product A/B/C. All text readable.
+      Data: three closed polygons with 0.25 fills and solid outlines in #009E73 (Product A), #C475FD (Product B), #4467A3 (Product C), vertex dots with off-white rims; five grey rings and six spokes stay visible through the fills. Product A's outline and dots turn teal where they lie under Product C's blue fill.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct page surface color
-      Chrome: Title and all axis labels rendered in light text, fully readable against dark surface. Grid value labels readable. Legend in top right maintains visibility.
-      Data: Three polygons display identical Okabe-Ito colors to light render (green, orange, blue) — only chrome has changed theme. Gridlines and radial lines maintain visibility. Vertex markers clearly visible.
-      Legibility verdict: PASS — No dark-on-dark failures; all text clearly visible; brand green #009E73 remains readable and maintains identity across both renders.
+      Background: warm near-black #1A1A17 (pixel-checked).
+      Chrome: title and axis labels in light text, ring values and legend labels in light grey; no dark-on-dark text. A faint grey rectangle frame runs about 5 px inside the canvas edge.
+      Data: same three colors as the light render; fills darker on the dark surface but outlines and dots clearly visible; brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,79 +68,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (32pt), axis labels (24pt), grid values (20pt), legend (22pt)
-          all explicitly sized and readable in both themes
+        comment: Title 32pt, axis labels 24pt bold, ring values 20pt, legend 22pt
+          — all explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend and title well-separated; grid labels
-          shifted; polygons overlap intentionally with transparency
+        comment: No text collisions; ring value labels sit beside the first spoke,
+          clear of the vertices
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements visible — grid circles (0.4 alpha), radial lines (0.3
-          alpha), polygons (0.25 fill, 0.9 line), vertices (size 22, alpha 0.9)
+        comment: 18 vertices at size 22 with page-colored rims, 4 px outlines, legend
+          swatches show fill and outline
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Okabe-Ito palette (positions 1–3: green, orange, blue); colorblind-safe;
-          no single-signal red-green'
+        passed: false
+        comment: Product A's outline and vertices are drawn beneath Product B and
+          C fills and shift from green to teal inside the blue polygon (defect line)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format (3600×3600) appropriate for radar; margins adequate;
-          ranges (-145 to 145) provide good spacing
+        comment: 2400x2400 square, chart centered and filling about 70% of the canvas,
+          legend close in the top-right corner
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive (Performance, Reliability,
-          Features, Support, Price Value, Ease of Use)
+        comment: Descriptive attribute labels on every spoke; score rings labeled
+          20–100
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order (1, 2, 3); backgrounds #FAF8F1
-          (light) / #1A1A17 (dark); data colors identical between renders'
+        comment: 'Imprint positions 1–3 (#009E73, #C475FD, #4467A3) identical in both
+          renders; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional execution with standard styling; no custom visual flourishes
-          or special design thinking beyond typical approach
+        comment: The style-guide baseline (Imprint palette, theme tokens, explicit
+          font sizes) and nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Filled polygons with transparency, outlines, and white-edged vertices
-          provide good refinement; grid is subtle; presentation clean but relatively
-          standard
+        comment: No axes or frame lines, subtle rings and spokes — the baseline, nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Radar structure enables clear comparison across dimensions; distinct
-          colors aid identification; no special visual hierarchy or emphasis on particular
-          insights
+        comment: Data displayed; no hierarchy or focal point chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,31 +145,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements multi-series radar chart with radial axes and
-          overlaid polygons
+        comment: Multi-series radar with six evenly spaced spokes and three overlaid
+          closed polygons
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: All features present — transparent fills (alpha 0.25), distinct colors,
-          legend, gridlines (20, 40, 60, 80, 100), axis labels, closed polygons, fill
-          + outline
+        passed: false
+        comment: Fills (alpha 0.25), outlines, legend, rings, outer labels and closed
+          polygons all present; ring value labels sit about half a ring step outward
+          of their rings, so C5's labeled values are ambiguous (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angles correctly calculated; values mapped to distance (x = value
-          × cos(angle), y = value × sin(angle)); all data shown; 0–100 scale
+        comment: 'Vertices at their values (checked Performance: A 85, B 70, C 92
+          against the rings); straight edges, no smoothing'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match series; all text readable
+        comment: Title radar-multi · python · bokeh · anyplot.ai; legend names each
+          series
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -163,24 +178,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six distinct dimensions; three products (optimal for comparison);
-          values 65–95 showing realistic variation
+        comment: Each product leads on different attributes, crossing outlines and
+          partial containment show the comparison
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Product comparison is realistic, neutral, and plausible; attributes
-          are genuine product characteristics
+        passed: false
+        comment: Real product attributes, but the series are labelled Product A/B/C
+          (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–100 scale sensible for product ratings; grid intervals (20, 40,
-          60, 80, 100) appropriate
+        comment: Scores 65–95 on a 0–100 rating scale; checked the 20-step ring computation
+          gives 20–100 for max 95
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -188,65 +203,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward data → figure → drawing
-          → save flow
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded; no randomness; fully reproducible
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, time, Path, numpy, bokeh modules, selenium)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI or simulated interactivity; code is clean and appropriate
-          complexity
+        passed: false
+        comment: Line 30 GRID_STEP = 20 is never used; its comment claims it sets
+          the ring interval while lines 61–64 compute it (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.html and plot-{THEME}.png; uses current Bokeh
-          API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png, current Bokeh 3 API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses figure(), ColumnDataSource, LabelSet, Legend, patch(), scatter(),
-          p.line() idomatically; theme tokens properly applied
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses distinctive Bokeh features (LabelSet, ColumnDataSource, theme
-          tokens) competently; implementation is straightforward without showcasing
-          unique interactive capabilities
+        comment: Correct figure/patch/scatter/LabelSet/Legend usage; nothing beyond
+          the default level
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Toolbar and tools disabled, no HoverTool or interactive legend —
+          generic usage
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-13T02:49:13Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - polar-projection
+  - layer-composition
   - custom-legend
+  - annotations
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
-  - matrix-construction
+  - columndatasource
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
+  - edge-highlighting
