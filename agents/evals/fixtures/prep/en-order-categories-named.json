@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Level,Answers\nHigh,18\nLow,42\nMedium,27\n",
+  "message": "Put the categories in this order: Low, Medium, High.",
+  "expected_operations": [],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["order", "category_order", "plot_request"],
+  "plot_request": true
+}

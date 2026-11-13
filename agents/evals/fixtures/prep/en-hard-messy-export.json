@@ -3,9 +3,10 @@
   "message": "This is a raw export. Remove the TOTAL line and the Internal Code and Comment columns, then give me the total quantity per item, largest first.",
   "expected_operations": [
     {"op": "drop_columns", "columns": ["Internal Code", "Comment"]},
-    {"op": "aggregate", "by": ["Item"], "column": "Qty", "how": "sum"},
-    {"op": "sort", "column": "Qty", "descending": true}
+    {"op": "aggregate", "by": ["Item"], "column": "Qty", "how": "sum"}
   ],
   "locale": "en",
-  "tags": ["hard", "chain", "messy", "summary-row", "drop_columns", "aggregate", "sort"]
+  "spec_id": "bar-basic",
+  "tags": ["hard", "chain", "messy", "summary-row", "drop_columns", "aggregate", "order", "plot_request", "change_and_order"],
+  "plot_request": true
 }

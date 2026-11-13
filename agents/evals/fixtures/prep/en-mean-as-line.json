@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Week,Visitors\n1,340\n2,410\n3,295\n4,520\n5,470\n6,385\n",
+  "message": "Add the average as a dashed horizontal line.",
+  "expected_operations": [],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["extra_figure", "plot_request"],
+  "plot_request": true
+}

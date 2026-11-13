@@ -1,7 +1,9 @@
 {
   "dataset_text": "Produkt,Umsatz\nHüte,10\nSchuhe,20\nTaschen,15\nGürtel,5\n",
   "message": "Sortiere nach Umsatz, absteigend.",
-  "expected_operations": [{"op": "sort", "column": "Umsatz", "descending": true}],
+  "expected_operations": [],
   "locale": "de",
-  "tags": ["sort"]
+  "spec_id": "bar-basic",
+  "tags": ["order", "plot_request"],
+  "plot_request": true
 }

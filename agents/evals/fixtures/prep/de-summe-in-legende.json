@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Monat,Kategorie,Betrag\nJan,Miete,1200\nJan,Essen,430\nJan,Freizeit,150\nFeb,Miete,1200\nFeb,Essen,390\nFeb,Freizeit,210\nMär,Miete,1200\nMär,Essen,465\nMär,Freizeit,95\n",
+  "message": "Schreib bei jeder Kategorie die Summe in die Legende dazu.",
+  "expected_operations": [],
+  "locale": "de",
+  "spec_id": "bar-stacked",
+  "tags": ["extra_figure", "plot_request"],
+  "plot_request": true
+}

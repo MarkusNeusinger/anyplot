@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Produit,Ventes\nThé,420\nGâteau,980\nConfiture,310\nMiel,655\n",
+  "message": "Les plus grands d'abord, s'il te plaît.",
+  "expected_operations": [],
+  "locale": "fr",
+  "spec_id": "bar-basic",
+  "tags": ["order", "plot_request"],
+  "plot_request": true
+}

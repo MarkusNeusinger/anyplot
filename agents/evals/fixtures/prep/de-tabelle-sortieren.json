@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Filiale,Umsatz\nBern,310\nBasel,455\nChur,120\nGenf,390\n",
+  "message": "Sortiere die Tabelle nach Umsatz, absteigend.",
+  "expected_operations": [{"op": "sort", "column": "Umsatz", "descending": true}],
+  "locale": "de",
+  "spec_id": "bar-basic",
+  "tags": ["sort", "table_named"]
+}

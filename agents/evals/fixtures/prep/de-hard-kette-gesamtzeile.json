@@ -3,9 +3,10 @@
   "message": "Die Gesamt-Zeile gehört nicht dazu und die Notizen brauche ich nicht. Dann bitte den Umsatz pro Region zusammenzählen und die stärkste Region zuerst.",
   "expected_operations": [
     {"op": "drop_columns", "columns": ["Notiz"]},
-    {"op": "aggregate", "by": ["Region"], "column": "Umsatz", "how": "sum"},
-    {"op": "sort", "column": "Umsatz", "descending": true}
+    {"op": "aggregate", "by": ["Region"], "column": "Umsatz", "how": "sum"}
   ],
   "locale": "de",
-  "tags": ["hard", "chain", "summary-row", "drop_columns", "aggregate", "sort"]
+  "spec_id": "bar-basic",
+  "tags": ["hard", "chain", "summary-row", "drop_columns", "aggregate", "order", "plot_request", "change_and_order"],
+  "plot_request": true
 }

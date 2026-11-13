@@ -105,6 +105,13 @@ too (`score_from_version`): some `prepare_data` or
 `query_data` call of the turn names it and no `prepare_data` call names another, or the case is a miss. The report
 lists every call's `from_version` under `from_versions`, scored or not.
 
+A case with `plot_request` asks for a change of the plot, alone or beside its data operations: an order of the
+bars, a total in the title. Its turn must send that wish to the plot, a `keep_plot_request` or a `plot_pipeline`
+call that carries a request, a text or a decision, and the plot must have it: the answer kept it for the next plot
+(`request_kept`) or drew it (`score_plot_request`, `PLOT_TOOLS`). Otherwise the case is a miss; the summary counts
+those under `plot_request_misses`. Its data is scored as in every case, so a table the turn sorted for the order misses by the
+order of its rows, and a case whose message asks for the plot alone expects no data call (`expected_operations: []`).
+
 A case is `unavailable` when its dataset could not be stored (`503 guard_unavailable`)
 or its turn ended with an `error` event (the judge down, `capacity`); it counts in no
 rate, and more than `--max-unavailable` (10 percent) of them exit 4. A dataset the
@@ -219,6 +226,11 @@ DATA_CODE_TOOL = "run_data_code"
 MAX_BEFORE_VERSIONS = 5
 """Earlier changes a case may make before its message: the versions the undo history keeps."""
 DATA_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
+PIPELINE_TOOL = "plot_pipeline"
+PLOT_TOOLS = frozenset({"keep_plot_request", PIPELINE_TOOL})
+"""The calls that send a wish to the plot: kept for the next plot, or run on the plot the session has."""
+SHIPPED = frozenset({"ok", "needs_attention"})
+"""The `plot_pipeline` results that drew a plot."""
 """The root's tools that store a dataset version; every call of them in a turn must succeed."""
 GAP_CODE = "unsupported_operation"
 """`prepare_data`'s answer to the `unsupported` operation: the root named a change no operation can make."""
@@ -318,6 +330,11 @@ class PrepCase(BaseModel):
     """`any` for a request that leaves the order of the rows open: the found and the expected table are compared after
     a canonical sort of their rows. `same`, the default, compares the rows in their order, which a line connects and a
     sort is about. Only for a case scored by its table."""
+    plot_request: bool = False
+    """The message asks for a change of the plot, alone or beside its data operations (an order of the bars, a total
+    in the title): the turn must send it to the plot with one of `PLOT_TOOLS`, and the plot must keep or draw it
+    (`score_plot_request`). The data operations are scored as in every case, so a table the turn sorted for such an
+    order is a miss by its rows."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -331,6 +348,9 @@ class PrepCase(BaseModel):
             raise ValueError("earlier changes come before a message on summarized data")
         if self.row_order == "any" and not self.scored_by_table:
             raise ValueError("row_order is for a case scored by its table")
+        if self.row_order == "any" and self.plot_request:
+            # The order of the rows is how such a case sees a table that was sorted for the plot's order.
+            raise ValueError("a plot_request case compares the rows in their order")
         return self
 
     @property
@@ -867,6 +887,13 @@ class CaseResult:
     version_miss: bool = False
     """The case expects a `from_version` and the turn did not start from it: the case is a miss
     (`score_from_version`)."""
+    plot_wishes: int = 0
+    """`PLOT_TOOLS` calls of the turn that carry a wish: a request in words, a text or a decision."""
+    plot_wishes_kept: int = 0
+    """`PLOT_TOOLS` answers of the turn that kept a request for the next plot (`request_kept`) or shipped a plot."""
+    plot_request_miss: bool = False
+    """The case expects a wish sent to the plot, and the turn sent none or the plot did not keep it: the case is a
+    miss (`score_plot_request`)."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -978,6 +1005,7 @@ class CaseRunner:
             score_conversions(result, owed, decimal)
             # A message case on summarized data gets no server conversion: the turn starts after the earlier changes.
             score_from_version(result, case.expected_from_version, current=1 + len(case.before_operations))
+            score_plot_request(result, case.plot_request)
             if summary_turn and pasted_rows is not None:
                 rows.add(pasted_rows)
             measure_reply(
@@ -1116,6 +1144,8 @@ class CaseRunner:
                 texts.extend(text for text in replies if text.strip())
             for call in event.get_function_calls():
                 result.tool_calls.append(str(call.name))
+                if call.name in PLOT_TOOLS and isinstance(call.args, dict) and _carries_a_wish(call.args):
+                    result.plot_wishes += 1
                 if call.name in (PREPARE_TOOL, QUERY_TOOL):
                     args = call.args if isinstance(call.args, dict) else {}
                     result.from_versions.append(f"{call.name}:{args.get('from_version', 'current')}")
@@ -1126,6 +1156,11 @@ class CaseRunner:
                 elif call.name == GENERATE_TOOL and isinstance(call.args, dict):
                     operations.append({"op": GENERATE_TOOL, **call.args})
             for response in event.get_function_responses():
+                if response.name in PLOT_TOOLS:
+                    kept = response.response if isinstance(response.response, dict) else {}
+                    # Kept for the next plot (the tool's own answer, or a run stopped before it started), or drawn.
+                    drawn = response.name == PIPELINE_TOOL and kept.get("status") in SHIPPED
+                    result.plot_wishes_kept += kept.get("request_kept") is True or drawn
                 # The operations are applied in order, so a list the data refuses (a column named
                 # before its rename, a type the cells cannot take) is a miss however it reads; so is
                 # a formula the server cannot compute.
@@ -1203,6 +1238,22 @@ def score_from_version(result: CaseResult, expected: str | int | None, current: 
     stray = any(tool == PREPARE_TOOL and version_key(version, current) != want for tool, version in calls)
     result.version_miss = not named or stray
     if result.version_miss:
+        result.match = False
+
+
+def _carries_a_wish(args: dict[str, Any]) -> bool:
+    """Whether a `PLOT_TOOLS` call names something for the plot: a request in words, a text or a decision. A bare
+    `plot_pipeline` call, as a plot button makes it, carries none."""
+    return bool(str(args.get("change_request") or "").strip() or args.get("expected_texts") or args.get("remember"))
+
+
+def score_plot_request(result: CaseResult, wanted: bool) -> None:
+    """Whether the turn sent the case's plot wish to the plot, and the plot has it: a `PLOT_TOOLS` call that carries
+    a wish (`plot_wishes`), and an answer that kept it for the next plot or drew it (`plot_wishes_kept`). A miss
+    otherwise: a bare plot call, or a `keep_plot_request` the server answered with `request_kept: false`, leaves the
+    user's order nowhere. What the wish says is not scored, and a case without the expectation is not scored."""
+    result.plot_request_miss = wanted and not (result.plot_wishes and result.plot_wishes_kept)
+    if result.plot_request_miss:
         result.match = False
 
 
@@ -1374,6 +1425,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         "conversions_owed": sum(result.conversions_owed for _, result in pairs),
         "conversions_made": sum(result.conversions_made for _, result in pairs),
         "version_misses": sum(1 for _, result in pairs if result.version_miss),
+        "plot_request_misses": sum(1 for _, result in pairs if result.plot_request_miss),
         "llm_calls": sum(result.llm_calls for _, result in pairs),
         "cost_usd": round(sum(result.cost_usd for _, result in pairs), 8),
     }
@@ -1395,6 +1447,10 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "server_operations": result.server_operations,
             "from_versions": result.from_versions,
             "version_miss": result.version_miss,
+            "plot_request_miss": result.plot_request_miss,
+            "plot_wishes": result.plot_wishes,
+            "plot_wishes_kept": result.plot_wishes_kept,
+            "tool_calls": result.tool_calls,
         }
         for case, result in pairs
         if result.operations is not None and not result.match
@@ -1466,6 +1522,8 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
                 outcome += f": {result.table_miss}"
             if result.version_miss:
                 outcome += f", from {', '.join(result.from_versions) or 'no call'}"
+            if result.plot_request_miss:
+                outcome += ", no plot request"
             if result.reply_miss:
                 outcome += f", reply: {result.reply_miss.replace('_', ' ')}"
         rows.append((case.id, expected, found, outcome))

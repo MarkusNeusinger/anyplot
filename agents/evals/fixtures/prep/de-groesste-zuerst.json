@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Abteilung,Kosten\nEinkauf,4200\nVertrieb,9100\nLager,2800\nIT,6400\n",
+  "message": "Die größten zuerst bitte.",
+  "expected_operations": [],
+  "locale": "de",
+  "spec_id": "bar-basic",
+  "tags": ["order", "plot_request"],
+  "plot_request": true
+}

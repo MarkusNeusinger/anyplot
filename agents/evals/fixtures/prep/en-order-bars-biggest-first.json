@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Product,Revenue\nTea,420\nCake,980\nJam,310\nHoney,655\nBread,740\n",
+  "message": "Sort the bars from biggest to smallest.",
+  "expected_operations": [],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["order", "plot_request"],
+  "plot_request": true
+}

@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Magasin,Ventes\nLyon,310\nNantes,455\nLille,120\nNice,390\n",
+  "message": "Trie le tableau par ventes, par ordre décroissant.",
+  "expected_operations": [{"op": "sort", "column": "Ventes", "descending": true}],
+  "locale": "fr",
+  "spec_id": "bar-basic",
+  "tags": ["sort", "table_named"]
+}
