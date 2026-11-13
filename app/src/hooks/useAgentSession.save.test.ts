@@ -133,7 +133,8 @@ describe('useAgentSession: .save()', () => {
     const call = calls.find(item => item.path.endsWith('/bundle'));
     expect(call?.search).toBe('?include_data=true');
     expect(downloads).toEqual([{ href: 'blob:bundle', download: 'anyplot-session-S1abcdef.json' }]);
-    expect(trackEvent).toHaveBeenCalledWith('agent_session_saved', { include_data: 'yes' });
+    // The save is the server's to count, not the public dashboard's.
+    expect(trackEvent).not.toHaveBeenCalled();
     // The usage beacon: the session-level action as version 0, nothing else.
     await waitFor(() =>
       expect(outcomes).toEqual([{ body: { action: 'saved_session', version: 0 }, keepalive: true }])
@@ -157,7 +158,6 @@ describe('useAgentSession: .save()', () => {
 
     expect(calls.find(item => item.path.endsWith('/bundle'))?.search).toBe('?include_data=false');
     expect(downloads).toEqual([{ href: 'blob:bundle', download: 'anyplot-session-S1abcdef.json' }]);
-    expect(trackEvent).toHaveBeenCalledWith('agent_session_saved', { include_data: 'no' });
   });
 
   it('rejects with the code and ref of a failed save, downloads nothing and records nothing', async () => {
@@ -174,7 +174,6 @@ describe('useAgentSession: .save()', () => {
     expect(error).toBeInstanceOf(AgentApiError);
     expect(error).toMatchObject({ status: 502, code: 'too_large', ref: 'ref-big' });
     expect(downloads).toEqual([]);
-    expect(trackEvent).not.toHaveBeenCalledWith('agent_session_saved', expect.anything());
     expect(outcomes).toEqual([]);
     expect(result.current.state.phase).toBe('ready');
   });
@@ -224,7 +223,6 @@ describe('useAgentSession: .save()', () => {
     await act(() => result.current.saveSession(true));
     expect(calls.filter(item => item.path.endsWith('/bundle'))).toHaveLength(0);
     expect(downloads).toEqual([]);
-    expect(trackEvent).not.toHaveBeenCalledWith('agent_session_saved', expect.anything());
 
     release();
     await act(() => parse);

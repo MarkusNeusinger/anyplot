@@ -1,10 +1,61 @@
 import { useCallback } from 'react';
 
 import { analyticsMuted } from 'src/analytics/mute';
-import { paths, RESERVED_TOP_LEVEL } from 'src/routes/paths';
+import { isPlotsPath, paths, RESERVED_TOP_LEVEL } from 'src/routes/paths';
 
-interface EventProps {
+/**
+ * The custom events the app sends. The set is closed: every name is a goal a reader of the
+ * public dashboard understands, and the compiler refuses any other
+ * (docs/reference/plausible.md).
+ */
+export type AnalyticsEvent =
+  | 'copy_code'
+  | 'download_image'
+  | 'interactive_open'
+  | 'search'
+  | 'search_no_results'
+  | 'feedback_submitted'
+  | 'agent_open'
+  | 'agent_plot_rendered'
+  | 'plots_scrolled'
+  | 'nav_click'
+  | 'ui_feature';
+
+/**
+ * The features `ui_feature` counts, as its `feature` property. The event answers one question
+ * per feature, "is this used at all", so it is sent once per feature and visit and carries
+ * nothing else.
+ */
+export const UI_FEATURES = [
+  'tab_toggle',
+  'view_mode_change',
+  'grid_resize',
+  'filter_remove',
+  'random_filter',
+  'plot_rotate',
+  'library_filter',
+  'theme_toggle',
+  'feedback_open',
+  'map_node_click',
+  'map_node_pin',
+  'map_search_select',
+] as const;
+
+export type UiFeature = (typeof UI_FEATURES)[number];
+
+export interface EventProps {
+  feature?: UiFeature;
   [key: string]: string | undefined;
+}
+
+/**
+ * `trackEvent`, for the components that receive it as a prop. `ui_feature` names its feature
+ * and nothing else: without a feature the event would say nothing, and with more than it the
+ * twelve features would again be twelve kinds of event. The compiler refuses both.
+ */
+export interface TrackEvent {
+  (name: 'ui_feature', props: { feature: UiFeature }, url?: string): void;
+  (name: Exclude<AnalyticsEvent, 'ui_feature'>, props?: EventProps, url?: string): void;
 }
 
 // The last pageview sent, for the whole app rather than per hook instance: the layout records
@@ -14,6 +65,65 @@ let lastPageviewUrl = '';
 /** Forgets the last pageview. For tests: the state above is the module's and outlives one. */
 export function forgetLastPageview(): void {
   lastPageviewUrl = '';
+}
+
+// A visit as Plausible counts it: it ends after 30 minutes without a pageview or an event.
+// The same gap starts a new visit here, so "once per visit" means the same on both sides. A
+// tab left open overnight counts a feature again the next day.
+const VISIT_GAP_MS = 30 * 60 * 1000;
+let lastSentAt = 0;
+const featuresThisVisit = new Set<UiFeature>();
+
+/** Forgets the visit and the features it used. For tests, like `forgetLastPageview`. */
+export function forgetVisit(): void {
+  lastSentAt = 0;
+  featuresThisVisit.clear();
+}
+
+/**
+ * Notes that something is being sent now. A long silence before it began a new visit, in which
+ * no feature was used yet. Only what is really sent counts: a repeated feature use sends
+ * nothing, so for Plausible the visit does not go on because of it.
+ */
+function noteSent(now: number): void {
+  if (now - lastSentAt > VISIT_GAP_MS) featuresThisVisit.clear();
+  lastSentAt = now;
+}
+
+/** Whether `ui_feature` still has to be sent for this feature in the visit that is under way at `now`. */
+function firstUseThisVisit(feature: UiFeature, now: number): boolean {
+  if (now - lastSentAt > VISIT_GAP_MS) featuresThisVisit.clear();
+  return !featuresThisVisit.has(feature);
+}
+
+/** How long a search query may be when it is sent: catalogue words fit, a pasted text does not. */
+export const MAX_QUERY_LENGTH = 40;
+
+/**
+ * A typed search query as it is sent: lowercase, single spaces, cut at `MAX_QUERY_LENGTH`. The
+ * public dashboard lists these, so "Scatter", "scatter " and "SCATTER" are one entry, and a
+ * long text a visitor pasted by mistake does not stand there in full.
+ */
+export function normalizeQuery(query: string): string {
+  return query.toLowerCase().trim().replace(/\s+/g, ' ').slice(0, MAX_QUERY_LENGTH).trimEnd();
+}
+
+/** The kinds of page a pageview is recorded as, in its `page` property. */
+export type PageKind = 'home' | 'plots' | 'spec_overview' | 'spec_detail' | 'agent_chat' | 'other';
+
+/**
+ * The kind of page a path names. `copy_code` and `download_image` send the same values, so one
+ * `page` breakdown covers pageviews and the two conversions.
+ */
+export function pageKind(pathname: string): PageKind {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts.length === 0) return 'home';
+  if (isPlotsPath(pathname)) return 'plots';
+  if (parts[0] === 'agent' && parts.length === 1) return 'agent_chat';
+  if (RESERVED_TOP_LEVEL.has(parts[0])) return 'other';
+  if (parts.length === 1) return 'spec_overview';
+  if (parts.length === 3) return 'spec_detail';
+  return 'other';
 }
 
 // Module-level ambient props attached to every pageview and custom event.
@@ -117,15 +227,25 @@ export function useAnalytics() {
     if (url === lastPageviewUrl) return;
     lastPageviewUrl = url;
 
-    const props = Object.keys(ambientProps).length > 0 ? { ...ambientProps } : undefined;
-    window.plausible?.('pageview', props ? { url, props } : { url });
+    noteSent(Date.now());
+    const props = { ...ambientProps, page: pageKind(window.location.pathname) };
+    window.plausible?.('pageview', { url, props });
   }, [isProduction]);
 
   // `url` names the page an event belongs to when it is sent after the visitor
   // left it; without one the script takes the current address.
-  const trackEvent = useCallback(
-    (name: string, props?: EventProps, url?: string) => {
+  const trackEvent: TrackEvent = useCallback(
+    (name: AnalyticsEvent, props?: EventProps, url?: string) => {
       if (!isProduction || analyticsMuted()) return;
+      const now = Date.now();
+      const feature = name === 'ui_feature' ? props?.feature : undefined;
+      if (name === 'ui_feature') {
+        // Without a feature the event says nothing (the type refuses the call; a caller that
+        // got around it sends nothing); a second use in the same visit adds nothing.
+        if (!feature || !firstUseThisVisit(feature, now)) return;
+      }
+      noteSent(now);
+      if (feature) featuresThisVisit.add(feature);
       const cleanProps = props
         ? Object.fromEntries(Object.entries(props).filter(([, v]) => v !== undefined))
         : {};

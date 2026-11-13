@@ -8,7 +8,9 @@
  * - One matrix, a row per vendor and purpose, most requests first: Cloudflare's
  *   category on most of its verified lines, the verified and unverified counts,
  *   the surfaces, the 404s and the most requested route. A row opens to its
- *   five most requested routes.
+ *   five most requested routes. Page reads are two columns: `pages` got the
+ *   prerendered page, `shell` the app's empty shell. A row with a category and
+ *   a `shell` count is a crawler Cloudflare knows that reads nothing here.
  * - One row per UTC day, newest first: the verified lines by audience, the
  *   unverified apart, and the MCP requests.
  * - Unlike the public tile, every status, surface and verdict counts here;
@@ -53,7 +55,10 @@ export interface MachineReadsVendor {
   requests: number;
   verified: number;
   unverified: number;
+  /** Page reads answered with the prerendered page. */
   pages: number;
+  /** Page reads answered with the app's empty shell, which holds nothing for a client without JavaScript. */
+  shell: number;
   code: number;
   og: number;
   mcp: number;
@@ -118,6 +123,7 @@ function readVendor(row: unknown): MachineReadsVendor | null {
     verified: count(row.verified),
     unverified: count(row.unverified),
     pages: count(row.pages),
+    shell: count(row.shell),
     code: count(row.code),
     og: count(row.og),
     mcp: count(row.mcp),
@@ -287,6 +293,7 @@ const MATRIX_COLUMNS = [
   'verified',
   'unverified',
   'pages',
+  'shell',
   'code',
   'og',
   'mcp',
@@ -353,6 +360,7 @@ function VendorRow({
     vendor.verified,
     vendor.unverified,
     vendor.pages,
+    vendor.shell,
     vendor.code,
     vendor.og,
     vendor.mcp,

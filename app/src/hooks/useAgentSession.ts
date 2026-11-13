@@ -134,8 +134,8 @@
  * the error show. Such a turn stays pending: the next turn reads it first, while
  * nothing in the session changed since, and when the cut turn shipped its plot,
  * before the cut or with that read, the same request again (a retry click) ends
- * there instead of making the same plot a second time. `agent_turn_resumed{outcome}` counts each
- * cut: `resumed`, `gone` (the server holds another turn) or `failed`.
+ * there instead of making the same plot a second time. A cut ends as `resumed`, `gone` (the
+ * server holds another turn) or `failed`.
  *
  * Session lifetime: the session, with the pasted data and its renders, is
  * deleted when the page unmounts and on `pagehide` (a reload or a closed tab,
@@ -202,13 +202,10 @@
  * case holds the transcript, the profile, the bindings and, when ticked, the
  * current data, and its record lives on the session (`chatFeedback`).
  *
- * Analytics carry enum properties only, never text or data:
- * `agent_data_parsed{status, size_bucket}`, `agent_data_confirmed{size_bucket}`,
- * `agent_data_prepared{changes}`, `agent_data_undo{version}`,
- * `agent_plot_rendered{library, status, repaired, spec}`,
- * `agent_guardrail_block{reason}`, `agent_session_saved{include_data}`,
- * `agent_result_feedback{reaction, include_data, subject}` and
- * `agent_turn_resumed{outcome}`.
+ * Analytics: one event, `agent_plot_rendered{library, status, repaired, spec}`, with enum
+ * properties only, never text or data. The page sends `agent_open`. What a session did
+ * step by step (pastes, confirmations, refusals, saves, feedback, cut turns) is in the
+ * server's usage telemetry, not on the public dashboard (docs/reference/agent-telemetry.md).
  *
  * Usage telemetry: after a copy, a download, a save or a sent feedback, a
  * fire-and-forget beacon (`POST .../outcome`) tells the BFF which action it
@@ -232,7 +229,6 @@ import {
   codeArtifact,
   type CodeArtifact,
   type ConvertAnswer,
-  countBucket,
   type DatasetChanged,
   type DatasetCopied,
   type DatasetParsed,
@@ -260,7 +256,6 @@ import {
   renderedThemes,
   type RoleSpec,
   type Round,
-  sizeBucket,
   type SwitchCarry,
   type SwitchSource,
   type Theme,
@@ -647,7 +642,7 @@ export type TurnEnd = 'done' | 'error' | 'refused' | 'stopped';
  */
 export const RESUME_DELAYS_MS: readonly number[] = [1_000, 2_000, 4_000, 8_000];
 
-/** How a cut turn's reads ended, for `agent_turn_resumed{outcome}`. */
+/** How a cut turn's reads ended. */
 type ResumeOutcome = 'resumed' | 'gone' | 'failed';
 
 /** What a turn's events showed it changed, for its outcome (`turnOutcome`). */
@@ -1444,19 +1439,6 @@ function dataVersionNumber(dataset: DatasetState): number {
   return versionOf(dataset.parsed.version);
 }
 
-/**
- * How far an undo went back, for the `agent_data_undo` bucket: the restored version's place in
- * its data, the data's first version (its paste) being 1, counted from the server's
- * `original_version`. An older server names none, and its `version` is that place already.
- */
-function undoDepth(parsed: DatasetParsed): number {
-  const version = versionOf(parsed.version);
-  const first = parsed.original_version;
-  const valid =
-    typeof first === 'number' && Number.isInteger(first) && first >= 1 && first <= version;
-  return valid ? version - first + 1 : version;
-}
-
 /** The snapshot of the data version `next` holds, numbered `n` in the session. */
 function snapshotOf(
   next: AgentSessionState,
@@ -2163,33 +2145,6 @@ export interface UseAgentSessionOptions {
   resumeDelaysMs?: readonly number[];
 }
 
-const GUARDRAIL_REASONS = new Set([
-  'out_of_scope',
-  'needs_data',
-  'budget',
-  'unsupported_content',
-  // The per-user message limits and a session closed after repeated scope refusals.
-  'rate_limited',
-  'daily_limit',
-  'session_closed',
-  // This plot in another library or language (a pointer to the catalogue), and
-  // a user paused for the day after repeated attack verdicts.
-  'other_library',
-  'locked_out',
-  // The whole service paused for the day: its day budget is spent, not the user's own.
-  'service_paused',
-]);
-
-/** The paste route's guard refusals (HTTP errors, not stream refusals) that count as guardrail blocks. */
-const PASTE_GUARDRAIL_REASONS = new Set([
-  'data_refused',
-  'rate_limited',
-  'daily_limit',
-  'service_paused',
-  'locked_out',
-  'session_closed',
-]);
-
 function failureOf(err: unknown): Failure {
   if (err instanceof AgentApiError) {
     return {
@@ -2420,14 +2375,9 @@ export function useAgentSession({
 
   /** `.discard()`: drop the transcribed table; nothing was stored, so the server is not asked. */
   const discardTranscription = useCallback(() => {
-    const transcription = stateRef.current.transcription;
-    if (!transcription) return;
+    if (!stateRef.current.transcription) return;
     safeDispatch({ type: 'transcription_clear' });
-    trackEvent('agent_data_parsed', {
-      status: 'discarded',
-      size_bucket: sizeBucket(transcription.bytes),
-    });
-  }, [safeDispatch, trackEvent]);
+  }, [safeDispatch]);
 
   /**
    * Bind `name` (a single role or a family member such as `y2`) to `column`, or clear it with `null`.
@@ -2477,7 +2427,6 @@ export function useAgentSession({
     try {
       await agentApi.confirmDataset(token, sid);
       safeDispatch({ type: 'confirm_done' });
-      trackEvent('agent_data_confirmed', { size_bucket: sizeBucket(dataset.bytes) });
       return true;
     } catch (err) {
       safeDispatch({ type: 'confirm_failed', failure: handleFailure(err) });
@@ -2485,7 +2434,7 @@ export function useAgentSession({
     } finally {
       confirmRef.current = false;
     }
-  }, [token, safeDispatch, handleFailure, trackEvent, busy]);
+  }, [token, safeDispatch, handleFailure, busy]);
 
   /**
    * `.undo()`: the version before the assistant's last change to the data is
@@ -2505,13 +2454,12 @@ export function useAgentSession({
     try {
       const parsed = await agentApi.undoDataset(token, sid);
       safeDispatch({ type: 'undo_done', parsed });
-      trackEvent('agent_data_undo', { version: countBucket(undoDepth(parsed)) });
     } catch (err) {
       safeDispatch({ type: 'undo_failed', failure: handleFailure(err) });
     } finally {
       undoRef.current = false;
     }
-  }, [token, safeDispatch, handleFailure, trackEvent, busy]);
+  }, [token, safeDispatch, handleFailure, busy]);
 
   /**
    * `.to_long()`: the service applies its wide-table suggestion as the next data
@@ -2528,13 +2476,12 @@ export function useAgentSession({
     try {
       const dataset = await agentApi.datasetToLong(token, sid);
       safeDispatch({ type: 'data_prepared', dataset, toLong: true });
-      trackEvent('agent_data_prepared', { changes: countBucket(dataset.changes.length) });
     } catch (err) {
       safeDispatch({ type: 'to_long_failed', failure: handleFailure(err) });
     } finally {
       undoRef.current = false;
     }
-  }, [token, safeDispatch, handleFailure, trackEvent, busy]);
+  }, [token, safeDispatch, handleFailure, busy]);
 
   /**
    * The admin fan-out (`FanOut`): the server copies the confirmed current data
@@ -2981,15 +2928,9 @@ export function useAgentSession({
             text: event.text,
             ...(event.code === 'service_paused' ? { until: nextUtcMidnight() } : {}),
           });
-          trackEvent('agent_guardrail_block', {
-            reason: GUARDRAIL_REASONS.has(event.code) ? event.code : 'other',
-          });
           break;
         case 'error':
           addItem({ kind: 'error', code: event.code, ref: event.ref });
-          if (event.code === 'guard_unavailable') {
-            trackEvent('agent_guardrail_block', { reason: 'guard_unavailable' });
-          }
           break;
         case 'done':
           // The assistant changed the data (`prepare_data`) or computed it from a
@@ -2997,9 +2938,6 @@ export function useAgentSession({
           // replaces the preview, and the user checks and confirms it like a paste.
           if (event.dataset) {
             safeDispatch({ type: 'data_prepared', dataset: event.dataset });
-            trackEvent('agent_data_prepared', {
-              changes: countBucket(event.dataset.changes.length),
-            });
           }
           // The root may have changed the bindings during the turn (`set_bindings`),
           // which also drops the server's confirmation: take both as the server has them.
@@ -3030,7 +2968,7 @@ export function useAgentSession({
           break;
       }
     },
-    [safeDispatch, addItem, onPlot, trackEvent]
+    [safeDispatch, addItem, onPlot]
   );
 
   /**
@@ -3233,8 +3171,7 @@ export function useAgentSession({
       cutTurnRef.current = null;
       if (cut && cut.sid === sid && sameMark(cut.mark, sessionMark(current))) {
         // One read, at once: the user asked again, so the network may be back. Its `done` still
-        // fits, since nothing it syncs changed since. The cut was counted when it happened
-        // (`agent_turn_resumed`), so this read is not.
+        // fits, since nothing it syncs changed since.
         const kind = 'text' in cut.body ? 'message' : cut.body.action;
         // The cut turn's plot, shown before the cut or brought by this read, is what the same
         // request asks for: asking again would make that plot a second time.
@@ -3285,7 +3222,6 @@ export function useAgentSession({
         if (end === 'done') return;
         const failure: Failure = { code: end === 'cut' ? 'network' : 'upstream', ref: null };
         const resumed = read.lastId ? await reattach(sid, read, controller, resumeDelaysMs) : null;
-        if (resumed) trackEvent('agent_turn_resumed', { outcome: resumed.outcome });
         if (read.finished || stoppedRef.current || controller.signal.aborted) return;
         // The server's own answer says more than the cut: a session that is gone, a sign-in.
         const shown =
@@ -3304,7 +3240,7 @@ export function useAgentSession({
         }
       });
     },
-    [token, addItem, consume, reattach, driveTurn, busy, trackEvent, resumeDelaysMs]
+    [token, addItem, consume, reattach, driveTurn, busy, resumeDelaysMs]
   );
 
   /**
@@ -3393,11 +3329,9 @@ export function useAgentSession({
       const sid = stateRef.current.sessionId;
       if (!sid || !text.trim() || busy()) return { outcome: 'skipped', turnEnd: null };
       const bytes = utf8Bytes(text);
-      const bucket = sizeBucket(bytes);
       if (bytes > MAX_DATASET_BYTES) {
         const failure: Failure = { code: 'too_long', ref: null };
         safeDispatch({ type: 'parse_failed', failure });
-        trackEvent('agent_data_parsed', { status: 'too_long', size_bucket: bucket });
         return { outcome: 'failed', turnEnd: null, failure };
       }
       let outcome: ParseOutcome = 'failed';
@@ -3423,7 +3357,6 @@ export function useAgentSession({
             },
             ...(options.chip ? { chip: options.chip } : {}),
           });
-          trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
           return { outcome: 'transcribed', turnEnd: null };
         }
         safeDispatch({
@@ -3446,7 +3379,6 @@ export function useAgentSession({
             offer: readLanguageOffer(parsed.language),
           });
         }
-        trackEvent('agent_data_parsed', { status: 'ok', size_bucket: bucket });
         outcome = 'stored';
         const defaults = toMap(parsed.bindings);
         // Learn whether the defaults are complete and which required roles
@@ -3461,17 +3393,10 @@ export function useAgentSession({
           forward = trimmed;
           outcome = 'forwarded';
           safeDispatch({ type: 'parse_forwarded' });
-          trackEvent('agent_data_parsed', { status: failure.code, size_bucket: bucket });
         } else {
           // Longer code reads as a failure whose line asks to shorten it (`DATA_FAILURE.code`).
           refusal = failure;
           safeDispatch({ type: 'parse_failed', failure });
-          const known = ['too_long', 'unparseable', 'data_refused', ...FORWARDED];
-          const status = known.includes(failure.code) ? failure.code : 'error';
-          trackEvent('agent_data_parsed', { status, size_bucket: bucket });
-          if (PASTE_GUARDRAIL_REASONS.has(failure.code)) {
-            trackEvent('agent_guardrail_block', { reason: failure.code });
-          }
         }
       } finally {
         parseRef.current = false;
@@ -3507,14 +3432,13 @@ export function useAgentSession({
       }
       return { outcome, turnEnd: null, ...(refusal ? { failure: refusal } : {}) };
     },
-    [token, safeDispatch, handleFailure, trackEvent, applyBindings, busy, runTurn]
+    [token, safeDispatch, handleFailure, applyBindings, busy, runTurn]
   );
 
   /**
    * `.use()`: store the transcribed table. Its CSV goes through the normal
    * parse as a confirmed table (the server skips only its free-text fallback),
-   * which stores it, applies the default bindings, reports
-   * `agent_data_parsed{status: ok}` and asks for the summary; the parse's start
+   * which stores it, applies the default bindings and asks for the summary; the parse's start
    * clears the transcription. While something else is in flight nothing starts
    * and the table stays.
    */
@@ -3621,8 +3545,8 @@ export function useAgentSession({
 
   /**
    * `.save()`: download the session's feedback case as `anyplot-session-<id>.json`,
-   * with each version's `data.csv` when `includeData` is set, and report
-   * `agent_session_saved{include_data}`. Nothing starts without a session, while
+   * with each version's `data.csv` when `includeData` is set, and report the save to the
+   * usage telemetry. Nothing starts without a session, while
    * anything else is in flight (the file would miss the turn in progress), or
    * while a save runs. A failure rejects with an `AgentApiError` for the
    * button's failure line; a 401 or 403 also shows the sign-in notice.
@@ -3637,7 +3561,6 @@ export function useAgentSession({
         const { blob, filename } = await agentApi.fetchBundle(token, sid, includeData);
         if (!mounted.current) return;
         downloadBlob(blob, filename);
-        trackEvent('agent_session_saved', { include_data: includeData ? 'yes' : 'no' });
         void agentApi.reportOutcome(token, sid, { action: 'saved_session', version: 0 });
       } catch (err) {
         const failure = handleFailure(err);
@@ -3646,7 +3569,7 @@ export function useAgentSession({
         saveRef.current = false;
       }
     },
-    [token, handleFailure, trackEvent, busy]
+    [token, handleFailure, busy]
   );
 
   // ---------------------------------------------------------------- language
@@ -3703,8 +3626,8 @@ export function useAgentSession({
 
   /**
    * `.send()` on a result card: store the case of version `number` (`POST
-   * .../feedback`), record it on the version and report
-   * `agent_result_feedback{reaction, include_data, subject}`. `number` 0 is the
+   * .../feedback`), record it on the version and report the send to the usage
+   * telemetry. `number` 0 is the
    * chat itself, recorded as `chatFeedback`. It runs whatever else is in
    * flight, because it starts no run and only reads the session; a second call
    * for a version whose send is still in flight joins that one. A failure
@@ -3749,11 +3672,6 @@ export function useAgentSession({
               caseId: stored.case_id,
             },
           });
-          trackEvent('agent_result_feedback', {
-            reaction: input.reaction,
-            include_data: input.includeData ? 'yes' : 'no',
-            subject: chat ? 'chat' : 'result',
-          });
           void agentApi.reportOutcome(token, sid, {
             action: 'feedback',
             version: number,
@@ -3785,7 +3703,7 @@ export function useAgentSession({
       feedbackRef.current.set(number, promise);
       return promise;
     },
-    [token, safeDispatch, handleFailure, trackEvent]
+    [token, safeDispatch, handleFailure]
   );
 
   return {

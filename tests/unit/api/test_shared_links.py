@@ -21,7 +21,7 @@ from api.routers.debug import require_admin
 from api.shared_links import (
     OTHER,
     SHARE_PLATFORMS,
-    TOP_PLOTS,
+    TOP_ENTRIES,
     WINDOW_DAYS,
     SharedLinksDetail,
     read_detail,
@@ -77,7 +77,8 @@ class TestSharePlatform:
                 "teams",
             ),
             ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Microsoft Teams", "teams"),
-            ("Snapchat/12.0", "snapchat"),
+            # Snap's fetcher as its documentation gives it (developers.snap.com/robots).
+            ("Snap URL Preview Service; bot; snapchat; https://developers.snap.com/robots", "snapchat"),
             ("github-camo (f7b8fdd5)", "github"),
             ("Mozilla/5.0 (compatible; Embedly/0.2; +http://support.embed.ly/)", "embedly"),
             ("Quora Link Preview/1.0", "quora"),
@@ -123,6 +124,9 @@ class TestSharePlatform:
             "Mozilla/5.0 (compatible; YandexBot/3.0)",
             # An app the table does not know yet.
             "Bluesky Cardyb/1.1; +mailto:support@bsky.app",
+            # Snapchat's in-app browser: a person who opened the image, not Snap's preview fetcher.
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+            "Version/13.0.3 Mobile/15E148 Snapchat/10.72.0.2 (like Safari/604.1)",
         ],
     )
     def test_everything_else_is_other(self, user_agent: str) -> None:
@@ -338,7 +342,7 @@ class TestRecordShare:
 
 
 class FakeRepository:
-    """The two reads of `LinkShareRepository`, over rows held in a list."""
+    """The reads of `LinkShareRepository`, over rows held in a list."""
 
     def __init__(self, rows: list[tuple[date, str, bool, str, str, str, int]]) -> None:
         self.rows = rows  # (day, platform, verified, spec_id, language, library_id, fetches)
@@ -360,6 +364,24 @@ class FakeRepository:
                 totals[key] = totals.get(key, 0) + fetches
         ranked = sorted(totals.items(), key=lambda item: (-item[1], item[0]))
         return [(*key, fetches) for key, fetches in ranked[:limit]]
+
+    async def top_specs(self, since: date, until: date, *, without_platform: str, limit: int) -> list[tuple[str, int]]:
+        return self._top_by(3, since, until, without_platform, limit)
+
+    async def top_libraries(
+        self, since: date, until: date, *, without_platform: str, limit: int
+    ) -> list[tuple[str, int]]:
+        return self._top_by(5, since, until, without_platform, limit)
+
+    def _top_by(
+        self, column: int, since: date, until: date, without_platform: str, limit: int
+    ) -> list[tuple[str, int]]:
+        totals: dict[str, int] = {}
+        for row in self.rows:
+            day, platform, name, fetches = row[0], row[1], str(row[column]), row[6]
+            if since <= day <= until and platform != without_platform and name:
+                totals[name] = totals.get(name, 0) + fetches
+        return sorted(totals.items(), key=lambda item: (-item[1], item[0]))[:limit]
 
 
 ROWS = [
@@ -389,7 +411,8 @@ class TestReadDetail:
         ]
         assert all(day.shares == 0 for day in detail.days)
         assert detail.total == 0 and detail.platforms == [] and detail.top == [] and detail.other == 0
-        assert detail.verified == {}
+        assert detail.top_specs == [] and detail.top_libraries == []
+        assert detail.other_verified == 0
 
     async def test_other_is_kept_apart_from_every_number(self) -> None:
         detail = await read_detail(FakeRepository(ROWS), TODAY)  # type: ignore[arg-type]
@@ -407,7 +430,12 @@ class TestReadDetail:
         """A share counts whatever the verdict: WhatsApp fetches from the sender's phone, which nobody verifies."""
         detail = await read_detail(FakeRepository(ROWS), TODAY)  # type: ignore[arg-type]
 
-        assert detail.verified == {"linkedin": 4, OTHER: 2, "slack": 1}  # whatsapp has none, so it is absent
+        assert [(entry.platform, entry.shares, entry.verified) for entry in detail.platforms] == [
+            ("linkedin", 4, 4),
+            ("whatsapp", 4, 0),
+            ("slack", 2, 1),  # one of its two fetches was verified, one was not
+        ]
+        assert detail.other_verified == 2
         assert detail.total == 10 and detail.other == 49
 
     async def test_top_plots_are_pages_shared_by_named_platforms(self) -> None:
@@ -419,11 +447,35 @@ class TestReadDetail:
             ("scatter-basic", None, None, 2),  # the hub, an entry of its own
         ]
 
-    async def test_lists_at_most_five_plots(self) -> None:
-        rows = [(TODAY, "slack", True, f"spec-{index}", "", "", index + 1) for index in range(TOP_PLOTS + 3)]
+    async def test_a_spec_sums_its_hub_and_its_implementations(self) -> None:
+        detail = await read_detail(FakeRepository(ROWS), TODAY)  # type: ignore[arg-type]
+
+        assert [(spec.spec_id, spec.shares) for spec in detail.top_specs] == [
+            ("scatter-basic", 5),  # matplotlib 3 and the hub 2; the 9 are `other`, the 110 outside the window
+            ("heatmap-basic", 4),
+        ]
+
+    async def test_a_library_sums_its_implementations_and_no_hub(self) -> None:
+        rows = [*ROWS, (TODAY, "teams", True, "bar-basic", "python", "matplotlib", 2)]
         detail = await read_detail(FakeRepository(rows), TODAY)  # type: ignore[arg-type]
-        assert len(detail.top) == TOP_PLOTS
-        assert detail.top[0].shares == TOP_PLOTS + 3
+
+        assert [(library.library, library.shares) for library in detail.top_libraries] == [
+            ("matplotlib", 5),  # scatter-basic 3 and bar-basic 2, across specs
+            ("ggplot2", 4),
+        ]
+        # The hub's two shares are a spec's and no library's: the libraries add up to less.
+        assert sum(spec.shares for spec in detail.top_specs) == 11
+        assert sum(library.shares for library in detail.top_libraries) == 9
+
+    async def test_each_list_holds_at_most_five_entries(self) -> None:
+        rows = [
+            (TODAY, "slack", True, f"spec-{index}", "python", f"library-{index}", index + 1)
+            for index in range(TOP_ENTRIES + 3)
+        ]
+        detail = await read_detail(FakeRepository(rows), TODAY)  # type: ignore[arg-type]
+        for entries in (detail.top, detail.top_specs, detail.top_libraries):
+            assert len(entries) == TOP_ENTRIES
+            assert entries[0].shares == TOP_ENTRIES + 3
 
 
 @pytest.fixture(autouse=True)
@@ -438,10 +490,15 @@ DETAIL = SharedLinksDetail(
     status="ok",
     total=10,
     days=[],
-    platforms=[{"platform": "whatsapp", "shares": 4}],  # type: ignore[list-item]
+    platforms=[  # type: ignore[list-item]
+        {"platform": "whatsapp", "shares": 4},
+        {"platform": "slack", "shares": 2, "verified": 1},
+    ],
+    top_specs=[{"spec_id": "scatter-basic", "shares": 5}],  # type: ignore[list-item]
+    top_libraries=[{"library": "matplotlib", "shares": 3}],  # type: ignore[list-item]
     top=[{"spec_id": "scatter-basic", "shares": 2}],  # type: ignore[list-item]
     other=49,
-    verified={"slack": 1, OTHER: 2},
+    other_verified=2,
 )
 
 
@@ -465,9 +522,15 @@ class TestPublicEndpoint:
         assert response.status_code == 200
         body = response.json()
         assert body["status"] == "ok" and body["total"] == 10 and body["window_days"] == 28
-        assert body["platforms"] == [{"platform": "whatsapp", "shares": 4}]
-        assert body["top"] == [{"spec_id": "scatter-basic", "language": None, "library": None, "shares": 2}]
-        assert "other" not in body and "verified" not in body
+        # Every platform says which part of its shares Cloudflare verified: the tile's two lines.
+        assert body["platforms"] == [
+            {"platform": "whatsapp", "shares": 4, "verified": 0},
+            {"platform": "slack", "shares": 2, "verified": 1},
+        ]
+        assert body["top_specs"] == [{"spec_id": "scatter-basic", "shares": 5}]
+        assert body["top_libraries"] == [{"library": "matplotlib", "shares": 3}]
+        # The pages one by one, like `other` and its verdicts, are the owner's section's.
+        assert "top" not in body and "other" not in body and "other_verified" not in body
 
     def test_is_not_configured_without_a_database(self) -> None:
         with patch("api.routers.insights.is_db_configured", return_value=False):
@@ -520,7 +583,10 @@ class TestDebugEndpoint:
             body = self._client(AsyncMock()).get("/debug/shared-links").json()
 
         assert body["status"] == "ok" and body["other"] == 49 and body["total"] == 10
-        assert body["verified"] == {"slack": 1, "other": 2}
+        assert body["other_verified"] == 2
+        assert body["platforms"][1] == {"platform": "slack", "shares": 2, "verified": 1}
+        assert body["top"] == [{"spec_id": "scatter-basic", "language": None, "library": None, "shares": 2}]
+        assert body["top_specs"] == [{"spec_id": "scatter-basic", "shares": 5}]
 
     def test_is_unavailable_while_the_table_is_missing(self) -> None:
         async def missing(_repository: object) -> SharedLinksDetail:

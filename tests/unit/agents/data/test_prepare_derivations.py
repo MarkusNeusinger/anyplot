@@ -472,18 +472,18 @@ class TestBlank:
         assert prepared.changes == ["emptied 0 cells of u where u is missing; the rows stay"]
 
     def test_a_blanked_cell_never_comes_back_from_the_paste(self) -> None:
-        """A re-reading of the pasted cells (`set_type` with a decimal comma) would restore what `blank` emptied."""
+        """A re-reading of the pasted cells (`set_type` with a decimal comma) would restore what `blank` emptied, so
+        after a `blank` the column has no pasted cells and the re-reading is refused; read first, it works."""
         parsed = parse_dataset("k;v\na;1.234\nb;-99\n")
-        operations = OPERATIONS.validate_python(
-            [
-                blank(["v"], {"column": "v", "test": "eq", "value": -99}),
-                {"op": "set_type", "column": "v", "type": "number", "decimal": ","},
-            ]
-        )
+        emptied = blank(["v"], {"column": "v", "test": "eq", "value": -99})
+        reading = {"op": "set_type", "column": "v", "type": "number", "decimal": ","}
 
-        prepared = apply_operations(parsed, operations)
+        with pytest.raises(PrepareError) as raised:
+            apply_operations(parsed, OPERATIONS.validate_python([emptied, reading]))
+        assert raised.value.code == "type_mismatch"
 
-        assert cells(prepared, 1)[1] == ""
+        prepared = apply_operations(parsed, OPERATIONS.validate_python([reading, emptied]))
+        assert cells(prepared, 1) == ["1234", ""]
 
     @pytest.mark.parametrize(
         "operation",

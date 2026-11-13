@@ -12,7 +12,6 @@ import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
-import { useAnalytics } from 'src/hooks';
 import {
   fontSize,
   proseLinkStyle,
@@ -72,7 +71,6 @@ function FactTable({
 }
 
 export function LegalPage() {
-  const { trackEvent } = useAnalytics();
   const { hash } = useLocation();
 
   // The route loads lazily, after the browser has looked for the fragment and not found it, so a
@@ -104,7 +102,6 @@ export function LegalPage() {
           href="https://www.linkedin.com/in/markus-neusinger/"
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent('external_link', { destination: 'linkedin' })}
           sx={proseLinkStyle}
         >
           markus-neusinger
@@ -115,7 +112,6 @@ export function LegalPage() {
           href="https://x.com/MarkusNeusinger"
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent('external_link', { destination: 'x' })}
           sx={proseLinkStyle}
         >
           @MarkusNeusinger
@@ -126,7 +122,6 @@ export function LegalPage() {
           href="https://github.com/MarkusNeusinger"
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackEvent('external_link', { destination: 'github_personal' })}
           sx={proseLinkStyle}
         >
           MarkusNeusinger
@@ -140,13 +135,7 @@ export function LegalPage() {
       <Typography sx={subheadingStyle}>other projects</Typography>
       <Typography sx={textStyle}>
         {/* no noreferrer — own sites, keep the referrer for their analytics */}
-        <Link
-          href="https://kurrentschrift.ink"
-          target="_blank"
-          rel="noopener"
-          onClick={() => trackEvent('external_link', { destination: 'kurrentschrift' })}
-          sx={proseLinkStyle}
-        >
+        <Link href="https://kurrentschrift.ink" target="_blank" rel="noopener" sx={proseLinkStyle}>
           kurrentschrift.ink
         </Link>{' '}
         — read and write old german cursive
@@ -155,7 +144,6 @@ export function LegalPage() {
           href="https://github.com/MarkusNeusinger/cite-citadel"
           target="_blank"
           rel="noopener"
-          onClick={() => trackEvent('external_link', { destination: 'cite_citadel' })}
           sx={proseLinkStyle}
         >
           cite-citadel
@@ -280,9 +268,11 @@ export function LegalPage() {
                   'shared links',
                   <Box component="span" id="shared-links" sx={ANCHOR_SX}>
                     when a messenger or a social network fetches a page&apos;s preview image, one
-                    counter goes up: the day, the platform and the page. no IP address, no
-                    user-agent, no time of day, nothing about who shared. the counts are kept
-                    without a time limit.
+                    counter goes up: the day, the platform and the page, and whether Cloudflare
+                    verified the fetcher as a bot it knows. no IP address, no user-agent, no time of
+                    day, nothing about who shared. unverified is no verdict on a share: WhatsApp and
+                    Signal fetch the preview from the sender&apos;s own phone, which nobody can
+                    verify. the counts are kept without a time limit.
                   </Box>,
                 ],
                 [
@@ -334,7 +324,10 @@ export function LegalPage() {
                 ],
                 ['assistant telemetry', 'up to 180 days'],
                 ['machine readers', 'up to 180 days'],
-                ['shared links', 'no time limit: counts per day, platform and page'],
+                [
+                  'shared links',
+                  'no time limit: counts per day, platform and page, verified or not',
+                ],
                 ['feedback case files', '180 days'],
                 ['feedback entries, case rows', 'until you ask to delete them'],
               ]}

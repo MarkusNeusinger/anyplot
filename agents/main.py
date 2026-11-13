@@ -299,6 +299,7 @@ from agents.anyplot.session_state import (
     DATASET_TOP,
     DATASET_VERSION,
     LANGUAGE_OFFERED,
+    PENDING_BASE,
     PENDING_BINDINGS,
     PENDING_CLEARED,
     PENDING_EXPECTED_TEXTS,
@@ -2460,7 +2461,7 @@ async def _settle_kept_note(runtime: Runtime, user: str, sid: str, ledger: Reque
             hold_request(state, note)  # a data version of this turn dropped it
         bindings = state.get(BINDINGS)
         state[PENDING_BINDINGS] = list(bindings) if isinstance(bindings, list) else []
-        keys = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_REMEMBER, PENDING_BINDINGS)
+        keys = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_REMEMBER, PENDING_BINDINGS, PENDING_BASE)
         await runtime.write_state(session, {key: state.get(key) for key in keys})
     except Exception as exc:  # the turn's answer stands; the note holds for the bindings it was kept with
         logger.warning("kept note not settled: %s", type(exc).__name__)

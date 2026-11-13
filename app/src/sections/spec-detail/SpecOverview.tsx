@@ -19,6 +19,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { specPath } from 'src/routes/paths';
 import { colors, fontSize, overlayButtonSx, semanticColors, typography } from 'src/theme';
@@ -45,7 +46,7 @@ interface SpecOverviewProps {
   onDownload: (impl: Implementation) => void;
   onTooltipToggle: (tooltipId: string | null) => void;
   getLibraryMeta: (libraryId: string) => LibraryMeta | undefined;
-  onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
+  onTrackEvent: TrackEvent;
 }
 
 export function SpecOverview({
@@ -114,7 +115,7 @@ interface ImplementationCardProps {
   onDownload: (impl: Implementation) => void;
   onTooltipToggle: (tooltipId: string | null) => void;
   getLibraryMeta: (libraryId: string) => LibraryMeta | undefined;
-  onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
+  onTrackEvent: TrackEvent;
 }
 
 function ImplementationCard({
@@ -277,7 +278,7 @@ function ImplementationCard({
                 aria-label="Open interactive"
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
-                  onTrackEvent('open_interactive', { spec: specId, library: impl.library_id });
+                  onTrackEvent('interactive_open', { spec: specId, library: impl.library_id });
                 }}
                 sx={overlayButtonSx(isDark)}
                 size="medium"

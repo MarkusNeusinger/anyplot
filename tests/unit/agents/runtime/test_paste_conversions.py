@@ -244,7 +244,7 @@ async def say(client: httpx.AsyncClient, sid: str, body: dict[str, Any]) -> list
 
 async def block_now(client: httpx.AsyncClient, sid: str) -> str:
     """The session block a turn starting now would get (no route ledger: no turn's own conversions)."""
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     return await session_context(context)  # type: ignore[arg-type]
 
 

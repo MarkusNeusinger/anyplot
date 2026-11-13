@@ -15,6 +15,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { BATCH_SIZE, type ImageSize, LANG_DISPLAY, LIB_ABBREV, libExt } from 'src/constants';
 import { useCodeFetch } from 'src/hooks';
+import { pageKind, type TrackEvent } from 'src/hooks/useAnalytics';
 import { useTheme as useAppTheme } from 'src/hooks/useLayoutContext';
 import { colors, fontSize, overlayButtonSx, semanticColors, typography } from 'src/theme';
 import type { PlotImage } from 'src/types';
@@ -35,7 +36,7 @@ interface ImageCardProps {
   imageSize: ImageSize;
   onTooltipToggle: (id: string | null) => void;
   onClick: (image: PlotImage) => void;
-  onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;
+  onTrackEvent?: TrackEvent;
 }
 
 export const ImageCard = memo(function ImageCard({
@@ -103,7 +104,7 @@ export const ImageCard = memo(function ImageCard({
             spec: image.spec_id,
             library: image.library,
             method: 'card',
-            page: 'home',
+            page: pageKind(window.location.pathname),
           });
           setTimeout(() => setCopyState('idle'), 2000);
         } else {

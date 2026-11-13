@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from api.cache import clear_cache
+from api.cache import clear_cache, get_cache, get_cache_stats
 from api.main import app, fastapi_app
 from api.routers.plots import (
     _calculate_contextual_counts,
@@ -705,11 +705,7 @@ class TestSeoRouter:
         mock_spec_repo = MagicMock()
         mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
 
-        with (
-            patch("api.routers.seo.get_cache", return_value=None),
-            patch("api.routers.seo.set_cache"),
-            patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo),
-        ):
+        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
             response = client.get("/sitemap.xml")
             assert response.status_code == 200
             # URL format: /, /plots, /specs, /{spec_id}, /{spec_id}/{language}/{library}
@@ -1111,10 +1107,55 @@ class TestSeoProxyRouter:
 
         with (
             patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo),
-            patch("api.routers.seo.set_cache") as mock_set_cache,
+            patch("api.routers.seo.set_page_cache") as mock_set_cache,
         ):
-            assert client.get("/seo-proxy/scatter-basic/python/madeuplib").status_code == 404
+            # A known pair the spec has no implementation for: the database is asked, and says no.
+            assert client.get("/seo-proxy/scatter-basic/python/seaborn").status_code == 404
+            mock_spec_repo.get_by_id.assert_awaited_once()
             mock_set_cache.assert_not_called()
+
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "/seo-proxy/.env",
+            "/seo-proxy/wp-login.php",
+            "/seo-proxy/Scatter_Basic",
+            "/seo-proxy/scatter--basic",
+            "/seo-proxy/.git/python/matplotlib",
+            # A library that doesn't exist, and one that belongs to another language.
+            "/seo-proxy/scatter-basic/python/madeuplib",
+            "/seo-proxy/scatter-basic/klingon/matplotlib",
+            "/seo-proxy/scatter-basic/python/ggplot2",
+        ],
+    )
+    def test_a_path_that_cannot_be_a_page_is_404_without_a_query(self, db_client, path: str) -> None:
+        """A scanner's probes and impossible pairs are answered by the route, not by the database."""
+        client, _ = db_client
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_by_id = AsyncMock(return_value=None)
+
+        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo) as repository:
+            assert client.get(path).status_code == 404
+            repository.assert_not_called()
+            mock_spec_repo.get_by_id.assert_not_called()
+
+    def test_a_crawler_page_is_kept_in_the_pages_own_cache(self, db_client, mock_spec) -> None:
+        """The second read comes from the page cache, and the shared cache holds no page."""
+        client, _ = db_client
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec)
+
+        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
+            first = client.get("/seo-proxy/scatter-basic")
+            second = client.get("/seo-proxy/scatter-basic")
+
+        assert first.status_code == 200 and second.text == first.text
+        mock_spec_repo.get_by_id.assert_awaited_once()
+        stats = get_cache_stats()
+        assert stats["pages"] == 1
+        assert get_cache("seo:scatter-basic") is None
 
     def test_seo_spec_implementation_fallback_image(self, db_client, mock_spec) -> None:
         """SEO spec implementation should use default image when impl has no preview."""

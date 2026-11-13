@@ -13,9 +13,9 @@ name from the closed set below, read from the user agent and then dropped.
 A user agent is whatever the client wrote, so a row also says whether
 Cloudflare verified the fetcher as a bot it knows (`verified`). Nothing else
 can tell a platform's own fetch from a scanner that signs as one once the user
-agent is gone. It is a diagnosis for /debug, not a filter: WhatsApp and Signal
-fetch the preview from the sender's own phone, which no one can verify, so the
-public numbers count both.
+agent is gone. It is a label, not a filter: WhatsApp and Signal fetch the
+preview from the sender's own phone, which no one can verify, so the public
+numbers count both and say per platform which part Cloudflare verified.
 
 Who fetched decides what the fetch is:
 
@@ -57,8 +57,9 @@ OTHER = "other"
 # visitors strip and the machine-readers tile on /stats.
 WINDOW_DAYS = 28
 
-# How many of the most shared plot pages the tile lists.
-TOP_PLOTS = 5
+# How many entries each "most shared" list holds: the specs and the libraries
+# of the tile, and the plot pages of the owner's section.
+TOP_ENTRIES = 5
 
 # The clients that fetch a preview image because a person shared a link: the
 # token a user agent carries (matched in lowercase) and the platform it stands
@@ -89,7 +90,10 @@ SHARE_TOKENS: tuple[tuple[str, str], ...] = (
     # in May 2025, so what it fetches is a link shared in Teams.
     ("skypeuripreview", "teams"),
     ("microsoft teams", "teams"),
-    ("snapchat", "snapchat"),
+    # Snap's fetcher, "Snap URL Preview Service; bot; snapchat; ...". Not the
+    # token "snapchat": the app's in-app browser carries "Snapchat/<version>",
+    # and a person who opens the image there shared nothing.
+    ("snap url preview", "snapchat"),
     # GitHub shows an image linked in a README, an issue or a comment through
     # its image proxy.
     ("github-camo", "github"),
@@ -234,10 +238,15 @@ class SharedLinksDay(BaseModel):
 
 
 class SharedLinksPlatform(BaseModel):
-    """One platform's shares over the window."""
+    """One platform's shares over the window, and how many of them Cloudflare verified.
+
+    `verified` is a part of `shares`, never more. The rest is not a verdict on
+    the share: an app that fetches from the sender's phone is never verified.
+    """
 
     platform: str
     shares: int
+    verified: int = 0
 
 
 class SharedLinksPlot(BaseModel):
@@ -249,13 +258,31 @@ class SharedLinksPlot(BaseModel):
     shares: int
 
 
+class SharedLinksSpec(BaseModel):
+    """One spec's shares over the window: its hub and all of its implementation pages together."""
+
+    spec_id: str
+    shares: int
+
+
+class SharedLinksLibrary(BaseModel):
+    """One library's shares over the window: its implementation pages, whatever the spec."""
+
+    library: str
+    shares: int
+
+
 class SharedLinksResponse(BaseModel):
     """The public numbers: shares by the named platforms only.
 
     `days` has one entry per UTC day of the window, oldest first, zeros
-    included. `platforms` is sorted by shares, largest first. `top` lists the
-    most shared plot pages. `not_configured` without a database and
-    `unavailable` when it does not answer, both with zeros.
+    included. `platforms`, `top_specs` and `top_libraries` are sorted by
+    shares, largest first. A platform's `verified` is the part of its shares
+    whose fetch Cloudflare verified as a bot it knows. A share of a spec's hub
+    counts for the spec and for no library, so the libraries add up to less
+    than the specs.
+    `not_configured` without a database and `unavailable` when it does not
+    answer, both with zeros.
     """
 
     status: UsageStatus
@@ -263,20 +290,23 @@ class SharedLinksResponse(BaseModel):
     total: int = 0
     days: list[SharedLinksDay] = []
     platforms: list[SharedLinksPlatform] = []
-    top: list[SharedLinksPlot] = []
+    top_specs: list[SharedLinksSpec] = []
+    top_libraries: list[SharedLinksLibrary] = []
 
 
 class SharedLinksDetail(SharedLinksResponse):
     """The owner's numbers: the public ones, plus what they leave out.
 
-    `other` is the fetches that are not counted as shares. `verified` says, per
-    platform and for `other`, how many of its fetches Cloudflare verified; a
-    platform with none is absent. A platform Cloudflare verifies whose shares
-    are mostly unverified is being imitated.
+    `top` lists the most shared plot pages, a hub and each implementation as
+    entries of their own. `other` is the fetches that are not counted as
+    shares, and `other_verified` how many of those Cloudflare verified: a
+    verified fetcher under `other` is a preview platform the list does not
+    name yet.
     """
 
+    top: list[SharedLinksPlot] = []
     other: int = 0
-    verified: dict[str, int] = {}
+    other_verified: int = 0
 
 
 def window_start(today: date) -> date:
@@ -300,21 +330,25 @@ async def read_detail(repository: LinkShareRepository, today: date | None = None
         else:
             per_day[day] += fetches
             per_platform[platform] = per_platform.get(platform, 0) + fetches
-    top = await repository.top_plots(since, until, without_platform=OTHER, limit=TOP_PLOTS)
+    top = await repository.top_plots(since, until, without_platform=OTHER, limit=TOP_ENTRIES)
+    top_specs = await repository.top_specs(since, until, without_platform=OTHER, limit=TOP_ENTRIES)
+    top_libraries = await repository.top_libraries(since, until, without_platform=OTHER, limit=TOP_ENTRIES)
     return SharedLinksDetail(
         status="ok",
         total=sum(per_day.values()),
         days=[SharedLinksDay(date=day.isoformat(), shares=shares) for day, shares in per_day.items()],
         platforms=[
-            SharedLinksPlatform(platform=platform, shares=shares)
+            SharedLinksPlatform(platform=platform, shares=shares, verified=verified_fetches.get(platform, 0))
             for platform, shares in sorted(per_platform.items(), key=lambda item: (-item[1], item[0]))
         ],
+        top_specs=[SharedLinksSpec(spec_id=spec_id, shares=shares) for spec_id, shares in top_specs],
+        top_libraries=[SharedLinksLibrary(library=library_id, shares=shares) for library_id, shares in top_libraries],
         top=[
             SharedLinksPlot(spec_id=spec_id, language=language or None, library=library_id or None, shares=shares)
             for spec_id, language, library_id, shares in top
         ],
         other=other,
-        verified=dict(sorted(verified_fetches.items())),
+        other_verified=verified_fetches.get(OTHER, 0),
     )
 
 
@@ -326,4 +360,4 @@ async def load_public() -> SharedLinksResponse:
     """
     async with get_db_context() as session:
         detail = await read_detail(LinkShareRepository(session))
-    return SharedLinksResponse(**detail.model_dump(exclude={"other", "verified"}))
+    return SharedLinksResponse(**detail.model_dump(exclude={"top", "other", "other_verified"}))

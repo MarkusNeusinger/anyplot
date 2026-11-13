@@ -79,7 +79,7 @@ describe('LegalPage', () => {
       ],
       ['assistant telemetry', 'up to 180 days'],
       ['machine readers', 'up to 180 days'],
-      ['shared links', 'no time limit: counts per day, platform and page'],
+      ['shared links', 'no time limit: counts per day, platform and page, verified or not'],
       ['feedback case files', '180 days'],
       ['feedback entries, case rows', 'until you ask to delete them'],
     ];
@@ -144,6 +144,10 @@ describe('LegalPage', () => {
     const sharedLinks = document.getElementById('shared-links');
     expect(sharedLinks).toHaveTextContent(/fetches a page.s preview image/);
     expect(sharedLinks).toHaveTextContent(/the day, the platform and the page/);
+    // The tile tells verified shares from the rest, so the row says what the rest is not.
+    expect(sharedLinks).toHaveTextContent(/whether Cloudflare\s+verified the fetcher/);
+    expect(sharedLinks).toHaveTextContent(/unverified is no verdict on a share/);
+    expect(sharedLinks).toHaveTextContent(/from the sender.s own phone/);
     expect(sharedLinks).toHaveTextContent(/no IP address, no\s+user-agent, no time of day/);
     expect(sharedLinks).toHaveTextContent(/nothing about who shared/);
     expect(sharedLinks).toHaveTextContent(/kept\s+without a time limit/);
@@ -355,27 +359,27 @@ describe('LegalPage', () => {
     expect(citadelLink).toHaveAttribute('rel', 'noopener');
   });
 
-  it('tracks external link clicks for other projects', () => {
-    trackEvent.mockClear();
-    render(<LegalPage />);
+  it('sends no event for an outbound link: the tracker script counts those itself', () => {
+    const plausible = vi.fn();
+    vi.stubGlobal('plausible', plausible);
+    try {
+      render(<LegalPage />);
 
-    fireEvent.click(screen.getByRole('link', { name: 'kurrentschrift.ink' }));
-    fireEvent.click(screen.getByRole('link', { name: 'cite-citadel' }));
+      for (const name of [
+        'kurrentschrift.ink',
+        'cite-citadel',
+        'markus-neusinger',
+        '@MarkusNeusinger',
+        'MarkusNeusinger',
+      ]) {
+        const link = screen.getByRole('link', { name });
+        expect(link).toHaveAttribute('href', expect.stringMatching(/^https:\/\//));
+        fireEvent.click(link);
+      }
 
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'kurrentschrift' });
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'cite_citadel' });
-  });
-
-  it('tracks external link clicks for linkedin, x and github', () => {
-    trackEvent.mockClear();
-    render(<LegalPage />);
-
-    fireEvent.click(screen.getByRole('link', { name: 'markus-neusinger' }));
-    fireEvent.click(screen.getByRole('link', { name: '@MarkusNeusinger' }));
-    fireEvent.click(screen.getByRole('link', { name: 'MarkusNeusinger' }));
-
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'linkedin' });
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'x' });
-    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'github_personal' });
+      expect(plausible).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

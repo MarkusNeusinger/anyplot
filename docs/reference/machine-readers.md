@@ -46,8 +46,10 @@ A request is a machine's by one of three signs:
    repeats the table in the same order, and `tests/unit/api/test_machine_reads_nginx.py` holds the two
    together.
 2. It carries a verdict of Cloudflare's (see [Verified or not](#verified-or-not)).
-3. Its path says so: every `/seo-proxy/*` request is a machine read, because nginx sends only crawlers in its
-   `$is_bot` map there; every JSON-RPC request to the MCP server is one too.
+3. Its path says so: every `/seo-proxy/*` request is a machine read, because nginx sends only the clients it
+   prerenders there (`$prerender`: a crawler in its `$is_bot` map, or a bot Cloudflare verified in a category
+   the site prerenders, [Bot detection](seo.md#bot-detection)); every JSON-RPC request to the MCP server is one
+   too.
 
 nginx adds a fourth sign for what it answers itself: a crawler in its `$is_bot` map. It never writes a line for
 a static asset (`/assets/*`, images, fonts, scripts).
@@ -108,6 +110,13 @@ substring-based: `claude-user`, `claude-searchbot`, and `claudebot` mean three d
 | `unknown` | No token matched: a crawler only Cloudflare named, or a prerender-path reader `AI_AGENTS` doesn't list. |
 
 A new crawler joins the table from the 30-day request log, never from these lines, which hold no user agent.
+
+Parallel's ShapBot joined that way on 2026-11-12. On 2026-11-10 the lines held 8,878 reads with Cloudflare's
+category `AI Search` and no vendor, 3,335 of them shell reads within one hour. The request log of that hour named
+the user agent, `… compatible; ShapBot/0.1.0`, which
+[Parallel documents](https://docs.parallel.ai/resources/crawler). ShapBot runs a browser, so each shell read is
+followed by the app's own API reads under the same user agent: for this vendor a page read is about 2.7 lines.
+Plausible's hourly pageviews show no trace of the burst.
 
 ## Verified or not
 
@@ -215,15 +224,21 @@ audiences: `for_person`, `index_training`, and `search`. The `seo`, `preview`, a
 out. Only those three audience fields are verified-only. Two more counts stand beside them:
 
 - `mcp`, on each point and in `totals`, counts the served MCP requests of every client, verified or not, because
-  an MCP client other than Claude is never a verified bot. The tile shows the 28-day total, labelled "over mcp
-  (all clients)".
+  an MCP client other than Claude is never a verified bot. The tile shows the 28-day total on a line of its own,
+  "mcp requests".
 - `unverified`, in `totals` only, counts the served reads in the same three audiences by a named vendor
-  (`assistant != 'other'`) that Cloudflare didn't verify. The tile's footnote names them as not counted. A line
-  without a vendor name, such as a python MCP client or a crawler only Cloudflare named, is never in it, so
-  "carried a crawler's name" holds.
+  (`assistant != 'other'`) that Cloudflare didn't verify. The tile shows the 28-day total on its last line,
+  "unverified requests". A line without a vendor name, such as a python MCP client or a crawler only Cloudflare
+  named, is never in it.
+
+The tile draws one bar per day: the day's sum over the three audiences, in the green of the visitors strip
+(`app/src/sections/stats/DayStrip.tsx`). Under the bars it gives the window's sums in three lines and no other
+text: "cloudflare verified" with the three audiences, which add up to the bars; "mcp requests"; and "unverified
+requests". Until 2026-11-12 a bar was split into the audiences in three colours, with a legend and a footnote
+sentence under it.
 
 The public numbers rest on the verdict: a vendor Cloudflare doesn't verify, such as Perplexity's indexer on
-2026-11-09, is in the footnote, never in the bars.
+2026-11-09, is on the "unverified requests" line, never in the bars.
 
 `status` is `not_configured` while `MACHINE_READS_DATASET` is unset or not a dataset name, answered before the
 cache, and `unavailable` when the BigQuery client can't start or the query fails on a cold cache, answered and
@@ -243,7 +258,10 @@ UTC days, today included, whatever its surface, status, or verdict:
   (`claude` is a person's assistant, an index, and a training crawler). A row carries the category Cloudflare gave
   most of its verified lines, the counts per surface, the 404s, and its five most requested routes. A route key is
   the route name followed by the catalogue ids of a served answer, such as
-  `spec_detail scatter-basic/python/matplotlib`.
+  `spec_detail scatter-basic/python/matplotlib`. Page reads are two counts: `pages` got the prerendered page,
+  `shell` the app's empty shell, which holds nothing for a client that runs no JavaScript. A row with a category
+  and a `shell` count is a crawler Cloudflare knows that the site answers with nothing to read. Until 2026-11-12
+  `pages` was the sum of both.
 - `daily`: one row per UTC day, newest first, with the verified lines by audience (`other` holds `preview` and
   every other category), the unverified lines, and the MCP requests.
 
@@ -461,7 +479,11 @@ All of these are read-only.
 7. The daily `bot-serving-check` run at 06:23 UTC shows up as `source: synthetic`, never as a live Googlebot.
 
 8. In the first week, compare each vendor's total with the request log's tallies: about 2,500 Googlebot pages,
-   about 5,600 ClaudeBot reads, and about 7,400 ExaSearchBot shell fetches a week, which nginx writes.
+   about 5,600 ClaudeBot reads, and about 7,400 ExaSearchBot shell fetches a week, which nginx writes. Since the
+   site prerenders by Cloudflare's category (2026-11-12, [Bot detection](seo.md#bot-detection)), a verified
+   ExaSearchBot or ShapBot read is a `page` line the API writes, no longer a `shell` line of nginx; ShapBot's
+   API reads, about 1.7 per page while it rendered the app itself, end with it, so the public tile's bars step
+   down on that day.
 
 ## What a line can't see
 
@@ -508,6 +530,7 @@ broken install.
 | `api/machine_reads_query.py` | The two readers' queries, windows, answers, and the owner's process cache |
 | `api/routers/insights.py`, `api/routers/debug.py` | `GET /insights/machine-readers` and `GET /debug/machine-readers` |
 | `app/src/sections/stats/MachineReadersTile.tsx`, `app/src/sections/stats/machineReaders.ts` | The tile on `/stats` and its client-side check of the answer |
+| `app/src/sections/stats/DayStrip.tsx`, `app/src/sections/stats/stripGeometry.ts` | The bar strip the tile shares with the shared links tile, and the height, floor and green of every day strip on `/stats` |
 | `app/src/sections/debug/MachineReadersSection.tsx` | The section on `/debug` |
 | `tests/unit/api/test_machine_reads.py`, `tests/unit/api/test_machine_reads_nginx.py` | The two writers, held to the same keys and sets |
 | `tests/unit/api/test_machine_reads_query.py`, `TestInsightsRouter` in `tests/unit/api/test_routers.py` | The two readers |

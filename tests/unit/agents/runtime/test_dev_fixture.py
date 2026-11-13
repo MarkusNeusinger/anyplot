@@ -124,6 +124,7 @@ def test_adk_loader_finds_the_app_with_its_plugins(monkeypatch: pytest.MonkeyPat
         "BudgetPlugin",
         "ToolSafetyPlugin",
         "EmptyReplyPlugin",
+        "RootRefusalPlugin",
         "ShippedReplyPlugin",
         "ReplyLanguagePlugin",
         "ContextFilterPlugin",

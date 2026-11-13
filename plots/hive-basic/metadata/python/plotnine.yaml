@@ -2,117 +2,143 @@ library: plotnine
 language: python
 specification_id: hive-basic
 created: '2025-12-24T22:18:58Z'
-updated: '2026-05-07T01:15:49Z'
-generated_by: claude-haiku
-workflow_run: 25470095814
+updated: '2026-11-12T02:38:48Z'
+generated_by: claude-sonnet
+workflow_run: 43141968937
 issue: 1879
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality across both themes with all text clearly legible
-  - Excellent design sophistication using thoughtful color hierarchy and custom Bezier
-    curves for edges
-  - Accurate hive plot implementation with proper radial axis layout and degree-based
-    node sizing
-  - Realistic software module dependency network demonstrating all aspects of network
-    visualization
-  - Clean, idiomatic plotnine code with proper theme adaptation and canvas utilization
-  - Perfect spec compliance with all required features and correct title format
-  weaknesses: []
+  - Three straight radial axes from a common center, each labeled in bold in its own
+    Imprint color
+  - Nodes placed on their group axis by a stated rule with a caption naming the property,
+    so the same data always draws the same way
+  - Edges drawn as vectorized quadratic Bezier curves pulled toward the center, translucent
+    and thinner than the nodes, so the core–utility and interface–core bands stay
+    traceable
+  - Node labels alternate sides of each axis and step outward in pairs, keeping most
+    neighbours apart
+  - Theme tokens threaded through title, caption, labels and background; both renders
+    read cleanly
+  - Idiomatic layered ggplot with per-layer data, scale_color_manual(limits=groups)
+    preserving data order and coord_fixed
+  weaknesses:
+  - 'DQ-03 (both): the caption says distance from the center is the number of connections,
+    but the hand-typed Degree column disagrees with the 30 drawn edges: core 9 vs
+    3 edges (-6), engine 6 vs 1 (-5), kernel 5 vs 1 (-4), queue 4 vs 0 (-4), api 6
+    vs 3 (-3), validator 5 vs 2 (-3) → compute the degree from the edges (count each
+    module in Source and Target) so the radius matches the drawn network. Likely cause:
+    the DEGREE list typed by hand in the nodes table (line 77).'
+  - 'VQ-02 (both): the ''validator'' label runs into ''queue'' below it on the utility
+    axis, and ''auth'', ''kernel'' and ''db'' sit against their own markers → clear
+    each label from neighbouring labels and markers by a few px. Likely cause: label_offset
+    0.05 is smaller than the largest marker radius and the 0.09 outward step lands
+    validator and queue on one line.'
+  - 'VQ-01 (both): node labels at geom_text size=5.5 come out about 6 pt (≈25 px tall
+    at 2400 px) and shrink to about 4 px in the 400 px thumbnail, small against the
+    10 pt caption → about size 7 (+1.5). Likely cause: geom_text(size=5.5).'
+  - 'Suggestion: within-group edges (kernel–runtime, cache–logger, core–db) collapse
+    onto their axis and almost disappear behind it; a lower alpha on the axis line
+    would let them show.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) surface
-      Chrome: Title "hive-basic · plotnine · anyplot.ai" in bold dark text; axis labels (CORE, UTILITY, INTERFACE) in large, colored text (green, orange, blue); node labels (auth, db, core, etc.) in dark text positioned perpendicular to axes
-      Data: 21 nodes arranged on three radial axes by category, sized by degree (6-22px); 30 edges rendered as Bezier curves with transparency; colors follow Okabe-Ito palette positions 1-3 (#009E73, #D55E00, #0072B2)
-      Legibility verdict: PASS - all text is clearly readable against the light background; good contrast; well-spaced elements
+      Background: warm off-white #FAF8F1, theme_void with no axes chrome.
+      Chrome: bold near-black title 'hive-basic · python · plotnine · anyplot.ai' at the top; bold colored axis labels CORE (top), UTILITY (lower left), INTERFACE (lower right); grey caption 'Distance from the center = module degree (number of connections)' at the bottom; small dark node labels beside each node. All readable; node labels are small.
+      Data: three straight axes at 90/210/330 degrees in #009E73, #C475FD, #4467A3; 21 nodes sized and placed by degree (core nodes spread along the upper axis, utility and interface nodes crowded at 0.4-0.7 radius); 30 translucent Bezier edges colored by source group, green bands core→utility, blue bands interface→core and interface→utility. 'validator' label touches 'queue'.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) surface
-      Chrome: Title in light text, clearly visible; axis labels maintain their data colors (green, orange, blue); node labels rendered in light text (#F0EFE8)
-      Data: Identical node and edge colors to light render - data colors #009E73, #D55E00, #0072B2 are unchanged; only chrome (text, background) has adapted to dark theme
-      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures; node labels contrast properly with background; color identity of data elements is preserved across themes
+      Background: warm near-black #1A1A17.
+      Chrome: title in light #F0EFE8, caption in light grey, node labels light; axis labels keep their data colors. No dark-on-dark text.
+      Data: identical axis, node and edge colors to the light render; edges read dimmer on the dark surface but remain visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; title bold 28pt, axis labels 18pt,
-          node labels 10pt; all readable in both themes
+        passed: false
+        comment: Title 14 pt, bold axis labels, caption 10 pt all readable in both
+          themes; node labels at geom_text size 5.5 are small and blur in the 400
+          px thumbnail (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Node labels offset perpendicular to axes; no overlapping text elements
+        passed: false
+        comment: '''validator'' runs into ''queue'' on the utility axis and ''auth'',
+          ''kernel'', ''db'' sit against their markers (defect line); edges crossing
+          near the center are permitted (C5)'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes sized appropriately (6-22px) based on degree; edges visible
-          with alpha=0.5; all elements clearly visible
+        comment: Nodes sized 2.5-8 by degree stand out clearly; edges at 0.55/alpha
+          0.5 visible but lighter than nodes in both themes; no legend glyphs needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette positions 1-3; colorblind-safe; good contrast
+        comment: Green, purple and blue Imprint positions 1-3 are CVD-distinguishable
+          and each axis is also named in text
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format (4800x4800px); plot fills 60-70% of canvas with balanced
-          margins
+        comment: 2400x2400 square canvas, gate passed; the radial shape is centered
+          horizontally; the empty band under the shape is permitted (C5)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels (CORE, UTILITY, INTERFACE) descriptive
+        comment: Axes named CORE / UTILITY / INTERFACE and the caption names the radial
+          property; N/A for x/y axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follows Okabe-Ito; backgrounds
-          theme-correct; chrome properly adapted in both renders'
+        comment: 'Axes and nodes use Imprint #009E73, #C475FD, #4467A3 in data order;
+          #FAF8F1 / #1A1A17 backgrounds; chrome flips correctly'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Custom Okabe-Ito palette, Bezier curve edges, degree-based sizing
-          create professional appearance above defaults
+        passed: false
+        comment: 'Axis labels set in bold in their axis color, caption in INK_SOFT
+          under a bold INK title: a deliberate type hierarchy beyond the baseline'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Uses theme_void for minimal chrome; transparent edges; generous whitespace;
-          refined appearance
+        passed: false
+        comment: Node labels alternate sides of the axis and step outward in pairs
+          so neighbours do not stack, theme_void with no chrome at all
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy through node sizing; color-coded categories; radial
-          layout guides viewer; clear focal point at center
+        passed: false
+        comment: 'Default: the data is displayed, no focal point chosen beyond the
+          spec'
     spec_compliance:
       score: 15
       max: 15
@@ -122,30 +148,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hive plot with three radial axes, nodes positioned by category
+        comment: 'Correct hive plot: three straight radial axes from a common center,
+          no extra layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes with IDs and properties, edges, axis assignment, node sizing
-          by degree, edge bundling all present
+        comment: 'C1 axes labeled by group, C2 nodes positioned by degree with a caption
+          naming it, C3 curved translucent edges, C4 no extra layers: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Node positions correct; radial distance encodes degree; edges connect
-          proper nodes
+        comment: Each node sits on its group axis at the radius its Degree column
+          gives; no layout algorithm
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'hive-basic · plotnine · anyplot.ai' correct; legend
-          correctly omitted
+        comment: Title 'hive-basic · python · plotnine · anyplot.ai' correct; legend
+          omitted on purpose since the axes are labeled directly
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -153,22 +180,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 21 nodes with degree range 3-9; 30 edges showing intra- and inter-category
-          connections; demonstrates all hive plot aspects
+        comment: 21 nodes, 30 edges, inter-axis bands and within-group links all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software module dependency network; realistic node names (auth, db,
-          cache); sensible categories (core, utility, interface)
+        comment: Software module dependency network with plausible module names (auth,
+          db, router, grpc) and types
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Degree values (3-9) and network structure are plausible; proportions
-          logically sound
+        passed: false
+        comment: 'Checked the Degree column against the 30 drawn edges: most values
+          disagree, e.g. core 9 vs 3 edges, queue 4 vs 0 (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -178,60 +204,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → constants → data → plot → save; no unnecessary
-          functions'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic data generation
+        comment: Fully deterministic hand-written data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; numpy, pandas, plotnine only
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering; clean Bezier curve implementation
+        comment: Bezier edges vectorized with numpy over t; groups, angles and colors
+          derived from the data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct API
+        comment: Saves plot-{THEME}.png at 6x6 in, 400 dpi with the current plotnine
+          API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ggplot + geoms pattern; proper aes() mapping; theme_void();
-          coord_fixed(); scale_color_manual()
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Thoughtful use of element_rect/element_text for styling; theme_void
-          for minimal look; multiple geom layers combined effectively
+        passed: false
+        comment: Layered ggplot with per-layer data= arguments, scale_color_manual(limits=groups)
+          keeping data order, scale_size_continuous(range=...), coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: 'Default: nothing beyond what the library prompt mandates'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-12T02:34:25Z'
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
+  - layer-composition
   - annotations
   patterns:
   - data-generation
-  - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending

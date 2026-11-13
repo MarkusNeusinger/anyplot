@@ -89,18 +89,15 @@ describe('PlotsPage', () => {
       expect(link).toHaveTextContent('manhattan-gwas.compare()');
     });
 
-    it('saves the scroll position and tracks the click as nav_click', () => {
+    it('saves the scroll position on the click, and sends no nav_click from the gallery', () => {
       state.activeFilters = [{ category: 'spec', values: ['manhattan-gwas'] }];
       state.specsData = [MANHATTAN];
       render(<PlotsPage />);
       fireEvent.click(screen.getByRole('link', { name: /all implementations of/i }));
       // Back from the spec page must restore where the user left, like a card click.
       expect(mockSaveScrollPosition).toHaveBeenCalledTimes(1);
-      expect(mockTrackEvent).toHaveBeenCalledWith('nav_click', {
-        source: 'gallery_spec_hub',
-        target: '/manhattan-gwas',
-        spec: 'manhattan-gwas',
-      });
+      // `nav_click` is about the landing page's elements; the spec page's pageview follows.
+      expect(mockTrackEvent).not.toHaveBeenCalledWith('nav_click', expect.anything());
     });
 
     it.each([
@@ -167,7 +164,7 @@ describe('PlotsPage', () => {
     it('triggers random navigation on Space when nothing interactive is focused', () => {
       render(<PlotsPage />);
       fireEvent.keyDown(document.body, { key: ' ' });
-      expect(mockHandleRandom).toHaveBeenCalledWith('space');
+      expect(mockHandleRandom).toHaveBeenCalledTimes(1);
     });
 
     it('does not fire when a focusable card owns the keystroke', () => {

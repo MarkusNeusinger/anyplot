@@ -2,50 +2,64 @@ library: pygal
 language: python
 specification_id: hive-basic
 created: '2025-12-24T22:18:26Z'
-updated: '2026-05-07T01:20:43Z'
-generated_by: claude-haiku
-workflow_run: 25470075756
+updated: '2026-11-12T02:41:47Z'
+generated_by: claude-sonnet
+workflow_run: 43142323337
 issue: 1879
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 79
 review:
   strengths:
-  - Correct hive plot with proper 3-axis network structure and radial layout
-  - Theme-adaptive styling with full color palette (Okabe-Ito) and correct background
-    colors
-  - Both light and dark renders fully readable with no legibility or contrast failures
-  - Deterministic data generation with proper seeding (np.random.seed(42))
-  - Smooth Bezier curve edges with intelligent edge bundling to reduce visual clutter
-  - Clean code structure with appropriate complexity for the task
-  - Good balance of nodes across axes (7, 8, 5 nodes per axis)
+  - 'Native pygal.XY build: per-series stroke_style for axes and edges, per-point
+    label dicts drawn by print_labels for node and axis-group names, no SVG post-processing'
+  - 'Theme tokens threaded through Style: #FAF8F1/#1A1A17 backgrounds, readable ink
+    in both renders, Imprint colors identical across themes'
+  - 'Hive structure follows the spec: three straight axes from one center, nodes ranked
+    by degree with a caption naming the property, translucent Bezier edges bundled
+    toward the center'
+  - Compact, deterministic, function-free script on the canonical 2400x2400 canvas
   weaknesses:
-  - Using XY chart is unconventional for network visualization; less idiomatic than
-    specialized approach
-  - Design is functional but lacks distinctive visual polish or refinement
-  - Node labels abbreviated to 4 characters — preserves readability but loses semantic
-    clarity
-  - No edge styling for weight or direction encoding (though not explicitly required
-    by spec)
+  - 'VQ-02 (both): the Interface node labels ADMI, WEBS, PUBL and GRAP sit directly
+    on the axis line and the incoming edge bundle, which strike through the letters
+    → place them clear of the axis on the side away from the bundle, as on the Core
+    axis (offset about +30 px perpendicular to the axis). Likely cause: pygal''s default
+    print_labels offset, which falls onto a diagonal axis.'
+  - 'VQ-03 (both): edges within a group (kernel-config, helpers-validators, rest_api-admin_ui
+    …) are drawn as Beziers whose control point lies on the same axis, so they collapse
+    onto the axis line and cannot be seen; the 1 px anchor dots of the axis-group
+    labels float as stray specks → drop the within-group edges (the spec''s basic
+    variant has no duplicated axes) and give the axis-label series no visible dot.
+    Likely cause: pull = 0.75 for same-group edges and dots_size=1 on the label series.'
+  - 'VQ-05 (both): the caption ''Distance from center = degree, highest nearest''
+    renders at roughly the title''s size and dominates the bottom of the canvas for
+    a secondary note → about 34 px, the node-label size (about −25 px). Likely cause:
+    x_title inherits a large title font size from Style.'
+  - 'DQ-03 (code): the ''Degree (dependencies)'' column does not match the edge list
+    (kernel 8 vs 6 edges, events 5 vs 2, rest_api 6 vs 7), so the captioned degree
+    ordering is not the network''s degree → compute degree from the edges (value counts
+    of source and target). Likely cause: hand-typed degree values.'
+  - 'Suggestion: full module names instead of four-letter abbreviations would read
+    better in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "hive-basic · pygal · anyplot.ai" clearly visible in dark text; axis labels (Core, Utility, Interface) readable in colored text; node labels (4-char abbreviations) distinct and readable; no contrast issues
-      Data: Three radial axes at 120° intervals with nodes positioned by degree; Core nodes (#009E73 brand green), Utility nodes (orange), Interface nodes (blue); edges rendered as smooth Bezier curves; color separation clear between axis groups
-      Legibility verdict: PASS - all text readable against light background
+      Background: warm off-white #FAF8F1, square 2400x2400.
+      Chrome: title 'hive-basic · python · pygal · anyplot.ai' in dark ink at the top; group labels Core, Utility, Interface at the outer axis ends; four-letter node labels (KERN, DATA, ... COMP) in dark ink; large caption 'Distance from center = degree, highest nearest' and a bottom legend (Core, Utility, Interface). All readable; Interface labels ADMI/WEBS/PUBL/GRAP are crossed by the axis line.
+      Data: three straight gray axes from a common center (Core down, Utility upper right, Interface upper left); 7 green #009E73 Core nodes, 7 lilac #C475FD Utility nodes, 6 blue #4467A3 Interface nodes; thin translucent Bezier edges colored by source group bundle toward the center.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title clearly visible in light text; axis labels and node labels readable against dark background; no dark-on-dark failures observed
-      Data: Node colors identical to light render (green Core, orange Utility, blue Interface); edges visible and distinct; proper data color fidelity confirmed between renders
-      Legibility verdict: PASS - all text readable against dark background, both renders properly theme-adapted
+      Background: warm near-black #1A1A17.
+      Chrome: title, node labels, group labels, caption and legend in light ink; no dark-on-dark text.
+      Data: node and edge colors identical to the light render; only chrome flipped; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -53,73 +67,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes with explicit font sizing (title
-          28px, labels 24px, nodes 18px)
+        comment: Explicit sizes (title 66, labels 34-44); title, node labels, axis-group
+          labels, caption and legend all readable in both themes and at thumbnail
+          size
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Node labels distinct and mostly well-spaced; minor proximity but
-          no overlaps
+        passed: false
+        comment: Interface-axis node labels (ADMI, WEBS, PUBL, GRAP) sit on the axis
+          line and edge bundle and are struck through (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: All nodes visible as 20px circles; edges visible via Bezier curves
-          and color differentiation
+        passed: false
+        comment: Nodes prominent, edges thin and translucent; within-group edges collapse
+          onto the axis line and vanish, and 1 px anchor dots float beside the axis-group
+          labels (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; no red-green sole signal; proper contrast
+        comment: Green/lilac/blue groups are CVD-distinguishable; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Well-centered on 4800x2700 canvas; generous margins; nothing cut
-          off
+        passed: false
+        comment: 2400x2400 square canvas; the x_title caption is set at about the
+          title's size and dominates the bottom for a secondary note (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; axis labels (Core, Utility, Interface) descriptive
-          and clear
+        comment: Title correct; caption names the radial property; axis groups labelled
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 confirmed; Okabe-Ito order respected; backgrounds
-          #FAF8F1/#1A1A17 correct for both themes'
+        comment: 'Core #009E73, Utility #C475FD, Interface #4467A3 in Imprint order;
+          backgrounds #FAF8F1/#1A1A17; identical data colors in both themes'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Theme-adaptive Style with Okabe-Ito palette applied; custom SVG axis
-          labels show design intent; overall styling functional but not polished
+        passed: true
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, explicit sizes;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Grid off, generous whitespace; minimal custom refinement beyond defaults
+        comment: Grid and axes off as the chart needs; no refinement beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy via degree-based positioning; clear focal point
-          at center where edges converge
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -129,113 +144,120 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3-axis hive plot with radial layout
+        comment: Correct three-axis hive plot; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes on axes, edges, axis labels, node labels, 2-3 axes all implemented
+        comment: C1 axes from a common center labelled by group, C2 degree-ranked
+          positions with a caption, C3 smooth translucent curved edges, C4 no extra
+          layers - all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Coordinates correctly calculated; all 20 nodes rendered; appropriate
-          range 0-10
+        comment: Nodes at their rule-based positions; no layout algorithm
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows all three axis categories
+        comment: Title 'hive-basic · python · pygal · anyplot.ai'; legend Core/Utility/Interface
+          matches the groups
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows nodes, edges, axes, labels; could show edge weights or directionality
+        comment: Shows axes, ranked nodes, inter-axis bands and edge bundling toward
+          the center
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software module dependency network (core, utility, interface) is
-          realistic and neutral
+        comment: Software module dependency network, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 20 nodes within recommended 20-100 range; degree 2-8 reasonable;
-          balanced axes (7,8,5 nodes)
+        passed: false
+        comment: 'Checked the Degree column against the 38 edges: it does not match
+          (kernel 8 vs 6 edges, events 5 vs 2, rest_api 6 vs 7), so the captioned
+          ''degree'' ordering is not the network''s degree (defect line)'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Single helper function data_to_svg; straightforward flow
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Fully deterministic, hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; cairosvg, numpy, pygal, standard library
+        comment: math, os, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; Bezier curves well-motivated; no fake UI
+        comment: Quadratic Bezier sampled by hand, which pygal has no primitive for;
+          compact (216 lines)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: render_to_png to plot-{THEME}.png and chart.render() to plot-{THEME}.html
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses pygal.XY as scatter proxy for network; works but less idiomatic
-          than specialized library
+        passed: true
+        comment: Native pygal.XY with per-series stroke_style, value dicts with labels
+          and print_labels, Style tokens, render_to_png - no SVG post-processing
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Custom SVG post-processing for axis labels; limited use of interactive
-          capabilities
+        passed: true
+        comment: Per-point label dicts rendered by print_labels as node and axis-group
+          labels, a pygal-native labelling path; native SVG/HTML interactive output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-11-12T02:37:24Z'
 impl_tags:
-  dependencies:
-  - cairosvg
+  dependencies: []
   techniques:
   - bezier-curves
-  - annotations
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
+  - alpha-blending

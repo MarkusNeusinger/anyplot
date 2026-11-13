@@ -118,8 +118,10 @@ class TestFixtures:
         # after the summary: the change is the turn's answer, and the plot waits for the user's check. Since
         # 2026-11-09, two summaries of the layouts code reads (`layout`): a web table copied one cell per line and an
         # inline list of pairs, the owner's live cases in invented data. And the change request that the pair list
-        # read as new data the same day (`change_request`): the root changes no data for it.
-        assert len(cases) == 106
+        # read as new data the same day (`change_request`): the root changes no data for it. Since 2026-11-11, one
+        # with thousands dots and a footnote mark on one cell (`footnote_mark`): `set_type` with a decimal comma
+        # reads both columns, where a detour through `strip` and `replace` had lost a digit.
+        assert len(cases) == 107
         assert sorted(item.id for item in cases if "layout" in item.tags) == [
             "de-wunsch-achsen-bis",
             "en-summary-inline-pairs",

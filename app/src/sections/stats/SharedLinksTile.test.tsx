@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { CHART_PX, MIN_BAR_PX } from 'src/sections/stats/machineReaders';
-import type { SharedLinksResponse } from 'src/sections/stats/sharedLinks';
+import { type SharedLinksResponse, UNVERIFIED_HINT } from 'src/sections/stats/sharedLinks';
 import { SharedLinksTile } from 'src/sections/stats/SharedLinksTile';
-import { render, screen, within } from 'src/test-utils';
+import { CHART_PX, MIN_BAR_PX, STRIP_BAR } from 'src/sections/stats/stripGeometry';
+import { render, screen, userEvent, waitFor, within } from 'src/test-utils';
+
+type User = ReturnType<typeof userEvent.setup>;
 
 const formatNum = (value: number): string => value.toLocaleString('en-US');
 
@@ -19,13 +21,17 @@ const ANSWER: SharedLinksResponse = {
   total: 7,
   days: DAYS,
   platforms: [
-    { platform: 'whatsapp', shares: 4 },
-    { platform: 'teams', shares: 2 },
-    { platform: 'whatsapp-lite', shares: 1 },
+    { platform: 'whatsapp', shares: 4, verified: 0 },
+    { platform: 'teams', shares: 2, verified: 2 },
+    { platform: 'whatsapp-lite', shares: 1, verified: 0 },
   ],
-  top: [
-    { spec_id: 'scatter-basic', language: 'python', library: 'matplotlib', shares: 3 },
-    { spec_id: 'heatmap-basic', language: null, library: null, shares: 2 },
+  top_specs: [
+    { spec_id: 'scatter-basic', shares: 5 },
+    { spec_id: 'heatmap-basic', shares: 2 },
+  ],
+  top_libraries: [
+    { library: 'matplotlib', shares: 3 },
+    { library: 'ggplot2', shares: 1 },
   ],
 };
 
@@ -71,37 +77,160 @@ describe('SharedLinksTile', () => {
     expect(screen.getByText('2026-11-11')).toBeInTheDocument();
   });
 
-  it('lists the platforms with their totals, largest first, as text', () => {
+  it('draws its bars in the strips’ one green, and a day without a share as the muted floor', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
 
-    expect(screen.getByTestId('shared-links-platforms')).toHaveTextContent(
-      /^whatsapp 4\s*teams 2\s*signal & similar 1$/
+    const bars = screen.getAllByTestId('shared-links-bar');
+    expect(bars[26]).toHaveStyle({
+      backgroundColor: STRIP_BAR.color,
+      opacity: String(STRIP_BAR.opacity),
+    });
+    expect(bars[0]).not.toHaveStyle({ backgroundColor: STRIP_BAR.color });
+  });
+
+  it('names the platforms cloudflare verified and sums the rest under no name', () => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-verified').textContent).toBe(
+      'cloudflare verified: teams 2'
+    );
+    // An app that fetches from the sender's phone is never verified, and its share still counts.
+    expect(screen.getByTestId('shared-links-unverified').textContent).toBe('unverified shares: 5');
+    expect(screen.queryByTestId('shared-links-platforms')).not.toBeInTheDocument();
+  });
+
+  it('explains the word unverified as a hint that describes it', () => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    // A button, so a keyboard and a finger reach it; the hint describes the word, and the
+    // word keeps its own name.
+    const term = screen.getByRole('button', { name: 'unverified' });
+    expect(term).toBe(screen.getByTestId('shared-links-unverified-term'));
+    expect(term).toHaveAttribute('type', 'button');
+    expect(term).toHaveAccessibleDescription(UNVERIFIED_HINT);
+    expect(UNVERIFIED_HINT).toMatch(/no verdict on a share/);
+    expect(UNVERIFIED_HINT).toMatch(
+      /WhatsApp and Signal fetch the preview from the sender’s own phone/
+    );
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['a pointer over the word', (user: User, term: HTMLElement) => user.hover(term)],
+    // A tap ends as a click: the tooltip's own touch timer opens for a long press only.
+    ['a tap or a click on it', (user: User, term: HTMLElement) => user.click(term)],
+    [
+      'a keyboard that reaches it',
+      async (user: User) => {
+        // The strip's days come before the word in the tab order: start on the last of them.
+        const days = screen.getAllByTestId('shared-links-day');
+        days[days.length - 1].focus();
+        await user.tab();
+      },
+    ],
+  ])('opens the hint for %s, and Escape closes it', async (_, reach) => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+    const user = userEvent.setup();
+    const term = screen.getByTestId('shared-links-unverified-term');
+
+    await reach(user, term);
+
+    // By its text: a day of the strip has a tooltip of its own.
+    expect(await screen.findByText(UNVERIFIED_HINT)).toBeInTheDocument();
+    expect(term).toHaveAccessibleDescription(UNVERIFIED_HINT);
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByText(UNVERIFIED_HINT)).not.toBeInTheDocument());
+  });
+
+  it('gives a platform with both kinds its verified part, and its rest to the sum', () => {
+    const mixed = {
+      ...ANSWER,
+      platforms: [
+        { platform: 'teams', shares: 1200, verified: 1150 },
+        { platform: 'slack', shares: 60, verified: 60 },
+        { platform: 'whatsapp', shares: 1034, verified: 0 },
+      ],
+    };
+    render(<SharedLinksTile answer={mixed} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-verified').textContent).toBe(
+      'cloudflare verified: teams 1,150 · slack 60'
+    );
+    expect(screen.getByTestId('shared-links-unverified').textContent).toBe(
+      'unverified shares: 1,084'
     );
   });
 
-  it('links the most shared plot pages: an implementation and a hub are entries of their own', () => {
-    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+  it('shows one of the two lines alone when every share is of its kind', () => {
+    const verified = { ...ANSWER, platforms: [{ platform: 'teams', shares: 2, verified: 2 }] };
+    const view = render(<SharedLinksTile answer={verified} formatNum={formatNum} />);
 
-    const top = screen.getByTestId('shared-links-top');
-    const links = within(top).getAllByRole('link');
-    expect(links.map(link => [link.textContent, link.getAttribute('href')])).toEqual([
-      ['scatter-basic · matplotlib', '/scatter-basic/python/matplotlib'],
-      ['heatmap-basic', '/heatmap-basic'],
-    ]);
-    expect(
-      within(top)
-        .getAllByRole('listitem')
-        .map(item => item.textContent)
-    ).toEqual(['scatter-basic · matplotlib 3', 'heatmap-basic 2']);
+    expect(screen.getByTestId('shared-links-verified')).toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-unverified')).not.toBeInTheDocument();
+
+    const unverified = { ...ANSWER, platforms: [{ platform: 'whatsapp', shares: 3, verified: 0 }] };
+    view.rerender(<SharedLinksTile answer={unverified} formatNum={formatNum} />);
+
+    expect(screen.queryByTestId('shared-links-verified')).not.toBeInTheDocument();
+    expect(screen.getByTestId('shared-links-unverified').textContent).toBe('unverified shares: 3');
   });
 
-  it('says what a share is and what the count cannot see', () => {
+  it('calls no share unverified when the answer names no verdict', () => {
+    // An API revision older than the page: the platforms in one line, as before.
+    const older = {
+      ...ANSWER,
+      platforms: ANSWER.platforms.map(entry => ({ ...entry, verified: null })),
+    };
+    render(<SharedLinksTile answer={older} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-platforms').textContent).toBe(
+      'by platform: whatsapp 4 · teams 2 · signal & similar 1'
+    );
+    expect(screen.queryByTestId('shared-links-verified')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-unverified')).not.toBeInTheDocument();
+  });
+
+  it('lists the most shared specs, each a link to its hub', () => {
     render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
 
-    const footnote = screen.getByTestId('shared-links-footnote');
-    expect(footnote).toHaveTextContent(/fetches a page.s preview\s+image/);
-    expect(footnote).toHaveTextContent(/nothing about who shared/);
-    expect(footnote).toHaveTextContent(/still holds from an earlier share is not seen/);
+    const specs = screen.getByTestId('shared-links-specs');
+    const links = within(specs).getAllByRole('link');
+    expect(links.map(link => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['scatter-basic', '/scatter-basic'],
+      ['heatmap-basic', '/heatmap-basic'],
+    ]);
+    expect(specs.textContent).toBe('most shared specs: scatter-basic 5 · heatmap-basic 2');
+  });
+
+  it('lists the most shared libraries, each a link to the gallery filtered by it', () => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    const libraries = screen.getByTestId('shared-links-libraries');
+    const links = within(libraries).getAllByRole('link');
+    expect(links.map(link => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['matplotlib', '/plots?lib=matplotlib'],
+      ['ggplot2', '/plots?lib=ggplot2'],
+    ]);
+    expect(libraries.textContent).toBe('most shared libraries: matplotlib 3 · ggplot2 1');
+  });
+
+  it('shows no libraries line when only hubs were shared', () => {
+    render(<SharedLinksTile answer={{ ...ANSWER, top_libraries: [] }} formatNum={formatNum} />);
+
+    expect(screen.getByTestId('shared-links-specs')).toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-libraries')).not.toBeInTheDocument();
+  });
+
+  it('holds no paragraph of its own: what a share is stands on the legal page it links', () => {
+    render(<SharedLinksTile answer={ANSWER} formatNum={formatNum} />);
+
+    expect(screen.queryByTestId('shared-links-footnote')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'legal.privacy()' })).toHaveAttribute(
+      'href',
+      '/legal#shared-links'
+    );
   });
 
   it('shows no platform line and no list for a window without a share', () => {
@@ -109,7 +238,8 @@ describe('SharedLinksTile', () => {
       ...ANSWER,
       total: 0,
       platforms: [],
-      top: [],
+      top_specs: [],
+      top_libraries: [],
       days: DAYS.map(day => ({ ...day, shares: 0 })),
     };
     render(<SharedLinksTile answer={quiet} formatNum={formatNum} />);
@@ -117,7 +247,10 @@ describe('SharedLinksTile', () => {
     expect(screen.getByText(/last 28 days · 0 shares/)).toBeInTheDocument();
     expect(screen.getAllByTestId('shared-links-bar')).toHaveLength(28);
     expect(screen.queryByTestId('shared-links-platforms')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('shared-links-top')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-verified')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-unverified')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-specs')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shared-links-libraries')).not.toBeInTheDocument();
   });
 
   it.each([

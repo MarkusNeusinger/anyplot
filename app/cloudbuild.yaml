@@ -168,6 +168,30 @@ steps:
   # visible to a human: the SPA shell for a browser, and the prerendered page
   # for a mapped crawler UA — the `$is_bot` map plus the `@seo_proxy` upstream,
   # which is exactly the hop that can break silently.
+  #
+  # The step's script is one Cloud Build argument, and an argument holds at
+  # most 10,000 characters (tests/unit/test_cloudbuild_configs.py), so what a
+  # probe needs explained at length stands here.
+  #
+  # The candidate tag: what the script's first check proves is the CONTROL
+  # PLANE. `status.traffic` is the tag assignment, not proof of which revision
+  # answered a given request. `candidate` is reused across builds, so in the
+  # moment after a re-assignment the tag URL can still reach the previous
+  # revision, and a probe would then pass against the wrong image. Closing
+  # that needs either a build-unique tag (which accumulates tag URLs on the
+  # service without bound) or a build id the app serves in its own response —
+  # neither is taken here. The residual is narrow and its worst case is mild:
+  # it needs the PREVIOUS candidate to pass every probe too, so the failure is
+  # "promoted a revision we only believed we smoked", not "shipped a page we
+  # know is broken".
+  #
+  # Cloudflare's verdict: a bot the edge verified in a category the site
+  # prerenders (`$prerender_category` in nginx.conf) gets the page whatever
+  # its user agent says, and one of any other category keeps the app. The
+  # script probes both with a browser's user agent. It can set the header
+  # because the candidate is asked on its run.app URL, where the gate's secret
+  # stands for the edge; behind the edge a client's own copy is replaced by
+  # Cloudflare's.
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
@@ -176,19 +200,7 @@ steps:
         # Resolve the candidate tag's URL AND assert it still points at THIS
         # build's revision (deterministic --revision-suffix) — a concurrent
         # build re-tagging `candidate` must fail this build, not get smoked
-        # on its behalf.
-        #
-        # What this checks is the CONTROL PLANE: `status.traffic` is the tag
-        # assignment, not proof of which revision answered a given request.
-        # `candidate` is reused across builds, so in the moment after a
-        # re-assignment the tag URL can still reach the previous revision, and
-        # a probe would then pass against the wrong image. Closing that needs
-        # either a build-unique tag (which accumulates tag URLs on the service
-        # without bound) or a build id the app serves in its own response —
-        # neither is taken here. The residual is narrow and its worst case is
-        # mild: it needs the PREVIOUS candidate to pass every probe too, so the
-        # failure is "promoted a revision we only believed we smoked", not
-        # "shipped a page we know is broken".
+        # on its behalf. What that does and doesn't prove: the step's header.
         read -r URL REV <<< "$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format=json \
           | python3 -c "import json,sys; t=json.load(sys.stdin)['status']['traffic']; c=next(x for x in t if x.get('tag')=='candidate'); print(c['url'], c['revisionName'])")"
         test "$$REV" = "${_SERVICE_NAME}-b$BUILD_ID" || { echo "candidate tag moved to $$REV (expected ${_SERVICE_NAME}-b$BUILD_ID)"; exit 1; }
@@ -300,6 +312,16 @@ steps:
           "a crawler did not get the prerendered home page"
         expect "$$GOOGLEBOT" "/scatter-basic" '<link rel="canonical" href="https://anyplot.ai/scatter-basic" />' \
           "a crawler did not get the prerendered page for this route"
+        # Cloudflare's verdict in a browser's user agent (the step's header):
+        # a prerendered category gets the page, any other keeps the app.
+        BARE_HDR=("$${HDR[@]}")
+        HDR=("$${BARE_HDR[@]}" -H "X-Verified-Bot-Category: Search Engine Crawler")
+        expect "$$HUMAN" "/scatter-basic" '<link rel="canonical" href="https://anyplot.ai/scatter-basic" />' \
+          "a verified crawler without a token did not get the prerendered page"
+        HDR=("$${BARE_HDR[@]}" -H "X-Verified-Bot-Category: Monitoring & Analytics")
+        expect "$$HUMAN" "/scatter-basic" '<div id="root">' \
+          "a verified bot of a category that is not prerendered did not get the app"
+        HDR=("$${BARE_HDR[@]}")
         # The machine files must come from the `location =` bypasses, not the
         # proxy — and llms.txt carries UTF-8 punctuation that needs the charset.
         # Sitemap line: only the site's robots.txt has it (the API's shares the rest).

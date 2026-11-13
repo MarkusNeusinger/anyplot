@@ -12,13 +12,14 @@ import Box from '@mui/material/Box';
 import Tooltip from '@mui/material/Tooltip';
 
 import type { ImageSize } from 'src/constants';
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import { paths } from 'src/routes/paths';
 import { colors, semanticColors } from 'src/theme';
 
 interface ToolbarActionsProps {
   imageSize: ImageSize;
   onImageSizeChange: (size: ImageSize) => void;
-  onTrackEvent: (event: string, props?: Record<string, string>) => void;
+  onTrackEvent: TrackEvent;
 }
 
 /**
@@ -58,7 +59,7 @@ export function GridSizeToggle({
   const handleToggle = () => {
     const newSize = imageSize === 'normal' ? 'compact' : 'normal';
     onImageSizeChange(newSize);
-    onTrackEvent('grid_resize', { size: newSize });
+    onTrackEvent('ui_feature', { feature: 'grid_resize' });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

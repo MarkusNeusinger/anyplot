@@ -68,6 +68,7 @@ import {
   type FeedbackInput,
   sessionBusy,
 } from 'src/hooks/useAgentSession';
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import { type ArtifactName, isPlotAction, type Theme } from 'src/lib/agent';
 import { ChapterLine } from 'src/sections/agent-chat/ChapterLine';
 import { countOf } from 'src/sections/agent-chat/countOf';
@@ -174,7 +175,7 @@ interface ChatThreadProps {
   language: string;
   onRequestTheme: (version: number, theme: Theme) => void;
   onFetchArtifact: (version: number, name: ArtifactName, theme?: Theme) => Promise<Blob>;
-  onTrack: (event: string, props?: Record<string, string | undefined>) => void;
+  onTrack: TrackEvent;
   /** The result cards' usage beacon (`ResultCard`'s `onOutcome`). */
   onOutcome?: (action: CardOutcome, version: number) => void;
   /** The result cards' quick feedback; without it they show no control. */

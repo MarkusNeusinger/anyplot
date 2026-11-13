@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
 
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import { colors, typography } from 'src/theme';
 
 // Cached global tag counts — loaded once, shared across all SpecTabs instances
@@ -29,7 +30,7 @@ export const IMPL_TAG_PARAM_MAP: Record<string, string> = {
   styling: 'style',
 };
 
-export type TrackEventFn = (name: string, props?: Record<string, string | undefined>) => void;
+export type TrackEventFn = TrackEvent;
 
 // Parse text with backticks into React nodes with inline code styling
 export function parseInlineCode(text: string): React.ReactNode[] {

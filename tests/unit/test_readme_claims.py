@@ -12,7 +12,7 @@ while a wider window would let a neighbouring number ("two reviews" next to "rep
 Values are read with `ast` from the agents' source, never by importing it, so the test needs no ADK.
 
 One claim has no offline source: the number of pull requests merged from the owner's account. The texts state it as a
-floor ("more than 850 pull requests from my account have merged"), and `MERGED_PRS_SNAPSHOT` below records the count
+floor ("more than 950 pull requests from my account have merged"), and `MERGED_PRS_SNAPSHOT` below records the count
 and the day it was taken. The floor must be a multiple of 50, below the snapshot and at most 50 below it, so it can
 neither overclaim nor go stale by more than one step. The release procedure (`agentic/commands/release.md`, step 4)
 counts again, updates the snapshot and raises the floor in the same commit.
@@ -42,7 +42,7 @@ LINKED_DOCS = (README, WORKFLOW_PAGE)
 # Pull requests merged from the owner's account, and when that was counted:
 # `gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`.
 # Updated by the release procedure (agentic/commands/release.md, step 4) together with the texts' floor.
-MERGED_PRS_SNAPSHOT = (869, "2026-11-04")
+MERGED_PRS_SNAPSHOT = (955, "2026-11-11")
 PR_FLOOR_STEP = 50
 
 NUMBER_WORDS = {

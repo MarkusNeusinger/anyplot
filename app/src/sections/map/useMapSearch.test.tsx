@@ -86,7 +86,7 @@ describe('useMapSearch', () => {
     expect(deps.setPinnedId).toHaveBeenCalledWith('scatter-basic');
     expect(deps.setSearchQuery).toHaveBeenCalledWith('');
     expect(result.current.searchOpen).toBe(false);
-    expect(deps.trackEvent).toHaveBeenCalledWith('map_search_select', { spec: 'scatter-basic' });
+    expect(deps.trackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'map_search_select' });
   });
 
   it('flyTo does nothing before the graph or the node position exists', () => {

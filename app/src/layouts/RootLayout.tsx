@@ -28,7 +28,7 @@ const containerSx = {
  * screens need all the vertical room the viewport can give).
  */
 export function RootLayout() {
-  const { trackEvent, trackPageview } = useAnalytics();
+  const { trackPageview } = useAnalytics();
   const { pathname, search, hash } = useLocation();
   const navigationType = useNavigationType();
   const { effective } = useTheme();
@@ -125,7 +125,7 @@ export function RootLayout() {
       </Box>
 
       <Container maxWidth={false} sx={{ ...containerSx, pb: { xs: 4, md: 6 } }}>
-        <Footer onTrackEvent={trackEvent} />
+        <Footer />
       </Container>
 
       {siteFeedback && <FeedbackWidget />}

@@ -138,9 +138,6 @@ describe('AgentChatPage .save()', () => {
     await waitFor(() =>
       expect(downloads).toEqual(['anyplot-session-S1.json', 'anyplot-session-S1.json'])
     );
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_session_saved', {
-      include_data: 'yes',
-    });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
     // The box keeps the choice from one save to the next.

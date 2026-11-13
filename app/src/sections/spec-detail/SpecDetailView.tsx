@@ -22,6 +22,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 
 import { API_URL } from 'src/constants';
+import type { TrackEvent } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { useLocalStorage } from 'src/hooks/useLocalStorage';
 import { useQuickReaction } from 'src/hooks/useQuickReaction';
@@ -49,7 +50,7 @@ interface SpecDetailViewProps {
   onImageLoad: () => void;
   onCopyCode: (impl: Implementation) => void;
   onDownload: (impl: Implementation) => void;
-  onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
+  onTrackEvent: TrackEvent;
 }
 
 export function SpecDetailView({
@@ -420,7 +421,7 @@ export function SpecDetailView({
               <IconButton
                 onClick={() => {
                   onViewModeChange('preview');
-                  onTrackEvent('view_mode_change', { mode: 'preview', library: selectedLibrary });
+                  onTrackEvent('ui_feature', { feature: 'view_mode_change' });
                 }}
                 aria-label="Show static preview"
                 sx={overlayBtnSx}
@@ -596,10 +597,7 @@ export function SpecDetailView({
                 <IconButton
                   onClick={() => {
                     onViewModeChange('interactive');
-                    onTrackEvent('view_mode_change', {
-                      mode: 'interactive',
-                      library: selectedLibrary,
-                    });
+                    onTrackEvent('ui_feature', { feature: 'view_mode_change' });
                   }}
                   aria-label="Show interactive"
                   sx={overlayBtnSx}

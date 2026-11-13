@@ -54,6 +54,11 @@ class TestDetectAiAgent:
             ("Mozilla/5.0 (compatible; ExaSearchBot/1.0)", ("exa", "index")),
             ("Keenable-User/1.0 (+https://keenable.ai/bot)", ("keenable", "user_directed")),
             ("Keenable-SearchBot/1.0 (+https://keenable.ai/bot)", ("keenable", "index")),
+            # Parallel's crawler as its documentation gives it, and as the request log has it from
+            # the browser it drives.
+            ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ShapBot/0.1.0", ("parallel", "index")),
+            ("Lightpanda/1.0 ShapBot/0.1.0", ("parallel", "index")),
+            ("Mozilla/5.0 (compatible; Shap-User/1.0)", ("parallel", "user_directed")),
             ("Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (compatible; Bytespider)", ("bytedance", "training")),
             ("CCBot/2.0 (https://commoncrawl.org/faq/)", ("commoncrawl", "training")),
             ("Mozilla/5.0 (compatible; Qwantbot/2.1)", ("qwant", "search")),

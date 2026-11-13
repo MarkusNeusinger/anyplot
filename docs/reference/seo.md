@@ -50,9 +50,71 @@ Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with 
 
 ## Bot detection
 
+A request gets the prerendered page for one of two reasons, and nginx's
+`$prerender` variable is their "or":
+
+- **Its user agent carries a token of the `$is_bot` map**
+  ([Detected bots](#detected-bots)). The list is kept by hand.
+- **Cloudflare verified it as a bot of a category that reads content**
+  ([By Cloudflare's verdict](#by-cloudflares-verdict)). Cloudflare keeps the
+  members, so a new search or AI crawler is served from the day it is verified.
+
+### By Cloudflare's verdict
+
+The edge sets `X-Verified-Bot-Category` on every request it proxies
+([Verified or not](machine-readers.md#verified-or-not)), and a client's own
+copy of the header never passes the edge. nginx's `$prerender_category` map
+turns eight of Cloudflare's 17 categories into "prerender", whatever the user
+agent says:
+
+| Prerendered on Cloudflare's word | Typical members |
+|---|---|
+| Search Engine Crawler | Googlebot, Bingbot, ExaSearchBot, Qwant |
+| AI Search | OAI-SearchBot, Parallel's ShapBot |
+| AI Crawler | GPTBot, ClaudeBot |
+| Page Preview | the link preview fetchers of Slack, Discord, Facebook |
+| Archiver | Internet Archive, Common Crawl |
+| Aggregator | Pinterest |
+| Feed Fetcher | feed readers |
+| Academic Research | library and research crawlers |
+
+The list is closed and everything else is off, because "verified" doesn't mean
+"never a person", and not every bot should see this page:
+
+| Not prerendered by category | Why |
+|---|---|
+| AI Assistant | Since 2026-07-01 Cloudflare's signed agents are verified too. Some are remote browsers a person directs (ChatGPT agent, Browserbase, Anchor Browser), and that person must get the app. The assistants' text fetchers are in `$is_bot` by their own tokens. |
+| Search Engine Optimization | Cloudflare files Google Lighthouse, GTmetrix, and Pingdom here, which measure the page a person gets. The SEO tools' crawlers are in `$is_bot` by their own tokens. |
+| Monitoring & Analytics, Security, Accessibility | They exist to test what people get. A monitor on the prerendered page can't see a blank app. |
+| Advertising & Marketing | It judges the landing page a person gets. |
+| Social Media Marketing, Webhooks, Other | Off until someone has looked at what they hold. |
+| A category Cloudflare adds later | nginx reads an unknown category as `other`, which is off. |
+
+Only the page routing reads `$prerender`. The analytics shield on `/api/event`
+keeps reading `$is_bot` alone: a rule that hides traffic from the numbers may
+only name automation by its own token
+([The principle](../../infra/cloudflare/README.md#the-principle)).
+
+What the change was for, measured in the machine-read lines of the seven days
+to 2026-11-12: Cloudflare-verified bots fetched 13,525 pages and got the empty
+app shell, because their tokens weren't in the map. ExaSearchBot made 7,971 of
+them and runs no JavaScript, so it read nothing; Parallel's ShapBot made 3,954
+and rendered the app in a browser of its own, at about 1.7 API reads per page.
+The category list covers 12,032 of the 13,525 and the six SEO tokens another
+1,467. The remaining 26 (Security 23, Accessibility 2, Advertising & Marketing
+1) keep the app on purpose.
+
+To check the verified path, ask the raw origin, where the gate's secret stands
+for the edge: `bot-serving-check.yml` and the deploy smoke in
+`app/cloudbuild.yaml` send a browser's user agent with
+`X-Verified-Bot-Category: Search Engine Crawler` and expect the page's
+canonical link, and with `Monitoring & Analytics` and expect the app shell.
+Through the edge the header can't be set by a client, so a manual probe there
+proves nothing either way.
+
 ### Detected bots
 
-nginx detects 57 User-Agent patterns (counted 2026-11-09), organized by category:
+nginx detects 62 User-Agent patterns (counted 2026-11-12), organized by category:
 
 **Social Media:**
 | Bot | User-Agent Pattern |
@@ -71,12 +133,41 @@ nginx detects 57 User-Agent patterns (counted 2026-11-09), organized by category
 | Slack | `slackbot` |
 | Discord | `discordbot` |
 | Telegram | `telegrambot` |
-| WhatsApp | `whatsapp` |
-| Signal | `signal` |
+| WhatsApp, Signal | `whatsapp` |
 | Viber | `viber` |
 | Skype/Teams | `skypeuripreview` |
 | Microsoft Teams | `microsoft teams` |
-| Snapchat | `snapchat` |
+| Snapchat | `snap url preview` |
+
+**An entry names the app's preview fetcher, never the app.** An app's in-app
+browser is Safari or Chrome with the app's name appended to the user agent,
+and the person in it must get the page a browser gets, with its analytics: a
+match in this map serves the prerendered page and drops the Plausible event
+(see [The analytics shield](plausible.md#the-analytics-shield)).
+`tests/unit/api/test_analytics_event_proxy.py` holds the in-app browsers no
+entry may match and the fetchers that must still match. Checked on 2026-11-12:
+
+- **Snapchat**: the fetcher signs as
+  `Snap URL Preview Service; bot; snapchat; …`
+  ([Snap's documentation](https://developers.snap.com/robots)), and the in-app
+  browser carries `Snapchat/<version>`. Until 2026-11-12 the entry was
+  `snapchat`, which matched both.
+- **Signal**: its fetcher signs as `WhatsApp/2`
+  ([Signal-Android #10060](https://github.com/signalapp/Signal-Android/issues/10060)),
+  so the `whatsapp` entry serves it. The entry `signal` matched no fetcher and
+  was removed on 2026-11-12.
+- **Viber**: the fetcher is the sender's own phone and signs as its WebView
+  with `Viber/<version>`, the shape an in-app browser has too. The two can't be
+  told apart by user agent, so the entry stays for the previews. A person in
+  Viber's in-app browser would get the prerendered page.
+- **Facebook, Instagram, X, LinkedIn, Pinterest, Telegram**: their in-app
+  browsers carry tokens of their own (`FBAN`, `Instagram`, `Twitter for
+  iPhone`, `LinkedInApp`, `Pinterest/iOS`, `Telegram-Android`) that no entry
+  matches.
+
+In the 30 days before 2026-11-12 the site's request log held no request from
+Snapchat, Signal, Viber, Tumblr, or Teams under these names, so nobody was
+served the wrong page; the map was wrong for the day someone is.
 
 **User-directed AI fetchers:**
 
@@ -149,22 +240,37 @@ citing anyplot would describe the empty SPA shell. The map decides **what** a
 crawler is served, never **whether** it may fetch — that is the robots.txt +
 Cloudflare question in [AI crawler policy](#ai-crawler-policy).
 
-**Counted, but served the SPA shell:** these crawlers are not in the map, so
-they receive the shell. Each read is still a machine-read line, written by
-nginx ([Machine readers](machine-readers.md)), with the purpose in brackets.
-Prerendering one of them is a serving decision of its own: ExaSearchBot alone
-fetches about 7,400 shell pages a week, which would become DB-backed renders on
-the API.
+**SEO tools:**
+| Bot | User-Agent Pattern |
+|-----|-------------------|
+| Semrush | `semrushbot` |
+| Ahrefs | `ahrefsbot` |
+| DataForSEO | `dataforseobot` |
+| Majestic | `mj12bot` |
+| Moz | `dotbot` |
+| Haloscan | `halobot` |
+
+They are in the map since 2026-11-12, by token and not by Cloudflare's
+category, which they share with the speed tests
+([By Cloudflare's verdict](#by-cloudflares-verdict)). A new SEO vendor in
+`AI_AGENTS` needs its token here too; a test holds the two together.
+
+**Counted, without a token in the map:** these crawlers are named in the
+vendor table but not here. Each gets the prerendered page when Cloudflare
+verifies it in a prerendered category, and the app shell otherwise. Either
+read is a machine-read line ([Machine readers](machine-readers.md)), with the
+purpose in brackets; the debug page's `shell` column shows who still reads
+nothing.
 
 | Bot | User-Agent Pattern | Purpose |
 |-----|-------------------|---------|
-| Exa | `exasearchbot` | AI search index (`index`) |
+| Exa | `exasearchbot` | AI search index (`index`); verified as Search Engine Crawler |
 | Keenable | `keenable-user`, `keenable` | a person's agent / AI search index |
+| Parallel | `shap-user`, `shapbot` | a person's agent / AI search index; ShapBot is verified as AI Search. Until 2026-11-12 it read the page through the shell in a browser of its own (Lightpanda) and the app's API calls |
 | Google Vertex AI agents | `google-cloudvertexbot` | builds an agent's grounding on the site owner's request (`index`) |
 | ByteDance | `bytespider` | training crawler (`training`) |
 | Common Crawl | `ccbot` | training corpus (`training`) |
-| Qwant · Petal · Sogou | `qwantbot`, `petalbot`, `sogou web spider` | search engines (`search`) |
-| SEO tools | `semrushbot`, `ahrefsbot`, `dataforseobot`, `mj12bot`, `dotbot`, `halobot` | search-marketing indexes (`seo`) |
+| Qwant · Petal · Sogou | `qwantbot`, `petalbot`, `sogou web spider` | search engines (`search`); Qwant is verified as Search Engine Crawler |
 
 **Link Preview Services:**
 | Bot | User-Agent Pattern |
@@ -188,10 +294,24 @@ map $http_user_agent $is_bot {
     # ... more bots
 }
 
+# Cloudflare's verdict: the categories that read content
+map $machine_category $prerender_category {
+    default 0;
+    "Search Engine Crawler" 1;
+    "AI Search" 1;
+    # ... six more
+}
+
+# A token, or a verified bot of a listed category
+map "$is_bot:$prerender_category" $prerender {
+    default 1;
+    "0:0" 0;
+}
+
 # SPA routing with bot detection
 location / {
     error_page 418 = @seo_proxy;
-    if ($is_bot) {
+    if ($prerender) {
         return 418;  # Trigger proxy to backend
     }
     try_files $uri $uri/ /index.html;
@@ -200,8 +320,45 @@ location / {
 # Named location for bot proxy
 location @seo_proxy {
     proxy_pass https://api.anyplot.ai/seo-proxy$request_uri;
+    proxy_connect_timeout 3s;
+    proxy_read_timeout 10s;
+    proxy_next_upstream_timeout 10s;
 }
 ```
+
+### What bounds the crawler path
+
+The site's nginx is one instance with 80 request slots that people and
+crawlers share, and each prerendered page is a request to the API. Four things
+keep a crawler from costing a person anything:
+
+- **The hop gives up early.** `@seo_proxy` and `@seo_proxy_python` connect
+  within 3 seconds and wait 10 seconds for the answer, where nginx's default is
+  60 seconds each. A crawler page takes 40 ms at the median, and the slowest of
+  the 3,718 served from 2026-11-09 to 2026-11-12 took 2.3 seconds. Past the
+  limit the crawler gets nginx's 504 and comes back later.
+  `proxy_next_upstream_timeout 10s` keeps that limit whole: the API's host
+  name resolves to several addresses, and without it nginx would ask the next
+  one after a timeout, with another 10 seconds for each. There is no fallback
+  to the app shell: a shell with the home page's title in place of a plot page
+  is worse for an index than a 5xx. The sitemap and `llms-full.txt` hops keep
+  nginx's default, because a cold generation of either can be slow.
+- **An impossible path is a 404 without a query.** `/seo-proxy/{spec_id}` and
+  `/seo-proxy/{spec_id}/{language}/{library}` check the shape of the spec id,
+  and the implementation route checks that the library exists and belongs to
+  the language, before they ask the database. Every scanner probe that carries
+  a crawler's user agent (`/.env`, `/wp-login.php`) arrives on the first route.
+- **The pages have a cache of their own.** The API keeps up to 1,000 of them
+  for a day (`prerender_cache_maxsize` in `core/config.py`), apart from the
+  cache of its other answers. One crawler reading the catalogue writes a few
+  thousand pages within the hour; in a shared cache that pushed out the
+  filters, the sitemap and the stats, and each of those is a database read on
+  a person's next request. Most pages are read about once a day, so a cache
+  that held the whole catalogue would add memory and few hits. The flush after
+  a database sync (`POST /debug/cache/invalidate`) empties both caches.
+- **The debug page shows who got nothing.** The machine readers section counts
+  a vendor's prerendered pages and its shell reads in two columns
+  ([Machine readers](machine-readers.md#the-debug-section)).
 
 ### The crawler path only exists behind the edge
 

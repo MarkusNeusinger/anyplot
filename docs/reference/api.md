@@ -374,7 +374,7 @@ Reads the machine-read telemetry in BigQuery (`api/machine_reads_query.py`) for 
 }
 ```
 
-Always `200`. `status` is `not_configured` while `MACHINE_READS_DATASET` is unset or not a `<project>.<dataset>` name, and `unavailable` when BigQuery doesn't answer; both come with empty `points` and zero totals, and neither is cached, so the next request tries again. An `ok` answer is cached with stale-while-revalidate (1h refresh); a failed refresh keeps the last answer. See [Machine readers](machine-readers.md#where-the-numbers-appear).
+Always `200`. `status` is `not_configured` while `MACHINE_READS_DATASET` is unset or not a `<project>.<dataset>` name, and `unavailable` when BigQuery doesn't answer; both come with empty `points` and zero totals, and the API keeps neither, so the next request that reaches it tries again. Like every `/insights/*` answer, such an answer still carries `Cache-Control: public, max-age=300, stale-while-revalidate=3600`, so a browser or the edge can show it for five more minutes. An `ok` answer is cached with stale-while-revalidate (1h refresh); a failed refresh keeps the last answer. See [Machine readers](machine-readers.md#where-the-numbers-appear).
 
 ### GET `/debug/machine-readers`
 
@@ -396,7 +396,7 @@ Admin-gated like the other `/debug/*` routes; `days=7` (default) or `days=30`, a
     {
       "assistant": "ahrefs", "kind": "seo", "category": "Search Engine Optimization",
       "requests": 25, "verified": 25, "unverified": 0,
-      "pages": 3, "code": 0, "og": 2, "mcp": 0, "not_found": 1,
+      "pages": 3, "shell": 17, "code": 0, "og": 2, "mcp": 0, "not_found": 1,
       "top_paths": [{"key": "plots_filter", "count": 3}]
     }
   ],
@@ -406,7 +406,7 @@ Admin-gated like the other `/debug/*` routes; `days=7` (default) or `days=30`, a
 }
 ```
 
-`vendors` holds one row per vendor and purpose, most requests first, with its five most requested routes; `daily` holds every day of the window, newest first. `status` is `not_configured` or `unavailable` as for `/insights/machine-readers`, with zeros and empty lists. An `ok` answer is kept for 10 minutes per window.
+`vendors` holds one row per vendor and purpose, most requests first, with its five most requested routes; `pages` counts the page reads answered with the prerendered page and `shell` those answered with the app's empty shell. `daily` holds every day of the window, newest first. `status` is `not_configured` or `unavailable` as for `/insights/machine-readers`, with zeros and empty lists. An `ok` answer is kept for 10 minutes per window.
 
 Both machine-reader routes read the dataset named by `MACHINE_READS_DATASET` (`<project>.<dataset>` of the views, `anyplot.machine_reads`; the queries read its linked log dataset, the name plus `_logs`). In production it comes from the `_MACHINE_READS_DATASET` substitution of the `deploy-api` trigger, which `api/cloudbuild.yaml` writes on every deploy.
 
@@ -425,28 +425,31 @@ Reads the share counters in the database (`api/shared_links.py`, [Shared links](
     {"date": "2026-11-11", "shares": 5}
   ],
   "platforms": [
-    {"platform": "whatsapp", "shares": 3},
-    {"platform": "teams", "shares": 2}
+    {"platform": "whatsapp", "shares": 3, "verified": 0},
+    {"platform": "teams", "shares": 2, "verified": 2}
   ],
-  "top": [
-    {"spec_id": "scatter-basic", "language": "python", "library": "matplotlib", "shares": 3},
-    {"spec_id": "scatter-basic", "language": null, "library": null, "shares": 2}
+  "top_specs": [
+    {"spec_id": "scatter-basic", "shares": 5}
+  ],
+  "top_libraries": [
+    {"library": "matplotlib", "shares": 3}
   ]
 }
 ```
 
-`platforms` is sorted by shares, largest first. `top` lists up to five plot pages; a spec's hub (`language` and `library` are `null`) and one implementation of it are entries of their own.
+`platforms`, `top_specs` and `top_libraries` are sorted by shares, largest first. A platform's `verified` is the part of its `shares` whose fetch Cloudflare verified as a bot it knows, never more than `shares`. The rest isn't a verdict on the share: WhatsApp and Signal fetch the preview from the sender's own phone and are never verified. A platform Cloudflare does verify whose shares are mostly unverified is being imitated. `top_specs` lists up to five specs; a spec's sum holds its hub and all of its implementation pages. `top_libraries` lists up to five libraries; a library's sum holds its implementation pages across specs. A share of a hub counts for no library, so the libraries add up to less than the specs.
 
-Always `200`. `status` is `not_configured` without a database, and `unavailable` when it doesn't answer or the `link_shares` table isn't there yet; both come with zeros and empty lists, and neither is kept, so the next request tries again. An `ok` answer is cached with stale-while-revalidate (1h refresh).
+Always `200`. `status` is `not_configured` without a database, and `unavailable` when it doesn't answer or the `link_shares` table isn't there yet; both come with zeros and empty lists, and the API keeps neither, so the next request that reaches it tries again. Like every `/insights/*` answer, such an answer still carries `Cache-Control: public, max-age=300, stale-while-revalidate=3600`, so a browser or the edge can show it for five more minutes. An `ok` answer is cached with stale-while-revalidate (1h refresh).
 
 ### GET `/debug/shared-links`
 
 **Purpose**: The share counters with the fetches the public tile leaves out, for the shared links section on the debug page
 
-Admin only. The answer of `/insights/shared-links`, read fresh, plus two fields:
+Admin only. The answer of `/insights/shared-links`, read fresh, plus three fields:
 
+- `top`: up to five plot pages, most shared first, such as `{"spec_id": "scatter-basic", "language": "python", "library": "matplotlib", "shares": 3}`. A spec's hub (`language` and `library` are `null`) and one implementation of it are entries of their own.
 - `other`: the number of preview images fetched in the window by a client that is neither a preview platform nor a known crawler. A rising `other` is how a platform missing from the list shows itself.
-- `verified`: an object from a platform's name (or `other`) to how many of its fetches Cloudflare verified as a bot it knows, such as `{"slack": 12, "other": 2}`. A platform with none is absent. A platform Cloudflare verifies whose shares are mostly unverified is being imitated; WhatsApp and Signal are never verified.
+- `other_verified`: how many of `other` Cloudflare verified as a bot it knows. A verified fetcher under `other` is a preview platform the list doesn't name yet.
 
 `status` is `unavailable` with zeros when the query fails.
 

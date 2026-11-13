@@ -1933,7 +1933,6 @@ describe('DataPanel files and sheets', () => {
     onConvert?: (dataBase64: string, sheet?: string) => Promise<ConvertAnswer>
   ) {
     const onParse = vi.fn();
-    const onTrack = vi.fn();
     const panel = (next: AgentSessionState) => (
       <Panel
         state={next}
@@ -1942,12 +1941,11 @@ describe('DataPanel files and sheets', () => {
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
-        onTrack={onTrack}
         onConvert={onConvert}
       />
     );
     const view = render(panel(state));
-    return { onParse, onTrack, rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
+    return { onParse, rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
   }
 
   const answer = (overrides: Partial<ConvertAnswer> = {}): ConvertAnswer => ({
@@ -1991,7 +1989,7 @@ describe('DataPanel files and sheets', () => {
     const onConvert = vi.fn(async (_data: string, sheet?: string) =>
       answer({ text: 'a,b\n1,2\n', sheet: sheet ?? '2024' })
     );
-    const { onParse, onTrack } = renderPanel(fromWorkbook(), onConvert);
+    const { onParse } = renderPanel(fromWorkbook(), onConvert);
     const picker = screen.getByLabelText(/# sheet/) as HTMLSelectElement;
     expect(screen.getByText('# sheet (2)')).toBeInTheDocument();
     expect(picker).toHaveValue('2024');
@@ -2011,11 +2009,6 @@ describe('DataPanel files and sheets', () => {
         expect.objectContaining({ name: 'Bericht.xlsx', sheet: '2025', text: 'a,b\n1,2\n' })
       )
     );
-    expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
-      kind: 'xlsx',
-      encoding: 'none',
-      outcome: 'sheet',
-    });
   });
 
   it('names the sheet in angle quotes, so the data line never nests quotes', async () => {

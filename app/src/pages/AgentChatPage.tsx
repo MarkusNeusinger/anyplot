@@ -689,7 +689,6 @@ function AgentChat({
     locked: !!fanOut,
     hasData: !!state.dataset,
     onConvert: session.convertFile,
-    onTrack: trackEvent,
   });
   const attachment = attach.attachment;
 
@@ -1438,7 +1437,6 @@ function AgentChat({
                       transcribedFrom.current = null;
                       void session.confirmTranscription();
                     }}
-                    onTrack={trackEvent}
                     // The sheet picker's read holds the composer back until its parse starts.
                     onConvert={(dataBase64, sheet) => {
                       cancelChain();

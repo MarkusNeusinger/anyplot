@@ -62,6 +62,10 @@ MAX_LISTED_VALUES = 12
 the profile of a six-row energy mix listed five sources, the root never saw `Übrige` and told the user the plot
 had added it to fill the ring."""
 MAX_CHANGE_REQUEST_CHARS = 600
+MAX_RUN_REQUEST_CHARS = 1_100
+"""The cap of the change request a run hands the adapter and the reviewer: the user's own, within
+`MAX_CHANGE_REQUEST_CHARS`, and before it the server's request of "plot the new data" when a kept change of the
+plot joins that run (`pipeline.new_data_request`; a test holds the sum under this cap)."""
 MAX_USER_REQUESTS = 8
 """Earlier change requests of a plot's lineage that a change run carries as the user's standing decisions."""
 MAX_USER_REQUESTS_CHARS = 2_400
@@ -429,11 +433,12 @@ class PipelineArgs(_ServerContract):
 
 
 class KeepRequestArgs(_ServerContract):
-    """The `keep_plot_request` tool input: a request for the first plot, kept without running anything.
+    """The `keep_plot_request` tool input: a request for the next plot, kept without running anything.
 
     Live round 9 of 2026-10-16: a title asked for before `.confirm()`, and a plot wish in the pasted notes,
     reached no plot, because the bare `.create_plot()` carries no request. The tool stores it as the kept note
-    (`pipeline.hold_request`) that the next first-plot run takes.
+    (`pipeline.hold_request`) that the next first-plot run takes, or, for a change of the plot the library has
+    while the data waits, the next run on that plot.
     """
 
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
@@ -495,7 +500,7 @@ class AdaptRequest(_ServerContract):
     bindings: list[Binding] = Field(max_length=MAX_COLUMNS)
     loader_columns: list[ColumnName] = Field(max_length=MAX_COLUMNS)
     hints: list[Note] = Field(default_factory=list, max_length=MAX_NOTES)
-    change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
+    change_request: str = Field(default="", max_length=MAX_RUN_REQUEST_CHARS)
     user_requests: list[UserRequest] = Field(default_factory=list, max_length=MAX_USER_REQUESTS)
     """The earlier change requests the base version carries out, oldest first: the user's standing decisions."""
     decisions: list[Decision] = Field(default_factory=list, max_length=MAX_DECISIONS)
@@ -533,7 +538,7 @@ class ReviewRequest(_ServerContract):
     bindings: list[Binding] = Field(max_length=MAX_COLUMNS)
     profile_summary: str = Field(max_length=2_000)
     spec_brief: str = Field(max_length=4_000)
-    change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
+    change_request: str = Field(default="", max_length=MAX_RUN_REQUEST_CHARS)
     user_requests: list[UserRequest] = Field(default_factory=list, max_length=MAX_USER_REQUESTS)
     """The earlier change requests the plot carries out, oldest first: choices the review never turns into defects."""
     decisions: list[Decision] = Field(default_factory=list, max_length=MAX_DECISIONS)

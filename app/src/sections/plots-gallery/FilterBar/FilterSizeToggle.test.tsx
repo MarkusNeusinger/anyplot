@@ -25,6 +25,6 @@ describe('FilterSizeToggle', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Switch to compact view' }));
 
     expect(onImageSizeChange).toHaveBeenCalledWith('compact');
-    expect(onTrackEvent).toHaveBeenCalledWith('grid_resize', { size: 'compact' });
+    expect(onTrackEvent).toHaveBeenCalledWith('ui_feature', { feature: 'grid_resize' });
   });
 });

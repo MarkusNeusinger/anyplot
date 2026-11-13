@@ -744,6 +744,7 @@ describe('DebugPage machine readers', () => {
         verified: 25,
         unverified: 0,
         pages: 3,
+        shell: 17,
         code: 0,
         og: 2,
         mcp: 0,
@@ -854,12 +855,13 @@ describe('DebugPage machine readers', () => {
     const matrix = within(within(region).getByRole('group', { name: 'Machine readers by vendor' }));
     const [head, first, second, third] = matrix.getAllByRole('row');
     expect(head).toHaveTextContent(
-      'vendorkindcategoryrequestsverifiedunverifiedpagescodeogmcp404top path'
+      'vendorkindcategoryrequestsverifiedunverifiedpagesshellcodeogmcp404top path'
     );
+    // Prerendered pages and shells are columns of their own; a row of an older answer has no shell.
     expect(first).toHaveTextContent(
-      '▸ perplexityindexunverified27027148500code icicle-basic/altair'
+      '▸ perplexityindexunverified270271408500code icicle-basic/altair'
     );
-    expect(second).toHaveTextContent('▸ ahrefsseoSearch Engine Optimization2525030201other');
+    expect(second).toHaveTextContent('▸ ahrefsseoSearch Engine Optimization252503170201other');
     expect(third).toHaveTextContent('otherunknownAI Crawler');
     // A row without routes has nothing to open.
     expect(matrix.getByRole('button', { name: 'other unknown: top routes' })).toBeDisabled();

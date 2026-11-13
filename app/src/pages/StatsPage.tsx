@@ -8,7 +8,6 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
-import { useAnalytics } from 'src/hooks';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { ApiError, apiGet, endpoints } from 'src/lib/api';
 import { paths, specPath } from 'src/routes/paths';
@@ -16,6 +15,7 @@ import { type MachineReadersResponse, readMachineReaders } from 'src/sections/st
 import { MachineReadersTile } from 'src/sections/stats/MachineReadersTile';
 import { readSharedLinks, type SharedLinksResponse } from 'src/sections/stats/sharedLinks';
 import { SharedLinksTile } from 'src/sections/stats/SharedLinksTile';
+import { CHART_PX, columnPx, STRIP_BAR } from 'src/sections/stats/stripGeometry';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
@@ -144,7 +144,6 @@ function statsLibLabel(lib: Pick<LibraryStats, 'id' | 'name'>): string {
 }
 
 export function StatsPage() {
-  const { trackEvent } = useAnalytics();
   const { isDark } = useTheme();
   const [data, setData] = useState<DashboardData | null>(null);
   const [visitors, setVisitors] = useState<VisitorPoint[] | null>(null);
@@ -315,7 +314,7 @@ export function StatsPage() {
               : ''}
           </Typography>
           {visitors === null ? (
-            <Box sx={{ height: 70, display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ height: CHART_PX, display: 'flex', alignItems: 'center' }}>
               <Typography
                 sx={{
                   fontFamily: typography.fontFamily,
@@ -327,7 +326,7 @@ export function StatsPage() {
               </Typography>
             </Box>
           ) : visitorPoints.length === 0 ? (
-            <Box sx={{ height: 70, display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ height: CHART_PX, display: 'flex', alignItems: 'center' }}>
               <Typography
                 sx={{
                   fontFamily: typography.fontFamily,
@@ -345,7 +344,7 @@ export function StatsPage() {
                   display: 'flex',
                   alignItems: 'flex-end',
                   gap: 0.25,
-                  height: 70,
+                  height: CHART_PX,
                   overflow: 'hidden',
                 }}
               >
@@ -358,12 +357,11 @@ export function StatsPage() {
                     <Box
                       sx={{
                         flex: 1,
-                        height: `${Math.max((point.visitors / maxVisitors) * 100, 3)}%`,
-                        bgcolor: colors.primaryDark,
-                        opacity: 0.5,
+                        height: `${columnPx(point.visitors, maxVisitors)}px`,
+                        bgcolor: STRIP_BAR.color,
+                        opacity: STRIP_BAR.opacity,
                         borderRadius: '2px 2px 0 0',
-                        minHeight: 2,
-                        '&:hover': { opacity: 0.8 },
+                        '&:hover': { opacity: STRIP_BAR.activeOpacity },
                         transition: 'opacity 0.15s ease',
                       }}
                     />
@@ -668,7 +666,7 @@ export function StatsPage() {
                 display: 'flex',
                 alignItems: 'flex-end',
                 gap: 0.25,
-                height: 70,
+                height: CHART_PX,
                 overflow: 'hidden',
               }}
             >
@@ -677,12 +675,11 @@ export function StatsPage() {
                   <Box
                     sx={{
                       flex: 1,
-                      height: `${Math.max((point.count / maxDaily) * 100, 3)}%`,
-                      bgcolor: colors.primaryDark,
-                      opacity: 0.5,
+                      height: `${columnPx(point.count, maxDaily)}px`,
+                      bgcolor: STRIP_BAR.color,
+                      opacity: STRIP_BAR.opacity,
                       borderRadius: '2px 2px 0 0',
-                      minHeight: 2,
-                      '&:hover': { opacity: 0.8 },
+                      '&:hover': { opacity: STRIP_BAR.activeOpacity },
                       transition: 'opacity 0.15s ease',
                     }}
                   />
@@ -740,12 +737,6 @@ export function StatsPage() {
                   '&:hover': { opacity: 0.85 },
                   transition: 'opacity 0.15s ease',
                 }}
-                onClick={() =>
-                  trackEvent('stats_top_impl_click', {
-                    spec: impl.spec_id,
-                    library: impl.library_id,
-                  })
-                }
               >
                 <Box
                   sx={{
@@ -882,10 +873,6 @@ export function StatsPage() {
                         key={tag}
                         component={RouterLink}
                         to={param ? paths.plotsFiltered(param, tag) : paths.plots}
-                        onClick={() => {
-                          if (param)
-                            trackEvent('tag_click', { param, value: tag, source: 'stats' });
-                        }}
                         sx={{
                           fontFamily: typography.fontFamily,
                           fontSize: size,

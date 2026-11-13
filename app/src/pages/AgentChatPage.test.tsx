@@ -976,9 +976,6 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
       'step 2: the data is confirmed; create the plot below'
     );
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_confirmed', {
-      size_bucket: 'lt_1kb',
-    });
     // While it plots, the status line says so, how long it runs and how long it usually takes, in
     // the step's words' place; the plot button's description, the same line, reads no clock.
     expect(screen.getByTestId('data-step')).toHaveTextContent(
@@ -1099,7 +1096,6 @@ describe('AgentChatPage gating', () => {
     expect(composerButtons()).toEqual(['.example_data() (inert)', '.create_plot() →']);
     // Nothing was confirmed yet, so nothing was lost.
     expect(lossNotice()).not.toBeInTheDocument();
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
 
     const create = screen.getByRole('button', { name: 'Create plot' });
     await untilActive(create);
@@ -1142,7 +1138,6 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('button', { name: 'Plot the new data' })).toBe(create);
     expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
     expect(screen.getByRole('cell', { name: '52' })).toBeInTheDocument();
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_undo', { version: '1' });
     // An undo asks for no new summary.
     expect(confirmAndTurns()).toEqual([
       'summarize_data',
@@ -1197,7 +1192,6 @@ describe('AgentChatPage gating', () => {
     expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
     expect(bindingsLine()).toHaveTextContent(/^x \(across\): x · /);
     expect(screen.getByRole('cell', { name: '-1.2246468e-16' })).toBeInTheDocument();
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
 
     await turnEnded();
     const create = screen.getByRole('button', { name: 'Create plot' });
@@ -3484,14 +3478,6 @@ describe('AgentChatPage attachment', () => {
     expect(screen.getByTestId('data-step')).toHaveTextContent(
       'step 1 of 2 · .create_plot() reads the attached table and plots it · Enter ↵ only reads it'
     );
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
-      as: 'data',
-      via: 'paste',
-    });
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
-      as: 'message',
-      via: 'paste',
-    });
   });
 
   it('attaches a copied web table with grouped columns from its HTML, the spans expanded', async () => {
@@ -3575,10 +3561,6 @@ describe('AgentChatPage attachment', () => {
     const posted = datasetPosts().map(([, init]) => JSON.parse(String((init as RequestInit).body)));
     expect(posted).toEqual([expect.objectContaining({ text: TABLE.trim() })]);
     expect(turnBodies().slice(1)).toEqual([{ action: 'summarize_data' }]);
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
-      as: 'data',
-      via: 'typed',
-    });
   });
 
   it('keeps a refused typed table red, and × puts it back into the box', async () => {
@@ -3624,18 +3606,8 @@ describe('AgentChatPage attachment', () => {
     ).toHaveTextContent('▤ scores.csv · 4 lines');
     // The box has the focus, so Enter sends the file instead of opening the chooser again.
     expect(message()).toHaveFocus();
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_file', {
-      kind: 'text',
-      encoding: 'utf-8',
-      outcome: 'attached',
-    });
     fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
     expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
-    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_file', {
-      kind: 'text',
-      encoding: 'utf-8',
-      outcome: 'removed',
-    });
   });
 
   it('reads a workbook on the server with the loader, and drops an answer that came after ×', async () => {
@@ -3750,10 +3722,8 @@ describe('AgentChatPage attachment', () => {
     expect(message()).toHaveValue('');
   });
 
-  it('counts a message paste once, though the browser reports its insertion again', async () => {
+  it('routes a message paste once, though the browser reports its insertion again', async () => {
     await openChat();
-    const routed = () =>
-      analytics.trackEvent.mock.calls.filter(([name]) => name === 'agent_input_routed');
     // The paste event routes the text as a message; the browser then inserts it and fires the
     // input event jsdom leaves out, with `insertFromPaste` too.
     expect(pasteText('a bar chart, please')).toBe(true);
@@ -3762,13 +3732,12 @@ describe('AgentChatPage attachment', () => {
       inputType: 'insertFromPaste',
     });
     expect(message()).toHaveValue('a bar chart, please');
-    expect(routed()).toEqual([['agent_input_routed', { as: 'message', via: 'paste' }]]);
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
 
     // The next paste the event hid (iOS) is routed on its input: the first one's mark is spent.
     fireEvent.input(message(), { target: { value: '' }, inputType: 'deleteContentBackward' });
     fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertFromPaste' });
     expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
-    expect(routed()).toHaveLength(2);
 
     // A table the paste event took inserts nothing, so it leaves no mark for the next paste.
     fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
@@ -3776,7 +3745,6 @@ describe('AgentChatPage attachment', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
     fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertFromPaste' });
     expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
-    expect(routed()).toHaveLength(4);
   });
 
   it('lets the plot button take a chip along, and asks before a reload drops it', async () => {

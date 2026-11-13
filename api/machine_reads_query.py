@@ -110,7 +110,9 @@ class MachineReadsVendor(BaseModel):
     verified: int = Field(default=0, ge=0)
     unverified: int = Field(default=0, ge=0)
     pages: int = Field(default=0, ge=0)
-    """Page reads, prerendered or the shell."""
+    """Page reads answered with the prerendered page."""
+    shell: int = Field(default=0, ge=0)
+    """Page reads answered with the app's empty shell: a crawler that runs no JavaScript read nothing."""
     code: int = Field(default=0, ge=0)
     og: int = Field(default=0, ge=0)
     mcp: int = Field(default=0, ge=0)
@@ -245,7 +247,9 @@ def detail_sql(dataset: str) -> str:
 
     Every live line counts, whatever its surface, status or verdict; `synthetic` counts the rest. A vendor row is
     a vendor and purpose (`claude` reads as a person's assistant, an index and a training crawler) with the
-    category Cloudflare gave most of its verified lines and its `TOP_PATHS` most requested routes.
+    category Cloudflare gave most of its verified lines and its `TOP_PATHS` most requested routes. Its page reads
+    are two counts: `pages` got the prerendered page, `shell` the app's empty shell. A row with a category and a
+    `shell` count is a crawler Cloudflare knows that the site answers with nothing to read.
     """
     columns = """,
     JSON_VALUE(json_payload.route) AS route,
@@ -281,7 +285,8 @@ vendors AS (
     COUNT(*) AS requests,
     COUNTIF(verified_category IS NOT NULL) AS verified,
     COUNTIF(verified_category IS NULL) AS unverified,
-    COUNTIF(surface IN ('page', 'shell')) AS pages,
+    COUNTIF(surface = 'page') AS pages,
+    COUNTIF(surface = 'shell') AS shell,
     COUNTIF(surface = 'code') AS code,
     COUNTIF(surface = 'og') AS og,
     COUNTIF(surface = 'mcp') AS mcp,
@@ -403,6 +408,7 @@ def _vendor(row: dict[str, Any]) -> MachineReadsVendor | None:
         verified=_count(row.get("verified")),
         unverified=_count(row.get("unverified")),
         pages=_count(row.get("pages")),
+        shell=_count(row.get("shell")),
         code=_count(row.get("code")),
         og=_count(row.get("og")),
         mcp=_count(row.get("mcp")),
