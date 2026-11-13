@@ -113,7 +113,7 @@ Then the local CI equivalents — the same commands the pipeline runs.
 # backend (CI job "Run Linting" + "Run Tests"); ruff lives in the dev extra,
 # which a fresh worktree's .venv lacks
 uv run --extra dev ruff check . && uv run --extra dev ruff format --check .
-uv run --extra typecheck mypy api core --pretty
+uv run --extra typecheck --extra agents mypy api core agents --pretty  # as ci-lint.yml runs it
 uv run pytest tests/unit tests/integration -n auto  # CI: -n 4 --dist worksteal
 
 # frontend, only if app/ changed (CI job "Run Frontend Tests")

@@ -212,6 +212,72 @@ def _withheld(code: str | None = None) -> types.Content:
     return types.Content(role="user", parts=[types.Part(text=withheld_text(code))])
 
 
+WITHHELD_TEXTS: frozenset[str] = frozenset({WITHHELD, *(withheld_text(code) for code in JUDGED_REFUSALS)})
+"""Every stored form of a withheld message."""
+HALT_QUOTE = f"[{HALT_AUTHOR}] said:"
+"""The words ADK puts before a halt event's text in the root's request. The event's author is `model`, another agent
+for the root, so ADK hands its text over as a user content: a preamble part, then one part per text that starts with
+these words and quotes it (`google.adk.flows.llm_flows.context._fencing`; a test builds one through ADK itself)."""
+
+
+def _texts(content: types.Content) -> list[str]:
+    return [part.text for part in content.parts or [] if part.text and not part.thought]
+
+
+def is_withheld(content: types.Content) -> bool:
+    """Whether a content of the root's request reads as the placeholder of a withheld message."""
+    return content.role == "user" and "".join(_texts(content)) in WITHHELD_TEXTS
+
+
+def is_quoted_halt(content: types.Content) -> bool:
+    """Whether a content of the root's request is a halt event as ADK hands it over: its preamble, then nothing but
+    quoted texts of `HALT_AUTHOR`. A user's own message is one part and has no preamble."""
+    texts = _texts(content)
+    return content.role == "user" and len(texts) > 1 and all(text.startswith(HALT_QUOTE) for text in texts[1:])
+
+
+def without_refused_turns(contents: list[types.Content]) -> list[types.Content]:
+    """The root's request without the turns the service refused before the root ran.
+
+    A refused turn left two user contents in the root's context: the placeholder and the quoted refusal. The next
+    message followed them as a third, so the root read one user turn that held a refusal ahead of the message, and
+    the root, whose prompt tells it to refuse what is out of scope, sent that fixed text again for a message the
+    judge had passed (persona round of 2026-11-11, two of the six typed turns right after a refusal). The judge's own
+    context has skipped fixed replies since they "primed it to refuse the next message alike" (`judge_context`);
+    this is the same for the root. Only the request changes: the session's events stay, so the judge's context and
+    the count of refusals read what they read.
+
+    A refused turn is the pair, and only the pair goes: the placeholder with the quoted halt right after it. Only the
+    scope guard halts a run (`before_run_callback`), every halt answers a withheld message, and ADK's trimming never
+    parts the two (consecutive user contents start one invocation). So a message of the user's own that reads like a
+    placeholder and passed the judge stays, since the root's reply follows it, and a quoted block without its
+    placeholder stays as well.
+    """
+    kept: list[types.Content] = []
+    index = 0
+    while index < len(contents):
+        refused = index + 1 < len(contents) and is_withheld(contents[index]) and is_quoted_halt(contents[index + 1])
+        if not refused:
+            kept.append(contents[index])
+        index += 2 if refused else 1
+    return kept or contents
+
+
+def withheld_messages(events: Sequence[Event]) -> int:
+    """How many of the session's user messages were withheld, whatever the reason: what the session block tells the
+    root in place of the turns `without_refused_turns` takes out. Counted as that filter reads them: a placeholder
+    with the halt event right after it."""
+    count = 0
+    before: Event | None = None  # the last event with content: a state write stands between the two at times
+    for event in events:
+        if event.content is None or not event.content.parts:
+            continue
+        if event.author == HALT_AUTHOR and before is not None and before.author == USER_AUTHOR:
+            count += before.content is not None and is_withheld(before.content)
+        before = event
+    return count
+
+
 SESSION_CLOSED = "session_closed"
 """The refusal code (and `refusals.yaml` entry) of a session closed after `AGENT_SESSION_REFUSALS` refusals."""
 COUNTED_PLACEHOLDER = withheld_text("out_of_scope")

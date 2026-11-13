@@ -100,7 +100,7 @@ async def pasted_session(client: httpx.AsyncClient, text: str) -> str:
 
 async def context_for(client: httpx.AsyncClient, sid: str, invocation: str) -> SimpleNamespace:
     """A tool context on the session's state, which the tools write their delta into."""
-    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
     context.invocation_id = invocation
     return context
 

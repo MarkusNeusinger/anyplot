@@ -984,7 +984,7 @@ class TestSessionBindings:
         dataset_id = services.datasets.put("s1", parse_dataset(csv))
         state[DATASET_ID] = dataset_id
         state[BINDINGS] = [{"role": role, "column": column} for role, column in bindings.items()]
-        context = SimpleNamespace(state=state, session=SimpleNamespace(id="s1"), invocation_id="i1")
+        context = SimpleNamespace(state=state, session=SimpleNamespace(id="s1", events=[]), invocation_id="i1")
 
         result = await get_dataset_profile(cast(Any, context))
         block = await agent_module.session_context(cast(Any, context))

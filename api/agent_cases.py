@@ -615,8 +615,8 @@ CALL_CODES = frozenset(
     " unsupported_operation url_or_path_not_allowed validation version_not_kept".split()
 )
 TURN_GUARDS = frozenset(
-    "scope_guard output_guard empty_reply reply_language shipped_reply plot_button budget_exempt budget_halt queue"
-    " session_closed message_limit".split()
+    "scope_guard output_guard empty_reply root_refusal reply_language shipped_reply plot_button budget_exempt"
+    " budget_halt queue session_closed message_limit".split()
 )
 GUARD_VERDICTS = frozenset(
     "in_scope out_of_scope needs_data other_library unsupported_content locked_out service_paused budget"

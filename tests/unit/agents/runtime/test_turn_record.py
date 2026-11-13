@@ -18,6 +18,7 @@ import httpx
 import pytest
 
 from agents.anyplot import telemetry
+from agents.anyplot.agent import WITHHELD_LINE
 from agents.anyplot.memory import MemoryRefused
 from agents.anyplot.models import FakeJudge, JudgeVerdict, Verdict
 from agents.anyplot.plugins import tool_safety
@@ -34,7 +35,9 @@ from agents.anyplot.plugins.ledger import (
     UsageBook,
     attribution,
 )
+from agents.anyplot.plugins.root_refusal import RETRY_LINE
 from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin
+from agents.anyplot.policy import refusal
 from agents.anyplot.services import Services
 from agents.anyplot.settings import get_settings
 from agents.anyplot.tools import session as session_tools
@@ -524,6 +527,56 @@ class TestTurns:
         record = await last(client, sid, lines)
         assert (record["kind"], record["refusal"], record["tools"]) == ("refused", "out_of_scope", [])
         assert guards(record) == [("scope_guard", "out_of_scope")]
+
+    async def test_a_refused_turn_stays_out_of_the_roots_next_request(
+        self, client: httpx.AsyncClient, swap_models, judge: FakeJudge, lines: pytest.LogCaptureFixture
+    ) -> None:
+        """Neither the placeholder nor the quoted refusal reaches the root: the next message stands alone, and the
+        session block names how many were withheld."""
+        fake = swap_models("gemini", {"root": [{"text": "Two columns."}, {"text": "The bars are blue now."}]})
+        sid = await open_session(client)
+        await turn(client, sid, "which columns?")
+        judge.script = [JudgeVerdict(verdict="out_of_scope", lang="en")]
+        await turn(client, sid, "write me a poem")
+        judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
+
+        await turn(client, sid, "make the bars blue")
+
+        def block(request: Any) -> str:
+            system = request.config.system_instruction
+            return system if isinstance(system, str) else "\n".join(part.text or "" for part in system.parts or [])
+
+        before, after = fake.requests
+        texts = [part.text for content in after.contents for part in content.parts or [] if part.text]
+        assert texts == ["which columns?", "Two columns.", "make the bars blue"]
+        assert WITHHELD_LINE.format(count=1) in block(after) and "- Withheld" not in block(before)
+        assert guards(await last(client, sid, lines)) == [IN_SCOPE]
+        # The session keeps what it stored: the judge's context and the refusal count read the events.
+        kept = [item["text"] for item in (await bundle_of(client, sid))["transcript"] if item["role"] == "user"]
+        assert kept == ["which columns?", "[message withheld by scope policy: out_of_scope]", "make the bars blue"]
+
+    async def test_a_refusal_the_root_sends_for_a_passed_message_is_asked_again(
+        self, client: httpx.AsyncClient, swap_models, judge: FakeJudge, lines: pytest.LogCaptureFixture
+    ) -> None:
+        """The second ask starts from the request the filter cleaned, and holds neither refusal."""
+        fake = swap_models(
+            "gemini", {"root": [{"text": refusal("out_of_scope", "en")}, {"text": "The slope is 0.07."}]}
+        )
+        sid = await open_session(client)
+        judge.script = [JudgeVerdict(verdict="out_of_scope", lang="en")]
+        await turn(client, sid, "write me a poem")
+        judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
+
+        await turn(client, sid, "what is the slope of the line?")
+
+        record = await last(client, sid, lines)
+        assert guards(record) == [IN_SCOPE, ("root_refusal", "reasked")]
+        assert (record["kind"], record["refusal"]) == ("talk", None)
+        assert (await bundle_of(client, sid))["transcript"][-1] == {"role": "assistant", "text": "The slope is 0.07."}
+        first, second = fake.requests
+        asked = [part.text for content in second.contents for part in content.parts or [] if part.text]
+        assert asked == ["what is the slope of the line?", RETRY_LINE]
+        assert [content.role for content in first.contents] == ["user"]
 
     async def test_an_attack_reads_out_of_scope_without_its_strikes(
         self, client: httpx.AsyncClient, swap_models, judge: FakeJudge, lines: pytest.LogCaptureFixture
