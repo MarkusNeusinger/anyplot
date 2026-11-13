@@ -44,8 +44,9 @@
   after the judge's. A rescued `out_of_scope` counts toward no refusal, so at most
   `AGENT_PASTE_NOTE_RESCUES` go on per user and day (`UsageBook.note_rescue_ok`, twice
   as many per network); past that the verdict stands (`paste_note_rescues_spent`) and
-  the note is refused and counted as any message. `attack` refuses the note as any
-  message, and `other_library` gets its fixed pointer to the catalogue;
+  the note is refused as any off-topic message is, which counts toward nothing.
+  `attack` refuses the note as any message, strike and count included, and
+  `other_library` gets its fixed pointer to the catalogue;
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
   above refuses the user with the `locked_out` refusal for the rest of the day (a

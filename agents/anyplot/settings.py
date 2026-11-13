@@ -590,8 +590,8 @@ class AgentSettings(BaseSettings):
     paste_note_rescues: PositiveInt = 5
     """Notes typed with a paste per user and day whose `out_of_scope` verdict goes on as `in_scope`
     (`AGENT_PASTE_NOTE_RESCUES`; the anonymous users of one network share twice as many). Such a note reaches the
-    root uncounted, so the cap bounds that channel; past it the verdict stands, and the note is refused and counted
-    toward the session's refusals as any message. Every tier, like the strikes."""
+    root uncounted, so the cap bounds that channel; past it the verdict stands and the note is refused, as any
+    off-topic message is, without counting toward the session's refusals. Every tier, like the strikes."""
 
     session_idle_s: PositiveInt = 3600
     """Idle seconds before the sweeper drops a session (`AGENT_SESSION_IDLE_S`)."""
