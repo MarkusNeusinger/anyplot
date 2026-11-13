@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Catégorie,Dépenses\nLoyer,1200\nCourses,460\nTransport,180\nLoisirs,240\n",
+  "message": "Affiche le total des dépenses dans le titre.",
+  "expected_operations": [],
+  "locale": "fr",
+  "spec_id": "bar-basic",
+  "tags": ["extra_figure", "plot_request"],
+  "plot_request": true
+}

@@ -1,8 +1,9 @@
 {
   "dataset_text": "Monat,Besucher\nMär,1840\nJan,1210\nMai,2475\nFeb,1395\nJun,2930\nApr,2105\n",
   "message": "Bring die Monate in die richtige Reihenfolge, Januar zuerst.",
-  "expected_operations": [{"op": "sort", "column": "Monat"}],
+  "expected_operations": [],
   "spec_id": "bar-basic",
   "locale": "de",
-  "tags": ["sort", "months"]
+  "tags": ["order", "months", "plot_request"],
+  "plot_request": true
 }

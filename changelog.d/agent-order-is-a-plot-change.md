@@ -9,6 +9,8 @@
   table keeps its rows as pasted; so is a figure shown with the plot, such
   as a total in the title or the sum of each category in the legend, which
   the plot code computes from the data. A sort of the table stays for a
-  user who names the table or its rows, for a top N, and for the calendar
-  order of months and dates. The prep eval scores where such a wish went
-  (`plot_request`), with ten cases for it and two that name the table.
+  user who names the table or its rows, for a top N, and for a date column
+  that runs newest first. The prep eval scores where such a wish went
+  (`plot_request`), with thirteen cases for it and three that name the
+  table. The rule names no word of any language: three of the cases are
+  French, a language the rules hold no example of.

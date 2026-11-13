@@ -122,13 +122,16 @@ class TestFixtures:
         # read as new data the same day (`change_request`): the root changes no data for it. Since 2026-11-11, one
         # with thousands dots and a footnote mark on one cell (`footnote_mark`): `set_type` with a decimal comma
         # reads both columns, where a detour through `strip` and `replace` had lost a digit. Since 2026-11-13, an
-        # order of the plot's marks and a figure shown with the plot go to the plot (`plot_request`): seven cases
-        # ask for the plot alone or beside a data change, and three name the table or its rows, which stay a `sort`.
-        assert len(cases) == 114
+        # order of the plot's marks and a figure shown with the plot go to the plot (`plot_request`): eleven cases
+        # ask for the plot alone or beside a data change, the calendar order of month names among them, and two
+        # name the table, which stays a `sort`. The rule names no word of any language, so three French cases, a
+        # language the rules hold no example of, check that it carries: an order, a figure and a sort of the table.
+        assert len(cases) == 117
         wishes = [item for item in cases if item.plot_request]
         assert sorted(item.id for item in wishes) == [
             "de-groesste-zuerst",
             "de-hard-kette-gesamtzeile",
+            "de-monate-kalenderfolge",
             "de-sortieren-absteigend",
             "de-summe-in-legende",
             "en-hard-messy-export",
@@ -137,15 +140,26 @@ class TestFixtures:
             "en-order-categories-named",
             "en-total-in-title",
             "en-two-operations",
+            "fr-plus-grands-d-abord",
+            "fr-total-dans-le-titre",
         ]
         assert all("plot_request" in item.tags for item in wishes)
         # A wish for the plot never comes with a `sort` of the table, and three of them change the data as well.
         assert not any(op.get("op") == "sort" for item in wishes for op in item.expected_operations)
         assert sum(1 for item in wishes if item.expected_operations) == 3
-        assert sum(1 for item in wishes if "extra_figure" in item.tags) == 3
+        assert sum(1 for item in wishes if "extra_figure" in item.tags) == 4
         named = [item for item in cases if "table_named" in item.tags]
-        assert sorted(item.id for item in named) == ["de-tabelle-sortieren", "en-hard-rename-filter-sort"]
+        assert sorted(item.id for item in named) == [
+            "de-tabelle-sortieren",
+            "en-hard-rename-filter-sort",
+            "fr-trier-le-tableau",
+        ]
         assert all(item.expected_operations[-1]["op"] == "sort" and not item.plot_request for item in named)
+        assert sorted(item.id for item in cases if item.locale == "fr") == [
+            "fr-plus-grands-d-abord",
+            "fr-total-dans-le-titre",
+            "fr-trier-le-tableau",
+        ]
         assert sorted(item.id for item in cases if "layout" in item.tags) == [
             "de-wunsch-achsen-bis",
             "en-summary-inline-pairs",
