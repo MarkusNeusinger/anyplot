@@ -387,6 +387,10 @@ VALUE_FREE_TESTS: frozenset[str] = frozenset(("is_missing", "not_missing"))
 RESET_VIEW_REFUSAL = (
     "reset_view clears the view of the plot and changes no table: prepare_data takes it as its first operation"
 )
+APPLY_VIEW_REFUSAL = (
+    "apply_view puts the rows the view of the plot shows in place of the table's: it is the first operation of a "
+    "call, and there has to be a view"
+)
 SHOWN_TIED_ROWS = 3  # of the rows of a tie on each side of a top N's cut, the ones its change line names
 TIED_NAME_CHARS = 20  # of one such row's name in that line, which names up to twice `SHOWN_TIED_ROWS` of them
 TargetType = Literal["number", "datetime", "text"]
@@ -588,6 +592,9 @@ class Prepared:
     splits: list[list[str]] = field(default_factory=list)
     """The new columns of each `split`, in the order of its parts: two neighbouring parts may fill a lower and upper
     bound pair left open (`bindings.carry_bindings`), and no other two columns of one source may."""
+    sorted_by: str | None = None
+    """The column the call's last `sort` ranked the rows by, while only row filters followed it (`_Carried.sorted_by`):
+    what a cut of the result after the call is a cut of, so `cut_note` can name a tie (`query_data`'s `limit`)."""
 
 
 def with_date_notes(parsed: ParsedDataset, prepared: Prepared) -> ParsedDataset:
@@ -1051,6 +1058,16 @@ class ResetView(_Strict):
     op: Literal["reset_view"]
 
 
+class ApplyView(_Strict):
+    """The view of the plot applied for real: the rows it shows are what the operations after it work on. In
+    `prepare_data` the table itself becomes those rows and the view is gone ("make that permanent", "sum the rows
+    shown per month"); in `query_data` the question is asked of the rows the plot shows. The tools put the view's own
+    operations in its place (`plot_view.route`, `tools.session.query_data`), first in a call; the engine, which
+    knows no view, refuses it."""
+
+    op: Literal["apply_view"]
+
+
 class Unsupported(_Strict):
     """A data change no operation can make, named by its `family`: refused as `unsupported_operation`, nothing changes.
 
@@ -1086,6 +1103,7 @@ Operation = Annotated[
     | Blank
     | KeepRows
     | ResetView
+    | ApplyView
     | Unsupported,
     Field(discriminator="op"),
 ]
@@ -1139,6 +1157,9 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation], languag
         # `prepare_data` takes it out before the table's operations run (`plot_view.route`); anywhere else it is
         # refused, since it would read as a change of the table that changes nothing.
         raise PrepareError("invalid_operation", RESET_VIEW_REFUSAL)
+    if any(isinstance(operation, ApplyView) for operation in operations):
+        # The tools put the view's own operations in its place; one that reaches the engine was not the first.
+        raise PrepareError("invalid_operation", APPLY_VIEW_REFUSAL)
     carried = _Carried.of(parsed, language)
     frame = _read(parsed)
     changes: list[str] = []
@@ -1191,7 +1212,20 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation], languag
         converted=converted,
         row_numbers=row_numbers,
         splits=[parts for parts in splits if any(parts)],
+        sorted_by=renamed.get(carried.sorted_by) if carried.sorted_by is not None else None,
     )
+
+
+def cut_note(result: ParsedDataset, sorted_by: str | None, n: int) -> str:
+    """What a cut of `result` to its first `n` rows says when it falls among rows of one value in `sorted_by`, the
+    column a call ranked them by (`Prepared.sorted_by`): the note of a top N (`_tie_note`), for a cut made outside
+    the operations, such as `query_data`'s `limit`. Empty when the cut takes every row, no column ranks them, or it
+    falls between two values."""
+    if sorted_by is None or n >= result.profile.rows:
+        return ""
+    carried = _Carried.of(result)
+    carried.sorted_by = sorted_by
+    return _tie_note(_read(result), n, carried, MAX_NOTE_CHARS, ("returned", "left out")).removeprefix("; ")
 
 
 def apply_and_parse(
@@ -1261,6 +1295,8 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
             return _keep_rows(frame, operation, carried)
         case ResetView():  # `apply_operations` refuses it before any operation runs
             raise PrepareError("invalid_operation", RESET_VIEW_REFUSAL)
+        case ApplyView():  # likewise
+            raise PrepareError("invalid_operation", APPLY_VIEW_REFUSAL)
         case Unsupported():  # `apply_operations` refuses it before any operation runs
             raise PrepareError("unsupported_operation", f"no operation can {UNSUPPORTED_WORDS[operation.family]}")
 
@@ -2013,15 +2049,19 @@ def _unvalued_note(dropped: pd.DataFrame, where: Sequence[Condition]) -> str:
     return f"; {' and '.join(parts)}" if parts else ""
 
 
-def _tie_note(frame: pd.DataFrame, n: int, carried: _Carried, room: int) -> str:
+def _tie_note(
+    frame: pd.DataFrame, n: int, carried: _Carried, room: int, sides: tuple[str, str] = ("kept", "dropped")
+) -> str:
     """What a top N's line adds when its cut falls among rows of one value in the column the rows were sorted by.
 
     The cut stays at `n`: which of the tied rows are in is the order they had before the sort, nothing the user
     chose. The note counts the tied rows on each side and names them by the first text column, so the reply can
     say so and the user can ask for more rows or for every row down to that value. Past `room` characters the
     names are left out, so the line's clip never cuts the counts: without the names the line stays under
-    `MAX_NOTE_CHARS` for the longest column name and value there can be.
+    `MAX_NOTE_CHARS` for the longest column name and value there can be. `sides` are the words for the rows
+    before and after the cut: a question's answer drops nothing, it returns some rows and leaves others out.
     """
+    inside_word, outside_word = sides
     column = carried.sorted_by
     if column is None or column not in frame.columns:
         return ""
@@ -2038,7 +2078,7 @@ def _tie_note(frame: pd.DataFrame, n: int, carried: _Carried, room: int) -> str:
         shown = _clip(shown, MAX_CELL_CHARS)
         value = f"{column} '{shown}'" if _kind(series) == "text" else f"{column} {shown}"
     head = f"; the cut falls among {inside + outside} rows with {value}: "
-    counted = f"{head}{inside} kept and {outside} dropped"
+    counted = f"{head}{inside} {inside_word} and {outside} {outside_word}"
     label = next((str(name) for name in frame.columns if name != column and _kind(frame[name]) == "text"), None)
     if label is None:
         return counted
@@ -2046,7 +2086,7 @@ def _tie_note(frame: pd.DataFrame, n: int, carried: _Carried, room: int) -> str:
     names, mask = frame[label], tied.to_numpy(dtype=bool)
     kept = _tied_names(names.iloc[:n][mask[:n]], label)
     dropped = _tied_names(names.iloc[n:][mask[n:]], label)
-    named = f"{head}{inside} kept{kept} and {outside} dropped{dropped}"
+    named = f"{head}{inside} {inside_word}{kept} and {outside} {outside_word}{dropped}"
     return named if len(named) <= room else counted
 
 

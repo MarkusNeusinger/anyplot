@@ -35,6 +35,7 @@ from agents.evals.prep import (
     canonical_operations,
     check_cases,
     describe,
+    drawn_after,
     load_cases,
     run_cases,
     score,
@@ -70,6 +71,8 @@ OPERATIONS = (
     "rolling",
     "blank",
     "keep_rows",
+    "reset_view",
+    "apply_view",
     "unsupported",
 )
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
@@ -132,7 +135,10 @@ class TestFixtures:
         # seven cases set the view of the plot (a selection, a top N, the note sent with a paste) and leave the table
         # as it is, five must leave no view: rows the user asks out of the table itself (`in_table`), rows that are
         # errors (`cleaning`, a French one), a selection another operation builds on, a rebuild from the original.
-        assert len(cases) == 124
+        # And the turns that build on a view an earlier turn set (`before_view`, `view_change`): a larger top N stays a
+        # view, "all rows again" clears it (`reset_view`), and two put it in the table's place (`apply_view`): the
+        # rows shown summed per month, and a French "keep only these in the table itself".
+        assert len(cases) == 128
         views = {item.id: item.view for item in cases if item.view is not None}
         assert sorted(case_id for case_id, landing in views.items() if landing == "set") == [
             "de-notiz-nur-2024",
@@ -141,15 +147,23 @@ class TestFixtures:
             "en-keep-at-least",
             "en-keep-two-categories",
             "en-top-revenue-keep-rows",
+            "en-view-top-15-after-10",
             "fr-garder-deux-villes",
         ]
         assert sorted(case_id for case_id, landing in views.items() if landing == "none") == [
             "de-hard-zwei-filter-zaehlen",
+            "de-wieder-alle-zeilen",
             "de-zeilen-aus-tabelle-loeschen",
             "en-drop-total-row",
             "en-from-original-first-20",
+            "en-sum-the-rows-shown",
+            "fr-appliquer-la-vue-au-tableau",
             "fr-lignes-de-test-en-trop",
         ]
+        built_on = [item for item in cases if item.before_view]
+        assert sorted(item.id for item in built_on) == sorted(item.id for item in cases if "view_change" in item.tags)
+        assert len(built_on) == 4 and all(item.view is not None for item in built_on)
+        assert sum(1 for item in built_on if item.expected_operations[0] == {"op": "apply_view"}) == 2
         (in_table,) = [item for item in cases if "in_table" in item.tags]
         assert in_table.expected_operations[-1]["target"] == "table"
         kept = [item for item in cases if "keep_where" in item.tags]
@@ -198,6 +212,7 @@ class TestFixtures:
         ]
         assert all(item.expected_operations[-1]["op"] == "sort" and not item.plot_request for item in named)
         assert sorted(item.id for item in cases if item.locale == "fr") == [
+            "fr-appliquer-la-vue-au-tableau",
             "fr-garder-deux-villes",
             "fr-lignes-de-test-en-trop",
             "fr-plus-grands-d-abord",
@@ -337,6 +352,12 @@ class TestFixtures:
                 assert set(table.column_dtypes.values()) == {"number"}, item.id
             if [operation["op"] for operation in operations] == ["unsupported"]:
                 continue  # a named gap applies nothing: `prepare_data` answers it with its fixed sentence
+            if item.before_view or any(operation["op"] in ("reset_view", "apply_view") for operation in operations):
+                # A turn that builds on a view: the engine knows no view, so the call is applied as the tool routes
+                # it, and it must leave rows for the plot to draw.
+                assert parsed is not None, item.id
+                assert drawn_after(parsed, item.before_view, operations, item.locale).profile.rows > 0, item.id
+                continue
             if operations:
                 assert parsed is not None, item.id
                 prepared = apply_operations(parsed, _operations(operations))

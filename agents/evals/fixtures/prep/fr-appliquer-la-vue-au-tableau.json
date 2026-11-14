@@ -1,0 +1,12 @@
+{
+  "dataset_text": "Ville,Ventes\nLyon,310\nNantes,455\nLille,120\nNice,390\nParis,980\n",
+  "before_view": [
+    {"op": "keep_rows", "where": [{"column": "Ventes", "test": "ge", "value": 300}]}
+  ],
+  "message": "C'est bien comme ça. Garde maintenant seulement ces lignes dans le tableau lui-même, les autres ne servent plus.",
+  "expected_operations": [{"op": "apply_view"}],
+  "view": "none",
+  "locale": "fr",
+  "spec_id": "bar-basic",
+  "tags": ["apply_view", "view_change"]
+}

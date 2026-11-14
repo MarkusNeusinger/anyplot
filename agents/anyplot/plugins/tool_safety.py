@@ -320,8 +320,9 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     # `bindings` when a conversion moved them, fenced as in `get_dataset_profile`; `family` with `unsupported_operation`.
     # `landed`, `view`, `of_rows` and `plot_outdated` for a call whose `keep_rows` landed in the view of the plot.
     PREPARE_TOOL: _DATA_VERSION_KEYS | {"bindings", "family", "landed", "view", "of_rows", "plot_outdated"},
+    # `view` while a view of the plot is in force: which rows the answer read, the table's or the plot's.
     QUERY_TOOL: frozenset(
-        {"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes", "family"}
+        {"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes", "family", "view"}
     ),
     GENERATE_TOOL: _DATA_VERSION_KEYS,
     DATA_CODE_TOOL: _DATA_VERSION_KEYS,

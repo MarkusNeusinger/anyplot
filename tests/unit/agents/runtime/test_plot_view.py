@@ -6,6 +6,7 @@ stays a step of the table, and the user's own word wins. The view is typed sessi
 """
 
 import json
+import re
 from collections.abc import AsyncIterator, Iterator
 from typing import Any
 
@@ -25,7 +26,14 @@ from agents.anyplot.plugins.tool_safety import TOOL_ALLOWED, call_outcome, chang
 from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import DATASET_ID, PLOT_VIEW_BEFORE, read_session
-from agents.anyplot.tools.session import VIEW_BREAKS_BINDINGS, VIEW_CLEARED, prepare_data
+from agents.anyplot.tools.session import (
+    NO_VIEW_TO_ASK,
+    VIEW_APPLIED,
+    VIEW_BREAKS_BINDINGS,
+    VIEW_CLEARED,
+    prepare_data,
+    query_data,
+)
 from agents.main import Runtime, app, get_runtime
 from agents.stream import turn_outcome
 
@@ -718,3 +726,153 @@ def stored_now(sid: str, state: dict[str, Any]) -> Any:
     stored = get_services().datasets.get(state[DATASET_ID], sid)
     assert stored is not None
     return stored
+
+
+SALES = (
+    "Year,Month,Store,Amount\n2023,Nov,North,30\n2023,Nov,South,25\n2023,Dec,North,40\n"
+    "2024,Jan,North,50\n2024,Jan,South,45\n2024,Feb,North,70\n2024,Feb,South,65\n"
+)
+
+
+class TestApplyView:
+    """The view put in the table's place in one step: for "make that permanent", and before a change of the table
+    that has to work on the rows the plot shows, where the change alone would read every row."""
+
+    async def test_the_table_takes_the_views_rows_and_no_view_is_left(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-a-1")
+        await prepare_data([only("Points", "ge", 40)], context)
+
+        answer = await prepare_data([{"op": "apply_view"}], context)
+
+        assert (answer["status"], answer["landed"], answer["version"], answer["rows"]) == ("ok", "table", 2, 12)
+        assert fenced(answer["changes"], "tool_notes") == ["kept 12 of 24 rows where Points ≥ 40, 12 dropped"]
+        assert fenced(answer["view"], "tool_notes") == [VIEW_APPLIED, "the plot draws all 12 rows of data v2"]
+        assert context.state[PLOT_VIEW] is None and len(points_of(sid, context.state)) == 12
+        # A data version like any other: the user checks it, and the turn changed the data.
+        assert not read_session(context.state).data_confirmed  # type: ignore[union-attr]
+        ledger = ledger_for("inv-a-1")
+        assert ledger.prep_ops == ["apply_view"] and ledger.view_ops == ["keep_rows"]
+
+    async def test_a_change_after_it_works_on_the_rows_the_plot_showed(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """ "Sum those per month" under "only 2024": the aggregate alone would add 2023 in, and the view, whose
+        column the aggregate drops, would be cleared without a word of the rows it had stood for."""
+        sid = await pasted_session(client, SALES)
+        context = await context_for(client, sid, "inv-a-2")
+        await prepare_data([only("Year", "eq", 2024)], context)
+        per_month = {"op": "aggregate", "by": ["Month"], "column": "Amount", "how": "sum"}
+
+        answer = await prepare_data([{"op": "apply_view"}, per_month], context)
+
+        assert (answer["status"], answer["landed"], answer["rows"]) == ("ok", "table", 2)
+        assert fenced(answer["changes"], "tool_notes")[0] == "kept 4 of 7 rows where Year = 2024, 3 dropped"
+        table = stored_now(sid, context.state).csv.strip().splitlines()
+        assert sorted(table[1:]) == ["Feb,135", "Jan,95"] and context.state[PLOT_VIEW] is None
+
+    async def test_a_view_named_after_it_is_the_view_of_the_new_table(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-a-3")
+        await prepare_data([only("Points", "ge", 40)], context)
+        top = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 3}]
+
+        answer = await prepare_data([{"op": "apply_view"}, *top], context)
+
+        assert (answer["landed"], answer["rows"]) == ("table_and_view", 12)
+        held = context.state[PLOT_VIEW]
+        assert held["top"] == {"column": "Points", "descending": True, "n": 3} and not held["selections"]
+        assert fenced(answer["view"], "tool_notes")[0] == VIEW_APPLIED
+        assert fenced(answer["view"], "tool_notes")[-1] == "the plot draws 3 of 12 rows of data v2"
+
+    async def test_it_needs_a_view_comes_first_and_reads_the_current_table(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-a-4")
+        table = context.state[DATASET_ID]
+
+        without = await prepare_data([{"op": "apply_view"}], context)
+        await prepare_data([only("Points", "ge", 40)], context)
+        late = await prepare_data([{"op": "rename", "column": "Goals", "name": "Tore"}, {"op": "apply_view"}], context)
+        both = await prepare_data([{"op": "reset_view"}, {"op": "apply_view"}], context)
+        earlier = await prepare_data([{"op": "apply_view"}], context, from_version="original")
+
+        assert [item["code"] for item in (without, late, both, earlier)] == ["invalid_operations"] * 4
+        assert "there is no view of the plot to apply" in without["errors"]
+        assert "leave from_version out" in earlier["errors"]
+        assert context.state[DATASET_ID] == table and context.state[PLOT_VIEW] is not None
+
+
+class TestQuestionsUnderAView:
+    """A question reads the whole table unless it asks for the rows the plot draws, and the answer says which: a
+    total over 24 rows is no total of the 12 the user is looking at."""
+
+    async def test_an_answer_says_that_it_read_every_row_and_how_to_ask_of_the_view(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-q-1")
+        assert "view" not in await query_data([], context)  # no view, nothing to say
+        await prepare_data([only("Points", "ge", 40)], context)
+
+        answer = await query_data([{"op": "sort", "column": "Points", "descending": True}], context, limit=1)
+
+        assert answer["status"] == "ok" and answer["rows"] == 24
+        note = re.search(r"<tool_notes>\n?(.*?)\n?</tool_notes>", answer["view"], re.DOTALL)
+        assert note is not None and note.group(1) == (
+            "this answer reads every row of the table; the plot draws 12 of the table's 24 rows (view: Points ≥ 40). "
+            "To ask about the rows the plot draws, start the operations with apply_view"
+        )
+
+    async def test_apply_view_asks_the_question_of_the_rows_the_plot_draws_and_stores_nothing(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-q-2")
+        await prepare_data([only("Points", "ge", 40)], context)
+        table, view = context.state[DATASET_ID], dict(context.state[PLOT_VIEW])
+        lowest = {"op": "sort", "column": "Points", "descending": False}
+
+        answer = await query_data([{"op": "apply_view"}, lowest], context, limit=1)
+
+        assert answer["status"] == "ok" and answer["rows"] == 12
+        shown = fenced(answer["table"], "user_data")
+        assert int(shown["rows"][0][shown["columns"].index("Points")]) >= 40  # the lowest of the rows shown
+        assert "this answer reads the rows the plot draws, 12 of the table's 24 rows" in answer["view"]
+        assert fenced(answer["changes"], "tool_notes")[0] == "kept 12 of 24 rows where Points ≥ 40, 12 dropped"
+        assert context.state[DATASET_ID] == table and context.state[PLOT_VIEW] == view
+
+    async def test_apply_view_without_a_view_is_refused_with_the_way_on(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-q-3")
+
+        answer = await query_data([{"op": "apply_view"}], context)
+
+        assert (answer["status"], answer["code"]) == ("error", "invalid_operations")
+        assert NO_VIEW_TO_ASK in answer["errors"]
+
+    async def test_a_cut_among_equal_values_is_named_in_an_answer_too(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """ "Which 2 are largest" over three equal values: the answer returns two rows, and its lines name the one
+        left out, in a question's words: nothing is dropped."""
+        sid = await pasted_session(client, "Stadt,Umsatz\nBern,1200\nKöln,800\nBasel,800\nGenf,800\nWien,300\n")
+        context = await context_for(client, sid, "inv-q-4")
+        largest = {"op": "sort", "column": "Umsatz", "descending": True}
+
+        cut = await query_data([largest], context, limit=2)
+        clean = await query_data([largest], context, limit=4)
+
+        assert fenced(cut["changes"], "tool_notes") == [
+            "sorted by Umsatz, descending",
+            "the first 2 of 5 rows are returned; the cut falls among 3 rows with Umsatz 800: "
+            "1 returned (Stadt 'Köln') and 2 left out (Stadt 'Basel' and 'Genf')",
+        ]
+        assert fenced(clean["changes"], "tool_notes") == ["sorted by Umsatz, descending"]

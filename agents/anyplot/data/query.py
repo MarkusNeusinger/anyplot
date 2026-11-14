@@ -28,8 +28,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ..language import DEFAULT_LANGUAGE
 from ..schemas import ColumnName, FromVersion
-from .parse import ParsedDataset, display_copy
-from .prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations
+from .parse import MAX_COMPUTED_BYTES, ParsedDataset, display_copy, parse_dataset
+from .prepare import MAX_OPERATIONS, Operation, Prepared, PrepareError, apply_operations, cut_note
 
 
 MAX_QUERY_ROWS = 25
@@ -81,11 +81,25 @@ def run_query(
     limit = max(1, min(limit, MAX_QUERY_ROWS))
     changes: list[str] = []
     text = parsed.csv
+    prepared: Prepared | None = None
     if operations:
         prepared = apply_operations(parsed, operations, language=language)
-        text, changes = prepared.csv, prepared.changes
+        text, changes = prepared.csv, list(prepared.changes)
     records = list(csv.reader(io.StringIO(text)))
     header, body = records[0], records[1:]
+    if prepared is not None and prepared.sorted_by is not None and len(body) > limit:
+        # The cut of a ranking, like a top N's: "which 3 are largest" must not name three of five equals as the
+        # answer without a word. The note is one more line of the result; the cut itself stays at `limit`.
+        ranked = parse_dataset(
+            prepared.csv,
+            text_columns=prepared.text_columns,
+            find_table=False,
+            max_bytes=MAX_COMPUTED_BYTES,
+            canonical=True,
+        )
+        tie = cut_note(ranked, prepared.sorted_by, limit)
+        if tie:
+            changes.append(f"the first {limit} of {len(body)} rows are returned; {tie}")
     if columns:
         missing = [name for name in columns if name not in header]
         if missing:

@@ -121,6 +121,7 @@ from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import (
     MAX_OPERATIONS,
+    ApplyView,
     KeepRows,
     Operation,
     PrepareArgs,
@@ -158,6 +159,7 @@ from ..pipeline import (
 )
 from ..plot_view import (
     CLEARED_LINE,
+    Current,
     PlotView,
     Routed,
     Viewed,
@@ -568,7 +570,8 @@ async def prepare_data(
     hold: only some categories, only a period as ge its start and le its end; it lands in the view of the plot, which
     says which rows the plot draws and leaves the table, its version and the user's confirmation as they are; with
     target table the table itself loses the other rows); reset_view (no fields; first in a call, clears the view of
-    the plot so every row is drawn again);
+    the plot so every row is drawn again); apply_view (no fields; first in a call, puts the rows the view of the plot
+    shows in place of the table's, so the operations after it work on those rows and no view is left);
     unsupported
     (family fill_values|edit_cells|add_rows|combine_tables|text_pattern|time_window|other; alone, for a change no
     operation can make: it changes nothing and answers unsupported_operation with a fixed message to send). Steps
@@ -616,17 +619,24 @@ async def prepare_data(
         roles = view.snapshot.roles()
         now = current(tool_context.state, stored, view.language, bindings=view.bindings, roles=roles)
         held = now.view
+        if routed.apply and held.empty:
+            raise ViewRefused("there is no view of the plot to apply: the plot draws every row of the table")
         shown = merged(held, routed) if routed.view else held
     except ViewRefused as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([str(exc)])}
-    # Whether the call makes a data version: the table's operations, or an earlier version taken as it was.
-    stores = bool(routed.table) or not start.current
+    # Whether the call makes a data version: the table's operations, the view's rows put in the table's place
+    # (`apply_view`), or an earlier version taken as it was.
+    stores = bool(routed.table) or routed.apply or not start.current
     prepared: Prepared | None = None
+    moved: list[str] = []
     try:
+        parsed = start.stored.as_parsed()  # the version as it is: an earlier one as the next, or a view's table
+        if routed.apply:
+            # The view's own operations, as a step of the table: the rows it showed are the table the rest works on.
+            applied, parsed = apply_and_parse(parsed, held.operations(), language=view.language)
+            moved = list(applied.changes)
         if routed.table:
-            prepared, parsed = apply_and_parse(start.stored.as_parsed(), routed.table, language=view.language)
-        else:
-            parsed = start.stored.as_parsed()  # the version as it is: an earlier one as the next, or a view's table
+            prepared, parsed = apply_and_parse(parsed, routed.table, language=view.language)
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
@@ -664,7 +674,7 @@ async def prepare_data(
             shown, seen, cleared = PlotView(), None, True
     if not stores:
         return _view_result(tool_context, view, start.stored, shown, seen, routed)
-    changes = rebuilt_changes(start, prepared.changes if prepared is not None else [])
+    changes = rebuilt_changes(start, [*moved, *(prepared.changes if prepared is not None else [])])
     try:
         # From an earlier version too, the result goes on top: the history is never rewritten, and `.undo()` steps
         # back to the version the turn began with.
@@ -688,7 +698,8 @@ async def prepare_data(
     if prepared is not None and (outcome := _conversion_outcome(prepared, parsed.profile, version.bindings)):
         telemetry.note_conversion(session_id, outcome)
     ledger.dataset_changes.extend(changes)
-    ledger.prep_ops.extend(operation.op for operation in routed.table)  # the names only, for the telemetry
+    # The names only, for the telemetry; an applied view is the table's step, under its own name.
+    ledger.prep_ops.extend([*(["apply_view"] if routed.apply else []), *(op.op for op in routed.table)])
     if not start.current:
         ledger.rebuilt_from.append(start.number)
     base = {
@@ -704,8 +715,12 @@ async def prepare_data(
         for key, value in (settled_delta(shown) if routed.view else view_delta(shown)).items():
             tool_context.state[key] = value
         ledger.view_ops.extend(view_op_names(routed))
-        base["landed"] = "table_and_view" if routed.view else "table"
-        base["view"] = _view_lines(shown, seen, version.version, parsed.profile.rows, cleared=cleared)
+        # An applied view that left none behind landed in the table alone.
+        both = routed.view and not (routed.apply and shown.empty)
+        base["landed"] = "table_and_view" if both else "table"
+        base["view"] = _view_lines(
+            shown, seen, version.version, parsed.profile.rows, cleared=cleared, applied=routed.apply
+        )
     elif any(isinstance(operation, KeepRows) for operation in routed.table):
         base["landed"] = "table"  # a `keep_rows` the call's order or its `target` sent to the table
     if version.bindings != view.bindings:
@@ -721,25 +736,29 @@ VIEW_BREAKS_BINDINGS = (
 )
 """`prepare_data`'s refusal of a view whose rows leave a bound column the plot cannot read (every cell empty)."""
 VIEW_CLEARED = "the view of the plot is cleared: the plot draws every row of the table again"
+VIEW_APPLIED = "the view of the plot was applied to the table: the rows it showed are the table now, and no view is set"
+"""`prepare_data`'s line for an `apply_view`: the table took the view's rows, as a data version the user checks."""
+NO_VIEW_TO_ASK = "there is no view of the plot to apply: the plot draws every row of the table, so leave apply_view out"
 
 
 def view_op_names(routed: Routed) -> list[str]:
-    """The operation names of a call's view part, as the telemetry counts them: the names only."""
-    names = ["reset_view"] if routed.reset else []
+    """The operation names of a call's view part, as the telemetry counts them: the names only. An applied view is
+    the table's step and counts there (`RequestLedger.prep_ops`)."""
+    names = ["reset_view"] if routed.reset and not routed.apply else []
     names += ["keep_rows"] * len(routed.selections)
     return [*names, "sort", "keep_rows"] if routed.top is not None else names
 
 
-def _view_lines(shown: PlotView, seen: Viewed | None, data_version: int, table_rows: int, *, cleared: bool) -> str:
+def _view_lines(
+    shown: PlotView, seen: Viewed | None, data_version: int, table_rows: int, *, cleared: bool, applied: bool = False
+) -> str:
     """The view as a tool result carries it, fenced: each step's line with its counts and the server's summary, or the
-    one line of a view that is no more."""
+    one line of a view that is no more: applied to the table, cleared by the call, or no longer fitting."""
     if seen is not None and not shown.empty:
-        lines = [*seen.changes, seen.summary(data_version)]
+        lines = [*([VIEW_APPLIED] if applied else []), *seen.changes, seen.summary(data_version)]
     else:
-        lines = [
-            CLEARED_LINE if cleared else VIEW_CLEARED,
-            f"the plot draws all {table_rows} rows of data v{data_version}",
-        ]
+        gone = VIEW_APPLIED if applied else CLEARED_LINE if cleared else VIEW_CLEARED
+        lines = [gone, f"the plot draws all {table_rows} rows of data v{data_version}"]
     return DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(lines, ensure_ascii=False))
 
 
@@ -794,11 +813,14 @@ async def query_data(
     operations: zero to five operations of the same set as prepare_data, applied in order (keep only some rows with
     keep_rows and where, such as test eq on the year asked about; a top N is a sort with limit; a share, a percent
     change or an index is a derive, a change from the row before a diff, another formula a compute; a total or a mean
-    per group an aggregate). columns: the columns to return, at most 8
+    per group an aggregate; apply_view first asks the question of the rows the view of the plot shows instead of
+    every row of the table). columns: the columns to return, at most 8
     (default: the first 8). limit: the rows to return, 1 to 25 (default 10). from_version: the version to read,
     "current" (the default), "original" (the first version, the table as the user pasted or opened it) or a version
     number the session block lists. Returns the table (columns and rows), the number of rows of the whole result,
-    whether it was cut, and the change lines, or an error with a code and a message.
+    whether it was cut, and the change lines, which name a tie when the cut at limit falls among rows a sort ranked
+    equal; while a view of the plot is in force, view says which rows the answer read. Or an error with a code and
+    a message.
     """
     view = _view(tool_context)
     if view is None:
@@ -820,12 +842,44 @@ async def query_data(
         )
     except VersionRefused as exc:
         return _version_refusal(exc.code)
+    # The view of the plot in force, as every reader of it sees it. A question reads the whole table unless its
+    # operations start with `apply_view`, which asks it of the rows the plot draws; either way the answer says which.
+    held = current(tool_context.state, stored, view.language, bindings=view.bindings, roles=view.snapshot.roles())
+    asked = list(args.operations)
+    of_view = bool(asked) and isinstance(asked[0], ApplyView)
+    source = start.stored.as_parsed()
+    seen: list[str] = []
+    if of_view:
+        if not start.current:
+            lines = ["apply_view works on the current table, whose rows the view shows: leave from_version out"]
+            return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(lines)}
+        if held.viewed is None:
+            return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([NO_VIEW_TO_ASK])}
+        source, seen, asked = held.viewed.parsed, list(held.viewed.changes), asked[1:]
     try:
-        answer = run_query(start.stored.as_parsed(), args.operations, args.columns, args.limit, language=view.language)
+        answer = run_query(source, asked, args.columns, args.limit, language=view.language)
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
-    return query_result(replace(answer, changes=rebuilt_changes(start, answer.changes)))
+    result = query_result(replace(answer, changes=rebuilt_changes(start, [*seen, *answer.changes])))
+    if held.viewed is not None and start.current and result.get("status") == "ok":
+        result["view"] = DATA_PREAMBLE + "\n" + fence("tool_notes", asked_of(held, stored, of_view=of_view))
+    return result
+
+
+def asked_of(held: Current, stored: StoredDataset, *, of_view: bool) -> str:
+    """Which rows a `query_data` answer read while a view of the plot is in force: the ones the plot draws, or
+    every row of the table, with the counts and the view's words, and for the table the way to ask of the view. The
+    root's reply says which, since a total over 248 rows is no total of the 12 the user is looking at."""
+    assert held.viewed is not None
+    text = [name for name, dtype in stored.column_dtypes.items() if dtype == "text"]
+    drawn = f"{held.viewed.rows} of the table's {held.viewed.of_rows} rows (view: {held.view.words(text)})"
+    if of_view:
+        return f"this answer reads the rows the plot draws, {drawn}"
+    return (
+        f"this answer reads every row of the table; the plot draws {drawn}. To ask about the rows the plot draws, "
+        "start the operations with apply_view"
+    )
 
 
 def query_result(answer: QueryResult) -> dict[str, Any]:
