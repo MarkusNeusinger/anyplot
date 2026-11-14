@@ -18,6 +18,7 @@
   the note. In the catalogue 26 of the 536 reviews since
   2026-10-15 lose a point on VQ-01; 23 of them cite the thumbnail, about 16
   for text below its reference (still a defect) and 5 for text at it.
+  (#13102)
 
 ### Fixed
 
@@ -31,4 +32,4 @@
   after the repair in 4. The reviewer and the offline scorer now get the
   style guide's "Text Sizes" behind the rubric, cut verbatim like the rubric
   itself, so text at the house size is no defect by what they read. The
-  adapter already had the whole style guide.
+  adapter already had the whole style guide. (#13102)
