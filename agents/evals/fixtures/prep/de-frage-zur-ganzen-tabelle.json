@@ -1,0 +1,13 @@
+{
+  "dataset_text": "Jahr,Monat,Filiale,Betrag\n2023,Nov,Nord,30\n2023,Nov,Süd,25\n2023,Dez,Nord,40\n2024,Jan,Nord,50\n2024,Jan,Süd,45\n2024,Feb,Nord,70\n2024,Feb,Süd,65\n",
+  "before_view": [
+    {"op": "keep_rows", "where": [{"column": "Jahr", "test": "eq", "value": 2024}]}
+  ],
+  "message": "Wie hoch ist der Betrag über alle Jahre zusammen, also in der ganzen Tabelle?",
+  "expected_operations": [],
+  "asks": "table",
+  "view": "set",
+  "locale": "de",
+  "spec_id": "bar-basic",
+  "tags": ["data_question", "view_question"]
+}

@@ -861,10 +861,9 @@ async def query_data(
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
-    result = query_result(replace(answer, changes=rebuilt_changes(start, [*seen, *answer.changes])))
-    if held.viewed is not None and start.current and result.get("status") == "ok":
-        result["view"] = DATA_PREAMBLE + "\n" + fence("tool_notes", asked_of(held, stored, of_view=of_view))
-    return result
+    # Said only of the current table: an earlier version has no view to tell the answer's rows from.
+    told = asked_of(held, stored, of_view=of_view) if held.viewed is not None and start.current else None
+    return query_result(replace(answer, changes=rebuilt_changes(start, [*seen, *answer.changes])), told)
 
 
 def asked_of(held: Current, stored: StoredDataset, *, of_view: bool) -> str:
@@ -882,8 +881,10 @@ def asked_of(held: Current, stored: StoredDataset, *, of_view: bool) -> str:
     )
 
 
-def query_result(answer: QueryResult) -> dict[str, Any]:
-    """The `query_data` result: the table fenced as `<user_data>`, cut by rows from the end to fit the tool's cap."""
+def query_result(answer: QueryResult, view: str | None = None) -> dict[str, Any]:
+    """The `query_data` result: the table fenced as `<user_data>`, cut by rows from the end to fit the tool's cap.
+    `view` is the line that says which rows the answer read while a view of the plot is in force (`asked_of`): it is
+    part of the result before the cut, so the rows give way to it and the result never passes the cap for it."""
     rows = list(answer.rows)
     while True:
         table = {"columns": answer.columns, "rows": rows}
@@ -896,6 +897,8 @@ def query_result(answer: QueryResult) -> dict[str, Any]:
         if answer.changes:
             notes = json.dumps(answer.changes, ensure_ascii=False)
             result["changes"] = DATA_PREAMBLE + "\n" + fence("tool_notes", notes)
+        if view is not None:
+            result["view"] = DATA_PREAMBLE + "\n" + fence("tool_notes", view)
         if not rows or result_size(result) <= result_limit(QUERY_TOOL):
             return result
         rows.pop()

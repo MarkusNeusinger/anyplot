@@ -348,6 +348,10 @@ class PrepCase(BaseModel):
     operations, routed as `prepare_data` routes them): the harness stores it in the session, the session block lists
     it, and the expected table is the one a plot draws once the turn's call has landed on top of it
     (`drawn_after`). For the turns that build on a view: a larger top N, every row again, the rows shown summed."""
+    asks: Literal["view", "table"] | None = None
+    """Which rows the turn's question is about while a view of the plot is in force (`score_question`): the rows the
+    plot draws (`view`: its `query_data` calls start with `apply_view`) or every row of the table (`table`). For a
+    question case with `before_view`; None leaves it unscored."""
     view: Literal["set", "none"] | None = None
     """Where the turn's choice of rows has to land (`score_view`): `set` for a view of the plot (a selection, a top
     N), which leaves the table as it is, `none` for a turn that must leave no view (a cleaning step, rows the user
@@ -970,6 +974,13 @@ class CaseResult:
     view_miss: bool = False
     """The case says where the rows have to land (`PrepCase.view`), and the turn landed them elsewhere: the case is
     a miss (`score_view`)."""
+    questions: int = 0
+    """The turn's `query_data` calls."""
+    questions_of_view: int = 0
+    """Those of them that asked of the rows the plot draws: their operations start with `apply_view`."""
+    question_miss: bool = False
+    """The case says which rows its question is about (`PrepCase.asks`), and the turn asked of the others or asked
+    nothing: the case is a miss (`score_question`)."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -1085,6 +1096,7 @@ class CaseRunner:
             score_from_version(result, case.expected_from_version, current=1 + len(case.before_operations))
             score_plot_request(result, case.plot_request)
             score_view(result, case.view, await self._view_held(user, sid))
+            score_question(result, case.asks)
             if summary_turn and pasted_rows is not None:
                 rows.add(pasted_rows)
             measure_reply(
@@ -1256,6 +1268,11 @@ class CaseRunner:
                 if call.name in (PREPARE_TOOL, QUERY_TOOL):
                     args = call.args if isinstance(call.args, dict) else {}
                     result.from_versions.append(f"{call.name}:{args.get('from_version', 'current')}")
+                if call.name == QUERY_TOOL and isinstance(call.args, dict):
+                    asked = call.args.get("operations")
+                    first = asked[0] if isinstance(asked, list) and asked else None
+                    result.questions += 1
+                    result.questions_of_view += isinstance(first, dict) and first.get("op") == "apply_view"
                 if call.name == PREPARE_TOOL and isinstance(call.args, dict):
                     items = call.args.get("operations")
                     if isinstance(items, list):
@@ -1370,6 +1387,20 @@ def score_view(result: CaseResult, wanted: Literal["set", "none"] | None, held: 
     result.view_set = held
     result.view_miss = wanted is not None and held != (wanted == "set")
     if result.view_miss:
+        result.match = False
+
+
+def score_question(result: CaseResult, asks: Literal["view", "table"] | None) -> None:
+    """Whether the turn asked its question of the rows the case means while a view of the plot is in force: the rows
+    the plot draws (`view`: every `query_data` call starts with `apply_view`) or every row of the table (`table`:
+    none does). A turn that asked nothing misses either way, and a case without the expectation is not scored. The
+    answer itself is not scored: it is the reply's, and the report holds no reply text."""
+    if asks is None:
+        return
+    of_view = result.questions_of_view
+    asked_right = of_view == result.questions if asks == "view" else of_view == 0
+    result.question_miss = not result.questions or not asked_right
+    if result.question_miss:
         result.match = False
 
 
@@ -1552,6 +1583,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         "version_misses": sum(1 for _, result in pairs if result.version_miss),
         "plot_request_misses": sum(1 for _, result in pairs if result.plot_request_miss),
         "view_misses": sum(1 for _, result in pairs if result.view_miss),
+        "question_misses": sum(1 for _, result in pairs if result.question_miss),
         "llm_calls": sum(result.llm_calls for _, result in pairs),
         "cost_usd": round(sum(result.cost_usd for _, result in pairs), 8),
     }
@@ -1576,6 +1608,9 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "plot_request_miss": result.plot_request_miss,
             "view_set": result.view_set,
             "view_miss": result.view_miss,
+            "questions": result.questions,
+            "questions_of_view": result.questions_of_view,
+            "question_miss": result.question_miss,
             "plot_wishes": result.plot_wishes,
             "plot_wishes_kept": result.plot_wishes_kept,
             "tool_calls": result.tool_calls,
@@ -1654,6 +1689,9 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
                 outcome += ", no plot request"
             if result.view_miss:
                 outcome += ", the table was cut, not the view" if case.view == "set" else ", a view was set"
+            if result.question_miss:
+                asked = f"{result.questions_of_view} of {result.questions} questions asked of the view"
+                outcome += f", {asked}, expected the {case.asks}"
             if result.reply_miss:
                 outcome += f", reply: {result.reply_miss.replace('_', ' ')}"
         rows.append((case.id, expected, found, outcome))

@@ -137,15 +137,19 @@ class TestFixtures:
         # errors (`cleaning`, a French one), a selection another operation builds on, a rebuild from the original.
         # And the turns that build on a view an earlier turn set (`before_view`, `view_change`): a larger top N stays a
         # view, "all rows again" clears it (`reset_view`), and two put it in the table's place (`apply_view`): the
-        # rows shown summed per month, and a French "keep only these in the table itself".
-        assert len(cases) == 128
+        # rows shown summed per month, and a French "keep only these in the table itself". And two questions under
+        # a view (`view_question`, `asks`): one about what the plot shows, one about the whole table; both change
+        # nothing, so the view they found is still set.
+        assert len(cases) == 130
         views = {item.id: item.view for item in cases if item.view is not None}
         assert sorted(case_id for case_id, landing in views.items() if landing == "set") == [
+            "de-frage-zur-ganzen-tabelle",
             "de-notiz-nur-2024",
             "de-nur-januar-2024",
             "de-top-2-gleichstand",
             "en-keep-at-least",
             "en-keep-two-categories",
+            "en-question-about-the-rows-shown",
             "en-top-revenue-keep-rows",
             "en-view-top-15-after-10",
             "fr-garder-deux-villes",
@@ -160,10 +164,13 @@ class TestFixtures:
             "fr-appliquer-la-vue-au-tableau",
             "fr-lignes-de-test-en-trop",
         ]
-        built_on = [item for item in cases if item.before_view]
-        assert sorted(item.id for item in built_on) == sorted(item.id for item in cases if "view_change" in item.tags)
-        assert len(built_on) == 4 and all(item.view is not None for item in built_on)
+        built_on = [item for item in cases if "view_change" in item.tags]
+        assert len(built_on) == 4 and all(item.before_view and item.view is not None for item in built_on)
         assert sum(1 for item in built_on if item.expected_operations[0] == {"op": "apply_view"}) == 2
+        asked = {item.id: item.asks for item in cases if item.asks is not None}
+        assert asked == {"en-question-about-the-rows-shown": "view", "de-frage-zur-ganzen-tabelle": "table"}
+        assert all(item.before_view and not item.expected_operations for item in cases if item.asks is not None)
+        assert sorted(item.id for item in cases if item.before_view) == sorted([*asked, *(i.id for i in built_on)])
         (in_table,) = [item for item in cases if "in_table" in item.tags]
         assert in_table.expected_operations[-1]["target"] == "table"
         kept = [item for item in cases if "keep_where" in item.tags]
@@ -1018,6 +1025,44 @@ class TestReplyShape:
         open_case = CaseResult("v-004", [], [], match=True)
         prep.score_view(open_case, None, held=True)
         assert open_case.view_set and not open_case.view_miss and open_case.match
+
+    def test_which_rows_a_question_was_asked_of_is_scored_under_a_view(self) -> None:
+        """A question changes neither the table nor the view, so the table a plot would draw cannot tell a turn that
+        asked of the rows shown from one that asked of every row: only the questions' own operations can."""
+
+        def asked(questions: int, of_view: int) -> CaseResult:
+            return CaseResult("q-001", [], [], match=True, questions=questions, questions_of_view=of_view)
+
+        shown = asked(1, 1)
+        prep.score_question(shown, "view")
+        assert not shown.question_miss and shown.match
+
+        whole = asked(1, 0)
+        prep.score_question(whole, "view")
+        assert whole.question_miss and not whole.match  # the answer covers rows the plot does not draw
+
+        mixed = asked(2, 1)
+        prep.score_question(mixed, "view")
+        assert mixed.question_miss  # every question of the turn has to read the rows shown
+
+        table = asked(2, 0)
+        prep.score_question(table, "table")
+        assert not table.question_miss and table.match
+
+        narrowed = asked(1, 1)
+        prep.score_question(narrowed, "table")
+        assert narrowed.question_miss and not narrowed.match  # the user asked for every year
+
+        # An answer without a question is a guess, whichever rows the case means.
+        unasked_view, unasked_table = asked(0, 0), asked(0, 0)
+        prep.score_question(unasked_view, "view")
+        prep.score_question(unasked_table, "table")
+        assert unasked_view.question_miss and not unasked_view.match
+        assert unasked_table.question_miss and not unasked_table.match
+
+        open_case = asked(1, 1)
+        prep.score_question(open_case, None)
+        assert not open_case.question_miss and open_case.match
 
     def test_the_table_a_plot_draws_after_a_call_follows_the_tools_routing(self) -> None:
         """`drawn_after` is the expected table of a turn that builds on a view: the call routed as `prepare_data`
