@@ -164,8 +164,8 @@ from ..plot_view import (
     Routed,
     Viewed,
     ViewRefused,
+    current,
     merged,
-    read_view,
     route,
     table_only,
     view_delta,
@@ -611,7 +611,10 @@ async def prepare_data(
         # original: the root said which table it means.
         rebuilds = args.from_version != CURRENT_VERSION
         routed = table_only(args.operations) if rebuilds else route(args.operations)
-        held = read_view(tool_context.state)
+        # The view held from before, as it holds for the current table: one that no longer fits it (after an undo,
+        # a change in the data panel) counts as none, so it never makes this call fail for a column that is gone.
+        now = current(tool_context.state, stored, view.language)
+        held = now.view
         shown = merged(held, routed) if routed.view else held
     except ViewRefused as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([str(exc)])}
@@ -631,7 +634,7 @@ async def prepare_data(
     # The view is checked on the table the call leaves, before anything is stored: a view of this call that does not
     # fit refuses the whole call, a view held from before is cleared with a line.
     seen: Viewed | None = None
-    cleared = False
+    cleared = now.cleared is not None  # a view that had stopped fitting before this call is written out with it
     if not shown.empty:
         try:
             seen = view_of(parsed, shown, view.language)

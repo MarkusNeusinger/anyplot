@@ -8,7 +8,8 @@
   draws. The table keeps every row, nothing has to be confirmed again, and
   the plot is redrawn in the same turn. A new top N replaces the old one, a
   filter on the same column replaces that filter, other filters narrow
-  further, and "show everything again" clears the view. The plot's notes
+  further, and "show everything again" clears the view. New data, pasted
+  or computed, starts without a view. The plot's notes
   say how many rows it draws and by which view, and the data file you
   download with a plot holds those rows, so the code runs on it as it ran
   here. (#13089)

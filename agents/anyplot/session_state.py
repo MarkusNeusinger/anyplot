@@ -152,6 +152,12 @@ PENDING_CLEARED: dict[str, Any] = {
 version carries it, except in the turn that kept it, which puts it back (`_settle_kept_note`) (a binding
 write no longer does: the run judges the bindings, `pipeline.pending_fate`; a library switch no longer does either,
 2026-11-02)."""
+PLOT_VIEW = PREFIX + "plot_view"
+"""The session's view of the plot (`plot_view.PlotView.model_dump()`): which rows of the current data a plot run
+draws; absent or None when it draws every row. It belongs to the data it was set on. Changes of that data keep it
+(`prepare_data`, undo), checked against the table whenever it is read (`plot_view.current`); new data takes it away
+(a paste, a computed table), since it would hide rows of a table the user never looked at through it. A library
+switch and a start over keep it, as they keep the data."""
 LAST_RUN = PREFIX + "last_run"
 """How the latest plot run ended (`schemas.LastRun`, content-free), written by every run that yields a result
 (`pipeline.record_last_run`): the feedback bundle's `session.last_run`."""

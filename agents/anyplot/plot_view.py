@@ -18,9 +18,11 @@ the user to confirm, and the table, its card and `query_data` keep every row. Th
 their kinds (a text column stays text also when the rows left would read as numbers), so the bindings the user
 confirmed stand.
 
-The view is checked against the table when it is set and again when it is read (`current`): a table that changed
-since (a rename, another paste, an undo) may no longer fit it, and then the view is cleared with a line that says
-so, never applied in part. No ADK import.
+The view belongs to the data it was set on (`session_state.PLOT_VIEW`). New data takes it away: a paste or a
+computed table writes it out of the session, since it would hide rows of a table the user never looked at through
+it. A change of the same data keeps it, and it is checked against the table when it is set and again whenever it
+is read (`current`): after a rename or an undo it may no longer fit, and then it counts as cleared, with a line
+that says so, never applied in part. No ADK import.
 """
 
 from collections.abc import Collection
@@ -45,13 +47,9 @@ from .data.prepare import (
 from .data.store import StoredDataset, dataset_size
 from .language import DEFAULT_LANGUAGE
 from .schemas import MAX_ROWS
-from .session_state import PREFIX
+from .session_state import PLOT_VIEW
 
 
-PLOT_VIEW = PREFIX + "plot_view"
-"""The session's view of the plot, `PlotView.model_dump()`; absent or empty when the plot draws every row. It
-outlives a library switch, a start over and a new paste, as the plot memory does, and is cleared when it no longer
-fits the table (`current`)."""
 MAX_SELECTIONS = 3
 """The selections one view holds. Each has up to `MAX_CONDITIONS` conditions, so a view of three is already more
 than a user keeps in mind; a fourth is refused with the way out (`reset_view`)."""

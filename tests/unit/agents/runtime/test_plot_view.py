@@ -18,18 +18,19 @@ from agents.anyplot.agent import VIEW_HEADING, session_context
 from agents.anyplot.data.fidelity import COMBINED_IN_VIEW_HEAD
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, PrepareError
+from agents.anyplot.dataset_versions import push_version
 from agents.anyplot.plot_view import CLEARED_LINE, PLOT_VIEW, PlotView, ViewRefused, merged, route, table_only, view_of
 from agents.anyplot.plugins.ledger import ToolCall, ledger_for
 from agents.anyplot.plugins.tool_safety import TOOL_ALLOWED, call_outcome, changed_data
 from agents.anyplot.render.backends.fake import FakeBackend
-from agents.anyplot.services import Services
+from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import DATASET_ID, read_session
 from agents.anyplot.tools.session import VIEW_BREAKS_BINDINGS, VIEW_CLEARED, prepare_data
 from agents.main import Runtime, app, get_runtime
 from agents.stream import turn_outcome
 
 from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, FakeAnthropic, default_script
-from .test_from_version import TEAMS, context_for, fenced, pasted_session, points_of
+from .test_from_version import TEAMS, context_for, fenced, pasted_session, points_of, write_back
 from .test_paste_conversions import paste
 from .test_row_fidelity import (
     HOURS,
@@ -586,3 +587,69 @@ class TestReviewedEdges:
         assert on_the_plots_table["plot_outdated"] is True
         # The new version waits for the user's check: a plot run could not start, so none is called due.
         assert on_a_new_version["landed"] == "view" and on_a_new_version["plot_outdated"] is False
+
+
+class TestTheDataTheViewBelongsTo:
+    """The view was set on one table. A change of that table keeps it, new data takes it away: it would hide rows of
+    a table the user never looked at through it."""
+
+    async def test_a_new_paste_takes_the_view_away(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        sid = await pasted_session(client, TEAMS)
+        await set_view(runtime, sid, only("Points", "ge", 40))
+        assert (await runtime.session(USER, sid)).state[PLOT_VIEW] is not None
+
+        await paste(client, sid, "Team,Points,Goals\nNeu A,50,3\nNeu B,20,1\n")  # the same columns, other data
+
+        assert (await runtime.session(USER, sid)).state[PLOT_VIEW] is None
+
+    async def test_a_computed_table_in_place_of_the_data_takes_it_away_and_a_change_keeps_it(
+        self, client: httpx.AsyncClient, runtime: Runtime, services: Services
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-v-14")
+        view = read_session(context.state)
+        assert view is not None
+        table = parse_dataset("p,q\n1,2\n3,4\n")
+
+        replaced = push_version(services.datasets, sid, view, table, view.snapshot, rebind=True)
+        changed = push_version(services.datasets, sid, view, parse_dataset(TEAMS), view.snapshot)
+
+        assert replaced.delta[PLOT_VIEW] is None and PLOT_VIEW not in changed.delta
+
+    async def test_an_undo_keeps_a_view_that_still_fits(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-v-15")
+        await prepare_data([{"op": "rename", "column": "Goals", "name": "Tore"}], context)
+        await prepare_data([only("Points", "ge", 40)], context)
+        await write_back(runtime, sid, context)
+
+        undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+
+        assert undone.status_code == 200
+        context = await context_for(client, sid, "inv-v-16")
+        assert plot_view.current(context.state, stored_now(sid, context.state)).viewed is not None
+
+    async def test_a_view_the_table_no_longer_fits_never_fails_a_later_call(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """After the undo the column the view names is gone. The view counts as none: the next call sets its own
+        view, where the stale selection would have refused it for a column the user cannot see any more."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-v-17")
+        await prepare_data([{"op": "rename", "column": "Points", "name": "Punkte"}], context)
+        await prepare_data([only("Punkte", "ge", 40)], context)
+        await write_back(runtime, sid, context)
+        assert (await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)).status_code == 200
+        context = await context_for(client, sid, "inv-v-18")
+        assert context.state[PLOT_VIEW] is not None  # still stored, and no longer fitting
+
+        answer = await prepare_data([only("Goals", "ge", 10)], context)
+
+        assert (answer["status"], answer["landed"]) == ("ok", "view")
+        assert context.state[PLOT_VIEW] == {"selections": [[{"column": "Goals", "test": "ge", "value": "10"}]]}
+
+
+def stored_now(sid: str, state: dict[str, Any]) -> Any:
+    stored = get_services().datasets.get(state[DATASET_ID], sid)
+    assert stored is not None
+    return stored

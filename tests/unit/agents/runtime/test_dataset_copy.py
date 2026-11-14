@@ -36,6 +36,7 @@ from agents.anyplot.session_state import (
     LANGUAGE_OFFERED,
     LANGUAGE_SOURCE,
     PLOT_LANGUAGE,
+    PLOT_VIEW,
     SessionView,
     confirmation_fingerprint,
     language_delta,
@@ -255,6 +256,20 @@ async def test_the_bindings_and_the_session_language_come_along(client: httpx.As
     copied_view, state = await view_of(runtime, target)
     assert [binding.model_dump() for binding in copied_view.bindings] == swapped and copied_view.data_confirmed
     assert (state[LANGUAGE], state[LANGUAGE_SOURCE], state[PLOT_LANGUAGE]) == ("de", "chosen", "de")
+
+
+async def test_the_view_of_the_plot_comes_along_with_the_data(client: httpx.AsyncClient, runtime: Runtime) -> None:
+    """Every library of the fan-out draws the rows the page drew: the view was set on the data that is copied."""
+    source = await open_session(client)
+    await paste(client, source)
+    shown = {"selections": [[{"column": "Study Hours", "test": "ge", "value": "2"}]]}
+    await runtime.write_state(await runtime.session(USER, source), {PLOT_VIEW: shown})
+    target = await open_session(client, library="seaborn", fanout=True)
+    assert (await view_of(runtime, target))[1].get(PLOT_VIEW) is None
+
+    assert (await copy(client, target, source)).status_code == 200
+
+    assert (await view_of(runtime, target))[1][PLOT_VIEW] == shown
 
 
 async def test_the_page_plots_language_comes_along_when_the_replies_moved_on(

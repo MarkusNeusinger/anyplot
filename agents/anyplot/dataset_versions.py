@@ -69,6 +69,7 @@ from .session_state import (
     DATASET_TOP,
     DATASET_VERSION,
     PENDING_CLEARED,
+    PLOT_VIEW,
     CatalogueSnapshot,
     SessionView,
 )
@@ -337,6 +338,10 @@ def push_version(
     else:
         bindings = carry_bindings(view.bindings, roles, stored.profile, previous, converted, row_numbers, splits)
     delta = {**_delta(dataset_id, bindings, history, version), DATASET_TOP: version}
+    if rebind:
+        # A computed table in place of the data is new data, as a paste is: the view of the plot was set on the
+        # table it replaces and goes with it. A change of the same table keeps its view (`plot_view.current`).
+        delta[PLOT_VIEW] = None
     if original is not None:
         delta[DATASET_ORIGINAL] = original
     original_version = kept_original.number if kept_original is not None else version
