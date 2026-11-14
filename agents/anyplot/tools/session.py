@@ -113,10 +113,12 @@ from google.adk import Workflow
 from google.adk.tools.tool_context import ToolContext
 from pydantic import ValidationError
 
+from core.spec_roles import DataRole
+
 from .. import telemetry
 from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
-from ..data.bindings import check_bindings
+from ..data.bindings import carry_bindings, check_bindings
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import (
@@ -637,8 +639,26 @@ async def prepare_data(
             if routed.view:
                 return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
             shown, cleared = PlotView(), True
-    if seen is not None and not stores and view_breaks_bindings(view, parsed, seen):
-        return {"status": "error", "code": "invalid_operation", "message": _fenced_lines([VIEW_BREAKS_BINDINGS])}
+    if seen is not None:
+        # The bindings the view has to hold on: the ones in force, or the ones the new version will carry
+        # (`push_version` computes them the same way), so a call that changes the table is checked like any other.
+        roles = view.snapshot.roles()
+        bound = view.bindings
+        if stores:
+            bound = carry_bindings(
+                view.bindings,
+                roles,
+                parsed.profile,
+                start.stored.profile,
+                prepared.converted if prepared is not None else None,
+                prepared.row_numbers if prepared is not None else (),
+                prepared.splits if prepared is not None else (),
+            )
+        if view_breaks_bindings(bound, roles, parsed.profile, seen.parsed.profile):
+            if routed.view:
+                message = _fenced_lines([VIEW_BREAKS_BINDINGS])
+                return {"status": "error", "code": "invalid_operation", "message": message}
+            shown, seen, cleared = PlotView(), None, True
     if not stores:
         return _view_result(tool_context, view, start.stored, shown, seen, routed)
     changes = rebuilt_changes(start, prepared.changes if prepared is not None else [])
@@ -699,14 +719,15 @@ VIEW_BREAKS_BINDINGS = (
 VIEW_CLEARED = "the view of the plot is cleared: the plot draws every row of the table again"
 
 
-def view_breaks_bindings(view: SessionView, table: ParsedDataset, seen: Viewed) -> bool:
+def view_breaks_bindings(
+    bindings: list[Binding], roles: list[DataRole], table: DatasetProfile, seen: DatasetProfile
+) -> bool:
     """Whether bindings that hold on the table stop holding on the view's rows: a view may narrow what the plot
     shows, never leave it without a column it needs."""
-    roles = view.snapshot.roles()
-    before = check_bindings(view.bindings, roles, table.profile)
+    before = check_bindings(bindings, roles, table)
     if not before.complete or before.errors:
         return False  # nothing to break: the bindings wait for the user either way
-    after = check_bindings(view.bindings, roles, seen.parsed.profile)
+    after = check_bindings(bindings, roles, seen)
     return not after.complete or bool(after.errors)
 
 
@@ -750,7 +771,14 @@ def _view_result(
     ledger.view_ops.extend(view_op_names(routed))
     services = get_services()
     latest = services.versions.latest_rendered(tool_context.session.id, target=view.target)
-    drew_this = latest is not None and not plot_shows_replaced_data(services, tool_context.session.id, view)
+    # A run is due, and can start, only for a plot of this very table that the user confirmed: a plot of an earlier
+    # version waits for the user's check of the new data, whatever the view says.
+    drew_this = (
+        latest is not None
+        and view.data_confirmed
+        and latest.drew(stored.number)
+        and not plot_shows_replaced_data(services, tool_context.session.id, view)
+    )
     return {
         "status": "ok",
         "landed": "view",

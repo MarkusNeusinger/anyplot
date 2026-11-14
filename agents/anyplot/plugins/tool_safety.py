@@ -87,6 +87,7 @@ from ..data.query import QueryArgs
 from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS, LanguageTarget
 from ..memory import ForgetArgs
 from ..pipeline import drawn_through_view, load_inputs, run_args, stop_not_ready
+from ..plot_view import read_view
 from ..policy import DATA_PREAMBLE, fence
 from ..repeated_keys import choice_is_open
 from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, NotReadyReason, PipelineArgs, PlotResult, SwitchArgs
@@ -459,8 +460,12 @@ def combine_is_open(tool_context: ToolContext) -> bool:
     view, dataset, reason = load_inputs(tool_context, get_services())
     if reason is not None or view is None or dataset is None:
         return False
-    # The rows the run would draw: under a view of the plot, a key repeats only if it does among the view's rows.
-    return choice_is_open(view, drawn_through_view(tool_context.state, view, dataset).dataset)
+    # The rows the run would draw: under a view of the plot, a key repeats only if it does among the view's rows,
+    # and the choice is open only until the user made it for that view (`PlotView.combine`).
+    drawn = drawn_through_view(tool_context.state, view, dataset)
+    if drawn.stamp is not None and read_view(tool_context.state).combine is not None:
+        return False
+    return choice_is_open(view, drawn.dataset)
 
 
 def turn_bound(

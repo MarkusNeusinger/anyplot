@@ -25,7 +25,7 @@ so, never applied in part. No ADK import.
 
 from collections.abc import Collection
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -74,6 +74,11 @@ class PlotView(BaseModel):
 
     selections: list[list[Condition]] = Field(default_factory=list, max_length=MAX_SELECTIONS)
     top: Top | None = None
+    combine: Literal["sum", "mean"] | None = None
+    """How the user said rows of the view that share the plot's key combine (`repeated_keys.combine_in_view`), once
+    a run asked and they answered. It stays with the view, since nothing else remembers it: without a view the
+    answer becomes a data version, under a view nothing is stored, and every later run would ask again. It is no
+    row operation, goes with the view when that is cleared, and a view of it alone is none."""
 
     @property
     def empty(self) -> bool:
@@ -100,7 +105,7 @@ class PlotView(BaseModel):
 
     def stamp(self) -> dict[str, Any] | None:
         """What a plot version records of the view it drew, or None for every row: two runs drew the same rows of a
-        table exactly when their stamps are equal."""
+        table, combined the same way, exactly when their stamps are equal."""
         return None if self.empty else self.model_dump(mode="json", exclude_none=True)
 
 
@@ -184,7 +189,8 @@ def merged(view: PlotView, routed: Routed) -> PlotView:
             f"the view of the plot holds at most {MAX_SELECTIONS} selections, each with up to {MAX_CONDITIONS} "
             "conditions: start the call with reset_view and name the selections that stay"
         )
-    return PlotView(selections=selections, top=routed.top if routed.top is not None else base.top)
+    top = routed.top if routed.top is not None else base.top
+    return PlotView(selections=selections, top=top, combine=base.combine)
 
 
 @dataclass(frozen=True)

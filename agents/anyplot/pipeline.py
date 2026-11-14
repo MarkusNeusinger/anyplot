@@ -166,7 +166,7 @@ from .language import DEFAULT_LANGUAGE, same_language
 from .memory import Planned, decision_lines, memory_delta, memory_written, next_seq, plan, read_memory
 from .memory import expected_texts as memory_expected_texts
 from .models import error_chain, model_busy
-from .plot_view import CLEARED_LINE, PlotView, current, view_delta, viewed_dataset
+from .plot_view import CLEARED_LINE, PlotView, current, read_view, view_delta, viewed_dataset
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
@@ -2051,26 +2051,35 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     # made of the whole table would add up rows the plot never draws.
     data_step: str | None = None
     notes = list(drawn.notes)
-    if drawn.stamp is None:
+    stamp = drawn.stamp
+    if stamp is None:
         view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger, node_input.combine)
         if data_step is not None:
             notes.append(data_step)
     else:
-        dataset, view_step = combine_in_view(view, drawn.dataset, node_input.combine)
+        # The function the user names in this call, else the one they named for this view before: nothing else
+        # remembers it, since no data version is made, and without it every later run would ask again.
+        held = read_view(ctx.state)
+        dataset, view_step = combine_in_view(view, drawn.dataset, node_input.combine or held.combine)
         if view_step is not None:
             notes.append(view_step)
+            if node_input.combine is not None and node_input.combine != held.combine:
+                chosen = held.model_copy(update={"combine": node_input.combine})
+                for key, value in view_delta(chosen).items():
+                    ctx.state[key] = value
+                stamp = chosen.stamp()
     # The version this run changes drew other rows of the table: the adapter hears that the data changed, as it does
     # for "plot the new data", with the user's own request after it.
     if (
         previous is not None
-        and previous.view != drawn.stamp
+        and previous.view != stamp
         and users_request(node_input.change_request) == node_input.change_request
     ):
         node_input = node_input.model_copy(update={"change_request": new_data_request(node_input.change_request)})
     run = Run(
         view=view,
         dataset=dataset,
-        view_stamp=drawn.stamp,
+        view_stamp=stamp,
         data_notes=notes,
         theme=theme,
         theme_asked=theme_asked,

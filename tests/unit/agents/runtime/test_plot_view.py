@@ -495,3 +495,94 @@ class TestRepeatedKeyUnderAView:
         done = next(data for name, data in events if name == "done")
         assert "dataset" not in done and done["data_confirmed"] is True
         assert len(await table_rows(client, sid)) == 12
+
+    async def test_the_answer_stays_with_the_view_so_a_later_change_of_the_plot_is_not_asked_again(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend, services: Services
+    ) -> None:
+        """Without a view the answer becomes a data version and the key repeats no more. Under a view nothing is
+        stored, so the view keeps the answer: a change of the plot runs, and draws the rows combined the same way."""
+        script = asked_then_chosen("sum", plans=[SCATTER_PLAN, SECOND_PLAN])
+        script["root"] += [
+            {"call": "plot_pipeline", "args": {"change_request": "make the line thicker", "base": "previous"}},
+            {"text": "Done."},
+        ]
+        script["reviewer"] = [{"json": VERDICT_OK}, {"json": VERDICT_OK}]
+        swap_models("gemini", script)
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, HOURS)
+        await bind_and_confirm(client, sid, LINE_BINDINGS)
+        await set_view(runtime, sid, only("Exam Score", "ge", 59))
+        await plot_with_choice(client, sid, "add them up")
+        assert (await runtime.session(USER, sid)).state[PLOT_VIEW]["combine"] == "sum"
+
+        events = await say(client, sid, "make the line thicker")
+
+        plot = next(data for name, data in events if name == "plot")
+        assert (plot["status"], plot["version"]) == ("ok", 2)
+        assert plot["changes"][1].startswith(f"{COMBINED_IN_VIEW_HEAD}: summed 'Exam Score' over 9 rows into 4")
+        assert backend.jobs[-1].data_csv.strip().splitlines()[1:] == ["2,136", "4,142", "6,148", "8,213"]
+        # The same rows, combined the same way: the adapter is told of no change of the data.
+        latest = services.versions.latest_rendered(sid)
+        assert latest is not None and latest.view is not None and latest.view["combine"] == "sum"
+        assert latest.requests == ["make the line thicker"]
+
+    async def test_the_session_block_reads_the_rows_the_plot_draws(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, HOURS)
+        await bind_and_confirm(client, sid, LINE_BINDINGS)
+        context = await context_for(client, sid, "inv-v-10")
+        assert "- Repeated key:" in await session_context(context)  # type: ignore[arg-type]
+        one_each = {"column": "Student", "test": "eq", "values": ["S00", "S01", "S02", "S03"]}
+
+        await prepare_data([{"op": "keep_rows", "where": [one_each]}], context)
+
+        assert "- Repeated key:" not in await session_context(context)  # type: ignore[arg-type]
+
+
+class TestReviewedEdges:
+    async def test_a_view_that_breaks_the_bindings_refuses_a_call_that_changes_the_table_too(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, "x,y,z\n1,5,a\n2,,b\n3,,c\n4,8,d\n")
+        context = await context_for(client, sid, "inv-v-11")
+        table = context.state[DATASET_ID]
+        rename = {"op": "rename", "column": "z", "name": "w"}
+
+        answer = await prepare_data(
+            [rename, {"op": "keep_rows", "where": [{"column": "y", "test": "is_missing"}]}], context
+        )
+
+        assert (answer["status"], answer["code"]) == ("error", "invalid_operation")
+        assert context.state[DATASET_ID] == table and context.state.get(PLOT_VIEW) is None
+
+    async def test_a_table_change_that_empties_a_bound_column_in_the_view_clears_the_view(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, "x,y,z\n1,5,a\n2,6,b\n3,7,a\n4,8,b\n")
+        context = await context_for(client, sid, "inv-v-12")
+        await prepare_data([only("z", "eq", "a")], context)
+        emptied = {"op": "blank", "columns": ["y"], "where": [{"column": "z", "test": "eq", "value": "a"}]}
+
+        answer = await prepare_data([emptied], context)
+
+        assert (answer["status"], answer["landed"], answer["version"]) == ("ok", "table", 2)
+        assert fenced(answer["view"], "tool_notes")[0] == CLEARED_LINE and context.state[PLOT_VIEW] is None
+
+    async def test_a_run_is_due_only_for_a_plot_of_this_confirmed_table(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        swap_models("gemini", default_script())
+        sid = await pasted_session(client, TEAMS)
+        assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
+        await create_plot(client, sid)
+        context = await context_for(client, sid, "inv-v-13")
+
+        on_the_plots_table = await prepare_data([only("Points", "ge", 40)], context)
+        await prepare_data([{"op": "rename", "column": "Goals", "name": "Tore"}], context)
+        on_a_new_version = await prepare_data([only("Points", "ge", 30)], context)
+
+        assert on_the_plots_table["plot_outdated"] is True
+        # The new version waits for the user's check: a plot run could not start, so none is called due.
+        assert on_a_new_version["landed"] == "view" and on_a_new_version["plot_outdated"] is False

@@ -286,18 +286,21 @@ async def session_context(context: ReadonlyContext) -> str:
         if by_user:
             lines.append(USER_BOUND_LINE.format(count=len(by_user)))
             lines.append(fence("user_data", "\n".join(f"{binding.role}: {binding.column}" for binding in by_user)))
-        fit = check.fit_warnings
+        # What the rows say about the bindings is read from the rows the plot draws: under a view, a value below 0
+        # or a repeated key among the rows it leaves out is none for this plot. Whether the bindings are complete
+        # stays a fact of the table (`check`).
+        drawn = (
+            check
+            if held.viewed is None
+            else check_bindings(view.bindings, view.snapshot.roles(), held.viewed.parsed.profile)
+        )
+        fit = drawn.fit_warnings
         if fit:
             # The lines name the user's columns, so they stand inside a data fence.
             lines.append(f"- Binding warnings: {len(fit)}, roles bound to a column that does not fit them as it is")
             lines.append(fence("user_data", "\n".join(fit)))
-        # Under a view the rows in question are the ones the plot draws: a key that repeats only among the rows the
-        # view leaves out is none for this plot.
-        repeated = (
-            check.repeated_key
-            if held.viewed is None
-            else check_bindings(view.bindings, view.snapshot.roles(), held.viewed.parsed.profile).repeated_key
-        )
+        # A key the view's rows repeat is settled once the user said how they combine (`PlotView.combine`).
+        repeated = None if held.view.combine is not None else drawn.repeated_key
         if repeated is not None:
             # A fact of the rows, not of the binding: its own line, its warning with the column names fenced below.
             lines.append(REPEATED_KEY_LINE.format(fact=repeated.fact(), per=repeated.per()))
