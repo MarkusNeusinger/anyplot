@@ -209,6 +209,9 @@ LEFT_OUT_HEAD = "The plot draws no mark where a value is missing: "
 """The server's line in "what changed" for rows without a value to draw, before its counts per role."""
 COMBINED_HEAD = "Rows that share a key were combined in data version "
 """The server's line in "what changed" for a repeated key it combined before the run, before the version's number."""
+COMBINED_IN_VIEW_HEAD = "Rows of the view that share a key were combined for the plot only"
+"""The same for a key that repeats among the rows a view of the plot shows (`combined_in_view_line`): combined for
+the run alone, with no data version."""
 
 SUM_SPECS: frozenset[str] = frozenset(
     {
@@ -492,12 +495,24 @@ def combined_line(aggregate: KeyAggregate, rows: int, groups: int, version: int)
     2: averaged 'Reading' over 27 rows into 9, one per 'Length'`, at most `MAX_CHANGE_CHARS`. The value columns are
     counted instead of named when there are more than two or their names would not fit; key names too long to fit
     end in `…`, so the counts and the version always stand."""
+    return _combined(f"{COMBINED_HEAD}{version}", aggregate, rows, groups)
+
+
+def combined_in_view_line(aggregate: KeyAggregate, rows: int, groups: int) -> str:
+    """The server's change line for a repeated key it combined among the rows a view of the plot shows, for the plot
+    alone (`plot_view.py`): `Rows of the view that share a key were combined for the plot only: summed 'Betrag' over
+    24 rows into 12, one per 'Monat'`, built as `combined_line` is. The table keeps every row, so no version is
+    named."""
+    return _combined(COMBINED_IN_VIEW_HEAD, aggregate, rows, groups)
+
+
+def _combined(head: str, aggregate: KeyAggregate, rows: int, groups: int) -> str:
     verb = _COMBINED_VERBS[aggregate.how]
     by = " and ".join(f"'{name}'" for name in aggregate.by)
     named = " and ".join(f"'{name}'" for name in aggregate.values)
     counted = f"{len(aggregate.values)} column{'s' if len(aggregate.values) != 1 else ''}"
     for values in ([named] if len(aggregate.values) <= 2 else []) + [counted]:
-        line = f"{COMBINED_HEAD}{version}: {verb} {values} over {rows:,} rows into {groups:,}, one per {by}"
+        line = f"{head}: {verb} {values} over {rows:,} rows into {groups:,}, one per {by}"
         if len(line) <= MAX_CHANGE_CHARS:
             return line
     return line[: MAX_CHANGE_CHARS - 1] + "…"

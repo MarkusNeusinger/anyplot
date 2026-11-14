@@ -336,7 +336,7 @@ def build(ledger: RequestLedger, action: str | None, failure: str | None = None)
     codes = turn_codes(ledger, failure)
     calls = [recorded_call(call) for call in ledger.tool_calls]
     lines = [line for hook, verdict in ledger.guards if (line := guard_line(hook, verdict)) is not None]
-    ops = [op for op in ledger.prep_ops if op in PREP_OPS]
+    ops = [op for op in [*ledger.prep_ops, *ledger.view_ops] if op in PREP_OPS]
     return TurnRecord.model_validate(
         {
             "turn": min(max(ledger.turn, 0), MAX_TURN),

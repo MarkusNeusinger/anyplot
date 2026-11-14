@@ -1,0 +1,11 @@
+{
+  "dataset_text": "Magasin,Type,Ventes\nLyon,réel,310\nNantes,réel,455\nDemo,test,999\nLille,réel,120\nEssai,test,1\n",
+  "message": "Les lignes de type test sont des erreurs de saisie, enlève-les.",
+  "expected_operations": [
+    {"op": "drop_rows", "where": [{"column": "Type", "test": "eq", "value": "test"}]}
+  ],
+  "view": "none",
+  "locale": "fr",
+  "spec_id": "bar-basic",
+  "tags": ["drop_rows", "cleaning"]
+}

@@ -71,8 +71,9 @@ RUNS = (
     "2026-09-15,7.0,39.9,5.7\n2026-09-17,15.0,93.0,6.2\n"
 )
 """Eight invented runs over three weeks; the fastest pace (4.9) is the run of 2026-09-12."""
-TOP_10 = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 10}]
-TOP_20 = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 20}]
+# A top 10 that cut the table itself (`target`): by default it would be a view of the plot, which leaves every row.
+TOP_10 = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 10, "target": "table"}]
+TOP_20 = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 20, "target": "table"}]
 WEEKLY = [
     {"op": "aggregate", "by": ["Date"], "columns": ["Distance (km)", "Time (min)"], "how": "sum", "period": "week"}
 ]

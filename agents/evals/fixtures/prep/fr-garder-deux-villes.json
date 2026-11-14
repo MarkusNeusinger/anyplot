@@ -4,6 +4,7 @@
   "expected_operations": [
     {"op": "keep_rows", "where": [{"column": "Ville", "test": "eq", "values": ["Lyon", "Nice"]}]}
   ],
+  "view": "set",
   "locale": "fr",
   "spec_id": "bar-basic",
   "tags": ["keep_rows", "keep_where"]

@@ -9,6 +9,7 @@
     {"op": "keep_rows", "n": 20}
   ],
   "expected_from_version": "original",
+  "view": "none",
   "locale": "en",
   "tags": ["from_version", "keep_rows", "top_n"]
 }

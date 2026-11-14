@@ -52,6 +52,7 @@ from .session_state import (
     DATASET_TOP,
     DATASET_VERSION,
     PENDING_CLEARED,
+    PLOT_VIEW,
     USER_BOUND,
     CatalogueSnapshot,
     initial_state,
@@ -149,6 +150,8 @@ class IngestedDataset:
             CARRY: None,
             # The bindings of a new paste are the parse's: what the user set by hand was for the data it replaces.
             USER_BOUND: None,
+            # So was the view of the plot: it would hide rows of a table the user never looked at through it.
+            PLOT_VIEW: None,
         }
 
 

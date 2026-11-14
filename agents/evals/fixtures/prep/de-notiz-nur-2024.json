@@ -3,6 +3,7 @@
   "message": "nur 2024",
   "first_turn": true,
   "expected_operations": [{"op": "keep_rows", "where": [{"column": "Jahr", "test": "eq", "value": 2024}]}],
+  "view": "set",
   "locale": "de",
   "tags": ["note", "keep_rows", "keep_where"]
 }

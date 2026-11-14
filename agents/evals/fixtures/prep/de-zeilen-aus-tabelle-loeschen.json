@@ -1,0 +1,15 @@
+{
+  "dataset_text": "Stadt,Umsatz\nBern,1200\nKöln,800\nBasel,650\nGenf,720\nWien,300\n",
+  "message": "Lösch alle Zeilen ausser Bern und Basel endgültig aus der Tabelle, die anderen brauche ich nie mehr.",
+  "expected_operations": [
+    {
+      "op": "keep_rows",
+      "where": [{"column": "Stadt", "test": "eq", "values": ["Bern", "Basel"]}],
+      "target": "table"
+    }
+  ],
+  "view": "none",
+  "locale": "de",
+  "spec_id": "bar-basic",
+  "tags": ["keep_rows", "in_table"]
+}

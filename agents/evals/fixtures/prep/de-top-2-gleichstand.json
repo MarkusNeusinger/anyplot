@@ -1,11 +1,12 @@
 {
   "dataset_text": "Stadt,Umsatz\nWien,300\nKöln,800\nBern,1200\nBasel,800\nGenf,800\n",
-  "message": "Behalte in der Tabelle nur die 2 Städte mit dem höchsten Umsatz.",
+  "message": "Zeig nur die 2 Städte mit dem höchsten Umsatz.",
   "expected_operations": [
     {"op": "sort", "column": "Umsatz", "descending": true},
     {"op": "keep_rows", "n": 2}
   ],
   "reply_names": ["Basel", "Genf"],
+  "view": "set",
   "locale": "de",
   "spec_id": "bar-basic",
   "tags": ["keep_rows", "top_n", "sort", "tie"]

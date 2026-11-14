@@ -6,6 +6,7 @@
     {"op": "sort", "column": "Revenue", "descending": true},
     {"op": "keep_rows", "n": 3}
   ],
+  "view": "set",
   "locale": "en",
   "tags": ["compute", "keep_rows", "top_n", "sort"]
 }

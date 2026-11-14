@@ -240,6 +240,7 @@ from agents.anyplot.opening import (
 )
 from agents.anyplot.page_export import NoPage, page_download
 from agents.anyplot.pipeline import hold_request
+from agents.anyplot.plot_view import read_view, view_delta
 from agents.anyplot.plugins.ledger import (
     ATTRIBUTION_LOGGER,
     CURRENT_LEDGER,
@@ -306,6 +307,7 @@ from agents.anyplot.session_state import (
     PENDING_REMEMBER,
     PENDING_REQUEST,
     PLOT_LANGUAGE,
+    PLOT_VIEW_BEFORE,
     SUMMARY_PENDING,
     TELEMETRY_SOURCE,
     USER_BOUND,
@@ -1654,6 +1656,14 @@ async def _ingest_paste(
     # compare-and-set instead. Keep any new `await` out of this block.
     session = await runtime.session(user, sid)
     current = read_session(session.state) or view
+    # The view of the plot was set on the data this paste replaces, and the paste's delta writes it out. It is kept
+    # aside, so the summary of the new data can name it and offer it again. A paste on top of one the root has not
+    # summarized yet keeps the view that paste set aside.
+    held_view = read_view(session.state)
+    if not held_view.empty:
+        delta[PLOT_VIEW_BEFORE] = held_view.model_dump(mode="json", exclude_none=True)
+    elif not current.summary_pending:
+        delta[PLOT_VIEW_BEFORE] = None
     # The data's language never sets the session's: the page offers it once, and a click sets it.
     offered = data_offer(current.language, current.language_source, current.language_offered, notes_lang, header_lang)
     if offered is not None:
@@ -2255,6 +2265,8 @@ async def copy_dataset(
     carried = switch_summary(carry, memory, None, written=memory_written(source.state))
     shown.update(memory_delta(memory, next_seq(source.state, memory)))
     shown[CARRY] = carry.model_dump(mode="json") if carry is not None else None
+    # The view of the plot comes along with the data it was set on, so every library draws the rows the page drew.
+    shown.update(view_delta(read_view(source.state)))
     # From the reads above to this write nothing suspends (see `_ingest_paste`): the source's state cannot change
     # between the confirmation check and the copy.
     await runtime.write_state(
@@ -2498,7 +2510,8 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
         action=facts.action or "text",
         asked_question=ledger.reply_question and ledger.refusal is None,
         tools=sorted({tool for tool in ledger.tools if tool in telemetry.TOOL_NAMES}),
-        prep_ops=sorted({op for op in ledger.prep_ops if op in telemetry.PREP_OPS}),
+        # A view of the plot counts with the data operations it is made of: the question is which ones are used.
+        prep_ops=sorted({op for op in [*ledger.prep_ops, *ledger.view_ops] if op in telemetry.PREP_OPS}),
         prep_calls=ledger.tools.count("prepare_data"),
         capability_gap=telemetry.closed_set(ledger.capability_gaps, telemetry.CAPABILITY_GAPS),
         refusal=codes.refusal,

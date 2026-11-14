@@ -114,13 +114,15 @@ class CallFacts:
 
 
 CallOutcome = Literal[
-    "ok", "changed", "kept", "shipped", "failed", "not_ready", "unconfirmed", "error", "refused", "unfinished"
+    "ok", "changed", "viewed", "kept", "shipped", "failed", "not_ready", "unconfirmed", "error", "refused", "unfinished"
 ]
 """What one root tool call did, as ToolSafety reads it from the tool's own answer (`tool_safety.call_outcome`):
 
 * `ok`: it answered and changed nothing (a reader, or `keep_plot_request` that kept nothing);
 * `changed`: it stored a change in the session (the data, the bindings, a language, the plot memory) or asked the
   page for a library switch;
+* `viewed`: a `prepare_data` call that changed the view of the plot alone (`plot_view.py`): which rows the next run
+  draws, with the table, its version and the user's confirmation as they were, so a plot may run in the same turn;
 * `kept`: a first-plot wish kept for the next run (`keep_plot_request`, a `plot_pipeline` that stopped on
   unconfirmed data and kept the request, or one ToolSafety refused before the run and whose request it kept:
   `data_changed_this_turn`, `summary_turn`);
@@ -366,6 +368,9 @@ class RequestLedger:
     with the version. The `plot` event carries it as `memory`; None for a run that stored no version."""
     prep_ops: list[str] = field(default_factory=list)
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
+    view_ops: list[str] = field(default_factory=list)
+    """The operation names of this turn's `prepare_data` calls that landed in the view of the plot (`plot_view.route`;
+    closed like `prep_ops`): they changed no data, so nothing that asks whether the turn changed the data reads them."""
     rebuilt_from: list[int] = field(default_factory=list)
     """The numbers of the earlier versions this turn's `prepare_data` calls started from (`from_version`): a rebuild
     changed the data also without an operation, which `prep_ops` would not show."""

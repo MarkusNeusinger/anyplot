@@ -166,12 +166,13 @@ from .language import DEFAULT_LANGUAGE, same_language
 from .memory import Planned, decision_lines, memory_delta, memory_written, next_seq, plan, read_memory
 from .memory import expected_texts as memory_expected_texts
 from .models import error_chain, model_busy
+from .plot_view import PlotView, current, read_view, view_delta, viewed_dataset
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
 from .render.gates import data_rows, evaluate
 from .render.runtimes import runtime_for
-from .repeated_keys import combine_repeated_key
+from .repeated_keys import combine_in_view, combine_repeated_key
 from .schemas import (
     EXPECTED_TEXT,
     MAX_CHANGE_CHARS,
@@ -604,9 +605,14 @@ class Run:
     owner decision of 2026-11-08: the plot draws every row, and a row it cannot draw is announced with its count):
     in `changes` right after `loader_notes`, never a residual note, so the status stays as the render earns it."""
     data_notes: list[str] = field(default_factory=list)
-    """The server's line for a repeated key it combined into a new data version before the run
-    (`repeated_keys.combine_repeated_key`, owner decision of 2026-11-09): the first line of `changes`, never a residual
-    note, and on a run that ships nothing the result's one change, since the data changed all the same."""
+    """The server's lines about the rows the run draws, the first lines of `changes` and never a residual note: the
+    view of the plot it drew them through (`Drawn.notes`), and a repeated key it combined, into a new data version
+    before the run (`repeated_keys.combine_repeated_key`, owner decision of 2026-11-09) or, under a view, for the run
+    alone (`combine_in_view`). On a run that ships nothing, a data step that made a version is still the result's
+    one change, since the data changed all the same."""
+    view_stamp: dict[str, Any] | None = None
+    """The view of the plot the run drew its rows through (`Drawn.stamp`), which the shipped version records
+    (`CodeVersion.view`); None for every row."""
     data_json: str | None = None
     """The run's table as typed JSON for a runtime whose code reads no `data.csv` (`RuntimeAdapter.data_json`:
     JavaScript), built once per run; every render job of the run and the shipped version carry it."""
@@ -757,6 +763,32 @@ def load_inputs(
     if not view.data_confirmed:
         return view, dataset, "data_unconfirmed"
     return view, dataset, None
+
+
+@dataclass(frozen=True)
+class Drawn:
+    """What a plot run draws of the session's table (`plot_view.py`): `dataset`, the table itself or its rows as the
+    view of the plot shows them, under the table's id and number; `stamp`, the view that held (`PlotView.stamp`,
+    None for every row); `notes`, the server's line for it in "what changed"; `cleared`, whether a stored view no
+    longer fit and has to be taken out of the session."""
+
+    dataset: StoredDataset
+    stamp: dict[str, Any] | None = None
+    notes: tuple[str, ...] = ()
+    cleared: bool = False
+
+
+def drawn_through_view(state: Any, view: SessionView, dataset: StoredDataset) -> Drawn:
+    """The rows a plot run on `dataset` draws: every row, or the ones the session's view of the plot shows.
+
+    Reads only. A view that no longer fits the table, or whose rows leave bindings that do not hold, is not applied
+    in part: the run draws every row and says so (`CLEARED_LINE`), and the caller that may write the state clears it.
+    """
+    held = current(state, dataset, view.language, bindings=view.bindings, roles=view.snapshot.roles())
+    if held.viewed is None:
+        return Drawn(dataset, notes=(held.cleared,) if held.cleared else (), cleared=held.cleared is not None)
+    note = held.viewed.note(held.view, dataset.number, MAX_CHANGE_CHARS)
+    return Drawn(viewed_dataset(dataset, held.viewed), stamp=held.view.stamp(), notes=(note,))
 
 
 PENDING_REASONS: frozenset[str] = frozenset({"data_unconfirmed", "incomplete_bindings", "combine_choice"})
@@ -1763,6 +1795,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             data_version=run.dataset.number,
             data_source=run.dataset.source,
             bindings=list(run.view.bindings),
+            view=run.view_stamp,
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
         ),
     )
@@ -1943,6 +1976,11 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         yield _result_event(stop_not_ready(ctx, ledger, node_input, view, not_ready or "no_dataset"))
         return
     language = plot_language(view, services.versions.latest_language(ctx.session.id))
+    # The rows this run draws: the table's, or the ones the view of the plot shows (`plot_view.py`).
+    drawn = drawn_through_view(ctx.state, view, dataset)
+    if drawn.cleared:
+        for key, value in view_delta(PlotView()).items():
+            ctx.state[key] = value
     ledger.pipeline_active = True
     if ledger.run_slot is not None and not await ledger.run_slot():
         # No slot: the route failed the turn with `capacity`, or the user cancelled the wait. Either way the run is
@@ -1965,8 +2003,9 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         new_data = new_data_base(latest, view, original, dataset.source, note_kept=note_kept)
         base: dict[str, Any] = {"base": "catalogue"}
         if new_data == "previous":
-            # An undo back to the data the version drew changed nothing: no request says it did.
-            same = latest is not None and latest.data_version == dataset.number
+            # An undo back to the data the version drew changed nothing: no request says it did. The same rows, that
+            # is: a view of the plot that changed since draws others of the same table.
+            same = latest is not None and latest.data_version == dataset.number and latest.view == drawn.stamp
             base = {"base": "previous", "change_request": "" if same else DATA_CHANGE_REQUEST}
         node_input = node_input.model_copy(update=base)
     # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one. A note
@@ -2003,11 +2042,41 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     # A key the rows repeat is combined first, as a data step with a number, a change line and an undo, so the plot
     # draws every row of the version it gets (owner decision of 2026-11-09). After the kept note was taken: a new
     # version drops a kept note, and this run carries it (`settle_pending_request` writes it back if nothing ships).
-    view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger, node_input.combine)
+    # Under a view the rows in question are the view's: a key that repeats only among the rows it leaves out is none
+    # for this plot, and one that repeats among the rows it shows is combined for the run alone, since a version
+    # made of the whole table would add up rows the plot never draws.
+    data_step: str | None = None
+    notes = list(drawn.notes)
+    stamp = drawn.stamp
+    if stamp is None:
+        view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger, node_input.combine)
+        if data_step is not None:
+            notes.append(data_step)
+    else:
+        # The function the user names in this call, else the one they named for this view before: nothing else
+        # remembers it, since no data version is made, and without it every later run would ask again.
+        held = read_view(ctx.state)
+        dataset, view_step = combine_in_view(view, drawn.dataset, node_input.combine or held.combine)
+        if view_step is not None:
+            notes.append(view_step)
+            if node_input.combine is not None and node_input.combine != held.combine:
+                chosen = held.model_copy(update={"combine": node_input.combine})
+                for key, value in view_delta(chosen).items():
+                    ctx.state[key] = value
+                stamp = chosen.stamp()
+    # The version this run changes drew other rows of the table: the adapter hears that the data changed, as it does
+    # for "plot the new data", with the user's own request after it.
+    if (
+        previous is not None
+        and previous.view != stamp
+        and users_request(node_input.change_request) == node_input.change_request
+    ):
+        node_input = node_input.model_copy(update={"change_request": new_data_request(node_input.change_request)})
     run = Run(
         view=view,
         dataset=dataset,
-        data_notes=[data_step] if data_step is not None else [],
+        view_stamp=stamp,
+        data_notes=notes,
         theme=theme,
         theme_asked=theme_asked,
         language=language or view.language,
