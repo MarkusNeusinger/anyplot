@@ -240,7 +240,12 @@ The operations:
     last `sort` ranked the rows by, the line counts and names the tied rows on each side
     (`_tie_note`). With `where` in place of `n` it keeps the rows for which 1 to 3 conditions
     all hold, a selection said positively ("only Miete and Strom", "only January"): its line
-    counts both sides and the dropped rows that had no value to test (`_unvalued_note`).
+    counts both sides and the dropped rows that had no value to test (`_unvalued_note`). Its
+    `target` (`plot`, the default, or `table`) is `prepare_data`'s business, not the engine's:
+    by default the operation lands in the view of the plot and the table keeps every row
+    (`plot_view.py`), and the engine applies it the same way wherever it lands.
+  * `reset_view`: clears that view. It changes no table, so the engine refuses it; only
+    `prepare_data` takes it, as the first operation of a call.
   * `unsupported`: names a change no operation can make by a closed `family` (fill in
     values, edit single cells, add rows, combine tables, a text pattern, a window over
     time, other). It changes nothing: `apply_operations` refuses it as
@@ -379,6 +384,9 @@ ORDER_TESTS: frozenset[str] = frozenset(("gt", "lt", "ge", "le"))
 """The tests that compare by order, which a boolean column has none of."""
 VALUE_FREE_TESTS: frozenset[str] = frozenset(("is_missing", "not_missing"))
 """The tests that ask whether a cell is there, and take no value."""
+RESET_VIEW_REFUSAL = (
+    "reset_view clears the view of the plot and changes no table: prepare_data takes it as its first operation"
+)
 SHOWN_TIED_ROWS = 3  # of the rows of a tie on each side of a top N's cut, the ones its change line names
 TIED_NAME_CHARS = 20  # of one such row's name in that line, which names up to twice `SHOWN_TIED_ROWS` of them
 TargetType = Literal["number", "datetime", "text"]
@@ -1024,12 +1032,23 @@ class KeepRows(_Strict):
     op: Literal["keep_rows"]
     n: int | None = Field(default=None, ge=1, le=MAX_ROWS)
     where: list[Condition] | None = Field(default=None, min_length=1, max_length=MAX_CONDITIONS)
+    target: Literal["plot", "table"] = "plot"
+    """Where `prepare_data` lands it (`plot_view.route`): `plot`, the default, in the view of the plot, which leaves
+    the table as it is; `table` when the user asks for the table itself to lose the rows. The engine applies the
+    operation the same way either way, and `query_data` ignores the field."""
 
     @model_validator(mode="after")
     def _one_way(self) -> Self:
         if (self.n is None) == (self.where is None):
             raise ValueError("keep_rows takes n (the first n rows) or where (the rows that match), one of the two")
         return self
+
+
+class ResetView(_Strict):
+    """The view of the plot cleared: every row of the table is drawn again. It changes no table, so only
+    `prepare_data` takes it, as the first operation of a call (`plot_view.route`); the engine refuses it."""
+
+    op: Literal["reset_view"]
 
 
 class Unsupported(_Strict):
@@ -1066,6 +1085,7 @@ Operation = Annotated[
     | Rolling
     | Blank
     | KeepRows
+    | ResetView
     | Unsupported,
     Field(discriminator="op"),
 ]
@@ -1115,6 +1135,10 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation], languag
     if gap is not None:
         # Reported before anything is applied: a call that names a gap changes nothing.
         raise PrepareError("unsupported_operation", f"no operation can {UNSUPPORTED_WORDS[gap.family]}")
+    if any(isinstance(operation, ResetView) for operation in operations):
+        # `prepare_data` takes it out before the table's operations run (`plot_view.route`); anywhere else it is
+        # refused, since it would read as a change of the table that changes nothing.
+        raise PrepareError("invalid_operation", RESET_VIEW_REFUSAL)
     carried = _Carried.of(parsed, language)
     frame = _read(parsed)
     changes: list[str] = []
@@ -1235,6 +1259,8 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
             return _blank(frame, operation, carried)
         case KeepRows():
             return _keep_rows(frame, operation, carried)
+        case ResetView():  # `apply_operations` refuses it before any operation runs
+            raise PrepareError("invalid_operation", RESET_VIEW_REFUSAL)
         case Unsupported():  # `apply_operations` refuses it before any operation runs
             raise PrepareError("unsupported_operation", f"no operation can {UNSUPPORTED_WORDS[operation.family]}")
 
@@ -3668,6 +3694,12 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
     if test == "le":
         return _bools(series <= target)
     return _bools(series < target)
+
+
+def condition_words(condition: Condition, *, text: bool) -> str:
+    """One condition in a change line's words (`Jahr = 2024`, `Stadt is 'Bern' or 'Wien'`), for a line written
+    outside an operation: `text` says whether its column holds text, whose values are quoted."""
+    return _describe(condition, "text" if text else "number")
 
 
 def _describe(condition: Condition, kind: Kind) -> str:

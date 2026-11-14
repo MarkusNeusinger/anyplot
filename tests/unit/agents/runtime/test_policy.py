@@ -573,7 +573,7 @@ class TestTheRowsToKeep:
     def test_the_root_names_the_rows_to_keep_and_never_their_opposite(self) -> None:
         root = policy.root_instruction()
 
-        assert "one call takes `n` or `where`, never both" in root
+        assert "One call takes `n` or `where`, never both" in root
         assert "whenever the user names the rows to keep, call it with what the user named" in root
         assert "never a `drop_rows` with the opposite test" in root
         # A period is its first and its last day, since a date without a time means the whole day.
@@ -586,8 +586,8 @@ class TestTheRowsToKeep:
     def test_the_root_says_what_the_count_alone_would_hide(self) -> None:
         root = policy.root_instruction()
 
-        assert "says how many dropped rows had no value in a tested column, which is why they left: say so" in root
-        assert "says when the cut of a top N falls among rows with the same value" in root
+        assert "say how many dropped rows had no value in a tested column, which is why they left: say so" in root
+        assert "they also say when the cut of a top N falls among rows with the same value" in root
         assert "since which of them stayed was no choice of the user" in root
         # The cut stays at N: the way to more rows is the user's next message, never a second call of the turn.
         assert "offer the next step, a larger `n` or every row down to that value" in root
@@ -595,6 +595,44 @@ class TestTheRowsToKeep:
         assert "`ge` that value after a descending sort, `le` after an ascending one" in root
         # Rows without a value tie by having none, and no comparison reaches them.
         assert "only a larger `n` takes more of them in, since an empty cell matches no comparison" in root
+
+
+class TestTheViewOfThePlot:
+    """Owner decision of 2026-11-13: which rows the plot shows is a view of the plot, adjusted like axis limits, and
+    the table stays as pasted; cleaning stays a step of the table, and the user's own word wins."""
+
+    def test_a_selection_and_a_top_n_are_a_view_and_wrong_rows_are_the_tables(self) -> None:
+        root = policy.root_instruction()
+        rule = root.split("- The view of the plot. ", 1)[1].split("\n", 1)[0]
+
+        assert "Which rows the plot shows is a view of the plot, never a change of the table" in rule
+        assert "Call `prepare_data` with `keep_rows` for it" in rule
+        assert "the table, its version and the user's confirmation stay as they are" in rule
+        assert "Rows that are wrong or do not belong to the data are no view" in rule
+        assert "Take those out with `drop_rows`, which changes the table" in rule
+        # The user's own word sends a view to the table; the rule names no word of any language as its trigger.
+        assert 'give the `keep_rows` the `"target"` `"table"`' in rule
+        assert "Decide by what the user means, never by single words" in rule
+
+    def test_the_view_is_built_on_and_cleared_and_the_plot_follows_in_the_turn(self) -> None:
+        root = policy.root_instruction()
+        rule = root.split("- The view of the plot. ", 1)[1].split("\n", 1)[0]
+
+        assert "a new top N takes the place of the one there" in rule
+        assert "a selection on the same columns takes the place of that selection" in rule
+        assert 'start the call with `{"op": "reset_view"}` and name after it the parts that stay' in rule
+        # A view changes no data, so the plot of the new rows needs no check by the user first.
+        assert "When the result says `plot_outdated` `true`" in rule
+        assert 'call `plot_pipeline` in the same turn, with `base` `"previous"`' in rule
+        assert "A view changes no data, so nothing waits for the user's check" in rule
+        # And the rule that forbids a plot after a data change says which calls it means.
+        assert "a call that landed in the view of the plot alone changed none" in root
+
+    def test_the_tool_line_names_the_exception(self) -> None:
+        root = policy.root_instruction()
+
+        assert "A `keep_rows` is the exception: it lands in the view of the plot, which changes no data" in root
+        assert "A call with `from_version` rebuilds the table, so its `keep_rows` land in the table" in root
 
 
 class TestOtherInstructions:

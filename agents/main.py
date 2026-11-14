@@ -240,6 +240,7 @@ from agents.anyplot.opening import (
 )
 from agents.anyplot.page_export import NoPage, page_download
 from agents.anyplot.pipeline import hold_request
+from agents.anyplot.plot_view import read_view, view_delta
 from agents.anyplot.plugins.ledger import (
     ATTRIBUTION_LOGGER,
     CURRENT_LEDGER,
@@ -2255,6 +2256,8 @@ async def copy_dataset(
     carried = switch_summary(carry, memory, None, written=memory_written(source.state))
     shown.update(memory_delta(memory, next_seq(source.state, memory)))
     shown[CARRY] = carry.model_dump(mode="json") if carry is not None else None
+    # The view of the plot comes along with the data it was set on, so every library draws the rows the page drew.
+    shown.update(view_delta(read_view(source.state)))
     # From the reads above to this write nothing suspends (see `_ingest_paste`): the source's state cannot change
     # between the confirmation check and the copy.
     await runtime.write_state(
@@ -2498,7 +2501,8 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
         action=facts.action or "text",
         asked_question=ledger.reply_question and ledger.refusal is None,
         tools=sorted({tool for tool in ledger.tools if tool in telemetry.TOOL_NAMES}),
-        prep_ops=sorted({op for op in ledger.prep_ops if op in telemetry.PREP_OPS}),
+        # A view of the plot counts with the data operations it is made of: the question is which ones are used.
+        prep_ops=sorted({op for op in [*ledger.prep_ops, *ledger.view_ops] if op in telemetry.PREP_OPS}),
         prep_calls=ledger.tools.count("prepare_data"),
         capability_gap=telemetry.closed_set(ledger.capability_gaps, telemetry.CAPABILITY_GAPS),
         refusal=codes.refusal,

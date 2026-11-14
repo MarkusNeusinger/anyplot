@@ -86,7 +86,8 @@ from ..data.prepare import PrepareArgs, validation_lines
 from ..data.query import QueryArgs
 from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS, LanguageTarget
 from ..memory import ForgetArgs
-from ..pipeline import load_inputs, run_args, stop_not_ready
+from ..pipeline import drawn_through_view, load_inputs, run_args, stop_not_ready
+from ..plot_view import read_view
 from ..policy import DATA_PREAMBLE, fence
 from ..repeated_keys import choice_is_open
 from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, NotReadyReason, PipelineArgs, PlotResult, SwitchArgs
@@ -317,7 +318,8 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     # Whether the page will switch after the turn; the library is the root's own argument, nothing to echo.
     "switch_plot": frozenset({"status", "code", "switch_requested"}),
     # `bindings` when a conversion moved them, fenced as in `get_dataset_profile`; `family` with `unsupported_operation`.
-    PREPARE_TOOL: _DATA_VERSION_KEYS | {"bindings", "family"},
+    # `landed`, `view`, `of_rows` and `plot_outdated` for a call whose `keep_rows` landed in the view of the plot.
+    PREPARE_TOOL: _DATA_VERSION_KEYS | {"bindings", "family", "landed", "view", "of_rows", "plot_outdated"},
     QUERY_TOOL: frozenset(
         {"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes", "family"}
     ),
@@ -380,6 +382,8 @@ def call_outcome(tool_name: str, result: Any) -> CallOutcome:
         return "kept" if result.get("request_kept") is True else "ok"
     if tool_name == SWITCH_TOOL:
         return "changed" if result.get("switch_requested") is True else "ok"
+    if tool_name == PREPARE_TOOL and result.get("landed") == "view":
+        return "viewed"  # the view of the plot alone: no data version, nothing for the user to confirm
     return "changed" if tool_name in ARGUMENTS else "error"
 
 
@@ -454,7 +458,14 @@ def combine_is_open(tool_context: ToolContext) -> bool:
     """Whether a plot of the session's confirmed data would combine rows by a function nobody chose
     (`repeated_keys.choice_is_open`). False for a session that is not ready for a plot: the run says why itself."""
     view, dataset, reason = load_inputs(tool_context, get_services())
-    return reason is None and view is not None and dataset is not None and choice_is_open(view, dataset)
+    if reason is not None or view is None or dataset is None:
+        return False
+    # The rows the run would draw: under a view of the plot, a key repeats only if it does among the view's rows,
+    # and the choice is open only until the user made it for that view (`PlotView.combine`).
+    drawn = drawn_through_view(tool_context.state, view, dataset)
+    if drawn.stamp is not None and read_view(tool_context.state).combine is not None:
+        return False
+    return choice_is_open(view, drawn.dataset)
 
 
 def turn_bound(

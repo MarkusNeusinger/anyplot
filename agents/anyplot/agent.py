@@ -62,6 +62,7 @@ from .memory import MemoryEntry, read_memory
 from .models import make_content_config, make_model
 from .paste_conversions import make_conversions
 from .pipeline import plot_shows_replaced_data
+from .plot_view import current
 from .plugins.budget import BudgetPlugin
 from .plugins.empty_reply import EmptyReplyPlugin
 from .plugins.ledger import CURRENT_LEDGER, ledger_for
@@ -144,6 +145,13 @@ VERSIONS_HEADING = (
 listed once there is more than one. Persona tests of 2026-11-06: after a top 10 or a weekly sum the root told users to
 press `.undo()` or paste again, because it could not see that the rows it needed still existed (owner decision of
 2026-11-06: the chat reads and rebuilds from the original or an earlier version and says so)."""
+VIEW_HEADING = (
+    "View of the plot: the plot draws {rows} of the table's {of_rows} rows, the ones the line below names; the table "
+    "keeps every row, a keep_rows of prepare_data changes the view and reset_view clears it (see 'Step 1: the data')"
+)
+"""The session block's line over the view of the plot in force (`plot_view.py`, owner decision of 2026-11-13), with
+the rows it leaves; the view's own words follow in a fence. Listed only while a view holds for the current table, so
+the root restates or changes what is there and never guesses at a view from its memory of earlier turns."""
 PASTED_LINE = (
     "- Data: pasted just now, not summarized yet; the table came in as an attachment of the message box and is "
     "stored, so get_dataset_profile reads it, and a typed message of this turn is the note sent with it, never data "
@@ -255,6 +263,12 @@ async def session_context(context: ReadonlyContext) -> str:
             # The change lines name the user's columns, so they stand inside a fence.
             lines.append(f"- {VERSIONS_HEADING.format(count=len(kept))}")
             lines.append(fence("tool_notes", "\n".join(version_lines(kept))))
+        held = current(context.state, dataset, view.language, bindings=view.bindings, roles=view.snapshot.roles())
+        if held.viewed is not None:
+            # The view's words name the user's columns and values, so they stand inside a fence.
+            lines.append(f"- {VIEW_HEADING.format(rows=held.viewed.rows, of_rows=held.viewed.of_rows)}")
+            text = [name for name, dtype in dataset.column_dtypes.items() if dtype == "text"]
+            lines.append(fence("tool_notes", held.view.words(text)))
         if dataset.context_lines:
             # A fixed line, never the notes: they are the user's text and reach the root only fenced.
             lines.append(f"- Notes pasted with the data: {NOTES_LINE}")
@@ -272,14 +286,23 @@ async def session_context(context: ReadonlyContext) -> str:
         if by_user:
             lines.append(USER_BOUND_LINE.format(count=len(by_user)))
             lines.append(fence("user_data", "\n".join(f"{binding.role}: {binding.column}" for binding in by_user)))
-        fit = check.fit_warnings
+        # What the rows say about the bindings is read from the rows the plot draws: under a view, a value below 0
+        # or a repeated key among the rows it leaves out is none for this plot. Whether the bindings are complete
+        # stays a fact of the table (`check`).
+        drawn = (
+            check
+            if held.viewed is None
+            else check_bindings(view.bindings, view.snapshot.roles(), held.viewed.parsed.profile)
+        )
+        fit = drawn.fit_warnings
         if fit:
             # The lines name the user's columns, so they stand inside a data fence.
             lines.append(f"- Binding warnings: {len(fit)}, roles bound to a column that does not fit them as it is")
             lines.append(fence("user_data", "\n".join(fit)))
-        if check.repeated_key is not None:
+        # A key the view's rows repeat is settled once the user said how they combine (`PlotView.combine`).
+        repeated = None if held.view.combine is not None else drawn.repeated_key
+        if repeated is not None:
             # A fact of the rows, not of the binding: its own line, its warning with the column names fenced below.
-            repeated = check.repeated_key
             lines.append(REPEATED_KEY_LINE.format(fact=repeated.fact(), per=repeated.per()))
             lines.append(fence("user_data", repeated.line()))
         ledger = CURRENT_LEDGER.get()

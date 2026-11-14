@@ -604,7 +604,9 @@ CALL_VERDICTS = frozenset(
     " too_many_prepare_calls"
     " too_many_generate_calls too_many_query_calls budget internal unknown".split()
 )
-CALL_OUTCOMES = frozenset("ok changed kept shipped failed not_ready unconfirmed error refused unfinished".split())
+CALL_OUTCOMES = frozenset(
+    "ok changed viewed kept shipped failed not_ready unconfirmed error refused unfinished".split()
+)
 CALL_CODES = frozenset(
     "budget busy capacity code_error combine_choice daily_limit data_changed_this_turn data_refused data_unconfirmed deadline"
     " empty_result error guard_unavailable incomplete_bindings internal invalid_arguments invalid_bindings invalid_code"
@@ -629,7 +631,8 @@ GUARD_VERDICTS = frozenset(
 )
 PREP_OPS = frozenset(
     "rename drop_columns drop_rows set_type aggregate sort pivot_longer pivot_wider classify derive make_date"
-    " row_number date_number split extract strip replace compute diff rolling blank keep_rows unsupported".split()
+    " row_number date_number split extract strip replace compute diff rolling blank keep_rows reset_view"
+    " unsupported".split()
 )
 # The record's own bounds (`turn_record.MAX_KEPT_TURNS` and the `MAX_RECORD_*`), read again here.
 _MAX_TURNS = 50

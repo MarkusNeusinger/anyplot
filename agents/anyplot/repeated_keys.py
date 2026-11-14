@@ -23,11 +23,12 @@ from typing import Any
 from pydantic import ValidationError
 
 from .data.bindings import carry_bindings, check_bindings, valid_bindings
-from .data.fidelity import How, KeyAggregate, combined_line, function_is_open, key_aggregate
+from .data.fidelity import How, KeyAggregate, combined_in_view_line, combined_line, function_is_open, key_aggregate
 from .data.parse import ParseError
 from .data.prepare import PrepareArgs, PrepareError, apply_and_parse
 from .data.store import DatasetStore, StoredDataset, StoreFull
 from .dataset_versions import DatasetVersion, push_version
+from .plot_view import Viewed, viewed_dataset
 from .session_state import CONFIRMED, SessionView, confirmation_fingerprint
 
 
@@ -67,6 +68,42 @@ def choice_is_open(view: SessionView, dataset: StoredDataset) -> bool:
     and the plot type leaves open whether the rows sum or average (`fidelity.function_is_open`). The tool guard
     then stops a call that names no function, and the root asks the user."""
     return planned_aggregate(view, dataset) is not None and function_is_open(view.spec_id)
+
+
+def combine_in_view(
+    view: SessionView, shown: StoredDataset, how: How | None = None
+) -> tuple[StoredDataset, str | None]:
+    """The rows a run under a view of the plot draws, with a key they repeat combined for the run alone, and the
+    line that announces it; `shown` as it is and None when there is nothing to combine.
+
+    `shown` is the table as the view shows it (`plot_view.viewed_dataset`). A data version, as
+    `combine_repeated_key` makes one, would be made of the whole table and add up rows the view leaves out
+    (January 2023 into January 2024 under "only 2024"), so under a view the aggregate is applied to the view's rows
+    and stored nowhere: the table keeps every row, and the view stays adjustable. The rule for which function, and
+    for when nothing is combined, is the same (`planned_aggregate`); so is the refusal of an aggregate that fails or
+    leaves bindings that do not hold or would move, after which the run draws the rows as they are.
+    """
+    roles = view.snapshot.roles()
+    aggregate = planned_aggregate(view, shown, how)
+    if aggregate is None:
+        return shown, None
+    try:
+        args = PrepareArgs.model_validate({"operations": [aggregate.operation]})
+        prepared, parsed = apply_and_parse(shown.as_parsed(), args.operations, language=view.language)
+    except (ValidationError, PrepareError, ParseError) as exc:
+        logger.warning("repeated key not combined in the view: %s", type(exc).__name__)
+        return shown, None
+    after = check_bindings(view.bindings, roles, parsed.profile)
+    if not after.complete or after.errors or after.repeated_key is not None:
+        return shown, None
+    carried = carry_bindings(
+        view.bindings, roles, parsed.profile, shown.profile, prepared.converted, prepared.row_numbers, prepared.splits
+    )
+    if carried != view.bindings:
+        logger.warning("repeated key not combined in the view: the bindings would move")
+        return shown, None
+    combined = viewed_dataset(shown, Viewed(parsed, list(prepared.changes), shown.profile.rows))
+    return combined, combined_in_view_line(aggregate, shown.profile.rows, parsed.profile.rows)
 
 
 def combine_repeated_key(

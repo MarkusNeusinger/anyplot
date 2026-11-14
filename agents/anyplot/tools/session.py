@@ -73,7 +73,13 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   version number the session block lists, since 2026-11-07) the operations start from that earlier version
   instead, none of them taking it as it was, and the result is stored on top all the same: the history is
   never rewritten, the change lines say where it started (`dataset_versions.rebuilt_changes`), and a number
-  that is gone answers `other_paste` or `version_not_kept` (`dataset_versions.resolve_version`).
+  that is gone answers `other_paste` or `version_not_kept` (`dataset_versions.resolve_version`). Since
+  2026-11-14 the `keep_rows` at the end of a call land in the view of the plot instead (`plot_view.route`,
+  owner decision of 2026-11-13): which rows the plot draws, stored as session state with no data version,
+  so the table and the confirmation stand and the plot may run in the same turn. The result then names
+  `landed` (`view`, `table`, `table_and_view`), the view's lines fenced as `<tool_notes>` and, for a view
+  alone, `plot_outdated`; `reset_view` clears the view, and a view that does not fit the table the call
+  leaves refuses the whole call.
 * `query_data(operations, columns, limit, from_version)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, then
   the first `limit` rows (at most 25) in at most eight columns, fenced as `<user_data>`, with
@@ -110,10 +116,12 @@ from pydantic import ValidationError
 from .. import telemetry
 from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
+from ..data.bindings import carry_bindings
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import (
     MAX_OPERATIONS,
+    KeepRows,
     Operation,
     PrepareArgs,
     Prepared,
@@ -147,6 +155,20 @@ from ..pipeline import (
     load_inputs,
     plot_shows_replaced_data,
     run_pipeline,
+)
+from ..plot_view import (
+    CLEARED_LINE,
+    PlotView,
+    Routed,
+    Viewed,
+    ViewRefused,
+    breaks_bindings,
+    current,
+    merged,
+    route,
+    table_only,
+    view_delta,
+    view_of,
 )
 from ..plugins.ledger import attribution, ledger_for
 from ..plugins.tool_safety import (
@@ -540,14 +562,19 @@ async def prepare_data(
     the row lag places before, default 1, in the order of a number or date column order); rolling (name, column, how
     mean|sum, window, order, within; adds the mean or sum over window rows, each row and the ones before it); blank
     (columns, where; empties the cells of columns in the rows where the conditions hold, the rows stay); keep_rows (n
-    or where, one of the two; n keeps the first n rows in their current order: the top 10 by revenue is a sort
-    descending, then keep_rows 10; where keeps the rows for which the conditions hold: only some categories, only a
-    period as ge its start and le its end);
+    or where, one of the two, and target plot|table, default plot; n keeps the first n rows in their current order:
+    the top 10 by revenue is a sort descending, then keep_rows 10; where keeps the rows for which the conditions
+    hold: only some categories, only a period as ge its start and le its end; it lands in the view of the plot, which
+    says which rows the plot draws and leaves the table, its version and the user's confirmation as they are; with
+    target table the table itself loses the other rows); reset_view (no fields; first in a call, clears the view of
+    the plot so every row is drawn again);
     unsupported
     (family fill_values|edit_cells|add_rows|combine_tables|text_pattern|time_window|other; alone, for a change no
     operation can make: it changes nothing and answers unsupported_operation with a fixed message to send). Steps
     chain in one call: a later operation may name a column an earlier one made. Returns the change lines and the new
-    profile, or an error with a code and a message.
+    profile, or an error with a code and a message. A call whose keep_rows landed in the view returns landed (view,
+    or table_and_view), the view's lines with the rows the plot now draws, and for a view alone plot_outdated: true
+    when the plot on the page still shows other rows, so a plot run in the same turn is due.
     """
     view = _view(tool_context)
     if view is None:
@@ -577,17 +604,65 @@ async def prepare_data(
     if start.current and not args.operations:  # `from_version` named the current version by its number
         lines = ["from_version names the current version, and there is no operation: nothing would change"]
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(lines)}
+    try:
+        # A call that names the version it starts from rebuilds the table, so everything in it is the table's: the
+        # rows the user asks back are in no view. Also when that version is the current one, by its number or as the
+        # original: the root said which table it means.
+        rebuilds = args.from_version != CURRENT_VERSION
+        routed = table_only(args.operations) if rebuilds else route(args.operations)
+        # The view held from before, as it holds for the current table: one that no longer fits it (after an undo,
+        # a change in the data panel) counts as none, so it never makes this call fail for a column that is gone.
+        roles = view.snapshot.roles()
+        now = current(tool_context.state, stored, view.language, bindings=view.bindings, roles=roles)
+        held = now.view
+        shown = merged(held, routed) if routed.view else held
+    except ViewRefused as exc:
+        return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([str(exc)])}
+    # Whether the call makes a data version: the table's operations, or an earlier version taken as it was.
+    stores = bool(routed.table) or not start.current
     prepared: Prepared | None = None
     try:
-        if args.operations:
-            prepared, parsed = apply_and_parse(start.stored.as_parsed(), args.operations, language=view.language)
+        if routed.table:
+            prepared, parsed = apply_and_parse(start.stored.as_parsed(), routed.table, language=view.language)
         else:
-            parsed = start.stored.as_parsed()  # the earlier version as it was, as the next one
+            parsed = start.stored.as_parsed()  # the version as it is: an earlier one as the next, or a view's table
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
     except ParseError:  # the operations keep every parser cap (rows, columns, size), so a refusal here is a bug
         return _error("internal")
+    # The view is checked on the table the call leaves, before anything is stored: a view of this call that does not
+    # fit refuses the whole call, a view held from before is cleared with a line.
+    seen: Viewed | None = None
+    cleared = now.cleared is not None  # a view that had stopped fitting before this call is written out with it
+    if not shown.empty:
+        try:
+            seen = view_of(parsed, shown, view.language)
+        except PrepareError as exc:
+            if routed.view:
+                return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
+            shown, cleared = PlotView(), True
+    if seen is not None:
+        # The bindings the view has to hold on: the ones in force, or the ones the new version will carry
+        # (`push_version` computes them the same way), so a call that changes the table is checked like any other.
+        bound = view.bindings
+        if stores:
+            bound = carry_bindings(
+                view.bindings,
+                roles,
+                parsed.profile,
+                start.stored.profile,
+                prepared.converted if prepared is not None else None,
+                prepared.row_numbers if prepared is not None else (),
+                prepared.splits if prepared is not None else (),
+            )
+        if breaks_bindings(bound, roles, parsed.profile, seen.parsed.profile):
+            if routed.view:
+                message = _fenced_lines([VIEW_BREAKS_BINDINGS])
+                return {"status": "error", "code": "invalid_operation", "message": message}
+            shown, seen, cleared = PlotView(), None, True
+    if not stores:
+        return _view_result(tool_context, view, start.stored, shown, seen, routed)
     changes = rebuilt_changes(start, prepared.changes if prepared is not None else [])
     try:
         # From an earlier version too, the result goes on top: the history is never rewritten, and `.undo()` steps
@@ -612,7 +687,7 @@ async def prepare_data(
     if prepared is not None and (outcome := _conversion_outcome(prepared, parsed.profile, version.bindings)):
         telemetry.note_conversion(session_id, outcome)
     ledger.dataset_changes.extend(changes)
-    ledger.prep_ops.extend(operation.op for operation in args.operations)  # the names only, for the telemetry
+    ledger.prep_ops.extend(operation.op for operation in routed.table)  # the names only, for the telemetry
     if not start.current:
         ledger.rebuilt_from.append(start.number)
     base = {
@@ -622,11 +697,87 @@ async def prepare_data(
         "version": version.version,
         "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(changes, ensure_ascii=False)),
     }
+    if routed.view or cleared:
+        # The view of this call, or one held from before that the new table no longer fits: stored with the version.
+        for key, value in view_delta(shown).items():
+            tool_context.state[key] = value
+        ledger.view_ops.extend(view_op_names(routed))
+        base["landed"] = "table_and_view" if routed.view else "table"
+        base["view"] = _view_lines(shown, seen, version.version, parsed.profile.rows, cleared=cleared)
+    elif any(isinstance(operation, KeepRows) for operation in routed.table):
+        base["landed"] = "table"  # a `keep_rows` the call's order or its `target` sent to the table
     if version.bindings != view.bindings:
         # The server moved them (`carry_bindings`): the reply names these, not the ones the turn started from (live
         # run of 2026-11-02: the root saw x on `value` and called the row numbers a mistake).
         base["bindings"] = DATA_PREAMBLE + "\n" + fence("user_data", bindings_text(version.bindings))
     return _with_profile(base, parsed.profile, "prepare_data")
+
+
+VIEW_BREAKS_BINDINGS = (
+    "with this view a column the plot is bound to would hold no usable value: the bindings would no longer hold, so "
+    "the view was not set"
+)
+"""`prepare_data`'s refusal of a view whose rows leave a bound column the plot cannot read (every cell empty)."""
+VIEW_CLEARED = "the view of the plot is cleared: the plot draws every row of the table again"
+
+
+def view_op_names(routed: Routed) -> list[str]:
+    """The operation names of a call's view part, as the telemetry counts them: the names only."""
+    names = ["reset_view"] if routed.reset else []
+    names += ["keep_rows"] * len(routed.selections)
+    return [*names, "sort", "keep_rows"] if routed.top is not None else names
+
+
+def _view_lines(shown: PlotView, seen: Viewed | None, data_version: int, table_rows: int, *, cleared: bool) -> str:
+    """The view as a tool result carries it, fenced: each step's line with its counts and the server's summary, or the
+    one line of a view that is no more."""
+    if seen is not None and not shown.empty:
+        lines = [*seen.changes, seen.summary(data_version)]
+    else:
+        lines = [
+            CLEARED_LINE if cleared else VIEW_CLEARED,
+            f"the plot draws all {table_rows} rows of data v{data_version}",
+        ]
+    return DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(lines, ensure_ascii=False))
+
+
+def _view_result(
+    tool_context: ToolContext,
+    view: SessionView,
+    stored: StoredDataset,
+    shown: PlotView,
+    seen: Viewed | None,
+    routed: Routed,
+) -> dict[str, Any]:
+    """`prepare_data`'s answer to a call that changed the view alone: the view is stored, the table, its version and
+    the user's confirmation stay as they are.
+
+    `plot_outdated` says that this library's latest plot of the data drew other rows than the view now shows, so a
+    run is due: the root may start it in the same turn, since no data changed.
+    """
+    for key, value in view_delta(shown).items():
+        tool_context.state[key] = value
+    ledger = ledger_for(tool_context.invocation_id)
+    ledger.view_ops.extend(view_op_names(routed))
+    services = get_services()
+    latest = services.versions.latest_rendered(tool_context.session.id, target=view.target)
+    # A run is due, and can start, only for a plot of this very table that the user confirmed: a plot of an earlier
+    # version waits for the user's check of the new data, whatever the view says.
+    drew_this = (
+        latest is not None
+        and view.data_confirmed
+        and latest.drew(stored.number)
+        and not plot_shows_replaced_data(services, tool_context.session.id, view)
+    )
+    return {
+        "status": "ok",
+        "landed": "view",
+        "rows": seen.rows if seen is not None else stored.profile.rows,
+        "of_rows": stored.profile.rows,
+        "version": stored.number,
+        "view": _view_lines(shown, seen, stored.number, stored.profile.rows, cleared=False),
+        "plot_outdated": drew_this and latest is not None and latest.view != shown.stamp(),
+    }
 
 
 async def query_data(
