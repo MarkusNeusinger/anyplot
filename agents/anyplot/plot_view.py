@@ -25,6 +25,7 @@ is read (`current`): after a rename or an undo it may no longer fit, and then it
 that says so, never applied in part. No ADK import.
 """
 
+import logging
 from collections.abc import Collection
 from dataclasses import dataclass, replace
 from typing import Any, Literal
@@ -53,6 +54,8 @@ from .language import DEFAULT_LANGUAGE
 from .schemas import MAX_ROWS, Binding, DatasetProfile
 from .session_state import PLOT_VIEW, PLOT_VIEW_BEFORE
 
+
+logger = logging.getLogger("anyplot.agents")
 
 MAX_SELECTIONS = 3
 """The selections one view holds. Each has up to `MAX_CONDITIONS` conditions, so a view of three is already more
@@ -316,6 +319,10 @@ def oldest_first(
         seen = _seen(shown.as_parsed(), [Sort(op="sort", column=column)], language)
     except PrepareError:
         return shown, None  # a column the engine cannot order is drawn as it stands
+    if dict(seen.parsed.column_dtypes) != dict(shown.column_dtypes) or seen.rows != shown.profile.rows:
+        # The same rows read back as another kind of column would move the bindings the user confirmed.
+        logger.warning("rows not ordered by date: the ordered table reads differently")
+        return shown, None
     return viewed_dataset(shown, seen), OLDEST_FIRST_LINE.format(column=column)
 
 

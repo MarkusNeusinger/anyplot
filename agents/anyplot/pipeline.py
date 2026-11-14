@@ -2063,14 +2063,13 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
                 chosen = held.model_copy(update={"combine": node_input.combine})
                 for key, value in view_delta(chosen).items():
                     ctx.state[key] = value
-                stamp = chosen.stamp()
+                held, stamp = chosen, chosen.stamp()
     # A bound date column that runs newest first is drawn oldest first. The order is the plot's, so the rows are
     # ordered for the run alone, after the view and the combine, which decide which rows those are. The line is
-    # said where the user first meets it: not again on a change of a version that drew the same rows.
+    # said where the user first meets it: not again on a change of a version that drew this very table, which is
+    # read off the table itself, since a rebound column changes the order without a new data version or view.
     dataset, order_note = oldest_first(dataset, view.bindings, held, view.language)
-    if order_note is not None and not (
-        previous is not None and previous.data_version == dataset.number and previous.view == stamp
-    ):
+    if order_note is not None and not (previous is not None and previous.data_csv == dataset.csv):
         notes.append(order_note)
     # The version this run changes drew other rows of the table: the adapter hears that the data changed, as it does
     # for "plot the new data", with the user's own request after it.

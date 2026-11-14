@@ -978,6 +978,21 @@ class TestTheDateOrderOfARun:
         drawn, line = oldest_first(newest, bindings, latest)
         assert line is not None and dates_of(drawn) == ["2026-11-06", "2026-11-07", "2026-11-08"]
 
+    def test_rows_that_would_read_back_differently_are_drawn_as_they_stand(self, monkeypatch) -> None:
+        """An order moves rows and nothing else. Should the ordered table read back with another kind of column, the
+        bindings the user confirmed would no longer be the ones drawn, so the run keeps the rows as they are."""
+        table = shown(VISITS)
+        as_text = parse_dataset(VISITS, text_columns=["Visitors"])
+        monkeypatch.setattr(plot_view, "_seen", lambda *_: plot_view.Viewed(as_text, [], as_text.profile.rows))
+
+        assert oldest_first(table, bound(("x", "Date"), ("y", "Visitors")), PlotView()) == (table, None)
+
+        def refuses(*_: object) -> plot_view.Viewed:
+            raise PrepareError("invalid_operation", "the rows could not be ordered")
+
+        monkeypatch.setattr(plot_view, "_seen", refuses)  # an order the engine cannot make never fails the run
+        assert oldest_first(table, bound(("x", "Date"), ("y", "Visitors")), PlotView()) == (table, None)
+
     def test_the_first_bound_one_decides_when_two_date_columns_run_newest_first(self) -> None:
         table = shown("Start,End,Task\n2026-11-08,2026-11-09,c\n2026-11-05,2026-11-08,b\n2026-11-01,2026-11-07,a\n")
 
@@ -1023,6 +1038,35 @@ class TestTheDateOrderOfARun:
         assert (again["status"], again["version"]) == ("ok", 2)
         assert DRAWN_BY_DATE not in again["changes"]
         assert backend.jobs[-1].data_csv.strip().splitlines() == drawn
+
+    async def test_a_date_column_bound_after_the_first_plot_is_ordered_and_said_on_the_change(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend
+    ) -> None:
+        """The first plot drew two number columns in the pasted order. Binding the date changes neither the data
+        version nor the view, so only the table the earlier version drew tells that this order is new to the user."""
+        script = default_script()
+        script["root"] = [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"call": "plot_pipeline", "args": {"base": "previous", "change_request": "the visitors over time"}},
+            {"text": "The plot shows the visitors per day now."},
+        ]
+        script["adapter"] = [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}]
+        script["reviewer"] = [{"json": VERDICT_OK}, {"json": VERDICT_OK}]
+        swap_models("anthropic-vertex", script)
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, VISITS)
+        await bind_and_confirm(client, sid, [{"role": "x", "column": "Sales"}, {"role": "y", "column": "Visitors"}])
+        first = next(data for name, data in await create_plot(client, sid) if name == "plot")
+        assert first["status"] == "ok" and DRAWN_BY_DATE not in first["changes"]
+        assert backend.jobs[-1].data_csv.strip().splitlines()[1].startswith("2026-11-08")
+
+        await bind_and_confirm(client, sid, VISIT_BINDINGS)
+        events = await say(client, sid, "show the visitors over time")
+
+        plot = next(data for name, data in events if name == "plot")
+        assert (plot["status"], plot["version"]) == ("ok", 2) and plot["changes"][0] == DRAWN_BY_DATE
+        assert backend.jobs[-1].data_csv.strip().splitlines()[1].startswith("2026-11-05")
 
     async def test_under_a_view_the_rows_it_shows_are_ordered_and_both_lines_are_said(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend
