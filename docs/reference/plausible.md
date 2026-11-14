@@ -969,4 +969,4 @@ event.
 ---
 
 **Last Updated**: 2026-11-14
-**Status**: Twelve custom events, each a dashboard goal (`stayed_10s` is measured and doesn't change the bounce rate yet); pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here
+**Status**: Twelve custom events. Eleven are dashboard goals; `stayed_10s` is sent and measured, doesn't change the bounce rate yet, and its goal and its property `input` still have to be added in the dashboard. Pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here
