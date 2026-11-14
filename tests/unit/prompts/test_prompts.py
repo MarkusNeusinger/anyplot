@@ -1508,6 +1508,12 @@ class TestTextSizeIsJudgedAtFullSize:
         rules = content[content.index("### General Rules") : content.index("## Proportional Sizing")]
         assert 'Text follows "Text Sizes" above, not this rule.' in rules
 
+    def test_the_generators_size_rule_is_about_marks_and_lines(self) -> None:
+        """The generator reads its own copy of the "2-3x larger" rule; applied to text it outgrows the table."""
+        content = (PROMPTS_DIR / "plot-generator.md").read_text()
+        line = next(line for line in content.splitlines() if "2-3x larger" in line)
+        assert line.startswith("- Marks and lines") and '"Text Sizes"' in line
+
     def test_size_alone_settles_nothing_else(self) -> None:
         """Text at its reference can still be faint, overlapping or cut off."""
         rule = self._vq01()
