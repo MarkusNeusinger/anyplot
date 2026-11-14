@@ -11,11 +11,11 @@
   further, and "show everything again" clears the view. The plot's notes
   say how many rows it draws and by which view, and the data file you
   download with a plot holds those rows, so the code runs on it as it ran
-  here.
+  here. (#13089)
 - **Cleaning stays in the table, and your word decides.** Rows that are
   wrong (a total row, test entries, duplicates) are still taken out of the
   table itself, and "delete them from the table" sends a selection there
-  too.
+  too. (#13089)
 
 ### Changed
 
@@ -24,3 +24,4 @@
   Under a view that version would be made of the whole table and add up
   rows the plot never draws, so the view's rows are combined for the
   picture only, after the same question whether to sum or to average.
+  (#13089)
