@@ -70,7 +70,8 @@ class TestRubric:
         for heading in STYLE_SECTIONS:
             assert heading in sizes, heading
         assert "| Tick labels | 8pt | 10px |" in sizes
-        assert "title `~22px`, labels `~14px`" in sizes  # the JavaScript family's own sizes
+        assert "title `~22px`, axis titles `~16px`, tick labels `~14px`" in sizes  # the JavaScript family's own sizes
+        assert "`titlesize = 20`" in sizes and "ggplot2" in sizes  # Makie and R have no table column
         # Only the text sizes: the marker advice and the general rules of the section around them stay out.
         assert "### Marker and Line Sizes" not in sizes and "### General Rules" not in sizes
 

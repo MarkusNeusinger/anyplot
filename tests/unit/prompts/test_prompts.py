@@ -1498,3 +1498,29 @@ class TestTextSizeIsJudgedAtFullSize:
         assert "AND when scaled down to mobile width" not in content
         sizes = content[content.index("### Text Sizes") : content.index("### Marker and Line Sizes")]
         assert "text at or above them is never too small" in sizes
+
+    def test_the_style_guide_calls_none_of_its_own_text_sizes_too_small(self) -> None:
+        """`fontsize=10` is the table's axis-title size at dpi=400. As the example of a size that is too small it
+        taught a reviewer to call the table's own sizes too small."""
+        content = self.STYLE_GUIDE.read_text()
+        note = next(line for line in content.splitlines() if line.startswith("**Common Mistake:**"))
+        assert "fontsize" not in note
+        rules = content[content.index("### General Rules") : content.index("## Proportional Sizing")]
+        assert 'Text follows "Text Sizes" above, not this rule.' in rules
+
+    def test_size_alone_settles_nothing_else(self) -> None:
+        """Text at its reference can still be faint, overlapping or cut off."""
+        rule = self._vq01()
+        assert "That settles its size only" in rule
+        row = next(line for line in rule.splitlines() if line.startswith("| 8 |"))
+        assert "all text clearly readable in both themes" in row
+
+    def test_the_text_sizes_name_every_library(self) -> None:
+        """The agent chat's reviewer reads this section alone, for any of the libraries, so each needs its sizes."""
+        content = self.STYLE_GUIDE.read_text()
+        sizes = content[content.index("### Text Sizes") : content.index("### Marker and Line Sizes")].lower()
+        spelled = {"letsplot": "lets-plot"}
+        missing = [
+            library["id"] for library in LIBRARIES_METADATA if spelled.get(library["id"], library["id"]) not in sizes
+        ]
+        assert not missing, missing

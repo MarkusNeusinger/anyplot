@@ -9,9 +9,13 @@
   below the size the style guide's "Text Sizes" and the library's prompt give
   it, when it reads small beside the plot's other text or for what it
   carries. Text at or above its reference is never too small. The review
-  prompt's example defect lines no longer argue with the thumbnail, the style
-  guide's own test names the full-size render, and its text sizes get a
-  heading of their own. In the catalogue 26 of the 536 reviews since
+  prompt's example defect lines no longer argue with the thumbnail, and the
+  style guide's own test names the full-size render. Its text sizes get a
+  heading of their own, with ggplot2, Makie and MUI X, which the table left
+  out. Its "Common Mistake" note no longer gives matplotlib `fontsize=10` as
+  a size that is too small: that is the table's own axis-title size, and in
+  an earlier measurement 27 of 29 VQ-01 lines of the chat's reviewer followed
+  the note. In the catalogue 26 of the 536 reviews since
   2026-10-15 lose a point on VQ-01; 23 of them cite the thumbnail, about 16
   for text below its reference (still a defect) and 5 for text at it.
 
