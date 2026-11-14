@@ -648,6 +648,27 @@ class TestTheDataTheViewBelongsTo:
         assert (answer["status"], answer["landed"]) == ("ok", "view")
         assert context.state[PLOT_VIEW] == {"selections": [[{"column": "Goals", "test": "ge", "value": "10"}]]}
 
+    async def test_a_view_that_leaves_a_bound_column_empty_is_none_for_every_reader(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """An undo can bring back a table on which the view still applies but leaves `y` without a value. The run
+        would draw every row then, so the session block lists no view and the next call builds on none: the three
+        agree on whether a view is in force."""
+        sid = await pasted_session(client, "x,y,z\n1,,a\n2,6,b\n3,,a\n4,8,b\n")
+        await set_view(runtime, sid, only("z", "eq", "a"))  # as an undo leaves it: stored, never checked on this table
+        context = await context_for(client, sid, "inv-v-19")
+        view = read_session(context.state)
+        assert view is not None
+
+        drawn = pipeline.drawn_through_view(context.state, view, stored_now(sid, context.state))
+        block = await session_context(context)  # type: ignore[arg-type]
+        answer = await prepare_data([only("x", "ge", 2)], context)
+
+        assert drawn.cleared and drawn.stamp is None and drawn.notes == (CLEARED_LINE,)
+        assert "View of the plot" not in block
+        assert (answer["status"], answer["landed"], answer["rows"]) == ("ok", "view", 3)
+        assert context.state[PLOT_VIEW] == {"selections": [[{"column": "x", "test": "ge", "value": "2"}]]}
+
 
 def stored_now(sid: str, state: dict[str, Any]) -> Any:
     stored = get_services().datasets.get(state[DATASET_ID], sid)

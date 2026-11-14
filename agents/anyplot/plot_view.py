@@ -31,6 +31,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from core.spec_roles import DataRole
+
+from .data.bindings import check_bindings
 from .data.parse import MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from .data.prepare import (
     MAX_CONDITIONS,
@@ -46,7 +49,7 @@ from .data.prepare import (
 )
 from .data.store import StoredDataset, dataset_size
 from .language import DEFAULT_LANGUAGE
-from .schemas import MAX_ROWS
+from .schemas import MAX_ROWS, Binding, DatasetProfile
 from .session_state import PLOT_VIEW
 
 
@@ -289,13 +292,39 @@ CLEARED_LINE = "the view of the plot no longer fits this table and was cleared: 
 names is gone or changed its kind, or no row would be left)."""
 
 
-def current(state: Any, dataset: StoredDataset, language: str = DEFAULT_LANGUAGE) -> Current:
-    """The stored view applied to `dataset`, or cleared when it no longer fits. Reads only: the caller that may write
-    the state stores `view_delta(PlotView())` for a cleared one."""
+def breaks_bindings(
+    bindings: list[Binding], roles: list[DataRole], table: DatasetProfile, seen: DatasetProfile
+) -> bool:
+    """Whether bindings that hold on the table stop holding on a view's rows: a view may narrow what the plot shows,
+    never leave it without a column it needs (every cell of a bound column empty among the rows left)."""
+    before = check_bindings(bindings, roles, table)
+    if not before.complete or before.errors:
+        return False  # nothing to break: the bindings wait for the user either way
+    after = check_bindings(bindings, roles, seen)
+    return not after.complete or bool(after.errors)
+
+
+def current(
+    state: Any,
+    dataset: StoredDataset,
+    language: str = DEFAULT_LANGUAGE,
+    *,
+    bindings: list[Binding] | None = None,
+    roles: list[DataRole] | None = None,
+) -> Current:
+    """The stored view applied to `dataset`, or cleared when it no longer fits: a step that does not apply, no row
+    left, or, with the session's `bindings` and the spec's `roles`, rows on which bindings that hold on the table no
+    longer hold (`breaks_bindings`). Every reader of the view passes them, so the run, the session block and
+    `prepare_data` agree on whether a view is in force. Reads only: the caller that may write the state stores
+    `view_delta(PlotView())` for a cleared one."""
     view = read_view(state)
     if view.empty:
         return Current(view)
     try:
-        return Current(view, view_of(dataset.as_parsed(), view, language))
+        seen = view_of(dataset.as_parsed(), view, language)
     except PrepareError:
         return Current(PlotView(), cleared=CLEARED_LINE)
+    if bindings is not None and roles is not None:
+        if breaks_bindings(bindings, roles, dataset.profile, seen.parsed.profile):
+            return Current(PlotView(), cleared=CLEARED_LINE)
+    return Current(view, seen)

@@ -263,7 +263,7 @@ async def session_context(context: ReadonlyContext) -> str:
             # The change lines name the user's columns, so they stand inside a fence.
             lines.append(f"- {VERSIONS_HEADING.format(count=len(kept))}")
             lines.append(fence("tool_notes", "\n".join(version_lines(kept))))
-        held = current(context.state, dataset, view.language)
+        held = current(context.state, dataset, view.language, bindings=view.bindings, roles=view.snapshot.roles())
         if held.viewed is not None:
             # The view's words name the user's columns and values, so they stand inside a fence.
             lines.append(f"- {VIEW_HEADING.format(rows=held.viewed.rows, of_rows=held.viewed.of_rows)}")

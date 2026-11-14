@@ -166,7 +166,7 @@ from .language import DEFAULT_LANGUAGE, same_language
 from .memory import Planned, decision_lines, memory_delta, memory_written, next_seq, plan, read_memory
 from .memory import expected_texts as memory_expected_texts
 from .models import error_chain, model_busy
-from .plot_view import CLEARED_LINE, PlotView, current, read_view, view_delta, viewed_dataset
+from .plot_view import PlotView, current, read_view, view_delta, viewed_dataset
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
@@ -784,15 +784,11 @@ def drawn_through_view(state: Any, view: SessionView, dataset: StoredDataset) ->
     Reads only. A view that no longer fits the table, or whose rows leave bindings that do not hold, is not applied
     in part: the run draws every row and says so (`CLEARED_LINE`), and the caller that may write the state clears it.
     """
-    held = current(state, dataset, view.language)
+    held = current(state, dataset, view.language, bindings=view.bindings, roles=view.snapshot.roles())
     if held.viewed is None:
         return Drawn(dataset, notes=(held.cleared,) if held.cleared else (), cleared=held.cleared is not None)
-    shown = viewed_dataset(dataset, held.viewed)
-    check = check_bindings(view.bindings, view.snapshot.roles(), shown.profile)
-    if not check.complete or check.errors:
-        return Drawn(dataset, notes=(CLEARED_LINE,), cleared=True)
     note = held.viewed.note(held.view, dataset.number, MAX_CHANGE_CHARS)
-    return Drawn(shown, stamp=held.view.stamp(), notes=(note,))
+    return Drawn(viewed_dataset(dataset, held.viewed), stamp=held.view.stamp(), notes=(note,))
 
 
 PENDING_REASONS: frozenset[str] = frozenset({"data_unconfirmed", "incomplete_bindings", "combine_choice"})

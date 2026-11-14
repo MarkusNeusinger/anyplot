@@ -113,12 +113,10 @@ from google.adk import Workflow
 from google.adk.tools.tool_context import ToolContext
 from pydantic import ValidationError
 
-from core.spec_roles import DataRole
-
 from .. import telemetry
 from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
-from ..data.bindings import carry_bindings, check_bindings
+from ..data.bindings import carry_bindings
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import (
@@ -164,6 +162,7 @@ from ..plot_view import (
     Routed,
     Viewed,
     ViewRefused,
+    breaks_bindings,
     current,
     merged,
     route,
@@ -613,7 +612,8 @@ async def prepare_data(
         routed = table_only(args.operations) if rebuilds else route(args.operations)
         # The view held from before, as it holds for the current table: one that no longer fits it (after an undo,
         # a change in the data panel) counts as none, so it never makes this call fail for a column that is gone.
-        now = current(tool_context.state, stored, view.language)
+        roles = view.snapshot.roles()
+        now = current(tool_context.state, stored, view.language, bindings=view.bindings, roles=roles)
         held = now.view
         shown = merged(held, routed) if routed.view else held
     except ViewRefused as exc:
@@ -645,7 +645,6 @@ async def prepare_data(
     if seen is not None:
         # The bindings the view has to hold on: the ones in force, or the ones the new version will carry
         # (`push_version` computes them the same way), so a call that changes the table is checked like any other.
-        roles = view.snapshot.roles()
         bound = view.bindings
         if stores:
             bound = carry_bindings(
@@ -657,7 +656,7 @@ async def prepare_data(
                 prepared.row_numbers if prepared is not None else (),
                 prepared.splits if prepared is not None else (),
             )
-        if view_breaks_bindings(bound, roles, parsed.profile, seen.parsed.profile):
+        if breaks_bindings(bound, roles, parsed.profile, seen.parsed.profile):
             if routed.view:
                 message = _fenced_lines([VIEW_BREAKS_BINDINGS])
                 return {"status": "error", "code": "invalid_operation", "message": message}
@@ -720,18 +719,6 @@ VIEW_BREAKS_BINDINGS = (
 )
 """`prepare_data`'s refusal of a view whose rows leave a bound column the plot cannot read (every cell empty)."""
 VIEW_CLEARED = "the view of the plot is cleared: the plot draws every row of the table again"
-
-
-def view_breaks_bindings(
-    bindings: list[Binding], roles: list[DataRole], table: DatasetProfile, seen: DatasetProfile
-) -> bool:
-    """Whether bindings that hold on the table stop holding on the view's rows: a view may narrow what the plot
-    shows, never leave it without a column it needs."""
-    before = check_bindings(bindings, roles, table)
-    if not before.complete or before.errors:
-        return False  # nothing to break: the bindings wait for the user either way
-    after = check_bindings(bindings, roles, seen)
-    return not after.complete or bool(after.errors)
 
 
 def view_op_names(routed: Routed) -> list[str]:

@@ -1122,7 +1122,7 @@ class CaseRunner:
         stored = get_services().datasets.get(view.dataset_id, sid) if view.dataset_id else None
         if stored is None:
             return None, view.language
-        held = current(session.state, stored, view.language)
+        held = current(session.state, stored, view.language, bindings=view.bindings, roles=view.snapshot.roles())
         drawn = viewed_dataset(stored, held.viewed) if held.viewed is not None else stored
         return result_table(drawn), view.language
 
