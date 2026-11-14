@@ -11,4 +11,4 @@
   a week the event only measures: it goes out with `interactive: false`, so
   the bounce rate and every public number stay as they are. Whether a visit
   of more than ten seconds then counts as engaged is the owner's decision
-  once the share is known for the farm and for readers.
+  once the share is known for the farm and for readers. (#13100)
