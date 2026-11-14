@@ -50,7 +50,7 @@ from .data.prepare import (
 from .data.store import StoredDataset, dataset_size
 from .language import DEFAULT_LANGUAGE
 from .schemas import MAX_ROWS, Binding, DatasetProfile
-from .session_state import PLOT_VIEW
+from .session_state import PLOT_VIEW, PLOT_VIEW_BEFORE
 
 
 MAX_SELECTIONS = 3
@@ -260,10 +260,10 @@ def viewed_dataset(dataset: StoredDataset, viewed: Viewed) -> StoredDataset:
     )
 
 
-def read_view(state: Any) -> PlotView:
-    """The session's view as stored, or the empty view: for nothing stored and for a value that does not validate,
-    which no code path writes."""
-    raw = state.get(PLOT_VIEW)
+def read_view(state: Any, key: str = PLOT_VIEW) -> PlotView:
+    """The session's view as stored under `key`, or the empty view: for nothing stored and for a value that does not
+    validate, which no code path writes."""
+    raw = state.get(key)
     if not raw:
         return PlotView()
     try:
@@ -275,6 +275,26 @@ def read_view(state: Any) -> PlotView:
 def view_delta(view: PlotView) -> dict[str, Any]:
     """The state delta that stores `view`; an empty view is stored as none."""
     return {PLOT_VIEW: None if view.empty else view.model_dump(mode="json", exclude_none=True)}
+
+
+def settled_delta(view: PlotView) -> dict[str, Any]:
+    """The state delta of a view the root set or cleared for the user: `view_delta`, and the view a paste had taken
+    away is forgotten (`PLOT_VIEW_BEFORE`), since the user has now said what the plot of this data shows."""
+    return {**view_delta(view), PLOT_VIEW_BEFORE: None}
+
+
+def view_before(state: Any, dataset: StoredDataset, language: str = DEFAULT_LANGUAGE) -> str | None:
+    """The words of the view a paste took away (`PLOT_VIEW_BEFORE`), when it would fit `dataset`, the new table: what
+    the summary of the new data names and offers again. None when there is none, or when it fits no row or no column
+    of the new table, where there is nothing to offer."""
+    before = read_view(state, PLOT_VIEW_BEFORE)
+    if before.empty:
+        return None
+    try:
+        view_of(dataset.as_parsed(), before, language)
+    except PrepareError:
+        return None
+    return before.words([name for name, dtype in dataset.column_dtypes.items() if dtype == "text"])
 
 
 @dataclass(frozen=True)

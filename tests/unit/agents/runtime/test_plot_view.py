@@ -14,7 +14,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from agents.anyplot import pipeline, plot_view
-from agents.anyplot.agent import VIEW_HEADING, session_context
+from agents.anyplot.agent import VIEW_BEFORE_LINE, VIEW_HEADING, session_context
 from agents.anyplot.data.fidelity import COMBINED_IN_VIEW_HEAD
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, PrepareError
@@ -24,7 +24,7 @@ from agents.anyplot.plugins.ledger import ToolCall, ledger_for
 from agents.anyplot.plugins.tool_safety import TOOL_ALLOWED, call_outcome, changed_data
 from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.services import Services, get_services
-from agents.anyplot.session_state import DATASET_ID, read_session
+from agents.anyplot.session_state import DATASET_ID, PLOT_VIEW_BEFORE, read_session
 from agents.anyplot.tools.session import VIEW_BREAKS_BINDINGS, VIEW_CLEARED, prepare_data
 from agents.main import Runtime, app, get_runtime
 from agents.stream import turn_outcome
@@ -601,6 +601,50 @@ class TestTheDataTheViewBelongsTo:
         await paste(client, sid, "Team,Points,Goals\nNeu A,50,3\nNeu B,20,1\n")  # the same columns, other data
 
         assert (await runtime.session(USER, sid)).state[PLOT_VIEW] is None
+
+    async def test_the_summary_of_the_new_data_names_the_view_it_replaced_and_offers_it_again(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """Owner decision of 2026-11-14: on a new paste a view is checked anew. It is never carried over unseen, and
+        never dropped unsaid: the summary turn names it, and it holds again only once the user says yes."""
+        sid = await pasted_session(client, TEAMS)
+        view = await set_view(runtime, sid, only("Points", "ge", 40))
+
+        await paste(client, sid, "Team,Points,Goals\nNeu A,50,3\nNeu B,20,1\n")
+
+        state = (await runtime.session(USER, sid)).state
+        assert state[PLOT_VIEW] is None and state[PLOT_VIEW_BEFORE] == view.stamp()
+        context = await context_for(client, sid, "inv-v-20")
+        block = await session_context(context)  # type: ignore[arg-type]
+        assert VIEW_BEFORE_LINE in block and "<tool_notes>\nPoints ≥ 40\n</tool_notes>" in block
+        assert "- View of the plot: the plot draws" not in block  # named, not in force
+
+        answer = await prepare_data([only("Points", "ge", 40)], context)
+
+        assert (answer["landed"], answer["rows"]) == ("view", 1) and context.state[PLOT_VIEW_BEFORE] is None
+        assert VIEW_BEFORE_LINE not in await session_context(context)  # type: ignore[arg-type]
+
+    async def test_a_view_the_new_table_cannot_take_is_not_offered(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        await set_view(runtime, sid, only("Points", "ge", 40))
+
+        await paste(client, sid, "Stadt,Umsatz\nBern,1200\nKöln,800\n")  # other columns: nothing to offer
+
+        context = await context_for(client, sid, "inv-v-21")
+        assert VIEW_BEFORE_LINE not in await session_context(context)  # type: ignore[arg-type]
+
+    async def test_a_second_paste_before_the_summary_keeps_the_view_the_first_set_aside(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        view = await set_view(runtime, sid, only("Points", "ge", 40))
+        await paste(client, sid, "Team,Points,Goals\nNeu A,50,3\nNeu B,20,1\n")
+
+        await paste(client, sid, "Team,Points,Goals\nNeu C,60,4\nNeu D,10,0\n")
+
+        assert (await runtime.session(USER, sid)).state[PLOT_VIEW_BEFORE] == view.stamp()
 
     async def test_a_computed_table_in_place_of_the_data_takes_it_away_and_a_change_keeps_it(
         self, client: httpx.AsyncClient, runtime: Runtime, services: Services

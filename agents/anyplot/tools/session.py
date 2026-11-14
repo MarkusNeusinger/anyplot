@@ -166,6 +166,7 @@ from ..plot_view import (
     current,
     merged,
     route,
+    settled_delta,
     table_only,
     view_delta,
     view_of,
@@ -699,7 +700,8 @@ async def prepare_data(
     }
     if routed.view or cleared:
         # The view of this call, or one held from before that the new table no longer fits: stored with the version.
-        for key, value in view_delta(shown).items():
+        # Only a view the call itself named settles what a paste had set aside (`settled_delta`).
+        for key, value in (settled_delta(shown) if routed.view else view_delta(shown)).items():
             tool_context.state[key] = value
         ledger.view_ops.extend(view_op_names(routed))
         base["landed"] = "table_and_view" if routed.view else "table"
@@ -755,7 +757,7 @@ def _view_result(
     `plot_outdated` says that this library's latest plot of the data drew other rows than the view now shows, so a
     run is due: the root may start it in the same turn, since no data changed.
     """
-    for key, value in view_delta(shown).items():
+    for key, value in settled_delta(shown).items():
         tool_context.state[key] = value
     ledger = ledger_for(tool_context.invocation_id)
     ledger.view_ops.extend(view_op_names(routed))

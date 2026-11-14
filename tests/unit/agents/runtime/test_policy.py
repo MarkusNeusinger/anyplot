@@ -628,6 +628,16 @@ class TestTheViewOfThePlot:
         # And the rule that forbids a plot after a data change says which calls it means.
         assert "a call that landed in the view of the plot alone changed none" in root
 
+    def test_new_data_starts_without_a_view_and_the_earlier_one_is_offered_never_assumed(self) -> None:
+        """Owner decision of 2026-11-14: on a new paste a view is checked anew."""
+        root = policy.root_instruction()
+        rule = root.split("- The view of the plot. ", 1)[1].split("\n", 1)[0]
+
+        assert "New data starts without a view" in rule
+        assert 'When the session block lists a "View of the plot before this paste"' in rule
+        assert "say in one sentence of the summary that the plot of the new data draws every row" in rule
+        assert "offer to set it again" in rule and "only once the user says yes" in rule
+
     def test_the_tool_line_names_the_exception(self) -> None:
         root = policy.root_instruction()
 

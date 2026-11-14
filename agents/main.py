@@ -307,6 +307,7 @@ from agents.anyplot.session_state import (
     PENDING_REMEMBER,
     PENDING_REQUEST,
     PLOT_LANGUAGE,
+    PLOT_VIEW_BEFORE,
     SUMMARY_PENDING,
     TELEMETRY_SOURCE,
     USER_BOUND,
@@ -1655,6 +1656,14 @@ async def _ingest_paste(
     # compare-and-set instead. Keep any new `await` out of this block.
     session = await runtime.session(user, sid)
     current = read_session(session.state) or view
+    # The view of the plot was set on the data this paste replaces, and the paste's delta writes it out. It is kept
+    # aside, so the summary of the new data can name it and offer it again. A paste on top of one the root has not
+    # summarized yet keeps the view that paste set aside.
+    held_view = read_view(session.state)
+    if not held_view.empty:
+        delta[PLOT_VIEW_BEFORE] = held_view.model_dump(mode="json", exclude_none=True)
+    elif not current.summary_pending:
+        delta[PLOT_VIEW_BEFORE] = None
     # The data's language never sets the session's: the page offers it once, and a click sets it.
     offered = data_offer(current.language, current.language_source, current.language_offered, notes_lang, header_lang)
     if offered is not None:

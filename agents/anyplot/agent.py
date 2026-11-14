@@ -62,7 +62,7 @@ from .memory import MemoryEntry, read_memory
 from .models import make_content_config, make_model
 from .paste_conversions import make_conversions
 from .pipeline import plot_shows_replaced_data
-from .plot_view import current
+from .plot_view import current, view_before
 from .plugins.budget import BudgetPlugin
 from .plugins.empty_reply import EmptyReplyPlugin
 from .plugins.ledger import CURRENT_LEDGER, ledger_for
@@ -152,6 +152,15 @@ VIEW_HEADING = (
 """The session block's line over the view of the plot in force (`plot_view.py`, owner decision of 2026-11-13), with
 the rows it leaves; the view's own words follow in a fence. Listed only while a view holds for the current table, so
 the root restates or changes what is there and never guesses at a view from its memory of earlier turns."""
+VIEW_BEFORE_LINE = (
+    "- View of the plot before this paste: the plot of the data this paste replaced drew only the rows the line below "
+    "names. It is not in force: a plot of the new data draws every row. Say so in one sentence of the summary and "
+    "offer to set it again, and set it only once the user says yes (see 'Step 1: the data')"
+)
+"""The session block's line on the summary turn of a paste that replaced data with a view of the plot
+(`session_state.PLOT_VIEW_BEFORE`), when that view would fit the new table (owner decision of 2026-11-14: on a new
+paste a view is checked anew). The view is never carried over unseen and never dropped unsaid; its words follow in a
+fence."""
 PASTED_LINE = (
     "- Data: pasted just now, not summarized yet; the table came in as an attachment of the message box and is "
     "stored, so get_dataset_profile reads it, and a typed message of this turn is the note sent with it, never data "
@@ -341,6 +350,11 @@ async def session_context(context: ReadonlyContext) -> str:
             # every call of the turn: the reply after the root's own `prepare_data`, on a version that is no paste,
             # is still the summary, with the row count after the change (the prep eval's `no_row_count` misses).
             lines.append(PASTED_LINE)
+            before = view_before(context.state, dataset, view.language)
+            if before is not None and held.viewed is None:
+                # The view of the data this paste replaced, which would fit the new table too: named, never applied.
+                lines.append(VIEW_BEFORE_LINE)
+                lines.append(fence("tool_notes", before))
         if ledger is not None and ledger.paste_context:
             # The note's turn: the paste's notes and file name, fenced with their preambles, for every call of the
             # turn.
