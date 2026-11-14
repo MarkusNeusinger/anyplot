@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import { analyticsMuted } from 'src/analytics/mute';
+import { beginStay, endStay } from 'src/analytics/stay';
 import { isPlotsPath, paths, RESERVED_TOP_LEVEL } from 'src/routes/paths';
 
 /**
@@ -19,7 +20,24 @@ export type AnalyticsEvent =
   | 'agent_plot_rendered'
   | 'plots_scrolled'
   | 'nav_click'
-  | 'ui_feature';
+  | 'ui_feature'
+  | 'stayed_10s';
+
+/**
+ * The event the tracker sends by itself, once per visit, when the page has been in front of
+ * the visitor for ten seconds (`src/analytics/stay.ts`). No component sends it: `TrackEvent`
+ * leaves it out.
+ */
+export const STAYED_EVENT = 'stayed_10s';
+
+/**
+ * Whether `stayed_10s` keeps a visit from counting as bounced. While it is measured it does
+ * not: no public number moves until the share of visits that stay is known for the crawler
+ * farm and for readers. Turning it on makes a visit of more than ten seconds an engaged one,
+ * and from that day the engaged visits count more than before, so `ENGAGED_SINCE` in
+ * `api/routers/insights.py` moves to the first full UTC day after it.
+ */
+export const STAYED_INTERACTIVE: boolean = false;
 
 /**
  * The features `ui_feature` counts, as its `feature` property. The event answers one question
@@ -56,7 +74,11 @@ export interface EventProps {
  */
 export interface TrackEvent {
   (name: 'ui_feature', props: { feature: UiFeature }, url?: string): void;
-  (name: Exclude<AnalyticsEvent, 'ui_feature'>, props?: EventProps, url?: string): void;
+  (
+    name: Exclude<AnalyticsEvent, 'ui_feature' | typeof STAYED_EVENT>,
+    props?: EventProps,
+    url?: string
+  ): void;
 }
 
 // The last pageview sent, for the whole app rather than per hook instance: the layout records
@@ -75,20 +97,43 @@ const VISIT_GAP_MS = 30 * 60 * 1000;
 let lastSentAt = 0;
 const featuresThisVisit = new Set<UiFeature>();
 
-/** Forgets the visit and the features it used. For tests, like `forgetLastPageview`. */
+/** Forgets the visit, the features it used and its stay. For tests, like `forgetLastPageview`. */
 export function forgetVisit(): void {
   lastSentAt = 0;
   featuresThisVisit.clear();
+  endStay();
 }
 
 /**
  * Notes that something is being sent now. A long silence before it began a new visit, in which
- * no feature was used yet. Only what is really sent counts: a repeated feature use sends
- * nothing, so for Plausible the visit does not go on because of it.
+ * no feature was used yet and whose ten seconds start to count. Only what is really sent
+ * counts: a repeated feature use sends nothing, so for Plausible the visit does not go on
+ * because of it.
  */
 function noteSent(now: number): void {
-  if (now - lastSentAt > VISIT_GAP_MS) featuresThisVisit.clear();
+  if (now - lastSentAt > VISIT_GAP_MS) {
+    featuresThisVisit.clear();
+    beginStay(now, sendStayed);
+  }
   lastSentAt = now;
+}
+
+/**
+ * Sends `stayed_10s`: the page has been in front of the visitor for ten seconds of this visit.
+ * `input` says whether a pointer, a finger or a key was used in that time.
+ *
+ * Nothing is sent once the visit is over for Plausible, which is 30 minutes after the last
+ * thing sent: ten seconds collected across a long pause would open a visit of their own
+ * there, one without a page. Nor while the admin's own use is muted.
+ */
+function sendStayed(input: boolean): void {
+  const now = Date.now();
+  if (analyticsMuted() || now - lastSentAt > VISIT_GAP_MS) return;
+  lastSentAt = now;
+  window.plausible?.(STAYED_EVENT, {
+    props: { ...ambientProps, input: input ? 'yes' : 'no' },
+    ...(STAYED_INTERACTIVE ? {} : { interactive: false }),
+  });
 }
 
 /** Whether `ui_feature` still has to be sent for this feature in the visit that is under way at `now`. */
@@ -238,6 +283,8 @@ export function useAnalytics() {
   const trackEvent: TrackEvent = useCallback(
     (name: AnalyticsEvent, props?: EventProps, url?: string) => {
       if (!isProduction || analyticsMuted()) return;
+      // The visit's clock sends this one itself, once (the type refuses the call).
+      if (name === STAYED_EVENT) return;
       const now = Date.now();
       const feature = name === 'ui_feature' ? props?.feature : undefined;
       if (name === 'ui_feature') {

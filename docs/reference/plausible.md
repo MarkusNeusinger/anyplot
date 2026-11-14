@@ -220,11 +220,14 @@ counts as a boundary because OR-filtered gallery views record
 
 ## Custom events
 
-The app sends eleven custom events, and no others. The set is closed in the
+The app sends twelve custom events, and no others. The set is closed in the
 code: `AnalyticsEvent` in `app/src/hooks/useAnalytics.ts` names them, every
 component receives the sender as that type, and the compiler refuses a name
-that isn't in it. Before 2026-11-12 the app sent 42 event names, 23 of them
-without a goal, so they were counted and shown nowhere.
+that isn't in it. Eleven are sent by what a visitor does. The twelfth,
+`stayed_10s`, the tracker sends by itself (see
+[Ten seconds on the site](#ten-seconds-on-the-site-stayed_10s)). Before
+2026-11-12 the app sent 42 event names, 23 of them without a goal, so they
+were counted and shown nowhere.
 
 | Event | Properties | Sent by | Counts |
 |-------|------------|---------|--------|
@@ -239,6 +242,7 @@ without a goal, so they were counted and shown nowhere.
 | `plots_scrolled` | `share`, `results`, `filtered` | `usePlotsScrolled.ts` | How far a visitor got through the gallery |
 | `ui_feature` | `feature` | Thirteen places, see [Feature use](#feature-use-ui_feature) | A visitor uses a feature of the interface, once per feature and visit |
 | `nav_click` | `source`, `target`, `spec`, `library` | The landing page, see [Landing page clicks](#landing-page-clicks-nav_click) | A visitor goes on from an element of the landing page |
+| `stayed_10s` | `input` | The tracker itself (`useAnalytics.ts`, `analytics/stay.ts`) | The site was in front of the visitor for ten seconds of a visit, once per visit |
 
 Every property holds a value from a closed list or a catalogue id, with one
 exception: `query` is what a visitor typed (see [Search](#search)). Every
@@ -406,6 +410,73 @@ breadcrumb and the gallery's `{spec_id}.compare()` link, on every page: 76 %
 of its events were menu clicks, which the pageview that follows already
 records. `SectionHeader` is used on other pages too (the tiles on `/stats`)
 and sends the event only on the landing page.
+
+### Ten seconds on the site (`stayed_10s`)
+
+> **Status (2026-11-14):** the event is sent and measured. It doesn't change
+> the bounce rate yet (`STAYED_INTERACTIVE` is `false`). Whether a visit of
+> more than ten seconds counts as engaged is the owner's decision after about
+> a week of numbers.
+
+Plausible counts a visit as bounced unless it has a second page or a custom
+event. A reader who lands on a plot, reads for a minute, and leaves is a
+bounce by that rule, and so is a page load of a crawler farm. Google
+Analytics 4 adds a third way out: a session is engaged when it "lasts longer
+than 10 seconds", has a key event, or has two page views
+([Google's definition](https://support.google.com/analytics/answer/12195621)).
+Plausible has no such clock and no setting for its bounce rule, so the app
+keeps the clock and reports once per visit.
+
+- **What is counted.** The time the site is in front of the visitor: the tab
+  visible and its window in focus (`pageActive()` in `analytics/stay.ts`).
+  That is how Google counts it ("the amount of time someone spends with your
+  web page in focus",
+  [User engagement](https://support.google.com/analytics/answer/11109416);
+  "The default threshold for engagement time is 10 seconds",
+  [Google tag settings](https://support.google.com/analytics/answer/12131703)),
+  and how Plausible counts time on page. A tab opened in the background, a
+  window behind another, and a page in the back-forward cache add nothing.
+- **Over the whole visit.** The clock starts with the pageview that begins a
+  visit and runs through everything after it. A click after five seconds or a
+  second page neither stops it nor starts it again, and time away only pauses
+  it.
+- **Once per visit, and only inside it.** A visit ends for Plausible 30
+  minutes after the last thing sent. Ten seconds collected across a longer
+  pause send nothing: the event would open a visit of its own there, one
+  without a page.
+- **`input`.** `yes` when the visitor used a pointer, a finger, or a key in
+  those seconds (`pointerdown`, `pointermove`, `touchstart`, `keydown`,
+  `wheel`, and only events the browser marks as the user's own), `no`
+  otherwise. Scrolling isn't asked: a page that scrolls itself says nothing.
+- **Never from a component.** `TrackEvent` leaves the name out, and
+  `trackEvent` sends nothing for it.
+
+While it is measured, the event goes out with `interactive: false`, which
+keeps it out of Plausible's bounce rate: no public number moves. The
+measurement answers one question the averages can't. On 2026-11-10 to
+2026-11-13 Plausible's time on page was 4 seconds for the farm-pattern
+visitors and 106 seconds for search visitors on a current Chrome, but that
+average holds only visits that sent an engagement signal when they left, and a
+page that is killed sends none. How many of the farm's page loads stay ten
+seconds is therefore not known. Read it per segment: filter by the goal
+`stayed_10s` and break down by browser version, source, and `input`.
+
+Turning it on (`STAYED_INTERACTIVE = true`) has these effects, to be written
+here when it happens:
+
+- The bounce rate becomes "left within ten seconds without doing anything".
+- A one-page visit that stays gets a visit duration of about ten seconds, the
+  time of its last event, where it had 0 before. The average rises, and for
+  those visits it understates the time they read.
+- The engaged visits of the `/stats` tile count more than before from that
+  day, and the days already counted can't be recomputed. `ENGAGED_SINCE` in
+  `api/routers/insights.py` moves to the first full UTC day after the change,
+  and the tile's switch moves with it.
+
+A second opinion of 2026-11-14 (Gemini 4 Argon and Claude Fable) is behind
+this order: measure first, count focused time, and keep the event inside the
+visit. The tracker script the site serves already sends nothing when
+`navigator.webdriver` is true, so that check adds nothing against the farm.
 
 ### Events that ended
 
@@ -716,6 +787,7 @@ Enterprise plan, so you change them in the dashboard.
 | `plots_scrolled` | Custom event | How far visitors get through the gallery |
 | `ui_feature` | Custom event | Which features of the interface are used |
 | `nav_click` | Custom event | Which element of the landing page visitors go on from |
+| `stayed_10s` | Custom event | Visitors who had the site in front of them for ten seconds |
 | Visit /plots | Pageview, `/plots*` | Visitors who reached the gallery, with any filters |
 | Scroll 90% on / | Pageview, scroll depth | Visitors who saw the whole landing page |
 | Outbound Link: Click | The script's own | Clicks on links to other sites |
@@ -740,6 +812,7 @@ Enterprise plan, so you change them in the dashboard.
 | `results` | `1-24`, `25-99`, `100-999`, `1000+` | `plots_scrolled` |
 | `filtered` | `true`, `false` | `plots_scrolled` |
 | `feature` | The thirteen of [Feature use](#feature-use-ui_feature) | `ui_feature` |
+| `input` | `yes`, `no`: whether a pointer, a finger, or a key was used in the ten seconds | `stayed_10s` |
 | `theme` | `dark`, `light`: the theme in effect, resolved from the three-state mode | Every pageview and event |
 
 ### Funnels and breakdowns
@@ -817,6 +890,7 @@ had no bounce rate draws the floor and is named "not counted".
 - **Pageview sending**: the layout effect in `app/src/layouts/RootLayout.tsx` (every navigation) and `app/src/hooks/useUrlSync.ts` (a filter change on `/plots`)
 - **Redirects that record nothing**: `app/src/routes/redirects.ts`
 - **Gallery scroll event**: `app/src/hooks/usePlotsScrolled.ts`, with the percentage from `app/src/utils/galleryScroll.ts`
+- **Ten seconds on the site**: the clock in `app/src/analytics/stay.ts`, started with each visit and sent by `sendStayed()` in `app/src/hooks/useAnalytics.ts` (`STAYED_EVENT`, `STAYED_INTERACTIVE`); `app/src/hooks/useStay.ts`, mounted in `RootLayout`, tells it when the page is in front of the visitor
 - **Event sending**: a component calls `useAnalytics().trackEvent`, or receives it as an `onTrackEvent` or `onTrack` prop of the type `TrackEvent`
 - **Agent chat events**: `app/src/pages/AgentChatPage.tsx` (`agent_open`, admin mute), `app/src/hooks/useAgentSession.ts` (`agent_plot_rendered`), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`, with `ENGAGED_SINCE` and `_engaged_visits()`
@@ -875,20 +949,24 @@ event.
 - [x] Phase 3, after the share counter (2026-11-11): the `og_image_view` goal
   and the properties `platform`, `language`, and the eleven `filter_*` entries
   deleted
-- [ ] Phase 5, after the event set of 2026-11-12 is deployed:
-  - Add the goals `ui_feature`, `interactive_open`, `feedback_submitted`,
-    `agent_open`, and `agent_plot_rendered`
-  - Add the properties `feature`, `status`, and `repaired`
-  - Delete the goals `tab_toggle`, `plot_rotate`, `grid_resize`,
+- [x] Phase 5, after the event set of 2026-11-12 (done the same day, 14 goals
+  and 15 properties read back through the Sites API):
+  - The goals `ui_feature`, `interactive_open`, `feedback_submitted`,
+    `agent_open`, and `agent_plot_rendered` added
+  - The properties `feature`, `status`, and `repaired` added
+  - The goals `tab_toggle`, `plot_rotate`, `grid_resize`,
     `filter_remove`, `random_filter`, `theme_toggle`, `internal_link`,
     `external_link`, `tag_click`, `suggest_spec`, `report_issue`, and
-    `open_interactive`
-  - Delete the properties `action`, `destination`, `framework`, `from`,
+    `open_interactive` deleted
+  - The properties `action`, `destination`, `framework`, `from`,
     `has_contact`, `input_method`, `mode`, `open`, `param`, `reaction`,
-    `size`, `spec_id`, `tab`, and `to`
-  - Rebuild or delete the funnels that use a deleted goal
+    `size`, `spec_id`, `tab`, and `to` deleted
+  - The funnels that use a deleted goal: not readable through the API, so
+    not confirmed
+- [ ] After `stayed_10s` is deployed (2026-11-14): add the goal `stayed_10s`
+  (custom event) and the property `input`
 
 ---
 
-**Last Updated**: 2026-11-12
-**Status**: Eleven custom events, each a dashboard goal; pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here
+**Last Updated**: 2026-11-14
+**Status**: Twelve custom events, each a dashboard goal (`stayed_10s` is measured and doesn't change the bounce rate yet); pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here
