@@ -124,11 +124,12 @@ function noteSent(now: number): void {
  *
  * Nothing is sent once the visit is over for Plausible, which is 30 minutes after the last
  * thing sent: ten seconds collected across a long pause would open a visit of their own
- * there, one without a page. Nor while the admin's own use is muted.
+ * there, one without a page. Nor while the admin's own use is muted, nor anywhere but on the
+ * live site: the moment comes from a timer, long after the pageview that was checked.
  */
 function sendStayed(input: boolean): void {
   const now = Date.now();
-  if (analyticsMuted() || now - lastSentAt > VISIT_GAP_MS) return;
+  if (!inProduction() || analyticsMuted() || now - lastSentAt > VISIT_GAP_MS) return;
   lastSentAt = now;
   window.plausible?.(STAYED_EVENT, {
     props: { ...ambientProps, input: input ? 'yes' : 'no' },
@@ -254,8 +255,13 @@ export function buildPlausibleUrl(): string {
     : `${ORIGIN}${pathPrefix || '/'}`;
 }
 
+/** Whether this is the live site: a preview, a local build and a test send nothing. */
+function inProduction(): boolean {
+  return typeof window !== 'undefined' && window.location.hostname === 'anyplot.ai';
+}
+
 export function useAnalytics() {
-  const isProduction = typeof window !== 'undefined' && window.location.hostname === 'anyplot.ai';
+  const isProduction = inProduction();
 
   // Records the page the address names now, at once. No page calls this for
   // itself: the layout does on every navigation (`RootLayout`), and the gallery

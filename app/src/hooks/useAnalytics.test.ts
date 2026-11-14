@@ -352,6 +352,17 @@ describe('useAnalytics', () => {
       expect(stayed()).toEqual([]);
     });
 
+    it('is not sent anywhere but on the live site, whatever the page was ten seconds before', () => {
+      // The moment comes from a timer, so the pageview's own check is long past by then.
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      at('/scatter-basic', '', 'localhost');
+      vi.advanceTimersByTime(60_000);
+
+      expect(stayed()).toEqual([]);
+    });
+
     it('is the tracker’s own event: no component can send it', () => {
       at('/');
       const { result } = renderHook(() => useAnalytics());
