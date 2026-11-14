@@ -1019,6 +1019,29 @@ class TestReplyShape:
         prep.score_view(open_case, None, held=True)
         assert open_case.view_set and not open_case.view_miss and open_case.match
 
+    def test_the_table_a_plot_draws_after_a_call_follows_the_tools_routing(self) -> None:
+        """`drawn_after` is the expected table of a turn that builds on a view: the call routed as `prepare_data`
+        routes it, on top of the view an earlier turn set."""
+        table = parse_dataset("Jahr,Monat,Umsatz\n2023,11,3\n2023,12,4\n2024,1,5\n2024,2,7\n2024,3,6\n")
+        only_2024 = [{"op": "keep_rows", "where": [{"column": "Jahr", "test": "eq", "value": 2024}]}]
+        per_year = {"op": "aggregate", "by": ["Jahr"], "column": "Umsatz", "how": "sum"}
+
+        def rows(operations: list[dict[str, Any]]) -> list[str]:
+            return drawn_after(table, only_2024, operations, "de").csv.strip().splitlines()[1:]
+
+        assert rows([]) == ["2024,1,5", "2024,2,7", "2024,3,6"]  # the view as it stands
+        assert len(rows([{"op": "reset_view"}])) == 5
+        assert rows([{"op": "apply_view"}, per_year]) == ["2024,18"]  # the rows shown, summed
+        # Every row summed per year, 7 for 2023 and 18 for 2024; the view still fits the table and still holds.
+        assert rows([per_year]) == ["2024,18"]
+        # A change of the table that the held view no longer fits clears it, as the tool does: every row is drawn.
+        assert rows([{"op": "drop_columns", "columns": ["Jahr"]}]) == ["11,3", "12,4", "1,5", "2,7", "3,6"]
+        # A view the call itself names has to fit the table it leaves: the tool refuses such a call whole.
+        with pytest.raises(PrepareError):
+            drawn_after(table, [], [{"op": "drop_columns", "columns": ["Jahr"]}, *only_2024], "de")
+        with pytest.raises(PrepareError, match="no view of the plot to apply"):
+            drawn_after(table, [], [{"op": "apply_view"}], "de")
+
     @pytest.mark.parametrize(
         ("text", "invitation"),
         [

@@ -736,7 +736,14 @@ def drawn_after(
         _, table = apply_and_parse(table, held.operations(), language=language)
     if routed.table:
         _, table = apply_and_parse(table, routed.table, language=language)
-    return table if shown.empty else view_of(table, shown, language).parsed
+    if shown.empty:
+        return table
+    try:
+        return view_of(table, shown, language).parsed
+    except PrepareError:
+        if routed.view:
+            raise  # the call's own view does not fit the table it leaves: the tool refuses the whole call
+        return table  # a view held from before that the changed table no longer fits is cleared, as the tool does
 
 
 def expected_result(
