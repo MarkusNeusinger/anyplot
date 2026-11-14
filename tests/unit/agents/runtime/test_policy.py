@@ -659,6 +659,24 @@ class TestTheViewOfThePlot:
         assert "the cut at `limit` falls among rows with the same value" in root
         assert "never call the returned ones the largest alone" in root
 
+    def test_a_newest_first_date_column_is_the_plots_to_order_never_a_sort_of_the_table(self) -> None:
+        """Owner decision of 2026-11-13: an order is the plot's. The run orders its rows by a bound date column that
+        runs newest first (`plot_view.oldest_first`), so no rule sends the root to sort the table for it."""
+        root = policy.root_instruction()
+        rule = root.split("- A date column whose profile has `order` `descending` runs newest first", 1)[1]
+        rule = rule.split("\n", 1)[0]
+
+        assert "the table keeps that order" in rule
+        assert "the plot draws its rows oldest first by itself" in rule
+        assert "never sort the table for it, never ask about the row order of a date column" in rule
+        assert "nothing to say about it in the summary" in rule
+        # The rule that made the root sort in the summary turn, and the sort a conversion line ended with, are gone.
+        assert "rows now run oldest to newest" not in root
+        assert "a `sort` when its dates run newest first" not in root
+        assert "with the line's `sort` on that column" not in root
+        # What reads the rows in their order on such a table says which end is the newest.
+        assert "in a table whose dates run newest first the newest value of a group without a `period`" in root
+
     def test_the_tool_line_names_the_exception(self) -> None:
         root = policy.root_instruction()
 

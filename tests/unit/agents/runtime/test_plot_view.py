@@ -19,11 +19,25 @@ from agents.anyplot.agent import VIEW_BEFORE_LINE, VIEW_HEADING, session_context
 from agents.anyplot.data.fidelity import COMBINED_IN_VIEW_HEAD
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, PrepareError
+from agents.anyplot.data.store import DatasetStore, StoredDataset
 from agents.anyplot.dataset_versions import push_version
-from agents.anyplot.plot_view import CLEARED_LINE, PLOT_VIEW, PlotView, ViewRefused, merged, route, table_only, view_of
+from agents.anyplot.plot_view import (
+    CLEARED_LINE,
+    OLDEST_FIRST_LINE,
+    PLOT_VIEW,
+    PlotView,
+    ViewRefused,
+    merged,
+    newest_first_column,
+    oldest_first,
+    route,
+    table_only,
+    view_of,
+)
 from agents.anyplot.plugins.ledger import ToolCall, ledger_for
 from agents.anyplot.plugins.tool_safety import TOOL_ALLOWED, call_outcome, changed_data
 from agents.anyplot.render.backends.fake import FakeBackend
+from agents.anyplot.schemas import Binding
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import DATASET_ID, PLOT_VIEW_BEFORE, read_session
 from agents.anyplot.tools.session import (
@@ -39,7 +53,7 @@ from agents.stream import turn_outcome
 
 from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, FakeAnthropic, default_script
 from .test_from_version import TEAMS, context_for, fenced, pasted_session, points_of, write_back
-from .test_paste_conversions import paste
+from .test_paste_conversions import SID, paste
 from .test_row_fidelity import (
     HOURS,
     LINE_BINDINGS,
@@ -876,3 +890,156 @@ class TestQuestionsUnderAView:
             "1 returned (Stadt 'Köln') and 2 left out (Stadt 'Basel' and 'Genf')",
         ]
         assert fenced(clean["changes"], "tool_notes") == ["sorted by Umsatz, descending"]
+
+
+VISITS = "Date,Visitors,Sales\n2026-11-08,412,90\n2026-11-07,398,70\n2026-11-06,455,80\n2026-11-05,430,60\n"
+"""Four days, newest first, as an export lists them. The sales fall with the visitors' dates in no order."""
+VISIT_BINDINGS = [{"role": "x", "column": "Date"}, {"role": "y", "column": "Visitors"}]
+DRAWN_BY_DATE = OLDEST_FIRST_LINE.format(column="Date")
+
+
+def bound(*pairs: tuple[str, str]) -> list[Binding]:
+    return [Binding(role=role, column=column) for role, column in pairs]
+
+
+def shown(text: str) -> StoredDataset:
+    store = DatasetStore()
+    stored = store.get(store.put(SID, parse_dataset(text)), SID)
+    assert stored is not None
+    return stored
+
+
+def dates_of(stored: StoredDataset, column: str = "Date") -> list[str]:
+    rows = stored.csv.strip().splitlines()
+    place = rows[0].split(",").index(column)
+    return [row.split(",")[place] for row in rows[1:]]
+
+
+class TestTheDateOrderOfARun:
+    """Owner decision of 2026-11-13: an order is the plot's. A run draws a bound date column that runs newest first
+    oldest first by itself, for the run alone, and the table keeps the rows as the user pasted them."""
+
+    def test_a_bound_date_column_that_runs_newest_first_orders_the_rows_of_the_run(self) -> None:
+        table = shown(VISITS)
+
+        drawn, line = oldest_first(table, bound(("x", "Date"), ("y", "Visitors")), PlotView())
+
+        assert line == "The plot draws the rows oldest first by 'Date'; the table runs newest first and stays as it is"
+        assert dates_of(drawn) == ["2026-11-05", "2026-11-06", "2026-11-07", "2026-11-08"]
+        assert drawn.csv.strip().splitlines()[1] == "2026-11-05,430,60"  # whole rows move, no cell changes
+        # The same data version, seen in the plot's order: nothing is stored and the table is as it was.
+        assert (drawn.dataset_id, drawn.number) == (table.dataset_id, table.number)
+        assert dates_of(table)[0] == "2026-11-08"
+        assert next(column.order for column in drawn.profile.columns if column.name == "Date") == "ascending"
+
+    @pytest.mark.parametrize(
+        ("text", "bindings"),
+        [
+            (VISITS, [("x", "Visitors"), ("y", "Sales")]),  # the date column is bound to nothing
+            ("Date,Visitors\n2026-11-05,430\n2026-11-06,455\n2026-11-07,398\n", [("x", "Date"), ("y", "Visitors")]),
+            ("Date,Visitors\n2026-11-07,398\n2026-11-05,430\n2026-11-06,455\n", [("x", "Date"), ("y", "Visitors")]),
+            ("Rank,Visitors\n3,398\n2,430\n1,455\n", [("x", "Rank"), ("y", "Visitors")]),  # numbers that fall
+        ],
+    )
+    def test_rows_no_bound_date_column_runs_newest_first_through_are_drawn_as_they_stand(
+        self, text: str, bindings: list[tuple[str, str]]
+    ) -> None:
+        table = shown(text)
+
+        drawn, line = oldest_first(table, bound(*bindings), PlotView())
+
+        assert line is None and drawn is table
+
+    def test_rows_without_a_date_come_last_and_equal_dates_keep_their_order(self) -> None:
+        table = shown("Date,Shift\n2026-11-07,late\n2026-11-07,early\n,unknown\n2026-11-05,late\n")
+
+        drawn, line = oldest_first(table, bound(("x", "Date"), ("y", "Shift")), PlotView())
+
+        assert line is not None
+        assert drawn.csv.strip().splitlines()[1:] == [
+            "2026-11-05,late",
+            "2026-11-07,late",
+            "2026-11-07,early",
+            ",unknown",
+        ]
+
+    def test_a_top_n_by_another_column_keeps_the_order_the_user_asked_for(self) -> None:
+        """The three best days by sales happen to fall with the dates: their order is the ranking's, not time's. A top
+        N by the date itself ("the latest 3") leaves the newest rows newest first, and those are drawn in date order."""
+        bindings = bound(("x", "Date"), ("y", "Sales"))
+        by_sales = view_from({"op": "sort", "column": "Sales", "descending": True}, {"op": "keep_rows", "n": 3})
+        latest = view_from({"op": "sort", "column": "Date", "descending": True}, {"op": "keep_rows", "n": 3})
+        table = shown("Date,Sales\n2026-11-08,90\n2026-11-07,80\n2026-11-06,70\n2026-11-05,60\n")
+        ranked = plot_view.viewed_dataset(table, view_of(table.as_parsed(), by_sales))
+        newest = plot_view.viewed_dataset(table, view_of(table.as_parsed(), latest))
+
+        assert newest_first_column(bindings, ranked.profile, by_sales) is None
+        assert oldest_first(ranked, bindings, by_sales) == (ranked, None)
+        drawn, line = oldest_first(newest, bindings, latest)
+        assert line is not None and dates_of(drawn) == ["2026-11-06", "2026-11-07", "2026-11-08"]
+
+    def test_the_first_bound_one_decides_when_two_date_columns_run_newest_first(self) -> None:
+        table = shown("Start,End,Task\n2026-11-08,2026-11-09,c\n2026-11-05,2026-11-08,b\n2026-11-01,2026-11-07,a\n")
+
+        assert newest_first_column(bound(("end", "End"), ("start", "Start")), table.profile, PlotView()) == "End"
+        assert newest_first_column(bound(("start", "Start"), ("end", "End")), table.profile, PlotView()) == "Start"
+
+    async def test_a_run_draws_the_rows_oldest_first_says_so_once_and_leaves_the_table_as_pasted(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend, services: Services
+    ) -> None:
+        script = default_script()
+        script["root"] = [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"call": "plot_pipeline", "args": {"base": "previous", "change_request": "a thicker line"}},
+            {"text": "The line is thicker now."},
+        ]
+        script["adapter"] = [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}]
+        script["reviewer"] = [{"json": VERDICT_OK}, {"json": VERDICT_OK}]
+        swap_models("anthropic-vertex", script)
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, VISITS)
+        await bind_and_confirm(client, sid, VISIT_BINDINGS)
+
+        events = await create_plot(client, sid)
+
+        plot = next(data for name, data in events if name == "plot")
+        assert plot["status"] == "ok" and plot["changes"][0] == DRAWN_BY_DATE
+        drawn = backend.jobs[-1].data_csv.strip().splitlines()
+        assert [row.split(",")[0] for row in drawn[1:]] == ["2026-11-05", "2026-11-06", "2026-11-07", "2026-11-08"]
+        # The version holds the rows it drew, so the downloaded code runs on the downloaded data; no view is recorded.
+        version = services.versions.latest_rendered(sid)
+        assert version is not None and version.data_csv.strip().splitlines() == drawn
+        assert (version.view, version.data_version) == (None, 1)
+        # The table is as pasted: newest first, no new version, still confirmed.
+        assert [row.split(",")[0] for row in await table_rows(client, sid)][0] == "2026-11-08"
+        done = next(data for name, data in events if name == "done")
+        assert done["data_confirmed"] is True and "dataset" not in done
+
+        # A change of that plot draws the same rows in the same order, and does not say it again.
+        changed = await say(client, sid, "make the line thicker")
+
+        again = next(data for name, data in changed if name == "plot")
+        assert (again["status"], again["version"]) == ("ok", 2)
+        assert DRAWN_BY_DATE not in again["changes"]
+        assert backend.jobs[-1].data_csv.strip().splitlines() == drawn
+
+    async def test_under_a_view_the_rows_it_shows_are_ordered_and_both_lines_are_said(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend
+    ) -> None:
+        swap_models("gemini", default_script())
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, VISITS)
+        await bind_and_confirm(client, sid, VISIT_BINDINGS)
+        await set_view(runtime, sid, only("Visitors", "ge", 400))
+
+        events = await create_plot(client, sid)
+
+        plot = next(data for name, data in events if name == "plot")
+        assert plot["status"] == "ok"
+        assert plot["changes"][:2] == [
+            "The plot draws 3 of the 4 rows of data v1 (view: Visitors ≥ 400)",
+            DRAWN_BY_DATE,
+        ]
+        drawn = backend.jobs[-1].data_csv.strip().splitlines()
+        assert [row.split(",")[0] for row in drawn[1:]] == ["2026-11-05", "2026-11-06", "2026-11-08"]

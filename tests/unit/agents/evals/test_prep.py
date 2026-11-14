@@ -301,18 +301,26 @@ class TestFixtures:
         assert all(item.message is None and item.dataset_text for item in cases)
         assert all("summary" in item.tags for item in cases)
         # A summary changes the data only for what the server found in code (live tests of 2026-11-01 and 11-02): a
-        # newest-first date column gets its sort, a column that converts for certain fills an open role, a list
-        # of values gets its row numbers, and a column of ranges fills a lower and upper bound pair left open.
-        sorted_dates = {"en-summary-rtx-prices", "de-summary-preise-monatsnamen", "en-summary-convert-day-dates"}
+        # column that converts for certain fills an open role, a list of values gets its row numbers, and a column
+        # of ranges fills a lower and upper bound pair left open.
         changing = {item.id for item in cases if item.expected_operations}
         assert changing == {
-            *sorted_dates,
+            "en-summary-convert-day-dates",
             "en-summary-year-column",
             "en-summary-row-number",
             "de-summary-zeilennummer",
             "en-summary-range-column",
         }
-        assert all("date_order" in item.tags for item in cases if item.id in sorted_dates)
+        # A date column that runs newest first is no reason to change the table: the plot draws it oldest first by
+        # itself (`plot_view.oldest_first`), so these summaries sort nothing, and a turn that still sorts misses.
+        newest_first = {item.id: item.expected_operations for item in cases if "newest_first" in item.tags}
+        assert set(newest_first) == {
+            "en-summary-rtx-prices",
+            "de-summary-preise-monatsnamen",
+            "en-summary-convert-day-dates",
+        }
+        assert all(operation["op"] != "sort" for operations in newest_first.values() for operation in operations)
+        assert newest_first["en-summary-rtx-prices"] == newest_first["de-summary-preise-monatsnamen"] == []
         # Dates whose day and month order reads both ways, and a conversion that would guess the century: the
         # summaries that may close with their question.
         assert [item.id for item in cases if prep.BLOCKED_TAGS & set(item.tags)] == [

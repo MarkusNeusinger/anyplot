@@ -113,16 +113,20 @@ class TestMakeConversions:
 
         assert made is not None and columns(store, made.version.dataset_id)[-1] == "Year (Datum)"
 
-    def test_newest_first_dates_are_sorted_in_the_same_version(self) -> None:
+    def test_newest_first_dates_keep_the_order_of_the_paste(self) -> None:
+        """The order of a time series is the plot's (`plot_view.oldest_first`): the conversion reads the dates and
+        leaves the rows where the user put them."""
         store, view = pasted("Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n24 Nov 2026;3\n", "line-timeseries-rolling")
 
         made = make_conversions(store, SID, view, view.snapshot)
 
         assert made is not None
-        assert [operation["op"] for operation in made.record.operations] == ["set_type", "sort"]
-        assert made.record.lines[0].endswith("; its dates ran newest first, so the rows now run oldest to newest")
+        assert [operation["op"] for operation in made.record.operations] == ["set_type"]
+        assert "newest first" not in made.record.lines[0] and "oldest" not in made.record.lines[0]
         stored = store.get(made.version.dataset_id, SID)
-        assert stored is not None and stored.csv.splitlines()[1].startswith("24 Nov 2026")
+        assert stored is not None and stored.csv.splitlines()[1].startswith("26 Nov 2026")
+        new = next(column for column in stored.profile.columns if column.name == "Datum (date)")
+        assert new.order == "descending"  # what a plot run reads to draw the rows oldest first
 
     @pytest.mark.parametrize(
         ("text", "values"),

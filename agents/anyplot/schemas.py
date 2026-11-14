@@ -335,8 +335,9 @@ class ColumnProfile(_ServerContract):
     `order` is set for a datetime column whose dates run one way down the rows, missing
     cells aside: `ascending` (oldest first) or `descending` (newest first, as a price
     history lists its months); None when they go back and forth or hold one moment. A
-    time series is drawn in date order, so the root sorts a newest-first date column of
-    the plot instead of asking about it (live test of 2026-11-01).
+    time series is drawn in date order, so a plot run orders its rows by a bound date
+    column that runs newest first (`plot_view.oldest_first`): the table keeps its order,
+    and the root neither sorts it for the plot nor asks about it.
 
     `monthly` is True for a datetime column of months: every date the first of its month,
     no time, at least two months of the year (`Nov 2026` as the parser writes it). Such a

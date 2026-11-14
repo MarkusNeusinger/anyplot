@@ -239,7 +239,12 @@ def view_of(parsed: ParsedDataset, view: PlotView, language: str = DEFAULT_LANGU
     The result is parsed again as a data version is, except that every text column stays text: the rows left may
     all read as numbers or dates, and a column that changed its kind would move the bindings the user confirmed.
     """
-    prepared = apply_operations(parsed, view.operations(), language=language)
+    return _seen(parsed, view.operations(), language)
+
+
+def _seen(parsed: ParsedDataset, operations: list[Operation], language: str) -> Viewed:
+    """`parsed` after `operations` that only choose or order its rows, read back with its text columns kept text."""
+    prepared = apply_operations(parsed, operations, language=language)
     text = [name for name, dtype in parsed.column_dtypes.items() if dtype == "text"]
     try:
         again = parse_dataset(
@@ -269,6 +274,49 @@ def viewed_dataset(dataset: StoredDataset, viewed: Viewed) -> StoredDataset:
         size_bytes=dataset_size(parsed),
         pasted_cells={},
     )
+
+
+OLDEST_FIRST_LINE = "The plot draws the rows oldest first by '{column}'; the table runs newest first and stays as it is"
+"""What a run says when it ordered its rows by a date column (`oldest_first`)."""
+
+
+def newest_first_column(bindings: list[Binding], shown: DatasetProfile, view: PlotView) -> str | None:
+    """The date column a run orders its rows by before it draws them: the first bound one whose dates run newest
+    first down the rows the run draws (`ColumnProfile.order`), or None.
+
+    None too while the view's top N ranks the rows by another column: that order is the one the user asked for, and
+    dates that happen to fall along it are no reason to undo it. A top N by the date column itself ("the latest
+    12") leaves the newest rows newest first, and those are drawn in date order like any other.
+    """
+    ranked_by = view.top.column if view.top is not None else None
+    newest_first = {
+        column.name for column in shown.columns if column.dtype == "datetime" and column.order == "descending"
+    }
+    for binding in bindings:
+        if binding.column in newest_first and ranked_by in (None, binding.column):
+            return binding.column
+    return None
+
+
+def oldest_first(
+    shown: StoredDataset, bindings: list[Binding], view: PlotView, language: str = DEFAULT_LANGUAGE
+) -> tuple[StoredDataset, str | None]:
+    """The rows a run draws, oldest first when a bound date column runs newest first, and the line that says so;
+    `shown` as it is and None when no bound date column does (`newest_first_column`).
+
+    A time series is drawn in date order, and what the plot code computes along the rows (a rolling mean, a running
+    total, the last value it labels) reads them in that order too. The order is the plot's (owner decision of
+    2026-11-13), so the table is not sorted for it: `shown` is ordered for the run alone, by the engine's own stable
+    `sort`, under the table's id and number, and stored nowhere. Rows without a date come last.
+    """
+    column = newest_first_column(bindings, shown.profile, view)
+    if column is None:
+        return shown, None
+    try:
+        seen = _seen(shown.as_parsed(), [Sort(op="sort", column=column)], language)
+    except PrepareError:
+        return shown, None  # a column the engine cannot order is drawn as it stands
+    return viewed_dataset(shown, seen), OLDEST_FIRST_LINE.format(column=column)
 
 
 def read_view(state: Any, key: str = PLOT_VIEW) -> PlotView:

@@ -975,7 +975,7 @@ class TestDryRun:
         dry = self.run("Datum,v\n26 Nov 2026,1\n25 Nov 2026,2\n24 Nov 2026,3\n", "Datum", "datetime")
 
         assert dry is not None and dry.certain
-        assert (dry.present, dry.read, dry.order) == (3, 3, "descending")
+        assert (dry.present, dry.read) == (3, 3)
         assert dry.reading == "read as dates (format inferred, day before month)"
 
     @pytest.mark.parametrize(
@@ -1061,7 +1061,7 @@ class TestDryRun:
 
         dry = prepare_module.year_run(prepare_module.read_frame(parsed), "Jahr")
 
-        assert dry.certain and (dry.read, dry.order, dry.date_format) == (3, "descending", "YYYY")
+        assert dry.certain and (dry.read, dry.date_format) == (3, "YYYY")
         assert dry.reading == "read as years (YYYY, each as 1 January)"
 
 
