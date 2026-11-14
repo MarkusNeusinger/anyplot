@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setAnalyticsMuted } from 'src/analytics/mute';
+import { noteStayInput, setStayActive, STAY_MS } from 'src/analytics/stay';
 import {
   buildPlausibleUrl,
   forgetLastPageview,
@@ -10,6 +11,8 @@ import {
   normalizeQuery,
   pageKind,
   setAnalyticsAmbientProps,
+  STAYED_EVENT,
+  STAYED_INTERACTIVE,
   UI_FEATURES,
   useAnalytics,
 } from 'src/hooks/useAnalytics';
@@ -225,6 +228,150 @@ describe('useAnalytics', () => {
     it('holds thirteen features, each named once', () => {
       expect(new Set(UI_FEATURES).size).toBe(UI_FEATURES.length);
       expect(UI_FEATURES).toHaveLength(13);
+    });
+  });
+
+  describe('stayed_10s', () => {
+    /** Puts the page in front of the visitor, or takes it away. */
+    function page(active: boolean) {
+      vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(active ? 'visible' : 'hidden');
+      vi.spyOn(document, 'hasFocus').mockReturnValue(active);
+    }
+
+    function stayed() {
+      return vi.mocked(window.plausible!).mock.calls.filter(([event]) => event === STAYED_EVENT);
+    }
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-11-14T08:00:00Z'));
+      page(true);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('is sent once per visit, ten seconds after the pageview that began it', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+
+      vi.advanceTimersByTime(STAY_MS - 1);
+      expect(stayed()).toEqual([]);
+      vi.advanceTimersByTime(1);
+      // While it is measured, it keeps no visit from counting as bounced.
+      expect(STAYED_INTERACTIVE).toBe(false);
+      expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'no' }, interactive: false }]]);
+
+      // A second page of the same visit does not start the clock again.
+      at('/plots');
+      result.current.trackPageview();
+      vi.advanceTimersByTime(5 * 60_000);
+      expect(stayed()).toHaveLength(1);
+    });
+
+    it('keeps counting through what the visitor does: a click after five seconds changes nothing', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+
+      vi.advanceTimersByTime(5_000);
+      result.current.trackEvent('copy_code', { spec: 'scatter-basic' });
+      vi.advanceTimersByTime(2_000);
+      result.current.trackEvent('ui_feature', { feature: 'tab_toggle' });
+      vi.advanceTimersByTime(2_999);
+      expect(stayed()).toEqual([]);
+
+      // Ten seconds after the visit began, not after the last thing the visitor did.
+      vi.advanceTimersByTime(1);
+      expect(stayed()).toHaveLength(1);
+    });
+
+    it('says when the visitor used a pointer, a finger or a key in those seconds', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      vi.advanceTimersByTime(2_000);
+      noteStayInput();
+      vi.advanceTimersByTime(8_000);
+
+      expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'yes' }, interactive: false }]]);
+    });
+
+    it('is not sent for a page that is never in front of the visitor', () => {
+      page(false);
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      vi.advanceTimersByTime(10 * 60_000);
+
+      expect(stayed()).toEqual([]);
+    });
+
+    it('is not sent once the visit is over for Plausible', () => {
+      // Four seconds, an hour in another tab, six more: together ten, but 30 minutes after
+      // the pageview the visit ended, and the event would open one of its own, without a page.
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      vi.advanceTimersByTime(4_000);
+      setStayActive(false, Date.now());
+      vi.advanceTimersByTime(60 * 60_000);
+      setStayActive(true, Date.now());
+      vi.advanceTimersByTime(60_000);
+
+      expect(stayed()).toEqual([]);
+    });
+
+    it('starts again with the next visit', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      vi.advanceTimersByTime(STAY_MS);
+      expect(stayed()).toHaveLength(1);
+
+      // More than 30 minutes without anything sent, then a page: a new visit.
+      vi.advanceTimersByTime(45 * 60_000);
+      at('/heatmap-basic');
+      result.current.trackPageview();
+      vi.advanceTimersByTime(STAY_MS);
+
+      expect(stayed()).toHaveLength(2);
+    });
+
+    it('is not sent while the admin’s own use is muted', () => {
+      at('/agent');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      setAnalyticsMuted(true);
+      vi.advanceTimersByTime(STAY_MS);
+      setAnalyticsMuted(false);
+      vi.advanceTimersByTime(60_000);
+
+      expect(stayed()).toEqual([]);
+    });
+
+    it('is not sent anywhere but on the live site, whatever the page was ten seconds before', () => {
+      // The moment comes from a timer, so the pageview's own check is long past by then.
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      at('/scatter-basic', '', 'localhost');
+      vi.advanceTimersByTime(60_000);
+
+      expect(stayed()).toEqual([]);
+    });
+
+    it('is the tracker’s own event: no component can send it', () => {
+      at('/');
+      const { result } = renderHook(() => useAnalytics());
+
+      // @ts-expect-error -- the type refuses the call; this line fails to compile if it ever
+      // stops doing so. A caller that got around the type sends nothing.
+      result.current.trackEvent('stayed_10s');
+
+      expect(window.plausible).not.toHaveBeenCalled();
     });
   });
 

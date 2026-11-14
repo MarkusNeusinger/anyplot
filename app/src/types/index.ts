@@ -164,6 +164,11 @@ export interface Implementation {
 // Plausible analytics (only in production)
 declare global {
   interface Window {
-    plausible?: (event: string, options?: { url?: string; props?: Record<string, string> }) => void;
+    plausible?: (
+      event: string,
+      // `interactive: false` keeps an event out of the bounce rate: a visit whose only other
+      // event is its pageview still counts as bounced.
+      options?: { url?: string; props?: Record<string, string>; interactive?: boolean }
+    ) => void;
   }
 }

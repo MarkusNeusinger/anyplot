@@ -9,6 +9,7 @@ import { FeedbackWidget } from 'src/components/FeedbackWidget';
 import { useAnalytics } from 'src/hooks';
 import { setAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
+import { useStay } from 'src/hooks/useStay';
 import { Footer } from 'src/layouts/Footer';
 import { MastheadRule } from 'src/layouts/MastheadRule';
 import { NavBar } from 'src/layouts/NavBar';
@@ -83,6 +84,10 @@ export function RootLayout() {
     trackPageview();
     if (offset > 0) window.scrollTo(0, offset);
   }, [pathname, search, navigationType, trackPageview]);
+
+  // The visit's ten seconds: the clock starts with the visit's first pageview
+  // above, and this tells it when the page is in front of the visitor.
+  useStay();
 
   // Always reset horizontal scroll on route change. If a previous page leaked
   // page-level horizontal scroll (e.g. a wide table on mobile), the offset
