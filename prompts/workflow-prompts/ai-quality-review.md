@@ -170,7 +170,7 @@ Score so that the reviews of the other libraries of this spec, written without s
 #### Visual Quality (30 pts)
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
-| VQ-01 | Text Legibility | 8 | Font sizes explicitly set? Readable at full size in BOTH themes? Mobile-readable when scaled to ~400 px? Apply Proportional Sizing Check (5d). |
+| VQ-01 | Text Legibility | 8 | Font sizes explicitly set? Readable in the full-size render in BOTH themes? No text below its style-guide reference that reads small (a reduced view is never the test)? Apply Proportional Sizing Check (5d). |
 | VQ-02 | No Overlap | 6 | All text readable? No collisions with other text or with data? Data-mark overlap only counts when it hides information — expected overlap handled with alpha/outline is not a deduction. See 5d. |
 | VQ-03 | Element Visibility | 6 | Markers/lines adapted to density? Legend glyphs (size circles, swatches, line samples) visible in BOTH themes and matching the marks? See 5d. |
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette)? No red-green as sole signal? |
@@ -255,7 +255,8 @@ Counter-examples:
 - An amber mean-reference line on a `-basic` bar chart is variant creep (SC-01): the line itself is the defect, and removing it is the fix. Recoloring it is a suggestion.
 - A count label that collides with a mean-reference line on a `-basic` bar chart: the line is the defect (SC-01), and moving the label clear of it, like recoloring the line, is a suggestion. The same holds for a callout the spec does not request that sits on data marks.
 - A count plot without percentage labels has no DQ-01 defect: the Notes allow them, and a missing optional feature deducts nothing. Adding them is a suggestion. An `A good version shows:` bullet that describes them "if drawn" or as the labels "the Notes allow" is not missed by a version that draws none, so adding them does not fix that bullet either.
-- "Slightly larger tick labels would help in the thumbnail" next to VQ-01 at 7/8 is a silent deduction. Either it is a defect, and the line says so (`VQ-01 (both): tick labels at 10 px blur in the 400 px thumbnail → about 12 px (+2 px). Likely cause: …`), or it is a suggestion, and VQ-01 keeps its 8.
+- "Slightly larger tick labels would help" next to VQ-01 at 7/8 is a silent deduction. Either it is a defect, and the line says so (`VQ-01 (both): tick labels at 6 pt, below the style guide's 8 pt, read small beside the 10 pt axis titles → 8 pt (+2 pt). Likely cause: …`), or it is a suggestion, and VQ-01 keeps its 8.
+- Tick labels at the style guide's size that would blur in a 400 px thumbnail are neither: VQ-01 is judged in the full-size render, and text at or above its reference is never too small.
 
 **Check before you go on.** For every technical item you scored below its maximum, point to the defect line that names it. Where there is none, write the line the deduction rests on. If you cannot name what is wrong, there is no deduction: restore the point now, before step 8b and before you write any file, and add up again. From here on your checklist is final.
 
@@ -428,7 +429,7 @@ Use this EXACT format:
 |---|---|
 | XX | XX |
 
-**Predecessor defects:** P1 (VQ-02) the size legend's "500" label overlaps its reference bubble, P2 (VQ-07) Sporting Goods on the red loss anchor, P3 (VQ-01) tick labels blur in the thumbnail, P4 (DQ-02) groups labelled Region A–D
+**Predecessor defects:** P1 (VQ-02) the size legend's "500" label overlaps its reference bubble, P2 (VQ-07) Sporting Goods on the red loss anchor, P3 (VQ-01) tick labels at 6 pt read small, P4 (DQ-02) groups labelled Region A–D
 **Previous weaknesses:** W1 obsolete (C2) · W2 suggestion · W3 defect (VQ-07)
 **Improvements:** `W3` Sporting Goods moved off the red loss anchor — legend and bubbles, both renders
 **Code improvements:** none
@@ -522,7 +523,7 @@ cat > review_prev.json << 'EOF'
     "library_mastery": {"score": 7, "max": 10, "items": [...]}
   },
   "strengths": ["Strength 1", "Strength 2"],
-  "weaknesses": ["VQ-02 (light): the size legend's \"500\" label overlaps its reference bubble by about 6 px → clear it by at least 4 px (+10 px). Likely cause: the legend label's offset.", "VQ-07 (both): Sporting Goods is drawn in #AE3030, the red loss anchor, as the fourth series → the fourth Imprint position #BD8233. Likely cause: the palette index.", "VQ-01 (both): tick labels at 9 px blur in the 400 px thumbnail → about 12 px (+3 px). Likely cause: the tick font size.", "DQ-02 (both): the groups are labelled Region A–D → real region names. Likely cause: the label list.", "Suggestion: …"]
+  "weaknesses": ["VQ-02 (light): the size legend's \"500\" label overlaps its reference bubble by about 6 px → clear it by at least 4 px (+10 px). Likely cause: the legend label's offset.", "VQ-07 (both): Sporting Goods is drawn in #AE3030, the red loss anchor, as the fourth series → the fourth Imprint position #BD8233. Likely cause: the palette index.", "VQ-01 (both): tick labels at 6 pt, below the style guide's 8 pt, read small beside the 10 pt axis titles → 8 pt (+2 pt). Likely cause: the tick font size.", "DQ-02 (both): the groups are labelled Region A–D → real region names. Likely cause: the label list.", "Suggestion: …"]
 }
 EOF
 python3 -c "import json; json.load(open('review_prev.json'))"

@@ -382,7 +382,7 @@ review:
     - "Clean code structure"
     - "Good use of alpha for overlapping points"
   weaknesses:  # defect lines first, then at most three "Suggestion:" lines
-    - "VQ-01 (both): tick labels at 8 pt are hard to read at full size → about 10 pt (+2 pt). Likely cause: tick_params labelsize=8."
+    - "VQ-01 (both): tick labels at 6 pt, below the style guide's 8 pt, read small beside the 10 pt axis titles → 8 pt (+2 pt). Likely cause: tick_params labelsize=6."
     - "Suggestion: a slightly lighter grid would recede further"
 
   # Provenance of the review (filled by impl-review, not synced to the database)

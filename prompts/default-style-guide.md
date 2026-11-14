@@ -258,6 +258,8 @@ Before finalizing any plot, consider removing:
 
 **These are starting values — the AI may adjust if the plot context demands it.** The review step then checks proportions (see "Proportional Sizing" below) and the repair loop tunes any element that's off.
 
+### Text Sizes
+
 Three library families with different sizing controls:
 
 | Element | DPI-based (matplotlib, seaborn, plotnine) | Scale-based (plotly, altair, lets-plot) | Native-pixel (bokeh, pygal) |
@@ -269,9 +271,11 @@ Three library families with different sizing controls:
 | Tick labels | 8pt | 10px | bokeh `'34pt'`; pygal `44` |
 | Legend | 8pt | 10px | bokeh `'34pt'`; pygal `44` |
 
-The JavaScript libraries (chartjs, d3, echarts, highcharts) are a fourth family: they render through the browser harness at `deviceScaleFactor=2` over a 1600×900 (or 1200×1200) CSS mount, so they size text in **CSS px within that mount space** (title `~22px`, labels `~14px`) — not the native 3200-px numbers. Their per-library prompts are the source of truth; see e.g. `prompts/library/highcharts.md`.
+The JavaScript libraries (chartjs, d3, echarts, highcharts, muix) are a fourth family: they render through the browser harness at `deviceScaleFactor=2` over a 1600×900 (or 1200×1200) CSS mount, so they size text in **CSS px within that mount space** (title `~22px`, labels `~14px`) — not the native 3200-px numbers. Their per-library prompts are the source of truth; see e.g. `prompts/library/highcharts.md`.
 
 All families produce the same 3200×1800 (or 2400×2400) output, so the source-pixel sizes of text are comparable across libraries.
+
+These sizes are also the review's reference for text legibility (VQ-01), judged in the full-size render: text at or above them is never too small.
 
 **Why the Native-pixel numbers look so much bigger** — and why bokeh's number differs from pygal:
 
@@ -285,6 +289,8 @@ The three families use completely different unit conventions for the same visual
 So **the same target visual size requires a different nominal number per library** because each library's unit constant differs. bokeh '50pt' ≈ pygal 66 ≈ matplotlib 12pt @ dpi=400 ≈ plotly 16px @ scale=4. Don't try to make them all look the same number. (The JS libraries differ again — they render at dpr=2 over a 1600-px mount, so their CSS px are ~half the native number; their own prompts give the values.)
 
 Bokeh also needs `min_border_*` reservations on the `figure(...)` constructor so the larger axis labels have room and aren't clipped from the PNG. See `prompts/library/bokeh.md` for the canonical numbers — keep that file as the single source of truth so the bottom/left/top/right values don't drift between here and the library prompt.
+
+### Marker and Line Sizes
 
 **Marker and line sizes** vary by library API and aren't directly comparable as a single number — matplotlib's `s=` is in points², plotly's `marker.size` is a pixel diameter, altair's `mark_point(size=...)` is an area, plotnine / lets-plot / ggplot2's `geom_point(size=...)` uses a smaller ggplot scale. See each library's own prompt (`prompts/library/<lib>.md` → "Sizing" section) for the canonical starting values, and adapt to data density per the heuristic below.
 
@@ -307,7 +313,7 @@ A label that tells the reader nothing is clutter at any mark count: a value that
 ### General Rules
 - Elements should be **~2-3× larger** than the library's standard defaults.
 - When in doubt, make it bigger.
-- Test: Would this be readable on a typical 1920–2560 px desktop monitor, AND on a 400 px mobile width?
+- Test: Is this comfortably readable in the full-size render, on a typical 1920–2560 px desktop monitor? A thumbnail about 400 px wide only has to keep the plot recognisable; its small text is not meant to be read there.
 
 ---
 
@@ -356,4 +362,4 @@ The AI makes the following design decisions for each visualization:
 - Data label placement
 - Annotations and callouts (only when specification explicitly requests them)
 
-**Priority:** Clarity, beauty, and readability at full resolution (~5.76 million pixels) AND when scaled down to mobile width (~400 px).
+**Priority:** Clarity, beauty, and readability at full resolution (~5.76 million pixels). Scaled down to a thumbnail (~400 px), the plot stays recognisable.
