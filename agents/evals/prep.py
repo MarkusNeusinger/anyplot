@@ -341,6 +341,11 @@ class PrepCase(BaseModel):
     """Texts of the fixture's own data the reply has to contain, each as written: what the user must hear about and
     the table cannot show, such as the rows a top N left out of a tie. A reply without one of them is the reply miss
     `unnamed` (`measure_reply`)."""
+    view: Literal["set", "none"] | None = None
+    """Where the turn's choice of rows has to land (`score_view`): `set` for a view of the plot (a selection, a top
+    N), which leaves the table as it is, `none` for a turn that must leave no view (a cleaning step, rows the user
+    asks out of the table itself). The table a plot would draw is the same either way, so only this tells a turn
+    that cut the table from one that set the view. None leaves it unscored."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -900,6 +905,11 @@ class CaseResult:
     plot_request_miss: bool = False
     """The case expects a wish sent to the plot, and the turn sent none or the plot did not keep it: the case is a
     miss (`score_plot_request`)."""
+    view_set: bool = False
+    """The session holds a view of the plot after the turn (`plot_view.read_view`)."""
+    view_miss: bool = False
+    """The case says where the rows have to land (`PrepCase.view`), and the turn landed them elsewhere: the case is
+    a miss (`score_view`)."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -1012,6 +1022,7 @@ class CaseRunner:
             # A message case on summarized data gets no server conversion: the turn starts after the earlier changes.
             score_from_version(result, case.expected_from_version, current=1 + len(case.before_operations))
             score_plot_request(result, case.plot_request)
+            score_view(result, case.view, await self._view_held(user, sid))
             if summary_turn and pasted_rows is not None:
                 rows.add(pasted_rows)
             measure_reply(
@@ -1083,15 +1094,24 @@ class CaseRunner:
             return None, f"the expected operations do not apply to the stored data: {cause}"
         return (result_table(made) if made is not None else None), None
 
+    async def _view_held(self, user: str, sid: str) -> bool:
+        """Whether the session holds a view of the plot after the turn, as stored (`plot_view.read_view`)."""
+        from agents.anyplot.plot_view import read_view
+
+        return not read_view((await self.runtime.session(user, sid)).state).empty
+
     async def _current_table(self, user: str, sid: str) -> tuple[ResultTable | None, str]:
-        """The table of the session's current data version after the turn, as the tools stored it, and the session
-        language they applied the operations in; no table for a session without data.
+        """The table a plot would draw after the turn, and the session language the tools applied the operations in;
+        no table for a session without data. It is the session's current data version as the tools stored it, seen
+        through the view of the plot when one holds (`plot_view.current`): a `keep_rows` lands there and leaves the
+        table as it is, so the rows a case expects are the rows the plot draws, wherever the call landed.
 
         The language is read after the turn, because the scope guard detects it from the message before the root's
         first tool call; the language before the turn would name a `date_number` column wrongly for every message that
         sets it. A root that changes the language with `set_language` after its data call in the same turn leaves a
         column named in the earlier language, which then shows as a column miss."""
         from agents.anyplot.language import DEFAULT_LANGUAGE
+        from agents.anyplot.plot_view import current, viewed_dataset
         from agents.anyplot.services import get_services
         from agents.anyplot.session_state import read_session
 
@@ -1100,7 +1120,11 @@ class CaseRunner:
         if view is None:
             return None, DEFAULT_LANGUAGE
         stored = get_services().datasets.get(view.dataset_id, sid) if view.dataset_id else None
-        return (result_table(stored) if stored is not None else None), view.language
+        if stored is None:
+            return None, view.language
+        held = current(session.state, stored, view.language)
+        drawn = viewed_dataset(stored, held.viewed) if held.viewed is not None else stored
+        return result_table(drawn), view.language
 
     async def _listed_conversions(self, user: str, sid: str) -> list[Any]:
         """The conversion lines the session block lists for the turn about to start (`conversions.candidates`)."""
@@ -1264,6 +1288,15 @@ def score_plot_request(result: CaseResult, wanted: bool) -> None:
     user's order nowhere. What the wish says is not scored, and a case without the expectation is not scored."""
     result.plot_request_miss = wanted and not (result.plot_wishes and result.plot_wishes_kept)
     if result.plot_request_miss:
+        result.match = False
+
+
+def score_view(result: CaseResult, wanted: Literal["set", "none"] | None, held: bool) -> None:
+    """Whether the turn's rows landed where the case says: in the view of the plot (`set`) or not (`none`). `held`
+    is whether the session holds a view after the turn. A case without the expectation is not scored."""
+    result.view_set = held
+    result.view_miss = wanted is not None and held != (wanted == "set")
+    if result.view_miss:
         result.match = False
 
 
@@ -1445,6 +1478,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         "conversions_made": sum(result.conversions_made for _, result in pairs),
         "version_misses": sum(1 for _, result in pairs if result.version_miss),
         "plot_request_misses": sum(1 for _, result in pairs if result.plot_request_miss),
+        "view_misses": sum(1 for _, result in pairs if result.view_miss),
         "llm_calls": sum(result.llm_calls for _, result in pairs),
         "cost_usd": round(sum(result.cost_usd for _, result in pairs), 8),
     }
@@ -1467,6 +1501,8 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "from_versions": result.from_versions,
             "version_miss": result.version_miss,
             "plot_request_miss": result.plot_request_miss,
+            "view_set": result.view_set,
+            "view_miss": result.view_miss,
             "plot_wishes": result.plot_wishes,
             "plot_wishes_kept": result.plot_wishes_kept,
             "tool_calls": result.tool_calls,
@@ -1543,6 +1579,8 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
                 outcome += f", from {', '.join(result.from_versions) or 'no call'}"
             if result.plot_request_miss:
                 outcome += ", no plot request"
+            if result.view_miss:
+                outcome += ", the table was cut, not the view" if case.view == "set" else ", a view was set"
             if result.reply_miss:
                 outcome += f", reply: {result.reply_miss.replace('_', ' ')}"
         rows.append((case.id, expected, found, outcome))

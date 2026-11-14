@@ -128,8 +128,30 @@ class TestFixtures:
         # language the rules hold no example of, check that it carries: an order, a figure and a sort of the table.
         # And the rows to keep said positively (`keep_where`): six cases name the rows that stay (some categories, a
         # period, a threshold, one of them French, two of them moved from a `drop_rows` with the opposite test), and
-        # one top N whose cut falls among equal values (`tie`), which stays at N.
-        assert len(cases) == 122
+        # one top N whose cut falls among equal values (`tie`), which stays at N. And where such rows land (`view`):
+        # seven cases set the view of the plot (a selection, a top N, the note sent with a paste) and leave the table
+        # as it is, five must leave no view: rows the user asks out of the table itself (`in_table`), rows that are
+        # errors (`cleaning`, a French one), a selection another operation builds on, a rebuild from the original.
+        assert len(cases) == 124
+        views = {item.id: item.view for item in cases if item.view is not None}
+        assert sorted(case_id for case_id, landing in views.items() if landing == "set") == [
+            "de-notiz-nur-2024",
+            "de-nur-januar-2024",
+            "de-top-2-gleichstand",
+            "en-keep-at-least",
+            "en-keep-two-categories",
+            "en-top-revenue-keep-rows",
+            "fr-garder-deux-villes",
+        ]
+        assert sorted(case_id for case_id, landing in views.items() if landing == "none") == [
+            "de-hard-zwei-filter-zaehlen",
+            "de-zeilen-aus-tabelle-loeschen",
+            "en-drop-total-row",
+            "en-from-original-first-20",
+            "fr-lignes-de-test-en-trop",
+        ]
+        (in_table,) = [item for item in cases if "in_table" in item.tags]
+        assert in_table.expected_operations[-1]["target"] == "table"
         kept = [item for item in cases if "keep_where" in item.tags]
         assert sorted(item.id for item in kept) == [
             "de-hard-zwei-filter-zaehlen",
@@ -177,6 +199,7 @@ class TestFixtures:
         assert all(item.expected_operations[-1]["op"] == "sort" and not item.plot_request for item in named)
         assert sorted(item.id for item in cases if item.locale == "fr") == [
             "fr-garder-deux-villes",
+            "fr-lignes-de-test-en-trop",
             "fr-plus-grands-d-abord",
             "fr-total-dans-le-titre",
             "fr-trier-le-tableau",
@@ -955,6 +978,25 @@ class TestReplyShape:
         half = CaseResult("t-003", [], [])
         prep.measure_reply(half, ["Basel fällt weg. Passt das?"], blocked=False, names=["Basel", "Genf"])
         assert half.reply_miss == "unnamed" and half.closing_question  # the missing name is the miss that counts
+
+    def test_where_the_rows_landed_is_scored_apart_from_the_table_a_plot_would_draw(self) -> None:
+        """A view and a cut of the table leave the same rows for the plot, so the table cannot tell a turn that set
+        the view from one that changed the user's data: only the session's view can."""
+        viewed = CaseResult("v-001", [], [], match=True)
+        prep.score_view(viewed, "set", held=True)
+        assert viewed.view_set and not viewed.view_miss and viewed.match
+
+        cut = CaseResult("v-002", [], [], match=True)
+        prep.score_view(cut, "set", held=False)
+        assert cut.view_miss and not cut.match  # the table lost rows the user only wanted out of the picture
+
+        hidden = CaseResult("v-003", [], [], match=True)
+        prep.score_view(hidden, "none", held=True)
+        assert hidden.view_miss and not hidden.match  # rows the user called errors are still in the table
+
+        open_case = CaseResult("v-004", [], [], match=True)
+        prep.score_view(open_case, None, held=True)
+        assert open_case.view_set and not open_case.view_miss and open_case.match
 
     @pytest.mark.parametrize(
         ("text", "invitation"),

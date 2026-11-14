@@ -73,8 +73,9 @@ a kept plot request, the plot memory. `switch_plot` asks the page for a switch (
 `plot_pipeline` call that kept the first plot's request (a `not_ready` run, a refusal before the run) is none of them:
 such a turn's answer is its reply, which a summary turn owes, so an empty one still ends as `no_reply` unless the
 page got the `plot` event (`stream.Translator.plot_sent`)."""
-STORED_OUTCOMES = frozenset({"changed", "kept"})
-"""The outcomes of a call of `STATE_TOOLS` that stored something (`ledger.CallOutcome`): a change, a kept request."""
+STORED_OUTCOMES = frozenset({"changed", "viewed", "kept"})
+"""The outcomes of a call of `STATE_TOOLS` that stored something (`ledger.CallOutcome`): a change, a view of the
+plot, a kept request."""
 
 
 def is_empty(response: LlmResponse) -> bool:

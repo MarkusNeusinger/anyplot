@@ -102,6 +102,7 @@ wherever the stream shows the change. `kept` and `memory` come last: the page se
 the turn, and they only tell a turn that changed nothing visible from a question."""
 CALL_CHANGES: dict[tuple[str, CallOutcome], TurnOutcome] = {
     ("prepare_data", "changed"): "data",
+    ("prepare_data", "viewed"): "kept",
     ("generate_data", "changed"): "data",
     ("run_data_code", "changed"): "data",
     ("set_bindings", "changed"): "data",
@@ -120,7 +121,8 @@ A bindings change is a change of the data card, where the bindings stand. A `set
 named the language already set: it stores the choice (source `chosen`), which detection never writes over. A
 `plot_pipeline` call that stopped `not_ready` for missing data or open roles is a plot turn, as the page shows it (a
 failed plot card); one refused for unconfirmed data (`unconfirmed`) shows no card and changes nothing, unless it kept
-the wish (`kept`)."""
+the wish (`kept`). A `prepare_data` call that changed the view of the plot alone (`viewed`) is `kept` too: the data
+card stays as it is, and what changed shows with the next plot, in the same turn when the root runs it (`plot`)."""
 
 
 def turn_outcome(ledger: RequestLedger) -> TurnOutcome:

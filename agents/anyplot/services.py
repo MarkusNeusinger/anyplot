@@ -122,6 +122,10 @@ class CodeVersion:
     """The bindings the run drew with (`SessionView.bindings`), which the page's "plot the new data" compares with the
     ones in force before it starts from this version (`pipeline.new_data_base`); None for a version stored without
     them, which never counts as the same."""
+    view: dict[str, Any] | None = None
+    """The view of the plot the run drew its rows through (`PlotView.stamp`), None for every row of the table.
+    `data_csv` holds the view's rows, so the downloaded code runs on the downloaded data as it ran here, and a later
+    turn tells a plot of the same rows from one a changed view has made stale."""
 
     @property
     def target(self) -> tuple[str, str]:

@@ -11,6 +11,7 @@
     },
     {"op": "aggregate", "by": ["Produkt"], "column": "Bestell-ID", "how": "count"}
   ],
+  "view": "none",
   "locale": "de",
   "tags": ["hard", "chain", "keep_rows", "keep_where", "aggregate", "count"]
 }

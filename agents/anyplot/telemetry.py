@@ -271,6 +271,7 @@ PrepOp = Literal[
     "rolling",
     "blank",
     "keep_rows",
+    "reset_view",
     "unsupported",
 ]
 PREP_OPS: frozenset[str] = frozenset(get_args(PrepOp))

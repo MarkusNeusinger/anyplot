@@ -1542,7 +1542,7 @@ assistant's tool calls, never from the reply's text:
 | `plot` | ran the plot pipeline: a shipped version, a failed run, or a run that stopped because the data or a binding is missing, which the page shows as a failed plot card |
 | `switch` | asked for the plot in another library (`done.switch`) |
 | `language` | set a language you asked for (`set_language`), also the one already set: the choice is stored, and language detection no longer changes it |
-| `kept` | kept a wish for the first plot (`keep_plot_request`, a plot that stopped on `data_unconfirmed` and kept the request, or a plot call the server turned down before the run on a paste's summary turn, keeping its request; the turn itself ends well), which the stream shows nothing of |
+| `kept` | kept a wish for the first plot (`keep_plot_request`, a plot that stopped on `data_unconfirmed` and kept the request, or a plot call the server turned down before the run on a paste's summary turn, keeping its request; the turn itself ends well), or changed the view of the plot alone (which rows the next plot draws, since 2026-11-14) without plotting; the stream shows nothing of either |
 | `memory` | removed a decision from the plot memory (`forget`) |
 | `answer` | changed nothing: it answered from the data, the profile or the code, or a change it tried stored nothing |
 
