@@ -2,53 +2,50 @@ library: bokeh
 language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:10:38Z'
-updated: '2026-05-08T05:29:40Z'
-generated_by: claude-haiku
-workflow_run: 25538242169
+updated: '2026-11-14T02:53:56Z'
+generated_by: claude-sonnet
+workflow_run: 43547981697
 issue: 2012
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - 'Theme adaptation fixed: both renders now correctly apply light (#FAF8F1) and
-    dark (#1A1A17) backgrounds with appropriate text colors'
-  - Correct 2D histogram with proper binning (35 bins), viridis colormap, and clear
-    density visualization
-  - 'Strong spec compliance: all required features present including colorbar, perceptually
-    uniform colormap, and hover tooltips'
-  - 'Excellent text readability: proper font sizing (28/22/18pt) with correct contrast
-    in both themes'
-  - Clean, professional layout with no overlaps, balanced margins, and excellent canvas
-    utilization
-  - 'Bokeh patterns well-applied: LinearColorMapper, image glyph, and HoverTool used
-    idiomatically'
+  - 'Counts mapped with the Imprint sequential ramp (#009E73 -> #4467A3) through a
+    LinearColorMapper, identical in both renders'
+  - Empty bins drawn transparent via nan_color and the mapper starting at 1, so every
+    occupied bin reads clearly against both page colours
+  - Colour bar fully themed (page background, INK title, INK_SOFT labels and ticks)
+    and titled 'Count per bin'
+  - Exact 3200x1800 canvas with explicit min_border reservations; all text sized and
+    readable in both themes
+  - HoverTool reports each bin's count from the image glyph in the interactive HTML
   weaknesses:
-  - 'Design Excellence generic: only default styling applied, no custom aesthetic
-    choices or visual refinement'
-  - 'No visual storytelling: central correlation peak (key insight) not emphasized;
-    viewer must extract pattern'
-  - 'Minor VQ-07: background color rendering appears slightly off from exact reference
-    hex values'
+  - 'Suggestion: drop missing values row-wise (df.dropna(subset=[TECH, COMMODITY]))
+    before np.histogram2d, so x and y stay paired when a user''s table has gaps.'
+  - 'Suggestion: keep a small pan/wheel-zoom/reset toolset for the HTML (toolbar_location=None
+    already keeps it out of the PNG) so readers can zoom into the dense core.'
+  - 'Suggestion: a log colour scale (LogColorMapper), which the Notes allow, would
+    separate the many 1–5 count fringe bins that now share nearly the same green.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) correctly applied to margins and plot area
-      Chrome: Title "histogram-2d · bokeh · anyplot.ai" in dark text (INK color); axis labels "Tech Stock Returns (%)" and "Commodity Returns (%)" in dark text; tick labels in medium gray (INK_SOFT); colorbar titled "Frequency"
-      Data: Viridis colormap showing 2D histogram with diagonal peak (yellow/bright green for high density, purple for low); 35 bins clearly visible
-      Legibility verdict: PASS - all text readable, correct theme adaptation, no contrast issues
+      Background: warm off-white #FAF8F1 across canvas and plot area, no white panels.
+      Chrome: bold title "histogram-2d · python · bokeh · anyplot.ai" top-left in dark ink (~47% of width); italic axis titles "Tech stock return (%)" and "Commodity return (%)"; dark-grey tick labels -3..3 and -2..4; thin grey frame; no grid. Colour bar on the right with ticks 10–50 and the rotated title "Count per bin" beside it. All readable.
+      Data: 35x35 rectangular bins tiling the frame, coloured on the Imprint green (#009E73) -> blue (#4467A3) ramp; low-count fringe bins solid green, the dense core around (0.5, 0.5) blue; a clear positive diagonal tilt. Empty bins blank (page shows through).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) correctly applied to margins and plot area
-      Chrome: All text elements in light colors; title, axis labels in light text (INK color); tick labels in lighter gray (INK_SOFT); colorbar readable
-      Data: Identical viridis distribution to light render (data colors theme-independent, only chrome changed)
-      Legibility verdict: PASS - excellent contrast, no dark-on-dark failures, theme adaptation correct, colors identical to light render
+      Background: warm near-black #1A1A17, no light panels (colour bar background themed too).
+      Chrome: title, axis titles and colour-bar title in light ink; tick labels light grey; frame light grey. No dark-on-dark text.
+      Data: same bins and identical green-to-blue colours as the light render; only chrome flipped. Brand green fringe bins read well against the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -56,47 +53,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized (28/22/18pt) and readable in both themes
-          with correct color contrast
+        comment: All sizes set explicitly (50/42/34pt, colour bar 38/30pt); title
+          about 47% of the width; readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Perfect layout with excellent spacing, no text collisions
+        comment: No text collisions; the colour-bar title sits clear of the bar and
+          of the heatmap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap perfectly visible, colorbar clearly legible across full canvas
+        comment: 35x35 bins tile the frame; even single-count bins read as solid green
+          against both pages
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe
+        comment: Single sequential ramp, no red-green signal; occupied bins contrast
+          strongly with both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced proportions with generous margins
+        comment: 3200x1800 (canvas gate passed); heatmap fills most of the canvas,
+          colour bar adjacent, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, correct title format
+        comment: Tech stock return (%) / Commodity return (%), descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Viridis and backgrounds now correct; minor deduction for background
-          color precision
+        passed: true
+        comment: 'imprint_seq (#009E73 -> #4467A3) for counts, identical in both renders;
+          backgrounds #FAF8F1 / #1A1A17; colour-bar chrome theme-correct'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -104,21 +105,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults; Viridis is standard choice, no custom design elements
+        comment: The style-guide baseline (Imprint ramp, theme tokens, explicit sizes)
+          and nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Grid off is appropriate; clean but no intentional refinements beyond
-          defaults
+        comment: Grid off and themed frame meet the baseline; nothing beyond it
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Distribution shown clearly but no visual emphasis on central correlation
-          peak
+        comment: Distribution displayed; no hierarchy chosen beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -128,25 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D histogram heatmap implementation
+        comment: Correct 2D histogram heatmap with rectangular bins (C1)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar, viridis colormap, 35 bins, hover tooltips all present
+        comment: Colour bar labelled 'Count per bin' (Notes, C2); sequential perceptually
+          ordered Imprint ramp (C2); 35 bins show tilt and shape (C3); log scale and
+          marginals optional, not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, axes show full data range
+        comment: x/y correct, ranges from the bin edges so all bins are shown; marks
+          at their bin positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar properly labeled
+        comment: Title 'histogram-2d · python · bokeh · anyplot.ai'; colour-bar title
+          reads as text for a reader
     data_quality:
       score: 15
       max: 15
@@ -156,20 +160,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full bivariate distribution visualized with peak and tail regions
+        comment: 5,000 correlated points show a dense core, a clear positive tilt
+          and sparse tails
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Financial scenario realistic, domain-appropriate, and neutral
+        comment: Joint tech-stock vs commodity returns, a neutral finance scenario
+          from the spec's Applications
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values realistic for asset returns; bin count appropriate for 5000
-          points
+        comment: 'Checked: axes span about -3.5..4 % around a 0.5 % mean with unit
+          spread and r = 0.6 (line 47); colour-bar max about 50 per bin is consistent
+          with 5,000 points over 35x35 bins'
     code_quality:
       score: 10
       max: 10
@@ -179,13 +186,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear progression, no unnecessary functions
+        comment: Linear script; lerp_hex is the palette-token helper the bokeh library
+          prompt itself shows
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set with np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -197,32 +205,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI, proper Selenium approach
+        comment: np.histogram2d does the binning; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format (plot-{THEME}.png/html)
+        comment: plot-{THEME}.html + plot-{THEME}.png via Selenium with CDP viewport
+          pin; current Bokeh 3 API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Proper API usage: figure(), image() glyph, LinearColorMapper, ColorBar,
-          HoverTool'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: LinearColorMapper + image glyph well-utilized; theme-tokens demonstrate
-          mastery
+        passed: true
+        comment: image glyph fed by LinearColorMapper with nan_color for empty bins
+          and low=1, a bokeh idiom beyond the library prompt
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: HoverTool reading @image counts straight from the raster glyph in
+          the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-14T02:49:00Z'
 impl_tags:
   dependencies:
   - selenium
@@ -232,7 +244,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - binning
   styling:
