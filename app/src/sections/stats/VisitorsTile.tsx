@@ -6,12 +6,15 @@
  *   Those are the visits Plausible does not count as bounced. A crawler farm that runs the
  *   page's scripts loads one page per visit, so it shows in the number of all visits and not in
  *   the bars.
- * - A day before the counting began has no number: it draws the floor and says so, not "0".
- *   Until the window has moved past that day, the header names it in place of "last 28 days".
  * - Below: all visits of the same days as one plain line, with a hint on the word "all" that
  *   says what else is in that number.
- * - An answer without engaged visits (an API revision older than the page) draws the unique
- *   visitors per day, as the tile did before.
+ * - Until every day of the window is counted (`engagedDays`), the tile draws the unique
+ *   visitors per day, as it did before: a strip that is empty for most of its days says less
+ *   than the one it replaces. The same holds for an answer without engaged visits, from an API
+ *   revision older than the page. The switch happens by itself on the day the window's first
+ *   day is the one the counting began.
+ * - A day inside a counted window that has no number (its answer had no bounce rate) draws the
+ *   floor and says "not counted", not "0".
  * - Loading and an answer without days are one muted line each.
  */
 
@@ -42,14 +45,11 @@ export interface VisitorsTileProps {
 
 export function VisitorsTile({ answer, formatNum }: VisitorsTileProps) {
   const points = answer?.points ?? [];
-  const engaged = engagedDays(points);
-  const since = answer?.engagedSince ?? null;
+  const engaged = answer ? engagedDays(answer) : null;
 
   let header = 'unique visitors · last 28 days';
   if (engaged) {
-    // The window still holds days from before the counting began: name the day it began.
-    const span = engaged.wholeWindow || !since ? 'last 28 days' : `since ${since}`;
-    header = `visits with a second page or an interaction · ${span} · ${formatNum(engaged.engaged)} total`;
+    header = `visits with a second page or an interaction · last 28 days · ${formatNum(engaged.engaged)} total`;
   } else if (points.length > 0) {
     header += ` · ${formatNum(points.reduce((sum, point) => sum + point.visitors, 0))} total`;
   }
@@ -94,14 +94,7 @@ export function VisitorsTile({ answer, formatNum }: VisitorsTileProps) {
               days={points.map(point => ({
                 date: point.date,
                 value: point.engaged ?? 0,
-                description:
-                  point.engaged === null
-                    ? // A day before the counting began says so. A later day without a number
-                      // is one whose answer had no bounce rate.
-                      since && point.date < since
-                      ? `not counted before ${since}`
-                      : 'not counted'
-                    : undefined,
+                description: point.engaged === null ? 'not counted' : undefined,
               }))}
               label="visits with a second page or an interaction per day"
               describe={n => `${n} ${visits(n)}`}

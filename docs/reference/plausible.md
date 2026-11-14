@@ -763,7 +763,8 @@ The questions the dashboard answers, and where:
 The backend sends Plausible nothing. It reads aggregate visit data from
 Plausible to render the visitors tile at the top of the public stats page.
 
-The tile draws one bar per day: the day's visits with a second page or an
+Once every day of its window is counted, the tile draws one bar per day: the
+day's visits with a second page or an
 interaction. Those are the visits Plausible doesn't count as bounced, and a
 bounced visit is one pageview and no custom event. Every route change sends a
 pageview, and no event of the app is sent as non-interactive, so a visitor
@@ -774,13 +775,16 @@ they came for, or automated traffic that runs the page's scripts. A crawler
 farm loads one page per visit, so it raises all visits and leaves the bars
 alone ([The Windows 10 Chrome farm](#the-windows-10-chrome-farm-2026-11-09)).
 
-The bars start on 2026-11-10. Until 2026-11-09 every page load sent
+The count starts on 2026-11-10. Until 2026-11-09 every page load sent
 web-vitals events, which Plausible takes for interactions, so no visit of
-those days bounced. A day before that date draws the floor and is named
-"not counted before 2026-11-10", and until the 28-day window has moved past
-it, the header says "since 2026-11-10" in place of "last 28 days". An answer
-without engaged visits, from an API revision older than the page, draws the
-unique visitors per day as the tile did before.
+those days bounced, and no other number of Plausible's says which visits had
+a second page. A strip that is empty for the days before would say less than
+the one it replaces, so the tile switches by itself: until every day of the
+28-day window is counted, which is on 2026-12-07, it draws the unique
+visitors per day as it did before, and from that day on the engaged visits.
+An answer without engaged visits, from an API revision older than the page,
+draws the unique visitors too. A day inside a counted window whose answer
+had no bounce rate draws the floor and is named "not counted".
 
 - **Endpoint**: `GET /insights/visitors` (in `api/routers/insights.py`)
 - **Upstream call**: `POST https://plausible.io/api/v2/query` with body

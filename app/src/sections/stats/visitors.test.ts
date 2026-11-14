@@ -73,24 +73,38 @@ describe('readVisitors', () => {
 });
 
 describe('engagedDays', () => {
-  it('sums the engaged visits and all visits over the days that are counted', () => {
-    const { points } = readVisitors(ANSWER);
-
-    // 61 + 76, against the 303 + 360 visits of the same two days: the 555 visits of the days
-    // before the counting began are in neither number.
-    expect(engagedDays(points)).toEqual({ engaged: 137, visits: 663, wholeWindow: false });
+  it('is null while the window still holds a day from before the counting began', () => {
+    // The window starts on 2026-11-08, two days before the first counted one: the tile keeps
+    // drawing the unique visitors, not a strip that is empty for the days without a number.
+    expect(engagedDays(readVisitors(ANSWER))).toBeNull();
   });
 
-  it('says when the whole window is counted', () => {
-    const { points } = readVisitors({ ...ANSWER, points: ANSWER.points.slice(2) });
+  it('sums the engaged visits and all visits once the window’s first day is counted', () => {
+    const counted = readVisitors({ ...ANSWER, points: ANSWER.points.slice(2) });
 
-    expect(engagedDays(points)).toEqual({ engaged: 137, visits: 663, wholeWindow: true });
+    // 61 + 76, against the 303 + 360 visits of the same two days.
+    expect(engagedDays(counted)).toEqual({ engaged: 137, visits: 663 });
   });
 
-  it('is null when no day has engaged visits', () => {
+  it('leaves a day without a number out of both sums', () => {
+    // A day whose answer had visits and no bounce rate.
+    const gap = readVisitors({
+      points: [
+        ...ANSWER.points.slice(2),
+        { date: '2026-11-12', visitors: 515, visits: 526, engaged: null },
+      ],
+      engaged_since: '2026-11-10',
+    });
+
+    expect(engagedDays(gap)).toEqual({ engaged: 137, visits: 663 });
+  });
+
+  it('is null for an answer that names no day the counting began, or no day at all', () => {
     const older = readVisitors({ points: [{ date: '2026-11-11', visitors: 353 }] });
 
-    expect(engagedDays(older.points)).toBeNull();
-    expect(engagedDays([])).toBeNull();
+    expect(engagedDays(older)).toBeNull();
+    expect(engagedDays(readVisitors({ points: [], engaged_since: '2026-11-10' }))).toBeNull();
+    // Counted days without the date they began: an answer this page does not know.
+    expect(engagedDays(readVisitors({ points: ANSWER.points.slice(2) }))).toBeNull();
   });
 });

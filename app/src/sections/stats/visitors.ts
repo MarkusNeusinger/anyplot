@@ -11,7 +11,8 @@ export interface VisitorPoint {
   visits: number | null;
   /**
    * The day's visits with a second page or an interaction: the ones Plausible does not count as
-   * bounced. `null` for a day before the counting began, and for an answer that names none.
+   * bounced. `null` for a day before the counting began, for a day whose answer had no bounce
+   * rate, and for an answer that names none.
    */
   engaged: number | null;
 }
@@ -69,26 +70,26 @@ export function readVisitors(body: unknown): VisitorsAnswer {
   };
 }
 
-/** The days that have engaged visits, with the sums the tile shows for them. */
+/** The sums the tile shows once the whole window has engaged visits. */
 export interface EngagedDays {
   /** Visits with a second page or an interaction, over the counted days. */
   engaged: number;
   /** All visits over the same days. */
   visits: number;
-  /** Whether the window's first day is counted: if not, the tile names the day counting began. */
-  wholeWindow: boolean;
 }
 
 /**
- * The sums over the days that have engaged visits; `null` when no day has them, which is an
- * answer of an older API revision, and the tile then draws the visitors as before.
+ * The sums over the days that have engaged visits, once the whole window is counted: its first
+ * day is on or after the day the counting began. `null` before that, and for an answer that
+ * names no such day (an older API revision): the tile then draws the unique visitors, so it
+ * never shows a strip that is empty for the days it has no number for.
  */
-export function engagedDays(points: VisitorPoint[]): EngagedDays | null {
+export function engagedDays({ points, engagedSince }: VisitorsAnswer): EngagedDays | null {
+  if (engagedSince === null || points.length === 0 || points[0].date < engagedSince) return null;
   const counted = points.filter(point => point.engaged !== null && point.visits !== null);
   if (counted.length === 0) return null;
   return {
     engaged: counted.reduce((sum, point) => sum + (point.engaged ?? 0), 0),
     visits: counted.reduce((sum, point) => sum + (point.visits ?? 0), 0),
-    wholeWindow: points[0]?.engaged !== null,
   };
 }

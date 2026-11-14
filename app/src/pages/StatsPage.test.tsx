@@ -489,10 +489,9 @@ describe('StatsPage', () => {
     expect(screen.getByText('plausible.view()')).toBeInTheDocument();
   });
 
-  it('draws the visits with a second page or an interaction, and all visits as a line', async () => {
+  it('draws the visits with a second page or an interaction once every day is counted', async () => {
     mockFetchSuccess({
       points: [
-        { date: '2026-11-09', visitors: 259, visits: 280, engaged: null },
         { date: '2026-11-10', visitors: 292, visits: 303, engaged: 61 },
         { date: '2026-11-11', visitors: 353, visits: 360, engaged: 76 },
       ],
@@ -503,17 +502,35 @@ describe('StatsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('visitors-header')).toHaveTextContent(
-        'visits with a second page or an interaction · since 2026-11-10 · 137 total'
+        'visits with a second page or an interaction · last 28 days · 137 total'
       );
     });
-    // 303 + 360: the day before the counting began is in neither number.
     expect(screen.getByTestId('visitors-all')).toHaveTextContent('all visits: 663');
-    expect(screen.getAllByTestId('visitors-day')).toHaveLength(3);
+    expect(screen.getAllByTestId('visitors-day')).toHaveLength(2);
     // The visitors' strip comes first in the page, then the machine readers'.
     const strips = screen.getAllByRole('group').map(group => group.getAttribute('aria-label'));
     expect(strips.indexOf('visits with a second page or an interaction per day')).toBeLessThan(
       strips.indexOf('machine readers per day')
     );
+  });
+
+  it('keeps the unique visitors while the window holds a day from before the counting', async () => {
+    mockFetchSuccess({
+      points: [
+        { date: '2026-11-09', visitors: 259, visits: 280, engaged: null },
+        { date: '2026-11-10', visitors: 292, visits: 303, engaged: 61 },
+      ],
+      engaged_since: '2026-11-10',
+    });
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('visitors-header')).toHaveTextContent(
+        'unique visitors · last 28 days · 551 total'
+      );
+    });
+    expect(screen.queryByTestId('visitors-all')).not.toBeInTheDocument();
   });
 
   it('renders the "visitor data unavailable" placeholder when Plausible returns empty points', async () => {
