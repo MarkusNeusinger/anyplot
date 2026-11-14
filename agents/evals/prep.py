@@ -250,6 +250,8 @@ CONDITION_OPERATIONS = frozenset({"drop_rows", "blank", "keep_rows"})
 """The operations whose `where` is one list of conditions that must all hold."""
 MAX_REPLY_NAMES = 6
 """The texts one case may ask its reply to contain (`PrepCase.reply_names`)."""
+VIEW_OPS = ("reset_view", "apply_view")
+"""The operations that settle the view of the plot and change no table by themselves (`plot_view.route`)."""
 COMPUTE_PROBE_ROWS = 8
 """The rows of invented values two `compute` expressions are compared on (`comparison_key`)."""
 COMPUTE_PROBES: tuple[tuple[float, float, float], ...] = ((150.5, 7.913, 21.7), (1.5, 0.913, 2.17))
@@ -341,6 +343,15 @@ class PrepCase(BaseModel):
     """Texts of the fixture's own data the reply has to contain, each as written: what the user must hear about and
     the table cannot show, such as the rows a top N left out of a tie. A reply without one of them is the reply miss
     `unnamed` (`measure_reply`)."""
+    before_view: list[dict[str, Any]] = Field(default_factory=list, max_length=MAX_BEFORE_VERSIONS)
+    """The view of the plot in force before the message, as the `keep_rows` of an earlier turn set it (their
+    operations, routed as `prepare_data` routes them): the harness stores it in the session, the session block lists
+    it, and the expected table is the one a plot draws once the turn's call has landed on top of it
+    (`drawn_after`). For the turns that build on a view: a larger top N, every row again, the rows shown summed."""
+    asks: Literal["view", "table"] | None = None
+    """Which rows the turn's question is about while a view of the plot is in force (`score_question`): the rows the
+    plot draws (`view`: its `query_data` calls start with `apply_view`) or every row of the table (`table`). For a
+    question case with `before_view`; None leaves it unscored."""
     view: Literal["set", "none"] | None = None
     """Where the turn's choice of rows has to land (`score_view`): `set` for a view of the plot (a selection, a top
     N), which leaves the table as it is, `none` for a turn that must leave no view (a cleaning step, rows the user
@@ -357,6 +368,8 @@ class PrepCase(BaseModel):
             raise ValueError("a first turn is a message sent with a dataset")
         if self.before_operations and (self.message is None or self.first_turn or self.dataset_text is None):
             raise ValueError("earlier changes come before a message on summarized data")
+        if self.before_view and (self.message is None or self.first_turn or self.dataset_text is None):
+            raise ValueError("an earlier view comes before a message on summarized data")
         if self.row_order == "any" and not self.scored_by_table:
             raise ValueError("row_order is for a case scored by its table")
         if self.row_order == "any" and self.plot_request:
@@ -696,10 +709,56 @@ def _row_key(row: Sequence[str | None], numeric: Sequence[bool]) -> tuple[tuple[
     return tuple(key)
 
 
+def drawn_after(
+    start: ParsedDataset | None,
+    before_view: Sequence[dict[str, Any]],
+    operations: Sequence[dict[str, Any]],
+    language: str,
+) -> ParsedDataset:
+    """The table a plot draws after one `prepare_data` call with `operations` lands on `start` while the view
+    `before_view` set is in force: the call routed as the tool routes it (`plot_view.route`), an `apply_view`
+    making the view's rows the table's, the call's own view merged into the one held, and the table seen through
+    what is left. Raises `PrepareError` or `ValidationError` for a call the data or the models refuse."""
+    from pydantic import TypeAdapter
+
+    from agents.anyplot.data.prepare import Operation, PrepareError, apply_and_parse
+    from agents.anyplot.plot_view import PlotView, ViewRefused, merged, route, view_of
+
+    if start is None:
+        raise PrepareError("invalid_operation", "there is no data to change")
+    models = TypeAdapter(list[Operation])
+    try:
+        held = merged(PlotView(), route(models.validate_python(list(before_view)))) if before_view else PlotView()
+        routed = route(models.validate_python([item for item in operations if item.get("op") != GAP_OP]))
+        if routed.apply and held.empty:
+            raise ViewRefused("there is no view of the plot to apply")
+        shown = merged(held, routed) if routed.view else held
+    except ViewRefused as exc:
+        raise PrepareError("invalid_operation", str(exc)) from exc
+    table = start
+    if routed.apply:
+        _, table = apply_and_parse(table, held.operations(), language=language)
+    if routed.table:
+        _, table = apply_and_parse(table, routed.table, language=language)
+    if shown.empty:
+        return table
+    try:
+        return view_of(table, shown, language).parsed
+    except PrepareError:
+        if routed.view:
+            raise  # the call's own view does not fit the table it leaves: the tool refuses the whole call
+        return table  # a view held from before that the changed table no longer fits is cleared, as the tool does
+
+
 def expected_result(
-    start: ParsedDataset | None, operations: Sequence[dict[str, Any]], language: str
+    start: ParsedDataset | None,
+    operations: Sequence[dict[str, Any]],
+    language: str,
+    before_view: Sequence[dict[str, Any]] = (),
 ) -> ParsedDataset | None:
-    """The table `operations` make from `start` (None for no data), through the server code the tools run.
+    """The table `operations` make from `start` (None for no data), through the server code the tools run. With a
+    view in force before the turn (`before_view`), or a call that clears or applies one, it is the table a plot
+    draws afterwards (`drawn_after`).
 
     The `prepare_data` operations are applied in their order, up to `MAX_OPERATIONS` to a call, as `prepare_data`
     applies them (`apply_and_parse`, in the session `language`, which names a `date_number` column that names
@@ -714,6 +773,8 @@ def expected_result(
     from agents.anyplot.data.parse import MAX_COMPUTED_BYTES, parse_dataset
     from agents.anyplot.data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_and_parse
 
+    if before_view or any(item.get("op") in VIEW_OPS for item in operations):
+        return drawn_after(start, before_view, operations, language)
     table = start
     pending: list[dict[str, Any]] = []
 
@@ -824,7 +885,10 @@ def describe(line: str) -> str:
     if op == "unsupported":
         return f"unsupported {data['family']}"
     if op == "keep_rows":
-        return f"keep_rows {_conditions(data['where'])}" if data.get("where") else f"keep_rows {data['n']}"
+        kept = f"keep_rows {_conditions(data['where'])}" if data.get("where") else f"keep_rows {data['n']}"
+        return f"{kept} (table)" if data.get("target") == "table" else kept
+    if op in ("reset_view", "apply_view"):
+        return str(op)
     if op == "sort":
         return f"sort {data['column']} {'desc' if data.get('descending') else 'asc'}"
     if op == "pivot_longer":
@@ -910,6 +974,13 @@ class CaseResult:
     view_miss: bool = False
     """The case says where the rows have to land (`PrepCase.view`), and the turn landed them elsewhere: the case is
     a miss (`score_view`)."""
+    questions: int = 0
+    """The turn's `query_data` calls."""
+    questions_of_view: int = 0
+    """Those of them that asked of the rows the plot draws: their operations start with `apply_view`."""
+    question_miss: bool = False
+    """The case says which rows its question is about (`PrepCase.asks`), and the turn asked of the others or asked
+    nothing: the case is a miss (`score_question`)."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -993,6 +1064,8 @@ class CaseRunner:
                     await self._mark_summarized(user, sid)
                 if case.before_operations:
                     await self._make_versions(user, sid, case.before_operations)
+                if case.before_view:
+                    await self._set_view(user, sid, case.before_view)
             summary_turn = case.action == "summarize_data" or case.first_turn
             start = await self._start_version(user, sid, case.expected_from_version) if case.scored_by_table else None
             listed = await self._listed_conversions(user, sid)
@@ -1023,6 +1096,7 @@ class CaseRunner:
             score_from_version(result, case.expected_from_version, current=1 + len(case.before_operations))
             score_plot_request(result, case.plot_request)
             score_view(result, case.view, await self._view_held(user, sid))
+            score_question(result, case.asks)
             if summary_turn and pasted_rows is not None:
                 rows.add(pasted_rows)
             measure_reply(
@@ -1088,11 +1162,22 @@ class CaseRunner:
         if not case.scored_by_table:
             return None, None
         try:
-            made = expected_result(start, case.expected_operations, language)
+            made = expected_result(start, case.expected_operations, language, case.before_view)
         except (PrepareError, GenerateError, ParseError, ValidationError) as exc:
             cause = getattr(exc, "code", None) or type(exc).__name__  # a fixed code, never a message with a cell
             return None, f"the expected operations do not apply to the stored data: {cause}"
         return (result_table(made) if made is not None else None), None
+
+    async def _set_view(self, user: str, sid: str, operations: Sequence[dict[str, Any]]) -> None:
+        """The case's earlier view, stored as the `prepare_data` call that set it stored it (`plot_view.view_delta`);
+        no model call. `check_cases` routed it once already, so a refusal here is a bug and raises."""
+        from pydantic import TypeAdapter
+
+        from agents.anyplot.data.prepare import Operation
+        from agents.anyplot.plot_view import PlotView, merged, route, view_delta
+
+        view = merged(PlotView(), route(TypeAdapter(list[Operation]).validate_python(list(operations))))
+        await self.runtime.write_state(await self.runtime.session(user, sid), view_delta(view))
 
     async def _view_held(self, user: str, sid: str) -> bool:
         """Whether the session holds a view of the plot after the turn, as stored (`plot_view.read_view`)."""
@@ -1183,6 +1268,11 @@ class CaseRunner:
                 if call.name in (PREPARE_TOOL, QUERY_TOOL):
                     args = call.args if isinstance(call.args, dict) else {}
                     result.from_versions.append(f"{call.name}:{args.get('from_version', 'current')}")
+                if call.name == QUERY_TOOL and isinstance(call.args, dict):
+                    asked = call.args.get("operations")
+                    first = asked[0] if isinstance(asked, list) and asked else None
+                    result.questions += 1
+                    result.questions_of_view += isinstance(first, dict) and first.get("op") == "apply_view"
                 if call.name == PREPARE_TOOL and isinstance(call.args, dict):
                     items = call.args.get("operations")
                     if isinstance(items, list):
@@ -1297,6 +1387,20 @@ def score_view(result: CaseResult, wanted: Literal["set", "none"] | None, held: 
     result.view_set = held
     result.view_miss = wanted is not None and held != (wanted == "set")
     if result.view_miss:
+        result.match = False
+
+
+def score_question(result: CaseResult, asks: Literal["view", "table"] | None) -> None:
+    """Whether the turn asked its question of the rows the case means while a view of the plot is in force: the rows
+    the plot draws (`view`: every `query_data` call starts with `apply_view`) or every row of the table (`table`:
+    none does). A turn that asked nothing misses either way, and a case without the expectation is not scored. The
+    answer itself is not scored: it is the reply's, and the report holds no reply text."""
+    if asks is None:
+        return
+    of_view = result.questions_of_view
+    asked_right = of_view == result.questions if asks == "view" else of_view == 0
+    result.question_miss = not result.questions or not asked_right
+    if result.question_miss:
         result.match = False
 
 
@@ -1479,6 +1583,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         "version_misses": sum(1 for _, result in pairs if result.version_miss),
         "plot_request_misses": sum(1 for _, result in pairs if result.plot_request_miss),
         "view_misses": sum(1 for _, result in pairs if result.view_miss),
+        "question_misses": sum(1 for _, result in pairs if result.question_miss),
         "llm_calls": sum(result.llm_calls for _, result in pairs),
         "cost_usd": round(sum(result.cost_usd for _, result in pairs), 8),
     }
@@ -1503,6 +1608,9 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "plot_request_miss": result.plot_request_miss,
             "view_set": result.view_set,
             "view_miss": result.view_miss,
+            "questions": result.questions,
+            "questions_of_view": result.questions_of_view,
+            "question_miss": result.question_miss,
             "plot_wishes": result.plot_wishes,
             "plot_wishes_kept": result.plot_wishes_kept,
             "tool_calls": result.tool_calls,
@@ -1581,6 +1689,9 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
                 outcome += ", no plot request"
             if result.view_miss:
                 outcome += ", the table was cut, not the view" if case.view == "set" else ", a view was set"
+            if result.question_miss:
+                asked = f"{result.questions_of_view} of {result.questions} questions asked of the view"
+                outcome += f", {asked}, expected the {case.asks}"
             if result.reply_miss:
                 outcome += f", reply: {result.reply_miss.replace('_', ' ')}"
         rows.append((case.id, expected, found, outcome))
@@ -1756,17 +1867,22 @@ def check_cases(cases: Sequence[PrepCase]) -> None:
             continue
         start = _offline_start(case, versions)
         try:
-            made = expected_result(start, case.expected_operations, case.locale)
+            # What a plot drew before the turn: the table, or the table through the view an earlier turn set.
+            before = drawn_after(start, case.before_view, [], case.locale) if case.before_view else start
+            made = expected_result(start, case.expected_operations, case.locale, case.before_view)
         except (ValidationError, PrepareError, GenerateError, ParseError) as exc:
             raise SetupError(f"case {case.id}: expected_operations do not apply to its data: {exc}") from exc
         changes = any(item.get("op") != GAP_OP for item in case.expected_operations)
         # The scoring's own equality: a sort under `row_order: "any"`, or a change within the tolerances, is none.
         unchanged = (
             made is not None
-            and start is not None
-            and table_difference(result_table(start), result_table(made), any_order=case.row_order == "any") is None
+            and before is not None
+            and table_difference(result_table(before), result_table(made), any_order=case.row_order == "any") is None
         )
-        if changes and unchanged:
+        # A view put in the table's place leaves the same rows for the plot: such a case is told from no call by
+        # where the rows are afterwards (`PrepCase.view`), a view in force before the turn and none after it.
+        moved = bool(case.before_view) and case.view == "none"
+        if changes and unchanged and not moved:
             raise SetupError(
                 f"case {case.id}: expected_operations leave its table as it is, so the table cannot tell them from no "
                 "data call; set strict_operations"

@@ -21,6 +21,7 @@ from agents.anyplot.data.prepare import (
     Aggregate,
     PrepareError,
     apply_operations,
+    cut_note,
 )
 from agents.anyplot.schemas import MAX_CELL_CHARS, MAX_COLUMN_NAME_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS
 
@@ -866,6 +867,54 @@ class TestKeepRowsThatMatch:
             apply_operations(parsed, OPERATIONS.validate_python(operations))
 
         assert caught.value.code == "type_mismatch"
+
+
+class TestTheEngineKnowsNoView:
+    """`reset_view` and `apply_view` settle the view of the plot, which the tools hold. The engine applies
+    operations to a table and refuses both, so one that reaches it never reads as a change that changed nothing."""
+
+    @pytest.mark.parametrize("op", ["reset_view", "apply_view"])
+    def test_an_operation_on_the_view_is_refused_and_takes_no_field(self, op: str) -> None:
+        code, message = failure(CITIES, {"op": op})
+
+        assert code == "invalid_operation" and "first operation" in message
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([{"op": op, "column": "Stadt"}])
+
+    def test_the_target_of_a_keep_rows_changes_nothing_in_the_engine(self) -> None:
+        plain = prepare(CITIES, keep({"column": "Land", "test": "eq", "value": "CH"}))
+        table = prepare(CITIES, {**keep({"column": "Land", "test": "eq", "value": "CH"}), "target": "table"})
+
+        assert plain.csv == table.csv and plain.changes == table.changes
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([{"op": "keep_rows", "n": 2, "target": "chart"}])
+
+
+class TestCutNote:
+    """A cut made after the operations, such as a question's `limit`, names a tie as a top N does, in its own words:
+    an answer drops nothing, it returns some rows and leaves others out."""
+
+    def test_the_result_says_what_ranked_its_rows(self) -> None:
+        ranked = prepare(CITIES, {"op": "sort", "column": "Umsatz", "descending": True}, drop("Land", "eq", "DE"))
+        renamed = prepare(
+            CITIES,
+            {"op": "sort", "column": "Umsatz", "descending": True},
+            {"op": "rename", "column": "Land", "name": "Staat"},
+        )
+
+        assert ranked.sorted_by == "Umsatz" and renamed.sorted_by is None
+        assert prepare(CITIES, drop("Land", "eq", "DE")).sorted_by is None
+
+    def test_a_cut_among_equal_values_is_named_and_any_other_cut_is_not(self) -> None:
+        ranked = prepare(CITIES, {"op": "sort", "column": "Umsatz", "descending": True})
+        result = reparse(ranked)
+
+        assert cut_note(result, ranked.sorted_by, 2) == (
+            "the cut falls among 3 rows with Umsatz 800: 1 returned (Stadt 'Köln') and 2 left out (Stadt 'Basel' and "
+            "'Genf')"
+        )
+        assert cut_note(result, ranked.sorted_by, 1) == "" and cut_note(result, ranked.sorted_by, 4) == ""
+        assert cut_note(result, None, 2) == "" and cut_note(result, ranked.sorted_by, 99) == ""
 
 
 class TestTopNTies:

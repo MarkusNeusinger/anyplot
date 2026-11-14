@@ -632,7 +632,7 @@ GUARD_VERDICTS = frozenset(
 PREP_OPS = frozenset(
     "rename drop_columns drop_rows set_type aggregate sort pivot_longer pivot_wider classify derive make_date"
     " row_number date_number split extract strip replace compute diff rolling blank keep_rows reset_view"
-    " unsupported".split()
+    " apply_view unsupported".split()
 )
 # The record's own bounds (`turn_record.MAX_KEPT_TURNS` and the `MAX_RECORD_*`), read again here.
 _MAX_TURNS = 50

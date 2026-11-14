@@ -37,6 +37,7 @@ from .data.bindings import check_bindings
 from .data.parse import MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from .data.prepare import (
     MAX_CONDITIONS,
+    ApplyView,
     Condition,
     KeepRows,
     Operation,
@@ -117,12 +118,14 @@ class ViewRefused(ValueError):
 @dataclass(frozen=True)
 class Routed:
     """One `prepare_data` call's operations by where they land: `table` as a data version, `selections` and `top` in
-    the view of the plot, `reset` when the call clears the view first."""
+    the view of the plot, `reset` when the call clears the view first, `apply` when it clears it by making the
+    rows it shows the table's (`apply_view`: the caller puts the view's operations before `table`)."""
 
     table: list[Operation]
     selections: list[list[Condition]]
     top: Top | None
     reset: bool
+    apply: bool = False
 
     @property
     def view(self) -> bool:
@@ -142,12 +145,17 @@ def route(operations: list[Operation]) -> Routed:
     that an operation of the table follows (the selected rows summed per month, a column computed for the top 10)
     is the table's too, since that operation works on the rows it leaves, and so is one without a `sort` before its
     `n`, which ranks the rows by nothing a view could keep: the whole call then lands in the table. `reset_view`
-    comes first or not at all (`ViewRefused`).
+    and `apply_view` come first or not at all, and a call has one of them (`ViewRefused`): both leave the view
+    empty before the rest applies, `apply_view` by moving its rows into the table.
     """
     reset = bool(operations) and isinstance(operations[0], ResetView)
-    rest = list(operations[1:] if reset else operations)
-    if any(isinstance(operation, ResetView) for operation in rest):
-        raise ViewRefused("reset_view is the first operation of a call: it clears the view before the others apply")
+    apply = bool(operations) and isinstance(operations[0], ApplyView)
+    rest = list(operations[1:] if reset or apply else operations)
+    if any(isinstance(operation, ResetView | ApplyView) for operation in rest):
+        raise ViewRefused(
+            "reset_view and apply_view are the first operation of a call, and a call has one of them: they settle "
+            "the view before the others apply"
+        )
     end = len(rest)
     top: Top | None = None
     if end >= 2:
@@ -164,14 +172,17 @@ def route(operations: list[Operation]) -> Routed:
         end -= 1
     table = rest[:end]
     if any(_for_plot(operation) for operation in table):
-        return Routed(table=rest, selections=[], top=None, reset=reset)
-    return Routed(table=table, selections=selections, top=top, reset=reset)
+        return Routed(table=rest, selections=[], top=None, reset=reset or apply, apply=apply)
+    return Routed(table=table, selections=selections, top=top, reset=reset or apply, apply=apply)
 
 
 def table_only(operations: list[Operation]) -> Routed:
     """A call whose every operation is the table's, whatever its `keep_rows` say: one that starts from an earlier
-    version (`from_version`) rebuilds the table. A `reset_view` in it still clears the view, first or not at all."""
+    version (`from_version`) rebuilds the table. A `reset_view` in it still clears the view, first or not at all;
+    an `apply_view` is refused (`ViewRefused`), since the view shows rows of the current table, not of that one."""
     routed = route(operations)
+    if routed.apply:
+        raise ViewRefused("apply_view works on the current table, whose rows the view shows: leave from_version out")
     rest: list[Operation] = [operation for operation in operations if not isinstance(operation, ResetView)]
     return Routed(table=rest, selections=[], top=None, reset=routed.reset)
 

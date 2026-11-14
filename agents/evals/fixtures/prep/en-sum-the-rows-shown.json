@@ -1,0 +1,16 @@
+{
+  "dataset_text": "Year,Month,Store,Amount\n2023,Nov,North,30\n2023,Nov,South,25\n2023,Dec,North,40\n2024,Jan,North,50\n2024,Jan,South,45\n2024,Feb,North,70\n2024,Feb,South,65\n",
+  "before_view": [
+    {"op": "keep_rows", "where": [{"column": "Year", "test": "eq", "value": 2024}]}
+  ],
+  "message": "Now add up the amounts of the rows shown, one total per month, and put that in the table.",
+  "expected_operations": [
+    {"op": "apply_view"},
+    {"op": "aggregate", "by": ["Month"], "column": "Amount", "how": "sum"}
+  ],
+  "view": "none",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "row_order": "any",
+  "tags": ["apply_view", "aggregate", "view_change"]
+}

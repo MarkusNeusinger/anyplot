@@ -638,6 +638,27 @@ class TestTheViewOfThePlot:
         assert "say in one sentence of the summary that the plot of the new data draws every row" in rule
         assert "offer to set it again" in rule and "only once the user says yes" in rule
 
+    def test_a_change_of_the_table_that_means_the_rows_shown_applies_the_view_first(self) -> None:
+        """A table change reads every row. "Sum these per month" under "only 2024" would add 2023 in, and the view,
+        whose column the sum drops, would go without a word of the rows it stood for."""
+        root = policy.root_instruction()
+        rule = root.split("- The view of the plot. ", 1)[1].split("\n", 1)[0]
+
+        assert "A change of the table reads every row of the table, also the rows the view leaves out" in rule
+        assert 'start that call with `{"op": "apply_view"}`' in rule
+        assert "when the message does not say which rows it means and the two would differ, ask" in rule
+        assert "puts the rows the view of the plot shows in place of the table's" in root
+        assert "It needs a view: without one it is refused" in root
+
+    def test_a_question_says_which_rows_it_read_and_names_a_tie_at_its_cut(self) -> None:
+        root = policy.root_instruction()
+
+        assert "a question reads every row of the table unless its operations start with" in root
+        assert "say in the reply which rows the answer covers, as the result's `view` says" in root
+        # "Which 3 are largest" over five equal values: the three returned are not the largest alone.
+        assert "the cut at `limit` falls among rows with the same value" in root
+        assert "never call the returned ones the largest alone" in root
+
     def test_the_tool_line_names_the_exception(self) -> None:
         root = policy.root_instruction()
 

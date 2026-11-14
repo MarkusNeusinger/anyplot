@@ -35,6 +35,7 @@ from agents.evals.prep import (
     canonical_operations,
     check_cases,
     describe,
+    drawn_after,
     load_cases,
     run_cases,
     score,
@@ -70,6 +71,8 @@ OPERATIONS = (
     "rolling",
     "blank",
     "keep_rows",
+    "reset_view",
+    "apply_view",
     "unsupported",
 )
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
@@ -132,24 +135,42 @@ class TestFixtures:
         # seven cases set the view of the plot (a selection, a top N, the note sent with a paste) and leave the table
         # as it is, five must leave no view: rows the user asks out of the table itself (`in_table`), rows that are
         # errors (`cleaning`, a French one), a selection another operation builds on, a rebuild from the original.
-        assert len(cases) == 124
+        # And the turns that build on a view an earlier turn set (`before_view`, `view_change`): a larger top N stays a
+        # view, "all rows again" clears it (`reset_view`), and two put it in the table's place (`apply_view`): the
+        # rows shown summed per month, and a French "keep only these in the table itself". And two questions under
+        # a view (`view_question`, `asks`): one about what the plot shows, one about the whole table; both change
+        # nothing, so the view they found is still set.
+        assert len(cases) == 130
         views = {item.id: item.view for item in cases if item.view is not None}
         assert sorted(case_id for case_id, landing in views.items() if landing == "set") == [
+            "de-frage-zur-ganzen-tabelle",
             "de-notiz-nur-2024",
             "de-nur-januar-2024",
             "de-top-2-gleichstand",
             "en-keep-at-least",
             "en-keep-two-categories",
+            "en-question-about-the-rows-shown",
             "en-top-revenue-keep-rows",
+            "en-view-top-15-after-10",
             "fr-garder-deux-villes",
         ]
         assert sorted(case_id for case_id, landing in views.items() if landing == "none") == [
             "de-hard-zwei-filter-zaehlen",
+            "de-wieder-alle-zeilen",
             "de-zeilen-aus-tabelle-loeschen",
             "en-drop-total-row",
             "en-from-original-first-20",
+            "en-sum-the-rows-shown",
+            "fr-appliquer-la-vue-au-tableau",
             "fr-lignes-de-test-en-trop",
         ]
+        built_on = [item for item in cases if "view_change" in item.tags]
+        assert len(built_on) == 4 and all(item.before_view and item.view is not None for item in built_on)
+        assert sum(1 for item in built_on if item.expected_operations[0] == {"op": "apply_view"}) == 2
+        asked = {item.id: item.asks for item in cases if item.asks is not None}
+        assert asked == {"en-question-about-the-rows-shown": "view", "de-frage-zur-ganzen-tabelle": "table"}
+        assert all(item.before_view and not item.expected_operations for item in cases if item.asks is not None)
+        assert sorted(item.id for item in cases if item.before_view) == sorted([*asked, *(i.id for i in built_on)])
         (in_table,) = [item for item in cases if "in_table" in item.tags]
         assert in_table.expected_operations[-1]["target"] == "table"
         kept = [item for item in cases if "keep_where" in item.tags]
@@ -198,6 +219,7 @@ class TestFixtures:
         ]
         assert all(item.expected_operations[-1]["op"] == "sort" and not item.plot_request for item in named)
         assert sorted(item.id for item in cases if item.locale == "fr") == [
+            "fr-appliquer-la-vue-au-tableau",
             "fr-garder-deux-villes",
             "fr-lignes-de-test-en-trop",
             "fr-plus-grands-d-abord",
@@ -337,6 +359,12 @@ class TestFixtures:
                 assert set(table.column_dtypes.values()) == {"number"}, item.id
             if [operation["op"] for operation in operations] == ["unsupported"]:
                 continue  # a named gap applies nothing: `prepare_data` answers it with its fixed sentence
+            if item.before_view or any(operation["op"] in ("reset_view", "apply_view") for operation in operations):
+                # A turn that builds on a view: the engine knows no view, so the call is applied as the tool routes
+                # it, and it must leave rows for the plot to draw.
+                assert parsed is not None, item.id
+                assert drawn_after(parsed, item.before_view, operations, item.locale).profile.rows > 0, item.id
+                continue
             if operations:
                 assert parsed is not None, item.id
                 prepared = apply_operations(parsed, _operations(operations))
@@ -997,6 +1025,67 @@ class TestReplyShape:
         open_case = CaseResult("v-004", [], [], match=True)
         prep.score_view(open_case, None, held=True)
         assert open_case.view_set and not open_case.view_miss and open_case.match
+
+    def test_which_rows_a_question_was_asked_of_is_scored_under_a_view(self) -> None:
+        """A question changes neither the table nor the view, so the table a plot would draw cannot tell a turn that
+        asked of the rows shown from one that asked of every row: only the questions' own operations can."""
+
+        def asked(questions: int, of_view: int) -> CaseResult:
+            return CaseResult("q-001", [], [], match=True, questions=questions, questions_of_view=of_view)
+
+        shown = asked(1, 1)
+        prep.score_question(shown, "view")
+        assert not shown.question_miss and shown.match
+
+        whole = asked(1, 0)
+        prep.score_question(whole, "view")
+        assert whole.question_miss and not whole.match  # the answer covers rows the plot does not draw
+
+        mixed = asked(2, 1)
+        prep.score_question(mixed, "view")
+        assert mixed.question_miss  # every question of the turn has to read the rows shown
+
+        table = asked(2, 0)
+        prep.score_question(table, "table")
+        assert not table.question_miss and table.match
+
+        narrowed = asked(1, 1)
+        prep.score_question(narrowed, "table")
+        assert narrowed.question_miss and not narrowed.match  # the user asked for every year
+
+        # An answer without a question is a guess, whichever rows the case means.
+        unasked_view, unasked_table = asked(0, 0), asked(0, 0)
+        prep.score_question(unasked_view, "view")
+        prep.score_question(unasked_table, "table")
+        assert unasked_view.question_miss and not unasked_view.match
+        assert unasked_table.question_miss and not unasked_table.match
+
+        open_case = asked(1, 1)
+        prep.score_question(open_case, None)
+        assert not open_case.question_miss and open_case.match
+
+    def test_the_table_a_plot_draws_after_a_call_follows_the_tools_routing(self) -> None:
+        """`drawn_after` is the expected table of a turn that builds on a view: the call routed as `prepare_data`
+        routes it, on top of the view an earlier turn set."""
+        table = parse_dataset("Jahr,Monat,Umsatz\n2023,11,3\n2023,12,4\n2024,1,5\n2024,2,7\n2024,3,6\n")
+        only_2024 = [{"op": "keep_rows", "where": [{"column": "Jahr", "test": "eq", "value": 2024}]}]
+        per_year = {"op": "aggregate", "by": ["Jahr"], "column": "Umsatz", "how": "sum"}
+
+        def rows(operations: list[dict[str, Any]]) -> list[str]:
+            return drawn_after(table, only_2024, operations, "de").csv.strip().splitlines()[1:]
+
+        assert rows([]) == ["2024,1,5", "2024,2,7", "2024,3,6"]  # the view as it stands
+        assert len(rows([{"op": "reset_view"}])) == 5
+        assert rows([{"op": "apply_view"}, per_year]) == ["2024,18"]  # the rows shown, summed
+        # Every row summed per year, 7 for 2023 and 18 for 2024; the view still fits the table and still holds.
+        assert rows([per_year]) == ["2024,18"]
+        # A change of the table that the held view no longer fits clears it, as the tool does: every row is drawn.
+        assert rows([{"op": "drop_columns", "columns": ["Jahr"]}]) == ["11,3", "12,4", "1,5", "2,7", "3,6"]
+        # A view the call itself names has to fit the table it leaves: the tool refuses such a call whole.
+        with pytest.raises(PrepareError):
+            drawn_after(table, [], [{"op": "drop_columns", "columns": ["Jahr"]}, *only_2024], "de")
+        with pytest.raises(PrepareError, match="no view of the plot to apply"):
+            drawn_after(table, [], [{"op": "apply_view"}], "de")
 
     @pytest.mark.parametrize(
         ("text", "invitation"),

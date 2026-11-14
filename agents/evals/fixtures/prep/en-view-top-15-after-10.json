@@ -1,0 +1,16 @@
+{
+  "dataset_text": "Team,Points\nA,61\nB,47\nC,33\nD,58\nE,44\nF,30\nG,55\nH,41\nI,27\nJ,52\nK,38\nL,24\nM,49\nN,35\nO,21\nP,46\nQ,32\nR,18\n",
+  "before_view": [
+    {"op": "sort", "column": "Points", "descending": true},
+    {"op": "keep_rows", "n": 10}
+  ],
+  "message": "Make it the top 15 after all.",
+  "expected_operations": [
+    {"op": "sort", "column": "Points", "descending": true},
+    {"op": "keep_rows", "n": 15}
+  ],
+  "view": "set",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["keep_rows", "top_n", "view_change"]
+}

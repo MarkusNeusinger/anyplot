@@ -1,0 +1,12 @@
+{
+  "dataset_text": "Jahr,Monat,Umsatz\n2023,11,3\n2023,12,4\n2024,1,5\n2024,2,7\n2024,3,6\n",
+  "before_view": [
+    {"op": "keep_rows", "where": [{"column": "Jahr", "test": "eq", "value": 2024}]}
+  ],
+  "message": "Zeig im Diagramm wieder alle Zeilen, ohne den Filter.",
+  "expected_operations": [{"op": "reset_view"}],
+  "view": "none",
+  "locale": "de",
+  "spec_id": "line-basic",
+  "tags": ["reset_view", "view_change"]
+}

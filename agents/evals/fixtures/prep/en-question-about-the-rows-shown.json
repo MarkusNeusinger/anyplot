@@ -1,0 +1,13 @@
+{
+  "dataset_text": "Year,Month,Store,Amount\n2023,Nov,North,30\n2023,Nov,South,25\n2023,Dec,North,40\n2024,Jan,North,50\n2024,Jan,South,45\n2024,Feb,North,70\n2024,Feb,South,65\n",
+  "before_view": [
+    {"op": "keep_rows", "where": [{"column": "Year", "test": "eq", "value": 2024}]}
+  ],
+  "message": "What do the amounts in the plot add up to?",
+  "expected_operations": [],
+  "asks": "view",
+  "view": "set",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["data_question", "view_question"]
+}

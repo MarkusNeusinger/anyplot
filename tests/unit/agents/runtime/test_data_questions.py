@@ -258,6 +258,10 @@ class TestQueryData:
         assert table_of(result)["rows"]  # cut by rows, never to nothing
         if cell.isascii():
             assert len(table_of(result)["rows"]) == MAX_QUERY_ROWS  # plain text fits whole
+        # The line on the view of the plot is part of the result before the cut: rows give way to it, never the cap.
+        told = query_result(answer, view="this answer reads every row of the table; " + "v" * 600)
+        assert result_size(told) <= result_limit("query_data") and "view" in told
+        assert table_of(told)["rows"] and len(table_of(told)["rows"]) <= len(table_of(result)["rows"])
 
     @pytest.mark.parametrize(
         ("arguments", "verdict"),
