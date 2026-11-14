@@ -115,17 +115,34 @@ class DailyImplPoint(BaseModel):
     count: int
 
 
+# The first UTC day whose bounce rate says what it should. Until 2026-11-09 every page load sent
+# web-vitals events, and Plausible takes any custom event for an interaction, so no visit
+# bounced: the days before would read as "every visit was engaged".
+ENGAGED_SINCE = date(2026, 11, 10)
+
+
 class VisitorPoint(BaseModel):
-    """Unique visitors on a single day, sourced from Plausible."""
+    """One UTC day of the site's visits, sourced from Plausible.
+
+    `engaged` is the day's visits with a second page or an interaction: the visits Plausible does
+    not count as bounced. A visit that bounced is one page and nothing else, which is a reader who
+    found what they came for and also what a crawler farm's page load looks like. It is `None` for
+    a day before `ENGAGED_SINCE`, and for a day whose answer has visits and no bounce rate.
+    Plausible answers the bounce rate in whole percent, so the number is right to about one in two
+    hundred of the day's visits.
+    """
 
     date: str  # ISO "YYYY-MM-DD"
     visitors: int
+    visits: int = 0
+    engaged: int | None = None
 
 
 class VisitorsResponse(BaseModel):
-    """Unique visitors per day for the public stats page."""
+    """The site's visits per day for the public stats page."""
 
     points: list[VisitorPoint]
+    engaged_since: str = ENGAGED_SINCE.isoformat()
 
 
 class DashboardResponse(BaseModel):
@@ -726,8 +743,30 @@ async def get_related_specs(
 # =============================================================================
 
 
+def _engaged_visits(visits: int, bounce_rate: float | None) -> int | None:
+    """The visits Plausible did not count as bounced, from its two public numbers.
+
+    A day without a visit has none. A day with visits and no bounce rate has no such number:
+    a missing rate read as zero would call every one of its visits engaged.
+    """
+    if visits == 0:
+        return 0
+    if bounce_rate is None:
+        return None
+    return max(0, min(visits, round(visits * (100 - bounce_rate) / 100)))
+
+
+def _number(value: object) -> float | None:
+    """A metric as a number, or `None` for anything else, such as a rate with nothing to divide."""
+    return float(value) if isinstance(value, int | float) and not isinstance(value, bool) else None
+
+
 async def _fetch_plausible_visitors() -> VisitorsResponse:
-    """Query the Plausible Stats API v2 for unique visitors per day (last 28d).
+    """Query the Plausible Stats API v2 for visitors, visits and the bounce rate per day (last 28d).
+
+    A day's `engaged` visits are its visits minus the bounced ones (`_engaged_visits`), from
+    `ENGAGED_SINCE` on. The stats page draws those: a crawler farm that runs the page's scripts
+    loads one page per visit, so it inflates the visitors and leaves the engaged visits alone.
 
     The 28-day window ends on today (inclusive) so the rightmost bar reflects
     current-day traffic as a partial day, matching how Plausible's dashboard
@@ -753,7 +792,7 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
     start = today - timedelta(days=27)
     payload = {
         "site_id": settings.plausible_site_id,
-        "metrics": ["visitors"],
+        "metrics": ["visitors", "visits", "bounce_rate"],
         "date_range": [start.isoformat(), today.isoformat()],
         "dimensions": ["time:day"],
     }
@@ -770,8 +809,8 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
         logger.warning("Plausible visitors fetch failed (returning empty series)", exc_info=True)
         return VisitorsResponse(points=[])
 
-    # Plausible v2 response: {"results": [{"dimensions": ["YYYY-MM-DD"], "metrics": [N]}, ...]}
-    by_date: dict[str, int] = {}
+    # Plausible v2 response: {"results": [{"dimensions": ["YYYY-MM-DD"], "metrics": [visitors, visits, bounce]}, ...]}
+    by_date: dict[str, tuple[int, int, float | None]] = {}
     for row in data.get("results", []):
         dims = row.get("dimensions") or []
         metrics = row.get("metrics") or []
@@ -780,25 +819,33 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
         # The time:day dimension can come back as "YYYY-MM-DD" or an ISO datetime —
         # normalize to a plain ISO date so the join with the zero-filled axis works.
         day_str = str(dims[0])[:10]
-        try:
-            count = int(metrics[0] or 0)
-        except TypeError, ValueError:
-            count = 0
-        by_date[day_str] = count
+        # A metric the row lacks, or one that is no number, is no number here either: a count
+        # reads as zero, and a missing bounce rate leaves the day without engaged visits.
+        numbers = [_number(value) for value in metrics[:3]]
+        numbers += [None] * (3 - len(numbers))
+        by_date[day_str] = (int(numbers[0] or 0), int(numbers[1] or 0), numbers[2])
 
-    points = [
-        VisitorPoint(
-            date=(today - timedelta(days=offset)).isoformat(),
-            visitors=by_date.get((today - timedelta(days=offset)).isoformat(), 0),
+    points = []
+    for offset in range(27, -1, -1):
+        day = today - timedelta(days=offset)
+        visitors, visits, bounce_rate = by_date.get(day.isoformat(), (0, 0, None))
+        points.append(
+            VisitorPoint(
+                date=day.isoformat(),
+                visitors=visitors,
+                visits=visits,
+                engaged=_engaged_visits(visits, bounce_rate) if day >= ENGAGED_SINCE else None,
+            )
         )
-        for offset in range(27, -1, -1)
-    ]
     return VisitorsResponse(points=points)
 
 
 @router.get("/visitors", response_model=VisitorsResponse)
 async def get_visitors() -> VisitorsResponse:
-    """Get unique visitors per day for the last 28 days (Plausible Stats API).
+    """Get visitors, visits and engaged visits per day for the last 28 days (Plausible Stats API).
+
+    A point's `engaged` is its visits with a second page or an interaction, `None` before
+    `engaged_since` (`ENGAGED_SINCE`).
 
     Cached for ~1h via stale-while-revalidate so we stay well under Plausible's
     600-req/h rate limit even under traffic spikes on the public stats page.

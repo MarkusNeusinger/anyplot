@@ -15,17 +15,15 @@
  * - Loading, a failed request and any answer but `ok` are one muted line each.
  */
 
-import { useState } from 'react';
-
 import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { paths, specPath } from 'src/routes/paths';
 import { DayStrip } from 'src/sections/stats/DayStrip';
+import { HintTerm } from 'src/sections/stats/HintTerm';
 import {
   byVerdict,
   platformLabel,
@@ -49,28 +47,6 @@ const entryLinkSx = {
   color: 'var(--ink)',
   textDecoration: 'none',
   '&:hover': { color: colors.primary, textDecoration: 'underline' },
-  '&:focus-visible': {
-    outline: `2px solid ${colors.primary}`,
-    outlineOffset: 2,
-    borderRadius: '2px',
-  },
-} as const;
-
-/**
- * A word with a hint: a button that reads as the line's own text, dotted like a term with a
- * note.
- */
-const hintTermSx = {
-  font: 'inherit',
-  letterSpacing: 'inherit',
-  color: 'inherit',
-  background: 'none',
-  border: 0,
-  p: 0,
-  m: 0,
-  textDecoration: 'underline dotted',
-  textUnderlineOffset: '3px',
-  cursor: 'help',
   '&:focus-visible': {
     outline: `2px solid ${colors.primary}`,
     outlineOffset: 2,
@@ -176,7 +152,10 @@ function SharedLinksSums({
           />
           {verdict.unverified > 0 && (
             <li data-testid="shared-links-unverified">
-              <UnverifiedTerm /> shares: {formatNum(verdict.unverified)}
+              <HintTerm hint={UNVERIFIED_HINT} testId="shared-links-unverified-term">
+                unverified
+              </HintTerm>{' '}
+              shares: {formatNum(verdict.unverified)}
             </li>
           )}
         </>
@@ -202,44 +181,6 @@ function SharedLinksSums({
         formatNum={formatNum}
       />
     </Box>
-  );
-}
-
-/**
- * The word "unverified" with its hint (`UNVERIFIED_HINT`), which describes the word and leaves
- * its name alone (`describeChild`).
- *
- * - A pointer and a keyboard open the hint the tooltip's own way.
- * - A tap opens it through the click. The tooltip's touch timer runs between the finger's
- *   down and up, so it opens for a long press and misses a tap.
- * - It closes when the pointer or the focus leaves, on Escape, and some seconds after a touch:
- *   long enough to read two sentences, where the default is 1.5 s.
- * - It opens under the word, over the "most shared" lines, so the verified line above stays
- *   readable beside it.
- */
-function UnverifiedTerm() {
-  const [open, setOpen] = useState(false);
-  return (
-    <Tooltip
-      title={UNVERIFIED_HINT}
-      arrow
-      describeChild
-      placement="bottom-start"
-      open={open}
-      onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
-      leaveTouchDelay={8000}
-    >
-      <Box
-        component="button"
-        type="button"
-        data-testid="shared-links-unverified-term"
-        onClick={() => setOpen(true)}
-        sx={hintTermSx}
-      >
-        unverified
-      </Box>
-    </Tooltip>
   );
 }
 

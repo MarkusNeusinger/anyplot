@@ -209,13 +209,16 @@ export function SpecDetailView({
           x: ((e.clientX - rect.left) / rect.width) * 100,
           y: ((e.clientY - rect.top) / rect.height) * 100,
         });
+        // Zooming in opens no page, so without this a visitor who lands on a plot, looks
+        // closer and leaves would count as one who did nothing.
+        onTrackEvent('ui_feature', { feature: 'plot_zoom' });
       }
       setAnimating(true);
       setZoomed(z => !z);
       if (animTimerRef.current) clearTimeout(animTimerRef.current);
       animTimerRef.current = setTimeout(() => setAnimating(false), 300);
     },
-    [zoomed]
+    [zoomed, onTrackEvent]
   );
 
   useEffect(() => {

@@ -237,7 +237,7 @@ without a goal, so they were counted and shown nowhere.
 | `agent_open` | `spec`, `library`, `source` | `AgentChatPage.tsx` | A visitor opens the agent chat for a plot |
 | `agent_plot_rendered` | `spec`, `library`, `status`, `repaired` | `useAgentSession.ts` | The agent chat ends a plot run |
 | `plots_scrolled` | `share`, `results`, `filtered` | `usePlotsScrolled.ts` | How far a visitor got through the gallery |
-| `ui_feature` | `feature` | Twelve places, see [Feature use](#feature-use-ui_feature) | A visitor uses a feature of the interface, once per feature and visit |
+| `ui_feature` | `feature` | Thirteen places, see [Feature use](#feature-use-ui_feature) | A visitor uses a feature of the interface, once per feature and visit |
 | `nav_click` | `source`, `target`, `spec`, `library` | The landing page, see [Landing page clicks](#landing-page-clicks-nav_click) | A visitor goes on from an element of the landing page |
 
 Every property holds a value from a closed list or a catalogue id, with one
@@ -362,6 +362,7 @@ times weighs as much as one who did it once.
 | `filter_remove` | Removes a filter in the gallery, one or all at once | `useFilterState.ts` |
 | `random_filter` | Asks the gallery for a random filter (the shuffle icon or the space bar) | `useFilterState.ts` |
 | `plot_rotate` | Clicks an image on `/specs` to see the next library's version | `SpecsListPage.tsx` |
+| `plot_zoom` | Zooms into an implementation's image. The zoom opens no page, so without it a visitor who lands on a plot, looks closer, and leaves would count as bounced (since 2026-11-14) | `SpecDetailView.tsx` |
 | `library_filter` | Filters `/libraries` by language or framework | `LibrariesPage.tsx` |
 | `theme_toggle` | Cycles the theme (system, light, dark) | `MastheadRule.tsx` |
 | `feedback_open` | Opens the feedback button's quick stack | `FeedbackWidget.tsx` |
@@ -738,7 +739,7 @@ Enterprise plan, so you change them in the dashboard.
 | `share` | `0-10`, `10-25`, `25-50`, `50-75`, `75-100` | `plots_scrolled` |
 | `results` | `1-24`, `25-99`, `100-999`, `1000+` | `plots_scrolled` |
 | `filtered` | `true`, `false` | `plots_scrolled` |
-| `feature` | The twelve of [Feature use](#feature-use-ui_feature) | `ui_feature` |
+| `feature` | The thirteen of [Feature use](#feature-use-ui_feature) | `ui_feature` |
 | `theme` | `dark`, `light`: the theme in effect, resolved from the three-state mode | Every pageview and event |
 
 ### Funnels and breakdowns
@@ -759,15 +760,41 @@ The questions the dashboard answers, and where:
 
 ## Reading stats — backend → Plausible Stats API
 
-The backend sends Plausible nothing. It reads aggregate visitor data from
-Plausible to render the unique-visitors chart at the top of the public stats
-page.
+The backend sends Plausible nothing. It reads aggregate visit data from
+Plausible to render the visitors tile at the top of the public stats page.
+
+Once every day of its window is counted, the tile draws one bar per day: the
+day's visits with a second page or an
+interaction. Those are the visits Plausible doesn't count as bounced, and a
+bounced visit is one pageview and no custom event. Every route change sends a
+pageview, and no event of the app is sent as non-interactive, so a visitor
+who opens a second page or uses anything that is counted stays in. Under the
+strip stands the number of all visits of the same days, with a hint on the
+word "all": a visit of one page without a click is a reader who found what
+they came for, or automated traffic that runs the page's scripts. A crawler
+farm loads one page per visit, so it raises all visits and leaves the bars
+alone ([The Windows 10 Chrome farm](#the-windows-10-chrome-farm-2026-11-09)).
+
+The count starts on 2026-11-10. Until 2026-11-09 every page load sent
+web-vitals events, which Plausible takes for interactions, so no visit of
+those days bounced, and no other number of Plausible's says which visits had
+a second page. A strip that is empty for the days before would say less than
+the one it replaces, so the tile switches by itself: until every day of the
+28-day window is counted, which is on 2026-12-07, it draws the unique
+visitors per day as it did before, and from that day on the engaged visits.
+An answer without engaged visits, from an API revision older than the page,
+draws the unique visitors too. A day inside a counted window whose answer
+had no bounce rate draws the floor and is named "not counted".
 
 - **Endpoint**: `GET /insights/visitors` (in `api/routers/insights.py`)
 - **Upstream call**: `POST https://plausible.io/api/v2/query` with body
-  `{"site_id": "anyplot.ai", "metrics": ["visitors"], "date_range": "28d", "dimensions": ["time:day"]}`
-  (28d matches Plausible's own default "Last 28 days" report so totals here
-  align with the dashboard at plausible.io/anyplot.ai)
+  `{"site_id": "anyplot.ai", "metrics": ["visitors", "visits", "bounce_rate"], "date_range": ["<today - 27 days>", "<today>"], "dimensions": ["time:day"]}`.
+  The explicit range ends on today; Plausible's `28d` preset ends on
+  yesterday.
+- **Engaged visits**: `visits * (100 - bounce_rate) / 100`, rounded, per day
+  from `ENGAGED_SINCE` on. Plausible answers the bounce rate in whole
+  percent, so a day's number is right to about one in two hundred of its
+  visits, and anyone can compute it from the public dashboard.
 - **Auth**: `Authorization: Bearer ${PLAUSIBLE_API_KEY}` (Stats API key
   created in Plausible → Account Settings → API Keys, then mirrored to
   GCP Secret Manager as `PLAUSIBLE_API_KEY` for Cloud Run)
@@ -775,9 +802,9 @@ page.
   traffic spikes stay well under Plausible's 600-req/h rate limit.
 - **Graceful degradation**: When `PLAUSIBLE_API_KEY` is unset or the
   upstream call fails, the endpoint returns `points: []` (empty list).
-  The frontend distinguishes this from "real zeros" — an empty list
+  The frontend distinguishes this from "real zeros": an empty list
   triggers the "visitor data unavailable" placeholder, while a non-empty
-  list with low/zero values renders the normal 30-bar chart. The
+  list with low or zero values renders the normal 28-bar strip. The
   dashboard endpoint is unaffected because visitors load on a separate
   fetch.
 
@@ -792,7 +819,8 @@ page.
 - **Gallery scroll event**: `app/src/hooks/usePlotsScrolled.ts`, with the percentage from `app/src/utils/galleryScroll.ts`
 - **Event sending**: a component calls `useAnalytics().trackEvent`, or receives it as an `onTrackEvent` or `onTrack` prop of the type `TrackEvent`
 - **Agent chat events**: `app/src/pages/AgentChatPage.tsx` (`agent_open`, admin mute), `app/src/hooks/useAgentSession.ts` (`agent_plot_rendered`), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
-- **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`
+- **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`, with `ENGAGED_SINCE` and `_engaged_visits()`
+- **Visitors tile**: `app/src/sections/stats/VisitorsTile.tsx`, its answer's check and sums in `app/src/sections/stats/visitors.ts`, and the hinted word in `app/src/sections/stats/HintTerm.tsx` (shared with the shared links tile)
 - **Shared links** (not in Plausible): `record_share()` in `api/shared_links.py`, called by `api/routers/og_images.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
 
 ## Add or change an event

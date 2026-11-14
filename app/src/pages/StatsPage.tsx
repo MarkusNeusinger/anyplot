@@ -16,6 +16,8 @@ import { MachineReadersTile } from 'src/sections/stats/MachineReadersTile';
 import { readSharedLinks, type SharedLinksResponse } from 'src/sections/stats/sharedLinks';
 import { SharedLinksTile } from 'src/sections/stats/SharedLinksTile';
 import { CHART_PX, columnPx, STRIP_BAR } from 'src/sections/stats/stripGeometry';
+import { readVisitors, type VisitorsAnswer } from 'src/sections/stats/visitors';
+import { VisitorsTile } from 'src/sections/stats/VisitorsTile';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
@@ -62,15 +64,6 @@ interface TimelinePoint {
 interface DailyImplPoint {
   date: string; // ISO YYYY-MM-DD
   count: number;
-}
-
-interface VisitorPoint {
-  date: string; // ISO YYYY-MM-DD
-  visitors: number;
-}
-
-interface VisitorsResponse {
-  points: VisitorPoint[];
 }
 
 interface DashboardData {
@@ -146,7 +139,8 @@ function statsLibLabel(lib: Pick<LibraryStats, 'id' | 'name'>): string {
 export function StatsPage() {
   const { isDark } = useTheme();
   const [data, setData] = useState<DashboardData | null>(null);
-  const [visitors, setVisitors] = useState<VisitorPoint[] | null>(null);
+  // `null` while loading; an answer without days is the tile's "unavailable" line.
+  const [visitors, setVisitors] = useState<VisitorsAnswer | null>(null);
   // `undefined` while loading, `null` for a failed request or an answer that is not `ok`.
   const [machineReaders, setMachineReaders] = useState<MachineReadersResponse | null | undefined>(
     undefined
@@ -168,9 +162,9 @@ export function StatsPage() {
   // blocks the rest of the dashboard from rendering (non-2xx and network
   // errors both fall through to the empty-points placeholder).
   useEffect(() => {
-    apiGet<VisitorsResponse>(endpoints.insightsVisitors)
-      .then(res => setVisitors(res?.points ?? []))
-      .catch(() => setVisitors([]));
+    apiGet<unknown>(endpoints.insightsVisitors)
+      .then(body => setVisitors(readVisitors(body)))
+      .catch(() => setVisitors(readVisitors(null)));
   }, []);
 
   // Machine readers load on their own too: BigQuery not set up, an outage or an
@@ -219,9 +213,6 @@ export function StatsPage() {
 
   const dailyImpls = data.daily_impls ?? [];
   const maxDaily = Math.max(...dailyImpls.map(d => d.count), 1);
-  const visitorPoints = visitors ?? [];
-  const maxVisitors = Math.max(...visitorPoints.map(v => v.visitors), 1);
-  const totalVisitors = visitorPoints.reduce((sum, v) => sum + v.visitors, 0);
   const totalDailyImpls = dailyImpls.reduce((sum, d) => sum + d.count, 0);
 
   return (
@@ -286,111 +277,9 @@ export function StatsPage() {
             </Box>
           ))}
         </Box>
-        {/* Unique visitors (last 28 days) — sourced from the Plausible Stats API.
-            The 28-day window matches Plausible's own default "Last 28 days"
-            report so totals here align with the dashboard at plausible.io/anyplot.ai.
-            `plausible.view()` lives in the section-header link slot, matching
-            the `libraries.all()` / `map.explore()` style used across the site. */}
-        <Box sx={{ mt: 4 }}>
-          <SectionHeader
-            prompt="❯"
-            title={<em>visitors</em>}
-            linkText="plausible.view()"
-            linkHref="https://plausible.io/anyplot.ai"
-          />
-        </Box>
-        <Box sx={{ mt: 1, mb: 3 }}>
-          <Typography
-            sx={{
-              fontFamily: typography.fontFamily,
-              fontSize: fontSize.xs,
-              color: semanticColors.mutedText,
-              mb: 0.5,
-            }}
-          >
-            unique visitors · last 28 days
-            {visitors !== null && visitorPoints.length > 0
-              ? ` · ${formatNum(totalVisitors)} total`
-              : ''}
-          </Typography>
-          {visitors === null ? (
-            <Box sx={{ height: CHART_PX, display: 'flex', alignItems: 'center' }}>
-              <Typography
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xxs,
-                  color: semanticColors.mutedText,
-                }}
-              >
-                loading visitor data...
-              </Typography>
-            </Box>
-          ) : visitorPoints.length === 0 ? (
-            <Box sx={{ height: CHART_PX, display: 'flex', alignItems: 'center' }}>
-              <Typography
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xxs,
-                  color: semanticColors.mutedText,
-                }}
-              >
-                visitor data unavailable — see plausible.io/anyplot.ai
-              </Typography>
-            </Box>
-          ) : (
-            <>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  gap: 0.25,
-                  height: CHART_PX,
-                  overflow: 'hidden',
-                }}
-              >
-                {visitorPoints.map(point => (
-                  <Tooltip
-                    key={point.date}
-                    title={`${point.date}: ${point.visitors} visitors`}
-                    arrow
-                  >
-                    <Box
-                      sx={{
-                        flex: 1,
-                        height: `${columnPx(point.visitors, maxVisitors)}px`,
-                        bgcolor: STRIP_BAR.color,
-                        opacity: STRIP_BAR.opacity,
-                        borderRadius: '2px 2px 0 0',
-                        '&:hover': { opacity: STRIP_BAR.activeOpacity },
-                        transition: 'opacity 0.15s ease',
-                      }}
-                    />
-                  </Tooltip>
-                ))}
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.micro,
-                    color: semanticColors.mutedText,
-                  }}
-                >
-                  {visitorPoints[0]?.date}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.micro,
-                    color: semanticColors.mutedText,
-                  }}
-                >
-                  {visitorPoints[visitorPoints.length - 1]?.date}
-                </Typography>
-              </Box>
-            </>
-          )}
-        </Box>
+        {/* Visitors (last 28 days): the visits with a second page or an interaction, from the
+            Plausible Stats API, with all visits as a line under the strip. */}
+        <VisitorsTile answer={visitors} formatNum={formatNum} />
 
         {/* Machine readers (last 28 days): verified crawlers and AI assistants,
             from the content-free machine-read telemetry in BigQuery. */}

@@ -33,6 +33,7 @@ export const UI_FEATURES = [
   'filter_remove',
   'random_filter',
   'plot_rotate',
+  'plot_zoom',
   'library_filter',
   'theme_toggle',
   'feedback_open',
@@ -51,7 +52,7 @@ export interface EventProps {
 /**
  * `trackEvent`, for the components that receive it as a prop. `ui_feature` names its feature
  * and nothing else: without a feature the event would say nothing, and with more than it the
- * twelve features would again be twelve kinds of event. The compiler refuses both.
+ * features would again be as many kinds of event. The compiler refuses both.
  */
 export interface TrackEvent {
   (name: 'ui_feature', props: { feature: UiFeature }, url?: string): void;
