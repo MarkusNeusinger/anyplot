@@ -462,9 +462,11 @@ class Current:
 CLEARED_LINE = "the view of the plot no longer fits this table and was cleared: the plot draws every row again"
 """What a run or a data change says when the stored view cannot be applied to the table any more (a column it
 names is gone or changed its kind, or no row would be left)."""
-EVERY_ROW_LINE = "The plot draws every row of data v{number} again, {rows} in all"
-"""What a run says when the version it changes drew a view of the plot and the view is gone since (the chat's
-`reset_view`, the page's `.show_all()`): the count comes back as it went, in the first line of "what changed"."""
+EVERY_ROW_LINE = "The view of the plot is cleared: the plot draws every row of data v{number}, {rows} in all"
+"""What a run says when the version it changes drew a view of the plot and none is set any more (the chat's
+`reset_view`, the page's `.show_all()`, a change of the table the view no longer fit): the count comes back as it
+went, in the first line of "what changed". It says nothing of "again", since the data may be a later version than
+the one the view was set on."""
 
 
 def breaks_bindings(

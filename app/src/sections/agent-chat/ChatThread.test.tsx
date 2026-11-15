@@ -1098,6 +1098,17 @@ describe('ChatThread plot cards', () => {
       expect(screen.getByTestId('result-view')).toBeInTheDocument();
       expect(showAll()).toHaveLength(0);
     });
+
+    it('keeps it on the newest plot of the library in use after a switch back', async () => {
+      // A plot in another library is the thread's newest card; the run redraws this library's.
+      const onShowAll = vi.fn();
+      thread({ 1: viewed(1), 2: viewed(2, 'seaborn') }, onShowAll);
+      await userEvent.click(screen.getByRole('button', { name: /^Plot v1, matplotlib/ }));
+      const here = screen.getByRole('article', { name: 'Plot version 1' });
+      await userEvent.click(within(here).getByRole('button', { name: /^Show all rows/ }));
+      expect(onShowAll).toHaveBeenCalledTimes(1);
+      expect(showAll()).toHaveLength(1);
+    });
   });
 
   it('labels a version that kept decisions by its request, the first plot as first plot, never kept 0', () => {

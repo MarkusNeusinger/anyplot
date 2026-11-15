@@ -256,7 +256,7 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
   // `.show_all()`: the server cleared the view and drew every row again.
   if (body.action === 'show_all_rows') {
     return [
-      ['plot', { ...PLOT, version: 3, changes: ['The plot draws every row of data v1 again'] }],
+      ['plot', { ...PLOT, version: 3, changes: ['The view of the plot is cleared'] }],
       ['message', { text: 'Every row again.' }],
       ['done', { llm_calls: 2, data_confirmed: true, view: null }],
     ];

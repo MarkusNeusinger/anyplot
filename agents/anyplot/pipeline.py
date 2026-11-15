@@ -2052,15 +2052,16 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     data_step: str | None = None
     notes = list(drawn.notes)
     stamp = drawn.stamp
-    if previous is not None and previous.view is not None and stamp is None and not drawn.cleared:
-        # The version this run changes drew a view of the plot, and none is set any more: the result names the rows
-        # that are back with their count, as it named the view's. A view that no longer fit has its own line.
-        notes.append(EVERY_ROW_LINE.format(number=dataset.number, rows=dataset.profile.rows))
     held = read_view(ctx.state)  # the view in force: a stored one that no longer fits was cleared above
     if stamp is None:
         view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger, node_input.combine)
         if data_step is not None:
             notes.append(data_step)
+        elif previous is not None and previous.view is not None and not drawn.cleared:
+            # The version this run changes drew a view of the plot, and none is set any more: the result names the
+            # rows the plot draws now with their count, as it named the view's. A view that no longer fit has its
+            # own line, and so has a repeated key combined into a new version, whose rows are other ones.
+            notes.append(EVERY_ROW_LINE.format(number=dataset.number, rows=dataset.profile.rows))
     else:
         # The function the user names in this call, else the one they named for this view before: nothing else
         # remembers it, since no data version is made, and without it every later run would ask again.

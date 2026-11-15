@@ -1602,7 +1602,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
           ]
         : viewCleared
           ? [
-              `The plot draws every row of data v${session.version} again, ${session.dataset.rows.length} in all`,
+              `The view of the plot is cleared: the plot draws every row of data v${session.version}, ${session.dataset.rows.length} in all`,
             ]
           : [];
       // Kept on the version for the bundle, like the service's stored `PlotResult`.

@@ -1041,8 +1041,9 @@ The page shows the view on the plot's card (`draws 10 of 248 rows · Jahr =
 10 of these 248 rows · …`). To draw every row again, send
 `{"action": "show_all_rows"}`, the card's `.show_all()`: the service clears
 the view and changes the latest plot for the rows that are back, and the
-result's first change line says so (`The plot draws every row of data v3
-again, 248 in all`). You can also ask for it in the chat.
+result's first change line says so (`The view of the plot is cleared: the
+plot draws every row of data v3, 248 in all`). You can also ask for it in
+the chat.
 
 ### Session language
 

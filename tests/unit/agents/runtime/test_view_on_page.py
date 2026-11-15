@@ -27,7 +27,10 @@ from agents.stream import MAX_VIEW_PARTS, Translator, shown_view
 
 from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, FakeAnthropic, default_script
 from .test_from_version import TEAMS, context_for, pasted_session, write_back
+from .test_paste_conversions import paste
+from .test_plot_new_data import change_data, plot_new_data
 from .test_plot_view import CITIES, TOP_2, only, set_view, view_from
+from .test_row_fidelity import HOURS, LINE_BINDINGS, QUESTION, SUMMED, bind_and_confirm, open_line_on_scatter_code
 from .test_service_flow import HEADERS, SECOND_PLAN, USER, create_plot, parse_sse, permissive_queue, say
 from .test_stream import parse
 
@@ -284,6 +287,71 @@ class TestShowAll:
         assert (plot["status"], plot["version"]) == ("ok", 2) and "view" not in plot
         assert plot["changes"][0] == EVERY_ROW_LINE.format(number=1, rows=24)
         assert len(backend.jobs[-1].data_csv.strip().splitlines()) == 1 + 24
+
+
+class TestTheLineForEveryRow:
+    """`EVERY_ROW_LINE`: a run whose base version drew a view, with none set any more, names the rows it draws."""
+
+    async def test_it_names_the_version_the_run_draws_when_the_table_changed_too(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend, services: Services
+    ) -> None:
+        """The view was set on data v1 and is gone, and the table lost a row since: the line counts data v2's rows,
+        and says nothing of drawing them again."""
+        swap_models("anthropic-vertex", two_plots())
+        sid = await confirmed_teams(client)
+        await set_view(runtime, sid, only("Points", "ge", 40))
+        await create_plot(client, sid)
+        await runtime.write_state(await runtime.session(USER, sid), {PLOT_VIEW: None})
+        await change_data(runtime, services, sid)
+
+        plot = await plot_new_data(client, sid)
+
+        assert (plot["status"], plot["version"], plot["new_data"]) == ("ok", 2, "previous")
+        assert plot["changes"][0] == EVERY_ROW_LINE.format(number=2, rows=23)
+        assert plot["changes"][0] == "The view of the plot is cleared: the plot draws every row of data v2, 23 in all"
+        assert len(backend.jobs[-1].data_csv.strip().splitlines()) == 1 + 23
+
+    async def test_a_key_combined_into_a_new_version_is_said_instead(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend
+    ) -> None:
+        """Without the view the plot's key repeats, and the run combines it into a new data version: the plot draws
+        that version's four rows, so a line that counted the table's twelve would contradict the one after it."""
+        script = {
+            "root": [
+                {"call": "plot_pipeline", "args": {}},
+                {"text": ROOT_REPLY},
+                {"call": "plot_pipeline", "args": {}},
+                {"text": QUESTION},
+                {"call": "plot_pipeline", "args": {"combine": "sum", "base": "previous"}},
+                {"text": "Summed per hour."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+        }
+        swap_models("anthropic-vertex", script)
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, HOURS)
+        await bind_and_confirm(client, sid, LINE_BINDINGS)
+        # One student per study hour: no key repeats among the rows the view shows.
+        one_each = {"column": "Student", "test": "eq", "values": ["S00", "S01", "S02", "S03"]}
+        await set_view(runtime, sid, {"op": "keep_rows", "where": [one_each]})
+        first = one(await create_plot(client, sid), "plot")
+        # The engine's words name three values of a longer list and count the rest.
+        assert first["view"] == {"rows": 4, "of_rows": 12, "parts": ["Student is 'S00', 'S01', 'S02' or 1 more"]}
+
+        # Every row again: three students share each hour, so the run stops and the root asks.
+        asked = parse_sse((await show_all(client, sid)).text)
+        assert [data["text"] for name, data in asked if name == "message"] == [QUESTION]
+        assert not any(name == "plot" for name, _ in asked) and one(asked, "done")["view"] is None
+
+        events = await say(client, sid, "add them up")
+
+        plot = one(events, "plot")
+        assert (plot["status"], plot["version"]) == ("ok", 2)
+        assert plot["changes"][0] == SUMMED
+        assert not any(line.startswith("The view of the plot is cleared") for line in plot["changes"])
+        # Three students per hour: 50 + 62 + 74 for two hours, and so on.
+        assert backend.jobs[-1].data_csv.strip().splitlines()[1:] == ["2,186", "4,195", "6,204", "8,213"]
 
 
 class TestTheDataRoutes:
