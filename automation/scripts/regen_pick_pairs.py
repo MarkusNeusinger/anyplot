@@ -114,14 +114,16 @@ KEPT_LABEL = "regen:kept"
 # `readiness_regression`: it would have merged but for a construct the agent
 # chat's validator refuses, which most regenerations do not add (3 of the
 # first 24 scanned ones did). The rest are technical: the gate kept because
-# something failed (the canvas gate, the score, the predecessor's renders, the
-# gate's context, review_regen.json, the gate script), not because it judged
-# the new render worse. `adapt_regression` is not one of them: the
-# adaptability check ran and the new code failed it.
+# something failed (the staged renders' tie to their code, the canvas gate,
+# the score, the predecessor's renders, the gate's context, review_regen.json,
+# the gate script), not because it judged the new render worse.
+# `adapt_regression` is not one of them: the adaptability check ran and the
+# new code failed it.
 RETURN_CODES = frozenset(
     {
         "regression",
         "readiness_regression",
+        "render_mismatch",
         "canvas_failed",
         "no_score",
         "prev_renders_missing",
