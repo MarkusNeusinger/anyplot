@@ -2,47 +2,52 @@ library: plotnine
 language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:09:48Z'
-updated: '2026-05-08T05:34:05Z'
-generated_by: claude-haiku
-workflow_run: 25538650260
+updated: '2026-11-15T02:34:27Z'
+generated_by: claude-sonnet
+workflow_run: 43667921446
 issue: 2012
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 81
 review:
   strengths:
-  - 'Theme adaptation: Perfectly executed theme-adaptive chrome with no legibility
-    failures in either render'
-  - 'Typography & sizing: Font sizes explicitly set and perfectly readable at full
-    resolution (4800×2700 px)'
-  - 'Color palette: Correct viridis colormap for continuous density data with excellent
-    perceptual uniformity and colorblind safety'
-  - 'Data presentation: Bivariate normal distribution with clear correlation effectively
-    revealed; density peak visually prominent'
-  - 'Codecraft: Clean, reproducible, idiomatic plotnine implementation with proper
-    seed and no unnecessary complexity'
-  weaknesses: []
+  - 'Uses the Imprint sequential ramp (#009E73 to #4467A3) through scale_fill_gradient
+    for the count fill, identical in both renders'
+  - 'Theme-adaptive chrome threaded through every theme element: all text readable
+    in both renders'
+  - Native geom_bin2d does the binning; the 28-bin grid shows the tilted correlated
+    cloud while the dense core reads as a gradient
+  - Column constants double as axis titles, so plotnine labels the axes from the data
+    without a labs() override
+  weaknesses:
+  - 'VQ-05 (both): the colorbar title ''Count'' sits flush against the legend frame''s
+    top-left corner with no padding, crowding the frame → leave at least ~4 px of
+    padding between the title and the frame (or drop the frame). Likely cause: legend_background=element_rect(...,
+    color=INK_SOFT) drawn with plotnine''s default zero legend margin; add legend_margin
+    or legend_box_margin.'
+  - 'Suggestion: marginal 1D histograms on the top and right edges, as the Notes allow,
+    would add univariate context.'
+  - 'Suggestion: a log-scaled fill (trans=''log10'') would separate the many low-count
+    fringe bins that now share nearly the same green.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title, axis labels, tick labels all in dark INK colors (#1A1A17 for primary, #4A4A44 for secondary) - excellent readability on light background
-      Data: 2D histogram with 40×40 bins showing bivariate normal distribution. Colormap is viridis with yellow (high density ~40) at center transitioning through green, teal, blue, and dark purple (low density ~0) at periphery. Density peak clearly visible.
-      Colorbar: Shows scale 0-40 with viridis gradient
-      Legibility verdict: PASS - All text readable, no light-on-light issues
+      Background: warm off-white #FAF8F1, 3200x1800 landscape canvas.
+      Chrome: title 'histogram-2d · python · plotnine · anyplot.ai' centered in dark ink; axis titles 'Asset returns (%)' and 'Index returns (%)'; ticks 0/3/6/9 and 0/5/10/15 in INK_SOFT; enclosed panel border; very faint grid. Colorbar 'Count' (about 0 to 65) on the right in an elevated box; its title sits flush against the frame's top-left corner.
+      Data: 28x28 rectangular bins tile the tilted elliptical cloud of 5000 correlated points; low counts brand green #009E73, rising through teal to blue #4467A3 at the core near (5.5, 8); empty fringe bins left blank.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title, axis labels, tick labels all in light INK colors (#F0EFE8 for primary, #B8B7B0 for secondary) - excellent readability on dark background, NO dark-on-dark failures
-      Data: Identical data colors to light render - yellow, green, teal, blue, purple in exact same positions and intensities. This confirms theme-correct chrome adaptation.
-      Colorbar: Identical to light render, scale visible
-      Legibility verdict: PASS - All text readable, proper light-on-dark contrast throughout
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, all readable; no dark-on-dark text; border and grid subtle; colorbar box in the elevated dark tone with light labels.
+      Data: bin colors identical to the light render (green to blue); green fringe bins stand out clearly against the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -50,67 +55,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and perfectly readable in both themes
+        comment: Explicit sizes (title 12, axis titles 10, ticks 8 pt); all text readable
+          in both themes, dark chrome on light and light chrome on dark
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements
+        comment: No text collides with text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bins optimally sized; density patterns clearly visible
+        comment: 28x28 bins clearly visible; low-count green bins stand out from both
+          backgrounds; colorbar visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and CVD-safe
+        comment: Green-to-blue ramp avoids red-green as sole signal; marks contrast
+          with both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Perfect layout with 60-70% plot utilization and balanced margins
+        passed: false
+        comment: Canvas 3200x1800 correct and balanced, but the colorbar title 'Count'
+          sits flush against the legend frame's top-left corner with no padding (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Axis titles 'Asset returns (%)' / 'Index returns (%)' are reader
+          text with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Viridis for continuous data, correct backgrounds, theme-adaptive
-          chrome, no theme legibility failures
+        comment: 'Continuous fill uses imprint_seq (#009E73 to #4467A3); backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional, intentional design above defaults but not exceptional
+        comment: Style-guide baseline (theme tokens, Imprint ramp, explicit sizes);
+          nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good refinement with subtle grid, borders, and whitespace
+        passed: false
+        comment: Enclosed panel border and faint grid per the style guide; no refinement
+          beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through density encoding; correlation structure
-          evident
+        passed: false
+        comment: The density peak reads by color alone; no hierarchy chosen beyond
+          the data itself
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D histogram heatmap
+        comment: Correct 2D histogram heatmap with rectangular bins via geom_bin2d;
+          no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar, perceptually uniform colormap, density visualization all
-          present
+        comment: Colorbar present, sequential perceptually uniform Imprint ramp, count
+          label; C1, C2, C3 met (C4 marginals not drawn, optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly mapped with appropriate ranges
+        comment: x and y mapped correctly; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar properly labeled
+        comment: Title 'histogram-2d · python · plotnine · anyplot.ai' correct; colorbar
+          titled 'Count'
     data_quality:
       score: 15
       max: 15
@@ -149,20 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bivariate normal with clear correlation structure exemplifies the
-          plot type
+        comment: 5000-point correlated bivariate normal shows shape, tilt and density
+          peak; fringe empty bins are permitted (C5)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Financial returns scenario is realistic and neutral
+        comment: Asset vs index returns is a plausible, neutral financial context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually realistic for percentage returns
+        comment: Means 5.2 % / 8.1 % with standard deviations around 1.6 % / 2 % are
+          sensible return values; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -172,56 +188,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes
+        comment: Flat script with theme tokens, column constants, a Data block and
+          a Plot block; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set for determinism
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unnecessary dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: Concise; geom_bin2d computes the binning; nothing hand-rolled
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and dpi
+        comment: Saves plot-{THEME}.png at 3200x1800 with current plotnine API
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Expert use of grammar of graphics pattern
+        comment: 'Idiomatic grammar of graphics: ggplot + geom_bin2d + scale_fill_gradient
+          + theme; axis titles taken from column names. Baseline usage'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Leverages geom_bin2d and scale_fill_cmap distinctively
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-15T02:30:50Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - custom-colormap
-  - grid-styling
-  - publication-ready
