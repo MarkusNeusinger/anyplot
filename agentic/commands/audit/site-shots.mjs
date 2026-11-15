@@ -73,6 +73,15 @@ if (!valid) {
   console.log(USAGE);
   process.exit(2);
 }
+// Resolved before a browser starts: a target that is no URL ends the run here, not in the middle of it.
+const urls = targets.map((target) => {
+  const text = /^https?:\/\//.test(target) ? target : `${SITE}${target.startsWith('/') ? target : `/${target}`}`;
+  return URL.canParse(text) ? new URL(text) : null;
+});
+if (urls.includes(null)) {
+  console.log(`not a path or URL: ${targets[urls.indexOf(null)]}`);
+  process.exit(2);
+}
 mkdirSync(opt.out, { recursive: true });
 
 // The hosts the Cloudflare smoke bypass matches; anywhere else the token means nothing.
@@ -100,8 +109,7 @@ function findChromium() {
 }
 
 // One file per page, viewport, theme and scroll position, so a second run overwrites only its own shots.
-function shotPath(url) {
-  const { hostname, pathname } = new URL(url);
+function shotPath({ hostname, pathname }) {
   const host = hostname === new URL(SITE).hostname ? '' : `${hostname}_`;
   const page = pathname.replace(/^\/|\/$/g, '').replace(/[^A-Za-z0-9._-]+/g, '_') || 'home';
   const suffix = `${opt.scroll ? `-y${opt.scroll}` : ''}${opt.full ? '-full' : ''}`;
@@ -117,8 +125,7 @@ const browser = await chromium.launch({ executablePath });
 const mobile = opt.viewport === 'mobile';
 const few = (items, n) => (items.length ? ` [${items.slice(0, n).join(' | ')}]` : '');
 
-for (const target of targets) {
-  const url = /^https?:\/\//.test(target) ? target : `${SITE}${target.startsWith('/') ? target : `/${target}`}`;
+async function shoot(url) {
   // A context of its own per page, so no page inherits another's cookies or storage.
   const context = await browser.newContext({
     viewport: VIEWPORTS[opt.viewport],
@@ -126,9 +133,18 @@ for (const target of targets) {
     isMobile: mobile,
     hasTouch: mobile,
   });
+  try {
+    await shootIn(context, url);
+  } finally {
+    await context.close().catch(() => {});
+  }
+}
+
+async function shootIn(context, url) {
   if (SMOKE_TOKEN) {
+    // A request the page aborts in flight rejects its `continue`; that is the page's business, not an error here.
     await context.route(carriesToken, (route) =>
-      route.continue({ headers: { ...route.request().headers(), 'x-smoke-token': SMOKE_TOKEN } }),
+      route.continue({ headers: { ...route.request().headers(), 'x-smoke-token': SMOKE_TOKEN } }).catch(() => {}),
     );
   }
   const page = await context.newPage();
@@ -147,7 +163,7 @@ for (const target of targets) {
   let challenge = false;
   const started = Date.now();
   try {
-    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    const response = await page.goto(url.href, { waitUntil: 'domcontentloaded', timeout: 30000 });
     status = response ? response.status() : status;
     // Cloudflare marks its challenge pages; such a page says nothing about the site behind it.
     challenge = response?.headers()['cf-mitigated'] === 'challenge';
@@ -194,7 +210,12 @@ for (const target of targets) {
   );
 
   await page.goto('about:blank').catch(() => {});
-  await page.waitForTimeout(400);
-  await context.close();
+  await page.waitForTimeout(400).catch(() => {});
 }
-await browser.close();
+
+// The browser is closed whatever a page does: a run that dies half-way must not leave a Chromium behind.
+try {
+  for (const url of urls) await shoot(url);
+} finally {
+  await browser.close().catch(() => {});
+}

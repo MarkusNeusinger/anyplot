@@ -59,7 +59,7 @@ You are the **audit-lead**. Your job is to coordinate a team of specialist audit
    | `security-auditor` | repo-wide (primarily `api/`, `core/config.py`, `agentic/workflows/`, `.github/workflows/`, the edge configuration) | security | fable |
    | `observability-auditor` | `api/analytics.py`, `api/cache.py`, `app/src/hooks/useAnalytics.ts`, `app/src/analytics/`, `docs/reference/plausible.md`, the agent telemetry and the machine-readers log | maintainability, speed | opus |
    | `agentic-auditor` | `CLAUDE.md`, `agentic/`, `prompts/`, `.claude/` with its skills, `agentic/commands/` (TAC-style: agent ergonomics) | maintainability, modern | opus |
-   | `agents-auditor` | the agent network's data and orchestration layer: `agents/anyplot/` without `code/` and `render/`, plus `agents/evals/` | correctness, maintainability | opus |
+   | `agents-auditor` | the agent network's data and orchestration layer: `agents/anyplot/` without `agents/anyplot/code/` and `agents/anyplot/render/`, plus `agents/evals/` | correctness, maintainability | opus |
    | `sandbox-auditor` | generated-code handling and the render sandbox: `agents/anyplot/code/`, `agents/anyplot/render/`, `agents/renderer/` | security, correctness | fable |
    | `public-lane-auditor` | the public agent chat end to end: `agents/main.py`, the session, queue, policy, and telemetry modules, `api/routers/agent*.py`, `api/agent_*.py` | security, correctness | fable |
    | `gcloud-auditor` | live `anyplot` GCP project (Cloud Run, Cloud SQL, GCS, Cloud Build, Logs, IAM, Secret Manager) — **read-only** | security, speed | opus |

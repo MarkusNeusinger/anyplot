@@ -69,10 +69,6 @@ const VERDICT_SCHEMA = {
 const ARGS = (typeof args === 'string') ? (() => { try { return JSON.parse(args) } catch (e) { return {} } })() : (args || {})
 let PARTNER = (ARGS && ARGS.partnerMap) || {}
 
-function fkey(f) {
-  return f.title + '::' + ((f.files || []).join(','))
-}
-
 // Severity alone would leave a typo on the landing page unverified while a rare
 // race in a script nobody opens gets a skeptic. A finding that a visitor of the
 // site or of the repository page meets is checked one importance level earlier.
@@ -117,43 +113,39 @@ async function crossValidate(report, auditor) {
   if (!report) return report
   const partnerHint = PARTNER[auditor.name] || 'independent domain'
   const all = report.findings || []
-  const high = all.filter(needsCrossValidation)
-  // Positive patterns (importance 1) need no skeptic and are not counted as left unverified.
-  const unverified = all.filter((f) => f.importance >= 2 && !needsCrossValidation(f)).length
-  if (!high.length) {
-    return { ...report, auditor: auditor.name, crossValidationStats: { reviewed: 0, dropped: 0, downgraded: 0, unverified } }
-  }
-  const verified = (await parallel(high.map((f) => () =>
+  // A finding is known by its position: two findings of one auditor may share a title and their files.
+  const selected = all.map((f, index) => ({ f, index })).filter(({ f }) => needsCrossValidation(f))
+  const verdicts = new Map((await parallel(selected.map(({ f, index }) => () =>
     agent(verifyPrompt(f, auditor.name, partnerHint), agentOptions(auditor, {
       label: 'verify:' + auditor.name,
       phase: 'Cross-validate',
       schema: VERDICT_SCHEMA,
       agentType: 'general-purpose',
-    })).then((v) => ({ ...f, verdict: v }))
+    })).then((v) => (v ? [index, v] : null))
       // KEEP-biased: a verifier that errors must not drop the finding. parallel()
       // already maps a rejected thunk to null, but catch explicitly so the intent
       // is unmistakable — an unverified finding falls through to merge and is kept.
       .catch(() => null)
-  ))).filter(Boolean)
+  ))).filter(Boolean))
 
-  const vmap = new Map(verified.map((v) => [fkey(v), v]))
   let dropped = 0
   let downgraded = 0
   const merged = []
-  for (const f of all) {
-    const v = vmap.get(fkey(f))
-    if (!v) { merged.push(f); continue } // not selected for a skeptic, or its verifier errored -> keep as-is
-    const verdict = v.verdict && v.verdict.verdict
-    const reason = (v.verdict && v.verdict.reason) || ''
-    if (verdict === 'DROP') { dropped++; continue }
-    if (verdict === 'DOWNGRADE') {
+  all.forEach((f, index) => {
+    const v = verdicts.get(index)
+    if (!v) { merged.push(f); return } // not selected for a skeptic, or its verifier errored -> keep as-is
+    const reason = v.reason || ''
+    if (v.verdict === 'DROP') { dropped++; return }
+    if (v.verdict === 'DOWNGRADE') {
       downgraded++
       merged.push({ ...f, importance: Math.max(1, f.importance - 1), crossvalidation: 'DOWNGRADE: ' + reason })
-      continue
+      return
     }
     merged.push({ ...f, crossvalidation: 'KEEP' })
-  }
-  return { ...report, auditor: auditor.name, findings: merged, crossValidationStats: { reviewed: verified.length, dropped, downgraded, unverified } }
+  })
+  // Left without a verdict: below the bar, or its verifier failed. Positive patterns (importance 1) need none.
+  const unverified = all.filter((f) => f.importance >= 2).length - verdicts.size
+  return { ...report, auditor: auditor.name, findings: merged, crossValidationStats: { reviewed: verdicts.size, dropped, downgraded, unverified } }
 }
 
 // --- main ------------------------------------------------------------------

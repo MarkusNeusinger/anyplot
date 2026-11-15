@@ -534,7 +534,9 @@ AUDIT_COMMAND = REPO_ROOT / "agentic" / "commands" / "audit.md"
 AUDITOR_FILES = sorted((REPO_ROOT / "agentic" / "commands" / "audit").glob("*-auditor.md"))
 
 # A row of the roster table: the auditor, its surface and dimensions, its model.
-_ROSTER_ROW = re.compile(r"^\s*\| `([a-z-]+-auditor)` \|(.*)\| (\w+) \|\s*$", re.M)
+# The last cell is taken as it stands, so a row with an empty or malformed model
+# cell is still a roster row and fails the model pin instead of dropping out of it.
+_ROSTER_ROW = re.compile(r"^\s*\| `([a-z-]+-auditor)` \|(.*)\|([^|\n]*)\|\s*$", re.M)
 # A row of the prompt index: the auditor and the file that holds its prompt.
 _INDEX_ROW = re.compile(r"^\| `([a-z-]+-auditor)` \| `(agentic/commands/audit/[a-z-]+-auditor\.md)`", re.M)
 _AUDIT_MODELS = {"opus", "fable"}
@@ -550,7 +552,7 @@ _UNAUDITED_TOP_LEVEL = {
 def _audit_roster() -> dict[str, tuple[str, str]]:
     """Each auditor of the roster table with its surface cells and its model."""
     text = AUDIT_COMMAND.read_text(encoding="utf-8")
-    return {name: (cells, model) for name, cells, model in _ROSTER_ROW.findall(text)}
+    return {name: (cells, model.strip()) for name, cells, model in _ROSTER_ROW.findall(text)}
 
 
 @pytest.mark.parametrize("audit_file", [AUDIT_COMMAND, *AUDITOR_FILES], ids=lambda p: p.name)
@@ -601,8 +603,16 @@ def test_every_tracked_top_level_directory_has_an_auditor() -> None:
         ["git", "ls-files", "-z"], cwd=REPO_ROOT, capture_output=True, check=True, text=True
     ).stdout.split("\0")
     top_level = {path.split("/", 1)[0] for path in tracked if "/" in path}
-    surfaces = " ".join(cells for cells, _ in _audit_roster().values())
-    unread = sorted(name for name in top_level - set(_UNAUDITED_TOP_LEVEL) if f"`{name}/" not in surfaces)
+    # The first segment of every path a roster row names. A row writes full
+    # paths, so a segment that is no top-level directory is not a surface.
+    named = {
+        token.split("/", 1)[0]
+        for cells, _ in _audit_roster().values()
+        for span in _BACKTICKED.findall(cells)
+        for token in span.split()
+        if "/" in token
+    }
+    unread = sorted(top_level - set(_UNAUDITED_TOP_LEVEL) - named)
     assert not unread, (
         f"no row of the roster table in agentic/commands/audit.md names these directories: {unread}; "
         "give one an auditor, or add it to _UNAUDITED_TOP_LEVEL with its reason"
