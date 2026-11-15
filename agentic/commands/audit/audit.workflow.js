@@ -1,9 +1,9 @@
 export const meta = {
   name: 'anyplot-audit',
-  description: 'Fan out repo auditors, domain-route an adversarial cross-validation of high-severity findings, return structured findings for the Lead to synthesize',
+  description: 'Fan out repo auditors, domain-route an adversarial cross-validation of the high-severity and the publicly visible findings, return structured findings for the Lead to synthesize',
   phases: [
-    { title: 'Analyze', detail: 'one agent per active auditor (general-purpose, inherits Opus)' },
-    { title: 'Cross-validate', detail: 'domain-routed skeptic verify of every importance>=4 finding' },
+    { title: 'Analyze', detail: 'one agent per active auditor (general-purpose, on the model its roster row names)' },
+    { title: 'Cross-validate', detail: 'domain-routed skeptic verify of every importance>=4 finding and every importance>=3 finding a site or repo visitor meets' },
   ],
 }
 
@@ -15,6 +15,7 @@ export const meta = {
 //   args = {
 //     auditors: [{ name: 'security-auditor',
 //                  prompt: '<Shared Rules + the auditor .md file contents>',
+//                  model?: 'fable',              // from the roster row; omitted, the agent inherits the session's model
 //                  agentType?: 'general-purpose' }],
 //     partnerMap: { 'backend-auditor': 'security / db / llm-pipeline', ... },  // Phase 2.5 routing hint per auditor
 //     baseline?: { ruff: '...', format: '...' }                               // optional context, echoed back
@@ -26,14 +27,16 @@ export const meta = {
 
 const FINDING_SCHEMA = {
   type: 'object',
-  required: ['title', 'importance', 'dimension', 'effort', 'autofix', 'files', 'description', 'hint'],
+  required: ['title', 'importance', 'dimension', 'seen_by', 'effort', 'autofix', 'files', 'evidence', 'description', 'hint'],
   properties: {
     title: { type: 'string' },
     importance: { type: 'integer', minimum: 1, maximum: 5 },
     dimension: { type: 'string', enum: ['security', 'speed', 'looks', 'modern', 'correctness', 'maintainability'] },
+    seen_by: { type: 'string', enum: ['site-visitor', 'repo-visitor', 'code-reader', 'internal'] },
     effort: { type: 'string', enum: ['S', 'M', 'L', 'XL'] },
     autofix: { type: 'string', enum: ['ruff', 'eslint', 'format', 'codemod', 'manual'] },
     files: { type: 'array', items: { type: 'string' } },
+    evidence: { type: 'string' },
     description: { type: 'string' },
     hint: { type: 'string' },
   },
@@ -46,6 +49,8 @@ const REPORT_SCHEMA = {
     auditor: { type: 'string' },
     coverage: { type: 'string', enum: ['full', 'partial', 'blocked', 'structural-only', 'filesystem-only'] },
     limitation: { type: 'string' },
+    read: { type: 'array', items: { type: 'string' } },
+    not_covered: { type: 'array', items: { type: 'string' } },
     findings: { type: 'array', items: FINDING_SCHEMA },
   },
 }
@@ -68,6 +73,14 @@ function fkey(f) {
   return f.title + '::' + ((f.files || []).join(','))
 }
 
+// Severity alone would leave a typo on the landing page unverified while a rare
+// race in a script nobody opens gets a skeptic. A finding that a visitor of the
+// site or of the repository page meets is checked one importance level earlier.
+const PUBLIC_READERS = ['site-visitor', 'repo-visitor']
+function needsCrossValidation(f) {
+  return f.importance >= 4 || (f.importance >= 3 && PUBLIC_READERS.includes(f.seen_by))
+}
+
 function verifyPrompt(finding, auditorName, partnerHint) {
   return [
     `You are a rigorous ${partnerHint} reviewer peer-reviewing a finding raised by the ${auditorName}.`,
@@ -77,7 +90,9 @@ function verifyPrompt(finding, auditorName, partnerHint) {
     `FINDING: ${finding.title}`,
     `IMPORTANCE: ${finding.importance}`,
     `DIMENSION: ${finding.dimension}`,
+    `SEEN_BY: ${finding.seen_by}`,
     `FILES: ${(finding.files || []).join(', ') || '(none)'}`,
+    `EVIDENCE: ${finding.evidence || '(none given)'}`,
     `DESCRIPTION: ${finding.description}`,
     ``,
     `This is a specialist peer-review: the BURDEN OF PROOF IS ON DROP. Decide exactly one verdict:`,
@@ -91,22 +106,30 @@ function verifyPrompt(finding, auditorName, partnerHint) {
   ].join('\n')
 }
 
-// Cross-validate one auditor's importance>=4 findings, each via a domain-routed skeptic.
+// An agent started without a model inherits the session's, so the roster's choice is passed on when it names one.
+function agentOptions(auditor, opts) {
+  return auditor.model ? { ...opts, model: auditor.model } : opts
+}
+
+// Cross-validate the findings of one auditor that needsCrossValidation selects, each via a domain-routed
+// skeptic on the auditor's own model: the skeptic of a high-risk finding is no weaker than its finder.
 async function crossValidate(report, auditor) {
   if (!report) return report
   const partnerHint = PARTNER[auditor.name] || 'independent domain'
   const all = report.findings || []
-  const high = all.filter((f) => f.importance >= 4)
+  const high = all.filter(needsCrossValidation)
+  // Positive patterns (importance 1) need no skeptic and are not counted as left unverified.
+  const unverified = all.filter((f) => f.importance >= 2 && !needsCrossValidation(f)).length
   if (!high.length) {
-    return { ...report, auditor: auditor.name, crossValidationStats: { reviewed: 0, dropped: 0, downgraded: 0 } }
+    return { ...report, auditor: auditor.name, crossValidationStats: { reviewed: 0, dropped: 0, downgraded: 0, unverified } }
   }
   const verified = (await parallel(high.map((f) => () =>
-    agent(verifyPrompt(f, auditor.name, partnerHint), {
+    agent(verifyPrompt(f, auditor.name, partnerHint), agentOptions(auditor, {
       label: 'verify:' + auditor.name,
       phase: 'Cross-validate',
       schema: VERDICT_SCHEMA,
       agentType: 'general-purpose',
-    }).then((v) => ({ ...f, verdict: v }))
+    })).then((v) => ({ ...f, verdict: v }))
       // KEEP-biased: a verifier that errors must not drop the finding. parallel()
       // already maps a rejected thunk to null, but catch explicitly so the intent
       // is unmistakable — an unverified finding falls through to merge and is kept.
@@ -119,7 +142,7 @@ async function crossValidate(report, auditor) {
   const merged = []
   for (const f of all) {
     const v = vmap.get(fkey(f))
-    if (!v) { merged.push(f); continue } // importance<4, or its verifier errored -> keep as-is
+    if (!v) { merged.push(f); continue } // not selected for a skeptic, or its verifier errored -> keep as-is
     const verdict = v.verdict && v.verdict.verdict
     const reason = (v.verdict && v.verdict.reason) || ''
     if (verdict === 'DROP') { dropped++; continue }
@@ -130,7 +153,7 @@ async function crossValidate(report, auditor) {
     }
     merged.push({ ...f, crossvalidation: 'KEEP' })
   }
-  return { ...report, auditor: auditor.name, findings: merged, crossValidationStats: { reviewed: verified.length, dropped, downgraded } }
+  return { ...report, auditor: auditor.name, findings: merged, crossValidationStats: { reviewed: verified.length, dropped, downgraded, unverified } }
 }
 
 // --- main ------------------------------------------------------------------
@@ -145,12 +168,12 @@ log('Auditing with ' + auditors.length + ' auditor(s): ' + auditors.map((a) => a
 // auditor's findings get verified while a slow auditor is still analyzing.
 const reports = await pipeline(
   auditors,
-  (a) => agent(a.prompt, {
+  (a) => agent(a.prompt, agentOptions(a, {
     label: a.name,
     phase: 'Analyze',
     schema: REPORT_SCHEMA,
     agentType: a.agentType || 'general-purpose',
-  }),
+  })),
   (report, a) => crossValidate(report, a)
 )
 

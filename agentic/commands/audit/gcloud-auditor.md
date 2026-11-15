@@ -17,14 +17,14 @@ Read-only commands typically use these verbs: `list`, `describe`, `get-*`, `read
 
 ## Scope ideas (not a checklist — use judgment)
 
-- **Cloud Run** (`anyplot-backend`, `anyplot-frontend`): revision sprawl (`gcloud run revisions list`), traffic split (`gcloud run services describe`), min/max instances vs actual usage, error rate / p95 latency over the last 7d, cold-start frequency
+- **Cloud Run** (`anyplot-api`, `anyplot-app`, `anyplot-agents`, `anyplot-renderer`): revision sprawl (`gcloud run revisions list`), traffic split (`gcloud run services describe`), min/max instances vs actual usage, error rate / p95 latency over the last 7d, cold-start frequency, the service account each one runs as
 - **Cloud SQL**: instance config, storage trend, slow query log presence, connection counts, pending maintenance
-- **Cloud Storage** (`anyplot-images`): orphaned `staging/` blobs older than N days (sample, do not list all), total size growth, public-access posture (`gcloud storage buckets get-iam-policy`)
+- **Cloud Storage** (`anyplot-images`, `anyplot-static`, `anyplot-agent-cases`): orphaned `staging/` blobs older than N days (sample, do not list all), total size growth, public-access posture (`gcloud storage buckets get-iam-policy`); the agent-cases bucket holds visitors' feedback cases and must not be public
 - **Cloud Build**: failed builds in last 7d, average duration trend
 - **Logs**: top 10 ERROR/CRITICAL log lines in last 7d across services. ALWAYS bound queries with `--limit=` (e.g. 50) and a short freshness filter (e.g. `--freshness=7d`). Log queries are the easiest way to blow the tool budget.
 - **IAM**: overly broad bindings on service accounts; SA keys older than 90d (`gcloud iam service-accounts keys list`)
 - **Secret Manager**: list secret names only (never `versions access`); flag secrets not rotated in >180d; flag secrets not referenced anywhere obvious in the repo
-- **Monitoring**: any obviously broken alerting policies (no alerting policy on `anyplot-backend` 5xx rate, etc.)
+- **Monitoring**: any obviously broken alerting policies (an uptime check or a 5xx alert missing for `anyplot-api` or `anyplot-agents`, a notification channel nobody reads)
 
 ## Tool budget
 
@@ -39,4 +39,4 @@ PROJECT: {gcp-project-id-actually-inspected}    # required if not blocked
 LIMITATION: {one line}                          # only if blocked or partial
 ---
 ```
-Then the standard `FINDING / IMPORTANCE / EFFORT / AUTO-FIX / FILES / DESCRIPTION / HINT` blocks. For findings that are not file-bound, use `FILES: gcp:<resource-path>` (e.g. `gcp:run/services/anyplot-backend`).
+Then the standard `FINDING / IMPORTANCE / EFFORT / AUTO-FIX / FILES / DESCRIPTION / HINT` blocks. For findings that are not file-bound, use `FILES: gcp:<resource-path>` (e.g. `gcp:run/services/anyplot-api`).

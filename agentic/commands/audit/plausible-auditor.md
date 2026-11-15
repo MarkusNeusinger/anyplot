@@ -13,13 +13,14 @@ Forbidden: every other Plausible endpoint (sites, goals, custom-props, shared-li
 
 ## Auth contract — never block the run
 
-The key was provisioned in 2026-05 and lives in **three** places — try them in order so an unset shell env doesn't immediately block the audit:
+The key was provisioned in 2026-05. Look for it in two places, in order, and never let its value reach the terminal:
 
-1. **Env var** — `$PLAUSIBLE_API_KEY` (CI, ad-hoc shells).
-2. **Local `.env`** — `grep -E '^PLAUSIBLE_API_KEY=' .env | cut -d= -f2-` from the repo root. The dev box has it; the file is gitignored, so this only works locally.
-3. **GCP Secret Manager** — `gcloud secrets versions access latest --secret=PLAUSIBLE_API_KEY --project=anyplot`. Requires gcloud auth on the `anyplot` project (same pattern as `ADMIN_TOKEN` / `DATABASE_URL`).
+1. **Env var** — `$PLAUSIBLE_API_KEY` (CI, ad-hoc shells). Test it with `[ -n "$PLAUSIBLE_API_KEY" ]`, never with `echo`.
+2. **Local `.env`** — read the one key into a variable inside the same command that uses it, so nothing prints it: `PLAUSIBLE_API_KEY="$(grep -E '^PLAUSIBLE_API_KEY=' "$MAIN/.env" | cut -d= -f2-)"`, with `MAIN=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")` because a worktree has no `.env`. A bare `grep … | cut …` writes the key to the transcript; don't run it. The dev box has the file; it is gitignored, so this only works locally.
 
-If none of (1)–(3) yields a value: send `COVERAGE: blocked`, a single `LIMITATION: PLAUSIBLE_API_KEY not available via env, .env, or Secret Manager` line, return zero findings.
+Don't fetch the key from Secret Manager: reading a secret there needs the owner's named authorization (`CLAUDE.md`), which an audit run does not have.
+
+If neither place yields a value: send `COVERAGE: blocked`, a single `LIMITATION: PLAUSIBLE_API_KEY not available via env or .env` line, return zero findings.
 
 Otherwise proceed. Use the key as `Authorization: Bearer $PLAUSIBLE_API_KEY` in every request. Never log, echo, paste, or include the key value in findings or chat output — if you need to show a curl, redact it to `Authorization: Bearer ***`.
 
