@@ -8,4 +8,4 @@
   the table and the plot no longer seem to disagree. `.show_all()` on the
   newest plot clears the view and draws every row again, without a new
   data version and without typing; the result names the rows that are
-  back. Before, the view stood only in the plot's list of changes.
+  back. Before, the view stood only in the plot's list of changes. (#13112)
