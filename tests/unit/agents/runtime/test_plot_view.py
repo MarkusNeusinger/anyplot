@@ -1220,14 +1220,27 @@ class TestTheMonthOrderOfARun:
         drawn, line = drawn_in_order(latest, bindings, last)
         assert line == DRAWN_BY_MONTH and dates_of(drawn, "Monat") == ["Apr", "Mai", "Jun"]
 
-    def test_the_first_bound_column_that_asks_for_an_order_decides(self) -> None:
-        """Month names that stand as they are leave the order to the next bound column, here the newest-first dates."""
-        table = shown("Monat,Stand,Wert\nJan,2026-11-08,1\nFeb,2026-11-07,2\nMär,2026-11-06,3\n")
-        scrambled = shown("Monat,Stand,Wert\nMär,2026-11-08,1\nJan,2026-11-07,2\nFeb,2026-11-06,3\n")
+    def test_a_bound_date_column_is_the_time_axis_and_month_names_beside_it_never_order_the_rows(self) -> None:
+        """Four months of two years, each with its date and its month name: ordering the rows by the names would put
+        March 2026 before November 2025 and take the dates out of their order. The date column decides alone,
+        whichever role comes first: newest first it orders the rows, oldest first or in no order they stand."""
+        rows = ["2025-01-01,Jan,1", "2025-11-01,Nov,2", "2026-03-01,Mär,3", "2026-06-01,Jun,4"]
+        head = "Datum,Monat,Wert\n"
+        oldest_first = shown(head + "\n".join(rows) + "\n")
+        newest_first = shown(head + "\n".join(reversed(rows)) + "\n")
+        no_order = shown(head + "\n".join([rows[2], rows[0], rows[3], rows[1]]) + "\n")
 
-        assert ordered_by(table, ("x", "Monat"), ("y", "Stand")) == "Stand"
-        assert ordered_by(scrambled, ("x", "Monat"), ("y", "Stand")) == "Monat"
-        assert ordered_by(scrambled, ("y", "Stand"), ("x", "Monat")) == "Stand"
+        assert ordered_by(oldest_first, ("x", "Datum"), ("y", "Wert")) is None
+        assert ordered_by(oldest_first, ("x", "Wert"), ("y", "Monat")) == "Monat"  # out of order when it stands alone
+        assert ordered_by(oldest_first, ("label", "Monat"), ("x", "Datum"), ("y", "Wert")) is None
+        assert ordered_by(newest_first, ("label", "Monat"), ("x", "Datum"), ("y", "Wert")) == "Datum"
+        assert ordered_by(no_order, ("label", "Monat"), ("x", "Datum"), ("y", "Wert")) is None
+
+    def test_the_first_bound_month_column_that_is_out_of_order_decides(self) -> None:
+        table = shown("Von,Bis,Wert\nJan,Mär,1\nFeb,Jan,2\nMär,Feb,3\n")
+
+        assert ordered_by(table, ("start", "Von"), ("end", "Bis")) == "Bis"  # the first one stands as it is
+        assert ordered_by(table, ("start", "Von"), ("y", "Wert")) is None
 
     def test_a_number_column_of_that_name_in_the_table_is_never_the_one_that_turns_the_rows(self) -> None:
         """Turning a run round numbers the rows in a column of its own and drops it again: a column of the user's

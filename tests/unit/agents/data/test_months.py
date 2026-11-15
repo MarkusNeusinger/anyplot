@@ -81,6 +81,12 @@ def test_a_run_of_separators_costs_linear_time(cell: str) -> None:
         ([3, 2, 1, 3, 2, 1], "calendar"),  # two series, each backward
         ([2, 3, 1, 2, 3], "calendar"),  # the second series starts before the first did
         ([1, 2, 11, 12, 1, 2, 11, 12], None),  # two series with the same gap
+        ([11, 12, 1, 2, 12, 1, 2], None),  # a second winter that starts a month later than the first
+        ([3, 4, 5, 4, 5], None),  # a second series that starts a month later
+        ([1, 2, 3, 2, 1, 3], None),  # passes that each leave months out
+        ([4, 4, 8, 8, 12, 12, 2, 2, 1, 1], "calendar"),  # two series, month by month, by the alphabet
+        ([4, 8, 12, 2], None),  # every fourth month, over the turn of the year
+        ([3, 3, 2, 2, 1, 1], "calendar"),  # two series, month by month, backward within the year
         ([3, 2, 1, 12, 11, 10], "reversed"),  # the newest first, over the turn of the year
         ([2, 1, 12, 2, 1, 12], "reversed"),  # two winters, each the newest first
         ([2, 2, 1, 1, 12, 12], "reversed"),  # two series, month by month, the newest first

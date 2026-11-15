@@ -25,6 +25,8 @@ is read (`current`): after a rename or an undo it may no longer fit, and then it
 that says so, never applied in part. No ADK import.
 """
 
+import csv
+import io
 import logging
 from collections.abc import Collection
 from dataclasses import dataclass, replace
@@ -50,7 +52,6 @@ from .data.prepare import (
     Sort,
     apply_operations,
     condition_words,
-    read_frame,
     suffixed_name,
     with_date_notes,
 )
@@ -313,18 +314,24 @@ def run_order(bindings: list[Binding], shown: StoredDataset, view: PlotView) -> 
     order (`months.month_order`): from January on, or, for a run that goes backward over the turn of the year, the
     reverse of the rows. Months that already run along the calendar, a fiscal year among them, stand.
 
+    A bound date column is the plot's time axis, whichever way it runs: month names bound beside it are labels of
+    its rows, and ordering the rows by them would take the dates out of their order. So month names are asked only
+    when no date column is bound.
+
     None too while the view's top N ranks the rows by another column: that order is the one the user asked for, and
     dates or months that happen to fall along it are no reason to undo it. A top N by the column itself ("the
     latest 12") leaves the newest rows newest first, and those are drawn in order like any other.
     """
     ranked_by = view.top.column if view.top is not None else None
     columns = {column.name: column for column in shown.profile.columns}
-    for binding in bindings:
-        column = columns.get(binding.column)
-        if column is None or ranked_by not in (None, column.name):
-            continue
+    bound = [columns[binding.column] for binding in bindings if binding.column in columns]
+    orderable = [column for column in bound if ranked_by in (None, column.name)]
+    for column in orderable:
         if column.dtype == "datetime" and column.order == "descending":
             return RunOrder(column.name, [Sort(op="sort", column=column.name)], OLDEST_FIRST_LINE)
+    if any(column.dtype == "datetime" for column in bound):
+        return None
+    for column in orderable:
         if column.dtype == "text" and column.months is not None:
             operations = _month_operations(shown, column.name)
             if operations:
@@ -332,11 +339,20 @@ def run_order(bindings: list[Binding], shown: StoredDataset, view: PlotView) -> 
     return None
 
 
+def _cells(shown: StoredDataset, column: str) -> list[str]:
+    """The cells of `column` down the rows of `shown` as `data.csv` writes them, an empty one as `""`."""
+    rows = csv.reader(io.StringIO(shown.csv, newline=""))
+    header = next(rows, [])
+    if column not in header:
+        return []
+    place = header.index(column)
+    return [row[place] for row in rows]
+
+
 def _month_operations(shown: StoredDataset, column: str) -> list[Operation]:
     """The engine's operations that put the rows of `shown` in the order of the month names of `column`; none when
     they stand as they are (`months.month_order`)."""
-    cells = read_frame(shown.as_parsed())[column].tolist()
-    order = month_order([month_number(cell) if isinstance(cell, str) else None for cell in cells])
+    order = month_order([month_number(cell) if cell else None for cell in _cells(shown, column)])
     if order == "calendar":
         return [Sort(op="sort", column=column)]  # the engine orders month names by the calendar, stable
     if order == "reversed":

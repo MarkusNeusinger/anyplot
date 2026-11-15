@@ -12,7 +12,7 @@ column names months: as they stand, from January on, or turned round.
 
 import re
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from itertools import pairwise
 from typing import Literal
 
@@ -187,26 +187,39 @@ def month_order(months: Sequence[int | None]) -> Literal["calendar", "reversed"]
     """How a plot orders rows whose column names these months, one per row and None for an empty cell: `calendar`
     from January on, `reversed` in the reverse of the rows, None as they stand.
 
-    Months that run along the calendar stand: from January on, or from another month and over the turn of the year,
-    each row's month the same as the one before it, following it by the shorter way round the year, or the month
-    the column starts with, where the next series or the next year begins (a fiscal year `Jul … Jun`, a winter
-    `Nov … Feb`, two series or two years one after the other). Months that run the other way and over the turn of
+    Months that run along the calendar stand: from January on, or from another month and over the turn of the year
+    (a fiscal year `Jul … Jun`, a winter `Nov … Feb`), also pass after pass, where the next series or the next year
+    starts again at a month the column has had before (`_runs_along`). Months whose reverse runs over the turn of
     the year (`Mar, Feb, Jan, Dec`: the newest first) are a run to turn round, since an order from January would
-    tear it apart there. Anything else (an alphabetical list, a ranking, a year that runs backward) is ordered from
-    January, which is all a column of names without a year can say.
+    tear it apart there. Anything else (an alphabetical list, a ranking, a year or several series that run
+    backward) is ordered from January, which is all a column of names without a year can say.
     """
     present = [month for month in months if month is not None]
-    steps = list(pairwise(present))
-    if not steps:
+    if _runs_along(present, _in_the_year) or _runs_along(present, _within(HALF_YEAR)):
         return None
-    restarts = [later == present[0] for _, later in steps]
-    if all(earlier <= later or again for (earlier, later), again in zip(steps, restarts, strict=True)):
-        return None  # from January on, pass after pass, whatever months a pass leaves out
-    forward = [(later - earlier) % 12 <= HALF_YEAR for earlier, later in steps]
-    backward = [(earlier - later) % 12 < HALF_YEAR for earlier, later in steps]  # half a year on counts as forward
-    if all(along or again for along, again in zip(forward, restarts, strict=True)):
-        return None
-    over_the_turn = any(back and earlier < later for back, (earlier, later) in zip(backward, steps, strict=True))
-    if over_the_turn and all(back or again for back, again in zip(backward, restarts, strict=True)):
+    turned = present[::-1]
+    # Half a year apart reads as forward, so a run to turn round needs every step of its reverse to be shorter.
+    if not _runs_along(turned, _in_the_year) and _runs_along(turned, _within(HALF_YEAR - 1)):
         return "reversed"
     return "calendar"
+
+
+def _runs_along(months: Sequence[int], onward: Callable[[int, int], bool]) -> bool:
+    """Whether each month moves on from the one before it (`onward`) or has come before in the column, where the
+    next pass starts: a series that begins a month later than the first one starts no new order."""
+    seen: set[int] = set()
+    for earlier, later in pairwise(months):
+        seen.add(earlier)
+        if not (onward(earlier, later) or later in seen):
+            return False
+    return True
+
+
+def _in_the_year(earlier: int, later: int) -> bool:
+    """From January on: the same month or a later one of the year, whatever months lie between."""
+    return earlier <= later
+
+
+def _within(furthest: int) -> Callable[[int, int], bool]:
+    """Round the year: the same month or one at most `furthest` months on, over the turn of the year too."""
+    return lambda earlier, later: (later - earlier) % 12 <= furthest
