@@ -42,9 +42,11 @@ const FINDING_SCHEMA = {
   },
 }
 
+// `read` and `not_covered` are required, empty when there is nothing to name: a report
+// that may leave them out says nothing about where the auditor did not look.
 const REPORT_SCHEMA = {
   type: 'object',
-  required: ['auditor', 'coverage', 'findings'],
+  required: ['auditor', 'coverage', 'read', 'not_covered', 'findings'],
   properties: {
     auditor: { type: 'string' },
     coverage: { type: 'string', enum: ['full', 'partial', 'blocked', 'structural-only', 'filesystem-only'] },

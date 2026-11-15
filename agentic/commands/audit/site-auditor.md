@@ -23,14 +23,15 @@ Never use the Playwright MCP browser: every session on the machine steers its cu
 
 ```bash
 SCRATCH=<the session scratchpad>
-cd "$SCRATCH" && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i --silent playwright-core@1.64.1
+[ -d "$SCRATCH/node_modules/playwright-core" ] || \
+  (cd "$SCRATCH" && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i --silent playwright-core@1.64.1)
 MAIN=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
 SMOKE_TOKEN="$(grep -E '^SMOKE_TOKEN=' "$MAIN/.env" | cut -d= -f2-)" \
   NODE_PATH="$SCRATCH/node_modules" node agentic/commands/audit/site-shots.mjs \
   --out "$SCRATCH/shots" --viewport desktop --theme light / /plots /about
 ```
 
-Run the two last lines from the repository root, as one command: the assignment in front of `node` hands the token to the helper and to nothing else.
+Run it from the repository root. The install runs in a subshell, so the shell stays in the repository and the helper's relative path holds. The two last lines are one command: the assignment in front of `node` hands the token to the helper and to nothing else.
 
 The helper prints one line per page (status, load time, title, `h1`, text length, horizontal overflow, console errors, page errors, failed requests) and saves a PNG that you open with the Read tool. Options: `--viewport desktop|tablet|mobile`, `--theme light|dark`, `--full`, `--scroll <px>`, `--wait <ms>`. For an interaction (the mobile menu, a hover state, the theme toggle, a code tab), copy the helper into the scratchpad and extend the copy.
 

@@ -5,10 +5,12 @@
 // for every session on the machine, and parallel auditors would steer each
 // other's pages.
 //
-// Run (playwright-core lives in the scratchpad, not the repo, as for
-// scripts/site-smoke.mjs):
+// Run from the repository root (playwright-core lives in the scratchpad, not the
+// repo, as for scripts/site-smoke.mjs; the install runs in a subshell so the
+// shell stays in the repository):
 //   SCRATCH=<the session scratchpad>
-//   cd "$SCRATCH" && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i --silent playwright-core@1.64.1
+//   [ -d "$SCRATCH/node_modules/playwright-core" ] || \
+//     (cd "$SCRATCH" && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i --silent playwright-core@1.64.1)
 //   MAIN=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
 //   SMOKE_TOKEN="$(grep -E '^SMOKE_TOKEN=' "$MAIN/.env" | cut -d= -f2-)" \
 //     NODE_PATH="$SCRATCH/node_modules" node agentic/commands/audit/site-shots.mjs \
