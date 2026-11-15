@@ -641,8 +641,8 @@ jobs:
       # cannot be added must never let the review run.
       # First generation (a repair's re-review included): the label
       # `ai-render-mismatch`, and the PR stays open until the pair is
-      # generated again (the check's comment gives the command). Never
-      # `ai-review-failed`: the watchdog would re-review the same staging, and
+      # generated again, which replaces its branch and so closes it (the
+      # check's comment gives the command). Never `ai-review-failed`: the watchdog would re-review the same staging, and
       # after a repair its Case 2 would run the repair again. The watchdog
       # skips the label and reports the PR.
       # Regeneration: `keep` as well, and no label here. The regen gate keeps

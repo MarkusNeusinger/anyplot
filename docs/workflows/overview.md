@@ -270,7 +270,7 @@ Only a `mismatch` stops the review. A hash that is missing or couldn't be read o
 
 The step "Stop on a render hash mismatch" runs when the check reports `stop=true`. The review doesn't run: nothing is scored, and no header is committed. What happens to the PR depends on what it is:
 
-- **A first generation**, including the re-review after a repair, gets the label `ai-render-mismatch` and stays open. The check's comment gives the command that generates the pair again. The watchdog rescues nothing that carries the label and reports the PR on every scan. The next review of the PR removes the label and checks the hash again.
+- **A first generation**, including the re-review after a repair, gets the label `ai-render-mismatch` and stays open. No workflow picks it up again by itself: the watchdog rescues nothing that carries the label and reports the PR on every scan. A review of the same PR, such as a manual re-run, removes the label and checks the hash again.
 - **A regeneration** gets no label. The regen gate keeps the live implementation with the code `render_mismatch`, and the keep path closes the PR like every other keep: `regen:kept`, the comment with the gate record, no re-score of the live implementation. The keep is a returning one, so the pair comes back after the attempt window (see [Daily regeneration modes](#daily-regeneration-modes)).
 
 The label is never `ai-review-failed`: the watchdog would re-review the same staging, and after a repair it would run the repair again.
@@ -281,7 +281,7 @@ To continue a stopped first generation, generate the pair again:
 gh workflow run bulk-generate.yml -f specification_id=<spec-id> -f library=<library>
 ```
 
-The run renders, stages, and reviews the pair anew on the same PR.
+`impl-generate.yml` deletes the pair's branch before it creates it anew, so the run closes the stopped PR and opens a new one with its own renders and review. The check's comment on the stopped PR gives the same command.
 
 `scripts/migrate_render_and_upload.py`, the manual re-render that promotes straight from staging, copies only the `plot-*` objects, as `impl-merge.yml` does, so a staged `render.sha256` or `adapt/` record never reaches production.
 
@@ -398,7 +398,7 @@ PR. The same test checks that every pin resolves.
 | `ai-attempt-1/2/3/4` | Retry counter | Workflow |
 | `ai-review-paused` | Claude stopped the PR's review (a spend or usage limit, or refused credentials): no score, no verdict. The watchdog skips the PR; pair mode or a manual rerun resumes it, and the next review removes the label (see [When Claude stops a session](#when-claude-stops-a-session)) | Workflow |
 | `ai-repair-paused` | Claude stopped the PR's repair, next to `ai-rejected`; the attempt isn't used up. The watchdog skips the PR; pair mode or a manual restart resumes it, and the next repair removes the label | Workflow |
-| `ai-render-mismatch` | The review of a first generation stopped: the staged renders were made from other code than the PR holds. No score, no verdict. The watchdog skips the PR and reports it; generating the pair again continues it, and the next review removes the label (see [What a mismatch does](#what-a-mismatch-does)) | Workflow |
+| `ai-render-mismatch` | The review of a first generation stopped: the staged renders were made from other code than the PR holds. No score, no verdict. The watchdog skips the PR and reports it; generating the pair again replaces the PR, and a review of the same PR removes the label (see [What a mismatch does](#what-a-mismatch-does)) | Workflow |
 | `quality:XX` | Quality score (e.g., quality:92) | Workflow |
 | `quality-poor` | Score < 50, needs fundamental fixes | Workflow |
 | `regen` | Regeneration of an implementation that is live on main (marker for humans and the watchdog; `impl-review.yml` decides "regeneration" from `origin/main`) | Workflow |

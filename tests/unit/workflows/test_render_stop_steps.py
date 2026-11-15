@@ -361,6 +361,16 @@ class TestWiring:
         # Before every case that rescues: none of them may see the PR.
         assert skip < script.index("# Case 0:") < script.index("# Case 1:") < script.index("# Case 2:")
 
+    def test_generating_the_pair_again_replaces_the_stopped_pr(self):
+        """What the stop comment tells the reader: impl-generate deletes the pair's branch, which closes its PR."""
+        script = str(_step("impl-generate.yml", "Create implementation branch")["run"])
+        delete = 'git push origin --delete "$BRANCH"'
+        assert script.index(delete) < script.index('git checkout -b "$BRANCH" origin/main')
+        result = render_hash.Comparison("mismatch", staged="a" * 64, head="b" * 64, form=render_hash.FORM_CODE)
+        text = render_hash.comment(result, "c" * 40, "", spec_id="spec-a", library="plotly")
+        assert "replaces this PR's branch, which closes this PR, and opens a new one" in text
+        assert "gh workflow run bulk-generate.yml -f specification_id=spec-a -f library=plotly" in text
+
 
 def _references(workflow: dict[str, Any]) -> set[str]:
     return set(re.findall(r"steps\.([A-Za-z0-9_-]+)\.(?:outputs|outcome|conclusion)\b", yaml.safe_dump(workflow)))
@@ -376,3 +386,21 @@ def test_the_edited_workflows_parse_and_reference_only_steps_that_exist(filename
         ids = {step["id"] for step in job.get("steps", []) if "id" in step}
         missing = _references({"job": job}) - ids
         assert not missing, f"{filename}: no step with id {sorted(missing)}"
+
+
+@pytest.mark.parametrize(
+    "filename", ["impl-review.yml", "impl-generate.yml", "impl-repair.yml", "watchdog-stuck-jobs.yml"]
+)
+def test_every_condition_of_the_edited_workflows_is_well_formed(filename):
+    """A malformed `if:` fails the whole workflow file at load, which no local run shows.
+
+    Not an expression parser: balanced parentheses, closed strings, and no
+    operator at an end or doubled.
+    """
+    for condition in [str(s["if"]) for s in _steps(filename) if "if" in s]:
+        bare = re.sub(r"'[^']*'", "''", condition)  # string literals hold no syntax
+        assert "'" not in bare.replace("''", ""), condition
+        assert bare.count("(") == bare.count(")"), condition
+        assert not re.search(r"^\s*(&&|\|\|)|(&&|\|\||!|==|!=)\s*$", bare), condition
+        # `cancelled()` is a call, so empty parentheses are fine.
+        assert not re.search(r"(&&|\|\|)\s*(&&|\|\||\))|\(\s*(&&|\|\|)", bare), condition

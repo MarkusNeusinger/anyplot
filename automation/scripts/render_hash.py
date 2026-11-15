@@ -228,11 +228,14 @@ def comment(
     elif result.stop:
         then = (
             "The review did not run: nothing is scored and the file header stays as it is. This PR is labelled "
-            f"`{STOP_LABEL}` and stays open until its renders come from its code again."
+            f"`{STOP_LABEL}` and stays open; no workflow picks it up again by itself."
         )
         if spec_id and library:
+            # impl-generate.yml deletes the pair's branch before it creates it
+            # anew ("Create implementation branch"), which closes this PR.
             then += (
-                " Generate the pair again, which renders, stages and reviews it anew:\n\n"
+                " To continue, generate the pair again. That run replaces this PR's branch, which closes this PR, "
+                "and opens a new one with its own renders and review:\n\n"
                 "```\n"
                 f"gh workflow run bulk-generate.yml -f specification_id={spec_id} -f library={library}\n"
                 "```"
