@@ -2785,8 +2785,9 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
     body = undone.json()
     assert set(body) == {
         *("preview", "profile", "bindings", "warnings", "context_lines", "roles", "suggestion", "version"),
-        *("can_undo", "original_version"),
+        *("can_undo", "original_version", "view"),
     }
+    assert body["view"] is None  # no view of the plot was set: the next plot draws every row
     assert body["version"] == 1 and body["profile"]["columns"][1]["name"] == "Study Hours"
     assert body["can_undo"] is False and body["original_version"] == 1  # back at the paste
     assert body["bindings"] == [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}]

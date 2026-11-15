@@ -511,6 +511,31 @@ export interface DatasetParsed {
    * through `plotLanguage` and `languageOffer`; absent from an older server.
    */
   language?: unknown;
+  /**
+   * The undo's answer only: the view of the plot in force on the restored version, or `null`
+   * for every row. Read it through `shownView`; absent from an older server and from a paste,
+   * which takes the view away.
+   */
+  view?: unknown;
+}
+
+/**
+ * A view of the plot as the server words it (`plot_view.Viewed.shown`): the plot draws `rows` of
+ * the table's `of_rows`, the ones every part keeps. A part is one selection or the top N, in
+ * English words around the user's own column names and values (`Jahr = 2024`, `top 10 by
+ * Umsatz`). On a plot it is the view that version drew; by the data, the one in force.
+ */
+export interface ShownView {
+  rows: number;
+  of_rows: number;
+  parts: string[];
+}
+
+/** A view of the plot as the service sends it, or `null` for anything else (`null` itself: every row). */
+export function shownView(value: unknown): ShownView | null {
+  if (!isRecord(value) || !isInt(value.rows) || !isInt(value.of_rows)) return null;
+  if (value.rows < 0 || value.of_rows < value.rows) return null;
+  return { rows: value.rows, of_rows: value.of_rows, parts: strings(value.parts) };
 }
 
 /**
@@ -553,6 +578,11 @@ export interface DatasetChanged {
   can_undo?: boolean;
   /** The number of the current data's first version (`DatasetParsed.original_version`). */
   original_version?: number;
+  /**
+   * `.to_long()`'s answer only: the view of the plot in force on the new version, or `null` for
+   * every row; absent from an older server and from `done.dataset`, whose event carries its own.
+   */
+  view?: ShownView | null;
 }
 
 /** The spec roles a `done` event's `dataset` lists at most (the service's `MAX_DONE_ROLES`). */
@@ -691,6 +721,11 @@ export interface PlotResult {
    * label names. Absent for every other plot, from an older server, and for an unknown value.
    */
   new_data?: NewDataBase;
+  /**
+   * The view of the plot the stored version drew its rows through, which its card names. Absent
+   * for a plot of every row, one without a stored version, and from an older server.
+   */
+  view?: ShownView;
 }
 
 export interface ThemeRendered {
@@ -968,18 +1003,28 @@ export function caseListQuery(query: CaseListQuery): string {
  * decisions, and `plot_new_data` is "plot the new data" after a data change or
  * a paste, which the server starts from the latest plot when the data comes
  * from its paste with its bindings, else from the catalogue code (the plot's
- * `new_data` says which). None of them passes the scope judge, so none sets the
- * session language, which the first typed message does: `.example_data()` as
- * typed words would keep a German visitor in English.
+ * `new_data` says which), and `show_all_rows` is the `.show_all()` on the card
+ * of a plot that drew a view of the plot: the server clears the view and draws
+ * every row again, from that plot while it may. None of them passes the scope
+ * judge, so none sets the session language, which the first typed message
+ * does: `.example_data()` as typed words would keep a German visitor in English.
  */
 export type TurnAction =
-  'create_plot' | 'carry_plot' | 'plot_new_data' | 'summarize_data' | 'example_data';
+  | 'create_plot'
+  | 'carry_plot'
+  | 'plot_new_data'
+  | 'show_all_rows'
+  | 'summarize_data'
+  | 'example_data';
 
 /** Whether a turn of this kind is a plot run from the start: its path shows up front, it has no in-progress line. */
 export const isPlotAction = (
   kind: string
-): kind is 'create_plot' | 'carry_plot' | 'plot_new_data' =>
-  kind === 'create_plot' || kind === 'carry_plot' || kind === 'plot_new_data';
+): kind is 'create_plot' | 'carry_plot' | 'plot_new_data' | 'show_all_rows' =>
+  kind === 'create_plot' ||
+  kind === 'carry_plot' ||
+  kind === 'plot_new_data' ||
+  kind === 'show_all_rows';
 
 /**
  * Where "plot the new data" started (the plot's `new_data`): `previous`, the library's latest
@@ -1889,6 +1934,12 @@ export type AgentEvent =
        */
       suggestion?: LongSuggestion | null;
       /**
+       * The view of the plot in force after the run, which the turn may have set, changed or
+       * cleared without a plot: `null` for every row, `undefined` when the server sent no
+       * `view` (no data, an older server), which leaves what the page shows by the data.
+       */
+      view?: ShownView | null;
+      /**
        * The library switch the user asked for in the chat (the assistant's
        * `switch_plot`), which the page carries out with the
        * switch route and, with `plot`, the carry run; `null` without one.
@@ -2153,6 +2204,7 @@ function datasetChanged(value: unknown): DatasetChanged | null {
     ...(isInt(value.original_version) && value.original_version >= 1
       ? { original_version: value.original_version }
       : {}),
+    ...('view' in value ? { view: shownView(value.view) } : {}),
   };
 }
 
@@ -2245,6 +2297,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
     case 'plot': {
       if (typeof d.status !== 'string' || !PLOT_STATUSES.has(d.status)) return null;
       const memory = versionMemory(d.memory);
+      const view = shownView(d.view);
       return {
         type: 'plot',
         result: {
@@ -2264,6 +2317,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
           ...(typeof d.new_data === 'string' && NEW_DATA_BASES.has(d.new_data)
             ? { new_data: d.new_data as NewDataBase }
             : {}),
+          ...(view ? { view } : {}),
         },
       };
     }
@@ -2292,6 +2346,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         language: plotLanguage(d.language),
         languageOffer: languageOffer(d.language),
         ...('suggestion' in d ? { suggestion: longSuggestion(d.suggestion) } : {}),
+        ...('view' in d ? { view: shownView(d.view) } : {}),
         switch: chatSwitch(d.switch),
         ...(d.turn !== undefined && d.turn !== null ? { turn: turnOf(d.turn) } : {}),
       };

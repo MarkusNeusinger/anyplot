@@ -279,6 +279,45 @@ describe('parseAgentEvent', () => {
     expect(base(undefined)).toBeUndefined();
   });
 
+  it('reads the view of the plot a version drew, and no field for anything else', () => {
+    const view = (value: unknown) => {
+      const event = parseAgentEvent(
+        raw('plot', { status: 'ok', attempts: 1, artifacts: [], version: 2, view: value })
+      );
+      return event?.type === 'plot' ? event.result.view : 'not a plot';
+    };
+    const shown = { rows: 10, of_rows: 248, parts: ['Jahr = 2024', 'top 10 by Umsatz'] };
+    expect(view(shown)).toEqual(shown);
+    // A part that is no text goes, the view stays; a view of every row it kept is still a view.
+    expect(view({ rows: 5, of_rows: 5, parts: ['Land is not empty', 7] })).toEqual({
+      rows: 5,
+      of_rows: 5,
+      parts: ['Land is not empty'],
+    });
+    for (const value of [
+      null,
+      undefined,
+      'top 10',
+      { rows: 10, parts: [] },
+      { rows: '10', of_rows: 248, parts: [] },
+      { rows: -1, of_rows: 248, parts: [] },
+      { rows: 249, of_rows: 248, parts: [] },
+    ]) {
+      expect(view(value)).toBeUndefined();
+    }
+  });
+
+  it("reads done's view in force: a view, null for every row, or no word at all", () => {
+    const shown = { rows: 10, of_rows: 248, parts: ['top 10 by Umsatz'] };
+    expect(parseAgentEvent(raw('done', { view: shown }))).toMatchObject({ view: shown });
+    expect(parseAgentEvent(raw('done', { view: null }))).toMatchObject({ view: null });
+    // A value the page cannot read is every row, never a view it made up.
+    expect(parseAgentEvent(raw('done', { view: 'top 10' }))).toMatchObject({ view: null });
+    // No `view` (no data, an older server): the page keeps what it shows by the data.
+    const silent = parseAgentEvent(raw('done', {}));
+    expect(silent?.type === 'done' && 'view' in silent).toBe(false);
+  });
+
   it("reads done's switch the user asked for in the chat, and drops one the page cannot make", () => {
     const done = (value: unknown) => parseAgentEvent(raw('done', { switch: value }));
     expect(done({ library: 'seaborn', plot: true })).toMatchObject({

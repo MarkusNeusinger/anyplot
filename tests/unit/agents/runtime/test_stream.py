@@ -14,6 +14,7 @@ from agents.anyplot.data.store import StoredDataset
 from agents.anyplot.dataset_versions import dataset_payload
 from agents.anyplot.language import MAX_LANGUAGE_CHARS
 from agents.anyplot.output_guard import CODE_OMITTED, MAX_MESSAGE_CHARS, sanitize
+from agents.anyplot.plot_view import MAX_PART_CHARS
 from agents.anyplot.plugins.ledger import RequestLedger, ToolCall
 from agents.anyplot.plugins.tool_safety import MAX_DATA_CODE_CHARS
 from agents.anyplot.schemas import (
@@ -30,7 +31,7 @@ from agents.anyplot.schemas import (
     DatasetProfile,
 )
 from agents.main import MAX_ROLE_DESCRIPTION_CHARS, AgentsError, _role_body, check_caller, decode_claims
-from agents.stream import MAX_DONE_EVENT_CHARS, MAX_DONE_ROLES, Translator, sse
+from agents.stream import MAX_DONE_EVENT_CHARS, MAX_DONE_ROLES, MAX_VIEW_PARTS, Translator, sse
 from core.spec_roles import TYPE_WORDS, DataRole
 
 
@@ -188,6 +189,8 @@ class TestTranslator:
             # The longest language the pattern admits, with the longest source word.
             "language": {"language": "x" * MAX_LANGUAGE_CHARS, "source": "detected"},
             "suggestion": suggestion,
+            # The view of the plot at its widest: every part it can hold, each at its cap.
+            "view": {"rows": MAX_ROWS, "of_rows": MAX_ROWS, "parts": ['"' * MAX_PART_CHARS] * MAX_VIEW_PARTS},
         }
 
         event = sse("done", payload)

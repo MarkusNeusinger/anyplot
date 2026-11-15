@@ -366,6 +366,11 @@ class RequestLedger:
     """The plot memory a shipped version stands on, `{kept, added}`: the ids of the entries from before the run that
     it kept, and of the entries its own `remember` items added (`pipeline.memory_ids`), set once the memory is settled
     with the version. The `plot` event carries it as `memory`; None for a run that stored no version."""
+    shipped_view: dict[str, Any] | None = None
+    """The view of the plot a shipped version drew its rows through, as the page shows it (`plot_view.Viewed.shown`:
+    the counts and the view's parts). The `plot` event carries it as `view`; None for a version that drew every row
+    and for a run that stored no version. It names the user's columns and values, so it never joins the tool result
+    the root reads."""
     prep_ops: list[str] = field(default_factory=list)
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
     view_ops: list[str] = field(default_factory=list)

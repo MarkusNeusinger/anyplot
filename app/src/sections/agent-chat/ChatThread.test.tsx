@@ -1047,6 +1047,70 @@ describe('ChatThread plot cards', () => {
     ]);
   });
 
+  describe('the view a plot drew', () => {
+    const VIEW = { rows: 10, of_rows: 248, parts: ['top 10 by Umsatz'] };
+    const viewed = (number: number, library = 'matplotlib'): PlotVersion => {
+      const base = version(number);
+      return { ...base, library, result: { ...base.result, view: VIEW } };
+    };
+    const thread = (versions: Record<number, PlotVersion>, onShowAll?: () => void) =>
+      render(
+        <ChatThread
+          state={{
+            ...initialAgentState('matplotlib'),
+            phase: 'ready',
+            sessionId: 'S1',
+            versions,
+            items: Object.keys(versions).map((number, index) => ({
+              id: index + 1,
+              kind: 'plot' as const,
+              version: Number(number),
+            })),
+          }}
+          specId="scatter-basic"
+          language="python"
+          onRequestTheme={vi.fn()}
+          onFetchArtifact={vi.fn()}
+          onTrack={vi.fn()}
+          onShowAll={onShowAll}
+        />
+      );
+    const showAll = () => screen.queryAllByRole('button', { name: /^Show all rows/ });
+
+    it('hands .show_all() to the newest plot alone, and the click to the page', async () => {
+      const onShowAll = vi.fn();
+      thread({ 1: viewed(1), 2: viewed(2) }, onShowAll);
+      // The older version's card is folded; open it: its line is words, the action is the newest's.
+      await userEvent.click(screen.getByRole('button', { name: /^Plot v1, matplotlib/ }));
+      expect(screen.getAllByTestId('result-view')).toHaveLength(2);
+      expect(showAll()).toHaveLength(1);
+      await userEvent.click(showAll()[0]);
+      expect(onShowAll).toHaveBeenCalledTimes(1);
+    });
+
+    it("offers none while the page passes none, or the newest plot is another library's", () => {
+      const { unmount } = thread({ 1: viewed(1) });
+      expect(screen.getByTestId('result-view')).toBeInTheDocument();
+      expect(showAll()).toHaveLength(0);
+      unmount();
+      // After a switch the run would draw this library's plot, not redraw the one on the card.
+      thread({ 1: viewed(1, 'seaborn') }, vi.fn());
+      expect(screen.getByTestId('result-view')).toBeInTheDocument();
+      expect(showAll()).toHaveLength(0);
+    });
+
+    it('keeps it on the newest plot of the library in use after a switch back', async () => {
+      // A plot in another library is the thread's newest card; the run redraws this library's.
+      const onShowAll = vi.fn();
+      thread({ 1: viewed(1), 2: viewed(2, 'seaborn') }, onShowAll);
+      await userEvent.click(screen.getByRole('button', { name: /^Plot v1, matplotlib/ }));
+      const here = screen.getByRole('article', { name: 'Plot version 1' });
+      await userEvent.click(within(here).getByRole('button', { name: /^Show all rows/ }));
+      expect(onShowAll).toHaveBeenCalledTimes(1);
+      expect(showAll()).toHaveLength(1);
+    });
+  });
+
   it('labels a version that kept decisions by its request, the first plot as first plot, never kept 0', () => {
     const decided = (number: number, kept: string[]): PlotVersion => ({
       ...version(number),

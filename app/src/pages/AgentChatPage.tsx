@@ -725,6 +725,10 @@ function AgentChat({
   // The chat waits only where `.plot_all()` is the action, in step 2: the fan-out takes no
   // text. Before it, with or without data, the box talks about the data as without `all`.
   const chatLocked = plotAll && step2;
+  // `.show_all()` on the newest plot's view line: while a view of the plot is in force on the
+  // confirmed data, this library has a plot to redraw and no other data waits in the box. Not
+  // while `all` is pressed, whose fan-out takes no change of the page's own plot.
+  const showAllOffered = step2 && hasPlot && state.plotView !== null && !attachment && !plotAll;
   // After a switch whose answer offered it: the plot in this library with the remembered
   // decisions (`carry_plot`), which the plot button's click runs while the box is empty. Not
   // while `all` is pressed, whose fan-out makes fresh plots everywhere. The button keeps its
@@ -1080,6 +1084,16 @@ function AgentChat({
     }
   };
   /**
+   * `.show_all()` on the newest plot's view line: the server clears the view of the plot and
+   * draws every row again, from that plot. The thread shows the click under the button's name.
+   * The card keeps the button inert while anything is in flight; the session's own guard holds
+   * back a second click.
+   */
+  const showAll = () => {
+    if (!showAllOffered || busy) return;
+    void session.showAllRows('.show_all()');
+  };
+  /**
    * A library picked in the menu. While the fan-out is on, any pick turns it
    * off: the library in use only that; another library switches as it would
    * without it. The URL follows a switch the server took; a refused one
@@ -1411,6 +1425,7 @@ function AgentChat({
                 onTrack={trackEvent}
                 onOutcome={session.reportOutcome}
                 onSendFeedback={session.sendFeedback}
+                onShowAll={showAllOffered ? showAll : undefined}
                 onAcceptLanguage={session.acceptLanguage}
                 start={
                   <StartItem

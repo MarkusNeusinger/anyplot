@@ -4,6 +4,7 @@
  */
 
 import type { DataSnapshot, VersionDecision } from 'src/hooks/useAgentSession';
+import type { ShownView } from 'src/lib/agent';
 import { countOf } from 'src/sections/agent-chat/countOf';
 import { cutRequest } from 'src/sections/agent-chat/threadModel';
 
@@ -82,6 +83,28 @@ export function plotCardLabel(
   return {
     text: `plot v${number} · ${library}${summary ? ` · ${summary}` : ''}`,
     spoken: `Plot v${number}, ${library}${summary ? `, ${summary}` : ''}`,
+  };
+}
+
+/**
+ * A view of the plot as a card's line says it (`ShownView`): on the plot's card, where it is the
+ * view that plot drew, `draws 10 of 248 rows · Jahr = 2024 · top 10 by Umsatz`; by the data, where
+ * it is the view in force, `the plot draws 10 of these 248 rows · Jahr = 2024 · top 10 by
+ * Umsatz`. The parts are the server's words around the user's own column names and values, shown
+ * in full: they say which rows are missing, and the line wraps.
+ */
+export function plotViewText(view: ShownView, where: 'plot' | 'data'): CardLabel {
+  const drawn = view.rows.toLocaleString('en-US');
+  const total = countOf(view.of_rows, 'row');
+  const counts =
+    where === 'plot' ? `draws ${drawn} of ${total}` : `the plot draws ${drawn} of these ${total}`;
+  const spoken =
+    where === 'plot'
+      ? `This plot draws ${drawn} of the data's ${total}`
+      : `The plot draws ${drawn} of these ${total}`;
+  return {
+    text: [counts, ...view.parts].join(' · '),
+    spoken: view.parts.length ? `${spoken}: ${view.parts.join('; ')}` : spoken,
   };
 }
 

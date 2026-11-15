@@ -253,9 +253,11 @@ import {
   PNG_ARTIFACT,
   languageOffer as readLanguageOffer,
   plotLanguage as readPlotLanguage,
+  shownView as readShownView,
   renderedThemes,
   type RoleSpec,
   type Round,
+  type ShownView,
   type SwitchCarry,
   type SwitchSource,
   type Theme,
@@ -931,6 +933,14 @@ export interface AgentSessionState {
   /** The undo call is in flight. */
   undoBusy: boolean;
   undoError: Failure | null;
+  /**
+   * The view of the plot in force on the current data, as the server last said it (a turn's
+   * `done`, an undo's or a `.to_long()`'s answer): the rows the next plot draws of the table's,
+   * which the data card names. `null` for every row, and before the server said anything. A
+   * paste takes the view away, as on the server; a plot's own card shows the view that plot drew
+   * (`PlotResult.view`).
+   */
+  plotView: ShownView | null;
   /** The `.to_long()` call is in flight. */
   toLongBusy: boolean;
   toLongError: Failure | null;
@@ -1089,6 +1099,8 @@ type Action =
    * route applies, also after the language changed (live round 9).
    */
   | { type: 'suggestion_sync'; suggestion: LongSuggestion | null }
+  /** A turn's `done` named the view of the plot in force after it (`null`: every row). */
+  | { type: 'view_sync'; view: ShownView | null }
   /** Append a thread item; the reducer gives it the next id. */
   | { type: 'item'; item: NewChatItem }
   /**
@@ -1149,6 +1161,7 @@ export function initialAgentState(library: string): AgentSessionState {
     dataChange: null,
     undoBusy: false,
     undoError: null,
+    plotView: null,
     toLongBusy: false,
     toLongError: null,
     libraryBusy: false,
@@ -1329,6 +1342,9 @@ function withDataVersion(
     dataChange,
     undoBusy: false,
     undoError: null,
+    // An undo's and a `.to_long()`'s answer say whether the view still holds on this version; a
+    // turn's `done` says it in a field of its own, right after its dataset (`view_sync`).
+    plotView: parsed.view !== undefined ? readShownView(parsed.view) : state.plotView,
     toLongBusy: false,
     toLongError: null,
     // The server dropped the switch's carry with the new version: it was taken from a plot of the
@@ -1719,6 +1735,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           },
           dataChange: null,
           undoError: null,
+          // The view of the plot was set on the data this paste replaces: the server wrote it out.
+          plotView: null,
           // An older server names no roles: the default bindings stand in for them.
           roles:
             action.parsed.roles ??
@@ -1997,6 +2015,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
             },
           }
         : state;
+    case 'view_sync':
+      return { ...state, plotView: action.view };
     case 'item':
       return appendItem(state, action.item);
     case 'run_start':
@@ -2963,6 +2983,9 @@ export function useAgentSession({
           }
           // The user asked for the plot in another library: the page switches once the turn is over.
           if (event.switch) safeDispatch({ type: 'chat_switch', request: event.switch });
+          // The assistant's `prepare_data` may have set, changed or cleared the view of the plot,
+          // with or without a plot: the data card says which rows the next plot draws.
+          if (event.view !== undefined) safeDispatch({ type: 'view_sync', view: event.view });
           break;
         default:
           break;
@@ -3261,6 +3284,16 @@ export function useAgentSession({
    */
   const plotNewData = useCallback(
     (label?: string) => runTurn({ action: 'plot_new_data' }, label),
+    [runTurn]
+  );
+
+  /**
+   * `.show_all()` on the card of a plot that drew a view of the plot: the server clears the view
+   * and draws every row again, from that plot while its data and bindings still stand, as "plot
+   * the new data" would. `label` is the button as it read, for the thread.
+   */
+  const showAllRows = useCallback(
+    (label?: string) => runTurn({ action: 'show_all_rows' }, label),
     [runTurn]
   );
 
@@ -3720,6 +3753,7 @@ export function useAgentSession({
     undoData,
     createPlot,
     plotNewData,
+    showAllRows,
     exampleData,
     carryPlot,
     followChatSwitch,

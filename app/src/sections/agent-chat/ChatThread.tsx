@@ -181,6 +181,11 @@ interface ChatThreadProps {
   /** The result cards' quick feedback; without it they show no control. */
   onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
   /**
+   * `.show_all()` on a plot's view line (`ResultCard`'s `onShowAll`), while the page offers it:
+   * only the newest plot of the library in use gets it, since the run redraws that plot.
+   */
+  onShowAll?: () => void;
+  /**
    * The card at a `data` item, with the version it shows (`snapshot`), or at the `transcription`
    * item that waits (`DataPanel`).
    */
@@ -251,6 +256,15 @@ const questionMarkSx = {
   lineHeight: 1,
   color: 'var(--ink-soft)',
 } as const;
+
+/**
+ * The newest plot in the library in use, 0 without one: the plot `.show_all()` redraws, which
+ * after a switch back is not the thread's newest card.
+ */
+function newestHere(state: AgentSessionState): number {
+  const here = Object.values(state.versions).filter(version => version.library === state.library);
+  return here.length ? Math.max(...here.map(version => version.number)) : 0;
+}
 
 function Item({
   item,
@@ -461,6 +475,7 @@ function Item({
           onTrack={props.onTrack}
           onOutcome={props.onOutcome}
           onSendFeedback={props.onSendFeedback}
+          onShowAll={version.number === newestHere(props.state) ? props.onShowAll : undefined}
         />
       );
     }

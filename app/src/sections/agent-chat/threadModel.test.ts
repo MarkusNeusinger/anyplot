@@ -606,6 +606,30 @@ describe('plotSummaries', () => {
     expect(plotSummaries(items, libraryOf).get(2)).toBeNull();
   });
 
+  it('names the plot of .show_all() by the rows that are back, never as new data', () => {
+    const items: ChatItem[] = [
+      create(1),
+      { id: 2, kind: 'plot', version: 1 },
+      { id: 3, kind: 'user', text: 'only the top 10 by revenue' },
+      { id: 4, kind: 'plot', version: 2 },
+      {
+        id: 5,
+        kind: 'action',
+        action: 'show_all_rows',
+        library: 'matplotlib',
+        label: '.show_all()',
+      },
+      { id: 6, kind: 'plot', version: 3 },
+    ];
+    // Every version in one library: the fixture's map files the third under another one.
+    const base = (version: number) => (version === 3 ? 'previous' : undefined);
+    expect([...plotSummaries(items, () => 'matplotlib', base)]).toEqual([
+      [1, 'first plot'],
+      [2, 'only the top 10 by revenue'],
+      [3, 'all rows on v2'],
+    ]);
+  });
+
   it('cuts a request to one line of 40 characters, the ellipsis included', () => {
     expect(cutRequest('  log scale\non   y  ')).toBe('log scale on y');
     const long = 'make the title bigger and move the legend outside the plot';

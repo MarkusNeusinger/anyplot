@@ -38,7 +38,7 @@ import {
   pairId,
   roleControlId,
 } from 'src/sections/agent-chat/bindings';
-import { fileSource } from 'src/sections/agent-chat/cardLabels';
+import { fileSource, plotViewText } from 'src/sections/agent-chat/cardLabels';
 import { countOf } from 'src/sections/agent-chat/countOf';
 import {
   BindingsBlock,
@@ -63,6 +63,7 @@ import {
   nativeControlSx,
   PHONE_QUERY,
   smallText,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { colors } from 'src/theme';
 
@@ -172,6 +173,8 @@ export function DataCard(props: DataCardProps) {
       });
 
   const checkOnly = dataset ? checkOnlyWarnings(state.bindingWarnings) : [];
+  // The view of the plot in force on this data, in the line's words; none for every row.
+  const plotView = dataset && state.plotView ? plotViewText(state.plotView, 'data') : null;
 
   // What opened the dropdowns, for Escape to give the focus back to: a pair's role, or `null` for
   // `.change()` and for the dropdowns that opened by themselves.
@@ -413,6 +416,24 @@ export function DataCard(props: DataCardProps) {
               toggle={narrow ? undefined : bindingsToggle}
               onRole={pairsAnswer ? openRole : undefined}
             />
+            {/* A view of the plot is in force: the table above keeps every row, and the plot
+                draws fewer. Said here, by the data, so the two cards never seem to disagree. */}
+            {plotView && (
+              <Box
+                data-testid="data-plot-view"
+                sx={{
+                  ...labelSx,
+                  fontSize: smallText,
+                  color: 'var(--ink-soft)',
+                  overflowWrap: 'anywhere',
+                }}
+              >
+                <span aria-hidden>{plotView.text}</span>
+                <Box component="span" sx={visuallyHiddenSx}>
+                  {plotView.spoken}
+                </Box>
+              </Box>
+            )}
             {hints.map(hint => (
               <Box
                 key={hint}

@@ -587,7 +587,9 @@ def _last_run(value: Any) -> CaseLastRun | None:
 
 # The turn record's closed vocabularies (`agents/anyplot/turn_record.py`), pinned equal by a test like the rounds'.
 # A value outside its set reads `other`, so an entry stays countable and no text reaches the view.
-TURN_ACTIONS = frozenset("text create_plot carry_plot plot_new_data summarize_data example_data other".split())
+TURN_ACTIONS = frozenset(
+    "text create_plot carry_plot plot_new_data show_all_rows summarize_data example_data other".split()
+)
 TURN_KINDS = frozenset("plot prep formula code example talk refused error".split())
 TURN_REFUSALS = frozenset(
     "out_of_scope needs_data other_library unsupported_content locked_out session_closed budget service_paused"

@@ -21,11 +21,11 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language, via?}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`; `via`: `header`, the chip and the default, or `offer`, the button on an offer line) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), and the plot's; source `chosen` from the chip, which ends every offer, `offer` from an offer while the user picked none, with the content-free `language_offer` telemetry line (`via`, the language as a closed code); `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern, or another `via`) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
-| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, under its own number (`version`: the session numbers every stored version once, so paste, change, undo, change is 1, 2, 1, 3), its bindings carried over (`dataset_versions.py`); `can_undo` whether another undo has a version to restore, `original_version` the number of the current data's first version; unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
+| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version, view}` (`view`: the view of the plot in force on the restored version as the page shows it, `{rows, of_rows, parts}`, or null for every row): the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, under its own number (`version`: the session numbers every stored version once, so paste, change, undo, change is 1, 2, 1, 3), its bindings carried over (`dataset_versions.py`); `can_undo` whether another undo has a version to restore, `original_version` the number of the current data's first version; unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (the target's first version, numbered 1) plus `confirmed: true`, `complete`, `missing_roles`, `copied_from` (the source's version number) and `carry` (the switch answer's shape: the plot memory and a carry of the source's latest plot come along, so the fan-out sends `carry_plot` on `offer`): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
-| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `plot_new_data`, "plot the new data": from the library's latest version while it drew the same paste with the same bindings, else the fresh plot; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`, every event with the id `<run_id>.<n>` (`agents/turn_log.py`) and a `: ping` comment after every 15 s without one; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), in the dataset shape with `version`, `can_undo` (false when `generate_data` made the session's first data) and `original_version`, and `language` (`{language, source}`, with `offer: {language, basis: "message"}` when the scope judge named another language for the typed message that the page has not been offered yet and the user picked none) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `plot_new_data`, "plot the new data": from the library's latest version while it drew the same paste with the same bindings, else the fresh plot; `show_all_rows`, the `.show_all()` on a plot that drew a view of the plot: the route clears the view and the run draws every row again, started as `plot_new_data` is; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`, every event with the id `<run_id>.<n>` (`agents/turn_log.py`) and a `: ping` comment after every 15 s without one; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, or whose summary of a paste made its `certain` conversions (`paste_conversions.py`), in the dataset shape with `version`, `can_undo` (false when `generate_data` made the session's first data) and `original_version`, and `language` (`{language, source}`, with `offer: {language, basis: "message"}` when the scope judge named another language for the typed message that the page has not been offered yet and the user picked none) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `view` (the view of the plot in force after the turn, `{rows, of_rows, parts}`, or null for every row) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark`, `422 no_view` for `show_all_rows` when no view is set and the latest plot drew every row |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `GET /v1/sessions/{sid}/turn` | header `Last-Event-ID: <run_id>.<n>` | SSE `anyplot/1`: the session's latest turn from its event `n + 1` on, as the turn's stream sent it, live until that stream ends; for a page that lost the stream (`agents/turn_log.py`); a read, which never holds or stops the run | `404 not_found` (another turn is the latest, or none), `422` (an id of another form) |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
@@ -186,7 +186,7 @@ from agents.anyplot.data.parse import (
 )
 from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations, with_date_notes
 from agents.anyplot.data.shape import long_suggestion
-from agents.anyplot.data.store import StoreFull
+from agents.anyplot.data.store import StoredDataset, StoreFull
 from agents.anyplot.data.transcribe import (
     category_header_warning,
     looks_like_free_text,
@@ -240,7 +240,7 @@ from agents.anyplot.opening import (
 )
 from agents.anyplot.page_export import NoPage, page_download
 from agents.anyplot.pipeline import hold_request
-from agents.anyplot.plot_view import read_view, view_delta
+from agents.anyplot.plot_view import PlotView, current, read_view, view_delta
 from agents.anyplot.plugins.ledger import (
     ATTRIBUTION_LOGGER,
     CURRENT_LEDGER,
@@ -334,7 +334,7 @@ from agents.renderer.wire import (
     MAX_CONVERT_INPUT_BYTES,
     MAX_SHEET_NAME_CHARS,
 )
-from agents.stream import MAX_DONE_ROLES, Translator, turn_outcome
+from agents.stream import MAX_DONE_ROLES, Translator, shown_view, turn_outcome
 from agents.turn_log import EVENT_ID_PATTERN, PING, TurnLog, logged, parse_event_id
 from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 from core.spec_roles import MAP_SPECS, DataRole
@@ -347,11 +347,12 @@ USER_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 SESSION_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
 SPEC_PATTERN = r"^[a-z0-9-]{1,100}$"
 LOCALE_PATTERN = r"^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$"
-Action = Literal["create_plot", "carry_plot", "plot_new_data", "summarize_data", "example_data"]
+Action = Literal["create_plot", "carry_plot", "plot_new_data", "show_all_rows", "summarize_data", "example_data"]
 ACTION_MESSAGES: dict[str, str] = {
     "create_plot": "[action] Create the plot from my dataset and bindings.",
     "carry_plot": "[action] Create the plot from my dataset and bindings, with the decisions I made so far.",
     "plot_new_data": "[action] Create the plot from my changed dataset and bindings.",
+    "show_all_rows": "[action] Create the plot from every row of my dataset again; I cleared the view of the plot.",
     "summarize_data": "[action] Summarize the dataset for the user.",
     "example_data": "[action] Make example data to try this plot.",
 }
@@ -367,10 +368,16 @@ the page's "plot in <library> with your
 decisions" after a switch: its run takes the carry and the memory (`switch.py`). `plot_new_data` (2026-11-08) is the
 page's "plot the new data" after a data change or a paste: its run starts from the library's latest version while
 that version drew the same paste with the same bindings, else as `create_plot` does (`RequestLedger.new_data`,
-`pipeline.new_data_base`); the root calls the same bare `plot_pipeline` for all three."""
-PLOT_ACTIONS: frozenset[str] = frozenset({"create_plot", "carry_plot", "plot_new_data"})
+`pipeline.new_data_base`). `show_all_rows` is the `.show_all()` on the card of a plot that drew a view of the plot
+(`plot_view.py`): the route clears the view before the turn, in code, so the root's session block already says that
+the plot draws every row, and the run starts where "plot the new data" would (`NEW_DATA_ACTIONS`). The root calls the
+same bare `plot_pipeline` for all four."""
+PLOT_ACTIONS: frozenset[str] = frozenset({"create_plot", "carry_plot", "plot_new_data", "show_all_rows"})
 """The actions of the page's plot buttons: the click confirmed the data and bindings as shown, so the turn plots them
 as they are (`RequestLedger.plot_action`, the guard in `plugins/tool_safety.py`)."""
+NEW_DATA_ACTIONS: frozenset[str] = frozenset({"plot_new_data", "show_all_rows"})
+"""The plot actions whose run draws other rows than the latest plot did and starts from that plot while it may
+(`RequestLedger.new_data`, `pipeline.new_data_base`): the data changed, or the view of the plot was cleared."""
 ACTION_LANGUAGE_LINE = "Reply in {name}, the session language."
 """Appended to an action message when the session language is a known one other than English (`english_name`)."""
 ACTION_MESSAGE = ACTION_MESSAGES["create_plot"]
@@ -2108,11 +2115,14 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
         raise AgentsError(422, "nothing_to_undo")
     await runtime.write_state(session, restored.delta)
     telemetry.marks(sid).undo = True  # the next `chat_turn` line's `undo`
+    after = await runtime.session(user, sid)
     return JSONResponse(
         {
             **restored.payload(),
             "roles": _page_roles(view.snapshot.roles()),
             "suggestion": _suggestion(view, restored.stored.profile),
+            # A view of the plot stays through an undo while it fits the restored table: other rows, other counts.
+            "view": _view_in_force(after.state, view, restored.stored, restored.bindings),
         },
         headers=_NO_STORE,
     )
@@ -2162,12 +2172,15 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
         raise AgentsError(503, "capacity") from None
     await runtime.write_state(session, version.delta)
     telemetry.marks(sid).to_long = True  # the next `chat_turn` line's `to_long`
+    after = await runtime.session(user, sid)
     return JSONResponse(
         {
             **version.payload(),
             "roles": _page_roles(view.snapshot.roles()),
             "suggestion": _suggestion(view, version.stored.profile),
             "changes": prepared.changes,
+            # A view set on the wide table seldom fits the long one, and then the next plot draws every row.
+            "view": _view_in_force(after.state, view, version.stored, version.bindings),
         },
         headers=_NO_STORE,
     )
@@ -2380,11 +2393,24 @@ def _telemetry_offer(ledger: RequestLedger | None, body: dict[str, Any]) -> None
     )
 
 
+def _view_in_force(
+    state: Any, view: SessionView, stored: StoredDataset, bindings: list[Binding]
+) -> dict[str, Any] | None:
+    """The view of the plot in force on `stored` with `bindings`, as the page shows it by the data (`{rows, of_rows,
+    parts}`, `stream.shown_view`), or None when the next plot draws every row: no view, or one that no longer fits
+    the table (`plot_view.current`), which the next reader that may write the state clears. Reads only."""
+    held = current(state, stored, view.language, bindings=bindings, roles=view.snapshot.roles())
+    if held.viewed is None:
+        return None
+    return shown_view(held.viewed.shown(held.view), spec_id=view.spec_id)
+
+
 async def _session_sync(
     runtime: Runtime, user: str, sid: str, *, dataset_before: str | None = None, ledger: RequestLedger | None = None
 ) -> dict[str, Any]:
     """The `done` event's sync fields after a turn: the bindings, whether the data is confirmed, a changed dataset,
-    the session language and the wide-table offer in it (`suggestion`, whenever the session has data).
+    the session language, the wide-table offer in it (`suggestion`, whenever the session has data) and the view of
+    the plot in force (`view`, or null for every row, whenever the session has data).
 
     The root's `set_bindings` tool may have changed the bindings (and dropped the
     confirmation) during the turn, and its `prepare_data` or `generate_data` tool the
@@ -2415,6 +2441,8 @@ async def _session_sync(
         # The wide-table offer in the session language after the turn: `set_language` may have changed it, and the
         # page's card must name what `.to_long()` applies.
         payload["suggestion"] = _suggestion(view, stored.profile)
+        # The view of the plot in force after the turn, which its `prepare_data` may have set, changed or cleared.
+        payload["view"] = _view_in_force(session.state, view, stored, view.bindings)
         if view.dataset_id != dataset_before:
             changes = list(ledger.dataset_changes) if ledger is not None else []
             original_version = original_number(get_services().datasets, sid, view)
@@ -2644,6 +2672,13 @@ async def post_message(
     settings = get_settings()
     services = get_services()
     view = read_session(session.state)
+    clear_view = body.action == "show_all_rows" and not read_view(session.state).empty
+    if body.action == "show_all_rows" and not clear_view:
+        # A page behind the session: no view is set any more. The click still has a plot to redraw while the latest
+        # one drew a view; with neither, a run would draw the same rows again, and it spends nothing.
+        latest = services.versions.latest_rendered(sid, target=view.target) if view is not None else None
+        if latest is None or latest.view is None:
+            raise AgentsError(422, "no_view")
     ledger = RequestLedger(
         request_id=rid,
         user_id=user,
@@ -2655,7 +2690,7 @@ async def post_message(
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
         site_theme=theme,
         fresh_start=body.action == "create_plot",
-        new_data=body.action == "plot_new_data",
+        new_data=body.action in NEW_DATA_ACTIONS,
         plot_action=body.action in PLOT_ACTIONS,
     )
     _stamp(ledger, view, session)
@@ -2700,6 +2735,15 @@ async def post_message(
     # and an entry neither reached (a client gone before the first byte) goes stale
     # after the deadline (or, while a sandbox run waits, the queue's maximum wait).
     runtime.active[sid] = run
+    if clear_view:
+        # The page's `.show_all()`: the view goes here, in code, once nothing refuses the turn any more, so the root
+        # reads a session without one and its bare `plot_pipeline` draws every row. A turn that then ships no plot
+        # leaves the view cleared, as a `reset_view` without a run does: the page's card still offers the redraw.
+        try:
+            await runtime.write_state(session, view_delta(PlotView()))
+        except BaseException:
+            runtime.finish(sid, run)
+            raise
     dataset_before = view.dataset_id if view is not None else None
     if view is not None and view.dataset_id:
         # A hit counts as use: the idle sweep must not take the dataset while the run waits.
