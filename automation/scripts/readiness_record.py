@@ -27,7 +27,14 @@ The status, first match wins:
 Only ``regression`` ever changes a decision: on a gated regeneration
 ``regen_gate.py`` keeps the live implementation (``readiness_regression``).
 Every other status leaves the pipeline as it is, so a lost upload, a push
-after the scan or a scan that could not run never refuses anything::
+after the scan or a scan that could not run never refuses anything.
+
+What the checks do not cover: the record's refusal keys themselves. They come
+from the generate or repair runner, where a model session had a shell, so a
+forged record can hide a regression or claim one. Claiming one only keeps the
+live implementation, and hiding one is where the pipeline stood before this
+check. A reader that does not trust that runner would have to run the
+validator in impl-review itself::
 
     readiness_record.py check --record adapt/readiness.json --new IMPL_AT_HEAD --prev IMPL_ON_MAIN \\
         --spec-id S --library B [--out VERDICT.json]
