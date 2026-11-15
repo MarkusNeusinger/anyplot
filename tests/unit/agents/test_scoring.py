@@ -9,12 +9,15 @@ from agents.anyplot.scoring import (
     REVIEW_SECTIONS,
     SCORED,
     SCORED_MAX,
+    STYLE_SECTIONS,
     TECHNICAL,
     TOOL_SCHEMA,
     ScoreError,
     ScoreRequest,
     parse_answer,
+    rubric_text,
     section,
+    style_text,
     system_prompt,
     user_text,
 )
@@ -57,6 +60,24 @@ class TestRubric:
         assert "## Code Quality (10 Points)" not in prompt
         assert "## Library Mastery (10 Points)" not in prompt
         assert "### 8b." not in prompt
+
+    def test_the_system_prompt_carries_the_text_sizes_the_rubric_measures_against(self) -> None:
+        """VQ-01 names the style guide's text sizes as its reference, so the scorer has to see them."""
+        prompt = system_prompt()
+        sizes = style_text()
+
+        assert prompt.rstrip().endswith(sizes)
+        for heading in STYLE_SECTIONS:
+            assert heading in sizes, heading
+        assert "| Tick labels | 8pt | 10px |" in sizes
+        assert "title `~22px`, axis titles `~16px`, tick labels `~14px`" in sizes  # the JavaScript family's own sizes
+        assert "`titlesize = 20`" in sizes and "ggplot2" in sizes  # Makie and R have no table column
+        # Only the text sizes: the marker advice and the general rules of the section around them stay out.
+        assert "### Marker and Line Sizes" not in sizes and "### General Rules" not in sizes
+
+    def test_the_adapters_rubric_does_not_repeat_the_style_guide(self) -> None:
+        """The adapter reads the whole style guide beside the rubric (`policy`)."""
+        assert "# From the style guide" not in rubric_text()
 
     def test_the_tool_schema_is_strict_and_names_every_criterion(self) -> None:
         item = TOOL_SCHEMA["properties"]["items"]["items"]

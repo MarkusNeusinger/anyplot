@@ -726,11 +726,14 @@ class TestOtherInstructions:
         assert "the title at 12 pt, axis titles at 10 pt, tick labels and legend text at 8 pt" in text
         pixels = [round(points * 400 / 72) for points in (rows["Title"], rows["Axis labels"], rows["Tick labels"])]
         assert f"(about {pixels[0]}, {pixels[1]} and {pixels[2]} px)" in text
-        assert "Text at or above these sizes is never too small" in text
+        assert "Text at or above its library's sizes is never too small" in text
+        # Those numbers are one family's: a JavaScript or Makie plot is measured against its own, smaller ones.
+        assert "each library is measured against its own" in text
+        assert "JavaScript and Makie text comes out smaller in the render" in text
         # Size is only half of legibility: faint or background-coloured text fails at any size.
         assert "too faint or lost against its background" in text
         # Smaller text is judged by readability, not rejected by size: the style guide allows deviations.
-        assert "never for its size alone" in text and "it has no annotation row" in text
+        assert "never for its size alone" in text and "The table has no annotation row" in text
 
     def test_root_lists_the_fixed_refusals(self) -> None:
         text = policy.root_instruction()

@@ -12,7 +12,9 @@ caps, so no model ever writes a total.
 pipeline's rules, one place to change a rule). `system_prompt` joins
 `agents/anyplot/prompts/scorer.md`, which says how the rubric applies to a user's
 plot, with sections cut by heading from `prompts/quality-criteria.md` and
-`prompts/workflow-prompts/ai-quality-review.md`. The criteria are the 16 that
+`prompts/workflow-prompts/ai-quality-review.md`, and with the style guide's text
+sizes (`STYLE_SECTIONS`): VQ-01 measures text against them, and a scorer that
+cannot see them reads the house sizes as small. The criteria are the 16 that
 describe what a user sees (`SCORED`, 75 points, scaled to 100): Visual Quality,
 Design Excellence, Spec Compliance, and DQ-01 and DQ-03 of Data Quality. Left out:
 DQ-02 (the realism of the scenario: the data is the user's own), Code Quality (the
@@ -41,6 +43,7 @@ REPO = Path(__file__).resolve().parents[2]
 SCORER_PROMPT = Path(__file__).with_name("prompts") / "scorer.md"
 CRITERIA_FILE = REPO / "prompts" / "quality-criteria.md"
 REVIEW_FILE = REPO / "prompts" / "workflow-prompts" / "ai-quality-review.md"
+STYLE_FILE = REPO / "prompts" / "default-style-guide.md"
 
 SCORED: dict[str, int] = {
     item: points for item, points in CRITERIA.items() if item[:2] in ("VQ", "DE", "SC") or item in ("DQ-01", "DQ-03")
@@ -75,6 +78,9 @@ REVIEW_SECTIONS = (
     "### 5d. MANDATORY: Proportional Sizing Check (both renders)",
     "### 8a. Strengths and weaknesses (every review)",
 )
+# The style guide sections the scorer and the reviewer read behind the rubric. The adapter gets the
+# whole style guide (`policy`), so these stay out of `rubric_text`.
+STYLE_SECTIONS = ("### Text Sizes",)
 
 TOOL_NAME = "submit_score"
 TOOL_SCHEMA: dict[str, Any] = {
@@ -172,8 +178,10 @@ def system_prompt(
     criteria: Path = CRITERIA_FILE,
     review: Path = REVIEW_FILE,
     highlights: bool | None = None,
+    style: Path = STYLE_FILE,
 ) -> str:
-    """`scorer.md` followed by the rubric sections it applies, cut verbatim from the catalogue's prompts.
+    """`scorer.md` followed by the rubric sections it applies and the style guide's text sizes, cut verbatim
+    from the catalogue's prompts.
 
     `highlights` (experiment; default from `AGENT_SCORER_HIGHLIGHTS=on`) adds a fifth user-plot rule:
     one data-derived highlight is not variant creep (`prompts/scorer_highlights.md`).
@@ -184,7 +192,21 @@ def system_prompt(
     if highlights:
         parts.append(HIGHLIGHT_RULE.read_text(encoding="utf-8").strip())
     parts.append(rubric_text(criteria, review))
+    parts.append(style_text(style))
     return "\n\n".join(parts) + "\n"
+
+
+def style_text(style: Path = STYLE_FILE) -> str:
+    """The style guide sections VQ-01 refers to (`STYLE_SECTIONS`), cut verbatim.
+
+    The rubric measures text against the style guide's sizes, and a text at or above them is never too
+    small. Without the table a scorer has only the render to go by, and it named 8 pt tick labels, the
+    house size, as too small.
+    """
+    text = style.read_text(encoding="utf-8")
+    parts = ["# From the style guide (prompts/default-style-guide.md)"]
+    parts += [section(text, heading) for heading in STYLE_SECTIONS]
+    return "\n\n".join(parts)
 
 
 def rubric_text(criteria: Path = CRITERIA_FILE, review: Path = REVIEW_FILE) -> str:

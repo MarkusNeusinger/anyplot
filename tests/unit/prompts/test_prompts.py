@@ -1437,3 +1437,96 @@ class TestAdaptableCode:
             content.index("### Step 5b: Adaptability self-check (Python only)") : content.index("## Step 6:")
         ]
         assert "python -m core.smoke_run selfcheck" in step and "At most three attempts" in step
+
+
+class TestTextSizeIsJudgedAtFullSize:
+    """VQ-01 measures text in the full-size render, against the style guide's own sizes.
+
+    The rubric used to ask for text that stays legible at about 400 px wide. The style guide's tick labels
+    (8 pt, about 44 px of 3200) are about 5 px there, so the two rules contradicted each other, and a
+    reviewer that followed the rubric named the house size as a defect. A reduced view is never the test.
+    """
+
+    CRITERIA = PROMPTS_DIR / "quality-criteria.md"
+    STYLE_GUIDE = PROMPTS_DIR / "default-style-guide.md"
+    REVIEW = PROMPTS_DIR / "workflow-prompts" / "ai-quality-review.md"
+    REDUCED_VIEW = re.compile(r"400 ?px|mobile|thumbnail|scaled down", re.IGNORECASE)
+
+    def _vq01(self) -> str:
+        content = self.CRITERIA.read_text()
+        return content[content.index("### VQ-01: Text Legibility") : content.index("### VQ-02:")]
+
+    def test_the_rubric_judges_text_in_the_full_size_render(self) -> None:
+        rule = self._vq01()
+        assert "full-size render" in rule
+        assert "a reduced view is never the test" in rule
+        assert "Text at or above its reference is never too small" in rule
+        # The thumbnail is named once, to rule it out; no point row asks for it.
+        rows = [line for line in rule.splitlines() if line.startswith("| ")]
+        assert rows and not [row for row in rows if self.REDUCED_VIEW.search(row)]
+
+    def test_the_rubrics_reference_is_a_section_the_style_guide_has(self) -> None:
+        assert '"Text Sizes"' in self._vq01()
+        headings = [line for line in self.STYLE_GUIDE.read_text().splitlines() if line.startswith("#")]
+        assert "### Text Sizes" in headings
+        assert headings.index("## Visual Sizing Defaults") < headings.index("### Text Sizes")
+
+    @pytest.mark.parametrize(
+        "prompt_path",
+        [PROMPTS_DIR / "quality-evaluator.md", PROMPTS_DIR / "workflow-prompts" / "ai-quality-review.md"],
+        ids=lambda p: p.name,
+    )
+    def test_no_scoring_table_asks_for_legibility_in_a_reduced_view(self, prompt_path: Path) -> None:
+        rows = [line for line in prompt_path.read_text().splitlines() if line.startswith("| VQ-01 |")]
+        assert rows, f"{prompt_path.name} has no VQ-01 row"
+        for row in rows:
+            assert "full-size render" in row
+            assert "a reduced view is never the test" in row
+
+    def test_no_example_defect_line_argues_with_the_thumbnail(self) -> None:
+        """An example line is what a reviewer copies: one that says "blurs in the thumbnail" teaches the argument."""
+        examples = [
+            line
+            for line in self.REVIEW.read_text().splitlines()
+            if "VQ-01" in line and self.REDUCED_VIEW.search(line) and "neither" not in line
+        ]
+        assert not examples, examples
+
+    def test_the_style_guide_does_not_test_text_at_thumbnail_size(self) -> None:
+        content = self.STYLE_GUIDE.read_text()
+        assert "AND on a 400 px mobile width" not in content
+        assert "AND when scaled down to mobile width" not in content
+        sizes = content[content.index("### Text Sizes") : content.index("### Marker and Line Sizes")]
+        assert "text at or above them is never too small" in sizes
+
+    def test_the_style_guide_calls_none_of_its_own_text_sizes_too_small(self) -> None:
+        """`fontsize=10` is the table's axis-title size at dpi=400. As the example of a size that is too small it
+        taught a reviewer to call the table's own sizes too small."""
+        content = self.STYLE_GUIDE.read_text()
+        note = next(line for line in content.splitlines() if line.startswith("**Common Mistake:**"))
+        assert "fontsize" not in note
+        rules = content[content.index("### General Rules") : content.index("## Proportional Sizing")]
+        assert 'Text follows "Text Sizes" above, not this rule.' in rules
+
+    def test_the_generators_size_rule_is_about_marks_and_lines(self) -> None:
+        """The generator reads its own copy of the "2-3x larger" rule; applied to text it outgrows the table."""
+        content = (PROMPTS_DIR / "plot-generator.md").read_text()
+        line = next(line for line in content.splitlines() if "2-3x larger" in line)
+        assert line.startswith("- Marks and lines") and '"Text Sizes"' in line
+
+    def test_size_alone_settles_nothing_else(self) -> None:
+        """Text at its reference can still be faint, overlapping or cut off."""
+        rule = self._vq01()
+        assert "That settles its size only" in rule
+        row = next(line for line in rule.splitlines() if line.startswith("| 8 |"))
+        assert "all text clearly readable in both themes" in row
+
+    def test_the_text_sizes_name_every_library(self) -> None:
+        """The agent chat's reviewer reads this section alone, for any of the libraries, so each needs its sizes."""
+        content = self.STYLE_GUIDE.read_text()
+        sizes = content[content.index("### Text Sizes") : content.index("### Marker and Line Sizes")].lower()
+        spelled = {"letsplot": "lets-plot"}
+        missing = [
+            library["id"] for library in LIBRARIES_METADATA if spelled.get(library["id"], library["id"]) not in sizes
+        ]
+        assert not missing, missing

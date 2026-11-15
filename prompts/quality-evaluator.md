@@ -185,7 +185,7 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| VQ-01 | Text Legibility | 8 | All text readable at full size AND at ~400 px mobile width? Font sizes explicitly set (regardless of whether at style-guide defaults or AI-adjusted)? Readable in BOTH themes? |
+| VQ-01 | Text Legibility | 8 | All text readable in the full-size render, none below its style-guide reference that reads small (a reduced view is never the test)? Font sizes explicitly set (regardless of whether at style-guide defaults or AI-adjusted)? Readable in BOTH themes? |
 | VQ-02 | No Overlap | 6 | Any overlapping text? Tick labels? Legend on data? Data marks overlapping each other count only when the overlap hides information — for overlap-native types (bubble, dense scatter, strip, network), overlap handled with translucency or a thin outline (page- or ink-colored) is expected and not a deduction. |
 | VQ-03 | Element Visibility | 6 | Markers/lines adapted to data density? Legend glyphs (size circles, color swatches, line samples) visible in BOTH themes and matching the marks they explain? An invisible glyph deducts VQ-03 (+ SC-04 when the encoding becomes unreadable); name the likely fix (e.g. ggplot2 `guide_legend(override.aes = list(fill = ...))`). |
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette choice)? No red-green as sole distinguishing signal? |

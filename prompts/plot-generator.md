@@ -543,9 +543,9 @@ Must pass all visual quality criteria (VQ-01 through VQ-06) and design excellenc
 
 **IMPORTANT: Standard Canvas Size**
 
-anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — library default sizes are still too small at this canvas!
+anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — a library's default marks and lines are still too small at this canvas!
 
-- Elements should be **~2-3x larger** than library defaults
+- Marks and lines should be **~2-3x larger** than library defaults; text takes the sizes of the style guide's "Text Sizes" and the library prompt, not this rule
 - See `prompts/default-style-guide.md` for "Visual Sizing Defaults" + "Proportional Sizing" criteria
 - See `prompts/library/{library}.md` for library-specific starting values
 
