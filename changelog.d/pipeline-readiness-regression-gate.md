@@ -15,4 +15,4 @@
   generations, forced regenerations, repairs) the status is a record only. The
   scan's record now carries the two hashes (record version 2). The keep is a
   returning one: the pair comes back after the attempt window, not behind the
-  whole catalogue.
+  whole catalogue. (#13113)
