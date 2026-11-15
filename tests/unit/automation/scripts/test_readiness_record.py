@@ -15,8 +15,8 @@ from typing import Any
 
 import pytest
 
-from automation.scripts import readiness_record, regen_gate, regen_pick_pairs, render_hash
-from automation.scripts.readiness_record import Verdict, assess, check
+from automation.scripts import adapt_record, readiness_record, regen_gate, regen_pick_pairs
+from automation.scripts.readiness_record import Verdict, assess, check, code_sha256, file_sha256
 from automation.scripts.regen_gate import (
     KEEP,
     MERGE,
@@ -32,6 +32,7 @@ from automation.scripts.regen_gate import (
     render_summary,
     validate_record,
 )
+from core import smoke_run
 from tests.unit.automation.scripts.test_regen_gate import (
     NEW_CHECKLIST,
     _adapt,
@@ -62,8 +63,8 @@ def _record(**overrides: Any) -> dict:
         "spec_id": SPEC,
         "library": LIB,
         "language": "python",
-        "new_sha256": render_hash.render_hash(NEW),
-        "prev_sha256": render_hash.render_hash(PREV),
+        "new_sha256": file_sha256(NEW),
+        "prev_sha256": file_sha256(PREV),
         "verdict": "regression",
         "new": _side("blocked", [KEY]),
         "prev": _side("coupled"),
@@ -128,11 +129,33 @@ def test_a_scan_without_a_verdict_is_unreadable(record):
 # --- the record must be of this code ---------------------------------------------------------------
 
 
-def test_the_header_score_never_makes_a_record_stale():
-    """impl-review writes `Quality: N/100` after its checks; main's file carries its stored score."""
-    head = NEW.replace(b"Quality: pending", b"Quality: 91/100")
+def test_the_reviews_header_commit_never_makes_a_record_stale():
+    """impl-review rewrites the header when it stores a review (title, library line, score, date).
+
+    A re-review of the same code reads the head after that commit, and must still find the regression.
+    """
+    stored = b'""" anyplot.ai\nscatter-basic: Basic Scatter Plot\nLibrary: altair 6.1.0 | Python 3.14.9\n'
+    stored += b'Quality: 91/100 | Updated: 2026-11-15\n"""\n\n'
+    head = stored + NEW.split(b'"""\n\n', 1)[1]
     main = PREV.replace(b"Quality: 87/100", b"Quality: pending")
+    assert head != NEW and main != PREV
     assert _assess(_record(), head=head, main=main).status == "regression"
+
+
+def test_the_hash_is_the_adapt_records_rule():
+    """One rule in three files that cannot import each other; the header goes, every other byte counts."""
+    samples = [NEW.decode(), PREV.decode(), "x = 1\n", '"""unclosed\nx = 1\n', "\n\n" + NEW.decode(), ""]
+    for text in samples:
+        assert code_sha256(text) == smoke_run.code_sha256(text) == adapt_record.code_sha256(text)
+    assert code_sha256(NEW.decode()) == code_sha256(NEW.decode().replace("pending", "91/100"))
+    assert code_sha256(NEW.decode()) != code_sha256(NEW.decode() + "x = 1\n")
+
+
+def test_the_file_hash_is_of_bytes():
+    r"""`git show` and the scanner both hand over bytes, so a `\r\n` file hashes as it is stored."""
+    assert file_sha256(NEW) == code_sha256(NEW.decode())
+    assert file_sha256(NEW.replace(b"\n", b"\r\n")) != file_sha256(NEW)
+    assert file_sha256(None) is None and file_sha256(b"\xff\xfe not utf-8") is None
 
 
 @pytest.mark.parametrize(
@@ -140,10 +163,11 @@ def test_the_header_score_never_makes_a_record_stale():
     [
         (NEW + b"x = 1\n", PREV, "head"),  # a push after the scan
         (None, PREV, "head"),  # no file at the head
+        (b"\xff\xfe not utf-8", PREV, "head"),  # a head the scanner could not have read
         (NEW, PREV + b"x = 1\n", "main"),  # main moved since the scan
         (NEW, None, "main"),  # the record has a predecessor, main has none
     ],
-    ids=["head-changed", "no-head", "main-changed", "no-main"],
+    ids=["head-changed", "no-head", "head-not-utf-8", "main-changed", "no-main"],
 )
 def test_a_record_of_other_code_is_stale(head, main, why):
     verdict = _assess(_record(), head=head, main=main)

@@ -185,7 +185,7 @@ Python implementations follow the Data block convention of [Adaptable catalogue 
 
 The agent chat adapts a catalogue file only when its validator accepts the file: the SECURITY profile, the theme block, and the save target (`agents/anyplot/code/readiness.py`). A regeneration or a repair can add a construct the validator refuses. The render then gets better while the pair stops working in the chat. `impl-generate.yml` and `impl-repair.yml` therefore run "Readiness scan (record-only)" right after the smoke run, for Python implementations.
 
-The step copies the validator from the workflow's own ref as a bare tree: `agents/anyplot/code`, the two schema modules it imports, and `core/`, plus `render_hash.py` and `regen_gate.py` for the two hashes. The real `agents/__init__.py` files import the agent runtime, so the step writes empty ones into the tree instead. It doesn't leave them out: without any, `agents` would be a namespace package, and a regular `agents` package elsewhere on the import path would win the import. The script also stops when a validator module comes from outside its own tree. It then runs `automation/scripts/readiness_scan.py` on the new file and on the implementation on `main`. The script reads both files and never runs them.
+The step copies the validator from the workflow's own ref as a bare tree: `agents/anyplot/code`, the two schema modules it imports, and `core/`, plus `readiness_record.py` for the two hashes. The real `agents/__init__.py` files import the agent runtime, so the step writes empty ones into the tree instead. It doesn't leave them out: without any, `agents` would be a namespace package, and a regular `agents` package elsewhere on the import path would win the import. The script also stops when a validator module comes from outside its own tree. It then runs `automation/scripts/readiness_scan.py` on the new file and on the implementation on `main`. The script reads both files and never runs them.
 
 A refusal key names why the validator blocks a file: `security:<rule>` for every rule of the SECURITY profile the file breaks, and the reason's category otherwise, such as `no-theme` or `savefig-target`. The verdict compares the keys of both files:
 
@@ -197,7 +197,7 @@ A refusal key names why the validator blocks a file: `security:<rule>` for every
 | `excluded` | A map spec. The chat refuses those whatever the code holds. |
 | `unreadable` | No new file, or a library without a Python profile. |
 
-The step prints one `readiness_scan` line, a warning for a regression and a notice otherwise, and writes a `**Readiness (record-only):**` line to the job summary. The record goes to `adapt/readiness.json` in staging, beside the smoke run. It holds identifiers and counts only, never code: for each file its status, its keys, and how often each SECURITY rule fires. The verdict compares keys, so a rule that fires more often than before is no regression; the count is there for a later reading. The record also names the hash of both scanned files (`new_sha256`, `prev_sha256`): the render hash of `render_hash.py`, which ignores the header score. The step never fails the job; `impl-review.yml` reads the record (see the next section).
+The step prints one `readiness_scan` line, a warning for a regression and a notice otherwise, and writes a `**Readiness (record-only):**` line to the job summary. The record goes to `adapt/readiness.json` in staging, beside the smoke run. It holds identifiers and counts only, never code: for each file its status, its keys, and how often each SECURITY rule fires. The verdict compares keys, so a rule that fires more often than before is no regression; the count is there for a later reading. The record also names the hash of both scanned files (`new_sha256`, `prev_sha256`): the source without its leading docstring header, the rule the adaptability records use. `impl-review.yml` rewrites that header when it stores a review, and the validator never reads it. The step never fails the job; `impl-review.yml` reads the record (see the next section).
 
 The scan covers Python only. The profiles of R, Julia, and JavaScript need tree-sitter grammars that these jobs don't carry.
 
@@ -208,7 +208,7 @@ On the six regenerations of 2026-11-11 the scan finds two regressions. `surface-
 `impl-review.yml` runs "Readiness check" for Python implementations, right after the adaptability check has downloaded staging's `adapt/` folder. The step runs `automation/scripts/readiness_record.py`, the copy from the workflow's own ref, on the staged `adapt/readiness.json`. A record counts only when it is about the code under review:
 
 - It's the scanner's record: its version, this spec and library, identifiers only.
-- `new_sha256` is the render hash of the implementation at the PR head, and `prev_sha256` that of the file on `origin/main`.
+- `new_sha256` is the code hash of the implementation at the PR head, and `prev_sha256` that of the file on `origin/main`. The hash leaves the header out, so a re-review after the review's own header commit still finds its record.
 - The regression is recomputed from the two sides' refusal keys. The record's own verdict is never read.
 
 The step reports one status:
@@ -216,7 +216,7 @@ The step reports one status:
 | Status | Meaning |
 |---|---|
 | `regression`, `none`, `first_generation`, `excluded`, `unreadable` | As in the scan, for a record that passed the three checks. |
-| `stale` | The record is of other code than the PR head or the file on `main`: a push after the scan, a re-review after the review's header commit, or a `main` that moved. |
+| `stale` | The record is of other code than the PR head or the file on `main`: a push after the scan, or a `main` that moved. |
 | `invalid` | The file isn't a record this reader knows. |
 | `missing` | No record is staged. |
 

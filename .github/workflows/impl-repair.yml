@@ -583,8 +583,9 @@ jobs:
       # repair; a first generation has none). The validator is a bare tree from
       # this workflow's ref with empty agents/__init__.py files (the real ones
       # import the agent runtime), and `-I` keeps the PR branch off the import
-      # path. The record names the hash of both scanned files (render_hash.py),
-      # which is how impl-review knows it is of the code under review.
+      # path. The record names the hash of both scanned files
+      # (readiness_record.py), which is how impl-review knows it is of the
+      # code under review.
       # Record-only: no exit code gates.
       - name: Readiness scan (record-only)
         if: success() && steps.lang.outputs.language == 'python'
@@ -601,8 +602,8 @@ jobs:
           PREV="$RUNNER_TEMP/readiness-prev-source"
           rm -rf "$TOOLS" "$PREV" "$OUT/readiness.json"; mkdir -p "$OUT" "$TOOLS"
           if ! git archive "$GITHUB_SHA" agents/anyplot/code agents/anyplot/schemas.py agents/anyplot/language.py \
-                 core automation/scripts/readiness_scan.py automation/scripts/render_hash.py \
-                 automation/scripts/regen_gate.py | tar -x -C "$TOOLS" \
+                 core automation/scripts/readiness_scan.py automation/scripts/readiness_record.py \
+                 | tar -x -C "$TOOLS" \
              || [ ! -f "$TOOLS/automation/scripts/readiness_scan.py" ]; then
             echo "::warning::readiness_scan could not copy the validator from ${GITHUB_SHA}; no readiness record is staged"
             exit 0

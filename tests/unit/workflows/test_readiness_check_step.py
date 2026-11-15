@@ -23,7 +23,7 @@ from typing import Any
 import pytest
 
 from automation.scripts import readiness_scan, regen_gate
-from automation.scripts.render_hash import render_hash
+from automation.scripts.readiness_record import code_sha256
 from tests.unit.automation.scripts.test_regen_gate import NEW_CHECKLIST, _checklist_json, _regen
 from tests.unit.workflows.test_pipeline_retry_gaps import _step, _steps
 from tests.unit.workflows.test_render_hash_steps import CODE, IMPL, LIB, SHELL_IDS, SHELLS, SPEC, TOOLS, Repo
@@ -40,8 +40,7 @@ def _repo(tmp_path) -> Repo:
     repo = Repo(tmp_path)
     tools = repo.runner / "regen-tools"
     tools.mkdir()
-    for name in ("readiness_record.py", "render_hash.py", "regen_gate.py"):
-        shutil.copy(TOOLS / name, tools / name)
+    shutil.copy(TOOLS / "readiness_record.py", tools / "readiness_record.py")  # a single file: it imports no sibling
     repo.git("fetch", "-q", "origin")  # impl-review's checkout has origin/main
     return repo
 
@@ -57,8 +56,8 @@ def _stage(repo: Repo, *, new: str = HEAD, prev: str | None = MAIN, **overrides:
         "spec_id": SPEC,
         "library": LIB,
         "language": "python",
-        "new_sha256": render_hash(new.encode()),
-        "prev_sha256": None if prev is None else render_hash(prev.encode()),
+        "new_sha256": code_sha256(new),
+        "prev_sha256": None if prev is None else code_sha256(prev),
         "verdict": "regression",
         "new": _side("blocked", [KEY]),
         "prev": None if prev is None else _side("coupled"),
@@ -106,6 +105,17 @@ class TestReadinessCheckStep:
         repo = _repo(tmp_path)
         _stage(repo)
         (repo.ws / IMPL).write_text(CODE.format(score="pending", x=99), encoding="utf-8")
+        result = _run(repo, shell)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _verdict(repo)["status"] == "regression"
+
+    def test_the_reviews_header_commit_keeps_the_record(self, tmp_path, shell):
+        """A re-review reads the head after impl-review stored its review in the header: same code, same record."""
+        repo = _repo(tmp_path)
+        _stage(repo)
+        header = '""" anyplot.ai\nscatter-basic: Basic Scatter Plot\nLibrary: matplotlib 3.12.1 | Python 3.14.9\n'
+        repo.commit({IMPL: header + 'Quality: 91/100 | Updated: 2026-11-15\n"""\n\nx = 1\n'}, "chore: store the review")
+        repo.push()
         result = _run(repo, shell)
         assert result.returncode == 0, result.stdout + result.stderr
         assert _verdict(repo)["status"] == "regression"
@@ -190,8 +200,6 @@ def test_the_reader_is_the_workflow_refs_copy():
     """Copied before the checkout of the PR head, so the head cannot choose how its record is read."""
     checkout = str(_step("impl-review.yml", "Checkout PR code")["run"])
     assert checkout.index("automation/scripts/readiness_record.py") < checkout.index("git checkout")
-    for name in ("render_hash.py", "regen_gate.py"):  # the reader imports the hash from its own directory
-        assert checkout.index(f"automation/scripts/{name}") < checkout.index("git checkout")
 
 
 def test_the_gate_gets_the_verdict_only_when_there_is_one():

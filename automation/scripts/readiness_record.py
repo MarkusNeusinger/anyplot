@@ -7,9 +7,12 @@ the new implementation and in its predecessor. ``impl-review.yml`` reads it
 here before anything keys a decision on it:
 
 - The record must be the scanner's: its version, this pair, identifiers only.
-- It must be about this code: ``new_sha256`` is the render hash of the
+- It must be about this code: ``new_sha256`` is the code hash of the
   implementation at the PR head and ``prev_sha256`` that of the file on
-  ``origin/main`` (``render_hash.py``; the header score never changes it).
+  ``origin/main`` (``code_sha256``: the source without its leading docstring
+  header, the rule of the adapt records). impl-review rewrites that header
+  when it stores a review, so a re-review of the same code still finds its
+  record, and the validator never reads the header either.
 - The regression is recomputed from the two sides' refusal keys. The record's
   own ``verdict``, ``added`` and ``removed`` are never read.
 
@@ -23,8 +26,8 @@ The status, first match wins:
 
 Only ``regression`` ever changes a decision: on a gated regeneration
 ``regen_gate.py`` keeps the live implementation (``readiness_regression``).
-Every other status leaves the pipeline as it is, so a lost upload, a re-review
-after the header commit or a scan that could not run never refuses anything::
+Every other status leaves the pipeline as it is, so a lost upload, a push
+after the scan or a scan that could not run never refuses anything::
 
     readiness_record.py check --record adapt/readiness.json --new IMPL_AT_HEAD --prev IMPL_ON_MAIN \\
         --spec-id S --library B [--out VERDICT.json]
@@ -33,14 +36,15 @@ after the header commit or a scan that could not run never refuses anything::
 ``check`` prints one ``::notice::`` (a ``::warning::`` for a regression),
 writes a job-summary line and ``status=`` to ``$GITHUB_OUTPUT`` when they are
 set, and with ``--out`` the verdict as one JSON line. It always exits 0 (2 on
-a usage error). Stdlib only; ``render_hash`` is imported from this file's own
-directory when it runs as a script, so a workflow's copy never reads the
-checkout's.
+a usage error). Stdlib only and a single file: impl-review runs it with the
+runner's Python from a copy at the workflow's ref, and ``readiness_scan.py``
+imports ``code_sha256`` from the copy beside it.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -48,13 +52,6 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
-
-if __package__:  # imported as automation.scripts.readiness_record (tests, local tools)
-    from automation.scripts import render_hash
-else:  # run as a script: the render_hash.py next to this file (the workflow-ref copy)
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import render_hash
 
 
 # The record version of ``readiness_scan.py`` this reader knows, and the
@@ -147,8 +144,34 @@ def _side(value: Any) -> tuple[str, frozenset[str], bool] | None:
     return status, frozenset(refusals) if status in REFUSED else frozenset(), spec_refused
 
 
-def _hash(data: bytes | None) -> str | None:
-    return None if data is None else render_hash.render_hash(data)
+def code_sha256(text: str) -> str:
+    """The SHA-256 of a source without its leading docstring header.
+
+    The rule of ``core.smoke_run.code_sha256`` and ``adapt_record.code_sha256``,
+    reimplemented because this file runs alone (a parity test holds the three
+    together). impl-review rewrites the header when it stores a review; the
+    code below it is what the validator scans.
+    """
+    body = text.lstrip()
+    if body.startswith('"""'):
+        end = body.find('"""', 3)
+        if end != -1:
+            body = body[end + 3 :]
+    return hashlib.sha256(body.strip().encode("utf-8")).hexdigest()
+
+
+def file_sha256(data: bytes | None) -> str | None:
+    """``code_sha256`` of a file's bytes, or None for no file and for bytes that are not UTF-8.
+
+    Bytes, not text read in text mode: ``git show`` hands out bytes, and a
+    ``\\r\\n`` file must hash the same on both sides.
+    """
+    if data is None:
+        return None
+    try:
+        return code_sha256(data.decode("utf-8"))
+    except UnicodeDecodeError:
+        return None
 
 
 def assess(record: Any, *, spec_id: str, library: str, head: bytes | None, main: bytes | None) -> Verdict:
@@ -178,9 +201,9 @@ def assess(record: Any, *, spec_id: str, library: str, head: bytes | None, main:
     if prev is not None and not (isinstance(prev_hash, str) and HASH_RE.fullmatch(prev_hash)):
         return Verdict(INVALID, why="hash")
     sides = {"new": new[0], "prev": prev[0] if prev else NO_SIDE}
-    if _hash(head) != new_hash:
+    if file_sha256(head) != new_hash:
         return Verdict(STALE, why="head", **sides)
-    if (prev_hash if prev is not None else None) != _hash(main):
+    if (prev_hash if prev is not None else None) != file_sha256(main):
         return Verdict(STALE, why="main", **sides)
     if new[0] == "unsupported":
         return Verdict(UNREADABLE, **sides)

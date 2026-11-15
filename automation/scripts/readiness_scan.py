@@ -14,9 +14,10 @@ nothing: it prints one line, writes a job-summary line and a record, and exits
 keeps the live implementation (``regen_gate.py``, ``readiness_regression``).
 
 The record carries the hash of each file it scanned (``new_sha256``,
-``prev_sha256``; the render hash of ``render_hash.py``, which ignores the
-header score). The reader compares them with the implementation at the PR head
-and on ``origin/main``, so a record of other code never decides anything.
+``prev_sha256``; ``readiness_record.code_sha256``, the source without its
+leading docstring header, which impl-review rewrites). The reader compares
+them with the implementation at the PR head and on ``origin/main``, so a
+record of other code never decides anything.
 
 A *refusal key* names why the validator blocks a file: ``security:<rule>`` for
 every rule of the SECURITY profile the file breaks, read from the validator's
@@ -38,7 +39,7 @@ Python only: the profiles of R, Julia and JavaScript need tree-sitter grammars
 that the generate and repair jobs do not carry.
 
 ``impl-generate.yml`` and ``impl-repair.yml`` run a copy from the workflow's
-own ref, next to ``render_hash.py`` and ``regen_gate.py`` (the hash) and a
+own ref, next to ``readiness_record.py`` (the hash) and a
 bare copy of the validator (``agents/anyplot/code``, the
 two schema modules it imports, and ``core/``). The step puts empty
 ``__init__.py`` files into ``agents/`` and ``agents/anyplot/`` there: the real
@@ -63,10 +64,10 @@ from pathlib import Path
 
 
 if __package__:  # imported as automation.scripts.readiness_scan (tests, local tools)
-    from automation.scripts import render_hash
-else:  # run as a script: the render_hash.py next to this file (the workflow-ref copy)
+    from automation.scripts import readiness_record
+else:  # run as a script: the readiness_record.py next to this file (the workflow-ref copy)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import render_hash
+    import readiness_record
 
 
 # 2: the record names the hash of both scanned files.
@@ -218,11 +219,11 @@ def _read(path: str | None) -> str | None:
 
 
 def _digest(path: str | None) -> str | None:
-    """The render hash of a file's bytes (``render_hash.render_hash``), or None when it cannot be read."""
+    """The code hash of a file's bytes (``readiness_record.file_sha256``), or None when it cannot be read."""
     if not path:
         return None
     try:
-        return render_hash.render_hash(Path(path).read_bytes())
+        return readiness_record.file_sha256(Path(path).read_bytes())
     except OSError:
         return None
 

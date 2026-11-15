@@ -239,15 +239,17 @@ the workflow's ref, next to a bare copy of the validator
 (`agents/anyplot/code`, its two schema modules, and `core/`, with empty
 `agents/__init__.py` files), so nothing of the agent runtime is imported. It
 reads the files and never runs them, writes `adapt/readiness.json` with the
-render hash of both files, and exits 0 for every verdict; it stops only when a
-validator module comes from outside its own tree. See
+code hash of both files (`readiness_record.code_sha256`), and exits 0 for
+every verdict; it stops only when a validator module comes from outside its
+own tree. See
 [Readiness scan](../../docs/workflows/overview.md#readiness-scan-record-only).
 
 ### `readiness_record.py`
 Reads the staged `adapt/readiness.json` against the code under review
 (`impl-review.yml`, "Readiness check"). The record must be the scanner's and
-name the render hash of the implementation at the PR head and of the one on
-`origin/main`; the regression is recomputed from its refusal keys. The script
+name the code hash (the source without its header docstring) of the
+implementation at the PR head and of the one on `origin/main`; the regression
+is recomputed from its refusal keys. The script
 reports `regression`, `none`, `first_generation`, `excluded`, `unreadable`,
 `stale`, `invalid`, or `missing`, prints a `readiness_check` line, and writes
 the verdict file that `regen_gate.py decide --readiness` reads. Stdlib only,

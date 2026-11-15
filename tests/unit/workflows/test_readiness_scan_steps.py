@@ -75,10 +75,10 @@ VALIDATOR_TREE = {
     "agents/anyplot/agent.py": "",
     "core/__init__.py": "",
     SCANNER: STUB_SCANNER,
-    # The scanner hashes both files with these two (the render hash).
-    "automation/scripts/render_hash.py": "",
+    # The scanner takes the hash of both files from the reader beside it.
+    "automation/scripts/readiness_record.py": "",
+    # On the ref as well, and not copied: the step names its files one by one.
     "automation/scripts/regen_gate.py": "",
-    "automation/scripts/regen_pick_pairs.py": "",
 }
 
 
@@ -212,10 +212,9 @@ class TestScanStep:
             "agents/anyplot/code/readiness.py",
             "agents/anyplot/language.py",
             "agents/anyplot/schemas.py",
+            # The reader, for the hash, and nothing else of automation/scripts.
+            "automation/scripts/readiness_record.py",
             SCANNER,
-            # The hash's two files and nothing else of automation/scripts.
-            "automation/scripts/regen_gate.py",
-            "automation/scripts/render_hash.py",
             "core/__init__.py",
         ]
         # The step writes the two package files itself, empty: regular packages win the import over
