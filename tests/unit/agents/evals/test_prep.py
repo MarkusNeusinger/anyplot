@@ -140,7 +140,7 @@ class TestFixtures:
         # rows shown summed per month, and a French "keep only these in the table itself". And two questions under
         # a view (`view_question`, `asks`): one about what the plot shows, one about the whole table; both change
         # nothing, so the view they found is still set.
-        assert len(cases) == 130
+        assert len(cases) == 132
         views = {item.id: item.view for item in cases if item.view is not None}
         assert sorted(case_id for case_id, landing in views.items() if landing == "set") == [
             "de-frage-zur-ganzen-tabelle",
@@ -223,6 +223,7 @@ class TestFixtures:
             "fr-garder-deux-villes",
             "fr-lignes-de-test-en-trop",
             "fr-plus-grands-d-abord",
+            "fr-summary-mois-recents-d-abord",
             "fr-total-dans-le-titre",
             "fr-trier-le-tableau",
         ]
@@ -297,7 +298,7 @@ class TestFixtures:
         """The step-1 summary, where 10 of 11 replies of the user test of 2026-11-01 closed with a question."""
         cases = [item for item in load_cases(DEFAULT_CASES) if item.action is not None]
 
-        assert len(cases) == 16 and {item.locale for item in cases} == {"de", "en"}
+        assert len(cases) == 18 and {item.locale for item in cases} == {"de", "en", "fr"}
         assert all(item.message is None and item.dataset_text for item in cases)
         assert all("summary" in item.tags for item in cases)
         # A summary changes the data only for what the server found in code (live tests of 2026-11-01 and 11-02): a
@@ -312,7 +313,7 @@ class TestFixtures:
             "en-summary-range-column",
         }
         # A date column that runs newest first is no reason to change the table: the plot draws it oldest first by
-        # itself (`plot_view.oldest_first`), so these summaries sort nothing, and a turn that still sorts misses.
+        # itself (`plot_view.drawn_in_order`), so these summaries sort nothing, and a turn that still sorts misses.
         newest_first = {item.id: item.expected_operations for item in cases if "newest_first" in item.tags}
         assert set(newest_first) == {
             "en-summary-rtx-prices",
@@ -321,6 +322,13 @@ class TestFixtures:
         }
         assert all(operation["op"] != "sort" for operations in newest_first.values() for operation in operations)
         assert newest_first["en-summary-rtx-prices"] == newest_first["de-summary-preise-monatsnamen"] == []
+        # Month names out of calendar order are the plot's to order too (owner decision of 2026-11-15): German ones
+        # by the alphabet and French ones newest first over the turn of the year. The summary changes nothing and
+        # offers no sort, which would close it with a question the turn is not blocked for.
+        month_order = {item.id: item for item in cases if "month_order" in item.tags}
+        assert set(month_order) == {"de-summary-monate-alphabetisch", "fr-summary-mois-recents-d-abord"}
+        assert all(item.expected_operations == [] and item.spec_id == "bar-basic" for item in month_order.values())
+        assert not any(prep.BLOCKED_TAGS & set(item.tags) for item in month_order.values())
         # Dates whose day and month order reads both ways, and a conversion that would guess the century: the
         # summaries that may close with their question.
         assert [item.id for item in cases if prep.BLOCKED_TAGS & set(item.tags)] == [

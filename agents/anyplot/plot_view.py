@@ -25,6 +25,8 @@ is read (`current`): after a rename or an undo it may no longer fit, and then it
 that says so, never applied in part. No ADK import.
 """
 
+import csv
+import io
 import logging
 from collections.abc import Collection
 from dataclasses import dataclass, replace
@@ -35,18 +37,22 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from core.spec_roles import DataRole
 
 from .data.bindings import check_bindings
+from .data.months import month_number, month_order
 from .data.parse import MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from .data.prepare import (
     MAX_CONDITIONS,
     ApplyView,
     Condition,
+    DropColumns,
     KeepRows,
     Operation,
     PrepareError,
     ResetView,
+    RowNumber,
     Sort,
     apply_operations,
     condition_words,
+    suffixed_name,
     with_date_notes,
 )
 from .data.store import StoredDataset, dataset_size
@@ -280,50 +286,110 @@ def viewed_dataset(dataset: StoredDataset, viewed: Viewed) -> StoredDataset:
 
 
 OLDEST_FIRST_LINE = "The plot draws the rows oldest first by '{column}'; the table runs newest first and stays as it is"
-"""What a run says when it ordered its rows by a date column (`oldest_first`)."""
+"""What a run says when it ordered its rows by a date column (`drawn_in_order`)."""
 
 
-def newest_first_column(bindings: list[Binding], shown: DatasetProfile, view: PlotView) -> str | None:
-    """The date column a run orders its rows by before it draws them: the first bound one whose dates run newest
-    first down the rows the run draws (`ColumnProfile.order`), or None.
+CALENDAR_ORDER_LINE = (
+    "The plot draws the rows in calendar order by '{column}'; "
+    "the table lists its months in another order and stays as it is"
+)
+"""What a run says when it ordered its rows by a column of month names (`drawn_in_order`)."""
+
+
+@dataclass(frozen=True)
+class RunOrder:
+    """The order a run puts its rows in before it draws them: by `column`, with the engine's `operations`, and the
+    `line` that says so."""
+
+    column: str
+    operations: list[Operation]
+    line: str
+
+
+def run_order(bindings: list[Binding], shown: StoredDataset, view: PlotView) -> RunOrder | None:
+    """The order a run puts the rows it draws in, by the first bound column that asks for one, or None.
+
+    A date column asks for one when its dates run newest first down those rows (`ColumnProfile.order`): oldest
+    first. A text column of month names (`ColumnProfile.months`) asks for one when its months are out of calendar
+    order (`months.month_order`): from January on, or, for a run that goes backward over the turn of the year, the
+    reverse of the rows. Months that already run along the calendar, a fiscal year among them, stand.
+
+    A bound date column is the plot's time axis, whichever way it runs: month names bound beside it are labels of
+    its rows, and ordering the rows by them would take the dates out of their order. So month names are asked only
+    when no date column is bound.
 
     None too while the view's top N ranks the rows by another column: that order is the one the user asked for, and
-    dates that happen to fall along it are no reason to undo it. A top N by the date column itself ("the latest
-    12") leaves the newest rows newest first, and those are drawn in date order like any other.
+    dates or months that happen to fall along it are no reason to undo it. A top N by the column itself ("the
+    latest 12") leaves the newest rows newest first, and those are drawn in order like any other.
     """
     ranked_by = view.top.column if view.top is not None else None
-    newest_first = {
-        column.name for column in shown.columns if column.dtype == "datetime" and column.order == "descending"
-    }
-    for binding in bindings:
-        if binding.column in newest_first and ranked_by in (None, binding.column):
-            return binding.column
+    columns = {column.name: column for column in shown.profile.columns}
+    bound = [columns[binding.column] for binding in bindings if binding.column in columns]
+    orderable = [column for column in bound if ranked_by in (None, column.name)]
+    for column in orderable:
+        if column.dtype == "datetime" and column.order == "descending":
+            return RunOrder(column.name, [Sort(op="sort", column=column.name)], OLDEST_FIRST_LINE)
+    if any(column.dtype == "datetime" for column in bound):
+        return None
+    for column in orderable:
+        if column.dtype == "text" and column.months is not None:
+            operations = _month_operations(shown, column.name)
+            if operations:
+                return RunOrder(column.name, operations, CALENDAR_ORDER_LINE)
     return None
 
 
-def oldest_first(
+def _cells(shown: StoredDataset, column: str) -> list[str]:
+    """The cells of `column` down the rows of `shown` as `data.csv` writes them, an empty one as `""`."""
+    rows = csv.reader(io.StringIO(shown.csv, newline=""))
+    header = next(rows, [])
+    if column not in header:
+        return []
+    place = header.index(column)
+    return [row[place] for row in rows]
+
+
+def _month_operations(shown: StoredDataset, column: str) -> list[Operation]:
+    """The engine's operations that put the rows of `shown` in the order of the month names of `column`; none when
+    they stand as they are (`months.month_order`)."""
+    order = month_order([month_number(cell) if cell else None for cell in _cells(shown, column)])
+    if order == "calendar":
+        return [Sort(op="sort", column=column)]  # the engine orders month names by the calendar, stable
+    if order == "reversed":
+        # The engine has no operation that turns the rows round: number them, sort by the number, drop it again.
+        number = suffixed_name(column, "row", shown.column_dtypes)
+        return [
+            RowNumber(op="row_number", name=number),
+            Sort(op="sort", column=number, descending=True),
+            DropColumns(op="drop_columns", columns=[number]),
+        ]
+    return []
+
+
+def drawn_in_order(
     shown: StoredDataset, bindings: list[Binding], view: PlotView, language: str = DEFAULT_LANGUAGE
 ) -> tuple[StoredDataset, str | None]:
-    """The rows a run draws, oldest first when a bound date column runs newest first, and the line that says so;
-    `shown` as it is and None when no bound date column does (`newest_first_column`).
+    """The rows a run draws, in the order a bound date or month column asks for, and the line that says so; `shown`
+    as it is and None when no bound column asks for one (`run_order`).
 
     A time series is drawn in date order, and what the plot code computes along the rows (a rolling mean, a running
     total, the last value it labels) reads them in that order too. The order is the plot's (owner decision of
     2026-11-13), so the table is not sorted for it: `shown` is ordered for the run alone, by the engine's own stable
-    `sort`, under the table's id and number, and stored nowhere. Rows without a date come last.
+    `sort`, under the table's id and number, and stored nowhere. Rows without a date or a month come last, except
+    in a run of months turned round, where each row keeps its place in the run.
     """
-    column = newest_first_column(bindings, shown.profile, view)
-    if column is None:
+    order = run_order(bindings, shown, view)
+    if order is None:
         return shown, None
     try:
-        seen = _seen(shown.as_parsed(), [Sort(op="sort", column=column)], language)
+        seen = _seen(shown.as_parsed(), order.operations, language)
     except PrepareError:
         return shown, None  # a column the engine cannot order is drawn as it stands
     if dict(seen.parsed.column_dtypes) != dict(shown.column_dtypes) or seen.rows != shown.profile.rows:
         # The same rows read back as another kind of column would move the bindings the user confirmed.
-        logger.warning("rows not ordered by date: the ordered table reads differently")
+        logger.warning("rows not ordered for the run: the ordered table reads differently")
         return shown, None
-    return viewed_dataset(shown, seen), OLDEST_FIRST_LINE.format(column=column)
+    return viewed_dataset(shown, seen), order.line.format(column=order.column)
 
 
 def read_view(state: Any, key: str = PLOT_VIEW) -> PlotView:

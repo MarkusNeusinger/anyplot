@@ -21,16 +21,18 @@ from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, PrepareError
 from agents.anyplot.data.store import DatasetStore, StoredDataset
 from agents.anyplot.dataset_versions import push_version
+from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.plot_view import (
+    CALENDAR_ORDER_LINE,
     CLEARED_LINE,
     OLDEST_FIRST_LINE,
     PLOT_VIEW,
     PlotView,
     ViewRefused,
+    drawn_in_order,
     merged,
-    newest_first_column,
-    oldest_first,
     route,
+    run_order,
     table_only,
     view_of,
 )
@@ -915,6 +917,12 @@ def dates_of(stored: StoredDataset, column: str = "Date") -> list[str]:
     return [row.split(",")[place] for row in rows[1:]]
 
 
+def ordered_by(table: StoredDataset, *pairs: tuple[str, str]) -> str | None:
+    """The column a run with these bindings orders the rows of `table` by, or None."""
+    order = run_order(bound(*pairs), table, PlotView())
+    return order.column if order is not None else None
+
+
 class TestTheDateOrderOfARun:
     """Owner decision of 2026-11-13: an order is the plot's. A run draws a bound date column that runs newest first
     oldest first by itself, for the run alone, and the table keeps the rows as the user pasted them."""
@@ -922,7 +930,7 @@ class TestTheDateOrderOfARun:
     def test_a_bound_date_column_that_runs_newest_first_orders_the_rows_of_the_run(self) -> None:
         table = shown(VISITS)
 
-        drawn, line = oldest_first(table, bound(("x", "Date"), ("y", "Visitors")), PlotView())
+        drawn, line = drawn_in_order(table, bound(("x", "Date"), ("y", "Visitors")), PlotView())
 
         assert line == "The plot draws the rows oldest first by 'Date'; the table runs newest first and stays as it is"
         assert dates_of(drawn) == ["2026-11-05", "2026-11-06", "2026-11-07", "2026-11-08"]
@@ -946,14 +954,14 @@ class TestTheDateOrderOfARun:
     ) -> None:
         table = shown(text)
 
-        drawn, line = oldest_first(table, bound(*bindings), PlotView())
+        drawn, line = drawn_in_order(table, bound(*bindings), PlotView())
 
         assert line is None and drawn is table
 
     def test_rows_without_a_date_come_last_and_equal_dates_keep_their_order(self) -> None:
         table = shown("Date,Shift\n2026-11-07,late\n2026-11-07,early\n,unknown\n2026-11-05,late\n")
 
-        drawn, line = oldest_first(table, bound(("x", "Date"), ("y", "Shift")), PlotView())
+        drawn, line = drawn_in_order(table, bound(("x", "Date"), ("y", "Shift")), PlotView())
 
         assert line is not None
         assert drawn.csv.strip().splitlines()[1:] == [
@@ -973,9 +981,9 @@ class TestTheDateOrderOfARun:
         ranked = plot_view.viewed_dataset(table, view_of(table.as_parsed(), by_sales))
         newest = plot_view.viewed_dataset(table, view_of(table.as_parsed(), latest))
 
-        assert newest_first_column(bindings, ranked.profile, by_sales) is None
-        assert oldest_first(ranked, bindings, by_sales) == (ranked, None)
-        drawn, line = oldest_first(newest, bindings, latest)
+        assert run_order(bindings, ranked, by_sales) is None
+        assert drawn_in_order(ranked, bindings, by_sales) == (ranked, None)
+        drawn, line = drawn_in_order(newest, bindings, latest)
         assert line is not None and dates_of(drawn) == ["2026-11-06", "2026-11-07", "2026-11-08"]
 
     def test_rows_that_would_read_back_differently_are_drawn_as_they_stand(self, monkeypatch) -> None:
@@ -985,19 +993,19 @@ class TestTheDateOrderOfARun:
         as_text = parse_dataset(VISITS, text_columns=["Visitors"])
         monkeypatch.setattr(plot_view, "_seen", lambda *_: plot_view.Viewed(as_text, [], as_text.profile.rows))
 
-        assert oldest_first(table, bound(("x", "Date"), ("y", "Visitors")), PlotView()) == (table, None)
+        assert drawn_in_order(table, bound(("x", "Date"), ("y", "Visitors")), PlotView()) == (table, None)
 
         def refuses(*_: object) -> plot_view.Viewed:
             raise PrepareError("invalid_operation", "the rows could not be ordered")
 
         monkeypatch.setattr(plot_view, "_seen", refuses)  # an order the engine cannot make never fails the run
-        assert oldest_first(table, bound(("x", "Date"), ("y", "Visitors")), PlotView()) == (table, None)
+        assert drawn_in_order(table, bound(("x", "Date"), ("y", "Visitors")), PlotView()) == (table, None)
 
     def test_the_first_bound_one_decides_when_two_date_columns_run_newest_first(self) -> None:
         table = shown("Start,End,Task\n2026-11-08,2026-11-09,c\n2026-11-05,2026-11-08,b\n2026-11-01,2026-11-07,a\n")
 
-        assert newest_first_column(bound(("end", "End"), ("start", "Start")), table.profile, PlotView()) == "End"
-        assert newest_first_column(bound(("start", "Start"), ("end", "End")), table.profile, PlotView()) == "Start"
+        assert ordered_by(table, ("end", "End"), ("start", "Start")) == "End"
+        assert ordered_by(table, ("start", "Start"), ("end", "End")) == "Start"
 
     async def test_a_run_draws_the_rows_oldest_first_says_so_once_and_leaves_the_table_as_pasted(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend, services: Services
@@ -1087,3 +1095,198 @@ class TestTheDateOrderOfARun:
         ]
         drawn = backend.jobs[-1].data_csv.strip().splitlines()
         assert [row.split(",")[0] for row in drawn[1:]] == ["2026-11-05", "2026-11-06", "2026-11-08"]
+
+
+ALPHABETICAL = "Monat,Besucher\nApr,2105\nFeb,1395\nJan,1210\nJun,2930\nMai,2475\nMär,1840\n"
+"""Six months as a spreadsheet sorts their names: by the alphabet."""
+MONTH_BINDINGS = [{"role": "category", "column": "Monat"}, {"role": "value", "column": "Besucher"}]
+DRAWN_BY_MONTH = CALENDAR_ORDER_LINE.format(column="Monat")
+
+
+async def open_bars_on_scatter_code(client: httpx.AsyncClient) -> str:
+    """A `bar-basic` session (its category takes text) whose catalogue code is the scatter file `SCATTER_PLAN` adapts,
+    so the scripted adapter ships a plot from whatever table the run gets."""
+    snapshot = snapshot_from_repo("bar-basic", "matplotlib").model_copy(
+        update={"code": snapshot_from_repo("scatter-basic", "matplotlib").code}
+    )
+    body = {"user": USER, "spec_id": "bar-basic", "library": "matplotlib", "locale": "en"}
+    response = await client.post("/v1/sessions", headers=HEADERS, json={**body, "snapshot": snapshot.model_dump()})
+    assert response.status_code == 200, response.text
+    return str(response.json()["session_id"])
+
+
+def months_table(*months: str) -> str:
+    """A table of month names in this order, each with its place in the paste as its value."""
+    return "Monat,Wert\n" + "".join(f"{month},{place}\n" for place, month in enumerate(months, 1))
+
+
+class TestTheMonthOrderOfARun:
+    """Owner decision of 2026-11-15: a column of month names that is out of calendar order is the plot's to order, as
+    newest-first dates are. A run draws it in calendar order by itself, and the table keeps the rows as pasted."""
+
+    def test_bound_month_names_out_of_calendar_order_order_the_rows_of_the_run(self) -> None:
+        table = shown(ALPHABETICAL)
+
+        drawn, line = drawn_in_order(table, bound(("x", "Monat"), ("y", "Besucher")), PlotView())
+
+        assert line == (
+            "The plot draws the rows in calendar order by 'Monat'; "
+            "the table lists its months in another order and stays as it is"
+        )
+        assert drawn.csv.strip().splitlines()[1:] == [
+            "Jan,1210",
+            "Feb,1395",
+            "Mär,1840",
+            "Apr,2105",
+            "Mai,2475",
+            "Jun,2930",
+        ]
+        # The same data version, seen in the plot's order: nothing is stored and the table is as it was.
+        assert (drawn.dataset_id, drawn.number) == (table.dataset_id, table.number)
+        assert dates_of(table, "Monat")[0] == "Apr"
+        assert dict(drawn.column_dtypes) == dict(table.column_dtypes)
+
+    @pytest.mark.parametrize(
+        "months",
+        [
+            ("Jan", "Feb", "Mär", "Apr"),  # from January on
+            ("Jan", "Feb", "Nov", "Dez"),  # from January on, with a gap
+            ("Jul", "Aug", "Sep", "Okt", "Nov", "Dez", "Jan", "Feb", "Mär", "Apr", "Mai", "Jun"),  # a fiscal year
+            ("Nov", "Dez", "Jan", "Feb"),  # a winter, over the turn of the year
+            ("Okt", "Nov", "Dez", "Jan", "Feb", "Okt", "Nov", "Dez", "Jan", "Feb"),  # two of them, one after the other
+            ("Jan", "Jan", "Feb", "Feb", "Mär", "Mär"),  # two series, month by month
+            ("Jan", "Feb", "Mär", "Jan", "Feb", "Mär"),  # two series, one after the other
+        ],
+    )
+    def test_months_that_run_along_the_calendar_are_drawn_as_they_stand(self, months: tuple[str, ...]) -> None:
+        table = shown(months_table(*months))
+
+        drawn, line = drawn_in_order(table, bound(("x", "Monat"), ("y", "Wert")), PlotView())
+
+        assert line is None and drawn is table
+
+    def test_months_that_run_backward_over_the_turn_of_the_year_are_turned_round(self) -> None:
+        """The newest first, as an export lists the last six months. An order from January would put January to March
+        before October to December and tear the run apart, so the rows are drawn in the reverse of the paste."""
+        table = shown(months_table("Mär", "Feb", "Jan", "Dez", "Nov", "Okt"))
+
+        drawn, line = drawn_in_order(table, bound(("x", "Monat"), ("y", "Wert")), PlotView())
+
+        assert line == DRAWN_BY_MONTH
+        assert drawn.csv.strip().splitlines() == ["Monat,Wert", "Okt,6", "Nov,5", "Dez,4", "Jan,3", "Feb,2", "Mär,1"]
+        assert dict(drawn.column_dtypes) == dict(table.column_dtypes)  # the number that turned the rows is gone
+
+    def test_a_year_that_runs_backward_is_drawn_from_january_on(self) -> None:
+        months = ("Dez", "Nov", "Okt", "Sep", "Aug", "Jul", "Jun", "Mai", "Apr", "Mär", "Feb", "Jan")
+        table = shown(months_table(*months))
+
+        drawn, line = drawn_in_order(table, bound(("x", "Monat"), ("y", "Wert")), PlotView())
+
+        assert line == DRAWN_BY_MONTH and dates_of(drawn, "Monat") == list(reversed(months))
+
+    def test_series_that_each_run_backward_are_ordered_by_month_and_keep_their_order_within_it(self) -> None:
+        """Month names without a year cannot tell one pass from the next, so months that come back are ordered from
+        January, by the engine's stable sort: the series keep the order of the paste within each month."""
+        table = shown("Monat,Filiale,Wert\nMär,Bern,3\nFeb,Bern,2\nJan,Bern,1\nMär,Chur,6\nFeb,Chur,5\nJan,Chur,4\n")
+
+        drawn, line = drawn_in_order(table, bound(("x", "Monat"), ("y", "Wert"), ("color", "Filiale")), PlotView())
+
+        assert line == DRAWN_BY_MONTH
+        assert drawn.csv.strip().splitlines()[1:] == [
+            "Jan,Bern,1",
+            "Jan,Chur,4",
+            "Feb,Bern,2",
+            "Feb,Chur,5",
+            "Mär,Bern,3",
+            "Mär,Chur,6",
+        ]
+
+    def test_month_names_no_role_is_bound_to_are_no_reason_to_order_the_rows(self) -> None:
+        table = shown("Monat,Besucher,Umsatz\nApr,2105,9\nFeb,1395,7\nJan,1210,8\n")
+
+        assert drawn_in_order(table, bound(("x", "Besucher"), ("y", "Umsatz")), PlotView()) == (table, None)
+
+    def test_a_top_n_by_another_column_keeps_the_order_the_user_asked_for(self) -> None:
+        """The three best months are a ranking. A top N by the month column itself is drawn in calendar order."""
+        bindings = bound(("x", "Monat"), ("y", "Besucher"))
+        best = view_from({"op": "sort", "column": "Besucher", "descending": True}, {"op": "keep_rows", "n": 3})
+        last = view_from({"op": "sort", "column": "Monat", "descending": True}, {"op": "keep_rows", "n": 3})
+        table = shown(ALPHABETICAL)
+        ranked = plot_view.viewed_dataset(table, view_of(table.as_parsed(), best))
+        latest = plot_view.viewed_dataset(table, view_of(table.as_parsed(), last))
+
+        assert dates_of(ranked, "Monat") == ["Jun", "Mai", "Apr"]
+        assert drawn_in_order(ranked, bindings, best) == (ranked, None)
+        drawn, line = drawn_in_order(latest, bindings, last)
+        assert line == DRAWN_BY_MONTH and dates_of(drawn, "Monat") == ["Apr", "Mai", "Jun"]
+
+    def test_a_bound_date_column_is_the_time_axis_and_month_names_beside_it_never_order_the_rows(self) -> None:
+        """Four months of two years, each with its date and its month name: ordering the rows by the names would put
+        March 2026 before November 2025 and take the dates out of their order. The date column decides alone,
+        whichever role comes first: newest first it orders the rows, oldest first or in no order they stand."""
+        rows = ["2025-01-01,Jan,1", "2025-11-01,Nov,2", "2026-03-01,Mär,3", "2026-06-01,Jun,4"]
+        head = "Datum,Monat,Wert\n"
+        oldest_first = shown(head + "\n".join(rows) + "\n")
+        newest_first = shown(head + "\n".join(reversed(rows)) + "\n")
+        no_order = shown(head + "\n".join([rows[2], rows[0], rows[3], rows[1]]) + "\n")
+
+        assert ordered_by(oldest_first, ("x", "Datum"), ("y", "Wert")) is None
+        assert ordered_by(oldest_first, ("x", "Wert"), ("y", "Monat")) == "Monat"  # out of order when it stands alone
+        assert ordered_by(oldest_first, ("label", "Monat"), ("x", "Datum"), ("y", "Wert")) is None
+        assert ordered_by(newest_first, ("label", "Monat"), ("x", "Datum"), ("y", "Wert")) == "Datum"
+        assert ordered_by(no_order, ("label", "Monat"), ("x", "Datum"), ("y", "Wert")) is None
+
+    def test_the_first_bound_month_column_that_is_out_of_order_decides(self) -> None:
+        table = shown("Von,Bis,Wert\nJan,Mär,1\nFeb,Jan,2\nMär,Feb,3\n")
+
+        assert ordered_by(table, ("start", "Von"), ("end", "Bis")) == "Bis"  # the first one stands as it is
+        assert ordered_by(table, ("start", "Von"), ("y", "Wert")) is None
+
+    def test_a_number_column_of_that_name_in_the_table_is_never_the_one_that_turns_the_rows(self) -> None:
+        """Turning a run round numbers the rows in a column of its own and drops it again: a column of the user's
+        with the name it would take stays in the table."""
+        table = shown("Monat,Monat (row),Wert\nMär,7,1\nFeb,8,2\nJan,9,3\nDez,10,4\n")
+
+        drawn, line = drawn_in_order(table, bound(("x", "Monat"), ("y", "Wert")), PlotView())
+
+        assert line == DRAWN_BY_MONTH
+        assert drawn.csv.strip().splitlines() == ["Monat,Monat (row),Wert", "Dez,10,4", "Jan,9,3", "Feb,8,2", "Mär,7,1"]
+
+    async def test_a_run_draws_the_months_in_calendar_order_says_so_once_and_leaves_the_table_as_pasted(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: FakeBackend, services: Services
+    ) -> None:
+        script = default_script()
+        script["root"] = [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"call": "plot_pipeline", "args": {"base": "previous", "change_request": "a thicker line"}},
+            {"text": "The line is thicker now."},
+        ]
+        script["adapter"] = [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}]
+        script["reviewer"] = [{"json": VERDICT_OK}, {"json": VERDICT_OK}]
+        swap_models("anthropic-vertex", script)
+        sid = await open_bars_on_scatter_code(client)
+        await paste(client, sid, ALPHABETICAL)
+        await bind_and_confirm(client, sid, MONTH_BINDINGS)
+
+        events = await create_plot(client, sid)
+
+        plot = next(data for name, data in events if name == "plot")
+        assert plot["status"] == "ok" and plot["changes"][0] == DRAWN_BY_MONTH
+        drawn = backend.jobs[-1].data_csv.strip().splitlines()
+        assert [row.split(",")[0] for row in drawn[1:]] == ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun"]
+        version = services.versions.latest_rendered(sid)
+        assert version is not None and version.data_csv.strip().splitlines() == drawn
+        assert (version.view, version.data_version) == (None, 1)
+        # The table is as pasted: by the alphabet, no new version, still confirmed.
+        assert [row.split(",")[0] for row in await table_rows(client, sid)][0] == "Apr"
+        done = next(data for name, data in events if name == "done")
+        assert done["data_confirmed"] is True and "dataset" not in done
+
+        # A change of that plot draws the same rows in the same order, and does not say it again.
+        changed = await say(client, sid, "make the line thicker")
+
+        again = next(data for name, data in changed if name == "plot")
+        assert (again["status"], again["version"]) == ("ok", 2)
+        assert DRAWN_BY_MONTH not in again["changes"]
+        assert backend.jobs[-1].data_csv.strip().splitlines() == drawn

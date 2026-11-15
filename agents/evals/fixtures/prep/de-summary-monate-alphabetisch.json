@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Monat,Besucher\nApr,2105\nAug,3320\nDez,1480\nFeb,1395\nJan,1210\nJul,3150\nJun,2930\nMai,2475\nMär,1840\nNov,1620\nOkt,2010\nSep,2690\n",
+  "action": "summarize_data",
+  "expected_operations": [],
+  "spec_id": "bar-basic",
+  "locale": "de",
+  "tags": ["summary", "month_names", "month_order"]
+}

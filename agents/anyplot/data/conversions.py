@@ -33,7 +33,7 @@ dates. The session block shows the root one line per candidate (`Candidate.line`
   as its one question.
 
 Converted dates that run newest first stay in the order of the rows: a plot run draws a
-bound date column oldest first by itself (`plot_view.oldest_first`), so no conversion
+bound date column oldest first by itself (`plot_view.drawn_in_order`), so no conversion
 sorts the table and the root never asks about it.
 
 A date column for the axis counts even when the axis is taken: the defaults fill the roles in

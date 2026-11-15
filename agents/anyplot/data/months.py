@@ -6,11 +6,15 @@ pl with its genitive, zh, vi, ru with its genitive); a name is compared without 
 diacritics and without a trailing dot (`Jan.`, `März`, `févr.`), and `3月`, `tháng 3`
 and the digits 1 to 12 are months too (owner decision of 2026-10-15). A month name with a
 year in one cell (`Nov 2026`, `Okt. 2026`, `2026 Nov`) is a month of that year
-(`month_year`, live test of 2026-11-01).
+(`month_year`, live test of 2026-11-01). `month_order` says how a plot orders rows whose
+column names months: as they stand, from January on, or turned round.
 """
 
 import re
 import unicodedata
+from collections.abc import Callable, Sequence
+from itertools import pairwise
+from typing import Literal
 
 
 _MONTH_WORDS: tuple[tuple[str, ...], ...] = (
@@ -173,3 +177,49 @@ def named_months(cells: list[str]) -> list[int] | None:
             return None
         months.add(month)
     return sorted(months) if len(months) >= MIN_NAMED_MONTHS else None
+
+
+HALF_YEAR = 6
+"""The furthest one month follows another by the shorter way round the year (`month_order`)."""
+
+
+def month_order(months: Sequence[int | None]) -> Literal["calendar", "reversed"] | None:
+    """How a plot orders rows whose column names these months, one per row and None for an empty cell: `calendar`
+    from January on, `reversed` in the reverse of the rows, None as they stand.
+
+    Months that run along the calendar stand: from January on, or from another month and over the turn of the year
+    (a fiscal year `Jul … Jun`, a winter `Nov … Feb`), also pass after pass, where the next series or the next year
+    starts again at a month the column has had before (`_runs_along`). Months whose reverse runs over the turn of
+    the year (`Mar, Feb, Jan, Dec`: the newest first) are a run to turn round, since an order from January would
+    tear it apart there. Anything else (an alphabetical list, a ranking, a year or several series that run
+    backward) is ordered from January, which is all a column of names without a year can say.
+    """
+    present = [month for month in months if month is not None]
+    if _runs_along(present, _in_the_year) or _runs_along(present, _within(HALF_YEAR)):
+        return None
+    turned = present[::-1]
+    # Half a year apart reads as forward, so a run to turn round needs every step of its reverse to be shorter.
+    if not _runs_along(turned, _in_the_year) and _runs_along(turned, _within(HALF_YEAR - 1)):
+        return "reversed"
+    return "calendar"
+
+
+def _runs_along(months: Sequence[int], onward: Callable[[int, int], bool]) -> bool:
+    """Whether each month moves on from the one before it (`onward`) or has come before in the column, where the
+    next pass starts: a series that begins a month later than the first one starts no new order."""
+    seen: set[int] = set()
+    for earlier, later in pairwise(months):
+        seen.add(earlier)
+        if not (onward(earlier, later) or later in seen):
+            return False
+    return True
+
+
+def _in_the_year(earlier: int, later: int) -> bool:
+    """From January on: the same month or a later one of the year, whatever months lie between."""
+    return earlier <= later
+
+
+def _within(furthest: int) -> Callable[[int, int], bool]:
+    """Round the year: the same month or one at most `furthest` months on, over the turn of the year too."""
+    return lambda earlier, later: (later - earlier) % 12 <= furthest

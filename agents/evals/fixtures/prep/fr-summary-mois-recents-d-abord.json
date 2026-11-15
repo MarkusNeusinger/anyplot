@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Mois,Ventes\nmars,4120\nfévr.,3875\njanv.,3340\ndéc.,5210\nnov.,4460\noct.,3990\n",
+  "action": "summarize_data",
+  "expected_operations": [],
+  "spec_id": "bar-basic",
+  "locale": "fr",
+  "tags": ["summary", "month_names", "month_order"]
+}

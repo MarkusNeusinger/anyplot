@@ -676,9 +676,25 @@ class TestTheViewOfThePlot:
         assert "with the line's `sort` on that column" not in root
         # The list of what a `sort` of the table is for no longer points at this rule.
         assert "under the rule on date columns below" not in root
-        assert "and for a `sort` you offered under the rule on month names above and the user accepts. Decide" in root
         # What reads the rows in their order on such a table says which end is the newest.
         assert "in a table whose dates run newest first the newest value of a group without a `period`" in root
+
+    def test_month_names_out_of_calendar_order_are_the_plots_to_order_never_a_sort_of_the_table(self) -> None:
+        """Owner decision of 2026-11-15: as for dates. The run orders its rows by bound month names that are out of
+        calendar order (`plot_view.drawn_in_order`), so the root neither sorts the table for it nor offers to."""
+        root = policy.root_instruction()
+        rule = root.split("A text column with `months` holds month names", 1)[1].split("\n", 1)[0]
+
+        assert "The table keeps the order its months stand in" in rule
+        assert "the plot draws its rows in calendar order by itself, and the plot's result says so" in rule
+        assert "never sort the table for it, never offer to" in rule
+        assert "offer `make_date` as under the date parts below" in rule  # a year column still makes a date
+        # The offer of a `sort`, and its place in the list of what a `sort` of the table is for, are gone.
+        assert "offer a `sort` on it" not in root
+        assert "under the rule on month names above" not in root
+        assert '"sort the rows by revenue"), and before a `keep_rows` for a top N. Decide by what the user' in root
+        # A user who asks for the table's own months in order still gets the calendar, never the alphabet.
+        assert "a text column of month names, one with `months` in the profile, sorts in calendar order" in root
 
     def test_the_tool_line_names_the_exception(self) -> None:
         root = policy.root_instruction()
