@@ -674,6 +674,9 @@ class TestTheViewOfThePlot:
         assert "rows now run oldest to newest" not in root
         assert "a `sort` when its dates run newest first" not in root
         assert "with the line's `sort` on that column" not in root
+        # The list of what a `sort` of the table is for no longer points at this rule.
+        assert "under the rule on date columns below" not in root
+        assert "and for a `sort` you offered under the rule on month names above and the user accepts. Decide" in root
         # What reads the rows in their order on such a table says which end is the newest.
         assert "in a table whose dates run newest first the newest value of a group without a `period`" in root
 
