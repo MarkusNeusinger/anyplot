@@ -1,113 +1,95 @@
 """ anyplot.ai
 heatmap-adjacency: Network Adjacency Matrix Heatmap
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-08
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 87/100 | Updated: 2026-11-15
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.transforms import blended_transform_factory
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-COMM_COLORS = ["#009E73", "#C475FD", "#4467A3"]  # Okabe-Ito positions 1–3
+# Imprint palette: all eight positions, one per community in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+imprint_seq.set_bad(PAGE_BG)  # absent edges take the page tone
 
-# Data: research collaboration network with 3 communities
+# Columns: the matrix is the table, only the color bar needs a name
+SOURCE = "Source node (sorted by community)"  # role: source
+TARGET = "Target node (sorted by community)"  # role: target
+WEIGHT = "Connection strength"  # role: weight
+
+# Data: replace this block with your own labeled square matrix, for example df = pd.read_csv("edges.csv", index_col=0)
+# Research collaboration network; node labels start with the community, nodes are sorted by community
 np.random.seed(42)
+communities = {"Neuro": 10, "CS": 12, "Psych": 8}
+labels = [f"{name} {k:02d}" for name, size in communities.items() for k in range(1, size + 1)]
+group = np.repeat(list(communities), list(communities.values()))
+same = group[:, None] == group[None, :]
+present = np.triu(np.random.random((len(labels), len(labels))) < np.where(same, 0.72, 0.12), k=1)
+strength = np.where(same, np.random.uniform(0.5, 1.0, same.shape), np.random.uniform(0.05, 0.3, same.shape))
+upper = np.where(present, strength, 0.0)
+df = pd.DataFrame(upper + upper.T, index=labels, columns=labels)
 
-community_sizes = [10, 12, 8]
-community_names = ["Neuro Lab", "CS Group", "Psych Dept"]
-n_nodes = sum(community_sizes)
+# Plot: reads only df and the constants above
+matrix = df.to_numpy()
+nodes = [str(node) for node in df.index]
+groups = pd.Series([node.split()[0] for node in nodes])
+sizes = groups.groupby(groups, sort=False).size()
+edges = np.concatenate([[0], np.cumsum(sizes.to_numpy())])
 
-communities = []
-for idx, size in enumerate(community_sizes):
-    communities.extend([idx] * size)
-communities = np.array(communities)
-
-prefixes = ["N", "C", "P"]
-node_labels = []
-counts_per_comm = [0, 0, 0]
-for c in communities:
-    counts_per_comm[c] += 1
-    node_labels.append(f"{prefixes[c]}{counts_per_comm[c]:02d}")
-
-# Weighted adjacency matrix with block-diagonal community structure
-adj = np.zeros((n_nodes, n_nodes))
-for i in range(n_nodes):
-    for j in range(i + 1, n_nodes):
-        same = communities[i] == communities[j]
-        if np.random.random() < (0.72 if same else 0.12):
-            w = np.random.uniform(0.5, 1.0) if same else np.random.uniform(0.05, 0.3)
-            adj[i, j] = adj[j, i] = w
-
-# Absent edges become NaN so they render as page background
-adj_masked = np.where(adj == 0, np.nan, adj)
-
-# Plot
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG, layout="constrained")
 ax.set_facecolor(PAGE_BG)
-
-cmap = plt.cm.viridis.copy()
-cmap.set_bad(color=PAGE_BG)
-
-im = ax.imshow(adj_masked, cmap=cmap, vmin=0, vmax=1.0, aspect="equal", interpolation="nearest")
-
-# Axis ticks
-ax.set_xticks(range(n_nodes))
-ax.set_yticks(range(n_nodes))
-ax.set_xticklabels(node_labels, fontsize=11, color=INK_SOFT, rotation=90)
-ax.set_yticklabels(node_labels, fontsize=11, color=INK_SOFT)
-ax.tick_params(axis="both", length=0, pad=3)
+im = ax.imshow(
+    np.where(matrix == 0, np.nan, matrix), cmap=imprint_seq, vmin=0, vmax=np.nanmax(matrix), interpolation="nearest"
+)
 
 # Community boundary lines
-cum = np.cumsum(community_sizes[:-1])
-for b in cum:
-    ax.axhline(b - 0.5, color=INK, linewidth=2.0, alpha=0.45)
-    ax.axvline(b - 0.5, color=INK, linewidth=2.0, alpha=0.45)
+for b in edges[1:-1]:
+    ax.axhline(b - 0.5, color=INK, linewidth=1.2, alpha=0.5)
+    ax.axvline(b - 0.5, color=INK, linewidth=1.2, alpha=0.5)
 
-# Community group labels above the x-axis using a blended transform
-trans_x = blended_transform_factory(ax.transData, ax.transAxes)
-boundaries = [0] + list(cum) + [n_nodes]
-for i, (name, color) in enumerate(zip(community_names, COMM_COLORS, strict=True)):
-    mid = (boundaries[i] + boundaries[i + 1] - 1) / 2
+# Community names above the matrix: data x, axes y
+trans = blended_transform_factory(ax.transData, ax.transAxes)
+for i, name in enumerate(sizes.index):
     ax.text(
-        mid,
+        (edges[i] + edges[i + 1] - 1) / 2,
         1.01,
         name,
-        transform=trans_x,
+        transform=trans,
         ha="center",
         va="bottom",
-        fontsize=15,
+        fontsize=10,
         fontweight="bold",
-        color=color,
-        clip_on=False,
+        color=IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)],
     )
 
-# Spines
+# Style
+ax.set_xticks(range(len(nodes)), nodes, rotation=90, fontsize=6.5, color=INK_SOFT)
+ax.set_yticks(range(len(nodes)), nodes, fontsize=6.5, color=INK_SOFT)
+ax.tick_params(length=0, pad=2)
 for spine in ax.spines.values():
     spine.set_edgecolor(INK_SOFT)
     spine.set_linewidth(0.8)
+ax.set_xlabel(TARGET, fontsize=10, color=INK)
+ax.set_ylabel(SOURCE, fontsize=10, color=INK)
+ax.set_title(
+    "heatmap-adjacency · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=24
+)
 
-# Axis labels
-ax.set_xlabel("Node (sorted by community)", fontsize=20, color=INK, labelpad=8)
-ax.set_ylabel("Node (sorted by community)", fontsize=20, color=INK, labelpad=8)
-
-# Colorbar
-cbar = fig.colorbar(im, ax=ax, fraction=0.045, pad=0.03, shrink=0.75)
-cbar.set_label("Connection Strength", fontsize=18, color=INK, labelpad=12)
-cbar.ax.tick_params(labelsize=14, labelcolor=INK_SOFT, color=INK_SOFT)
+cbar = fig.colorbar(im, ax=ax, shrink=0.75, pad=0.02)
+cbar.set_label(WEIGHT, fontsize=10, color=INK)
+cbar.ax.tick_params(labelsize=8, labelcolor=INK_SOFT, color=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
-# Title
-ax.set_title("heatmap-adjacency · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=36)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
