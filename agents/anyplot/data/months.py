@@ -6,11 +6,15 @@ pl with its genitive, zh, vi, ru with its genitive); a name is compared without 
 diacritics and without a trailing dot (`Jan.`, `März`, `févr.`), and `3月`, `tháng 3`
 and the digits 1 to 12 are months too (owner decision of 2026-10-15). A month name with a
 year in one cell (`Nov 2026`, `Okt. 2026`, `2026 Nov`) is a month of that year
-(`month_year`, live test of 2026-11-01).
+(`month_year`, live test of 2026-11-01). `month_order` says how a plot orders rows whose
+column names months: as they stand, from January on, or turned round.
 """
 
 import re
 import unicodedata
+from collections.abc import Sequence
+from itertools import pairwise
+from typing import Literal
 
 
 _MONTH_WORDS: tuple[tuple[str, ...], ...] = (
@@ -173,3 +177,36 @@ def named_months(cells: list[str]) -> list[int] | None:
             return None
         months.add(month)
     return sorted(months) if len(months) >= MIN_NAMED_MONTHS else None
+
+
+HALF_YEAR = 6
+"""The furthest one month follows another by the shorter way round the year (`month_order`)."""
+
+
+def month_order(months: Sequence[int | None]) -> Literal["calendar", "reversed"] | None:
+    """How a plot orders rows whose column names these months, one per row and None for an empty cell: `calendar`
+    from January on, `reversed` in the reverse of the rows, None as they stand.
+
+    Months that run along the calendar stand: from January on, or from another month and over the turn of the year,
+    each row's month the same as the one before it, following it by the shorter way round the year, or the month
+    the column starts with, where the next series or the next year begins (a fiscal year `Jul … Jun`, a winter
+    `Nov … Feb`, two series or two years one after the other). Months that run the other way and over the turn of
+    the year (`Mar, Feb, Jan, Dec`: the newest first) are a run to turn round, since an order from January would
+    tear it apart there. Anything else (an alphabetical list, a ranking, a year that runs backward) is ordered from
+    January, which is all a column of names without a year can say.
+    """
+    present = [month for month in months if month is not None]
+    steps = list(pairwise(present))
+    if not steps:
+        return None
+    restarts = [later == present[0] for _, later in steps]
+    if all(earlier <= later or again for (earlier, later), again in zip(steps, restarts, strict=True)):
+        return None  # from January on, pass after pass, whatever months a pass leaves out
+    forward = [(later - earlier) % 12 <= HALF_YEAR for earlier, later in steps]
+    backward = [(earlier - later) % 12 < HALF_YEAR for earlier, later in steps]  # half a year on counts as forward
+    if all(along or again for along, again in zip(forward, restarts, strict=True)):
+        return None
+    over_the_turn = any(back and earlier < later for back, (earlier, later) in zip(backward, steps, strict=True))
+    if over_the_turn and all(back or again for back, again in zip(backward, restarts, strict=True)):
+        return "reversed"
+    return "calendar"

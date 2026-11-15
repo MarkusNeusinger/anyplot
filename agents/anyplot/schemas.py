@@ -325,7 +325,9 @@ class ColumnProfile(_ServerContract):
     `months` is set for a text column whose every cell names a month (`Jan`, `März`;
     `data/months.named_months`): the months it holds, 1 to 12 ascending, so the root states
     the range from them and not from the five `top` values (live test round 4 of
-    2026-10-15: "Jan bis Mai" for a column of Jan to Jun).
+    2026-10-15: "Jan bis Mai" for a column of Jan to Jun). A plot run orders its rows by
+    a bound column of month names that is out of calendar order
+    (`plot_view.drawn_in_order`), as it does for dates: the table keeps its order.
 
     `top` holds a text or boolean column's values by frequency: every distinct value when
     the column has at most `MAX_LISTED_VALUES` of them, otherwise the `MAX_TOP_VALUES`
@@ -336,7 +338,7 @@ class ColumnProfile(_ServerContract):
     cells aside: `ascending` (oldest first) or `descending` (newest first, as a price
     history lists its months); None when they go back and forth or hold one moment. A
     time series is drawn in date order, so a plot run orders its rows by a bound date
-    column that runs newest first (`plot_view.oldest_first`): the table keeps its order,
+    column that runs newest first (`plot_view.drawn_in_order`): the table keeps its order,
     and the root neither sorts it for the plot nor asks about it.
 
     `monthly` is True for a datetime column of months: every date the first of its month,
