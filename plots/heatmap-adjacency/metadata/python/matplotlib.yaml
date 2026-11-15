@@ -2,127 +2,134 @@ library: matplotlib
 language: python
 specification_id: heatmap-adjacency
 created: '2026-05-08T07:06:52Z'
-updated: '2026-05-08T07:12:12Z'
+updated: '2026-11-15T02:47:34Z'
 generated_by: claude-sonnet
-workflow_run: 25541908488
+workflow_run: 43668906723
 issue: 5240
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - 'All required spec features present: community-sorted nodes, symmetric adjacency
-    matrix, colorbar, boundary lines, and node tick labels'
-  - Elegant use of blended_transform_factory to position community group labels in
-    mixed data/axes coordinates — a distinctly matplotlib technique
-  - 'Perfect theme-adaptive chrome: both renders fully readable, viridis correctly
-    used for continuous weight data, Okabe-Ito positions 1-3 for community labels'
-  - Realistic research-collaboration dataset with clear block-diagonal structure exposing
-    three communities
-  - 'Clean code: np.random.seed(42), NaN masking for absent edges, strict=True in
-    zip — all Pythonic'
+  - 'Continuous edge weight drawn with imprint_seq (#009E73 → #4467A3) and absent
+    edges masked to NaN with cmap.set_bad(PAGE_BG), so weak edges (green) never blend
+    into the page tone in either theme'
+  - blended_transform_factory(ax.transData, ax.transAxes) places the community headers
+    at data-x / axes-y — a matplotlib transform idiom that keeps them centred over
+    each block whatever the layout
+  - Symmetric matrix built vectorised (np.triu mask + upper + upper.T) with nodes
+    sorted by community, so three blocks sit cleanly on the diagonal with sparse inter-group
+    cells
+  - Exact 2400×2400 canvas from figsize=(6, 6), dpi=400 and layout='constrained',
+    with theme tokens threaded through title, labels, ticks, spines and colour bar
+    in both renders
   weaknesses:
-  - Tick labels at fontsize=11 are below the 16pt guideline (practical compromise
-    for 30 nodes, but slightly under-spec)
-  - 'LM-02: Could push further into matplotlib-distinctive territory beyond blended_transform_factory
-    — e.g., AxesGrid or PathCollection-based cell annotations'
+  - 'DQ-02 (both): nodes are labelled ''Neuro 01'' … ''Psych 08'', numbered placeholders
+    that read as generic IDs rather than people in a collaboration network → invented
+    researcher names (e.g. surnames per lab), keeping the community prefix in the
+    boundary headers. Likely cause: the labels list comprehension f"{name} {k:02d}".'
+  - 'Suggestion: the community headers reuse #009E73 and #4467A3, the exact endpoints
+    of imprint_seq, so ''Neuro'' reads like ''weak edge'' and ''Psych'' like ''strong
+    edge''; INK-coloured headers would keep the two encodings apart.'
+  - 'Suggestion: label the colour bar''s scale explicitly as normalised, e.g. ''Connection
+    strength (0–1)''.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, clearly not pure white
-      Chrome: Title "heatmap-adjacency · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Node (sorted by community)" at fontsize=20 fully visible. Tick labels (N01–N10, C01–C12, P01–P08) at fontsize=11 — readable but below 16pt guideline. Colorbar label "Connection Strength" at fontsize=18 readable. Community group labels ("Neuro Lab" green, "CS Group" orange, "Psych Dept" blue) at fontsize=15 above the x-axis, clearly visible.
-      Data: viridis colormap from deep purple (0.0) to yellow (1.0) for connection strength. Block-diagonal structure clearly shows 3 communities. Absent edges render as PAGE_BG (off-white), blending with background to create clean negative space. Community boundary lines visible as semi-transparent dark lines.
+      Background: warm off-white #FAF8F1, not pure white; absent-edge cells take the same page tone.
+      Chrome: title "heatmap-adjacency · python · matplotlib · anyplot.ai" in dark ink (~75% width); bold community headers Neuro (#009E73), CS (#C475FD), Psych (#4467A3) above the matrix; y label "Source node (sorted by community)", x label "Target node (sorted by community)"; 30 node tick labels ("Neuro 01" … "Psych 08") in INK_SOFT, x ticks rotated 90°; colour bar "Connection strength" 0.0–0.8 ticks. All readable, nothing clipped.
+      Data: 30×30 symmetric matrix, three dense diagonal blocks (10/12/8) in teal-to-blue (strong 0.5–1.0), scattered inter-community cells in brand green (weak 0.05–0.3), empty diagonal; semi-transparent ink lines mark community boundaries. imprint_seq green→blue colormap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light #F0EFE8 text — clearly readable against dark background. Axis labels light-colored, fully visible. Tick labels in INK_SOFT (#B8B7B0 in dark mode) — light gray, readable. Colorbar ticks and label in light colors. Community group labels use same Okabe-Ito colors (green/orange/blue), all visible. No dark-on-dark failures observed.
-      Data: Data colors identical to light render — viridis purple-to-yellow unchanged. Absent edges render as #1A1A17 (near-black), blending seamlessly with dark background — expected and aesthetically appropriate. Community boundary lines in semi-transparent light ink, still visible.
+      Background: warm near-black #1A1A17, not pure black; absent cells take the same tone.
+      Chrome: title, axis labels and colour-bar label in light ink; tick labels in light grey INK_SOFT; spines and boundary lines light; no dark-on-dark text anywhere. Community headers same Imprint colours as light, all visible (Psych blue a little dimmer but readable).
+      Data: cell colours identical to the light render (imprint_seq green→blue); weak green cells stand out clearly from the dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt — correct. Tick labels 11pt and colorbar
-          ticks 14pt are below the 16pt guideline; practical compromise for 30 nodes
-          but slightly under-spec.
+        comment: All sizes explicit (title 12, labels 10, ticks 6.5, headers 10, colour-bar
+          ticks 8); readable in both themes, title ~75% width as expected
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels rotated 90deg, no collisions anywhere.
+        comment: No text collisions; rotated x ticks and row labels fit their slots
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible; viridis provides excellent perceptual
-          range; block-diagonal pattern unmistakable.
+        comment: Cells crisp with interpolation='nearest'; weak green cells clearly
+          visible on both backgrounds; colour bar visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is CVD-safe; Okabe-Ito community labels are CVD-safe.
+        comment: Green-to-blue ramp is CVD-safe; absent edges in the page tone are
+          clearly distinct from the weakest edges
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 12x12 figsize appropriate for matrix; colorbar well-positioned;
-          nothing cut off.
+        comment: 2400×2400 canvas, matrix fills most of it, colour bar adjacent, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels descriptive ('Node (sorted by community)'); colorbar
-          label 'Connection Strength'; units not applicable for node indices.
+        comment: Descriptive axis titles naming source/target and the ordering; colour
+          bar 'Connection strength' (dimensionless)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous data uses viridis (correct for heatmap). PAGE_BG correct
-          for both themes. All chrome theme-adaptive. NaN cells use PAGE_BG (theme-adaptive).
-          Okabe-Ito positions 1-3 for community labels.
+        comment: 'imprint_seq for single-polarity weights; community headers in Imprint
+          positions 1–3; #FAF8F1 / #1A1A17 backgrounds; chrome theme-correct in both
+          renders'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Colored community labels (Okabe-Ito) above the matrix are a distinctive
-          design touch. Warm background, clean viridis colormap, refined spines —
-          clearly above defaults.
+        comment: 'Beyond baseline: bold community headers in Imprint colours form
+          a second typographic level above the matrix, giving a clear title → group
+          → node hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Tick marks removed (length=0), spines thinned and softened with INK_SOFT,
-          no grid (appropriate for heatmap). Good but not exceptional.
+        comment: 'Beyond baseline: tick marks removed (length=0, pad=2), thin INK_SOFT
+          frame, half-alpha partition lines at the block edges; otherwise baseline'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Community boundary lines and color-coded group labels create clear
-          visual hierarchy. Block-diagonal structure immediately tells the clustering
-          story. Viewer is guided to the key insight.
+        comment: Data chosen so strong within-community weights (blue) contrast with
+          weak between-community weights (green), letting the blocks emerge from colour
+          alone together with the partition lines
     spec_compliance:
       score: 15
       max: 15
@@ -132,30 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct adjacency matrix heatmap with community structure.
+        comment: Correct adjacency-matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: nodes sorted by community, symmetric matrix,
-          colorbar, node label ticks, community boundary lines, absent edges as distinct
-          background.'
+        comment: 'All Notes and good-version bullets met: square matrix, community
+          ordering, both triangles filled, colour bar, distinct absent-edge tone,
+          node names as ticks'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes show all 30 nodes correctly with matching labels.
+        comment: Rows and columns use the same node order; every edge at its row/column
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-adjacency · matplotlib · anyplot.ai' exactly correct.
-          Colorbar label 'Connection Strength'. Community labels color-coded correctly.
+        comment: Title in the mandated format; colour bar labelled
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -163,22 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: within-community dense connections, sparse between-community
-          connections, varied weights, different community sizes (10/12/8).'
+        comment: Dense blocks, sparse inter-group cells, varied weights, unequal community
+          sizes (10/12/8), empty diagonal
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Research collaboration network (Neuro Lab, CS Group, Psych Dept)
-          — realistic, neutral, comprehensible academic scenario.
+        comment: Research collaboration network across three fields is real and neutral,
+          but nodes are numbered placeholders (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0.5-1.0 within-community strength, 0.05-0.3 cross-community — realistic
-          asymmetry. 72% vs 12% connection probability is plausible.
+        comment: 'Checked: symmetric by construction (upper + upper.T); weights 0.5–1.0
+          within and 0.05–0.3 between communities, consistent with the colour bar;
+          no check values in spec'
     code_quality:
       score: 10
       max: 10
@@ -188,53 +195,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> tokens -> data -> plot -> save. No functions
-          or classes.'
+        comment: 'Linear zones: tokens → data → plot → save, no functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 4 imports used: os, matplotlib.pyplot, numpy, blended_transform_factory.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic (strict=True in zip, np.where for NaN masking, cumsum for
-          boundaries). No over-engineering.
+        comment: Vectorised data generation (np.repeat, np.triu, broadcasting); no
+          hand-rolled algorithms
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG.
+        comment: Saves plot-{THEME}.png at dpi=400, no bbox_inches='tight', current
+          API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of imshow, fig.colorbar, axhline/axvline, spines API,
-          and tick_params.
+        comment: Axes API, imshow with nearest interpolation, constrained layout,
+          fig.colorbar(ax=ax), set_xticks(ticks, labels) one-call form
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: blended_transform_factory (mixing data+axes coordinates for community
-          labels) is a distinctly matplotlib transform-system feature. cmap.copy().set_bad()
-          is another matplotlib-specific technique.
+        comment: cmap.set_bad for NaN-masked absent edges and blended_transform_factory
+          for data-x/axes-y headers — matplotlib-specific features
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-15T02:43:33Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -244,7 +253,6 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
