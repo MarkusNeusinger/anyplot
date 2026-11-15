@@ -20,12 +20,12 @@
   runs on the model its roster row names (Fable for the three high-risk
   reviews), passed explicitly instead of inherited from the session. The
   shared rules gain the limits for the live site: no agent runs, at most two
-  loads of `/agent`, no shared browser.
+  loads of `/agent`, no shared browser. (#13114)
 - **A persisted audit report says that it is a snapshot.** A report opens
   with a status line and describes an incident in the past tense of its own
   date. The report of 2026-07-15, still the newest one, headlined a Health
   Score of 30 and a retry loop "still going" that was fixed the next day; it
-  now says so.
+  now says so. (#13114)
 
 ### Fixed
 
@@ -40,7 +40,7 @@
   file names a path that does not exist, when the roster, the prompt index,
   and the auditor files disagree, when a roster row names no model, or when
   a tracked top-level directory has neither an auditor nor a stated reason
-  to have none.
+  to have none. (#13114)
 
 ### Security
 
@@ -51,4 +51,4 @@
   auditor was allowed `alembic check`, which loads `.env` and so connects to
   the shared production database; drift is read from the `Verify Migrations`
   job instead, and only `alembic heads`, which reads the revision files,
-  stays allowed.
+  stays allowed. (#13114)
