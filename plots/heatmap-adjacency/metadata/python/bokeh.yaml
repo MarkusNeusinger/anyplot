@@ -2,120 +2,124 @@ library: bokeh
 language: python
 specification_id: heatmap-adjacency
 created: '2026-05-08T07:07:51Z'
-updated: '2026-05-08T07:28:26Z'
+updated: '2026-11-15T02:51:37Z'
 generated_by: claude-sonnet
-workflow_run: 25541908792
+workflow_run: 43669150131
 issue: 5240
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - Community-ordered layout with clear block-diagonal structure — spec requirement
-    fully realized
-  - 'Excellent theme adaptation: warm backgrounds, NaN color correctly shifts from
-    #E8E5DE (light) to #252520 (dark)'
-  - Full spec compliance including colorbar, symmetric fill, and proper weight scale
-  - Clean readable code with seed set, clean imports, and current Bokeh 3.9.0 API
+  - 'Absent edges are drawn as a separate background rect layer in a theme-adaptive
+    tone (#E8E5DE light / #252520 dark) that is clearly distinct from both the page
+    and the weakest green edge in either theme'
+  - Both triangles are built from the edge list itself (source/target swap concat),
+    so the matrix mirrors exactly across its diagonal
+  - 'Bokeh-native field transform (fill_color={''field'': weight, ''transform'': LinearColorMapper})
+    with an imprint_seq 256-stop ramp and a matching ColorBar'
+  - Department ordering produces four clean diagonal blocks with sparse weak inter-department
+    cells, matching the spec's characteristic picture
   weaknesses:
-  - Tick label font size is 15pt vs. recommended 18pt minimum for pixel-based libraries
-    (VQ-01)
-  - Colorbar width of 60px is slightly narrow for a 3600px canvas; could be 80-100px
-    for better readability
-  - Design excellence could be elevated with subtle department boundary separators
-    to reinforce cluster structure
+  - 'CQ-04 (code): IMPRINT_PALETTE (line 39) and ELEVATED_BG (line 33) are defined
+    and never used → remove both. Likely cause: theme/palette boilerplate copied from
+    the library prompt without pruning.'
+  - 'Suggestion: a HoverTool showing source, target and connection strength would
+    make the HTML matrix inspectable cell by cell.'
+  - 'Suggestion: thin department boundary lines or group labels along the axes would
+    make the four blocks name themselves.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), not pure white — correct light theme surface
-      Chrome: Title "Researcher Collaboration · heatmap-adjacency · bokeh · anyplot.ai" in dark INK (#1A1A17); axis labels "Researcher (Source)" and "Researcher (Target)" in INK; tick labels (Phy01-Math06) in INK_SOFT gray — all clearly readable
-      Data: Viridis256 colormap on weighted adjacency matrix; absent edges use warm gray NaN color (#E8E5DE); block-diagonal community structure across 4 departments is immediately apparent; colorbar on right with "Connection Strength" label
+      Background: warm off-white #FAF8F1 around a 24x24 matrix whose absent-edge cells are a slightly darker warm grey (#E8E5DE).
+      Chrome: title 'Researcher Collaboration · heatmap-adjacency · python · bokeh · anyplot.ai' top-left in dark ink (~64% width); y axis 'Source researcher' and x axis 'Target researcher' (italic); node names Phy01..Math06 as tick labels on both axes, x labels rotated 60°; vertical colorbar 'Connection strength' with ticks 0.2-0.8 on the right. All text dark on light, readable.
+      Data: edge cells on the imprint_seq ramp from #009E73 (weak, ~0.1) to #4467A3 (strong, ~1.0); four dense blue-teal blocks along the diagonal (Phy, Chem, Bio, Math), scattered bright-green weak cells between groups, empty diagonal, symmetric.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), not pure black — correct dark theme surface
-      Chrome: Title and axis labels in light INK (#F0EFE8); tick labels in INK_SOFT (#B8B7B0) — all clearly readable against dark background; no dark-on-dark text failures detected
-      Data: Viridis256 colors identical to light render (purple/teal/yellow unchanged); absent-edge NaN cells use #252520 (nearly matches dark background — intentional recession of absent edges in dark mode)
+      Background: warm near-black #1A1A17; absent-edge cells #252520, a step lighter, clearly distinct from the page and from the bright green weak edges.
+      Chrome: title, axis titles, tick labels and colorbar labels in light ink; no dark-on-dark text.
+      Data: identical cell colors to the light render; only chrome and the absent-edge tone flip.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title 28pt, axis labels 22pt, colorbar 18-20pt correct; tick labels
-          15pt below recommended 18pt
+        comment: Title 34pt, axis titles 26pt, ticks and colorbar labels 20-22pt;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 24 x-axis labels at pi/3 rotation, no overlap
+        comment: Rotated x tick labels clear of each other; no text over data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clear; colorbar width 60px slightly narrow for 3600px
-          canvas
+        comment: Full-size gapless cells; weak cross-department edges clearly visible
+          against the absent-edge tone
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis256 is perceptually uniform and colorblind-safe
+        comment: Two-stop green-to-blue ramp, no red-green signal; absent tone distinct
+          by lightness
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 ideal for symmetric matrix; minor wasted space in
-          title region
+        comment: 2400x2400 square, matrix fills the canvas, title ~64% width, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Researcher (Source) and Researcher (Target) are descriptive
+        comment: '''Source researcher'' / ''Target researcher'', colorbar ''Connection
+          strength'' (unitless 0-1 score)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis256 for continuous data; #FAF8F1 light / #1A1A17 dark backgrounds;
-          all chrome tokens theme-correct'
+        comment: 'imprint_seq (#009E73 to #4467A3) for weights; #FAF8F1 / #1A1A17
+          backgrounds; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above-default: warm backgrounds + Viridis cohesive; NaN color tasteful;
-          lacks exceptional flourishes'
+        passed: false
+        comment: The style-guide baseline with a descriptive title prefix; nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid removed; all chrome explicitly themed; appropriate outline for
-          enclosed heatmap
+        passed: false
+        comment: Grid removed and outline kept, per the baseline; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Community-ordered layout makes 4-department block-diagonal structure
-          immediately legible
+        passed: false
+        comment: Department order is the spec's required ordering; no own focal point
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct matrix-based adjacency heatmap with symmetric fill
+        comment: Square adjacency matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar, community-ordered nodes, symmetric matrix, NaN absent-edge
-          color, node name labels
+        comment: Department-ordered nodes (C2), both triangles filled (C4), colorbar
+          (C3), distinct absent-edge tone (C3), node names on both axes (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=target, y=source, cell color=connection weight
+        comment: Row = source, column = target, color = weight; mirror cells from
+          the same edges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains required spec-id · library · anyplot.ai pattern; colorbar
-          as weight scale legend
+        comment: '''Researcher Collaboration · heatmap-adjacency · python · bokeh
+          · anyplot.ai''; colorbar titled from the weight column'
     data_quality:
       score: 15
       max: 15
@@ -155,24 +160,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Within-department dense clusters, sparse cross-dept edges, weighted
-          connections, 4 distinct communities
+        comment: Four dense diagonal blocks, scattered weak inter-group cells, weighted
+          edges, empty diagonal
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Academic research collaboration — real, neutral, commonly-cited adjacency
-          matrix use case
+        comment: Researcher collaboration across Physics/Chemistry/Biology/Math departments,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 24 nodes, 80%/8% intra/inter-dept probability, weight ranges 0.5-1.0/0.1-0.4
-          plausible
+        comment: 24 nodes (spec 20-200); weights 0.5-1.0 within, 0.1-0.4 between departments;
+          colorbar 0.1-1.0 read off the bar
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -180,7 +185,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Flat script; the only helper is the library prompt's mandated _lerp_hex
+          ramp builder
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -192,38 +198,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; ruff noqa justified by sys.path manipulation
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean Pythonic code, list comprehension for data flattening, no over-engineering
+        passed: false
+        comment: IMPRINT_PALETTE (line 39) and ELEVATED_BG (line 33) are defined and
+          never used (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.html + plot-{THEME}.png; current Bokeh 3.9.0 API
+        comment: plot-{THEME}.html + plot-{THEME}.png via Selenium with CDP viewport
+          pin; Bokeh 3 API
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: ColumnDataSource with field transforms, LinearColorMapper with nan_color,
-          categorical ranges, ColorBar via add_layout
+        passed: false
+        comment: ColumnDataSource from the tidy edge frame, field+transform color
+          mapping, categorical factor ranges straight from node lists, ColorBar via
+          add_layout
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: nan_color on LinearColorMapper, field-based color transform, ColorBar
-          as layout component are Bokeh-native
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; no HoverTool in
+          the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-11-15T02:47:26Z'
 impl_tags:
   dependencies:
   - selenium
@@ -232,7 +244,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - columndatasource
   dataprep: []
   styling:

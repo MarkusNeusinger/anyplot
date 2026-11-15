@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-adjacency: Network Adjacency Matrix Heatmap
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-08
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-15
 """
 
 # ruff: noqa: E402
@@ -19,9 +19,9 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from bokeh.io import output_file, save
 from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper
-from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -35,97 +35,114 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 NAN_COLOR = "#E8E5DE" if THEME == "light" else "#252520"
 
-# Data — 24 researchers across 4 departments, ordered by department
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+
+def _lerp_hex(c0, c1, t):
+    a = [int(c0[i : i + 2], 16) for i in (1, 3, 5)]
+    b = [int(c1[i : i + 2], 16) for i in (1, 3, 5)]
+    return "#" + "".join(f"{round(x + (y - x) * t):02X}" for x, y in zip(a, b, strict=False))
+
+
+# Imprint sequential ramp (single polarity): green to blue
+IMPRINT_SEQ = [_lerp_hex("#009E73", "#4467A3", t / 255) for t in range(256)]
+
+# Columns: set these to your table's column names
+SOURCE = "Source researcher"  # role: source
+TARGET = "Target researcher"  # role: target
+WEIGHT = "Connection strength"  # role: weight
+
+# Data: replace this block with your own edge list, for example df = pd.read_csv("edges.csv")
+# 24 researchers in 4 departments (ordered by department); each undirected edge listed once
 np.random.seed(42)
 dept_codes = ["Phy", "Chem", "Bio", "Math"]
-n_per_dept = 6
-node_names = [f"{code}{i:02d}" for code in dept_codes for i in range(1, n_per_dept + 1)]
-node_community = [idx for idx in range(len(dept_codes)) for _ in range(n_per_dept)]
-
-n = len(node_names)
-
-# Weighted symmetric adjacency matrix
-adj = np.zeros((n, n))
-for i in range(n):
-    for j in range(i + 1, n):
-        same_dept = node_community[i] == node_community[j]
+names = [f"{code}{i:02d}" for code in dept_codes for i in range(1, 7)]
+dept_of = {name: k // 6 for k, name in enumerate(names)}
+edges = []
+for a in range(len(names)):
+    for b in range(a + 1, len(names)):
+        same_dept = dept_of[names[a]] == dept_of[names[b]]
         if same_dept and np.random.rand() < 0.80:
-            w = np.random.uniform(0.5, 1.0)
-            adj[i, j] = w
-            adj[j, i] = w
+            edges.append((names[a], names[b], np.random.uniform(0.5, 1.0)))
         elif not same_dept and np.random.rand() < 0.08:
-            w = np.random.uniform(0.1, 0.4)
-            adj[i, j] = w
-            adj[j, i] = w
+            edges.append((names[a], names[b], np.random.uniform(0.1, 0.4)))
+df = pd.DataFrame(edges, columns=[SOURCE, TARGET, WEIGHT])
 
-# NaN encodes absent edges (no self-loops shown)
-adj_nan = adj.astype(float)
-adj_nan[adj == 0] = np.nan
+# Plot: reads only df and the constants above
+# Node order: first appearance, sources first, which keeps departments contiguous
+nodes = list(pd.unique(pd.concat([df[SOURCE], df[TARGET]], ignore_index=True)))
+# Undirected graph: fill both triangles
+cells = pd.concat(
+    [df.rename(columns={SOURCE: "row", TARGET: "col"}), df.rename(columns={SOURCE: "col", TARGET: "row"})],
+    ignore_index=True,
+)
+source = ColumnDataSource(cells)
 
-# Flatten to row-per-cell format for ColumnDataSource
-xs, ys, weights = [], [], []
-for i in range(n):
-    for j in range(n):
-        xs.append(node_names[j])  # column = target node
-        ys.append(node_names[i])  # row = source node
-        weights.append(adj_nan[i, j])
+mapper = LinearColorMapper(palette=IMPRINT_SEQ, low=df[WEIGHT].min(), high=df[WEIGHT].max(), nan_color=NAN_COLOR)
 
-source = ColumnDataSource({"x": xs, "y": ys, "weight": weights})
-
-# Continuous color mapper — viridis for edge weights
-mapper = LinearColorMapper(palette=Viridis256, low=0.1, high=1.0, nan_color=NAN_COLOR)
-
-# Figure (square canvas for symmetric matrix)
 p = figure(
-    width=3600,
-    height=3600,
-    x_range=node_names,
-    y_range=list(reversed(node_names)),
+    width=2400,
+    height=2400,
+    x_range=nodes,
+    y_range=list(reversed(nodes)),
     toolbar_location=None,
-    title="Researcher Collaboration · heatmap-adjacency · bokeh · anyplot.ai",
+    title="Researcher Collaboration · heatmap-adjacency · python · bokeh · anyplot.ai",
+    x_axis_label=TARGET,
+    y_axis_label=SOURCE,
+    min_border_top=90,
+    min_border_bottom=60,
+    min_border_left=60,
+    min_border_right=60,
 )
 
-# Heatmap rectangles
+# Absent edges: background cells in a distinct tone, so they never read as weak edges
+grid = pd.MultiIndex.from_product([nodes, nodes], names=["row", "col"]).to_frame(index=False)
+p.rect(x="col", y="row", width=1, height=1, source=ColumnDataSource(grid), fill_color=NAN_COLOR, line_color=None)
+
+# Edge cells colored by weight
 p.rect(
-    x="x", y="y", width=1, height=1, source=source, fill_color={"field": "weight", "transform": mapper}, line_color=None
+    x="col",
+    y="row",
+    width=1,
+    height=1,
+    source=source,
+    fill_color={"field": WEIGHT, "transform": mapper},
+    line_color=None,
 )
 
-# Colorbar
 colorbar = ColorBar(
     color_mapper=mapper,
     ticker=BasicTicker(desired_num_ticks=6),
-    label_standoff=20,
+    label_standoff=16,
     border_line_color=None,
     location=(0, 0),
-    title="Connection Strength",
-    title_text_font_size="20pt",
+    title=WEIGHT,
+    title_text_font_size="22pt",
     title_text_color=INK,
-    major_label_text_font_size="18pt",
+    major_label_text_font_size="20pt",
     major_label_text_color=INK_SOFT,
-    background_fill_color=ELEVATED_BG,
-    width=60,
+    background_fill_color=PAGE_BG,
+    width=50,
 )
 p.add_layout(colorbar, "right")
 
-# Typography
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = "34pt"
 p.title.text_color = INK
 p.title.text_font_style = "normal"
 
-p.xaxis.axis_label = "Researcher (Target)"
-p.yaxis.axis_label = "Researcher (Source)"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "26pt"
+p.yaxis.axis_label_text_font_size = "26pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
 
-p.xaxis.major_label_text_font_size = "15pt"
-p.yaxis.major_label_text_font_size = "15pt"
+p.xaxis.major_label_text_font_size = "20pt"
+p.yaxis.major_label_text_font_size = "20pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.major_label_orientation = math.pi / 3
 
-# Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
@@ -143,7 +160,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome via Selenium
-W, H = 3600, 3600
+W, H = 2400, 2400
 opts = Options()
 for arg in (
     "--headless=new",
@@ -157,6 +174,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
