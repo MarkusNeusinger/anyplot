@@ -32,8 +32,9 @@ dates. The session block shows the root one line per candidate (`Candidate.line`
   separators (`prepare.Conversion.guess`). The root proposes the conversion with the counts,
   as its one question.
 
-When the converted dates would run newest first, the operations end with a `sort` of the
-new column: a time series is drawn in date order, so the root never asks about it.
+Converted dates that run newest first stay in the order of the rows: a plot run draws a
+bound date column oldest first by itself (`plot_view.oldest_first`), so no conversion
+sorts the table and the root never asks about it.
 
 A date column for the axis counts even when the axis is taken: the defaults fill the roles in
 spec order, so `8 Nov 2026,3000` on a line plot has its one number column on `x` and `y`
@@ -153,14 +154,11 @@ class Candidate:
         return "date" if self.dry.type == "datetime" else "number"
 
     def operations(self) -> list[dict[str, Any]]:
-        """The `prepare_data` operations that make the conversion: the new column, then a sort when it runs newest first."""
+        """The `prepare_data` operations that make the conversion: the new column beside the original."""
         conversion: dict[str, Any] = {"op": "set_type", "column": self.dry.column, "type": self.dry.type}
         if self.dry.date_format is not None:
             conversion["date_format"] = self.dry.date_format
-        operations = [{**conversion, "name": self.name}]
-        if self.dry.order == "descending":
-            operations.append({"op": "sort", "column": self.name})
-        return operations
+        return [{**conversion, "name": self.name}]
 
     def line(self) -> str:
         """The session block's line: the role, the column, the counts, certain or why not, and the operations."""
@@ -177,8 +175,6 @@ class Candidate:
             if dry.guess:
                 reasons.append(f"the reading guesses {dry.guess}")
             line += f"; uncertain: {' and '.join(reasons)}"
-        if dry.order == "descending":
-            line += "; the dates run newest first, so the sort puts them oldest first"
         if self.moved is not None:
             line += f"; {self.moved.role} then takes '{self.moved.column}', which {self.role} holds now"
         return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
@@ -191,8 +187,6 @@ class Candidate:
             f"{self.role}: column '{dry.column}' ({kind}): {dry.read} of {dry.present} cells {dry.reading}, into the "
             f"new column '{self.name}', which {self.role} takes"
         )
-        if dry.order == "descending":
-            line += "; its dates ran newest first, so the rows now run oldest to newest"
         if self.moved is not None:
             line += f"; {self.moved.role} takes '{self.moved.column}', which {self.role} held"
         return line

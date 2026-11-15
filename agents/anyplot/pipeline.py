@@ -166,7 +166,7 @@ from .language import DEFAULT_LANGUAGE, same_language
 from .memory import Planned, decision_lines, memory_delta, memory_written, next_seq, plan, read_memory
 from .memory import expected_texts as memory_expected_texts
 from .models import error_chain, model_busy
-from .plot_view import PlotView, current, read_view, view_delta, viewed_dataset
+from .plot_view import PlotView, current, oldest_first, read_view, view_delta, viewed_dataset
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
@@ -608,8 +608,8 @@ class Run:
     """The server's lines about the rows the run draws, the first lines of `changes` and never a residual note: the
     view of the plot it drew them through (`Drawn.notes`), and a repeated key it combined, into a new data version
     before the run (`repeated_keys.combine_repeated_key`, owner decision of 2026-11-09) or, under a view, for the run
-    alone (`combine_in_view`). On a run that ships nothing, a data step that made a version is still the result's
-    one change, since the data changed all the same."""
+    alone (`combine_in_view`), and the date column it ordered them by (`plot_view.oldest_first`). On a run that ships
+    nothing, a data step that made a version is still the result's one change, since the data changed all the same."""
     view_stamp: dict[str, Any] | None = None
     """The view of the plot the run drew its rows through (`Drawn.stamp`), which the shipped version records
     (`CodeVersion.view`); None for every row."""
@@ -2048,6 +2048,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     data_step: str | None = None
     notes = list(drawn.notes)
     stamp = drawn.stamp
+    held = read_view(ctx.state)  # the view in force: a stored one that no longer fits was cleared above
     if stamp is None:
         view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger, node_input.combine)
         if data_step is not None:
@@ -2055,7 +2056,6 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     else:
         # The function the user names in this call, else the one they named for this view before: nothing else
         # remembers it, since no data version is made, and without it every later run would ask again.
-        held = read_view(ctx.state)
         dataset, view_step = combine_in_view(view, drawn.dataset, node_input.combine or held.combine)
         if view_step is not None:
             notes.append(view_step)
@@ -2063,7 +2063,14 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
                 chosen = held.model_copy(update={"combine": node_input.combine})
                 for key, value in view_delta(chosen).items():
                     ctx.state[key] = value
-                stamp = chosen.stamp()
+                held, stamp = chosen, chosen.stamp()
+    # A bound date column that runs newest first is drawn oldest first. The order is the plot's, so the rows are
+    # ordered for the run alone, after the view and the combine, which decide which rows those are. The line is
+    # said where the user first meets it: not again on a change of a version that drew this very table, which is
+    # read off the table itself, since a rebound column changes the order without a new data version or view.
+    dataset, order_note = oldest_first(dataset, view.bindings, held, view.language)
+    if order_note is not None and not (previous is not None and previous.data_csv == dataset.csv):
+        notes.append(order_note)
     # The version this run changes drew other rows of the table: the adapter hears that the data changed, as it does
     # for "plot the new data", with the user's own request after it.
     if (

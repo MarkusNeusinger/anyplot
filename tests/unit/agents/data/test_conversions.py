@@ -52,17 +52,17 @@ class TestCandidates:
 
         [candidate] = found(text, language="de")
 
+        # No sort: the table keeps its rows as pasted, and a plot run draws the dates oldest first by itself.
         assert candidate.role == "date" and candidate.dry.certain
         assert candidate.operations() == [
-            {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"},
-            {"op": "sort", "column": "Datum (Datum)"},
+            {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"}
         ]
         assert candidate.line() == (
             "date: column 'Datum' (text): 3 of 3 cells would be read as dates (format inferred, day before month); "
-            "certain: every cell reads and nothing is guessed; the dates run newest first, so the sort puts them "
-            'oldest first; operations: [{"op": "set_type", "column": "Datum", "type": "datetime", "name": '
-            '"Datum (Datum)"}, {"op": "sort", "column": "Datum (Datum)"}]'
+            'certain: every cell reads and nothing is guessed; operations: [{"op": "set_type", "column": "Datum", '
+            '"type": "datetime", "name": "Datum (Datum)"}]'
         )
+        assert "newest first" not in candidate.made()
 
     def test_its_operations_fill_the_role(self) -> None:
         """The operations the line gives make the column that the service binds (`carry_bindings`): the role is filled."""
@@ -74,8 +74,8 @@ class TestCandidates:
         after = applied(parsed, candidate)
 
         column = next(column for column in after.profile.columns if column.name == "Datum (date)")
-        assert column.dtype == "datetime" and column.order == "ascending"
-        assert after.csv.splitlines()[1] == "24 Nov 2026,3,2026-11-24"
+        assert column.dtype == "datetime" and column.order == "descending"  # the rows stay as pasted
+        assert after.csv.splitlines()[1] == "26 Nov 2026,1,2026-11-26"
         assert check_bindings(default_bindings(roles, after.profile), roles, after.profile).complete
 
     def test_an_uncertain_conversion_says_why(self) -> None:

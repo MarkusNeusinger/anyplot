@@ -1654,9 +1654,8 @@ class DryRun:
     """What a `set_type` of one text column to numbers or dates would do, nothing stored (`dry_run`).
 
     `read` of `present` cells would convert; `reading` is the change line's words after the
-    count; `guess` what the reading would guess (`Conversion.guess`); `order` the direction
-    the read dates would run down the rows (`ColumnProfile.order`), for a sort the plot needs;
-    `date_format` the format the `set_type` names (`year_run`), None when it infers one.
+    count; `guess` what the reading would guess (`Conversion.guess`); `date_format` the
+    format the `set_type` names (`year_run`), None when it infers one.
     """
 
     column: str
@@ -1665,7 +1664,6 @@ class DryRun:
     read: int
     reading: str
     guess: str | None = None
-    order: Literal["ascending", "descending"] | None = None
     date_format: DateFormat | None = None
 
     @property
@@ -1706,8 +1704,7 @@ def dry_run(
         return None
     if conversion.unit is not None and _names_month(conversion.unit):
         return None  # `Nov 26, 2026` is a date, never the number 26.2026 behind a unit `Nov`
-    order = _run_order(conversion.values) if target == "datetime" else None
-    return DryRun(column, target, present, present - conversion.failed, conversion.reading, conversion.guess, order)
+    return DryRun(column, target, present, present - conversion.failed, conversion.reading, conversion.guess)
 
 
 def year_run(frame: pd.DataFrame, column: str) -> DryRun:
@@ -1720,9 +1717,7 @@ def year_run(frame: pd.DataFrame, column: str) -> DryRun:
     present = int(series.notna().sum())
     conversion = _date_conversion(series, "YYYY")
     read = present - conversion.failed
-    return DryRun(
-        column, "datetime", present, read, conversion.reading, conversion.guess, _run_order(conversion.values), "YYYY"
-    )
+    return DryRun(column, "datetime", present, read, conversion.reading, conversion.guess, "YYYY")
 
 
 @dataclass(frozen=True)
@@ -1780,15 +1775,6 @@ def _numbers_of(cells: list[str], decimal: str) -> Conversion | None:
         return _number_conversion(pd.Series(cells, dtype="str"), decimal)
     except PrepareError:
         return None
-
-
-def _run_order(dates: pd.Series) -> Literal["ascending", "descending"] | None:
-    values = dates.dropna()
-    if values.nunique() < 2:
-        return None
-    if values.is_monotonic_increasing:
-        return "ascending"
-    return "descending" if values.is_monotonic_decreasing else None
 
 
 def _convert(series: pd.Series, target: Literal["number", "datetime"], decimal: str) -> Conversion:
