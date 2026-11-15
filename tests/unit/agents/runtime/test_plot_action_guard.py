@@ -147,8 +147,9 @@ class TestTheGuard:
             "code": "tool_not_allowed",
         }
 
-    def test_the_plot_buttons_are_the_create_the_carry_and_the_new_data(self) -> None:
-        assert PLOT_ACTIONS == {"create_plot", "carry_plot", "plot_new_data"} and PLOT_ACTIONS < set(ACTION_MESSAGES)
+    def test_the_plot_buttons_are_the_create_the_carry_the_new_data_and_every_row_again(self) -> None:
+        assert PLOT_ACTIONS == {"create_plot", "carry_plot", "plot_new_data", "show_all_rows"}
+        assert PLOT_ACTIONS < set(ACTION_MESSAGES)
 
     def test_the_prompt_names_the_code_and_every_refused_tool(self) -> None:
         policy = root_instruction()

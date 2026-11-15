@@ -148,6 +148,25 @@ describe('DataPanel card', () => {
     />
   );
 
+  it('says under the bindings which rows the plot draws while a view of the plot is in force', () => {
+    const view = { rows: 10, of_rows: 248, parts: ['Jahr = 2024', 'top 10 by Umsatz'] };
+    const { rerender } = render(panel(stateWith({ x: 'month', y1: 'shoes' }, { plotView: view })));
+    const line = screen.getByTestId('data-plot-view');
+    expect(line.firstElementChild).toHaveTextContent(
+      /^the plot draws 10 of these 248 rows · Jahr = 2024 · top 10 by Umsatz$/
+    );
+    expect(line.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+    expect(line).toHaveTextContent(
+      'The plot draws 10 of these 248 rows: Jahr = 2024; top 10 by Umsatz'
+    );
+    // The table itself keeps every row: the card's label and preview are the data's.
+    expect(screen.getByTestId('data-card-label')).toHaveTextContent('data · 1 row × 5 cols');
+    // Every row again: no line, and nothing that reads like one.
+    rerender(panel(stateWith({ x: 'month', y1: 'shoes' })));
+    expect(screen.queryByTestId('data-plot-view')).not.toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent('the plot draws');
+  });
+
   it('carries what the data holds on its border, in words for a screen reader', () => {
     render(panel(stateWith({ x: 'month', y1: 'shoes' })));
     const label = screen.getByTestId('data-card-label');

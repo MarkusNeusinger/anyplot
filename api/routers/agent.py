@@ -184,7 +184,8 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     # `version` is the agents service's number of the stored version (ok and needs_attention only), and `memory`
     # (`{kept, added}`, plot memory entry ids) the decisions that version stands on, only with it;
     # `rounds` lists how each attempt ended (`{attempt, outcome, findings}`), for the page's progress grid; `new_data`
-    # where "plot the new data" started (`previous`, or a closed reason for the catalogue plot), only on its plot.
+    # where "plot the new data" started (`previous`, or a closed reason for the catalogue plot), only on its plot;
+    # `view` (`{rows, of_rows, parts}`) the view of the plot that version drew its rows through, absent for every row.
     "plot": frozenset(
         {
             "status",
@@ -197,6 +198,7 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
             "memory",
             "rounds",
             "new_data",
+            "view",
         }
     ),
     "refusal": frozenset({"code", "text"}),
@@ -207,9 +209,22 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     # `language` carries the session language `{language, source}` after every run, so the page syncs its chip;
     # `suggestion` the `.to_long()` offer in that language (or null) on a session with data, so its card follows;
     # `switch` (`{library, plot}`) the library switch the user asked for in the chat, which the page carries out;
-    # `turn` what a turn that ended well changed (`answer`, `data`, `plot`, `switch`, `language`, `kept`, `memory`).
+    # `turn` what a turn that ended well changed (`answer`, `data`, `plot`, `switch`, `language`, `kept`, `memory`);
+    # `view` the view of the plot in force after the turn (the `plot` event's shape, or null for every row) on a
+    # session with data, so the page says by the data which rows the next plot draws.
     "done": frozenset(
-        {"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language", "suggestion", "switch", "turn"}
+        {
+            "llm_calls",
+            "tokens",
+            "bindings",
+            "data_confirmed",
+            "dataset",
+            "language",
+            "suggestion",
+            "switch",
+            "turn",
+            "view",
+        }
     ),
 }
 # `no_reply`: the assistant wrote no reply, also when asked once more (`agents/anyplot/plugins/empty_reply.py`).
@@ -282,6 +297,7 @@ _UPSTREAM_CODES = frozenset(
         "no_dataset",
         "nothing_to_undo",
         "no_suggestion",
+        "no_view",
         "has_dataset",
         "unconfirmed",
         "rate_limited",
@@ -655,10 +671,13 @@ class MessageBody(_StrictBody):
     text: MessageText | None = None
     # `create_plot` starts step 2 (the fresh plot, also `.start_over()`); `carry_plot` plots in the library the user
     # switched to with the decisions made so far; `plot_new_data` is "plot the new data" after a data change, from the
-    # latest plot when the agents service's guard allows it; `summarize_data` asks the assistant for the step-1
-    # summary; `example_data` asks it for example data (`.example_data()`), which, unlike typed words, sets no session
-    # language.
-    action: Literal["create_plot", "carry_plot", "plot_new_data", "summarize_data", "example_data"] | None = None
+    # latest plot when the agents service's guard allows it; `show_all_rows` is the `.show_all()` on the card of a
+    # plot that drew a view of the plot: the service clears the view and draws every row again; `summarize_data`
+    # asks the assistant for the step-1 summary; `example_data` asks it for example data (`.example_data()`), which,
+    # unlike typed words, sets no session language.
+    action: (
+        Literal["create_plot", "carry_plot", "plot_new_data", "show_all_rows", "summarize_data", "example_data"] | None
+    ) = None
 
     @model_validator(mode="after")
     def _exactly_one(self) -> MessageBody:

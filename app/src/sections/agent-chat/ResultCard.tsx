@@ -97,7 +97,7 @@ import {
   type Theme,
 } from 'src/lib/agent';
 import { CardFrame } from 'src/sections/agent-chat/CardFrame';
-import { decisionsText, plotCardLabel } from 'src/sections/agent-chat/cardLabels';
+import { decisionsText, plotCardLabel, plotViewText } from 'src/sections/agent-chat/cardLabels';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { InteractivePreview } from 'src/sections/agent-chat/InteractivePreview';
@@ -180,6 +180,13 @@ export interface ResultCardProps {
    * control); without it the card shows no control. Never held back by `busy`.
    */
   onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
+  /**
+   * `.show_all()` on the line of the view this plot drew: clear the view and draw every row
+   * again. The page passes it for the one card it applies to, the newest plot while its view is
+   * still in force on confirmed data; without it the line stands without an action. It waits
+   * while `busy`, since the server runs one turn at a time.
+   */
+  onShowAll?: () => void;
 }
 
 export function ResultCard({
@@ -194,6 +201,7 @@ export function ResultCard({
   onTrack,
   onOutcome,
   onSendFeedback,
+  onShowAll,
 }: ResultCardProps) {
   const { isDark } = useTheme();
   // Read at the first render, so a phone never paints the actions over the image first.
@@ -579,16 +587,49 @@ export function ResultCard({
   // Both parts at every width: the label names the request, so this line is the card's only word
   // on what the version kept.
   const shown = [kept, added].filter(part => part !== null);
-  const decisionsLine = shown.length ? (
+  // The rows this version drew, when a view of the plot left some out: the plot shows fewer rows
+  // than the data card above it, and this line is where the card says so, with the way back.
+  const view = result.view ? plotViewText(result.view, 'plot') : null;
+  const viewLine = view ? (
     <Box
-      data-testid="result-decisions"
+      data-testid="result-view"
       sx={{
         ...labelSx,
         color: 'var(--ink-soft)',
         lineHeight: 1.6,
-        overflowWrap: 'anywhere',
-        mt: narrow ? -1 : 0,
+        display: 'flex',
+        // On a phone the words fill the line, so the action takes the row under them, flush
+        // with the card's other action lines; from `sm` up it ends the line.
+        flexDirection: narrow ? 'column' : 'row',
+        flexWrap: 'wrap',
+        alignItems: narrow ? 'flex-start' : 'center',
+        columnGap: 0.5,
       }}
+    >
+      <Box component="span" sx={{ overflowWrap: 'anywhere', minWidth: 0 }}>
+        <span aria-hidden>{view.text}</span>
+        <Box component="span" sx={visuallyHiddenSx}>
+          {view.spoken}
+        </Box>
+      </Box>
+      {onShowAll && (
+        <Box
+          component="button"
+          type="button"
+          onClick={onShowAll}
+          disabled={busy}
+          aria-label="Show all rows: clear the view and draw the plot again"
+          sx={narrow ? { ...cardActionSx, ml: -1.25 } : actionButtonSx}
+        >
+          .show_all()
+        </Box>
+      )}
+    </Box>
+  ) : null;
+  const decisionsLine = shown.length ? (
+    <Box
+      data-testid="result-decisions"
+      sx={{ ...labelSx, color: 'var(--ink-soft)', lineHeight: 1.6, overflowWrap: 'anywhere' }}
     >
       <span aria-hidden>{shown.map(part => part.text).join(' · ')}</span>
       <Box component="span" sx={visuallyHiddenSx}>
@@ -596,6 +637,14 @@ export function ResultCard({
       </Box>
     </Box>
   ) : null;
+  // The card's lines of words about the version, as one block: the rows it drew, then what it kept.
+  const factLines =
+    viewLine || decisionsLine ? (
+      <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, mt: narrow ? -1 : 0 }}>
+        {viewLine}
+        {decisionsLine}
+      </Box>
+    ) : null;
 
   return (
     <CardFrame
@@ -612,9 +661,9 @@ export function ResultCard({
     >
       {expanded && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          {/* What the version kept and added, the card's first line from `sm` up (the v4 mock),
-              its actions over the image's corner beside it. */}
-          {!narrow && decisionsLine}
+          {/* The rows the version drew and what it kept and added, the card's first lines from
+              `sm` up (the v4 mock), its actions over the image's corner beside them. */}
+          {!narrow && factLines}
           {/* Image with the overlay actions of the plot page. */}
           <Box
             sx={{
@@ -750,8 +799,8 @@ export function ResultCard({
             )}
           </Box>
 
-          {/* On a phone the same line stands under the image, above the card's action line. */}
-          {narrow && decisionsLine}
+          {/* On a phone the same lines stand under the image, above the card's action line. */}
+          {narrow && factLines}
 
           {narrow && (
             <Box

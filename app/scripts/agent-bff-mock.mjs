@@ -244,6 +244,14 @@
  * drew the current paste with the same bindings, else plots from the catalogue code in the theme asked for before,
  * and its plot names which (`new_data`: `previous`, `other_paste`, `bindings_changed`, `kept_note`, `no_plot`).
  *
+ * The view of the plot (`agents/anyplot/plot_view.py`): once a plot exists, a typed "top 5" sets a view (the
+ * five rows with the largest values of the first bound y column), which every later plot draws, and "all rows"
+ * clears it. The table keeps every row and stays confirmed. A plot through the view names it (`plot.view`,
+ * `{rows, of_rows, parts}`) and says so in its first change line, every `done` on a session with data names the
+ * view in force (`view`, null for every row), and so does the undo's answer; a paste takes the view away.
+ * `{action: "show_all_rows"}`, the card's `.show_all()`, clears the view and redraws like `plot_new_data`
+ * (`422 no_view` when no view is set and the library's latest plot drew every row).
+ *
  * What a turn changed: every `done` of a turn that ended well carries `turn` (`answer`, `data`, `plot`,
  * `language` or `kept`, the service's `stream.turn_outcome` for the paths the mock plays): a question, a
  * summary and a note without a change are `answer`, a refusal, an error or a stop carry none.
@@ -417,6 +425,8 @@ const ACTION_MESSAGES = {
   carry_plot:
     '[action] Create the plot from my dataset and bindings, with the decisions I made so far.',
   plot_new_data: '[action] Create the plot from my changed dataset and bindings.',
+  show_all_rows:
+    '[action] Create the plot from every row of my dataset again; I cleared the view of the plot.',
   summarize_data: '[action] Summarize the dataset for the user.',
   example_data: '[action] Make example data to try this plot.',
 };
@@ -893,6 +903,31 @@ function csvText(holder) {
 const columnOf = (holder, name) => holder.bindings.find(b => b.role === name)?.column;
 /** The bound y columns: `y` of scatter-basic, or every member `y1, y2, ...` of line-multi. */
 const yColumns = holder => holder.bindings.filter(b => /^y\d*$/.test(b.role)).map(b => b.column);
+
+/**
+ * The view of the plot in force as the page shows it (`plot_view.Viewed.shown`), or null for every
+ * row: no view, no data, or a view whose column the table no longer has.
+ */
+function shownView(session) {
+  const view = session.view;
+  if (!view || !session.dataset?.header.includes(view.column)) return null;
+  const total = session.dataset.rows.length;
+  return {
+    rows: Math.min(view.n, total),
+    of_rows: total,
+    parts: [`top ${view.n} by ${view.column}`],
+  };
+}
+
+/** The rows a plot run draws: the table's, or the ones the view of the plot keeps; the table itself stays. */
+function drawnDataset(session) {
+  if (!shownView(session)) return session.dataset;
+  const index = session.dataset.header.indexOf(session.view.column);
+  const rows = [...session.dataset.rows]
+    .sort((a, b) => Number(b[index]) - Number(a[index]))
+    .slice(0, session.view.n);
+  return { ...session.dataset, rows };
+}
 
 /** One point list per y column; a non-numeric x (a date) plots by row order. */
 function points(holder) {
@@ -1433,16 +1468,30 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       }
       // "Plot the new data" (`pipeline.new_data_base`): from the library's latest version while it
       // drew the current data's paste with the same bindings, else from the catalogue code.
-      const newData = body.action === 'plot_new_data' ? newDataBase(session) : null;
+      // `.show_all()` starts the same way (`NEW_DATA_ACTIONS` in `agents/main.py`).
+      const fromLatest = body.action === 'plot_new_data' || body.action === 'show_all_rows';
+      const newData = fromLatest ? newDataBase(session) : null;
+      // The view of the plot: a typed "top 5" sets it, "all rows" and `.show_all()` clear it, and
+      // the run draws the rows it keeps. It changes no data, so nothing waits for a confirmation.
+      const top = body.action ? null : lower.match(/\btop\s+(\d{1,4})\b/);
+      const everyRow =
+        body.action === 'show_all_rows' ||
+        (!body.action && /\ball rows\b|\bevery row\b|\balle zeilen\b/.test(lower));
+      const hadView = shownView(session) !== null;
+      if (top && Number(top[1]) > 0)
+        session.view = { n: Number(top[1]), column: yColumns(session)[0] };
+      if (everyRow) session.view = null;
+      const viewSet = !!top && shownView(session) !== null;
+      const viewCleared = everyRow && hadView;
       // `create_plot` and `carry_plot` start from the catalogue code, and so does "plot the new
       // data" without the latest version as its base; a typed change refines the latest version.
-      const refine =
-        body.action === 'plot_new_data'
-          ? newData === 'previous'
-          : body.action !== 'create_plot' && body.action !== 'carry_plot';
+      const refine = fromLatest
+        ? newData === 'previous'
+        : body.action !== 'create_plot' && body.action !== 'carry_plot';
       // A refinement repairs once; with MOCK_REPAIR=1 a first plot does too, as a first try the review fails.
-      // The new data on the latest version passes at once, as the server's request changes little.
-      const repaired = (refine && newData === null) || REPAIR;
+      // The new data on the latest version passes at once, as the server's request changes little,
+      // and so does a change of the rows alone.
+      const repaired = (refine && newData === null && !viewSet && !viewCleared) || REPAIR;
       const steps = repaired
         ? [
             ['adapting', 1],
@@ -1511,9 +1560,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // A switch's carry for this library (`switch.Carry`): the first run here takes it, a fresh
       // `create_plot` never does; it brings the theme the user asked for in the library before.
       const carried =
-        session.carry?.target === session.library &&
-        body.action !== 'create_plot' &&
-        body.action !== 'plot_new_data'
+        session.carry?.target === session.library && body.action !== 'create_plot' && !fromLatest
           ? session.carry
           : null;
       // "Plot the new data" from the catalogue code keeps the theme asked for on the latest version.
@@ -1532,7 +1579,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         turn: session.turns,
         theme,
         themeAsked: askedTheme !== null,
-        dataset: session.dataset,
+        // The rows the view of the plot keeps: the version's `data.csv` holds what it drew.
+        dataset: drawnDataset(session),
         // The data version it drew (`CodeVersion.data_version`).
         dataNumber: session.version,
         bindings: session.bindings,
@@ -1546,18 +1594,33 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       session.versions.push(version);
       const x = columnOf(version, 'x');
       const y = yColumns(version).join(', ');
+      // The server's first change line about the rows the run drew (`Viewed.note`, `EVERY_ROW_LINE`).
+      const view = shownView(session);
+      const rowsLine = view
+        ? [
+            `The plot draws ${view.rows} of the ${view.of_rows} rows of data v${session.version} (view: ${view.parts.join('; ')})`,
+          ]
+        : viewCleared
+          ? [
+              `The plot draws every row of data v${session.version} again, ${session.dataset.rows.length} in all`,
+            ]
+          : [];
       // Kept on the version for the bundle, like the service's stored `PlotResult`.
       version.result = {
         status: repaired ? 'needs_attention' : 'ok',
         reason: null,
         attempts: repaired ? 2 : 1,
         artifacts: artifactNames(version),
-        changes:
-          newData === 'previous'
-            ? ['Drew the new data', 'Kept the title, the colours and the labels']
-            : refine
-              ? ['Applied your change request', 'Marker size raised from 110 to 160']
-              : [`x now reads ${x}, y reads ${y}`, 'Axis labels name your columns'],
+        changes: [
+          ...rowsLine,
+          ...(viewSet || viewCleared
+            ? ['Axis limits follow the rows shown', 'Kept the title, the colours and the labels']
+            : newData === 'previous'
+              ? ['Drew the new data', 'Kept the title, the colours and the labels']
+              : refine
+                ? ['Applied your change request', 'Marker size raised from 110 to 160']
+                : [`x now reads ${x}, y reads ${y}`, 'Axis labels name your columns']),
+        ],
         // In the review's grammar, as the service writes them: the card reads them in plain words.
         residual_defects: repaired
           ? [
@@ -1570,6 +1633,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         rounds,
         // Where "plot the new data" started, only on its plot.
         ...(newData ? { new_data: newData } : {}),
+        // The view of the plot the version drew its rows through; absent for every row.
+        ...(view ? { view } : {}),
       };
       // The plot memory, settled with the version before its event (`pipeline.settle_memory`): a
       // typed change keeps its decision, the first plot of a library the wish kept for it in step
@@ -1577,7 +1642,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // is spent. The event names what the version stands on (`pipeline.memory_ids`): the kept
       // entries from before the run and the added ones; one a change replaced is in neither.
       const before = new Set(session.memory.map(entry => entry.id));
-      if (refine && newData === null) rememberChange(session, text);
+      // A view of the plot is session state of its own, never a remembered decision.
+      if (refine && newData === null && !viewSet && !viewCleared) rememberChange(session, text);
       else if (session.keptWish && (firstHere || newData === 'kept_note')) {
         rememberChange(session, session.keptWish);
         session.keptWish = null;
@@ -1596,13 +1662,17 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       const decisions = session.memory.length;
       const kept = decisions ? ` with your ${decisions} decision${decisions === 1 ? '' : 's'}` : '';
       send('message', {
-        text: newData
-          ? NEW_DATA_REPLIES[newData](latestHere?.number, kept)
-          : refine
-            ? 'Done. One note remains: two markers sit close to the y axis label.'
-            : body.action === 'carry_plot'
-              ? `Here is the plot in ${session.library}, from its catalogue code${decisions ? ` with your ${decisions} decision${decisions === 1 ? '' : 's'}` : ''}.`
-              : `Here is ${SPECS[session.specId].title.toLowerCase()} with your data: ${x} on x and ${y} on y.`,
+        text: viewCleared
+          ? `The plot draws every row again, ${session.dataset.rows.length} in all.`
+          : viewSet
+            ? `The plot shows the ${view.parts[0]} now, ${view.rows} of ${view.of_rows} rows; your table keeps every row.`
+            : newData
+              ? NEW_DATA_REPLIES[newData](latestHere?.number, kept)
+              : refine
+                ? 'Done. One note remains: two markers sit close to the y axis label.'
+                : body.action === 'carry_plot'
+                  ? `Here is the plot in ${session.library}, from its catalogue code${decisions ? ` with your ${decisions} decision${decisions === 1 ? '' : 's'}` : ''}.`
+                  : `Here is ${SPECS[session.specId].title.toLowerCase()} with your data: ${x} on x and ${y} on y.`,
       });
     } finally {
       runsInFlight -= 1;
@@ -1620,6 +1690,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       data_confirmed: session.confirmed,
       language: languageBody(session, turnOffer),
       ...(session.dataset ? { suggestion: longSuggestion(session, session.dataset) } : {}),
+      // The view of the plot in force after the turn, or null for every row, on a session with data.
+      ...(session.dataset ? { view: shownView(session) } : {}),
       ...(session.changed ? { dataset: session.changed } : {}),
       ...(turn && !session.cancelled && !closed ? { turn } : {}),
     });
@@ -1630,7 +1702,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
 }
 
 /** The turns MOCK_CUT_AFTER cuts: a session's first plot turn only, so its next one runs through. */
-const PLOT_ACTIONS = new Set(['create_plot', 'carry_plot', 'plot_new_data']);
+const PLOT_ACTIONS = new Set(['create_plot', 'carry_plot', 'plot_new_data', 'show_all_rows']);
 
 /**
  * Where "plot the new data" starts, as the service's `pipeline.new_data_base`: `previous` while the
@@ -1961,6 +2033,8 @@ function storeVersion(session, parsed, changes) {
  * data before.
  */
 function newData(session) {
+  // The view of the plot was set on the data this replaces.
+  session.view = null;
   session.history = [];
   session.top += 1;
   session.version = session.top;
@@ -3000,7 +3074,17 @@ async function route(req, res) {
     // A new data version drops the switch's carry and a kept wish (2026-11-08).
     session.carry = null;
     session.keptWish = null;
-    return json(res, 200, { ...datasetPayload(session), roles: SPECS[session.specId].roles }, ref);
+    return json(
+      res,
+      200,
+      {
+        ...datasetPayload(session),
+        roles: SPECS[session.specId].roles,
+        // A view of the plot stays through an undo while the restored table has its column.
+        view: shownView(session),
+      },
+      ref
+    );
   }
   if (method === 'PUT' && rest === '/bindings') {
     if (session.active) return fail(res, 409, 'run_active', ref);
@@ -3120,6 +3204,13 @@ async function route(req, res) {
     if (session.active) return fail(res, 409, 'run_active', ref);
     if (typeof body?.text === 'string' && body.text.length > 2000)
       return fail(res, 413, 'too_long', ref);
+    // `.show_all()` with no view set and a latest plot of every row has nothing to redraw.
+    if (
+      body?.action === 'show_all_rows' &&
+      !shownView(session) &&
+      !session.versions.findLast(item => item.library === session.library)?.result?.view
+    )
+      return fail(res, 422, 'no_view', ref);
     return streamTurn(req, res, session, body ?? {}, ref, siteTheme);
   }
   if (method === 'POST' && rest === '/outcome') {

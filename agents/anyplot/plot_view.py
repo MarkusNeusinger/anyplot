@@ -66,6 +66,9 @@ logger = logging.getLogger("anyplot.agents")
 MAX_SELECTIONS = 3
 """The selections one view holds. Each has up to `MAX_CONDITIONS` conditions, so a view of three is already more
 than a user keeps in mind; a fourth is refused with the way out (`reset_view`)."""
+MAX_PART_CHARS = 120
+"""The longest part of a view on the page (`Viewed.shown`): one selection or the top N. A selection that names many
+values gives way with an ellipsis, as the view's words do in the plot's line."""
 
 
 class Top(BaseModel):
@@ -103,16 +106,20 @@ class PlotView(BaseModel):
             steps.append(KeepRows(op="keep_rows", n=self.top.n))
         return steps
 
-    def words(self, text_columns: Collection[str] = ()) -> str:
-        """The view in a line's words: `Jahr = 2024; Land is 'CH' or 'AT'; top 10 by Umsatz`. `text_columns` are the
-        table's text columns, whose values are quoted."""
+    def parts(self, text_columns: Collection[str] = ()) -> list[str]:
+        """The view's parts in words, one per selection and one for the top N: `Jahr = 2024`, `Land is 'CH' or 'AT'`,
+        `top 10 by Umsatz`. `text_columns` are the table's text columns, whose values are quoted."""
         parts = [
             " and ".join(condition_words(condition, text=condition.column in text_columns) for condition in where)
             for where in self.selections
         ]
         if self.top is not None:
             parts.append(f"{'top' if self.top.descending else 'lowest'} {self.top.n} by {self.top.column}")
-        return "; ".join(parts)
+        return parts
+
+    def words(self, text_columns: Collection[str] = ()) -> str:
+        """The view in a line's words: its `parts`, as `Jahr = 2024; Land is 'CH' or 'AT'; top 10 by Umsatz`."""
+        return "; ".join(self.parts(text_columns))
 
     def stamp(self) -> dict[str, Any] | None:
         """What a plot version records of the view it drew, or None for every row: two runs drew the same rows of a
@@ -236,10 +243,23 @@ class Viewed:
         (view: Jahr = 2024; top 10 by Umsatz)`, within `limit` characters. The counts always stand; the view's
         words give way."""
         head = f"The plot draws {self.rows} of the {self.of_rows} rows of data v{data_version} (view: "
-        text = [name for name, dtype in self.parsed.column_dtypes.items() if dtype == "text"]
-        words = view.words(text)
-        room = limit - len(head) - 1
-        return head + (words if len(words) <= room else words[: max(room - 1, 0)] + "…") + ")"
+        words = view.words(self._text_columns())
+        return head + _within(words, limit - len(head) - 1) + ")"
+
+    def shown(self, view: PlotView) -> dict[str, Any]:
+        """The view as the page shows it beside the plot and the data (`ShownView` in `app/src/lib/agent.ts`): the
+        counts of `note`, and the view's parts, each within `MAX_PART_CHARS`. The parts name the user's columns and
+        values, so this goes to the page alone, never into a tool result the root reads."""
+        parts = [_within(part, MAX_PART_CHARS) for part in view.parts(self._text_columns())]
+        return {"rows": self.rows, "of_rows": self.of_rows, "parts": parts}
+
+    def _text_columns(self) -> list[str]:
+        return [name for name, dtype in self.parsed.column_dtypes.items() if dtype == "text"]
+
+
+def _within(words: str, room: int) -> str:
+    """`words` as they are, or cut to `room` characters with an ellipsis at the end."""
+    return words if len(words) <= room else words[: max(room - 1, 0)] + "…"
 
 
 def view_of(parsed: ParsedDataset, view: PlotView, language: str = DEFAULT_LANGUAGE) -> Viewed:
@@ -442,6 +462,9 @@ class Current:
 CLEARED_LINE = "the view of the plot no longer fits this table and was cleared: the plot draws every row again"
 """What a run or a data change says when the stored view cannot be applied to the table any more (a column it
 names is gone or changed its kind, or no row would be left)."""
+EVERY_ROW_LINE = "The plot draws every row of data v{number} again, {rows} in all"
+"""What a run says when the version it changes drew a view of the plot and the view is gone since (the chat's
+`reset_view`, the page's `.show_all()`): the count comes back as it went, in the first line of "what changed"."""
 
 
 def breaks_bindings(

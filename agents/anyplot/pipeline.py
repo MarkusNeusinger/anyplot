@@ -166,7 +166,7 @@ from .language import DEFAULT_LANGUAGE, same_language
 from .memory import Planned, decision_lines, memory_delta, memory_written, next_seq, plan, read_memory
 from .memory import expected_texts as memory_expected_texts
 from .models import error_chain, model_busy
-from .plot_view import PlotView, current, drawn_in_order, read_view, view_delta, viewed_dataset
+from .plot_view import EVERY_ROW_LINE, PlotView, current, drawn_in_order, read_view, view_delta, viewed_dataset
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
@@ -769,12 +769,14 @@ def load_inputs(
 class Drawn:
     """What a plot run draws of the session's table (`plot_view.py`): `dataset`, the table itself or its rows as the
     view of the plot shows them, under the table's id and number; `stamp`, the view that held (`PlotView.stamp`,
-    None for every row); `notes`, the server's line for it in "what changed"; `cleared`, whether a stored view no
-    longer fit and has to be taken out of the session."""
+    None for every row); `notes`, the server's line for it in "what changed"; `shown`, that view as the page shows
+    it on the plot's card (`Viewed.shown`, None for every row); `cleared`, whether a stored view no longer fit and
+    has to be taken out of the session."""
 
     dataset: StoredDataset
     stamp: dict[str, Any] | None = None
     notes: tuple[str, ...] = ()
+    shown: dict[str, Any] | None = None
     cleared: bool = False
 
 
@@ -788,7 +790,9 @@ def drawn_through_view(state: Any, view: SessionView, dataset: StoredDataset) ->
     if held.viewed is None:
         return Drawn(dataset, notes=(held.cleared,) if held.cleared else (), cleared=held.cleared is not None)
     note = held.viewed.note(held.view, dataset.number, MAX_CHANGE_CHARS)
-    return Drawn(viewed_dataset(dataset, held.viewed), stamp=held.view.stamp(), notes=(note,))
+    return Drawn(
+        viewed_dataset(dataset, held.viewed), stamp=held.view.stamp(), notes=(note,), shown=held.viewed.shown(held.view)
+    )
 
 
 PENDING_REASONS: frozenset[str] = frozenset({"data_unconfirmed", "incomplete_bindings", "combine_choice"})
@@ -2048,6 +2052,10 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     data_step: str | None = None
     notes = list(drawn.notes)
     stamp = drawn.stamp
+    if previous is not None and previous.view is not None and stamp is None and not drawn.cleared:
+        # The version this run changes drew a view of the plot, and none is set any more: the result names the rows
+        # that are back with their count, as it named the view's. A view that no longer fit has its own line.
+        notes.append(EVERY_ROW_LINE.format(number=dataset.number, rows=dataset.profile.rows))
     held = read_view(ctx.state)  # the view in force: a stored one that no longer fits was cleared above
     if stamp is None:
         view, dataset, data_step = _combine_repeated_key(ctx, services, view, dataset, ledger, node_input.combine)
@@ -2148,6 +2156,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     settle_memory(ctx.state, run, ledger.plot_shipped)
     # The memory the stored version stands on, for its `plot` event: known only once settled with the version.
     ledger.shipped_memory = memory_ids(run) if ledger.plot_shipped and result.version is not None else None
+    # The view the stored version drew its rows through, for the same event: the page shows it on the plot's card.
+    ledger.shipped_view = drawn.shown if ledger.plot_shipped and result.version is not None else None
     record_last_run(ctx.state, result, turn=ledger.turn)
     _attribute_result(ledger, run, result)
     _telemetry_run(ledger, ctx.session.id, ctx.invocation_id, run, result, time.monotonic() - started)

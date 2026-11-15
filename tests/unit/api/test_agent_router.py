@@ -1146,6 +1146,36 @@ class TestMessagesStream:
             ("done", {"llm_calls": 4, "tokens": 900, "turn": "kept"}),
         ]
 
+    def test_the_view_of_the_plot_passes_on_the_plot_and_on_done(self, client, upstream) -> None:
+        """A plot's `view` (the rows that version drew) and `done.view` (the view in force, null for every row) reach
+        the page, whose cards name them."""
+        view = {"rows": 10, "of_rows": 248, "parts": ["Jahr = 2024", "top 10 by Umsatz"]}
+        plot = {"status": "ok", "attempts": 1, "artifacts": [], "version": 2, "view": view, "plan": "secret"}
+        body = f"event: plot\ndata: {json.dumps(plot)}\n\nevent: done\ndata: {json.dumps({'view': view})}\n\n"
+        upstream.handler = lambda request: httpx.Response(200, content=body.encode())
+
+        events = _sse_events(self._post(client).text)
+
+        assert events == [
+            ("plot", {"status": "ok", "attempts": 1, "artifacts": [], "version": 2, "view": view}),
+            ("done", {"view": view}),
+        ]
+        upstream.handler = lambda request: httpx.Response(200, content=b'event: done\ndata: {"view": null}\n\n')
+        assert _sse_events(self._post(client).text) == [("done", {"view": None})]
+
+    def test_the_show_all_rows_action_is_forwarded_and_its_refusal_keeps_its_code(self, client, upstream) -> None:
+        """`.show_all()` on a plot's view line travels as the action; a session without a view to clear answers
+        `422 no_view`, which the page reads as such."""
+        upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")
+        client.post("/debug/agent/sessions/s1/messages", json={"action": "show_all_rows"}, headers=CLIENT_HEADERS)
+        assert upstream.last_json == {"action": "show_all_rows"}
+
+        upstream.handler = lambda request: httpx.Response(422, json={"detail": "no_view"})
+        refused = client.post(
+            "/debug/agent/sessions/s1/messages", json={"action": "show_all_rows"}, headers=CLIENT_HEADERS
+        )
+        assert (refused.status_code, refused.json()["detail"]) == (422, "no_view")
+
     def test_text_message_forwarded(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")
         client.post("/debug/agent/sessions/s1/messages", json={"text": "make it blue"}, headers=CLIENT_HEADERS)

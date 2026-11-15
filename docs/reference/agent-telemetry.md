@@ -213,10 +213,11 @@ text.
 | `plot_switch` | `memory_kinds` | The plot memory's entries counted by kind (`title`, `axis_label`, `reference_line`, `annotation`, `marker` and the other kinds of the closed set) |
 | `pipeline_run` | `carried` | The run took a switch's carry: the first plot in a new library, from its catalogue plot with the user's decisions |
 | `pipeline_run` | `fresh` | The run was the page's `.create_plot()` or `.start_over()`: the catalogue code again, without a switch's carry, with the memory's decisions; also "plot the new data" when it started from the catalogue plot |
-| `pipeline_run` | `new_data` | Since 2026-11-08, only on the page's "plot the new data": `previous` when the run started from the library's latest version (the same paste, the same bindings), else why it started from the catalogue plot: `other_paste`, `other_data` (a computed table replaced the data), `bindings_changed`, `kept_note` (a first-plot request waited) or `no_plot`. It counts how often the latest version is the base |
+| `pipeline_run` | `new_data` | Since 2026-11-08, only on the page's "plot the new data" and, since 2026-11-15, its `.show_all()`: `previous` when the run started from the library's latest version (the same paste, the same bindings), else why it started from the catalogue plot: `other_paste`, `other_data` (a computed table replaced the data), `bindings_changed`, `kept_note` (a first-plot request waited) or `no_plot`. It counts how often the latest version is the base |
 | `pipeline_run` | `memory_entries`, `remembered`, `memory_full` | The plot memory's entries the run handed the adapter, the entries it stored once it shipped, and whether the memory had no room for them |
 | `chat_turn` | `action` `carry_plot`, `tools` `forget` | The page's carry run after a switch, and the root removing a decision |
 | `chat_turn` | `action` `plot_new_data` | Since 2026-11-08: the page's "plot the new data", after a data change or a paste |
+| `chat_turn` | `action` `show_all_rows` | Since 2026-11-15: the page's `.show_all()` on a plot that drew a view of the plot, which clears the view and draws every row again |
 
 The typed columns are in `agents/telemetry/views/02_event_views.sql` (`pipeline_runs` and the new `plot_switches`).
 Applying the changed views waits for the owner's approval, as on 2026-11-01; until then the fields sit in `payload`

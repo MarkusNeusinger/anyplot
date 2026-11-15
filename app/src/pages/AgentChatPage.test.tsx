@@ -213,6 +213,9 @@ const PLOT = {
   version: 1,
 };
 
+/** A view of the plot on the two pasted rows, as the server words it. */
+const TOP_ROW = { rows: 1, of_rows: 2, parts: ['top 1 by score'] };
+
 /** A turn's stream as the BFF sends it. */
 function sse(events: [string, unknown][]) {
   return new Response(
@@ -240,6 +243,22 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
       ['plot', PLOT],
       ['message', { text: 'Here is your plot.' }],
       ['done', { llm_calls: 2, data_confirmed: true }],
+    ];
+  }
+  // The assistant set a view of the plot and drew it: the plot names the view, `done` the one in force.
+  if (body.text?.includes('top row')) {
+    return [
+      ['plot', { ...PLOT, version: 2, view: TOP_ROW }],
+      ['message', { text: 'The plot shows the top row now.' }],
+      ['done', { llm_calls: 3, data_confirmed: true, view: TOP_ROW }],
+    ];
+  }
+  // `.show_all()`: the server cleared the view and drew every row again.
+  if (body.action === 'show_all_rows') {
+    return [
+      ['plot', { ...PLOT, version: 3, changes: ['The plot draws every row of data v1 again'] }],
+      ['message', { text: 'Every row again.' }],
+      ['done', { llm_calls: 2, data_confirmed: true, view: null }],
     ];
   }
   // A question the assistant answers without touching the data or the bindings.
@@ -1228,6 +1247,47 @@ describe('AgentChatPage gating', () => {
     ).toBe(true);
     expect(currentStep()).toBe(2);
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
+  });
+
+  it('names a view of the plot on both cards, and .show_all() draws every row again', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndPlot();
+    // A plot of every row: neither card has a word on rows, and nothing offers `.show_all()`.
+    expect(screen.queryByTestId('result-view')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('data-plot-view')).not.toBeInTheDocument();
+
+    sendFromComposer('only the top row by score');
+    expect(await screen.findByText('The plot shows the top row now.')).toBeInTheDocument();
+    await turnEnded();
+    const plot = within(screen.getByRole('article', { name: 'Plot version 2' }));
+    expect(plot.getByTestId('result-view').firstElementChild?.firstElementChild).toHaveTextContent(
+      /^draws 1 of 2 rows · top 1 by score$/
+    );
+    // The table keeps both rows, and its card says that the plot draws one of them.
+    const data = within(screen.getByTestId('data-card'));
+    expect(data.getByRole('cell', { name: '52' })).toBeInTheDocument();
+    expect(data.getByRole('cell', { name: '58' })).toBeInTheDocument();
+    expect(data.getByTestId('data-plot-view').firstElementChild).toHaveTextContent(
+      /^the plot draws 1 of these 2 rows · top 1 by score$/
+    );
+    expect(currentStep()).toBe(2);
+
+    // One click: no confirmation to give, the data never changed; the thread names the button.
+    fireEvent.click(plot.getByRole('button', { name: /^Show all rows/ }));
+    await waitFor(() => expect(lastAction()).toHaveTextContent(/^❯\.show_all\(\)# matplotlib$/));
+    expect(await screen.findByText('Every row again.')).toBeInTheDocument();
+    await turnEnded();
+    expect(confirmAndTurns().slice(-2)).toEqual([
+      'text: only the top row by score',
+      'show_all_rows',
+    ]);
+    // The new plot drew every row: its card has no line, the data card none, and the older
+    // version's card keeps its own line as words, without the action.
+    const latest = within(screen.getByRole('article', { name: 'Plot version 3' }));
+    expect(latest.queryByTestId('result-view')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('data-plot-view')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Show all rows/ })).not.toBeInTheDocument();
   });
 
   it('goes back to step 1 with the card open when a binding changes in step 2', async () => {

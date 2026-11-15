@@ -939,6 +939,113 @@ describe('ResultCard', () => {
     });
   });
 
+  describe('the view of the plot it drew', () => {
+    const VIEW = { rows: 10, of_rows: 248, parts: ['Jahr = 2024', 'top 10 by Umsatz'] };
+    const viewed = (overrides: Partial<PlotVersion> = {}) => {
+      const base = makeVersion();
+      return makeVersion({ result: { ...base.result, view: VIEW }, ...overrides });
+    };
+
+    it('says which rows the version drew on its first line, in full for a screen reader', () => {
+      renderCard({ version: viewed() });
+      const line = screen.getByTestId('result-view');
+      expect(line.firstElementChild?.firstElementChild).toHaveTextContent(
+        /^draws 10 of 248 rows · Jahr = 2024 · top 10 by Umsatz$/
+      );
+      expect(line.firstElementChild?.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+      expect(line).toHaveTextContent(
+        "This plot draws 10 of the data's 248 rows: Jahr = 2024; top 10 by Umsatz"
+      );
+      expect(
+        line.compareDocumentPosition(screen.getByTestId('result-image-box')) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+      // Without the page's handler the line is words alone: an older version, or a view no
+      // longer in force.
+      expect(screen.queryByRole('button', { name: /Show all rows/ })).not.toBeInTheDocument();
+    });
+
+    it('shows no line for a plot of every row', () => {
+      renderCard();
+      expect(screen.queryByTestId('result-view')).not.toBeInTheDocument();
+      expect(document.body).not.toHaveTextContent('.show_all()');
+    });
+
+    it('offers .show_all() where the page passes it, and holds it back while the session is busy', async () => {
+      const onShowAll = vi.fn();
+      const { rerender } = render(
+        <ResultCard
+          version={viewed()}
+          specId="scatter-basic"
+          language="python"
+          latest
+          busy
+          onRequestTheme={vi.fn()}
+          onFetchArtifact={vi.fn(async () => new Blob())}
+          onTrack={vi.fn()}
+          onShowAll={onShowAll}
+        />
+      );
+      const button = screen.getByRole('button', {
+        name: 'Show all rows: clear the view and draw the plot again',
+      });
+      expect(button).toHaveTextContent(/^\.show_all\(\)$/);
+      expect(button).toBeDisabled();
+      await userEvent.click(button);
+      expect(onShowAll).not.toHaveBeenCalled();
+
+      rerender(
+        <ResultCard
+          version={viewed()}
+          specId="scatter-basic"
+          language="python"
+          latest
+          busy={false}
+          onRequestTheme={vi.fn()}
+          onFetchArtifact={vi.fn(async () => new Blob())}
+          onTrack={vi.fn()}
+          onShowAll={onShowAll}
+        />
+      );
+      await userEvent.click(
+        screen.getByRole('button', {
+          name: 'Show all rows: clear the view and draw the plot again',
+        })
+      );
+      expect(onShowAll).toHaveBeenCalledTimes(1);
+    });
+
+    it('stands above what the version kept, as one block, on a phone under the image', () => {
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn((query: string) => ({
+          matches: query === '(max-width: 599.95px)',
+          media: query,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          onchange: null,
+          dispatchEvent: vi.fn(),
+        }))
+      );
+      renderCard({
+        version: viewed({
+          decisions: { kept: [{ id: 'm1', text: 'title in German' }], added: [] },
+        }),
+        onShowAll: vi.fn(),
+      });
+      const view = screen.getByTestId('result-view');
+      const decisions = screen.getByTestId('result-decisions');
+      const image = screen.getByTestId('result-image-box');
+      expect(image.compareDocumentPosition(view) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(
+        view.compareDocumentPosition(decisions) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+      expect(view.parentElement).toBe(decisions.parentElement);
+    });
+  });
+
   it('has no feedback control without onSendFeedback', () => {
     renderCard();
     expect(screen.queryByTestId('result-feedback')).not.toBeInTheDocument();

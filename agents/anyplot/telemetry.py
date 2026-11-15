@@ -225,11 +225,14 @@ MissingBucket = Literal["none", "lt5", "5_30", "gt30"]
 SpecFit = Literal["direct", "needs_reshape", "missing_role", "incompatible"]
 
 TurnKind = Literal["plot", "prep", "formula", "code", "example", "talk", "refused", "error"]
-TurnAction = Literal["text", "create_plot", "carry_plot", "plot_new_data", "summarize_data", "example_data"]
+TurnAction = Literal[
+    "text", "create_plot", "carry_plot", "plot_new_data", "show_all_rows", "summarize_data", "example_data"
+]
 """`carry_plot` (2026-11-02): the page's "plot in <library> with your decisions" after a switch (`switch.py`).
 `plot_new_data` (2026-11-08): the page's "plot the new data", from the latest version or the catalogue plot
-(`pipeline.new_data_base`). `example_data`: the page's `.example_data()`, the example data a session without data
-asks for in one click."""
+(`pipeline.new_data_base`). `show_all_rows`: the `.show_all()` on the card of a plot that drew a view of the plot,
+which clears the view and draws every row again. `example_data`: the page's `.example_data()`, the example data a
+session without data asks for in one click."""
 ToolName = Literal[
     "get_dataset_profile",
     "get_spec_brief",

@@ -182,7 +182,8 @@ export function cutRequest(text: string): string {
  * German`), by version: the typed request of the turn that made it, cut to 40 characters;
  * `.start_over()` for a plot that button made; for "plot the new data" where it started
  * (`newDataOf`, the plot's `new_data`: `new data on v3` from the library's version before it,
- * `NEW_DATA_FRESH_LABEL` from the catalogue plot); `first plot` for the first plot of its
+ * `NEW_DATA_FRESH_LABEL` from the catalogue plot), and for `.show_all()`, which starts the same
+ * way, `all rows on v3`; `first plot` for the first plot of its
  * library that no request asked for; else `null`, and the label names the version and the library
  * only. `libraryOf` gives a version's library.
  */
@@ -205,8 +206,11 @@ export function plotSummaries(
       if (opener.kind === 'user') summary = cutRequest(opener.text);
       else if (opener.kind === 'action' && opener.label === START_OVER_LABEL) {
         summary = START_OVER_LABEL;
-      } else if (newData === 'previous' && before !== undefined) summary = `new data on v${before}`;
-      else if (newData !== undefined && newData !== 'previous' && newData !== 'no_plot') {
+      } else if (newData === 'previous' && before !== undefined) {
+        // The same data through no view any more is no new data: `.show_all()` has its own words.
+        const allRows = opener.kind === 'action' && opener.action === 'show_all_rows';
+        summary = `${allRows ? 'all rows' : 'new data'} on v${before}`;
+      } else if (newData !== undefined && newData !== 'previous' && newData !== 'no_plot') {
         // From the catalogue plot: another paste or table, other bindings, or a first-plot note.
         summary = NEW_DATA_FRESH_LABEL;
       } else if (library !== undefined && before === undefined) summary = 'first plot';

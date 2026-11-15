@@ -10,10 +10,10 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `status` | `step: "started"` | the run queue, once, right after the last `queued` status, when the entry that waited holds its slot; the only end of the wait a turn without pipeline steps has before its reply. A turn that never waited, an expired or withdrawn wait, and a turn's second sandbox run send none |
 | `status` | `step`, `attempt`, `max_attempts`, and on `repairing` `outcome`, `findings`, `defects` | the pipeline's content-free `custom_metadata` progress events; `max_attempts` is the run's round cap (`AGENT_MAX_ATTEMPTS`), so the page counts "try 2 of 3" from the server; the step that opens a repair round says how the round before it ended (`RoundOutcome`, a count) and the rubric ids it repairs (`VQ-05`, closed codes) |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
-| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `memory`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `memory`, only with `version`, the plot memory the version stands on as entry ids, `{kept, added}` (the entries from before the run it kept, the ones it added; two empty lists for a session without memory), from the ledger (`shipped_memory`), set once the memory is settled with the version; `rounds`, how each attempt ended (`{attempt, outcome, findings, step, shipped, defects, gates_failed, sandbox_failures}`: the step it ended in, whether its render is the one shipped, the rubric ids it passed on to the repair, and the closed ids of the gates its renders failed and of a crash, which the page does not show) |
+| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `memory`, `view`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `memory`, only with `version`, the plot memory the version stands on as entry ids, `{kept, added}` (the entries from before the run it kept, the ones it added; two empty lists for a session without memory), from the ledger (`shipped_memory`), set once the memory is settled with the version; `view`, only with `version` too, the view of the plot the version drew its rows through (`{rows, of_rows, parts}`, from the ledger's `shipped_view`), absent for every row; `rounds`, how each attempt ended (`{attempt, outcome, findings, step, shipped, defects, gates_failed, sandbox_failures}`: the step it ended in, whether its render is the one shipped, the rubric ids it passed on to the repair, and the closed ids of the gates its renders failed and of a crash, which the page does not show) |
 | `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched), `other_library` (this plot in another library or language: a fixed pointer to the catalogue, not counted toward closing by default), `unsupported_content`, `locked_out` (past the day's `attack` strikes) and `session_closed` (the session's third counted refusal) from the scope guard, `budget` from the budgets (`service_paused` when only the service's day budget is spent, for every user); the refusal one before the closing one ends with the fixed `close_warning` sentence; right after `ready`, before the scope judge: `locked_out`, `budget` for a user over the daily budget, `service_paused` for everyone else once the service's day budget is spent, `rate_limited` or `daily_limit` past the user's message limits, `session_closed` in a closed session |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when a sandbox run found the queue full or waited its maximum; the turn ends there, without a `plot`), `run_limit` (the user already has `AGENT_USER_MAX_RUNS` sandbox runs queued or running in other sessions; the turn ends the same way), `deadline`, `no_reply` (the root wrote no reply, also when asked once more: `plugins/empty_reply.py`) or `internal` |
-| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set), `suggestion` (the `.to_long()` offer in the session language, or null, when the session has data) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset`, and last `turn` (`TurnOutcome`: `answer`, `data`, `plot`, `switch`, `language`, `kept` or `memory`) after a turn that ended without an error, a refusal or the user's stop | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) and `turn` (`turn_outcome`, from the ledger's record of the root's tool calls) |
+| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set), `suggestion` (the `.to_long()` offer in the session language, or null, when the session has data), `view` (the view of the plot in force, or null for every row, when the session has data) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset`, and last `turn` (`TurnOutcome`: `answer`, `data`, `plot`, `switch`, `language`, `kept` or `memory`) after a turn that ended without an error, a refusal or the user's stop | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) and `turn` (`turn_outcome`, from the ledger's record of the root's tool calls) |
 
 The route numbers every event on its way out (`id: <run_id>.<n>`, `agents/turn_log.py`) and keeps the
 session's latest turn, which `GET /v1/sessions/{sid}/turn` reads to the end for a page that lost the stream.
@@ -44,6 +44,7 @@ from google.adk.events.event import Event
 
 from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
+from agents.anyplot.plot_view import MAX_SELECTIONS
 from agents.anyplot.plugins.empty_reply import NO_REPLY, carries_answer
 from agents.anyplot.plugins.ledger import CallOutcome, RequestLedger
 from agents.anyplot.schemas import MEMORY_ENTRY_ID_PATTERN, RoundOutcome
@@ -63,6 +64,9 @@ always reaches the page."""
 NO_SUGGESTION: Any = object()
 """`Translator.done`'s default for `suggestion`: no data, so the event carries no `suggestion` key (a `null` one
 says that the data has no offer)."""
+NO_VIEW: Any = object()
+"""`Translator.done`'s default for `view`: no data, so the event carries no `view` key (a `null` one says that the
+plot draws every row of the data)."""
 MAX_DONE_ROLES = 50
 """The spec roles a `done` event's `dataset` lists at most. No catalogue spec comes near (a
 binding set holds at most 50 columns), but a role list has no bound of its own: one bullet
@@ -92,6 +96,8 @@ ROUND_OUTCOMES = frozenset(get_args(RoundOutcome))
 RUBRIC_ID = re.compile(r"[A-Z]{2}-[0-9]{2}")
 """A rubric id a repairing status names (`schemas.RubricId`)."""
 MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
+MAX_VIEW_PARTS = MAX_SELECTIONS + 1
+"""The parts of a view of the plot an event carries at most (`shown_view`): its selections and a top N."""
 MEMORY_ID = re.compile(MEMORY_ENTRY_ID_PATTERN)
 TurnOutcome = Literal["answer", "data", "plot", "switch", "language", "kept", "memory"]
 """What a turn changed, the `done` event's `turn` (`turn_outcome`)."""
@@ -150,6 +156,23 @@ def plot_memory(memory: dict[str, list[str]] | None) -> dict[str, list[str]] | N
 def _entry_ids(items: list[Any]) -> list[str]:
     """Plot memory entry ids (`m3`), closed by their pattern: never an entry's text."""
     return [item for item in items if isinstance(item, str) and MEMORY_ID.fullmatch(item)]
+
+
+def shown_view(view: Any, *, spec_id: str | None = None) -> dict[str, Any] | None:
+    """A view of the plot as the `plot` and `done` events carry it (`plot_view.Viewed.shown`), `{rows, of_rows,
+    parts}`, or None for anything else: the two counts, and the view's parts as one sanitised line each, since they
+    name the user's columns and values, as the same words do in the plot's `changes`."""
+    if not isinstance(view, dict):
+        return None
+    rows, of_rows, parts = view.get("rows"), view.get("of_rows"), view.get("parts")
+    if not _is_count(rows) or not _is_count(of_rows) or not isinstance(parts, list):
+        return None
+    lines = (plain_line(part, spec_id=spec_id) for part in parts[:MAX_VIEW_PARTS] if isinstance(part, str))
+    return {"rows": rows, "of_rows": of_rows, "parts": [line for line in lines if line]}
+
+
+def _is_count(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
 
 
 def sse(event: str, data: dict[str, Any]) -> str:
@@ -221,7 +244,8 @@ class Translator:
     def _plot(self, output: dict[str, Any]) -> dict[str, Any]:
         """The plot event: the allowlisted fields, the model-written lines sanitised to one plain line each.
 
-        `version` goes out only when the result was stored as a version, and `memory` (`plot_memory`) only with it;
+        `version` goes out only when the result was stored as a version, and with it alone `memory` (`plot_memory`)
+        and `view` (`shown_view`), the view of the plot the version drew its rows through, absent for every row;
         `new_data` only for the page's "plot the new data", where the card's label says where the plot started.
         """
         data = {key: output[key] for key in PLOT_FIELDS if key in output}
@@ -229,8 +253,11 @@ class Translator:
             data.pop("new_data", None)
         if not isinstance(data.get("version"), int):
             data.pop("version", None)
-        elif (memory := plot_memory(self.ledger.shipped_memory)) is not None:
-            data["memory"] = memory
+        else:
+            if (memory := plot_memory(self.ledger.shipped_memory)) is not None:
+                data["memory"] = memory
+            if (view := shown_view(self.ledger.shipped_view, spec_id=self.spec_id)) is not None:
+                data["view"] = view
         for key in MODEL_WRITTEN_FIELDS:
             if isinstance(data.get(key), list):
                 lines = (plain_line(item, spec_id=self.spec_id) for item in data[key] if isinstance(item, str))
@@ -276,6 +303,7 @@ class Translator:
         dataset: dict[str, Any] | None = None,
         language: dict[str, Any] | None = None,
         suggestion: object = NO_SUGGESTION,
+        view: object = NO_VIEW,
         switch: dict[str, Any] | None = None,
         turn: TurnOutcome | None = None,
     ) -> str:
@@ -294,6 +322,9 @@ class Translator:
         chip follows it. `suggestion` is the wide-table offer (`.to_long()`) as the dataset route answers it, or
         `null` for none, after every run on a session with data: its new column names follow the session
         language, which the turn may have changed, so the page's card always names what `.to_long()` applies.
+        `view` is the view of the plot in force (`shown_view`: the rows the next plot draws of the table's, and the
+        view's parts), or `null` for every row, after every run on a session with data: the turn's `prepare_data`
+        may have set, changed or cleared it without a plot, and the page says by the data what the plot draws.
         `switch` is `{library, plot}` after a turn whose root asked for a switch the user wanted in the chat
         (`switch_plot`, 2026-11-02): the page carries it out with the switch route and, with `plot`, the carry run.
         `turn` is what the turn changed (`turn_outcome`), after a turn that ended without an error, a refusal or the
@@ -313,6 +344,8 @@ class Translator:
             payload["language"] = language
         if suggestion is not NO_SUGGESTION:
             payload["suggestion"] = suggestion
+        if view is not NO_VIEW:
+            payload["view"] = shown_view(view, spec_id=self.spec_id)
         if switch is not None:
             payload["switch"] = switch
         if turn is not None:

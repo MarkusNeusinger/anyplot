@@ -181,6 +181,12 @@ interface ChatThreadProps {
   /** The result cards' quick feedback; without it they show no control. */
   onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
   /**
+   * `.show_all()` on the newest plot's view line (`ResultCard`'s `onShowAll`), while the page
+   * offers it: only that card gets it, and only while it is a plot in the library in use, since
+   * the run redraws this library's plot.
+   */
+  onShowAll?: () => void;
+  /**
    * The card at a `data` item, with the version it shows (`snapshot`), or at the `transcription`
    * item that waits (`DataPanel`).
    */
@@ -461,6 +467,11 @@ function Item({
           onTrack={props.onTrack}
           onOutcome={props.onOutcome}
           onSendFeedback={props.onSendFeedback}
+          onShowAll={
+            version.number === latestVersion && version.library === props.state.library
+              ? props.onShowAll
+              : undefined
+          }
         />
       );
     }

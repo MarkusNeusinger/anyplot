@@ -3907,6 +3907,99 @@ describe("agentReducer: a new data version and the switch's offer", () => {
   });
 });
 
+describe('the view of the plot by the data', () => {
+  const VIEW = { rows: 10, of_rows: 248, parts: ['Jahr = 2024', 'top 10 by Umsatz'] };
+  const ready: AgentSessionState = {
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+  };
+  const pasted = (state: AgentSessionState) =>
+    agentReducer(state, {
+      type: 'parse_done',
+      parsed: DATASET as unknown as DatasetParsed,
+      bytes: 10,
+      chip: '▤ table',
+    });
+
+  it("takes the view a turn's done names, and every row for null", () => {
+    const viewed = agentReducer(pasted(ready), { type: 'view_sync', view: VIEW });
+    expect(viewed.plotView).toEqual(VIEW);
+    expect(agentReducer(viewed, { type: 'view_sync', view: null }).plotView).toBeNull();
+  });
+
+  it('loses the view to a paste, as the server writes it out of the session', () => {
+    const viewed = agentReducer(pasted(ready), { type: 'view_sync', view: VIEW });
+    expect(pasted(viewed).plotView).toBeNull();
+  });
+
+  it("keeps it through a turn's data change, whose done names the view right after", () => {
+    const viewed = agentReducer(pasted(ready), { type: 'view_sync', view: VIEW });
+    const changed = agentReducer(viewed, {
+      type: 'data_prepared',
+      dataset: PREPARED as unknown as DatasetChanged,
+    });
+    expect(changed.plotView).toEqual(VIEW);
+  });
+
+  it("takes an undo's and a .to_long()'s word on whether the view still holds", () => {
+    const viewed = agentReducer(pasted(ready), { type: 'view_sync', view: VIEW });
+    const fewer = { ...VIEW, of_rows: 300 };
+    const undone = agentReducer(viewed, {
+      type: 'undo_done',
+      parsed: { ...DATASET, view: fewer } as unknown as DatasetParsed,
+    });
+    expect(undone.plotView).toEqual(fewer);
+    const gone = agentReducer(viewed, {
+      type: 'undo_done',
+      parsed: { ...DATASET, view: null } as unknown as DatasetParsed,
+    });
+    expect(gone.plotView).toBeNull();
+    // An older server names none: the page keeps what it shows.
+    const silent = agentReducer(viewed, {
+      type: 'undo_done',
+      parsed: DATASET as unknown as DatasetParsed,
+    });
+    expect(silent.plotView).toEqual(VIEW);
+    const long = agentReducer(viewed, {
+      type: 'data_prepared',
+      dataset: { ...PREPARED, view: null } as unknown as DatasetChanged,
+      toLong: true,
+    });
+    expect(long.plotView).toBeNull();
+  });
+
+  it("reads a turn's view from done, and .show_all() sends its own action", async () => {
+    const routes = baseRoutes();
+    const turns: unknown[] = [];
+    routes['POST /sessions/S1/messages'] = () => {
+      const first = turns.length === 0;
+      turns.push(first);
+      return sse([
+        ['plot', { ...PLOT_OK, version: first ? 1 : 2, ...(first ? { view: VIEW } : {}) }],
+        ['done', { view: first ? VIEW : null }],
+      ]);
+    };
+    const { result } = await openSession(routes);
+
+    await act(() => result.current.createPlot());
+    expect(result.current.state.plotView).toEqual(VIEW);
+    expect(result.current.state.versions[1].result.view).toEqual(VIEW);
+
+    await act(() => result.current.showAllRows('.show_all()'));
+    const sent = calls.filter(call => call.path.endsWith('/messages')).map(call => call.body);
+    expect(sent).toEqual([{ action: 'create_plot' }, { action: 'show_all_rows' }]);
+    expect(result.current.state.plotView).toBeNull();
+    expect(result.current.state.versions[2].result.view).toBeUndefined();
+    // The thread shows the click under the button's name.
+    const clicks = result.current.state.items.filter(item => item.kind === 'action');
+    expect(clicks[clicks.length - 1]).toMatchObject({
+      action: 'show_all_rows',
+      label: '.show_all()',
+    });
+  });
+});
+
 describe("agentReducer: the run's clock", () => {
   const ready: AgentSessionState = {
     ...initialAgentState('matplotlib'),
