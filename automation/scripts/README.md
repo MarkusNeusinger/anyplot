@@ -131,7 +131,10 @@ record's `why`:
 With `--review-skipped` and no score, it merges on the route before the score
 checks. A merge whose predecessor passes and whose new source fails becomes keep
 with `adapt_regression`, and so does one whose predecessor passes the static
-check with an unknown smoke run while the new source fails the static check. `adapt-route` writes `adapt_route`, `adapt_why`,
+check with an unknown smoke run while the new source fails the static check.
+With `--readiness`, the verdict file of `readiness_record.py`, a merge also
+becomes keep with `readiness_regression` when that verdict is `regression`;
+every other status changes nothing. `adapt-route` writes `adapt_route`, `adapt_why`,
 `adapt_prev`, and `adapt_new` before the review, and always exits 0. impl-review
 passes that result back to `decide` as `--adapt-route-held`. The record gains
 `adapt` (`AdaptAssessment.to_record`, checked by `validate_record`), with
@@ -235,10 +238,21 @@ and `impl-repair.yml` run it in "Readiness scan (record-only)" from a copy at
 the workflow's ref, next to a bare copy of the validator
 (`agents/anyplot/code`, its two schema modules, and `core/`, with empty
 `agents/__init__.py` files), so nothing of the agent runtime is imported. It
-reads the files and never runs them, writes `adapt/readiness.json`, and exits
-0 for every verdict; it stops only when a validator module comes from outside
-its own tree. See
+reads the files and never runs them, writes `adapt/readiness.json` with the
+render hash of both files, and exits 0 for every verdict; it stops only when a
+validator module comes from outside its own tree. See
 [Readiness scan](../../docs/workflows/overview.md#readiness-scan-record-only).
+
+### `readiness_record.py`
+Reads the staged `adapt/readiness.json` against the code under review
+(`impl-review.yml`, "Readiness check"). The record must be the scanner's and
+name the render hash of the implementation at the PR head and of the one on
+`origin/main`; the regression is recomputed from its refusal keys. The script
+reports `regression`, `none`, `first_generation`, `excluded`, `unreadable`,
+`stale`, `invalid`, or `missing`, prints a `readiness_check` line, and writes
+the verdict file that `regen_gate.py decide --readiness` reads. Stdlib only,
+and it exits 0 for every status. See
+[Readiness check and the readiness regression](../../docs/workflows/overview.md#readiness-check-and-the-readiness-regression).
 
 ### `spec_characteristics_lint.py`
 Lint for the closing `## What a good version looks like` section of

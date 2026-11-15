@@ -7,9 +7,16 @@ target (``agents/anyplot/code/readiness.py``). A regeneration or a repair can
 add a construct the validator refuses and so turn a pair the chat could use
 into one it refuses, while the render gets better. This script scans the new
 file and the predecessor with that validator and records what the new file
-adds (rule step P2b, the readiness-regression gate). Record-only for now: it
-prints one line, writes a job-summary line and a record, and exits 0 for
-every verdict.
+adds (rule step P2b, the readiness-regression gate). The scan itself gates
+nothing: it prints one line, writes a job-summary line and a record, and exits
+0 for every verdict. ``impl-review.yml`` reads the record
+(``readiness_record.py``), and on a gated regeneration a regression there
+keeps the live implementation (``regen_gate.py``, ``readiness_regression``).
+
+The record carries the hash of each file it scanned (``new_sha256``,
+``prev_sha256``; the render hash of ``render_hash.py``, which ignores the
+header score). The reader compares them with the implementation at the PR head
+and on ``origin/main``, so a record of other code never decides anything.
 
 A *refusal key* names why the validator blocks a file: ``security:<rule>`` for
 every rule of the SECURITY profile the file breaks, read from the validator's
@@ -31,7 +38,8 @@ Python only: the profiles of R, Julia and JavaScript need tree-sitter grammars
 that the generate and repair jobs do not carry.
 
 ``impl-generate.yml`` and ``impl-repair.yml`` run a copy from the workflow's
-own ref, next to a bare copy of the validator (``agents/anyplot/code``, the
+own ref, next to ``render_hash.py`` and ``regen_gate.py`` (the hash) and a
+bare copy of the validator (``agents/anyplot/code``, the
 two schema modules it imports, and ``core/``). The step puts empty
 ``__init__.py`` files into ``agents/`` and ``agents/anyplot/`` there: the real
 ones import the agent runtime, and without any the two would be namespace
@@ -54,7 +62,15 @@ import sys
 from pathlib import Path
 
 
-RECORD_VERSION = 1
+if __package__:  # imported as automation.scripts.readiness_scan (tests, local tools)
+    from automation.scripts import render_hash
+else:  # run as a script: the render_hash.py next to this file (the workflow-ref copy)
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import render_hash
+
+
+# 2: the record names the hash of both scanned files.
+RECORD_VERSION = 2
 TREE = Path(__file__).resolve().parents[2]
 _TOKEN = re.compile(r"^[a-z][a-z0-9-]*$")
 
@@ -124,9 +140,24 @@ def scan_side(code: str, *, spec_id: str, library: str) -> dict:
     return _side("blocked", refusals=keys, spec_refused=map_spec, findings=counts)
 
 
-def build_record(new: str | None, prev: str | None, *, spec_id: str, library: str) -> dict:
-    """The record of one scan: both sides, the keys the new file adds and drops, and the verdict."""
-    record: dict = {"version": RECORD_VERSION, "spec_id": spec_id, "library": library, "language": "python"}
+def build_record(
+    new: str | None,
+    prev: str | None,
+    *,
+    spec_id: str,
+    library: str,
+    new_sha256: str | None = None,
+    prev_sha256: str | None = None,
+) -> dict:
+    """The record of one scan: both sides with their hashes, the keys the new file adds and drops, and the verdict."""
+    record: dict = {
+        "version": RECORD_VERSION,
+        "spec_id": spec_id,
+        "library": library,
+        "language": "python",
+        "new_sha256": new_sha256 if new is not None else None,
+        "prev_sha256": prev_sha256 if prev is not None else None,
+    }
     new_side = None if new is None else scan_side(new, spec_id=spec_id, library=library)
     prev_side = None if prev is None or new_side is None else scan_side(prev, spec_id=spec_id, library=library)
     added: list[str] = []
@@ -186,8 +217,25 @@ def _read(path: str | None) -> str | None:
         return None
 
 
+def _digest(path: str | None) -> str | None:
+    """The render hash of a file's bytes (``render_hash.render_hash``), or None when it cannot be read."""
+    if not path:
+        return None
+    try:
+        return render_hash.render_hash(Path(path).read_bytes())
+    except OSError:
+        return None
+
+
 def cmd_scan(args: argparse.Namespace) -> int:
-    record = build_record(_read(args.new), _read(args.prev), spec_id=args.spec_id, library=args.library)
+    record = build_record(
+        _read(args.new),
+        _read(args.prev),
+        spec_id=args.spec_id,
+        library=args.library,
+        new_sha256=_digest(args.new),
+        prev_sha256=_digest(args.prev),
+    )
     print(log_line(record))
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:

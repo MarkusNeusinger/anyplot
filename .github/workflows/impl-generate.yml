@@ -1382,8 +1382,12 @@ jobs:
       # the workspace, which the generator wrote, off the import path; and the
       # implementation is read, never run. The record
       # lands beside the smoke run in $RUNNER_TEMP/adapt, which "Upload to GCS
-      # Staging" stages under adapt/. Record-only: no exit code gates. The
-      # other languages' profiles need tree-sitter grammars this job lacks.
+      # Staging" stages under adapt/. It names the hash of both scanned files
+      # (render_hash.py), which is how impl-review knows it is of the code
+      # under review; on a gated regeneration a regression there keeps the
+      # live implementation (impl-review.yml "Readiness check"). Record-only
+      # in this job: no exit code gates. The other languages' profiles need
+      # tree-sitter grammars this job lacks.
       - name: Readiness scan (record-only)
         if: steps.inputs.outputs.language == 'python'
         continue-on-error: true
@@ -1399,7 +1403,8 @@ jobs:
           PREV="$RUNNER_TEMP/readiness-prev-source"
           rm -rf "$TOOLS" "$PREV" "$OUT/readiness.json"; mkdir -p "$OUT" "$TOOLS"
           if ! git archive "$GITHUB_SHA" agents/anyplot/code agents/anyplot/schemas.py agents/anyplot/language.py \
-                 core automation/scripts/readiness_scan.py | tar -x -C "$TOOLS" \
+                 core automation/scripts/readiness_scan.py automation/scripts/render_hash.py \
+                 automation/scripts/regen_gate.py | tar -x -C "$TOOLS" \
              || [ ! -f "$TOOLS/automation/scripts/readiness_scan.py" ]; then
             echo "::warning::readiness_scan could not copy the validator from ${GITHUB_SHA}; no readiness record is staged"
             exit 0

@@ -334,13 +334,13 @@ jobs:
           # same reason: a PR head must not choose the rules it is checked by.
           # So does the JavaScript header writer (impl_header.py), which
           # "Update metadata and implementation header" imports, the
-          # render-hash check and the contract check.
+          # render-hash check, the contract check and the readiness check.
           mkdir -p "$RUNNER_TEMP/regen-tools"
           cp automation/scripts/regen_gate.py automation/scripts/close_issue_if_complete.py \
              automation/scripts/review_provenance.py automation/scripts/regen_writeback.py \
              automation/scripts/adaptability_check.py automation/scripts/adapt_record.py \
              automation/scripts/impl_header.py automation/scripts/render_hash.py \
-             automation/scripts/contract_check.py \
+             automation/scripts/contract_check.py automation/scripts/readiness_record.py \
              "$RUNNER_TEMP/regen-tools/"
           # The reviewer's step-10 self-check (`check-feedback`) runs this
           # same workflow-ref copy of the gate.
@@ -975,6 +975,47 @@ jobs:
           # Last write of the step (see above).
           echo "review_skipped=${REVIEW_SKIPPED}" >> "$GITHUB_OUTPUT"
 
+      # The readiness record impl-generate or impl-repair staged
+      # (adapt/readiness.json, which the step above downloaded): what the
+      # agent chat's validator refuses in the new file and in its predecessor
+      # (automation/scripts/readiness_scan.py). This step reads it against the
+      # code under review (readiness_record.py): the record must name the
+      # hash of the implementation at the PR head and of the one on
+      # origin/main, and the regression is recomputed from its refusal keys.
+      # The verdict goes to $RUNNER_TEMP/readiness-verdict.json, where only
+      # the regen gate reads it: on a gated regeneration the status
+      # `regression` keeps the live implementation (readiness_regression).
+      # Every other status changes nothing: a missing, stale or malformed
+      # record never refuses, and outside the regen gate the line is a record
+      # only. Never a raw `exit 1` (see "Canvas dimension gate"). Python only,
+      # like the scan. The predecessor's header holds its stored score, so
+      # both copies live under $RUNNER_TEMP, outside the reviewer's /tmp/*
+      # reads, and go right after the check.
+      - name: Readiness check
+        if: steps.lang.outputs.language == 'python'
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+        run: |
+          NEW="$RUNNER_TEMP/readiness-head-source"
+          PREV="$RUNNER_TEMP/readiness-main-source"
+          VERDICT="$RUNNER_TEMP/readiness-verdict.json"
+          # A verdict of an earlier run must never stand in for this one's.
+          rm -f "$NEW" "$PREV" "$VERDICT"
+          IMPL="plots/${SPEC_ID}/implementations/python/${LIBRARY}.py"
+          git show "${HEAD_SHA}:${IMPL}" > "$NEW" 2>/dev/null || rm -f "$NEW"
+          git show "origin/main:${IMPL}" > "$PREV" 2>/dev/null || rm -f "$PREV"
+          if ! python3 "$RUNNER_TEMP/regen-tools/readiness_record.py" check \
+               --record "$RUNNER_TEMP/adapt/readiness.json" --new "$NEW" --prev "$PREV" \
+               --spec-id "$SPEC_ID" --library "$LIBRARY" --out "$VERDICT"; then
+            echo "::warning::readiness check did not run; the regen gate decides without it"
+            rm -f "$VERDICT"
+          fi
+          rm -f "$NEW" "$PREV"
+
       - name: React with eyes emoji
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -1528,6 +1569,9 @@ jobs:
           [ -s "$RUNNER_TEMP/adapt/pair.json" ] && ADAPT+=(--adapt-pair "$RUNNER_TEMP/adapt/pair.json")
           [ "$REVIEW_SKIPPED" = "true" ] && ADAPT+=(--review-skipped)
           [ "$ADAPT_ROUTE" = "true" ] && ADAPT+=(--adapt-route-held)
+          # The verdict of "Readiness check": a regression there turns a merge
+          # into keep (readiness_regression). No file, no check.
+          [ -s "$RUNNER_TEMP/readiness-verdict.json" ] && ADAPT+=(--readiness "$RUNNER_TEMP/readiness-verdict.json")
           if ! python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" decide \
                --spec-id "$SPEC_ID" --library "$LIBRARY" \
                --score "$SCORE" --prev-stored "$PREV_STORED" \
@@ -1598,6 +1642,7 @@ jobs:
           cp -r "$RUNNER_TEMP/adapt/." "$DIR/adapt/" 2>/dev/null || true
           rm -rf "$DIR/adapt/prev-src"
           cp /tmp/anyplot-adapt-new.json /tmp/anyplot-adapt-prev.json "$DIR/adapt/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/readiness-verdict.json" "$DIR/adapt/" 2>/dev/null || true
           MAIN_SHA=$(git rev-parse -q --verify origin/main 2>/dev/null || echo "")
           jq -n --arg pr "$PR_NUM" --arg head "$HEAD_SHA" --arg main "$MAIN_SHA" --arg spec "$SPEC_ID" \
              --arg lib "$LIBRARY" --arg lang "$LANGUAGE" --arg ext "$EXT" --arg model "$MODEL_ID" \

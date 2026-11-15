@@ -2140,6 +2140,7 @@ class TestRecordCounts:
                 "at",
                 "writeback",
                 "adapt",
+                "readiness",
             }
         )
 

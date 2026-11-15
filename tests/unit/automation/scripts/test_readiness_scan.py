@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from automation.scripts import readiness_scan
+from automation.scripts import readiness_scan, render_hash
 from automation.scripts.readiness_scan import build_record, log_line, scan_side, summary_line
 
 
@@ -220,7 +220,29 @@ def test_a_record_holds_identifiers_only():
     record = _record(MANY, BANNED_NAME)
     text = json.dumps(record)
     assert "example.com" not in text and "notes.txt" not in text and "socket" not in text
-    assert set(record) == {"version", "spec_id", "library", "language", "verdict", "new", "prev", "added", "removed"}
+    assert set(record) == {
+        "version",
+        "spec_id",
+        "library",
+        "language",
+        "new_sha256",
+        "prev_sha256",
+        "verdict",
+        "new",
+        "prev",
+        "added",
+        "removed",
+    }
+
+
+def test_the_record_names_the_hash_of_each_file_it_was_given_one_for():
+    """The reader ties a record to the code under review by these two; a side that was not read has none."""
+    record = build_record(BANNED_NAME, CLEAN, spec_id=SPEC, library=LIB, new_sha256="a" * 64, prev_sha256="b" * 64)
+    assert (record["new_sha256"], record["prev_sha256"]) == ("a" * 64, "b" * 64)
+    first = build_record(CLEAN, None, spec_id=SPEC, library=LIB, new_sha256="a" * 64, prev_sha256="b" * 64)
+    assert (first["new_sha256"], first["prev_sha256"]) == ("a" * 64, None)
+    nothing = build_record(None, CLEAN, spec_id=SPEC, library=LIB, new_sha256="a" * 64, prev_sha256="b" * 64)
+    assert nothing["new_sha256"] is None and nothing["verdict"] == "unreadable"
 
 
 # --- the command, as the workflows run it ----------------------------------------------------------
@@ -299,7 +321,10 @@ def test_the_bare_copy_scans_without_the_agent_runtime(tmp_path, workflow):
     )
     assert (workspace / "summary").read_text(encoding="utf-8").startswith("**Readiness (record-only):** regression: ")
     record = json.loads((workspace / "r.json").read_text(encoding="utf-8"))
-    assert record["version"] == 1 and record["verdict"] == "regression"
+    assert record["version"] == 2 and record["verdict"] == "regression"
+    # The copy's own render_hash.py and regen_gate.py made the two hashes, of the files' bytes.
+    assert record["new_sha256"] == render_hash.render_hash(BANNED_IMPORT.encode())
+    assert record["prev_sha256"] == render_hash.render_hash(CLEAN.encode())
 
 
 HOSTILE = 'raise SystemExit("a foreign agents package was imported")\n'
@@ -380,6 +405,24 @@ def test_scan_prints_the_line_and_writes_the_summary_and_the_record(tmp_path, mo
     )
     record = json.loads((tmp_path / "r.json").read_text(encoding="utf-8"))
     assert record["added"] == ["security:banned-name"] and record["new"]["findings"] == {"banned-name": 1}
+    assert record["new_sha256"] == render_hash.render_hash(BANNED_NAME.encode())
+    assert record["prev_sha256"] == render_hash.render_hash(CLEAN.encode())
+
+
+def test_the_hash_is_of_the_files_bytes_and_ignores_the_header_score(tmp_path):
+    r"""impl-review compares it with `git show`, which hands out bytes: a `\r\n` file must hash as it is stored.
+
+    The predecessor on main carries its stored score and the pushed file `pending`; both hash alike.
+    """
+    scored = CLEAN.replace("Quality: pending", "Quality: 87/100")
+    (tmp_path / "new.py").write_bytes(CLEAN.replace("\n", "\r\n").encode())
+    (tmp_path / "prev.py").write_text(scored, encoding="utf-8")
+    arguments = ["scan", "--new", str(tmp_path / "new.py"), "--prev", str(tmp_path / "prev.py")]
+    readiness_scan.main([*arguments, "--spec-id", SPEC, "--library", LIB, "--out", str(tmp_path / "r.json")])
+    record = json.loads((tmp_path / "r.json").read_text(encoding="utf-8"))
+    assert record["new_sha256"] == render_hash.render_hash(CLEAN.replace("\n", "\r\n").encode())
+    assert record["new_sha256"] != render_hash.render_hash(CLEAN.encode())
+    assert record["prev_sha256"] == render_hash.render_hash(CLEAN.encode())
 
 
 @pytest.mark.parametrize("content", [None, b"\xff\xfe not utf-8"], ids=["missing", "not-utf-8"])
