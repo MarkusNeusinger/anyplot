@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-adjacency: Network Adjacency Matrix Heatmap
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Created: 2026-05-08
@@ -14,7 +14,9 @@ if sys.path and sys.path[0] == os.path.dirname(__file__):
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 from scipy.cluster.hierarchy import leaves_list, linkage
 from scipy.spatial.distance import squareform
 
@@ -25,6 +27,12 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint single-polarity ramp for edge weight: green (weak) to blue (strong)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", [IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]])
 
 sns.set_theme(
     style="ticks",
@@ -43,89 +51,76 @@ sns.set_theme(
     },
 )
 
-# Data — corporate social network with 3 departments
-np.random.seed(42)
+# Columns: set these to your labels
+NODE = "Node"  # role: source
+TARGET = "Connected node"  # role: target
+WEIGHT = "Connection strength"  # role: weight
 
+# Data: replace this block with your own labeled square matrix, for example
+# df = pd.read_csv("adjacency.csv", index_col=0)  (rows and columns carry the same node names)
+rng = np.random.default_rng(42)
 communities = {
     "Research": [f"R{i:02d}" for i in range(1, 10)],
     "Marketing": [f"M{i:02d}" for i in range(1, 9)],
     "Engineering": [f"E{i:02d}" for i in range(1, 9)],
 }
-nodes = [n for group in communities.values() for n in group]
-n = len(nodes)
-node_idx = {name: i for i, name in enumerate(nodes)}
+names = [name for members in communities.values() for name in members]
+group_of = {name: group for group, members in communities.items() for name in members}
+adj = np.zeros((len(names), len(names)))
+for i in range(len(names)):
+    for j in range(i + 1, len(names)):
+        if group_of[names[i]] == group_of[names[j]]:
+            # within a department: dense, strong ties
+            if rng.random() < 0.78:
+                adj[i, j] = adj[j, i] = rng.uniform(0.5, 1.0)
+        elif rng.random() < 0.12:
+            # across departments: sparse, weak ties
+            adj[i, j] = adj[j, i] = rng.uniform(0.08, 0.30)
+df = pd.DataFrame(adj, index=pd.Index(names, name=NODE), columns=pd.Index(names, name=NODE))
 
-adj = np.zeros((n, n))
-
-# Within-community: dense, high-weight connections
-for group_nodes in communities.values():
-    members = list(group_nodes)
-    for i in range(len(members)):
-        for j in range(i + 1, len(members)):
-            if np.random.rand() < 0.78:
-                w = np.random.uniform(0.5, 1.0)
-                u, v = node_idx[members[i]], node_idx[members[j]]
-                adj[u, v] = adj[v, u] = w
-
-# Cross-community: sparse, low-weight connections
-group_list = list(communities.values())
-for gi in range(len(group_list)):
-    for gj in range(gi + 1, len(group_list)):
-        for u_name in group_list[gi]:
-            for v_name in group_list[gj]:
-                if np.random.rand() < 0.12:
-                    w = np.random.uniform(0.08, 0.30)
-                    u, v = node_idx[u_name], node_idx[v_name]
-                    adj[u, v] = adj[v, u] = w
-
-# Reorder nodes by hierarchical clustering to expose block-diagonal structure
-dist = 1.0 - adj
+# Plot: reads only df and the constants above
+# Reorder nodes by hierarchical clustering so communities form diagonal blocks
+size = min(df.shape)  # rows and columns are the same nodes in the same order
+matrix = df.iloc[:size, :size].fillna(0)
+matrix.columns = matrix.index
+strength = matrix.to_numpy() / max(np.nanmax(matrix.to_numpy()), 1e-12)
+dist = 1.0 - (strength + strength.T) / 2
 np.fill_diagonal(dist, 0)
-condensed = squareform(dist)
-Z = linkage(condensed, method="ward")
-order = leaves_list(Z)
-nodes_ordered = [nodes[i] for i in order]
-adj_ordered = adj[np.ix_(order, order)]
+order = leaves_list(linkage(squareform(dist, checks=False), method="ward"))
+ordered = matrix.iloc[order, order]
 
-# Plot
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
-
-mask = adj_ordered == 0
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 
 sns.heatmap(
-    adj_ordered,
-    mask=mask,
-    cmap="viridis",
+    ordered,
+    mask=ordered == 0,  # absent edges show the page background, distinct from any weak edge
+    cmap=imprint_seq,
     vmin=0,
-    vmax=1.0,
+    vmax=np.ceil(np.nanmax(ordered.to_numpy()) * 10) / 10,
     ax=ax,
-    xticklabels=nodes_ordered,
-    yticklabels=nodes_ordered,
+    xticklabels=True,
+    yticklabels=True,
     linewidths=0,
     square=True,
-    cbar_kws={"label": "Connection Strength", "shrink": 0.75, "pad": 0.02},
+    cbar_kws={"shrink": 0.8, "pad": 0.02},
 )
 
-# Style colorbar
 cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=14, colors=INK_SOFT)
-cbar.set_label("Connection Strength", fontsize=16, color=INK)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.set_label(WEIGHT, fontsize=10, color=INK)
 cbar.outline.set_edgecolor(INK_SOFT)
 
-# Labels and title
-ax.set_xlabel("Node", fontsize=20, color=INK, labelpad=12)
-ax.set_ylabel("Node", fontsize=20, color=INK, labelpad=12)
-ax.set_title("heatmap-adjacency · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+ax.set_title("heatmap-adjacency · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
+ax.set_xlabel(NODE, fontsize=10, color=INK, labelpad=6)
+ax.set_ylabel(TARGET, fontsize=10, color=INK, labelpad=6)
+ax.tick_params(axis="both", labelsize=6.5, colors=INK_SOFT, length=2)
+plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+plt.setp(ax.get_yticklabels(), rotation=0)
 
-ax.tick_params(axis="both", labelsize=11, colors=INK_SOFT)
-ax.tick_params(axis="x", rotation=45)
-ax.tick_params(axis="y", rotation=0)
+for side in ("top", "right"):
+    ax.spines[side].set_visible(False)
+for side in ("left", "bottom"):
+    ax.spines[side].set_color(INK_SOFT)
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for s in ("left", "bottom"):
-    ax.spines[s].set_color(INK_SOFT)
-
-# Save
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.1, right=0.95, top=0.93, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
