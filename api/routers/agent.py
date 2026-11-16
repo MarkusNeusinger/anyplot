@@ -182,7 +182,7 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "status": frozenset({"step", "attempt", "max_attempts", "outcome", "findings", "defects", "position", "waiting"}),
     "message": frozenset({"text"}),
     # `version` is the agents service's number of the stored version (ok and needs_attention only), and `memory`
-    # (`{kept, added}`, plot memory entry ids) the decisions that version stands on, only with it;
+    # (`{kept, added, unused}`, plot memory entry ids) the decisions that version stands on, only with it;
     # `rounds` lists how each attempt ended (`{attempt, outcome, findings}`), for the page's progress grid; `new_data`
     # where "plot the new data" started (`previous`, or a closed reason for the catalogue plot), only on its plot;
     # `view` (`{rows, of_rows, parts}`) the view of the plot that version drew its rows through, absent for every row.

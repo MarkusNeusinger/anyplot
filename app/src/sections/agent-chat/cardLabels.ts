@@ -109,13 +109,17 @@ export function plotViewText(view: ShownView, where: 'plot' | 'data'): CardLabel
 }
 
 /**
- * One part of a plot card's decisions line: `kept: y = 7 line · x label` or `new: log scale on
- * y`, each text cut as a label quotes a request (`cutRequest`), and in words with the full texts;
- * `null` for an empty list. A decision whose text no list named counts all the same, as `1 more`
- * after the texts (`kept: 3 decisions` when none has one), so the line names every decision the
- * server listed for the version.
+ * One part of a plot card's decisions line: `kept: y = 7 line · x label`, `new: log scale on y`
+ * or `not used: title 'Q3'` (a remembered decision whose text the plot does not draw, which stays
+ * remembered), each text cut as a label quotes a request (`cutRequest`), and in words with the
+ * full texts; `null` for an empty list. A decision whose text no list named counts all the same,
+ * as `1 more` after the texts (`kept: 3 decisions` when none has one), so the line names every
+ * decision the server listed for the version.
  */
-export function decisionsText(part: 'kept' | 'new', list: VersionDecision[]): CardLabel | null {
+export function decisionsText(
+  part: 'kept' | 'new' | 'not used',
+  list: VersionDecision[]
+): CardLabel | null {
   if (list.length === 0) return null;
   const texts = list.flatMap(item => (item.text === null ? [] : [item.text]));
   const unnamed = list.length - texts.length;
