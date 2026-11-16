@@ -644,8 +644,9 @@ jobs:
           STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
 
           # The render.sha256 of the code before the repair goes before the new
-          # renders arrive, so it can never sit beside them; the repaired
-          # file's is written last, by the next step.
+          # renders arrive, so it does not sit beside them; the repaired
+          # file's is written last, by the next step. Best effort: see the
+          # removal in that step.
           gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
 
           # Upload both theme PNGs + their responsive variants
@@ -739,7 +740,11 @@ jobs:
             echo "::notice::Staged render.sha256"
             exit 0
           fi
-          # Never leave half a file, or the hash of other code, beside the renders.
+          # Do not leave half a file, or the hash of other code, beside the
+          # renders. Best effort, like the removal before the upload: nothing
+          # rests on it. A hash that survives both is compared with the PR
+          # head like any other, so the hash of the code before the repair
+          # stops the re-review as a mismatch.
           gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
           echo "::error::render.sha256 not staged (${WHY}): the review would stop on renders without a hash, so this repair fails before its re-review"
           exit 1

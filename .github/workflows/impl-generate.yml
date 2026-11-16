@@ -1634,8 +1634,8 @@ jobs:
           fi
 
           # A render.sha256 from an earlier run goes before the new renders
-          # arrive, so it can never sit beside them; this run's is written last,
-          # by the next step.
+          # arrive, so it does not sit beside them; this run's is written last,
+          # by the next step. Best effort: see the removal in that step.
           gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
 
           # Upload all plot images for both themes (originals + responsive variants)
@@ -1711,7 +1711,11 @@ jobs:
             echo "::notice::Staged render.sha256"
             exit 0
           fi
-          # Never leave half a file, or another run's hash, beside the renders.
+          # Do not leave half a file, or another run's hash, beside the renders.
+          # Best effort, like the removal before the upload: nothing rests on
+          # it. A hash that survives both is compared with the PR head like
+          # any other, so the hash of other code stops the review as a
+          # mismatch, and only the hash of this very code lets it run.
           gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
           echo "::error::render.sha256 not staged (${WHY}): the review would stop on renders without a hash, so this run fails and the pair is generated again"
           exit 1
