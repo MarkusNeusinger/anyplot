@@ -1380,7 +1380,7 @@ async def seo_about():
 
 # The crawler copy of `/agent` without a plot, the explainer
 # (app/src/sections/agent-chat/AgentIntro.tsx). llms.txt links the address,
-# and the legal page sends readers there for the assistant's terms; without a
+# and it is where the assistant's terms of use live; without a
 # route of its own a recognised crawler or AI assistant that followed the link
 # fell into the spec route below as an unknown spec and read a 404. nginx
 # passes the query on, so a chat's address (`/agent?spec=…`) gets this copy

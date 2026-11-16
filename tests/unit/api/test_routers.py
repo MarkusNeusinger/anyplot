@@ -1225,7 +1225,7 @@ class TestSeoProxyRouter:
             assert f'href="{link}"' in response.text
 
     def test_seo_agent_carries_the_explainer_and_its_terms(self, client: TestClient) -> None:
-        """llms.txt and the legal page lead to /agent; a crawler there got the spec route's 404."""
+        """llms.txt links /agent, where the assistant's terms live; a crawler there got the spec route's 404."""
         response = client.get("/seo-proxy/agent")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]

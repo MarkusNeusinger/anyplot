@@ -15,8 +15,8 @@
   stand in three quiet labelled lines, `status`, `limits`, and `your code`,
   and a fourth, `privacy`, links to the legal page's section on what the
   assistant stores. The same four lines stand under the "closed right now"
-  notice while the public lane is closed, so a reader whom the legal page
-  sends to `/agent` for the terms finds them then too. It opens no session:
+  notice while the public lane is closed, so the terms stand at `/agent`
+  also while the operator has paused the assistant. It opens no session:
   of the agent routes, a visitor's browser asks only the lane's door, which
   the API answers without the agents service. The site's feedback button
   stands on the explainer: the layout, which hid it on all of `/agent`, now

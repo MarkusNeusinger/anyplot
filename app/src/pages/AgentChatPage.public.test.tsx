@@ -468,7 +468,7 @@ describe('AgentChatPage on the public lane', () => {
   ])(
     'keeps the terms of use under the closed notice at %s (%s), and asks nothing but the lane',
     async path => {
-      // The legal page sends readers to `/agent` for the terms, also while the assistant is paused.
+      // `/agent` is where the terms live, so they stand there also while the assistant is paused.
       laneOpen = false;
       renderPath(path);
       await screen.findByText(/the assistant is closed right now/);

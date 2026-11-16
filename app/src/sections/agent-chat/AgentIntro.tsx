@@ -116,9 +116,9 @@ const buttonClearance = (breakpoint: 'xs' | 'sm', gutter: number) =>
 
 /**
  * The assistant's terms of use as labelled lines: the explainer's fine print, and the same block
- * under the closed notice (`LaneClosed` in `AgentChatPage`), because the legal page sends readers
- * to `/agent` for them and they must stand there also while the operator has paused the
- * assistant. Text and links only: it opens no session and asks nothing. The crawler copy of
+ * under the closed notice (`LaneClosed` in `AgentChatPage`): `/agent` is where the assistant's
+ * terms live, so they must stand there also while the operator has paused the assistant. Text
+ * and links only: it opens no session and asks nothing. The crawler copy of
  * `/agent` (`/seo-proxy/agent` in `api/routers/seo.py`) carries the same sentences, and
  * tests/unit/test_agent_intro_crawler_copy.py fails when the two differ.
  */

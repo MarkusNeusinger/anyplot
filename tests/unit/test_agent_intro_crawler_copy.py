@@ -2,10 +2,9 @@
 
 A recognised crawler or AI assistant that follows a link to https://anyplot.ai/agent reads `/seo-proxy/agent`
 (`api/routers/seo.py`), never the explainer a browser renders (`app/src/sections/agent-chat/AgentIntro.tsx`). The
-copy restates the page's title, description, example pairs and terms of use, and the legal page sends readers to
-`/agent` for those terms. A change on one side alone would leave a crawler or an assistant quoting terms the page no
-longer states, and no other test would notice: the page's tests run in the browser's world and the copy's in the
-API's. So the strings are read from the source here, the way `test_agent_intro_examples.py` reads the examples.
+copy restates the page's title, description, example pairs and terms of use, and `/agent` is where those terms live.
+A change on one side alone would leave a crawler or an assistant quoting terms the page no longer states, and no
+other test would notice: the page's tests run in the browser's world and the copy's in the API's. So the strings are read from the source here, the way `test_agent_intro_examples.py` reads the examples.
 """
 
 from __future__ import annotations

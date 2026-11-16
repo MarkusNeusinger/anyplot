@@ -337,8 +337,8 @@ export const HIGHCHARTS_NOTE =
  * The page while the public lane is closed (`GET /agent/lane` answered no, or the public lane
  * refused the session) and the page does not run on the admin lane. An admin's browser keeps the
  * admin menu below the text: "view as visitor" to switch back, or the line about an expired admin
- * session. The assistant's terms stand below the notice, because the legal page sends readers
- * to `/agent` for them, also while the operator has paused the assistant.
+ * session. The assistant's terms stand below the notice: `/agent` is where they live, so they
+ * stand there also while the operator has paused the assistant.
  */
 function LaneClosed({ adminMenu = null }: { adminMenu?: React.ReactNode }) {
   const { pathname, search } = useLocation();
