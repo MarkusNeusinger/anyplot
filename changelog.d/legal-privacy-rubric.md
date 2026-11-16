@@ -6,9 +6,9 @@
   so the server logs' 30 days stand beside the IP addresses they hold instead of a screen
   further down. On a phone, each item of that line takes a line of its own. The two tables
   are gone; the row that holds for the whole site, the hosting on Google Cloud, stays as a
-  sentence under the first table. The crawler copy of the page (`/seo-proxy/legal`) now says what the page says, row
-  by row: it gains the shared links it lacked, and the right to object gets back its
-  condition.
+  sentence under the first table. The crawler copy of the page (`/seo-proxy/legal`) now
+  says what the page says, row by row: it gains the shared links it lacked, and the right
+  to object gets back its condition.
 - **The privacy policy speaks in plain words, without article numbers.** On `/legal`, the
   table of GDPR article numbers is gone: one sentence under "why this is allowed" names each
   legal basis in words beside what it covers, a legitimate interest, your request and your
@@ -20,17 +20,20 @@
 - **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to 782
   words (counted at 390 px), and on a phone (390 px) from 6590 to 5064 px high; on a desktop
   (1440 px), from 3659 to 2718 px. The data assistant's status, its limits and the terms for
-  your code now stand on its explainer page, `/agent`, which the assistant's first row links,
-  so the pull request of the explainer page has to merge first. The machine readers and the
-  shared links share one row, under both anchors the stats page links: it says what each
-  counts, that neither holds an IP address or a user-agent, and how long each is kept, beside
-  its own store, and where; the fields of a line and of a counter stay in the docs. The edge
-  and the bot check are one Cloudflare row whose place stands once. Explanations go: why an
-  unverified share is no verdict (the stats tile's hint already says it), that browsing never
-  reaches a model because the catalogue is written at build time, the sentence that repeated
-  the assistant's heading, that the assistant is open to everyone, the comparison of your
-  code with the catalogue's MIT License, and the sentence naming the laws. Every kind of data, its period, place and recipients, the bases and the rights
-  stay. The list of what the site does not do speaks as its one operator: "what I do not do".
+  your code now stand on its explainer page, `/agent`, which the assistant's first row
+  links. The machine readers and the shared links share one row, under both anchors the
+  stats page links: it says what each counts, that neither holds an IP address or a
+  user-agent, and how long each is kept, beside its own store, and where; the fields of a
+  line and of a counter stay in the docs, and with them that a line is content-free and says
+  nothing about anyone's browsing, and that a counter holds no time of day and nothing about
+  who shared. The edge and the bot check are one Cloudflare row whose place stands once.
+  Explanations go: why an unverified share is no verdict (the stats tile's hint already says
+  it), that browsing never reaches a model because the catalogue is written at build time,
+  the sentence that repeated the assistant's heading, that the assistant is open to
+  everyone, the comparison of your code with the catalogue's MIT License, and the sentence
+  naming the laws. Every kind of data, its period, place and recipients, the bases and the
+  rights stay. The list of what the site does not do speaks as its one operator: "what I do
+  not do".
 
 ### Fixed
 
