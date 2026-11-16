@@ -380,6 +380,69 @@ describe('AgentChatPage on the public lane', () => {
     );
   });
 
+  it('records a chat reached straight from another chat by a history jump as an open of its own', async () => {
+    const user = userEvent.setup();
+    const { router } = renderPath('/agent');
+    const opens = () =>
+      analytics.trackEvent.mock.calls.filter(([name]) => name === 'agent_open').map(([, p]) => p);
+    const sessions = () =>
+      calls.filter(
+        call => call.url.pathname.endsWith('/agent/sessions') && call.init.method === 'POST'
+      );
+
+    await user.click(await screen.findByRole('link', { name: 'scatter-basic in matplotlib' }));
+    await screen.findByLabelText('Message');
+    await waitFor(() => expect(router.state.location.search).not.toContain('source='));
+    await act(() => router.navigate('/agent'));
+    await user.click(await screen.findByRole('link', { name: 'line-basic in d3' }));
+    await waitFor(() => expect(opens()).toHaveLength(2));
+    await waitFor(() => expect(router.state.location.search).not.toContain('source='));
+
+    // From chat B straight back to chat A, a pair in the address the whole way: a new chat.
+    await act(() => router.navigate(-2));
+    expect(router.state.location.search).toBe(
+      '?spec=scatter-basic&library=matplotlib&language=python'
+    );
+    await waitFor(() => expect(sessions()).toHaveLength(3));
+    await waitFor(() => expect(opens()).toHaveLength(3));
+    expect(opens()).toEqual([
+      { library: 'matplotlib', source: 'agent_intro', spec: 'scatter-basic' },
+      { library: 'd3', source: 'agent_intro', spec: 'line-basic' },
+      { library: 'matplotlib', source: 'direct', spec: 'scatter-basic' },
+    ]);
+  });
+
+  it('records no second open for a library switch inside the chat', async () => {
+    const user = userEvent.setup();
+    answerWith(
+      '/specs/scatter-basic',
+      json(200, {
+        title: 'Basic Scatter Plot',
+        implementations: ['matplotlib', 'seaborn', 'highcharts'].map(library_id => ({
+          library_id,
+        })),
+      })
+    );
+    answerWith(
+      '/agent/session/library',
+      json(200, { session_id: 'S1', eligibility: { eligible: true, status: 'clean', reasons: [] } })
+    );
+    const { router } = renderPage();
+    await screen.findByLabelText('Message');
+    await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
+
+    await user.click(screen.getByRole('button', { name: /^Library: matplotlib/ }));
+    const option = await within(await screen.findByRole('dialog')).findByRole('button', {
+      name: 'seaborn',
+    });
+    await waitFor(() => expect(option).toBeEnabled());
+    await user.click(option);
+    await waitFor(() => expect(router.state.location.search).toContain('library=seaborn'));
+    expect(
+      analytics.trackEvent.mock.calls.filter(([name]) => name === 'agent_open').map(([, p]) => p)
+    ).toEqual([{ library: 'matplotlib', source: 'direct', spec: 'scatter-basic' }]);
+  });
+
   it('says the assistant is closed at /agent without a plot while the lane is, as before', async () => {
     laneOpen = false;
     renderPath('/agent');

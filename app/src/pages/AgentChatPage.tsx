@@ -420,19 +420,22 @@ export function AgentChatPage() {
   // `source` only says where the visitor came from; it is read once for
   // `agent_open` and dropped, so a reload counts as a direct open. An admin's
   // open is no visitor's: the page records nothing for it (`muted`). One open
-  // per chat: a library switch inside the chat records none, but the page stays
-  // mounted when the visitor goes back to the explainer (no pair), so the next
-  // pair picked there opens a new chat and counts again.
-  const openTracked = useRef(false);
+  // per chat, and a chat is the spec in the address: `AgentChat` remounts, with a
+  // new session, when the spec changes (its key; the token part changes only in
+  // an admin's browser, which records nothing), and a library switch keeps it.
+  // The page itself stays mounted across these, through a return to the
+  // explainer (no pair) as through a history jump from one chat straight to
+  // another, so the guard holds the spec it counted, not a flag.
+  const openTracked = useRef<string | null>(null);
   useEffect(() => {
     if (!valid) {
-      openTracked.current = false;
+      openTracked.current = null;
       return;
     }
     if (!allowed) return;
     const source = params.get('source');
-    if (!openTracked.current) {
-      openTracked.current = true;
+    if (openTracked.current !== spec) {
+      openTracked.current = spec;
       if (!muted) {
         trackEvent('agent_open', {
           library,

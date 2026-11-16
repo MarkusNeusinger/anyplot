@@ -434,6 +434,14 @@ class TestCiTestsSpecSectionCheck:
         [config] = [line for line in check.splitlines() if "CONFIG_CHANGES=$(" in line]
         assert "|plots/[^/]+/specification\\.md)$" in config
 
+    def test_a_changed_chat_explainer_runs_the_unit_tests(self) -> None:
+        """tests/unit/test_agent_intro_examples.py reads the explainer's example pairs from AgentIntro.tsx: a PR that
+        changes only that file runs it, instead of leaving a missing implementation to the next Python PR."""
+        check = self._step("Check for testable changes")["run"]
+        [config] = [line for line in check.splitlines() if "CONFIG_CHANGES=$(" in line]
+        assert "|app/src/sections/agent-chat/AgentIntro\\.tsx|" in config
+        assert (WORKFLOWS_DIR.parent.parent / "app" / "src" / "sections" / "agent-chat" / "AgentIntro.tsx").is_file()
+
     def test_step_needs_no_dependency_install(self) -> None:
         # The step runs on the pinned interpreter (regen_gate's `except A, B:` needs 3.14),
         # so setup-python precedes it unconditionally; uv and the project install do not.

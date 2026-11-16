@@ -13,4 +13,7 @@
   In Plausible, `nav_click{source: hero_use_my_data}` now targets `/agent`,
   and `agent_open` gains the source `agent_intro` for the explainer's
   examples. Each chat opened there counts as one open, also after the visitor
-  goes back to the explainer and picks another example.
+  goes back to the explainer and picks another example. A unit test checks
+  that each example names an implementation under `plots/`, and the CI job
+  "Run Tests" now also runs on a pull request that changes only
+  `AgentIntro.tsx`.
