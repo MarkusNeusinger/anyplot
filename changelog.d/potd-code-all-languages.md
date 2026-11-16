@@ -9,4 +9,9 @@
   with no default, so a call that leaves it out fails instead of looking
   under Python; the plot of the day passes its pick's own language. The
   agent case detail on the debug page had the same gap and now finds the
-  catalogue code of a non-Python case.
+  catalogue code of a non-Python case. Its diff therefore runs on R, Julia,
+  and JavaScript code for the first time: it drops the `//` attribution
+  header of a JavaScript export as it drops the `#` header, and both diff
+  labels carry the library's file extension instead of `.py`. A JavaScript
+  case whose version names no library is now filed under the library its
+  exported code names, as the other languages' cases already were.
