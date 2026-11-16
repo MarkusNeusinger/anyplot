@@ -14,4 +14,6 @@
   header of a JavaScript export as it drops the `#` header, and both diff
   labels carry the library's file extension instead of `.py`. A JavaScript
   case whose version names no library is now filed under the library its
-  exported code names, as the other languages' cases already were. (#13123)
+  exported code names, as the other languages' cases already were, and the
+  regression importer (`agents/evals/import_case.py`) reads the header the
+  same way, so it replays such a case under that library. (#13123)

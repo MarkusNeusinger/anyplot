@@ -80,7 +80,8 @@ _FILE_KEYS = frozenset({"images", "data_csv"})
 """The version fields that become files of their own and stay out of the manifest's `bundle`."""
 # The first line of exported code (agents/anyplot/code/export.py, `attribution`):
 # `# Adapted by anyplot.ai from <spec> (<library>[ <version>]) for your data.csv;`, with `//` in place of `#`
-# for JavaScript, whose export is a script the exported page runs.
+# for JavaScript, whose export is a script the exported page runs. The regression importer
+# (agents/evals/import_case.py) imports nothing from the repository and keeps a copy; its test holds the two equal.
 _EXPORT_LIBRARY = re.compile(
     r"\A(?P<marker>#|//) Adapted by anyplot\.ai from [a-z0-9-]+ \((?P<library>[a-z][a-z0-9]*)[ )]"
 )
