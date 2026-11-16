@@ -216,9 +216,13 @@ describe('LegalPage', () => {
     ).toBeInTheDocument();
     // Everything the feedback record actually holds, each field by its name, so a later trim
     // cannot quietly drop one, least of all the two identifiers a reader would care about most.
+    // Then who reads it: the admin page's "copy prompt for Claude Code" button hands the message,
+    // the page and the reaction to the coding assistant (src/utils/claudePrompt.ts), so the row
+    // names that recipient and no longer says only the operator reads it.
     expect(screen.getAllByRole('row', { name: /^feedback\s/ })[0]).toHaveTextContent(
-      /message, reaction, optional contact, page, your window size, user-agent and a random id that ties your own submissions together, read only by the operator\./
+      /message, reaction, optional contact, page, your window size, user-agent and a random id that ties your own submissions together\. I read them, and when I work on one, its message, page and reaction can go to the ai assistant I code with \(Claude by Anthropic\)\. a salted IP hash limits spam\./
     );
+    expect(document.getElementById('privacy')?.textContent).not.toMatch(/read only by/);
     // The feedback's IP hash is salted; when it goes stands on the feedback row's second line.
     expect(screen.getByText(/a salted IP hash limits spam/)).toBeInTheDocument();
     // Plausible's real property is cookieless and identifier-free; that its script is only
@@ -357,10 +361,12 @@ describe('LegalPage', () => {
     expect(screen.getByText(/so they are pseudonymous/)).toBeInTheDocument();
     // Nothing is kept without feedback: the condition opens the row, and "then" carries it into
     // both the bucket and the triage row. The box starts unticked, and leaving it so drops
-    // data.csv only, while the profile sample stays.
+    // data.csv only, while the profile sample stays. The cases are read in a session with the
+    // coding assistant (.claude/skills/triage-agent-cases), so the row names that recipient and
+    // what it reads.
     const caseRow = screen.getAllByRole('row', { name: /^feedback\s/ })[1];
     expect(caseRow).toHaveTextContent(
-      /^feedback\s*only when you send feedback\. a private bucket then keeps the conversation, a profile of your data with its first 5 rows, and the plot.s code and images\. it keeps the whole data file only if you tick "# include data\.csv"; the box starts unticked, which leaves out that file only\. a triage row then keeps your reaction, message, a hash of your tab id and the run.s details\./
+      /^feedback\s*only when you send feedback\. a private bucket then keeps the conversation, a profile of your data with its first 5 rows, and the plot.s code and images\. it keeps the whole data file only if you tick "# include data\.csv"; the box starts unticked, which leaves out that file only\. a triage row then keeps your reaction, message, a hash of your tab id and the run.s details\. I read the cases together with the ai assistant I code with \(Claude by Anthropic\): the conversation, the data sample or file, the plot and its code\./
     );
     // "No cookies" holds for visitors; the one admin gets Cloudflare Access's login cookie.
     expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();

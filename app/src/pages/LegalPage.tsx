@@ -375,8 +375,9 @@ export function LegalPage() {
                   'feedback',
                   <>
                     message, reaction, optional contact, page, your window size, user-agent and a
-                    random id that ties your own submissions together, read only by the operator. a
-                    salted IP hash limits spam.
+                    random id that ties your own submissions together. I read them, and when I work
+                    on one, its message, page and reaction can go to the ai assistant I code with
+                    (Claude by Anthropic). a salted IP hash limits spam.
                     <Kept
                       items={[
                         ['entries', 'until you ask to delete them'],
@@ -465,6 +466,8 @@ export function LegalPage() {
                     </Box>
                     ; the box starts unticked, which leaves out that file only. a triage row then
                     keeps your reaction, message, a hash of your tab id and the run&apos;s details.
+                    I read the cases together with the ai assistant I code with (Claude by
+                    Anthropic): the conversation, the data sample or file, the plot and its code.
                     <Kept
                       items={[
                         ['case files', '180 days'],

@@ -1309,12 +1309,20 @@ class TestSeoProxyRouter:
             # Who is responsible, under the page's own heading, not only as the legal notice's operator.
             "<li>Who is responsible: Markus Neusinger (see above).</li>",
             "Running costs about $60 a month (October 2026).",
-            # Every field the feedback record holds, each by its name.
+            # Every field the feedback record holds, each by its name, then who reads it: the operator,
+            # and the coding assistant the admin page's "copy prompt for Claude Code" button hands the
+            # message, page and reaction to (app/src/utils/claudePrompt.ts).
             "Feedback: your message and reaction, the optional contact field, the page, window size, "
-            "user-agent and a random id that ties your own submissions together; read only by the operator",
+            "user-agent and a random id that ties your own submissions together; kept until you ask to "
+            "delete it, in Google Cloud SQL in the Netherlands (europe-west4). The operator reads the "
+            "entries, and when he works on one, its message, page and reaction can go to the AI assistant "
+            "he codes with (Claude by Anthropic). The salted IP hash against spam",
             "Why this is allowed: a legitimate interest in protecting the site, counting its readers, "
             "and the assistant's telemetry and limits",
-            "the Cloudflare Access login cookie",
+            # The login cookie is the operator's own, as the human page says ("I sign in through
+            # Cloudflare Access").
+            "<li>No cookies for visitors (the operator: the Cloudflare Access login cookie), no accounts, "
+            "and no name or email unless you type one.",
             # The rights item whole, through the address and the early deletion of a feedback case.
             "Rights: you can ask what is stored about you and have it corrected, erased or restricted, "
             "object to the processing for a reason specific to your situation, and complain to a data "
@@ -1337,6 +1345,9 @@ class TestSeoProxyRouter:
             "Google Cloud and Cloudflare apply their data processing terms",
         ):
             assert fact in response.text, fact
+        # Neither the old exclusive reader nor the old plural cookie holder survives in the copy.
+        for gone in ("read only by the operator", "admins: the Cloudflare Access login cookie"):
+            assert gone not in response.text, gone
 
     def test_seo_legal_mirrors_the_data_assistant_section(self, client: TestClient) -> None:
         """The crawler body carries the assistant's facts the human page states (LegalPage.tsx `#assistant`)."""
@@ -1361,7 +1372,11 @@ class TestSeoProxyRouter:
             "so they are pseudonymous",
             "Admins: a keyed hash (HMAC)",
             "a profile of your data with its first 5 rows",
-            "your reaction, message, a hash of your tab id and the run's details",
+            # Who reads a case, and what: the triage session with the coding assistant
+            # (.claude/skills/triage-agent-cases/SKILL.md, "Read each case").
+            "your reaction, message, a hash of your tab id and the run's details. The operator reads the "
+            "cases together with the AI assistant he codes with (Claude by Anthropic): the conversation, "
+            "the data sample or file, the plot and its code.</li>",
             "it starts unticked, which leaves out that file only",
             "never your text, data, column or file names",
             # Every kind of field by its name: event types, plot type and library record what a
