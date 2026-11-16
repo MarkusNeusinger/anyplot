@@ -14,7 +14,7 @@ import html
 import re
 
 from api.routers import seo
-from tests.unit.test_agent_instructions import _headings
+from tests.markdown_anchors import headings
 from tests.unit.test_agent_intro_examples import AGENT_INTRO, ROOT, example_pairs
 
 
@@ -24,7 +24,7 @@ LEGAL_PAGE = AGENT_INTRO.parents[2] / "pages" / "LegalPage.tsx"
 
 def readme_anchors() -> set[str]:
     """The README's headings as GitHub anchors."""
-    return _headings((ROOT / "README.md").read_text(encoding="utf-8"))
+    return headings((ROOT / "README.md").read_text(encoding="utf-8"))
 
 
 TERMS_BLOCK = re.compile(r"const AGENT_TERMS: \[string, ReactNode\]\[\] = \[(?P<body>.*?)\n\];", re.DOTALL)

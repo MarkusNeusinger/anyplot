@@ -41,6 +41,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.markdown_anchors import headings
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -60,8 +62,6 @@ AGENT_FILES = [
 
 _BACKTICKED = re.compile(r"`([^`\n]+)`")
 _MD_LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
-_HEADING = re.compile(r"^#+\s+(.*)$", re.M)
-_FENCE = re.compile(r"^```.*?^```", re.M | re.S)
 
 # A backticked span is only treated as a path when it looks like one and
 # carries no shell or placeholder syntax. Everything else in backticks is a
@@ -148,26 +148,6 @@ def _candidate_paths(text: str) -> set[str]:
     return {fragment for span in _BACKTICKED.findall(text) for fragment in span.split() if _looks_like_path(fragment)}
 
 
-def _headings(text: str) -> set[str]:
-    """The page's real headings, as GitHub anchors.
-
-    Fenced blocks are stripped first. These files are full of shell snippets,
-    and a `# Install uv` comment inside one is not a heading — counting it
-    would let a dead same-page link pass by matching a line GitHub renders as
-    code.
-    """
-    return {_anchor(h) for h in _HEADING.findall(_FENCE.sub("", text))}
-
-
-def _anchor(heading: str) -> str:
-    """GitHub's slug for a heading: lowercased, punctuation dropped, spaces to
-    hyphens. Enough of the algorithm for the headings these files actually have.
-    """
-    slug = heading.strip().lower()
-    slug = re.sub(r"[^\w\s-]", "", slug)
-    return re.sub(r"\s", "-", slug)
-
-
 def _flat(text: str) -> str:
     """Lowercased with runs of whitespace collapsed.
 
@@ -206,7 +186,7 @@ def test_markdown_links_resolve(agent_file: Path) -> None:
     nowhere, and a reader who follows it concludes the guide is stale.
     """
     text = agent_file.read_text(encoding="utf-8")
-    anchors = _headings(text)
+    anchors = headings(text)
 
     broken: list[str] = []
     for target in _MD_LINK.findall(text):
