@@ -52,7 +52,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `evals/eligibility.py` | The model-free sweep of the catalogue's files of every Python library with a code profile (matplotlib, seaborn, plotnine, altair, pygal, lets-plot): eligible, coupled and blocked pairs, and why |
 | `evals/scope.py`, `evals/scope.evalset.json` | The judge-only scope eval and its 317 synthetic cases: in-scope, off-topic and adversarial messages and notes pasted with a table, scored for adversarial recall and false refusals |
 | `evals/prep.py`, `evals/fixtures/prep/` | The live prep eval and its 132 German, English and French cases (64 single-step data requests, 11 `hard` ones, 11 data-code cases, 3 requests for example data, 4 for another plot type, 18 step-1 summaries, 7 notes sent with a paste, a table sent as a message, 2 questions asked while a view of the plot is in force and 11 wishes for the plot alone or beside one data change; two of the `hard` ones end in such a wish too, so 13 cases carry `plot_request`): each through `/v1` in process with the real model, scored on the `prepare_data` operations and `generate_data` calls the root chose, on the size of the table each `run_data_code` call stored (a `refuse` case passes when nothing was stored), on whether a wish for the plot went to the plot (`plot_request`), and on the shape of the root's reply ([Run the prep eval](#run-the-prep-eval)) |
-| `evals/fixtures/cases/` | The eval cases: 900 generated (`<spec>-<library>-<perturbation>`), eleven hand-written, among them `scatter-basic-matplotlib`, `bar-grouped-seaborn`, `scatter-basic-matplotlib-german-message` (a German follow-up that sets the session language) and four `*-combined-*` cases whose follow-up asks for two changes at once, each measured by the case's `checks`, and 23 stress cases (`stress-<name>`) ([fixtures README](evals/fixtures/README.md)) |
+| `evals/fixtures/cases/` | The eval cases: 900 generated (`<spec>-<library>-<perturbation>`), fifteen hand-written, among them `scatter-basic-matplotlib`, `bar-grouped-seaborn`, `scatter-basic-matplotlib-german-message` (a German follow-up that sets the session language), four `*-combined-*` cases whose follow-up asks for two changes at once, each measured by the case's `checks`, and four `*-view-*` cases that draw under a view of the plot (`before_view`, measured by `view_checks`), and 23 stress cases (`stress-<name>`) ([fixtures README](evals/fixtures/README.md)) |
 | `evals/baselines/` | Committed baseline reports, one per model ([baselines README](evals/baselines/README.md)) |
 
 The unit tests are in `tests/unit/agents/`; `tests/unit/agents/runtime/` drives a full "Create plot" through `/v1` with a fake renderer and scripted models for both providers, and `tests/unit/agents/evals/` runs the harness the same way.
@@ -425,7 +425,7 @@ Before the first case the harness renders the catalogue file of the first case o
     --renderer remote --render-url https://RENDERER_URL --gcloud-token
   ```
 
-- The full matrix is the 367 cases that are not stress cases (247 before pygal and lets-plot joined, 127 before plotnine and altair). Cap the spend with `--budget-usd`:
+- The full matrix is the 915 cases that are not stress cases (367 before ggplot2, 247 before pygal and lets-plot joined, 127 before plotnine and altair). Cap the spend with `--budget-usd`:
 
   ```bash
   uv run --extra agents python -m agents.evals.matrix --cases full --budget-usd 4 \
@@ -440,6 +440,12 @@ Before the first case the harness renders the catalogue file of the first case o
   ```
 
 - To run a subset, pass comma-separated globs over case ids, for example `--cases "*-seaborn-*"` or `--cases "pie-basic-*,box-basic-*"`. `--cases scatter-basic-matplotlib-german-message` runs the case whose German follow-up sets the session language: its first version is English, its second must carry German plot text, and each run's record holds the `done` event's `language`.
+- To measure the figures a plot draws under a view of the plot (a top N or a selection), run the four view cases. A case's `before_view` is one `prepare_data` call's view operations, which the harness sets after the confirmation as the tool sets a view (no route sets one), so the plot draws only those rows; with `view_checks.clear` the case then clears the view with the page's `.show_all()` (`{"action": "show_all_rows"}`) as its follow-up turn. Three cases draw the catalogue's mean line of `bar-horizontal` (matplotlib) under a top 4, under a French selection and with the top 4 cleared, and `bar-basic-seaborn-view-top-control` labels each bar and draws no figure over several rows. Estimated before a first measured run: a case takes 5 to 8 model calls and the cleared one 10 to 16, about $0.10 for the four at list price:
+
+  ```bash
+  uv run --extra agents python -m agents.evals.matrix --cases '*-view-*' --budget-usd 1 --no-baseline \
+    --out agents/evals/reports/<date>-view --renderer remote --render-url https://RENDERER_URL --gcloud-token
+  ```
 - To check one library, the form every run of 2026-10-28 to 2026-10-31 took, select its cases by glob, cap the spend, write to a directory of its own, and skip the baseline diff, because the committed baseline holds none or few of that library's cases:
 
   ```bash
@@ -483,6 +489,7 @@ The rates mean the following:
 - **Pass rate**: runs that shipped a render (`ok` or `needs_attention`) that passed every deterministic gate: the host gates without a padded canvas, and no ADAPTATION validator finding. Every run counts, so a run that crashed in the harness is a run that did not pass. The reviewer and the advisory probe gates do not decide a pass; your gallery judgement does.
 - **Accept-match rate**: runs whose outcome (`ok` counts as accepted) matches the case's `expected` value; cases that expect `unknown` are left out.
 - **Cost per successful plot**: the whole run's list-price cost divided by the passed runs; the summary also gives the median cost of a passed run.
+- **Runs under a view of the plot** (cases with `before_view`): each run's `view` record holds `drawn_rows`, the `{rows, of_rows}` the shipped version drew (the fact the pipeline hands every adapter and reviewer request of the run; a model run never sees a request's text, so the unit tests assert each request), `words_hold_view`, the turns' `adapter_calls`, `reviewer_calls` and `review_rounds` (the reviews that answered), `dq03_raised` (a review raised DQ-03, also one a repair fixed), `named` (every part of the view, the N of a top N or a value a selection keeps, stands in a drawn title, subtitle, legend text, annotation or other text; null when the render reported no drawn texts), `cleared` for a case that clears the view (`every_row`, that turn's calls and reviews, and `still_named`), and the case's `checks`. The summary's row "Runs under a view of the plot" counts them and names each failed check (`view_check_failures`). They decide no pass: a label can name the view in words the check cannot read, such as a number written as a word.
 
 The diff against a baseline compares the cases both reports hold, with every repeat of each, so a smoke run is measured against the same 16 cases of a full baseline (14 against a baseline written before pygal and lets-plot joined, and the 12 matplotlib and seaborn ones against one written before plotnine and altair). Each report's pass rate over all of its own runs is an extra row. With 16 cases one run is 6.25 percentage points, more than the 5-point tolerance, so a single case that flips from pass to fail is a regression on the smoke set.
 
