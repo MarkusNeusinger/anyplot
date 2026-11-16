@@ -34,6 +34,7 @@ const DESCRIPTION =
 const HOW_I_BUILD_URL = `${GITHUB_URL}/blob/main/README.md#how-i-build-anyplot`;
 const HIGHLIGHTS_URL = `${GITHUB_URL}/blob/main/README.md#engineering-highlights`;
 const AI_WORKFLOW_URL = `${GITHUB_URL}/blob/main/docs/concepts/ai-workflow.md`;
+const AGENT_NETWORK_URL = `${GITHUB_URL}/blob/main/docs/concepts/agent-network.md`;
 
 // The criteria and the repair count are the ones impl-review.yml applies; test_readme_claims.py holds
 // both to their sources.
@@ -179,11 +180,13 @@ export function AboutPage() {
                   </Link>
                 </Typography>
                 <Typography sx={{ ...textStyle, mb: 0 }}>
-                  I&apos;m a chart nerd. physicist by training, data analyst by trade. since 2013 I
-                  have built data pipelines, models and the tools around them, lately with ai agents
-                  doing the legwork. on anyplot they write the code; I decide, test and send back. I
-                  have built it alone since November 2025, in Visp, a small town in the Swiss Alps.
-                  I wanted one place to find the right plot for my data.
+                  I&apos;m a chart nerd. physicist by training, senior data analyst by trade. since
+                  2013 I have built data pipelines, models and the tools around them, lately with ai
+                  agents doing the legwork. I know the stack from building it by hand: from 2022 to
+                  2024 I built and ran a platform for blockchain market data, largely without ai. on
+                  anyplot the agents write the code; I decide, test and send back. I have built it
+                  alone and in my own time since November 2025, in Visp, a small town in the Swiss
+                  Alps. I wanted one place to find the right plot for my data.
                 </Typography>
               </Box>
             </Box>
@@ -223,9 +226,8 @@ export function AboutPage() {
               &ldquo;use with my data&rdquo;. I decide what gets built, cut the work into tasks and
               give each one to Claude Code, Claude in GitHub Actions, Gemini or Copilot, depending
               on what it needs and what it costs. I test what comes back and send it back until
-              it&apos;s right. a new spec needs my approval, and outside the plot pipeline the
-              agents merge nothing without my OK. what I correct becomes a rule the agents follow. I
-              have built it with ai agents since November 2025.
+              it&apos;s right. outside the plot pipeline the agents merge nothing without my OK, and
+              what I correct becomes a rule they follow.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               more on GitHub: <Ext href={HOW_I_BUILD_URL}>how I build anyplot</Ext> and{' '}
@@ -257,13 +259,19 @@ export function AboutPage() {
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>review</em>} />
           <Box sx={proseColumnSx}>
+            {/* "more than thirty" is a floor on the changes to prompts/quality-criteria.md after its
+                first commit (`git log -- prompts/quality-criteria.md` listed 35 when the sentence
+                was written). CI clones the repository shallow, so no test can count them. */}
             <Box sx={textStyle}>
               every implementation is scored before it ships. automated checks come first: the code
               runs, the canvas has its size. then an ai reviewer scores the render on a 100-point
               rubric of 24 criteria — visual quality, design, spec compliance, data quality, code
               quality, and library mastery — blind to any earlier score. a first review needs 90;
               below that, ai repairs the defects the review named and the plot is reviewed again, up
-              to four times, and the bar drops 10 points per repair, to 50 at the last review. the{' '}
+              to four times, and the bar drops 10 points per repair, to 50 at the last review. what
+              counts as a good plot is my call; ai helped turn it into 24 criteria and their points.
+              the rubric isn&apos;t fixed: it has changed more than thirty times since November
+              2025, for example after a review passed a plot whose title was cut off. the{' '}
               {proseLink(paths.stats, 'stats page')} shows the score distribution per library.
             </Box>
           </Box>
@@ -284,6 +292,17 @@ export function AboutPage() {
               the catalogue&apos;s rubric, repairs it once if needed, and hands back the image and
               the code. your chat and data live only in server memory and are deleted after an hour
               idle, unless you send feedback.
+            </Box>
+            <Box sx={{ ...textStyle, mt: 1 }}>
+              one agent talks to you, an adapter writes the code changes, and a reviewer scores the
+              render; the loop that calls them is plain code. a validator reads the code before
+              anything runs, and code decides from the reviewer&apos;s points whether a repair is
+              due: one repair and two reviews at most. what the review still finds comes back as
+              notes with the plot. my rules: open to everyone, no login, hosted in the EU, and I
+              keep what you paste or write only if you send feedback. by those rules I decided which
+              model answers, where the code it writes runs, and what the usage logs may hold;{' '}
+              <Ext href={AGENT_NETWORK_URL}>the design document on GitHub</Ext> records these
+              decisions with their dates.
             </Box>
           </Box>
         </Box>
@@ -310,10 +329,11 @@ export function AboutPage() {
             <Box sx={textStyle}>
               every plot uses <strong>imprint</strong>, my own colourblind-safe categorical palette
               — 8 hues plus 3 semantic anchors, tuned for warm-paper rendering and validated against
-              the three main forms of colour vision deficiency. it sits in the same neighbourhood as
-              Okabe-Ito, Paul Tol&apos;s &ldquo;muted&rdquo;, and ColorBrewer Set2 — about 8% of men
-              have some form of CVD, and most plotting libraries ignore this entirely. I make it the
-              default.
+              the three main forms of colour vision deficiency. it took four rounds: the
+              colour-distance numbers had to agree with what I like to look at. it sits in the same
+              neighbourhood as Okabe-Ito, Paul Tol&apos;s &ldquo;muted&rdquo;, and ColorBrewer Set2
+              — about 8% of men have some form of CVD, and most plotting libraries ignore this
+              entirely. I make it the default.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               a "gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or
@@ -401,9 +421,9 @@ export function AboutPage() {
                   'checks',
                   // A no-break space keeps the percent sign with its number.
                   <>
-                    tests and lint on every code pull request, an 80&nbsp;% patch-coverage target,
-                    CodeQL, every migration run on a throwaway PostgreSQL, a check of the live site
-                    after a merge
+                    tests and lint on every pull request that changes code outside the plot
+                    catalogue, an 80&nbsp;% patch-coverage target, CodeQL, every migration run on a
+                    throwaway PostgreSQL, and by rule a check of the live site after a merge
                   </>,
                 ],
                 [
@@ -459,13 +479,12 @@ export function AboutPage() {
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
               it started in November 2025 as pyplots.ai, a catalogue of Python plotting examples. it
-              grew out of everyday work: finding plot ideas, and showing colleagues a chart instead
-              of explaining it at length. people wanted two things from it. they wanted ideas for
-              which plot fits their data. and they wanted to get to know libraries they hadn&apos;t
-              used yet, since each has its own strengths. after a few months on pyplots.ai, I
-              decided to go bigger. in April 2026 it became anyplot.ai. today it covers fifteen
-              libraries in four languages, and one colorblind-safe palette travels across all of
-              them.
+              grew out of everyday work: showing colleagues a chart instead of explaining it at
+              length. they, and later people who found it online, wanted two things from it: ideas
+              for which plot fits their data, and to get to know libraries they hadn&apos;t used
+              yet, since each has its own strengths. after a few months on pyplots.ai, I decided to
+              go bigger. in April 2026 it became anyplot.ai. today it covers fifteen libraries in
+              four languages, and one colorblind-safe palette travels across all of them.
             </Box>
           </Box>
         </Box>

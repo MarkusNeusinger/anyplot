@@ -347,10 +347,27 @@ def test_about_page_and_its_bot_copy_state_the_rubric_bar_and_mcp_tools():
         assert near(text, str(floor), "at the last review"), f"{name}: the last review's bar is {floor}"
         # 5, not 3: seo.py splits "Six tools" over two string literals (`Six " "tools`).
         assert near(text, NUMBER_WORDS[mcp_tool_count()], "tools", window=5), f"{name}: {mcp_tool_count()} MCP tools"
-    # The pipeline diagram writes both in digits.
+    # The pipeline diagram writes both in digits, and so does the sentence on who set the rubric.
     for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
-        assert f"ai scores ({len(CRITERIA)} criteria)" in collapse(text).lower(), f"{name}: the diagram's criteria"
-        assert f"ai repairs (up to {repairs} times)" in collapse(text).lower(), f"{name}: the diagram's repairs"
+        prose = collapse(text).lower()
+        assert f"ai scores ({len(CRITERIA)} criteria)" in prose, f"{name}: the diagram's criteria"
+        assert f"ai repairs (up to {repairs} times)" in prose, f"{name}: the diagram's repairs"
+        assert f"ai helped turn it into {len(CRITERIA)} criteria and their points." in prose, (
+            f"{name}: the rubric has {len(CRITERIA)} criteria"
+        )
+
+
+def test_about_page_and_its_bot_copy_state_the_chats_repair_bounds():
+    """The chat's second paragraph bounds a run as the README's highlight does: the agents' settings and pipeline."""
+    attempts = field_default("agents/anyplot/settings.py", "AgentSettings", "max_attempts")
+    reviews = module_constant("agents/anyplot/pipeline.py", "MAX_REVIEWS")
+    assert isinstance(attempts, int) and isinstance(reviews, int)
+    phrase = f"one repair and {NUMBER_WORDS[reviews]} reviews at most"
+    assert attempts - 1 == 1, f"a run repairs {attempts - 1} times by default: reword '{phrase}'"
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert f"whether a repair is due: {phrase}." in collapse(text).lower(), (
+            f"{name}: one repair and {reviews} reviews at most, as the agents' settings bound a run"
+        )
 
 
 def test_about_page_and_its_bot_copy_claim_no_regeneration_on_a_library_release():
@@ -417,7 +434,8 @@ def test_about_page_and_its_bot_copy_state_the_owners_year_as_the_readme_does():
 
 
 def test_the_readme_introduces_the_owner_as_the_about_page_does():
-    """The README's "a physicist and data analyst" is the About page's "physicist by training, data analyst by trade".
+    """The README's "a physicist and data analyst" is the About page's "physicist by training, senior data analyst by
+    trade", and "senior" is the AI workflow page's "then senior data analyst".
 
     Text held to text, as the year above: neither has a source in code.
     """
@@ -426,9 +444,30 @@ def test_the_readme_introduces_the_owner_as_the_about_page_does():
         "README.md 'How I build anyplot' no longer names the owner's trades"
     )
     assert "working in data and AI" not in intro, "README.md: the About page names the trades, not a field"
+    assert "data analyst, then senior data analyst" in collapse(read(WORKFLOW_PAGE)), (
+        "ai-workflow.md 'What I bring' no longer says the owner became a senior data analyst"
+    )
     for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
-        assert "physicist by training, data analyst by trade" in collapse(text).lower(), (
-            f"{name}: physicist by training, data analyst by trade, as the README says"
+        assert "physicist by training, senior data analyst by trade" in collapse(text).lower(), (
+            f"{name}: physicist by training, senior data analyst by trade, as the README and ai-workflow.md say"
+        )
+
+
+def test_about_page_and_its_bot_copy_date_the_platform_as_the_workflow_page_does():
+    """The builder's platform built by hand, largely without AI, in the years the AI workflow page gives it.
+
+    Text held to text: the platform is not in this repository.
+    """
+    match = re.search(
+        r"from (\d{4}) to (\d{4}) I built and ran defichain-data, a platform for blockchain market data",
+        collapse(read(WORKFLOW_PAGE)),
+    )
+    assert match, "ai-workflow.md 'What I bring' no longer dates the blockchain data platform"
+    assert "largely without AI" in collapse(read(WORKFLOW_PAGE)), "ai-workflow.md: the platform was built without AI"
+    phrase = f"from {match.group(1)} to {match.group(2)} I built and ran a platform for blockchain market data, "
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert f"{phrase}largely without AI.".lower() in collapse(text).lower(), (
+            f"{name}: the platform of {match.group(1)} to {match.group(2)}, as ai-workflow.md dates it"
         )
 
 
@@ -474,8 +513,7 @@ def test_about_page_and_its_bot_copy_date_the_start_as_the_readme_does():
     assert since, "README.md 'How I build anyplot' no longer says since when the owner's pull requests have merged"
     for phrase in (
         f"it started in {since.group(1)} as pyplots.ai",
-        f"I have built it alone since {since.group(1)},",
-        f"I have built it with AI agents since {since.group(1)}.",
+        f"I have built it alone and in my own time since {since.group(1)},",
     ):
         for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
             assert phrase.lower() in collapse(text).lower(), f"{name}: '{phrase}', as the README says"
@@ -490,6 +528,19 @@ def test_about_page_and_its_bot_copy_count_the_libraries_and_languages_in_the_or
         assert phrase in collapse(text).lower(), (
             f"{name}: the registry has {libraries} libraries in {languages} languages"
         )
+
+
+def test_about_page_counts_the_palette_rounds():
+    """The palette's "four rounds" are the variant rounds kept under docs/reference/palette-variants/ (v0, v1, ...).
+
+    The crawler copy has no palette section, so only the page states it.
+    """
+    rounds = {
+        path.split("/")[3] for path in tracked_files() if re.match(r"^docs/reference/palette-variants/v\d+/", path)
+    }
+    assert rounds, "docs/reference/palette-variants/ no longer keeps its rounds as v0, v1, ..."
+    phrase = f"it took {NUMBER_WORDS[len(rounds)]} rounds: the colour-distance numbers"
+    assert phrase in collapse(read(ABOUT_PAGE)), f"AboutPage.tsx: the palette took {len(rounds)} rounds"
 
 
 def test_about_page_and_its_bot_copy_state_the_patch_coverage_target():
@@ -525,11 +576,13 @@ def test_about_page_links_name_tracked_files_and_existing_headings():
     tracked = tracked_files()
     for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", read(SEO))):
         links = set(_GITHUB_BLOB.findall(text))
-        # The three the "how it is built" section links, so this test cannot pass on a page that lost them.
+        # The three the "how it is built" section links and the chat's design document, so this test cannot pass
+        # on a page that lost them.
         for expected in (
             ("README.md", "#how-i-build-anyplot"),
             ("README.md", "#engineering-highlights"),
             ("docs/concepts/ai-workflow.md", ""),
+            ("docs/concepts/agent-network.md", ""),
         ):
             assert expected in links, f"{name} no longer links {''.join(expected)}"
         for path, anchor in links:

@@ -73,16 +73,17 @@ describe('AboutPage', () => {
     const builder = document.getElementById('builder')!;
     expect(builder).toHaveTextContent('Markus Neusinger');
     // In the first person, with the year the README's "How I build anyplot" gives, which
-    // test_readme_claims.py pins.
+    // test_readme_claims.py pins; "senior" is the AI workflow page's "then senior data analyst".
     expect(builder).toHaveTextContent(
-      /I.m a chart nerd\. physicist by training, data analyst by trade\. since 2013 I have built data pipelines, models and the tools around them, lately with ai agents doing the legwork\./
+      /I.m a chart nerd\. physicist by training, senior data analyst by trade\. since 2013 I have built data pipelines, models and the tools around them, lately with ai agents doing the legwork\./
     );
+    // The years test_readme_claims.py holds to the AI workflow page's "from 2022 to 2024".
     expect(builder).toHaveTextContent(
-      /on anyplot they write the code; I decide, test and send back\./
+      /lately with ai agents doing the legwork\. I know the stack from building it by hand: from 2022 to 2024 I built and ran a platform for blockchain market data, largely without ai\. on anyplot the agents write the code; I decide, test and send back\./
     );
     // The month test_readme_claims.py holds to the README's "Since November 2025".
     expect(builder).toHaveTextContent(
-      /I have built it alone since November 2025, in Visp, a small town in the Swiss Alps\. I wanted one place to find the right plot for my data\./
+      /I have built it alone and in my own time since November 2025, in Visp, a small town in the Swiss Alps\. I wanted one place to find the right plot for my data\./
     );
     // The builder speaks for himself: no sentence of the page describes him from outside.
     expect(document.body).not.toHaveTextContent(/\bhe (has|built|leads|tests|corrects)\b/);
@@ -108,8 +109,9 @@ describe('AboutPage', () => {
     expect(screen.queryByText(/by a physicist and data analyst/)).not.toBeInTheDocument();
   });
 
-  // spec-create.yml merges a spec only on the owner's `approved`; outside the plot pipeline a pull
-  // request merges only on his named OK (CLAUDE.md, "PR Follow-Through").
+  // Outside the plot pipeline a pull request merges only on the owner's named OK (CLAUDE.md,
+  // "PR Follow-Through"). The spec approval stands in the lede and the diagram, the month in "who
+  // built it" and the origin, each pinned there.
   it('says ai models write the code, what I do, and links the README sections and the workflow page', () => {
     render(<AboutPage />);
 
@@ -118,9 +120,7 @@ describe('AboutPage', () => {
     );
     for (const sentence of [
       /I decide what gets built, cut the work into tasks and give each one to Claude Code, Claude in GitHub Actions, Gemini or Copilot, depending on what it needs and what it costs\./,
-      /I test what comes back and send it back until it.s right\./,
-      /a new spec needs my approval, and outside the plot pipeline the agents merge nothing without my OK\./,
-      /what I correct becomes a rule the agents follow\. I have built it with ai agents since November 2025\.$/,
+      /I test what comes back and send it back until it.s right\. outside the plot pipeline the agents merge nothing without my OK, and what I correct becomes a rule they follow\.$/,
     ]) {
       expect(paragraph).toHaveTextContent(sentence);
     }
@@ -153,6 +153,17 @@ describe('AboutPage', () => {
       screen.getByText(/every night a job\s+regenerates the oldest implementations/)
     ).toBeInTheDocument();
     expect(screen.queryByText(/ships a\s+new release/)).not.toBeInTheDocument();
+  });
+
+  // test_readme_claims.py holds the 24 to the criteria registry. "more than thirty" is a floor on
+  // the changes to prompts/quality-criteria.md, which a shallow CI clone cannot count; #7528 added
+  // AR-09 after a review passed an altair chart whose title the crop had cut off.
+  it('says who sets the rubric and that it changes', () => {
+    render(<AboutPage />);
+
+    expect(screen.getByText(/^every implementation is scored before it ships\./)).toHaveTextContent(
+      /to 50 at the last review\. what counts as a good plot is my call; ai helped turn it into 24 criteria and their points\. the rubric isn.t fixed: it has changed more than thirty times since November 2025, for example after a review passed a plot whose title was cut off\. the stats page shows the score distribution per library\.$/
+    );
   });
 
   // textContent, not toHaveTextContent: the matchers collapse whitespace, and the block's columns
@@ -194,7 +205,7 @@ describe('AboutPage', () => {
     // test_readme_claims.py holds the two counts to the library registry.
     const origin = screen.getByText(/^it started in November 2025/);
     expect(origin).toHaveTextContent(
-      /pyplots\.ai, a catalogue of Python plotting examples\. it grew out of everyday work: finding plot ideas, and showing colleagues a chart instead of explaining it at length\. people wanted two things/
+      /pyplots\.ai, a catalogue of Python plotting examples\. it grew out of everyday work: showing colleagues a chart instead of explaining it at length\. they, and later people who found it online, wanted two things from it: ideas for which plot fits their data, and to get to know libraries they hadn.t used yet, since each has its own strengths\. after a few months/
     );
     expect(origin).toHaveTextContent(
       /it became anyplot\.ai\. today it covers fifteen libraries in four languages, and one colorblind-safe palette travels across all of them\.$/
@@ -219,6 +230,16 @@ describe('AboutPage', () => {
     ).not.toBeInTheDocument();
     expect(screen.getByText(/my own colourblind-safe categorical palette/)).toBeInTheDocument();
     expect(screen.getByText(/ignore this entirely\. I make it the default\./)).toBeInTheDocument();
+  });
+
+  // Four rounds of variants under docs/reference/palette-variants/ (v0 to v3), which
+  // test_readme_claims.py counts; scripts/_palette_common.py measures the colour distances.
+  it('says how many rounds the palette took', () => {
+    render(<AboutPage />);
+
+    expect(screen.getByText(/^every plot uses/)).toHaveTextContent(
+      /validated against the three main forms of colour vision deficiency\. it took four rounds: the colour-distance numbers had to agree with what I like to look at\. it sits in the same neighbourhood as Okabe-Ito/
+    );
   });
 
   it('keeps the library-agnostic point under the palette', () => {
@@ -267,6 +288,25 @@ describe('AboutPage', () => {
     );
   });
 
+  // The agent design document (docs/concepts/agent-network.md) holds each part: the roles, the
+  // validator, the points that decide a repair, the notes, the owner rules with their dates.
+  // test_readme_claims.py holds "one repair and two reviews" to the agents' settings.
+  it('explains the agents and my rules in a second paragraph, linking the design document', () => {
+    render(<AboutPage />);
+
+    const paragraph = screen.getByText(/^one agent talks to you/);
+    expect(paragraph).toHaveTextContent(
+      /^one agent talks to you, an adapter writes the code changes, and a reviewer scores the render; the loop that calls them is plain code\. a validator reads the code before anything runs, and code decides from the reviewer.s points whether a repair is due: one repair and two reviews at most\. what the review still finds comes back as notes with the plot\./
+    );
+    expect(paragraph).toHaveTextContent(
+      /what the review still finds comes back as notes with the plot\. my rules: open to everyone, no login, hosted in the EU, and I keep what you paste or write only if you send feedback\. by those rules I decided which model answers, where the code it writes runs, and what the usage logs may hold; the design document on GitHub records these decisions with their dates\.$/
+    );
+    const link = screen.getByRole('link', { name: 'the design document on GitHub' });
+    expect(link).toHaveAttribute('href', `${REPO}/blob/main/docs/concepts/agent-network.md`);
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(paragraph).toContainElement(link);
+  });
+
   it('names the machine readers on the stats page in the mcp section', () => {
     render(<AboutPage />);
 
@@ -306,12 +346,12 @@ describe('AboutPage', () => {
     ]) {
       expect(screen.getAllByRole('rowheader', { name: group }).length).toBeGreaterThan(0);
     }
-    // ci-tests.yml and ci-lint.yml on every code pull request, codecov.yml's patch target,
-    // codeql.yml, ci-migrations.yml; the live-site check is the merge rule in CLAUDE.md
-    // (scripts/site-smoke.mjs).
+    // ci-tests.yml and ci-lint.yml, which skip a pull request of plot implementations and metadata
+    // only; codecov.yml's patch target, codeql.yml, ci-migrations.yml; the live-site check is the
+    // merge rule in CLAUDE.md (scripts/site-smoke.mjs).
     expect(
       screen.getByRole('row', {
-        name: /^checks\s*tests and lint on every code pull request, an 80\s%\spatch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, a check of the live site after a merge$/,
+        name: /^checks\s*tests and lint on every pull request that changes code outside the plot catalogue, an 80\s%\spatch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, and by rule a check of the live site after a merge$/,
       })
     ).toBeInTheDocument();
     expect(

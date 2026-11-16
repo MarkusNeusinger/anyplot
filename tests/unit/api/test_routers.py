@@ -1249,6 +1249,24 @@ class TestSeoProxyRouter:
         )
         for link in ("https://anyplot.ai/stats", "https://anyplot.ai/plots", "https://anyplot.ai/mcp"):
             assert f'href="{link}"' in response.text
+        # The chat's second paragraph, as AboutPage.tsx has it, with its link to the design document.
+        for sentence in (
+            "One agent talks to you, an adapter writes the code changes, and a reviewer scores the render; the "
+            "loop that calls them is plain code.",
+            "A validator reads the code before anything runs, and code decides from the reviewer's points whether "
+            "a repair is due: one repair and two reviews at most.",
+            "What the review still finds comes back as notes with the plot.",
+            "My rules: open to everyone, no login, hosted in the EU, and I keep what you paste or write only if "
+            "you send feedback.",
+            "By those rules I decided which model answers, where the code it writes runs, and what the usage logs "
+            "may hold; ",
+            "the design document on GitHub</a> records these decisions with their dates.",
+        ):
+            assert sentence in response.text, sentence
+        assert (
+            '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/agent-network.md">'
+            "the design document on GitHub</a>"
+        ) in response.text
 
     def test_seo_about_tells_the_origin_and_speaks_as_its_builder(self, client: TestClient) -> None:
         """The crawler copy carries the page's origin where the page has it, and says I, never we, as the page does."""
@@ -1263,8 +1281,9 @@ class TestSeoProxyRouter:
         )
         for sentence in (
             "It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples.",
-            "It grew out of everyday work: finding plot ideas, and showing colleagues a chart instead of "
-            "explaining it at length.",
+            "It grew out of everyday work: showing colleagues a chart instead of explaining it at length.",
+            "They, and later people who found it online, wanted two things from it: ideas for which plot fits "
+            "their data, and to get to know libraries they hadn't used yet, since each has its own strengths.",
             "After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai.",
             "Today it covers fifteen libraries in four languages, and one colorblind-safe palette travels "
             "across all of them.",
@@ -1284,26 +1303,34 @@ class TestSeoProxyRouter:
             assert heading in response.text
         for fact in (
             "Markus Neusinger",
-            "I'm a chart nerd. Physicist by training, data analyst by trade.",
+            "I'm a chart nerd. Physicist by training, senior data analyst by trade.",
             "Since 2013 I have built data pipelines, models and the tools around them, lately with AI agents "
             "doing the legwork.",
-            "On anyplot they write the code; I decide, test and send back.",
-            "I have built it alone since November 2025, in Visp, a small town in the Swiss Alps.",
+            "I know the stack from building it by hand: from 2022 to 2024 I built and ran a platform for "
+            "blockchain market data, largely without AI.",
+            "On anyplot the agents write the code; I decide, test and send back.",
+            "I have built it alone and in my own time since November 2025, in Visp, a small town in the Swiss Alps.",
             "I wanted one place to find the right plot for my data.",
             "AI models write anyplot's code: the site, the API, and the agents behind Use with my data.",
-            "A new spec needs my approval, and outside the plot pipeline the agents merge nothing without my OK.",
-            "I have built it with AI agents since November 2025.",
+            # The spec approval stands in the lede, the month in "Who built it" and the origin.
+            "Outside the plot pipeline the agents merge nothing without my OK, and what I correct becomes a rule "
+            "they follow.",
             # The stack the description names, from the page's table.
             "The site runs on React 19, Vite, MUI 9 with MUI X and TypeScript.",
             "The API runs on Python 3.14, FastAPI, SQLAlchemy and PostgreSQL 18.",
-            "Checks: tests and lint on every code pull request, an 80 % patch-coverage target, CodeQL, every "
-            "migration run on a throwaway PostgreSQL, a check of the live site after a merge.",
+            "Checks: tests and lint on every pull request that changes code outside the plot catalogue, an 80 % "
+            "patch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, and by rule a check "
+            "of the live site after a merge.",
             "Running costs about $60 a month (October 2026).",
             # The corrected pipeline and review claims (AboutPage.tsx says the same).
             "Every night a job regenerates the oldest implementations",
             "the bar drops 10 points per repair, to 50 at the last review",
+            "What counts as a good plot is my call; AI helped turn it into 24 criteria and their points. The "
+            "rubric isn't fixed: it has changed more than thirty times since November 2025, for example after a "
+            "review passed a plot whose title was cut off.",
         ):
             assert fact in response.text, fact
+        assert "A new spec needs my approval" not in response.text
         assert "ships a new release" not in response.text
         # The checks before the review are the ones a workflow runs; none looks for a blank image.
         assert "Automated checks come first: the code runs, the canvas has its size." in response.text

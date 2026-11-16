@@ -1319,7 +1319,10 @@ async def seo_mcp():
 
 # Mirrors app/src/pages/AboutPage.tsx — who built the site, how, the pipeline
 # story, the stack (the page's table, one sentence per row) and the origin;
-# counts derive from the registry so they cannot drift.
+# counts derive from the registry so they cannot drift. The page's palette
+# section has no copy here. The review's "more than thirty" is a floor on the
+# changes to prompts/quality-criteria.md after its first commit (35 when the
+# sentence was written); CI clones shallow, so no test counts them.
 _ABOUT_BOT_BODY = (
     "<h1>About anyplot</h1>"
     f"<p>anyplot.ai is a catalogue of plotting examples across {_LIBRARY_COUNT} libraries "
@@ -1331,17 +1334,18 @@ _ABOUT_BOT_BODY = (
     '(<a href="https://www.linkedin.com/in/markus-neusinger/">LinkedIn</a>, '
     '<a href="https://github.com/MarkusNeusinger">GitHub</a>, '
     '<a href="https://neusinger.com">neusinger.com</a>). I\'m a chart nerd. Physicist by training, '
-    "data analyst by trade. Since 2013 I have built data pipelines, models and the tools around "
-    "them, lately with AI agents doing the legwork. On anyplot they write the code; I decide, test "
-    "and send back. I have built it alone since November 2025, in Visp, a small town in the Swiss "
-    "Alps. I wanted one place to find the right plot for my data.</p>"
+    "senior data analyst by trade. Since 2013 I have built data pipelines, models and the tools "
+    "around them, lately with AI agents doing the legwork. I know the stack from building it by "
+    "hand: from 2022 to 2024 I built and ran a platform for blockchain market data, largely without "
+    "AI. On anyplot the agents write the code; I decide, test and send back. I have built it alone "
+    "and in my own time since November 2025, in Visp, a small town in the Swiss Alps. I wanted one "
+    "place to find the right plot for my data.</p>"
     "<h2>How it is built</h2>"
     "<p>AI models write anyplot's code: the site, the API, and the agents behind Use with my data. I "
     "decide what gets built, cut the work into tasks and give each one to Claude Code, Claude in "
     "GitHub Actions, Gemini or Copilot, depending on what it needs and what it costs. I test what "
-    "comes back and send it back until it's right. A new spec needs my approval, and outside the "
-    "plot pipeline the agents merge nothing without my OK. What I correct becomes a rule the agents "
-    "follow. I have built it with AI agents since November 2025. More on GitHub: "
+    "comes back and send it back until it's right. Outside the plot pipeline the agents merge "
+    "nothing without my OK, and what I correct becomes a rule they follow. More on GitHub: "
     '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot">'
     "How I build anyplot</a> and "
     '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#engineering-highlights">'
@@ -1363,7 +1367,10 @@ _ABOUT_BOT_BODY = (
     "on a 100-point rubric of 24 criteria (visual quality, design, spec compliance, data quality, "
     "code quality, and library mastery), blind to any earlier score. A first review needs 90; "
     "below that, AI repairs the defects the review named and the plot is reviewed again, up to "
-    "four times, and the bar drops 10 points per repair, to 50 at the last review. The "
+    "four times, and the bar drops 10 points per repair, to 50 at the last review. What counts as a "
+    "good plot is my call; AI helped turn it into 24 criteria and their points. The rubric isn't "
+    "fixed: it has changed more than thirty times since November 2025, for example after a review "
+    "passed a plot whose title was cut off. The "
     '<a href="https://anyplot.ai/stats">stats page</a> shows the score distribution per library.</p>'
     "<h2>Use with my data</h2>"
     "<p>Experimental, open to everyone since 2 November 2026. "
@@ -1372,6 +1379,15 @@ _ABOUT_BOT_BODY = (
     "network access, reviews the render against the catalogue's rubric, repairs it once if "
     "needed, and hands back the image and the code. Your chat and data live only in server "
     "memory and are deleted after an hour idle, unless you send feedback.</p>"
+    "<p>One agent talks to you, an adapter writes the code changes, and a reviewer scores the "
+    "render; the loop that calls them is plain code. A validator reads the code before anything "
+    "runs, and code decides from the reviewer's points whether a repair is due: one repair and two "
+    "reviews at most. What the review still finds comes back as notes with the plot. My rules: open "
+    "to everyone, no login, hosted in the EU, and I keep what you paste or write only if you send "
+    "feedback. By those rules I decided which model answers, where the code it writes runs, and "
+    "what the usage logs may hold; "
+    '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/agent-network.md">'
+    "the design document on GitHub</a> records these decisions with their dates.</p>"
     "<h2>MCP server</h2>"
     "<p>The same catalogue, served to AI coding assistants over the Model Context Protocol. Six "
     "tools search specs by tag, return a spec with its implementations, and fetch one library's "
@@ -1387,9 +1403,10 @@ _ABOUT_BOT_BODY = (
     "Logging, BigQuery, Cloud Build and Artifact Registry in the Netherlands (europe-west4), plus Secret "
     "Manager and Cloud Monitoring. At the edge and for analytics: Cloudflare, and Plausible with no "
     "cookies and a public dashboard. For reviews: Gemini via Vertex AI for second opinions and GitHub "
-    "Copilot for pull requests. Checks: tests and lint on every code pull request, an 80 % "
-    "patch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, a check of the "
-    "live site after a merge. Editor and typography: JetBrains PyCharm, MonoLisa by Marcus Sterz, and "
+    "Copilot for pull requests. Checks: tests and lint on every pull request that changes code "
+    "outside the plot catalogue, an 80 % patch-coverage target, CodeQL, every migration run on a "
+    "throwaway PostgreSQL, and by rule a check of the live site after a merge. Editor and "
+    "typography: JetBrains PyCharm, MonoLisa by Marcus Sterz, and "
     "JetBrains Mono 2.304 (SIL Open Font License 1.1) for the attribution strip under plots created "
     "from your own data.</p>"
     "<p>The whole stack — specs, pipeline, API and frontend — is open source under the MIT License at "
@@ -1397,12 +1414,12 @@ _ABOUT_BOT_BODY = (
     "Running costs about $60 a month (October 2026).</p>"
     "<h2>Origin</h2>"
     "<p>It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples. It grew "
-    "out of everyday work: finding plot ideas, and showing colleagues a chart instead of explaining "
-    "it at length. People wanted two things from it. They wanted ideas for which plot fits their "
-    "data. And they wanted to get to know libraries they hadn't used yet, since each has its own "
-    "strengths. After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became "
-    "anyplot.ai. Today it covers fifteen libraries in four languages, and one colorblind-safe palette "
-    "travels across all of them.</p>"
+    "out of everyday work: showing colleagues a chart instead of explaining it at length. They, and "
+    "later people who found it online, wanted two things from it: ideas for which plot fits their "
+    "data, and to get to know libraries they hadn't used yet, since each has its own strengths. "
+    "After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai. "
+    "Today it covers fifteen libraries in four languages, and one colorblind-safe palette travels "
+    "across all of them.</p>"
     "<h2>Open</h2>"
     '<p>Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
     "propose a new plot type via a "
