@@ -2,47 +2,51 @@ library: altair
 language: python
 specification_id: heatmap-adjacency
 created: '2026-05-08T07:19:21Z'
-updated: '2026-05-08T07:40:51Z'
+updated: '2026-11-16T02:44:37Z'
 generated_by: claude-sonnet
-workflow_run: 25542295641
+workflow_run: 43793246444
 issue: 5240
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (symmetric fill, colorbar, node-name
-    tick labels, cluster-ordered nodes) correctly implemented'
-  - Fully theme-adaptive chrome with all six tokens correctly applied to every element
-    in both renders
-  - Correct viridis colormap for continuous edge-weight data — no forbidden palettes
-  - Clean, reproducible code with seed; flat KISS structure
-  - Both renders pass legibility check — no dark-on-dark failures
+  - Absent edges sit on a neutral elevated tile, so a missing tie never reads as a
+    weak one (C3) in either theme
+  - imprint_seq ramp for edge weight with a color bar, identical data colors in light
+    and dark renders
+  - Department separators drawn with mark_rule and bandPosition=0 land exactly on
+    the block edges of the ordinal scale
+  - Symmetric 24x24 matrix ordered by department shows three clear diagonal blocks
+    with sparse weak cross ties
+  - Canvas lands exactly on 2400x2400 via pad-only post-processing
+  - Native tooltips (researcher, co-author, strength) in the HTML output
   weaknesses:
-  - Tick label font size is 16px; style guide specifies 18px for pixel-based libraries
-    — raise labelFontSize to 18
-  - Canvas is 3300×3300 px (1100 × 3.0); target for square symmetric plots is 3600×3600
-    — raise width/height to 1200
-  - No group-boundary annotations or per-department axis labels — adding text labels
-    alongside axis separators would lift DE-03 significantly
-  - LM-02 underused — Altair supports layering rules for group boundary lines or alt.condition
-    to suppress diagonal cells
+  - 'VQ-05 (both): the 368x368 inner view leaves the content occupying only the middle
+    of the 2400x2400 canvas, with empty bands of about 330 px above the title and
+    about 325 px below the x-axis title, the matrix spans only about 61 % of the canvas
+    width, and the legend frame is about 580 px wide around a 70 px gradient → inner
+    view near the library prompt''s square 500x460 (about +100 px each) and a compact
+    legend so the matrix fills the canvas. Likely cause: .properties(width=368, height=368)
+    plus the long legend title setting the legend frame width.'
+  - 'Suggestion: department labels (Physics, Biology, Chemistry) at the block boundaries
+    would name the groups the separators delimit.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) — correct
-      Chrome: title "heatmap-adjacency · altair · anyplot.ai" in dark ink; both axis labels "Researcher" clearly dark; 24 tick labels rotated -45° on x-axis and horizontal on y-axis in INK_SOFT color; colorbar legend with "Collab. Strength" title on elevated off-white (#FFFDF6) background
-      Data: viridis colormap (dark purple = 0/absent edges, yellow-green = strong ~1.0 connections); 24×24 matrix with clear block-diagonal structure; 3 department clusters (Ph, Bi, Ch) with strong within-group connections and sparse cross-group connections; dashed separator lines at group boundaries
-      Legibility verdict: PASS — all text clearly readable on warm off-white background
+      Background: warm off-white #FAF8F1; legend frame and absent-edge tiles in elevated #FFFDF6
+      Chrome: title 'heatmap-adjacency · python · altair · anyplot.ai' in dark ink, axis titles 'Researcher' (y) and 'Co-author' (x) bold dark, 24 node tick labels (Ph01-Ch08) in INK_SOFT, x labels rotated -45 degrees; color bar 'Collaboration strength' 0.0-0.8+ on the right; all readable
+      Data: 24x24 symmetric matrix, imprint_seq green (#009E73, weak) to blue (#4467A3, strong); three dense blue blocks on the diagonal (Ph, Bi, Ch) with sparse green cross ties; empty diagonal; dashed dark separators exactly at the group boundaries. Content sits in the middle with wide empty bands top and bottom
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: near-black (#1A1A17) — correct
-      Chrome: title in light (#F0EFE8) text clearly visible; axis labels and tick labels in lighter (#B8B7B0) color clearly readable against dark background; colorbar legend on elevated dark (#242420) background with light text; no dark-on-dark failures detected
-      Data: viridis colormap colors IDENTICAL to light render — only chrome flips between themes; same block-diagonal structure visible with identical yellow-green clusters and dark purple absent edges
-      Legibility verdict: PASS — all text readable on near-black background; no dark-on-dark issues
+      Background: warm near-black #1A1A17; absent tiles and legend frame in #242420
+      Chrome: title and axis titles in light ink, tick and legend labels in light grey; no dark-on-dark text
+      Data: identical cell colors to the light render; separators flip to light dashes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -50,75 +54,79 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px correct; tick labels at 16px slightly
-          below recommended 18px for pixel-based libraries
+        comment: 'Title 16 px, axis titles 12 px, ticks and legend labels 10 px at
+          scale 4: at the style-guide references; readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: x-axis labels rotated -45 degrees; no collisions
+        comment: No text collisions; x tick labels rotated -45 degrees clear each
+          other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 576 matrix cells clearly visible; viridis range distinguishes
-          absent from strong connections
+        comment: All 24x24 cells, the color-bar gradient and the dashed block separators
+          are visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe
+        comment: Green-to-blue sequential ramp plus neutral absent tiles; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Canvas 3300x3300 (1100x3.0); target is 3600x3600 for square plots
+        passed: false
+        comment: Canvas is exactly 2400x2400, but the 368 px inner view leaves empty
+          bands of about 330 px above the title and below the x-axis title, and the
+          legend frame is about 580 px wide around a 70 px gradient (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec-id format; axes labeled Researcher; colorbar titled
-          Collab. Strength
+        comment: 'Researcher / Co-author / Collaboration strength: descriptive reader
+          text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous edge-weight data; backgrounds #FAF8F1/#1A1A17
-          correct'
+        comment: 'imprint_seq (#009E73 -> #4467A3) for the continuous weight; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional viridis with custom colorbar dimensions; full theme-adaptive
-          chrome. Missing group annotations.
+        comment: Style-guide baseline typography and hierarchy; nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid hidden; INK_SOFT tokens on domain/ticks; dashed block separators
-          are helpful. Limited beyond basics.
+        comment: 'Raised by one: every cell has a 0.5 px page-colored gutter and absent
+          edges sit on a neutral elevated tile, giving a crisp matrix grid without
+          grid lines'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Block-diagonal structure tells community story; no group-label annotations
-          or focal-point emphasis
+        passed: false
+        comment: Block-diagonal story comes from the spec's ordering and group boundaries;
+          no further focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct matrix-based adjacency heatmap using mark_rect()
+        comment: Correct adjacency-matrix heatmap with mark_rect; no unrequested encodings
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cluster-ordered nodes; symmetric fill; weight-to-color encoding;
-          colorbar; node-name tick labels
+        comment: 'C1 square matrix same order on both axes; C2 ordered by department,
+          blocks on the diagonal; C3 color = weight with color bar, absent edges neutral;
+          C4 symmetric; C5 node names as ticks: all met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source on x, target on y, weight on color; all 24 nodes visible on
-          both axes
+        comment: Researcher on y, co-author on x, weight on color; separators sit
+          exactly between Ph08/Bi01 and Bi08/Ch01
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: heatmap-adjacency · altair · anyplot.ai; colorbar: Collab.
-          Strength'
+        comment: Title heatmap-adjacency · python · altair · anyplot.ai; color-bar
+          title 'Collaboration strength'
     data_quality:
       score: 15
       max: 15
@@ -159,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full adjacency matrix; within-group density vs cross-group sparsity
-          both represented
+        comment: 'Dense within-department blocks, sparse weak cross-department ties,
+          empty diagonal, absent cells: full range of the plot type'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Academic co-authorship network with Physics/Biology/Chemistry departments;
-          neutral and realistic
+        comment: 'Academic co-authorship across physics, biology and chemistry departments:
+          plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 24 nodes (3x8) within 20-200 target range; weight [0,1] appropriate
+        comment: 24 nodes within the 20-200 range; strengths 0.08-1.0 on a 0-1 scale;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -189,25 +199,26 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used
+        comment: os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean chained Altair calls; readable matrix construction loop
+        comment: stack/reset_index reshaping and prefix-derived cuts; no hand-rolled
+          algorithm a call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and .html, pads to 2400x2400 without cropping
     library_mastery:
       score: 6
       max: 10
@@ -217,24 +228,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: mark_rect() with :O ordinal encoding and sort=node_names; configure_axisX
-          separate for angle; alt.Scale(scheme='viridis')
+        comment: 'Raised by one: layered alt.layer of shared ordinal scales with an
+          explicit domain, encoding types and escaped fields as the library prompt
+          asks'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Tooltips with format and HTML export are useful but not deeply distinctive;
-          no alt.condition, layered annotations, or selection interactions
+        comment: 'Raised by one: mark_rule with bandPosition=0 places separators on
+          band edges of the ordinal scale; native tooltips in the HTML'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-16T02:40:32Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - layer-composition
+  - colorbar
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - matrix-construction
+  - wide-to-long
   dataprep: []
   styling:
   - custom-colormap
+  - edge-highlighting
