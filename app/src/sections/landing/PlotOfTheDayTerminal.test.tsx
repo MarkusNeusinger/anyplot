@@ -33,6 +33,9 @@ vi.mock('src/hooks/useLayoutContext', async () => {
 
 import { PlotOfTheDayTerminal, POTD_LOAD_ERROR } from 'src/sections/landing/PlotOfTheDayTerminal';
 
+/** A quoted string with at least one character: generated content that makes a line box. */
+const LINE_OF_TEXT = /^(["']).+\1$/;
+
 const potd = {
   spec_id: 'scatter-basic',
   spec_title: 'Basic Scatter',
@@ -129,22 +132,29 @@ describe('PlotOfTheDayTerminal', () => {
     const wide = 600;
     const { rerender } = render(<PlotOfTheDayTerminal potd={null} status="loading" />);
     // The empty frame holds the actions' row with nothing in it; its pseudo-element gives it
-    // the line's height without words of its own.
+    // the line's height without words of its own. An empty string, `none` or `normal` would
+    // leave the row 0 px high, and the narrow frame would grow by a line when the plot arrives.
     const empty = screen.getByTestId('potd-terminal-actions');
     expect(empty).toBeEmptyDOMElement();
     expect(styleAt(empty, 390, narrow).flexBasis).toBe('100%');
+    expect(styleAt(empty, 390, narrow, '::before').content).toMatch(LINE_OF_TEXT);
     expect(styleAt(empty, 1440, wide).flexBasis).toBe('auto');
     const rowClass = empty.className;
 
     rerender(<PlotOfTheDayTerminal potd={null} status="failed" onRetry={vi.fn()} />);
-    expect(screen.getByTestId('potd-terminal-actions').className).toBe(rowClass);
+    const failed = screen.getByTestId('potd-terminal-actions');
+    expect(failed.className).toBe(rowClass);
+    expect(failed).toBeEmptyDOMElement();
+    expect(styleAt(failed, 390, narrow, '::before').content).toMatch(LINE_OF_TEXT);
 
-    // The plot without `.use_my_data()`: github.open() alone still takes the second row.
+    // The plot without `.use_my_data()`: github.open() alone still takes the second row, and
+    // its text gives the row its height, so the pseudo-element adds nothing beside it.
     rerender(<PlotOfTheDayTerminal potd={potd} status="ready" />);
     const card = screen.getByTestId('potd-terminal-actions');
     expect(card.className).toBe(rowClass);
     expect(within(card).getByLabelText('Open source on GitHub')).toBeInTheDocument();
     expect(within(card).queryByRole('link', { name: 'Use with my data' })).toBeNull();
+    expect(styleAt(card, 390, narrow, '::before').content).toBe('');
     expect(styleAt(card, 390, narrow).flexBasis).toBe('100%');
     expect(styleAt(card.parentElement as Element, 390, narrow).flexWrap).toBe('wrap');
     expect(styleAt(card, 1440, wide).flexBasis).toBe('auto');
@@ -157,6 +167,7 @@ describe('PlotOfTheDayTerminal', () => {
     expect(withLink.className).toBe(rowClass);
     expect(within(withLink).getByRole('link', { name: 'Use with my data' })).toBeInTheDocument();
     expect(styleAt(withLink, 390, narrow).flexBasis).toBe('100%');
+    expect(styleAt(withLink, 390, narrow, '::before').content).toBe('');
   });
 
   it('keeps `// plot of the day` in its own node when the plot arrives', () => {

@@ -46,6 +46,8 @@ describe('HeroSection with the plot-of-the-day terminal', () => {
     const frame = screen.getByTestId('potd-terminal-placeholder');
     const empty = screen.getByTestId('potd-terminal-actions');
     expect(styleAt(empty, 390, phoneCard).flexBasis).toBe('100%');
+    // The empty row is a line high (its pseudo-element's no-break space), not 0 px.
+    expect(styleAt(empty, 390, phoneCard, '::before').content).toMatch(/^(["']).+\1$/);
 
     rerender(<HeroSection potd={potd} potdStatus="ready" onRetryPotd={vi.fn()} />);
     // The hero hands the plot to the same card element, so the reserved box stays.
