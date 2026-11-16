@@ -444,11 +444,11 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>origin</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              it started as pyplots.ai, a small catalogue of python plotting examples built in a
-              weekend. it grew when it became clear people wanted two things from a catalogue like
-              this: inspiration for which plot fits their data, and a way to get to know libraries
-              they hadn't used before — each has its own specialties. anyplot is the grown-up
-              version, anchored in a colorblind-safe palette that travels across every library.
+              it started as pyplots.ai, a small catalogue of python plotting examples. it grew when
+              it became clear people wanted two things from a catalogue like this: inspiration for
+              which plot fits their data, and a way to get to know libraries they hadn't used before
+              — each has its own specialties. anyplot is the grown-up version, anchored in a
+              colorblind-safe palette that travels across every library.
             </Box>
           </Box>
         </Box>
