@@ -10,10 +10,10 @@
   a link on the site.
 - **About is the last entry of the main navigation.** Eight entries need about
   750 px beside the logo and the search, so the two-row masthead of phones now
-  also serves tablets up to 899 px, with the full labels; on phones narrower
-  than 364 px the labels shrink to keep 8 px apart, and the active page is
-  marked by a small dot that stays clear of the label before it. From 900 to
-  1199 px the row runs at 12 px with 18 px gaps.
+  also serves tablets up to 899 px, with the full labels. On phones narrower
+  than 364 px the labels shrink to keep 8 px apart, and on every phone the
+  active page is marked by a small dot that stays clear of the label before
+  it. From 900 to 1199 px the row runs at 12 px with 18 px gaps.
 
 ### Changed
 
