@@ -5,11 +5,15 @@
   hero's entry below `plots.browse()` reads `.use_my_data() →` over "an ai
   agent adapts a catalogue plot to your data" and leads to `/agent`, in place
   of the muted `# new: pick any plot, then .use_my_data()` line that led to
-  `/plots`. `/agent` without a catalogue pair is now an explainer with a title
-  of its own: the about page's description of the chat, three example pairs in
+  `/plots`. Until the lane answers, the entry's box stands there invisible, so
+  the answer moves neither the plot of the day nor anything below it; only a
+  closed lane removes the box. `/agent` without a catalogue pair is now an
+  explainer: the about page's description of the chat, three example pairs in
   Python, R, and JavaScript that open the chat, and the way on to the
-  catalogue. It opens no session: of the agent routes, a visitor's browser
-  asks only the lane's door, which the API answers without the agents service.
+  catalogue, under a title, a description, and a link preview (`og:title`,
+  `og:description`) of its own. It opens no session: of the agent routes, a
+  visitor's browser asks only the lane's door, which the API answers without
+  the agents service.
   In Plausible, `nav_click{source: hero_use_my_data}` now targets `/agent`,
   and `agent_open` gains the source `agent_intro` for the explainer's
   examples. Each chat opened there counts as one open, also after the visitor

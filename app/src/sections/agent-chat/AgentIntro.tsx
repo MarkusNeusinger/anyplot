@@ -35,6 +35,8 @@ const AGENT_EXAMPLES = [
   { spec: 'line-basic', library: 'd3' },
 ] as const;
 
+/** The page's title, in the tab and in a link preview. */
+export const AGENT_INTRO_TITLE = 'use with my data | anyplot.ai';
 /** The page's description: the about page's two sentences on what the chat does. */
 export const AGENT_INTRO_DESCRIPTION =
   "pick any plot, choose .use_my_data(), and paste your data. an agent adapts that plot's code to your columns, renders it in a sandbox with no network access, reviews the render against the catalogue's rubric, repairs it once if needed, and hands back the image and the code.";
@@ -45,8 +47,12 @@ const targetSx = { display: 'inline-flex', alignItems: 'center', minHeight: { xs
 export function AgentIntro() {
   return (
     <Box data-testid="agent-intro" sx={{ py: 4, maxWidth: 640, mx: 'auto' }}>
-      <title>use with my data | anyplot.ai</title>
+      {/* The Open Graph pair replaces the home page's shell defaults, which a shared link would
+          otherwise show. No canonical: the page is never indexed. */}
+      <title>{AGENT_INTRO_TITLE}</title>
       <meta name="description" content={AGENT_INTRO_DESCRIPTION} />
+      <meta property="og:title" content={AGENT_INTRO_TITLE} />
+      <meta property="og:description" content={AGENT_INTRO_DESCRIPTION} />
       <SectionHeader prompt="❯" title={<em>use with my data</em>} />
       <Box component="p" sx={{ ...bodyTextSx, m: 0 }}>
         experimental, open to everyone since 2 november 2026.{' '}

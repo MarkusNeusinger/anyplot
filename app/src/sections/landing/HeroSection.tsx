@@ -237,6 +237,12 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
  * without a plot, which explains the chat and leads on to the catalogue or to a few example
  * plots: the visitor still picks the plot before a chat opens. Tracked as
  * `nav_click{source: hero_use_my_data}`. No "experimental" here: the chat's notice says it.
+ *
+ * While the lane's answer is out, the entry keeps its box, invisible and out of reach (no link,
+ * hidden from assistive technology), so the answer moves nothing below it: in one column the
+ * plot of the day sits under it, and in two columns it sets the left column's height, which
+ * centres the card. The open lane, the usual answer, then shows the entry in place. Only a
+ * closed lane, the rare answer, removes the box, and the content below moves up once.
  */
 export const AGENT_ENTRY_NAME = '.use_my_data()';
 /** What the feature does, in plain words. */
@@ -247,15 +253,19 @@ export const AGENT_ENTRY_LABEL =
 
 function AgentEntry({ onClick }: { onClick: () => void }) {
   const open = useAgentLaneOpen();
-  if (open !== true) return null;
+  if (open === false) return null;
+  const pending = open === null;
+  // The placeholder is a plain element, so nothing can focus or click it; the link that replaces
+  // it is a new element, whose rise plays as it appears.
+  const elementProps = pending
+    ? { component: 'span' as const, 'aria-hidden': true }
+    : { component: RouterLink, to: paths.agent, onClick, 'aria-label': AGENT_ENTRY_LABEL };
   return (
     <Box
-      component={RouterLink}
-      to={paths.agent}
-      onClick={onClick}
-      aria-label={AGENT_ENTRY_LABEL}
+      {...elementProps}
       data-testid="hero-agent-entry"
       sx={{
+        visibility: pending ? 'hidden' : 'visible',
         animation: 'rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s backwards',
         display: 'inline-flex',
         flexDirection: 'column',

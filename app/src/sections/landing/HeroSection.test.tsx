@@ -61,10 +61,50 @@ describe('HeroSection', () => {
     });
   });
 
-  it('keeps the entry hidden while the lane probe is pending', () => {
+  it("keeps the entry's box while the lane probe is pending: invisible, unreachable, untracked", async () => {
+    const user = userEvent.setup();
     lane.open = null;
-    render(<HeroSection potd={null} />);
+    const { rerender } = render(<HeroSection potd={null} />);
+    // The box holds the same two lines as the link, so the link takes its place without a move.
+    const box = screen.getByTestId('hero-agent-entry');
+    expect(box).toHaveTextContent(`${AGENT_ENTRY_NAME} →`);
+    expect(box).toHaveTextContent(AGENT_ENTRY_TEXT);
+    expect(box).toHaveStyle({ visibility: 'hidden' });
+    expect(box).toHaveAttribute('aria-hidden', 'true');
+    // No link: nothing to follow, focus or name.
+    expect(box.tagName).toBe('SPAN');
+    expect(box).not.toHaveAttribute('href');
+    expect(box).not.toHaveAttribute('tabindex');
     expect(screen.queryByRole('link', { name: AGENT_ENTRY_LABEL })).not.toBeInTheDocument();
+    expect(screen.queryByText(AGENT_ENTRY_TEXT)?.closest('a')).toBeNull();
+    // Tabbing through the hero never stops on it.
+    const stops: (Element | null)[] = [];
+    for (let i = 0; i < 6; i += 1) {
+      await user.tab();
+      stops.push(document.activeElement);
+    }
+    expect(stops.some(el => el !== null && box.contains(el))).toBe(false);
+    await user.click(box);
+    expect(trackEvent).not.toHaveBeenCalled();
+
+    // The lane answers open: the link stands in the box's place.
+    lane.open = true;
+    rerender(<HeroSection potd={null} />);
+    const link = screen.getByRole('link', { name: AGENT_ENTRY_LABEL });
+    expect(link).toHaveAttribute('data-testid', 'hero-agent-entry');
+    expect(link).toHaveStyle({ visibility: 'visible' });
+    expect(link).not.toHaveAttribute('aria-hidden');
+  });
+
+  it('removes the box when the lane answers closed', () => {
+    lane.open = null;
+    const { rerender } = render(<HeroSection potd={null} />);
+    expect(screen.getByTestId('hero-agent-entry')).toBeInTheDocument();
+
+    lane.open = false;
+    rerender(<HeroSection potd={null} />);
+    expect(screen.queryByTestId('hero-agent-entry')).not.toBeInTheDocument();
+    expect(screen.queryByText(AGENT_ENTRY_TEXT)).not.toBeInTheDocument();
   });
 
   it('tracks the primary browse CTA, mcp link and github link', async () => {

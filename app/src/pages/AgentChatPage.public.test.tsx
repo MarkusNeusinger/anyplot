@@ -18,6 +18,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { analyticsMuted } from 'src/analytics/mute';
 import { resetAgentLaneProbe } from 'src/hooks/useAgentLaneOpen';
 import { AgentChatPage, HIGHCHARTS_NOTE } from 'src/pages/AgentChatPage';
+import { AGENT_INTRO_DESCRIPTION, AGENT_INTRO_TITLE } from 'src/sections/agent-chat/AgentIntro';
 import { EXPERIMENTAL_DETAILS, EXPERIMENTAL_LINE } from 'src/sections/agent-chat/lane';
 import { theme } from 'src/theme';
 import { ADMIN_HINT_KEY, VIEW_AS_VISITOR_KEY } from 'src/utils/adminAuth';
@@ -321,6 +322,16 @@ describe('AgentChatPage on the public lane', () => {
       'content',
       expect.stringContaining("an agent adapts that plot's code to your columns")
     );
+    // A shared link previews the explainer, not the home page: the page's own Open Graph pair.
+    expect(AGENT_INTRO_TITLE).toBe('use with my data | anyplot.ai');
+    const og = (property: string) =>
+      Array.from(document.querySelectorAll(`meta[property="${property}"]`)).map(meta =>
+        meta.getAttribute('content')
+      );
+    expect(og('og:title')).toEqual([AGENT_INTRO_TITLE]);
+    expect(og('og:description')).toEqual([AGENT_INTRO_DESCRIPTION]);
+    // Never indexed, so no canonical either.
+    expect(document.querySelector('link[rel="canonical"]')).toBeNull();
     // A tool page, never one to index, also as the explainer.
     expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
       'content',
