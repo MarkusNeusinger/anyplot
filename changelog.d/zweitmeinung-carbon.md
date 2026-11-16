@@ -7,4 +7,4 @@
   so a second opinion, which runs only on request, gets the stronger reader.
   Argon stays one flag away (`--model gemini-4-argon`) for the case that Carbon
   is not reachable, and the report names the model that ran. The Flash check
-  before a code pull request opens is unchanged.
+  before a code pull request opens is unchanged. (#13146)
