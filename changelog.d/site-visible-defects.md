@@ -21,9 +21,9 @@
 - **The Highcharts card notes its licence.** The card reads
   `free for non-commercial use` on the libraries page and the landing page.
   A licence note now has its own line above `.explore()`, and MUI X's
-  `MIT · community` moved there from beside it, so a note never wraps or
-  pushes `.explore()` out of line with the cards beside it. This adds a
-  19 px line to both cards.
+  `MIT · community` moved there from beside it. The Highcharts note stays
+  on one line at every width from 320 px, and `.explore()` stays level with
+  the cards beside it. This adds a 19 px line to both cards.
 - **The landing page no longer jumps when the plot of the day arrives.** The
   terminal frame is reserved, empty, while the plot loads, and keeps its
   height when the plot arrives and when `.use_my_data()` joins its header
