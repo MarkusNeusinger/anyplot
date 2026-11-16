@@ -363,9 +363,10 @@ class RequestLedger:
     `attribution` itself, so a hook's line and its verdict here never differ. The hook's other fields (counts,
     languages, waits) never come here; the turn's record closes both names (`turn_record.GuardLine`)."""
     shipped_memory: dict[str, list[str]] | None = None
-    """The plot memory a shipped version stands on, `{kept, added}`: the ids of the entries from before the run that
-    it kept, and of the entries its own `remember` items added (`pipeline.memory_ids`), set once the memory is settled
-    with the version. The `plot` event carries it as `memory`; None for a run that stored no version."""
+    """The plot memory a shipped version stands on, `{kept, added, unused}`: the ids of the entries from before the run
+    that it kept, of the entries the run added, and of the entries from before the run whose verbatim text its render
+    does not draw (`pipeline.memory_ids`), set once the memory is settled with the version. The `plot` event carries
+    it as `memory`; None for a run that stored no version."""
     shipped_view: dict[str, Any] | None = None
     """The view of the plot a shipped version drew its rows through, as the page shows it (`plot_view.Viewed.shown`:
     the counts and the view's parts). The `plot` event carries it as `view`; None for a version that drew every row

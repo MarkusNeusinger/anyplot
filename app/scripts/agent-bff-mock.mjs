@@ -233,7 +233,7 @@
  * catalogue code like `create_plot`, in the theme the user asked for in the library before, and spends the
  * carry. `GET .../memory` lists the entries with `written` (the memory ever held one), `DELETE .../memory/{id}`
  * removes one (`404 not_found`, `409 run_active`) and `DELETE .../memory` forgets all. A shipped plot's event
- * names the memory its version stands on, `memory: {kept, added}` by entry id, settled before the event as the
+ * names the memory its version stands on, `memory: {kept, added, unused}` by entry id, settled before the event as the
  * service does. A typed plot wish before the data is confirmed (also in the note sent with a paste), while the
  * library has no plot of this data (a plot of data a new paste replaced is none), is kept for its first plot as
  * the root's `keep_plot_request` keeps it, which the stream shows nothing of; that plot then remembers it. Every
@@ -1640,7 +1640,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // typed change keeps its decision, the first plot of a library the wish kept for it in step
       // 1, a start over keeps the memory as it is (only the user clears it), and the switch's carry
       // is spent. The event names what the version stands on (`pipeline.memory_ids`): the kept
-      // entries from before the run and the added ones; one a change replaced is in neither.
+      // entries from before the run and the added ones; one a change replaced is in neither. The
+      // mock draws no texts, so no remembered text goes unused.
       const before = new Set(session.memory.map(entry => entry.id));
       // A view of the plot is session state of its own, never a remembered decision.
       if (refine && newData === null && !viewSet && !viewCleared) rememberChange(session, text);
@@ -1653,6 +1654,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         version.result.memory = {
           kept: session.memory.filter(entry => before.has(entry.id)).map(entry => entry.id),
           added: session.memory.filter(entry => !before.has(entry.id)).map(entry => entry.id),
+          unused: [],
         };
       }
       turn = 'plot';
