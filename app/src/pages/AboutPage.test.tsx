@@ -30,11 +30,14 @@ describe('AboutPage', () => {
 
     const builder = document.getElementById('builder')!;
     expect(builder).toHaveTextContent('Markus Neusinger');
-    // As the README's "How I build anyplot" says it, and the year test_readme_claims.py pins.
+    // As the README's "How I build anyplot" says it, in the first person, and the year
+    // test_readme_claims.py pins.
     expect(builder).toHaveTextContent(
-      /a physicist working in data and ai: since 2013 he has built data pipelines/
+      /I.m a physicist working in data and ai: since 2013 I.ve built data pipelines/
     );
-    expect(builder).toHaveTextContent(/he built anyplot in Visp, a small town in the Swiss Alps/);
+    expect(builder).toHaveTextContent(/I built anyplot in Visp, a small town in the Swiss Alps/);
+    // The builder speaks for himself: no sentence of the page describes him from outside.
+    expect(document.body).not.toHaveTextContent(/\bhe (has|built|leads|tests|corrects)\b/);
     expect(builder.querySelector('img')).toHaveAttribute(
       'src',
       'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp'

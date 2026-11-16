@@ -4,7 +4,8 @@
   built it" names Markus Neusinger with his photo, links to LinkedIn, GitHub
   and his own site neusinger.com, and his other projects; "how it is built"
   says that models write the code of the site, the API, and the agents, and how
-  he leads them, and links the README's "How I build anyplot" and "Engineering
+  he leads them, in the first person as the README does, and links the README's
+  "How I build anyplot" and "Engineering
   highlights" and the AI workflow page. `test_readme_claims.py` checks that
   those files and headings exist, so a renamed heading fails a test instead of
   a link on the site. The author in the structured data names neusinger.com

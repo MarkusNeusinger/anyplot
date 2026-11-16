@@ -176,11 +176,11 @@ export function AboutPage() {
                   </Link>
                 </Typography>
                 <Typography sx={{ ...textStyle, mb: 0 }}>
-                  a physicist working in data and ai: since 2013 he has built data pipelines,
-                  analyses and machine learning, and the apps people use them through. he built
-                  anyplot in Visp, a small town in the Swiss Alps, looking for one place to find the
-                  right plot for the data in front of him — and a way to explore what each library
-                  does best.
+                  I&apos;m a physicist working in data and ai: since 2013 I&apos;ve built data
+                  pipelines, analyses and machine learning, and the apps people use them through. I
+                  built anyplot in Visp, a small town in the Swiss Alps, looking for one place to
+                  find the right plot for the data in front of me — and a way to explore what each
+                  library does best.
                 </Typography>
               </Box>
             </Box>
@@ -217,11 +217,11 @@ export function AboutPage() {
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
               models write anyplot&apos;s code — the site, the api, and the agents behind &ldquo;use
-              with my data&rdquo; — and he leads them, with his experience across data, backends,
+              with my data&rdquo; — and I lead them, with my experience across data, backends,
               frontends and hosting. work goes to Claude Code, Claude in GitHub Actions, Gemini or
-              Copilot by what it needs and what it costs; he tests what comes back and returns it
-              until it&apos;s right. what he corrects becomes a rule the agents follow, and a
-              mistake that comes back becomes a test or a written rule.
+              Copilot by what it needs and what it costs; I test what comes back and return it until
+              it&apos;s right. what I correct becomes a rule the agents follow, and a mistake that
+              comes back becomes a test or a written rule.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               more on GitHub: <Ext href={HOW_I_BUILD_URL}>how I build anyplot</Ext> and{' '}

@@ -1329,16 +1329,16 @@ _ABOUT_BOT_BODY = (
     "<p>Markus Neusinger "
     '(<a href="https://www.linkedin.com/in/markus-neusinger/">LinkedIn</a>, '
     '<a href="https://github.com/MarkusNeusinger">GitHub</a>, '
-    '<a href="https://neusinger.com">neusinger.com</a>), a physicist working in data and AI: '
-    "since 2013 he has built data pipelines, analyses and machine learning, and the apps people use "
-    "them through. He built anyplot in Visp, a small town in the Swiss Alps, looking for one place to "
-    "find the right plot for the data in front of him, and a way to explore what each library does "
+    '<a href="https://neusinger.com">neusinger.com</a>). I\'m a physicist working in data and AI: '
+    "since 2013 I've built data pipelines, analyses and machine learning, and the apps people use "
+    "them through. I built anyplot in Visp, a small town in the Swiss Alps, looking for one place to "
+    "find the right plot for the data in front of me, and a way to explore what each library does "
     "best.</p>"
     "<h2>How it is built</h2>"
     "<p>Models write anyplot's code (the site, the API, and the agents behind Use with my data), and "
-    "he leads them, with his experience across data, backends, frontends and hosting. Work goes to "
-    "Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs; he "
-    "tests what comes back and returns it until it's right. What he corrects becomes a rule the "
+    "I lead them, with my experience across data, backends, frontends and hosting. Work goes to "
+    "Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs; I "
+    "test what comes back and return it until it's right. What I correct becomes a rule the "
     "agents follow, and a mistake that comes back becomes a test or a written rule. More on GitHub: "
     '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot">'
     "How I build anyplot</a> and "
