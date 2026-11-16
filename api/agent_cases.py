@@ -788,7 +788,7 @@ def code_diff(original: str, adapted: str, *, spec_id: str, library_id: str) -> 
     The export's attribution header is dropped first, so its two comment lines do not read as
     a change. Each line counts as newline-terminated, so a missing final newline on either
     side does not glue two diff lines together. Both labels carry the library's file
-    extension, so `case/plot<ext>` names the code file a case of that library stores.
+    extension (`core.constants.library_file_extension`), the one its language's code file has.
     """
     extension = library_file_extension(library_id)
     return "".join(
