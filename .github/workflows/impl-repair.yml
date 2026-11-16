@@ -645,7 +645,7 @@ jobs:
 
           # The render.sha256 of the code before the repair goes before the new
           # renders arrive, so it can never sit beside them; the repaired
-          # file's is written last.
+          # file's is written last, by the next step.
           gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
 
           # Upload both theme PNGs + their responsive variants
@@ -664,34 +664,6 @@ jobs:
               gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot-${theme}.html" 2>/dev/null || true
             fi
           done
-
-          # render.sha256 of the repaired file ("Check the repair's push" made
-          # sure it is the pushed one), as impl-generate stages it: both
-          # hashes, from this workflow's ref, never promoted, never fatal,
-          # three upload attempts. A mismatch in impl-review stops the review.
-          TOOLS="$RUNNER_TEMP/render-tools"
-          mkdir -p "$TOOLS"
-          STAGED_HASH=false
-          if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
-             && git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$TOOLS/regen_gate.py" \
-             && git show "${GITHUB_SHA}:automation/scripts/impl_header.py" > "$TOOLS/impl_header.py" \
-             && python3 "$TOOLS/render_hash.py" write --source "$IMPL_DIR/${LIBRARY}${EXT}" --language "$LANGUAGE" \
-                  --out "$RUNNER_TEMP/render.sha256"; then
-            for attempt in 1 2 3; do
-              if gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
-                STAGED_HASH=true
-                break
-              fi
-              echo "::warning::render.sha256 upload failed (attempt ${attempt}/3)"
-              if [ "$attempt" -lt 3 ]; then sleep $((attempt * 5)); fi
-            done
-          fi
-          if [ "$STAGED_HASH" = true ]; then
-            echo "::notice::Staged render.sha256"
-          else
-            echo "::warning::render.sha256 not staged; impl-review reports the render hash as missing"
-            gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
-          fi
 
           # The smoke run of the repaired file replaces the staged one (never
           # promoted). Without a new one the stale record from before the
@@ -717,6 +689,55 @@ jobs:
           fi
 
           rm -f /tmp/gcs-key.json
+
+      # render.sha256 of the repaired file ("Check the repair's push" made
+      # sure it is the pushed one), as impl-generate stages it: both hashes,
+      # from this workflow's ref, never promoted, three upload attempts.
+      # Written last, after the repaired renders and their records are staged
+      # (the hash of the code before the repair went before them, in the step
+      # above), and fatal: the review stops on renders without a hash, so a
+      # repair that cannot stage one must not start its re-review. The
+      # failure takes the repair's ordinary crash path ("Handle repair
+      # failure", which names it). Its own step, so that handler reads the
+      # step's outcome.
+      - name: Stage the render hash
+        id: render_hash
+        if: success()
+        env:
+          SPEC_ID: ${{ inputs.specification_id }}
+          LIBRARY: ${{ inputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          EXT: ${{ steps.lang.outputs.ext }}
+        run: |
+          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
+          STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
+          TOOLS="$RUNNER_TEMP/render-tools"
+          mkdir -p "$TOOLS"
+          STAGED_HASH=false
+          WHY="the hash could not be computed"
+          if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
+             && git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$TOOLS/regen_gate.py" \
+             && git show "${GITHUB_SHA}:automation/scripts/impl_header.py" > "$TOOLS/impl_header.py" \
+             && python3 "$TOOLS/render_hash.py" write --source "$IMPL_DIR/${LIBRARY}${EXT}" --language "$LANGUAGE" \
+                  --out "$RUNNER_TEMP/render.sha256"; then
+            WHY="the upload failed three times"
+            for attempt in 1 2 3; do
+              if gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
+                STAGED_HASH=true
+                break
+              fi
+              echo "::warning::render.sha256 upload failed (attempt ${attempt}/3)"
+              if [ "$attempt" -lt 3 ]; then sleep $((attempt * 5)); fi
+            done
+          fi
+          if [ "$STAGED_HASH" = true ]; then
+            echo "::notice::Staged render.sha256"
+            exit 0
+          fi
+          # Never leave half a file, or the hash of other code, beside the renders.
+          gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
+          echo "::error::render.sha256 not staged (${WHY}): the review would stop on renders without a hash, so this repair fails before its re-review"
+          exit 1
 
       - name: Post repair status
         env:
@@ -768,7 +789,12 @@ jobs:
           CLAUDE_MODE: ${{ steps.claude_auth.outputs.mode }}
           # A gate the repair failed ("Check the repair's push", "Process repaired image").
           GATE: ${{ steps.push_gate.outputs.gate || steps.process.outputs.gate }}
+          # "Stage the render hash" failed: read from the step's outcome.
+          RENDER_HASH_OUTCOME: ${{ steps.render_hash.outcome }}
         run: |
+          if [ -z "$GATE" ] && [ "$RENDER_HASH_OUTCOME" = "failure" ]; then
+            GATE="render.sha256 could not be staged beside the repaired renders"
+          fi
           # Restore ai-rejected label that was removed at start of repair so the
           # PR state stays consistent (otherwise it looks "stuck approved").
           gh pr edit "$PR_NUM" --add-label "ai-rejected" 2>/dev/null || true

@@ -119,11 +119,13 @@ printf '%s\\n' "$*" >> "$UV_LOG"
 [ -z "$UV_NOOP" ] && touch "$NUMPY_MARKER"
 exit 0
 """
-# Records every call as one JSON array per line; `gh api` answers the failure count.
+# Records every call as one JSON array per line; `gh api` answers the failure count
+# ("<genuine> <infrastructure>", $GH_API_COUNTS), or fails with GH_FAIL_API=1.
 FAKE_GH = """#!/bin/sh
 "$TEST_PYTHON" -c 'import json, sys; print(json.dumps(sys.argv[1:]))' "$@" >> "$GH_LOG"
 case "$1" in
-  api) echo "0 0" ;;
+  api) [ "${GH_FAIL_API:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+       echo "${GH_API_COUNTS:-0 0}" ;;
 esac
 exit 0
 """
@@ -842,10 +844,17 @@ class Handler:
         self.constants = {key: str(step["env"][key]) for key in ("CAMPAIGN_WINDOW_H", "INFRA_WINDOW_CAP")}
 
     def run(
-        self, *, source_ref: str, adopt_cause: str, regen_label: str = "", source_model: str = ""
+        self,
+        *,
+        source_ref: str,
+        adopt_cause: str,
+        regen_label: str = "",
+        source_model: str = "",
+        shell: tuple[str, ...] = ("bash", "-eo", "pipefail", "-c"),
+        **extra: str,
     ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            ["bash", "-eo", "pipefail", "-c", self.script],
+            [*shell, self.script],
             cwd=self.cwd,
             env=_env(
                 PATH=f"{self.bin}{os.pathsep}{os.environ['PATH']}",
@@ -864,6 +873,7 @@ class Handler:
                 GCS_OUTCOME="",
                 PR_OUTCOME="",
                 REVIEW_DISPATCH_OUTCOME="",
+                **{"RENDER_HASH_OUTCOME": "", **extra},
                 REGEN_LABEL=regen_label,
                 LANGUAGE="javascript",
                 EXT=".tsx",
@@ -968,6 +978,83 @@ class TestHandler:
         script = str(_step("impl-generate.yml", HANDLER_STEP)["run"])
         hint = "-f model=${MODEL}${SOURCE_REF:+ -f source_ref=${SOURCE_REF}}${SOURCE_MODEL:+ -f source_model=${SOURCE_MODEL}}"
         assert script.count(hint) == 2  # the infrastructure pause and the retry cap
+
+
+# What Actions runs a step with when neither the step nor the workflow sets a
+# shell: `bash -e`, without pipefail. The handler has to hold under that one.
+BASH_E = ("bash", "-e", "-c")
+PIPEFAIL = ("bash", "-eo", "pipefail", "-c")
+
+
+class TestFailureCountRead:
+    """The retry caps must hold when the count of earlier failures cannot be read.
+
+    With `gh` piped straight into `awk`, a failed call read as "0 0" under
+    `bash -e`: every failure during an API incident bought another full
+    generation. These tests ran green then, because they ran under pipefail.
+    """
+
+    def test_the_handler_runs_under_the_default_shell(self) -> None:
+        workflow = _workflow("impl-generate.yml")
+        assert "shell" not in _step("impl-generate.yml", HANDLER_STEP)
+        assert "defaults" not in workflow
+        assert all("defaults" not in job for job in workflow["jobs"].values())
+
+    @pytest.mark.parametrize("shell", [BASH_E, PIPEFAIL], ids=["bash-e", "pipefail"])
+    def test_a_failed_read_never_buys_a_retry(self, tmp_path: Path, shell: tuple[str, ...]) -> None:
+        handler = Handler(tmp_path)
+        result = handler.run(source_ref="", adopt_cause="", shell=shell, GH_FAIL_API="1")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert handler.dispatches() == []
+        assert "Failure-count API call failed — failing closed" in result.stdout
+        assert "Previous failures for" not in result.stdout
+
+    @pytest.mark.parametrize("shell", [BASH_E, PIPEFAIL], ids=["bash-e", "pipefail"])
+    @pytest.mark.parametrize(("counts", "retried"), [("0 0", True), ("2 0", False), ("0 7", True)])
+    def test_a_read_that_works_decides_the_retry(
+        self, tmp_path: Path, shell: tuple[str, ...], counts: str, retried: bool
+    ) -> None:
+        """A genuine failure: retried below the three-attempt cap, whatever the infrastructure count says."""
+        handler = Handler(tmp_path)
+        result = handler.run(source_ref="", adopt_cause="", shell=shell, GH_API_COUNTS=counts)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert f"Previous failures for muix/{SPEC}" in result.stdout
+        assert bool(handler.dispatches()) == retried
+
+
+class TestTheHashStepFailureIsInfrastructure:
+    """ "Stage the render hash" failed: a storage failure, like a failed render upload."""
+
+    def test_it_is_retried_without_spending_an_attempt(self, tmp_path: Path) -> None:
+        handler = Handler(tmp_path)
+        result = handler.run(source_ref="", adopt_cause="", shell=BASH_E, RENDER_HASH_OUTCOME="failure")
+        assert result.returncode == 0, result.stdout + result.stderr
+        expected = "Classified as infrastructure failure: render.sha256 could not be staged beside the renders"
+        assert expected in result.stdout
+        assert len(handler.dispatches()) == 1
+        (comment,) = handler.comments()
+        assert "<!-- impl-fail-cause:infra -->" in comment
+        assert all("impl:muix:failed" not in label for _, label in handler.label_edits())
+
+    def test_at_the_cap_the_pair_is_parked_and_never_marked_failed(self, tmp_path: Path) -> None:
+        handler = Handler(tmp_path)
+        result = handler.run(
+            source_ref="", adopt_cause="", shell=BASH_E, RENDER_HASH_OUTCOME="failure", GH_API_COUNTS="0 5"
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert handler.dispatches() == []
+        assert "infrastructure failures in the last 12h (cap: 5)" in result.stdout
+        assert all("impl:muix:failed" not in label for _, label in handler.label_edits())
+
+    def test_a_count_that_cannot_be_read_parks_it_too(self, tmp_path: Path) -> None:
+        """Fail closed, but as what it is: a storage failure never marks the library as failed."""
+        handler = Handler(tmp_path)
+        result = handler.run(
+            source_ref="", adopt_cause="", shell=BASH_E, RENDER_HASH_OUTCOME="failure", GH_FAIL_API="1"
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert handler.dispatches() == []
+        assert all("impl:muix:failed" not in label for _, label in handler.label_edits())
 
 
 # --- bulk-generate ------------------------------------------------------------------------------

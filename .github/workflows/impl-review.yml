@@ -552,12 +552,13 @@ jobs:
       # (automation/scripts/render_hash.py). Compared with the file at the PR
       # head, not the workspace ("Hide the previous review" rewrites that).
       # The file holds two hashes, so the head still matches after the
-      # review's own header commit (a manual re-review). A mismatch against
-      # such a file writes `stop=true`, which the next step acts on; a missing
-      # or unreadable hash, and a mismatch against a file staged before the
-      # second hash existed, only post a comment and a job-summary line. The
-      # outputs are written before the comment is posted, so a failed post
-      # never loses a stop.
+      # review's own header commit (a manual re-review). Only a match lets
+      # the review run: a mismatch, a missing hash and a hash that cannot be
+      # read all write `stop=true` with their `cause`, which the next step
+      # acts on. A download that failed three times also writes `retry=true`:
+      # that says nothing about the renders. The outputs are written before
+      # the comment is posted, so a failed post never loses a stop. A check
+      # that crashes writes nothing, and the review then runs.
       - name: Check the render hash
         id: render_hash
         if: steps.gcs.outcome == 'success'
@@ -578,11 +579,12 @@ jobs:
           SRC="$RUNNER_TEMP/render-head-source"
           BODY="$RUNNER_TEMP/render-hash-comment.md"
           rm -f "$HASH" "$SRC" "$BODY"
-          # What the comment says happens next on a mismatch.
+          # What the comment says happens next after a stop.
           WORDING=(--spec-id "$SPEC_ID" --library "$LIBRARY")
           [ "$IS_REGEN" = "true" ] && WORDING+=(--regeneration)
           # Three attempts, like the render download: one failed read must not
-          # turn into `unreadable`. "No URLs matched" is an answer (no hash).
+          # turn into `unreadable`. A missing object is an answer (no hash),
+          # in either wording: gsutil's own, and the gcloud storage shim's.
           FETCH_ERROR=""
           for attempt in 1 2 3; do
             FETCH_ERROR=""
@@ -590,7 +592,7 @@ jobs:
               break
             fi
             rm -f "$HASH"
-            if grep -q "No URLs matched" "$RUNNER_TEMP/render-hash.err"; then
+            if grep -qE 'matched no objects|No URLs matched' "$RUNNER_TEMP/render-hash.err"; then
               break
             fi
             FETCH_ERROR=$(head -c 300 "$RUNNER_TEMP/render-hash.err" | tr '\n' ' ')
@@ -603,9 +605,9 @@ jobs:
             --language "$LANGUAGE" --fetch-error="$FETCH_ERROR" --run-url "$RUN_URL" --comment-out "$BODY" \
             "${WORDING[@]}"
           [ -s "$BODY" ] || exit 0
-          # One comment per status and head: a re-review or a resumed review of
-          # the same head posts nothing new (the pause dedupe reads the PR's
-          # last bot comment). A failed read posts it.
+          # One comment per status, cause and head: a re-review or a resumed
+          # review of the same head posts nothing new (the pause dedupe reads
+          # the PR's last bot comment). A failed read posts it.
           MARKER=$(head -n 1 "$BODY")
           HEADS=$(gh api --paginate "repos/${REPOSITORY}/issues/${PR_NUM}/comments?per_page=100" \
             --jq '.[] | (.body // "") | split("\n") | .[0] // "" | rtrimstr("\r")' 2>/dev/null) || HEADS=""
@@ -615,27 +617,36 @@ jobs:
             gh pr comment "$PR_NUM" --body-file "$BODY" || echo "::warning::render-hash comment not posted on PR #${PR_NUM}"
           fi
 
-      # A mismatch stops the review: the staged renders were made from other
-      # code than the PR head holds, so a score would describe renders this
-      # code never produced, and the header commit would store it.
+      # Only a match lets the review run. Anything else stops it: the staged
+      # renders were made from other code than the PR head holds, or nothing
+      # ties them to that code, so a score would describe renders this code
+      # may never have produced, and the header commit would store it.
       # `stopped` switches off every step below that reads the renders or runs
       # the review. It is written first, before any API call: a label that
       # cannot be added must never let the review run.
+      # Gated regeneration, whatever the cause: `keep` and the gate's code
+      # (`render_mismatch`, or `render_unverified` for a hash that is missing
+      # or could not be read), and no label here. The regen gate keeps the
+      # live implementation, the early verdict step adds `regen:kept`, and
+      # "Add verdict label and take action" closes the PR like every other
+      # keep. A failed download is a keep too: the watchdog only flags a
+      # regeneration's failed review, and its open PR would hold the pair.
       # First generation (a repair's re-review included, and a forced or
-      # adopted regeneration, which takes this path like its review does): the
-      # label `ai-render-mismatch`, and the PR stays open until the pair is
-      # generated again, which replaces its branch and so closes it (the
-      # check's comment gives the command). The run ends as failed once the
-      # label is on, like every other end of this job without a verdict, so
-      # the run list shows the stop; no step and no workflow acts on that
-      # failure. Never `ai-review-failed`: the watchdog would re-review the
-      # same staging, and after a repair its Case 2 would run the repair
-      # again. The watchdog skips the label and reports the PR.
-      # Regeneration: `keep` as well, and no label here. The regen gate keeps
-      # the live implementation (`render_mismatch`), the early verdict step
-      # adds `regen:kept`, and "Add verdict label and take action" closes the
-      # PR like every other keep.
-      - name: Stop on a render hash mismatch
+      # adopted regeneration, which takes this path like its review does):
+      # - The hash could not be downloaded (`retry`): `ai-review-failed`, the
+      #   label of a review that failed, so the watchdog's Case 1 starts the
+      #   review again once at its next scan. The storage failed; the renders
+      #   were not judged.
+      # - Every other cause: the label `ai-render-unverified`, and the PR
+      #   stays open until the pair is generated again, which replaces its
+      #   branch and so closes it (the check's comment gives the command).
+      #   Never `ai-review-failed` here: the watchdog would re-review the same
+      #   staging, and after a repair its Case 2 would run the repair again.
+      #   The watchdog skips the label and reports the PR.
+      # Either way the run ends as failed once the label is on, like every
+      # other end of this job without a verdict, so the run list shows the
+      # stop; no step and no workflow acts on that failure.
+      - name: Stop on the render hash
         id: render_stop
         if: steps.render_hash.outputs.stop == 'true'
         env:
@@ -644,27 +655,47 @@ jobs:
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
           IS_REGEN: ${{ steps.regen.outputs.is_regen }}
+          CAUSE: ${{ steps.render_hash.outputs.cause }}
+          RETRY: ${{ steps.render_hash.outputs.retry }}
+          KEEP_CODE: ${{ steps.render_hash.outputs.code }}
         run: |
           echo "stopped=true" >> "$GITHUB_OUTPUT"
+          CAUSE="${CAUSE:-unknown}"
           if [ "$IS_REGEN" = "true" ]; then
+            # Only the gate's two codes: with any other value the gate would
+            # judge a review that never ran.
+            [ "$KEEP_CODE" = "render_mismatch" ] || KEEP_CODE="render_unverified"
             echo "keep=true" >> "$GITHUB_OUTPUT"
-            echo "::warning::render_stop spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} regeneration=true: no review; the regen gate keeps the live implementation (render_mismatch)"
-            echo "**Render hash:** the review of PR #${PR_NUM} did not run; the regen gate keeps the live implementation (\`render_mismatch\`)." >> "$GITHUB_STEP_SUMMARY"
+            echo "code=${KEEP_CODE}" >> "$GITHUB_OUTPUT"
+            echo "::warning::render_stop spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} regeneration=true cause=${CAUSE}: no review; the regen gate keeps the live implementation (${KEEP_CODE})"
+            echo "**Render hash:** the review of PR #${PR_NUM} did not run (${CAUSE}); the regen gate keeps the live implementation (\`${KEEP_CODE}\`)." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          echo "::warning::render_stop spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} regeneration=false: no review; the PR gets ai-render-mismatch and stays open"
-          echo "**Render hash:** the review of PR #${PR_NUM} did not run; the PR gets the label \`ai-render-mismatch\` and stays open." >> "$GITHUB_STEP_SUMMARY"
-          gh label create "ai-render-mismatch" --color "d93f0b" \
-            --description "Review stopped: the staged renders were made from other code than the PR holds" 2>/dev/null || true
+          if [ "$RETRY" = "true" ]; then
+            LABEL="ai-review-failed"
+            COLOR="d73a4a"
+            DESCRIPTION="AI review failed; watchdog re-dispatches once"
+            NEXT="the watchdog starts the review again once"
+            WITHOUT="without the label the watchdog treats the PR as stalled and acts after its stale window (Case 5 runs the review, Case 2 the repair again); add the label by hand"
+          else
+            LABEL="ai-render-unverified"
+            COLOR="d93f0b"
+            DESCRIPTION="Review stopped: nothing ties the staged renders to the code the PR holds"
+            NEXT="the PR stays open until the pair is generated again; its comment says how"
+            WITHOUT="without the label the watchdog acts on the PR after its stale window (Case 2 runs the repair again, Case 5 the review at attempt 0); add the label by hand"
+          fi
+          echo "::warning::render_stop spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} regeneration=false cause=${CAUSE}: no review; the PR gets ${LABEL}"
+          echo "**Render hash:** the review of PR #${PR_NUM} did not run (${CAUSE}); the PR gets the label \`${LABEL}\`: ${NEXT}." >> "$GITHUB_STEP_SUMMARY"
+          gh label create "$LABEL" --color "$COLOR" --description "$DESCRIPTION" 2>/dev/null || true
           for attempt in 1 2 3; do
-            if gh pr edit "$PR_NUM" --add-label "ai-render-mismatch" 2> "$RUNNER_TEMP/render-stop.err"; then
-              echo "::error::The review of PR #${PR_NUM} stopped on a render hash mismatch: nothing was scored. The PR carries ai-render-mismatch and stays open; its comment says how to continue."
+            if gh pr edit "$PR_NUM" --add-label "$LABEL" 2> "$RUNNER_TEMP/render-stop.err"; then
+              echo "::error::The review of PR #${PR_NUM} stopped on the render hash (${CAUSE}): nothing was scored. The PR carries ${LABEL}: ${NEXT}."
               exit 1
             fi
-            echo "::warning::adding ai-render-mismatch failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/render-stop.err" | tr '\n' ' ')"
+            echo "::warning::adding ${LABEL} failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/render-stop.err" | tr '\n' ' ')"
             [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
           done
-          echo "::error::ai-render-mismatch could not be added to PR #${PR_NUM}: the review stays stopped, but without the label the watchdog acts on the PR after its stale window (Case 2 runs the repair again, Case 5 the review at attempt 0); add the label by hand"
+          echo "::error::${LABEL} could not be added to PR #${PR_NUM}: the review stays stopped, but ${WITHOUT}"
           exit 1
 
       # Regen only: the predecessor's production renders, which the review
@@ -725,9 +756,9 @@ jobs:
           fi
           echo "::notice::Found both theme renders — proceeding to review"
 
-      # `ai-render-mismatch` says that this PR's review stopped because its
-      # staged renders were made from other code ("Stop on a render hash
-      # mismatch"), and the watchdog rescues no PR that carries it. It goes
+      # `ai-render-unverified` says that this PR's review stopped because
+      # nothing ties its staged renders to its code ("Stop on the render
+      # hash"), and the watchdog rescues no PR that carries it. It goes
       # only here, once this run's check has read `match` and the run has its
       # renders. A run that ends earlier (cloud auth, a missing render), a
       # check that did not run or crashed, and a hash that is missing or
@@ -735,7 +766,7 @@ jobs:
       # that the renders now come from this code. A label that stays although
       # the hash matches would hide the PR from every watchdog rescue, so the
       # read and the removal get three attempts each. Best effort.
-      - name: Clear the ai-render-mismatch label
+      - name: Clear the ai-render-unverified label
         if: steps.render_hash.outputs.status == 'match'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -752,21 +783,21 @@ jobs:
             [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
           done
           if [ "$READ_OK" -ne 1 ]; then
-            echo "::warning::Could not read labels for PR #${PR_NUM} — a stale ai-render-mismatch, if any, stays and the watchdog keeps skipping the PR"
+            echo "::warning::Could not read labels for PR #${PR_NUM} — a stale ai-render-unverified, if any, stays and the watchdog keeps skipping the PR"
             exit 0
           fi
-          if ! grep -qxF "ai-render-mismatch" <<< "$LABELS"; then
+          if ! grep -qxF "ai-render-unverified" <<< "$LABELS"; then
             exit 0
           fi
           for attempt in 1 2 3; do
-            if gh pr edit "$PR_NUM" --remove-label "ai-render-mismatch" 2> "$RUNNER_TEMP/render-clear.err"; then
-              echo "::notice::Removed ai-render-mismatch from PR #${PR_NUM}: this review's render hash check reads match"
+            if gh pr edit "$PR_NUM" --remove-label "ai-render-unverified" 2> "$RUNNER_TEMP/render-clear.err"; then
+              echo "::notice::Removed ai-render-unverified from PR #${PR_NUM}: this review's render hash check reads match"
               exit 0
             fi
-            echo "::warning::removing ai-render-mismatch failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/render-clear.err" | tr '\n' ' ')"
+            echo "::warning::removing ai-render-unverified failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/render-clear.err" | tr '\n' ' ')"
             [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
           done
-          echo "::warning::ai-render-mismatch could not be removed from PR #${PR_NUM} — the watchdog keeps skipping the PR; remove the label by hand"
+          echo "::warning::ai-render-unverified could not be removed from PR #${PR_NUM} — the watchdog keeps skipping the PR; remove the label by hand"
           exit 0
 
       # Canvas dimension gate — runs before the AI review.
@@ -1192,8 +1223,8 @@ jobs:
           echo "::notice::blind review: header $(grep -m1 -o 'Quality: [a-z0-9]*' "$IMPL_FILE" || echo 'Quality: n/a'), stored review hidden=$([ -f "$META_FILE" ] && echo false || echo true)"
 
       # Skipped on a review-free adapt merge ("Adaptability check
-      # (record-only)") and after a render hash mismatch ("Stop on a render
-      # hash mismatch"); every step keyed on this one's success then skips by
+      # (record-only)") and after a render-hash stop ("Stop on the render
+      # hash"); every step keyed on this one's success then skips by
       # itself, and the steps those two paths need say so in their `if`.
       - name: Run AI Quality Review
         id: review
@@ -1641,8 +1672,9 @@ jobs:
       # the gate decides as before. On a review-free adapt merge the gate runs
       # without a score (`--score ""` reads as none) and with
       # --review-skipped, which only a counted adapt route turns into a merge.
-      # After a render hash mismatch it runs without a review as well, with
-      # --render-mismatch, which keeps before anything else is read.
+      # After a render-hash stop it runs without a review as well, with
+      # --render-mismatch or --render-unverified, which keep before anything
+      # else is read.
       - name: Regen gate
         id: gate
         if: steps.regen.outputs.is_regen == 'true' && ((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true' || steps.render_stop.outputs.keep == 'true')
@@ -1667,8 +1699,9 @@ jobs:
           # adapt.route_pre_review; a held route the review turns off is
           # `adapt_overruled`).
           ADAPT_ROUTE: ${{ steps.adapt.outputs.route }}
-          # "Stop on a render hash mismatch" stopped the review.
-          RENDER_MISMATCH: ${{ steps.render_stop.outputs.keep }}
+          # "Stop on the render hash" stopped the review, with the gate's code.
+          RENDER_KEEP: ${{ steps.render_stop.outputs.keep }}
+          RENDER_STOP_CODE: ${{ steps.render_stop.outputs.code }}
         run: |
           # Record and summary live in $RUNNER_TEMP, not /tmp: the reviewer has
           # already run and never reads them, and the workflow tests run this
@@ -1676,7 +1709,15 @@ jobs:
           RECORD="$RUNNER_TEMP/anyplot-regen-record.json"
           rm -f "$RECORD"
           FLAGS=()
-          [ "$RENDER_MISMATCH" = "true" ] && FLAGS+=(--render-mismatch)
+          # A stop without the mismatch code is unverified: no review ran, so
+          # the gate must never go on to judge one.
+          if [ "$RENDER_KEEP" = "true" ]; then
+            if [ "$RENDER_STOP_CODE" = "render_mismatch" ]; then
+              FLAGS+=(--render-mismatch)
+            else
+              FLAGS+=(--render-unverified)
+            fi
+          fi
           [ -f /tmp/anyplot-canvas-gate.txt ] && FLAGS+=(--canvas-failed)
           [ "$CHANGE_REQUEST_PRESENT" = "true" ] && FLAGS+=(--change-request-present)
           [ "$CONTEXT_OUTCOME" = "success" ] || FLAGS+=(--context-failed)
@@ -2769,7 +2810,7 @@ jobs:
           WB_SCORE: ${{ steps.writeback.outputs.score }}
           NOTHING_TO_REPAIR: ${{ steps.early_verdict.outputs.nothing_to_repair }}
           REVIEW_SKIPPED: ${{ steps.adapt.outputs.review_skipped }}
-          # "Stop on a render hash mismatch" stopped the review of a regeneration.
+          # "Stop on the render hash" stopped the review of a regeneration.
           RENDER_STOPPED: ${{ steps.render_stop.outputs.keep }}
           ADAPT_COUNTED: ${{ steps.gate.outputs.adapt_counted }}
           ADAPT_OVERRULED: ${{ steps.gate.outputs.adapt_overruled }}
@@ -2825,11 +2866,15 @@ jobs:
             else
               RENDER="this render (score ${SCORE})"
             fi
-            # The keep comment's first sentence. After a render hash mismatch
-            # the gate compared nothing: no review ran.
+            # The keep comment's first sentence. After a render-hash stop the
+            # gate compared nothing: no review ran. The gate's code says why.
             KEPT_WHY="The regen gate compared ${RENDER} with the implementation on main and kept the latter."
             if [ "$RENDER_STOPPED" = "true" ]; then
-              KEPT_WHY="No review ran: the staged renders of this PR were not made from the code at its head (see the render hash comment above), so the regen gate kept the implementation on main."
+              if [ "$GATE_CODE" = "render_mismatch" ]; then
+                KEPT_WHY="No review ran: the staged renders of this PR were not made from the code at its head (see the render hash comment above), so the regen gate kept the implementation on main."
+              else
+                KEPT_WHY="No review ran: nothing ties the staged renders of this PR to the code at its head, because the render hash is missing or could not be read (see the render hash comment above), so the regen gate kept the implementation on main."
+              fi
             fi
             # Keep only: what happened to the re-score of the live
             # implementation ("Write back the re-score", previous step). A

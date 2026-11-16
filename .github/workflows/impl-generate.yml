@@ -1634,7 +1634,8 @@ jobs:
           fi
 
           # A render.sha256 from an earlier run goes before the new renders
-          # arrive, so it can never sit beside them; this run's is written last.
+          # arrive, so it can never sit beside them; this run's is written last,
+          # by the next step.
           gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
 
           # Upload all plot images for both themes (originals + responsive variants)
@@ -1648,24 +1649,52 @@ jobs:
           echo "uploaded=true" >> $GITHUB_OUTPUT
           echo "::notice::Uploaded plot-light + plot-dark (+responsive variants)"
 
-          # render.sha256: the hashes of the file the renders came from, which
-          # impl-review compares with the PR head (automation/scripts/render_hash.py,
-          # from this workflow's ref): the file with its score reset, and its
-          # code without the header, so the review's own header commit still
-          # matches. A mismatch there stops the review. Readable like every
-          # object in the bucket (it is the hash of public code) and never
-          # promoted (not plot-*). Never fatal; the upload gets three attempts,
-          # and without a hash the review reports it missing (the earlier
-          # run's went above). The writer needs the language (the copy it
-          # hashes has no extension) and, for JavaScript, impl_header.py.
+          # Upload HTML for interactive libraries (one per theme)
+          for theme in light dark; do
+            if [ -f "$IMPL_DIR/plot-${theme}.html" ]; then
+              gsutil -h "Cache-Control:public, max-age=604800" cp "$IMPL_DIR/plot-${theme}.html" "${STAGING_PATH}/plot-${theme}.html"
+              gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot-${theme}.html" 2>/dev/null || true
+              echo "html_url_${theme}=${PUBLIC_URL}/plot-${theme}.html" >> $GITHUB_OUTPUT
+            fi
+          done
+
+          rm -f /tmp/gcs-key.json
+
+      # render.sha256: the hashes of the file the renders came from, which
+      # impl-review compares with the PR head (automation/scripts/render_hash.py,
+      # from this workflow's ref): the file with its score reset, and its
+      # code without the header, so the review's own header commit still
+      # matches. Readable like every object in the bucket (it is the hash of
+      # public code) and never promoted (not plot-*). The writer needs the
+      # language (the copy it hashes has no extension) and, for JavaScript,
+      # impl_header.py.
+      # Written last, after every render of this run is staged (the earlier
+      # run's hash went before them, in the step above), and fatal: the review
+      # stops on renders without a hash, so a run that cannot stage one must
+      # not hand its PR to the review. The upload gets three attempts. A
+      # failure here is a storage failure like a failed render upload, and
+      # "Handle generation failure" treats it as one: the pair is generated
+      # again without spending its attempts. Its own step, so that handler
+      # reads the step's outcome.
+      - name: Stage the render hash
+        id: render_hash
+        if: steps.pr.outputs.pr_exists == 'true'
+        env:
+          SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
+          LIBRARY: ${{ steps.inputs.outputs.library }}
+        run: |
+          STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
           TOOLS="$RUNNER_TEMP/render-tools"
           mkdir -p "$TOOLS"
           STAGED_HASH=false
+          WHY="the hash could not be computed"
           if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
              && git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$TOOLS/regen_gate.py" \
              && git show "${GITHUB_SHA}:automation/scripts/impl_header.py" > "$TOOLS/impl_header.py" \
              && python3 "$TOOLS/render_hash.py" write --source "$RUNNER_TEMP/render-source" --language "$LANGUAGE" \
                   --out "$RUNNER_TEMP/render.sha256"; then
+            WHY="the upload failed three times"
             for attempt in 1 2 3; do
               if gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
                 STAGED_HASH=true
@@ -1677,21 +1706,12 @@ jobs:
           fi
           if [ "$STAGED_HASH" = true ]; then
             echo "::notice::Staged render.sha256"
-          else
-            echo "::warning::render.sha256 not staged; impl-review reports the render hash as missing"
-            gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
+            exit 0
           fi
-
-          # Upload HTML for interactive libraries (one per theme)
-          for theme in light dark; do
-            if [ -f "$IMPL_DIR/plot-${theme}.html" ]; then
-              gsutil -h "Cache-Control:public, max-age=604800" cp "$IMPL_DIR/plot-${theme}.html" "${STAGING_PATH}/plot-${theme}.html"
-              gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot-${theme}.html" 2>/dev/null || true
-              echo "html_url_${theme}=${PUBLIC_URL}/plot-${theme}.html" >> $GITHUB_OUTPUT
-            fi
-          done
-
-          rm -f /tmp/gcs-key.json
+          # Never leave half a file, or another run's hash, beside the renders.
+          gsutil rm "${STAGING_PATH}/render.sha256" 2>/dev/null || true
+          echo "::error::render.sha256 not staged (${WHY}): the review would stop on renders without a hash, so this run fails and the pair is generated again"
+          exit 1
 
       # ========================================================================
       # Post preview and trigger review
@@ -1833,6 +1853,7 @@ jobs:
           GCP_AUTH_OUTCOME: ${{ steps.gcp_auth.outcome }}
           GCLOUD_OUTCOME: ${{ steps.gcloud.outcome }}
           GCS_OUTCOME: ${{ steps.gcs.outcome }}
+          RENDER_HASH_OUTCOME: ${{ steps.render_hash.outcome }}
           PR_OUTCOME: ${{ steps.pr.outcome }}
           REVIEW_DISPATCH_OUTCOME: ${{ steps.review_dispatch.outcome }}
           # Infrastructure failures are retried without spending the pair's
@@ -1994,9 +2015,9 @@ jobs:
           # Infrastructure = both Claude runs ended in the action's own error
           # path with a provider-side signature (the execution log is checked,
           # so an agent that gave up — max turns, refused — still counts), or
-          # the GCP auth / Cloud SDK / GCS upload / PR creation / review
-          # dispatch step failed. "Implementation file not found" and a missing
-          # theme render are the agent's own and keep counting.
+          # the GCP auth / Cloud SDK / GCS upload / render hash / PR creation /
+          # review dispatch step failed. "Implementation file not found" and a
+          # missing theme render are the agent's own and keep counting.
           INFRA_CAUSE=""
           if [ "${CLAUDE_RETRY_OUTCOME}" = "failure" ]; then
             if [ -n "${CLAUDE_EXEC_FILE}" ] && [ -f "${CLAUDE_EXEC_FILE}" ] \
@@ -2006,6 +2027,8 @@ jobs:
             fi
           elif [ "${GCP_AUTH_OUTCOME}" = "failure" ] || [ "${GCLOUD_OUTCOME}" = "failure" ] || [ "${GCS_OUTCOME}" = "failure" ]; then
             INFRA_CAUSE="Google Cloud auth/upload step failed"
+          elif [ "${RENDER_HASH_OUTCOME}" = "failure" ]; then
+            INFRA_CAUSE="render.sha256 could not be staged beside the renders"
           elif [ "${PR_OUTCOME}" = "failure" ] || [ "${REVIEW_DISPATCH_OUTCOME}" = "failure" ]; then
             INFRA_CAUSE="GitHub API step failed (PR creation or review dispatch)"
           fi
@@ -2027,8 +2050,9 @@ jobs:
           # NB: --paginate applies --jq to EACH page separately, so the filter
           # emits one per-page count per line; awk sums them into one number
           # (the old code broke on issues with >100 comments for this reason).
-          # pipefail (Actions bash default) makes a gh failure fail the whole
-          # pipeline, so the fail-closed else-branch still triggers.
+          # The gh call's own exit status decides, apart from awk: a run step
+          # without `shell:` is `bash -e` with no pipefail, so with gh piped
+          # straight into awk a failed call read as "0 0" and bought a retry.
           #
           # CAMPAIGN-SCOPED: only markers younger than CAMPAIGN_WINDOW_H count.
           # The markers are the permanent audit trail — nothing deletes them —
@@ -2051,9 +2075,10 @@ jobs:
           INFRA_TAG="<!-- impl-fail-cause:infra -->"
           CAMPAIGN_CUTOFF=$(date -u -d "${CAMPAIGN_WINDOW_H} hours ago" +%Y-%m-%dT%H:%M:%SZ)
           # One paginated call, two numbers per page ("<genuine> <infra>"), summed by awk.
-          if COUNTS=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
-            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | \"\(map(select(.body | contains(\"$INFRA_TAG\") | not)) | length) \(map(select(.body | contains(\"$INFRA_TAG\"))) | length)\"" \
-            | awk '{ g += $1; i += $2 } END { print (g + 0) " " (i + 0) }'); then
+          if PAGES=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
+               --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | \"\(map(select(.body | contains(\"$INFRA_TAG\") | not)) | length) \(map(select(.body | contains(\"$INFRA_TAG\"))) | length)\"") \
+             && COUNTS=$(printf '%s\n' "$PAGES" | awk '{ g += $1; i += $2 } END { print (g + 0) " " (i + 0) }') \
+             && [[ "$COUNTS" =~ ^[0-9]+\ [0-9]+$ ]]; then
             FAILURE_COUNT=${COUNTS% *}
             INFRA_COUNT=${COUNTS#* }
             echo "::notice::Previous failures for ${LIBRARY}/${SPEC_ID} since ${CAMPAIGN_CUTOFF}: $FAILURE_COUNT (plus $INFRA_COUNT infrastructure failures, not counted)"

@@ -6,9 +6,10 @@ copy hash alike, while any other byte of the file changes it. The code hash
 ignores the whole header, the block impl-review's writer replaces, and nothing
 else: a JavaScript directive and every line of code count. `check` reports
 match, mismatch, missing or unreadable, never fails, and writes a PR comment
-for everything but a match. Only a mismatch against a file with a code hash
-stops the review. The script also runs as the workflow-ref copy, next to its
-own regen_gate.py and impl_header.py.
+for everything but a match. Only a match lets the review run: every other
+result stops it and names its cause, and a failed download also asks for
+another run. The script also runs as the workflow-ref copy, next to its own
+regen_gate.py and impl_header.py.
 """
 
 from __future__ import annotations
@@ -24,13 +25,20 @@ import pytest
 from automation.scripts import regen_gate
 from automation.scripts.impl_header import replace_js_header
 from automation.scripts.render_hash import (
+    CAUSE_CONTENT,
+    CAUSE_FETCH,
+    CAUSE_HEAD,
+    CAUSE_MISMATCH,
+    CAUSE_MISSING,
     CODE_NAME,
     FORM_CODE,
     FORM_LEGACY,
     KEEP_CODE,
     LANGUAGES,
     MARKER,
+    RETRY_LABEL,
     STOP_LABEL,
+    UNVERIFIED_CODE,
     code_hash,
     compare,
     main,
@@ -43,6 +51,14 @@ from automation.scripts.render_hash import (
 
 TOOLS = Path(__file__).resolve().parents[4] / "automation" / "scripts"
 HEAD = "0123456789abcdef0123456789abcdef01234567"
+# What `check` writes to $GITHUB_OUTPUT for a match: every key, the cause and the keep code empty.
+MATCH_OUTPUT = "status=match\nstop=false\ncause=\nretry=false\ncode=\n"
+
+
+def _outputs(text: str) -> dict[str, str]:
+    return dict(line.split("=", 1) for line in text.splitlines())
+
+
 BODY = "import os\n\nTHEME = os.getenv('ANYPLOT_THEME', 'light')\n"
 
 
@@ -275,7 +291,8 @@ class TestCompare:
         result = compare(hash_file, source, language="python")
         assert (result.status, result.reason, result.via, result.form) == ("match", "", "file", FORM_CODE)
         assert result.staged == result.head == render_hash(_python("pending"))
-        assert not result.stop
+        # Only a match lets the review run, and it has no cause and no keep code.
+        assert (result.stop, result.retry, result.cause, result.keep_code) == (False, False, "", "")
 
     def test_the_head_after_the_header_commit_matches_by_its_code(self, tmp_path):
         hash_file, source = self._files(tmp_path, _python("pending"), REVIEWED)
@@ -287,23 +304,29 @@ class TestCompare:
         hash_file, source = self._files(tmp_path, _python("pending"), _python("pending", body="x = 1\n"))
         result = compare(hash_file, source, language="python")
         assert (result.status, result.form, result.stop) == ("mismatch", FORM_CODE, True)
+        assert (result.cause, result.retry, result.keep_code) == (CAUSE_MISMATCH, False, KEEP_CODE)
 
-    def test_a_file_without_the_code_hash_never_stops(self, tmp_path):
-        hash_file, source = self._files(tmp_path, _python("pending"), _python("pending", body="x = 1\n"))
+    def test_a_one_line_file_matches_by_its_render_hash_and_stops_on_anything_else(self, tmp_path):
+        """The writer has written two lines since the code hash exists, so a one-line file is a leftover."""
+        hash_file, source = self._files(tmp_path, _python("87/100"), _python("pending"))
         hash_file.write_text(hash_file.read_text(encoding="utf-8").splitlines()[0] + "\n", encoding="utf-8")
-        result = compare(hash_file, source, language="python")
-        assert (result.status, result.form, result.stop) == ("mismatch", FORM_LEGACY, False)
-        # The header commit cannot be told from other code either.
+        exact = compare(hash_file, source, language="python")
+        assert (exact.status, exact.via, exact.form, exact.stop) == ("match", "file", FORM_LEGACY, False)
+        source.write_bytes(_python("pending", body="x = 1\n"))
+        other = compare(hash_file, source, language="python")
+        assert (other.status, other.form, other.stop, other.cause) == ("mismatch", FORM_LEGACY, True, CAUSE_MISMATCH)
+        assert other.keep_code == KEEP_CODE
+        # It cannot tell the review's header commit from other code, so that stops as well: before
+        # this rule merges, no open PR may still carry a one-line file.
         source.write_bytes(REVIEWED)
-        (tmp_path / "rendered.py").write_bytes(_python("pending"))
         hash_file.write_text(f"{render_hash(_python('pending'))}  x.py\n", encoding="utf-8")
-        assert compare(hash_file, source, language="python").status == "mismatch"
+        assert compare(hash_file, source, language="python").stop
 
     @pytest.mark.parametrize("language", ["", "cobol"])
     def test_without_a_known_language_the_code_hash_is_not_read(self, tmp_path, language):
         hash_file, source = self._files(tmp_path, _python("pending"), REVIEWED)
         result = compare(hash_file, source, language=language)
-        assert (result.status, result.form, result.stop) == ("mismatch", FORM_LEGACY, False)
+        assert (result.status, result.form, result.stop) == ("mismatch", FORM_LEGACY, True)
 
     @pytest.mark.parametrize(
         "second",
@@ -323,23 +346,51 @@ class TestCompare:
         result = compare(tmp_path / "absent", source, language="python")
         assert (result.status, result.staged, result.reason) == ("missing", "", "no render.sha256 in staging")
         assert result.head == render_hash(_python("pending"))
-        assert not result.stop
+        # The writers fail their run when they cannot stage the hash, so these renders are not this run's.
+        assert (result.stop, result.retry, result.cause, result.keep_code) == (
+            True,
+            False,
+            CAUSE_MISSING,
+            UNVERIFIED_CODE,
+        )
 
     @pytest.mark.parametrize("content", ["", "not-a-hash  plots/x.py\n", "ABC" * 30])
     def test_a_file_without_a_hash_is_unreadable(self, tmp_path, content):
         (tmp_path / "render.sha256").write_text(content, encoding="utf-8")
         (tmp_path / "head.py").write_bytes(_python("pending"))
         result = compare(tmp_path / "render.sha256", tmp_path / "head.py", language="python")
-        assert (result.status, result.stop) == ("unreadable", False)
+        assert (result.status, result.stop, result.retry, result.cause) == ("unreadable", True, False, CAUSE_CONTENT)
+        assert result.keep_code == UNVERIFIED_CODE
         assert read_hash(tmp_path / "render.sha256") is None
 
-    def test_an_unreadable_head_or_staging(self, tmp_path):
+    def test_an_unreadable_head_stops_and_a_failed_download_asks_for_another_run(self, tmp_path):
         hash_file, _ = self._files(tmp_path, _python("pending"), None)
         absent = compare(hash_file, tmp_path / "absent", language="python")
-        assert (absent.status, absent.stop) == ("unreadable", False)
+        assert (absent.status, absent.stop, absent.retry, absent.cause) == ("unreadable", True, False, CAUSE_HEAD)
+        # A failed download says nothing about the renders: the review does not run, but it is
+        # worth another run, where every other cause parks the PR.
         failed = compare(hash_file, tmp_path / "rendered.py", fetch_error="HTTP 503\nretry", language="python")
         assert failed.status == "unreadable" and failed.reason == "staging could not be read (HTTP 503 retry)"
-        assert not failed.stop
+        assert (failed.stop, failed.retry, failed.cause, failed.keep_code) == (True, True, CAUSE_FETCH, UNVERIFIED_CODE)
+        # The download's failure wins over whatever an old file on disk says.
+        assert compare(tmp_path / "absent", tmp_path / "rendered.py", fetch_error="x", language="python").retry
+
+    def test_only_a_failed_download_is_retried(self, tmp_path):
+        """Every cause stops; `retry` is the one that does not park the PR."""
+        hash_file, source = self._files(tmp_path, _python("pending"), _python("pending", body="x = 1\n"))
+        garbled = tmp_path / "garbled"
+        garbled.write_text("nothing\n", encoding="utf-8")
+        results = {
+            CAUSE_MISMATCH: compare(hash_file, source, language="python"),
+            CAUSE_MISSING: compare(tmp_path / "absent", source, language="python"),
+            CAUSE_CONTENT: compare(garbled, source, language="python"),
+            CAUSE_HEAD: compare(hash_file, tmp_path / "absent", language="python"),
+            CAUSE_FETCH: compare(hash_file, source, fetch_error="503", language="python"),
+        }
+        assert {cause: result.cause for cause, result in results.items()} == {cause: cause for cause in results}
+        assert all(result.stop for result in results.values())
+        assert [cause for cause, result in results.items() if result.retry] == [CAUSE_FETCH]
+        assert {result.keep_code for cause, result in results.items() if cause != CAUSE_MISMATCH} == {UNVERIFIED_CODE}
 
 
 class TestCli:
@@ -371,7 +422,7 @@ class TestCli:
 
     @pytest.mark.parametrize("language", [[], ["--language", "cobol"]], ids=["absent", "unknown"])
     def test_write_fails_without_a_known_language(self, tmp_path, language):
-        # A file without the code hash is never enforced, so half a file must not be written.
+        # A one-line file reads the review's own header commit as a mismatch, so half a file must not be written.
         (tmp_path / "x.py").write_bytes(_python("pending"))
         with pytest.raises(SystemExit) as exc:
             main(["write", "--source", str(tmp_path / "x.py"), "--out", str(tmp_path / "h"), *language])
@@ -379,14 +430,14 @@ class TestCli:
 
     def test_a_match_writes_no_comment(self, tmp_path, monkeypatch, capsys):
         output, summary, body = self._check(tmp_path, monkeypatch, _python("87/100"), _python("pending"))
-        assert output == "status=match\nstop=false\n"
+        assert output == MATCH_OUTPUT
         assert "**Render hash:** match: the staged renders come from the implementation at `0123456`." in summary
         assert not body.exists()
         assert "::notice::render_hash status=match" in capsys.readouterr().out
 
     def test_a_match_by_the_code_says_so(self, tmp_path, monkeypatch, capsys):
         output, summary, body = self._check(tmp_path, monkeypatch, _python("pending"), REVIEWED)
-        assert output == "status=match\nstop=false\n"
+        assert output == MATCH_OUTPUT
         assert "only the file header differs" in summary
         assert not body.exists()
         assert "head=0123456 via=code form=two-line" in capsys.readouterr().out
@@ -402,11 +453,14 @@ class TestCli:
             "--library",
             "matplotlib",
         )
-        assert output == "status=mismatch\nstop=true\n"
+        assert output == "status=mismatch\nstop=true\ncause=mismatch\nretry=false\ncode=render_mismatch\n"
         assert "**Render hash:** mismatch at `0123456`" in summary and "the review does not run" in summary
-        assert "::warning::render_hash status=mismatch head=0123456 form=two-line stop=true" in capsys.readouterr().out
+        assert (
+            "::warning::render_hash status=mismatch head=0123456 form=two-line stop=true cause=mismatch retry=false:"
+            in capsys.readouterr().out
+        )
         text = body.read_text(encoding="utf-8")
-        assert text.splitlines()[0] == MARKER.format(status="mismatch", head=HEAD)
+        assert text.splitlines()[0] == MARKER.format(status="mismatch", cause="mismatch", head=HEAD)
         assert "## :warning: Staged renders do not match this code" in text
         assert render_hash(_python("pending"))[:12] in text
         assert "The review did not run" in text
@@ -416,7 +470,7 @@ class TestCli:
         # A forced or adopted run takes this path too, and the plain command would not repeat it.
         assert "forced or adopted from a branch, repeat that run instead" in text
         assert "`-f regen_gate=false`" in text and "`-f source_ref=<the ref>`" in text
-        assert "go ahead unchanged" not in text and KEEP_CODE not in text
+        assert KEEP_CODE not in text and UNVERIFIED_CODE not in text and RETRY_LABEL not in text
         assert text.endswith(":robot: *[impl-review](https://run/1)*\n")
         # Repair reads the last comment that contains "AI Review" as its feedback.
         assert "AI Review" not in text
@@ -425,45 +479,107 @@ class TestCli:
         output, _, body = self._check(
             tmp_path, monkeypatch, _python("pending"), _python("pending", body="x\n"), "--regeneration"
         )
-        assert output == "status=mismatch\nstop=true\n"
+        assert _outputs(output)["code"] == KEEP_CODE
         text = body.read_text(encoding="utf-8")
         assert "The review did not run" in text and f"(`{KEEP_CODE}`)" in text
-        assert STOP_LABEL not in text and "bulk-generate" not in text
+        assert STOP_LABEL not in text and RETRY_LABEL not in text and "bulk-generate" not in text
 
-    def test_a_mismatch_against_a_legacy_file_only_warns(self, tmp_path, monkeypatch, capsys):
+    def test_a_mismatch_against_a_one_line_file_stops_and_says_what_the_file_is(self, tmp_path, monkeypatch, capsys):
         output, summary, body = self._check(
             tmp_path, monkeypatch, _python("pending"), _python("pending", body="x\n"), legacy=True
         )
-        assert output == "status=mismatch\nstop=false\n"
-        assert "warn-only, the score is unchanged" in summary
-        assert "form=legacy stop=false" in capsys.readouterr().out
+        assert _outputs(output) == {
+            "status": "mismatch",
+            "stop": "true",
+            "cause": "mismatch",
+            "retry": "false",
+            "code": KEEP_CODE,
+        }
+        assert "the review does not run" in summary
+        assert "form=legacy stop=true cause=mismatch" in capsys.readouterr().out
         text = body.read_text(encoding="utf-8")
-        assert "the review and its score go ahead unchanged" in text and "holds no code hash" in text
-        assert "The review did not run" not in text
+        assert "The file holds one hash only." in text and "left from an older run" in text
+        assert "The review did not run" in text and f"`{STOP_LABEL}`" in text
 
-    @pytest.mark.parametrize("case", ["missing", "legacy", "unreadable"])
-    def test_a_regeneration_that_does_not_stop_gets_the_warning_text(self, tmp_path, monkeypatch, case):
-        """`--regeneration` is passed on every regeneration; only a stop may speak of the keep."""
-        extra = ["--regeneration", "--spec-id", "scatter-basic", "--library", "matplotlib"]
-        if case == "unreadable":
-            extra.append("--fetch-error=ServiceException: 503")
-        staged = None if case == "missing" else _python("pending")
-        output, _, body = self._check(
-            tmp_path, monkeypatch, staged, _python("pending", body="x\n"), *extra, legacy=case == "legacy"
+    # What each cause but a mismatch says: the finding, and where the PR goes.
+    CAUSES = {
+        "missing": ("missing", "carry no `render.sha256`"),
+        "content": ("unreadable", "render.sha256 holds no sha256"),
+        "fetch": ("unreadable", "could not be downloaded after three attempts"),
+    }
+
+    def _cause(self, tmp_path: Path, monkeypatch, cause: str, *extra: str) -> tuple[dict[str, str], str]:
+        staged = None if cause == "missing" else _python("pending")
+        args = [*extra, "--spec-id", "scatter-basic", "--library", "matplotlib"]
+        if cause == "fetch":
+            args.append("--fetch-error=ServiceException: 503")
+        output, summary, body = self._check(tmp_path, monkeypatch, staged, _python("pending", body="x\n"), *args)
+        if cause == "content":
+            # Checked again against a file that holds no hash.
+            (tmp_path / "render.sha256").write_text("garbled\n", encoding="utf-8")
+            (tmp_path / "output").unlink()
+            check = ["check", "--hash", str(tmp_path / "render.sha256"), "--source", str(tmp_path / "head.py")]
+            check += ["--language", "python", "--head", HEAD, "--comment-out", str(body), *args]
+            assert main(check) == 0
+            output = (tmp_path / "output").read_text(encoding="utf-8")
+        assert "the review does not run" in summary
+        return _outputs(output), body.read_text(encoding="utf-8")
+
+    @pytest.mark.parametrize("cause", sorted(CAUSES))
+    def test_a_first_generation_is_parked_or_retried_by_cause(self, tmp_path, monkeypatch, cause):
+        status, finding = self.CAUSES[cause]
+        outputs, text = self._cause(tmp_path, monkeypatch, cause)
+        retry = cause == "fetch"
+        assert outputs == {
+            "status": status,
+            "stop": "true",
+            "cause": cause,
+            "retry": "true" if retry else "false",
+            "code": UNVERIFIED_CODE,
+        }
+        assert text.splitlines()[0] == MARKER.format(status=status, cause=cause, head=HEAD)
+        assert "## :warning: Staged renders not checked against this code" in text
+        assert finding in text and "The review did not run" in text
+        if retry:
+            # The storage failed, the renders were not judged: a failed review, which the watchdog re-runs.
+            assert f"labels the PR `{RETRY_LABEL}`" in text and "the watchdog starts the review again once" in text
+            assert STOP_LABEL not in text and "bulk-generate" not in text
+        else:
+            assert f"labels this PR `{STOP_LABEL}` and ends as failed; the PR stays open" in text
+            assert "gh workflow run bulk-generate.yml -f specification_id=scatter-basic -f library=matplotlib" in text
+            assert RETRY_LABEL not in text
+        assert UNVERIFIED_CODE not in text and "regen gate keeps" not in text
+
+    @pytest.mark.parametrize("cause", sorted(CAUSES))
+    def test_a_regeneration_is_kept_whatever_the_cause(self, tmp_path, monkeypatch, cause):
+        """A gated regeneration never gets a label: a failed download is a returning keep as well."""
+        outputs, text = self._cause(tmp_path, monkeypatch, cause, "--regeneration")
+        assert (outputs["stop"], outputs["code"]) == ("true", UNVERIFIED_CODE)
+        assert f"The regen gate keeps the live implementation (`{UNVERIFIED_CODE}`) and closes this PR" in text
+        assert "the pair returns after the attempt window" in text
+        assert STOP_LABEL not in text and RETRY_LABEL not in text and "bulk-generate" not in text
+
+    def test_a_missing_hash_says_whose_the_renders_are(self, tmp_path, monkeypatch):
+        output, _, body = self._check(tmp_path, monkeypatch, None, _python("pending"))
+        assert _outputs(output)["status"] == "missing"
+        text = body.read_text(encoding="utf-8")
+        assert "nothing ties them to the implementation at `0123456`" in text
+        assert "fails its run when it cannot" in text and "not staged by this PR's own run" in text
+
+    def test_an_unreadable_head_stops_like_a_mismatch(self, tmp_path, monkeypatch):
+        output, _, body = self._check(tmp_path, monkeypatch, _python("pending"), _python("pending"))
+        (tmp_path / "output").unlink()
+        check = ["check", "--hash", str(tmp_path / "render.sha256"), "--source", str(tmp_path / "absent.py")]
+        assert main([*check, "--language", "python", "--head", HEAD, "--comment-out", str(body)]) == 0
+        outputs = _outputs((tmp_path / "output").read_text(encoding="utf-8"))
+        assert (outputs["status"], outputs["cause"], outputs["retry"], outputs["code"]) == (
+            "unreadable",
+            "head",
+            "false",
+            UNVERIFIED_CODE,
         )
-        status = "mismatch" if case == "legacy" else case
-        assert output == f"status={status}\nstop=false\n"
         text = body.read_text(encoding="utf-8")
-        assert "This check only warns here: the review and its score go ahead unchanged." in text
-        assert "The review did not run" not in text and KEEP_CODE not in text and STOP_LABEL not in text
-
-    def test_a_missing_hash_writes_the_comment(self, tmp_path, monkeypatch):
-        output, summary, body = self._check(tmp_path, monkeypatch, None, _python("pending"))
-        assert output == "status=missing\nstop=false\n"
-        assert "warn-only, the score is unchanged" in summary
-        text = body.read_text(encoding="utf-8")
-        assert "Renders staged before the hash existed have none." in text
-        assert "the review and its score go ahead unchanged" in text
+        assert "the implementation at the head could not be read" in text and f"`{STOP_LABEL}`" in text
 
     def test_a_usage_error_exits_2(self):
         with pytest.raises(SystemExit) as exc:

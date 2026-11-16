@@ -2,9 +2,9 @@
 
 Every render path stages ``render.sha256`` beside the PNGs it uploads:
 ``impl-generate.yml`` (a generated or an adopted file) and ``impl-repair.yml``.
-``impl-review.yml`` compares it with the implementation at the PR head. A
-mismatch stops the review: nothing is scored and no header is committed. A
-hash that is missing or could not be read only warns.
+``impl-review.yml`` compares it with the implementation at the PR head. Only
+a match lets the review run. Anything else stops it: nothing is scored and no
+header is committed.
 
 The file holds two hashes of the implementation the renders came from:
 
@@ -23,10 +23,26 @@ The file holds two hashes of the implementation the renders came from:
   A JavaScript file's ``//#`` directives are not header: the render harness
   reads them, and they count.
 
-``check`` reports a match when either hash fits. Only a mismatch against a
-file that carries the code hash stops the review (``stop=true``): a
-``render.sha256`` staged before the code hash existed cannot tell a header
-commit from other code, so its mismatch still only warns.
+``check`` reports a match when either hash fits, and otherwise why the renders
+are not tied to this code (``cause``):
+
+- ``mismatch``: neither hash fits, so the renders were made from other code.
+  That holds for a one-line file as well. The writer has written two lines
+  since the code hash exists, so a one-line file is left from an older run.
+- ``missing``: staging holds no ``render.sha256``. The writers put it there
+  last and fail their run when they cannot, so renders without one are not
+  this run's.
+- ``content``: the file holds no sha256.
+- ``head``: the implementation at the PR head could not be read.
+- ``fetch``: the file could not be downloaded, which is a failure of the
+  storage and not a property of the renders.
+
+Every cause stops the review (``stop=true``). ``fetch`` also writes
+``retry=true``: the same review may well pass an hour later, so impl-review
+ends it as a failed review that the watchdog starts again, where the other
+causes park the PR. On a gated regeneration every cause is a keep, with the
+code in ``code``: ``render_mismatch`` for a mismatch and ``render_unverified``
+for the rest.
 
 The name is not ``plot-*``: review and merge copy exactly those objects, and
 the hash must never reach production.
@@ -41,12 +57,13 @@ Subcommands::
 
 ``write`` writes ``<render hash>  <source>`` (the ``sha256sum`` format) and
 ``<code hash>  code``. ``check`` writes
-``status=match|mismatch|missing|unreadable`` and ``stop=true|false`` to
-``$GITHUB_OUTPUT`` and one line to ``$GITHUB_STEP_SUMMARY`` when they are set,
-prints a ``::notice::`` or ``::warning::``, and on anything but a match writes
-the PR comment to ``--comment-out``. It exits 0 whatever the status (2 on a
-usage error); a crash exits 1, and the step that runs it then lets the review
-go on without a stop.
+``status=match|mismatch|missing|unreadable``, ``stop=true|false``, ``cause``,
+``retry=true|false`` and ``code`` to ``$GITHUB_OUTPUT`` and one line to
+``$GITHUB_STEP_SUMMARY`` when they are set, prints a ``::notice::`` or
+``::warning::``, and on anything but a match writes the PR comment to
+``--comment-out``. It exits 0 whatever the status (2 on a usage error); a
+crash exits 1, and the step that runs it then lets the review go on without a
+stop.
 Stdlib only; ``regen_gate`` and, for JavaScript, ``impl_header`` are imported
 from this file's own directory when it runs as a script, so a workflow's copy
 never reads the checkout's.
@@ -72,7 +89,8 @@ else:  # run as a script: the regen_gate.py next to this file (the workflow-ref 
 
 
 HASH_RE = re.compile(r"[0-9a-f]{64}")
-MARKER = "<!-- render-hash:v1 status={status} head={head} -->"
+# One comment per status, cause and head (impl-review dedupes on this line).
+MARKER = "<!-- render-hash:v2 status={status} cause={cause} head={head} -->"
 LANGUAGES = ("python", "r", "julia", "javascript")
 # The name field of the second line of render.sha256.
 CODE_NAME = "code"
@@ -80,11 +98,22 @@ CODE_NAME = "code"
 # before the code hash existed).
 FORM_CODE = "two-line"
 FORM_LEGACY = "legacy"
-# The label of a first generation whose review stopped on a mismatch
-# (impl-review.yml "Stop on a render hash mismatch"; the watchdog skips it).
-STOP_LABEL = "ai-render-mismatch"
-# The regen gate's keep code for a regeneration whose review stopped.
+# Why the renders are not tied to the code at the head (Comparison.cause).
+CAUSE_MISMATCH = "mismatch"
+CAUSE_MISSING = "missing"
+CAUSE_CONTENT = "content"
+CAUSE_HEAD = "head"
+CAUSE_FETCH = "fetch"
+# The label of a first generation whose review stopped on the render hash
+# (impl-review.yml "Stop on the render hash"; the watchdog skips it).
+STOP_LABEL = "ai-render-unverified"
+# The label of a review that failed and that the watchdog starts again once:
+# what a first generation gets when the hash could not be downloaded.
+RETRY_LABEL = "ai-review-failed"
+# The regen gate's keep codes for a regeneration whose review stopped: the
+# renders were made from other code, or nothing ties them to this code.
 KEEP_CODE = "render_mismatch"
+UNVERIFIED_CODE = "render_unverified"
 
 # The header block impl-review's writer replaces at the start of a file, per
 # language: the patterns of "Update metadata and implementation header" in
@@ -175,12 +204,13 @@ def read_hash(path: Path) -> str | None:
 
 @dataclass(frozen=True)
 class Comparison:
-    """What ``check`` found: the status, both render hashes, and how far the staged file can be trusted.
+    """What ``check`` found: the status, both render hashes, and why the renders are not tied to the code.
 
     ``via`` says which hash matched: ``file`` (every byte but the score) or
     ``code`` (only the header differs). ``form`` is the staged file's:
     ``two-line`` with a code hash, ``legacy`` without, empty when it was not
-    read.
+    read. ``cause`` is empty for a match and one of the ``CAUSE_*`` words for
+    everything else.
     """
 
     status: str
@@ -189,70 +219,98 @@ class Comparison:
     reason: str = ""
     via: str = ""
     form: str = ""
+    cause: str = ""
 
     @property
     def stop(self) -> bool:
-        """Only a mismatch against a file that carries the code hash stops the review."""
-        return self.status == "mismatch" and self.form == FORM_CODE
+        """Only a match lets the review run."""
+        return self.status != "match"
+
+    @property
+    def retry(self) -> bool:
+        """A failed download says nothing about the renders, so the same review is worth another run."""
+        return self.cause == CAUSE_FETCH
+
+    @property
+    def keep_code(self) -> str:
+        """The regen gate's code for a gated regeneration that stops here; empty for a match."""
+        if not self.stop:
+            return ""
+        return KEEP_CODE if self.cause == CAUSE_MISMATCH else UNVERIFIED_CODE
 
 
 def compare(hash_file: Path, source: Path, fetch_error: str = "", language: str = "") -> Comparison:
     """Compare the staged ``render.sha256`` with the implementation at the head.
 
     Without a known ``language`` the code hash is not compared, and the file
-    counts as ``legacy``: a mismatch then never stops the review.
+    counts as ``legacy``: only its render hash can match then.
     """
     data = source.read_bytes() if source.is_file() else None
     head = render_hash(data) if data is not None else ""
     if fetch_error:
         reason = f"staging could not be read ({regen_gate._one_line(fetch_error)[:200]})"
-        return Comparison("unreadable", head=head, reason=reason)
+        return Comparison("unreadable", head=head, reason=reason, cause=CAUSE_FETCH)
     if not hash_file.is_file():
-        return Comparison("missing", head=head, reason="no render.sha256 in staging")
+        return Comparison("missing", head=head, reason="no render.sha256 in staging", cause=CAUSE_MISSING)
     staged, staged_code = read_hashes(hash_file)
     if staged is None:
-        return Comparison("unreadable", head=head, reason="render.sha256 holds no sha256")
+        return Comparison("unreadable", head=head, reason="render.sha256 holds no sha256", cause=CAUSE_CONTENT)
     form = FORM_CODE if staged_code is not None and language in LANGUAGES else FORM_LEGACY
     if data is None:
-        return Comparison(
-            "unreadable", staged=staged, reason="the implementation at the head could not be read", form=form
-        )
+        reason = "the implementation at the head could not be read"
+        return Comparison("unreadable", staged=staged, reason=reason, form=form, cause=CAUSE_HEAD)
     if staged == head:
         return Comparison("match", staged=staged, head=head, via="file", form=form)
     if form == FORM_CODE and staged_code == code_hash(data, language):
         return Comparison("match", staged=staged, head=head, via=CODE_NAME, form=form)
-    return Comparison("mismatch", staged=staged, head=head, form=form)
+    return Comparison("mismatch", staged=staged, head=head, form=form, cause=CAUSE_MISMATCH)
 
 
 def comment(
     result: Comparison, head: str, run_url: str, *, regeneration: bool = False, spec_id: str = "", library: str = ""
 ) -> str:
-    """The PR comment for every status but a match."""
+    """The PR comment for every status but a match: what was found, and what happens to the PR."""
     short = head[:7] or "the head"
     title = "Staged renders not checked against this code"
-    if result.status == "mismatch":
+    if result.cause == CAUSE_MISMATCH:
         title = "Staged renders do not match this code"
         what = (
             f"`render.sha256` beside the staged renders is `{result.staged[:12]}`, but the implementation at "
             f"`{short}` hashes to `{result.head[:12]}`: the renders under review were made from other code."
         )
-    elif result.status == "missing":
+        if result.form == FORM_LEGACY:
+            what += (
+                " The file holds one hash only. Every render path has written two since the code hash exists, "
+                "so this file is left from an older run."
+            )
+    elif result.cause == CAUSE_MISSING:
         what = (
-            "The staged renders carry no `render.sha256`, so this review cannot tell whether they come "
-            f"from the implementation at `{short}`. Renders staged before the hash existed have none."
+            f"The staged renders carry no `render.sha256`, so nothing ties them to the implementation at `{short}`. "
+            "Every render path writes the hash last and fails its run when it cannot, so renders without one were "
+            "not staged by this PR's own run: they are left from an earlier run or were put there by hand."
+        )
+    elif result.cause == CAUSE_FETCH:
+        what = (
+            f"The render hash could not be downloaded after three attempts: {result.reason}. That is a failure of "
+            "the storage, not a finding about the renders."
         )
     else:
         what = f"The render hash could not be checked: {result.reason}."
-    if result.stop and regeneration:
-        then = (
-            "The review did not run: nothing is scored and the file header stays as it is. The regen gate keeps "
-            f"the live implementation (`{KEEP_CODE}`) and closes this PR; the pair returns after the attempt window."
+    then = "The review did not run: nothing is scored and the file header stays as it is. "
+    if regeneration:
+        then += (
+            f"The regen gate keeps the live implementation (`{result.keep_code}`) and closes this PR; the pair "
+            "returns after the attempt window."
         )
-    elif result.stop:
-        then = (
-            "The review did not run: nothing is scored and the file header stays as it is. The review run labels "
-            f"this PR `{STOP_LABEL}` and ends as failed; the PR stays open, and no workflow picks it up again by "
-            "itself."
+    elif result.retry:
+        then += (
+            f"This run ends as failed and labels the PR `{RETRY_LABEL}`, so the watchdog starts the review again "
+            "once, at its next scan within six hours. If the download fails then as well, the PR needs a look."
+        )
+    else:
+        then += (
+            f"The review run labels this PR `{STOP_LABEL}` and ends as failed; the PR stays open, and no workflow "
+            "picks it up again by itself."
         )
         if spec_id and library:
             # impl-generate.yml deletes the pair's branch before it creates it
@@ -270,15 +328,8 @@ def comment(
                 "If this PR's description says it was forced or adopted from a branch, repeat that run instead: add "
                 "`-f regen_gate=false`, or `-f source_ref=<the ref>` with its `-f source_model=<the model>`."
             )
-    elif result.status == "mismatch":
-        then = (
-            "This check only warns here: the review and its score go ahead unchanged. This `render.sha256` holds "
-            "no code hash, so the check cannot tell the review's own header commit from other code."
-        )
-    else:
-        then = "This check only warns here: the review and its score go ahead unchanged."
     lines = [
-        MARKER.format(status=result.status, head=head or "n/a"),
+        MARKER.format(status=result.status, cause=result.cause or "none", head=head or "n/a"),
         f"## :warning: {title}",
         "",
         what,
@@ -325,12 +376,11 @@ def cmd_check(args: argparse.Namespace) -> int:
             )
     else:
         detail = result.reason or f"staged {result.staged[:12]}, head {result.head[:12]}"
-        stop = "true" if result.stop else "false"
-        print(f"::warning::render_hash status={result.status} head={short} form={form} stop={stop}: {detail}")
-        if result.stop:
-            summary = f"**Render hash:** {result.status} at `{short}` ({detail}); the review does not run."
-        else:
-            summary = f"**Render hash:** {result.status} at `{short}` ({detail}); warn-only, the score is unchanged."
+        print(
+            f"::warning::render_hash status={result.status} head={short} form={form} stop=true "
+            f"cause={result.cause} retry={'true' if result.retry else 'false'}: {detail}"
+        )
+        summary = f"**Render hash:** {result.status} at `{short}` ({detail}); the review does not run."
         if args.comment_out:
             text = comment(
                 result,
@@ -341,7 +391,14 @@ def cmd_check(args: argparse.Namespace) -> int:
                 library=args.library,
             )
             Path(args.comment_out).write_text(text, encoding="utf-8")
-    _append("GITHUB_OUTPUT", f"status={result.status}\nstop={'true' if result.stop else 'false'}\n")
+    outputs = {
+        "status": result.status,
+        "stop": "true" if result.stop else "false",
+        "cause": result.cause,
+        "retry": "true" if result.retry else "false",
+        "code": result.keep_code,
+    }
+    _append("GITHUB_OUTPUT", "".join(f"{key}={value}\n" for key, value in outputs.items()))
     _append("GITHUB_STEP_SUMMARY", f"\n{summary}\n")
     return 0
 
@@ -352,7 +409,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     write = sub.add_parser("write", help="Write render.sha256 for the implementation the renders came from")
     write.add_argument("--source", required=True)
-    # Required: a file without the code hash is never enforced, so a writer
+    # Required: a file without the code hash matches by its render hash only,
+    # so the review's own header commit would read as a mismatch. A writer
     # that could not name the language must fail, not write half a file.
     write.add_argument("--language", required=True, choices=LANGUAGES)
     write.add_argument("--out", required=True)
@@ -361,7 +419,7 @@ def build_parser() -> argparse.ArgumentParser:
     check = sub.add_parser("check", help="Compare the staged render.sha256 with the implementation at the head")
     check.add_argument("--hash", required=True, help="the downloaded render.sha256 (absent: missing)")
     check.add_argument("--source", required=True, help="the implementation at the head (absent: unreadable)")
-    check.add_argument("--language", default="", help="without a known one, a mismatch only warns")
+    check.add_argument("--language", default="", help="without a known one, only the render hash is compared")
     check.add_argument("--head", default="")
     check.add_argument("--fetch-error", default="", help="the download's error, other than a missing object")
     check.add_argument("--run-url", default="")

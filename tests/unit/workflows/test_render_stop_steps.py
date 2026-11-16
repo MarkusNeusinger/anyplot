@@ -1,15 +1,19 @@
-"""What impl-review does after a render hash mismatch (rule P2b).
+"""What impl-review does when the render hash does not match (rule P2b).
 
-"Check the render hash" writes `stop=true` when the staged renders were made
-from other code than the PR head holds (test_render_hash_steps.py). The step
-"Stop on a render hash mismatch" then stops the review:
+"Check the render hash" writes `stop=true` for everything but a match: the
+staged renders were made from other code than the PR head holds, or nothing
+ties them to it (test_render_hash_steps.py). The step "Stop on the render
+hash" then stops the review:
 
-- A first generation gets the label `ai-render-mismatch` and stays open; no
+- A first generation gets the label `ai-render-unverified` and stays open; no
   review, no score, no header commit, and the run ends as failed. The
   watchdog rescues nothing that carries the label and reports it. A later
   review whose check reads `match` removes the label.
+- A first generation whose hash could not be downloaded gets `ai-review-failed`
+  instead, the label of a failed review, so the watchdog runs the review again.
 - A regeneration runs no review either; the regen gate keeps the live
-  implementation (`render_mismatch`), and the keep path closes the PR.
+  implementation (`render_mismatch` or `render_unverified`), and the keep path
+  closes the PR.
 
 These tests run the step scripts with a stub `gh`, and pin the `if:` wiring
 that no local run reaches: which steps a stop switches off, and which three
@@ -36,8 +40,8 @@ TOOLS = ROOT / "automation" / "scripts"
 WORKFLOWS = ROOT / ".github" / "workflows"
 REVIEW = "impl-review.yml"
 CHECK = "Check the render hash"
-STOP = "Stop on a render hash mismatch"
-CLEAR = "Clear the ai-render-mismatch label"
+STOP = "Stop on the render hash"
+CLEAR = "Clear the ai-render-unverified label"
 GATE = "Regen gate"
 EARLY = "Add preliminary verdict label (early)"
 RUN_REVIEW = "Run AI Quality Review"
@@ -65,6 +69,7 @@ def _names() -> list[str]:
 
 
 def _stop(tmp_path: Path, **env: str):
+    """The stop step, by default after a mismatch (what the check wrote for it)."""
     output, summary = tmp_path / "output", tmp_path / "summary"
     result, calls = _run(
         str(_step(REVIEW, STOP)["run"]),
@@ -72,44 +77,90 @@ def _stop(tmp_path: Path, **env: str):
         tmp_path,
         GITHUB_OUTPUT=str(output),
         GITHUB_STEP_SUMMARY=str(summary),
-        **ENV,
-        **env,
+        **{**ENV, "CAUSE": "mismatch", "RETRY": "false", "KEEP_CODE": render_hash.KEEP_CODE, **env},
     )
     return result, calls, output.read_text(encoding="utf-8") if output.exists() else ""
 
 
+# What the check writes for each cause but a failed download: all of them park a first generation.
+PARKING = [
+    ("mismatch", render_hash.KEEP_CODE),
+    ("missing", render_hash.UNVERIFIED_CODE),
+    ("content", render_hash.UNVERIFIED_CODE),
+    ("head", render_hash.UNVERIFIED_CODE),
+]
+
+
 class TestStopStep:
-    def test_a_first_generation_gets_the_label_and_nothing_else(self, tmp_path):
-        result, calls, output = _stop(tmp_path, IS_REGEN="false")
+    @pytest.mark.parametrize(("cause", "code"), PARKING)
+    def test_a_first_generation_gets_the_label_and_nothing_else(self, tmp_path, cause, code):
+        result, calls, output = _stop(tmp_path, IS_REGEN="false", CAUSE=cause, KEEP_CODE=code)
         # The run ends red like every other end without a verdict, with the label on.
         assert result.returncode == 1, result.stdout + result.stderr
-        assert "::error::The review of PR #7 stopped on a render hash mismatch" in result.stdout
+        assert (
+            f"::error::The review of PR #7 stopped on the render hash ({cause}): nothing was scored." in result.stdout
+        )
         assert "could not be added" not in result.stdout
         assert output == "stopped=true\n"
         assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--add-label", render_hash.STOP_LABEL]]
         (created,) = _calls(calls, "label", "create")
         assert created[2] == render_hash.STOP_LABEL
-        # No comment (the check posted it), no close, no dispatch, and never the label the watchdog rescues.
+        # No comment (the check posted it), no close, no dispatch, and never the label the watchdog rescues:
+        # another review would read the same staging.
         assert len(calls) == 2
-        assert "ai-review-failed" not in _code_only(str(_step(REVIEW, STOP)["run"]))
-        assert "::warning::render_stop spec=spec-a lib=plotly pr=7 regeneration=false" in result.stdout
+        assert render_hash.RETRY_LABEL not in result.stdout
+        assert f"::warning::render_stop spec=spec-a lib=plotly pr=7 regeneration=false cause={cause}" in result.stdout
 
-    def test_a_regeneration_asks_for_the_keep_and_calls_nothing(self, tmp_path):
-        result, calls, output = _stop(tmp_path, IS_REGEN="true")
+    def test_a_failed_download_ends_as_a_failed_review_for_the_watchdog(self, tmp_path):
+        """The storage failed, the renders were not judged: the PR is not parked, its review runs again."""
+        result, calls, output = _stop(
+            tmp_path, IS_REGEN="false", CAUSE="fetch", RETRY="true", KEEP_CODE=render_hash.UNVERIFIED_CODE
+        )
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert output == "stopped=true\n"  # the review still does not run on renders it could not check
+        assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--add-label", render_hash.RETRY_LABEL]]
+        (created,) = _calls(calls, "label", "create")
+        assert created[2] == render_hash.RETRY_LABEL
+        # The description the other two places give that label, so whichever creates it first agrees.
+        assert created[created.index("--description") + 1] == "AI review failed; watchdog re-dispatches once"
+        assert len(calls) == 2
+        assert render_hash.STOP_LABEL not in result.stdout
+        assert "The PR carries ai-review-failed: the watchdog starts the review again once." in result.stdout
+
+    @pytest.mark.parametrize(
+        ("env", "code"),
+        [
+            ({"CAUSE": "mismatch", "KEEP_CODE": "render_mismatch"}, "render_mismatch"),
+            ({"CAUSE": "missing", "KEEP_CODE": "render_unverified"}, "render_unverified"),
+            # A failed download as well: the watchdog only flags a regeneration's failed review.
+            ({"CAUSE": "fetch", "RETRY": "true", "KEEP_CODE": "render_unverified"}, "render_unverified"),
+            # Never a code the gate does not know: it would judge a review that never ran.
+            ({"CAUSE": "", "KEEP_CODE": ""}, "render_unverified"),
+            ({"CAUSE": "missing", "KEEP_CODE": "merge"}, "render_unverified"),
+        ],
+        ids=["mismatch", "missing", "download-failed", "no-outputs", "foreign-code"],
+    )
+    def test_a_regeneration_asks_for_the_keep_and_calls_nothing(self, tmp_path, env, code):
+        result, calls, output = _stop(tmp_path, IS_REGEN="true", **env)
         assert result.returncode == 0, result.stdout + result.stderr
-        assert output == "stopped=true\nkeep=true\n"
+        assert output == f"stopped=true\nkeep=true\ncode={code}\n"
         assert calls == []
-        assert "regeneration=true" in result.stdout and "render_mismatch" in result.stdout
+        assert "regeneration=true" in result.stdout and f"({code})" in result.stdout
 
-    def test_a_label_that_cannot_be_added_fails_the_job_after_the_stop_is_written(self, tmp_path):
+    @pytest.mark.parametrize(
+        ("env", "label"),
+        [({}, render_hash.STOP_LABEL), ({"CAUSE": "fetch", "RETRY": "true"}, render_hash.RETRY_LABEL)],
+        ids=["parked", "retried"],
+    )
+    def test_a_label_that_cannot_be_added_fails_the_job_after_the_stop_is_written(self, tmp_path, env, label):
         """The review must stay stopped whatever the API does, so the output comes first."""
-        result, calls, output = _stop(tmp_path, IS_REGEN="false", GH_FAIL_ADD_LABEL=render_hash.STOP_LABEL)
+        result, calls, output = _stop(tmp_path, IS_REGEN="false", GH_FAIL_ADD_LABEL=label, **env)
         assert result.returncode == 1
         assert output == "stopped=true\n"
         assert len(_calls(calls, "pr", "edit")) == 3
-        assert "::error::ai-render-mismatch could not be added to PR #7" in result.stdout
+        assert f"::error::{label} could not be added to PR #7" in result.stdout
         # Without the label the watchdog acts on the PR, and the message says so.
-        assert "Case 2 runs the repair again" in result.stdout and "add the label by hand" in result.stdout
+        assert "Case 2" in result.stdout and "add the label by hand" in result.stdout
         assert "::error::The review of PR #7 stopped" not in result.stdout
 
     def test_a_label_that_already_exists_is_fine(self, tmp_path):
@@ -164,7 +215,7 @@ class TestClearStep:
         [
             ({"GH_LABELS": "quality:85"}, 1, 0),
             ({"GH_FAIL_VIEW": "1"}, 3, 0),
-            ({"GH_LABELS": "ai-render-mismatch", "GH_FAIL_PR_REMOVE": "1"}, 1, 3),
+            ({"GH_LABELS": "ai-render-unverified", "GH_FAIL_PR_REMOVE": "1"}, 1, 3),
         ],
         ids=["absent", "unreadable-labels", "remove-fails"],
     )
@@ -265,20 +316,32 @@ def _gate(tmp_path: Path, **env: str):
     return result, outputs, runner
 
 
-class TestKeepPath:
-    def test_the_gate_keeps_without_any_review_file(self, tmp_path):
-        result, outputs, runner = _gate(tmp_path, RENDER_MISMATCH="true")
-        assert result.returncode == 0, result.stdout + result.stderr
-        assert (outputs["verdict"], outputs["code"]) == ("keep", "render_mismatch")
-        assert " verdict=keep code=render_mismatch " in result.stdout and "script_crashed" not in result.stdout
-        record = json.loads((runner / "anyplot-regen-record.json").read_text(encoding="utf-8"))
-        assert (record["verdict"], record["code"], record["pr"]) == ("keep", "render_mismatch", 7)
-        assert regen_gate.validate_record(record) == []
-        assert "not made from the code at the PR head" in (runner / "anyplot-regen-summary.md").read_text()
+# What the stop step hands the gate, and the reason the gate then gives.
+KEEPS = [
+    ("render_mismatch", "render_mismatch", "not made from the code at the PR head"),
+    ("render_unverified", "render_unverified", "nothing ties the staged renders to the code at the PR head"),
+    # A keep without a code the gate knows is unverified: it must never judge a review that did not run.
+    ("", "render_unverified", "nothing ties the staged renders to the code at the PR head"),
+]
 
-    @pytest.mark.parametrize("flag", ["", "false"])
-    def test_without_the_stop_the_gate_gets_no_flag(self, tmp_path, flag):
-        result, outputs, _ = _gate(tmp_path, RENDER_MISMATCH=flag)
+
+class TestKeepPath:
+    @pytest.mark.parametrize(("handed", "code", "reason"), KEEPS, ids=["mismatch", "unverified", "no-code"])
+    def test_the_gate_keeps_without_any_review_file(self, tmp_path, handed, code, reason):
+        result, outputs, runner = _gate(tmp_path, RENDER_KEEP="true", RENDER_STOP_CODE=handed)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert (outputs["verdict"], outputs["code"]) == ("keep", code)
+        assert f" verdict=keep code={code} " in result.stdout and "script_crashed" not in result.stdout
+        record = json.loads((runner / "anyplot-regen-record.json").read_text(encoding="utf-8"))
+        assert (record["verdict"], record["code"], record["pr"]) == ("keep", code, 7)
+        assert regen_gate.validate_record(record) == []
+        assert record["adapt"]["review"] == "skipped"
+        assert reason in (runner / "anyplot-regen-summary.md").read_text()
+
+    @pytest.mark.parametrize("keep", ["", "false"])
+    def test_without_the_stop_the_gate_gets_no_flag(self, tmp_path, keep):
+        # A code alone does nothing: the flag follows the stop step's `keep`.
+        result, outputs, _ = _gate(tmp_path, RENDER_KEEP=keep, RENDER_STOP_CODE="render_mismatch")
         assert result.returncode == 0, result.stdout + result.stderr
         assert outputs["code"] == "no_score"
 
@@ -290,9 +353,9 @@ class TestKeepPath:
         assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--add-label", "regen:kept"]]
         assert output.read_text(encoding="utf-8") == "approved=false\n"
 
-    def _verdict(self, tmp_path: Path, **env: str):
+    def _verdict(self, tmp_path: Path, code: str = "render_mismatch", **env: str):
         """Gate, then the verdict step with what the gate left in $RUNNER_TEMP."""
-        gate, outputs, runner = _gate(tmp_path, RENDER_MISMATCH="true")
+        gate, outputs, runner = _gate(tmp_path, RENDER_KEEP="true", RENDER_STOP_CODE=code)
         assert gate.returncode == 0, gate.stdout + gate.stderr
         work = tmp_path / "work"
         result, calls = _run(
@@ -329,23 +392,31 @@ class TestKeepPath:
         )
         return result, calls
 
-    def test_the_verdict_step_closes_the_pr_and_says_that_no_review_ran(self, tmp_path):
-        result, calls = self._verdict(tmp_path, RENDER_STOPPED="true")
+    @pytest.mark.parametrize(
+        ("code", "why"),
+        [
+            ("render_mismatch", "No review ran: the staged renders of this PR were not made from the code at its head"),
+            (
+                "render_unverified",
+                "No review ran: nothing ties the staged renders of this PR to the code at its head, because the "
+                "render hash is missing or could not be read",
+            ),
+        ],
+    )
+    def test_the_verdict_step_closes_the_pr_and_says_why_no_review_ran(self, tmp_path, code, why):
+        result, calls = self._verdict(tmp_path, code, RENDER_STOPPED="true")
         assert result.returncode == 0, result.stdout + result.stderr
         assert ["pr", "close", "7", "--delete-branch"] in calls
         assert not _calls(calls, "workflow", "run")  # no merge, no repair
         (comment,) = _calls(calls, "pr", "comment")
         body = Path(comment[-1]).read_text(encoding="utf-8")
         assert "## :leftwards_arrow_with_hook: Regeneration kept the live implementation" in body
-        assert "No review ran: the staged renders of this PR were not made from the code at its head" in body
+        assert why in body
         assert "This PR is closed without merging" in body
         assert "compared this render" not in body and "(score " not in body
-        assert (
-            "**Stored review:** unchanged (the gate has no re-score of the live implementation: render_mismatch)."
-            in body
-        )
+        assert f"**Stored review:** unchanged (the gate has no re-score of the live implementation: {code})." in body
         (marker,) = regen_gate.parse_record_markers(body)
-        assert (marker["code"], marker["verdict"], marker["writeback"]) == ("render_mismatch", "keep", "no_rescore")
+        assert (marker["code"], marker["verdict"], marker["writeback"]) == (code, "keep", "no_rescore")
 
     def test_without_the_flag_the_comment_is_the_ordinary_keep(self, tmp_path):
         """The control: the same run as an ordinary keep after a review, whose write-back is missing."""
@@ -368,6 +439,10 @@ class TestWiring:
         assert (step["id"], step["if"]) == ("render_stop", "steps.render_hash.outputs.stop == 'true'")
         assert "continue-on-error" not in step
         assert step["env"]["IS_REGEN"] == "${{ steps.regen.outputs.is_regen }}"
+        # What the check found: why, whether another run is worth it, and the gate's code.
+        assert step["env"]["CAUSE"] == "${{ steps.render_hash.outputs.cause }}"
+        assert step["env"]["RETRY"] == "${{ steps.render_hash.outputs.retry }}"
+        assert step["env"]["KEEP_CODE"] == "${{ steps.render_hash.outputs.code }}"
         # Regeneration or not is known before the stop.
         assert names.index("Detect regeneration") < names.index(STOP)
 
@@ -383,7 +458,7 @@ class TestWiring:
         between = names[names.index(STOP) + 1 : names.index(GATE)]
         still_running = [n for n in between if STOPPED not in str(_step(REVIEW, n).get("if", ""))]
         review_keyed = [n for n in still_running if "steps.review." in str(_step(REVIEW, n).get("if", ""))]
-        # The label's removal keys on a match of the check, and a stop is a mismatch.
+        # The label's removal keys on a match of the check, and a stop is never a match.
         assert CLEAR in still_running
         still_running.remove(CLEAR)
         assert sorted(set(still_running) - set(review_keyed)) == [
@@ -416,10 +491,11 @@ class TestWiring:
 
     def test_the_gate_still_needs_a_regeneration(self):
         assert _step(REVIEW, GATE)["if"].startswith("steps.regen.outputs.is_regen == 'true' && (")
-        assert _step(REVIEW, GATE)["env"]["RENDER_MISMATCH"] == "${{ steps.render_stop.outputs.keep }}"
+        assert _step(REVIEW, GATE)["env"]["RENDER_KEEP"] == "${{ steps.render_stop.outputs.keep }}"
+        assert _step(REVIEW, GATE)["env"]["RENDER_STOP_CODE"] == "${{ steps.render_stop.outputs.code }}"
         script = str(_step(REVIEW, GATE)["run"])
-        flag = '[ "$RENDER_MISMATCH" = "true" ] && FLAGS+=(--render-mismatch)'
-        assert script.index(flag) < script.index('python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" decide')
+        decide = script.index('python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" decide')
+        assert script.index("FLAGS+=(--render-mismatch)") < script.index("FLAGS+=(--render-unverified)") < decide
 
     @pytest.mark.parametrize(
         "name",
@@ -440,22 +516,37 @@ class TestWiring:
 
     def test_only_the_stop_and_the_gate_steps_read_the_outputs(self):
         text = (WORKFLOWS / REVIEW).read_text(encoding="utf-8")
-        # `stop` switches the stop step on, `status` the removal of the label after a match.
-        assert set(re.findall(r"steps\.render_hash\.outputs\.(\w+)", text)) == {"stop", "status"}
-        assert set(re.findall(r"steps\.render_stop\.outputs\.(\w+)", text)) == {"stopped", "keep"}
+        # `stop` switches the stop step on, which reads `cause`, `retry` and `code`; `status`
+        # switches on the removal of the label after a match.
+        assert set(re.findall(r"steps\.render_hash\.outputs\.(\w+)", text)) == {
+            "stop",
+            "status",
+            "cause",
+            "retry",
+            "code",
+        }
+        assert set(re.findall(r"steps\.render_stop\.outputs\.(\w+)", text)) == {"stopped", "keep", "code"}
 
     def test_the_names_agree_across_the_workflows_and_the_scripts(self):
         stop = _code_only(str(_step(REVIEW, STOP)["run"]))
-        assert f'--add-label "{render_hash.STOP_LABEL}"' in stop
+        assert f'LABEL="{render_hash.STOP_LABEL}"' in stop and f'LABEL="{render_hash.RETRY_LABEL}"' in stop
         assert f'--remove-label "{render_hash.STOP_LABEL}"' in str(_step(REVIEW, CLEAR)["run"])
-        assert render_hash.KEEP_CODE in regen_gate.REASON_CODES
-        assert render_hash.KEEP_CODE in regen_pick_pairs.RETURN_CODES
+        for code in (render_hash.KEEP_CODE, render_hash.UNVERIFIED_CODE):
+            assert code in regen_gate.REASON_CODES and code in regen_pick_pairs.RETURN_CODES
+            assert code in stop
+        # The label the watchdog re-runs is the one the review's other failure paths create.
+        review = (WORKFLOWS / REVIEW).read_text(encoding="utf-8")
+        assert f'gh label create "{render_hash.RETRY_LABEL}"' in review
+        # No PR may still carry the label this one replaced.
+        for path in WORKFLOWS.glob("*.yml"):
+            assert "ai-render-mismatch" not in path.read_text(encoding="utf-8"), path.name
 
     def test_the_watchdog_skips_the_label_and_reports_it(self):
         script = str(_step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"])
         skip = script.index(f'grep -q " {render_hash.STOP_LABEL} "')
-        block = script[skip : script.index("fi", skip)]
-        assert "::warning::PR #$num: review stopped on a render hash mismatch" in block and "continue" in block
+        # Up to the block's `continue`: a search for the closing `fi` would stop inside the label's name.
+        block = script[skip : script.index("continue", skip) + len("continue")]
+        assert "::warning::PR #$num: review stopped on the render hash" in block and block.endswith("continue")
         # Before every case that rescues: none of them may see the PR.
         assert skip < script.index("# Case 0:") < script.index("# Case 1:") < script.index("# Case 2:")
 
@@ -464,7 +555,9 @@ class TestWiring:
         script = str(_step("impl-generate.yml", "Create implementation branch")["run"])
         delete = 'git push origin --delete "$BRANCH"'
         assert script.index(delete) < script.index('git checkout -b "$BRANCH" origin/main')
-        result = render_hash.Comparison("mismatch", staged="a" * 64, head="b" * 64, form=render_hash.FORM_CODE)
+        result = render_hash.Comparison(
+            "mismatch", staged="a" * 64, head="b" * 64, form=render_hash.FORM_CODE, cause=render_hash.CAUSE_MISMATCH
+        )
         text = render_hash.comment(result, "c" * 40, "", spec_id="spec-a", library="plotly")
         assert "replaces this PR's branch, which closes this PR, and opens a new one" in text
         assert "gh workflow run bulk-generate.yml -f specification_id=spec-a -f library=plotly" in text
