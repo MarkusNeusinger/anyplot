@@ -144,8 +144,8 @@ plot.
 2. **Specification.** `spec-create.yml` checks for duplicates, assigns a spec ID and tags, and opens a pull request with
    the spec. The maintainer approves it on the issue.
 3. **Generation.** `impl-generate.yml` writes one implementation per library and renders it in both themes.
-4. **Review.** `impl-review.yml` first runs automated checks: the code parses and runs, the image exists and isn't
-   blank, and the canvas has its target size. An AI reviewer then scores the render, blind to any earlier score, on a
+4. **Review.** `impl-review.yml` first runs automated checks: the code parses and runs, the image exists, and the
+   canvas has its target size. An AI reviewer then scores the render, blind to any earlier score, on a
    100-point rubric of 24 criteria ([`prompts/quality-criteria.md`](prompts/quality-criteria.md)): visual quality 30,
    design 20, spec compliance 15, data quality 15, code quality 10, and library mastery 10.
 5. **Repair.** Below the bar, `impl-repair.yml` fixes the defects the review named, and the plot is reviewed again.

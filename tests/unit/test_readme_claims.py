@@ -312,6 +312,14 @@ def test_about_page_and_its_bot_copy_name_only_the_checks_a_workflow_runs():
         if not blank_checked:
             # A word of its own: `target="_blank"` is no claim.
             assert not re.search(r"\bblank\b", prose), f"{name}: no workflow checks for a blank image"
+    # The README's pipeline step lists the same checks. Only that sentence: the quality bar's "a blank image ...
+    # scores 0" is a rule of the rubric the reviewer applies, not a check a workflow runs.
+    step = re.search(r"^4\. \*\*Review\.\*\*(.*?)^5\. ", read(README), re.MULTILINE | re.DOTALL)
+    assert step, "README.md no longer has the pipeline's review step"
+    checks = collapse(step.group(1)).split(" An AI reviewer ", 1)[0]
+    assert "first runs automated checks:" in checks, "README.md: the review step no longer lists its automated checks"
+    if not blank_checked:
+        assert not re.search(r"\bblank\b", checks, re.IGNORECASE), "README.md: no workflow checks for a blank image"
 
 
 def test_about_page_and_its_bot_copy_state_the_owners_year_as_the_readme_does():
