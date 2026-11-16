@@ -411,8 +411,8 @@ export function LegalPage() {
             <FactTable
               rows={[
                 [
-                  'status',
-                  'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
+                  'what it is',
+                  'it adapts a catalogue plot to your data. experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
                 ],
                 [
                   'the model',

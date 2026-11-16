@@ -240,8 +240,9 @@ describe('LegalPage', () => {
   it('describes the experimental data assistant without overclaiming', () => {
     render(<LegalPage />);
 
-    expect(screen.getByRole('row', { name: /^status\s/ })).toHaveTextContent(
-      /experimental, without warranty: results can be wrong and nobody checks them by hand\. the operator may pause it at any time\./
+    // The chat's notice links "how the assistant works" here, so the row says what it does.
+    expect(screen.getByRole('row', { name: /^what it is\s/ })).toHaveTextContent(
+      /it adapts a catalogue plot to your data\. experimental, without warranty: results can be wrong and nobody checks them by hand\. the operator may pause it at any time\./
     );
     expect(
       screen.getByText(

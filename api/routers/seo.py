@@ -1251,8 +1251,8 @@ _LEGAL_BOT_BODY = (
     "</ul>"
     '<h2 id="assistant">Data assistant (experimental)</h2>'
     "<ul>"
-    "<li>Only if you use it. Experimental, without warranty: results can be wrong and nobody checks "
-    "them by hand. The operator may pause it at any time.</li>"
+    "<li>Only if you use it. It adapts a catalogue plot to your data. Experimental, without warranty: "
+    "results can be wrong and nobody checks them by hand. The operator may pause it at any time.</li>"
     "<li>Input goes to Claude by Anthropic via Google Cloud Vertex AI in the EU, under Google "
     "Cloud's data processing terms; it is not used for training. Don't paste personal data you are "
     "not allowed to share.</li>"
