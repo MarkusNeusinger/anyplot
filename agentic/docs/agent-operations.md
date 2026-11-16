@@ -55,5 +55,6 @@ it.
   `plots/`, diffs under about 20 lines, and Dependabot bumps excepted), so
   Copilot's one round ideally finds nothing. The `/open-pr` skill runs this
   check.
-- A second opinion, Fable and Gemini 4 Argon side by side, runs only when the
-  owner asks for one.
+- A second opinion, Fable and Gemini 4 Carbon side by side, runs only when the
+  owner asks for one. Carbon replaced Gemini 4 Argon there on 2026-11-16; Argon
+  is the fallback when Carbon is not reachable, named as such in the report.

@@ -58,7 +58,7 @@ when the structure starts to turn into a mess. It shows in four ways:
 
 1. **Idea and plan.** I say what I want and why. For a change that matters, a planning session writes
    the plan first.
-2. **Second opinion.** A large plan goes to Fable and Gemini 4 Argon side by side. I decide what to take
+2. **Second opinion.** A large plan goes to Fable and Gemini 4 Carbon side by side. I decide what to take
    from their findings.
 3. **Build.** One build agent per task works in its own worktree, never on `main`. It runs the
    verification skill for what it touches, such as a browser check at two widths in both themes for the
