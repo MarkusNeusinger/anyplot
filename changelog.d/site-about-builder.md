@@ -10,9 +10,9 @@
   anyplot" and "Engineering highlights" and the AI workflow page.
   `test_readme_claims.py` checks that those files and headings exist, so a
   renamed heading fails a test instead of a link on the site. One person
-  builds the site, so the whole page speaks in the first person singular,
-  "I" and never "we". The author in the structured data names neusinger.com
-  too.
+  builds the site, so the whole page and its crawler copy speak in the first
+  person singular, "I" and never "we". The author in the structured data
+  names neusinger.com too.
 
 ### Changed
 
@@ -27,7 +27,7 @@
   With a larger browser font size on a narrow phone the links break as github
   and mcp over about and legal, so no line ends on a separator. Keyboard and
   screen readers follow the order each layout shows, and with a browser font
-  size up to 24 px every line keeps at least 9 px from the feedback and
+  size up to 24 px every line keeps at least 8 px from the feedback and
   scroll-to-top buttons.
 - **The stack and the running costs moved from the legal page to the about
   page.** The legal page keeps the legal notice and the privacy policy; a link
@@ -38,7 +38,9 @@
   agents write and review the catalogue, the stack, and what it costs to run."
   on the page, in its link preview and in its crawler copy, in place of three
   different descriptions, one of them an "AI-powered" slogan the style guide
-  rules out.
+  rules out. The crawler copy now lists the stack too, one sentence per row
+  of the page's table, so each part of the description has its section
+  there.
 
 ### Fixed
 
@@ -46,9 +48,10 @@
   style guide's origin story said pyplots.ai was built in a weekend. It
   started in November 2025, and after a few months it became anyplot.ai in
   April 2026, as the repository's first commit and the 2.0.0 relaunch in
-  `CHANGELOG.md` show; `test_readme_claims.py` pins the month of the rename
-  to that release.
-
+  `CHANGELOG.md` show. The crawler copy now tells the origin too, between
+  transparency and open as on the page. On the page and in its crawler copy,
+  `test_readme_claims.py` holds the month of the rename to that release and
+  the start month to the README's "Since November 2025".
 - **The masthead fits at every width.** With MonoLisa the last menu entry ran
   into the right margin on phones narrower than about 344 px, and the screen
   cut it off below about 327 px. From 600 to about 700 px and from 900 to
@@ -66,7 +69,7 @@
   the ones a workflow runs, so the blank-image check is gone, from the
   README's pipeline step too. The crawler body says the same, and
   `test_readme_claims.py` pins the floor, the step, the nightly schedule and
-  the checks, the README's included.
+  the checks, and keeps the blank-image check out of the README's step.
 - **Back leaves a redirected address in one step.** A fresh load of the old
   chat address `/debug/agent` or of a language address `/{spec}/{language}`
   left the old address one step back in the history, so Back landed on it and
