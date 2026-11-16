@@ -31,7 +31,6 @@ vi.mock('src/hooks/useLayoutContext', async () => {
   return { ...actual, useTheme: () => ({ isDark: false, toggle: vi.fn() }) };
 });
 
-import { PlotOfTheDayLoadContext } from 'src/hooks/usePlotOfTheDay';
 import { PlotOfTheDayTerminal, POTD_LOAD_ERROR } from 'src/sections/landing/PlotOfTheDayTerminal';
 
 const potd = {
@@ -60,7 +59,7 @@ describe('PlotOfTheDayTerminal', () => {
   });
 
   it('shows no .use_my_data() while the eligibility names no lane, and asks about its pair', () => {
-    render(<PlotOfTheDayTerminal potd={potd} />);
+    render(<PlotOfTheDayTerminal potd={potd} status="ready" />);
 
     expect(screen.queryByRole('link', { name: 'Use with my data' })).toBeNull();
     expect(agentEligibility.asked).toContainEqual(['scatter-basic', 'matplotlib']);
@@ -68,7 +67,7 @@ describe('PlotOfTheDayTerminal', () => {
 
   it('opens the public chat for its pair through the router', () => {
     agentEligibility.lane = 'public';
-    render(<PlotOfTheDayTerminal potd={potd} />);
+    render(<PlotOfTheDayTerminal potd={potd} status="ready" />);
 
     const link = screen.getByRole('link', { name: 'Use with my data' });
     expect(link).toHaveTextContent('.use_my_data()');
@@ -84,7 +83,7 @@ describe('PlotOfTheDayTerminal', () => {
     // The public door is closed and the admin's eligibility answered: one chat page all the
     // same, which picks the admin lane itself (`AgentChatPage`).
     agentEligibility.lane = 'admin';
-    render(<PlotOfTheDayTerminal potd={potd} />);
+    render(<PlotOfTheDayTerminal potd={potd} status="ready" />);
 
     const link = screen.getByRole('link', { name: 'Use with my data' });
     expect(link).toHaveAttribute(
@@ -95,7 +94,7 @@ describe('PlotOfTheDayTerminal', () => {
   });
 
   it('reserves the empty frame without potd data: hidden, no links, no words of its own', () => {
-    render(<PlotOfTheDayTerminal potd={null} />);
+    render(<PlotOfTheDayTerminal potd={null} status="loading" />);
     const frame = screen.getByTestId('potd-terminal-placeholder');
     expect(frame).toHaveAttribute('aria-hidden', 'true');
     expect(frame.querySelectorAll('a, button, img')).toHaveLength(0);
@@ -106,19 +105,13 @@ describe('PlotOfTheDayTerminal', () => {
     const user = userEvent.setup();
     const retry = vi.fn();
     const { container, rerender } = render(
-      <PlotOfTheDayLoadContext.Provider value={{ status: 'loading', retry }}>
-        <PlotOfTheDayTerminal potd={null} />
-      </PlotOfTheDayLoadContext.Provider>
+      <PlotOfTheDayTerminal potd={null} status="loading" onRetry={retry} />
     );
     const frame = container.firstElementChild;
     expect(frame).toHaveAttribute('aria-hidden', 'true');
     expect(screen.queryByRole('alert')).toBeNull();
 
-    rerender(
-      <PlotOfTheDayLoadContext.Provider value={{ status: 'failed', retry }}>
-        <PlotOfTheDayTerminal potd={null} />
-      </PlotOfTheDayLoadContext.Provider>
-    );
+    rerender(<PlotOfTheDayTerminal potd={null} status="failed" onRetry={retry} />);
     // Same element as the loading frame: the box does not move, and the entrance does not replay.
     expect(container.firstElementChild).toBe(frame);
     expect(frame).not.toHaveAttribute('aria-hidden');
@@ -131,27 +124,21 @@ describe('PlotOfTheDayTerminal', () => {
   });
 
   it('renders no card when the API answered without a plot of the day', () => {
-    const { container } = render(
-      <PlotOfTheDayLoadContext.Provider value={{ status: 'none', retry: vi.fn() }}>
-        <PlotOfTheDayTerminal potd={null} />
-      </PlotOfTheDayLoadContext.Provider>
-    );
+    const { container } = render(<PlotOfTheDayTerminal potd={null} status="none" />);
     expect(container).toBeEmptyDOMElement();
   });
 
   it('renders no card for a plot of the day without a preview image', () => {
     const { container } = render(
-      <PlotOfTheDayLoadContext.Provider value={{ status: 'ready', retry: vi.fn() }}>
-        <PlotOfTheDayTerminal potd={{ ...potd, preview_url: null }} />
-      </PlotOfTheDayLoadContext.Provider>
+      <PlotOfTheDayTerminal potd={{ ...potd, preview_url: null }} status="ready" />
     );
     expect(container).toBeEmptyDOMElement();
   });
 
   it('keeps the frame element when the plot arrives, so the entrance does not replay', () => {
-    const { container, rerender } = render(<PlotOfTheDayTerminal potd={null} />);
+    const { container, rerender } = render(<PlotOfTheDayTerminal potd={null} status="loading" />);
     const frame = container.firstElementChild;
-    rerender(<PlotOfTheDayTerminal potd={potd} />);
+    rerender(<PlotOfTheDayTerminal potd={potd} status="ready" />);
     expect(container.firstElementChild).toBe(frame);
     expect(frame).not.toHaveAttribute('aria-hidden');
     expect(screen.queryByTestId('potd-terminal-placeholder')).toBeNull();
@@ -160,7 +147,7 @@ describe('PlotOfTheDayTerminal', () => {
 
   it('tracks nav_click on filename, github link and image', async () => {
     const user = userEvent.setup();
-    render(<PlotOfTheDayTerminal potd={potd} />);
+    render(<PlotOfTheDayTerminal potd={potd} status="ready" />);
 
     await user.click(screen.getByText(/plots\/scatter-basic\/matplotlib\.py/));
     expect(trackEvent).toHaveBeenCalledWith(

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
@@ -9,7 +9,7 @@ import { GITHUB_URL } from 'src/constants';
 import { useAnalytics, useAppData } from 'src/hooks';
 import { type FeaturedImpl, useFeaturedSpecs } from 'src/hooks/useFeaturedSpecs';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import { PlotOfTheDayLoadContext, usePlotOfTheDay } from 'src/hooks/usePlotOfTheDay';
+import { usePlotOfTheDay } from 'src/hooks/usePlotOfTheDay';
 import { paths, specPath } from 'src/routes/paths';
 import { HeroSection } from 'src/sections/landing/HeroSection';
 import { LibrariesSection } from 'src/sections/landing/LibrariesSection';
@@ -21,10 +21,6 @@ import { selectPreviewUrl } from 'src/utils/themedPreview';
 export function LandingPage() {
   const { librariesData, stats, loadFailed, reloadAppData } = useAppData();
   const { potd, status: potdStatus, retry: retryPotd } = usePlotOfTheDay();
-  const potdLoad = useMemo(
-    () => ({ status: potdStatus, retry: retryPotd }),
-    [potdStatus, retryPotd]
-  );
   const featured = useFeaturedSpecs(5);
   const navigate = useNavigate();
   const { trackEvent } = useAnalytics();
@@ -56,9 +52,7 @@ export function LandingPage() {
           pb: { xs: 4, md: 7 },
         }}
       >
-        <PlotOfTheDayLoadContext.Provider value={potdLoad}>
-          <HeroSection potd={potd} />
-        </PlotOfTheDayLoadContext.Provider>
+        <HeroSection potd={potd} potdStatus={potdStatus} onRetryPotd={retryPotd} />
         <NumbersStrip stats={stats} failed={loadFailed} onRetry={reloadAppData} />
       </Box>
 
@@ -327,6 +321,12 @@ const PALETTE = [
   { background: '#99B314', hex: '#99B314', name: 'lime' },
 ] as const;
 
+/** A hue is expanded while the pointer is on it or its colour block has keyboard focus. */
+const HUE_ACTIVE = ':is(:hover, :has(.hue-block:focus-visible))';
+/** Style guide §8.4: every transition on this easing. */
+const STRIP_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
+const NO_MOTION = '@media (prefers-reduced-motion: reduce)';
+
 function LabelledPaletteStrip() {
   const [copiedHex, setCopiedHex] = useState<string | null>(null);
   const handleCopy = (hex: string) => {
@@ -344,17 +344,17 @@ function LabelledPaletteStrip() {
       });
   };
   // One column per hue holds its colour block and its name, so a name moves with its colour
-  // when the hovered (or, on a touch screen, tapped) hue expands and the rest contract.
-  // A contracted column is narrower than most names, so while a hue is expanded only its
-  // own name shows; the others fade out instead of overprinting each other.
+  // when the hovered (or, on a touch screen, tapped, or keyboard-focused) hue expands and the
+  // rest contract. A contracted column is narrower than most names, so while a hue is
+  // expanded only its own name shows; the others fade out instead of overprinting each other.
   return (
     <Box
       data-strip
       sx={{
         display: 'flex',
-        '&:hover .swatch': { flex: 0.6 },
-        '&:hover .swatch:hover': { flex: 3 },
-        '&:hover .swatch:not(:hover) .hue-name': { opacity: 0 },
+        [`&${HUE_ACTIVE} .swatch`]: { flex: 0.6 },
+        [`& .swatch${HUE_ACTIVE}`]: { flex: 3 },
+        [`&${HUE_ACTIVE} .swatch:not(${HUE_ACTIVE}) .hue-name`]: { opacity: 0 },
       }}
     >
       {PALETTE.map(({ background, hex, name }) => {
@@ -369,7 +369,8 @@ function LabelledPaletteStrip() {
               // Without it the nowrap hex label sets a ~70 px minimum, and on a phone the
               // strip overflows: the last colours are clipped and drift from their names.
               minWidth: 0,
-              transition: 'flex 0.3s',
+              transition: `flex 0.3s ${STRIP_EASE}`,
+              [NO_MOTION]: { transition: 'none' },
               display: 'flex',
               flexDirection: 'column',
               '&:first-of-type .hue-block': { borderRadius: '6px 0 0 6px' },
@@ -394,8 +395,12 @@ function LabelledPaletteStrip() {
                 border: 'none',
                 padding: 0,
                 cursor: 'pointer',
-                '& .hex-label': { opacity: copied ? 1 : 0, transition: 'opacity 0.2s' },
-                '&:hover .hex-label': { opacity: 1 },
+                '& .hex-label': {
+                  opacity: copied ? 1 : 0,
+                  transition: `opacity 0.2s ${STRIP_EASE}`,
+                  [NO_MOTION]: { transition: 'none' },
+                },
+                '&:is(:hover, :focus-visible) .hex-label': { opacity: 1 },
               }}
             >
               <Box
@@ -434,7 +439,8 @@ function LabelledPaletteStrip() {
                 textAlign: 'center',
                 px: 0.5,
                 lineHeight: 1.3,
-                transition: 'opacity 0.2s',
+                transition: `opacity 0.2s ${STRIP_EASE}`,
+                [NO_MOTION]: { transition: 'none' },
               }}
             >
               {name}

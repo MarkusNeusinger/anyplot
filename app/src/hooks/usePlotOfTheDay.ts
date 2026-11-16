@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { apiGet, endpoints } from 'src/lib/api';
 
@@ -29,21 +29,11 @@ export interface PlotOfTheDayData {
  */
 export type PlotOfTheDayStatus = 'loading' | 'ready' | 'none' | 'failed';
 
-export interface PlotOfTheDayLoad {
+export interface PlotOfTheDayState {
+  potd: PlotOfTheDayData | null;
   status: PlotOfTheDayStatus;
   /** Asks again after a failure. */
-  retry?: () => void;
-}
-
-/**
- * The request's status for the terminal card, which sits inside the hero: the landing page
- * provides it, so the card can tell a request in flight from a failed one. The default is
- * `loading`, which keeps the reserved empty frame.
- */
-export const PlotOfTheDayLoadContext = createContext<PlotOfTheDayLoad>({ status: 'loading' });
-
-export interface PlotOfTheDayState extends Required<PlotOfTheDayLoad> {
-  potd: PlotOfTheDayData | null;
+  retry: () => void;
 }
 
 export function usePlotOfTheDay(): PlotOfTheDayState {

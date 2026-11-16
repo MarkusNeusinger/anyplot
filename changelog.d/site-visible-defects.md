@@ -6,7 +6,8 @@
   about 70 px, so the last three or four swatches were clipped and the names
   drifted under the wrong colours. Each name now moves with its colour when
   a hover or a tap expands one; while a colour is expanded, only its name
-  shows.
+  shows. Keyboard focus now expands a colour and shows its hex as a hover
+  does, and the strip no longer animates when reduced motion is turned on.
 - **The swatch labels on the palette page use the ink with the higher
   contrast.** The helper now compares the WCAG contrast ratio of both inks
   against each swatch instead of cutting at a luminance of 0.5. Every
@@ -21,10 +22,12 @@
   `free · non-commercial`, beside the note MUI X already had, on the
   libraries page and the landing page.
 - **The landing page no longer jumps when the plot of the day arrives.** The
-  terminal frame is reserved, empty, while the plot loads. On a tablet, with
-  the plot-of-the-day answer delayed by 1.5 s, the layout shift drops from
-  0.18 to under 0.001. If the request fails, the frame stays and says
-  `plot of the day did not load`, with `.retry()`.
+  terminal frame is reserved, empty, while the plot loads. Its footer has as
+  many rows as the card's, so the frame keeps its height at every width from
+  320 px up; a title too long for its row is cut with an ellipsis instead of
+  wrapping. On a tablet, with the plot-of-the-day answer delayed by 1.5 s,
+  the layout shift drops from 0.18 to under 0.001. If the request fails, the
+  frame stays and says `plot of the day did not load`, with `.retry()`.
 - **A failed load on the plots page clears and can be retried.** The error
   banner is cleared when the next fetch starts. It says `plots did not load`
   instead of the raw exception with status and URL, and offers `.retry()`.

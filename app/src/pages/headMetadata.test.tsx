@@ -62,10 +62,7 @@ vi.mock('src/hooks/useFeaturedSpecs', () => ({
   useFeaturedSpecs: () => [],
 }));
 
-vi.mock('src/hooks/usePlotOfTheDay', async () => ({
-  ...(await vi.importActual<typeof import('src/hooks/usePlotOfTheDay')>(
-    'src/hooks/usePlotOfTheDay'
-  )),
+vi.mock('src/hooks/usePlotOfTheDay', () => ({
   usePlotOfTheDay: () => ({ potd: null, status: 'loading', retry: () => {} }),
 }));
 

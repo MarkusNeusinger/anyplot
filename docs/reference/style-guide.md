@@ -1122,7 +1122,7 @@ The vertical plot stacks flanking the hero box on ultrawide viewports auto-scrol
 
 The palette strip at the bottom responds to hover: normal state is even distribution, `:hover .sw` shrinks all colors to 50%, then `.sw:hover` expands the specific hovered color to 300%. Playful detail that invites interaction without being necessary.
 
-Each color's name sits in the same column as the color, so it moves with it. While one color is expanded, only that color's name shows, because a contracted column is narrower than most names. On a touch screen a tap expands the color and keeps it expanded until the next tap elsewhere.
+Each color's name sits in the same column as the color, so it moves with it. While one color is expanded, only that color's name shows, because a contracted column is narrower than most names. On a touch screen a tap expands the color and keeps it expanded until the next tap elsewhere. Keyboard focus on a color expands it and shows its hex, as a hover does. Under `prefers-reduced-motion` the strip changes without transitions.
 
 ```css
 .palette-strip .sw { flex: 1; transition: flex 0.3s; }

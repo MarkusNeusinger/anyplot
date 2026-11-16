@@ -32,11 +32,12 @@ vi.mock('src/hooks/useFeaturedSpecs', () => ({
   ],
 }));
 
-vi.mock('src/hooks/usePlotOfTheDay', async () => ({
-  ...(await vi.importActual<typeof import('src/hooks/usePlotOfTheDay')>(
-    'src/hooks/usePlotOfTheDay'
-  )),
-  usePlotOfTheDay: () => ({ potd: null, status: 'loading', retry: () => {} }),
+const potdHook = vi.hoisted(() => ({
+  status: 'loading' as 'loading' | 'ready' | 'none' | 'failed',
+  retry: (): void => {},
+}));
+vi.mock('src/hooks/usePlotOfTheDay', () => ({
+  usePlotOfTheDay: () => ({ potd: null, status: potdHook.status, retry: potdHook.retry }),
 }));
 
 vi.mock('src/hooks/useLayoutContext', async () => {
@@ -51,8 +52,13 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => navigate };
 });
 
+// Records the props the page hands the hero.
+const heroProps = vi.hoisted(() => vi.fn());
 vi.mock('src/sections/landing/HeroSection', () => ({
-  HeroSection: () => <div data-testid="hero" />,
+  HeroSection: (props: object) => {
+    heroProps(props);
+    return <div data-testid="hero" />;
+  },
 }));
 
 vi.mock('src/sections/landing/NumbersStrip', () => ({
@@ -65,6 +71,52 @@ describe('LandingPage', () => {
   beforeEach(() => {
     trackEvent.mockClear();
     navigate.mockClear();
+    heroProps.mockClear();
+    potdHook.status = 'loading';
+    potdHook.retry = () => {};
+  });
+
+  it('hands the plot-of-the-day status and its retry to the hero', () => {
+    const retry = vi.fn();
+    potdHook.status = 'failed';
+    potdHook.retry = retry;
+    render(<LandingPage />);
+
+    expect(heroProps).toHaveBeenLastCalledWith(
+      expect.objectContaining({ potd: null, potdStatus: 'failed', onRetryPotd: retry })
+    );
+  });
+
+  it('keeps each palette name in its colour column, and a click copies the hex', async () => {
+    const user = userEvent.setup();
+    // userEvent installs its own clipboard, so the spy goes on after the setup.
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText');
+    const { container } = render(<LandingPage />);
+
+    // The name sits in the same flex item as its colour block, so it moves with the colour
+    // when a hue expands; names in a row of their own drifted under the wrong colours.
+    const hues = Array.from(container.querySelectorAll('[data-strip] > [data-hue]'));
+    expect(
+      hues.map(hue => [
+        hue.querySelector('[data-hue-name]')?.textContent,
+        hue.querySelector('[data-hue-block]')?.getAttribute('aria-label'),
+      ])
+    ).toEqual([
+      ['brand green', 'Copy #009E73 to clipboard'],
+      ['lavender', 'Copy #C475FD to clipboard'],
+      ['blue', 'Copy #4467A3 to clipboard'],
+      ['ochre', 'Copy #BD8233 to clipboard'],
+      ['matte red', 'Copy #AE3030 to clipboard'],
+      ['cyan', 'Copy #2ABCCD to clipboard'],
+      ['rose', 'Copy #954477 to clipboard'],
+      ['lime', 'Copy #99B314 to clipboard'],
+    ]);
+    expect(container.querySelectorAll('[data-hue-name]')).toHaveLength(8);
+
+    await user.click(screen.getByRole('button', { name: 'Copy #4467A3 to clipboard' }));
+    expect(writeText).toHaveBeenCalledWith('#4467A3');
+    const copied = await screen.findByText('copied ✓');
+    expect(copied.closest('[data-hue]')).toHaveAttribute('data-hue', 'blue');
   });
 
   it('tracks library card clicks and navigates', async () => {
