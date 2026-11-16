@@ -25,6 +25,17 @@ describe('AboutPage', () => {
     expect(headings).toContain('transparency');
   });
 
+  // spec-create.yml merges a spec only on the repository owner's `approved` label.
+  it('says in the lede that ideas arrive as issues and that I approve the specs', () => {
+    render(<AboutPage />);
+
+    expect(
+      screen.getByText(
+        /plot ideas come in as GitHub issues; ai drafts the spec, generates code for every library, and reviews each implementation\. I approve new specs and tune the rules when something repeatedly fails\./
+      )
+    ).toBeInTheDocument();
+  });
+
   it('describes itself by the four things it covers, each a section of the page', () => {
     render(<AboutPage />);
 

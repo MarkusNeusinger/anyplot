@@ -1220,6 +1220,12 @@ class TestSeoProxyRouter:
         assert f'<meta property="og:description" content="{description}" />' in response.text
         # registry-derived count + the pipeline sequence
         assert "15 libraries" in response.text
+        # The lede as AboutPage.tsx has it: ideas arrive as issues, the builder approves the specs.
+        assert (
+            "Plot ideas come in as GitHub issues; AI drafts the specification, generates code for every "
+            "library, and reviews each implementation. I approve new specs and tune the rules when "
+            "something repeatedly fails."
+        ) in response.text
         assert "AI-drafted, human-approved" in response.text
         # In the first person, as AboutPage.tsx says it.
         assert "I update the spec and every library regenerates. I never patch generated code by hand." in (

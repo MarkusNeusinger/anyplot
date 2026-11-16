@@ -1323,9 +1323,9 @@ async def seo_mcp():
 _ABOUT_BOT_BODY = (
     "<h1>About anyplot</h1>"
     f"<p>anyplot.ai is a catalogue of plotting examples across {_LIBRARY_COUNT} libraries "
-    f"in {_LANGUAGE_LIST}. Plot ideas come from humans; AI drafts the specification, "
-    "generates code for every library, and reviews each implementation. Humans approve "
-    "specs and tune the rules.</p>"
+    f"in {_LANGUAGE_LIST}. Plot ideas come in as GitHub issues; AI drafts the specification, "
+    "generates code for every library, and reviews each implementation. I approve new specs "
+    "and tune the rules when something repeatedly fails.</p>"
     "<h2>Who built it</h2>"
     "<p>Markus Neusinger "
     '(<a href="https://www.linkedin.com/in/markus-neusinger/">LinkedIn</a>, '

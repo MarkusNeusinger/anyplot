@@ -99,10 +99,10 @@ export function AboutPage() {
           <Box sx={proseColumnSx}>
             <Box sx={{ ...textStyle, fontSize: '18px', color: 'var(--ink)', fontWeight: 300 }}>
               a catalogue of plotting examples across fifteen libraries in python, r, julia, and
-              javascript. plot ideas come from humans; ai drafts the spec, generates code for every
-              library, and reviews each implementation. humans approve specs and tune the rules when
-              something repeatedly fails. every example uses the same colorblind-safe palette, so
-              switching libraries never breaks your color grammar.
+              javascript. plot ideas come in as GitHub issues; ai drafts the spec, generates code
+              for every library, and reviews each implementation. I approve new specs and tune the
+              rules when something repeatedly fails. every example uses the same colorblind-safe
+              palette, so switching libraries never breaks your color grammar.
             </Box>
           </Box>
         </Box>
