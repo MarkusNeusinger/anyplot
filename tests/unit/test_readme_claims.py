@@ -102,6 +102,16 @@ def near(text: str, value: str, keyword: str, window: int = 3) -> bool:
     return False
 
 
+def about_bot_body() -> str:
+    """The About page's crawler copy (`_ABOUT_BOT_BODY` in seo.py) as one text.
+
+    The copy is a run of string literals, one per source line, so a phrase that wraps between two literals is joined
+    back together here; matching against seo.py as written would miss it.
+    """
+    body = read(SEO).split("\n_ABOUT_BOT_BODY = (", 1)[1].split("\n)\n", 1)[0]
+    return re.sub(r"[\"']\s*\n\s*f?[\"']", "", body)
+
+
 # --- reading the sources ------------------------------------------------------------------------
 
 
@@ -303,10 +313,7 @@ def test_about_page_and_its_bot_copy_name_only_the_checks_a_workflow_runs():
     # core/canvas.py has a blank-image check (AR-04), but no workflow calls it.
     workflows = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
     blank_checked = any(re.search(r"check_blank|is_blank_png", read(path)) for path in workflows)
-    about_body = read(SEO).split("\n_ABOUT_BOT_BODY = (", 1)[1].split("\n)\n", 1)[0]
-    # The bot copy is a run of string literals, one per source line; join them back into one text.
-    about_body = re.sub(r"[\"']\s*\n\s*f?[\"']", "", about_body)
-    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_body)):
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
         prose = collapse(text).lower()
         assert "automated checks come first: the code runs, the canvas has its size." in prose, f"{name}: the checks"
         if not blank_checked:
@@ -346,16 +353,41 @@ _MONTHS = (
 )
 
 
-def test_about_page_dates_the_rename_as_the_changelog_does():
+def test_about_page_and_its_bot_copy_date_the_rename_as_the_changelog_does():
     """The origin's month of the rename to anyplot.ai is the month of the CHANGELOG's relaunch release."""
     heading = re.search(
         r"^## \[[\d.]+\] — (\d{4})-(\d{2})-\d{2} — anyplot\.ai Relaunch$", read(ROOT / "CHANGELOG.md"), re.MULTILINE
     )
     assert heading, "CHANGELOG.md no longer has the release that relaunched the site as anyplot.ai"
     year, month = heading.group(1), _MONTHS[int(heading.group(2)) - 1]
-    assert f"in {month} {year} it became anyplot.ai." in collapse(read(ABOUT_PAGE)), (
-        f"AboutPage.tsx: the origin dates the rename to {month} {year}, as CHANGELOG.md does"
-    )
+    # Without case: the bot copy starts the sentence with a capital, the page does not.
+    phrase = f"in {month} {year} it became anyplot.ai.".lower()
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert phrase in collapse(text).lower(), (
+            f"{name}: the origin dates the rename to {month} {year}, as CHANGELOG.md does"
+        )
+
+
+def test_about_page_and_its_bot_copy_date_the_start_as_the_readme_does():
+    """The origin starts in the month the README counts the owner's merged pull requests from.
+
+    Text held to text, so the two cannot drift apart; neither proves the date, which is the first commit's.
+    """
+    since = re.search(r"Since (\w+ \d{4}), more than", collapse(section(read(README), "How I build anyplot")))
+    assert since, "README.md 'How I build anyplot' no longer says since when the owner's pull requests have merged"
+    phrase = f"it started in {since.group(1)} as pyplots.ai".lower()
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert phrase in collapse(text).lower(), f"{name}: the origin starts in {since.group(1)}, as the README says"
+
+
+def test_about_page_and_its_bot_copy_name_the_default_model():
+    """The stack names the data assistant's model, as the README's architecture does."""
+    model = field_default("agents/anyplot/settings.py", "AgentSettings", "model")
+    assert isinstance(model, str)
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert model_display_name(model) in collapse(text), (
+            f"{name}: the data assistant runs on {model_display_name(model)}"
+        )
 
 
 # A GitHub address of a file on main, as the About page and its bot copy write it, with its heading anchor.

@@ -4,6 +4,7 @@ Tests for api/routers/ endpoints.
 Tests the modular router endpoints.
 """
 
+import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -1220,7 +1221,10 @@ class TestSeoProxyRouter:
         # registry-derived count + the pipeline sequence
         assert "15 libraries" in response.text
         assert "AI-drafted, human-approved" in response.text
-        assert "never patched by hand" in response.text
+        # In the first person, as AboutPage.tsx says it.
+        assert "I update the spec and every library regenerates. I never patch generated code by hand." in (
+            response.text
+        )
         # bot parity with the page's review, chat and MCP sections (AboutPage.tsx)
         for heading in ("<h2>Review</h2>", "<h2>Use with my data</h2>", "<h2>MCP server</h2>"):
             assert heading in response.text
@@ -1232,6 +1236,29 @@ class TestSeoProxyRouter:
         for link in ("https://anyplot.ai/stats", "https://anyplot.ai/plots", "https://anyplot.ai/mcp"):
             assert f'href="{link}"' in response.text
 
+    def test_seo_about_tells_the_origin_and_speaks_as_its_builder(self, client: TestClient) -> None:
+        """The crawler copy carries the page's origin where the page has it, and says I, never we, as the page does."""
+        response = client.get("/seo-proxy/about")
+        assert response.status_code == 200
+        text = response.text
+        # The page's order: transparency, then the origin, then the ways in.
+        assert (
+            text.index('<h2 id="transparency">Transparency</h2>')
+            < text.index("<h2>Origin</h2>")
+            < text.index("<h2>Open</h2>")
+        )
+        for sentence in (
+            "It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples.",
+            "After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai.",
+            "One colorblind-safe palette travels across every library.",
+        ):
+            assert sentence in text, sentence
+        assert "weekend" not in text
+        # One person builds the site; AboutPage.test.tsx holds the page to the same.
+        body = text.split("<h1>About anyplot</h1>", 1)[1].split("<nav>", 1)[0]
+        prose = re.sub(r"<[^>]+>", " ", body)
+        assert not re.search(r"\b(we|our|ours|us)\b", prose, re.IGNORECASE)
+
     def test_seo_about_names_the_builder_and_carries_the_stack_and_costs(self, client: TestClient) -> None:
         """Who built the site and how, and the transparency facts that moved here from the legal page."""
         response = client.get("/seo-proxy/about")
@@ -1242,8 +1269,13 @@ class TestSeoProxyRouter:
             "Markus Neusinger",
             "I'm a chart nerd. Physicist by training, data analyst by trade.",
             "Since 2013 I have built data pipelines, models and the tools around them.",
+            "Lately with AI agents doing the legwork. anyplot is made the same way.",
             "I built it alone, in Visp, a small town in the Swiss Alps.",
+            "I wanted one place to find the right plot for my data.",
             "Models write anyplot's code",
+            # The stack the description names, from the page's table.
+            "The site runs on React 19, Vite, MUI 9 with MUI X and TypeScript.",
+            "The API runs on Python 3.14, FastAPI, SQLAlchemy and PostgreSQL 18.",
             "Running costs about $60 a month (October 2026).",
             # The corrected pipeline and review claims (AboutPage.tsx says the same).
             "Every night a job regenerates the oldest implementations",

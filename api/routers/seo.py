@@ -1317,8 +1317,9 @@ async def seo_mcp():
     )
 
 
-# Mirrors app/src/pages/AboutPage.tsx — who built the site, how, and the
-# pipeline story; counts derive from the registry so they cannot drift.
+# Mirrors app/src/pages/AboutPage.tsx — who built the site, how, the pipeline
+# story, the stack (the page's table, one sentence per row) and the origin;
+# counts derive from the registry so they cannot drift.
 _ABOUT_BOT_BODY = (
     "<h1>About anyplot</h1>"
     f"<p>anyplot.ai is a catalogue of plotting examples across {_LIBRARY_COUNT} libraries "
@@ -1350,8 +1351,8 @@ _ABOUT_BOT_BODY = (
     "<p>idea → spec (AI-drafted, human-approved) → code (AI-generated per library) → "
     "review (AI-evaluated). Every night a job regenerates the oldest implementations, and a new "
     "version replaces the live one only when a review of both finds a fixed defect and no "
-    "regression; when a better example pattern emerges the spec is updated and every library "
-    "regenerates. Generated code is never patched by hand.</p>"
+    "regression; when a better example pattern emerges, I update the spec and every library "
+    "regenerates. I never patch generated code by hand.</p>"
     "<h2>Review</h2>"
     "<p>Every implementation is scored before it ships. Automated checks come first: the code "
     "runs, the canvas has its size. Then an AI reviewer scores the render "
@@ -1375,9 +1376,25 @@ _ABOUT_BOT_BODY = (
     '<a href="https://anyplot.ai/stats">stats page</a> shows, per day, how many assistants and '
     "crawlers read the catalogue and how many came on behalf of a person.</p>"
     '<h2 id="transparency">Transparency</h2>'
+    "<p>The site runs on React 19, Vite, MUI 9 with MUI X and TypeScript. The API runs on Python 3.14, "
+    "FastAPI, SQLAlchemy and PostgreSQL 18. The catalogue pipeline runs on GitHub Actions with Claude "
+    "Code. The data assistant runs on Google ADK and Claude Haiku 5.5 via Vertex AI (EU), and renders "
+    "plots in Cloud Run sandboxes (gVisor). On Google Cloud: Cloud Run, Cloud SQL, Cloud Storage, Cloud "
+    "Logging, BigQuery, Cloud Build and Artifact Registry in the Netherlands (europe-west4), plus Secret "
+    "Manager and Cloud Monitoring. At the edge and for analytics: Cloudflare, and Plausible with no "
+    "cookies and a public dashboard. For reviews: Gemini via Vertex AI for second opinions and GitHub "
+    "Copilot for pull requests. Editor and typography: JetBrains PyCharm, MonoLisa by Marcus Sterz, and "
+    "JetBrains Mono 2.304 (SIL Open Font License 1.1) for the attribution strip under plots created "
+    "from your own data.</p>"
     "<p>The whole stack — specs, pipeline, API and frontend — is open source under the MIT License at "
     '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>. '
     "Running costs about $60 a month (October 2026).</p>"
+    "<h2>Origin</h2>"
+    "<p>It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples. People "
+    "wanted two things from it. They wanted ideas for which plot fits their data. And they wanted to "
+    "get to know libraries they hadn't used yet, since each has its own strengths. After a few months "
+    "on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai. One colorblind-safe "
+    "palette travels across every library.</p>"
     "<h2>Open</h2>"
     '<p>Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
     "propose a new plot type via a "
