@@ -28,7 +28,7 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 
 **Color discipline:** `#009E73` (brand green) appears only in small, deliberate moments — logo dot, italic accents, hover states, active navigation, terminal cursor. Everything else is warm grayscale, so when a chart appears its colors land with full impact.
 
-**Pipeline transparency:** AI is part of the story, not a hidden production detail. Humans submit ideas (plot requests as GitHub issues); AI drafts the spec from the idea; humans approve the spec before any code runs; AI generates the implementations and reviews them; on rejection AI retries and humans tune the rules or refine the spec. Communicated openly in copy and methodology pages.
+**Pipeline transparency:** AI is part of the story, not a hidden production detail. Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. Below the review's bar, AI repairs the defects the review named and the plot is reviewed again; when a better example pattern emerges, I update the spec and regenerate its libraries. Communicated openly in copy and methodology pages.
 
 ---
 
@@ -188,7 +188,7 @@ Rotate alternatives as appropriate. The canonical hero block is always the first
 
 See §2.2 for the five tone attributes (precise, understated, curious, respectful, slightly playful) and what to avoid.
 
-The site speaks as its single builder, in the first person singular ("I"), not as "we" or "humans".
+The site speaks as its single builder, in the first person singular ("I"), not as "we" or "humans". Meta descriptions and crawler copies describe the site in the third person.
 
 ### 3.5 Capitalization & Punctuation
 
@@ -266,7 +266,7 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 >
 > Don't: `Powered by cutting-edge AI to bring you the best plotting examples!`
 >
-> Don't: `Specs hand-crafted by experts.` — they aren't; they're AI-drafted from a human one-liner, then human-approved.
+> Don't: `Specs hand-crafted by experts.` — they aren't: plot ideas come in as GitHub issues, AI drafts the spec, and I approve it.
 
 **The pattern:** state the mechanism, name what does what, no breathless framing. When in doubt, format as code — pipelines as arrows, results as `+`/`~`/`-`/`✗`.
 
@@ -286,16 +286,16 @@ The second version is shorter, says what's actually happening (ideas come in as 
 - **Library-agnostic**, showing the same chart types across matplotlib, seaborn, plotly, and others.
 - **Colorblind-safe by default**. Every example uses the imprint palette. This isn't a feature, it's a baseline.
 - **Copyable**. Every example is self-contained, with the full code visible and executable.
-- **Curated**. We don't aggregate every plot on the internet — we maintain a considered collection.
+- **Curated**. I don't aggregate every plot on the internet — I maintain a considered collection.
 - **The pipeline runs on its own schedule, by rules I set.** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs. The pipeline is documented and visible.
 
 **What anyplot is not:**
 
-- **A plotting library**. We don't compete with matplotlib or plotly. We help you use them better.
-- **An AI plot generator the user prompts.** Users browse a curated catalogue: its plots come from specs humans approve, and the AI generates them offline. The experimental chat at `/agent` adapts a plot the user picked from that catalogue to their own data; it doesn't invent a plot from a prompt.
-- **A dashboard tool**. We show static examples. Interactive dashboards are a different product category.
-- **A tutorial platform**. We assume you know how to run Python code. We don't teach from zero.
-- **A community forum**. We accept contributions through GitHub but we're not building a social layer.
+- **A plotting library**. anyplot doesn't compete with matplotlib or plotly; it helps you use them better.
+- **An AI plot generator the user prompts.** Users browse a curated catalogue: its plots come from specs I approve, and the AI generates them offline. The experimental chat at `/agent` adapts a plot the user picked from that catalogue to their own data; it doesn't invent a plot from a prompt.
+- **A dashboard tool**. The catalogue shows static examples. Interactive dashboards are a different product category.
+- **A tutorial platform**. The examples assume you know how to run Python code; they don't teach from zero.
+- **A community forum**. Everything happens on GitHub — issues, releases, discussions. There's no separate forum, no signup, no account.
 
 ### 3.8 Story Points
 

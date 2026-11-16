@@ -51,8 +51,8 @@ when the structure starts to turn into a mess. It shows in four ways:
 - **Knowing what has to hold.** Security is a good example: I know what has to hold, private data and no
   way to abuse the service, and asking the right question is often enough for a model to find what still
   needs hardening. Before the chat went public, the question of what the request logs keep moved the
-  session id out of every URL, because Cloud Run keeps a request's URL together with the client's address
-  for 30 days ([`agent_public.py`](../../api/routers/agent_public.py)).
+  public chat's session id out of its URLs, because Cloud Run keeps a request's URL together with the
+  client's address for 30 days ([`agent_public.py`](../../api/routers/agent_public.py)).
 
 ## The path of a change
 
