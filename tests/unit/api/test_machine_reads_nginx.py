@@ -170,6 +170,8 @@ class TestTheClosedSets:
             ("/plots?lib=matplotlib", "plots"),
             ("/legal", "legal"),
             ("/mcp", "mcp_page"),
+            ("/agent", "agent_page"),
+            ("/agent?spec=box-basic&library=matplotlib", "agent_page"),
             ("/box-basic", "spec_hub"),
             ("/box-basic/", "spec_hub"),
             ("/box-basic/python", "spec_language"),

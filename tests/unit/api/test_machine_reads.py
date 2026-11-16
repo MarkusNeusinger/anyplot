@@ -83,6 +83,8 @@ class TestRouteTable:
             ("/seo-proxy/palette", "page", "palette"),
             ("/seo-proxy/map", "page", "map"),
             ("/seo-proxy/stats", "page", "stats"),
+            ("/seo-proxy/agent", "page", "agent_page"),
+            ("/seo-proxy/agent/", "page", "agent_page"),
             ("/seo-proxy/box-basic", "page", "spec_hub"),
             # nginx's map names the slashed form alike; FastAPI redirects it, so it carries no id.
             ("/seo-proxy/box-basic/", "page", "spec_hub"),
@@ -120,6 +122,13 @@ class TestRouteTable:
     )
     def test_names_the_route(self, path: str, surface: str, route: str) -> None:
         assert route_of(path)[:2] == (surface, route)
+
+    def test_the_chat_explainer_is_no_spec(self) -> None:
+        """A served `/agent` copy is a page of its own; the spec shape would write `agent` as a spec id."""
+        line = _line("/seo-proxy/agent", {"User-Agent": GOOGLEBOT})
+        assert line is not None
+        assert line["route"] == "agent_page"
+        assert "spec_id" not in line
 
     # Routes a reader of the catalogue never needs: the API's own plumbing, the admin and agent routes, and
     # the in-app relays. Everything else the API serves must have a name, or its reads land as `other`.

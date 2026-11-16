@@ -1224,6 +1224,46 @@ class TestSeoProxyRouter:
         for link in ("https://anyplot.ai/stats", "https://anyplot.ai/plots", "https://anyplot.ai/mcp"):
             assert f'href="{link}"' in response.text
 
+    def test_seo_agent_carries_the_explainer_and_its_terms(self, client: TestClient) -> None:
+        """llms.txt and the legal page lead to /agent; a crawler there got the spec route's 404."""
+        response = client.get("/seo-proxy/agent")
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        # Never indexed, as the page is not (`AgentChatPage`).
+        assert '<meta name="robots" content="noindex" />' in response.text
+        assert "<title>use with my data | anyplot.ai</title>" in response.text
+        assert "an agent adapts that plot&#x27;s code to your columns" in response.text
+        # The three terms, word for word as the explainer has them, and the way to the privacy facts.
+        for sentence in (
+            "experimental, without warranty: results can be wrong and nobody checks them by hand. "
+            "the operator may pause it at any time.",
+            "use it only with data you may share, never for unlawful content or automated requests. "
+            "daily limits apply per tab and per network; a misuse can pause you for the day.",
+            "yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.",
+        ):
+            assert f"<dd>{sentence}</dd>" in response.text, sentence
+        assert '<a href="https://anyplot.ai/legal#assistant">what is stored, where and for how long</a>' in (
+            response.text
+        )
+        # The three examples open the chat on their pair.
+        for spec, library, language in (
+            ("scatter-basic", "matplotlib", "python"),
+            ("bar-basic", "ggplot2", "r"),
+            ("line-basic", "d3", "javascript"),
+        ):
+            assert (
+                f'<a href="https://anyplot.ai/agent?spec={spec}&amp;library={library}&amp;language={language}">'
+                f"{spec} in {library}</a>"
+            ) in response.text
+
+    def test_seo_agent_is_not_taken_for_a_spec(self, db_client) -> None:
+        """Declared before `/seo-proxy/{spec_id}`, it answers without asking the catalogue."""
+        client, _ = db_client
+        with patch("api.routers.seo.SpecRepository") as spec_repo:
+            response = client.get("/seo-proxy/agent")
+        assert response.status_code == 200
+        spec_repo.assert_not_called()
+
     def test_seo_libraries_lists_the_registry(self, client: TestClient) -> None:
         """The /libraries bot page was a 29-word stub although its whole
         content sits in core/constants.py (AI-access audit 2026-08-19)."""
