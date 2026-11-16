@@ -67,18 +67,7 @@ describe('HeroSection', () => {
     expect(screen.queryByRole('link', { name: AGENT_ENTRY_LABEL })).not.toBeInTheDocument();
   });
 
-  it('leaves mcp to the nav: the hero links to the catalogue, GitHub and, while open, the agent', () => {
-    lane.open = true;
-    render(<HeroSection potd={null} />);
-    expect(screen.queryByLabelText('Connect via MCP')).not.toBeInTheDocument();
-    const hrefs = screen.getAllByRole('link').map(link => link.getAttribute('href'));
-    expect(hrefs).not.toContain('/mcp');
-    expect(hrefs).toEqual(
-      expect.arrayContaining(['/agent', '/plots', 'https://github.com/MarkusNeusinger/anyplot'])
-    );
-  });
-
-  it('tracks the primary browse CTA and the github link', async () => {
+  it('tracks the primary browse CTA, mcp link and github link', async () => {
     const user = userEvent.setup();
     render(<HeroSection potd={null} />);
 
@@ -87,6 +76,11 @@ describe('HeroSection', () => {
       source: 'hero_cta_browse',
       target: '/plots',
     });
+
+    const mcp = screen.getByRole('link', { name: 'Connect via MCP' });
+    expect(mcp).toHaveAttribute('href', '/mcp');
+    await user.click(mcp);
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'hero_mcp', target: '/mcp' });
 
     await user.click(screen.getByLabelText('Clone on GitHub'));
     expect(trackEvent).toHaveBeenCalledWith('nav_click', {

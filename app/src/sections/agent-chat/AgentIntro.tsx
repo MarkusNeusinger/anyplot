@@ -23,12 +23,16 @@ export const AGENT_INTRO_SOURCE = 'agent_intro';
 
 /**
  * One catalogue pair per language, so the examples show that the chat is not Python-only. Each is
- * an implementation under `plots/` that the agents service's readiness scan finds eligible.
+ * an implementation under `plots/` that the agents service's readiness scan finds eligible and
+ * whose review score is at least 90, the score a first review needs (`QUALITY_THRESHOLD_APPROVAL`),
+ * so a first chat starts from a plot that passed the bar. tests/unit/test_agent_intro_examples.py
+ * checks that the files exist, so a renamed or removed implementation fails a test instead of
+ * leaving a dead end here.
  */
 const AGENT_EXAMPLES = [
   { spec: 'scatter-basic', library: 'matplotlib' },
-  { spec: 'line-basic', library: 'ggplot2' },
-  { spec: 'bar-basic', library: 'd3' },
+  { spec: 'bar-basic', library: 'ggplot2' },
+  { spec: 'line-basic', library: 'd3' },
 ] as const;
 
 /** The page's description: the about page's two sentences on what the chat does. */

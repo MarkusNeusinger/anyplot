@@ -541,7 +541,8 @@ library-agnostic spec…              │                             │
                                     │                             │
 steal like an artist._▌             │                             │
                                     │                             │
-[plots.browse() →] | github.clone() └─────────────────────────────┘
+[plots.browse() →] | mcp.connect()  └─────────────────────────────┘
+                     github.clone()
 .use_my_data() →
 an ai agent adapts a catalogue plot to your data
 ────────────────────────────────────────────────────────────────
@@ -560,7 +561,7 @@ an ai agent adapts a catalogue plot to your data
 3. **Subtitle** — `one spec · every library · always current.`, MonoLisa upright weight 500, 18px, `--ink`. Must fit on one line (`whiteSpace: nowrap` + stepped responsive size).
 4. **Intro prose** — 4–6 lines MonoLisa upright weight 300, `--ink-soft`, 18px. `<em>your</em>` renders as italic-ss01 script accent inline.
 5. **Tagline** — `steal like an artist.`, MonoLisa italic + `ss01`, 22px. Typed out by TypewriterText (see §8.1) at ~68ms/char, with a trailing green block cursor that fades 2.5s after typing completes.
-6. **CTAs** — the primary filled pill `plots.browse() →`, then a muted `|` and the text link `github.clone()` next to it (§7.4.1). While the agent chat's public lane is open, one more text link stands below them, two lines in one link: `.use_my_data() →` over `an ai agent adapts a catalogue plot to your data`, both 13px MonoLisa, the name in `--ink` at weight 500 and green on hover, the plain words in `--ink-soft`. On a phone the plain words break into two balanced lines. The link leads to `/agent` without a plot, which explains the chat. Lowercase throughout.
+6. **CTAs** — the primary filled pill `plots.browse() →`, then a muted `|` and two stacked text links next to it, `mcp.connect()` over `github.clone()` (§7.4.1). While the agent chat's public lane is open, one more text link stands below them, two lines in one link: `.use_my_data() →` over `an ai agent adapts a catalogue plot to your data`, both 13px MonoLisa, the name in `--ink` at weight 500 and green on hover, the plain words in `--ink-soft`. On a phone the plain words break into two balanced lines. The link leads to `/agent` without a plot, which explains the chat. Lowercase throughout.
 7. **NumbersStrip** — single `borderTop`, five quiet stats (1.5rem MonoLisa weight 600 in `--ink-soft`), labels 12px `--ink-muted`. Hangs directly under the hero inside the same 88svh section so the libraries peek below.
 
 CSS sketch:
@@ -825,7 +826,7 @@ Two forms of the pseudo-function style, used in different contexts:
 Examples of the explicit form:
 
 - Hero CTAs: `plots.browse()`, `plots.find()`
-- Secondary links: `github.clone()`
+- Secondary links: `github.clone()`, `mcp.connect()`
 - Search prompt: `❯ plots.find(_▌)` (or bare `.find()` inside a detail pane)
 - Page-level fallbacks: `page.miss()`, `results.empty()`
 

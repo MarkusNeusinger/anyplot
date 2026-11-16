@@ -191,14 +191,23 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
           >
             |
           </Box>
-          <SecondaryLink
-            href="https://github.com/MarkusNeusinger/anyplot"
-            subject="github"
-            verb="clone"
-            ariaLabel="Clone on GitHub"
-            external
-            onClick={() => trackEvent('nav_click', { source: 'hero_github', target: 'github' })}
-          />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+            <SecondaryLink
+              to={paths.mcp}
+              subject="mcp"
+              verb="connect"
+              ariaLabel="Connect via MCP"
+              onClick={() => trackEvent('nav_click', { source: 'hero_mcp', target: paths.mcp })}
+            />
+            <SecondaryLink
+              href="https://github.com/MarkusNeusinger/anyplot"
+              subject="github"
+              verb="clone"
+              ariaLabel="Clone on GitHub"
+              external
+              onClick={() => trackEvent('nav_click', { source: 'hero_github', target: 'github' })}
+            />
+          </Box>
         </Box>
         <AgentEntry
           onClick={() =>

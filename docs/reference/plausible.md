@@ -394,7 +394,7 @@ carry `spec` and `library`.
 
 | `source` | Element | Leads to |
 |----------|---------|----------|
-| `hero_cta_browse`, `hero_github` | The hero's call to action and its secondary link (`HeroSection.tsx`) | `/plots`, GitHub |
+| `hero_cta_browse`, `hero_mcp`, `hero_github` | The hero's call to action and its two secondary links (`HeroSection.tsx`) | `/plots`, `/mcp`, GitHub |
 | `hero_use_my_data` | `.use_my_data() →` over `an ai agent adapts a catalogue plot to your data` below the hero's call to action, shown while the agent chat's public lane is open. Until 2026-11-16 it was the line `# new: pick any plot, then .use_my_data() →`, which led to `/plots` | `/agent`, the chat's explainer without a plot |
 | `potd_terminal_image`, `potd_terminal_filename`, `potd_terminal_github` | The plot of the day in its terminal frame (`PlotOfTheDayTerminal.tsx`), with `spec` and `library` | The plot's page, GitHub |
 | `featured_thumb` | A plot of the featured grid, with `spec` | The spec's hub |
@@ -485,7 +485,6 @@ removed from the dashboard (see [Dashboard checklist](#dashboard-checklist)).
 
 | Ended | Event | Where its number is now |
 |-------|-------|-------------------------|
-| 2026-11-16 | The `nav_click` source `hero_mcp` (`mcp.connect()` in the hero) | The pageview of `/mcp`: the nav's `mcp` entry above the hero leads there |
 | 2026-11-12 | `tab_toggle`, `view_mode_change`, `grid_resize`, `filter_remove`, `random_filter`, `plot_rotate`, `library_filter`, `theme_toggle`, `feedback_opened`, `map_node_click`, `map_node_pin`, `map_search_select` | `ui_feature`, by `feature` (`feedback_opened` as `feedback_open`) |
 | 2026-11-12 | `open_interactive` | Renamed `interactive_open` |
 | 2026-11-12 | `external_link` | The script's `Outbound Link: Click`, which records the same click with the link's address |

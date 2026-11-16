@@ -341,8 +341,8 @@ describe('AgentChatPage on the public lane', () => {
     expect(examples).toHaveLength(3);
     [
       ['scatter-basic', 'matplotlib', 'python'],
-      ['line-basic', 'ggplot2', 'r'],
-      ['bar-basic', 'd3', 'javascript'],
+      ['bar-basic', 'ggplot2', 'r'],
+      ['line-basic', 'd3', 'javascript'],
     ].forEach(([spec, library, language], index) => {
       const item = examples[index];
       expect(within(item).getByRole('link', { name: `${spec} in ${library}` })).toHaveAttribute(
@@ -371,12 +371,12 @@ describe('AgentChatPage on the public lane', () => {
     ]);
 
     await act(() => router.navigate(-1));
-    await user.click(await screen.findByRole('link', { name: 'bar-basic in d3' }));
+    await user.click(await screen.findByRole('link', { name: 'line-basic in d3' }));
     await waitFor(() => expect(opens()).toHaveLength(2));
-    expect(opens()[1]).toEqual({ library: 'd3', source: 'agent_intro', spec: 'bar-basic' });
+    expect(opens()[1]).toEqual({ library: 'd3', source: 'agent_intro', spec: 'line-basic' });
     // The source leaves the address again, so a reload of it counts as a direct open.
     await waitFor(() =>
-      expect(router.state.location.search).toBe('?spec=bar-basic&library=d3&language=javascript')
+      expect(router.state.location.search).toBe('?spec=line-basic&library=d3&language=javascript')
     );
   });
 
