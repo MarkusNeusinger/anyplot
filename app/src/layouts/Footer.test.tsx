@@ -39,9 +39,9 @@ describe('Footer', () => {
     }
   });
 
-  // Below 720px the single row would run under the scroll-to-top button, which nothing lifts from
-  // 600px up, so the name takes the middle line of three and its two separators go: no line
-  // starts or ends on a "·".
+  // At the 16px default font size, the single row would run under the scroll-to-top button below
+  // 720px, and nothing lifts that button from 600px up, so the name takes the middle line of three
+  // and its two separators go: no line starts or ends on a "·".
   it('puts the name on a line of its own below 720px and keeps one row from 720px', () => {
     render(<Footer />);
 
@@ -74,6 +74,27 @@ describe('Footer', () => {
         }
       }
     }
+  });
+
+  // The row's text grows with the browser's default font size and the corner buttons do not, so a
+  // larger default needs a wider screen before the row fits beside them; a smaller one never
+  // brings the row in below 720px, where its px gaps would still reach the button.
+  it('takes one row later with a larger default font size and never before 720px', () => {
+    render(<Footer />);
+
+    const line = screen.getByRole('link', { name: 'markus neusinger' }).parentElement!;
+    const separators = [line.previousElementSibling!, line.nextElementSibling!];
+    const layout = (width: number, fontSize: number) => ({
+      basis: styleAt(line, width, fontSize).flexBasis,
+      separators: separators.map(el => styleAt(el, width, fontSize).display),
+    });
+    const threeRows = { basis: '100%', separators: ['none', 'none'] };
+    const oneRow = { basis: 'auto', separators: ['inline', 'inline'] };
+
+    for (const width of [720, 780, 899]) expect(layout(width, 20)).toEqual(threeRows);
+    for (const width of [900, 1440]) expect(layout(width, 20)).toEqual(oneRow);
+    for (const width of [600, 719]) expect(layout(width, 13)).toEqual(threeRows);
+    expect(layout(720, 13)).toEqual(oneRow);
   });
 
   it('sends no event for any entry: the tracker script counts the outbound ones itself', async () => {
