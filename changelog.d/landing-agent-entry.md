@@ -8,14 +8,18 @@
   `/plots`. Until the lane answers, the entry's box stands there invisible, so
   the answer moves neither the plot of the day nor anything below it; only a
   closed lane removes the box. `/agent` without a catalogue pair is now an
-  explainer: the about page's description of the chat, three example pairs in
-  Python, R, and JavaScript that open the chat, and the way on to the
-  catalogue, under a title, a description, and an `og:title` and
-  `og:description` of its own. Below the way on, the assistant's terms of use
-  stand in three quiet labelled lines, `status`, `limits`, and `your code`,
-  and a fourth, `privacy`, links to the legal page's section on what the
-  assistant stores. The same four lines stand under the "closed right now"
-  notice while the public lane is closed, so the terms stand at `/agent`
+  explainer: the about page's description of the chat, which says that
+  `.use_my_data()` is chosen on the plot's own page, a sentence that names the
+  model (Claude by Anthropic, served through Google Cloud Vertex AI in the
+  EU), three example pairs in Python, R, and JavaScript that open the chat,
+  and the way on to the catalogue, under a title, a description, and an
+  `og:title` and `og:description` of its own. Below the way on, one line says
+  how the chat is built, and its "on GitHub" links to the README's section on
+  the chat. Then the assistant's terms of use stand under the heading "ground
+  rules" in four quiet labelled lines: `your code`; `privacy`, which links to
+  the legal page's section on what the assistant stores; `limits`; and
+  `status`. The same heading and four lines stand under the "closed right
+  now" notice while the public lane is closed, so the terms stand at `/agent`
   also while the operator has paused the assistant. The explainer opens no
   session: of the agent routes, a visitor's browser asks only the lane's
   door, which the API answers without the agents service. The site's
@@ -37,8 +41,9 @@
   recognised crawler to `/seo-proxy/agent`, which had no route and fell into
   the spec route as an unknown spec. The API now serves a copy of the
   explainer there, `noindex` as the page is: the title, the description, the
-  example pairs, and the terms of use word for word, which a test pins to
-  `AgentIntro.tsx`. The machine-read log names the page `agent_page` instead
+  paragraph, the example pairs, the line on how the chat is built, and the
+  terms of use word for word under their heading and in their order, which a
+  test pins to `AgentIntro.tsx`. The machine-read log names the page `agent_page` instead
   of a spec hub for a spec called `agent`.
 - **The back button asks before it leaves a chat for the explainer.** The
   chat's leave warning compared only the path, so going back from a chat with

@@ -510,7 +510,7 @@ Used by nginx to serve correct meta tags to social media bots.
 
 **Purpose**: Bot-optimized copy of the data assistant's explainer at `/agent`, with its terms of use, marked `noindex`
 
-The title, description, example pairs and terms are the page's own (`app/src/sections/agent-chat/AgentIntro.tsx`); `tests/unit/test_agent_intro_crawler_copy.py` fails when the two differ.
+The title, description, paragraph, example pairs, line on how the chat is built, and terms with their heading and order are the page's own (`app/src/sections/agent-chat/AgentIntro.tsx`); `tests/unit/test_agent_intro_crawler_copy.py` fails when the two differ.
 
 ---
 
