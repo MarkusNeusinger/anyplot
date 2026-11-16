@@ -17,16 +17,20 @@
   phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
   check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
   says the same, word for word, and now also names who is responsible.
-- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to 881
-  words, and on a phone (390 px) from 6590 to 5674 px high; on a desktop (1440 px), from 3659
-  to 2968 px. The machine readers and the shared links share one row, under both anchors
-  the stats page links, with each period beside its own store; the edge and the bot check
-  are one Cloudflare row whose place stands once. Explanations go: why an unverified share is
-  no verdict (the stats tile's hint already says it), that browsing never reaches a model
-  because the catalogue is written at build time, the sentence that repeated the
-  assistant's heading, that the assistant is open to everyone, the
-  comparison of your code with the catalogue's MIT License, and the sentence naming the
-  laws. Every kind of data, its period, place and recipients, the bases and the rights stay.
+- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to 782
+  words (counted at 390 px), and on a phone (390 px) from 6590 to 5064 px high; on a desktop
+  (1440 px), from 3659 to 2718 px. The data assistant's status, its limits and the terms for
+  your code now stand on its explainer page, `/agent`, which the assistant's first row links,
+  so the pull request of the explainer page has to merge first. The machine readers and the
+  shared links share one row, under both anchors the stats page links: it says what each
+  counts, that neither holds an IP address or a user-agent, and how long each is kept, beside
+  its own store, and where; the fields of a line and of a counter stay in the docs. The edge
+  and the bot check are one Cloudflare row whose place stands once. Explanations go: why an
+  unverified share is no verdict (the stats tile's hint already says it), that browsing never
+  reaches a model because the catalogue is written at build time, the sentence that repeated
+  the assistant's heading, that the assistant is open to everyone, and the sentence naming
+  the laws. Every kind of data, its period, place and recipients, the bases and the rights
+  stay. The list of what the site does not do speaks as its one operator: "what I do not do".
 
 ### Fixed
 
@@ -37,4 +41,5 @@
   section of the legal page for how long data is kept and where it runs. Its storage
   overview no longer has only an admin send a feedback case of the agent chat, and it says
   that a case keeps the conversation and up to 5 sample rows of the data even when the data
-  file is left out.
+  file is left out, and it names the case bucket's region, the Netherlands (europe-west4), as
+  the privacy section does.
