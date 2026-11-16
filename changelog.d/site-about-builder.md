@@ -48,8 +48,8 @@
   style guide's origin story said pyplots.ai was built in a weekend. It
   started in November 2025, and after a few months it became anyplot.ai in
   April 2026, as the repository's first commit and the 2.0.0 relaunch in
-  `CHANGELOG.md` show. The crawler copy now tells the origin too, between
-  transparency and open as on the page. On the page and in its crawler copy,
+  `CHANGELOG.md` show. The crawler copy now tells the origin too, after
+  transparency, as on the page. On the page and in its crawler copy,
   `test_readme_claims.py` holds the month of the rename to that release and
   the start month to the README's "Since November 2025".
 - **The masthead fits at every width.** With MonoLisa the last menu entry ran
