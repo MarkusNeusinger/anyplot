@@ -318,18 +318,23 @@ export function LegalPage() {
                 ],
                 [
                   'machine readers, shared links',
-                  // Two anchors in one row, for the two tiles on /stats that link here: the shares
-                  // anchor starts at its own sentence and runs to the end, so it also covers the
-                  // negatives and the periods that both kinds share.
+                  // Two anchors in one row, for the two tiles on /stats that link here. The shares
+                  // start on a line of their own that names them, so a fresh load of #shared-links
+                  // lands on a line start rather than mid-sentence; their span runs to the end of
+                  // the cell, so it also covers the negative and the periods both kinds share.
                   <Box component="span" id="machine-readers" sx={ANCHOR_SX}>
                     crawlers, ai assistants and mcp clients: one content-free line per request, with
                     vendor and purpose, whether Cloudflare verified it, the page or file and the
-                    status.{' '}
-                    <Box component="span" id="shared-links" sx={ANCHOR_SX}>
-                      link previews that messengers and social networks fetch: counted per day,
-                      platform and page, and whether Cloudflare verified the fetcher, with no time
-                      of day. neither holds an IP address or a user-agent, or anything about
-                      anyone&apos;s browsing or who shared.
+                    status, and nothing about anyone&apos;s browsing.
+                    <Box
+                      component="span"
+                      id="shared-links"
+                      sx={{ ...ANCHOR_SX, display: 'block', mt: 0.75 }}
+                    >
+                      shared links: link previews that messengers and social networks fetch, counted
+                      per day, platform and page, and whether Cloudflare verified the fetcher, with
+                      no time of day and nothing about who shared. neither holds an IP address or a
+                      user-agent.
                       <Kept
                         items={[
                           ['machine reads', 'up to 180 days (Logging, BigQuery)'],
@@ -343,13 +348,13 @@ export function LegalPage() {
                 [
                   'cloudflare',
                   <>
-                    as the cdn, Cloudflare uses your IP address on every request to rate-limit,
-                    filter bots and absorb DDoS attacks. when you send feedback, rate a plot or open
-                    the data assistant, its Turnstile checks that a browser, not a script, is
-                    asking: it reads your IP address, user-agent and TLS fingerprint and keeps an
-                    item in your browser&apos;s storage, with no cookie. anyplot learns only whether
-                    the check passed. Cloudflare also uses these signals on its own behalf, to
-                    improve the check.
+                    as the cdn, Cloudflare uses your IP address to rate-limit, filter bots and
+                    absorb DDoS attacks. when you send feedback, rate a plot or open the data
+                    assistant, its Turnstile checks that a browser, not a script, is asking: it
+                    reads your IP address, user-agent and TLS fingerprint and keeps an item in your
+                    browser&apos;s storage, with no cookie. anyplot learns only whether the check
+                    passed. Cloudflare also uses these signals on its own behalf, to improve the
+                    check.
                     <Kept items={[['where', 'global, EU data centers for EU visitors']]} />
                   </>,
                 ],
@@ -407,7 +412,7 @@ export function LegalPage() {
             <FactTable
               rows={[
                 [
-                  'what it is',
+                  'status',
                   'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
                 ],
                 [
@@ -421,9 +426,9 @@ export function LegalPage() {
                 [
                   'logs',
                   <>
-                    no content: never your text, data, column or file names. telemetry holds
-                    technical details such as sizes, timings and token counts, and the language code
-                    (rare ones as &quot;other&quot;).
+                    no content: never your text, data, column or file names. telemetry holds event
+                    types, formats, sizes, plot type, library, language code (rare ones as
+                    &quot;other&quot;), attempts, defect ids, statuses, latencies and token counts.
                     <Kept
                       items={[
                         ['telemetry', 'up to 180 days'],

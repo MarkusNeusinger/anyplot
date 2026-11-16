@@ -5,9 +5,8 @@
   stand in the rows of the data they belong to, most of them on a closing line of their own,
   so the server logs' 30 days stand beside the IP addresses they hold instead of a screen
   further down. On a phone, each item of that line takes a line of its own. The two tables
-  are gone; their two rows that hold for the whole site, the hosting on Google Cloud and
-  Cloudflare as CDN, DDoS protection and bot check, stay as one sentence under the first
-  table. The crawler copy of the page (`/seo-proxy/legal`) now says what the page says, row
+  are gone; the row that holds for the whole site, the hosting on Google Cloud, stays as a
+  sentence under the first table. The crawler copy of the page (`/seo-proxy/legal`) now says what the page says, row
   by row: it gains the shared links it lacked, and the right to object gets back its
   condition.
 - **The privacy policy speaks in plain words, without article numbers.** On `/legal`, the
@@ -18,16 +17,17 @@
   phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
   check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
   says the same, word for word, and now also names who is responsible.
-- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 1027 to 873
-  words, and on a phone (390 px) from 6434 to 5588 px high; on a desktop (1440 px), from 3330
-  to 2942 px. The machine readers and the shared links share one row, under both anchors
+- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to 876
+  words, and on a phone (390 px) from 6590 to 5654 px high; on a desktop (1440 px), from 3659
+  to 2968 px. The machine readers and the shared links share one row, under both anchors
   the stats page links, with each period beside its own store; the edge and the bot check
   are one Cloudflare row whose place stands once. Explanations go: why an unverified share is
-  no verdict (the stats tile's hint already says it), how the catalogue is built, the
-  sentence that repeated the assistant's heading, the full list of telemetry fields
-  (now a category, the language code still named), and the sentence naming the laws. Every
-  kind of data, its period, place and recipients, the bases and the rights stay. The server
-  logs are now "read only to look into a fault or an attack".
+  no verdict (the stats tile's hint already says it), that browsing never reaches a model
+  because the catalogue is written at build time, the sentence that repeated the
+  assistant's heading, what the assistant does and that it is open to everyone, the
+  comparison of your code with the catalogue's MIT License, and the sentence naming the
+  laws. Every kind of data, its period, place and recipients, the bases and the rights stay.
+  The server logs are now "read only to look into a fault or an attack".
 
 ### Fixed
 

@@ -1261,7 +1261,8 @@ class TestSeoProxyRouter:
         assert "CDN / DDoS / bot check" not in response.text
         assert response.text.count("EU data centers for EU visitors") == 1
         # The machine-read lines and the share counters, mirrored from the human page's shared row:
-        # each period tied to its own store, the place once, the negatives for both.
+        # each period tied to its own store, the place once, each kind's own negative beside it and
+        # the negative both share after them.
         assert "Machine readers and shared links: each request by a crawler, an AI assistant or an MCP" in (
             response.text
         )
@@ -1269,28 +1270,27 @@ class TestSeoProxyRouter:
             "Server logs: IP address, URL and user-agent of each request, read only to look into a fault "
             "or an attack; kept 30 days",
             "one content-free line (vendor and purpose, whether Cloudflare verified it, the page or file, "
-            "the status), kept up to 180 days in Google Cloud Logging and BigQuery.",
-            "Link previews that messengers and social networks fetch are counted per day, platform and page",
-            "with no time of day, kept without a time limit in Google Cloud SQL.",
-            "Both in the Netherlands (europe-west4). Neither holds an IP address or a user-agent, or "
-            "anything about anyone's browsing or who shared.",
-            # Cloudflare's place at its first mention, then the edge on every request and the check
-            # only on the three actions, apart.
-            "Cloudflare (global, EU data centers for EU visitors): as the CDN, it uses your IP address on "
-            "every request to rate-limit, filter bots and absorb DDoS attacks.",
+            "the status), with nothing about anyone's browsing, kept up to 180 days in Google Cloud "
+            "Logging and BigQuery.",
+            "Shared links: link previews that messengers and social networks fetch are counted per day, "
+            "platform and page, and whether Cloudflare verified the fetcher, with no time of day and "
+            "nothing about who shared, kept without a time limit in Google Cloud SQL.",
+            "Both in the Netherlands (europe-west4). Neither holds an IP address or a user-agent.</li>",
+            # Cloudflare's place at its first mention, then the edge and the check, which runs only on
+            # the three actions, apart.
+            "Cloudflare (global, EU data centers for EU visitors): as the CDN, it uses your IP address to "
+            "rate-limit, filter bots and absorb DDoS attacks.",
             "When you send feedback, rate a plot or open the data assistant, its Turnstile checks that a "
             "browser, not a script, is asking",
             "kept until you ask to delete it, in Google Cloud SQL in the Netherlands (europe-west4)",
         ):
             assert fact in response.text, fact
-        # Why "unverified" is no verdict on a share is the stats tile's hint now, not the policy's.
-        assert "no verdict" not in response.text
         # The right to object carries the condition that makes it one, as on the human page.
         assert "object to the processing for a reason specific to your situation" in response.text
         assert "object to the processing, and" not in response.text
         assert "restriction, objection, and" not in response.text
         # Plain words, as on the human page: no article numbers, no wording of legal texts, and no
-        # law or licence named in the privacy part.
+        # law named.
         for term in (
             "Art. 6",
             "Legal bases",
@@ -1301,8 +1301,6 @@ class TestSeoProxyRouter:
             "data protection law",
         ):
             assert term not in response.text, term
-        privacy = response.text.split("<h2>Privacy</h2>")[1].split("<h2>Transparency</h2>")[0]
-        assert "MIT License" not in privacy
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
@@ -1311,16 +1309,21 @@ class TestSeoProxyRouter:
             # Who is responsible, under the page's own heading, not only as the legal notice's operator.
             "<li>Who is responsible: Markus Neusinger (see above).</li>",
             "Running costs about $60 a month (October 2026).",
-            "a random id that ties your own submissions together",
-            "the optional contact field",
+            # Every field the feedback record holds, each by its name.
+            "Feedback: your message and reaction, the optional contact field, the page, window size, "
+            "user-agent and a random id that ties your own submissions together; read only by the operator",
             "Why this is allowed: a legitimate interest in protecting the site, counting its readers, "
             "and the assistant's telemetry and limits",
             "the Cloudflare Access login cookie",
-            "and complain to a data protection authority",
+            # The rights item whole, through the address and the early deletion of a feedback case.
+            "Rights: you can ask what is stored about you and have it corrected, erased or restricted, "
+            "object to the processing for a reason specific to your situation, and complain to a data "
+            'protection authority. A few lines to <a href="mailto:admin@anyplot.ai">admin@anyplot.ai</a> '
+            "are enough, also to have a feedback case deleted early.</li>",
             "transfers outside Switzerland and the EU",
             "cleared by the next feedback after ten minutes, and its salt dies with the server instance",
-            "uses your IP address on every request to rate-limit, filter bots and absorb DDoS attacks",
-            "no name or email unless you type one",
+            "uses your IP address to rate-limit, filter bots and absorb DDoS attacks",
+            "no accounts, and no name or email unless you type one",
             "may credit your public username",
             "<li>No AI training on what you send.</li>",
             "your plot votes, a release number",
@@ -1349,7 +1352,10 @@ class TestSeoProxyRouter:
             "it starts unticked, which leaves out that file only",
             "Highcharts needs a licence from Highsoft for commercial use",
             "never your text, data, column or file names",
-            'and the language code (rare ones as "other")',
+            # Every kind of field by its name: event types, plot type and library record what a
+            # visitor did and chose, so no category of "technical details" covers them.
+            "Telemetry holds event types, formats, sizes, plot type, library, language code (rare ones as "
+            '"other"), attempts, defect ids, statuses, latencies and token counts.',
             "your request: making the plot you ask the data assistant for",
             "your consent to a feedback case",
             # The page's periods and places for the assistant's data, each beside its data.

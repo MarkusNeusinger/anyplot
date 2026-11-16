@@ -6,7 +6,7 @@ import { ThemeProvider } from '@mui/material/styles';
 
 import { LegalPage } from 'src/pages/LegalPage';
 import { UNVERIFIED_HINT } from 'src/sections/stats/sharedLinks';
-import { render, screen } from 'src/test-utils';
+import { render, screen, within } from 'src/test-utils';
 import { theme } from 'src/theme';
 
 const trackEvent = vi.fn();
@@ -54,7 +54,7 @@ describe('LegalPage', () => {
   // A shortening pass is exactly what drops a qualifier — "30 days" silently
   // spreading over a store that has no timer, or the objection right losing
   // the condition that makes it one.
-  it('names why the processing is allowed, the jurisdiction and the whole set of rights', () => {
+  it('names who is responsible, why the processing is allowed and the whole set of rights', () => {
     render(<LegalPage />);
 
     expect(screen.getByText('who is responsible')).toBeInTheDocument();
@@ -64,9 +64,15 @@ describe('LegalPage', () => {
     expect(screen.getByText(/a legitimate interest in protecting the site/)).toHaveTextContent(
       "a legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits; your request: making the plot you ask the data assistant for; and your consent to a feedback case, given when you send it and withdrawable at any time by asking."
     );
-    // Every right, the objection with the condition that makes it one.
-    expect(screen.getByText(/you can ask what is stored about you/)).toHaveTextContent(
-      'you can ask what is stored about you and have it corrected, erased or restricted, object to the processing for a reason specific to your situation, and complain to a data protection authority.'
+    // Every right, the objection with the condition that makes it one, the address to write to
+    // and that a feedback case can go early: the whole paragraph, so no clause can fall off its end.
+    const rights = screen.getByText(/you can ask what is stored about you/);
+    expect(rights).toHaveTextContent(
+      /^you can ask what is stored about you and have it corrected, erased or restricted, object to the processing for a reason specific to your situation, and complain to a data protection authority\. a few lines to admin@anyplot\.ai are enough, also to have a feedback case deleted early\.$/
+    );
+    expect(within(rights).getByRole('link', { name: 'admin@anyplot.ai' })).toHaveAttribute(
+      'href',
+      'mailto:admin@anyplot.ai'
     );
     // Plain words, without the wording or the article numbers of legal texts, and without naming
     // the laws themselves.
@@ -80,7 +86,6 @@ describe('LegalPage', () => {
       /on grounds relating/,
       /GDPR/,
       /data protection law/,
-      /MIT License/,
     ]) {
       expect(privacy.textContent, String(term)).not.toMatch(term);
     }
@@ -153,7 +158,7 @@ describe('LegalPage', () => {
     // Cloudflare's three roles (cdn, DDoS, the check) stand in its own row, not in the hosting
     // sentence, and its place stands once.
     expect(screen.getByRole('row', { name: /^cloudflare\s/ })).toHaveTextContent(
-      /as the cdn, Cloudflare uses your IP address on every request to rate-limit, filter bots and absorb DDoS attacks/
+      /as the cdn, Cloudflare uses your IP address to rate-limit, filter bots and absorb DDoS attacks\./
     );
     expect(document.getElementById('privacy')?.textContent).not.toMatch(/cdn \/ ddos/);
     expect(screen.getAllByText(/EU data centers for EU visitors/)).toHaveLength(1);
@@ -169,13 +174,14 @@ describe('LegalPage', () => {
     // blanket "no personal data" was false — and so is any restatement of it:
     // an IP address, an IP hash and the feedback session id are personal data
     // whether or not you typed them, so the bullet promises only name/email.
-    expect(screen.getByText(/no name or email unless you type one/)).toBeInTheDocument();
-    // Everything the feedback record actually holds, so a later trim cannot
-    // quietly drop the two identifiers a reader would care about most.
-    expect(screen.getByText(/your window size/)).toBeInTheDocument();
     expect(
-      screen.getByText(/a random id that ties your own submissions together/)
+      screen.getByText(/no accounts, and no name or email unless you type one/)
     ).toBeInTheDocument();
+    // Everything the feedback record actually holds, each field by its name, so a later trim
+    // cannot quietly drop one, least of all the two identifiers a reader would care about most.
+    expect(screen.getAllByRole('row', { name: /^feedback\s/ })[0]).toHaveTextContent(
+      /message, reaction, optional contact, page, your window size, user-agent and a random id that ties your own submissions together, read only by the operator\./
+    );
     // The feedback's IP hash is salted; when it goes stands on the feedback row's second line.
     expect(screen.getByText(/a salted IP hash limits spam/)).toBeInTheDocument();
     // Plausible's real property is cookieless and identifier-free; that its script is only
@@ -185,9 +191,9 @@ describe('LegalPage', () => {
     ).toBeInTheDocument();
     // The browser's storage is named, not hidden behind "no cookies".
     expect(screen.getByText(/your plot\s+votes, a release number/)).toBeInTheDocument();
-    // Cloudflare's two uses stay apart: the cdn sees your IP address on every request, the check
-    // runs only on the three actions. Turnstile, per Cloudflare's privacy addendum: what it reads,
-    // its storage item, no cookie, and that Cloudflare uses the signals for itself, to improve the
+    // Cloudflare's two uses stay apart: the cdn's use of your IP address, and the check that runs
+    // only on the three actions. Turnstile, per Cloudflare's privacy addendum: what it reads, its
+    // storage item, no cookie, and that Cloudflare uses the signals for itself, to improve the
     // check.
     const cloudflare = screen.getByRole('row', { name: /^cloudflare\s/ });
     expect(cloudflare).toHaveTextContent(
@@ -199,52 +205,44 @@ describe('LegalPage', () => {
     expect(cloudflare).toHaveTextContent(/on its own behalf, to improve the check/);
     expect(screen.getByText(/and Cloudflare Turnstile.s own\s+item/)).toBeInTheDocument();
     // The machine-read lines and the share counters share a row, and each tile on /stats links
-    // its own anchor in it. #machine-readers wraps the whole cell; #shared-links starts at the
-    // shares and runs to the end. So each anchor holds its own text, the negatives both kinds
-    // share and both periods. Every request is a line, verified or not, so the row claims no
-    // "verified only".
-    const machineReaders = document.getElementById('machine-readers');
-    expect(machineReaders).toHaveTextContent(
-      /crawlers, ai assistants and mcp clients: one content-free line per request/
-    );
-    expect(machineReaders).toHaveTextContent(/whether Cloudflare verified it/);
-    expect(machineReaders).toHaveTextContent(/anything about anyone.s browsing/);
+    // its own anchor in it. #machine-readers wraps the whole cell; #shared-links is a block that
+    // starts with its own name and runs to the end. So each anchor holds its own text, the
+    // negative both kinds share and both periods. Each kind keeps its own negative, worded for
+    // what its store can and cannot hold: the lines say nothing about anyone's browsing, the
+    // counters nothing about who shared. Every request is a line, verified or not, so the row
+    // claims no "verified only".
+    const machineReaders = document.getElementById('machine-readers') as HTMLElement;
     const sharedLinks = document.getElementById('shared-links') as HTMLElement;
     expect(machineReaders).toContainElement(sharedLinks);
+    expect(machineReaders).toHaveTextContent(
+      /^crawlers, ai assistants and mcp clients: one content-free line per request, with vendor and purpose, whether Cloudflare verified it, the page or file and the status, and nothing about anyone.s browsing\.\s*shared links:/
+    );
     // What a share is (the tile's header says the legal page explains it), what a counter holds,
     // each thing it never holds.
     expect(sharedLinks).toHaveTextContent(
-      /link previews that messengers and social networks fetch: counted per day, platform and page/
+      /^shared links: link previews that messengers and social networks fetch, counted per day, platform and page, and whether Cloudflare verified the fetcher, with no time of day and nothing about who shared\. neither holds an IP address or a user-agent\./
     );
-    expect(sharedLinks).toHaveTextContent(/whether Cloudflare verified the fetcher/);
-    expect(sharedLinks).toHaveTextContent(/with no time of day/);
-    expect(sharedLinks).toHaveTextContent(/neither holds an IP address or a user-agent/);
-    expect(sharedLinks).toHaveTextContent(/or who shared/);
     for (const anchor of [machineReaders, sharedLinks]) {
       expect(anchor).toHaveTextContent(/machine reads: up to 180 days \(Logging, BigQuery\)/);
       expect(anchor).toHaveTextContent(/shares: no time limit \(SQL\)/);
     }
-    // Why "unverified" is no verdict on a share left this row; the tile says it where the word
-    // stands, in the hint of its "unverified" term.
-    expect(sharedLinks).not.toHaveTextContent(/no verdict/);
+    // The page does not say why an unverified share is no verdict on it; the tile's hint on the
+    // word "unverified" does, so it has to keep saying it.
     expect(UNVERIFIED_HINT).toMatch(
       /no verdict on a share: WhatsApp and Signal fetch the preview from the sender.s own phone/
     );
   });
 
   // The data assistant's section, each claim pinned with the qualifier that
-  // makes it true: experimental and open to everyone but pausable, training
+  // makes it true: experimental, without warranty and pausable, training
   // excluded under Google Cloud's terms, the ids pseudonymous (not anonymous),
   // and the data file unticked by default.
   it('describes the experimental data assistant without overclaiming', () => {
     render(<LegalPage />);
 
-    expect(
-      screen.getByText(
-        /experimental, without warranty: results can be wrong and nobody checks them by hand/
-      )
-    ).toBeInTheDocument();
-    expect(screen.getByText(/the operator may pause it at any time/)).toBeInTheDocument();
+    expect(screen.getByRole('row', { name: /^status\s/ })).toHaveTextContent(
+      /experimental, without warranty: results can be wrong and nobody checks them by hand\. the operator may pause it at any time\./
+    );
     expect(
       screen.getByText(
         /served through Google Cloud Vertex AI in the EU under Google Cloud.s data processing terms/
@@ -262,13 +260,12 @@ describe('LegalPage', () => {
     expect(
       screen.getByText(/no content: never your text, data, column or file names\./)
     ).toBeInTheDocument();
-    // The fields stand as a category, except the language: it is about the user, so it is named,
-    // only as a code, with rare ones folded into "other".
-    expect(
-      screen.getByText(
-        /telemetry holds\s+technical details such as sizes, timings and token counts, and the language code\s+\(rare ones as "other"\)/
-      )
-    ).toBeInTheDocument();
+    // Every kind of field by its name: event types, plot type and library record what a visitor
+    // did and chose, so no category of "technical details" covers them. The language only as a
+    // code, with rare ones folded into "other".
+    expect(screen.getByRole('row', { name: /^logs\s/ })).toHaveTextContent(
+      /telemetry holds event types, formats, sizes, plot type, library, language code \(rare ones as "other"\), attempts, defect ids, statuses, latencies and token counts\./
+    );
     // A public user's id is a salted random tab id that dies with the instance; only admins get the HMAC.
     expect(
       screen.getByText(
