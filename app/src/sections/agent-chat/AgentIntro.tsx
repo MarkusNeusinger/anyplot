@@ -1,12 +1,17 @@
 /**
  * `/agent` without a catalogue pair in its query: what the chat does, in the words of the about
- * page's "use with my data" section, a few example pairs that open the chat, and the way on to
- * the catalogue, where every other pair starts. The landing page's `.use_my_data()` leads here.
+ * page's "use with my data" section, a few example pairs that open the chat, the way on to the
+ * catalogue, where every other pair starts, and below it the assistant's terms of use in a few
+ * quiet lines. The landing page's `.use_my_data()` leads here.
  *
  * It is text and links only, with no request of its own: it opens no session, so a visitor who
  * only reads costs the agents service nothing. The page decides the lane before it shows this (a
  * closed public lane still reads as closed), and keeps it out of the index (`AgentChatPage`).
+ * With no feedback of its own, it keeps the site's feedback button, which the layout hides only
+ * in a chat (`RootLayout`).
  */
+
+import { Fragment, type ReactNode } from 'react';
 
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -15,7 +20,13 @@ import Box from '@mui/material/Box';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_TO_LANG } from 'src/constants';
 import { paths } from 'src/routes/paths';
-import { actionButtonSx, bodyTextSx, inlineCodeSx, labelSx } from 'src/sections/agent-chat/styles';
+import {
+  actionButtonSx,
+  bodyTextSx,
+  inlineCodeSx,
+  labelSx,
+  smallText,
+} from 'src/sections/agent-chat/styles';
 import { colors, proseLinkStyle } from 'src/theme';
 
 /** `agent_open`'s `source` for a chat opened from one of the examples below. */
@@ -43,6 +54,40 @@ export const AGENT_INTRO_DESCRIPTION =
 
 /** A link of the examples' list and the closing action: a 44 px target at phone width. */
 const targetSx = { display: 'inline-flex', alignItems: 'center', minHeight: { xs: 44, sm: 32 } };
+
+/**
+ * The assistant's terms of use, label and sentence, after the way on as the page's fine print, so
+ * the two ways in (the examples and the catalogue) stay together above it.
+ * Where each sentence holds in the code: the operator's pause is the public door
+ * (`AGENT_PUBLIC_ENABLED`, `api/routers/agent_public.py`); the daily limits count the tab's random
+ * id and the network (`agents/anyplot/settings.py`); the pause for the day is the day's `attack`
+ * strikes (`AGENT_ATTACK_STRIKES`, `locked_out`); the Highcharts note is the chat's own
+ * (`HIGHCHARTS_NOTE` in `AgentChatPage`). The last line leads to the legal page's section on
+ * what the assistant stores, where and for how long.
+ */
+const AGENT_TERMS: [string, ReactNode][] = [
+  [
+    'status',
+    'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
+  ],
+  [
+    'limits',
+    'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
+  ],
+  [
+    'your code',
+    'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.',
+  ],
+  [
+    'privacy',
+    <Box key="privacy" component={RouterLink} to={`${paths.legal}#assistant`} sx={proseLinkStyle}>
+      what is stored, where and for how long
+    </Box>,
+  ],
+];
+
+/** The sentences: the body face one step smaller, in the soft ink, which reads 4.5:1 and more. */
+const termTextSx = { ...bodyTextSx, fontSize: smallText, color: 'var(--ink-soft)', m: 0 } as const;
 
 export function AgentIntro() {
   return (
@@ -126,6 +171,31 @@ export function AgentIntro() {
           plots
         </Box>
         .browse() →
+      </Box>
+
+      <Box
+        component="dl"
+        data-testid="agent-intro-terms"
+        sx={{
+          display: 'grid',
+          // At phone width the label stands above its sentence, which keeps the full width.
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'max-content minmax(0, 1fr)' },
+          columnGap: 2,
+          rowGap: { xs: 0, sm: 0.75 },
+          mt: 4,
+          mb: 0,
+        }}
+      >
+        {AGENT_TERMS.map(([term, text]) => (
+          <Fragment key={term}>
+            <Box component="dt" sx={{ ...labelSx, lineHeight: 1.6 }}>
+              {term}
+            </Box>
+            <Box component="dd" sx={{ ...termTextSx, mb: { xs: 1, sm: 0 } }}>
+              {text}
+            </Box>
+          </Fragment>
+        ))}
       </Box>
     </Box>
   );
