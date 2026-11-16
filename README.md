@@ -38,7 +38,8 @@ Seven decisions I made and hold the agents to, each with its reason and the code
 - **A review loop instead of hand-edits.** A wrong plot is fixed in its spec or in a rule and then regenerated,
   not patched by hand. An AI reviewer scores every render on a 24-criterion rubric, blind to any earlier score,
   and a repair loop fixes the defects it names, against a bar that starts at 90 of 100 and drops 10 points per
-  repair. A fix to a prompt or a spec fixes every plot it governs. ([rubric](prompts/quality-criteria.md), [review workflow](.github/workflows/impl-review.yml))
+  repair. A fix to a prompt or a spec fixes every plot it governs. ([rubric](prompts/quality-criteria.md),
+  [review workflow](.github/workflows/impl-review.yml))
 - **A gate against silent regressions.** Every night the oldest implementations are regenerated, and a new
   version replaces the live one only when a pairwise review of both finds a visible fix and the new score
   drops by no more than a point. A newer model can't quietly make the catalogue worse.
