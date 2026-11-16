@@ -16,3 +16,12 @@
   goes back to the explainer and picks another example. A unit test checks
   that each example names an implementation under `plots/`, and CI now also
   runs the Python tests on a pull request that changes only `AgentIntro.tsx`.
+
+### Fixed
+
+- **The back button asks before it leaves a chat for the explainer.** The
+  chat's leave warning compared only the path, so going back from a chat with
+  data or a plot to `/agent` without a plot, or to another chat, ended the
+  session without asking. It now asks for any move away from the chat's
+  catalogue plot, as a link off the page always did; a library switch inside
+  the chat still passes without a prompt.

@@ -413,8 +413,11 @@ function LocationProbe() {
   return <output data-testid="location">{`${current.pathname}${current.search}`}</output>;
 }
 
-/** A data router, as in the app: the page's leave warning uses the router's blocker. */
-function renderAt(url: string) {
+/**
+ * A data router, as in the app: the page's leave warning uses the router's blocker. `before` are
+ * the history entries behind `url`, for the back button.
+ */
+function renderAt(url: string, before: string[] = []) {
   const router = createMemoryRouter(
     [
       {
@@ -428,13 +431,14 @@ function renderAt(url: string) {
       },
       { path: '*', element: <LocationProbe /> },
     ],
-    { initialEntries: [url] }
+    { initialEntries: [...before, url] }
   );
-  return render(
+  const view = render(
     <ThemeProvider theme={theme}>
       <RouterProvider router={router} />
     </ThemeProvider>
   );
+  return { ...view, router };
 }
 
 const PAGE = '/agent?spec=scatter-basic&library=matplotlib&language=python';
@@ -2138,6 +2142,55 @@ describe('AgentChatPage leave warning', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/scatter-basic');
     await waitFor(() => expect(deletes()).toHaveLength(1));
     expect(unload()).toBe(false);
+  });
+
+  it('asks before the back button returns to the explainer on the same path', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const { router } = renderAt(PAGE, ['/agent']);
+    await parseAndSummarize();
+
+    // Declined: the address goes back to the chat, and the chat with its data and session stays.
+    act(() => void router.navigate(-1));
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(LEAVE_TEXT));
+    await waitFor(() => expect(router.state.location.search).toBe(PAGE.slice('/agent'.length)));
+    expect(screen.getByTestId('location')).toHaveTextContent(PAGE);
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('agent-intro')).not.toBeInTheDocument();
+    expect(deletes()).toHaveLength(0);
+
+    // Agreed on the next press: the blocker was reset, so it asks again, and the explainer comes.
+    confirm.mockReturnValue(true);
+    act(() => void router.navigate(-1));
+    expect(await screen.findByTestId('agent-intro')).toBeInTheDocument();
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(screen.getByTestId('location').textContent).toBe('/agent');
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    await waitFor(() => expect(deletes()).toHaveLength(1));
+  });
+
+  it('asks before the back button returns to another chat on the same path', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const { router } = renderAt(PAGE, ['/agent?spec=box-basic&library=matplotlib&language=python']);
+    await parseAndSummarize();
+
+    act(() => void router.navigate(-1));
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(LEAVE_TEXT));
+    await waitFor(() => expect(router.state.location.search).toContain('spec=scatter-basic'));
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(deletes()).toHaveLength(0);
+  });
+
+  it('asks nothing when the back button leaves a chat with nothing to lose', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const { router } = renderAt(PAGE, ['/agent']);
+    await screen.findByLabelText('Message');
+
+    act(() => void router.navigate(-1));
+    expect(await screen.findByTestId('agent-intro')).toBeInTheDocument();
+    expect(confirm).not.toHaveBeenCalled();
   });
 });
 

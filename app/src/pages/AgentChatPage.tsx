@@ -125,7 +125,9 @@
  * data, a plot or work in flight, a reload, a closed tab or a link off the page
  * asks first (`useLeaveWarning`: the browser's `beforeunload` dialog, and for a
  * link inside the site or the back button the router's blocker with a
- * `confirm`). The page's own query edits pass, and so do the reload links
+ * `confirm`). Off the page means off the chat's spec too (`leavesChat`): the back
+ * button from a chat to the explainer, or to another chat, stays on `/agent` and
+ * asks all the same. The page's own query edits pass, and so do the reload links
  * after an expired session or no answer (`ReloadHint`), which the user clicked
  * on purpose.
  *
@@ -184,7 +186,7 @@ import {
 import { loadMood, useAgentStatus } from 'src/hooks/useAgentStatus';
 import { useAnalytics } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
+import { type LeavesPage, leavesPath, useLeaveWarning } from 'src/hooks/useLeaveWarning';
 import {
   agentApi,
   type AgentLane,
@@ -262,6 +264,15 @@ import { readAdminToken, readViewAsVisitor, setViewAsVisitor } from 'src/utils/a
 import type { ThemedPreviewSource } from 'src/utils/themedPreview';
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
+/**
+ * A chat is its spec: another spec, or none (the explainer), on the same path `/agent` unmounts
+ * the chat and deletes its session as surely as another path does, so the leave warning asks for
+ * both. The page's own query edits keep the spec (the library and its language, the dropped
+ * `source`) and pass.
+ */
+const leavesChat: LeavesPage = (current, next) =>
+  leavesPath(current, next) ||
+  new URLSearchParams(current.search).get('spec') !== new URLSearchParams(next.search).get('spec');
 /**
  * Where `agent_open` says the visitor came from: the plot page, the landing page, the spec hub,
  * the plot of the day, or an example of this page's explainer (`AgentIntro`).
@@ -718,7 +729,8 @@ function AgentChat({
   // The fan-out's panel opens only on this session's confirmed data, so its sessions are covered.
   useLeaveWarning(
     sessionHoldsWork(state) || draft.trim() !== '' || attachment !== null,
-    LEAVE_TEXT
+    LEAVE_TEXT,
+    leavesChat
   );
   // The session could not open for this pair: other libraries are links instead.
   const reopen = state.phase === 'ineligible' || state.phase === 'error';
