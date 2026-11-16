@@ -75,6 +75,10 @@ VALIDATOR_TREE = {
     "agents/anyplot/agent.py": "",
     "core/__init__.py": "",
     SCANNER: STUB_SCANNER,
+    # The scanner takes the hash of both files from the reader beside it.
+    "automation/scripts/readiness_record.py": "",
+    # On the ref as well, and not copied: the step names its files one by one.
+    "automation/scripts/regen_gate.py": "",
 }
 
 
@@ -208,6 +212,8 @@ class TestScanStep:
             "agents/anyplot/code/readiness.py",
             "agents/anyplot/language.py",
             "agents/anyplot/schemas.py",
+            # The reader, for the hash, and nothing else of automation/scripts.
+            "automation/scripts/readiness_record.py",
             SCANNER,
             "core/__init__.py",
         ]

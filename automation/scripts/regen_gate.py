@@ -64,6 +64,15 @@ render pair impl-generate stages (``--adapt-new``, ``--adapt-prev``,
 ``--adapt-pair``) and never renders; without them the route and the
 regression are off, so every older caller decides as before.
 
+The *readiness regression* (rule step P2b) turns a merge into keep the same
+way (``readiness_regression``): the agent chat's validator refuses the new
+source for something it did not refuse the predecessor for, so the chat could
+no longer adapt a pair it could adapt before. The gate does not scan: it reads
+the verdict of impl-review's "Readiness check" step (``--readiness``;
+``readiness_record.py``), which has already tied the staged record to the two
+sources. Only the status ``regression`` keeps. A missing, stale or malformed
+record never does, and without the flag the check is off.
+
 Anything missing or malformed fails closed to ``keep``. The classification
 keys (``prev_checklist``, ``prev_weaknesses``, ``rule``, ``kind``) never
 invalidate the file: a missing or malformed one only leaves fewer carriers.
@@ -112,7 +121,8 @@ Subcommands::
         [--prev-model ID] [--prev-criteria-version V] [--record-out FILE] \
         [--prev-impl /tmp/anyplot-prev-impl.EXT --new-impl plots/S/implementations/L/B.EXT]
         [--adapt-new /tmp/anyplot-adapt-new.json --adapt-prev /tmp/anyplot-adapt-prev.json \
-         --adapt-pair $RUNNER_TEMP/adapt/pair.json] [--review-skipped]
+         --adapt-pair $RUNNER_TEMP/adapt/pair.json] [--review-skipped] \
+        [--readiness $RUNNER_TEMP/readiness-verdict.json]
 
     regen_gate.py adapt-route --spec-id S --library B --adapt-new FILE --adapt-prev FILE \
         --adapt-pair FILE --prev-impl /tmp/anyplot-prev-impl.py \
@@ -173,6 +183,7 @@ REASON_CODES = (
     "no_defect_improvement",
     "below_tolerance",
     "adapt_regression",
+    "readiness_regression",
     "merge",
     "adapt_identity",
     "script_crashed",
@@ -1422,6 +1433,120 @@ def adapt_summary_line(adapt: AdaptAssessment) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Readiness regression (rule step P2b)
+# ---------------------------------------------------------------------------
+
+# impl-review's "Readiness check" step reads the staged readiness record
+# against the implementation at the PR head and the one on origin/main
+# (``readiness_record.py``) and writes a verdict file, which ``decide
+# --readiness`` loads. The statuses and the key grammar are that module's,
+# kept here as well because this file runs alone
+# (``tests/unit/automation/scripts/test_readiness_record.py`` holds the two
+# together). A key never has two hyphens in a row, so a record with keys still
+# fits inside an HTML comment.
+READINESS_REGRESSION = "readiness_regression"
+READINESS_VERDICT_VERSION = 1
+READINESS_MISSING = "missing"
+READINESS_INVALID = "invalid"
+READINESS_NONE = "none"
+READINESS_STATUSES = (
+    READINESS_MISSING,
+    READINESS_INVALID,
+    "stale",
+    "unreadable",
+    "excluded",
+    "first_generation",
+    "regression",
+    READINESS_NONE,
+)
+READINESS_SIDE_STATUSES = ("clean", "coupled", "blocked", "error", "unsupported", "n/a")
+READINESS_KEY_RE = re.compile(r"(?=.{1,81}$)[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?::[a-z][a-z0-9]*(?:-[a-z0-9]+)*)?")
+READINESS_KEY_LIMIT = 64
+READINESS_RECORD_KEYS = ("status", "new", "prev", "added", "removed")
+READINESS_KEY_SEPARATOR = "/"
+
+
+@dataclass(frozen=True)
+class Readiness:
+    """The readiness check's verdict: its status, each source's status, and the refusal keys that changed.
+
+    The default is the verdict of a gate that was given none: ``missing``.
+    """
+
+    status: str = READINESS_MISSING
+    new: str = "n/a"
+    prev: str = "n/a"
+    added: tuple[str, ...] = ()
+    removed: tuple[str, ...] = ()
+
+    @property
+    def regression(self) -> bool:
+        return self.status == "regression" and bool(self.added)
+
+    def to_record(self) -> dict[str, str]:
+        """The gate record's ``readiness`` block: five plain tokens, the keys of each list joined by ``/``."""
+        return {
+            "status": self.status,
+            "new": self.new,
+            "prev": self.prev,
+            "added": READINESS_KEY_SEPARATOR.join(self.added),
+            "removed": READINESS_KEY_SEPARATOR.join(self.removed),
+        }
+
+
+def _readiness_keys(value: Any) -> tuple[str, ...] | None:
+    """A verdict's key list as a sorted tuple, or None when it is not a list of refusal keys."""
+    if not isinstance(value, list) or len(value) > READINESS_KEY_LIMIT:
+        return None
+    if not all(isinstance(key, str) and READINESS_KEY_RE.fullmatch(key) for key in value):
+        return None
+    return tuple(sorted(set(value)))
+
+
+def load_readiness(path_text: str | None) -> Readiness:
+    """The verdict impl-review's readiness check wrote, ``missing`` without one, ``invalid`` for anything else.
+
+    A verdict counts only when it is exactly what ``readiness_record.py``
+    writes: its version, a known status, known side statuses, key lists, and
+    added keys exactly on a ``regression``. Everything else is ``invalid``,
+    which never keeps.
+    """
+    data, problem = load_adapt_file(path_text)
+    if problem in (ABSENT, MISSING):
+        return Readiness()
+    invalid = Readiness(status=READINESS_INVALID)
+    if problem or not isinstance(data, dict):
+        return invalid
+    version, status = data.get("version"), data.get("status")
+    if not _is_int(version) or version != READINESS_VERDICT_VERSION or status not in READINESS_STATUSES:
+        return invalid
+    new, prev = data.get("new"), data.get("prev")
+    if new not in READINESS_SIDE_STATUSES or prev not in READINESS_SIDE_STATUSES:
+        return invalid
+    added, removed = _readiness_keys(data.get("added")), _readiness_keys(data.get("removed"))
+    if added is None or removed is None or bool(added) != (status == "regression"):
+        return invalid
+    return Readiness(status=status, new=new, prev=prev, added=added, removed=removed)
+
+
+def readiness_regression_text(readiness: Readiness) -> str:
+    """What the readiness regression rests on: the refusal keys only the new source has."""
+    keys = ", ".join(readiness.added)
+    return f"the agent chat's validator refuses the new source for {keys}, which it did not refuse the predecessor for"
+
+
+def readiness_summary_line(readiness: Readiness) -> str:
+    """``**Readiness:** …`` for the PR comment; fixed text and validator identifiers only."""
+    if readiness.regression:
+        text = f"regression: {readiness_regression_text(readiness)}, so the live implementation stays"
+    elif readiness.status == READINESS_NONE:
+        text = f"no new refusal by the agent chat's validator (new {readiness.new}, predecessor {readiness.prev})"
+    else:
+        text = f"not judged ({readiness.status})"
+    return f"**Readiness:** {text}"
+
+
+# ---------------------------------------------------------------------------
 # Decision
 # ---------------------------------------------------------------------------
 
@@ -1458,6 +1583,9 @@ class GateInput:
     # (``--adapt-new``/``--adapt-prev``/``--adapt-pair``/``--review-skipped``).
     # The default has none, which turns the route and the regression off.
     adapt: AdaptInput = field(default_factory=AdaptInput)
+    # The readiness check's verdict (``--readiness``). The default is
+    # ``missing``, which never keeps.
+    readiness: Readiness = field(default_factory=Readiness)
 
 
 @dataclass
@@ -1484,6 +1612,8 @@ class GateResult:
     new_lines: int | None = None
     # The adapt route's assessment (``decide`` sets it on every result).
     adapt: AdaptAssessment | None = None
+    # The readiness check's verdict (``decide`` copies it onto every result).
+    readiness: Readiness = field(default_factory=Readiness)
 
 
 def _is_int(value: Any) -> TypeGuard[int]:
@@ -1658,11 +1788,13 @@ def decide(inp: GateInput) -> GateResult:
     so an early keep still reports them. The adapt route is assessed once,
     with the review the decision reads (``_adapt_review``), and its
     assessment is on every result. Last, the adapt regression turns any merge
-    into keep (``adapt_regression``).
+    into keep (``adapt_regression``), and then the readiness regression does
+    (``readiness_regression``).
     """
     adapt = adapt_assess(inp, _adapt_review(inp))
     result = _decide(inp, adapt)
     result.adapt = adapt
+    result.readiness = inp.readiness
     if inp.prev_source is not None and inp.new_source is not None:
         result.prev_lines = len(inp.prev_source.splitlines())
         result.new_lines = len(inp.new_source.splitlines())
@@ -1672,6 +1804,12 @@ def decide(inp: GateInput) -> GateResult:
             f"so the live implementation stays (without it: {result.code})"
         )
         result.verdict, result.code = KEEP, ADAPT_REGRESSION
+    if result.verdict == MERGE and inp.readiness.regression:
+        result.reason = (
+            f"readiness regression: {readiness_regression_text(inp.readiness)}, "
+            f"so the live implementation stays (without it: {result.code})"
+        )
+        result.verdict, result.code = KEEP, READINESS_REGRESSION
     return result
 
 
@@ -2693,6 +2831,9 @@ def render_summary(result: GateResult, prev_stored: str, score: int | None) -> s
     adapt = result.adapt
     if adapt is not None and (adapt.requested or result.code in (ADAPT_IDENTITY, ADAPT_REGRESSION)):
         lines += ["", adapt_summary_line(adapt)]
+    # Only with a verdict, so a caller without the readiness check prints the old block.
+    if result.readiness.status != READINESS_MISSING:
+        lines += ["", readiness_summary_line(result.readiness)]
     lines += ["", "**Regressions**"]
     if result.regressions:
         for item in result.regressions:
@@ -2738,6 +2879,7 @@ RECORD_KEYS = frozenset(
         "at",
         "writeback",
         "adapt",
+        "readiness",
     }
 )
 # What happened to the re-score of the live implementation on a keep
@@ -2842,6 +2984,9 @@ def build_record(
     written before it lack the key. Its ``route_pre_review`` (whether
     impl-review's ``adapt-route`` held before the review) came after the
     block's first form, so the validator accepts a block without it.
+    ``readiness`` (rule step P2b) is the readiness check's verdict
+    (``Readiness.to_record``): ``missing`` when the gate was given none.
+    Records written before it lack the key.
     """
     kinds = {"W": 0, "P": 0, "C": 0, "new": 0}
     for item in result.improvements:
@@ -2877,7 +3022,33 @@ def build_record(
         "coerced": result.coerced,
         "at": at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "adapt": (result.adapt or AdaptAssessment(why="no_record")).to_record(),
+        "readiness": result.readiness.to_record(),
     }
+
+
+def readiness_record_errors(readiness: Any) -> list[str]:
+    """Schema check for a record's ``readiness`` block (``Readiness.to_record``).
+
+    Exactly the five keys; a known status and known side statuses; ``added``
+    and ``removed`` each a string of refusal keys joined by ``/`` (empty for
+    none), with added keys exactly on a ``regression``.
+    """
+    if not isinstance(readiness, dict) or set(readiness) != set(READINESS_RECORD_KEYS):
+        return [f"record.readiness must be an object with {', '.join(READINESS_RECORD_KEYS)}"]
+    errors = []
+    if readiness["status"] not in READINESS_STATUSES:
+        errors.append("record.readiness.status is not one of READINESS_STATUSES")
+    for side in ("new", "prev"):
+        if readiness[side] not in READINESS_SIDE_STATUSES:
+            errors.append(f"record.readiness.{side} is not a known status")
+    for name in ("added", "removed"):
+        value = readiness[name]
+        keys = value.split(READINESS_KEY_SEPARATOR) if isinstance(value, str) and value else []
+        if not isinstance(value, str) or _readiness_keys(keys) is None:
+            errors.append(f"record.readiness.{name} must be refusal keys joined by {READINESS_KEY_SEPARATOR!r}")
+    if isinstance(readiness["added"], str) and bool(readiness["added"]) != (readiness["status"] == "regression"):
+        errors.append("record.readiness.added must name keys exactly when the status is regression")
+    return errors
 
 
 def adapt_record_errors(adapt: Any) -> list[str]:
@@ -2962,6 +3133,8 @@ def validate_record(record: Any) -> list[str]:
             errors.append("record.writeback belongs to a keep record only")
     if "adapt" in record:
         errors += adapt_record_errors(record["adapt"])
+    if "readiness" in record:
+        errors += readiness_record_errors(record["readiness"])
 
     def walk(value: Any, where: str) -> None:
         if isinstance(value, dict):
@@ -3160,6 +3333,8 @@ def cmd_decide(args: argparse.Namespace) -> int:
         # All optional too: without them the adapt route and the adapt
         # regression are off.
         adapt=_adapt_input(args, review_skipped=args.review_skipped, route_held=args.adapt_route_held),
+        # Optional as well: without it the readiness regression is off.
+        readiness=load_readiness(args.readiness),
     )
     result = decide(inp)
     adapt = result.adapt or AdaptAssessment(why="no_record")
@@ -3183,10 +3358,12 @@ def cmd_decide(args: argparse.Namespace) -> int:
             f" adapt_counted={_bool_text(adapt.counted)} adapt_why={adapt.why}"
             f" adapt_overruled={_bool_text(adapt.overruled)}"
         )
+    # Only with the readiness flag, for the same reason.
+    readiness_field = f" readiness={result.readiness.status}" if args.readiness else ""
     print(
         f"::notice::regen_gate spec={args.spec_id} lib={args.library} prev_stored={args.prev_stored} "
         f"prev_rescored={rescored} new={score if score is not None else 'n/a'} verdict={result.verdict} "
-        f"code={result.code}{provenance}{lines}{adapt_fields} reason={reason}"
+        f"code={result.code}{provenance}{lines}{adapt_fields}{readiness_field} reason={reason}"
     )
     if args.summary_out:
         Path(args.summary_out).write_text(render_summary(result, args.prev_stored, score), encoding="utf-8")
@@ -3222,6 +3399,7 @@ def cmd_decide(args: argparse.Namespace) -> int:
             # The pre-review route held and the review's floor turned it off
             # (impl-review labels the PR `regen:adapt-overruled`).
             "adapt_overruled": _bool_text(adapt.overruled),
+            "readiness": result.readiness.status,
         }
     )
     return 0
@@ -3398,6 +3576,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--adapt-route-held",
         action="store_true",
         help="impl-review's adapt-route held before the review (the record's adapt.route_pre_review)",
+    )
+    # The readiness check's verdict; without it the readiness regression is off.
+    dec.add_argument(
+        "--readiness", default="", help="the verdict readiness_record.py wrote ($RUNNER_TEMP/readiness-verdict.json)"
     )
     dec.set_defaults(func=cmd_decide)
 

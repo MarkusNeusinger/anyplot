@@ -138,6 +138,7 @@ impl-review.yml
   |-- Checks the staged render.sha256 against the PR head (warn-only)
   |-- Checks the file's static contract: title, theme, save target, colours, colormaps (record-only)
   |-- Python: adaptability check of the PR's file and its predecessor (record-only)
+  |-- Python: readiness check of the staged scan record against the PR head and main
   |-- AI evaluates code + image
   |-- Posts review comment with score
   |-- Updates metadata/{language}/{library}.yaml (quality_score, review feedback)
@@ -184,7 +185,7 @@ Python implementations follow the Data block convention of [Adaptable catalogue 
 
 The agent chat adapts a catalogue file only when its validator accepts the file: the SECURITY profile, the theme block, and the save target (`agents/anyplot/code/readiness.py`). A regeneration or a repair can add a construct the validator refuses. The render then gets better while the pair stops working in the chat. `impl-generate.yml` and `impl-repair.yml` therefore run "Readiness scan (record-only)" right after the smoke run, for Python implementations.
 
-The step copies the validator from the workflow's own ref as a bare tree: `agents/anyplot/code`, the two schema modules it imports, and `core/`. The real `agents/__init__.py` files import the agent runtime, so the step writes empty ones into the tree instead. It doesn't leave them out: without any, `agents` would be a namespace package, and a regular `agents` package elsewhere on the import path would win the import. The script also stops when a validator module comes from outside its own tree. It then runs `automation/scripts/readiness_scan.py` on the new file and on the implementation on `main`. The script reads both files and never runs them.
+The step copies the validator from the workflow's own ref as a bare tree: `agents/anyplot/code`, the two schema modules it imports, and `core/`, plus `readiness_record.py` for the two hashes. The real `agents/__init__.py` files import the agent runtime, so the step writes empty ones into the tree instead. It doesn't leave them out: without any, `agents` would be a namespace package, and a regular `agents` package elsewhere on the import path would win the import. The script also stops when a validator module comes from outside its own tree. It then runs `automation/scripts/readiness_scan.py` on the new file and on the implementation on `main`. The script reads both files and never runs them.
 
 A refusal key names why the validator blocks a file: `security:<rule>` for every rule of the SECURITY profile the file breaks, and the reason's category otherwise, such as `no-theme` or `savefig-target`. The verdict compares the keys of both files:
 
@@ -196,11 +197,36 @@ A refusal key names why the validator blocks a file: `security:<rule>` for every
 | `excluded` | A map spec. The chat refuses those whatever the code holds. |
 | `unreadable` | No new file, or a library without a Python profile. |
 
-The step prints one `readiness_scan` line, a warning for a regression and a notice otherwise, and writes a `**Readiness (record-only):**` line to the job summary. The record goes to `adapt/readiness.json` in staging, beside the smoke run. It holds identifiers and counts only, never code: for each file its status, its keys, and how often each SECURITY rule fires. The verdict compares keys, so a rule that fires more often than before is no regression; the count is there for a later reading. Nothing reads it yet, and the step never fails the job.
+The step prints one `readiness_scan` line, a warning for a regression and a notice otherwise, and writes a `**Readiness (record-only):**` line to the job summary. The record goes to `adapt/readiness.json` in staging, beside the smoke run. It holds identifiers and counts only, never code: for each file its status, its keys, and how often each SECURITY rule fires. The verdict compares keys, so a rule that fires more often than before is no regression; the count is there for a later reading. The record also names the hash of both scanned files (`new_sha256`, `prev_sha256`): the source without its leading docstring header, the rule the adaptability records use. `impl-review.yml` rewrites that header when it stores a review, and the validator never reads it. The step never fails the job; `impl-review.yml` reads the record (see the next section).
 
 The scan covers Python only. The profiles of R, Julia, and JavaScript need tree-sitter grammars that these jobs don't carry.
 
 On the six regenerations of 2026-11-11 the scan finds two regressions. `surface-basic` in altair went from accepted to refused (`security:banned-attribute`), and `surface-basic` in pygal traded `security:banned-import` for `security:banned-attribute` and `security:banned-keyword`. The other four added nothing, and two of those moved from coupled to clean.
+
+#### Readiness check and the readiness regression
+
+`impl-review.yml` runs "Readiness check" for Python implementations, right after the adaptability check has downloaded staging's `adapt/` folder. The step runs `automation/scripts/readiness_record.py`, the copy from the workflow's own ref, on the staged `adapt/readiness.json`. A record counts only when it is about the code under review:
+
+- It's the scanner's record: its version, this spec and library, identifiers only.
+- `new_sha256` is the code hash of the implementation at the PR head, and `prev_sha256` that of the file on `origin/main`. The hash leaves the header out, so a re-review after the review's own header commit still finds its record.
+- The regression is recomputed from the two sides' refusal keys. The record's own verdict is never read.
+
+The step reports one status:
+
+| Status | Meaning |
+|---|---|
+| `regression`, `none`, `first_generation`, `excluded`, `unreadable` | As in the scan, for a record that passed the three checks. |
+| `stale` | The record is of other code than the PR head or the file on `main`: a push after the scan, or a `main` that moved. |
+| `invalid` | The file isn't a record this reader knows. |
+| `missing` | No record is staged. |
+
+It prints one `readiness_check` line, a warning for a regression and a notice otherwise, writes a `**Readiness check:**` line to the job summary, and leaves the verdict in `$RUNNER_TEMP/readiness-verdict.json`, outside the reviewer's reads. The step never fails the job.
+
+On a gated regeneration the regen gate reads that verdict (`regen_gate.py decide --readiness`). When it is `regression`, a merge becomes a keep with the code `readiness_regression`: the live implementation stays, because the chat could adapt the pair before and couldn't after. Every other status changes nothing, so a lost upload, a stale or malformed record, and a scan that couldn't run never refuse a regeneration. The PR comment gets a `**Readiness:**` line that names the refusal keys, and the gate record a `readiness` block.
+
+A first generation, a forced regeneration, and the repair loop have no regen gate. There the status is a record only.
+
+In the first 24 scanned regenerations (2026-11-12 to 2026-11-15) three were regressions: two in altair (`security:banned-attribute`) and one in pygal (`security:banned-keyword`, `security:banned-statement`). Two of them merged before this gate existed: `shap-waterfall` in altair (#13075, a `.format` call) and `histogram-2d` in pygal (#13105).
 
 #### Renders tied to their code
 
@@ -454,6 +480,8 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
    ```
 
    **Adapt regression.** On every spec, when the predecessor passes the adaptability check and the new source fails it, the live implementation stays (`adapt_regression`), whatever else would replace it. The same holds without a smoke run: when the predecessor passes the static check, its smoke run is missing, stale, or skipped, and the new source fails the static check. Converted code stays converted.
+
+   **Readiness regression.** When the agent chat's validator refuses the new source for something it didn't refuse the predecessor for, the live implementation stays as well (`readiness_regression`). The gate doesn't scan: it reads the verdict of the review's "Readiness check" step (see [Readiness check and the readiness regression](#readiness-check-and-the-readiness-regression)). Only the status `regression` keeps; a missing, stale, or malformed record never does. When both regressions hold, the code is `adapt_regression`.
 4. Replace: `regen:improved`, then `regen:adapt` when the adapt route counted or `regen:adapt-overruled` when the review overruled it, then `ai-approved`, a PR comment with the same summary (stored, re-scored, and new score, improvements, regressions, reason), then the normal merge. Keep: `regen:adapt-overruled` when the review overruled the adapt route, then `regen:kept`, the PR is closed with that comment, the issue gets `impl:{library}:done` back, and the live code and GCS production stay as they are. The re-score of the live implementation becomes its stored review through a separate metadata PR (see [Stored review on a keep](#stored-review-on-a-keep)).
 
 A crashed regen review is auto-retried once by `impl-review.yml`; after that the PR carries `ai-review-failed` and the watchdog only flags it — it never dispatches a further review for a regeneration. The same one-retry budget covers a review of any PR that scored but failed before a verdict label landed, for example on a GitHub 5xx (see [Review recovery](#review-recovery)).
@@ -464,8 +492,8 @@ Every review writes its weaknesses in the two formats: defect lines first, then 
 
 Every decision leaves three traces:
 
-- **The gate record in the PR comment.** Both the keep and the replace comment end with an invisible `<!-- regen-gate-record:v1 {...} -->` marker: one line of JSON with the scores, improvement and regression counts (the improvements split into carriers, suggestions, and obsolete citations; the suggestions name additions, polish, and improvements without a kind apart, and a histogram counts the kind of every listed improvement, and `code` counts the code improvements the gate counted), the reason code (`merge`, `below_tolerance`, `no_visible_improvement`, `no_defect_improvement`, `regression`, `adapt_identity`, `adapt_regression`, `regen_json_invalid`, `canvas_failed`, and so on), and the provenance of both reviews (resolved model and rules version of this review and of the stored one). The `adapt` block holds the adapt route: `version` (the checker version), `prev` and `new` (each source's adaptability `status`, with its `static` and `smoke` statuses), `identity` (the share of differing pixels per theme), `counted`, `why` (`route` when it counted, otherwise the first condition that failed, such as `not_python`, `prev_passes`, `identity_dark`, or `technical_below`), `review` (`ran` or `skipped`), and `route_pre_review` (whether `adapt-route` held before the review: `true`, `false`, or `null` without adapt input). A keep record also says what happened to the re-score (`writeback`, see the next section). It holds no model-written text. PR comments are permanent, so read this first.
-- **The notice line in the run log.** `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… code=… model=… criteria=… prev_lines=… new_lines=… adapt_counted=… adapt_why=… adapt_overruled=… reason=…`, where `prev_lines` and `new_lines` are the two sources' line counts, and `adapt_counted`, `adapt_why`, and `adapt_overruled` appear when the step passes the adapt files. Run logs expire.
+- **The gate record in the PR comment.** Both the keep and the replace comment end with an invisible `<!-- regen-gate-record:v1 {...} -->` marker: one line of JSON with the scores, improvement and regression counts (the improvements split into carriers, suggestions, and obsolete citations; the suggestions name additions, polish, and improvements without a kind apart, and a histogram counts the kind of every listed improvement, and `code` counts the code improvements the gate counted), the reason code (`merge`, `below_tolerance`, `no_visible_improvement`, `no_defect_improvement`, `regression`, `adapt_identity`, `adapt_regression`, `regen_json_invalid`, `canvas_failed`, and so on), and the provenance of both reviews (resolved model and rules version of this review and of the stored one). The `adapt` block holds the adapt route: `version` (the checker version), `prev` and `new` (each source's adaptability `status`, with its `static` and `smoke` statuses), `identity` (the share of differing pixels per theme), `counted`, `why` (`route` when it counted, otherwise the first condition that failed, such as `not_python`, `prev_passes`, `identity_dark`, or `technical_below`), `review` (`ran` or `skipped`), and `route_pre_review` (whether `adapt-route` held before the review: `true`, `false`, or `null` without adapt input). The `readiness` block holds the readiness check's verdict: `status`, each source's validator status (`new`, `prev`), and the refusal keys that were `added` and `removed`, each list joined by `/` (`missing` and empty when the gate got no verdict). A keep record also says what happened to the re-score (`writeback`, see the next section). It holds no model-written text. PR comments are permanent, so read this first.
+- **The notice line in the run log.** `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… code=… model=… criteria=… prev_lines=… new_lines=… adapt_counted=… adapt_why=… adapt_overruled=… reason=…`, where `prev_lines` and `new_lines` are the two sources' line counts, and `adapt_counted`, `adapt_why`, and `adapt_overruled` appear when the step passes the adapt files. A `readiness=…` field before `reason=` appears when the step passes the readiness verdict. Run logs expire.
 - **The pair artifact.** `regen-pair-<pr>-<attempt>` on the `impl-review.yml` run, kept 60 days: both renders, both sources (the predecessor's with its score hidden), the previous review, this review's files, and the gate record. For a Python pair, `adapt/` adds both adapt records and what impl-generate staged for them: the smoke runs, `pair.json`, the raw renders of both sources, and the generator's self-check log. The predecessor's production renders are overwritten on the next merge, so this is the only copy of what the gate compared.
 
 `uv run python -m automation.scripts.review_retest gate-report` aggregates the records across pull requests: merge rate, reason codes, how far re-scored predecessors land from their stored scores, the counted visible improvements and carriers, cited permissions and obsolete weaknesses, what happened to the re-scores of kept implementations, the merges the code path carried, and soft alarms. See [Review retest](review-retest.md#monitor-the-regen-gate).
@@ -670,6 +698,9 @@ night:
   one of these codes:
   - `regression`: the regeneration beat the live implementation except for
     that regression.
+  - `readiness_regression`: the regeneration would have merged but for a
+    construct the agent chat's validator refuses, which most regenerations
+    don't add.
   - A technical keep, where the gate kept because something failed, not
     because it judged the new render worse: `canvas_failed`, `no_score`,
     `prev_renders_missing`, `context_failed`, `regen_json_missing`,

@@ -110,14 +110,18 @@ KEPT_LABEL = "regen:kept"
 # The gate keep codes (regen_gate.REASON_CODES) after which a pair returns at
 # its age from before the keep once the attempt window has passed, so a second
 # try comes within a window, not after the whole catalogue. `regression`: the
-# regeneration beat the live implementation except for a regression. The rest
-# are technical: the gate kept because something failed (the canvas gate, the
-# score, the predecessor's renders, the gate's context, review_regen.json, the
-# gate script), not because it judged the new render worse. `adapt_regression`
-# is not one of them: the adaptability check ran and the new code failed it.
+# regeneration beat the live implementation except for a regression.
+# `readiness_regression`: it would have merged but for a construct the agent
+# chat's validator refuses, which most regenerations do not add (3 of the
+# first 24 scanned ones did). The rest are technical: the gate kept because
+# something failed (the canvas gate, the score, the predecessor's renders, the
+# gate's context, review_regen.json, the gate script), not because it judged
+# the new render worse. `adapt_regression` is not one of them: the
+# adaptability check ran and the new code failed it.
 RETURN_CODES = frozenset(
     {
         "regression",
+        "readiness_regression",
         "canvas_failed",
         "no_score",
         "prev_renders_missing",
