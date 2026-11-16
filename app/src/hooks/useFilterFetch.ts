@@ -137,10 +137,14 @@ export function useFilterFetch({
       } catch {
         if (abortController.signal.aborted) return;
         // The plots of the previous filter would stand under the new chips as if they were
-        // this filter's result; the error line stands alone instead.
+        // this filter's result; the error line stands alone instead. Their counts go too, so
+        // the search menu offers no number of the previous filter as this one's. The global
+        // counts stay: they count the whole catalogue, which no filter changes.
         setAllImages([]);
         setDisplayedImages([]);
         setHasMore(false);
+        setFilterCounts(null);
+        setOrCounts([]);
         setError(FILTER_FETCH_ERROR);
       } finally {
         if (!abortController.signal.aborted) {

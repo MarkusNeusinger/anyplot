@@ -38,4 +38,6 @@
   banner is cleared when the next fetch starts. It says `plots did not load`
   instead of the raw exception with status and URL, and offers `.retry()`.
   While it shows, the page shows no plots of an earlier filter and no longer
-  claims that no plots match.
+  claims that no plots match, and the search menu offers no counts of an
+  earlier filter. The banner sits 16 px below the masthead's rule instead of
+  on it.

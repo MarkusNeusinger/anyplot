@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fireEvent, render, screen } from 'src/test-utils';
+import { fireEvent, render, screen, styleAt } from 'src/test-utils';
 
 const {
   mockHandleRandom,
@@ -92,6 +92,14 @@ describe('PlotsPage', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('plots did not load');
       fireEvent.click(screen.getByRole('button', { name: 'Retry loading the plots' }));
       expect(mockRetryFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the error line off the masthead rule, on a phone and on a desktop', () => {
+      state.error = 'plots did not load';
+      render(<PlotsPage />);
+      const alert = screen.getByRole('alert');
+      expect(styleAt(alert, 390).marginTop).toBe('16px');
+      expect(styleAt(alert, 1440).marginTop).toBe('16px');
     });
 
     it('claims no empty result while the load failed', () => {

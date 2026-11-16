@@ -239,6 +239,41 @@ describe('useFilterFetch', () => {
       expect(result.current.hasMore).toBe(false);
     });
 
+    it('drops the counts of the previous filter when the next filter fails, and keeps the global ones', async () => {
+      const orCounts = [{ matplotlib: 50, seaborn: 12 }];
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ ...mockApiResponse, orCounts }),
+      });
+      fetchMock.mockRejectedValueOnce(new Error('Network error'));
+
+      const { result, rerender } = renderHook(
+        ({ filters }: { filters: ActiveFilters }) => useFilterFetch({ activeFilters: filters }),
+        {
+          initialProps: { filters: [{ category: 'lib', values: ['matplotlib'] }] as ActiveFilters },
+        }
+      );
+      await waitFor(() => {
+        expect(result.current.filterCounts).toEqual(mockApiResponse.counts);
+      });
+      expect(result.current.orCounts).toEqual(orCounts);
+
+      rerender({
+        filters: [
+          { category: 'lib', values: ['matplotlib'] },
+          { category: 'plot', values: ['scatter'] },
+        ],
+      });
+      await waitFor(() => {
+        expect(result.current.error).toBe(FILTER_FETCH_ERROR);
+      });
+      // No count of `lib:matplotlib` stands for `lib:matplotlib plot:scatter`.
+      expect(result.current.filterCounts).toBeNull();
+      expect(result.current.orCounts).toEqual([]);
+      // The whole catalogue's counts do not depend on the filter.
+      expect(result.current.globalCounts).toEqual(mockApiResponse.globalCounts);
+    });
+
     it('retry runs the fetch for the same filters again and clears the error on success', async () => {
       fetchMock.mockRejectedValueOnce(new Error('Network error'));
       fetchMock.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiResponse) });
