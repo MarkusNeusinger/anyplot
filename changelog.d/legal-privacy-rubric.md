@@ -11,3 +11,11 @@
   per kind of data. The crawler copy of the page (`/seo-proxy/legal`) now says what the page
   says, row by row: it gains the shared links it lacked, and the right to object gets back
   its condition.
+
+### Fixed
+
+- **The database reference no longer contradicts the privacy policy.** The "Data privacy"
+  list in `docs/reference/database.md` promised anonymous session ids, usage data deleted
+  after 90 days and no personal data, and its first item broke off mid-sentence. It now
+  names what each store holds, with the file that shows it, and points to the privacy
+  section of the legal page for how long data is kept and where it runs.

@@ -689,10 +689,17 @@ await session.execute(f"SELECT * FROM specs WHERE id = '{spec_id}'")
 
 ### Data privacy
 
-- No user data stored permanently, with one exception: the quick-feedback cases of the agent chat. When someone submits one, the case (the conversation, the code, the images, the message, a hashed user id, and `data.csv` when the box is ticked) is stored in the private bucket `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days. Its row in `agent_feedback` holds the message and the hashed ids, but no conversation, code, images or data, and stays
-- Anonymous session IDs only
-- Usage data auto-deleted after 90 days
-- GDPR-compliant (no personal data)
+The privacy section of the legal page ([anyplot.ai/legal#privacy](https://anyplot.ai/legal#privacy), `app/src/pages/LegalPage.tsx`) states how long each kind of data is kept and where it runs. If you change what a store below holds, update that section and its crawler copy in `api/routers/seo.py` (`_LEGAL_BOT_BODY`) too.
+
+What visitors leave in the database, the case bucket, and the logs:
+
+- `feedback` holds each entry of the site's feedback widget and each plot vote: the message, the reaction, the optional contact field, the page, the window size, the user agent, and a random session id that the browser keeps for its own entries (`core/database/models.py` `Feedback`, `app/src/components/FeedbackWidget.tsx`).
+- Its `ip_hash` is a salted HMAC of the client IP address, used only for the rate limit and the duplicate check. The salt is drawn per process and never logged or configured, so it dies with the process, and each submission that reaches the database first clears the hashes older than 10 minutes (`api/routers/feedback.py` `_hash_ip`, `_clear_expired_ip_hashes`).
+- `link_shares` holds a count per day, platform, and page of the link previews that messengers and social networks fetch, with no address, no user agent, and no time of day (`core/database/models.py` `LinkShare`).
+- `agent_feedback` holds one row per feedback case of the agent chat: the reaction, the message, hashed user and session ids, and the run's metadata, never the conversation, code, images, or data (`core/database/models.py` `AgentFeedback`).
+- The case's files are in the private bucket `gs://anyplot-agent-cases`: `manifest.json` with the conversation and the dataset profile, for a case about a plot also the PNG of each rendered theme and `plot.py`, and `data.csv` only when the sender ticked `# include data.csv`, which starts unticked ([Feedback capture](../concepts/agent-network.md#feedback-capture), `app/src/sections/agent-chat/ResultFeedback.tsx`).
+- An agent chat session (its data, chat, and plots) lives only in the agents service's memory and ends with the instance; it never reaches the database ([Session hash](agent-telemetry.md#session-hash)).
+- The agent chat's usage telemetry holds no content and goes to a log bucket, not to the database. Its lines are pseudonymous rather than anonymous: a line can be matched by its timestamp to Cloud Run's request logs, which hold the client IP address ([Agent usage telemetry](agent-telemetry.md#what-is-recorded-and-what-never-is), [Session hash](agent-telemetry.md#session-hash)).
 
 ---
 
