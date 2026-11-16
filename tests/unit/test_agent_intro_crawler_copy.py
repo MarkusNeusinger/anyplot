@@ -162,10 +162,18 @@ def test_the_copy_serves_the_paragraph_and_the_terms():
     # every comparison of the constants with the page.
     assert served_paragraph() == copy_paragraph()
     labels = [match["label"] for match in TERM_LABEL.finditer(terms_block())]
+    # The heading stands right above the list, as on the page.
+    assert f"<h2>{seo.AGENT_TERMS_HEADING}</h2><dl><dt>" in seo._AGENT_BOT_BODY
     assert re.findall(r"<dt>([^<]*)</dt>", seo._AGENT_BOT_BODY) == labels
     for label, text in seo.AGENT_TERMS:
         term = f"<dt>{html.escape(label, quote=False)}</dt><dd>{html.escape(text, quote=False)}</dd>"
         assert term in seo._AGENT_BOT_BODY, label
+
+
+def test_the_terms_heading_is_the_pages():
+    assert seo.AGENT_TERMS_HEADING == string_constant("AGENT_TERMS_HEADING")
+    # The page renders the constant as the heading, right before the list.
+    assert re.search(r"\{AGENT_TERMS_HEADING\}\s*</Box>\s*<Box\s+component=\"dl\"", SOURCE)
 
 
 def test_the_terms_are_the_pages_word_for_word():
@@ -174,8 +182,9 @@ def test_the_terms_are_the_pages_word_for_word():
     sentences = {match["label"]: match["text"] for match in STRING_TERM.finditer(body)}
     # Every line but the privacy link is a sentence; a line written in another shape would otherwise be
     # skipped without a sound.
-    assert labels == ["status", "limits", "your code", "privacy"], labels
-    assert list(sentences) == ["status", "limits", "your code"], list(sentences)
+    assert labels == ["your code", "privacy", "limits", "status"], labels
+    assert tuple(labels) == seo.AGENT_TERM_LABELS
+    assert list(sentences) == ["your code", "limits", "status"], list(sentences)
     assert tuple(sentences.items()) == seo.AGENT_TERMS
 
 

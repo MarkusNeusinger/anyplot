@@ -478,20 +478,24 @@ describe('AgentChatPage on the public lane', () => {
       expect(
         catalogue.compareDocumentPosition(terms) & Node.DOCUMENT_POSITION_FOLLOWING
       ).toBeTruthy();
+      // Under the same heading and in the same order as on the explainer.
+      expect(terms.previousElementSibling).toBe(
+        screen.getByRole('heading', { level: 3, name: 'ground rules' })
+      );
       expect(
         within(terms)
           .getAllByRole('term')
           .map(label => label.textContent)
-      ).toEqual(['status', 'limits', 'your code', 'privacy']);
+      ).toEqual(['your code', 'privacy', 'limits', 'status']);
       expect(
         within(terms)
           .getAllByRole('definition')
           .map(text => text.textContent)
       ).toEqual([
-        'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
-        'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
         'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.',
         'what is stored, where and for how long',
+        'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
+        'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
       ]);
       expect(
         within(terms).getByRole('link', { name: 'what is stored, where and for how long' })

@@ -78,25 +78,20 @@ const privacyLinkSx = {
   my: { xs: -1.5, sm: 0 },
 } as const;
 
+/** The heading above the terms, here and under the closed notice. */
+export const AGENT_TERMS_HEADING = 'ground rules';
+
 /**
  * The assistant's terms of use, label and sentence, after the way on as the page's fine print, so
  * the two ways in (the examples and the catalogue) stay together above it.
- * Where each sentence holds in the code: the operator's pause is the public door
- * (`AGENT_PUBLIC_ENABLED`, `api/routers/agent_public.py`); the daily limits count the tab's random
- * id and the network (`agents/anyplot/settings.py`); the pause for the day is the day's `attack`
- * strikes (`AGENT_ATTACK_STRIKES`, `locked_out`); the Highcharts note is the chat's own
- * (`HIGHCHARTS_NOTE` in `AgentChatPage`). The last line leads to the legal page's section on
- * what the assistant stores, where and for how long.
+ * Where each sentence holds in the code: the Highcharts note is the chat's own (`HIGHCHARTS_NOTE`
+ * in `AgentChatPage`); the second line leads to the legal page's section on what the assistant
+ * stores, where and for how long; the daily limits count the tab's random id and the network
+ * (`agents/anyplot/settings.py`); the pause for the day is the day's `attack` strikes
+ * (`AGENT_ATTACK_STRIKES`, `locked_out`); the operator's pause is the public door
+ * (`AGENT_PUBLIC_ENABLED`, `api/routers/agent_public.py`).
  */
 const AGENT_TERMS: [string, ReactNode][] = [
-  [
-    'status',
-    'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
-  ],
-  [
-    'limits',
-    'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
-  ],
   [
     'your code',
     'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.',
@@ -107,7 +102,18 @@ const AGENT_TERMS: [string, ReactNode][] = [
       what is stored, where and for how long
     </Box>,
   ],
+  [
+    'limits',
+    'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
+  ],
+  [
+    'status',
+    'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
+  ],
 ];
+
+/** The explainer's two small headings, "or start with" and the terms' own. */
+const subheadingSx = { ...labelSx, fontWeight: 400, mb: 0.5 } as const;
 
 /** The sentences: the body face one step smaller, in the soft ink, which reads 4.5:1 and more. */
 const termTextSx = { ...bodyTextSx, fontSize: smallText, color: 'var(--ink-soft)', m: 0 } as const;
@@ -130,40 +136,45 @@ const clearOfButtonSx = {
 } as const;
 
 /**
- * The assistant's terms of use as labelled lines: the explainer's fine print, and the same block
- * under the closed notice (`LaneClosed` in `AgentChatPage`): `/agent` is where the assistant's
- * terms live, so they must stand there also while the operator has paused the assistant. Text
- * and links only: it opens no session and asks nothing. The crawler copy of
- * `/agent` (`/seo-proxy/agent` in `api/routers/seo.py`) carries the same sentences, and
- * tests/unit/test_agent_intro_crawler_copy.py fails when the two differ.
+ * The assistant's terms of use as labelled lines under their heading: the explainer's fine print,
+ * and the same block under the closed notice (`LaneClosed` in `AgentChatPage`): `/agent` is where
+ * the assistant's terms live, so they must stand there also while the operator has paused the
+ * assistant. Text and links only: it opens no session and asks nothing. The crawler copy of
+ * `/agent` (`/seo-proxy/agent` in `api/routers/seo.py`) carries the same heading and sentences,
+ * and tests/unit/test_agent_intro_crawler_copy.py fails when the two differ. A fragment, so the
+ * list stays the last element of the explainer and of the notice.
  */
 export function AgentTerms() {
   return (
-    <Box
-      component="dl"
-      data-testid="agent-intro-terms"
-      sx={{
-        display: 'grid',
-        // At phone width the label stands above its sentence, which keeps the full width.
-        gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'max-content minmax(0, 1fr)' },
-        columnGap: 2,
-        rowGap: { xs: 0, sm: 0.75 },
-        ...clearOfButtonSx,
-        mt: 4,
-        mb: 0,
-      }}
-    >
-      {AGENT_TERMS.map(([term, text]) => (
-        <Fragment key={term}>
-          <Box component="dt" sx={{ ...labelSx, lineHeight: 1.6 }}>
-            {term}
-          </Box>
-          <Box component="dd" sx={{ ...termTextSx, mb: { xs: 1, sm: 0 } }}>
-            {text}
-          </Box>
-        </Fragment>
-      ))}
-    </Box>
+    <>
+      <Box component="h3" sx={{ ...subheadingSx, mt: 4 }}>
+        {AGENT_TERMS_HEADING}
+      </Box>
+      <Box
+        component="dl"
+        data-testid="agent-intro-terms"
+        sx={{
+          display: 'grid',
+          // At phone width the label stands above its sentence, which keeps the full width.
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'max-content minmax(0, 1fr)' },
+          columnGap: 2,
+          rowGap: { xs: 0, sm: 0.75 },
+          ...clearOfButtonSx,
+          my: 0,
+        }}
+      >
+        {AGENT_TERMS.map(([term, text]) => (
+          <Fragment key={term}>
+            <Box component="dt" sx={{ ...labelSx, lineHeight: 1.6 }}>
+              {term}
+            </Box>
+            <Box component="dd" sx={{ ...termTextSx, mb: { xs: 1, sm: 0 } }}>
+              {text}
+            </Box>
+          </Fragment>
+        ))}
+      </Box>
+    </>
   );
 }
 
@@ -197,11 +208,7 @@ export function AgentIntro() {
         feedback.
       </Box>
 
-      <Box
-        component="h3"
-        id="agent-intro-examples"
-        sx={{ ...labelSx, fontWeight: 400, mt: 3, mb: 0.5 }}
-      >
+      <Box component="h3" id="agent-intro-examples" sx={{ ...subheadingSx, mt: 3 }}>
         or start with
       </Box>
       <Box

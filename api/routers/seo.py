@@ -1389,7 +1389,7 @@ async def seo_about():
 # The strings are the page's own. tests/unit/test_agent_intro_crawler_copy.py
 # reads AgentIntro.tsx and fails when the title, the description, the intro's
 # sentences around it, the example pairs, the line on how the chat is built or
-# the terms here differ from it.
+# the terms (their heading, order and sentences) here differ from it.
 AGENT_INTRO_TITLE = "use with my data | anyplot.ai"
 AGENT_INTRO_DESCRIPTION = (
     "pick any plot, choose .use_my_data() on its page, and paste your data. an agent adapts that plot's code "
@@ -1411,18 +1411,21 @@ AGENT_INTRO_HOW = (
     "how it works: one agent talks to you, and the loop around it is plain code. the design and the code are on GitHub."
 )
 AGENT_DESIGN_URL = "https://github.com/MarkusNeusinger/anyplot#use-with-my-data-agent-chat"
+AGENT_TERMS_HEADING = "ground rules"
+# The terms' labels in the page's order; every line but `privacy`, a link, is a sentence of AGENT_TERMS.
+AGENT_TERM_LABELS = ("your code", "privacy", "limits", "status")
 AGENT_TERMS = (
-    (
-        "status",
-        "experimental, without warranty: results can be wrong and nobody checks them by hand. "
-        "the operator may pause it at any time.",
-    ),
+    ("your code", "yours to use, as is. Highcharts needs a licence from Highsoft for commercial use."),
     (
         "limits",
         "use it only with data you may share, never for unlawful content or automated requests. "
         "daily limits apply per tab and per network; a misuse can pause you for the day.",
     ),
-    ("your code", "yours to use, as is. Highcharts needs a licence from Highsoft for commercial use."),
+    (
+        "status",
+        "experimental, without warranty: results can be wrong and nobody checks them by hand. "
+        "the operator may pause it at any time.",
+    ),
 )
 AGENT_PRIVACY_LINK = "what is stored, where and for how long"
 
@@ -1441,10 +1444,9 @@ def _build_agent_body() -> str:
         f'&amp;language={LIBRARY_LANGUAGES[library]}">{spec} in {library}</a> · {LIBRARY_LANGUAGES[library]}</li>'
         for spec, library in AGENT_INTRO_EXAMPLES
     )
-    terms = "".join(
-        f"<dt>{html.escape(term, quote=False)}</dt><dd>{html.escape(text, quote=False)}</dd>"
-        for term, text in AGENT_TERMS
-    )
+    lines = {term: html.escape(text, quote=False) for term, text in AGENT_TERMS}
+    lines["privacy"] = f'<a href="https://anyplot.ai/legal#assistant">{AGENT_PRIVACY_LINK}</a>'
+    terms = "".join(f"<dt>{html.escape(term, quote=False)}</dt><dd>{lines[term]}</dd>" for term in AGENT_TERM_LABELS)
     return (
         "<h1>use with my data</h1>"
         f"<p>{html.escape(AGENT_INTRO_OPENING, quote=False)} {paragraph} "
@@ -1452,9 +1454,7 @@ def _build_agent_body() -> str:
         f"<h2>or start with</h2><ul>{examples}</ul>"
         '<p><a href="https://anyplot.ai/plots">Browse plots</a></p>'
         f"<p>{how}</p>"
-        f"<dl>{terms}"
-        f'<dt>privacy</dt><dd><a href="https://anyplot.ai/legal#assistant">{AGENT_PRIVACY_LINK}</a></dd>'
-        "</dl>"
+        f"<h2>{html.escape(AGENT_TERMS_HEADING, quote=False)}</h2><dl>{terms}</dl>"
     )
 
 

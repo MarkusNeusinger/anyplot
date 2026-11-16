@@ -1,7 +1,8 @@
 /**
- * The explainer's terms of use: three labelled lines in the wording decided for the explainer, and
- * a fourth that links to the legal page's section on what the assistant stores. The sentences are written out
- * here, not imported, so a change of their wording fails this test. The page around the
+ * The explainer's own text: its paragraph, the line on how the chat is built, and the terms of use
+ * under their heading, three labelled sentences in the wording decided for the explainer and a
+ * line that links to the legal page's section on what the assistant stores. The texts are written
+ * out here, not imported, so a change of their wording fails this test. The page around the
  * explainer (the lane, the head, the examples) is AgentChatPage.public.test.tsx's.
  */
 
@@ -56,23 +57,25 @@ describe('AgentIntro paragraph', () => {
 });
 
 describe('AgentIntro terms', () => {
-  it('lists the terms as labelled lines, in order, verbatim', () => {
+  it('lists the terms as labelled lines under their heading, in order, verbatim', () => {
     renderIntro();
     const terms = screen.getByTestId('agent-intro-terms');
     expect(terms.tagName).toBe('DL');
+    const heading = screen.getByRole('heading', { level: 3, name: 'ground rules' });
+    expect(terms.previousElementSibling).toBe(heading);
     const labels = within(terms).getAllByRole('term');
     const texts = within(terms).getAllByRole('definition');
     expect(labels.map(label => label.textContent)).toEqual([
-      'status',
-      'limits',
       'your code',
       'privacy',
+      'limits',
+      'status',
     ]);
     expect(texts.map(text => text.textContent)).toEqual([
-      'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
-      'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
       'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.',
       'what is stored, where and for how long',
+      'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
+      'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
     ]);
   });
 

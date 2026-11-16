@@ -1245,18 +1245,22 @@ class TestSeoProxyRouter:
             "<p>how it works: one agent talks to you, and the loop around it is plain code. the design and the code "
             'are <a href="https://github.com/MarkusNeusinger/anyplot#use-with-my-data-agent-chat">on GitHub</a>.</p>'
         ) in response.text
-        # The three terms, word for word as the explainer has them, and the way to the privacy facts.
-        for sentence in (
-            "experimental, without warranty: results can be wrong and nobody checks them by hand. "
-            "the operator may pause it at any time.",
-            "use it only with data you may share, never for unlawful content or automated requests. "
-            "daily limits apply per tab and per network; a misuse can pause you for the day.",
-            "yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.",
-        ):
-            assert f"<dd>{sentence}</dd>" in response.text, sentence
-        assert '<a href="https://anyplot.ai/legal#assistant">what is stored, where and for how long</a>' in (
-            response.text
-        )
+        # The terms under their heading, in the explainer's order and word for word as it has them, with
+        # the way to the privacy facts second.
+        assert (
+            "<h2>ground rules</h2><dl>"
+            "<dt>your code</dt>"
+            "<dd>yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.</dd>"
+            "<dt>privacy</dt>"
+            '<dd><a href="https://anyplot.ai/legal#assistant">what is stored, where and for how long</a></dd>'
+            "<dt>limits</dt>"
+            "<dd>use it only with data you may share, never for unlawful content or automated requests. "
+            "daily limits apply per tab and per network; a misuse can pause you for the day.</dd>"
+            "<dt>status</dt>"
+            "<dd>experimental, without warranty: results can be wrong and nobody checks them by hand. "
+            "the operator may pause it at any time.</dd>"
+            "</dl>"
+        ) in response.text
         # The three examples open the chat on their pair.
         for spec, library, language in (
             ("scatter-basic", "matplotlib", "python"),
