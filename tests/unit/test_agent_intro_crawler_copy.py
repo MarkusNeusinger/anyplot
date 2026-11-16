@@ -9,6 +9,7 @@ other test would notice: the page's tests run in the browser's world and the cop
 
 from __future__ import annotations
 
+import html
 import re
 
 from api.routers import seo
@@ -22,6 +23,9 @@ TERM_LABEL = re.compile(r"\[\s*(?P<q>['\"])(?P<label>[^'\"]+)(?P=q),")
 STRING_TERM = re.compile(
     r"\[\s*(?P<q>['\"])(?P<label>[^'\"]+)(?P=q),\s*(?P<p>['\"])(?P<text>.*?)(?P=p),?\s*\]", re.DOTALL
 )
+PARAGRAPH_OPEN = '<Box component="p"'
+BOX_TAG = re.compile(r"<(?P<close>/?)Box\b[^>]*?(?P<self>/?)>")
+JSX_CHILD = re.compile(r"(<[^>]*>|\{' '\})")
 
 
 def string_constant(name: str) -> str:
@@ -37,17 +41,84 @@ def terms_block() -> str:
     return block["body"]
 
 
+def page_paragraph() -> str:
+    """The children of the explainer's one `<Box component="p">`, up to its own closing tag.
+
+    The paragraph holds a link and a code span, each a `<Box>` of its own, so its end is found by
+    counting the boxes that open and close inside it, not at the first `</Box>`.
+    """
+    assert SOURCE.count(PARAGRAPH_OPEN) == 1, 'AgentIntro.tsx should have exactly one `<Box component="p"`'
+    start = SOURCE.index(">", SOURCE.index(PARAGRAPH_OPEN)) + 1
+    depth = 1
+    for tag in BOX_TAG.finditer(SOURCE, start):
+        if tag["close"]:
+            depth -= 1
+        elif not tag["self"]:
+            depth += 1
+        if depth == 0:
+            return SOURCE[start : tag.start()]
+    raise AssertionError('the explainer\'s `<Box component="p">` is never closed')
+
+
+def jsx_run(text: str) -> str:
+    """One run of JSX text between two tags, as JSX renders it.
+
+    The rule is JSX's own: a line loses its leading spaces unless it is the run's first and its
+    trailing spaces unless it is the run's last, an empty line drops out, and the lines left are
+    joined with one space. Whitespace that holds a line break next to a tag thus renders as nothing.
+    """
+    lines = text.replace("\t", " ").split("\n")
+    kept = []
+    for index, line in enumerate(lines):
+        if index > 0:
+            line = line.lstrip(" ")
+        if index < len(lines) - 1:
+            line = line.rstrip(" ")
+        if line:
+            kept.append(line)
+    return " ".join(kept)
+
+
+def jsx_text(children: str) -> str:
+    """The text a JSX fragment renders: tags drop out, `{' '}` is a space, entities are decoded."""
+    parts = []
+    for part in JSX_CHILD.split(children):
+        if part == "{' '}":
+            parts.append(" ")
+        elif not part.startswith("<"):
+            parts.append(jsx_run(part))
+    return html.unescape("".join(parts))
+
+
+def served_paragraph() -> str:
+    """The text of the crawler copy's paragraph, its link and code span unwrapped."""
+    paragraph = re.search(r"<p>(?P<inner>.*?)</p>", seo._AGENT_BOT_BODY, re.DOTALL)
+    assert paragraph is not None, "the crawler copy of /agent has no paragraph"
+    return html.unescape(re.sub(r"<[^>]+>", "", paragraph["inner"]))
+
+
 def test_the_title_and_description_are_the_pages():
     assert seo.AGENT_INTRO_TITLE == string_constant("AGENT_INTRO_TITLE")
     assert seo.AGENT_INTRO_DESCRIPTION == string_constant("AGENT_INTRO_DESCRIPTION")
 
 
 def test_the_paragraph_around_the_description_is_the_pages():
-    # The page writes its paragraph out in JSX, across lines; with the whitespace folded, the copy's
-    # sentences before and after the description stand in it word for word.
-    page = " ".join(SOURCE.split())
-    assert seo.AGENT_INTRO_OPENING in page
-    assert seo.AGENT_INTRO_CLOSING in page
+    # The page writes its paragraph out in JSX, across lines and around a link and a code span,
+    # rather than from the description constant; read as JSX renders it, it is the copy's opening
+    # sentence, the description and the closing sentence, so neither side can drift from the other.
+    expected = f"{seo.AGENT_INTRO_OPENING} {seo.AGENT_INTRO_DESCRIPTION} {seo.AGENT_INTRO_CLOSING}"
+    assert jsx_text(page_paragraph()) == expected
+
+
+def test_the_copy_serves_the_paragraph_and_the_terms():
+    # The served body is built from the constants above; a slip in the builder would otherwise pass
+    # every comparison of the constants with the page.
+    assert served_paragraph() == f"{seo.AGENT_INTRO_OPENING} {seo.AGENT_INTRO_DESCRIPTION} {seo.AGENT_INTRO_CLOSING}"
+    labels = [match["label"] for match in TERM_LABEL.finditer(terms_block())]
+    assert re.findall(r"<dt>([^<]*)</dt>", seo._AGENT_BOT_BODY) == labels
+    for label, text in seo.AGENT_TERMS:
+        term = f"<dt>{html.escape(label, quote=False)}</dt><dd>{html.escape(text, quote=False)}</dd>"
+        assert term in seo._AGENT_BOT_BODY, label
 
 
 def test_the_terms_are_the_pages_word_for_word():
