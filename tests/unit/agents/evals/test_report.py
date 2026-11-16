@@ -242,6 +242,60 @@ def test_shipped_runs_without_drawn_texts_are_counted_where_the_library_reports_
     assert "| Probe errors | TimeoutError 1 |" in text
 
 
+def view_of(named: bool | None, checks: dict[str, bool], **fields: Any) -> dict[str, Any]:
+    """A run's `view` record (`matrix.view_record`) with the given drawn-text reading and checks."""
+    return {
+        "drawn_rows": {"rows": 4, "of_rows": 6},
+        "words_hold_view": True,
+        "adapter_calls": 1,
+        "reviewer_calls": 1,
+        "review_rounds": 1,
+        "dq03_raised": False,
+        "named": named,
+        "cleared": None,
+        "checks": checks,
+        **fields,
+    }
+
+
+def test_the_runs_under_a_view_are_summed_and_their_failed_checks_named() -> None:
+    cleared = {"every_row": True, "review_rounds": 1, "dq03_raised": True, "still_named": True}
+    runs = [
+        run("a-matplotlib-view", view=view_of(True, {"drawn_rows": True, "named": True})),
+        run("b-matplotlib-view", view=view_of(False, {"drawn_rows": True, "named": False}, review_rounds=2)),
+        run("c-matplotlib-view", view=view_of(True, {"drawn_rows": True, "cleared_unnamed": False}, cleared=cleared)),
+        run("d-seaborn-view", view=view_of(None, {"drawn_rows": False, "no_dq03": True})),
+        run("e-matplotlib-x"),  # no view, and a report older than the field
+        run("f-matplotlib-x", view=None),
+    ]
+
+    summary = summarize(runs)
+
+    assert summary["view"] == {
+        "runs": 4,
+        "drew_view_rows": 3,
+        "named": 2,
+        "named_measured": 3,
+        "dq03_raised": 1,
+        "review_rounds": 5,
+        "cleared": 1,
+        "cleared_every_row": 1,
+        "still_named": 1,
+    }
+    assert summary["view_check_failures"] == [
+        "b-matplotlib-view r1: view:named",
+        "c-matplotlib-view r1: view:cleared_unnamed",
+        "d-seaborn-view r1: view:drawn_rows",
+    ]
+    assert summary["pass_rate"] == 1.0  # the view checks decide no pass
+    text = summary_markdown(report_of(runs))
+    assert (
+        "| Runs under a view of the plot | 4 runs: drew the view's rows 3, named the view 2 of 3 read, DQ-03 raised 1, "
+        "5 reviews; cleared 1, every row 1, still named 1; 3 view checks failed; b-matplotlib-view r1: view:named"
+    ) in text
+    assert "Runs under a view" not in summary_markdown(report_of(runs[4:]))
+
+
 def test_summary_markdown_has_every_section() -> None:
     runs = [run("a-matplotlib-x"), run("b-matplotlib-x", status="failed", reason="render", passed=False)]
     report = report_of(runs, provider="anthropic-vertex", location="eu", renderer="fake")

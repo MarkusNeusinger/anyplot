@@ -33,6 +33,8 @@ probe (R, altair, pygal, lets-plot): the G-gates then have nothing to read.
 """
 
 import builtins
+import csv
+import io
 import math
 import re
 import unicodedata
@@ -324,8 +326,9 @@ def limit_line(theme: Theme, reason: str | None, measured: int | None, limit: in
 
 
 def data_rows(data_csv: str) -> int:
-    """Rows of the canonical data.csv (header excluded; the parser writes one row per line)."""
-    return max(0, len([line for line in data_csv.split("\n") if line]) - 1)
+    """Rows of the canonical data.csv, header excluded: its records, not its lines, since a quoted cell keeps the
+    line break a pasted cell held, and blank lines are no row."""
+    return max(0, sum(1 for row in csv.reader(io.StringIO(data_csv, newline="")) if row) - 1)
 
 
 def evaluate(

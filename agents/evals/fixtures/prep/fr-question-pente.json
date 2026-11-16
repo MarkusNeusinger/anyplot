@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Semaine,Abonnés\n1,370\n2,493\n3,655\n4,792\n5,955\n6,1091\n7,1246\n8,1374\n",
+  "message": "Quelle est la pente et l'ordonnée à l'origine de la droite qui ajuste les abonnés en fonction de la semaine ?",
+  "expected_operations": [],
+  "question_ops": ["fit"],
+  "reply_names": ["146", "215"],
+  "locale": "fr",
+  "tags": ["data_question", "fit"]
+}

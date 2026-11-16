@@ -15,6 +15,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import httpx
+import numpy as np
 import pytest
 from pydantic import TypeAdapter
 
@@ -91,6 +92,18 @@ OWID = (
     "Switzerland,2021,4.1,0.1\nSwitzerland,2022,3.9,0.1\nSwitzerland,2023,3.7,0.09\n"
 )
 YEAR_2023 = {"column": "year", "test": "ne", "value": 2023}
+# Invented rain gauges in the same shape, for a grand total and a fit.
+GAUGE_RAIN = [120.4, 98.75, 210.1, 175.5, 66.05, 358.0]
+GAUGE_RUNOFF = [31.2, 22.9, 61.45, 50.1, 12.8, 108.35]
+GAUGES = "station,year,rainfall,runoff\n" + "".join(
+    f"{station},{year},{rain},{runoff}\n"
+    for (station, year), rain, runoff in zip(
+        [("Alpha", 2022), ("Alpha", 2023), ("Beta", 2022), ("Beta", 2023), ("Gamma", 2022), ("Gamma", 2023)],
+        GAUGE_RAIN,
+        GAUGE_RUNOFF,
+        strict=True,
+    )
+)
 
 
 async def open_line_multi(client: httpx.AsyncClient, data: str = OWID) -> tuple[str, list[Binding]]:
@@ -232,6 +245,31 @@ class TestQueryData:
         assert (invalid["status"], invalid["code"]) == ("error", "invalid_operations")
         assert context.state == before
 
+    async def test_a_grand_total_and_a_fit_each_take_one_call(self, client: httpx.AsyncClient) -> None:
+        """An `aggregate` without `by` and a `fit` with a `compute` on its row, as a question only; nothing is stored."""
+        sid, _ = await open_line_multi(client, GAUGES)
+        context = await context_for(client, sid, "inv-q-6")
+        before = dict(context.state)
+
+        total = await query_data([{"op": "aggregate", "column": "rainfall", "how": "sum"}], context)
+        fitted = await query_data(
+            [
+                {"op": "fit", "x": "rainfall", "y": "runoff"},
+                {"op": "compute", "name": "per_unit", "expression": "1/m", "inputs": {"m": "slope"}},
+            ],
+            context,
+            columns=["slope", "intercept", "n", "per_unit"],
+        )
+
+        assert table_of(total) == {"columns": ["rainfall"], "rows": [["1028.8"]]}
+        assert "summed rainfall over all 6 rows" in total["changes"]
+        slope, intercept = np.polyfit(GAUGE_RAIN, GAUGE_RUNOFF, 1)
+        (row,) = table_of(fitted)["rows"]
+        assert float(row[0]) == pytest.approx(slope, abs=1e-12) and float(row[1]) == pytest.approx(intercept, abs=1e-12)
+        assert row[2] == "6" and float(row[3]) == pytest.approx(1 / slope, rel=1e-12)
+        assert result_size(fitted) <= result_limit("query_data")
+        assert context.state == before and context.state[DATASET_VERSION] == 1
+
     def test_a_question_names_a_date_number_column_in_the_session_language(self) -> None:
         """`columns` names the new column as `prepare_data` would, so a question can ask for it by that name."""
         parsed = parse_dataset("Kunde,Abo\nA,2021-04-01\nB,2020-02-29\n")
@@ -273,6 +311,11 @@ class TestQueryData:
             ({"operations": [], "columns": [f"c{i}" for i in range(9)]}, "invalid_arguments"),
             ({"operations": [{"op": "sort", "column": "year"}] * 6}, "invalid_arguments"),
             ({"operations": [], "expression": "df.max()"}, "invalid_arguments"),
+            # Only a question takes an `aggregate` without `by` and a `fit`.
+            ({"operations": [{"op": "aggregate", "column": "co2_per_capita", "how": "sum"}]}, None),
+            ({"operations": [{"op": "aggregate", "by": None, "column": "co2_per_capita", "how": "sum"}]}, None),
+            ({"operations": [{"op": "fit", "x": "year", "y": "co2_per_capita"}]}, None),
+            ({"operations": [{"op": "fit", "x": "year"}]}, "invalid_arguments"),
             # A condition value is data, compared with the cells: a web address in it passes.
             (
                 {
@@ -286,6 +329,19 @@ class TestQueryData:
     )
     def test_tool_safety_bounds_the_arguments(self, arguments: dict[str, Any], verdict: str | None) -> None:
         assert ToolSafetyPlugin.check("query_data", arguments, "anyplot") == verdict
+
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            {"op": "aggregate", "column": "co2_per_capita", "how": "sum"},
+            {"op": "aggregate", "by": [], "column": "co2_per_capita", "how": "sum"},
+            {"op": "aggregate", "by": None, "column": "co2_per_capita", "how": "sum"},
+            {"op": "fit", "x": "year", "y": "co2_per_capita"},
+        ],
+    )
+    def test_prepare_data_refuses_what_only_a_question_takes(self, operation: dict[str, Any]) -> None:
+        """Stored as the user's table, a grand total or a fit would collapse it to one row."""
+        assert ToolSafetyPlugin.check("prepare_data", {"operations": [operation]}, "anyplot") == "invalid_arguments"
 
 
 def roles() -> list[DataRole]:

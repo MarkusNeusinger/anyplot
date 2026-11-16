@@ -1,14 +1,19 @@
 """Eval case loading, validation and selection."""
 
+import csv
+import io
 import json
 import re
 import shutil
+import statistics
 from pathlib import Path
 
 import pytest
 
 from agents.anyplot.dev_fixture import CASES_DIR
-from agents.evals.cases import CaseError, FollowUpChecks, load_case, load_cases, select_cases
+from agents.anyplot.grounding import GROUP_LIMITS
+from agents.evals.cases import CaseError, FollowUpChecks, ViewChecks, load_case, load_cases, select_cases
+from agents.evals.matrix import holds_token, view_tokens
 
 
 def _write(directory: Path, case: dict, data: str = "a,b\n1,2\n") -> Path:
@@ -25,6 +30,10 @@ VALID = {
     "expected": "rejected",
     "tags": ["custom"],
 }
+KEEP_B: dict = {"op": "keep_rows", "where": [{"column": "b", "test": "eq", "value": 2}]}
+"""A selection on `VALID`'s data: a view of the plot."""
+B_ABOVE_1: dict = {"op": "keep_rows", "where": [{"column": "b", "test": "gt", "value": 1}]}
+"""A selection by an order condition alone: a view with no word of its own."""
 
 
 def test_every_committed_case_loads() -> None:
@@ -32,9 +41,9 @@ def test_every_committed_case_loads() -> None:
 
     stress = [case for case in cases if "stress" in case.tags]
     # 900 generated (ggplot2's 60 since 2026-10-29, makie's 60 and the four JavaScript libraries' 240 since
-    # 2026-10-30, MUI X's, plotly's and bokeh's 60 each since 2026-10-31) and eleven hand-written (the four
-    # combined-request cases since 2026-11-01)
-    assert len(cases) - len(stress) == 911
+    # 2026-10-30, MUI X's, plotly's and bokeh's 60 each since 2026-10-31) and fifteen hand-written (the four
+    # combined-request cases since 2026-11-01, the four view cases since 2026-11-16)
+    assert len(cases) - len(stress) == 915
     assert len(stress) == 23 and all(case.case_id.startswith("stress-") for case in stress)
     assert [case.case_id for case in cases] == sorted(case.case_id for case in cases)
     assert {case.origin for case in cases} == {"fixtures"}
@@ -44,6 +53,7 @@ def test_every_committed_case_loads() -> None:
         "bar-basic-seaborn-decimals-de": "de",
         "bar-basic-seaborn-decimals-en": "en",
         "line-multi-matplotlib-millions-de": "de",
+        "bar-horizontal-matplotlib-view-selection-fr": "fr",
     }
     assert set(hand_written) == {
         "scatter-basic-matplotlib",
@@ -51,11 +61,13 @@ def test_every_committed_case_loads() -> None:
         "scatter-basic-matplotlib-german-message",
         *chosen,
         *COMBINED,
+        *VIEW_CASES,
     }
     assert hand_written["bar-grouped-seaborn"].locale == "de"
-    # Only the block H cases (density and number formats) choose a language; the German message case
-    # tests detection by its first typed message.
+    # Only the block H cases (density and number formats) and the French view case choose a language; the German
+    # message case tests detection by its first typed message.
     assert {case.case_id: case.language for case in cases if case.language is not None} == chosen
+    assert {case.case_id for case in cases if case.before_view} == set(VIEW_CASES)
 
 
 def test_the_german_message_case_sets_the_language_by_its_first_typed_message() -> None:
@@ -79,7 +91,8 @@ def test_selection_by_smoke_full_and_globs() -> None:
     smoke = select_cases(cases, "smoke")
     assert len(smoke) == 25 and all("smoke" in case.tags for case in smoke)
     full = select_cases(cases, "full")
-    assert len(full) == 911 and full == [case for case in cases if "stress" not in case.tags]
+    assert len(full) == 915 and full == [case for case in cases if "stress" not in case.tags]
+    assert [case.case_id for case in select_cases(cases, "*-view-*")] == sorted(VIEW_CASES)
     stress = select_cases(cases, "stress")
     assert len(stress) == 23 and all("stress" in case.tags for case in stress)
     assert len(select_cases(cases, "stress-compute-*")) == 3
@@ -114,6 +127,28 @@ def test_a_case_may_take_data_steps_before_its_plot(tmp_path: Path) -> None:
     assert load_case(_write(tmp_path / "plain", VALID)).before_operations == ()
 
 
+def test_a_case_may_draw_under_a_view_of_the_plot(tmp_path: Path) -> None:
+    top = [{"op": "sort", "column": "b", "descending": True}, {"op": "keep_rows", "n": 1}]
+    fields = {"before_view": [KEEP_B, *top], "view_checks": {"named": True, "clear": True}}
+
+    case = load_case(_write(tmp_path / "viewed", {**VALID, **fields}))
+
+    assert case.before_view == (KEEP_B, *top)
+    assert case.view_checks == ViewChecks(named=True, clear=True, no_dq03=False)
+    # Without checks the harness checks the drawn rows alone; without a view the case is as before.
+    assert load_case(_write(tmp_path / "unchecked", {**VALID, "before_view": top})).view_checks is None
+    plain = load_case(_write(tmp_path / "plain", VALID))
+    assert (plain.before_view, plain.view_checks) == ((), None)
+
+
+def test_the_clearing_of_a_view_is_the_cases_only_follow_up(tmp_path: Path) -> None:
+    directory = _write(tmp_path / "both", {**VALID, "before_view": [KEEP_B], "view_checks": {"clear": True}})
+    (directory / "change_request.txt").write_text("make the bars blue\n")
+
+    with pytest.raises(CaseError, match="view_checks.clear and a change_request.txt exclude each other"):
+        load_case(directory)
+
+
 @pytest.mark.parametrize("language", ["de", "Deutsch", "Klingon", "Old Norse"])
 def test_a_case_may_name_the_session_language_it_chooses(tmp_path: Path, language: str) -> None:
     case = load_case(_write(tmp_path / "chosen", {**VALID, "language": language}))
@@ -137,6 +172,23 @@ def test_a_case_may_name_the_session_language_it_chooses(tmp_path: Path, languag
         ({"before_operations": [[{"op": "sort", "column": "a"}]] * 6}, "a list of 1 to 5 operation lists"),
         ({"before_operations": [[{"op": "fill", "column": "a"}]]}, "an operation list that prepare_data refuses"),
         ({"before_operations": [{"op": "sort", "column": "a"}]}, "an operation list that prepare_data refuses"),
+        ({"before_view": []}, "a non-empty list of operations"),
+        ({"before_view": {"op": "keep_rows", "n": 1}}, "a non-empty list of operations"),
+        ({"before_view": [{"op": "fill", "column": "a"}]}, "an operation list that prepare_data refuses"),
+        # A top N without its sort ranks by nothing a view could keep, so the call lands in the table.
+        ({"before_view": [{"op": "keep_rows", "n": 1}]}, "must land in the view of the plot alone"),
+        ({"before_view": [{"op": "keep_rows", "n": 1, "target": "table"}]}, "must land in the view of the plot"),
+        ({"before_view": [{"op": "sort", "column": "a"}]}, "must land in the view of the plot alone"),
+        ({"before_view": [{"op": "reset_view"}, KEEP_B]}, "must land in the view of the plot alone"),
+        ({"before_view": [KEEP_B, {"op": "reset_view"}]}, "a view that prepare_data refuses"),
+        ({"before_view": [KEEP_B, {"op": "rename", "column": "a", "name": "c"}]}, "must land in the view"),
+        ({"view_checks": {"named": True}}, "view_checks need a before_view"),
+        ({"before_view": [KEEP_B], "view_checks": {}}, "view_checks must be an object"),
+        ({"before_view": [KEEP_B], "view_checks": {"named": "yes"}}, "each true or false"),
+        ({"before_view": [KEEP_B], "view_checks": {"total": True}}, "view_checks must be an object"),
+        # A view of an order condition alone has no word a label repeats, so `named` or `clear` would read nothing.
+        ({"before_view": [B_ABOVE_1], "view_checks": {"named": True}}, "need a part of the view a label repeats"),
+        ({"before_view": [B_ABOVE_1], "view_checks": {"clear": True}}, "need a part of the view a label repeats"),
     ],
 )
 def test_invalid_fields_are_refused(tmp_path: Path, change: dict, message: str) -> None:
@@ -219,6 +271,62 @@ def test_the_combined_request_patterns_tell_the_change_from_the_catalogue(patter
     assert checks is not None
 
     assert (re.search(getattr(checks, field_name)[index], code) is not None) is found
+
+
+VIEW_CASES: dict[str, ViewChecks] = {
+    "bar-horizontal-matplotlib-view-top-mean": ViewChecks(named=True),
+    "bar-horizontal-matplotlib-view-selection-fr": ViewChecks(named=True),
+    "bar-horizontal-matplotlib-view-top-cleared": ViewChecks(named=True, clear=True),
+    "bar-basic-seaborn-view-top-control": ViewChecks(no_dq03=True),
+}
+"""The view cases of PR #13142: a mean drawn under a top N and under a selection in French, the top N cleared, and a
+control whose plot labels each bar and draws no figure over several rows."""
+MEAN_LINE = re.compile(r"\bax[hv]line\(")
+SUMMARY_CALL = re.compile(r"\b(?:mean|median|sum)\(")
+
+
+def _rows(case_id: str) -> list[dict[str, str]]:
+    return list(csv.DictReader(io.StringIO(load_case(CASES_DIR / case_id).data_text)))
+
+
+@pytest.mark.parametrize("case_id", sorted(VIEW_CASES))
+def test_the_view_cases_hold_the_premises_their_checks_read(case_id: str) -> None:
+    """What a view case's checks read only holds on its data: the catalogue file draws a mean (or, for the control,
+    none), the view's words stand in no cell and no mean the plot would write, the keys are unique (or the cleared
+    run would combine rows first), the selected column is no bound one (or the legend would name it anyway), and
+    every bar's label and the mean's fit the annotations `PlotShows.texts` keeps."""
+    from pydantic import TypeAdapter
+
+    from agents.anyplot.data.prepare import Operation
+    from agents.anyplot.plot_view import PlotView, merged, route
+
+    case = load_case(CASES_DIR / case_id)
+    checks = VIEW_CASES[case_id]
+    assert case.view_checks == checks and "view" in case.tags and case.change_request is None
+    code = case.snapshot().code
+    if checks.named:  # a catalogue regeneration that drops the mean leaves the case nothing to name
+        assert MEAN_LINE.search(code) and SUMMARY_CALL.search(code)
+    else:
+        assert "bar_label(" in code and not MEAN_LINE.search(code) and not SUMMARY_CALL.search(code)
+    view = merged(PlotView(), route(TypeAdapter(list[Operation]).validate_python(list(case.before_view))))
+    tokens = [token for part in view_tokens(view) for token in part]
+    bound = {binding.role: binding.column for binding in case.bindings or []}
+    selected = {condition.column for where in view.selections for condition in where}
+    assert tokens and not selected & set(bound.values())
+    rows = _rows(case_id)
+    keys = [row[bound["category"]] for row in rows]
+    assert len(set(keys)) == len(keys)
+    values = [float(row[bound["value"]]) for row in rows]
+    if view.top is not None:
+        drawn = sorted(values, reverse=view.top.descending)[: view.top.n]
+    else:
+        drawn = [value for row, value in zip(rows, values, strict=True) if all(row[c] in tokens for c in selected)]
+    written = [cell for row in rows for column, cell in row.items() if column not in selected]
+    written += [f"{statistics.fmean(sample):.{places}f}" for sample in (drawn, values) for places in (0, 1, 2)]
+    written += [text.replace(".", ",") for text in written]  # the plot language's decimal comma
+    assert not [text for text in written for token in tokens if holds_token(text, token)]
+    marks = len(rows) if checks.clear else len(drawn)
+    assert marks + 1 <= GROUP_LIMITS["annotations"]
 
 
 def test_checks_are_read_and_need_a_follow_up(tmp_path: Path) -> None:

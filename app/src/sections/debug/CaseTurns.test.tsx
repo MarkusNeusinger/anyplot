@@ -77,6 +77,62 @@ describe('CaseTurns', () => {
     expect(screen.queryByText('message → prep')).not.toBeInTheDocument();
   });
 
+  it('lists the shape of each call under it', async () => {
+    const user = userEvent.setup();
+    const asked = {
+      tool: 'query_data',
+      verdict: 'allowed',
+      outcome: 'ok',
+      code: null,
+      shape: {
+        operations: [
+          {
+            op: 'keep_rows',
+            mode: 'where',
+            target: null,
+            order: null,
+            conditions: [{ test: 'gt', value_shape: 'number', column_kind: 'integer' }],
+            how: null,
+            period: null,
+            keys: null,
+            type: null,
+            date_format: null,
+            decimal: null,
+            unit: null,
+            keep: null,
+            family: null,
+          },
+        ],
+        from_version: 'current',
+        limit: true,
+        base: null,
+        theme: null,
+        combine: null,
+        change_request: null,
+        expected_texts: null,
+        remember: null,
+        applies_to: null,
+        plot: null,
+      },
+    };
+    const profile = { tool: 'get_dataset_profile', verdict: 'allowed', outcome: 'ok', code: null };
+    render(<CaseTurns turns={{ records: [turn({ tools: [asked, profile] })], dropped: 0 }} />);
+
+    const row = screen.getByRole('button');
+    await user.click(row);
+
+    const details = document.getElementById(row.getAttribute('aria-controls') ?? '');
+    expect(details).not.toBeNull();
+    const panel = within(details as HTMLElement);
+    expect(panel.getByText('from_version: current · limit: named')).toBeInTheDocument();
+    expect(
+      panel.getByText('keep_rows · mode: where · conditions: integer column gt number value')
+    ).toBeInTheDocument();
+    // A call without a shape has no lines under it.
+    expect(panel.getByText('get_dataset_profile').querySelector('ul')).toBeNull();
+    expect((details as HTMLElement).querySelectorAll('ol > li ul li')).toHaveLength(2);
+  });
+
   it('names what a bound left out without an empty list', async () => {
     const user = userEvent.setup();
     const record = turn({ guards: [], guards_dropped: 3 });

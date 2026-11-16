@@ -1,7 +1,7 @@
 # anyplot.ai
 # skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-05-22
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 62/100 | Updated: 2026-11-16
 
 using CairoMakie
 using Colors
@@ -198,7 +198,7 @@ for T0 in -60.0:10.0:60.0
     if -47.0 <= x_bot <= 88.0
         text!(ax, x_bot, y_p(1000.0) - 0.014;
               text    = "$(Int(T0))°",
-              fontsize = 9,
+              fontsize = 10,
               color   = INK_SOFT,
               align   = (:center, :top))
     end
@@ -256,7 +256,7 @@ for (i, ws_gkg) in enumerate([2.0, 4.0, 8.0, 12.0, 20.0])
         if -47.0 <= x_top <= 88.0
             text!(ax, x_top, y_top;
                   text    = "$(Int(ws_gkg))",
-                  fontsize = 8,
+                  fontsize = 10,
                   color   = mix_col,
                   align   = (:center, :bottom))
         end
@@ -275,14 +275,14 @@ if any(cape_mask)
         vcat(par_xs_c, reverse(env_xs_c)),
         vcat(ys_c,     reverse(ys_c)),
     )
-    cape_fill = RGBAf(IMPRINT[5].r, IMPRINT[5].g, IMPRINT[5].b, 0.22f0)
+    cape_fill = RGBAf(IMPRINT[5].r, IMPRINT[5].g, IMPRINT[5].b, 0.45f0)
     poly!(ax, cape_pts; color = cape_fill, strokewidth = 0, label = "CAPE")
 end
 
 # Lifted parcel trace (smooth, fine resolution)
 parcel_xs_fine = [skew_x(T, P) for (T, P) in zip(parcel_Ts_fine, P_FINE)]
 lines!(ax, parcel_xs_fine, y_p.(P_FINE);
-       color = IMPRINT[4], linewidth = 2.0, linestyle = :dashdotdot,
+       color = IMPRINT[4], linewidth = 2.5, linestyle = :dashdotdot,
        label = "Lifted parcel")
 
 # LCL marker
@@ -292,7 +292,7 @@ scatter!(ax, [lcl_x], [lcl_y];
          color = IMPRINT[4], markersize = 10, marker = :diamond, strokewidth = 0)
 text!(ax, lcl_x + 1.5, lcl_y;
       text    = "LCL",
-      fontsize = 9,
+      fontsize = 10,
       color   = IMPRINT[4],
       align   = (:left, :center))
 

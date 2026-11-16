@@ -332,7 +332,13 @@ class LanguageRepository(BaseRepository[Language]):
 
 
 class ImplRepository(BaseRepository[Impl]):
-    """Repository for Impl operations."""
+    """Repository for Impl operations.
+
+    An implementation is keyed by (spec_id, language_id, library_id), and `get_code`,
+    `get_by_spec_and_library` and `upsert` take all three: `language_id` has no default, because
+    a lookup under another language finds no row and reads like a missing implementation.
+    A caller without the language at hand takes it from `core.constants.LIBRARY_LANGUAGES`.
+    """
 
     model = Impl
     updatable_fields = IMPL_UPDATABLE_FIELDS
@@ -393,7 +399,7 @@ class ImplRepository(BaseRepository[Impl]):
         result = await self.session.execute(select(Impl.id).where(Impl.code.isnot(None)))
         return {row[0] for row in result.all()}
 
-    async def get_code(self, spec_id: str, library_id: str, language_id: str = "python") -> Impl | None:
+    async def get_code(self, spec_id: str, library_id: str, language_id: str) -> Impl | None:
         """Get a specific implementation with only the code field undeferred."""
         result = await self.session.execute(
             select(Impl)
@@ -402,12 +408,8 @@ class ImplRepository(BaseRepository[Impl]):
         )
         return result.scalar_one_or_none()
 
-    async def get_by_spec_and_library(self, spec_id: str, library_id: str, language_id: str = "python") -> Impl | None:
-        """Get a specific implementation by spec + language + library (includes all deferred fields).
-
-        Defaults to language_id="python" so existing callers keep working. Pass ``language_id``
-        explicitly to disambiguate when multiple languages exist for the same (spec, library).
-        """
+    async def get_by_spec_and_library(self, spec_id: str, library_id: str, language_id: str) -> Impl | None:
+        """Get a specific implementation by spec + language + library (includes all deferred fields)."""
         # selectinload(Impl.library) — MCP get_implementation reads impl.library
         # on an async session; without eager-load it raises MissingGreenlet.
         result = await self.session.execute(
@@ -422,7 +424,7 @@ class ImplRepository(BaseRepository[Impl]):
         )
         return result.scalar_one_or_none()
 
-    async def upsert(self, spec_id: str, library_id: str, impl_data: dict, language_id: str = "python") -> Impl:
+    async def upsert(self, spec_id: str, library_id: str, impl_data: dict, language_id: str) -> Impl:
         """Create or update an implementation by (spec_id, language_id, library_id)."""
         existing = await self.get_by_spec_and_library(spec_id, library_id, language_id)
         if existing:

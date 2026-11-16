@@ -16,22 +16,45 @@ import pytest
 from google.adk.events.event import Event
 
 from agents.anyplot import pipeline
+from agents.anyplot.data.kinds import read_kinds
 from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.typed_json import typed_json
 from agents.anyplot.plot_view import EVERY_ROW_LINE, MAX_PART_CHARS, MAX_SELECTIONS, PLOT_VIEW, PlotView, view_of
 from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.render.backends.fake import FakeBackend
-from agents.anyplot.services import Services
-from agents.anyplot.tools.session import prepare_data
+from agents.anyplot.schemas import CodeArtifact, DrawnRows, PlotResult
+from agents.anyplot.services import CodeVersion, Services
+from agents.anyplot.tools.session import get_current_code, prepare_data, version_data
 from agents.main import ACTION_MESSAGES, NEW_DATA_ACTIONS, PLOT_ACTIONS, Runtime, app, get_runtime
 from agents.stream import MAX_VIEW_PARTS, Translator, shown_view
 
-from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, FakeAnthropic, default_script
+from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, VERDICT_REJECT, FakeAnthropic, default_script
 from .test_from_version import TEAMS, context_for, pasted_session, write_back
 from .test_paste_conversions import paste
 from .test_plot_new_data import change_data, plot_new_data
 from .test_plot_view import CITIES, TOP_2, only, set_view, view_from
-from .test_row_fidelity import HOURS, LINE_BINDINGS, QUESTION, SUMMED, bind_and_confirm, open_line_on_scatter_code
-from .test_service_flow import HEADERS, SECOND_PLAN, USER, create_plot, parse_sse, permissive_queue, say
+from .test_row_fidelity import (
+    HOURS,
+    LINE_BINDINGS,
+    QUESTION,
+    SUMMED,
+    asked_then_chosen,
+    bind_and_confirm,
+    open_line_on_scatter_code,
+    plot_with_choice,
+)
+from .test_service_flow import (
+    HEADERS,
+    SECOND_PLAN,
+    USER,
+    create_plot,
+    open_d3_session,
+    parse_sse,
+    permissive_queue,
+    request_text,
+    requests_of,
+    say,
+)
 from .test_stream import parse
 
 
@@ -328,7 +351,7 @@ class TestTheLineForEveryRow:
             "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
             "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
         }
-        swap_models("anthropic-vertex", script)
+        fake = swap_models("anthropic-vertex", script)
         sid = await open_line_on_scatter_code(client)
         await paste(client, sid, HOURS)
         await bind_and_confirm(client, sid, LINE_BINDINGS)
@@ -352,6 +375,190 @@ class TestTheLineForEveryRow:
         assert not any(line.startswith("The view of the plot is cleared") for line in plot["changes"])
         # Three students per hour: 50 + 62 + 74 for two hours, and so on.
         assert backend.jobs[-1].data_csv.strip().splitlines()[1:] == ["2,186", "4,195", "6,204", "8,213"]
+        # The adapter still hears that the plot draws every row, those of the new version, after the view.
+        assert drawn_rows_sent(fake, "adapter")[-1] == {"rows": 4, "of_rows": 4, "view": ""}
+
+
+def texts_in(value: object) -> list[str]:
+    """Every text of a request's messages, as the Anthropic fake recorded them."""
+    if isinstance(value, dict):
+        return [
+            text
+            for key, item in value.items()
+            for text in ([item] if key in ("text", "content") and isinstance(item, str) else texts_in(item))
+        ]
+    if isinstance(value, list):
+        return [text for item in value for text in texts_in(item)]
+    return []
+
+
+def drawn_rows_in(text: str) -> dict[str, Any] | None:
+    """The rows a request said the plot draws (`schemas.DrawnRows`), None when it said nothing of them."""
+    head = f"{pipeline.DRAWN_ROWS_HEADING}\n<user_data>\n"
+    if head not in text:
+        return None
+    return json.loads(text.split(head, 1)[1].split("\n</user_data>", 1)[0])
+
+
+def drawn_rows_sent(fake: object, kind: str) -> list[dict[str, Any] | None]:
+    """What every `kind` request of the test said about the rows the plot draws, in order, for either fake."""
+    if isinstance(fake, FakeAnthropic):
+        calls = [call for call in fake.calls if FakeAnthropic.kind(call) == kind]
+        return [drawn_rows_in("\n".join(texts_in(call["messages"]))) for call in calls]
+    return [drawn_rows_in(request_text(request)) for request in requests_of(fake, kind)]
+
+
+TOP_10 = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 10}]
+SHELF_REMARKS = 'Shelf,Count,Remark\nA1,4,"top row\nleft side"\nB2,7,plain\nC3,2,"two\nlines\nhere"\n'
+"""Three invented shelves, two with a remark over several lines, as a cell pasted from a spreadsheet holds them."""
+
+
+class TestTheRowsAFigureCovers:
+    """`schemas.DrawnRows`: the adapter and the reviewer hear which rows of the table the plot draws, so a total or a
+    mean drawn under a view names its selection, and a label written for a view does not survive its clearing. The version keeps the counts, and `get_current_code` says what its data files hold."""
+
+    async def test_top_10_then_top_5_then_every_row(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, services: Services
+    ) -> None:
+        top_5 = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 5}]
+        script = {
+            "root": [
+                {"call": "plot_pipeline", "args": {}},
+                {"text": ROOT_REPLY},
+                {"call": "prepare_data", "args": {"operations": top_5}},
+                {"call": "plot_pipeline", "args": {"base": "previous"}},
+                {"text": "The plot shows the top 5 now."},
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "Every row again."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}, {"json": SECOND_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}, {"json": VERDICT_OK}],
+        }
+        fake = swap_models("gemini", script)
+        sid = await confirmed_teams(client)
+        await set_view(runtime, sid, *TOP_10)
+
+        assert one(await create_plot(client, sid), "plot")["version"] == 1
+        assert one(await say(client, sid, "only the top 5 by points"), "plot")["version"] == 2
+        assert one(parse_sse((await show_all(client, sid)).text), "plot")["version"] == 3
+
+        top_10 = {"rows": 10, "of_rows": 24, "view": "top 10 by Points"}
+        top_5_of = {"rows": 5, "of_rows": 24, "view": "top 5 by Points"}
+        every_row = {"rows": 24, "of_rows": 24, "view": ""}
+        assert drawn_rows_sent(fake, "adapter") == [top_10, top_5_of, every_row]
+        assert drawn_rows_sent(fake, "reviewer") == [top_10, top_5_of, every_row]
+        # Each version keeps the view's counts it drew, the one of every row none.
+        rows = [version.view_rows for version in services.versions.all(sid)]
+        assert rows == [DrawnRows(**top_10), DrawnRows(**top_5_of), None]
+        # The code tool says what each version's download holds, whatever view is in force now.
+        context = await context_for(client, sid, "inv-figures-1")
+        first = await get_current_code(1, context)  # type: ignore[arg-type]
+        latest = await get_current_code(0, context)  # type: ignore[arg-type]
+        assert first["data"] == {"rows_in_file": {"data.csv": 10}, "view": {"rows": 10, "of_rows": 24}}
+        assert latest["version"] == 3 and latest["data"] == {"rows_in_file": {"data.csv": 24}}
+
+    async def test_a_change_under_the_same_view_still_hears_its_rows(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The view stays as it was: the change's figures are still over the view's rows, so its requests say so."""
+        script = {
+            "root": [
+                {"call": "plot_pipeline", "args": {}},
+                {"text": ROOT_REPLY},
+                {"call": "plot_pipeline", "args": {"change_request": "make the markers larger", "base": "previous"}},
+                {"text": "The markers are larger now."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+        }
+        fake = swap_models("gemini", script)
+        sid = await confirmed_teams(client)
+        await set_view(runtime, sid, *TOP_10)
+
+        assert one(await create_plot(client, sid), "plot")["version"] == 1
+        assert one(await say(client, sid, "make the markers larger"), "plot")["version"] == 2
+
+        top_10 = {"rows": 10, "of_rows": 24, "view": "top 10 by Points"}
+        assert drawn_rows_sent(fake, "adapter") == [top_10, top_10]
+        assert drawn_rows_sent(fake, "reviewer") == [top_10, top_10]
+        latest = await get_current_code(0, await context_for(client, sid, "inv-figures-4"))  # type: ignore[arg-type]
+        assert latest["version"] == 2 and latest["data"]["view"] == {"rows": 10, "of_rows": 24}
+
+    async def test_a_repair_round_hears_the_rows_too(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The repair writes the labels the reviewer found wanting, so its request carries the rows as the first did."""
+        script = default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}])
+        script["reviewer"] = [{"json": VERDICT_REJECT}, {"json": VERDICT_OK}]
+        fake = swap_models("gemini", script)
+        sid = await confirmed_teams(client)
+        await set_view(runtime, sid, *TOP_10)
+
+        assert one(await create_plot(client, sid), "plot")["attempts"] == 2
+
+        top_10 = {"rows": 10, "of_rows": 24, "view": "top 10 by Points"}
+        for kind in ("adapter", "reviewer"):
+            sent = drawn_rows_sent(fake, kind)
+            assert len(sent) >= 2 and all(drawn == top_10 for drawn in sent), (kind, sent)
+
+    async def test_a_plot_of_every_row_without_a_view_before_hears_nothing_of_rows(
+        self, client: httpx.AsyncClient, swap_models
+    ) -> None:
+        fake = swap_models("gemini", default_script())
+        sid = await confirmed_teams(client)
+
+        await create_plot(client, sid)
+
+        assert drawn_rows_sent(fake, "adapter") == [None] and drawn_rows_sent(fake, "reviewer") == [None]
+
+    async def test_the_download_after_a_combine_holds_fewer_rows_than_the_view_draws(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """Nine rows of the view, summed into four per study hour for the run alone: `data.csv` holds the four."""
+        fake = swap_models("gemini", asked_then_chosen("sum"))
+        sid = await open_line_on_scatter_code(client)
+        await paste(client, sid, HOURS)
+        await bind_and_confirm(client, sid, LINE_BINDINGS)
+        await set_view(runtime, sid, only("Exam Score", "ge", 59))
+
+        assert one(await plot_with_choice(client, sid, "add them up"), "plot")["status"] == "ok"
+
+        assert drawn_rows_sent(fake, "adapter") == [{"rows": 9, "of_rows": 12, "view": "Exam Score ≥ 59"}]
+        answer = await get_current_code(0, await context_for(client, sid, "inv-figures-2"))  # type: ignore[arg-type]
+        assert answer["data"] == {"rows_in_file": {"data.csv": 4}, "view": {"rows": 9, "of_rows": 12}}
+
+    async def test_a_javascript_plot_counts_the_table_its_page_embeds(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sid = await open_d3_session(client, swap_models, monkeypatch)
+        await set_view(
+            runtime, sid, {"op": "sort", "column": "Exam Score", "descending": True}, {"op": "keep_rows", "n": 5}
+        )
+
+        assert one(await create_plot(client, sid), "plot")["status"] == "ok"
+
+        answer = await get_current_code(0, await context_for(client, sid, "inv-figures-3"))  # type: ignore[arg-type]
+        assert answer["data"] == {"rows_in_file": {"data.csv": 5, "plot.html": 5}, "view": {"rows": 5, "of_rows": 24}}
+
+    @pytest.mark.parametrize("code_artifact", ["plot.py", "plot.js"])
+    def test_a_cell_over_several_lines_is_one_row_of_every_download(self, code_artifact: CodeArtifact) -> None:
+        """The canonical CSV keeps the line breaks of a quoted cell: its records are the table's rows, not its lines."""
+        table = parse_dataset(SHELF_REMARKS)
+        assert table.profile.rows == 3 and len(table.csv.splitlines()) == 7
+        page = code_artifact == "plot.js"
+        stored = CodeVersion(
+            number=1,
+            working="",
+            run_form="",
+            export="",
+            data_csv=table.csv,
+            render_id=None,
+            result=PlotResult(status="ok", attempts=1),
+            code_artifact=code_artifact,
+            data_json=typed_json(table.csv, read_kinds(table.csv, table.column_dtypes)) if page else None,
+        )
+
+        assert version_data(stored) == {"rows_in_file": {"data.csv": 3, **({"plot.html": 3} if page else {})}}
 
 
 class TestTheDataRoutes:

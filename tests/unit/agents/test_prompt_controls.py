@@ -223,7 +223,7 @@ def test_the_remembered_bullet_says_where_the_decisions_stand_after_a_paste_with
 
 def test_the_prompt_says_what_the_page_shows_of_questions_and_kept_decisions() -> None:
     """The page marks a message that changed nothing as a question and starts the reply with a label of its own,
-    and an open plot card names the remembered decisions it kept and added on its first line, while its label
+    and an open plot card names the remembered decisions it kept, added and did not use on its first line, while its label
     keeps the request it answered: the root knows both, so it never writes the label into its reply, and it can
     point the user to what a version kept. The words are the page's own."""
     messages = (AGENT_CHAT / "messages.ts").read_text(encoding="utf-8")
@@ -239,6 +239,9 @@ def test_the_prompt_says_what_the_page_shows_of_questions_and_kept_decisions() -
     assert "`kept: y = 7 line · x label · new: log scale on y`" in card
     assert "`kept ${" not in labels
     assert "`${part}: " in labels
+    # The card's last part, a remembered decision the plot does not draw, which stays in the memory.
+    assert "under `not used:`, a remembered decision whose text this plot does not draw, which stays remembered" in card
+    assert "part: 'kept' | 'new' | 'not used'" in labels
 
 
 def test_the_result_card_bullet_says_where_each_download_sits() -> None:

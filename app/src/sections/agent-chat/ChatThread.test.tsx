@@ -1117,6 +1117,7 @@ describe('ChatThread plot cards', () => {
       decisions: {
         kept: kept.map((text, index) => ({ id: `m${index + 1}`, text })),
         added: [],
+        unused: [],
       },
     });
     renderThread({

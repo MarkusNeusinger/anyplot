@@ -180,7 +180,8 @@ def test_the_step_never_gates_by_itself_and_follows_the_download_of_the_adapt_fo
         _step("impl-review.yml", ADAPT)["run"]
     )
     assert names.index(STEP) < names.index("Hide the previous review") < names.index("Run AI Quality Review")
-    assert step["if"] == "steps.lang.outputs.language == 'python'"  # like the scan
+    # Python only, like the scan; and not after a render hash mismatch, which runs no review.
+    assert step["if"] == "steps.lang.outputs.language == 'python' && steps.render_stop.outputs.stopped != 'true'"
     assert step["continue-on-error"] is True and step["timeout-minutes"] == 2
     assert "id" not in step  # its only way into a decision is the verdict file the gate reads
     assert "exit 1" not in str(step["run"])

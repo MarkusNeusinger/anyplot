@@ -1648,18 +1648,24 @@ jobs:
           echo "uploaded=true" >> $GITHUB_OUTPUT
           echo "::notice::Uploaded plot-light + plot-dark (+responsive variants)"
 
-          # render.sha256: the hash of the file the renders came from, which
+          # render.sha256: the hashes of the file the renders came from, which
           # impl-review compares with the PR head (automation/scripts/render_hash.py,
-          # from this workflow's ref). Readable like every object in the bucket
-          # (it is the hash of public code) and never promoted (not plot-*).
-          # Never fatal; the upload gets three attempts, and without a hash the
-          # review reports it missing (the earlier run's went above).
+          # from this workflow's ref): the file with its score reset, and its
+          # code without the header, so the review's own header commit still
+          # matches. A mismatch there stops the review. Readable like every
+          # object in the bucket (it is the hash of public code) and never
+          # promoted (not plot-*). Never fatal; the upload gets three attempts,
+          # and without a hash the review reports it missing (the earlier
+          # run's went above). The writer needs the language (the copy it
+          # hashes has no extension) and, for JavaScript, impl_header.py.
           TOOLS="$RUNNER_TEMP/render-tools"
           mkdir -p "$TOOLS"
           STAGED_HASH=false
           if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
              && git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$TOOLS/regen_gate.py" \
-             && python3 "$TOOLS/render_hash.py" write --source "$RUNNER_TEMP/render-source" --out "$RUNNER_TEMP/render.sha256"; then
+             && git show "${GITHUB_SHA}:automation/scripts/impl_header.py" > "$TOOLS/impl_header.py" \
+             && python3 "$TOOLS/render_hash.py" write --source "$RUNNER_TEMP/render-source" --language "$LANGUAGE" \
+                  --out "$RUNNER_TEMP/render.sha256"; then
             for attempt in 1 2 3; do
               if gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
                 STAGED_HASH=true

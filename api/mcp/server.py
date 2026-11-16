@@ -417,10 +417,9 @@ async def get_implementation(spec_id: str, library: str) -> dict[str, Any]:
             valid_names = [library_obj.id for library_obj in valid_libraries]
             raise ValueError(f"Library '{library}' not found. Valid libraries: {', '.join(valid_names)}")
 
-        # Get implementation. The language comes from the library's own DB row —
-        # the repository's language_id defaults to "python", which made every
-        # R/Julia/JavaScript implementation (28% of the catalogue) answer a
-        # false "not found" through this tool.
+        # Get implementation. The language comes from the library's own DB row:
+        # the repository needs it, and a lookup under another language answers a
+        # false "not found".
         impl = await impl_repo.get_by_spec_and_library(spec_id, library, lib.language)
         if impl is None or impl.code is None:
             raise ValueError(f"Implementation for '{spec_id}' in library '{library}' not found")

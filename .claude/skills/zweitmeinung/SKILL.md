@@ -1,6 +1,6 @@
 ---
 name: zweitmeinung
-description: Get an outside second opinion on the current plan, design or diff from Google Gemini through Vertex AI (4 Argon for second opinions the owner asks for, 3.8 Flash for the check of every code PR Claude opens; read-only tools over the repository), optionally side by side with a Fable subagent, and compare it with your own view. For Claude only; Gemini in agy never runs it. Use when the owner asks for a "Zweitmeinung", a second opinion, a Gemini or Google opinion, or a Fable and Gemini review of a plan, and for the Flash check before Claude opens a PR. Never implements anything by itself.
+description: Get an outside second opinion on the current plan, design or diff from Google Gemini through Vertex AI (4 Carbon for second opinions the owner asks for, 3.8 Flash for the check of every code PR Claude opens; read-only tools over the repository), optionally side by side with a Fable subagent, and compare it with your own view. For Claude only; Gemini in agy never runs it. Use when the owner asks for a "Zweitmeinung", a second opinion, a Gemini or Google opinion, or a Fable and Gemini review of a plan, and for the Flash check before Claude opens a PR. Never implements anything by itself.
 ---
 
 # Zweitmeinung (second opinion)
@@ -38,12 +38,18 @@ $GR check
 
 ## 2. Who reviews
 
-**The owner's standing rules (2026-10-15, 2026-10-21, 2026-10-22 and 2026-10-28):**
+**The owner's standing rules (2026-10-15, 2026-10-21, 2026-10-22, 2026-10-28 and 2026-11-16):**
 
-- **The owner asks for a "Zweitmeinung" or a second opinion:** Fable and Gemini 4 Argon
-  (`gemini-4-argon`, the default, thinking `high`: the owner wants it to think), both in
-  parallel. Only when he asks (owner, 2026-10-28): a plan does not get one by default, so
-  offer it for a large plan instead of running it.
+- **The owner asks for a "Zweitmeinung" or a second opinion:** Fable and Gemini 4 Carbon
+  (`gemini-4-carbon`, the default since 2026-11-16, thinking `high`: the owner wants it
+  to think), both in parallel. Only when he asks (owner, 2026-10-28): a plan does not get
+  one by default, so offer it for a large plan instead of running it. Google describes
+  Carbon as its strongest reasoning model and Gemini 4 Argon, the default until then, as
+  the efficient one, with faster answers and fewer tokens per turn. Argon stays one flag
+  away (`--model gemini-4-argon`) for the case that Carbon is not reachable: Google's
+  Vertex page restricts Carbon to verified enterprise customers in select regions, and
+  project `anyplot` answered on `global` on 2026-11-16. Say in the report which model
+  ran; never switch silently.
 - **Every code PR Claude opens, before it opens** (`/open-pr` section 1 names the
   exceptions: docs, instruction files, changelog fragments, `plots/`, under about 20
   lines, Dependabot; nobody asks): Gemini
@@ -156,9 +162,9 @@ git worktree remove --force "$W"
 
 - **Exit 0:** read `$D/gemini.md`. `$D/gemini.json` holds turns, tool calls, token counts
   (also per turn, to see the cache hit rate), `traffic_type` (`ON_DEMAND_FLEX` confirms
-  Flex) and `est_cost_usd` at Vertex list price for `global`, per 1M tokens: Argon $4 /
-  $20 / cached $0.20; Flash $1.50 / $7.50 / $0.15, and half of that when every turn ran
-  on Flex.
+  Flex) and `est_cost_usd` at Vertex list price for `global`, per 1M tokens: Carbon and
+  Argon $4 / $20 / cached $0.20; Flash $1.50 / $7.50 / $0.15, and half of that when
+  every turn ran on Flex. `model_version` names the model that answered.
 - **Exit 2:** setup or input problem; the message says which. **Exit 3:** blocked, or no
   answer (the model kept calling tools after the budget). **Exit 4:** the answer stopped
   early (`finish_reason`); use what is there and say so.
@@ -170,7 +176,9 @@ git worktree remove --force "$W"
   $1.64, median $1.21, the middle half $1.01 to $1.31. The six Flash runs above $0.70 all
   summed 0.8 to 1.4 million tokens over their turns, so a large diff, not the model, sets
   the price. The owner's account merges about 8 PRs a day, so routine reviews must stay
-  cheap.
+  cheap. Carbon has no runs in the ledger yet: it costs the same per token as Argon and
+  spends more tokens per turn, so expect a second opinion above Argon's median, and
+  report Carbon's cost and findings beside Argon's numbers after its first five runs.
 - **Flash is on probation.** The owner's decision on 2026-10-22: measure it on real PRs,
   with no extra test runs. On every PR Flash reviewed, once Copilot's review is in, add
   `copilot_findings` (the real ones) and `matched_copilot` (how many of those Flash also

@@ -2424,6 +2424,51 @@ class TestInsightsRouter:
             assert data["quality_score"] == 92.5
             assert data["preview_url_light"] == TEST_IMAGE_URL
             assert data["preview_url_dark"] == dark_url
+            assert data["code"] == "import matplotlib"
+            mock_impl_repo.get_by_spec_and_library.assert_awaited_once_with("scatter-basic", "matplotlib", "python")
+
+    def test_potd_returns_the_code_of_a_non_python_pick(self, client: TestClient, mock_spec) -> None:
+        """An R pick is looked up under its own language, so its code and versions come back.
+
+        The repository answers only for the full key (spec, library, language), the way the
+        database does: a lookup under any other language finds no row.
+        """
+        candidate = mock_spec.impls[0]
+        candidate.library_id = "ggplot2"
+        candidate.language_id = "r"
+        candidate.library.name = "ggplot2"
+        candidate.library.language = "r"
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+        r_impl = MagicMock()
+        r_impl.code = "ggplot(df, aes(x, y)) + geom_point()"
+        r_impl.review_image_description = "A scatter plot"
+        r_impl.library_version = "4.0.1"
+        r_impl.python_version = None
+        r_impl.language_version = "4.5.1"
+        r_impl.preview_url_light = TEST_IMAGE_URL
+        r_impl.preview_url_dark = None
+
+        def _by_full_key(*args: str, **kwargs: str) -> MagicMock | None:
+            return r_impl if (args, kwargs) == (("scatter-basic", "ggplot2", "r"), {}) else None
+
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_by_spec_and_library = AsyncMock(side_effect=_by_full_key)
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.insights.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/insights/plot-of-the-day")
+            assert response.status_code == 200
+            data = response.json()
+            assert (data["library_id"], data["language"]) == ("ggplot2", "r")
+            assert data["code"] == "ggplot(df, aes(x, y)) + geom_point()"
+            assert (data["library_version"], data["language_version"]) == ("4.0.1", "4.5.1")
+            assert data["image_description"] == "A scatter plot"
+            mock_impl_repo.get_by_spec_and_library.assert_awaited_once_with("scatter-basic", "ggplot2", "r")
 
     def test_potd_prefers_the_featured_pool_and_rotates_without_repeats(self) -> None:
         """A featured spec (score >= 92, no `-basic`) beats a plainer one, and a cycle repeats no spec."""

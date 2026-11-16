@@ -666,14 +666,17 @@ jobs:
           done
 
           # render.sha256 of the repaired file ("Check the repair's push" made
-          # sure it is the pushed one), as impl-generate stages it: from this
-          # workflow's ref, never promoted, never fatal, three upload attempts.
+          # sure it is the pushed one), as impl-generate stages it: both
+          # hashes, from this workflow's ref, never promoted, never fatal,
+          # three upload attempts. A mismatch in impl-review stops the review.
           TOOLS="$RUNNER_TEMP/render-tools"
           mkdir -p "$TOOLS"
           STAGED_HASH=false
           if git show "${GITHUB_SHA}:automation/scripts/render_hash.py" > "$TOOLS/render_hash.py" \
              && git show "${GITHUB_SHA}:automation/scripts/regen_gate.py" > "$TOOLS/regen_gate.py" \
-             && python3 "$TOOLS/render_hash.py" write --source "$IMPL_DIR/${LIBRARY}${EXT}" --out "$RUNNER_TEMP/render.sha256"; then
+             && git show "${GITHUB_SHA}:automation/scripts/impl_header.py" > "$TOOLS/impl_header.py" \
+             && python3 "$TOOLS/render_hash.py" write --source "$IMPL_DIR/${LIBRARY}${EXT}" --language "$LANGUAGE" \
+                  --out "$RUNNER_TEMP/render.sha256"; then
             for attempt in 1 2 3; do
               if gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
                 STAGED_HASH=true
