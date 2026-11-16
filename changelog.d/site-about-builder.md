@@ -19,9 +19,9 @@
   neusinger.com too.
 - **The landing hero names its builder.** The eyebrow above the headline
   reads "the open plot catalogue · by Markus Neusinger", the name a link to
-  the about page that the keyboard reaches first, and the intro adds "I
-  approve new specs and set the rules." The masthead, the OG image and the
-  crawler copy keep "the open plot catalogue" alone.
+  the about page and the hero's first link for the keyboard, and the intro
+  adds "I approve new specs and set the rules." The masthead, the OG image
+  and the crawler copy keep "the open plot catalogue" alone.
 - **The about page's stack table lists the checks.** A "checks" row names
   tests and lint on every code pull request, the 80 % patch-coverage target
   of `codecov.yml`, CodeQL, every migration run on a throwaway PostgreSQL,
