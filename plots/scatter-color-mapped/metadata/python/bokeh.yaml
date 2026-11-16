@@ -2,50 +2,49 @@ library: bokeh
 language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:45:17Z'
-updated: '2026-05-08T12:58:27Z'
-generated_by: claude-haiku
-workflow_run: 25556383538
+updated: '2026-11-16T02:53:43Z'
+generated_by: claude-sonnet
+workflow_run: 43794197223
 issue: 2004
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 80
 review:
   strengths:
-  - Perfect Visual Quality (30/30) with all text explicitly sized and readable in
-    both light and dark themes
-  - 'Flawless theme compliance: both renders perfectly themed with identical data
-    colors and appropriate chrome adaptation'
-  - 'Complete spec adherence: scatter plot with continuous viridis colormap, colorbar
-    legend, and interactive hover tooltips'
-  - Clean, reproducible code with proper theme tokenization for light/dark rendering
-  - Perceptually uniform viridis colormap appropriate for scientific intensity visualization
+  - 'Imprint sequential ramp (#009E73 → #4467A3) through a LinearColorMapper shared
+    by the glyph fill and the ColorBar, so marker colors match the bar exactly'
+  - Fully theme-threaded chrome including the ColorBar panel, labels, ticks and outline;
+    readable in both renders
+  - Thin INK_SOFT outline at alpha 0.6 keeps both colormap ends visible on both backgrounds
+  - HoverTool with formatted X/Y/Intensity tooltips adds value-level inspection in
+    the HTML output
+  - Clean six-zone layout with column constants; canvas exactly 3200x1800
   weaknesses:
-  - Design Excellence (12/20) relies on library defaults without custom aesthetic
-    sophistication
-  - Could leverage more bokeh-specific advanced features (callbacks, interactive selection
-    tools) for higher Library Mastery score
+  - 'DQ-02 (both): the axes and color variable read as generic placeholders, ''X coordinate
+    (m)'', ''Y coordinate (m)'', ''Intensity (a.u.)'' → name a concrete measurement,
+    e.g. ''Easting (m)'', ''Northing (m)'', ''Soil moisture (%)'' or ''Radiation dose
+    (µSv/h)''. Likely cause: the column constants X, Y, INTENSITY.'
+  - 'DQ-03 (both): the color bar runs down to about -5 for a quantity labeled intensity,
+    which cannot be negative → keep the variable non-negative (min ≥ 0). Likely cause:
+    rng.normal(0, 3) noise added to a distance in intensity_values without clipping.'
+  - 'Suggestion: a ColorBar with a few more major ticks (e.g. BasicTicker(desired_num_ticks=8))
+    would make reading individual point values off the bar easier.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and neutral
-      Chrome: Title, axis labels, tick labels all in dark text (INK #1A1A17, INK_SOFT #4A4A44), clearly readable at 28pt, 22pt, 18pt respectively
-      Data: 150 scatter points with viridis colormap gradient (purple to yellow), size=35, alpha=0.8, well-differentiated
-      Grid: Subtle (alpha=0.10), visible but non-intrusive
-      Colorbar: Clear label "Intensity (magnitude)", positioned right, readable
+      Background: warm off-white #FAF8F1 for page and plot area; 3200x1800.
+      Chrome: bold title "scatter-color-mapped · python · bokeh · anyplot.ai" top-left (~55% width); italic axis titles "X coordinate (m)" and "Y coordinate (m)"; tick labels 30-80 / 30-70 in INK_SOFT; subtle grid; vertical ColorBar on the right titled "Intensity (a.u.)" with ticks 0-30 on a matching page-colored panel. All readable.
+      Data: 150 circular markers, size 26, filled on the imprint_seq ramp from #009E73 (center, low intensity) to #4467A3 (outer, high intensity), alpha 0.85, thin dark-grey outline. Positive x-y correlation, radial color gradient from the (50,50) center.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), high contrast
-      Chrome: Title, axis labels, tick labels all in light text (INK #F0EFE8, INK_SOFT #B8B7B0), clearly visible against dark background
-      Data: Identical viridis colormap progression as light render (purple to yellow) - confirming theme-independent data colors
-      Grid: Subtle, visible
-      Colorbar: Light-colored frame and text, readable
-      Legibility verdict: PASS - No dark-on-dark failures. All text readable. Data colors identical to light render.
-
-    Both renders pass theme-readability check. Chrome correctly flips between light/dark while data remains consistent.
+      Background: warm near-black #1A1A17 for page, plot area and colorbar panel.
+      Chrome: title and axis titles in light INK, tick and colorbar labels in light INK_SOFT; grid subtle but visible; no dark-on-dark text.
+      Data: identical marker positions and colors to the light render; outline flips to light grey so the blue high end stays visible on the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,49 +55,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28pt, 22pt, 18pt); perfect readability
-          in both themes
+        comment: 50/42/34pt title/axis/tick, colorbar 34/30pt; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text collisions; all elements well-spaced
+        comment: No text collisions; marker overlap minimal and outlined
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers optimally sized for 150-point density; colormap gradient
-          clearly visible
+        comment: size=26 markers for 150 points, thin INK_SOFT outline keeps both
+          colormap ends visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Green-to-blue ramp, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 65% of canvas; generous balanced margins; colorbar positioned
-          cleanly
+        comment: 3200x1800, balanced margins, colorbar fits beside plot, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axes labeled with units
+        comment: X coordinate (m), Y coordinate (m), Intensity (a.u.) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis256 for continuous data; backgrounds #FAF8F1/#1A1A17; all
-          chrome properly themed in both renders'
+        comment: 'imprint_seq ramp #009E73 to #4467A3; #FAF8F1/#1A1A17 backgrounds;
+          chrome themed incl. colorbar panel'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -106,22 +104,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; viridis is appropriate but standard; no
-          exceptional design
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid (alpha=0.10); clean outline; generous whitespace; thoughtful
-          styling
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Color gradient creates visual hierarchy; correlation pattern visible;
-          clear focal point
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -131,49 +126,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with color mapping
+        comment: Color-mapped scatter with continuous colormap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Scatter, viridis colormap, colorbar, hover tooltips all present
+        comment: 'C1-C4 met: one point per observation, labeled colorbar with units
+          covering full range, outlined markers, mild alpha 0.85'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly mapped; all data visible; intensity encoded in
-          color
+        comment: All points at their values, automatic ranges show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar properly labeled
+        comment: Title scatter-color-mapped · python · bokeh · anyplot.ai; colorbar
+          titled from the constant
     data_quality:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Demonstrates intensity variation and x-y relationship; could show
-          more extremes
+        comment: Full colormap range used, correlated x/y, radial intensity pattern
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Plausible scientific measurement scenario; neutral, non-controversial
+        passed: false
+        comment: Generic 'X/Y coordinate' and 'Intensity (a.u.)' labels (defect line)
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Factually correct values; logical proportions
+        passed: false
+        comment: Intensity goes to about -5 for a magnitude (defect line)
     code_quality:
       score: 10
       max: 10
@@ -183,50 +178,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no unnecessary functions or classes
+        comment: Six-zone layout; _lerp_hex is the library prompt's mandated ramp
+          helper
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures determinism
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; proper theme token usage
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and .html
+        comment: plot-{THEME}.png + .html via Selenium with CDP viewport pin
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Proper use of figure, scatter, ColumnDataSource, linear_cmap, ColorBar,
-          HoverTool
+        passed: false
+        comment: 'ColumnDataSource, field+transform fill, ColorBar from the mapper:
+          the expected patterns'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages linear_cmap, ColorBar customization, HoverTool; could use
-          more advanced features
+        passed: false
+        comment: HoverTool with formatted per-column tooltips in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-16T02:49:56Z'
 impl_tags:
   dependencies:
   - selenium
@@ -240,3 +238,5 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
+  - edge-highlighting
