@@ -443,7 +443,7 @@ export function LegalPage() {
                 ],
                 [
                   'ids',
-                  'a random tab id stands in for you, and the per-network limits count your IP address; both are salted with a value that lives only as long as the server instance, in memory, never written down. nothing durable: only timestamps could match them to the 30-day server logs, so they are pseudonymous. admins: a keyed hash (HMAC).',
+                  'a random tab id stands in for you: the daily limits and a pause after misuse count on it, and the per-network limits count your IP address; both are salted with a value that lives only as long as the server instance, in memory, never written down. nothing durable: only timestamps could match them to the 30-day server logs, so they are pseudonymous. admins: a keyed hash (HMAC).',
                 ],
                 [
                   'feedback',

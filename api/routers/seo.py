@@ -1260,10 +1260,11 @@ _LEGAL_BOT_BODY = (
     "holds event types, formats, sizes, plot type, library, language code (rare ones as "
     '"other"), attempts, defect ids, statuses, latencies and token counts. Telemetry: up to 180 '
     "days in Google Cloud Logging and BigQuery in the Netherlands (europe-west4).</li>"
-    "<li>Ids: a random tab id stands in for you, and the per-network limits count your IP address; "
-    "both are salted with a value that lives only as long as the server instance, in memory, never "
-    "written down. Nothing durable: only timestamps could match them to the 30-day server logs, so "
-    "they are pseudonymous. Admins: a keyed hash (HMAC).</li>"
+    "<li>Ids: a random tab id stands in for you: the daily limits and a pause after misuse count on "
+    "it, and the per-network limits count your IP address; both are salted with a value that lives "
+    "only as long as the server instance, in memory, never written down. Nothing durable: only "
+    "timestamps could match them to the 30-day server logs, so they are pseudonymous. Admins: a "
+    "keyed hash (HMAC).</li>"
     "<li>Stored only with feedback: the conversation, a profile of your data with its first 5 rows, "
     "the plot's code and images, and the whole data file only if you tick "
     '"# include data.csv" (it starts unticked, which leaves out that file only). The files go to a '

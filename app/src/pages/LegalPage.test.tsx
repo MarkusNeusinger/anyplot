@@ -256,8 +256,8 @@ describe('LegalPage', () => {
       within(whatItIs).getByRole('link', { name: "the data assistant's page" })
     ).toHaveAttribute('href', '/agent');
     // The terms that moved are gone from the privacy section, and so are their two rows. What
-    // touches personal data stays: the network limits' use of your IP address (the ids row), what
-    // not to paste (the model row) and the limits as a reason in the bases sentence.
+    // touches personal data stays: what the limits count on, the tab id and your IP address (the
+    // ids row), what not to paste (the model row) and the limits as a reason in the bases sentence.
     const privacySection = document.getElementById('privacy') as HTMLElement;
     for (const moved of [
       /without warranty/,
@@ -277,8 +277,11 @@ describe('LegalPage', () => {
     }
     expect(screen.queryByRole('rowheader', { name: 'limits' })).not.toBeInTheDocument();
     expect(screen.queryByRole('rowheader', { name: 'your code' })).not.toBeInTheDocument();
+    // The daily limits and the pause after misuse count on the salted tab id, the per-network
+    // limits on the salted address: both uses of an identifier, so the ids row names them while
+    // the sentences that state the limits stand on the assistant's page.
     expect(screen.getByRole('row', { name: /^ids\s/ })).toHaveTextContent(
-      /the per-network limits count your IP address/
+      /^ids\s*a random tab id stands in for you: the daily limits and a pause after misuse count on it, and the per-network limits count your IP address; both are salted with a value/
     );
     expect(
       screen.getByText(

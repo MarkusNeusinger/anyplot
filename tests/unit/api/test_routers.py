@@ -1347,8 +1347,10 @@ class TestSeoProxyRouter:
             '<a href="https://anyplot.ai/agent">the data assistant\'s page</a>.</li>',
             "Google Cloud Vertex AI in the EU, under Google Cloud's data processing terms",
             "Don't paste personal data you are not allowed to share",
-            # The ids keep the network limits' use of your IP address, which is personal data.
-            "the per-network limits count your IP address",
+            # The ids keep what the limits count on, the salted tab id and the salted IP address,
+            # both personal data; the sentences that state the limits stand on the assistant's page.
+            "<li>Ids: a random tab id stands in for you: the daily limits and a pause after misuse count on "
+            "it, and the per-network limits count your IP address; both are salted with a value",
             "salted with a value that lives only as long as the server instance",
             "so they are pseudonymous",
             "it starts unticked, which leaves out that file only",
