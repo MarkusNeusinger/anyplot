@@ -57,6 +57,28 @@ describe('HeroSection', () => {
     expect(screen.queryByRole('link', { name: AGENT_LANE_LABEL })).not.toBeInTheDocument();
   });
 
+  it('names the builder in the eyebrow, a link to the about page that Tab reaches first', async () => {
+    const user = userEvent.setup();
+    render(<HeroSection potd={null} />);
+
+    const builder = screen.getByRole('link', { name: 'Markus Neusinger' });
+    expect(builder).toHaveAttribute('href', '/about');
+    expect(builder.parentElement).toHaveTextContent(/^the open plot catalogue · by Markus Neusinger$/);
+    // The first link of the hero: the eyebrow sits above the headline.
+    await user.tab();
+    expect(builder).toHaveFocus();
+  });
+
+  it('says in the intro who approves the specs and sets the rules', () => {
+    render(<HeroSection potd={null} />);
+
+    expect(
+      screen.getByText(/^every plot begins as a library-agnostic spec\./)
+    ).toHaveTextContent(
+      /^every plot begins as a library-agnostic spec\. ai drafts implementations across every supported library, validates them against quality criteria, and keeps them current\. I approve new specs and set the rules\. you discover, copy, and adapt — plug in your data\. that.s it\.$/
+    );
+  });
+
   it('tracks the primary browse CTA, mcp link and github link', async () => {
     const user = userEvent.setup();
     render(<HeroSection potd={null} />);

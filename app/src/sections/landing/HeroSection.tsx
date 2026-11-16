@@ -54,7 +54,27 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
             },
           }}
         >
-          the open plot catalogue
+          {/* One flex item, so the gap after the rule does not also split the name from its text. */}
+          <Box component="span">
+            the open plot catalogue · by{' '}
+            <Box
+              component={RouterLink}
+              to={paths.about}
+              sx={{
+                color: 'inherit',
+                textDecoration: 'none',
+                transition: 'color 0.2s',
+                '&:hover': { color: colors.primary },
+                '&:focus-visible': {
+                  outline: `2px solid ${colors.primary}`,
+                  outlineOffset: 2,
+                  borderRadius: '2px',
+                },
+              }}
+            >
+              Markus Neusinger
+            </Box>
+          </Box>
         </Box>
 
         <Box
@@ -143,8 +163,9 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
           }}
         >
           every plot begins as a library-agnostic spec. ai drafts implementations across every
-          supported library, validates them against quality criteria, and keeps them current. you
-          discover, copy, and adapt — plug in <em>your</em> data. that&apos;s it.
+          supported library, validates them against quality criteria, and keeps them current. I
+          approve new specs and set the rules. you discover, copy, and adapt — plug in{' '}
+          <em>your</em> data. that&apos;s it.
         </Box>
 
         <TypewriterText

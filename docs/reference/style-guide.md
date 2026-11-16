@@ -528,22 +528,22 @@ The key rule: **mono is the default, italic-ss01 is the editorial accent.** Ever
 The hero is a split-column layout: editorial text on the left (paper-tier), terminal-framed plot-of-the-day on the right (catalog-tier). The full-width "terminal box" around everything was dropped; the plot panel alone carries the terminal metaphor now.
 
 ```
-— the open plot catalogue           ┌─ ~/anyplot ──────────────────┐
-                                    │ $ python plots/…/plotly.py  │
-any.plot()                          │                             │
-— any library.                      │  [plot rendered here]       │
-                                    │                             │
-one spec · every library ·          │                             │
-always current.                     │                             │
-                                    │                             │
-every plot begins as a              │                             │
-library-agnostic spec…              │                             │
-                                    │                             │
-steal like an artist._▌             │                             │
-                                    │                             │
-[browse plots →]  or connect via    └─────────────────────────────┘
+— the open plot catalogue · by Markus Neusinger   ┌─ ~/anyplot ──────────────────┐
+                                                  │ $ python plots/…/plotly.py  │
+any.plot()                                        │                             │
+— any library.                                    │  [plot rendered here]       │
+                                                  │                             │
+one spec · every library ·                        │                             │
+always current.                                   │                             │
+                                                  │                             │
+every plot begins as a                            │                             │
+library-agnostic spec…                            │                             │
+                                                  │                             │
+steal like an artist._▌                           │                             │
+                                                  │                             │
+[browse plots →]  or connect via                  └─────────────────────────────┘
                   mcp / github →
-────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────────
  1            9          310           2,677         441k
  languages    libraries  specifications implementations lines of code
 ```
@@ -554,7 +554,7 @@ steal like an artist._▌             │                             │
 - Size: `clamp(2.75rem, 4.5vw, 4.75rem)` on the H1 container, with `0.75em` on both spans.
 
 **Layer hierarchy (top to bottom, left column):**
-1. **Eyebrow** — `— the open plot catalogue`, lowercase, 11px MonoLisa upright, `--imprint-green`, tracked `.08em`, preceded by 18×1px green rule.
+1. **Eyebrow** — `— the open plot catalogue · by Markus Neusinger`, lowercase, 11px MonoLisa upright, `--imprint-green`, tracked `.08em`, preceded by 18×1px green rule. The name links to the about page (`paths.about`) in the eyebrow's own colour, with no underline at rest, the site's green on hover and the hero links' focus ring for the keyboard. Only the landing hero carries the name: the masthead rule, the OG image and the crawler `<h1>` keep `the open plot catalogue`.
 2. **H1** — see above.
 3. **Subtitle** — `one spec · every library · always current.`, MonoLisa upright weight 500, 18px, `--ink`. Must fit on one line (`whiteSpace: nowrap` + stepped responsive size).
 4. **Intro prose** — 4–6 lines MonoLisa upright weight 300, `--ink-soft`, 18px. `<em>your</em>` renders as italic-ss01 script accent inline.
@@ -1044,7 +1044,7 @@ Hero box rises from 8px below with opacity transition:
 
 Staggered via `animation-delay`:
 
-- Eyebrow (`— the open plot catalogue`): 0s
+- Eyebrow (`— the open plot catalogue · by Markus Neusinger`): 0s
 - H1 line 1 (`any.plot()`): 0.1s
 - H1 line 2 (`— any library.` script): 0.1s
 - Subtitle (`one spec · every library · always current.`): 0.15s
