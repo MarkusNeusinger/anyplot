@@ -1216,8 +1216,10 @@ words, an id, a hash or a time:
   without one and for arguments that didn't validate. A field of `shape` that
   doesn't apply to the tool is `null`:
   - `operations` (`prepare_data`, `query_data`): each operation in order as
-    `{op, ...}` with the codes of its kind, such as `how` and `period` of an
-    `aggregate` or `order` of a `sort`. A `keep_rows` adds `mode` (`where` or
+    `{op, ...}` with the codes of its kind, such as `how`, `period` and `keys`
+    (the count of its `by` columns, 0 for a `query_data` aggregate over every
+    row) of an `aggregate` or `order` of a `sort`, and `op` alone for a `fit`,
+    which only `query_data` takes. A `keep_rows` adds `mode` (`where` or
     `first_n`), its `target` in a `prepare_data` whose `from_version` is
     `current` (`query_data` ignores it, and a call that names the version it
     starts from sends every selection to the table), and with `first_n` the
