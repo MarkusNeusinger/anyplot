@@ -47,7 +47,7 @@ p <- ggplot(board, aes(x = col, y = row)) +
   ) +
   coord_fixed(ratio = 1) +
   labs(
-    title = "chessboard-basic · ggplot2 · anyplot.ai",
+    title = "chessboard-basic · r · ggplot2 · anyplot.ai",
     x = NULL,
     y = NULL
   ) +
@@ -58,10 +58,10 @@ p <- ggplot(board, aes(x = col, y = row)) +
     panel.grid        = element_blank(),
     panel.border      = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.5),
     axis.title        = element_blank(),
-    axis.text.x       = element_text(color = INK, size = 20),
-    axis.text.y       = element_text(color = INK, size = 20),
-    plot.title        = element_text(color = INK, size = 24, hjust = 0.5),
-    plot.margin       = unit(c(20, 20, 20, 20), "pt")
+    axis.text.x       = element_text(color = INK, size = 14),
+    axis.text.y       = element_text(color = INK, size = 14),
+    plot.title        = element_text(color = INK, size = 16, hjust = 0.5),
+    plot.margin       = unit(c(14, 14, 14, 14), "pt")
   )
 
 # --- Save -------------------------------------------------------------------
@@ -69,8 +69,8 @@ ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
   device   = ragg::agg_png,
-  width    = 9,
-  height   = 9,
+  width    = 6,
+  height   = 6,
   units    = "in",
-  dpi      = 300
+  dpi      = 400
 )
