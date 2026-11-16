@@ -1,7 +1,7 @@
 """anyplot.ai
 scatter-color-mapped: Color-Mapped Scatter Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-08
+Quality: pending | Updated: 2026-05-08
 """
 
 import os
