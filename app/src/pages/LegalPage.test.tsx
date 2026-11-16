@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 
 import { LegalPage } from 'src/pages/LegalPage';
+import { UNVERIFIED_HINT } from 'src/sections/stats/sharedLinks';
 import { render, screen } from 'src/test-utils';
 import { theme } from 'src/theme';
 
@@ -57,7 +58,7 @@ describe('LegalPage', () => {
     render(<LegalPage />);
 
     expect(screen.getByText('who is responsible')).toBeInTheDocument();
-    expect(screen.getByText(/swiss data protection law applies/)).toBeInTheDocument();
+    expect(screen.getByText('Markus Neusinger (see above).')).toBeInTheDocument();
     // Each basis named in words with what it covers; consent given at the send and withdrawable.
     expect(screen.getByText('why this is allowed')).toBeInTheDocument();
     expect(screen.getByText(/a legitimate interest in protecting the site/)).toHaveTextContent(
@@ -67,7 +68,8 @@ describe('LegalPage', () => {
     expect(screen.getByText(/you can ask what is stored about you/)).toHaveTextContent(
       'you can ask what is stored about you and have it corrected, erased or restricted, object to the processing for a reason specific to your situation, and complain to a data protection authority.'
     );
-    // Plain words, without the wording or the article numbers of legal texts.
+    // Plain words, without the wording or the article numbers of legal texts, and without naming
+    // the laws themselves.
     const privacy = document.getElementById('privacy') as HTMLElement;
     for (const term of [
       /Art\.\s*\d/,
@@ -76,6 +78,9 @@ describe('LegalPage', () => {
       /supervisory/,
       /particular situation/,
       /on grounds relating/,
+      /GDPR/,
+      /data protection law/,
+      /MIT License/,
     ]) {
       expect(privacy.textContent, String(term)).not.toMatch(term);
     }
@@ -89,7 +94,10 @@ describe('LegalPage', () => {
     // pinned per row: the 30 days belong to the server logs only, the feedback entries and the
     // case rows have no timer at all, and the feedback IP hash is cleared only when the next
     // feedback arrives (api/routers/feedback.py `_clear_expired_ip_hashes`), not after a flat
-    // "ten minutes". `feedback` labels two rows, the site's and the data assistant's.
+    // "ten minutes". The machine-read lines and the share counters share a row, so their line
+    // ties each period to its own store: up to 180 days in Logging and BigQuery, no time limit in
+    // SQL. Cloudflare's place stands once, on its own row. `feedback` labels two rows, the
+    // site's and the data assistant's.
     const keptLines: [string, number, string][] = [
       ['analytics', 0, 'where: Plausible Analytics (EU, proxied)'],
       [
@@ -98,22 +106,16 @@ describe('LegalPage', () => {
         'kept: 30 days · where: Google Cloud (Logging) in the Netherlands (europe-west4)',
       ],
       [
-        'machine readers',
+        'machine readers, shared links',
         0,
-        'kept: up to 180 days · where: Google Cloud (Logging, BigQuery) in the Netherlands (europe-west4)',
+        'machine reads: up to 180 days (Logging, BigQuery) · shares: no time limit (SQL) · where: Google Cloud in the Netherlands (europe-west4)',
       ],
-      [
-        'shared links',
-        0,
-        'kept: no time limit · where: Google Cloud (SQL) in the Netherlands (europe-west4)',
-      ],
-      ['edge', 0, 'where: Cloudflare (global, EU data centers for EU visitors)'],
+      ['cloudflare', 0, 'where: global, EU data centers for EU visitors'],
       [
         'feedback',
         0,
         'entries: until you ask to delete them · IP hash: cleared by the next feedback after ten minutes; its salt dies with the server instance · where: Google Cloud (SQL) in the Netherlands (europe-west4)',
       ],
-      ['bot check', 0, 'where: Cloudflare (global, EU data centers for EU visitors)'],
       [
         'logs',
         0,
@@ -142,12 +144,19 @@ describe('LegalPage', () => {
     // The separate period and place tables are gone, their figures moved into the rows.
     expect(screen.queryByText('how long it stays')).not.toBeInTheDocument();
     expect(screen.queryByText('where it runs')).not.toBeInTheDocument();
-    // The two place rows that hold for the whole site stay, word for word, as the sentence
-    // before the transfers: they also place what no row does, such as the servers that hold a
-    // session in memory, and Cloudflare's role as the cdn.
+    // The hosting place that holds for the whole site stays, word for word, as the sentence
+    // before the transfers: it also places what no row does, such as the servers that hold a
+    // session in memory. The transfers sentence itself stays word for word.
     expect(screen.getByText(/transfers outside Switzerland and the EU/)).toHaveTextContent(
-      'hosting: Google Cloud (Run, SQL, Storage, Logging, BigQuery) in the Netherlands (europe-west4); cdn / ddos / bot check: Cloudflare (global, EU data centers for EU visitors). Google Cloud and Cloudflare process data'
+      'hosting: Google Cloud (Run, SQL, Storage, Logging, BigQuery) in the Netherlands (europe-west4). Google Cloud and Cloudflare process data under their data processing terms, including their safeguards for transfers outside Switzerland and the EU.'
     );
+    // Cloudflare's three roles (cdn, DDoS, the check) stand in its own row, not in the hosting
+    // sentence, and its place stands once.
+    expect(screen.getByRole('row', { name: /^cloudflare\s/ })).toHaveTextContent(
+      /as the cdn, Cloudflare uses your IP address on every request to rate-limit, filter bots and absorb DDoS attacks/
+    );
+    expect(document.getElementById('privacy')?.textContent).not.toMatch(/cdn \/ ddos/);
+    expect(screen.getAllByText(/EU data centers for EU visitors/)).toHaveLength(1);
     // The page states the current state only: no notes on what older entries still carry.
     expect(screen.queryByText(/before the move/)).not.toBeInTheDocument();
     expect(screen.queryByText(/unsalted/)).not.toBeInTheDocument();
@@ -168,41 +177,59 @@ describe('LegalPage', () => {
       screen.getByText(/a random id that ties your own submissions together/)
     ).toBeInTheDocument();
     // The feedback's IP hash is salted; when it goes stands on the feedback row's second line.
-    expect(screen.getByText(/a salted hash of your IP address limits spam/)).toBeInTheDocument();
-    // Plausible's real property is cookieless and identifier-free, not that
-    // the script is ours — it is Plausible's, only served from our domain.
-    expect(screen.getByText(/its script is served through this domain/)).toBeInTheDocument();
-    expect(screen.getByText(/Cloudflare uses your IP address/)).toBeInTheDocument();
+    expect(screen.getByText(/a salted IP hash limits spam/)).toBeInTheDocument();
+    // Plausible's real property is cookieless and identifier-free; that its script is only
+    // served from our domain stands on the row's second line as "proxied".
+    expect(
+      screen.getByText(/no cookies, no cross-site id, no IP address kept/)
+    ).toBeInTheDocument();
     // The browser's storage is named, not hidden behind "no cookies".
     expect(screen.getByText(/your plot\s+votes, a release number/)).toBeInTheDocument();
-    // Turnstile, per Cloudflare's privacy addendum: what it reads, its storage item, no cookie,
-    // and that Cloudflare uses the signals for itself, to improve the check.
-    expect(screen.getByRole('row', { name: /^bot check\s/ })).toHaveTextContent(
-      /Cloudflare Turnstile checks that a browser, not a script, is asking/
+    // Cloudflare's two uses stay apart: the cdn sees your IP address on every request, the check
+    // runs only on the three actions. Turnstile, per Cloudflare's privacy addendum: what it reads,
+    // its storage item, no cookie, and that Cloudflare uses the signals for itself, to improve the
+    // check.
+    const cloudflare = screen.getByRole('row', { name: /^cloudflare\s/ });
+    expect(cloudflare).toHaveTextContent(
+      /when you send feedback, rate a plot or open the data assistant, its Turnstile checks that a browser, not a script, is asking/
     );
-    expect(screen.getByText(/user-agent and TLS fingerprint/)).toBeInTheDocument();
-    expect(screen.getByText(/with no cookie/)).toBeInTheDocument();
-    expect(screen.getByText(/on its own behalf, to improve the\s+check/)).toBeInTheDocument();
+    expect(cloudflare).toHaveTextContent(/user-agent and TLS fingerprint/);
+    expect(cloudflare).toHaveTextContent(/keeps an item in your browser.s storage, with no cookie/);
+    expect(cloudflare).toHaveTextContent(/anyplot learns only whether the check passed/);
+    expect(cloudflare).toHaveTextContent(/on its own behalf, to improve the check/);
     expect(screen.getByText(/and Cloudflare Turnstile.s own\s+item/)).toBeInTheDocument();
-    // The machine-read line, with the two things it never holds, under the anchor that
-    // /legal#machine-readers lands on. Every request is a line, verified or not, so the row
-    // claims no "verified only".
+    // The machine-read lines and the share counters share a row, and each tile on /stats links
+    // its own anchor in it. #machine-readers wraps the whole cell; #shared-links starts at the
+    // shares and runs to the end. So each anchor holds its own text, the negatives both kinds
+    // share and both periods. Every request is a line, verified or not, so the row claims no
+    // "verified only".
     const machineReaders = document.getElementById('machine-readers');
-    expect(machineReaders).toHaveTextContent(/one content-free\s+line/);
+    expect(machineReaders).toHaveTextContent(
+      /crawlers, ai assistants and mcp clients: one content-free line per request/
+    );
     expect(machineReaders).toHaveTextContent(/whether Cloudflare verified it/);
-    expect(machineReaders).toHaveTextContent(/no IP address, no user-agent/);
-    // The share counter, under the anchor /legal#shared-links lands on (the tile on /stats links
-    // it): what a row holds, each thing it never holds, and that it has no time limit.
-    const sharedLinks = document.getElementById('shared-links');
-    expect(sharedLinks).toHaveTextContent(/fetches a page.s preview image/);
-    expect(sharedLinks).toHaveTextContent(/the day, the platform and the page/);
-    // The tile tells verified shares from the rest, so the row says what the rest is not.
-    expect(sharedLinks).toHaveTextContent(/whether Cloudflare\s+verified the fetcher/);
-    expect(sharedLinks).toHaveTextContent(/unverified is no verdict on a share/);
-    expect(sharedLinks).toHaveTextContent(/from the sender.s own phone/);
-    expect(sharedLinks).toHaveTextContent(/no IP address, no\s+user-agent, no time of day/);
-    expect(sharedLinks).toHaveTextContent(/nothing about who shared/);
-    expect(sharedLinks).toHaveTextContent(/kept: no time limit/);
+    expect(machineReaders).toHaveTextContent(/anything about anyone.s browsing/);
+    const sharedLinks = document.getElementById('shared-links') as HTMLElement;
+    expect(machineReaders).toContainElement(sharedLinks);
+    // What a share is (the tile's header says the legal page explains it), what a counter holds,
+    // each thing it never holds.
+    expect(sharedLinks).toHaveTextContent(
+      /link previews that messengers and social networks fetch: counted per day, platform and page/
+    );
+    expect(sharedLinks).toHaveTextContent(/whether Cloudflare verified the fetcher/);
+    expect(sharedLinks).toHaveTextContent(/with no time of day/);
+    expect(sharedLinks).toHaveTextContent(/neither holds an IP address or a user-agent/);
+    expect(sharedLinks).toHaveTextContent(/or who shared/);
+    for (const anchor of [machineReaders, sharedLinks]) {
+      expect(anchor).toHaveTextContent(/machine reads: up to 180 days \(Logging, BigQuery\)/);
+      expect(anchor).toHaveTextContent(/shares: no time limit \(SQL\)/);
+    }
+    // Why "unverified" is no verdict on a share left this row; the tile says it where the word
+    // stands, in the hint of its "unverified" term.
+    expect(sharedLinks).not.toHaveTextContent(/no verdict/);
+    expect(UNVERIFIED_HINT).toMatch(
+      /no verdict on a share: WhatsApp and Signal fetch the preview from the sender.s own phone/
+    );
   });
 
   // The data assistant's section, each claim pinned with the qualifier that
@@ -213,9 +240,10 @@ describe('LegalPage', () => {
     render(<LegalPage />);
 
     expect(
-      screen.getByText(/open to everyone, experimental and without warranty/)
+      screen.getByText(
+        /experimental, without warranty: results can be wrong and nobody checks them by hand/
+      )
     ).toBeInTheDocument();
-    expect(screen.getByText(/nobody checks them by hand/)).toBeInTheDocument();
     expect(screen.getByText(/the operator may pause it at any time/)).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -227,13 +255,20 @@ describe('LegalPage', () => {
       screen.getByText(/don.t paste personal data you are not allowed to share/)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/with no database, and is cleared after an hour idle/)
+      screen.getByText(/lives in server memory only and is cleared after an hour idle/)
     ).toBeInTheDocument();
     // The renderer's answer cache has no idle timer of its own.
     expect(screen.getByText(/keeps its last 16 results in memory/)).toBeInTheDocument();
-    expect(screen.getByText(/never your text, data, column or file names/)).toBeInTheDocument();
-    // The language is about the user: only as a code, with rare ones folded into "other".
-    expect(screen.getByText(/language code \(rare ones as "other"\)/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no content: never your text, data, column or file names\./)
+    ).toBeInTheDocument();
+    // The fields stand as a category, except the language: it is about the user, so it is named,
+    // only as a code, with rare ones folded into "other".
+    expect(
+      screen.getByText(
+        /telemetry holds\s+technical details such as sizes, timings and token counts, and the language code\s+\(rare ones as "other"\)/
+      )
+    ).toBeInTheDocument();
     // A public user's id is a salted random tab id that dies with the instance; only admins get the HMAC.
     expect(
       screen.getByText(
@@ -248,22 +283,22 @@ describe('LegalPage', () => {
     expect(screen.getByText(/so they are pseudonymous/)).toBeInTheDocument();
     // Nothing is kept without feedback; the box starts unticked, and leaving it so drops
     // data.csv only, while the profile sample stays.
-    expect(screen.getByText(/kept only when you send feedback/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/it starts unticked, which leaves out that file only/)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/first 5 rows/)).toBeInTheDocument();
+    const caseRow = screen.getAllByRole('row', { name: /^feedback\s/ })[1];
+    expect(caseRow).toHaveTextContent(
+      /only when you send feedback, a private bucket keeps the conversation, a profile of your data with its first 5 rows, the plot.s code and images, and the whole data file only if you tick "# include data\.csv" \(it starts unticked, which leaves out that file only\)/
+    );
+    expect(caseRow).toHaveTextContent(
+      /a triage row keeps your reaction, message, a hash of your tab id and the run.s details/
+    );
     // "No cookies" holds for visitors; admins get Cloudflare Access's login cookie.
     expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();
     expect(
       screen.getByText(/Cloudflare Access, which sets its own login cookie/)
     ).toBeInTheDocument();
     // Scope: the assistant's processing touches only the people who use it; the chat links here.
+    // The heading says it, so no sentence repeats it under it.
     const heading = screen.getByText('only if you use the data assistant (experimental)');
     expect(heading).toHaveAttribute('id', 'assistant');
-    expect(
-      screen.getByText(/if you only browse the catalogue, none of it touches you/)
-    ).toBeInTheDocument();
     // Where the assistant's model runs stands in its own row, under the heading that limits it
     // to those who use the assistant.
     expect(
@@ -271,16 +306,20 @@ describe('LegalPage', () => {
         name: /^the model\s*what you paste and write goes to Claude by Anthropic, served through Google Cloud Vertex AI in the EU/,
       })
     ).toBeInTheDocument();
-    // The code's licence with the Highcharts exception, and the transfers.
-    expect(screen.getByText(/yours to use, as is/)).toBeInTheDocument();
+    // The code is yours, with the Highcharts exception, and the transfers.
     expect(
       screen.getByText(
-        /Highcharts is free for non-commercial use, and a commercial use needs a licence from Highsoft/
+        'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.'
       )
     ).toBeInTheDocument();
     expect(screen.getByText(/transfers outside Switzerland and the EU/)).toBeInTheDocument();
-    // Browsing the catalogue involves no model, and nothing sent trains one.
-    expect(screen.getByText(/browsing never reaches a model/)).toBeInTheDocument();
+    // Nothing sent trains a model.
+    expect(screen.getByText('no ai training')).toBeInTheDocument();
+    expect(screen.getByText(/on what you send/)).toBeInTheDocument();
+    // The operator's own practice for the server logs: read only for a fault or an attack.
+    expect(screen.getByRole('row', { name: /^server logs\s/ })).toHaveTextContent(
+      /IP address, URL and user-agent of each request, read only to look into a fault or an attack\./
+    );
   });
 
   it('renders the technology stack', () => {

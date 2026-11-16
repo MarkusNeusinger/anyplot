@@ -1253,40 +1253,63 @@ class TestSeoProxyRouter:
         assert "kept until you ask to delete it" in response.text
         # The server logs sit in the EU (the `_Default` sink's europe-west4 bucket).
         assert "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4)" in response.text
-        # The hosting sentence names what LegalPage.tsx's hosting sentence names, BigQuery and
-        # Cloudflare's role as the CDN included.
-        assert "Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands" in response.text
-        assert "CDN / DDoS / bot check: Cloudflare (global, EU data centers for EU visitors)." in response.text
-        # The machine-read line, mirrored from the human page's "machine readers" row.
-        assert "Machine readers: each request by a crawler, an AI assistant or an MCP client" in response.text
-        assert "without IP address or user-agent, kept up to 180 days" in response.text
-        # Each kind of data carries its own period and place, as its row on the human page does.
+        # The hosting sentence names what LegalPage.tsx's hosting sentence names, BigQuery included;
+        # Cloudflare's roles and place stand in its own item, once.
+        assert "Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands (europe-west4).</li>" in (
+            response.text
+        )
+        assert "CDN / DDoS / bot check" not in response.text
+        assert response.text.count("EU data centers for EU visitors") == 1
+        # The machine-read lines and the share counters, mirrored from the human page's shared row:
+        # each period tied to its own store, the place once, the negatives for both.
+        assert "Machine readers and shared links: each request by a crawler, an AI assistant or an MCP" in (
+            response.text
+        )
         for fact in (
-            "Server logs: IP address, URL and user-agent of each request, for security and debugging",
-            "kept up to 180 days in Google Cloud Logging and BigQuery in the Netherlands (europe-west4)",
-            "Shared links: when a messenger or a social network fetches a page's preview image",
-            "nothing about who shared",
-            "The counts are kept without a time limit in Google Cloud SQL in the Netherlands (europe-west4)",
-            "Edge: Cloudflare (global, EU data centers for EU visitors) uses your IP address",
+            "Server logs: IP address, URL and user-agent of each request, read only to look into a fault "
+            "or an attack; kept 30 days",
+            "one content-free line (vendor and purpose, whether Cloudflare verified it, the page or file, "
+            "the status), kept up to 180 days in Google Cloud Logging and BigQuery.",
+            "Link previews that messengers and social networks fetch are counted per day, platform and page",
+            "with no time of day, kept without a time limit in Google Cloud SQL.",
+            "Both in the Netherlands (europe-west4). Neither holds an IP address or a user-agent, or "
+            "anything about anyone's browsing or who shared.",
+            # Cloudflare's place at its first mention, then the edge on every request and the check
+            # only on the three actions, apart.
+            "Cloudflare (global, EU data centers for EU visitors): as the CDN, it uses your IP address on "
+            "every request to rate-limit, filter bots and absorb DDoS attacks.",
+            "When you send feedback, rate a plot or open the data assistant, its Turnstile checks that a "
+            "browser, not a script, is asking",
             "kept until you ask to delete it, in Google Cloud SQL in the Netherlands (europe-west4)",
-            # The bot check's place stands at its first mention, so it reads as the check's own.
-            "Cloudflare Turnstile (global, EU data centers for EU visitors) checks that a browser",
         ):
             assert fact in response.text, fact
+        # Why "unverified" is no verdict on a share is the stats tile's hint now, not the policy's.
+        assert "no verdict" not in response.text
         # The right to object carries the condition that makes it one, as on the human page.
         assert "object to the processing for a reason specific to your situation" in response.text
         assert "object to the processing, and" not in response.text
         assert "restriction, objection, and" not in response.text
-        # Plain words, as on the human page: no article numbers and no wording of legal texts.
-        for term in ("Art. 6", "Legal bases", "controller", "supervisory", "particular situation"):
+        # Plain words, as on the human page: no article numbers, no wording of legal texts, and no
+        # law or licence named in the privacy part.
+        for term in (
+            "Art. 6",
+            "Legal bases",
+            "controller",
+            "supervisory",
+            "particular situation",
+            "GDPR",
+            "data protection law",
+        ):
             assert term not in response.text, term
+        privacy = response.text.split("<h2>Privacy</h2>")[1].split("<h2>Transparency</h2>")[0]
+        assert "MIT License" not in privacy
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
         # The site-wide facts the human page states once each, the stored feedback fields included.
         for fact in (
             # Who is responsible, under the page's own heading, not only as the legal notice's operator.
-            "Who is responsible: Markus Neusinger (see above). Swiss data protection law applies",
+            "<li>Who is responsible: Markus Neusinger (see above).</li>",
             "Running costs about $60 a month (October 2026).",
             "a random id that ties your own submissions together",
             "the optional contact field",
@@ -1296,17 +1319,18 @@ class TestSeoProxyRouter:
             "and complain to a data protection authority",
             "transfers outside Switzerland and the EU",
             "cleared by the next feedback after ten minutes, and its salt dies with the server instance",
-            "uses your IP address to rate-limit, filter bots and absorb DDoS attacks",
+            "uses your IP address on every request to rate-limit, filter bots and absorb DDoS attacks",
             "no name or email unless you type one",
             "may credit your public username",
-            "so browsing never reaches a model",
+            "<li>No AI training on what you send.</li>",
             "your plot votes, a release number",
             "given when you send it and withdrawable at any time by asking",
-            # The bot check, as LegalPage.tsx's "bot check" row states it.
+            # The bot check, as LegalPage.tsx's "cloudflare" row states it.
             "checks that a browser, not a script, is asking",
             "user-agent and TLS fingerprint",
-            "with no cookie",
+            "keeps an item in your browser's storage, with no cookie; anyplot learns only whether the check passed",
             "Cloudflare also uses these signals on its own behalf, to improve the check",
+            "Google Cloud and Cloudflare apply their data processing terms",
         ):
             assert fact in response.text, fact
 
@@ -1316,21 +1340,26 @@ class TestSeoProxyRouter:
         assert response.status_code == 200
         for fact in (
             'id="assistant"',
-            "experimental feature, and the operator may pause it",
-            "Google Cloud Vertex AI in the EU",
-            "nobody checks them by hand",
+            "Only if you use it. Experimental, without warranty: results can be wrong and nobody checks "
+            "them by hand. The operator may pause it at any time.",
+            "Google Cloud Vertex AI in the EU, under Google Cloud's data processing terms",
+            "Don't paste personal data you are not allowed to share",
             "salted with a value that lives only as long as the server instance",
             "so they are pseudonymous",
             "it starts unticked, which leaves out that file only",
-            "a licence from Highsoft",
+            "Highcharts needs a licence from Highsoft for commercial use",
+            "never your text, data, column or file names",
+            'and the language code (rare ones as "other")',
             "your request: making the plot you ask the data assistant for",
             "your consent to a feedback case",
             # The page's periods and places for the assistant's data, each beside its data.
             "Telemetry: up to 180 days in Google Cloud Logging and BigQuery in the Netherlands (europe-west4)",
             "private bucket in Google Cloud Storage in the Netherlands (europe-west4) for 180 days",
             "The triage row stays until you ask to delete it, in Google Cloud SQL in the Netherlands",
-            "cleared after an hour idle",
+            "server memory only, cleared after an hour idle",
             "keeps its last 16 results in memory",
+            "only if you tick",
+            "it starts unticked, which leaves out that file only",
             "it is not used for training",
             "Daily limits apply per tab and per network",
         ):

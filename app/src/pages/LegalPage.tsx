@@ -111,12 +111,13 @@ function Kept({ items }: { items: [string, ReactNode][] }) {
 
 /**
  * Where data runs on Google Cloud. The region stays on one line: a break at its hyphen
- * ("europe-" / "west4") reads as two words.
+ * ("europe-" / "west4") reads as two words. Without `services`, a row that ties each of its
+ * periods to its own service names only the place.
  */
-function GoogleCloud({ services }: { services: string }) {
+function GoogleCloud({ services }: { services?: string }) {
   return (
     <>
-      Google Cloud ({services}) in the Netherlands{' '}
+      Google Cloud{services ? ` (${services})` : ''} in the Netherlands{' '}
       <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
         (europe-west4)
       </Box>
@@ -272,10 +273,7 @@ export function LegalPage() {
 
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
             <Typography sx={subheadingStyle}>who is responsible</Typography>
-            <Typography sx={textStyle}>
-              Markus Neusinger (see above). swiss data protection law applies, and the GDPR for
-              visitors from the EU.
-            </Typography>
+            <Typography sx={textStyle}>Markus Neusinger (see above).</Typography>
 
             <Typography sx={subheadingStyle}>what is processed</Typography>
             <FactTable
@@ -301,15 +299,15 @@ export function LegalPage() {
                     >
                       public dashboard
                     </Link>
-                    . its script is served through this domain: no cookies, no cross-site id, no IP
-                    address kept.
+                    : no cookies, no cross-site id, no IP address kept.
                     <Kept items={[['where', 'Plausible Analytics (EU, proxied)']]} />
                   </>,
                 ],
                 [
                   'server logs',
                   <>
-                    IP address, URL and user-agent of each request, for security and debugging.
+                    IP address, URL and user-agent of each request, read only to look into a fault
+                    or an attack.
                     <Kept
                       items={[
                         ['kept', '30 days'],
@@ -319,45 +317,40 @@ export function LegalPage() {
                   </>,
                 ],
                 [
-                  'machine readers',
+                  'machine readers, shared links',
+                  // Two anchors in one row, for the two tiles on /stats that link here: the shares
+                  // anchor starts at its own sentence and runs to the end, so it also covers the
+                  // negatives and the periods that both kinds share.
                   <Box component="span" id="machine-readers" sx={ANCHOR_SX}>
-                    each request by a crawler, an ai assistant or an mcp client is one content-free
-                    line: the vendor and purpose, whether Cloudflare verified it, the page or file
-                    it asked for and the status. no IP address, no user-agent, nothing about
-                    anyone&apos;s browsing.
-                    <Kept
-                      items={[
-                        ['kept', 'up to 180 days'],
-                        ['where', <GoogleCloud services="Logging, BigQuery" />],
-                      ]}
-                    />
+                    crawlers, ai assistants and mcp clients: one content-free line per request, with
+                    vendor and purpose, whether Cloudflare verified it, the page or file and the
+                    status.{' '}
+                    <Box component="span" id="shared-links" sx={ANCHOR_SX}>
+                      link previews that messengers and social networks fetch: counted per day,
+                      platform and page, and whether Cloudflare verified the fetcher, with no time
+                      of day. neither holds an IP address or a user-agent, or anything about
+                      anyone&apos;s browsing or who shared.
+                      <Kept
+                        items={[
+                          ['machine reads', 'up to 180 days (Logging, BigQuery)'],
+                          ['shares', 'no time limit (SQL)'],
+                          ['where', <GoogleCloud />],
+                        ]}
+                      />
+                    </Box>
                   </Box>,
                 ],
                 [
-                  'shared links',
-                  <Box component="span" id="shared-links" sx={ANCHOR_SX}>
-                    when a messenger or a social network fetches a page&apos;s preview image, one
-                    counter goes up: the day, the platform and the page, and whether Cloudflare
-                    verified the fetcher as a bot it knows. no IP address, no user-agent, no time of
-                    day, nothing about who shared. unverified is no verdict on a share: WhatsApp and
-                    Signal fetch the preview from the sender&apos;s own phone, which nobody can
-                    verify.
-                    <Kept
-                      items={[
-                        ['kept', 'no time limit'],
-                        ['where', <GoogleCloud services="SQL" />],
-                      ]}
-                    />
-                  </Box>,
-                ],
-                [
-                  'edge',
+                  'cloudflare',
                   <>
-                    Cloudflare uses your IP address to rate-limit, filter bots and absorb DDoS
-                    attacks.
-                    <Kept
-                      items={[['where', 'Cloudflare (global, EU data centers for EU visitors)']]}
-                    />
+                    as the cdn, Cloudflare uses your IP address on every request to rate-limit,
+                    filter bots and absorb DDoS attacks. when you send feedback, rate a plot or open
+                    the data assistant, its Turnstile checks that a browser, not a script, is
+                    asking: it reads your IP address, user-agent and TLS fingerprint and keeps an
+                    item in your browser&apos;s storage, with no cookie. anyplot learns only whether
+                    the check passed. Cloudflare also uses these signals on its own behalf, to
+                    improve the check.
+                    <Kept items={[['where', 'global, EU data centers for EU visitors']]} />
                   </>,
                 ],
                 [
@@ -365,7 +358,7 @@ export function LegalPage() {
                   <>
                     message, reaction, optional contact, page, your window size, user-agent and a
                     random id that ties your own submissions together, read only by the operator. a
-                    salted hash of your IP address limits spam.
+                    salted IP hash limits spam.
                     <Kept
                       items={[
                         ['entries', 'until you ask to delete them'],
@@ -379,30 +372,15 @@ export function LegalPage() {
                   </>,
                 ],
                 [
-                  'bot check',
-                  <>
-                    when you send feedback, rate a plot or open the data assistant, Cloudflare
-                    Turnstile checks that a browser, not a script, is asking: it reads your IP
-                    address, user-agent and TLS fingerprint and keeps an item of its own in your
-                    browser&apos;s storage, with no cookie. anyplot learns only whether the check
-                    passed. Cloudflare also uses these signals on its own behalf, to improve the
-                    check.
-                    <Kept
-                      items={[['where', 'Cloudflare (global, EU data centers for EU visitors)']]}
-                    />
-                  </>,
-                ],
-                [
                   'github',
                   'suggest a plot type there and your public username may be credited in its spec.',
                 ],
               ]}
             />
             <Typography sx={{ ...textStyle, mt: 2 }}>
-              hosting: <GoogleCloud services="Run, SQL, Storage, Logging, BigQuery" />; cdn / ddos /
-              bot check: Cloudflare (global, EU data centers for EU visitors). Google Cloud and
-              Cloudflare process data under their data processing terms, including their safeguards
-              for transfers outside Switzerland and the EU.
+              hosting: <GoogleCloud services="Run, SQL, Storage, Logging, BigQuery" />. Google Cloud
+              and Cloudflare process data under their data processing terms, including their
+              safeguards for transfers outside Switzerland and the EU.
             </Typography>
 
             <Typography sx={subheadingStyle}>why this is allowed</Typography>
@@ -420,21 +398,17 @@ export function LegalPage() {
               item. admins sign in through Cloudflare Access, which sets its own login cookie
               <br />
               • no accounts, and no name or email unless you type one
-              <br />• <strong>no ai training</strong> on what you send. the catalogue is written at
-              build time, so browsing never reaches a model
+              <br />• <strong>no ai training</strong> on what you send
             </Typography>
 
             <Typography id="assistant" sx={{ ...subheadingStyle, ...ANCHOR_SX }}>
               only if you use the data assistant (experimental)
             </Typography>
-            <Typography sx={textStyle}>
-              if you only browse the catalogue, none of it touches you.
-            </Typography>
             <FactTable
               rows={[
                 [
                   'what it is',
-                  'it adapts a catalogue plot to your data. open to everyone, experimental and without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
+                  'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
                 ],
                 [
                   'the model',
@@ -442,14 +416,14 @@ export function LegalPage() {
                 ],
                 [
                   'memory',
-                  'a session (data, chat, plots) lives in server memory only, with no database, and is cleared after an hour idle. the render service keeps its last 16 results in memory.',
+                  'a session (data, chat, plots) lives in server memory only and is cleared after an hour idle. the render service keeps its last 16 results in memory.',
                 ],
                 [
                   'logs',
                   <>
-                    no content: never your text, data, column or file names. telemetry holds event
-                    types, formats, sizes, plot type, library, language code (rare ones as
-                    &quot;other&quot;), attempts, defect ids, statuses, latencies and token counts.
+                    no content: never your text, data, column or file names. telemetry holds
+                    technical details such as sizes, timings and token counts, and the language code
+                    (rare ones as &quot;other&quot;).
                     <Kept
                       items={[
                         ['telemetry', 'up to 180 days'],
@@ -465,15 +439,14 @@ export function LegalPage() {
                 [
                   'feedback',
                   <>
-                    kept only when you send feedback: the conversation, a profile of your data with
-                    its first 5 rows, the plot&apos;s code and images, and the whole data file only
-                    if you tick{' '}
+                    only when you send feedback, a private bucket keeps the conversation, a profile
+                    of your data with its first 5 rows, the plot&apos;s code and images, and the
+                    whole data file only if you tick{' '}
                     <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
                       &quot;# include data.csv&quot;
-                    </Box>
-                    . it starts unticked, which leaves out that file only. files go to a private
-                    bucket in the Netherlands; a triage row keeps your reaction, message, a hash of
-                    your tab id and the run&apos;s details.
+                    </Box>{' '}
+                    (it starts unticked, which leaves out that file only). a triage row keeps your
+                    reaction, message, a hash of your tab id and the run&apos;s details.
                     <Kept
                       items={[
                         ['case files', '180 days'],
@@ -489,7 +462,7 @@ export function LegalPage() {
                 ],
                 [
                   'your code',
-                  "yours to use, as is, like the catalogue's code under the MIT License. Highcharts is free for non-commercial use, and a commercial use needs a licence from Highsoft.",
+                  'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.',
                 ],
               ]}
             />

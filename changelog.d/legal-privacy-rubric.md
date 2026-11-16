@@ -18,6 +18,16 @@
   phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
   check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
   says the same, word for word, and now also names who is responsible.
+- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 1027 to 873
+  words, and on a phone (390 px) from 6434 to 5588 px high; on a desktop (1440 px), from 3330
+  to 2942 px. The machine readers and the shared links share one row, under both anchors
+  the stats page links, with each period beside its own store; the edge and the bot check
+  are one Cloudflare row whose place stands once. Explanations go: why an unverified share is
+  no verdict (the stats tile's hint already says it), how the catalogue is built, the
+  sentence that repeated the assistant's heading, the full list of telemetry fields
+  (now a category, the language code still named), and the sentence naming the laws. Every
+  kind of data, its period, place and recipients, the bases and the rights stay. The server
+  logs are now "read only to look into a fault or an attack".
 
 ### Fixed
 
