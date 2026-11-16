@@ -34,7 +34,10 @@
   goes back to the explainer and picks another example. A unit test checks
   that each example names an implementation under `plots/`, and CI now also
   runs the Python tests on a pull request that changes only `AgentIntro.tsx`,
-  `README.md`, or `LegalPage.tsx`, which the explainer's tests read.
+  `README.md`, or `LegalPage.tsx`, which the explainer's tests read, or only
+  `AboutPage.tsx`, `docs/concepts/ai-workflow.md`, or
+  `docs/concepts/agent-network.md`, which the test of the README's claims
+  reads along with the README.
 
 ### Fixed
 

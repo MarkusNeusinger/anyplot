@@ -454,6 +454,27 @@ class TestCiTestsSpecSectionCheck:
         assert (root / "README.md").is_file()
         assert (root / "app" / "src" / "pages" / "LegalPage.tsx").is_file()
 
+    def test_a_changed_text_that_the_readme_claims_test_reads_runs_the_unit_tests(self) -> None:
+        """tests/unit/test_readme_claims.py reads README.md, docs/concepts/ai-workflow.md, docs/concepts/agent-network.md
+        and AboutPage.tsx: a PR that only rewords one of them runs it, instead of leaving a stale claim or a dead link to
+        the next Python PR. The paths go through the filter's own pattern, so a typo in it fails here."""
+        check = self._step("Check for testable changes")["run"]
+        [config] = [line for line in check.splitlines() if "CONFIG_CHANGES=$(" in line]
+        found = re.search(r"grep -E '([^']+)'", config)
+        assert found, "CONFIG_CHANGES no longer filters the changed files with grep -E '<pattern>'"
+        pattern = re.compile(found.group(1))
+        root = WORKFLOWS_DIR.parent.parent
+        for path in (
+            "README.md",
+            "docs/concepts/ai-workflow.md",
+            "docs/concepts/agent-network.md",
+            "app/src/pages/AboutPage.tsx",
+        ):
+            assert (root / path).is_file(), f"{path} is gone: update the filter and this list"
+            assert pattern.search(path), f"a PR that changes only {path} skips the unit tests"
+        # Anchored at both ends: the page's own test file is no text the Python tests read.
+        assert not pattern.search("app/src/pages/AboutPage.test.tsx")
+
     def test_step_needs_no_dependency_install(self) -> None:
         # The step runs on the pinned interpreter (regen_gate's `except A, B:` needs 3.14),
         # so setup-python precedes it unconditionally; uv and the project install do not.
