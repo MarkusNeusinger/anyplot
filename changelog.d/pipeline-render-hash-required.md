@@ -14,14 +14,14 @@
   "no hash", and its PR comment prints a command only for a spec ID and a
   library name of the expected shape. The weekly regeneration review doesn't
   count a render-hash keep as a missing pair artifact: no review ran, so
-  there is no pair to stage.
+  there is no pair to stage. (#13129)
 - **A run that can't stage `render.sha256` fails.** The hash write is its own
   step in `impl-generate.yml` and `impl-repair.yml`, last and fatal, with five
   upload attempts, so a run that can't stage the hash never hands its PR to
   the review. In impl-generate the failure counts as an infrastructure
   failure: the pair is generated again without spending one of its three
   attempts. In impl-repair it takes the repair's crash path, and the comment
-  names it.
+  names it. (#13129)
 
 ### Fixed
 
@@ -30,7 +30,7 @@
   option that GitHub Actions doesn't set by default, so a failed count read
   as zero earlier failures and bought another full generation. The call's own
   exit status now decides, after three attempts, and the handler's tests also
-  run under plain `bash -e`.
+  run under plain `bash -e`. (#13129)
 
 ### Removed
 
@@ -38,3 +38,4 @@
   produces, to a staging path the review doesn't read, and expected a repair
   loop its PR never got. A locally written implementation goes through the
   pipeline's adopt mode instead, as the catalogue audit already does.
+  (#13129)
