@@ -419,18 +419,27 @@ export function AgentChatPage() {
 
   // `source` only says where the visitor came from; it is read once for
   // `agent_open` and dropped, so a reload counts as a direct open. An admin's
-  // open is no visitor's: the page records nothing for it (`muted`).
+  // open is no visitor's: the page records nothing for it (`muted`). One open
+  // per chat: a library switch inside the chat records none, but the page stays
+  // mounted when the visitor goes back to the explainer (no pair), so the next
+  // pair picked there opens a new chat and counts again.
   const openTracked = useRef(false);
   useEffect(() => {
-    if (!allowed || !valid || openTracked.current) return;
-    openTracked.current = true;
+    if (!valid) {
+      openTracked.current = false;
+      return;
+    }
+    if (!allowed) return;
     const source = params.get('source');
-    if (!muted) {
-      trackEvent('agent_open', {
-        library,
-        source: source && OPEN_SOURCES.has(source) ? source : 'direct',
-        spec,
-      });
+    if (!openTracked.current) {
+      openTracked.current = true;
+      if (!muted) {
+        trackEvent('agent_open', {
+          library,
+          source: source && OPEN_SOURCES.has(source) ? source : 'direct',
+          spec,
+        });
+      }
     }
     if (source) {
       const next = new URLSearchParams(params);

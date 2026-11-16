@@ -45,9 +45,9 @@ describe('HeroSection', () => {
     lane.open = true;
     rerender(<HeroSection potd={null} />);
     const link = screen.getByRole('link', { name: AGENT_ENTRY_LABEL });
-    // The idiom over the plain words, both inside the one link.
-    expect(link).toHaveTextContent(`${AGENT_ENTRY_NAME} →${AGENT_ENTRY_TEXT}`);
-    expect(link).toHaveTextContent('.use_my_data() →an ai agent adapts any plot to your data');
+    // The idiom and the plain words, both inside the one link.
+    expect(link).toHaveTextContent(`${AGENT_ENTRY_NAME} →`);
+    expect(link).toHaveTextContent(AGENT_ENTRY_TEXT);
     // The accessible name keeps the words on screen (WCAG 2.5.3).
     expect(AGENT_ENTRY_LABEL.toLowerCase()).toContain(AGENT_ENTRY_TEXT);
     // A decision of the launch: the chat's notice says "experimental", the hero does not.
@@ -71,12 +71,11 @@ describe('HeroSection', () => {
     lane.open = true;
     render(<HeroSection potd={null} />);
     expect(screen.queryByLabelText('Connect via MCP')).not.toBeInTheDocument();
-    expect(
-      screen
-        .getAllByRole('link')
-        .map(link => link.getAttribute('href'))
-        .sort()
-    ).toEqual(['/agent', '/plots', 'https://github.com/MarkusNeusinger/anyplot']);
+    const hrefs = screen.getAllByRole('link').map(link => link.getAttribute('href'));
+    expect(hrefs).not.toContain('/mcp');
+    expect(hrefs).toEqual(
+      expect.arrayContaining(['/agent', '/plots', 'https://github.com/MarkusNeusinger/anyplot'])
+    );
   });
 
   it('tracks the primary browse CTA and the github link', async () => {

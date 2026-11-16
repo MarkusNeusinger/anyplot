@@ -8,7 +8,7 @@
  * AgentChatPage.parity.test.tsx compares the two lanes' DOM.
  */
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -73,11 +73,12 @@ function renderPath(path: string) {
   const router = createMemoryRouter([{ path: '/agent', element: <AgentChatPage /> }], {
     initialEntries: [path],
   });
-  return render(
+  const view = render(
     <ThemeProvider theme={theme}>
       <RouterProvider router={router} />
     </ThemeProvider>
   );
+  return { ...view, router };
 }
 
 function renderPage(library = 'matplotlib', language = 'python', extra = '') {
@@ -337,20 +338,46 @@ describe('AgentChatPage on the public lane', () => {
     const examples = within(
       within(intro).getByRole('list', { name: 'or start with' })
     ).getAllByRole('listitem');
-    expect(examples.map(item => item.textContent)).toEqual([
-      'scatter-basic in matplotlib·python',
-      'line-basic in ggplot2·r',
-      'bar-basic in d3·javascript',
-    ]);
-    expect(examples.map(item => within(item).getByRole('link').getAttribute('href'))).toEqual([
-      '/agent?spec=scatter-basic&library=matplotlib&language=python&source=agent_intro',
-      '/agent?spec=line-basic&library=ggplot2&language=r&source=agent_intro',
-      '/agent?spec=bar-basic&library=d3&language=javascript&source=agent_intro',
-    ]);
+    expect(examples).toHaveLength(3);
+    [
+      ['scatter-basic', 'matplotlib', 'python'],
+      ['line-basic', 'ggplot2', 'r'],
+      ['bar-basic', 'd3', 'javascript'],
+    ].forEach(([spec, library, language], index) => {
+      const item = examples[index];
+      expect(within(item).getByRole('link', { name: `${spec} in ${library}` })).toHaveAttribute(
+        'href',
+        `/agent?spec=${spec}&library=${library}&language=${language}&source=agent_intro`
+      );
+      expect(within(item).getByText(language)).toBeInTheDocument();
+    });
     // Text and links only: no session, no status read, no debug call, no `agent_open`.
     expect(calls.map(call => call.url.pathname)).toEqual(['/agent/lane']);
     expect(analytics.trackEvent).not.toHaveBeenCalled();
     expect(screen.queryByTestId('experimental-notice')).not.toBeInTheDocument();
+  });
+
+  it('records one open per chat picked on the explainer, also after going back to it', async () => {
+    const user = userEvent.setup();
+    const { router } = renderPath('/agent');
+    const opens = () =>
+      analytics.trackEvent.mock.calls.filter(([name]) => name === 'agent_open').map(([, p]) => p);
+
+    await user.click(await screen.findByRole('link', { name: 'scatter-basic in matplotlib' }));
+    await screen.findByLabelText('Message');
+    await waitFor(() => expect(router.state.location.search).not.toContain('source='));
+    expect(opens()).toEqual([
+      { library: 'matplotlib', source: 'agent_intro', spec: 'scatter-basic' },
+    ]);
+
+    await act(() => router.navigate(-1));
+    await user.click(await screen.findByRole('link', { name: 'bar-basic in d3' }));
+    await waitFor(() => expect(opens()).toHaveLength(2));
+    expect(opens()[1]).toEqual({ library: 'd3', source: 'agent_intro', spec: 'bar-basic' });
+    // The source leaves the address again, so a reload of it counts as a direct open.
+    await waitFor(() =>
+      expect(router.state.location.search).toBe('?spec=bar-basic&library=d3&language=javascript')
+    );
   });
 
   it('says the assistant is closed at /agent without a plot while the lane is, as before', async () => {

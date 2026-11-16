@@ -220,8 +220,10 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
  * The hero's entry to "use with my data", shown only while the public agent lane is open
  * (`useAgentLaneOpen`), so closing the lane on the server removes it too. Two lines in one
  * link, as the chat's plot button names its action over what a click does: the name,
- * `.use_my_data()`, the idiom of the plot page's own entry, over one line in plain words on
- * what the feature does, so a reader who does not read code learns it exists. A text link in
+ * `.use_my_data()`, the idiom of the plot page's own entry, over plain words on what the
+ * feature does, so a reader who does not read code learns it exists. A catalogue plot, not
+ * any plot: a pair the agent cannot adapt (a map spec, a blocked file) has no entry on its
+ * plot page, and this line says no more than that page does. A text link in
  * the secondary links' size, so it never outweighs `plots.browse()`. It leads to `/agent`
  * without a plot, which explains the chat and leads on to the catalogue or to a few example
  * plots: the visitor still picks the plot before a chat opens. Tracked as
@@ -229,9 +231,10 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
  */
 export const AGENT_ENTRY_NAME = '.use_my_data()';
 /** What the feature does, in plain words. */
-export const AGENT_ENTRY_TEXT = 'an ai agent adapts any plot to your data';
+export const AGENT_ENTRY_TEXT = 'an ai agent adapts a catalogue plot to your data';
 /** The link's accessible name: words rather than the method-call style, the plain line kept. */
-export const AGENT_ENTRY_LABEL = 'Use with my data: an AI agent adapts any plot to your data';
+export const AGENT_ENTRY_LABEL =
+  'Use with my data: an AI agent adapts a catalogue plot to your data';
 
 function AgentEntry({ onClick }: { onClick: () => void }) {
   const open = useAgentLaneOpen();
@@ -266,7 +269,11 @@ function AgentEntry({ onClick }: { onClick: () => void }) {
       <Box component="span" className="entry-name">
         {AGENT_ENTRY_NAME} →
       </Box>
-      <Box component="span">{AGENT_ENTRY_TEXT}</Box>
+      {/* Balanced: where the line is wider than the column (a phone), it breaks into two even
+          lines instead of leaving one word alone on the second. */}
+      <Box component="span" sx={{ textWrap: 'balance' }}>
+        {AGENT_ENTRY_TEXT}
+      </Box>
     </Box>
   );
 }
