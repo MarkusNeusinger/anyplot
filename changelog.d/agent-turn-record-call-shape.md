@@ -13,4 +13,4 @@
   column name, a bound, a text or an id: the record's models admit closed
   codes, booleans and bounded counts only, and a call's shape small counts
   only, which a test checks field by field. The case detail on `/debug`
-  lists the shape under each call.
+  lists the shape under each call. (#13144)
