@@ -213,9 +213,13 @@ export function LegalPage() {
     <>
       <Typography sx={subheadingStyle}>disclaimer</Typography>
       <Typography sx={textStyle}>
-        a personal portfolio project: plot examples generated and maintained by ai workflows, meant
-        as a starting point for your own data. the code is provided &quot;as is&quot; under the MIT
-        License; review it before production use.
+        a personal portfolio project. the plot examples are generated and maintained by ai workflows
+        and meant as a starting point for your own data. how that works, and my part in it: see{' '}
+        <Link component={RouterLink} to={paths.about} sx={proseLinkStyle}>
+          about
+        </Link>
+        . the code is provided &quot;as is&quot; under the MIT License; review it before production
+        use.
       </Typography>
     </>
   );
@@ -275,6 +279,19 @@ export function LegalPage() {
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
             <Typography sx={subheadingStyle}>who is responsible</Typography>
             <Typography sx={textStyle}>Markus Neusinger (see above).</Typography>
+
+            <Typography sx={subheadingStyle}>what I do not do</Typography>
+            <Typography sx={textStyle}>
+              • no cookies for visitors
+              <br />
+              • no accounts, and no name or email unless you type one
+              <br />• <strong>no ai training</strong> on what you send
+            </Typography>
+            <Typography sx={textStyle}>
+              the browser&apos;s storage keeps UI settings, your plot votes, a release number, the
+              random ids named here and Cloudflare Turnstile&apos;s own item. I sign in through
+              Cloudflare Access, which sets its own login cookie.
+            </Typography>
 
             <Typography sx={subheadingStyle}>what is processed</Typography>
             <FactTable
@@ -345,12 +362,12 @@ export function LegalPage() {
                   'cloudflare',
                   <>
                     as the cdn, Cloudflare uses your IP address to rate-limit, filter bots and
-                    absorb DDoS attacks. when you send feedback, rate a plot or open the data
-                    assistant, its Turnstile checks that a browser, not a script, is asking: it
-                    reads your IP address, user-agent and TLS fingerprint and keeps an item in your
-                    browser&apos;s storage, with no cookie. anyplot learns only whether the check
-                    passed. Cloudflare also uses these signals on its own behalf, to improve the
-                    check.
+                    absorb DDoS attacks. its Turnstile runs when you send feedback, rate a plot or
+                    open the data assistant, and checks that a browser, not a script, is asking. for
+                    that it reads your IP address, user-agent and TLS fingerprint and keeps an item
+                    in your browser&apos;s storage, with no cookie. anyplot learns only whether the
+                    check passed. Cloudflare also uses these signals on its own behalf, to improve
+                    the check.
                     <Kept items={[['where', 'global, EU data centers for EU visitors']]} />
                   </>,
                 ],
@@ -386,20 +403,12 @@ export function LegalPage() {
 
             <Typography sx={subheadingStyle}>why this is allowed</Typography>
             <Typography sx={textStyle}>
-              a legitimate interest in protecting the site, counting its readers, and the
-              assistant&apos;s telemetry and limits; your request: making the plot you ask the data
-              assistant for; and your consent to a feedback case, given when you send it and
-              withdrawable at any time by asking.
-            </Typography>
-
-            <Typography sx={subheadingStyle}>what I do not do</Typography>
-            <Typography sx={textStyle}>
-              • no cookies for visitors; the browser&apos;s storage keeps UI settings, your plot
-              votes, a release number, the random ids named here and Cloudflare Turnstile&apos;s own
-              item. admins sign in through Cloudflare Access, which sets its own login cookie
+              • a legitimate interest in protecting the site, counting its readers, and the
+              assistant&apos;s telemetry and limits
               <br />
-              • no accounts, and no name or email unless you type one
-              <br />• <strong>no ai training</strong> on what you send
+              • your request: making the plot you ask the data assistant for
+              <br />• your consent to a feedback case: you give it when you send it and can withdraw
+              it at any time by asking
             </Typography>
 
             <Typography id="assistant" sx={{ ...subheadingStyle, ...ANCHOR_SX }}>
@@ -443,19 +452,19 @@ export function LegalPage() {
                 ],
                 [
                   'ids',
-                  'a random tab id stands in for you: the per-tab limits and a pause after misuse count on it, and the per-network limits count your IP address; both ids are salted with a value that lives only as long as the server instance, in memory, never written down. nothing durable: only timestamps could match them to the 30-day server logs, so they are pseudonymous. admins: a keyed hash (HMAC).',
+                  'a random tab id stands in for you. the per-tab limits and a pause after misuse go by that id, the per-network limits by your IP address. both ids are salted with a value that lives only as long as the server instance, in memory, never written down. nothing durable: only timestamps could match them to the 30-day server logs, so they are pseudonymous. admins: a keyed hash (HMAC).',
                 ],
                 [
                   'feedback',
                   <>
-                    only when you send feedback: a private bucket keeps the conversation, a profile
-                    of your data with its first 5 rows, the plot&apos;s code and images, and the
-                    whole data file only if you tick{' '}
+                    only when you send feedback. a private bucket then keeps the conversation, a
+                    profile of your data with its first 5 rows, and the plot&apos;s code and images.
+                    it keeps the whole data file only if you tick{' '}
                     <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
                       &quot;# include data.csv&quot;
-                    </Box>{' '}
-                    (it starts unticked, which leaves out that file only), and a triage row keeps
-                    your reaction, message, a hash of your tab id and the run&apos;s details.
+                    </Box>
+                    ; the box starts unticked, which leaves out that file only. a triage row then
+                    keeps your reaction, message, a hash of your tab id and the run&apos;s details.
                     <Kept
                       items={[
                         ['case files', '180 days'],

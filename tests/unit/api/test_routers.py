@@ -1276,8 +1276,9 @@ class TestSeoProxyRouter:
             # the three actions, apart.
             "Cloudflare (global, EU data centers for EU visitors): as the CDN, it uses your IP address to "
             "rate-limit, filter bots and absorb DDoS attacks.",
-            "When you send feedback, rate a plot or open the data assistant, its Turnstile checks that a "
-            "browser, not a script, is asking",
+            "Its Turnstile runs when you send feedback, rate a plot or open the data assistant, and checks "
+            "that a browser, not a script, is asking. For that it reads your IP address, user-agent and TLS "
+            "fingerprint",
             "kept until you ask to delete it, in Google Cloud SQL in the Netherlands (europe-west4)",
         ):
             assert fact in response.text, fact
@@ -1326,7 +1327,8 @@ class TestSeoProxyRouter:
             "may credit your public username",
             "<li>No AI training on what you send.</li>",
             "your plot votes, a release number",
-            "given when you send it and withdrawable at any time by asking",
+            "and your consent to a feedback case: you give it when you send it and can withdraw it at any "
+            "time by asking.</li>",
             # The bot check, as LegalPage.tsx's "cloudflare" row states it.
             "checks that a browser, not a script, is asking",
             "user-agent and TLS fingerprint",
@@ -1349,8 +1351,8 @@ class TestSeoProxyRouter:
             "Don't paste personal data you are not allowed to share",
             # The ids keep what the limits count on, the salted tab id and the salted IP address,
             # both personal data; the sentences that state the limits stand on the assistant's page.
-            "<li>Ids: a random tab id stands in for you; the per-tab limits and a pause after misuse count on "
-            "it, and the per-network limits count your IP address. Both ids are salted with a value",
+            "<li>Ids: a random tab id stands in for you. The per-tab limits and a pause after misuse go by "
+            "that id, the per-network limits by your IP address. Both ids are salted with a value",
             "salted with a value that lives only as long as the server instance",
             # Why they are pseudonymous and not anonymous, and what a feedback case holds, as the
             # page's own test pins them.

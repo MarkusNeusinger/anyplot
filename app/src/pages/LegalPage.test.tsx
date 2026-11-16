@@ -59,10 +59,11 @@ describe('LegalPage', () => {
 
     expect(screen.getByText('who is responsible')).toBeInTheDocument();
     expect(screen.getByText('Markus Neusinger (see above).')).toBeInTheDocument();
-    // Each basis named in words with what it covers; consent given at the send and withdrawable.
+    // Each basis named in words with what it covers, one point each; consent given at the send
+    // and withdrawable. Anchored, so no point and no qualifier can fall off.
     expect(screen.getByText('why this is allowed')).toBeInTheDocument();
     expect(screen.getByText(/a legitimate interest in protecting the site/)).toHaveTextContent(
-      "a legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits; your request: making the plot you ask the data assistant for; and your consent to a feedback case, given when you send it and withdrawable at any time by asking."
+      /^• a legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits\s*• your request: making the plot you ask the data assistant for\s*• your consent to a feedback case: you give it when you send it and can withdraw it at any time by asking$/
     );
     // Every right, the objection with the condition that makes it one, the address to write to
     // and that a feedback case can go early: the whole paragraph, so no clause can fall off its end.
@@ -89,6 +90,42 @@ describe('LegalPage', () => {
     ]) {
       expect(privacy.textContent, String(term)).not.toMatch(term);
     }
+  });
+
+  it('says what I do not do right after who is responsible, then what the browser keeps', () => {
+    render(<LegalPage />);
+
+    // The block stands directly under "who is responsible", before the first row of what is
+    // processed.
+    const who = screen.getByText('who is responsible');
+    const notDone = screen.getByText('what I do not do');
+    expect(who.nextElementSibling?.nextElementSibling).toBe(notDone);
+    // Three short points and nothing else in them.
+    const points = notDone.nextElementSibling as HTMLElement;
+    expect(points).toHaveTextContent(
+      /^• no cookies for visitors\s*• no accounts, and no name or email unless you type one\s*• no ai training on what you send$/
+    );
+    // What the browser keeps and the one login cookie stand in a paragraph of their own below the
+    // points, every item of the storage list included.
+    const storage = points.nextElementSibling as HTMLElement;
+    expect(storage).toHaveTextContent(
+      /^the browser's storage keeps UI settings, your plot votes, a release number, the random ids named here and Cloudflare Turnstile's own item\. I sign in through Cloudflare Access, which sets its own login cookie\.$/
+    );
+    expect(storage.nextElementSibling).toBe(screen.getByText('what is processed'));
+    expect(document.getElementById('privacy')?.textContent).not.toMatch(/admins sign in/);
+  });
+
+  it('points from the disclaimer to the about page for how the examples are made', () => {
+    render(<LegalPage />);
+
+    const disclaimer = screen.getByText('disclaimer').nextElementSibling as HTMLElement;
+    expect(disclaimer).toHaveTextContent(
+      /^a personal portfolio project\. the plot examples are generated and maintained by ai workflows and meant as a starting point for your own data\. how that works, and my part in it: see about\. the code is provided "as is" under the MIT License; review it before production use\.$/
+    );
+    expect(within(disclaimer).getByRole('link', { name: 'about' })).toHaveAttribute(
+      'href',
+      '/about'
+    );
   });
 
   it('gives each kind of data its own period and place, in its own row', () => {
@@ -197,7 +234,7 @@ describe('LegalPage', () => {
     // check.
     const cloudflare = screen.getByRole('row', { name: /^cloudflare\s/ });
     expect(cloudflare).toHaveTextContent(
-      /when you send feedback, rate a plot or open the data assistant, its Turnstile checks that a browser, not a script, is asking/
+      /its Turnstile runs when you send feedback, rate a plot or open the data assistant, and checks that a browser, not a script, is asking\. for that it reads your IP address, user-agent and TLS fingerprint and keeps an item in your browser.s storage, with no cookie\. anyplot learns only whether the check passed\./
     );
     expect(cloudflare).toHaveTextContent(/user-agent and TLS fingerprint/);
     expect(cloudflare).toHaveTextContent(/keeps an item in your browser.s storage, with no cookie/);
@@ -281,7 +318,7 @@ describe('LegalPage', () => {
     // limits on the salted address: both uses of an identifier, so the ids row names them while
     // the sentences that state the limits stand on the assistant's page.
     expect(screen.getByRole('row', { name: /^ids\s/ })).toHaveTextContent(
-      /^ids\s*a random tab id stands in for you: the per-tab limits and a pause after misuse count on it, and the per-network limits count your IP address; both ids are salted with a value/
+      /^ids\s*a random tab id stands in for you\. the per-tab limits and a pause after misuse go by that id, the per-network limits by your IP address\. both ids are salted with a value/
     );
     expect(
       screen.getByText(
@@ -318,16 +355,17 @@ describe('LegalPage', () => {
       screen.getByText(/only timestamps could match them to the 30-day server logs/)
     ).toBeInTheDocument();
     expect(screen.getByText(/so they are pseudonymous/)).toBeInTheDocument();
-    // Nothing is kept without feedback; the box starts unticked, and leaving it so drops
+    // Nothing is kept without feedback: the condition opens the row, and "then" carries it into
+    // both the bucket and the triage row. The box starts unticked, and leaving it so drops
     // data.csv only, while the profile sample stays.
     const caseRow = screen.getAllByRole('row', { name: /^feedback\s/ })[1];
     expect(caseRow).toHaveTextContent(
-      /only when you send feedback: a private bucket keeps the conversation, a profile of your data with its first 5 rows, the plot.s code and images, and the whole data file only if you tick "# include data\.csv" \(it starts unticked, which leaves out that file only\), and a triage row keeps your reaction, message, a hash of your tab id and the run.s details\./
+      /^feedback\s*only when you send feedback\. a private bucket then keeps the conversation, a profile of your data with its first 5 rows, and the plot.s code and images\. it keeps the whole data file only if you tick "# include data\.csv"; the box starts unticked, which leaves out that file only\. a triage row then keeps your reaction, message, a hash of your tab id and the run.s details\./
     );
-    // "No cookies" holds for visitors; admins get Cloudflare Access's login cookie.
+    // "No cookies" holds for visitors; the one admin gets Cloudflare Access's login cookie.
     expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();
     expect(
-      screen.getByText(/Cloudflare Access, which sets its own login cookie/)
+      screen.getByText(/I sign in through Cloudflare Access, which sets its own login cookie\./)
     ).toBeInTheDocument();
     // Scope: the assistant's processing touches only the people who use it; the chat links here.
     // The heading says it, so no sentence repeats it under it.
