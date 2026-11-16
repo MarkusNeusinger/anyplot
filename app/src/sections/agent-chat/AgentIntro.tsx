@@ -27,7 +27,7 @@ import {
   labelSx,
   smallText,
 } from 'src/sections/agent-chat/styles';
-import { colors, proseLinkStyle } from 'src/theme';
+import { colors, FAB_GAP, FAB_INSET, FAB_SIZE, proseLinkStyle } from 'src/theme';
 
 /** `agent_open`'s `source` for a chat opened from one of the examples below. */
 export const AGENT_INTRO_SOURCE = 'agent_intro';
@@ -88,6 +88,17 @@ const AGENT_TERMS: [string, ReactNode][] = [
 
 /** The sentences: the body face one step smaller, in the soft ink, which reads 4.5:1 and more. */
 const termTextSx = { ...bodyTextSx, fontSize: smallText, color: 'var(--ink-soft)', m: 0 } as const;
+
+/**
+ * Where the column reaches the window's right edge (on a phone and a small tablet), the site's
+ * feedback button floats over it, and the terms reach the first screen's foot, so without room
+ * they would sit under it on arrival. They keep out of its column: the button's inset, size and
+ * gap from the window's edge (`FeedbackWidget`), less the layout's side gutter, 16 px and from
+ * `sm` 32 px (`RootLayout`), which the column already leaves free. From `md` the column, at most
+ * 640 px wide and centred, stands clear of the button.
+ */
+const buttonClearance = (breakpoint: 'xs' | 'sm', gutter: number) =>
+  `${FAB_INSET[breakpoint] + FAB_SIZE[breakpoint] + FAB_GAP - gutter}px`;
 
 export function AgentIntro() {
   return (
@@ -182,6 +193,7 @@ export function AgentIntro() {
           gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'max-content minmax(0, 1fr)' },
           columnGap: 2,
           rowGap: { xs: 0, sm: 0.75 },
+          pr: { xs: buttonClearance('xs', 16), sm: buttonClearance('sm', 32), md: 0 },
           mt: 4,
           mb: 0,
         }}
