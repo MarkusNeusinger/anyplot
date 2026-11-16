@@ -322,7 +322,7 @@ describe('AgentChatPage on the public lane', () => {
       'content',
       expect.stringContaining("an agent adapts that plot's code to your columns")
     );
-    // A shared link previews the explainer, not the home page: the page's own Open Graph pair.
+    // The page's own Open Graph pair replaces the home page's shell defaults in the head.
     expect(AGENT_INTRO_TITLE).toBe('use with my data | anyplot.ai');
     const og = (property: string) =>
       Array.from(document.querySelectorAll(`meta[property="${property}"]`)).map(meta =>

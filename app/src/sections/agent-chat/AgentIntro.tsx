@@ -35,7 +35,7 @@ const AGENT_EXAMPLES = [
   { spec: 'line-basic', library: 'd3' },
 ] as const;
 
-/** The page's title, in the tab and in a link preview. */
+/** The page's title, in the tab and in the head's `og:title`. */
 export const AGENT_INTRO_TITLE = 'use with my data | anyplot.ai';
 /** The page's description: the about page's two sentences on what the chat does. */
 export const AGENT_INTRO_DESCRIPTION =
@@ -47,8 +47,9 @@ const targetSx = { display: 'inline-flex', alignItems: 'center', minHeight: { xs
 export function AgentIntro() {
   return (
     <Box data-testid="agent-intro" sx={{ py: 4, maxWidth: 640, mx: 'auto' }}>
-      {/* The Open Graph pair replaces the home page's shell defaults, which a shared link would
-          otherwise show. No canonical: the page is never indexed. */}
+      {/* The Open Graph pair replaces the home page's shell defaults in the head, so the rendered
+          page never describes itself as the home page. A link-preview fetcher runs no JavaScript
+          and never sees it. No canonical: the page is never indexed. */}
       <title>{AGENT_INTRO_TITLE}</title>
       <meta name="description" content={AGENT_INTRO_DESCRIPTION} />
       <meta property="og:title" content={AGENT_INTRO_TITLE} />

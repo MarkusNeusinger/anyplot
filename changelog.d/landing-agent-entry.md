@@ -10,8 +10,8 @@
   closed lane removes the box. `/agent` without a catalogue pair is now an
   explainer: the about page's description of the chat, three example pairs in
   Python, R, and JavaScript that open the chat, and the way on to the
-  catalogue, under a title, a description, and a link preview (`og:title`,
-  `og:description`) of its own. It opens no session: of the agent routes, a
+  catalogue, under a title, a description, and an `og:title` and
+  `og:description` of its own. It opens no session: of the agent routes, a
   visitor's browser asks only the lane's door, which the API answers without
   the agents service.
   In Plausible, `nav_click{source: hero_use_my_data}` now targets `/agent`,
