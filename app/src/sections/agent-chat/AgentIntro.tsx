@@ -1,7 +1,8 @@
 /**
  * `/agent` without a catalogue pair in its query: what the chat does, in the words of the about
- * page's "use with my data" section, a few example pairs that open the chat, the way on to the
- * catalogue, where every other pair starts, and below it the assistant's terms of use in a few
+ * page's "use with my data" section, and which model it runs on; a few example pairs that open the
+ * chat; the way on to the catalogue, where every other pair starts; one line on how the chat is
+ * built, with a link to its design on GitHub; and below it the assistant's terms of use in a few
  * quiet lines (`AgentTerms`, which the closed notice carries too). The landing page's
  * `.use_my_data()` leads here.
  *
@@ -19,7 +20,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import Box from '@mui/material/Box';
 
 import { SectionHeader } from 'src/components/SectionHeader';
-import { LIB_TO_LANG } from 'src/constants';
+import { GITHUB_URL, LIB_TO_LANG } from 'src/constants';
 import { paths } from 'src/routes/paths';
 import {
   actionButtonSx,
@@ -52,6 +53,14 @@ export const AGENT_INTRO_TITLE = 'use with my data | anyplot.ai';
 /** The page's description: the about page's two sentences on what the chat does. */
 export const AGENT_INTRO_DESCRIPTION =
   "pick any plot, choose .use_my_data() on its page, and paste your data. an agent adapts that plot's code to your columns, renders it in a sandbox with no network access, reviews the render against the catalogue's rubric, repairs it once if needed, and hands back the image and the code.";
+
+/**
+ * Where the chat's design and code are described: the README's section on "use with my data", by
+ * GitHub's anchor for its heading. tests/unit/test_agent_intro_crawler_copy.py checks that the
+ * README has that heading, so a renamed one fails a test instead of landing the link at the
+ * README's top.
+ */
+const AGENT_DESIGN_URL = `${GITHUB_URL}#use-with-my-data-agent-chat`;
 
 /** A link of the examples' list and the closing action: a 44 px target at phone width. */
 const targetSx = { display: 'inline-flex', alignItems: 'center', minHeight: { xs: 44, sm: 32 } };
@@ -105,14 +114,20 @@ const termTextSx = { ...bodyTextSx, fontSize: smallText, color: 'var(--ink-soft)
 
 /**
  * Where the column reaches the window's right edge (on a phone and a small tablet), the site's
- * feedback button floats over it, and the terms reach the first screen's foot, so without room
- * they would sit under it on arrival. They keep out of its column: the button's inset, size and
+ * feedback button floats over it, and the line on how the chat is built and the terms reach the
+ * first screen's foot, so without room they would sit under it on arrival. They keep out of its
+ * column (`clearOfButtonSx`): the button's inset, size and
  * gap from the window's edge (`FeedbackWidget`), less the layout's side gutter, 16 px and from
  * `sm` 32 px (`RootLayout`), which the column already leaves free. From `md` the column, at most
  * 640 px wide (560 px under the closed notice) and centred, stands clear of the button.
  */
 const buttonClearance = (breakpoint: 'xs' | 'sm', gutter: number) =>
   `${FAB_INSET[breakpoint] + FAB_SIZE[breakpoint] + FAB_GAP - gutter}px`;
+
+/** The right padding that keeps a line at the column's foot out of the button's column. */
+const clearOfButtonSx = {
+  pr: { xs: buttonClearance('xs', 16), sm: buttonClearance('sm', 32), md: 0 },
+} as const;
 
 /**
  * The assistant's terms of use as labelled lines: the explainer's fine print, and the same block
@@ -133,7 +148,7 @@ export function AgentTerms() {
         gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'max-content minmax(0, 1fr)' },
         columnGap: 2,
         rowGap: { xs: 0, sm: 0.75 },
-        pr: { xs: buttonClearance('xs', 16), sm: buttonClearance('sm', 32), md: 0 },
+        ...clearOfButtonSx,
         mt: 4,
         mb: 0,
       }}
@@ -238,6 +253,21 @@ export function AgentIntro() {
           plots
         </Box>
         .browse() →
+      </Box>
+
+      <Box component="p" sx={{ ...termTextSx, ...clearOfButtonSx, mt: 3 }}>
+        how it works: one agent talks to you, and the loop around it is plain code. the design and
+        the code are{' '}
+        <Box
+          component="a"
+          href={AGENT_DESIGN_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={proseLinkStyle}
+        >
+          on GitHub
+        </Box>
+        .
       </Box>
 
       <AgentTerms />

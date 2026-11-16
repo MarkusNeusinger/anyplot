@@ -1388,7 +1388,8 @@ async def seo_about():
 #
 # The strings are the page's own. tests/unit/test_agent_intro_crawler_copy.py
 # reads AgentIntro.tsx and fails when the title, the description, the intro's
-# sentences around it, the example pairs or the terms here differ from it.
+# sentences around it, the example pairs, the line on how the chat is built or
+# the terms here differ from it.
 AGENT_INTRO_TITLE = "use with my data | anyplot.ai"
 AGENT_INTRO_DESCRIPTION = (
     "pick any plot, choose .use_my_data() on its page, and paste your data. an agent adapts that plot's code "
@@ -1405,6 +1406,11 @@ AGENT_INTRO_CLOSING = (
     "your chat and data live only in server memory and are deleted after an hour idle, unless you send feedback."
 )
 AGENT_INTRO_EXAMPLES = (("scatter-basic", "matplotlib"), ("bar-basic", "ggplot2"), ("line-basic", "d3"))
+# The line between the way on and the terms; its last words link the README's section on the chat.
+AGENT_INTRO_HOW = (
+    "how it works: one agent talks to you, and the loop around it is plain code. the design and the code are on GitHub."
+)
+AGENT_DESIGN_URL = "https://github.com/MarkusNeusinger/anyplot#use-with-my-data-agent-chat"
 AGENT_TERMS = (
     (
         "status",
@@ -1422,10 +1428,14 @@ AGENT_PRIVACY_LINK = "what is stored, where and for how long"
 
 
 def _build_agent_body() -> str:
-    """The explainer as the page shows it: the paragraph, the examples, the way on, the terms."""
+    """The explainer as the page shows it: the paragraph, the examples, the way on, the line on how
+    the chat is built, the terms."""
     paragraph = html.escape(AGENT_INTRO_DESCRIPTION, quote=False)
     paragraph = paragraph.replace("pick any plot", '<a href="https://anyplot.ai/plots">pick any plot</a>', 1)
     paragraph = paragraph.replace(".use_my_data()", "<code>.use_my_data()</code>", 1)
+    how = html.escape(AGENT_INTRO_HOW, quote=False).replace(
+        "on GitHub", f'<a href="{AGENT_DESIGN_URL}">on GitHub</a>', 1
+    )
     examples = "".join(
         f'<li><a href="https://anyplot.ai/agent?spec={spec}&amp;library={library}'
         f'&amp;language={LIBRARY_LANGUAGES[library]}">{spec} in {library}</a> · {LIBRARY_LANGUAGES[library]}</li>'
@@ -1441,6 +1451,7 @@ def _build_agent_body() -> str:
         f"{html.escape(AGENT_INTRO_MODEL, quote=False)} {html.escape(AGENT_INTRO_CLOSING, quote=False)}</p>"
         f"<h2>or start with</h2><ul>{examples}</ul>"
         '<p><a href="https://anyplot.ai/plots">Browse plots</a></p>'
+        f"<p>{how}</p>"
         f"<dl>{terms}"
         f'<dt>privacy</dt><dd><a href="https://anyplot.ai/legal#assistant">{AGENT_PRIVACY_LINK}</a></dd>'
         "</dl>"

@@ -1240,6 +1240,11 @@ class TestSeoProxyRouter:
         ) in response.text
         # The model, as the legal page names it.
         assert "the model is Claude by Anthropic, served through Google Cloud Vertex AI in the EU." in response.text
+        # How the chat is built, with the README's section on it.
+        assert (
+            "<p>how it works: one agent talks to you, and the loop around it is plain code. the design and the code "
+            'are <a href="https://github.com/MarkusNeusinger/anyplot#use-with-my-data-agent-chat">on GitHub</a>.</p>'
+        ) in response.text
         # The three terms, word for word as the explainer has them, and the way to the privacy facts.
         for sentence in (
             "experimental, without warranty: results can be wrong and nobody checks them by hand. "

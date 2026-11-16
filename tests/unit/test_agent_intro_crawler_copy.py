@@ -2,7 +2,8 @@
 
 A recognised crawler or AI assistant that follows a link to https://anyplot.ai/agent reads `/seo-proxy/agent`
 (`api/routers/seo.py`), never the explainer a browser renders (`app/src/sections/agent-chat/AgentIntro.tsx`). The
-copy restates the page's title, description, example pairs and terms of use, and `/agent` is where those terms live.
+copy restates the page's title, description, paragraph, example pairs, line on how the chat is built and terms of
+use, and `/agent` is where those terms live.
 A change on one side alone would leave a crawler or an assistant quoting terms the page no longer states, and no
 other test would notice: the page's tests run in the browser's world and the copy's in the API's. So the strings are read from the source here, the way `test_agent_intro_examples.py` reads the examples.
 """
@@ -13,11 +14,18 @@ import html
 import re
 
 from api.routers import seo
-from tests.unit.test_agent_intro_examples import AGENT_INTRO, example_pairs
+from tests.unit.test_agent_instructions import _headings
+from tests.unit.test_agent_intro_examples import AGENT_INTRO, ROOT, example_pairs
 
 
 SOURCE = AGENT_INTRO.read_text(encoding="utf-8")
 LEGAL_PAGE = AGENT_INTRO.parents[2] / "pages" / "LegalPage.tsx"
+
+
+def readme_anchors() -> set[str]:
+    """The README's headings as GitHub anchors."""
+    return _headings((ROOT / "README.md").read_text(encoding="utf-8"))
+
 
 TERMS_BLOCK = re.compile(r"const AGENT_TERMS: \[string, ReactNode\]\[\] = \[(?P<body>.*?)\n\];", re.DOTALL)
 TERM_LABEL = re.compile(r"\[\s*(?P<q>['\"])(?P<label>[^'\"]+)(?P=q),")
@@ -42,14 +50,19 @@ def terms_block() -> str:
     return block["body"]
 
 
-def page_paragraph() -> str:
-    """The children of the explainer's one `<Box component="p">`, up to its own closing tag.
+def page_paragraphs() -> list[str]:
+    """The children of each of the explainer's two `<Box component="p">`, each up to its own closing tag.
 
-    The paragraph holds a link and a code span, each a `<Box>` of its own, so its end is found by
-    counting the boxes that open and close inside it, not at the first `</Box>`.
+    The first is what the chat does, the second the line on how it is built. Each holds links or a
+    code span, each a `<Box>` of its own, so a paragraph's end is found by counting the boxes that
+    open and close inside it, not at the first `</Box>`.
     """
-    assert SOURCE.count(PARAGRAPH_OPEN) == 1, 'AgentIntro.tsx should have exactly one `<Box component="p"`'
-    start = SOURCE.index(">", SOURCE.index(PARAGRAPH_OPEN)) + 1
+    opens = [match.start() for match in re.finditer(re.escape(PARAGRAPH_OPEN), SOURCE)]
+    assert len(opens) == 2, 'AgentIntro.tsx should have exactly two `<Box component="p"`'
+    return [paragraph_children(SOURCE.index(">", open_at) + 1) for open_at in opens]
+
+
+def paragraph_children(start: int) -> str:
     depth = 1
     for tag in BOX_TAG.finditer(SOURCE, start):
         if tag["close"]:
@@ -58,7 +71,7 @@ def page_paragraph() -> str:
             depth += 1
         if depth == 0:
             return SOURCE[start : tag.start()]
-    raise AssertionError('the explainer\'s `<Box component="p">` is never closed')
+    raise AssertionError('an explainer\'s `<Box component="p">` is never closed')
 
 
 def jsx_run(text: str) -> str:
@@ -115,7 +128,25 @@ def test_the_paragraph_around_the_description_is_the_pages():
     # rather than from the description constant; read as JSX renders it, it is the copy's opening
     # sentence, the description, the model's sentence and the closing sentence, so neither side can
     # drift from the other.
-    assert jsx_text(page_paragraph()) == copy_paragraph()
+    assert jsx_text(page_paragraphs()[0]) == copy_paragraph()
+
+
+def test_the_line_on_how_the_chat_is_built_is_the_pages():
+    assert jsx_text(page_paragraphs()[1]) == seo.AGENT_INTRO_HOW
+    served = re.search(r"<p>(?P<inner>how it works:.*?)</p>", seo._AGENT_BOT_BODY, re.DOTALL)
+    assert served is not None, "the crawler copy of /agent has no line on how the chat is built"
+    assert html.unescape(re.sub(r"<[^>]+>", "", served["inner"])) == seo.AGENT_INTRO_HOW
+    assert f'<a href="{seo.AGENT_DESIGN_URL}">on GitHub</a>.' in served["inner"]
+
+
+def test_the_design_link_lands_on_the_readmes_section_on_the_chat():
+    # The page builds the address from the site's GitHub constant and an anchor; GitHub makes that
+    # anchor from a README heading, and a renamed heading would land the link at the README's top.
+    link = re.search(r"const AGENT_DESIGN_URL = `\$\{GITHUB_URL\}#(?P<anchor>[a-z0-9-]+)`;", SOURCE)
+    assert link is not None, "AgentIntro.tsx has no `const AGENT_DESIGN_URL = `${GITHUB_URL}#…`;`"
+    assert "href={AGENT_DESIGN_URL}" in page_paragraphs()[1]
+    assert seo.AGENT_DESIGN_URL == f"https://github.com/MarkusNeusinger/anyplot#{link['anchor']}"
+    assert link["anchor"] in readme_anchors(), link["anchor"]
 
 
 def test_the_model_is_the_one_the_legal_page_names():

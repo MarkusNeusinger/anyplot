@@ -32,6 +32,27 @@ describe('AgentIntro paragraph', () => {
       "experimental, open to everyone since 2 november 2026. pick any plot, choose .use_my_data() on its page, and paste your data. an agent adapts that plot's code to your columns, renders it in a sandbox with no network access, reviews the render against the catalogue's rubric, repairs it once if needed, and hands back the image and the code. the model is Claude by Anthropic, served through Google Cloud Vertex AI in the EU. your chat and data live only in server memory and are deleted after an hour idle, unless you send feedback."
     );
   });
+
+  it('says how the chat is built between the way on and the terms, with its design on GitHub', () => {
+    renderIntro();
+    const intro = screen.getByTestId('agent-intro');
+    const line = within(intro).getAllByRole('paragraph')[1];
+    expect(line.textContent).toBe(
+      'how it works: one agent talks to you, and the loop around it is plain code. the design and the code are on GitHub.'
+    );
+    const browse = within(intro).getByRole('link', { name: 'Browse plots' });
+    const terms = within(intro).getByTestId('agent-intro-terms');
+    expect(browse.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(line.compareDocumentPosition(terms) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The README's section on the chat, in a new tab like the site's other links to GitHub.
+    const github = within(line).getByRole('link', { name: 'on GitHub' });
+    expect(github).toHaveAttribute(
+      'href',
+      'https://github.com/MarkusNeusinger/anyplot#use-with-my-data-agent-chat'
+    );
+    expect(github).toHaveAttribute('target', '_blank');
+    expect(github).toHaveAttribute('rel', 'noopener noreferrer');
+  });
 });
 
 describe('AgentIntro terms', () => {
