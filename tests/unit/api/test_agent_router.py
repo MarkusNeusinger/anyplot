@@ -2909,7 +2909,7 @@ class TestCases:
 
         body = client.get(self.PATH).json()
 
-        catalogue.get_code.assert_awaited_once_with("scatter-basic", "matplotlib")
+        catalogue.get_code.assert_awaited_once_with("scatter-basic", "matplotlib", "python")
         assert body["diff"] == (
             "--- catalogue/scatter-basic/matplotlib.py\n"
             "+++ case/plot.py\n"
@@ -2926,6 +2926,26 @@ class TestCases:
         catalogue.get_code.assert_not_awaited()
         assert body["diff"] is None
         assert body["code"] == PLOT_PY
+
+    def test_detail_reads_a_non_python_catalogue_under_its_language(self, client, cases, rows, catalogue) -> None:
+        """The row has no programming language; the registry gives ggplot2's, so its code is found."""
+        _seed(cases, rows, library_id="ggplot2")
+        catalogue.get_code.return_value = _make_impl(
+            library_id="ggplot2", code="library(ggplot2)\n", library_version="4.0.1"
+        )
+
+        body = client.get(self.PATH).json()
+
+        catalogue.get_code.assert_awaited_once_with("scatter-basic", "ggplot2", "r")
+        assert body["catalogue_library_version"] == "4.0.1"
+
+    def test_detail_skips_the_catalogue_for_a_library_outside_the_registry(
+        self, client, cases, rows, catalogue
+    ) -> None:
+        _seed(cases, rows, library_id="no-such-lib")
+        body = client.get(self.PATH).json()
+        catalogue.get_code.assert_not_awaited()
+        assert (body["diff"], body["catalogue_library_version"]) == (None, None)
 
     def test_detail_lists_the_other_rows_of_the_same_version(self, client, cases, rows) -> None:
         seeded = _seed(cases, rows)

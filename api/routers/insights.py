@@ -498,14 +498,14 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
     for spec in all_specs:
         for impl in spec.impls:
             if impl.quality_score is not None and impl.quality_score >= 90 and impl.preview_url:
-                language = impl.library.language if impl.library else "python"
                 candidates.append(
                     (
                         spec.id,
                         spec.title,
                         spec.description or "",
                         impl.library_id,
-                        language,
+                        # The row's own key, which the lookup of the pick's code below needs.
+                        impl.language_id,
                         impl.quality_score,
                         impl.preview_url,
                         impl.preview_url_dark,
@@ -520,7 +520,7 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
     )
 
     # Load deferred fields (code, image_description) for just this one impl
-    full_impl = await impl_repo.get_by_spec_and_library(spec_id, library_id)
+    full_impl = await impl_repo.get_by_spec_and_library(spec_id, library_id, language)
 
     # Prefer preview URLs from the fresh per-impl load so they can't drift from
     # the code/metadata below; the candidate-snapshot values are the fallback.
