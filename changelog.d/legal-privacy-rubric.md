@@ -17,11 +17,12 @@
   phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
   check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
   says the same, word for word, and now also names who is responsible.
-- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to 782
-  words (counted at 390 px), and on a phone (390 px) from 6590 to 5064 px high; on a desktop
-  (1440 px), from 3659 to 2718 px. The data assistant's status, its limits and the terms for
+- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to 793
+  words (counted at 390 px), and on a phone (390 px) from 6590 to 5124 px high; on a desktop
+  (1440 px), from 3659 to 2738 px. The data assistant's status, its limits and the terms for
   your code now stand on its explainer page, `/agent`, which the assistant's first row
-  links. The machine readers and the shared links share one row, under both anchors the
+  links; what the limits count on, your tab id and your IP address, stays on the legal page.
+  The machine readers and the shared links share one row, under both anchors the
   stats page links: it says what each counts, that neither holds an IP address or a
   user-agent, and how long each is kept, beside its own store, and where; the fields of a
   line and of a counter stay in the docs, and with them that a line is content-free and says
