@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-split: Split Violin Plot
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-08
@@ -8,7 +8,9 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.patches import Patch
+from scipy.stats import gaussian_kde
 
 
 # Theme tokens
@@ -18,130 +20,90 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-COLOR_CONTROL = "#009E73"  # Position 1 - brand green
-COLOR_TREATMENT = "#C475FD"  # Position 2 - vermillion
+# Imprint palette: all eight positions, one per split group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Test score distributions for control vs treatment groups across school levels
+# Constants
+HALF_WIDTH = 0.42  # widest half violin, in x-axis units (a full violin stays inside its 1-unit slot)
+
+# Columns: set these to your table's column names
+SCHOOL_LEVEL = "School level"  # role: category
+TEST_SCORE = "Test score (points)"  # role: value
+STUDY_GROUP = "Study group"  # role: split_group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-
-school_levels = ["Elementary", "Middle School", "High School", "College"]
-n_per_group = 180
-
-data = {"category": [], "value": [], "split_group": []}
-
-# Generate realistic test score distributions
+levels = ["Elementary", "Middle School", "High School", "College"]
 level_params = {
-    "Elementary": {"control_mean": 72, "control_std": 12, "treatment_mean": 76, "treatment_std": 11},
-    "Middle School": {"control_mean": 68, "control_std": 14, "treatment_mean": 73, "treatment_std": 13},
-    "High School": {"control_mean": 65, "control_std": 16, "treatment_mean": 71, "treatment_std": 14},
-    "College": {"control_mean": 70, "control_std": 11, "treatment_mean": 75, "treatment_std": 10},
+    "Elementary": {"Control": (72, 12), "Treatment": (76, 11)},
+    "Middle School": {"Control": (68, 14), "Treatment": (73, 13)},
+    "High School": {"Control": (65, 16), "Treatment": (71, 14)},
+    "College": {"Control": (70, 11), "Treatment": (75, 10)},
 }
+n_per_group = 180
+rows = []
+for level in levels:
+    for group, (mean, std) in level_params[level].items():
+        scores = np.clip(np.random.normal(mean, std, n_per_group), 20, 100)
+        rows.extend({SCHOOL_LEVEL: level, TEST_SCORE: s, STUDY_GROUP: group} for s in scores)
+df = pd.DataFrame(rows)
 
-for level in school_levels:
-    params = level_params[level]
+# Plot: reads only df and the constants above
+df = df.dropna(subset=[SCHOOL_LEVEL, TEST_SCORE, STUDY_GROUP])  # a missing value is skipped, never drawn as zero
+categories = list(df[SCHOOL_LEVEL].unique())
+groups = list(df[STUDY_GROUP].unique())
+colors = dict(zip(groups, IMPRINT_PALETTE, strict=False))
+sides = {group: (-1 if i % 2 == 0 else 1) for i, group in enumerate(groups)}  # first group left, second right
 
-    # Control group - normal distribution
-    control_scores = np.random.normal(params["control_mean"], params["control_std"], n_per_group)
-    control_scores = np.clip(control_scores, 20, 100)
+# One KDE per half, evaluated only across its own data range so tails stop at the data
+densities = {}
+for (level, group), values in df.groupby([SCHOOL_LEVEL, STUDY_GROUP], sort=False)[TEST_SCORE]:
+    grid = np.linspace(values.min(), values.max(), 200)
+    densities[(level, group)] = (grid, gaussian_kde(values)(grid))
+peak = max(dens.max() for _, dens in densities.values())  # shared scale: widths are comparable across halves
 
-    # Treatment group - slightly right-skewed
-    treatment_scores = np.random.normal(params["treatment_mean"], params["treatment_std"], n_per_group)
-    treatment_scores = np.clip(treatment_scores, 20, 100)
-
-    data["category"].extend([level] * (n_per_group * 2))
-    data["value"].extend(list(control_scores) + list(treatment_scores))
-    data["split_group"].extend(["Control"] * n_per_group + ["Treatment"] * n_per_group)
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Create split violins
-positions = np.arange(len(school_levels))
+for i, level in enumerate(categories):
+    for group in groups:
+        grid, dens = densities[(level, group)]
+        side = sides[group]
+        edge = i + side * dens / peak * HALF_WIDTH
+        ax.fill_betweenx(grid, i, edge, facecolor=colors[group], edgecolor=INK_SOFT, linewidth=0.8, alpha=0.85)
 
-for i, level in enumerate(school_levels):
-    # Get data for this school level
-    mask_control = [
-        j
-        for j, (c, g) in enumerate(zip(data["category"], data["split_group"], strict=False))
-        if c == level and g == "Control"
-    ]
-    mask_treatment = [
-        j
-        for j, (c, g) in enumerate(zip(data["category"], data["split_group"], strict=False))
-        if c == level and g == "Treatment"
-    ]
+        # Quartile markers on the half they describe: median long and bold, quartiles short
+        q1, med, q3 = np.percentile(
+            df[(df[SCHOOL_LEVEL] == level) & (df[STUDY_GROUP] == group)][TEST_SCORE], [25, 50, 75]
+        )
+        ax.plot([i, i + side * 0.30], [med, med], color=INK, linewidth=2.4, solid_capstyle="butt", zorder=3)
+        for q in (q1, q3):
+            ax.plot([i, i + side * 0.17], [q, q], color=INK, linewidth=1.2, solid_capstyle="butt", zorder=3)
 
-    control_vals = [data["value"][j] for j in mask_control]
-    treatment_vals = [data["value"][j] for j in mask_treatment]
+    ax.axvline(i, color=INK_SOFT, linewidth=0.6, alpha=0.5, zorder=2)
 
-    # Create violin for control (left side)
-    vp_control = ax.violinplot(
-        [control_vals], positions=[i], widths=0.8, showmeans=False, showmedians=False, showextrema=False
-    )
+title = "violin-split · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.set_xticks(range(len(categories)), categories)
+ax.set_xlabel(SCHOOL_LEVEL, fontsize=10, color=INK)
+ax.set_ylabel(TEST_SCORE, fontsize=10, color=INK)
+ax.set_xlim(-0.6, len(categories) - 0.4)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 
-    # Clip to left half
-    for body in vp_control["bodies"]:
-        m = np.mean(body.get_paths()[0].vertices[:, 0])
-        body.get_paths()[0].vertices[:, 0] = np.clip(body.get_paths()[0].vertices[:, 0], -np.inf, m)
-        body.set_facecolor(COLOR_CONTROL)
-        body.set_edgecolor(INK_SOFT)
-        body.set_linewidth(1.5)
-        body.set_alpha(0.8)
-
-    # Create violin for treatment (right side)
-    vp_treatment = ax.violinplot(
-        [treatment_vals], positions=[i], widths=0.8, showmeans=False, showmedians=False, showextrema=False
-    )
-
-    # Clip to right half
-    for body in vp_treatment["bodies"]:
-        m = np.mean(body.get_paths()[0].vertices[:, 0])
-        body.get_paths()[0].vertices[:, 0] = np.clip(body.get_paths()[0].vertices[:, 0], m, np.inf)
-        body.set_facecolor(COLOR_TREATMENT)
-        body.set_edgecolor(INK_SOFT)
-        body.set_linewidth(1.5)
-        body.set_alpha(0.8)
-
-    # Add quartile markers
-    q1_c, med_c, q3_c = np.percentile(control_vals, [25, 50, 75])
-    q1_t, med_t, q3_t = np.percentile(treatment_vals, [25, 50, 75])
-
-    # Control side (left) - median and quartiles
-    ax.hlines(med_c, i - 0.28, i - 0.02, colors=INK, linewidth=3, zorder=3)
-    ax.hlines([q1_c, q3_c], i - 0.18, i - 0.02, colors=INK, linewidth=1.5, zorder=3)
-
-    # Treatment side (right) - median and quartiles
-    ax.hlines(med_t, i + 0.02, i + 0.28, colors=INK, linewidth=3, zorder=3)
-    ax.hlines([q1_t, q3_t], i + 0.02, i + 0.18, colors=INK, linewidth=1.5, zorder=3)
-
-# Styling
-ax.set_xticks(positions)
-ax.set_xticklabels(school_levels, fontsize=16, color=INK_SOFT)
-ax.set_xlabel("School Level", fontsize=20, color=INK)
-ax.set_ylabel("Test Score", fontsize=20, color=INK)
-ax.set_title("violin-split · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Spine styling
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+for s in ("top", "right"):
+    ax.spines[s].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
-# Grid - subtle y-axis only
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK_SOFT)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Legend
-legend_elements = [
-    Patch(facecolor=COLOR_CONTROL, edgecolor=INK_SOFT, alpha=0.8, label="Control"),
-    Patch(facecolor=COLOR_TREATMENT, edgecolor=INK_SOFT, alpha=0.8, label="Treatment"),
-]
-leg = ax.legend(handles=legend_elements, fontsize=16, loc="upper right", framealpha=0.9)
+handles = [Patch(facecolor=colors[g], edgecolor=INK_SOFT, alpha=0.85, label=g) for g in groups]
+leg = ax.legend(handles=handles, title=STUDY_GROUP, fontsize=8, title_fontsize=8, loc="lower left")
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_title().set_color(INK)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.08, right=0.97, top=0.92, bottom=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
