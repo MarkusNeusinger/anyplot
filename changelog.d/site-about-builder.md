@@ -21,10 +21,13 @@
   click away from the footer, the about page and the landing page. The footer
   reads github, mcp, the builder's name, about, legal: issues are filed on
   GitHub or from a spec page's "report issue" link, and the name stays in the
-  middle and now shows on phones and tablets too. From 720 px, or wider with a
-  larger browser font size, the footer is one row; below that it takes three
-  centred rows, github and mcp, the name, about and legal, so no row ends on a
-  separator or runs under the scroll-to-top button.
+  middle of the row and now shows on phones and tablets too. From 720 px, or
+  wider with a larger browser font size, the footer is one row; below that
+  the four links share a centred line and the name takes the line below it.
+  With a larger browser font size on a narrow phone the links break as github
+  and mcp over about and legal, so no line ends on a separator. Keyboard and
+  screen readers follow the order each layout shows, and every line keeps at
+  least 11 px from the feedback and scroll-to-top buttons.
 - **The stack and the running costs moved from the legal page to the about
   page.** The legal page keeps the legal notice and the privacy policy; a link
   to `/legal#transparency` leads to `/about#transparency`, which a fresh load
