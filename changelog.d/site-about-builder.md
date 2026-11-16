@@ -2,13 +2,16 @@
 
 - **The about page says who built the site and how.** Under its lede, "who
   built it" names Markus Neusinger with his photo, links to LinkedIn, GitHub
-  and his own site neusinger.com, and his other projects; "how it is built"
-  says that models write the code of the site, the API, and the agents, and how
-  he leads them, in the first person as the README does, and links the README's
-  "How I build anyplot" and "Engineering
-  highlights" and the AI workflow page. `test_readme_claims.py` checks that
-  those files and headings exist, so a renamed heading fails a test instead of
-  a link on the site. The author in the structured data names neusinger.com
+  and his own site neusinger.com, and his other projects, and introduces him
+  in his own words: a chart nerd, physicist by training and data analyst by
+  trade, who built anyplot alone in Visp with AI agents doing the legwork.
+  "how it is built" says that models write the code of the site, the API, and
+  the agents, and how he leads them, and links the README's "How I build
+  anyplot" and "Engineering highlights" and the AI workflow page.
+  `test_readme_claims.py` checks that those files and headings exist, so a
+  renamed heading fails a test instead of a link on the site. One person
+  builds the site, so the whole page speaks in the first person singular,
+  "I" and never "we". The author in the structured data names neusinger.com
   too.
 
 ### Changed
@@ -26,8 +29,21 @@
   page.** The legal page keeps the legal notice and the privacy policy; a link
   to `/legal#transparency` leads to `/about#transparency`, which a fresh load
   now scrolls to. The crawler bodies of both pages and `llms.txt` follow.
+- **The about page's description names what the page covers.** Search
+  results and link previews read "About anyplot.ai: who built it, how AI
+  agents write and review the catalogue, the stack, and what it costs to run."
+  on the page, in its link preview and in its crawler copy, in place of three
+  different descriptions, one of them an "AI-powered" slogan the style guide
+  rules out.
 
 ### Fixed
+
+- **The origin gives its dates, not a weekend.** The about page and the
+  style guide's origin story said pyplots.ai was built in a weekend. It
+  started in November 2025, and after a few months it became anyplot.ai in
+  April 2026, as the repository's first commit and the 2.0.0 relaunch in
+  `CHANGELOG.md` show; `test_readme_claims.py` pins the month of the rename
+  to that release.
 
 - **The masthead fits at every width.** With MonoLisa the last menu entry ran
   into the right margin on phones narrower than about 344 px, and the screen
@@ -43,9 +59,10 @@
   last review, and that a nightly job regenerates the oldest implementations,
   instead of promising a re-run whenever a library ships a release, which no
   workflow does. Among the automated checks before the review it names only
-  the ones a workflow runs, so the blank-image check is gone. The crawler body
-  says the same, and `test_readme_claims.py` pins the floor, the step, the
-  nightly schedule and the checks.
+  the ones a workflow runs, so the blank-image check is gone, from the
+  README's pipeline step too. The crawler body says the same, and
+  `test_readme_claims.py` pins the floor, the step, the nightly schedule and
+  the checks, the README's included.
 - **Back leaves a redirected address in one step.** A fresh load of the old
   chat address `/debug/agent` or of a language address `/{spec}/{language}`
   left the old address one step back in the history, so Back landed on it and
