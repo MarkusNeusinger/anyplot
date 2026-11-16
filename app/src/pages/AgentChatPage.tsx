@@ -137,10 +137,11 @@
  * 2. The lane. A browser without the admin hint (`src/utils/adminAuth.ts`) or local
  *    development is a visitor's: it sends no request to the debug API, and runs on the
  *    public lane while the API's `GET /agent/lane` is open (`useAgentLaneOpen`); closed,
- *    the page says so. A browser with the hint asks the admin lane's `GET /status` first
- *    (`useAgentAdmin`), and the page waits for the answer, which picks the lane: the admin
- *    lane, also while the public door is closed; or, after a refusal or no answer (an
- *    expired Cloudflare Access session), the public lane, while the admin menu says the
+ *    the page says so, with the assistant's terms below the notice and, at a chat's address,
+ *    the site's feedback button (`LaneClosed`). A browser with the hint asks the admin lane's
+ *    `GET /status` first (`useAgentAdmin`), and the page waits for the answer, which picks the
+ *    lane: the admin lane, also while the public door is closed; or, after a refusal or no
+ *    answer (an expired Cloudflare Access session), the public lane, while the admin menu says the
  *    admin session expired and links to `/debug`. A refusal later in the session does the
  *    same. "View as visitor" in the admin menu runs the public lane for this tab, exactly
  *    as a visitor's. The BFF's admin gate is the real check; the page only picks the API.
@@ -163,12 +164,13 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
 
 import { setAnalyticsMuted } from 'src/analytics/mute';
+import { FeedbackWidget } from 'src/components/FeedbackWidget';
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_TO_LANG } from 'src/constants';
@@ -201,14 +203,14 @@ import {
 } from 'src/lib/agent';
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
-import { namesAgentChat, paths, specPath } from 'src/routes/paths';
+import { isAgentChatAddress, namesAgentChat, paths, specPath } from 'src/routes/paths';
 import {
   AdminMenu,
   AdminMeters,
   type AdminMode,
   AdminSection,
 } from 'src/sections/agent-chat/AdminMenu';
-import { AGENT_INTRO_SOURCE, AgentIntro } from 'src/sections/agent-chat/AgentIntro';
+import { AGENT_INTRO_SOURCE, AgentIntro, AgentTerms } from 'src/sections/agent-chat/AgentIntro';
 import { attachmentSummary } from 'src/sections/agent-chat/attachmentText';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatFrame, FrameRule, StatusLine } from 'src/sections/agent-chat/ChatFrame';
@@ -332,25 +334,35 @@ export const HIGHCHARTS_NOTE =
   'highcharts is free for non-commercial use; a commercial use needs a licence from Highsoft.';
 
 /**
- * The page while the public lane is closed (`GET /agent/lane` answered no) and the page does not
- * run on the admin lane. An admin's browser keeps the admin menu below the text: "view as visitor"
- * to switch back, or the line about an expired admin session.
+ * The page while the public lane is closed (`GET /agent/lane` answered no, or the public lane
+ * refused the session) and the page does not run on the admin lane. An admin's browser keeps the
+ * admin menu below the text: "view as visitor" to switch back, or the line about an expired admin
+ * session. The assistant's terms stand below the notice, because the legal page sends readers
+ * to `/agent` for them, also while the operator has paused the assistant.
  */
 function LaneClosed({ adminMenu = null }: { adminMenu?: React.ReactNode }) {
+  const { pathname, search } = useLocation();
   return (
-    <Notice title="use with my data · experimental">
-      the assistant is closed right now. please try again later; the{' '}
-      <Box component={RouterLink} to={paths.plots} sx={proseLinkStyle}>
-        catalogue
-      </Box>{' '}
-      stays open.
-      {/* Its row is the admin menu's too (`admin-menu…`), so the parity test leaves it out. */}
-      {adminMenu && (
-        <Box data-testid="admin-menu-row" sx={{ display: 'flex', mt: 2 }}>
-          {adminMenu}
-        </Box>
-      )}
-    </Notice>
+    <>
+      <Notice title="use with my data · experimental">
+        the assistant is closed right now. please try again later; the{' '}
+        <Box component={RouterLink} to={paths.plots} sx={proseLinkStyle}>
+          catalogue
+        </Box>{' '}
+        stays open.
+        {/* Its row is the admin menu's too (`admin-menu…`), so the parity test leaves it out. */}
+        {adminMenu && (
+          <Box data-testid="admin-menu-row" sx={{ display: 'flex', mt: 2 }}>
+            {adminMenu}
+          </Box>
+        )}
+        <AgentTerms />
+      </Notice>
+      {/* The layout leaves the site's feedback button out wherever the address names a chat
+          (`RootLayout`), but no chat is open here to offer feedback of its own, so the page
+          brings the button back by the layout's own rule: exactly where the layout left it out. */}
+      {isAgentChatAddress(pathname, search) && <FeedbackWidget />}
+    </>
   );
 }
 
@@ -402,7 +414,8 @@ export function AgentChatPage() {
   // highlighter and a back link to a page that does not exist.
   const language = LIB_TO_LANG[library] ?? 'python';
   // A catalogue pair in the query: the chat, else the explainer. The layout reads the same rule
-  // for the site's feedback button, which it hides wherever the query names a pair (`RootLayout`).
+  // for the site's feedback button, which it hides wherever the query names a pair (`RootLayout`);
+  // the closed notice brings it back there, since it shows no chat (`LaneClosed`).
   const valid = namesAgentChat(params);
 
   // A layout effect: the layout records this page's pageview in its own layout effect, which

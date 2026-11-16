@@ -454,13 +454,52 @@ describe('AgentChatPage on the public lane', () => {
     ).toEqual([{ library: 'matplotlib', source: 'direct', spec: 'scatter-basic' }]);
   });
 
-  it('says the assistant is closed at /agent without a plot while the lane is, as before', async () => {
+  it('says the assistant is closed at /agent without a plot while the lane is, with no explainer', async () => {
     laneOpen = false;
     renderPath('/agent');
     expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
     expect(screen.queryByTestId('agent-intro')).not.toBeInTheDocument();
     expect(calls.every(call => call.url.pathname.endsWith('/agent/lane'))).toBe(true);
   });
+
+  it.each([
+    ['/agent', 'without a plot'],
+    ['/agent?spec=scatter-basic&library=matplotlib&language=python', 'at a chat address'],
+  ])(
+    'keeps the terms of use under the closed notice at %s (%s), and asks nothing but the lane',
+    async path => {
+      // The legal page sends readers to `/agent` for the terms, also while the assistant is paused.
+      laneOpen = false;
+      renderPath(path);
+      await screen.findByText(/the assistant is closed right now/);
+      const terms = screen.getByTestId('agent-intro-terms');
+      // Below the notice's sentence, whose last link is the way on to the catalogue.
+      const catalogue = screen.getByRole('link', { name: 'catalogue' });
+      expect(
+        catalogue.compareDocumentPosition(terms) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+      expect(
+        within(terms)
+          .getAllByRole('term')
+          .map(label => label.textContent)
+      ).toEqual(['status', 'limits', 'your code', 'privacy']);
+      expect(
+        within(terms)
+          .getAllByRole('definition')
+          .map(text => text.textContent)
+      ).toEqual([
+        'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
+        'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
+        'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.',
+        'what is stored, where and for how long',
+      ]);
+      expect(
+        within(terms).getByRole('link', { name: 'what is stored, where and for how long' })
+      ).toHaveAttribute('href', '/legal#assistant');
+      // Text and links only: no session, no status read, while the door is closed.
+      expect(calls.map(call => call.url.pathname)).toEqual(['/agent/lane']);
+    }
+  );
 
   it('says the assistant is closed while the lane is, and opens nothing', async () => {
     laneOpen = false;

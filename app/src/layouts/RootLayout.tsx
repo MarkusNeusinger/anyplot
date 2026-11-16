@@ -39,7 +39,8 @@ export function RootLayout() {
   // composer's buttons and the replies. The explainer at `/agent` without a pair has none, so the
   // button stands there. The page picks chat or explainer by the same rule (`namesAgentChat`).
   // The rule reads the address alone, so at a chat's address the button stays away also while
-  // the page shows no chat: while it waits for the lane, or with the lane closed.
+  // the page waits for the lane. With the lane closed no chat is open there, and the page's closed
+  // notice shows the button itself, by this same rule (`LaneClosed` in `AgentChatPage`).
   const siteFeedback = !isAgentChatAddress(pathname, search);
 
   // Set synchronously during render so the pageview below and a child page's

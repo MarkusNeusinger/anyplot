@@ -2,13 +2,14 @@
  * `/agent` without a catalogue pair in its query: what the chat does, in the words of the about
  * page's "use with my data" section, a few example pairs that open the chat, the way on to the
  * catalogue, where every other pair starts, and below it the assistant's terms of use in a few
- * quiet lines. The landing page's `.use_my_data()` leads here.
+ * quiet lines (`AgentTerms`, which the closed notice carries too). The landing page's
+ * `.use_my_data()` leads here.
  *
  * It is text and links only, with no request of its own: it opens no session, so a visitor who
  * only reads costs the agents service nothing. The page decides the lane before it shows this (a
- * closed public lane still reads as closed), and keeps it out of the index (`AgentChatPage`).
- * With no feedback of its own, it keeps the site's feedback button, which the layout hides only
- * at an address that names a chat (`RootLayout`).
+ * closed public lane reads as closed, with the terms below the notice), and keeps it out of the
+ * index (`AgentChatPage`). With no feedback of its own, it keeps the site's feedback button,
+ * which the layout hides only at an address that names a chat (`RootLayout`).
  */
 
 import { Fragment, type ReactNode } from 'react';
@@ -108,17 +109,57 @@ const termTextSx = { ...bodyTextSx, fontSize: smallText, color: 'var(--ink-soft)
  * they would sit under it on arrival. They keep out of its column: the button's inset, size and
  * gap from the window's edge (`FeedbackWidget`), less the layout's side gutter, 16 px and from
  * `sm` 32 px (`RootLayout`), which the column already leaves free. From `md` the column, at most
- * 640 px wide and centred, stands clear of the button.
+ * 640 px wide (560 px under the closed notice) and centred, stands clear of the button.
  */
 const buttonClearance = (breakpoint: 'xs' | 'sm', gutter: number) =>
   `${FAB_INSET[breakpoint] + FAB_SIZE[breakpoint] + FAB_GAP - gutter}px`;
+
+/**
+ * The assistant's terms of use as labelled lines: the explainer's fine print, and the same block
+ * under the closed notice (`LaneClosed` in `AgentChatPage`), because the legal page sends readers
+ * to `/agent` for them and they must stand there also while the operator has paused the
+ * assistant. Text and links only: it opens no session and asks nothing. The crawler copy of
+ * `/agent` (`/seo-proxy/agent` in `api/routers/seo.py`) carries the same sentences, and
+ * tests/unit/test_agent_intro_crawler_copy.py fails when the two differ.
+ */
+export function AgentTerms() {
+  return (
+    <Box
+      component="dl"
+      data-testid="agent-intro-terms"
+      sx={{
+        display: 'grid',
+        // At phone width the label stands above its sentence, which keeps the full width.
+        gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'max-content minmax(0, 1fr)' },
+        columnGap: 2,
+        rowGap: { xs: 0, sm: 0.75 },
+        pr: { xs: buttonClearance('xs', 16), sm: buttonClearance('sm', 32), md: 0 },
+        mt: 4,
+        mb: 0,
+      }}
+    >
+      {AGENT_TERMS.map(([term, text]) => (
+        <Fragment key={term}>
+          <Box component="dt" sx={{ ...labelSx, lineHeight: 1.6 }}>
+            {term}
+          </Box>
+          <Box component="dd" sx={{ ...termTextSx, mb: { xs: 1, sm: 0 } }}>
+            {text}
+          </Box>
+        </Fragment>
+      ))}
+    </Box>
+  );
+}
 
 export function AgentIntro() {
   return (
     <Box data-testid="agent-intro" sx={{ py: 4, maxWidth: 640, mx: 'auto' }}>
       {/* The Open Graph pair replaces the home page's shell defaults in the head, so the rendered
           page never describes itself as the home page. A link-preview fetcher runs no JavaScript
-          and never sees it. No canonical: the page is never indexed. */}
+          and never sees it; one that nginx recognises gets the crawler copy instead
+          (`/seo-proxy/agent`), with the same title and description. No canonical: the page is
+          never indexed. */}
       <title>{AGENT_INTRO_TITLE}</title>
       <meta name="description" content={AGENT_INTRO_DESCRIPTION} />
       <meta property="og:title" content={AGENT_INTRO_TITLE} />
@@ -197,31 +238,7 @@ export function AgentIntro() {
         .browse() →
       </Box>
 
-      <Box
-        component="dl"
-        data-testid="agent-intro-terms"
-        sx={{
-          display: 'grid',
-          // At phone width the label stands above its sentence, which keeps the full width.
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'max-content minmax(0, 1fr)' },
-          columnGap: 2,
-          rowGap: { xs: 0, sm: 0.75 },
-          pr: { xs: buttonClearance('xs', 16), sm: buttonClearance('sm', 32), md: 0 },
-          mt: 4,
-          mb: 0,
-        }}
-      >
-        {AGENT_TERMS.map(([term, text]) => (
-          <Fragment key={term}>
-            <Box component="dt" sx={{ ...labelSx, lineHeight: 1.6 }}>
-              {term}
-            </Box>
-            <Box component="dd" sx={{ ...termTextSx, mb: { xs: 1, sm: 0 } }}>
-              {text}
-            </Box>
-          </Fragment>
-        ))}
-      </Box>
+      <AgentTerms />
     </Box>
   );
 }
