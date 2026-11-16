@@ -49,7 +49,20 @@ interface PlotOfTheDayTerminalProps {
   maxPlotHeight?: string;
 }
 
-/** The prompt header: `$ runner filename` on the left, the actions on the right. */
+/**
+ * The card is wide from this width on (the frame is the query container): the prompt header
+ * and the status footer take one row each. Narrower, on a phone and in the narrow
+ * two-column card from 900 px, each takes two, because one row would leave the filename or
+ * the title only a few characters. The row counts depend on the card's width alone, never
+ * on its content, so the frame has the same height empty, with the plot, and after the
+ * eligibility answer adds `.use_my_data()`.
+ */
+const WIDE_CARD = '@container (min-width: 560px)';
+
+/**
+ * The prompt header: `$ runner filename` on the first row, the actions on the second in a
+ * narrow card; all on one row in a wide card.
+ */
 const headerSx = {
   display: 'flex',
   flexWrap: 'wrap',
@@ -60,14 +73,27 @@ const headerSx = {
   pb: 1.5,
   color: 'var(--ink-muted)',
   fontSize: '12px',
+  [WIDE_CARD]: { flexWrap: 'nowrap' },
 } as const;
 
 /**
- * The footer takes one row once the card is this wide (the frame is the query container).
- * Narrower, on a phone and in the narrow two-column card from 900 px, one row would leave
- * a title only a few characters.
+ * The header's actions, `.use_my_data()` for an eligible pair and `github.open()`. In a
+ * narrow card they always take a row of their own, right-aligned below the filename, with or
+ * without `.use_my_data()`: that link arrives with a separate answer after the plot, and
+ * would otherwise move the pair to a new row then and push the page down. The empty and the
+ * failed frame hold the same row with nothing in it; a no-break space gives it the line's
+ * height.
  */
-const FOOTER_ONE_ROW = '@container (min-width: 560px)';
+const headerActionsSx = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  gap: 1.75,
+  ml: 'auto',
+  flexBasis: '100%',
+  '&:empty::before': { content: '"\\00a0"' },
+  [WIDE_CARD]: { flexBasis: 'auto' },
+} as const;
 
 /**
  * The status footer: `>>> title · library`, and `// plot of the day` at the right. It has
@@ -86,7 +112,7 @@ const footerSx = {
   py: 1.5,
   fontSize: '11px',
   color: 'var(--ink-muted)',
-  [FOOTER_ONE_ROW]: { flexWrap: 'nowrap' },
+  [WIDE_CARD]: { flexWrap: 'nowrap' },
 } as const;
 
 /** `>>>` and the title: the first row of a narrow card, the part that shrinks in a wide one. */
@@ -95,8 +121,52 @@ const footerLeadSx = {
   gap: 1.5,
   minWidth: 0,
   flexBasis: '100%',
-  [FOOTER_ONE_ROW]: { flexBasis: 'auto' },
+  [WIDE_CARD]: { flexBasis: 'auto' },
 } as const;
+
+/**
+ * The status footer of both states. Its children keep their places whether or not the title
+ * and the library are there, so when the plot arrives React keeps `// plot of the day` in its
+ * own node instead of turning it into the library name, which would move that text and count
+ * as a layout shift. Without a title it is hidden from screen readers, as the empty frame's
+ * glyphs carry no words.
+ */
+function StatusFooter({ title, library }: { title?: string; library?: string }) {
+  return (
+    <Box sx={footerSx} aria-hidden={title ? undefined : 'true'} data-testid="potd-terminal-footer">
+      <Box sx={footerLeadSx}>
+        <Box component="span" sx={{ color: colors.primary }}>
+          &gt;&gt;&gt;
+        </Box>
+        {title && (
+          <Box
+            component="span"
+            sx={{
+              color: 'var(--ink-soft)',
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {title}
+          </Box>
+        )}
+      </Box>
+      {/* In a narrow card the library starts the second row, where a leading dot would
+          dangle. */}
+      {library && (
+        <Box component="span" sx={{ display: 'none', [WIDE_CARD]: { display: 'inline' } }}>
+          ·
+        </Box>
+      )}
+      {library && <Box component="span">{library}</Box>}
+      <Box sx={{ flex: 1 }} />
+      <Box component="span" sx={{ opacity: 0.8 }}>
+        // plot of the day
+      </Box>
+    </Box>
+  );
+}
 
 /** The 16:10 plot frame between the dashed rules, capped at `maxPlotHeight`. */
 function plotFrameSx(maxPlotHeight: string) {
@@ -147,7 +217,7 @@ export function PlotOfTheDayTerminal({
     position: 'relative',
     width: '100%',
     maxWidth,
-    // The footer's row count follows the card's own width (`FOOTER_ONE_ROW`).
+    // The header's and the footer's row counts follow the card's own width (`WIDE_CARD`).
     containerType: 'inline-size',
     border: '1px solid var(--ink-muted)',
     borderRadius: '6px',
@@ -185,6 +255,8 @@ export function PlotOfTheDayTerminal({
           <Box component="span" sx={{ color: colors.primary, fontWeight: 700 }}>
             $
           </Box>
+          {/* The actions' row, held empty, so a narrow header has its two rows already. */}
+          <Box sx={headerActionsSx} data-testid="potd-terminal-actions" />
         </Box>
         <Box
           sx={{
@@ -216,17 +288,7 @@ export function PlotOfTheDayTerminal({
             </Box>
           )}
         </Box>
-        <Box sx={footerSx} aria-hidden="true">
-          <Box sx={footerLeadSx}>
-            <Box component="span" sx={{ color: colors.primary }}>
-              &gt;&gt;&gt;
-            </Box>
-          </Box>
-          <Box sx={{ flex: 1 }} />
-          <Box component="span" sx={{ opacity: 0.8 }}>
-            // plot of the day
-          </Box>
-        </Box>
+        <StatusFooter />
       </Box>
     );
   }
@@ -309,18 +371,7 @@ export function PlotOfTheDayTerminal({
         >
           {displayFilename}
         </Box>
-        {/* The actions. With `.use_my_data()` beside it, the pair takes its own line on a
-            phone, right-aligned below the filename, so the filename keeps its width. */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 1.75,
-            ml: 'auto',
-            flexBasis: agentLink ? { xs: '100%', sm: 'auto' } : 'auto',
-          }}
-        >
+        <Box sx={headerActionsSx} data-testid="potd-terminal-actions">
           {agentLink && (
             <Box
               {...agentLink}
@@ -415,35 +466,7 @@ export function PlotOfTheDayTerminal({
         </Box>
       </Box>
 
-      {/* Status footer */}
-      <Box sx={footerSx}>
-        <Box sx={footerLeadSx}>
-          <Box component="span" sx={{ color: colors.primary }}>
-            &gt;&gt;&gt;
-          </Box>
-          <Box
-            component="span"
-            sx={{
-              color: 'var(--ink-soft)',
-              minWidth: 0,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {potd.spec_title}
-          </Box>
-        </Box>
-        {/* In a narrow card the library starts the second row, where a leading dot would
-            dangle. */}
-        <Box component="span" sx={{ display: 'none', [FOOTER_ONE_ROW]: { display: 'inline' } }}>
-          ·
-        </Box>
-        <Box component="span">{potd.library_name}</Box>
-        <Box sx={{ flex: 1 }} />
-        <Box component="span" sx={{ opacity: 0.8 }}>
-          // plot of the day
-        </Box>
-      </Box>
+      <StatusFooter title={potd.spec_title} library={potd.library_name} />
     </Box>
   );
 }

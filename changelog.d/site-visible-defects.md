@@ -22,12 +22,18 @@
   `free · non-commercial`, beside the note MUI X already had, on the
   libraries page and the landing page.
 - **The landing page no longer jumps when the plot of the day arrives.** The
-  terminal frame is reserved, empty, while the plot loads. Its footer has as
-  many rows as the card's, so the footer no longer grows when the plot
-  arrives; a title too long for its row is cut with an ellipsis instead of
-  wrapping. On a tablet, with the plot-of-the-day answer delayed by 1.5 s,
-  the layout shift drops from 0.18 to under 0.001. If the request fails, the
-  frame stays and says `plot of the day did not load`, with `.retry()`.
+  terminal frame is reserved, empty, while the plot loads, and keeps its
+  height when the plot arrives and when `.use_my_data()` joins its header
+  about a second later. The header and the footer have a number of rows
+  that depends only on the card's width: below 560 px, on a phone and in the
+  narrow two-column card from 900 px, the header's actions and the footer's
+  library each take a second row in every state. A filename or title too
+  long for its row is cut with an ellipsis instead of wrapping. With the
+  plot-of-the-day answer delayed by 1.5 s, the layout shift on a tablet
+  drops from 0.18 to under 0.001; on a phone with the card in view, the
+  late `.use_my_data()` shifted the page by 0.18 and now shifts it by under
+  0.001. If the request fails, the frame stays and says
+  `plot of the day did not load`, with `.retry()`.
 - **A failed load on the plots page clears and can be retried.** The error
   banner is cleared when the next fetch starts. It says `plots did not load`
   instead of the raw exception with status and URL, and offers `.retry()`.

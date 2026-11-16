@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fireEvent, render, screen, userEvent } from 'src/test-utils';
+import { fireEvent, render, screen, styleAt, userEvent, within } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 
@@ -121,6 +121,58 @@ describe('PlotOfTheDayTerminal', () => {
 
     await user.click(screen.getByRole('button', { name: 'Retry loading the plot of the day' }));
     expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives the header the same rows in every state: the actions on a row of their own while the card is narrow', () => {
+    // A phone's card, the narrow two-column card from 900 px, and a wide card.
+    const narrow = 400;
+    const wide = 600;
+    const { rerender } = render(<PlotOfTheDayTerminal potd={null} status="loading" />);
+    // The empty frame holds the actions' row with nothing in it; its pseudo-element gives it
+    // the line's height without words of its own.
+    const empty = screen.getByTestId('potd-terminal-actions');
+    expect(empty).toBeEmptyDOMElement();
+    expect(styleAt(empty, 390, narrow).flexBasis).toBe('100%');
+    expect(styleAt(empty, 1440, wide).flexBasis).toBe('auto');
+    const rowClass = empty.className;
+
+    rerender(<PlotOfTheDayTerminal potd={null} status="failed" onRetry={vi.fn()} />);
+    expect(screen.getByTestId('potd-terminal-actions').className).toBe(rowClass);
+
+    // The plot without `.use_my_data()`: github.open() alone still takes the second row.
+    rerender(<PlotOfTheDayTerminal potd={potd} status="ready" />);
+    const card = screen.getByTestId('potd-terminal-actions');
+    expect(card.className).toBe(rowClass);
+    expect(within(card).getByLabelText('Open source on GitHub')).toBeInTheDocument();
+    expect(within(card).queryByRole('link', { name: 'Use with my data' })).toBeNull();
+    expect(styleAt(card, 390, narrow).flexBasis).toBe('100%');
+    expect(styleAt(card.parentElement as Element, 390, narrow).flexWrap).toBe('wrap');
+    expect(styleAt(card, 1440, wide).flexBasis).toBe('auto');
+    expect(styleAt(card.parentElement as Element, 1440, wide).flexWrap).toBe('nowrap');
+
+    // The eligibility answer adds the link into the same row, which keeps its place.
+    agentEligibility.lane = 'public';
+    rerender(<PlotOfTheDayTerminal potd={potd} status="ready" />);
+    const withLink = screen.getByTestId('potd-terminal-actions');
+    expect(withLink.className).toBe(rowClass);
+    expect(within(withLink).getByRole('link', { name: 'Use with my data' })).toBeInTheDocument();
+    expect(styleAt(withLink, 390, narrow).flexBasis).toBe('100%');
+  });
+
+  it('keeps `// plot of the day` in its own node when the plot arrives', () => {
+    const { rerender } = render(<PlotOfTheDayTerminal potd={null} status="loading" />);
+    const footer = screen.getByTestId('potd-terminal-footer');
+    const tag = within(footer).getByText('// plot of the day');
+    expect(footer).toHaveAttribute('aria-hidden', 'true');
+
+    rerender(<PlotOfTheDayTerminal potd={potd} status="ready" />);
+    // The same node in the same place: the library name is a node of its own, so the tag
+    // does not turn into it and move.
+    expect(screen.getByTestId('potd-terminal-footer')).toBe(footer);
+    expect(within(footer).getByText('// plot of the day')).toBe(tag);
+    expect(within(footer).getByText('Matplotlib')).not.toBe(tag);
+    expect(within(footer).getByText('Basic Scatter')).toBeInTheDocument();
+    expect(footer).not.toHaveAttribute('aria-hidden');
   });
 
   it('renders no card when the API answered without a plot of the day', () => {

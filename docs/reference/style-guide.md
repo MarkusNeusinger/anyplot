@@ -698,6 +698,13 @@ In catalog tier (`max-width: 2200px`): `grid-template-columns: repeat(auto-fill,
 
 The plot panel sits inside a single ASCII-style box drawn with CSS borders. The box framing makes the panel feel like a terminal window rendered on editorial paper.
 
+The panel keeps one height from the first paint on (`app/src/sections/landing/PlotOfTheDayTerminal.tsx`). While the plot of the day loads, the same frame stands empty; if the request fails, it says `plot of the day did not load` with `.retry()`. Its prompt header and status footer have a number of rows that depends only on the panel's own width, a container query at 560 px, never on their content:
+
+- Narrower than 560 px, on a phone and in the narrow two-column hero from 900 px, the header puts its actions (`.use_my_data()` when the pair is eligible, and `github.open()`) on a second row, right-aligned, and the footer puts the library and `// plot of the day` on a second row. The empty and the failed frame hold both rows too, so `.use_my_data()`, which arrives with its own answer after the plot, does not add a row.
+- From 560 px, the header and the footer take one row each.
+
+A filename or a title too long for its row is cut with an ellipsis instead of wrapping.
+
 ```
 ┌─ ~/anyplot ──────────────────────┐
 │                                  │
