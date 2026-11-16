@@ -36,7 +36,7 @@ from typing import NoReturn
 
 PROJECT = "anyplot"
 LOCATION = "global"  # second opinions: cheapest; the site's agents stay on eu
-DEFAULT_MODEL = "gemini-4-argon"
+DEFAULT_MODEL = "gemini-4-carbon"  # Google's strongest reasoning model; Argon is the faster, leaner one
 LABELS = {"purpose": "second-opinion"}
 
 MAX_FILE_BYTES = 300_000
@@ -65,13 +65,17 @@ NO_INLINE = LOCK_FILES | {"CHANGELOG.md"}
 
 # USD per 1M tokens on Vertex AI global: (input, output incl. thinking, cached input).
 # From the billing pricing export, 2026-10-21. Regional (eu) is 10 % more.
+# Carbon carries Argon's prices: Google's pricing page lists the two at the same
+# rate on every tier (read 2026-11-16); its own SKU was not in that export yet.
 PRICES = {
+    ("gemini-4-carbon", "online"): (4.00, 20.00, 0.20),
     ("gemini-4-argon", "online"): (4.00, 20.00, 0.20),
     ("gemini-3.8-flash", "online"): (1.50, 7.50, 0.15),
     ("gemini-3.8-flash", "flex"): (0.75, 3.75, 0.075),
 }
 # Flex PayGo: half price for latency-tolerant requests, global endpoint only, and
-# only for some models (3.8 Flash yes, 4 Argon no; Vertex docs, 2026-10-21).
+# only for some models (3.8 Flash yes, 4 Argon no; Vertex docs, 2026-10-21. 4 Carbon's
+# Vertex page lists Standard, Priority, Batch and Provisioned Throughput, no Flex; 2026-11-16).
 FLEX_MODELS = {"gemini-3.8-flash"}
 FLEX_HEADERS = {"X-Vertex-AI-LLM-Shared-Request-Type": "flex", "X-Vertex-AI-LLM-Request-Type": "shared"}
 FLEX_WAIT_MS = 300_000  # Flex time per run, and per request; after that the run goes online
