@@ -51,7 +51,7 @@ const AGENT_EXAMPLES = [
 export const AGENT_INTRO_TITLE = 'use with my data | anyplot.ai';
 /** The page's description: the about page's two sentences on what the chat does. */
 export const AGENT_INTRO_DESCRIPTION =
-  "pick any plot, choose .use_my_data(), and paste your data. an agent adapts that plot's code to your columns, renders it in a sandbox with no network access, reviews the render against the catalogue's rubric, repairs it once if needed, and hands back the image and the code.";
+  "pick any plot, choose .use_my_data() on its page, and paste your data. an agent adapts that plot's code to your columns, renders it in a sandbox with no network access, reviews the render against the catalogue's rubric, repairs it once if needed, and hands back the image and the code.";
 
 /** A link of the examples' list and the closing action: a 44 px target at phone width. */
 const targetSx = { display: 'inline-flex', alignItems: 'center', minHeight: { xs: 44, sm: 32 } };
@@ -173,11 +173,12 @@ export function AgentIntro() {
         , choose{' '}
         <Box component="code" sx={inlineCodeSx}>
           .use_my_data()
-        </Box>
-        , and paste your data. an agent adapts that plot&apos;s code to your columns, renders it in
-        a sandbox with no network access, reviews the render against the catalogue&apos;s rubric,
-        repairs it once if needed, and hands back the image and the code. your chat and data live
-        only in server memory and are deleted after an hour idle, unless you send feedback.
+        </Box>{' '}
+        on its page, and paste your data. an agent adapts that plot&apos;s code to your columns,
+        renders it in a sandbox with no network access, reviews the render against the
+        catalogue&apos;s rubric, repairs it once if needed, and hands back the image and the code.
+        your chat and data live only in server memory and are deleted after an hour idle, unless you
+        send feedback.
       </Box>
 
       <Box

@@ -1391,9 +1391,9 @@ async def seo_about():
 # two outer sentences, the example pairs or the terms here differ from it.
 AGENT_INTRO_TITLE = "use with my data | anyplot.ai"
 AGENT_INTRO_DESCRIPTION = (
-    "pick any plot, choose .use_my_data(), and paste your data. an agent adapts that plot's code to your "
-    "columns, renders it in a sandbox with no network access, reviews the render against the catalogue's "
-    "rubric, repairs it once if needed, and hands back the image and the code."
+    "pick any plot, choose .use_my_data() on its page, and paste your data. an agent adapts that plot's code "
+    "to your columns, renders it in a sandbox with no network access, reviews the render against the "
+    "catalogue's rubric, repairs it once if needed, and hands back the image and the code."
 )
 # The explainer's paragraph is the description between these two sentences.
 AGENT_INTRO_OPENING = "experimental, open to everyone since 2 november 2026."

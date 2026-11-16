@@ -24,6 +24,16 @@ function renderIntro() {
   );
 }
 
+describe('AgentIntro paragraph', () => {
+  it('says what the chat does, verbatim', () => {
+    renderIntro();
+    const paragraph = within(screen.getByTestId('agent-intro')).getAllByRole('paragraph')[0];
+    expect(paragraph.textContent).toBe(
+      "experimental, open to everyone since 2 november 2026. pick any plot, choose .use_my_data() on its page, and paste your data. an agent adapts that plot's code to your columns, renders it in a sandbox with no network access, reviews the render against the catalogue's rubric, repairs it once if needed, and hands back the image and the code. your chat and data live only in server memory and are deleted after an hour idle, unless you send feedback."
+    );
+  });
+});
+
 describe('AgentIntro terms', () => {
   it('lists the terms as labelled lines, in order, verbatim', () => {
     renderIntro();

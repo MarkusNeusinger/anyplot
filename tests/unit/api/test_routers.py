@@ -1233,6 +1233,11 @@ class TestSeoProxyRouter:
         assert '<meta name="robots" content="noindex" />' in response.text
         assert "<title>use with my data | anyplot.ai</title>" in response.text
         assert "an agent adapts that plot&#x27;s code to your columns" in response.text
+        # The choice is made on a plot's own page, as the explainer says.
+        assert (
+            '<a href="https://anyplot.ai/plots">pick any plot</a>, choose <code>.use_my_data()</code> on its page, '
+            "and paste your data."
+        ) in response.text
         # The three terms, word for word as the explainer has them, and the way to the privacy facts.
         for sentence in (
             "experimental, without warranty: results can be wrong and nobody checks them by hand. "
