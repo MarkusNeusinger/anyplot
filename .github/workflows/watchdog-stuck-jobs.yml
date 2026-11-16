@@ -320,10 +320,19 @@ jobs:
                    || echo " $fresh " | grep -qE " (ai-approved|ai-rejected|regen:kept|regen:improved) "; then
                 echo "::notice::PR #$num: a review finished during this scan (verdict present or ai-review-failed gone) — no re-review; judged again on the next scan"
               else
+                # The marker only. `ai-review-failed` stays on for the review
+                # to remove at its start ("Clear a stale ai-review-failed
+                # label"): it is the review the label asked for. Removing it
+                # here, after the dispatch, could take away the label a fast
+                # replacement run had already put back (a second failed hash
+                # download ends within a minute or two), and the PR would be
+                # left with the marker alone, which no case sees. A
+                # replacement run that never starts leaves both labels on, and
+                # the next scan reports the PR.
                 ensure_label "ai-review-rescued" "5319e7" "Review re-dispatched once after ai-review-failed"
                 if dispatch "PR #$num: review (failed)" impl-review.yml -f pr_number="$num" \
                    && [[ "$DRY_RUN" != "true" ]]; then
-                  gh pr edit "$num" --add-label "ai-review-rescued" --remove-label "ai-review-failed" 2>/dev/null || true
+                  gh pr edit "$num" --add-label "ai-review-rescued" 2>/dev/null || true
                 fi
               fi
               continue

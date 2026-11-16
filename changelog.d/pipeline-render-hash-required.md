@@ -31,6 +31,13 @@
   as zero earlier failures and bought another full generation. The call's own
   exit status now decides, after three attempts, and the handler's tests also
   run under plain `bash -e`. (#13129)
+- **The watchdog's review rescue can no longer remove a fresh failure
+  label.** After it re-dispatched a failed review, the watchdog removed
+  `ai-review-failed` itself. A replacement review that failed again within
+  that moment had its new label taken away, and the PR was left with the
+  rescue marker alone, which no rescue case sees. The rescue now only adds
+  `ai-review-rescued`; the review it dispatched removes the old label when
+  it starts, as every review does. (#13129)
 
 ### Removed
 
