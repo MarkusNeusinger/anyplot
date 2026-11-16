@@ -28,7 +28,7 @@ from agents.anyplot.schemas import MAX_ATTEMPTS
 from agents.anyplot.services import Services
 from agents.anyplot.settings import MAX_THINKING_BUDGET, AgentSettings, get_settings
 from agents.evals import matrix
-from agents.evals.cases import EvalCase, FollowUpChecks, load_cases, select_cases
+from agents.evals.cases import EvalCase, FollowUpChecks, ViewChecks, load_cases, select_cases
 from agents.evals.matrix import (
     EXIT_OK,
     EXIT_OUTAGE,
@@ -45,7 +45,7 @@ from agents.evals.matrix import (
 from agents.evals.report import Flip, summarize, summary_markdown
 from agents.main import Runtime
 
-from ..runtime.fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, FakeAnthropic
+from ..runtime.fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, FakeAnthropic, default_script
 from .conftest import check_html
 
 
@@ -118,6 +118,7 @@ async def test_two_fixtures_through_the_real_flow(
     assert bar["edit_apply_failures"] >= 2 and bar["adapter_outcomes"] == {"plan": 2}
     assert bar["llm_calls"] == 4 and bar["cost_usd"] == pytest.approx(4 * CALL_COST)
     assert bar["png"] is None and bar["render_s"] == []
+    assert bar["view"] is None and scatter["view"] is None  # no `before_view`: no view, no third turn
     # Only `create_plot`, which the judge never reads: both stay English whatever their locale (bar-grouped: `de`).
     assert bar["language"] == scatter["language"] == {"language": "en", "source": "default"}
 
@@ -235,6 +236,290 @@ async def test_a_cases_data_steps_are_stored_before_the_bindings_and_the_plot_dr
     assert scores == sorted(scores, reverse=True)
     # No model call made the steps: one root turn, one adapter call and the review, as without them.
     assert [FakeAnthropic.kind(call) for call in fake.calls].count("adapter") == 1
+
+
+TOP_5 = ({"op": "sort", "column": "Exam Score", "descending": True}, {"op": "keep_rows", "n": 5})
+"""A top-5 view of the scatter fixture's 24 rows."""
+TOP_5_TITLE: dict[str, Any] = {
+    "edits": [{"find": 'title = "Exam Score by Study Hours"', "replace": 'title = "Exam Score of the top 5"'}],
+    "title": "Exam Score of the top 5",
+    "changes": ["Named the top 5 in the title"],
+}
+EVERY_ROW_TITLE: dict[str, Any] = {
+    "edits": [{"find": 'title = "Exam Score of the top 5"', "replace": 'title = "Exam Score by Study Hours"'}],
+    "title": "Exam Score by Study Hours",
+    "changes": ["The title names every student again"],
+}
+VERDICT_DQ03: dict[str, Any] = {
+    "ok": False,
+    "defects": [
+        {
+            "id": "DQ-03",
+            "theme": "both",
+            "observed": "the mean reads as the whole data's",
+            "target": "a label that names the top 5",
+            "likely_cause": "the mean's label",
+        }
+    ],
+}
+
+
+def probe_by_rows(job: RenderJob, theme: str) -> FakeOutcome:
+    """Drawn texts that follow the rows a render draws, as a plot that names its view would: the top 5's mean while
+    the job's data holds 5 rows, every student's otherwise."""
+    rows = len(job.data_csv.splitlines()) - 1
+    label = "Mean of the top 5: 92" if rows == 5 else "Mean of all 24 students: 71"
+    labels = [{"kind": "title", "text": "Exam Score"}, {"kind": "annotation", "text": label}]
+    return FakeOutcome(probe={"texts": [], "tick_overlaps": 0, "points": 0, "labels": labels})
+
+
+def drawn_rows_fact(rows: int, of_rows: int, view: str) -> str:
+    """The `DrawnRows` line of a request as it stands in a recorded call's JSON-dumped messages."""
+    line = json.dumps({"rows": rows, "of_rows": of_rows, "view": view}, ensure_ascii=False)
+    return json.dumps(line, ensure_ascii=False)[1:-1]
+
+
+async def test_a_case_under_a_view_records_its_drawn_rows_its_reviews_and_its_clearing(
+    tmp_path: Path, services: Services, swap_models, backend: FakeBackend
+) -> None:
+    """`before_view` is set after the confirmation and the plot draws its rows; every adapter and reviewer request
+    of that turn carries them, a DQ-03 that a repair fixed still counts, and the `.show_all()` turn draws every row
+    with requests that say so. The view facts decide no pass."""
+    from agents.anyplot.pipeline import DRAWN_ROWS_HEADING
+
+    fake = swap_models(
+        "anthropic-vertex",
+        {
+            "root": [
+                {"call": "plot_pipeline", "args": {}},
+                {"text": ROOT_REPLY},
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "The plot draws every student again."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": TOP_5_TITLE}, {"json": EVERY_ROW_TITLE}],
+            "reviewer": [{"json": VERDICT_DQ03}, {"json": VERDICT_OK}, {"json": VERDICT_OK}],
+        },
+    )
+    backend.script = probe_by_rows
+    case = dataclasses.replace(
+        two_fixtures()[1], before_view=TOP_5, view_checks=ViewChecks(named=True, clear=True, no_dq03=True)
+    )
+
+    result = await run_matrix(
+        [case], config(tmp_path, cases=case.case_id), services=services, runtime=runtime(), echo=lambda _: None
+    )
+
+    (run,) = result.report["runs"]
+    assert (run["status"], run["turns"], run["passed"]) == ("ok", 2, True)
+    assert (run["checks"], run["checks_passed"]) == ({}, None)  # no follow-up checks; the view's are its own
+    # The view held through the plot turn's two renders; the clearing turn drew all 24 rows.
+    assert [len(job.data_csv.splitlines()) - 1 for job in backend.jobs[1:]] == [5, 5, 24]
+    assert run["view"] == {
+        "drawn_rows": {"rows": 5, "of_rows": 24},
+        "words_hold_view": True,
+        "adapter_calls": 2,
+        "reviewer_calls": 2,
+        "review_rounds": 2,
+        "dq03_raised": True,
+        "named": True,
+        "cleared": {
+            "every_row": True,
+            "adapter_calls": 1,
+            "reviewer_calls": 1,
+            "review_rounds": 1,
+            "dq03_raised": False,
+            "still_named": False,
+        },
+        "checks": {
+            "drawn_rows": True,
+            "named": True,
+            "no_dq03": False,
+            "cleared_every_row": True,
+            "cleared_unnamed": True,
+        },
+    }
+    assert result.report["summary"]["view_check_failures"] == ["scatter-basic-matplotlib r1: view:no_dq03"]
+    # Exactly: every adapter and reviewer request of the plot turn carried the view's rows under their heading, and
+    # every request of the clearing turn all 24 rows with no view.
+    calls = {
+        kind: [
+            json.dumps(call["messages"], ensure_ascii=False) for call in fake.calls if FakeAnthropic.kind(call) == kind
+        ]
+        for kind in ("adapter", "reviewer")
+    }
+    assert [len(texts) for texts in calls.values()] == [3, 3]
+    under_view, every_row = drawn_rows_fact(5, 24, "top 5 by Exam Score"), drawn_rows_fact(24, 24, "")
+    for texts in calls.values():
+        assert all(DRAWN_ROWS_HEADING in text for text in texts)
+        assert [under_view in text for text in texts] == [True, True, False]
+        assert [every_row in text for text in texts] == [False, False, True]
+
+
+async def test_a_case_under_a_view_without_checks_checks_its_drawn_rows_and_runs_no_clearing(
+    tmp_path: Path, services: Services, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("anthropic-vertex", default_script())
+    case = dataclasses.replace(two_fixtures()[1], before_view=TOP_5)
+
+    result = await run_matrix(
+        [case], config(tmp_path, cases=case.case_id), services=services, runtime=runtime(), echo=lambda _: None
+    )
+
+    (run,) = result.report["runs"]
+    assert (run["status"], run["turns"]) == ("ok", 1)
+    # The fake's probe reports no drawn texts: nothing to read, so `named` is unknown, never a pass or a miss.
+    assert (run["view"]["drawn_rows"], run["view"]["named"], run["view"]["cleared"]) == (
+        {"rows": 5, "of_rows": 24},
+        None,
+        None,
+    )
+    assert run["view"]["checks"] == {"drawn_rows": True}
+
+
+async def test_a_case_with_a_view_needs_the_runtime(tmp_path: Path) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/v1/sessions":
+            return httpx.Response(200, json={"session_id": "sid"})
+        return httpx.Response(200, json={"complete": True})
+
+    runner = runner_over(handler, tmp_path)
+    case = dataclasses.replace(two_fixtures()[1], before_view=TOP_5)
+
+    record = await runner.run(case, 1)
+
+    assert (record["status"], record["error"]) == ("harness_error", "RuntimeError")
+
+
+@pytest.mark.parametrize(
+    ("text", "token", "held"),
+    [
+        ("Mean of the top 4: 60.2%", "4", True),
+        ("n = 4", "4", True),
+        ("Top 4.", "4", True),
+        ("avg 47.9%", "4", False),
+        ("12.4%", "4", False),
+        ("4,5 %", "4", False),
+        ("Top 45", "4", False),
+        ("Moyenne (site Nord) : 58,4 %", "Nord", True),
+        ("NORD", "nord", True),
+        ("Nordique", "Nord", False),
+        ("", "Nord", False),
+        ("anything", " ", False),
+    ],
+)
+def test_a_view_token_stands_whole_in_a_drawn_text(text: str, token: str, held: bool) -> None:
+    assert matrix.holds_token(text, token) is held
+
+
+def test_the_view_tokens_are_its_parts_own_words() -> None:
+    from agents.anyplot.plot_view import PlotView, Top
+
+    view = PlotView.model_validate(
+        {
+            "selections": [
+                [{"column": "Site", "test": "eq", "value": "Nord"}, {"column": "Year", "test": "gt", "value": 2020}],
+                [{"column": "Land", "test": "eq", "values": ["CH", "AT"]}],
+            ],
+            "top": Top(column="Score", descending=True, n=10).model_dump(),
+        }
+    )
+
+    # A comparison by order (`Year > 2020`) has no word a label would repeat.
+    assert matrix.view_tokens(view) == [("Nord",), ("CH", "AT"), ("10",)]
+
+
+def test_turn_view_facts_count_the_answered_reviews_and_any_dq03() -> None:
+    lines: list[dict[str, Any]] = [
+        {"hook": "model", "agent": "adapter_matplotlib"},
+        {"hook": "model", "agent": "reviewer"},
+        {"hook": "pipeline_review", "verdict": "unreadable_retry"},
+        {"hook": "model", "agent": "reviewer"},
+        {"hook": "pipeline_review", "verdict": "defects", "defects": ["VQ-02", "DQ-03"]},
+        {"hook": "model", "agent": "adapter_matplotlib"},
+        {"hook": "model", "agent": "reviewer"},
+        {"hook": "pipeline_review", "verdict": "ok", "defects": []},
+        {"hook": "model", "agent": "anyplot"},
+    ]
+
+    assert matrix.turn_view_facts(lines) == {
+        "adapter_calls": 2,
+        "reviewer_calls": 3,
+        "review_rounds": 2,
+        "dq03_raised": True,
+    }
+    assert matrix.turn_view_facts([])["dq03_raised"] is False
+
+
+def test_a_view_record_without_a_shipped_version_checks_nothing() -> None:
+    from agents.anyplot.plot_view import PlotView, Top
+
+    view = PlotView(top=Top(column="Score", descending=True, n=4))
+    drawn = {"number": 1, "texts": {"title": ["Score"]}, "view": {"top": {}}, "view_rows": None}
+
+    unshipped = matrix.view_record(ViewChecks(named=True), view, None, [])
+    stored_none = matrix.view_record(ViewChecks(named=True), view, drawn, [])
+
+    assert (unshipped["drawn_rows"], unshipped["named"], unshipped["checks"]) == (None, None, {})
+    # A version that stored no rows, and texts that do not name the top 4: both checks fail.
+    assert stored_none["checks"] == {"drawn_rows": False, "named": False}
+
+
+def test_a_view_without_a_word_of_its_own_reads_as_unknown_never_as_named() -> None:
+    """A view of an order condition alone has no part a label repeats: an empty `all` must not read as named."""
+    from agents.anyplot.plot_view import PlotView
+
+    view = PlotView.model_validate({"selections": [[{"column": "Score", "test": "gt", "value": 50}]]})
+    drawn = {
+        "number": 1,
+        "texts": {"title": ["Score"]},
+        "view": {"selections": []},
+        "view_rows": {"rows": 3, "of_rows": 9, "view": "Score > 50"},
+    }
+
+    record = matrix.view_record(ViewChecks(), view, drawn, [], {"number": 2, "texts": {}, "view": None}, [])
+
+    assert (record["named"], record["words_hold_view"], record["cleared"]["still_named"]) == (None, None, None)
+    assert record["checks"] == {"drawn_rows": True}  # the counts still hold
+
+
+VIEW_FIXTURE_ROWS: dict[str, tuple[int, int, str]] = {
+    "bar-basic-seaborn-view-top-control": (5, 8, "top 5 by Sunny days"),
+    "bar-horizontal-matplotlib-view-selection-fr": (4, 7, "Site = 'Nord'"),
+    "bar-horizontal-matplotlib-view-top-cleared": (4, 6, "top 4 by Booked seats (%)"),
+    "bar-horizontal-matplotlib-view-top-mean": (4, 6, "top 4 by Booked seats (%)"),
+}
+
+
+@pytest.mark.parametrize("case_id", sorted(VIEW_FIXTURE_ROWS))
+async def test_each_view_fixture_reaches_the_adapter_through_the_app(
+    tmp_path: Path, services: Services, swap_models, case_id: str
+) -> None:
+    """Each committed view case through the real routes with its own data, bindings and language: the view is set
+    on the stored table and every adapter request carries its rows. Plans that match nothing end the run before a
+    review, so no plan for the case's catalogue file is needed, and no clearing turn follows a plot that failed."""
+    fake = swap_models(
+        "anthropic-vertex",
+        {
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": "The plot could not be made."}],
+            "adapter": [{"json": BAD_PLAN}, {"json": BAD_PLAN}],
+        },
+    )
+    (case,) = select_cases(load_cases(promoted_dir=Path("/nonexistent")), case_id)
+
+    result = await run_matrix(
+        [case], config(tmp_path, cases=case_id), services=services, runtime=runtime(), echo=lambda _: None
+    )
+
+    (run,) = result.report["runs"]
+    assert (run["status"], run["reason"], run["turns"]) == ("failed", "validation", 1)
+    adapter = [
+        json.dumps(call["messages"], ensure_ascii=False) for call in fake.calls if FakeAnthropic.kind(call) == "adapter"
+    ]
+    assert len(adapter) == 2 and all(drawn_rows_fact(*VIEW_FIXTURE_ROWS[case_id]) in text for text in adapter)
+    if case.language is not None:
+        assert all(f"<plot_language>\\n{case.language}\\n</plot_language>" in text for text in adapter)
+    assert (run["view"]["drawn_rows"], run["view"]["cleared"], run["view"]["checks"]) == (None, None, {})
+    assert run["view"]["adapter_calls"] == 2 and run["view"]["review_rounds"] == 0
 
 
 async def test_a_case_with_data_steps_needs_the_runtime(tmp_path: Path) -> None:

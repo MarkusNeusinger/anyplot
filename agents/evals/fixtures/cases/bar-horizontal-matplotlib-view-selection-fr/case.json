@@ -1,0 +1,17 @@
+{
+  "spec_id": "bar-horizontal",
+  "library": "matplotlib",
+  "locale": "fr",
+  "language": "fr",
+  "bindings": [
+    {"role": "category", "column": "Atelier"},
+    {"role": "value", "column": "Places réservées (%)"}
+  ],
+  "expected": "accepted",
+  "tags": ["categorical", "fr", "language", "small", "view", "view-mean"],
+  "source": "hand-written synthetic data: the catalogue file draws a mean line with an annotation, and a view that keeps the rows of one site (4 of 7, on a column the plot does not draw) in a French plot, a language the adapter's rule has no example in",
+  "before_view": [
+    {"op": "keep_rows", "where": [{"column": "Site", "test": "eq", "value": "Nord"}]}
+  ],
+  "view_checks": {"named": true}
+}

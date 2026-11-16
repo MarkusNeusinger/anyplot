@@ -168,6 +168,7 @@ from agents.evals.matrix import (
     AttributionCollector,
     parse_events,
     store_data_steps,
+    store_view,
 )
 from agents.evals.pricing import LOCATION_SURCHARGE, UnknownPrice, call_cost, judge_cost, price_of
 from agents.evals.scope import Pacer
@@ -1186,15 +1187,10 @@ class CaseRunner:
         return (result_table(made) if made is not None else None), None
 
     async def _set_view(self, user: str, sid: str, operations: Sequence[dict[str, Any]]) -> None:
-        """The case's earlier view, stored as the `prepare_data` call that set it stored it (`plot_view.view_delta`);
-        no model call. `check_cases` routed it once already, so a refusal here is a bug and raises."""
-        from pydantic import TypeAdapter
-
-        from agents.anyplot.data.prepare import Operation
-        from agents.anyplot.plot_view import PlotView, merged, route, view_delta
-
-        view = merged(PlotView(), route(TypeAdapter(list[Operation]).validate_python(list(operations))))
-        await self.runtime.write_state(await self.runtime.session(user, sid), view_delta(view))
+        """The case's earlier view, stored as the `prepare_data` call that set it stored it; no model call.
+        `check_cases` routed it once already, so a refusal here is a bug and raises (`matrix.store_view`, which the
+        matrix's view cases share)."""
+        await store_view(self.runtime, user, sid, operations)
 
     async def _view_held(self, user: str, sid: str) -> bool:
         """Whether the session holds a view of the plot after the turn, as stored (`plot_view.read_view`)."""

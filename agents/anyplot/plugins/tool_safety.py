@@ -308,7 +308,8 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
         {"status", "reason", "code", "rows", "bindings", "profile", "truncated", "to_long", "user_notes", "file_name"}
     ),
     "get_spec_brief": frozenset({"status", "code", "brief"}),
-    "get_current_code": frozenset({"status", "code", "version"}),
+    # `data`: what the version's downloaded data holds, counts and fixed file names only (`session.version_data`).
+    "get_current_code": frozenset({"status", "code", "version", "data"}),
     "set_bindings": frozenset(
         {"status", "reason", "code", "complete", "missing_roles", "data_confirmed", "errors", "warnings"}
     ),

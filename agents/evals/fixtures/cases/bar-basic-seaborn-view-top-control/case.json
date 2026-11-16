@@ -1,0 +1,17 @@
+{
+  "spec_id": "bar-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "bindings": [
+    {"role": "category", "column": "Town"},
+    {"role": "value", "column": "Sunny days"}
+  ],
+  "expected": "accepted",
+  "tags": ["categorical", "small", "view", "view-control"],
+  "source": "hand-written synthetic data: a top-5 view of the plot (5 of 8 rows) on a catalogue file that labels each bar with its value and draws no figure over several rows, so no label has a selection to name and no review should raise DQ-03 for one",
+  "before_view": [
+    {"op": "sort", "column": "Sunny days", "descending": true},
+    {"op": "keep_rows", "n": 5}
+  ],
+  "view_checks": {"no_dq03": true}
+}
