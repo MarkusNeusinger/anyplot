@@ -1342,14 +1342,16 @@ class TestSeoProxyRouter:
         assert response.status_code == 200
         for fact in (
             'id="assistant"',
-            "Only if you use it. It adapts a catalogue plot to your data. Experimental, without warranty: "
-            "results can be wrong and nobody checks them by hand. The operator may pause it at any time.",
+            # What it is, and where its terms of use stand: its own page, as on the human page.
+            "Only if you use it. It adapts a catalogue plot to your data. Status, limits and your code: see "
+            '<a href="https://anyplot.ai/agent">the data assistant\'s page</a>.</li>',
             "Google Cloud Vertex AI in the EU, under Google Cloud's data processing terms",
             "Don't paste personal data you are not allowed to share",
+            # The ids keep the network limits' use of your IP address, which is personal data.
+            "the per-network limits count your IP address",
             "salted with a value that lives only as long as the server instance",
             "so they are pseudonymous",
             "it starts unticked, which leaves out that file only",
-            "Highcharts needs a licence from Highsoft for commercial use",
             "never your text, data, column or file names",
             # Every kind of field by its name: event types, plot type and library record what a
             # visitor did and chose, so no category of "technical details" covers them.
@@ -1366,9 +1368,23 @@ class TestSeoProxyRouter:
             "only if you tick",
             "it starts unticked, which leaves out that file only",
             "it is not used for training",
-            "Daily limits apply per tab and per network",
         ):
             assert fact in response.text, fact
+        # The assistant's terms of use stand on its own page now, not in the privacy policy.
+        for moved in (
+            "without warranty",
+            "results can be wrong and nobody checks them by hand",
+            "may pause it at any time",
+            "use it only with data you may share",
+            "unlawful content",
+            "automated requests",
+            "Daily limits apply per tab and per network",
+            "a misuse can pause you for the day",
+            "yours to use, as is",
+            "Highcharts",
+            "<li>Limits:",
+        ):
+            assert moved not in response.text, moved
 
     def test_seo_mcp_tells_agents_how_to_connect(self, client: TestClient) -> None:
         """The /mcp page's audience is AI agents — the bot body must carry the

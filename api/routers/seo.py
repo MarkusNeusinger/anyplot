@@ -1251,8 +1251,8 @@ _LEGAL_BOT_BODY = (
     "</ul>"
     '<h2 id="assistant">Data assistant (experimental)</h2>'
     "<ul>"
-    "<li>Only if you use it. It adapts a catalogue plot to your data. Experimental, without warranty: "
-    "results can be wrong and nobody checks them by hand. The operator may pause it at any time.</li>"
+    "<li>Only if you use it. It adapts a catalogue plot to your data. Status, limits and your code: see "
+    '<a href="https://anyplot.ai/agent">the data assistant\'s page</a>.</li>'
     "<li>Input goes to Claude by Anthropic via Google Cloud Vertex AI in the EU, under Google "
     "Cloud's data processing terms; it is not used for training. Don't paste personal data you are "
     "not allowed to share.</li>"
@@ -1272,10 +1272,6 @@ _LEGAL_BOT_BODY = (
     "private bucket in Google Cloud Storage in the Netherlands (europe-west4) for 180 days. The "
     "triage row stays until you ask to delete it, in Google Cloud SQL in the Netherlands "
     "(europe-west4): your reaction, message, a hash of your tab id and the run's details.</li>"
-    "<li>Limits: use it only with data you may share, never for unlawful content or automated "
-    "requests. Daily limits apply per tab and per network; a misuse can pause you for the day.</li>"
-    "<li>Its code is yours to use, as is; Highcharts needs a licence from Highsoft for commercial "
-    "use.</li>"
     "</ul>"
     "<h2>Transparency</h2>"
     "<p>The whole stack — specs, pipeline, API and frontend — is open source at "

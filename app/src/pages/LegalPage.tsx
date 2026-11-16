@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect } from 'react';
 
-import { useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
+import { paths } from 'src/routes/paths';
 import {
   fontSize,
   proseLinkStyle,
@@ -395,7 +396,7 @@ export function LegalPage() {
               withdrawable at any time by asking.
             </Typography>
 
-            <Typography sx={subheadingStyle}>what we do not do</Typography>
+            <Typography sx={subheadingStyle}>what I do not do</Typography>
             <Typography sx={textStyle}>
               • no cookies for visitors; the browser&apos;s storage keeps UI settings, your plot
               votes, a release number, the random ids named here and Cloudflare Turnstile&apos;s own
@@ -412,7 +413,15 @@ export function LegalPage() {
               rows={[
                 [
                   'what it is',
-                  'it adapts a catalogue plot to your data. experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
+                  // Its terms of use (status, limits, the code's licence) stand on its own page;
+                  // what touches personal data stays in the rows below.
+                  <>
+                    it adapts a catalogue plot to your data. status, limits and your code: see{' '}
+                    <Link component={RouterLink} to={paths.agent} sx={proseLinkStyle}>
+                      the data assistant&apos;s page
+                    </Link>
+                    .
+                  </>,
                 ],
                 [
                   'the model',
@@ -459,14 +468,6 @@ export function LegalPage() {
                       ]}
                     />
                   </>,
-                ],
-                [
-                  'limits',
-                  'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
-                ],
-                [
-                  'your code',
-                  'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.',
                 ],
               ]}
             />

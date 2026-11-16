@@ -185,7 +185,7 @@ describe('LegalPage', () => {
     // The feedback's IP hash is salted; when it goes stands on the feedback row's second line.
     expect(screen.getByText(/a salted IP hash limits spam/)).toBeInTheDocument();
     // Plausible's real property is cookieless and identifier-free; that its script is only
-    // served from our domain stands on the row's second line as "proxied".
+    // served from this domain stands on the row's second line as "proxied".
     expect(
       screen.getByText(/no cookies, no cross-site id, no IP address kept/)
     ).toBeInTheDocument();
@@ -240,9 +240,40 @@ describe('LegalPage', () => {
   it('describes the experimental data assistant without overclaiming', () => {
     render(<LegalPage />);
 
-    // The chat's notice links "how the assistant works" here, so the row says what it does.
-    expect(screen.getByRole('row', { name: /^what it is\s/ })).toHaveTextContent(
-      /it adapts a catalogue plot to your data\. experimental, without warranty: results can be wrong and nobody checks them by hand\. the operator may pause it at any time\./
+    // The chat's notice links "how the assistant works" here, so the row says what it does; its
+    // terms of use (status, limits, the code's licence) stand on its own page, which the row names
+    // and links.
+    const whatItIs = screen.getByRole('row', { name: /^what it is\s/ });
+    expect(whatItIs).toHaveTextContent(
+      /^what it is\s*it adapts a catalogue plot to your data\. status, limits and your code: see the data assistant.s page\.$/
+    );
+    expect(
+      within(whatItIs).getByRole('link', { name: "the data assistant's page" })
+    ).toHaveAttribute('href', '/agent');
+    // The terms that moved are gone from the privacy section, and so are their two rows. What
+    // touches personal data stays: the network limits' use of your IP address (the ids row), what
+    // not to paste (the model row) and the limits as a reason in the bases sentence.
+    const privacySection = document.getElementById('privacy') as HTMLElement;
+    for (const moved of [
+      /without warranty/,
+      /results can be wrong/,
+      /nobody checks them by hand/,
+      /may pause it at any time/,
+      /use it only with data you may share/,
+      /unlawful content/,
+      /automated requests/,
+      /daily limits apply/,
+      /a misuse can pause you/,
+      /yours to use/,
+      /Highcharts/,
+      /Highsoft/,
+    ]) {
+      expect(privacySection.textContent, String(moved)).not.toMatch(moved);
+    }
+    expect(screen.queryByRole('rowheader', { name: 'limits' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('rowheader', { name: 'your code' })).not.toBeInTheDocument();
+    expect(screen.getByRole('row', { name: /^ids\s/ })).toHaveTextContent(
+      /the per-network limits count your IP address/
     );
     expect(
       screen.getByText(
@@ -301,14 +332,12 @@ describe('LegalPage', () => {
         name: /^the model\s*what you paste and write goes to Claude by Anthropic, served through Google Cloud Vertex AI in the EU/,
       })
     ).toBeInTheDocument();
-    // The code is yours, with the Highcharts exception, and the transfers.
-    expect(
-      screen.getByText(
-        'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.'
-      )
-    ).toBeInTheDocument();
+    // The transfers.
     expect(screen.getByText(/transfers outside Switzerland and the EU/)).toBeInTheDocument();
-    // Nothing sent trains a model.
+    // Nothing sent trains a model. One person runs the site, so the list speaks in the first
+    // person singular.
+    expect(screen.getByText('what I do not do')).toBeInTheDocument();
+    expect(screen.queryByText(/what we do not do/)).not.toBeInTheDocument();
     expect(screen.getByText('no ai training')).toBeInTheDocument();
     expect(screen.getByText(/on what you send/)).toBeInTheDocument();
     // The server logs' purpose stands beside the data they hold.
