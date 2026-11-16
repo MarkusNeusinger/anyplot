@@ -17,7 +17,7 @@
   phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
   check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
   says the same, word for word, and now also names who is responsible.
-- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to 794
+- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to 808
   words (counted at 390 px), and on a phone (390 px) from 6590 to 5124 px high; on a desktop
   (1440 px), from 3659 to 2738 px. The data assistant's status, its limits and the terms for
   your code now stand on its explainer page, `/agent`, which the assistant's first row
@@ -33,8 +33,15 @@
   the sentence that repeated the assistant's heading, that the assistant is open to
   everyone, the comparison of your code with the catalogue's MIT License, and the sentence
   naming the laws. Every kind of data, its period, place and recipients, the bases and the
-  rights stay. The list of what the site does not do speaks as its one operator: "what I do
-  not do".
+  rights stay. The list of what the site does not do speaks as its one operator, "what I do
+  not do", and stands right after "who is responsible": three short points, with what the
+  browser's storage keeps and the operator's own Cloudflare Access sign-in in a paragraph
+  below them. Long sentences are split without adding or dropping a claim: the legal bases
+  are three points, and the bot check, the ids row and the assistant's feedback row each
+  read as shorter sentences.
+- **The legal notice links the About page.** Its disclaimer says the plot examples are
+  generated and maintained by AI workflows and links the About page for how that works and
+  the operator's part in it.
 
 ### Fixed
 
