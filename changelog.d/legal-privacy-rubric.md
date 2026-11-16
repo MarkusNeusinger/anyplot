@@ -28,8 +28,8 @@
   and the bot check are one Cloudflare row whose place stands once. Explanations go: why an
   unverified share is no verdict (the stats tile's hint already says it), that browsing never
   reaches a model because the catalogue is written at build time, the sentence that repeated
-  the assistant's heading, that the assistant is open to everyone, and the sentence naming
-  the laws. Every kind of data, its period, place and recipients, the bases and the rights
+  the assistant's heading, that the assistant is open to everyone, the comparison of your
+  code with the catalogue's MIT License, and the sentence naming the laws. Every kind of data, its period, place and recipients, the bases and the rights
   stay. The list of what the site does not do speaks as its one operator: "what I do not do".
 
 ### Fixed
