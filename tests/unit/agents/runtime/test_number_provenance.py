@@ -18,6 +18,8 @@ from google.genai import types
 
 from agents.anyplot import figures as figures_module
 from agents.anyplot.agent import MEMORY_HEADING, add_session_context, memory_block
+from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.query import QueryArgs, run_query
 from agents.anyplot.figures import Figure, Sources, figures
 from agents.anyplot.memory import MEMORY, MemoryEntry
 from agents.anyplot.plugins import reply_language
@@ -40,6 +42,7 @@ from agents.anyplot.policy import DATA_PREAMBLE, fence, refusal
 from agents.anyplot.services import Services
 from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE
 from agents.anyplot.settings import get_settings
+from agents.anyplot.tools.session import query_result
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import ScriptedRoot, gemini_response, kind_of
@@ -274,6 +277,71 @@ class TestCheck:
         (line,) = lines(caplog)
         assert line["verdict"] == "clean"
         assert (line["figures"], line["unsourced"], line["from_tool_result"]) == (2, 0, 2)
+
+    async def test_a_versions_row_counts_are_a_tool_result_beside_its_code(
+        self, ledger: RequestLedger, services: Services, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """`get_current_code`'s `data` holds counts the server took from the stored version (`session.version_data`):
+        a tool result, while the code text beside them stays `plot_code`."""
+        result = {
+            "status": "ok",
+            "version": 3,
+            "code": DATA_PREAMBLE + "\n" + fence("catalogue_code", "ax.axhline(3.75)"),
+            "data": {"rows_in_file": {"data.csv": 248, "plot.html": 248}, "view": {"rows": 15, "of_rows": 248}},
+        }
+        ledger.root_request = root_request(
+            user("how many rows does the file of version 3 hold?"),
+            call_of("get_current_code", {"version": 3}),
+            response_of("get_current_code", result),
+        )
+        ledger.tools = ["get_current_code"]
+        sources = request_sources(ledger.root_request, {})
+        reply = "The data.csv of version 3 holds 248 rows; the plot drew 15 of them, under a line at 3.75."
+        response = gemini_response({"text": reply})
+
+        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
+            assert await check(response) is None
+
+        assert (sources.kind_of(one("248")), sources.kind_of(one("15"))) == ("tool_result", "tool_result")
+        assert sources.kind_of(one("3.75")) == "plot_code"
+        (line,) = lines(caplog)
+        assert (line["verdict"], line["unsourced"], line["from_tool_result"], line["from_plot_code"]) == (
+            "clean",
+            0,
+            2,
+            1,
+        )
+
+    async def test_a_fit_and_a_grand_total_are_tool_results(
+        self, ledger: RequestLedger, services: Services, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The answers of a `fit` and of an `aggregate` without `by`, as the server writes them: a reply that states the
+        slope as the result writes it, the intercept rounded and the total is clean."""
+        dataset = parse_dataset("week,signups\n1,112\n2,135\n3,149\n4,171\n5,198\n6,214\n")
+        fit = [{"op": "fit", "x": "week", "y": "signups"}]
+        total = [{"op": "aggregate", "column": "signups", "how": "sum"}]
+        fitted = run_query(dataset, QueryArgs.model_validate({"operations": fit}).operations)
+        summed = run_query(dataset, QueryArgs.model_validate({"operations": total}).operations)
+        assert fitted.columns == ["slope", "intercept", "r_squared", "n"] and summed.columns == ["signups"]
+        (row,) = fitted.rows
+        slope, intercept = row[0], row[1]
+        ledger.root_request = root_request(
+            user("how fast do the signups grow, and how many are there in all?"),
+            call_of("query_data", {"operations": fit}),
+            response_of("query_data", query_result(fitted)),
+            call_of("query_data", {"operations": total}),
+            response_of("query_data", query_result(summed)),
+        )
+        ledger.tools = ["query_data", "query_data"]
+        reply = f"The signups grow by {slope} a week from {Decimal(intercept):.2f}, {summed.rows[0][0]} in all."
+        response = gemini_response({"text": reply})
+
+        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
+            assert await check(response) is None
+
+        assert text(response) == reply
+        (line,) = lines(caplog)
+        assert (line["verdict"], line["figures"], line["unsourced"], line["from_tool_result"]) == ("clean", 3, 0, 3)
 
     async def test_a_reply_without_a_figure_leaves_no_line(
         self, ledger: RequestLedger, services: Services, caplog: pytest.LogCaptureFixture
