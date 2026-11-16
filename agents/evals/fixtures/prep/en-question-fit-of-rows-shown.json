@@ -1,0 +1,14 @@
+{
+  "dataset_text": "Site,Month,Visitors\nHarbor,1,373\nHarbor,2,499\nHarbor,3,611\nHarbor,4,756\nHarbor,5,874\nHarbor,6,1015\nHill,1,875\nHill,2,866\nHill,3,837\nHill,4,821\nHill,5,808\nHill,6,773\n",
+  "before_view": [
+    {"op": "keep_rows", "where": [{"column": "Site", "test": "eq", "value": "Harbor"}]}
+  ],
+  "message": "For the points in the plot, how many visitors per month does a straight-line trend through them add?",
+  "expected_operations": [],
+  "asks": "view",
+  "view": "set",
+  "question_ops": ["fit"],
+  "reply_names": ["128"],
+  "locale": "en",
+  "tags": ["data_question", "view_question", "fit"]
+}

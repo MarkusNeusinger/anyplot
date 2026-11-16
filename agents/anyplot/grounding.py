@@ -417,6 +417,32 @@ def expected_misses(expected: Sequence[str], drawn: DrawnTexts | None) -> list[E
     return misses
 
 
+def draws(drawn: DrawnTexts, text: str) -> bool:
+    """Whether the render draws `text` as `expected_misses` checks a requested text or number format: a text stands
+    whole in one drawn text, a format example draws its unit with its decimal mark. A report that left texts out
+    never calls a text missing, so a caller that claims a miss reads only a complete one (`DrawnTexts.complete`)."""
+    return not expected_misses([text], drawn)
+
+
+def whole_text_in(drawn: DrawnTexts, group: ShownGroup, text: str) -> bool:
+    """Whether one drawn text of `group` (the title, an axis label) reads exactly `text`, case, spacing, quotes, dashes
+    and mathtext aside: the whole text, never a part of it, so a unit or a year inside a longer label never stands for
+    that label. A number-format example (`format_unit`) is never one."""
+    if format_unit(text) is not None:
+        return False
+    wanted = _norm(text)
+    return bool(wanted) and any(_norm(shown) == wanted for shown in drawn.groups.get(group, []))
+
+
+def whole_text_as(drawn: DrawnTexts, kind: str | None, text: str) -> bool:
+    """Whether a drawn text the probe reported as `kind` (a probe kind such as `suptitle`, not a role), or of any kind
+    for None, reads exactly `text`, compared as `whole_text_in` compares a role's texts."""
+    if format_unit(text) is not None:
+        return False
+    wanted = _norm(text)
+    return bool(wanted) and any(kind in (None, label.kind) and _norm(label.text) == wanted for label in drawn.labels)
+
+
 def reviewed_misses(expected: Sequence[str], lines: Sequence[str]) -> list[tuple[str, str]]:
     """The requested texts a review reports missing from the image, each with the first defect line that does.
 

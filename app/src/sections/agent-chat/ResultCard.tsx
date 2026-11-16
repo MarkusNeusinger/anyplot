@@ -11,12 +11,13 @@
  *   card to that one line (`▸ plot v2 · …`), and a newer version folds the one
  *   before it. The version's status (`ok`, `needs attention`) stands in the
  *   theme row, before the run's line.
- * - What the version kept and added of the remembered decisions
- *   (`PlotVersion.decisions`): `kept: y = 7 line · x label · new: log scale on
- *   y`, each decision cut to 40 characters, in full for a screen reader; from
- *   `sm` up the open card's first line, on a phone under the image, above the
- *   card's action line. The label does not count them, so a phone shows both
- *   parts too. No line when both are empty or the server named none.
+ * - What the version kept and added of the remembered decisions, and the ones
+ *   whose text it does not draw (`PlotVersion.decisions`): `kept: y = 7 line ·
+ *   x label · new: log scale on y · not used: title 'Q3'`, each decision cut to
+ *   40 characters, in full for a screen reader; from `sm` up the open card's
+ *   first line, on a phone under the image, above the card's action line. The
+ *   label does not count them, so a phone shows every part too. No line when
+ *   all are empty or the server named none.
  * - Folded by default since 2026-11-02 (owner: less text, the details behind
  *   a toggle rather than removed): the image, its toolbar and the theme switch
  *   show; the run's rounds and its "what changed" list sit behind one status
@@ -578,15 +579,16 @@ export function ResultCard({
     .filter(Boolean)
     .join(' · ');
   const hasDetails = rounds.length > 0 || result.changes.length > 0;
-  // The remembered decisions the version kept and the ones it added, as the server named them;
-  // a version whose memory is unknown has neither.
+  // The remembered decisions the version kept, the ones it added and the ones whose text it does
+  // not draw, as the server named them; a version whose memory is unknown has none of them.
   const decisions = version.decisions;
   const kept = decisions ? decisionsText('kept', decisions.kept) : null;
   const added = decisions ? decisionsText('new', decisions.added) : null;
+  const unused = decisions ? decisionsText('not used', decisions.unused) : null;
   const label = plotCardLabel(number, library, request);
-  // Both parts at every width: the label names the request, so this line is the card's only word
+  // Every part at every width: the label names the request, so this line is the card's only word
   // on what the version kept.
-  const shown = [kept, added].filter(part => part !== null);
+  const shown = [kept, added, unused].filter(part => part !== null);
   // The rows this version drew, when a view of the plot left some out: the plot shows fewer rows
   // than the data card above it, and this line is where the card says so, with the way back.
   const view = result.view ? plotViewText(result.view, 'plot') : null;
@@ -661,7 +663,7 @@ export function ResultCard({
     >
       {expanded && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          {/* The rows the version drew and what it kept and added, the card's first lines from
+          {/* The rows the version drew and what it kept, added and did not use, the card's first lines from
               `sm` up (the v4 mock), its actions over the image's corner beside them. */}
           {!narrow && factLines}
           {/* Image with the overlay actions of the plot page. */}

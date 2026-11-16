@@ -5,7 +5,7 @@
   validation of the arguments (ADK
   leaves `FUNCTION_TOOL_ARG_VALIDATION` off; `prepare_data` takes at most five
   operations of the `Operation` union and the version they start from (`prepare.PrepareArgs`),
-  `query_data` up to five of them with its
+  `query_data` up to five of `prepare.QueryOperation` (those, an `aggregate` without `by`, and `fit`) with its
   `query.QueryArgs` bounds, `generate_data` the `generate.Generate`
   spec and `set_language` one value that matches `language.LANGUAGE_PATTERN`, as the
   language route does, with an `applies_to` of `language.LANGUAGE_TARGETS`,
