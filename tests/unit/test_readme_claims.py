@@ -16,6 +16,10 @@ floor ("more than 950 pull requests from my account have merged"), and `MERGED_P
 and the day it was taken. The floor must be a multiple of 50, below the snapshot and at most 50 below it, so it can
 neither overclaim nor go stale by more than one step. The release procedure (`agentic/commands/release.md`, step 4)
 counts again, updates the snapshot and raises the floor in the same commit.
+
+The releases beside it are counted exactly, offline: the README's "N releases have shipped" must equal the version
+headings of `CHANGELOG.md`, so cutting a release fails this test until the same release branch raises the number
+(step 4 again).
 """
 
 from __future__ import annotations
@@ -456,6 +460,16 @@ def test_the_workflow_page_floor_on_recorded_decisions_holds():
         re.findall(r"owner (?:decision|rule|request)", read(ROOT / "docs" / "concepts" / "agent-network.md"), re.I)
     )
     assert recorded > int(match.group(1)), f"agent-network.md names {recorded} owner decisions, rules or requests"
+
+
+def test_the_readme_counts_the_releases_of_the_changelog():
+    """The README's release count is the number of released versions in CHANGELOG.md (module docstring)."""
+    released = len(re.findall(r"^## \[\d+\.\d+\.\d+\] — ", read(ROOT / "CHANGELOG.md"), re.MULTILINE))
+    assert released, "CHANGELOG.md no longer has version headings of the form '## [X.Y.Z] — '"
+    claims = re.findall(r"(\d+) releases have shipped", collapse(section(read(README), "How I build anyplot")))
+    assert claims, "README.md 'How I build anyplot' no longer says how many releases have shipped"
+    for claim in claims:
+        assert int(claim) == released, f"README.md says {claim} releases have shipped; CHANGELOG.md has {released}"
 
 
 def test_merged_pull_request_claims_are_sane_floors():

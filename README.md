@@ -16,13 +16,13 @@ code.
 
 ## How I build anyplot
 
-I'm [Markus Neusinger](https://linkedin.com/in/markus-neusinger/), a physicist working in data and AI: since 2013 I've built data pipelines, analyses and machine learning, and the apps people use them through. Models write anyplot's code; I lead them, with that experience across data, backends, frontends and hosting.
+I'm [Markus Neusinger](https://linkedin.com/in/markus-neusinger/), a physicist and data analyst: since 2013 I've built data pipelines, analyses and machine learning, and the apps people use them through. Models write anyplot's code; I lead them, with that experience across data, backends, frontends and hosting.
 
 - **I set the course.** The vision, the decisions, and the structure that keeps a codebase written by agents from turning into a mess. Seven of those decisions are [below](#engineering-highlights).
 - **I know when to push back.** The models know a lot. The job is knowing which question to ask, when to make a model research a point properly, and when a confident answer is wrong. Security is a good example: I know what has to hold, private data and no way to abuse the service, and asking the right question is often enough for a model to find what still needs hardening.
 - **I split, assign, test, and send back.** Work goes to Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs. I test what comes back and return it until it's right.
 
-This isn't one prompt and a wait. Since November 2025, more than 950 pull requests from my account have merged, and what I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
+This isn't one prompt and a wait. Since November 2025, more than 950 pull requests from my account have merged and 16 releases have shipped. A new spec needs my approval, and outside the plot pipeline the agents merge nothing without my OK. What I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
 
 [![A grid of catalogue plots, one spec in each library, with the catalogue's spec, library, and language counts](docs/assets/readme-showcase.png)](https://anyplot.ai/plots)
 
@@ -60,9 +60,9 @@ Seven decisions I made and hold the agents to, each with its reason and the code
   and a tool allowlist per agent. ([operations](agents/anyplot/data/prepare.py),
   [plugins](agents/anyplot/plugins/))
 - **Private by construction.** Chats and data live only in server memory and are dropped after an hour
-  idle, and the session id never appears in a URL. Usage telemetry holds only enums, buckets, and counts,
-  keyed by hashes under a per-process random salt, and a canary test fails if any message or data value
-  reaches a log line. ([telemetry](agents/anyplot/telemetry.py),
+  idle, and the public chat's session id travels in a header, not in a URL. Usage telemetry holds only
+  enums, buckets, and counts, keyed by hashes under a per-process random salt, and a canary test fails if
+  any message or data value reaches a log line. ([telemetry](agents/anyplot/telemetry.py),
   [canary test](tests/unit/agents/runtime/test_canary.py))
 - **Rules that turn a repeated mistake into a check.** A mistake that comes back becomes a test or a written
   rule, with the incident beside it. One test keeps the assistant's prompt in step with the buttons the chat
@@ -142,7 +142,7 @@ plot.
 
 1. **Request.** Someone opens an issue, from GitHub or from a link on anyplot.ai.
 2. **Specification.** `spec-create.yml` checks for duplicates, assigns a spec ID and tags, and opens a pull request with
-   the spec. The maintainer approves it on the issue.
+   the spec. I approve it on the issue; since September 2026 the merge job ignores the label from any other account.
 3. **Generation.** `impl-generate.yml` writes one implementation per library and renders it in both themes.
 4. **Review.** `impl-review.yml` first runs automated checks: the code parses and runs, the image exists, and the
    canvas has its target size. An AI reviewer then scores the render, blind to any earlier score, on a
