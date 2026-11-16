@@ -56,6 +56,19 @@ export const AGENT_INTRO_DESCRIPTION =
 const targetSx = { display: 'inline-flex', alignItems: 'center', minHeight: { xs: 44, sm: 32 } };
 
 /**
+ * The privacy line's link, which wraps to two lines on a phone up to about 390 px wide: one box
+ * (an inline-block) for both lines, padded 12 px above and below at phone width, so it is a 44 px
+ * target also on one line, with a negative margin of the same size that takes the padding back
+ * out of the layout, so no line moves.
+ */
+const privacyLinkSx = {
+  ...proseLinkStyle,
+  display: 'inline-block',
+  py: { xs: 1.5, sm: 0 },
+  my: { xs: -1.5, sm: 0 },
+} as const;
+
+/**
  * The assistant's terms of use, label and sentence, after the way on as the page's fine print, so
  * the two ways in (the examples and the catalogue) stay together above it.
  * Where each sentence holds in the code: the operator's pause is the public door
@@ -80,7 +93,7 @@ const AGENT_TERMS: [string, ReactNode][] = [
   ],
   [
     'privacy',
-    <Box key="privacy" component={RouterLink} to={`${paths.legal}#assistant`} sx={proseLinkStyle}>
+    <Box key="privacy" component={RouterLink} to={`${paths.legal}#assistant`} sx={privacyLinkSx}>
       what is stored, where and for how long
     </Box>,
   ],
