@@ -442,6 +442,18 @@ class TestCiTestsSpecSectionCheck:
         assert "|app/src/sections/agent-chat/AgentIntro\\.tsx|" in config
         assert (WORKFLOWS_DIR.parent.parent / "app" / "src" / "sections" / "agent-chat" / "AgentIntro.tsx").is_file()
 
+    def test_a_changed_readme_or_legal_page_runs_the_unit_tests(self) -> None:
+        """tests/unit/test_agent_intro_crawler_copy.py reads README.md, whose heading the explainer's GitHub link lands
+        on, and LegalPage.tsx, whose row on the model the explainer repeats: a PR that changes only one of them runs
+        it, instead of leaving a dead anchor or a different model to the next Python PR."""
+        check = self._step("Check for testable changes")["run"]
+        [config] = [line for line in check.splitlines() if "CONFIG_CHANGES=$(" in line]
+        assert "|README\\.md|" in config
+        assert "|app/src/pages/LegalPage\\.tsx|" in config
+        root = WORKFLOWS_DIR.parent.parent
+        assert (root / "README.md").is_file()
+        assert (root / "app" / "src" / "pages" / "LegalPage.tsx").is_file()
+
     def test_step_needs_no_dependency_install(self) -> None:
         # The step runs on the pinned interpreter (regen_gate's `except A, B:` needs 3.14),
         # so setup-python precedes it unconditionally; uv and the project install do not.

@@ -32,7 +32,8 @@
   examples. Each chat opened there counts as one open, also after the visitor
   goes back to the explainer and picks another example. A unit test checks
   that each example names an implementation under `plots/`, and CI now also
-  runs the Python tests on a pull request that changes only `AgentIntro.tsx`.
+  runs the Python tests on a pull request that changes only `AgentIntro.tsx`,
+  `README.md`, or `LegalPage.tsx`, which the explainer's tests read.
 
 ### Fixed
 
