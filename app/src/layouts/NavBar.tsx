@@ -20,9 +20,9 @@ const NAV_LINKS: { label: string; to: string; short?: string }[] = [
   { label: 'about', to: '/about' },
 ];
 
-// Logo, seven short labels and the search share one row from 716px up with MonoLisa; below that the
-// grid squeezed the logo onto two lines and pushed the search past the edge. So the two-row
-// masthead of phones runs up to 719px.
+// Logo, seven short labels and the search share one row from 716px up with MonoLisa. Below that a
+// single row wraps the logo onto two lines, and below about 624px it also pushes the search past
+// the screen's edge. So the two-row masthead of phones runs up to 719px.
 const ONE_ROW = '@media (min-width: 720px)';
 
 // Below 353px the row's gaps are narrower than the box of the "•" glyph plus 3px, so the marker

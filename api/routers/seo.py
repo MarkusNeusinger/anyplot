@@ -1375,9 +1375,9 @@ _ABOUT_BOT_BODY = (
     '<a href="https://anyplot.ai/stats">stats page</a> shows, per day, how many assistants and '
     "crawlers read the catalogue and how many came on behalf of a person.</p>"
     '<h2 id="transparency">Transparency</h2>'
-    "<p>The whole stack — specs, pipeline, API and frontend — is open source at "
-    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>; '
-    "the catalogue content is MIT-licensed. Running costs about $60 a month (October 2026).</p>"
+    "<p>The whole stack — specs, pipeline, API and frontend — is open source under the MIT License at "
+    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>. '
+    "Running costs about $60 a month (October 2026).</p>"
     "<h2>Open</h2>"
     '<p>Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
     "propose a new plot type via a "

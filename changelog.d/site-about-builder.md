@@ -25,13 +25,15 @@
 
 ### Fixed
 
-- **The masthead fits at every width.** With MonoLisa the last menu entry was
-  cut off on phones narrower than about 344 px, and from 600 to about 700 px
-  and from 900 to about 925 px the logo broke onto two lines while the search
-  ran past the edge. The single row now starts at 720 px, the labels on a
-  phone keep at least 8 px apart, phones narrower than 360 px mark the active
-  page with a small dot that stays clear of the label before it, and from 900
-  to 1199 px the labels keep 20 px apart.
+- **The masthead fits at every width.** With MonoLisa the last menu entry ran
+  into the right margin on phones narrower than about 344 px, and the screen
+  cut it off below about 327 px. From 600 to about 700 px and from 900 to
+  about 925 px the logo broke onto two lines; from 600 to about 640 px the
+  search also ran into the right margin, and below about 609 px past the
+  screen's edge. The single row now starts at 720 px, the labels on a phone
+  keep at least 8 px apart, phones narrower than 360 px mark the active page
+  with a small dot that stays clear of the label before it, and from 900 to
+  1199 px the labels keep 20 px apart.
 - **The about page no longer overstates the review and the upkeep of the
   catalogue.** It says that the bar drops 10 points per repair, to 50 at the
   last review, and that a nightly job regenerates the oldest implementations,

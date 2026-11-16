@@ -76,8 +76,9 @@ describe('NavBar', () => {
     ]);
   });
 
-  // With MonoLisa the logo, the seven short labels and the search need 716px in one row; below
-  // that the grid wrapped the logo onto two lines and pushed the search past the edge.
+  // With MonoLisa the logo, the seven short labels and the search need 716px in one row. Below
+  // that a single row wraps the logo onto two lines, and below about 624px it also pushes the
+  // search past the screen's edge.
   it('keeps two rows below 720px and one from 720px', () => {
     const { container } = render(<NavBar />);
 

@@ -1244,8 +1244,12 @@ class TestSeoProxyRouter:
         # The checks before the review are the ones a workflow runs; none looks for a blank image.
         assert "Automated checks come first: the code runs, the canvas has its size." in response.text
         assert "blank" not in response.text
-        # The source and its licence are stated once, under Transparency.
+        # The source and its licence are stated once, under Transparency: the licence covers the
+        # whole stack, as LICENSE and AboutPage.tsx say, not only the catalogue content.
         assert response.text.count('<a href="https://github.com/MarkusNeusinger/anyplot">') == 1
+        assert "is open source under the MIT License at" in response.text
+        assert response.text.count("MIT License") == 1
+        assert "MIT-licensed" not in response.text
         for link in (
             "https://www.linkedin.com/in/markus-neusinger/",
             "https://github.com/MarkusNeusinger",

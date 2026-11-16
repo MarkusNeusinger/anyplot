@@ -952,8 +952,8 @@ The `cubic-bezier(0.4, 0, 0.2, 1)` is the standard material-motion "ease-in-out"
 ```
 
 - Row 1: `any.plot()` wordmark (18px xs, 22px sm), `plots.search()` method-call link (11px xs, 12px sm) right-aligned.
-- Row 2: all seven nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels kick in below md, where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `about` as-is.
-- The single row starts at 720px, not at sm: with MonoLisa the logo, the seven short labels and the search need 716px, and below that the grid wrapped the logo onto two lines and pushed the search past the edge.
+- Row 2: all seven nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels show below md, in both the two-row and the single-row layout: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `about` as-is. The single row needs them at 720px, where it has 5.6px to spare.
+- The single row starts at 720px, not at sm: with MonoLisa the logo, the seven short labels and the search need 716px. Below that a single row wraps the logo onto two lines, and below about 624px it also pushes the search past the screen's edge.
 - Active marker below 360px: a drawn 4px green dot, 2px before the label, instead of the `•` glyph. At 320px the gap before a label is 9.6px, narrower than the glyph's 11.5px box plus 3px.
 - Font size ramps 12px xs → 12px sm → 13px md. Gap (the least space between two labels) ramps 1 (8px) xs → 2.25 sm → 2.5 md → 3.5 lg: 8px lets seven labels fit a 320px phone, and from 900px to 1199px the full labels at 13px leave the logo room for one line only with 20px gaps.
 - `/mcp` has no slot in the bar; the footer, the about page and the landing page link it.
