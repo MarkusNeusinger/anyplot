@@ -10,13 +10,13 @@
   says what the page says, row by row: it gains the shared links it lacked, and the right
   to object gets back its condition.
 - **The privacy policy speaks in plain words, without article numbers.** On `/legal`, the
-  table of GDPR article numbers is gone: one sentence under "why this is allowed" names each
+  table of GDPR article numbers is gone: three points under "why this is allowed" name each
   legal basis in words beside what it covers, a legitimate interest, your request and your
   consent. The other terms of legal texts give way to everyday words: "who is responsible"
   replaces "controller", the right to object keeps its condition without the statute's
   phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
   check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
-  says the same, word for word, and now also names who is responsible.
+  says the same, and now also names who is responsible.
 - **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to 808
   words (counted at 390 px), and on a phone (390 px) from 6590 to 5124 px high; on a desktop
   (1440 px), from 3659 to 2738 px. The data assistant's status, its limits and the terms for
