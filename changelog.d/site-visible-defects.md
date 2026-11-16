@@ -5,9 +5,9 @@
   swatch. Before, the hidden hex label gave every swatch a minimum width of
   about 70 px, so the last three or four swatches were clipped and the names
   drifted under the wrong colours. Each name now moves with its colour when
-  a hover or a tap expands one; while a colour is expanded, only its name
-  shows. Keyboard focus now expands a colour and shows its hex as a hover
-  does, and the strip no longer animates when reduced motion is turned on.
+  one expands; while a colour is expanded, only its name shows. Keyboard
+  focus now expands a colour and shows its hex as a hover does, and the
+  strip no longer animates when reduced motion is turned on.
 - **The swatch labels on the palette page use the ink with the higher
   contrast.** The helper now compares the WCAG contrast ratio of both inks
   against each swatch instead of cutting at a luminance of 0.5. Every
@@ -24,15 +24,15 @@
 - **The landing page no longer jumps when the plot of the day arrives.** The
   terminal frame is reserved, empty, while the plot loads, and keeps its
   height when the plot arrives and when `.use_my_data()` joins its header
-  about a second later. The header and the footer have a number of rows
+  after the plot. The header and the footer have a number of rows
   that depends only on the card's width: below 560 px, on a phone and in the
   narrow two-column card from 900 px, the header's actions and the footer's
   library each take a second row in every state. A filename or title too
   long for its row is cut with an ellipsis instead of wrapping. With the
   plot-of-the-day answer delayed by 1.5 s, the layout shift on a tablet
-  drops from 0.18 to under 0.001; on a phone with the card in view, the
-  late `.use_my_data()` shifted the page by 0.18 and now shifts it by under
-  0.001. If the request fails, the frame stays and says
+  (820 px) drops from 0.18 to under 0.001. On a phone (390 px) with the card
+  in view, the late `.use_my_data()` shifted the page by 0.18 and now by
+  under 0.001. If the request fails, the frame stays and says
   `plot of the day did not load`, with `.retry()`.
 - **A failed load on the plots page clears and can be retried.** The error
   banner is cleared when the next fetch starts. It says `plots did not load`

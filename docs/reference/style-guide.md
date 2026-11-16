@@ -1127,14 +1127,15 @@ The vertical plot stacks flanking the hero box on ultrawide viewports auto-scrol
 
 ### 8.6 Palette Strip Interaction
 
-The palette strip at the bottom responds to hover: normal state is even distribution, `:hover .sw` shrinks all colors to 50%, then `.sw:hover` expands the specific hovered color to 300%. Playful detail that invites interaction without being necessary.
+The palette strip at the bottom responds to hover: normal state is even distribution; while a color is hovered, the strip shrinks the other colors to `flex: 0.6` and expands that color to `flex: 3` (`LabelledPaletteStrip` in `app/src/pages/LandingPage.tsx`). Playful detail that invites interaction without being necessary.
 
-Each color's name sits in the same column as the color, so it moves with it. While one color is expanded, only that color's name shows, because a contracted column is narrower than most names. On a touch screen a tap expands the color and keeps it expanded until the next tap elsewhere. Keyboard focus on a color expands it and shows its hex, as a hover does. Under `prefers-reduced-motion` the strip changes without transitions.
+Each color's name sits in the same column as the color, so it moves with it. While one color is expanded, only that color's name shows, because a contracted column is narrower than most names. The columns have no minimum width (`min-width: 0`), so all eight fit a 320 px phone. Keyboard focus on a color expands it and shows its hex, as a hover does. On a touch screen the strip relies on the browser's hover emulation: where a tap leaves the tapped color hovered, as mobile browsers commonly do, it stays expanded until the next tap elsewhere. Under `prefers-reduced-motion` the strip changes without transitions.
 
 ```css
-.palette-strip .sw { flex: 1; transition: flex 0.3s; }
-.palette-strip:hover .sw { flex: 0.5; }
-.palette-strip .sw:hover { flex: 3; }
+.palette-strip .sw { flex: 1; min-width: 0; transition: flex 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.palette-strip:is(:hover, :has(:focus-visible)) .sw { flex: 0.6; }
+.palette-strip .sw:is(:hover, :has(:focus-visible)) { flex: 3; }
+@media (prefers-reduced-motion: reduce) { .palette-strip .sw { transition: none; } }
 ```
 
 ---
