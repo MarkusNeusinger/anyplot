@@ -300,14 +300,16 @@ export const MEMORY_ENTRY_ID = /^m[0-9]{1,6}$/;
 
 /**
  * The plot memory a stored version stands on, by entry id (`plot.memory`): `kept`, the decisions
- * from before the run that it kept, and `added`, the ones the run added, each in the memory's
- * order. A decision the run replaced is in neither list. The server settles them with the version,
- * so they hold also when the turn fails later. Ids are numbered once per session and never reused:
- * an id names one decision for the session's life.
+ * from before the run that it kept, `added`, the ones the run added, and `unused`, the ones from
+ * before the run whose text the plot does not draw, which stay remembered, each in the memory's
+ * order. A decision the run replaced is in no list. The server settles them with the version, so
+ * they hold also when the turn fails later. Ids are numbered once per session and never reused: an
+ * id names one decision for the session's life.
  */
 export interface VersionMemory {
   kept: string[];
   added: string[];
+  unused: string[];
 }
 
 /**
@@ -711,9 +713,9 @@ export interface PlotResult {
   /** How each attempt ended, in order; absent from an older server or a saved session. */
   rounds?: Round[];
   /**
-   * The decisions the stored version kept and added (`VersionMemory`). Absent when the server
-   * named none, for a plot without a stored version or from an older server: the version's memory
-   * is unknown then, never empty. A session without memory sends two empty lists.
+   * The decisions the stored version kept, added and did not use (`VersionMemory`). Absent when
+   * the server named none, for a plot without a stored version or from an older server: the
+   * version's memory is unknown then, never empty. A session without memory sends empty lists.
    */
   memory?: VersionMemory;
   /**
@@ -2226,15 +2228,19 @@ export function longSuggestion(value: unknown): LongSuggestion | null {
 }
 
 /**
- * A version's `memory` as the server sends it: both lists, each id in the memory's pattern (an
+ * A version's `memory` as the server sends it: the lists, each id in the memory's pattern (an
  * entry that is no id is dropped, never the list); `null` for anything else, which reads as no
- * field, so a malformed value never shows as an empty memory.
+ * field, so a malformed value never shows as an empty memory. An older server sends no `unused`,
+ * which reads as none.
  */
 function versionMemory(value: unknown): VersionMemory | null {
   if (!isRecord(value) || !Array.isArray(value.kept) || !Array.isArray(value.added)) return null;
+  // Only a missing field reads as none: a `null` is as malformed as any other value that is no list.
+  const unused = value.unused === undefined ? [] : value.unused;
+  if (!Array.isArray(unused)) return null;
   const ids = (items: unknown[]) =>
     items.filter((id): id is string => typeof id === 'string' && MEMORY_ENTRY_ID.test(id));
-  return { kept: ids(value.kept), added: ids(value.added) };
+  return { kept: ids(value.kept), added: ids(value.added), unused: ids(unused) };
 }
 
 /** `done.turn` as the page reads it: a known outcome, or `unknown` for any other value. */

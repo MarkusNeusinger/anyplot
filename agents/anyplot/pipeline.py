@@ -131,7 +131,7 @@ import re
 import secrets
 import time
 from collections import Counter
-from collections.abc import AsyncGenerator, Callable, Sequence
+from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any, Literal, get_args
 
@@ -156,6 +156,7 @@ from .dataset_versions import original_number
 from .grounding import (
     EXPECT_LINE_ID,
     UNVERIFIED_LINE,
+    DrawnTexts,
     drawn_texts,
     expected_misses,
     plot_texts,
@@ -163,7 +164,17 @@ from .grounding import (
     reviewed_misses,
 )
 from .language import DEFAULT_LANGUAGE, same_language
-from .memory import Planned, decision_lines, memory_delta, memory_written, next_seq, plan, read_memory
+from .memory import (
+    Planned,
+    decision_lines,
+    memory_delta,
+    memory_written,
+    next_seq,
+    not_drawn,
+    plan,
+    read_memory,
+    replace_drawn,
+)
 from .memory import expected_texts as memory_expected_texts
 from .models import error_chain, model_busy
 from .plot_view import EVERY_ROW_LINE, PlotView, current, drawn_in_order, read_view, view_delta, viewed_dataset
@@ -480,6 +491,9 @@ class Candidate:
     texts: dict[ShownGroup, list[str]] | None = None
     """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels, which
     the root never sees (`tool_safety.fence_pipeline_notes`)."""
+    drawn: DrawnTexts | None = None
+    """Every drawn text this render's probe reported, unclipped (`grounding.drawn_texts`), which the plot memory is
+    checked against once it ships (`settle_memory`, `memory_ids`); None without probe labels."""
     expect_lines: list[str] = field(default_factory=list)
     """The requested texts and number formats this render does not show (`grounding.expected_misses`), as lines."""
     expect_misses: list[str] = field(default_factory=list)
@@ -575,6 +589,9 @@ class Run:
     """The `changes` notes of every adapter call so far whose plan changed the code, in order (`note_changes`)."""
     expected_texts: list[str] = field(default_factory=list)
     """The texts and number formats the user asked to see (`PipelineArgs.expected_texts`), checked per render."""
+    written_texts: list[str] = field(default_factory=list)
+    """The run's expected texts the user wrote, its own and a kept note's, without the ones a switch carried
+    (`carried_texts`): the texts a standing title or label may be replaced by once the run ships (`settle_memory`)."""
     base: Literal["catalogue", "previous"] = "catalogue"
     round_scores: dict[int, int] = field(default_factory=dict)
     """The catalogue review score of each reviewed round's latest review, by round: the telemetry's score buckets."""
@@ -1259,13 +1276,15 @@ def plan_memory(state: Any, args: PipelineArgs, *, turn: int) -> Planned:
     return plan(stored, args.remember, seq=next_seq(state, stored), turn=turn)
 
 
-def settle_memory(state: Any, run: Run, shipped: bool) -> None:
+def settle_memory(state: Any, run: Run, shipped: bool, *, turn: int) -> None:
     """After a run, the switch's carry and the plot memory as the run leaves them; a run that shipped nothing leaves
     both as they were, so a change that never reached the plot is never remembered.
 
     A shipped run in the carry's target has taken the carry, or made a version the next change starts
     from, so the carry goes; so does a shipped fresh run (`Run.fresh`), whose plot is the target's now.
-    The memory takes the run's planned entries (`plan_memory`): its `remember` items, stored only now.
+    The memory takes the run's planned entries (`plan_memory`): its `remember` items, stored only now, and a
+    standing title, subtitle or axis label the shipped render replaced with a text the user wrote
+    (`memory.replace_drawn`, written in `turn`), which `run.memory_plan` holds from here on for `memory_ids`.
     Nothing here ever empties the memory: `.start_over()` keeps it (owner decision of 2026-11-02), and
     only the user removes entries (`forget`, the page's remove and forget-all).
     """
@@ -1274,24 +1293,46 @@ def settle_memory(state: Any, run: Run, shipped: bool) -> None:
     if state.get(CARRY) is not None and (run.fresh or read_carry(state, run.view.target) is not None):
         state[CARRY] = None
     planned = run.memory_plan
-    if planned is not None and planned.seq != run.memory_seq:
+    if planned is None:
+        return
+    render = shipped_candidate(run)
+    planned = replace_drawn(
+        planned,
+        run.written_texts,
+        render.drawn if render is not None else None,
+        standing_below=run.memory_seq,
+        turn=turn,
+    )
+    run.memory_plan = planned
+    if planned.seq != run.memory_seq:
         for key, value in memory_delta(planned.entries, planned.seq).items():
             state[key] = value
 
 
-def memory_ids(run: Run) -> dict[str, list[str]] | None:
-    """The plot memory a shipped run left, by entry id: `kept`, the entries from before the run that still stand, and
-    `added`, the ones its own `remember` items made, each in the memory's order; None for a run without a plan.
+def memory_ids(run: Run, written_in: Mapping[int, str]) -> dict[str, list[str]] | None:
+    """The plot memory a shipped run left, by entry id: `kept`, the entries from before the run that still stand,
+    `added`, the ones the run made (its `remember` items and a title or label its render replaced), and `unused`, the
+    entries from before the run whose verbatim text the shipped render does not draw (`memory.not_drawn`), each in the
+    memory's order; None for a run without a plan.
 
     Ids are numbered on from the session's counter and never reused (`memory.next_seq`), so an entry numbered below
-    the counter the run started from was there before it; a decision the run replaced is in neither list."""
+    the counter the run started from was there before it; a decision the run replaced is in no list. `unused` is
+    measured only where the drawn texts decide a requested text (`RuntimeAdapter.review_texts` false): where the
+    reviewer finds the texts in the image, the probe never claims one missing, so every entry counts as kept there.
+    `written_in` maps each earlier turn to the plot language of the version it shipped."""
     planned = run.memory_plan
     if planned is None:
         return None
+    shipped = shipped_candidate(run)
+    measured = shipped.drawn if shipped is not None and not runtime_for(run.view.library).review_texts else None
+    unused = not_drawn(
+        planned.entries, measured, standing_below=run.memory_seq, language=run.language, written_in=written_in
+    )
     ids = [entry.id for entry in planned.entries]
     return {
-        "kept": [entry_id for entry_id in ids if int(entry_id[1:]) < run.memory_seq],
+        "kept": [entry_id for entry_id in ids if int(entry_id[1:]) < run.memory_seq and entry_id not in unused],
         "added": [entry_id for entry_id in ids if int(entry_id[1:]) >= run.memory_seq],
+        "unused": unused,
     }
 
 
@@ -2139,6 +2180,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         language=language or view.language,
         change_request=node_input.change_request,
         expected_texts=list(node_input.expected_texts),
+        written_texts=list(own_input.expected_texts),
         base=node_input.base,
         decisions=decision_lines(memory_plan.entries),
         memory_written=memory_written(ctx.state),
@@ -2194,9 +2236,15 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         changes = result.changes if result.status in ("ok", "needs_attention") else run.data_notes
         result = result.model_copy(update={"combined": True, "changes": changes})
     settle_pending_request(ctx.state, own_input, ledger.plot_shipped, kept_change=kept_change)
-    settle_memory(ctx.state, run, ledger.plot_shipped)
-    # The memory the stored version stands on, for its `plot` event: known only once settled with the version.
-    ledger.shipped_memory = memory_ids(run) if ledger.plot_shipped and result.version is not None else None
+    settle_memory(ctx.state, run, ledger.plot_shipped, turn=ledger.turn)
+    # The memory the stored version stands on, for its `plot` event: known only once settled with the version. Each
+    # earlier turn's plot language tells an entry whose text a language change rewrote from one the plot left out.
+    written_in = {
+        version.turn: version.language
+        for version in services.versions.all(ctx.session.id)
+        if version.number != result.version
+    }
+    ledger.shipped_memory = memory_ids(run, written_in) if ledger.plot_shipped and result.version is not None else None
     # The view the stored version drew its rows through, for the same event: the page shows it on the plot's card.
     ledger.shipped_view = drawn.shown if ledger.plot_shipped and result.version is not None else None
     record_last_run(ctx.state, result, turn=ledger.turn)
@@ -2701,6 +2749,7 @@ async def _attempts(
             advisory_gates=[gate for gate in report.failed_gates if gate.startswith("G")],
             changes=list(run.changes),
             texts=texts,
+            drawn=drawn,
             expect_lines=expect_lines,
             expect_misses=[miss.expected for miss in misses],
             expect_note=expect_note,

@@ -386,11 +386,11 @@ class TestTranslator:
         assert translator.started() == 'event: status\ndata: {"step":"started"}\n\n'
 
     def test_a_stored_version_carries_its_memory(self, translator: Translator) -> None:
-        translator.ledger.shipped_memory = {"kept": ["m1", "m2", "m3"], "added": ["m4"]}
+        translator.ledger.shipped_memory = {"kept": ["m1", "m3"], "added": ["m4"], "unused": ["m2"]}
         (chunk,) = translator.translate(pipeline_event(status="ok", attempts=1, artifacts=[], version=4))
         assert chunk == (
             'event: plot\ndata: {"status":"ok","attempts":1,"artifacts":[],"version":4,'
-            '"memory":{"kept":["m1","m2","m3"],"added":["m4"]}}\n\n'
+            '"memory":{"kept":["m1","m3"],"added":["m4"],"unused":["m2"]}}\n\n'
         )
 
     def test_a_plot_without_a_stored_version_carries_no_memory(self, translator: Translator) -> None:
@@ -404,10 +404,14 @@ class TestTranslator:
         assert chunk == 'event: plot\ndata: {"status":"ok","attempts":1,"artifacts":[],"version":2}\n\n'
 
     def test_only_entry_ids_pass(self) -> None:
-        assert plot_memory({"kept": ["m1", "title: 'Lernzeit'", 7], "added": ["m12"]}) == {
+        assert plot_memory({"kept": ["m1", "title: 'Lernzeit'", 7], "added": ["m12"], "unused": ["m2", None]}) == {
             "kept": ["m1"],
             "added": ["m12"],
+            "unused": ["m2"],
         }
+        # A record without the unused list names none; a malformed one is no memory at all.
+        assert plot_memory({"kept": ["m1"], "added": []}) == {"kept": ["m1"], "added": [], "unused": []}
+        assert plot_memory({"kept": ["m1"], "added": [], "unused": "m2"}) is None
         assert plot_memory({"kept": ["m1"]}) is None
         assert plot_memory(None) is None
 
@@ -493,8 +497,8 @@ async def test_a_plot_is_plot_and_its_version_stands_on_no_memory(client: httpx.
     events = await say(client, sid, "plot it")
 
     assert done_of(events)["turn"] == "plot"
-    # A session without memory: known to be empty, so two empty lists, never a missing field.
-    assert plot_of(events)["memory"] == {"kept": [], "added": []}
+    # A session without memory: known to be empty, so empty lists, never a missing field.
+    assert plot_of(events)["memory"] == {"kept": [], "added": [], "unused": []}
     steps = [data for name, data in events if name == "status"]
     assert steps and all(step["max_attempts"] == 2 for step in steps)  # the default AGENT_MAX_ATTEMPTS
 
@@ -522,7 +526,7 @@ async def test_a_version_names_the_decisions_it_kept_and_the_one_it_added(
 
     events = await say(client, sid, "plot it with the x axis called 'Zeit (h)'")
 
-    assert plot_of(events)["memory"] == {"kept": ["m1", "m2", "m3"], "added": ["m4"]}
+    assert plot_of(events)["memory"] == {"kept": ["m1", "m2", "m3"], "added": ["m4"], "unused": []}
     assert done_of(events)["turn"] == "plot"
 
 
@@ -544,7 +548,7 @@ async def test_a_turn_that_fails_after_shipping_keeps_its_plots_memory_and_has_n
 
     events = await say(client, sid, "plot it")
 
-    assert plot_of(events)["memory"] == {"kept": ["m1"], "added": []}
+    assert plot_of(events)["memory"] == {"kept": ["m1"], "added": [], "unused": []}
     assert [name for name, _ in events][-2:] == ["error", "done"]
     assert "turn" not in done_of(events)
 

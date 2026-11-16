@@ -231,25 +231,32 @@ describe('parseAgentEvent', () => {
     expect(parseAgentEvent(raw('done', {}))).not.toHaveProperty('turn');
   });
 
-  it("reads a version's kept and added decision ids, and no field as an unknown memory", () => {
+  it("reads a version's kept, added and unused decision ids, and no field as an unknown memory", () => {
     const memory = (value: unknown) => {
       const event = parseAgentEvent(
         raw('plot', { status: 'ok', attempts: 1, artifacts: [], version: 4, memory: value })
       );
       return event?.type === 'plot' ? event.result.memory : 'not a plot';
     };
-    expect(memory({ kept: ['m1', 'm2', 'm3'], added: ['m4'] })).toEqual({
-      kept: ['m1', 'm2', 'm3'],
+    expect(memory({ kept: ['m1', 'm3'], added: ['m4'], unused: ['m2'] })).toEqual({
+      kept: ['m1', 'm3'],
       added: ['m4'],
+      unused: ['m2'],
     });
-    // A session without memory: two empty lists, which is not the same as none.
-    expect(memory({ kept: [], added: [] })).toEqual({ kept: [], added: [] });
-    // An entry that is no id goes, the list stays; a malformed value is no field at all.
-    expect(memory({ kept: ['m1', 'title in German', 7], added: [] })).toEqual({
-      kept: ['m1'],
+    // A session without memory: empty lists, which is not the same as none.
+    expect(memory({ kept: [], added: [], unused: [] })).toEqual({
+      kept: [],
       added: [],
+      unused: [],
     });
+    // An older server sends no unused list: none of the decisions went unused.
+    expect(memory({ kept: ['m1'], added: [] })).toEqual({ kept: ['m1'], added: [], unused: [] });
+    // An entry that is no id goes, the list stays; a malformed value is no field at all.
+    const mixed = { kept: ['m1', 'title in German', 7], added: [], unused: [null, 'm2'] };
+    expect(memory(mixed)).toEqual({ kept: ['m1'], added: [], unused: ['m2'] });
     expect(memory({ kept: ['m1'] })).toBeUndefined();
+    expect(memory({ kept: ['m1'], added: [], unused: 'm2' })).toBeUndefined();
+    expect(memory({ kept: ['m1'], added: [], unused: null })).toBeUndefined();
     expect(memory(['m1'])).toBeUndefined();
     expect(memory(undefined)).toBeUndefined();
     expect(

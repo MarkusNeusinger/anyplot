@@ -1127,9 +1127,10 @@ class TestMessagesStream:
         assert events[1] == ("plot", plot)
 
     def test_the_turn_outcome_the_memory_and_the_round_cap_pass(self, client, upstream) -> None:
-        """`done.turn`, a version's `memory` and a step's `max_attempts` reach the page; unknown fields still drop."""
+        """`done.turn`, a version's `memory` (with the decisions the plot did not use) and a step's `max_attempts` reach
+        the page; unknown fields still drop."""
         status = {"step": "adapting", "attempt": 1, "max_attempts": 3, "cap": 9}
-        memory = {"kept": ["m1", "m2", "m3"], "added": ["m4"]}
+        memory = {"kept": ["m1", "m3"], "added": ["m4"], "unused": ["m2"]}
         plot = {"status": "ok", "attempts": 1, "artifacts": [], "version": 4, "memory": memory, "plan": "secret"}
         done = {"llm_calls": 4, "tokens": 900, "turn": "kept", "turns": ["x"]}
         body = "".join(
