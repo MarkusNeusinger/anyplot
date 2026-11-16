@@ -282,12 +282,13 @@ class TestCheck:
         self, ledger: RequestLedger, services: Services, caplog: pytest.LogCaptureFixture
     ) -> None:
         """`get_current_code`'s `data` holds counts the server took from the stored version (`session.version_data`):
-        a tool result, while the code text beside them stays `plot_code`."""
+        a tool result, while the code text beside them stays `plot_code`. The file holds fewer rows than the view drew
+        (rows that share the plot's key were combined), so each count stands in one field only."""
         result = {
             "status": "ok",
             "version": 3,
             "code": DATA_PREAMBLE + "\n" + fence("catalogue_code", "ax.axhline(3.75)"),
-            "data": {"rows_in_file": {"data.csv": 248, "plot.html": 248}, "view": {"rows": 15, "of_rows": 248}},
+            "data": {"rows_in_file": {"data.csv": 13, "plot.html": 13}, "view": {"rows": 15, "of_rows": 248}},
         }
         ledger.root_request = root_request(
             user("how many rows does the file of version 3 hold?"),
@@ -296,19 +297,19 @@ class TestCheck:
         )
         ledger.tools = ["get_current_code"]
         sources = request_sources(ledger.root_request, {})
-        reply = "The data.csv of version 3 holds 248 rows; the plot drew 15 of them, under a line at 3.75."
+        reply = "The data.csv of version 3 holds 13 rows; the plot drew 15 of the 248, under a line at 3.75."
         response = gemini_response({"text": reply})
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
             assert await check(response) is None
 
-        assert (sources.kind_of(one("248")), sources.kind_of(one("15"))) == ("tool_result", "tool_result")
+        assert [sources.kind_of(one(count)) for count in ("13", "15", "248")] == ["tool_result"] * 3
         assert sources.kind_of(one("3.75")) == "plot_code"
         (line,) = lines(caplog)
         assert (line["verdict"], line["unsourced"], line["from_tool_result"], line["from_plot_code"]) == (
             "clean",
             0,
-            2,
+            3,
             1,
         )
 
