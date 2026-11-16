@@ -687,9 +687,11 @@ PREP_OPS = frozenset(
     " row_number date_number split extract strip replace compute diff rolling blank keep_rows reset_view"
     " apply_view unsupported".split()
 )
+# The operations only a question takes (`turn_record.QueryOnlyOp`), which a call's shape records by name alone.
+QUERY_ONLY_OPS = frozenset({"fit"})
 SHAPE_CODES: dict[str, frozenset[str]] = {
     # A call's shape (`turn_record.CallShape`, `RecordedOp`, `RecordedCondition`), each field's own set by its name.
-    "op": PREP_OPS | {"other"},
+    "op": PREP_OPS | QUERY_ONLY_OPS | {"other"},
     "test": frozenset("eq ne contains is_missing not_missing gt lt ge le other".split()),
     "value_shape": frozenset("number iso_date iso_datetime year_month year_quarter year text list none".split()),
     "column_kind": frozenset("integer number datetime boolean text unknown".split()),

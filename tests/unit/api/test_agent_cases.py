@@ -610,6 +610,19 @@ def test_manifest_detail_reads_a_calls_shape() -> None:
     assert bare is None and older is None
 
 
+def test_manifest_detail_reads_a_questions_total_and_fit() -> None:
+    """A question's aggregate over every row keeps its `keys` of 0, and a `fit` reads by its own name."""
+    total = {**NULL_OPERATION, "op": "aggregate", "how": "sum", "keys": 0}
+    question = {**NULL_SHAPE, "operations": [total, {**NULL_OPERATION, "op": "fit"}], "from_version": "current"}
+    manifest = {"bundle": {"turns": {"records": [_shaped_turn(("query_data", question))]}}}
+
+    turns = manifest_detail(manifest, 0).turns
+
+    assert turns is not None
+    shape = turns.records[0].tools[0].shape
+    assert shape is not None and shape.operations == (CaseOperation(**total), CaseOperation(**NULL_OPERATION, op="fit"))
+
+
 def test_manifest_detail_closes_a_shape_to_each_fields_own_vocabulary() -> None:
     """A value outside its field's set reads `other`, a code of another field too; a count past its bound, a
     non-boolean flag and a list past the tools' own bounds are dropped, never shown."""

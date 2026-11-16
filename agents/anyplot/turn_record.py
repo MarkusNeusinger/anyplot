@@ -68,6 +68,7 @@ from .data.prepare import (
     Period,
     PrepareArgs,
     PrepareErrorCode,
+    QueryOperation,
     Rolling,
     RollingHow,
     SetType,
@@ -339,6 +340,12 @@ PlotBase = Literal["catalogue", "previous"]
 """`PipelineArgs.base`, pinned equal by a test."""
 CombineChoice = Literal["sum", "mean"]
 """`PipelineArgs.combine`, pinned equal by a test."""
+QueryOnlyOp = Literal["fit"]
+"""The operations only `query_data` takes beside `Operation`'s (`prepare.QueryOperation`), by the models' own `op`,
+pinned equal by a test. A `fit` is recorded by its name alone: its `x` and `y` are column names."""
+RecordedOpName = PrepOp | QueryOnlyOp
+"""Every operation name a call's shape records (`RecordedOp.op`); any other reads `other`."""
+RECORDED_OPS = literal_values(RecordedOpName)
 KIND_KEEPING_OPS = frozenset({"drop_rows", "keep_rows", "sort", "drop_columns", "reset_view"})
 """The operations after which every column of the stored table that is still there keeps its name and its kind: they
 choose or order the rows of the call's own frame, drop columns, or clear the view of the plot. After any other
@@ -381,18 +388,19 @@ class RecordedOp(_Record):
     `keep_rows`: `mode`, `target` (in a `prepare_data` from `current` only, `KeepTarget`), with `first_n` the `order`
     of the top N (the direction of the call's last `sort` before it, with only row filters between them, as the engine
     keeps that ranking), and with `where` its `conditions`. `drop_rows` and `blank`: their `conditions`. `sort`:
-    `order`. `aggregate`: `how`, `period` and `keys`, the count of its `by` columns. `set_type`: `type`,
+    `order`. `aggregate`: `how`, `period` and `keys`, the count of its `by` columns (0 for a question's aggregate
+    over every row, `QueryAggregate`). `set_type`: `type`,
     `date_format`, `decimal`. `derive` and `rolling`: `how`. `date_number`: `unit`. `extract`: `keep`. `unsupported`:
     `family`. Any other operation, `classify` among them (`CONDITION_OPS`): its name alone."""
 
-    op: PrepOp | Literal["other"]
+    op: RecordedOpName | Literal["other"]
     mode: KeepMode | None = None
     target: KeepTarget | None = None
     order: Direction | None = None
     conditions: list[RecordedCondition] | None = Field(default=None, max_length=MAX_CONDITIONS)
     how: How | DeriveHow | RollingHow | None = None
     period: Period | None = None
-    keys: Annotated[int, Field(ge=1, le=MAX_KEYS)] | None = None
+    keys: Annotated[int, Field(ge=0, le=MAX_KEYS)] | None = None
     type: TargetType | None = None
     date_format: DateFormat | None = None
     decimal: Decimal | None = None
@@ -569,12 +577,12 @@ def _direction(descending: bool) -> Direction:
 
 
 def operation_shape(
-    operation: Operation, ranked: Direction | None, kinds: ColumnKinds, *, targeted: bool = True
+    operation: Operation | QueryOperation, ranked: Direction | None, kinds: ColumnKinds, *, targeted: bool = True
 ) -> RecordedOp:
     """One data operation as the record keeps it (`RecordedOp`): `ranked` is the direction of the `sort` that still
     ranks the rows it gets, `kinds` the column kinds its conditions read (`operations_shape`), and `targeted` whether
     the call lands a `keep_rows` by its `target` (a `prepare_data` from `current`)."""
-    fields: dict[str, Any] = {"op": operation.op if operation.op in PREP_OPS else "other"}
+    fields: dict[str, Any] = {"op": operation.op if operation.op in RECORDED_OPS else "other"}
     if isinstance(operation, CONDITION_OPS) and operation.where is not None:
         fields["conditions"] = [condition_shape(condition, kinds) for condition in operation.where]
     if isinstance(operation, KeepRows):
@@ -601,7 +609,7 @@ def operation_shape(
 
 
 def operations_shape(
-    operations: Sequence[Operation],
+    operations: Sequence[Operation | QueryOperation],
     kinds_of: Callable[[], ColumnKinds],
     reread_at: int | None = None,
     *,
@@ -668,7 +676,7 @@ def call_shape(tool: str, args: BaseModel, kinds_of: Callable[[], ColumnKinds] =
         # and only one from `current` lands a `keep_rows` by its `target`: a call that names the version it starts
         # from rebuilds the table, so every selection lands in it (`tools.session.prepare_data`, `table_only`).
         prepare = isinstance(args, PrepareArgs)
-        reread = view_reread(args.operations) if prepare else None
+        reread = view_reread(args.operations) if isinstance(args, PrepareArgs) else None
         fields: dict[str, Any] = {
             "operations": operations_shape(args.operations, reads, reread, targeted=prepare and current),
             "from_version": from_kind(args.from_version),

@@ -77,6 +77,7 @@ from agents.anyplot.turn_record import (
     HookVerdict,
     KeepTarget,
     PlotBase,
+    QueryOnlyOp,
     RecordedCall,
     RecordedCondition,
     RecordedOp,
@@ -202,6 +203,7 @@ class TestClosedSets:
         assert agent_cases.TURN_GUARDS == TURN_HOOKS
         assert agent_cases.GUARD_VERDICTS == set(get_args(HookVerdict))
         assert agent_cases.PREP_OPS == telemetry.PREP_OPS
+        assert agent_cases.QUERY_ONLY_OPS == literal_values(QueryOnlyOp)
         assert names(agent_cases.CaseTurn) == set(TurnRecord.model_fields)
         assert names(agent_cases.CaseToolCall) == set(RecordedCall.model_fields)
         assert names(agent_cases.CaseGuardLine) == set(GuardLine.model_fields)
@@ -227,7 +229,7 @@ class TestClosedSets:
             if literal_values(field.annotation)
         }
         assert closed == agent_cases.SHAPE_CODES
-        assert closed["op"] == telemetry.PREP_OPS | {"other"}
+        assert closed["op"] == telemetry.PREP_OPS | literal_values(QueryOnlyOp) | {"other"}
         assert (
             agent_cases._MAX_SHAPE_OPERATIONS,
             agent_cases._MAX_SHAPE_CONDITIONS,
@@ -249,6 +251,16 @@ class TestClosedSets:
         operations = get_args(get_args(prepare.Operation)[0])
         assert RANK_KEEPING_OPS == prepare._ROW_FILTERS
         assert {model for model in operations if "where" in model.model_fields} == set(CONDITION_OPS)
+
+    def test_the_query_only_operations_are_the_question_models_own(self) -> None:
+        """The names a shape records beside `Operation`'s are the `op` of every model only `query_data` takes, so an
+        operation a question gains later fails here instead of reading `other` unnoticed."""
+
+        def names(union: Any) -> set[str]:
+            return {get_args(model.model_fields["op"].annotation)[0] for model in get_args(get_args(union)[0])}
+
+        assert literal_values(QueryOnlyOp) == names(prepare.QueryOperation) - names(prepare.Operation)
+        assert literal_values(RecordedOp.model_fields["op"].annotation) == names(prepare.QueryOperation) | {"other"}
 
     def test_the_operations_that_keep_a_columns_kind_are_pinned(self) -> None:
         """Only these choose or order rows, drop columns or clear the view. Any other operation may reshape the table
@@ -931,6 +943,21 @@ class TestCallShape:
         assert conditions(shape, 1) == [("contains", "text", "unknown")]
         assert (shape.limit, bare.limit, bare.operations) == (True, False, [])
         assert "5" not in shape.model_dump_json()
+
+    def test_a_question_records_a_total_over_every_row_and_a_fit_by_its_name(self) -> None:
+        """An `aggregate` without `by` counts no key (`keys` 0), also where ToolSafety notes the call; a `fit` records
+        its name and no other field, never its columns."""
+        grand_total = {"operations": [{"op": "aggregate", "column": "Parcels", "how": "sum"}]}
+        fit = {"operations": [{"op": "fit", "x": "Weight kg", "y": "Parcels"}]}
+
+        total_shape = call_shape("query_data", QueryArgs.model_validate(grand_total))
+        fit_shape = call_shape("query_data", QueryArgs.model_validate(fit))
+        noted = tool_safety.recorded_shape("query_data", grand_total, cast(Any, FakeContext()))
+
+        assert total_shape is not None and total_shape.operations == [RecordedOp(op="aggregate", how="sum", keys=0)]
+        assert noted == total_shape
+        assert fit_shape is not None and fit_shape.operations == [RecordedOp(op="fit")]
+        assert "Parcels" not in fit_shape.model_dump_json() and "Weight" not in fit_shape.model_dump_json()
 
     def test_a_limit_named_at_its_default_still_reads_named(self) -> None:
         """Whether the call named a limit, not whether it differs from the default the tool applies."""
