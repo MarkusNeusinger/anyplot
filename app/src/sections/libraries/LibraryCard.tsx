@@ -31,8 +31,10 @@ const FRAMEWORK_LABEL: Record<string, string> = {
 };
 
 // Short license note surfaced on the card. Only set where it's worth calling
-// out (e.g. MUI X ships community-MIT while Pro/Premium stay out of scope).
+// out: MUI X ships community-MIT while Pro/Premium stay out of scope, and
+// Highcharts is the one library not free for commercial use (/legal, "your code").
 const LICENSE_NOTE: Record<string, string> = {
+  highcharts: 'free · non-commercial',
   muix: 'MIT · community',
 };
 
@@ -58,6 +60,9 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
       sx={{
         all: 'unset',
         boxSizing: 'border-box',
+        // Fills a column wrapper (LibrariesPage sets a version row under each card), so the
+        // cards of a grid row match in height; a plain grid item is stretched anyway.
+        flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
         gap: 2,

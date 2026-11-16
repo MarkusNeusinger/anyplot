@@ -360,6 +360,9 @@ function LabelledPaletteStrip() {
               className="swatch"
               sx={{
                 flex: 1,
+                // Without it the nowrap hex label sets a ~70 px minimum, and on a phone the
+                // strip overflows: the last swatches are clipped and drift from their names.
+                minWidth: 0,
                 height: 120,
                 background,
                 transition: 'flex 0.3s',
@@ -395,13 +398,24 @@ function LabelledPaletteStrip() {
           );
         })}
       </Box>
-      <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${PALETTE.length}, 1fr)`, mt: 1 }}>
+      {/* Equal columns, one under each swatch: `minmax(0, 1fr)` so a long name cannot widen
+          its column, and a flex cell so a name wider than its column (lavender on a 320 px
+          phone) overflows evenly on both sides and stays centred under its swatch. */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${PALETTE.length}, minmax(0, 1fr))`,
+          mt: 1,
+        }}
+      >
         {PALETTE.map(({ background, name }) => (
           <Box
             key={background}
             sx={{
+              display: 'flex',
+              justifyContent: 'center',
               fontFamily: typography.mono,
-              fontSize: { xs: '9px', md: '10px' },
+              fontSize: { xs: 'clamp(8px, 2.5vw, 9px)', md: '10px' },
               color: semanticColors.mutedText,
               textAlign: 'center',
               px: 0.5,

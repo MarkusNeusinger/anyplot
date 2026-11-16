@@ -64,6 +64,8 @@ interface UseFilterStateReturn {
   handleRemoveGroup: (groupIndex: number) => void;
   handleClearFilters: () => void;
   handleRandom: () => void;
+  /** Runs the gallery fetch for the current filters again, after a failure. */
+  retryFetch: () => void;
 
   // Animation state for random
   randomAnimation: { index: number; phase: 'out' | 'in'; oldLabel?: string } | null;
@@ -117,6 +119,7 @@ export function useFilterState({
     setDisplayedImages,
     setHasMore,
     setError,
+    retry: retryFetch,
   } = useFilterFetch({
     activeFilters,
     initialState: homeStateRef.current.initialized
@@ -329,6 +332,7 @@ export function useFilterState({
     handleRemoveGroup,
     handleClearFilters,
     handleRandom,
+    retryFetch,
 
     // Animation
     randomAnimation,

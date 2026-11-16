@@ -4,7 +4,7 @@
  * Handles API calls, image shuffling, and pagination state.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { BATCH_SIZE } from 'src/constants';
 import { apiGet, endpoints } from 'src/lib/api';
@@ -33,7 +33,15 @@ interface UseFilterFetchReturn extends FilterFetchState {
   setDisplayedImages: React.Dispatch<React.SetStateAction<PlotImage[]>>;
   setHasMore: React.Dispatch<React.SetStateAction<boolean>>;
   setError: React.Dispatch<React.SetStateAction<string>>;
+  /** Runs the fetch for the current filters again, after a failure. */
+  retry: () => void;
 }
+
+/**
+ * The gallery's error line once a fetch still failed after apiGet's own retries. The page shows
+ * it with a `.retry()`; the raw ApiError (status and URL) is for the network panel, not for it.
+ */
+export const FILTER_FETCH_ERROR = 'plots did not load';
 
 /**
  * Hook to fetch filtered images and manage related state.
@@ -60,6 +68,9 @@ export function useFilterFetch({
   const [hasMore, setHasMore] = useState(initialState.hasMore ?? false);
   const [loading, setLoading] = useState(!skipInitialFetch);
   const [error, setError] = useState<string>('');
+  // Bumped by `retry` so the effect runs again for the same filters.
+  const [reloadKey, setReloadKey] = useState(0);
+  const retry = useCallback(() => setReloadKey(k => k + 1), []);
 
   // Track if we should skip initial fetch
   const skipRef = useRef(skipInitialFetch);
@@ -83,6 +94,9 @@ export function useFilterFetch({
 
     const fetchFilteredImages = async () => {
       setLoading(true);
+      // A new fetch starts clean: the error of an earlier filter or attempt must not stand
+      // above the results of this one.
+      setError('');
 
       try {
         // Parse from the stable string key so the effect doesn't depend on
@@ -120,9 +134,9 @@ export function useFilterFetch({
         // Initial display count
         setDisplayedImages(shuffled.slice(0, BATCH_SIZE));
         setHasMore(shuffled.length > BATCH_SIZE);
-      } catch (err) {
+      } catch {
         if (abortController.signal.aborted) return;
-        setError(`Error loading images: ${err}`);
+        setError(FILTER_FETCH_ERROR);
       } finally {
         if (!abortController.signal.aborted) {
           setLoading(false);
@@ -133,7 +147,7 @@ export function useFilterFetch({
     fetchFilteredImages();
 
     return () => abortController.abort();
-  }, [filtersKey]);
+  }, [filtersKey, reloadKey]);
 
   return {
     filterCounts,
@@ -148,5 +162,6 @@ export function useFilterFetch({
     setDisplayedImages,
     setHasMore,
     setError,
+    retry,
   };
 }

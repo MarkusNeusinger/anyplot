@@ -41,12 +41,58 @@ interface PlotOfTheDayTerminalProps {
   maxPlotHeight?: string;
 }
 
+/** The prompt header: `$ runner filename` on the left, the actions on the right. */
+const headerSx = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: 0.75,
+  px: { xs: 2, md: 3 },
+  pt: { xs: 2.5, md: 3 },
+  pb: 1.5,
+  color: 'var(--ink-muted)',
+  fontSize: '12px',
+} as const;
+
+/** The status footer: `>>> title · library`, and `// plot of the day` at the right. */
+const footerSx = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 1.5,
+  flexWrap: 'wrap',
+  px: { xs: 2, md: 3 },
+  py: 1.5,
+  fontSize: '11px',
+  color: 'var(--ink-muted)',
+} as const;
+
+/** The 16:10 plot frame between the dashed rules, capped at `maxPlotHeight`. */
+function plotFrameSx(maxPlotHeight: string) {
+  return {
+    display: 'block',
+    mx: 'auto',
+    width: { xs: 'calc(100% - 32px)', md: 'calc(100% - 48px)' },
+    maxWidth: `calc(${maxPlotHeight} * 1.6)`,
+    maxHeight: maxPlotHeight,
+    borderTop: '1px dashed var(--rule)',
+    borderBottom: '1px dashed var(--rule)',
+    bgcolor: 'var(--bg-surface)',
+    aspectRatio: '16 / 10',
+    position: 'relative',
+    overflow: 'hidden',
+  } as const;
+}
+
 /**
  * Terminal-framed plot-of-the-day card.
  *
  * Looks like a terminal window rendered on the editorial paper: thin border,
  * `~/anyplot` tab label, green prompt + filename header, plot image as console
  * output, status footer. Fills its container by default so parents control width.
+ *
+ * Until the plot of the day is there to show, it renders the same frame empty, so
+ * the box is reserved and the content below it does not jump down when the plot
+ * arrives (in the one-column layout of a tablet the card sits above the numbers).
  */
 export function PlotOfTheDayTerminal({
   potd,
@@ -60,7 +106,52 @@ export function PlotOfTheDayTerminal({
   // spec pages; no entry while it probes, for a closed lane, or for an ineligible pair.
   const agentLane = useAgentEligibility(potd?.spec_id, potd?.library_id);
   const previewUrl = selectPreviewUrl(potd, isDark);
-  if (!potd || !previewUrl) return null;
+  // The root keeps the same element and styles in both states, so React keeps its node
+  // and the `rise` entrance does not play a second time when the plot arrives.
+  const frameSx = {
+    position: 'relative',
+    width: '100%',
+    maxWidth,
+    border: '1px solid var(--ink-muted)',
+    borderRadius: '6px',
+    bgcolor: 'var(--bg-surface)',
+    fontFamily: typography.mono,
+    animation: 'rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards',
+    '&::before': {
+      content: '"~/anyplot.ai"',
+      position: 'absolute',
+      top: '-0.7em',
+      left: 24,
+      px: 1.25,
+      bgcolor: 'var(--bg-page)',
+      fontFamily: typography.mono,
+      fontSize: '12px',
+      color: 'var(--ink-muted)',
+      letterSpacing: '0.05em',
+    },
+  } as const;
+
+  if (!potd || !previewUrl) {
+    return (
+      <Box sx={frameSx} aria-hidden="true" data-testid="potd-terminal-placeholder">
+        <Box sx={headerSx}>
+          <Box component="span" sx={{ color: colors.primary, fontWeight: 700 }}>
+            $
+          </Box>
+        </Box>
+        <Box sx={{ ...plotFrameSx(maxPlotHeight), bgcolor: 'var(--bg-elevated)' }} />
+        <Box sx={footerSx}>
+          <Box component="span" sx={{ color: colors.primary }}>
+            &gt;&gt;&gt;
+          </Box>
+          <Box sx={{ flex: 1 }} />
+          <Box component="span" sx={{ opacity: 0.8 }}>
+            // plot of the day
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
 
   // File extension + runner command follow the implementation language:
   // - ggplot2 (R) ships as .R + Rscript
@@ -99,44 +190,9 @@ export function PlotOfTheDayTerminal({
     : null;
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        width: '100%',
-        maxWidth,
-        border: '1px solid var(--ink-muted)',
-        borderRadius: '6px',
-        bgcolor: 'var(--bg-surface)',
-        fontFamily: typography.mono,
-        animation: 'rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards',
-        '&::before': {
-          content: '"~/anyplot.ai"',
-          position: 'absolute',
-          top: '-0.7em',
-          left: 24,
-          px: 1.25,
-          bgcolor: 'var(--bg-page)',
-          fontFamily: typography.mono,
-          fontSize: '12px',
-          color: 'var(--ink-muted)',
-          letterSpacing: '0.05em',
-        },
-      }}
-    >
+    <Box sx={frameSx}>
       {/* Prompt header — the filename links to the raw source on GitHub */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: 0.75,
-          px: { xs: 2, md: 3 },
-          pt: { xs: 2.5, md: 3 },
-          pb: 1.5,
-          color: 'var(--ink-muted)',
-          fontSize: '12px',
-        }}
-      >
+      <Box sx={headerSx}>
         <Box component="span" sx={{ color: colors.primary, fontWeight: 700 }}>
           $
         </Box>
@@ -247,17 +303,7 @@ export function PlotOfTheDayTerminal({
           })
         }
         sx={{
-          display: 'block',
-          mx: 'auto',
-          width: { xs: 'calc(100% - 32px)', md: 'calc(100% - 48px)' },
-          maxWidth: `calc(${maxPlotHeight} * 1.6)`,
-          maxHeight: maxPlotHeight,
-          borderTop: '1px dashed var(--rule)',
-          borderBottom: '1px dashed var(--rule)',
-          bgcolor: 'var(--bg-surface)',
-          aspectRatio: '16 / 10',
-          position: 'relative',
-          overflow: 'hidden',
+          ...plotFrameSx(maxPlotHeight),
           cursor: 'pointer',
           '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: -2 },
         }}
@@ -292,18 +338,7 @@ export function PlotOfTheDayTerminal({
       </Box>
 
       {/* Status footer */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          flexWrap: 'wrap',
-          px: { xs: 2, md: 3 },
-          py: 1.5,
-          fontSize: '11px',
-          color: 'var(--ink-muted)',
-        }}
-      >
+      <Box sx={footerSx}>
         <Box component="span" sx={{ color: colors.primary }}>
           &gt;&gt;&gt;
         </Box>

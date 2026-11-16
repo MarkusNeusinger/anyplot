@@ -93,9 +93,22 @@ describe('PlotOfTheDayTerminal', () => {
     expect(fireEvent.click(link)).toBe(false);
   });
 
-  it('renders nothing without potd data', () => {
-    const { container } = render(<PlotOfTheDayTerminal potd={null} />);
-    expect(container.firstChild).toBeNull();
+  it('reserves the empty frame without potd data: hidden, no links, no words of its own', () => {
+    render(<PlotOfTheDayTerminal potd={null} />);
+    const frame = screen.getByTestId('potd-terminal-placeholder');
+    expect(frame).toHaveAttribute('aria-hidden', 'true');
+    expect(frame.querySelectorAll('a, button, img')).toHaveLength(0);
+    expect(frame).toHaveTextContent(/^\$>>>\/\/ plot of the day$/);
+  });
+
+  it('keeps the frame element when the plot arrives, so the entrance does not replay', () => {
+    const { container, rerender } = render(<PlotOfTheDayTerminal potd={null} />);
+    const frame = container.firstElementChild;
+    rerender(<PlotOfTheDayTerminal potd={potd} />);
+    expect(container.firstElementChild).toBe(frame);
+    expect(frame).not.toHaveAttribute('aria-hidden');
+    expect(screen.queryByTestId('potd-terminal-placeholder')).toBeNull();
+    expect(screen.getByRole('img')).toBeInTheDocument();
   });
 
   it('tracks nav_click on filename, github link and image', async () => {

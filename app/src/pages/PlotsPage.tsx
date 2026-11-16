@@ -5,6 +5,7 @@ import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-d
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 
+import { RetryButton } from 'src/components/RetryButton';
 import { ScrollToTopFab } from 'src/components/ScrollToTopFab';
 import type { ImageSize } from 'src/constants';
 import {
@@ -62,6 +63,7 @@ export function PlotsPage() {
     handleRemoveGroup,
     handleClearFilters,
     handleRandom,
+    retryFetch,
     randomAnimation,
   } = useFilterState({
     onTrackPageview: trackPageview,
@@ -213,7 +215,11 @@ export function PlotsPage() {
       <link rel="canonical" href="https://anyplot.ai/plots" />
 
       {error && (
-        <Alert severity="error" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>
+        <Alert
+          severity="error"
+          action={<RetryButton onClick={retryFetch} label="Retry loading the plots" />}
+          sx={{ mb: 4, maxWidth: 500, mx: 'auto', alignItems: 'center' }}
+        >
           {error}
         </Alert>
       )}
@@ -288,26 +294,30 @@ export function PlotsPage() {
         </Box>
       )}
 
-      <ImagesGrid
-        images={displayedImages}
-        viewMode={noFilters ? 'library' : 'spec'}
-        selectedSpec={selectedSpec}
-        loading={loading}
-        hasMore={hasMore}
-        isLoadingMore={false}
-        isTransitioning={false}
-        librariesData={librariesData}
-        languagesData={languagesData}
-        specsData={specsData}
-        openTooltip={openImageTooltip}
-        loadMoreRef={loadMoreRef}
-        imageSize={imageSize}
-        onTooltipToggle={setOpenImageTooltip}
-        onCardClick={handleCardClick}
-        onTrackEvent={trackEvent}
-      />
+      {/* After a failed load the empty states would claim that nothing matches; the error
+          line above says what happened instead. */}
+      {(!error || displayedImages.length > 0) && (
+        <ImagesGrid
+          images={displayedImages}
+          viewMode={noFilters ? 'library' : 'spec'}
+          selectedSpec={selectedSpec}
+          loading={loading}
+          hasMore={hasMore}
+          isLoadingMore={false}
+          isTransitioning={false}
+          librariesData={librariesData}
+          languagesData={languagesData}
+          specsData={specsData}
+          openTooltip={openImageTooltip}
+          loadMoreRef={loadMoreRef}
+          imageSize={imageSize}
+          onTooltipToggle={setOpenImageTooltip}
+          onCardClick={handleCardClick}
+          onTrackEvent={trackEvent}
+        />
+      )}
 
-      {!loading && allImages.length === 0 && !noFilters && (
+      {!loading && !error && allImages.length === 0 && !noFilters && (
         <Alert severity="info" sx={{ maxWidth: 400, mx: 'auto' }}>
           no plots match these filters.
         </Alert>

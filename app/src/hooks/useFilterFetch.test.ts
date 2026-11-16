@@ -1,7 +1,7 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useFilterFetch } from 'src/hooks/useFilterFetch';
+import { FILTER_FETCH_ERROR, useFilterFetch } from 'src/hooks/useFilterFetch';
 import type { ActiveFilters, PlotImage } from 'src/types';
 
 describe('useFilterFetch', () => {
@@ -160,24 +160,79 @@ describe('useFilterFetch', () => {
   });
 
   describe('error handling', () => {
-    it('sets error on network failure', async () => {
+    it('sets the short error line on network failure, not the raw exception', async () => {
       fetchMock.mockRejectedValue(new Error('Network error'));
 
       const { result } = renderHook(() => useFilterFetch({ activeFilters: [] }));
 
       await waitFor(() => {
-        expect(result.current.error).toContain('Error loading images');
+        expect(result.current.error).toBe(FILTER_FETCH_ERROR);
       });
+      expect(result.current.loading).toBe(false);
     });
 
-    it('sets error on non-ok HTTP response', async () => {
-      fetchMock.mockResolvedValue({ ok: false });
+    it('sets the short error line on a non-ok HTTP response, without status or URL', async () => {
+      fetchMock.mockResolvedValue({ ok: false, status: 404, statusText: 'Not Found' });
 
       const { result } = renderHook(() => useFilterFetch({ activeFilters: [] }));
 
       await waitFor(() => {
-        expect(result.current.error).toContain('Error loading images');
+        expect(result.current.error).toBe(FILTER_FETCH_ERROR);
       });
+      expect(result.current.error).not.toMatch(/404|plots\/filter|ApiError/);
+    });
+
+    it('clears the error when the next filter fetch starts, and keeps it clear on success', async () => {
+      // A plain Error and a 404 are not retried by apiGet, so one mock answer is one attempt.
+      fetchMock.mockRejectedValueOnce(new Error('Network error'));
+      let answer: (value: unknown) => void = () => {};
+      fetchMock.mockImplementationOnce(
+        () =>
+          new Promise(resolve => {
+            answer = resolve;
+          })
+      );
+
+      const { result, rerender } = renderHook(
+        ({ filters }: { filters: ActiveFilters }) => useFilterFetch({ activeFilters: filters }),
+        { initialProps: { filters: [{ category: 'lib', values: ['bokeh'] }] as ActiveFilters } }
+      );
+      await waitFor(() => {
+        expect(result.current.error).toBe(FILTER_FETCH_ERROR);
+      });
+
+      rerender({ filters: [{ category: 'lib', values: ['matplotlib'] }] });
+      // The second fetch is still pending: the banner of the first one is already gone.
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      });
+      expect(result.current.error).toBe('');
+
+      answer({ ok: true, json: () => Promise.resolve(mockApiResponse) });
+      await waitFor(() => {
+        expect(result.current.allImages).toHaveLength(50);
+      });
+      expect(result.current.error).toBe('');
+      expect(result.current.loading).toBe(false);
+    });
+
+    it('retry runs the fetch for the same filters again and clears the error on success', async () => {
+      fetchMock.mockRejectedValueOnce(new Error('Network error'));
+      fetchMock.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiResponse) });
+      const filters: ActiveFilters = [{ category: 'lib', values: ['matplotlib'] }];
+
+      const { result } = renderHook(() => useFilterFetch({ activeFilters: filters }));
+      await waitFor(() => {
+        expect(result.current.error).toBe(FILTER_FETCH_ERROR);
+      });
+
+      act(() => result.current.retry());
+      await waitFor(() => {
+        expect(result.current.allImages).toHaveLength(50);
+      });
+      expect(result.current.error).toBe('');
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls[1][0]).toBe(fetchMock.mock.calls[0][0]);
     });
   });
 });

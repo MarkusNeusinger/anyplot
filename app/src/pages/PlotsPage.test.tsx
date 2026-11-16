@@ -2,18 +2,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fireEvent, render, screen } from 'src/test-utils';
 
-const { mockHandleRandom, mockTrackEvent, mockSaveScrollPosition, mockUsePlotsScrolled, state } =
-  vi.hoisted(() => ({
-    mockHandleRandom: vi.fn(),
-    mockTrackEvent: vi.fn(),
-    mockSaveScrollPosition: vi.fn(),
-    mockUsePlotsScrolled: vi.fn(),
-    state: {
-      activeFilters: [] as { category: string; values: string[] }[],
-      specsData: [] as { id: string; title: string }[],
-      specTitles: {} as Record<string, string>,
-    },
-  }));
+const {
+  mockHandleRandom,
+  mockRetryFetch,
+  mockTrackEvent,
+  mockSaveScrollPosition,
+  mockUsePlotsScrolled,
+  state,
+} = vi.hoisted(() => ({
+  mockHandleRandom: vi.fn(),
+  mockRetryFetch: vi.fn(),
+  mockTrackEvent: vi.fn(),
+  mockSaveScrollPosition: vi.fn(),
+  mockUsePlotsScrolled: vi.fn(),
+  state: {
+    activeFilters: [] as { category: string; values: string[] }[],
+    specsData: [] as { id: string; title: string }[],
+    specTitles: {} as Record<string, string>,
+    error: '',
+  },
+}));
 
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({ trackPageview: vi.fn(), trackEvent: mockTrackEvent }),
@@ -29,7 +37,7 @@ vi.mock('src/hooks', () => ({
     displayedImages: [],
     hasMore: false,
     loading: false,
-    error: '',
+    error: state.error,
     setDisplayedImages: vi.fn(),
     setHasMore: vi.fn(),
     handleAddFilter: vi.fn(),
@@ -37,6 +45,7 @@ vi.mock('src/hooks', () => ({
     handleRemoveFilter: vi.fn(),
     handleRemoveGroup: vi.fn(),
     handleRandom: mockHandleRandom,
+    retryFetch: mockRetryFetch,
     randomAnimation: null,
   }),
   isFiltersEmpty: (f: unknown[]) => !f || f.length === 0,
@@ -70,6 +79,33 @@ describe('PlotsPage', () => {
     state.activeFilters = [];
     state.specsData = [];
     state.specTitles = {};
+    state.error = '';
+  });
+
+  describe('error banner', () => {
+    it('shows the error line with a retry that runs the fetch again', () => {
+      state.error = 'plots did not load';
+      state.activeFilters = [{ category: 'lib', values: ['matplotlib'] }];
+      render(<PlotsPage />);
+      expect(screen.getByRole('alert')).toHaveTextContent('plots did not load');
+      fireEvent.click(screen.getByRole('button', { name: 'Retry loading the plots' }));
+      expect(mockRetryFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('claims no empty result while the load failed', () => {
+      state.error = 'plots did not load';
+      state.activeFilters = [{ category: 'lib', values: ['matplotlib'] }];
+      render(<PlotsPage />);
+      expect(screen.queryByText('no plots match these filters.')).toBeNull();
+      expect(screen.queryByTestId('images-grid')).toBeNull();
+    });
+
+    it('shows no banner without an error', () => {
+      state.activeFilters = [{ category: 'lib', values: ['matplotlib'] }];
+      render(<PlotsPage />);
+      expect(screen.queryByRole('button', { name: 'Retry loading the plots' })).toBeNull();
+      expect(screen.getByText('no plots match these filters.')).toBeInTheDocument();
+    });
   });
 
   describe('link to the spec page', () => {
