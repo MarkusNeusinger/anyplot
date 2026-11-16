@@ -204,12 +204,12 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>how it is built</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              models write anyplot&apos;s code — the site, the api, and the agents behind use with
-              my data — and he leads them, with his experience across data, backends, frontends and
-              hosting. work goes to Claude Code, Claude in GitHub Actions, Gemini or Copilot by what
-              it needs and what it costs; he tests what comes back and returns it until it&apos;s
-              right. what he corrects becomes a rule the agents follow, and a mistake that comes
-              back becomes a test or a written rule.
+              models write anyplot&apos;s code — the site, the api, and the agents behind &ldquo;use
+              with my data&rdquo; — and he leads them, with his experience across data, backends,
+              frontends and hosting. work goes to Claude Code, Claude in GitHub Actions, Gemini or
+              Copilot by what it needs and what it costs; he tests what comes back and returns it
+              until it&apos;s right. what he corrects becomes a rule the agents follow, and a
+              mistake that comes back becomes a test or a written rule.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               more on GitHub: <Ext href={HOW_I_BUILD_URL}>how I build anyplot</Ext> and{' '}

@@ -58,15 +58,17 @@ export function Footer() {
       <Link href={ISSUE_CHOOSER_URL} target="_blank" rel="noopener noreferrer" sx={linkSx}>
         report
       </Link>
-      {/* On phones the name takes a line of its own under the links, so no row ends on a "·". */}
-      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+      {/* Below md the name takes a line of its own under the links: no row ends on a "·", and the
+          row of links stays short enough to keep clear of the floating buttons in the corner,
+          which useFooterLift lifts only below sm. */}
+      <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
         ·
       </Box>
       <Box
         component="span"
         sx={{
-          order: { xs: 1, sm: 0 },
-          flexBasis: { xs: '100%', sm: 'auto' },
+          order: { xs: 1, md: 0 },
+          flexBasis: { xs: '100%', md: 'auto' },
           textAlign: 'center',
         }}
       >

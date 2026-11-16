@@ -952,7 +952,8 @@ The `cubic-bezier(0.4, 0, 0.2, 1)` is the standard material-motion "ease-in-out"
 ```
 
 - Row 1: `any.plot()` wordmark (18px xs, 22px sm), `plots.search()` method-call link (11px xs, 12px sm) right-aligned.
-- Row 2: all eight nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels kick in below md where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `mcp`, `about` as-is.
+- Row 2: all eight nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels kick in on phones (below sm), where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `mcp`, `about` as-is. From sm a tablet's row has room for the full labels.
+- Active marker on phones (below sm): a drawn 4px green dot, 2px before the label, instead of the `•` glyph, because at 320px the gap before a label is about 9px, narrower than the glyph's box. From sm the marker is the glyph.
 - Eight items beside the logo and the search need about 750px, so the single row starts at md, not sm.
 - Font size: 12px below md, shrinking on phones narrower than 364px (`clamp(10.5px, 3.3vw, 12px)`) so the eight labels keep at least 8px apart down to 320px; 12px from md, 13px from lg. Gap (the least space between two labels): 1 (8px) below md, 2.25 from md, 3.5 from lg.
 - The tap padding (14px × 8px, cancelled by a negative margin) applies below md, phones and tablets alike.

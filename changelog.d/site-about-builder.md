@@ -10,9 +10,10 @@
   a link on the site.
 - **About is the last entry of the main navigation.** Eight entries need about
   750 px beside the logo and the search, so the two-row masthead of phones now
-  also serves tablets up to 899 px; on phones narrower than 364 px the labels
-  shrink to keep 8 px apart, and from 900 to 1199 px the row runs at 12 px with
-  18 px gaps.
+  also serves tablets up to 899 px, with the full labels; on phones narrower
+  than 364 px the labels shrink to keep 8 px apart, and the active page is
+  marked by a small dot that stays clear of the label before it. From 900 to
+  1199 px the row runs at 12 px with 18 px gaps.
 
 ### Changed
 
@@ -20,8 +21,10 @@
   page.** The legal page keeps the legal notice and the privacy policy; a link
   to `/legal#transparency` leads to `/about#transparency`, which a fresh load
   now scrolls to. The crawler bodies of both pages and `llms.txt` follow.
-- **The footer shows the builder's name on phones too.** Below 600 px it takes
-  a line of its own under the other links, so no row ends on a separator.
+- **The footer shows the builder's name on phones and tablets too.** Below
+  900 px it takes a line of its own under the other links, so no row ends on a
+  separator and the row stays clear of the feedback button; on phones the
+  footer text is a step smaller.
 
 ### Fixed
 

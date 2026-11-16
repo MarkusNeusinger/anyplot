@@ -61,14 +61,21 @@ const activeLinkSx = {
   ...linkSx,
   color: 'var(--ink)',
   '&::before': {
-    content: '"•"',
+    // On phones the gap before a label can be as narrow as 9px, narrower than the box of the
+    // "•" glyph, so the marker is a drawn 4px dot there: its box is its ink, and it ends 2px
+    // before its own label. From sm the marker is the glyph.
+    content: { xs: '""', sm: '"•"' },
+    width: { xs: '4px', sm: 'auto' },
+    height: { xs: '4px', sm: 'auto' },
+    borderRadius: { xs: '50%', sm: 0 },
+    backgroundColor: { xs: colors.primary, sm: 'transparent' },
     color: colors.primary,
     position: 'absolute' as const,
-    // Offsets track the tap padding so the bullet stays next to the text
-    left: { xs: '-4px', md: '-12px' },
+    // Offsets track the tap padding so the marker stays next to the text
+    left: { xs: '2px', sm: '-4px', md: '-12px' },
     fontSize: '18px',
     lineHeight: 1,
-    top: { xs: '13px', md: '3px' },
+    top: { xs: 'calc(50% - 2px)', sm: '13px', md: '3px' },
   },
 } as const;
 
@@ -160,7 +167,7 @@ export function NavBar() {
         </Box>
       </Box>
 
-      {/* Nav links — full row below md (shorthand labels), inline from md */}
+      {/* Nav links — full row below md (shorthand labels on phones), inline from md */}
       <Box
         component="ul"
         sx={{
@@ -187,11 +194,11 @@ export function NavBar() {
               to={link.to}
               sx={location.pathname === link.to ? activeLinkSx : linkSx}
             >
-              {/* Full label on ≥md, short label on smaller screens where it saves room */}
-              <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
+              {/* Full label from sm, short label on phones where it saves room */}
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
                 {link.label}
               </Box>
-              <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
+              <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
                 {link.short || link.label}
               </Box>
             </Box>

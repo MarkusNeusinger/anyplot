@@ -34,11 +34,33 @@ describe('Footer', () => {
         expect(styleAt(el, width).display).not.toBe('none');
       }
     }
-    // On phones it closes the footer, on its own line, so no row ends on a separator.
+    // Below md it closes the footer, on its own line, so no row ends on a separator.
     const line = link.parentElement!;
-    expect(styleAt(line, 390).flexBasis).toBe('100%');
-    expect(styleAt(line, 390).order).toBe('1');
-    expect(styleAt(line, 600).flexBasis).toBe('auto');
+    for (const width of [320, 390, 600, 899]) {
+      expect(styleAt(line, width).flexBasis).toBe('100%');
+      expect(styleAt(line, width).order).toBe('1');
+    }
+    expect(styleAt(line, 900).flexBasis).toBe('auto');
+    expect(styleAt(line, 900).order).toBe('0');
+  });
+
+  // The floating buttons in the bottom-right corner lift above the footer only below 600px
+  // (useFooterLift). jsdom lays nothing out, so this pins the layout that keeps the row of links
+  // short from 600 to 899px: the name and its separator leave the row, and only the four short
+  // links share it. With MonoLisa at 600px that row ends at x=450, left of the button at x=536.
+  it('keeps the name out of the row of links up to md, so the row stays clear of the buttons', () => {
+    const { container } = render(<Footer />);
+
+    const footer = container.querySelector('footer')!;
+    const name = screen.getByRole('link', { name: 'markus neusinger' }).parentElement!;
+    const separatorBeforeName = name.previousElementSibling!;
+    expect(separatorBeforeName).toHaveTextContent('·');
+    for (const width of [600, 700, 899]) {
+      expect(styleAt(separatorBeforeName, width).display).toBe('none');
+      expect(styleAt(name, width).flexBasis).toBe('100%');
+    }
+    expect(styleAt(separatorBeforeName, 900).display).toBe('inline');
+    expect(footer.querySelectorAll('a')).toHaveLength(5);
   });
 
   it('sends no event for a link: the tracker script counts the outbound ones itself', async () => {
