@@ -1525,7 +1525,7 @@ class TestToolSafety:
         }
         assert await after("get_current_code", {"status": "ok", "code": "x" * 20000, "version": 1}) is None
         # A version's data facts are counts under fixed names (`session.version_data`): allowed, and passed unchanged.
-        data = {"rows": {"data.csv": 20_000, "plot.html": 20_000}, "view": {"rows": 20_000, "of_rows": 20_000}}
+        data = {"rows_in_file": {"data.csv": 20_000, "plot.html": 20_000}, "view": {"rows": 20_000, "of_rows": 20_000}}
         assert (
             await after("get_current_code", {"status": "ok", "code": "x" * 20000, "version": 1, "data": data}) is None
         )

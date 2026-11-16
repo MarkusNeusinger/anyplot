@@ -454,8 +454,8 @@ class TestTheRowsAFigureCovers:
         context = await context_for(client, sid, "inv-figures-1")
         first = await get_current_code(1, context)  # type: ignore[arg-type]
         latest = await get_current_code(0, context)  # type: ignore[arg-type]
-        assert first["data"] == {"rows": {"data.csv": 10}, "view": {"rows": 10, "of_rows": 24}}
-        assert latest["version"] == 3 and latest["data"] == {"rows": {"data.csv": 24}}
+        assert first["data"] == {"rows_in_file": {"data.csv": 10}, "view": {"rows": 10, "of_rows": 24}}
+        assert latest["version"] == 3 and latest["data"] == {"rows_in_file": {"data.csv": 24}}
 
     async def test_a_change_under_the_same_view_still_hears_its_rows(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
@@ -525,7 +525,7 @@ class TestTheRowsAFigureCovers:
 
         assert drawn_rows_sent(fake, "adapter") == [{"rows": 9, "of_rows": 12, "view": "Exam Score ≥ 59"}]
         answer = await get_current_code(0, await context_for(client, sid, "inv-figures-2"))  # type: ignore[arg-type]
-        assert answer["data"] == {"rows": {"data.csv": 4}, "view": {"rows": 9, "of_rows": 12}}
+        assert answer["data"] == {"rows_in_file": {"data.csv": 4}, "view": {"rows": 9, "of_rows": 12}}
 
     async def test_a_javascript_plot_counts_the_table_its_page_embeds(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models, monkeypatch: pytest.MonkeyPatch
@@ -538,7 +538,7 @@ class TestTheRowsAFigureCovers:
         assert one(await create_plot(client, sid), "plot")["status"] == "ok"
 
         answer = await get_current_code(0, await context_for(client, sid, "inv-figures-3"))  # type: ignore[arg-type]
-        assert answer["data"] == {"rows": {"data.csv": 5, "plot.html": 5}, "view": {"rows": 5, "of_rows": 24}}
+        assert answer["data"] == {"rows_in_file": {"data.csv": 5, "plot.html": 5}, "view": {"rows": 5, "of_rows": 24}}
 
     @pytest.mark.parametrize("code_artifact", ["plot.py", "plot.js"])
     def test_a_cell_over_several_lines_is_one_row_of_every_download(self, code_artifact: CodeArtifact) -> None:
@@ -558,7 +558,7 @@ class TestTheRowsAFigureCovers:
             data_json=typed_json(table.csv, read_kinds(table.csv, table.column_dtypes)) if page else None,
         )
 
-        assert version_data(stored) == {"rows": {"data.csv": 3, **({"plot.html": 3} if page else {})}}
+        assert version_data(stored) == {"rows_in_file": {"data.csv": 3, **({"plot.html": 3} if page else {})}}
 
 
 class TestTheDataRoutes:
