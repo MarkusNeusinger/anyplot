@@ -276,7 +276,7 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 >
 > Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
 
-The second version is shorter, says what's actually happening (humans submit ideas + approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
+The second version is shorter, says what's actually happening (ideas come in as GitHub issues; I approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
 
 ### 3.7 Positioning
 
