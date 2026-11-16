@@ -324,7 +324,10 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
   );
 }
 
-/** The chat's Highcharts note, shown while the session plots in Highcharts (the legal page says the same). */
+/**
+ * The chat's Highcharts note, shown while the session plots in Highcharts (the explainer's
+ * `your code` line says the same).
+ */
 export const HIGHCHARTS_NOTE =
   'highcharts is free for non-commercial use; a commercial use needs a licence from Highsoft.';
 
@@ -399,7 +402,7 @@ export function AgentChatPage() {
   // highlighter and a back link to a page that does not exist.
   const language = LIB_TO_LANG[library] ?? 'python';
   // A catalogue pair in the query: the chat, else the explainer. The layout reads the same rule
-  // for the site's feedback button, which stands on the explainer only (`RootLayout`).
+  // for the site's feedback button, which it hides wherever the query names a pair (`RootLayout`).
   const valid = namesAgentChat(params);
 
   // A layout effect: the layout records this page's pageview in its own layout effect, which

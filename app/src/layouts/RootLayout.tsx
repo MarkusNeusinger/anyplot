@@ -34,10 +34,12 @@ export function RootLayout() {
   const navigationType = useNavigationType();
   const { effective } = useTheme();
   const mastheadSticks = pathname !== paths.plots;
-  // The agent chat has a feedback row of its own on every result, and the chat's for a session
-  // without one; on a phone the site's button covered the composer's buttons and the replies. The
-  // explainer at `/agent` without a pair has neither, so the button stands there. The page picks
-  // chat or explainer by the same rule (`namesAgentChat`).
+  // The agent chat offers feedback of its own once it has a conversation or a plot (`.feedback()`
+  // at its status line, a row on every result); on a phone the site's button covered the
+  // composer's buttons and the replies. The explainer at `/agent` without a pair has none, so the
+  // button stands there. The page picks chat or explainer by the same rule (`namesAgentChat`).
+  // The rule reads the address alone, so at a chat's address the button stays away also while
+  // the page shows no chat: while it waits for the lane, or with the lane closed.
   const siteFeedback = !isAgentChatAddress(pathname, search);
 
   // Set synchronously during render so the pageview below and a child page's

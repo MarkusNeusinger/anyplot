@@ -8,7 +8,7 @@
  * only reads costs the agents service nothing. The page decides the lane before it shows this (a
  * closed public lane still reads as closed), and keeps it out of the index (`AgentChatPage`).
  * With no feedback of its own, it keeps the site's feedback button, which the layout hides only
- * in a chat (`RootLayout`).
+ * at an address that names a chat (`RootLayout`).
  */
 
 import { Fragment, type ReactNode } from 'react';

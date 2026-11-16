@@ -1,6 +1,6 @@
 /**
- * The explainer's terms of use: three labelled lines in the legal page's words, and a fourth that
- * links to the legal page's section on what the assistant stores. The sentences are written out
+ * The explainer's terms of use: three labelled lines in the wording decided for the explainer, and
+ * a fourth that links to the legal page's section on what the assistant stores. The sentences are written out
  * here, not imported, so a change of their wording fails this test. The page around the
  * explainer (the lane, the head, the examples) is AgentChatPage.public.test.tsx's.
  */
@@ -25,7 +25,7 @@ function renderIntro() {
 }
 
 describe('AgentIntro terms', () => {
-  it('lists the terms as labelled lines, in order, in the legal page words', () => {
+  it('lists the terms as labelled lines, in order, verbatim', () => {
     renderIntro();
     const terms = screen.getByTestId('agent-intro-terms');
     expect(terms.tagName).toBe('DL');
