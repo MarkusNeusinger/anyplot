@@ -155,6 +155,26 @@ describe('AboutPage', () => {
     expect(screen.queryByText(/ships a\s+new release/)).not.toBeInTheDocument();
   });
 
+  // textContent, not toHaveTextContent: the matchers collapse whitespace, and the block's columns
+  // are spaces.
+  it('draws the pipeline as a block with its columns aligned', () => {
+    render(<AboutPage />);
+
+    expect(screen.getByText(/^\/\/ pipeline/).textContent).toBe(
+      [
+        '// pipeline',
+        'idea    → a github issue',
+        'spec    → ai drafts, I approve',
+        'code    → ai writes     (per library)',
+        'review  → ai scores     (24 criteria)',
+        'fix     → ai repairs    (up to 4 times)',
+        'rules   → I set and change them',
+      ].join('\n')
+    );
+    // One builder: the page names no "humans" anywhere.
+    expect(document.body).not.toHaveTextContent(/\bhumans?\b/i);
+  });
+
   // The first commit is from November 2025; CHANGELOG.md's 2.0.0 relaunch as anyplot.ai is from
   // April 2026, which test_readme_claims.py pins.
   it('tells the origin with the dates the repository shows', () => {

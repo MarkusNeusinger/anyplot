@@ -1226,7 +1226,11 @@ class TestSeoProxyRouter:
             "library, and reviews each implementation. I approve new specs and tune the rules when "
             "something repeatedly fails."
         ) in response.text
-        assert "AI-drafted, human-approved" in response.text
+        assert (
+            "idea → a GitHub issue; spec → AI drafts, I approve; code → AI writes (per library); "
+            "review → AI scores (24 criteria); fix → AI repairs (up to 4 times); rules → I set and change them."
+        ) in response.text
+        assert "human-approved" not in response.text
         # In the first person, as AboutPage.tsx says it, and as a rule rather than an absolute.
         assert "The pipeline runs on its own schedule, by rules I set." in response.text
         assert (

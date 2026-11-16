@@ -287,6 +287,10 @@ def test_about_page_and_its_bot_copy_state_the_rubric_bar_and_mcp_tools():
         assert near(text, str(floor), "at the last review"), f"{name}: the last review's bar is {floor}"
         # 5, not 3: seo.py splits "Six tools" over two string literals (`Six " "tools`).
         assert near(text, NUMBER_WORDS[mcp_tool_count()], "tools", window=5), f"{name}: {mcp_tool_count()} MCP tools"
+    # The pipeline diagram writes both in digits.
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert f"ai scores ({len(CRITERIA)} criteria)" in collapse(text).lower(), f"{name}: the diagram's criteria"
+        assert f"ai repairs (up to {repairs} times)" in collapse(text).lower(), f"{name}: the diagram's repairs"
 
 
 def test_about_page_and_its_bot_copy_claim_no_regeneration_on_a_library_release():

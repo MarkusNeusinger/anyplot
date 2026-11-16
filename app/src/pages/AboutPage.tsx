@@ -34,12 +34,15 @@ const HOW_I_BUILD_URL = `${GITHUB_URL}/blob/main/README.md#how-i-build-anyplot`;
 const HIGHLIGHTS_URL = `${GITHUB_URL}/blob/main/README.md#engineering-highlights`;
 const AI_WORKFLOW_URL = `${GITHUB_URL}/blob/main/docs/concepts/ai-workflow.md`;
 
+// The criteria and the repair count are the ones impl-review.yml applies; test_readme_claims.py holds
+// both to their sources.
 const PIPELINE_BLOCK = `// pipeline
-idea    → human-submitted        (github issue)
-spec    → ai-drafted, human-approved
-code    → ai-generated           (per library)
-review  → ai-evaluated
-fix     → ai-retries; humans tune rules`;
+idea    → a github issue
+spec    → ai drafts, I approve
+code    → ai writes     (per library)
+review  → ai scores     (24 criteria)
+fix     → ai repairs    (up to 4 times)
+rules   → I set and change them`;
 
 const ctaSx = {
   fontFamily: typography.mono,
