@@ -265,14 +265,20 @@ import type { ThemedPreviewSource } from 'src/utils/themedPreview';
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 /**
- * A chat is its spec: another spec, or none (the explainer), on the same path `/agent` unmounts
- * the chat and deletes its session as surely as another path does, so the leave warning asks for
- * both. The page's own query edits keep the spec (the library and its language, the dropped
- * `source`) and pass.
+ * A chat is its spec, shown for a library the page knows: another spec, none, or an address
+ * without a known library (all three show the explainer or another chat) on the same path `/agent`
+ * unmounts the chat and deletes its session as surely as another path does, so the leave warning
+ * asks for each. The page's own query edits keep the spec and name a known library (a library
+ * switch with its language, the dropped `source`) and pass.
  */
-const leavesChat: LeavesPage = (current, next) =>
-  leavesPath(current, next) ||
-  new URLSearchParams(current.search).get('spec') !== new URLSearchParams(next.search).get('spec');
+const leavesChat: LeavesPage = (current, next) => {
+  if (leavesPath(current, next)) return true;
+  const there = new URLSearchParams(next.search);
+  return (
+    new URLSearchParams(current.search).get('spec') !== there.get('spec') ||
+    !(LIBRARIES as readonly string[]).includes(there.get('library') ?? '')
+  );
+};
 /**
  * Where `agent_open` says the visitor came from: the plot page, the landing page, the spec hub,
  * the plot of the day, or an example of this page's explainer (`AgentIntro`).

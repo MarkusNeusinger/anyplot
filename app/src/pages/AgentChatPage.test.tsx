@@ -2182,6 +2182,20 @@ describe('AgentChatPage leave warning', () => {
     expect(deletes()).toHaveLength(0);
   });
 
+  it('asks before the back button returns to the same plot without a library', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    // The same spec with no library shows the explainer, so it ends the chat as another plot does.
+    const { router } = renderAt(PAGE, ['/agent?spec=scatter-basic']);
+    await parseAndSummarize();
+
+    act(() => void router.navigate(-1));
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(LEAVE_TEXT));
+    await waitFor(() => expect(router.state.location.search).toBe(PAGE.slice('/agent'.length)));
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(deletes()).toHaveLength(0);
+  });
+
   it('asks nothing when the back button leaves a chat with nothing to lose', async () => {
     const confirm = vi.spyOn(window, 'confirm');
     localStorage.setItem(ADMIN_HINT_KEY, '1');
