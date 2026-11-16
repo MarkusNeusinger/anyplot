@@ -206,6 +206,10 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
         {DESCRIPTIONS[name] || ''}
       </Box>
 
+      {/* The licence note takes its own line above .explore(). Beside it, a note as long
+          as Highcharts' does not fit the narrower cards of each column count: it wraps,
+          touches .explore() and lifts it out of line with the row's other cards. Stacked,
+          the note fits on one line, and .explore() stays on the card's bottom line. */}
       <Box
         className="lib-card-cta"
         sx={{
@@ -214,12 +218,12 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
           color: 'var(--ink-muted)',
           mt: 'auto',
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 0.5,
           transition: 'color 0.2s',
         }}
       >
-        <span aria-hidden="true">.explore()</span>
         {licenseNote && (
           <Box
             component="span"
@@ -233,6 +237,7 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
             {licenseNote}
           </Box>
         )}
+        <span aria-hidden="true">.explore()</span>
       </Box>
     </Box>
   );
