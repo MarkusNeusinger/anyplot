@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen, userEvent } from 'src/test-utils';
+import { render, screen, styleAt, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 const navigate = vi.fn();
@@ -27,6 +27,36 @@ describe('NavBar', () => {
   beforeEach(() => {
     trackEvent.mockClear();
     navigate.mockClear();
+  });
+
+  it('lists eight pages, about last', () => {
+    const { container } = render(<NavBar />);
+
+    const targets = Array.from(container.querySelectorAll('ul a')).map(a => a.getAttribute('href'));
+    expect(targets).toEqual([
+      '/specs',
+      '/plots',
+      '/map',
+      '/libraries',
+      '/stats',
+      '/palette',
+      '/mcp',
+      '/about',
+    ]);
+  });
+
+  // Eight labels beside the logo and the search need about 750px, so phones and tablets keep the
+  // two-row masthead and the single row starts at md (scratch measurements in the PR).
+  it('keeps two rows below md and one from md', () => {
+    const { container } = render(<NavBar />);
+
+    const nav = container.querySelector('nav')!;
+    for (const width of [320, 390, 600, 820, 899]) {
+      expect(styleAt(nav, width).gridTemplateAreas).toBe('"logo search" "nav nav"');
+    }
+    for (const width of [900, 1440]) {
+      expect(styleAt(nav, width).gridTemplateAreas).toBe('"logo nav search"');
+    }
   });
 
   it('sends no event for the menu: the pageview that follows names the page', async () => {

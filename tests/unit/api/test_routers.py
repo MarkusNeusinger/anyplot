@@ -1224,6 +1224,37 @@ class TestSeoProxyRouter:
         for link in ("https://anyplot.ai/stats", "https://anyplot.ai/plots", "https://anyplot.ai/mcp"):
             assert f'href="{link}"' in response.text
 
+    def test_seo_about_names_the_builder_and_carries_the_stack_and_costs(self, client: TestClient) -> None:
+        """Who built the site and how, and the transparency facts that moved here from the legal page."""
+        response = client.get("/seo-proxy/about")
+        assert response.status_code == 200
+        for heading in ("<h2>Who built it</h2>", "<h2>How it is built</h2>", '<h2 id="transparency">Transparency</h2>'):
+            assert heading in response.text
+        for fact in (
+            "Markus Neusinger",
+            "a physicist working in data and AI",
+            "Models write anyplot's code",
+            "Running costs about $60 a month (October 2026).",
+            # The corrected pipeline and review claims (AboutPage.tsx says the same).
+            "Every night a job regenerates the oldest implementations",
+            "the bar drops 10 points per repair, to 50 at the last review",
+        ):
+            assert fact in response.text, fact
+        assert "ships a new release" not in response.text
+        for link in (
+            "https://www.linkedin.com/in/markus-neusinger/",
+            "https://github.com/MarkusNeusinger",
+            "https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot",
+            "https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#engineering-highlights",
+            "https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/ai-workflow.md",
+        ):
+            assert f'href="{link}"' in response.text, link
+        # The legal page keeps only the legal notice and the privacy policy.
+        legal = client.get("/seo-proxy/legal").text
+        assert "Running costs" not in legal
+        assert "Transparency" not in legal
+        assert "transparency" not in legal
+
     def test_seo_libraries_lists_the_registry(self, client: TestClient) -> None:
         """The /libraries bot page was a 29-word stub although its whole
         content sits in core/constants.py (AI-access audit 2026-08-19)."""
@@ -1263,7 +1294,6 @@ class TestSeoProxyRouter:
         assert "unsalted" not in response.text
         # The site-wide facts the human page states once each, the stored feedback fields included.
         for fact in (
-            "Running costs about $60 a month (October 2026).",
             "a random id that ties your own submissions together",
             "the optional contact field",
             "legitimate interest (Art. 6(1)(f) GDPR)",

@@ -37,6 +37,24 @@ export function agentChatRedirect({ request }: LoaderFunctionArgs) {
   return redirect(query ? `${paths.agent}?${query}` : paths.agent);
 }
 
+/** The legal page's old section that moved to the about page: stack, source and running costs. */
+export const MOVED_TO_ABOUT = '#transparency';
+
+/**
+ * `/legal#transparency` is `/about#transparency` since that section moved. A loader's request
+ * carries no fragment, so this reads the address bar, which names the address being opened only on
+ * a fresh load: an in-app navigation runs the loader while the bar still shows the page being left,
+ * hence the path check. A fresh load of the old address so never becomes a legal page or a
+ * pageview. An in-app link to it is caught by the page itself (`LegalPage`).
+ */
+export function legalMovedSectionRedirect() {
+  const { pathname, hash } = window.location;
+  if (pathname.replace(/\/$/, '') === paths.legal && hash === MOVED_TO_ABOUT) {
+    return redirect(`${paths.about}${MOVED_TO_ABOUT}`);
+  }
+  return null;
+}
+
 /** `/{spec}/{language}` is the spec hub scoped to one language: `/{spec}?language={language}`. */
 export function specLanguageRedirect({ params }: LoaderFunctionArgs) {
   const { specId = '', language = '' } = params;

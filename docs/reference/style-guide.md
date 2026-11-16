@@ -941,19 +941,21 @@ Horizontal text links, no icons, no boxes. On hover, a 1px green underline anima
 
 The `cubic-bezier(0.4, 0, 0.2, 1)` is the standard material-motion "ease-in-out" curve — smooth but with enough snap to feel crisp.
 
-**Mobile NavBar (xs < 600px).** The nav collapses into a two-row grid so nothing drops off:
+**Mobile and tablet NavBar (below md, < 900px).** The nav collapses into a two-row grid so nothing drops off:
 
 ```
-┌───────────────────────────────────┐
-│ any.plot()          plots.search()│  row 1: logo + search link
-├───────────────────────────────────┤
-│ specs plots map libs stats pal mcp│  row 2: seven items · space-between
-└───────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ any.plot()                plots.search()│  row 1: logo + search link
+├─────────────────────────────────────────┤
+│ specs plots map libs stats pal mcp about│  row 2: eight items · space-between
+└─────────────────────────────────────────┘
 ```
 
-- Row 1: `any.plot()` wordmark (17px), `plots.search()` method-call link (11px) right-aligned.
-- Row 2: all seven nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels kick in on `xs` where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `mcp` as-is.
-- Font size ramps 12px xs → 12px sm → 13px md. Gap ramps 2 → 2.25 → 3.5.
+- Row 1: `any.plot()` wordmark (18px xs, 22px sm), `plots.search()` method-call link (11px xs, 12px sm) right-aligned.
+- Row 2: all eight nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels kick in below md where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `mcp`, `about` as-is.
+- Eight items beside the logo and the search need about 750px, so the single row starts at md, not sm.
+- Font size: 12px below md, shrinking on phones narrower than 364px (`clamp(10.5px, 3.3vw, 12px)`) so the eight labels keep at least 8px apart down to 320px; 12px from md, 13px from lg. Gap (the least space between two labels): 1 (8px) below md, 2.25 from md, 3.5 from lg.
+- The tap padding (14px × 8px, cancelled by a negative margin) applies below md, phones and tablets alike.
 - The NavBar is static (flows with the page). On `/plots` the masthead *also* flows so the FilterBar is the only sticky surface; on every other page the masthead stays sticky while the NavBar scrolls away naturally.
 
 **Masthead on mobile.** `ThemeToggle` collapses to the glyph only (`◐` / `☀`) — label hidden via `display: { xs: 'none', sm: 'inline' }` — so the breadcrumb (`~/anyplot.ai · main · v1.1.0`) has room to stay visible even on narrow viewports. Grid columns on xs are `1fr auto auto` (left breadcrumb takes all remaining width, toggle hugs the right edge); on sm+ it's `1fr auto 1fr` with the block-comment tagline in the middle.

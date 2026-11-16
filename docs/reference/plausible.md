@@ -203,8 +203,8 @@ counts as a boundary because OR-filtered gallery views record
 | `/specs` | Specs page (alphabetical spec list) |
 | `/libraries` | Libraries listing |
 | `/palette` | Color palette reference |
-| `/about` | About page |
-| `/legal` | Legal notice, privacy policy, transparency |
+| `/about` | About page: what anyplot is, who built it and how, the pipeline, and the stack and running costs (`#transparency`) |
+| `/legal` | Legal notice and privacy policy. A fresh load of `/legal#transparency`, where the stack and costs used to be, redirects in the route's loader to `/about#transparency` and records only the `/about` pageview |
 | `/mcp` | MCP server documentation (AI assistant integration) |
 | `/stats` | Platform statistics (library scores, coverage, tags, top implementations) |
 | `/map` | Network map of specs clustered by visual similarity |

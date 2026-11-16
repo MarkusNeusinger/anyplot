@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Footer } from 'src/layouts/Footer';
-import { render, screen, userEvent } from 'src/test-utils';
+import { render, screen, styleAt, userEvent } from 'src/test-utils';
 
 describe('Footer', () => {
   afterEach(() => {
@@ -21,6 +21,24 @@ describe('Footer', () => {
     render(<Footer />);
 
     expect(screen.getByText('markus neusinger')).toBeInTheDocument();
+  });
+
+  it('shows the name at every width, on a line of its own on phones', () => {
+    render(<Footer />);
+
+    const link = screen.getByRole('link', { name: 'markus neusinger' });
+    expect(link).toHaveAttribute('href', 'https://www.linkedin.com/in/markus-neusinger/');
+    const footer = link.closest('footer')!;
+    for (const width of [320, 390, 600, 900, 1440]) {
+      for (let el: Element | null = link; el && el !== footer; el = el.parentElement) {
+        expect(styleAt(el, width).display).not.toBe('none');
+      }
+    }
+    // On phones it closes the footer, on its own line, so no row ends on a separator.
+    const line = link.parentElement!;
+    expect(styleAt(line, 390).flexBasis).toBe('100%');
+    expect(styleAt(line, 390).order).toBe('1');
+    expect(styleAt(line, 600).flexBasis).toBe('auto');
   });
 
   it('sends no event for a link: the tracker script counts the outbound ones itself', async () => {

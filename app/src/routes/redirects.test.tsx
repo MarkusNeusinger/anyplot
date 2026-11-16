@@ -1,16 +1,29 @@
+import { useEffect } from 'react';
+
 import { act, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { agentChatRedirect, specLanguageRedirect } from 'src/routes/redirects';
+import {
+  agentChatRedirect,
+  legalMovedSectionRedirect,
+  specLanguageRedirect,
+} from 'src/routes/redirects';
 import { ADMIN_HINT_KEY, readAdminHint } from 'src/utils/adminAuth';
+
+/** Every address a page was rendered at, in order. */
+let rendered: string[] = [];
 
 /** The destination's stand-in: where the redirect lands, and the hint it finds when it mounts. */
 function Landing() {
-  const { pathname, search } = useLocation();
+  const { pathname, search, hash } = useLocation();
+  const address = `${pathname}${search}${hash}`;
+  useEffect(() => {
+    rendered.push(address);
+  }, [address]);
   return (
     <>
-      <output data-testid="location">{`${pathname}${search}`}</output>
+      <output data-testid="location">{address}</output>
       <output data-testid="hint">{readAdminHint() ? 'admin hint' : 'no hint'}</output>
     </>
   );
@@ -23,6 +36,8 @@ function renderAt(...urls: string[]) {
       { path: '/', element: <Landing /> },
       { path: '/debug/agent', loader: agentChatRedirect },
       { path: '/agent', element: <Landing /> },
+      { path: '/legal', loader: legalMovedSectionRedirect, element: <Landing /> },
+      { path: '/about', element: <Landing /> },
       { path: '/:specId', element: <Landing /> },
       { path: '/:specId/:language', loader: specLanguageRedirect },
     ],
@@ -39,6 +54,36 @@ function renderAt(...urls: string[]) {
 
 beforeEach(() => {
   localStorage.clear();
+  rendered = [];
+});
+
+afterEach(() => {
+  window.history.replaceState(null, '', '/');
+});
+
+describe('legalMovedSectionRedirect', () => {
+  // A loader's request carries no fragment, so the loader reads the address bar: on a fresh load
+  // that is the address being opened.
+  it('sends a fresh load of /legal#transparency to the about page, which is the only page', async () => {
+    window.history.replaceState(null, '', '/legal#transparency');
+    renderAt('/legal#transparency');
+    expect(await screen.findByTestId('location')).toHaveTextContent(/^\/about#transparency$/);
+    // The layout records a pageview for every page it renders (`RootLayout`): /legal is none.
+    expect(rendered).toEqual(['/about#transparency']);
+  });
+
+  it('leaves the legal page itself, and its other sections, where they are', async () => {
+    window.history.replaceState(null, '', '/legal#assistant');
+    renderAt('/legal#assistant');
+    expect(await screen.findByTestId('location')).toHaveTextContent(/^\/legal#assistant$/);
+  });
+
+  it('lets the footer lead from /about#transparency to /legal: the bar still shows the page left', async () => {
+    window.history.replaceState(null, '', '/about#transparency');
+    const { router } = renderAt('/about#transparency');
+    await act(() => router.navigate('/legal'));
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/legal$/);
+  });
 });
 
 describe('agentChatRedirect', () => {

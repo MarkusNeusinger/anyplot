@@ -1252,20 +1252,16 @@ _LEGAL_BOT_BODY = (
     "<li>Its code is yours to use, as is; Highcharts is free for non-commercial use, and a commercial "
     "use needs a licence from Highsoft.</li>"
     "</ul>"
-    "<h2>Transparency</h2>"
-    "<p>The whole stack — specs, pipeline, API and frontend — is open source at "
-    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>; '
-    "the catalogue content is MIT-licensed. Running costs about $60 a month (October 2026).</p>"
 )
 
 
 @router.get("/seo-proxy/legal")
 async def seo_legal():
-    """Bot-optimized legal page: operator, privacy and transparency facts."""
+    """Bot-optimized legal page: operator and privacy facts."""
     return HTMLResponse(
         _render_bot_html(
             title="Legal | anyplot.ai",
-            description="Legal notice, privacy policy, and transparency information for anyplot.ai",
+            description="Legal notice and privacy policy for anyplot.ai",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/legal",
             body=_LEGAL_BOT_BODY,
@@ -1320,27 +1316,48 @@ async def seo_mcp():
     )
 
 
-# Mirrors app/src/pages/AboutPage.tsx — the pipeline story is the page's
-# content; counts derive from the registry so they cannot drift.
+# Mirrors app/src/pages/AboutPage.tsx — who built the site, how, and the
+# pipeline story; counts derive from the registry so they cannot drift.
 _ABOUT_BOT_BODY = (
     "<h1>About anyplot</h1>"
     f"<p>anyplot.ai is a catalogue of plotting examples across {_LIBRARY_COUNT} libraries "
     f"in {_LANGUAGE_LIST}. Plot ideas come from humans; AI drafts the specification, "
     "generates code for every library, and reviews each implementation. Humans approve "
     "specs and tune the rules.</p>"
+    "<h2>Who built it</h2>"
+    "<p>Markus Neusinger "
+    '(<a href="https://www.linkedin.com/in/markus-neusinger/">LinkedIn</a>, '
+    '<a href="https://github.com/MarkusNeusinger">GitHub</a>), a physicist working in data and AI: '
+    "since 2013 he has built data pipelines, analyses and machine learning, and the apps people use "
+    "them through. He built anyplot in Visp, a small town in the Swiss Alps, looking for one place to "
+    "find the right plot for the data in front of him, and a way to explore what each library does "
+    "best.</p>"
+    "<h2>How it is built</h2>"
+    "<p>Models write anyplot's code (the site, the API, and the agents behind Use with my data), and "
+    "he leads them, with his experience across data, backends, frontends and hosting. Work goes to "
+    "Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs; he "
+    "tests what comes back and returns it until it's right. What he corrects becomes a rule the "
+    "agents follow, and a mistake that comes back becomes a test. More on GitHub: "
+    '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot">'
+    "How I build anyplot</a> and "
+    '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#engineering-highlights">'
+    "Engineering highlights</a> in the README, and the whole story in "
+    '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/ai-workflow.md">'
+    "How anyplot is built with AI agents</a>.</p>"
     "<h2>Pipeline</h2>"
     "<p>idea → spec (AI-drafted, human-approved) → code (AI-generated per library) → "
-    "review (AI-evaluated). When a library ships a new release the pipeline re-runs; when a "
-    "better example pattern emerges the spec is updated and every library regenerates. "
-    "Generated code is never patched by hand.</p>"
+    "review (AI-evaluated). Every night a job regenerates the oldest implementations, and a new "
+    "version replaces the live one only when a review of both finds a fixed defect and no "
+    "regression; when a better example pattern emerges the spec is updated and every library "
+    "regenerates. Generated code is never patched by hand.</p>"
     "<h2>Review</h2>"
     "<p>Every implementation is scored before it ships. Automated checks come first: the code "
     "runs, the image isn't blank, the canvas has its size. Then an AI reviewer scores the render "
     "on a 100-point rubric of 24 criteria (visual quality, design, spec compliance, data quality, "
     "code quality, and library mastery), blind to any earlier score. A first review needs 90; "
     "below that, AI repairs the defects the review named and the plot is reviewed again, up to "
-    'four times. The <a href="https://anyplot.ai/stats">stats page</a> shows the score '
-    "distribution per library.</p>"
+    "four times, and the bar drops 10 points per repair, to 50 at the last review. The "
+    '<a href="https://anyplot.ai/stats">stats page</a> shows the score distribution per library.</p>'
     "<h2>Use with my data</h2>"
     "<p>Experimental, open to everyone since 2 November 2026. "
     '<a href="https://anyplot.ai/plots">Pick any plot</a>, choose .use_my_data(), and paste your '
@@ -1355,6 +1372,10 @@ _ABOUT_BOT_BODY = (
     'on the <a href="https://anyplot.ai/mcp">MCP page</a>; the '
     '<a href="https://anyplot.ai/stats">stats page</a> shows, per day, how many assistants and '
     "crawlers read the catalogue and how many came on behalf of a person.</p>"
+    '<h2 id="transparency">Transparency</h2>'
+    "<p>The whole stack — specs, pipeline, API and frontend — is open source at "
+    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>; '
+    "the catalogue content is MIT-licensed. Running costs about $60 a month (October 2026).</p>"
     "<h2>Open</h2>"
     "<p>Source, specs and pipeline live at "
     '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a> '

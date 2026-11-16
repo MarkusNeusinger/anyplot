@@ -396,7 +396,8 @@ Backend endpoints that serve HTML with correct meta tags for bots.
 | `GET /seo-proxy/` | Home page | Default (`api.anyplot.ai/og/home.png`) |
 | `GET /seo-proxy/plots` | Plots page | Default |
 | `GET /seo-proxy/specs` | Specs page | Default |
-| `GET /seo-proxy/legal` | Legal page | Default |
+| `GET /seo-proxy/about` | About page: who built it, how it is built, the pipeline, the stack and running costs | Default |
+| `GET /seo-proxy/legal` | Legal page: legal notice and privacy policy | Default |
 | `GET /seo-proxy/{spec_id}` | Spec overview (cross-language hub) | Collage (2x3 grid) |
 | `GET /seo-proxy/{spec_id}/{language}` | **301** → `/seo-proxy/{spec_id}` (consolidated) | — |
 | `GET /seo-proxy/{spec_id}/{language}/{library}` | Implementation | Single branded |

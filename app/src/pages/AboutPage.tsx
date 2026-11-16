@@ -2,11 +2,31 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import Typography from '@mui/material/Typography';
 
+import { Ext, FactTable } from 'src/components/FactTable';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
+import { ANCHOR_SX, useHashScroll } from 'src/hooks/useHashScroll';
 import { paths } from 'src/routes/paths';
-import { codeBlockStyle, colors, proseLinkStyle, textStyle, typography } from 'src/theme';
+import {
+  codeBlockStyle,
+  colors,
+  fontSize,
+  proseLinkStyle,
+  semanticColors,
+  subheadingStyle,
+  textStyle,
+  typography,
+} from 'src/theme';
+
+const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp';
+
+// Files and headings on main, as GitHub renders them. Each address is written out in full so
+// tests/unit/test_readme_claims.py can find it and fail when a file moves or a heading is renamed.
+const HOW_I_BUILD_URL = `${GITHUB_URL}/blob/main/README.md#how-i-build-anyplot`;
+const HIGHLIGHTS_URL = `${GITHUB_URL}/blob/main/README.md#engineering-highlights`;
+const AI_WORKFLOW_URL = `${GITHUB_URL}/blob/main/docs/concepts/ai-workflow.md`;
 
 const PIPELINE_BLOCK = `// pipeline
 idea    → human-submitted        (github issue)
@@ -46,6 +66,9 @@ const inlineCodeSx = {
 } as const;
 
 export function AboutPage() {
+  // A fresh load of /about#transparency (and of /legal#transparency, which leads here) lands on it.
+  useHashScroll();
+
   // An in-prose link to another page of the site, through the router.
   const proseLink = (to: string, label: string) => (
     <Link component={RouterLink} to={to} sx={proseLinkStyle}>
@@ -84,14 +107,128 @@ export function AboutPage() {
           </Box>
         </Box>
 
+        {/* Who built it */}
+        <Box component="section" id="builder" sx={{ ...sectionSx, ...ANCHOR_SX }}>
+          <SectionHeader prompt="❯" title={<em>who built it</em>} />
+          <Box sx={proseColumnSx}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: { xs: 3, sm: 6 },
+                alignItems: 'flex-start',
+                flexDirection: { xs: 'column', sm: 'row' },
+              }}
+            >
+              {/* Decorative: the name stands beside it. Not lazy: it sits on the first screen.
+                  110px wide so photo, name and links end above the fold of a 1440x900 screen. */}
+              <Box
+                component="img"
+                src={AVATAR_URL}
+                alt=""
+                aria-hidden="true"
+                width={240}
+                height={518}
+                sx={{ width: 110, height: 'auto', flexShrink: 0, display: 'block' }}
+              />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                  sx={{
+                    fontFamily: typography.mono,
+                    fontSize: fontSize.lg,
+                    fontWeight: 500,
+                    color: 'var(--ink)',
+                    mb: 1,
+                  }}
+                >
+                  Markus Neusinger
+                </Typography>
+                <Typography sx={textStyle}>
+                  linkedin:{' '}
+                  <Link
+                    href="https://www.linkedin.com/in/markus-neusinger/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={proseLinkStyle}
+                  >
+                    markus-neusinger
+                  </Link>
+                  <br />
+                  github:{' '}
+                  <Link
+                    href="https://github.com/MarkusNeusinger"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={proseLinkStyle}
+                  >
+                    MarkusNeusinger
+                  </Link>
+                </Typography>
+                <Typography sx={{ ...textStyle, mb: 0 }}>
+                  a physicist working in data and ai: since 2013 he has built data pipelines,
+                  analyses and machine learning, and the apps people use them through. he built
+                  anyplot in Visp, a small town in the Swiss Alps, looking for one place to find the
+                  right plot for the data in front of him — and a way to explore what each library
+                  does best.
+                </Typography>
+              </Box>
+            </Box>
+
+            <Typography sx={subheadingStyle}>other projects</Typography>
+            <Typography sx={textStyle}>
+              {/* no noreferrer — own sites, keep the referrer for their analytics */}
+              <Link
+                href="https://kurrentschrift.ink"
+                target="_blank"
+                rel="noopener"
+                sx={proseLinkStyle}
+              >
+                kurrentschrift.ink
+              </Link>{' '}
+              — read and write old german cursive
+              <br />
+              <Link
+                href="https://github.com/MarkusNeusinger/cite-citadel"
+                target="_blank"
+                rel="noopener"
+                sx={proseLinkStyle}
+              >
+                cite-citadel
+              </Link>{' '}
+              — llm-maintained, fully-cited personal wiki
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* How it is built */}
+        <Box component="section" sx={sectionSx}>
+          <SectionHeader prompt="❯" title={<em>how it is built</em>} />
+          <Box sx={proseColumnSx}>
+            <Box sx={textStyle}>
+              models write anyplot&apos;s code — the site, the api, and the agents behind use with
+              my data — and he leads them, with his experience across data, backends, frontends and
+              hosting. work goes to Claude Code, Claude in GitHub Actions, Gemini or Copilot by what
+              it needs and what it costs; he tests what comes back and returns it until it&apos;s
+              right. what he corrects becomes a rule the agents follow, and a mistake that comes
+              back becomes a test.
+            </Box>
+            <Box sx={{ ...textStyle, mt: 1 }}>
+              more on GitHub: <Ext href={HOW_I_BUILD_URL}>how I build anyplot</Ext> and{' '}
+              <Ext href={HIGHLIGHTS_URL}>engineering highlights</Ext> in the README, and the whole
+              story in <Ext href={AI_WORKFLOW_URL}>how anyplot is built with ai agents</Ext>.
+            </Box>
+          </Box>
+        </Box>
+
         {/* Pipeline */}
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>pipeline</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              humans curate; ai executes. the catalogue maintains itself: when matplotlib ships a
-              new release, we re-run the pipeline; when a better example pattern emerges, we update
-              the spec and every library regenerates. we never patch generated code by hand.
+              humans curate; ai executes. the catalogue maintains itself: every night a job
+              regenerates the oldest implementations, and a new version replaces the live one only
+              when a review of both finds a fixed defect and no regression; when a better example
+              pattern emerges, we update the spec and every library regenerates. we never patch
+              generated code by hand.
             </Box>
             <Box sx={{ ...codeBlockStyle, whiteSpace: 'pre', fontSize: '13px', mt: 3 }}>
               {PIPELINE_BLOCK}
@@ -109,8 +246,9 @@ export function AboutPage() {
               the render on a 100-point rubric of 24 criteria — visual quality, design, spec
               compliance, data quality, code quality, and library mastery — blind to any earlier
               score. a first review needs 90; below that, ai repairs the defects the review named
-              and the plot is reviewed again, up to four times. the{' '}
-              {proseLink(paths.stats, 'stats page')} shows the score distribution per library.
+              and the plot is reviewed again, up to four times, and the bar drops 10 points per
+              repair, to 50 at the last review. the {proseLink(paths.stats, 'stats page')} shows the
+              score distribution per library.
             </Box>
           </Box>
         </Box>
@@ -162,21 +300,131 @@ export function AboutPage() {
               the default.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
+              a "gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or
+              bokeh. the palette travels with you across libraries. switching tools doesn't mean
+              re-learning your color grammar.
+            </Box>
+            <Box sx={{ ...textStyle, mt: 1 }}>
               see the {proseLink(paths.palette, 'palette page')} for the full reference and usage
               rules.
             </Box>
           </Box>
         </Box>
 
-        {/* Library agnostic */}
-        <Box component="section" sx={sectionSx}>
-          <SectionHeader prompt="❯" title={<em>library-agnostic</em>} />
+        {/* Transparency: stack, source and running costs */}
+        <Box component="section" id="transparency" sx={{ ...sectionSx, ...ANCHOR_SX }}>
+          <SectionHeader prompt="❯" title={<em>transparency</em>} />
+
           <Box sx={proseColumnSx}>
-            <Box sx={textStyle}>
-              a "gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or
-              bokeh. the palette travels with you across libraries. switching tools doesn't mean
-              re-learning your color grammar.
-            </Box>
+            <Typography sx={textStyle}>open source, down to what it costs to run.</Typography>
+
+            <Typography sx={subheadingStyle}>technology stack</Typography>
+            <FactTable
+              rows={[
+                [
+                  'site',
+                  <>
+                    <Ext href="https://react.dev">React</Ext> 19,{' '}
+                    <Ext href="https://vite.dev">Vite</Ext>, <Ext href="https://mui.com">MUI</Ext> 9
+                    with <Ext href="https://mui.com/x/">MUI X</Ext>,{' '}
+                    <Ext href="https://typescriptlang.org">TypeScript</Ext>
+                  </>,
+                ],
+                [
+                  'api',
+                  <>
+                    <Ext href="https://python.org">Python</Ext> 3.14,{' '}
+                    <Ext href="https://fastapi.tiangolo.com">FastAPI</Ext>,{' '}
+                    <Ext href="https://sqlalchemy.org">SQLAlchemy</Ext>,{' '}
+                    <Ext href="https://postgresql.org">PostgreSQL</Ext> 18
+                  </>,
+                ],
+                [
+                  'catalogue pipeline',
+                  <>
+                    <Ext href="https://github.com/features/actions">GitHub Actions</Ext> with Claude
+                    (<Ext href="https://www.anthropic.com/claude-code">Claude Code</Ext>); 15
+                    plotting libraries in Python, R, Julia and JavaScript
+                  </>,
+                ],
+                [
+                  'data assistant',
+                  <>
+                    <Ext href="https://google.github.io/adk-docs/">Google ADK</Ext>,{' '}
+                    <Ext href="https://www.anthropic.com/claude/haiku">Claude Haiku 5.5</Ext> via{' '}
+                    <Ext href="https://cloud.google.com/vertex-ai">Vertex AI</Ext> (EU), plots
+                    rendered in Cloud Run sandboxes (<Ext href="https://gvisor.dev">gVisor</Ext>)
+                  </>,
+                ],
+                [
+                  'google cloud',
+                  <>
+                    <Ext href="https://cloud.google.com/run">Cloud Run</Ext>, Cloud SQL, Cloud
+                    Storage, Cloud Logging, BigQuery, Cloud Build and Artifact Registry in the
+                    Netherlands (europe-west4), plus Secret Manager and Cloud Monitoring
+                  </>,
+                ],
+                [
+                  'edge & analytics',
+                  <>
+                    <Ext href="https://cloudflare.com">Cloudflare</Ext>,{' '}
+                    <Ext href="https://plausible.io">Plausible</Ext> (no cookies,{' '}
+                    <Ext href="https://plausible.io/anyplot.ai">public dashboard</Ext>)
+                  </>,
+                ],
+                [
+                  'reviews',
+                  <>
+                    <Ext href="https://deepmind.google/technologies/gemini/">Gemini</Ext> via Vertex
+                    AI for second opinions,{' '}
+                    <Ext href="https://github.com/features/copilot">GitHub Copilot</Ext> for pull
+                    requests
+                  </>,
+                ],
+                [
+                  'editor, typography',
+                  <>
+                    <Ext href="https://www.jetbrains.com/pycharm/">JetBrains PyCharm</Ext>;{' '}
+                    <Ext href="https://www.monolisa.dev/">MonoLisa</Ext> by Marcus Sterz;{' '}
+                    <Ext href="https://github.com/JetBrains/JetBrainsMono">JetBrains Mono</Ext>{' '}
+                    2.304 (<Ext href="https://openfontlicense.org">SIL Open Font License 1.1</Ext>)
+                    for the attribution strip under plots created from your own data
+                  </>,
+                ],
+              ]}
+            />
+
+            <Typography sx={subheadingStyle}>source code</Typography>
+            <Typography sx={textStyle}>
+              the entire codebase is publicly available under the MIT License:
+              <br />
+              <Link href={GITHUB_URL} target="_blank" rel="noopener" sx={proseLinkStyle}>
+                github.com/MarkusNeusinger/anyplot
+              </Link>
+              <br />
+              bundled third-party fonts keep their own licences — JetBrains Mono is under the SIL
+              Open Font License 1.1.
+            </Typography>
+
+            <Typography sx={subheadingStyle}>monthly running costs (October 2026)</Typography>
+            <FactTable
+              labelWidth="75%"
+              rows={[
+                ['hosting: Cloud Run (site, api, data assistant, renderer)', '~$10'],
+                ['database: Cloud SQL', '~$25'],
+                ['data assistant model: Claude Haiku via Vertex AI', '~$15'],
+                ['storage, logs and builds', '~$1'],
+                ['domain (.ai)', '~$8'],
+                ['total', <strong key="total">~$60/month</strong>],
+              ]}
+            />
+            <Typography
+              sx={{ ...textStyle, fontSize: fontSize.sm, color: semanticColors.mutedText, mt: 1 }}
+            >
+              after three-year commitments and promotional credits; the assistant&apos;s model cost
+              grows with use. development tools and subscriptions are not included. all costs are
+              covered privately.
+            </Typography>
           </Box>
         </Box>
 
@@ -190,18 +438,6 @@ export function AboutPage() {
               this: inspiration for which plot fits their data, and a way to get to know libraries
               they hadn't used before — each has its own specialties. anyplot is the grown-up
               version, anchored in a colorblind-safe palette that travels across every library.
-            </Box>
-            <Box sx={{ ...textStyle, mt: 1 }}>
-              built in Visp, a small town in the Swiss Alps, by a physicist and data analyst looking
-              for one place to find the right plot for the data in front of him — and a way to
-              explore what each library does best.
-            </Box>
-            <Box sx={{ ...textStyle, mt: 1 }}>
-              curious about the stack, costs, or analytics? see{' '}
-              <Link component={RouterLink} to={`${paths.legal}#transparency`} sx={proseLinkStyle}>
-                transparency
-              </Link>{' '}
-              on the legal page.
             </Box>
           </Box>
         </Box>

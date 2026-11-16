@@ -44,7 +44,8 @@ export function Footer() {
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: 1,
-        fontSize: fontSize.md,
+        // A step smaller on phones, so the four short links share one row down to 320px.
+        fontSize: { xs: fontSize.sm, sm: fontSize.md },
         fontFamily: typography.mono,
         color: semanticColors.mutedText,
         letterSpacing: '0.08em',
@@ -57,8 +58,18 @@ export function Footer() {
       <Link href={ISSUE_CHOOSER_URL} target="_blank" rel="noopener noreferrer" sx={linkSx}>
         report
       </Link>
-      <Box component="span" sx={{ display: { xs: 'none', md: 'contents' } }}>
-        <span>·</span>
+      {/* On phones the name takes a line of its own under the links, so no row ends on a "·". */}
+      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+        ·
+      </Box>
+      <Box
+        component="span"
+        sx={{
+          order: { xs: 1, sm: 0 },
+          flexBasis: { xs: '100%', sm: 'auto' },
+          textAlign: 'center',
+        }}
+      >
         <Link
           href="https://www.linkedin.com/in/markus-neusinger/"
           target="_blank"

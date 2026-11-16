@@ -142,6 +142,17 @@ def review_bar() -> tuple[int, int]:
     return int(match.group(1)), int(match.group(2))
 
 
+def review_floor() -> int:
+    """The lowest bar, from the clamp impl-review.yml applies right after the threshold formula."""
+    workflow = read(ROOT / ".github" / "workflows" / "impl-review.yml")
+    floors = set(re.findall(r'if \[ "\$THRESHOLD" -lt (\d+) \]; then THRESHOLD=(\d+); fi', workflow))
+    assert floors, "impl-review.yml no longer clamps THRESHOLD to a floor"
+    assert len(floors) == 1, f"impl-review.yml clamps THRESHOLD to more than one floor: {sorted(floors)}"
+    ((below, floor),) = floors
+    assert below == floor, f"impl-review.yml clamps below {below} to {floor}"
+    return int(floor)
+
+
 def model_display_name(model_id: str) -> str:
     """`claude-haiku-5-5` as the README names it: `Claude Haiku 5.5`."""
     words = model_id.split("-")
@@ -169,6 +180,7 @@ def test_the_bar_in_the_workflow_is_the_one_in_core_constants():
     start, step = review_bar()
     assert start == QUALITY_THRESHOLD_APPROVAL
     assert (QUALITY_THRESHOLD_APPROVAL - QUALITY_THRESHOLD_FINAL_APPROVAL) % step == 0
+    assert review_floor() == QUALITY_THRESHOLD_FINAL_APPROVAL
 
 
 # --- (a) links ----------------------------------------------------------------------------------
@@ -254,14 +266,63 @@ def test_the_intro_counts_the_registry_libraries():
 
 def test_about_page_and_its_bot_copy_state_the_rubric_bar_and_mcp_tools():
     start, step = review_bar()
-    repairs = (start - QUALITY_THRESHOLD_FINAL_APPROVAL) // step
+    floor = review_floor()
+    repairs = (start - floor) // step
     for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", read(SEO))):
         assert near(text, f"{sum(CRITERIA.values())}-point", "rubric"), f"{name}: the rubric's points"
         assert near(text, str(len(CRITERIA)), "criteria"), f"{name}: the rubric's criteria"
         assert near(text, str(start), "first review needs"), f"{name}: the first review's bar"
         assert near(text, NUMBER_WORDS[repairs], "times"), f"{name}: {repairs} repairs"
+        assert near(text, str(step), "points per repair"), f"{name}: the bar drops {step} points per repair"
+        assert near(text, str(floor), "at the last review"), f"{name}: the last review's bar is {floor}"
         # 5, not 3: seo.py splits "Six tools" over two string literals (`Six " "tools`).
         assert near(text, NUMBER_WORDS[mcp_tool_count()], "tools", window=5), f"{name}: {mcp_tool_count()} MCP tools"
+
+
+def test_about_page_and_its_bot_copy_claim_no_regeneration_on_a_library_release():
+    """No workflow runs on a library's release: a nightly job regenerates the oldest implementations."""
+    workflow = read(ROOT / ".github" / "workflows" / "daily-regen.yml")
+    triggers = workflow.split("\non:\n", 1)[1].split("\n\n", 1)[0]
+    cron = re.search(r"^\s+schedule:\s*\n\s+- cron: '([^']+)'", triggers, re.MULTILINE)
+    assert cron, "daily-regen.yml no longer runs on a schedule"
+    assert cron.group(1).split()[2:] == ["*", "*", "*"], f"daily-regen.yml no longer runs every day: {cron.group(1)}"
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", read(SEO))):
+        prose = collapse(text).lower()
+        assert "ships a new release" not in prose, f"{name}: no workflow re-runs the pipeline on a library release"
+        assert "every night a job regenerates the oldest implementations" in prose, f"{name}: the nightly job"
+
+
+def test_about_page_and_its_bot_copy_state_the_owners_year_as_the_readme_does():
+    match = re.search(r"since (\d{4}) I've built", collapse(section(read(README), "How I build anyplot")))
+    assert match, "README.md 'How I build anyplot' no longer says since when the owner has built data systems"
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", read(SEO))):
+        assert near(text, match.group(1), "since"), f"{name}: since {match.group(1)}, as the README says"
+
+
+# A GitHub address of a file on main, as the About page and its bot copy write it, with its heading anchor.
+_GITHUB_BLOB = re.compile(
+    r"(?:\$\{GITHUB_URL\}|https://github\.com/MarkusNeusinger/anyplot)/blob/main/([\w./-]+)(#[\w-]+)?"
+)
+
+
+def test_about_page_links_name_tracked_files_and_existing_headings():
+    """A renamed heading or a moved doc fails here instead of breaking a link on the site."""
+    tracked = tracked_files()
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", read(SEO))):
+        links = set(_GITHUB_BLOB.findall(text))
+        # The three the "how it is built" section links, so this test cannot pass on a page that lost them.
+        for expected in (
+            ("README.md", "#how-i-build-anyplot"),
+            ("README.md", "#engineering-highlights"),
+            ("docs/concepts/ai-workflow.md", ""),
+        ):
+            assert expected in links, f"{name} no longer links {''.join(expected)}"
+        for path, anchor in links:
+            assert path in tracked, f"{name} links {path}, which is not a tracked file"
+            if anchor:
+                markdown = read(ROOT / path)
+                slugs = {_slug(line.lstrip("#")) for line in markdown.splitlines() if line.startswith("#")}
+                assert anchor[1:] in slugs, f"{name} links {path}{anchor}, which names no heading there"
 
 
 def test_the_workflow_page_floor_on_recorded_decisions_holds():
