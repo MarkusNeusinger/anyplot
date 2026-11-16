@@ -42,3 +42,8 @@
   the ones a workflow runs, so the blank-image check is gone. The crawler body
   says the same, and `test_readme_claims.py` pins the floor, the step, the
   nightly schedule and the checks.
+- **Back leaves a redirected address in one step.** A fresh load of the old
+  chat address `/debug/agent` or of a language address `/{spec}/{language}`
+  left the old address one step back in the history, so Back landed on it and
+  was sent forward again; the destination now takes over the old address's
+  history entry, as the about page does for `/legal#transparency`.
