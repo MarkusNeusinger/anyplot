@@ -565,8 +565,10 @@ token counts instead, so the two can differ for today.
 
 The telemetry is content-free and keyed by a salted, per-instance session hash, but it is still a record of
 use. The privacy section of the legal page (`app/src/pages/LegalPage.tsx`, "only if you use the data
-assistant (experimental)") describes it in its `logs` and `ids` rows: the fields in plain words, that no
-content is recorded, and that it is pseudonymous rather than anonymous. The `logs` row's second line
+assistant (experimental)") describes it in its `logs` row: the fields in plain words and that no content
+is recorded. Its `ids` row says of the tab id and the IP address that they are salted and pseudonymous
+rather than anonymous; the telemetry's own key, the salted session hash, is not named on the page. The
+`logs` row's second line
 gives the 180-day retention and the EU location, so the period stands beside the data it belongs to. If you
 change a field, the retention or the location here, update that row and the crawler copy in
 `api/routers/seo.py` (`_LEGAL_BOT_BODY`) too; `app/src/pages/LegalPage.test.tsx` and

@@ -1352,7 +1352,14 @@ class TestSeoProxyRouter:
             "<li>Ids: a random tab id stands in for you; the per-tab limits and a pause after misuse count on "
             "it, and the per-network limits count your IP address. Both ids are salted with a value",
             "salted with a value that lives only as long as the server instance",
+            # Why they are pseudonymous and not anonymous, and what a feedback case holds, as the
+            # page's own test pins them.
+            "in memory, never written down",
+            "Nothing durable: only timestamps could match them to the 30-day server logs",
             "so they are pseudonymous",
+            "Admins: a keyed hash (HMAC)",
+            "a profile of your data with its first 5 rows",
+            "your reaction, message, a hash of your tab id and the run's details",
             "it starts unticked, which leaves out that file only",
             "never your text, data, column or file names",
             # Every kind of field by its name: event types, plot type and library record what a

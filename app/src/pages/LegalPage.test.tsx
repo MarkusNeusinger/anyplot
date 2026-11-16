@@ -239,9 +239,9 @@ describe('LegalPage', () => {
   });
 
   // The data assistant's section, each claim pinned with the qualifier that
-  // makes it true: experimental, without warranty and pausable, training
-  // excluded under Google Cloud's terms, the ids pseudonymous (not anonymous),
-  // and the data file unticked by default.
+  // makes it true: experimental (the heading), its terms of use on the
+  // assistant's own page, training excluded under Google Cloud's terms, the ids
+  // pseudonymous (not anonymous), and the data file unticked by default.
   it('describes the experimental data assistant without overclaiming', () => {
     render(<LegalPage />);
 
@@ -277,7 +277,7 @@ describe('LegalPage', () => {
     }
     expect(screen.queryByRole('rowheader', { name: 'limits' })).not.toBeInTheDocument();
     expect(screen.queryByRole('rowheader', { name: 'your code' })).not.toBeInTheDocument();
-    // The daily limits and the pause after misuse count on the salted tab id, the per-network
+    // The per-tab limits and the pause after misuse count on the salted tab id, the per-network
     // limits on the salted address: both uses of an identifier, so the ids row names them while
     // the sentences that state the limits stand on the assistant's page.
     expect(screen.getByRole('row', { name: /^ids\s/ })).toHaveTextContent(
