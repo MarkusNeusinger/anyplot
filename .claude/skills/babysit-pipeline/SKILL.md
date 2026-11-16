@@ -123,6 +123,12 @@ with evidence — never let the user ask "still running?".
   move — it auto-closes the bad PR. Stale `ai-review-failed` PRs on
   old branches keep re-failing review (score=0) even on a strong
   model: regenerate fresh, don't re-review.
+- **A PR labelled `ai-render-mismatch` is parked on purpose**: its
+  review stopped because the staged renders were made from other code
+  than the PR holds, the review run is red, and neither the watchdog
+  nor a re-review of the same staging moves it. Generate the pair
+  again the way the PR was made; the PR's comment gives the command
+  (`docs/workflows/overview.md`, "What a mismatch does").
 - **Never run concurrent re-reviews on the same PR** (manual dispatch
   + auto-retry + a rescuer loop once raced labels into
   `quality:89` + `ai-review-failed` with no merge). At most one

@@ -207,6 +207,40 @@ class TestCodeHash:
     def test_non_utf8_bytes_hash_as_they_are(self):
         assert code_hash(b"x = '\xff'\n", "python") != code_hash(b"x = '\xfe'\n", "python")
 
+    @pytest.mark.parametrize(
+        ("language", "generated"),
+        [
+            ("python", "#!/usr/bin/env python3\n" + _python("85/100").decode()),
+            ("python", _python("85/100").decode().replace('"""', "'''")),
+            ("r", "# anyplot.ai\n# Quality: 85/100 | Created: 2026-11-15\n\n" + R_CODE),
+            ("julia", "#' anyplot.ai\n#' Quality: 85/100 | Created: 2026-11-15\n\n" + JULIA_CODE),
+            ("javascript", "'use strict';\n" + JS_OLD_HEADER.replace("pending", "85/100") + "\n" + JS_CODE),
+        ],
+        ids=[
+            "python-shebang",
+            "python-single-quotes",
+            "r-hash-header",
+            "julia-roxygen-header",
+            "javascript-code-first",
+        ],
+    )
+    def test_the_score_never_counts_even_outside_the_header_block(self, language, generated):
+        # impl-generate stages the hash of the generator's file and commits the
+        # reset form; here the score line is not in the block strip_header removes.
+        committed = regen_gate.reset_header_score(generated)
+        assert committed != generated and "Quality: 85/100" in strip_header(generated, language)
+        assert code_hash(generated.encode(), language) == code_hash(committed.encode(), language)
+        assert code_hash(generated.replace("85/100", "91/100").encode(), language) == code_hash(
+            committed.encode(), language
+        )
+
+    def test_a_score_shaped_line_deep_in_the_code_still_counts(self):
+        # Only header lines are reset (regen_gate.HEADER_LINES), on both sides alike.
+        body = BODY + "\n" * 20 + "# Quality: 50/100\n"
+        assert code_hash(_python("pending", body=body), "python") != code_hash(
+            _python("pending", body=body.replace("50/100", "51/100")), "python"
+        )
+
 
 class TestCompare:
     def _files(self, tmp_path: Path, staged: bytes, head: bytes | None) -> tuple[Path, Path]:
@@ -356,8 +390,13 @@ class TestCli:
         assert text.splitlines()[0] == MARKER.format(status="mismatch", head=HEAD)
         assert "## :warning: Staged renders do not match this code" in text
         assert render_hash(_python("pending"))[:12] in text
-        assert "The review did not run" in text and f"labelled `{STOP_LABEL}`" in text
+        assert "The review did not run" in text
+        # The comment is posted before the label is added, so it does not say the label is on.
+        assert f"The review run labels this PR `{STOP_LABEL}` and ends as failed; the PR stays open" in text
         assert "gh workflow run bulk-generate.yml -f specification_id=scatter-basic -f library=matplotlib" in text
+        # A forced or adopted run takes this path too, and the plain command would not repeat it.
+        assert "forced or adopted from a branch, repeat that run instead" in text
+        assert "`-f regen_gate=false`" in text and "`-f source_ref=<the ref>`" in text
         assert "go ahead unchanged" not in text and KEEP_CODE not in text
         assert text.endswith(":robot: *[impl-review](https://run/1)*\n")
         # Repair reads the last comment that contains "AI Review" as its feedback.
@@ -382,6 +421,22 @@ class TestCli:
         text = body.read_text(encoding="utf-8")
         assert "the review and its score go ahead unchanged" in text and "holds no code hash" in text
         assert "The review did not run" not in text
+
+    @pytest.mark.parametrize("case", ["missing", "legacy", "unreadable"])
+    def test_a_regeneration_that_does_not_stop_gets_the_warning_text(self, tmp_path, monkeypatch, case):
+        """`--regeneration` is passed on every regeneration; only a stop may speak of the keep."""
+        extra = ["--regeneration", "--spec-id", "scatter-basic", "--library", "matplotlib"]
+        if case == "unreadable":
+            extra.append("--fetch-error=ServiceException: 503")
+        staged = None if case == "missing" else _python("pending")
+        output, _, body = self._check(
+            tmp_path, monkeypatch, staged, _python("pending", body="x\n"), *extra, legacy=case == "legacy"
+        )
+        status = "mismatch" if case == "legacy" else case
+        assert output == f"status={status}\nstop=false\n"
+        text = body.read_text(encoding="utf-8")
+        assert "This check only warns here: the review and its score go ahead unchanged." in text
+        assert "The review did not run" not in text and KEEP_CODE not in text and STOP_LABEL not in text
 
     def test_a_missing_hash_writes_the_comment(self, tmp_path, monkeypatch):
         output, summary, body = self._check(tmp_path, monkeypatch, None, _python("pending"))

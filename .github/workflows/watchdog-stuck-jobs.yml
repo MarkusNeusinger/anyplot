@@ -221,10 +221,10 @@ jobs:
             # rescue helps: another review would read the same staging, and a
             # repair rescue would run a repair nobody reviewed. Reported on
             # every scan until the pair is generated again (that run replaces
-            # the branch, which closes the PR), a review of the PR removes the
-            # label, or the PR is closed.
+            # the branch, which closes the PR), a review of the PR finds no
+            # mismatch any more and removes the label, or the PR is closed.
             if echo " $labels " | grep -q " ai-render-mismatch "; then
-              echo "::warning::PR #$num: review stopped on a render hash mismatch (ai-render-mismatch) — not rescued; generate $spec_id/$library again or close the PR"
+              echo "::warning::PR #$num: review stopped on a render hash mismatch (ai-render-mismatch) — not rescued; generate $spec_id/$library again the way the PR was made (its comment gives the command), or close the PR"
               continue
             fi
 

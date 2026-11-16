@@ -19,6 +19,7 @@ from typing import Any
 import pytest
 import yaml
 
+from automation.scripts import regen_gate
 from automation.scripts.render_hash import code_hash
 
 
@@ -165,3 +166,50 @@ def test_the_code_hash_still_sees_a_change_below_the_header(tmp_path, language, 
     edited = edited.replace('save("plot.png", fig)', 'save("p.png", fig)').replace("ANYPLOT_TOKENS", "ANYPLOT_SIZE")
     assert edited != after
     assert code_hash(edited.encode(), language) != code_hash(before.encode(), language)
+
+
+# --- the whole way from staging to a re-review, with a score in the file ------------------------
+#
+# impl-generate stages the hash of the file as the generator left it, and a
+# regeneration or an adopted file still carries the stored `Quality: N/100`.
+# The commit holds the reset form (`sanitize-source --pending`), and the
+# review's header commit follows. When the header is not the block the writer
+# replaces, the writer prepends a new one and the old score line stays in the
+# code: it must not count with its number on the staged side only.
+
+SCORED_PY = PY_HEADER.replace("pending", "85/100")
+SCORED_R = R_HEADER.replace("pending", "85/100")
+SCORED_JULIA = JULIA_HEADER.replace("pending", "85/100")
+SCORED_JS = OLD.replace("pending", "85/100")
+SCORED = [
+    pytest.param("python", "matplotlib.py", SCORED_PY + PY_CODE, id="python"),
+    pytest.param("python", "matplotlib.py", "#!/usr/bin/env python3\n" + SCORED_PY + PY_CODE, id="python-shebang"),
+    pytest.param("python", "matplotlib.py", "# -*- coding: utf-8 -*-\n" + SCORED_PY + PY_CODE, id="python-coding"),
+    pytest.param("python", "matplotlib.py", SCORED_PY.replace('"""', "'''") + PY_CODE, id="python-single-quotes"),
+    pytest.param("r", "ggplot2.R", SCORED_R + R_CODE, id="r"),
+    pytest.param("r", "ggplot2.R", SCORED_R.replace("#' ", "# ") + R_CODE, id="r-hash-header"),
+    pytest.param("julia", "makie.jl", SCORED_JULIA + JULIA_CODE, id="julia"),
+    pytest.param("julia", "makie.jl", SCORED_JULIA.replace("# ", "#' ") + JULIA_CODE, id="julia-roxygen-header"),
+    pytest.param("javascript", "d3.js", SCORED_JS + SQUARE + CODE, id="javascript"),
+    pytest.param("javascript", "d3.js", "'use strict';\n" + SCORED_JS + SQUARE + CODE, id="javascript-code-first"),
+]
+
+
+@pytest.mark.parametrize(("language", "filename", "generated"), SCORED)
+def test_a_scored_file_matches_after_the_reset_and_the_header_commit(tmp_path, language, filename, generated):
+    staged = code_hash(generated.encode(), language)
+    committed = regen_gate.reset_header_score(generated)
+    assert committed != generated  # the pipeline's reset did change the file
+    assert code_hash(committed.encode(), language) == staged
+    reviewed = _run(tmp_path, language, filename, committed)
+    assert reviewed != committed
+    assert code_hash(reviewed.encode(), language) == staged
+
+
+@pytest.mark.parametrize(("language", "filename", "generated"), SCORED)
+def test_a_scored_file_still_shows_a_change_of_its_code(tmp_path, language, filename, generated):
+    reviewed = _run(tmp_path, language, filename, regen_gate.reset_header_score(generated))
+    edited = reviewed.replace("x.plot()", "x.plot(1)").replace("ggsave('plot.png')", "ggsave('p.png')")
+    edited = edited.replace('save("plot.png", fig)', 'save("p.png", fig)').replace("ANYPLOT_TOKENS", "ANYPLOT_SIZE")
+    assert edited != reviewed
+    assert code_hash(edited.encode(), language) != code_hash(generated.encode(), language)

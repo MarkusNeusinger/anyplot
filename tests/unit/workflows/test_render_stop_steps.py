@@ -5,8 +5,9 @@ from other code than the PR head holds (test_render_hash_steps.py). The step
 "Stop on a render hash mismatch" then stops the review:
 
 - A first generation gets the label `ai-render-mismatch` and stays open; no
-  review, no score, no header commit. The watchdog rescues nothing that
-  carries the label and reports it.
+  review, no score, no header commit, and the run ends as failed. The
+  watchdog rescues nothing that carries the label and reports it. A later
+  review that goes on removes the label.
 - A regeneration runs no review either; the regen gate keeps the live
   implementation (`render_mismatch`), and the keep path closes the PR.
 
@@ -80,7 +81,10 @@ def _stop(tmp_path: Path, **env: str):
 class TestStopStep:
     def test_a_first_generation_gets_the_label_and_nothing_else(self, tmp_path):
         result, calls, output = _stop(tmp_path, IS_REGEN="false")
-        assert result.returncode == 0, result.stdout + result.stderr
+        # The run ends red like every other end without a verdict, with the label on.
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert "::error::The review of PR #7 stopped on a render hash mismatch" in result.stdout
+        assert "could not be added" not in result.stdout
         assert output == "stopped=true\n"
         assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--add-label", render_hash.STOP_LABEL]]
         (created,) = _calls(calls, "label", "create")
@@ -104,10 +108,40 @@ class TestStopStep:
         assert output == "stopped=true\n"
         assert len(_calls(calls, "pr", "edit")) == 3
         assert "::error::ai-render-mismatch could not be added to PR #7" in result.stdout
+        # Without the label the watchdog acts on the PR, and the message says so.
+        assert "Case 2 runs the repair again" in result.stdout and "add the label by hand" in result.stdout
+        assert "::error::The review of PR #7 stopped" not in result.stdout
 
     def test_a_label_that_already_exists_is_fine(self, tmp_path):
-        result, _, output = _stop(tmp_path, IS_REGEN="false", GH_LABEL_CREATE_RC="1")
-        assert result.returncode == 0 and output == "stopped=true\n"
+        result, calls, output = _stop(tmp_path, IS_REGEN="false", GH_LABEL_CREATE_RC="1")
+        assert output == "stopped=true\n"
+        assert len(_calls(calls, "pr", "edit")) == 1 and "could not be added" not in result.stdout
+
+    def test_no_step_and_no_workflow_acts_on_the_failed_run(self):
+        """A first-generation stop ends the job as failed; nothing may turn that into a rescue."""
+        after = _names()[_names().index(STOP) + 1 :]
+        on_failure = [
+            n for n in after if re.search(r"failure\(\)|always\(\)|cancelled\(\)", str(_step(REVIEW, n).get("if", "")))
+        ]
+        assert on_failure == [
+            "Claude session summary",
+            "Restore the stored review",
+            "Re-dispatch review after a post-score failure",
+        ]
+        # The first needs a review outcome, the last a review or a skipped one; the restore only resets the workspace.
+        assert (
+            "steps.review.outcome == 'success' || steps.review.outcome == 'failure'"
+            in _step(REVIEW, "Claude session summary")["if"]
+        )
+        rescue = _step(REVIEW, "Re-dispatch review after a post-score failure")["if"]
+        assert "steps.review.conclusion == 'success'" in rescue and "render_stop" not in rescue
+        # And no workflow starts on a finished review run.
+        review_name = yaml.safe_load((WORKFLOWS / REVIEW).read_text(encoding="utf-8"))["name"]
+        for path in WORKFLOWS.glob("*.yml"):
+            workflow = yaml.safe_load(path.read_text(encoding="utf-8"))
+            triggers = workflow.get(True, workflow.get("on"))  # YAML reads a bare `on` as True
+            watched = triggers.get("workflow_run", {}) if isinstance(triggers, dict) else {}
+            assert review_name not in ((watched or {}).get("workflows") or []), path.name
 
     def test_the_first_line_of_the_script_writes_the_output(self):
         lines = [line.strip() for line in _code_only(str(_step(REVIEW, STOP)["run"])).splitlines() if line.strip()]
@@ -115,7 +149,7 @@ class TestStopStep:
 
 
 class TestClearStep:
-    """A review that starts checks the hash again, so the label of an earlier stop goes first."""
+    """The label of an earlier stop goes once a later review has checked the hash again and goes on."""
 
     def _clear(self, tmp_path: Path, **env: str):
         return _run(str(_step(REVIEW, CLEAR)["run"]), tmp_path, tmp_path, PR_NUM="7", **env)
@@ -126,23 +160,31 @@ class TestClearStep:
         assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--remove-label", render_hash.STOP_LABEL]]
 
     @pytest.mark.parametrize(
-        "env",
+        ("env", "views", "edits"),
         [
-            {"GH_LABELS": "quality:85"},
-            {"GH_FAIL_VIEW": "1"},
-            {"GH_LABELS": "ai-render-mismatch", "GH_FAIL_PR_REMOVE": "1"},
+            ({"GH_LABELS": "quality:85"}, 1, 0),
+            ({"GH_FAIL_VIEW": "1"}, 3, 0),
+            ({"GH_LABELS": "ai-render-mismatch", "GH_FAIL_PR_REMOVE": "1"}, 1, 3),
         ],
         ids=["absent", "unreadable-labels", "remove-fails"],
     )
-    def test_it_never_fails_the_review(self, tmp_path, env):
+    def test_it_never_fails_the_review_and_tries_three_times(self, tmp_path, env, views, edits):
+        """A label that stays on a reviewed PR hides it from every watchdog rescue, so one failed call is not the end."""
         result, calls = self._clear(tmp_path, **env)
         assert result.returncode == 0, result.stdout + result.stderr
-        assert len(_calls(calls, "pr", "edit")) == (1 if "GH_FAIL_PR_REMOVE" in env else 0)
+        assert (len(_calls(calls, "pr", "view")), len(_calls(calls, "pr", "edit"))) == (views, edits)
+        if views == 3 or edits == 3:
+            assert "the watchdog keeps skipping the PR" in result.stdout
 
-    def test_it_runs_before_the_check(self):
+    def test_it_runs_only_once_the_review_goes_on(self):
+        """Not at the start of the run: a run that dies before the check (cloud auth) must leave the PR parked."""
         names = _names()
-        assert names.index(CLEAR) < names.index(CHECK)
-        assert "if" not in _step(REVIEW, CLEAR)
+        assert names[names.index("Verify both theme renders exist") + 1] == CLEAR
+        assert names.index(STOP) < names.index(CLEAR) < names.index(RUN_REVIEW)
+        step = _step(REVIEW, CLEAR)
+        # No status function, so a failed verify (or any earlier failure) skips it.
+        assert step["if"] == STOPPED
+        assert "continue-on-error" not in step
 
 
 # --- the keep path of a stopped regeneration: gate, early verdict, verdict -----------------------
@@ -315,7 +357,23 @@ class TestWiring:
 
     @pytest.mark.parametrize("name", SWITCHED_ON)
     def test_the_keep_path_switches_on(self, name):
-        assert _step(REVIEW, name)["if"].rstrip(")").endswith(KEEP), name
+        """The whole condition: with `&&` in place of the last `||` a stopped regeneration would run nothing."""
+        reviewed = (
+            "(steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true')"
+            " || steps.adapt.outputs.review_skipped == 'true'"
+        )
+        expected = f"{reviewed} || {KEEP}"
+        if name == GATE:
+            expected = f"steps.regen.outputs.is_regen == 'true' && ({expected})"
+        assert _step(REVIEW, name)["if"] == expected, name
+
+    def test_the_steps_get_what_they_read(self):
+        """The step tests inject these values themselves, so the wiring is pinned here."""
+        assert _step(REVIEW, CHECK)["env"]["IS_REGEN"] == "${{ steps.regen.outputs.is_regen }}"
+        assert _step(REVIEW, VERDICT_STEP)["env"]["RENDER_STOPPED"] == "${{ steps.render_stop.outputs.keep }}"
+        for name in (CHECK, STOP, CLEAR):
+            assert _step(REVIEW, name)["env"]["GH_TOKEN"] == "${{ secrets.GITHUB_TOKEN }}", name
+            assert _step(REVIEW, name)["env"]["PR_NUM"] == "${{ steps.pr.outputs.pr_number }}", name
 
     def test_the_gate_still_needs_a_regeneration(self):
         assert _step(REVIEW, GATE)["if"].startswith("steps.regen.outputs.is_regen == 'true' && (")

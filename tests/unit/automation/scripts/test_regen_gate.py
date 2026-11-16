@@ -819,6 +819,12 @@ class TestCli:
         record = json.loads(record_file.read_text(encoding="utf-8"))
         assert (record["verdict"], record["code"]) == ("keep", "render_mismatch")
         assert validate_record(record) == []
+        # No review ran, although nothing passed --review-skipped (that step did not run either).
+        assert record["adapt"]["review"] == "skipped"
+        # The control: the same call without the stop says the review ran.
+        assert main([*args, "--pr", "7"]) == 0
+        control = json.loads(record_file.read_text(encoding="utf-8"))
+        assert (control["code"], control["adapt"]["review"]) == ("no_score", "ran")
 
     def test_decide_invalid_json_keeps(self, tmp_path, monkeypatch, capsys):
         monkeypatch.delenv("GITHUB_OUTPUT", raising=False)

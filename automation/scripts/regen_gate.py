@@ -163,7 +163,7 @@ import os
 import re
 import sys
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TypeGuard
@@ -1800,6 +1800,10 @@ def decide(inp: GateInput) -> GateResult:
     (``readiness_regression``).
     """
     adapt = adapt_assess(inp, _adapt_review(inp))
+    if inp.render_mismatch:
+        # The review stopped before it ran, whatever the adapt flags say (the
+        # step that would pass ``--review-skipped`` did not run either).
+        adapt = replace(adapt, review=ADAPT_REVIEW_SKIPPED)
     result = _decide(inp, adapt)
     result.adapt = adapt
     result.readiness = inp.readiness

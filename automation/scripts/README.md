@@ -136,7 +136,8 @@ With `--readiness`, the verdict file of `readiness_record.py`, a merge also
 becomes keep with `readiness_regression` when that verdict is `regression`;
 every other status changes nothing. With `--render-mismatch` it keeps with
 `render_mismatch` before anything else is read: impl-review's render-hash
-check stopped the review, so there is no score. `adapt-route` writes `adapt_route`, `adapt_why`,
+check stopped the review, so there is no score, and the record's `adapt.review`
+reads `skipped`. `adapt-route` writes `adapt_route`, `adapt_why`,
 `adapt_prev`, and `adapt_new` before the review, and always exits 0. impl-review
 passes that result back to `decide` as `--adapt-route-held`. The record gains
 `adapt` (`AdaptAssessment.to_record`, checked by `validate_record`), with
@@ -219,7 +220,7 @@ Ties the staged renders to the code that made them (stdlib, plus
 `render.sha256` (`impl-generate.yml`, `impl-repair.yml`, each from a copy at
 the workflow's ref): the file with its `Quality:` header line reset to
 `pending`, and the code without the header that impl-review's writer
-replaces. `check` compares the file with the one at the PR head
+replaces, with the score reset the same way. `check` compares the file with the one at the PR head
 (`impl-review.yml`, "Check the render hash") and reports `match`, `mismatch`,
 `missing`, or `unreadable`, plus `stop=true` for a mismatch against a file
 that holds both hashes. The script itself never fails the review; the step

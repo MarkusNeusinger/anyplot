@@ -293,24 +293,6 @@ jobs:
             fi
           fi
 
-      # `ai-render-mismatch` says that this PR's review stopped because its
-      # staged renders were made from other code ("Stop on a render hash
-      # mismatch"), and the watchdog rescues no PR that carries it. This run
-      # checks the hash again, so the label goes; the stop step puts it back
-      # on another mismatch. Best effort.
-      - name: Clear the ai-render-mismatch label
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUM: ${{ steps.pr.outputs.pr_number }}
-        run: |
-          if gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2>/dev/null | grep -qxF "ai-render-mismatch"; then
-            if gh pr edit "$PR_NUM" --remove-label "ai-render-mismatch" 2>/dev/null; then
-              echo "::notice::Removed ai-render-mismatch from PR #${PR_NUM}: this run checks the render hash again"
-            else
-              echo "::warning::could not remove ai-render-mismatch from PR #${PR_NUM}"
-            fi
-          fi
-
       - name: Derive language + extension from library
         id: lang
         env:
@@ -639,12 +621,16 @@ jobs:
       # `stopped` switches off every step below that reads the renders or runs
       # the review. It is written first, before any API call: a label that
       # cannot be added must never let the review run.
-      # First generation (a repair's re-review included): the label
-      # `ai-render-mismatch`, and the PR stays open until the pair is
+      # First generation (a repair's re-review included, and a forced or
+      # adopted regeneration, which takes this path like its review does): the
+      # label `ai-render-mismatch`, and the PR stays open until the pair is
       # generated again, which replaces its branch and so closes it (the
-      # check's comment gives the command). Never `ai-review-failed`: the watchdog would re-review the same staging, and
-      # after a repair its Case 2 would run the repair again. The watchdog
-      # skips the label and reports the PR.
+      # check's comment gives the command). The run ends as failed once the
+      # label is on, like every other end of this job without a verdict, so
+      # the run list shows the stop; no step and no workflow acts on that
+      # failure. Never `ai-review-failed`: the watchdog would re-review the
+      # same staging, and after a repair its Case 2 would run the repair
+      # again. The watchdog skips the label and reports the PR.
       # Regeneration: `keep` as well, and no label here. The regen gate keeps
       # the live implementation (`render_mismatch`), the early verdict step
       # adds `regen:kept`, and "Add verdict label and take action" closes the
@@ -667,17 +653,18 @@ jobs:
             exit 0
           fi
           echo "::warning::render_stop spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} regeneration=false: no review; the PR gets ai-render-mismatch and stays open"
-          echo "**Render hash:** the review of PR #${PR_NUM} did not run; the PR is labelled \`ai-render-mismatch\` and stays open." >> "$GITHUB_STEP_SUMMARY"
+          echo "**Render hash:** the review of PR #${PR_NUM} did not run; the PR gets the label \`ai-render-mismatch\` and stays open." >> "$GITHUB_STEP_SUMMARY"
           gh label create "ai-render-mismatch" --color "d93f0b" \
             --description "Review stopped: the staged renders were made from other code than the PR holds" 2>/dev/null || true
           for attempt in 1 2 3; do
             if gh pr edit "$PR_NUM" --add-label "ai-render-mismatch" 2> "$RUNNER_TEMP/render-stop.err"; then
-              exit 0
+              echo "::error::The review of PR #${PR_NUM} stopped on a render hash mismatch: nothing was scored. The PR carries ai-render-mismatch and stays open; its comment says how to continue."
+              exit 1
             fi
             echo "::warning::adding ai-render-mismatch failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/render-stop.err" | tr '\n' ' ')"
             [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
           done
-          echo "::error::ai-render-mismatch could not be added to PR #${PR_NUM}: the review stays stopped, but the watchdog does not see why"
+          echo "::error::ai-render-mismatch could not be added to PR #${PR_NUM}: the review stays stopped, but without the label the watchdog acts on the PR after its stale window (Case 2 runs the repair again, Case 5 the review at attempt 0); add the label by hand"
           exit 1
 
       # Regen only: the predecessor's production renders, which the review
@@ -737,6 +724,48 @@ jobs:
             exit 1
           fi
           echo "::notice::Found both theme renders — proceeding to review"
+
+      # `ai-render-mismatch` says that this PR's review stopped because its
+      # staged renders were made from other code ("Stop on a render hash
+      # mismatch"), and the watchdog rescues no PR that carries it. It goes
+      # only here, once this run has checked the hash again without a stop and
+      # has its renders: a run that ends earlier (cloud auth, a missing
+      # render) leaves the PR parked as it was. A label that stays although
+      # the review went on would hide the PR from every watchdog rescue, so
+      # the read and the removal get three attempts each. Best effort.
+      - name: Clear the ai-render-mismatch label
+        if: steps.render_stop.outputs.stopped != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+        run: |
+          LABELS=""
+          READ_OK=0
+          for attempt in 1 2 3; do
+            if LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2> "$RUNNER_TEMP/render-clear.err"); then
+              READ_OK=1
+              break
+            fi
+            echo "::warning::gh pr view (labels) failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/render-clear.err" | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          if [ "$READ_OK" -ne 1 ]; then
+            echo "::warning::Could not read labels for PR #${PR_NUM} — a stale ai-render-mismatch, if any, stays and the watchdog keeps skipping the PR"
+            exit 0
+          fi
+          if ! grep -qxF "ai-render-mismatch" <<< "$LABELS"; then
+            exit 0
+          fi
+          for attempt in 1 2 3; do
+            if gh pr edit "$PR_NUM" --remove-label "ai-render-mismatch" 2> "$RUNNER_TEMP/render-clear.err"; then
+              echo "::notice::Removed ai-render-mismatch from PR #${PR_NUM}: this review checked the render hash again and goes on"
+              exit 0
+            fi
+            echo "::warning::removing ai-render-mismatch failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/render-clear.err" | tr '\n' ' ')"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+          done
+          echo "::warning::ai-render-mismatch could not be removed from PR #${PR_NUM} — the watchdog keeps skipping the PR; remove the label by hand"
+          exit 0
 
       # Canvas dimension gate — runs before the AI review.
       # The saved PNG must be exactly 3200×1800 (landscape) or 2400×2400 (square)

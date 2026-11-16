@@ -14,13 +14,14 @@ The file holds two hashes of the implementation the renders came from:
   file is committed in after a generation, and the form the reviewer reads, so
   the generator's own ``Quality: N/100`` and impl-generate's reset never change
   it.
-- The *code hash*: the file without its header. impl-review's "Update metadata
-  and implementation header" step rewrites the whole header when it stores a
-  review (title, library line, date, score), so after that commit the render
-  hash of the head is another one although no line of code changed. The code
-  hash leaves out exactly what that writer replaces (``strip_header``), so a
-  re-review of the same code still matches. A JavaScript file's ``//#``
-  directives are not header: the render harness reads them, and they count.
+- The *code hash*: the file without its header, with the score reset as well.
+  impl-review's "Update metadata and implementation header" step rewrites the
+  whole header when it stores a review (title, library line, date, score), so
+  after that commit the render hash of the head is another one although no
+  line of code changed. The code hash leaves out exactly what that writer
+  replaces (``strip_header``), so a re-review of the same code still matches.
+  A JavaScript file's ``//#`` directives are not header: the render harness
+  reads them, and they count.
 
 ``check`` reports a match when either hash fits. Only a mismatch against a
 file that carries the code hash stops the review (``stop=true``): a
@@ -43,7 +44,9 @@ Subcommands::
 ``status=match|mismatch|missing|unreadable`` and ``stop=true|false`` to
 ``$GITHUB_OUTPUT`` and one line to ``$GITHUB_STEP_SUMMARY`` when they are set,
 prints a ``::notice::`` or ``::warning::``, and on anything but a match writes
-the PR comment to ``--comment-out``. It always exits 0 (2 on a usage error).
+the PR comment to ``--comment-out``. It exits 0 whatever the status (2 on a
+usage error); a crash exits 1, and the step that runs it then lets the review
+go on without a stop.
 Stdlib only; ``regen_gate`` and, for JavaScript, ``impl_header`` are imported
 from this file's own directory when it runs as a script, so a workflow's copy
 never reads the checkout's.
@@ -124,14 +127,21 @@ def strip_header(text: str, language: str) -> str:
 
 
 def code_hash(data: bytes, language: str) -> str:
-    """sha256 of the source without its header; line endings and blank lines around the code do not count.
+    """sha256 of the source without its header; the score, line endings and blank lines around the code do not count.
 
     The writer reads the file in text mode and writes ``\\n``, and it puts a
     line break after a header it has to prepend, so neither may change the
     hash of unchanged code.
+
+    The score is reset first, as for the render hash. impl-generate stages the
+    hash of the file as the generator left it and commits the file with
+    ``Quality: N/100`` reset to ``pending``. A score line outside the block
+    ``strip_header`` removes (a file that starts with a shebang or a coding
+    line, a header in another comment style) would otherwise count with its
+    number on one side and as ``pending`` on the other.
     """
     text = data.decode("utf-8", errors="surrogateescape").replace("\r\n", "\n").replace("\r", "\n")
-    body = strip_header(text, language).strip()
+    body = strip_header(regen_gate.reset_header_score(text), language).strip()
     return hashlib.sha256(body.encode("utf-8", errors="surrogateescape")).hexdigest()
 
 
@@ -227,18 +237,25 @@ def comment(
         )
     elif result.stop:
         then = (
-            "The review did not run: nothing is scored and the file header stays as it is. This PR is labelled "
-            f"`{STOP_LABEL}` and stays open; no workflow picks it up again by itself."
+            "The review did not run: nothing is scored and the file header stays as it is. The review run labels "
+            f"this PR `{STOP_LABEL}` and ends as failed; the PR stays open, and no workflow picks it up again by "
+            "itself."
         )
         if spec_id and library:
             # impl-generate.yml deletes the pair's branch before it creates it
-            # anew ("Create implementation branch"), which closes this PR.
+            # anew ("Create implementation branch"), which closes this PR. The
+            # command is the plain generation; a forced or adopted run takes
+            # this path too (`regen:forced`, or an adopted first
+            # implementation), and only its PR description says how it was made.
             then += (
                 " To continue, generate the pair again. That run replaces this PR's branch, which closes this PR, "
                 "and opens a new one with its own renders and review:\n\n"
                 "```\n"
                 f"gh workflow run bulk-generate.yml -f specification_id={spec_id} -f library={library}\n"
-                "```"
+                "```\n\n"
+                "That command generates the file anew, and for a pair that is live on `main` the regen gate decides. "
+                "If this PR's description says it was forced or adopted from a branch, repeat that run instead: add "
+                "`-f regen_gate=false`, or `-f source_ref=<the ref>` with its `-f source_model=<the model>`."
             )
     elif result.status == "mismatch":
         then = (

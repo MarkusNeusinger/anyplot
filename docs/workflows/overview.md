@@ -245,7 +245,7 @@ A failed repair gate takes the ordinary crash path ("Handle repair failure"): `a
 The render hash ties the staged renders to the code under review, and a mismatch stops the review. `impl-generate.yml` and `impl-repair.yml` stage `render.sha256` beside the PNGs (`automation/scripts/render_hash.py`). The file holds two hashes of the implementation the renders came from:
 
 - **The render hash** is the sha256 of the file with its `Quality:` header line reset to `pending` (`regen_gate.reset_header_score`, the rewrite `sanitize-source --pending` makes). The generator's own header score and the pipeline's reset to `pending` therefore never change it.
-- **The code hash** is the sha256 of the file without its header. The review's own header commit rewrites the whole generated header (first line, library version, date, score), so after that commit the head has another render hash although no line of code changed. The code hash leaves out exactly the block that the header writer replaces: the leading docstring in Python, the leading `#'` lines in R, the leading `#` lines in Julia, and the `// anyplot.ai` header block in JavaScript. A JavaScript file's `//#` directives aren't header: the render harness reads them, so they count. Line endings and blank lines around the code don't count.
+- **The code hash** is the sha256 of the file without its header, with the score reset the same way. The review's own header commit rewrites the whole generated header (first line, library version, date, score), so after that commit the head has another render hash although no line of code changed. The code hash leaves out exactly the block that the header writer replaces: the leading docstring in Python, the leading `#'` lines in R, the leading `#` lines in Julia, and the `// anyplot.ai` header block in JavaScript. A JavaScript file's `//#` directives aren't header: the render harness reads them, so they count. Line endings and blank lines around the code don't count. The score is reset first because impl-generate commits the file with `Quality: pending` after it staged the hash: in a file whose score line sits outside that block, such as one that starts with a shebang, the number would otherwise count on one side only.
 
 impl-generate hashes the file as the generator left it in the workspace, before the checkout of the pushed branch; impl-repair hashes the file its push gate just checked. Both pass the language to the writer, which fails without a known one, so a file never holds one hash only. The object isn't named `plot-*`, so neither the review's download nor the promotion copies it. Like every object in the bucket it's publicly readable while it's staged; it's the hash of code that's public anyway.
 
@@ -262,7 +262,7 @@ Both workflows also write a `**Render freshness:**` line to the job summary, `fr
 | `missing` | Staging has no `render.sha256`, for example renders staged before the hash existed. | Yes | Runs |
 | `unreadable` | Staging or the file at the head couldn't be read. | Yes | Runs |
 
-The comment starts with `<!-- render-hash:v1 status=… head=… -->`, and a PR gets it once per status and head: a re-review or a resumed review of the same head posts nothing new. The log line is `render_hash status=… head=… form=… stop=…`; a match also names the hash that fit (`via=file` or `via=code`).
+The comment starts with `<!-- render-hash:v1 status=… head=… -->`, and a PR gets it once per status and head: a re-review or a resumed review of the same head posts nothing new. The log has one line per check. A match writes the notice `render_hash status=match sha256=… head=… via=… form=…`, where `via` names the hash that fit (`file` or `code`). Every other result writes the warning `render_hash status=… head=… form=… stop=…`.
 
 Only a `mismatch` stops the review. A hash that is missing or couldn't be read only warns, as before: there is nothing to compare the code with. A `mismatch` against a `render.sha256` without a code hash (`form=legacy`, a file staged before the code hash existed) only warns too, because the check can't tell the review's header commit from other code.
 
@@ -270,18 +270,21 @@ Only a `mismatch` stops the review. A hash that is missing or couldn't be read o
 
 The step "Stop on a render hash mismatch" runs when the check reports `stop=true`. The review doesn't run: nothing is scored, and no header is committed. What happens to the PR depends on what it is:
 
-- **A first generation**, including the re-review after a repair, gets the label `ai-render-mismatch` and stays open. No workflow picks it up again by itself: the watchdog rescues nothing that carries the label and reports the PR on every scan. A review of the same PR, such as a manual re-run, removes the label and checks the hash again.
-- **A regeneration** gets no label. The regen gate keeps the live implementation with the code `render_mismatch`, and the keep path closes the PR like every other keep: `regen:kept`, the comment with the gate record, no re-score of the live implementation. The keep is a returning one, so the pair comes back after the attempt window (see [Daily regeneration modes](#daily-regeneration-modes)).
+- **A first generation**, including the re-review after a repair, gets the label `ai-render-mismatch` and stays open. The review run ends as failed once the label is on, like every other end of the review without a verdict, so the run list shows the stop; nothing acts on that failure. No workflow picks the PR up again by itself: the watchdog rescues nothing that carries the label and reports the PR on every scan. A later review of the same PR, such as a manual re-run, checks the hash again and removes the label when it finds no mismatch and has its renders.
+- **A forced regeneration** (`regen:forced`: dispatched with `regen_gate=false` or in adopt mode) takes the same path as a first generation, as its review does.
+- **A gated regeneration** gets no label. The regen gate keeps the live implementation with the code `render_mismatch`, and the keep path closes the PR like every other keep: `regen:kept`, the comment with the gate record, no re-score of the live implementation. The run ends as successful, because a keep is a verdict. The keep is a returning one, so the pair comes back after the attempt window (see [Daily regeneration modes](#daily-regeneration-modes)).
 
-The label is never `ai-review-failed`: the watchdog would re-review the same staging, and after a repair it would run the repair again.
+The label is never `ai-review-failed`: the watchdog would re-review the same staging, and after a repair it would run the repair again. If the label can't be added, the review still doesn't run, but the watchdog then treats the PR like any other stalled one.
 
-To continue a stopped first generation, generate the pair again:
+To continue a stopped PR, generate the pair again the way the PR was made. For a plain generation:
 
 ```bash
 gh workflow run bulk-generate.yml -f specification_id=<spec-id> -f library=<library>
 ```
 
 `impl-generate.yml` deletes the pair's branch before it creates it anew, so the run closes the stopped PR and opens a new one with its own renders and review. The check's comment on the stopped PR gives the same command.
+
+That command generates the file anew, and for a pair that is live on `main` the regen gate decides. A forced or adopted PR needs its own inputs again, which its description names: add `-f regen_gate=false`, or `-f source_ref=<ref>` with `-f source_model=<model>` (see [Adopt implementations from a branch](#adopt-implementations-from-a-branch)).
 
 `scripts/migrate_render_and_upload.py`, the manual re-render that promotes straight from staging, copies only the `plot-*` objects, as `impl-merge.yml` does, so a staged `render.sha256` or `adapt/` record never reaches production.
 
@@ -398,7 +401,7 @@ PR. The same test checks that every pin resolves.
 | `ai-attempt-1/2/3/4` | Retry counter | Workflow |
 | `ai-review-paused` | Claude stopped the PR's review (a spend or usage limit, or refused credentials): no score, no verdict. The watchdog skips the PR; pair mode or a manual rerun resumes it, and the next review removes the label (see [When Claude stops a session](#when-claude-stops-a-session)) | Workflow |
 | `ai-repair-paused` | Claude stopped the PR's repair, next to `ai-rejected`; the attempt isn't used up. The watchdog skips the PR; pair mode or a manual restart resumes it, and the next repair removes the label | Workflow |
-| `ai-render-mismatch` | The review of a first generation stopped: the staged renders were made from other code than the PR holds. No score, no verdict. The watchdog skips the PR and reports it; generating the pair again replaces the PR, and a review of the same PR removes the label (see [What a mismatch does](#what-a-mismatch-does)) | Workflow |
+| `ai-render-mismatch` | The review of a first generation or a forced regeneration stopped: the staged renders were made from other code than the PR holds. No score, no verdict. The watchdog skips the PR and reports it; generating the pair again replaces the PR, and a review of the same PR that finds no mismatch removes the label (see [What a mismatch does](#what-a-mismatch-does)) | Workflow |
 | `quality:XX` | Quality score (e.g., quality:92) | Workflow |
 | `quality-poor` | Score < 50, needs fundamental fixes | Workflow |
 | `regen` | Regeneration of an implementation that is live on main (marker for humans and the watchdog; `impl-review.yml` decides "regeneration" from `origin/main`) | Workflow |

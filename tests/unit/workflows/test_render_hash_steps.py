@@ -632,7 +632,11 @@ class TestReviewCheck:
     @pytest.mark.parametrize(
         ("regen", "has", "lacks"),
         [
-            ("false", ["labelled `ai-render-mismatch`", f"-f specification_id={SPEC} -f library={LIB}"], "regen gate"),
+            (
+                "false",
+                ["labels this PR `ai-render-mismatch`", f"-f specification_id={SPEC} -f library={LIB}"],
+                "render_mismatch",
+            ),
             ("true", ["The regen gate keeps the live implementation (`render_mismatch`)"], "ai-render-mismatch"),
         ],
         ids=["first-generation", "regeneration"],
