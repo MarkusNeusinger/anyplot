@@ -89,7 +89,7 @@ for every line; the stories live in the guardrails file. Three examples:
   the pull request was green. Since then an agent fixes a small build or test blocker on the spot, even
   when it's outside its task.
 - **2026-10-22, a blank site.** A dependency bump passed every check and deployed, and every page of
-  anyplot.ai rendered blank. I noticed about 45 minutes later. Since then the agent checks the live site
+  anyplot.ai rendered blank for about 45 minutes. Since then the agent checks the live site
   after every merge, and CI runs the same check on the built image.
 - **2026-10-30, a stall nobody reported.** A build agent stopped at midday while waiting for its own
   tests. A context summary called it "still working", and in the evening I was the one who asked
