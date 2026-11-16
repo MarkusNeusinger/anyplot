@@ -262,8 +262,9 @@ export function useFilterState({
   // Random filter - replaces last filter slot (or adds first one)
   const handleRandom = useCallback(() => {
     const currentFilters = activeFiltersRef.current;
-    // Use contextual counts if filters exist, otherwise global
-    const countsToUse = currentFilters.length > 0 ? filterCounts : globalCounts;
+    // Use contextual counts if filters exist, otherwise global. A failed fetch clears the
+    // contextual counts, and the global ones then keep the shortcut a way out of the error.
+    const countsToUse = currentFilters.length > 0 ? (filterCounts ?? globalCounts) : globalCounts;
     if (!countsToUse) return;
 
     const availableCategories = FILTER_CATEGORIES.filter(cat => {

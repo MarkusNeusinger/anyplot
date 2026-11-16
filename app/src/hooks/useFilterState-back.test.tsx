@@ -197,4 +197,26 @@ describe('useFilterState after Back', () => {
     );
     expect(onTrackEvent).toHaveBeenCalledTimes(2);
   });
+
+  it('still rolls a random filter after a failed fetch cleared the contextual counts', async () => {
+    const { Wrapper } = createLayout();
+    const { result } = renderHook(() => useFilterState(options), { wrapper: Wrapper });
+    await waitFor(() => expect(result.current.globalCounts).toEqual(emptyCounts));
+
+    // The filter's own fetch fails: the gallery shows the error and holds no contextual counts.
+    fetchMock.mockRejectedValue(new Error('offline'));
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    act(() => result.current.handleRandom());
+    await waitFor(() =>
+      expect(result.current.activeFilters).toEqual([{ category: 'lang', values: ['python'] }])
+    );
+    await waitFor(() => expect(result.current.filterCounts).toBeNull(), { timeout: 5000 });
+
+    // The shortcut still leads somewhere: it rolls from the catalogue's counts.
+    vi.mocked(Math.random).mockReturnValue(0.99);
+    act(() => result.current.handleRandom());
+    await waitFor(() =>
+      expect(result.current.activeFilters).toEqual([{ category: 'plot', values: ['bar'] }])
+    );
+  });
 });
