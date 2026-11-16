@@ -16,19 +16,15 @@
   and a fourth, `privacy`, links to the legal page's section on what the
   assistant stores. It opens no session: of the agent routes, a visitor's
   browser asks only the lane's door, which the API answers without the agents
-  service.
+  service. The site's feedback button stands on the explainer: the layout,
+  which hid it on all of `/agent`, now hides it only where the query names a
+  catalogue pair, by the rule the page uses to pick the chat.
   In Plausible, `nav_click{source: hero_use_my_data}` now targets `/agent`,
   and `agent_open` gains the source `agent_intro` for the explainer's
   examples. Each chat opened there counts as one open, also after the visitor
   goes back to the explainer and picks another example. A unit test checks
   that each example names an implementation under `plots/`, and CI now also
   runs the Python tests on a pull request that changes only `AgentIntro.tsx`.
-- **The site's feedback button shows on the `/agent` explainer.** The layout
-  hid it on all of `/agent`, which suits the chat, whose results and sessions
-  carry feedback of their own, but left the explainer with no feedback at all.
-  It now hides the button only where the query names a catalogue pair, by the
-  same rule the page uses to choose between the chat and the explainer, so the
-  two cannot disagree.
 
 ### Fixed
 
