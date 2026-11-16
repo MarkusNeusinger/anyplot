@@ -617,6 +617,16 @@ def test_code_diff_is_empty_when_only_the_header_differs() -> None:
     assert code_diff("import pandas as pd\n", PLOT_PY, spec_id="s", library_id="l") == ""
 
 
+def test_code_diff_is_empty_when_only_a_script_header_differs() -> None:
+    original = "const chart = new Chart(ctx, config);\n"
+    adapted = (
+        "// Adapted by anyplot.ai from scatter-basic (chartjs 4.4.7) for your data.csv;\n"
+        "// run: open plot.html in a browser, which runs this code with the chart library, the light theme and your data\n"
+        "\n" + original
+    )
+    assert code_diff(original, adapted, spec_id="scatter-basic", library_id="chartjs") == ""
+
+
 def test_code_diff_shows_two_hunks_for_two_distant_changes() -> None:
     original = "".join(f"line {number}\n" for number in range(30))
     adapted = original.replace("line 2\n", "line two\n").replace("line 27\n", "line twenty-seven\n")

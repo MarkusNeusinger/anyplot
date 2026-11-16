@@ -81,7 +81,9 @@ _FILE_KEYS = frozenset({"images", "data_csv"})
 # The first line of exported code (agents/anyplot/code/export.py, `attribution`):
 # `# Adapted by anyplot.ai from <spec> (<library>[ <version>]) for your data.csv;`, with `//` in place of `#`
 # for JavaScript, whose export is a script the exported page runs.
-_EXPORT_LIBRARY = re.compile(r"\A(#|//) Adapted by anyplot\.ai from [a-z0-9-]+ \(([a-z][a-z0-9]*)[ )]")
+_EXPORT_LIBRARY = re.compile(
+    r"\A(?P<marker>#|//) Adapted by anyplot\.ai from [a-z0-9-]+ \((?P<library>[a-z][a-z0-9]*)[ )]"
+)
 
 
 class BundleError(ValueError):
@@ -256,7 +258,7 @@ def version_library(version: dict[str, Any], session: dict[str, Any]) -> str | N
     code = version.get("plot_py")
     match = _EXPORT_LIBRARY.match(code) if isinstance(code, str) else None
     if match:
-        return match.group(2)
+        return match.group("library")
     return _text(session.get("library"))
 
 
@@ -764,7 +766,7 @@ def _without_export_header(code: str) -> str:
     header = _EXPORT_LIBRARY.match(code)
     if not header:
         return code
-    marker = header.group(1)
+    marker = header.group("marker")
     lines = code.split("\n")
     start = 0
     while start < len(lines) and lines[start].startswith(marker):
