@@ -10,4 +10,4 @@
   empty cells of each column. Before, a total took two steps and a fit had
   no operation at all, so the chat worked such figures out itself and
   could state them wrong. Both stay questions: a change of the data never
-  totals your table without a key or fits a line to it.
+  totals your table without a key or fits a line to it. (#13141)
