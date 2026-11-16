@@ -95,7 +95,7 @@ const yAxis = g
       .ticks(6)
       .tickSize(0)
       .tickPadding(14)
-      .tickFormat((d) => `$${d}M`),
+      .tickFormat((d) => `$${d3.format(",.0f")(d)}M`),
   );
 yAxis.select(".domain").remove();
 yAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "20px");
