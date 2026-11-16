@@ -129,8 +129,11 @@ describe('LegalPage', () => {
       (
         screen.getAllByRole('rowheader', { name: label })[nth].closest('tr') as HTMLElement
       ).querySelector('[data-kept-line]')?.textContent;
+    // A no-break space ties each separator to the pair before it, so no wrap starts a line with
+    // the dot.
+    const tiedSeparator = `${String.fromCharCode(0xa0)}· `;
     for (const [label, nth, line] of keptLines) {
-      expect(keptLineOf(label, nth), label).toBe(line);
+      expect(keptLineOf(label, nth), label).toBe(line.split(' · ').join(tiedSeparator));
     }
     // No other row carries such a line, so no period is borrowed by a row it does not belong
     // to; github states neither a period nor a place.

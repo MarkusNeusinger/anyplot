@@ -79,7 +79,8 @@ const KEPT_FONT_SIZE = '0.8125rem';
  * The labels are muted and the values keep the cell's ink, because the period is the fact a
  * reader looks for. On a phone each pair takes a line of its own, where a separator would only
  * start a line, so it is hidden there; it stays in the text, so the line's text is the same at
- * every width.
+ * every width. Wider, a no-break space ties the separator to the pair before it, so a line can
+ * break after the dot but never start with it.
  */
 function Kept({ items }: { items: [string, ReactNode][] }) {
   return (
@@ -95,7 +96,7 @@ function Kept({ items }: { items: [string, ReactNode][] }) {
               component="span"
               sx={{ display: { xs: 'none', sm: 'inline' }, color: semanticColors.mutedText }}
             >
-              {' · '}
+              &nbsp;·{' '}
             </Box>
           )}
           <Box component="span" sx={{ color: semanticColors.mutedText }}>
