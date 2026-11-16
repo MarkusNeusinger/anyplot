@@ -75,12 +75,13 @@ The operations:
   each month). `first` and `last` take a group's first and last value that is there, in
   the order of the rows, or, with a `period`, of the datetime keys' moments, so the
   last reading of a month is its latest one. A `period` turns every datetime key into `YYYY-MM`,
-  `YYYY-Qn` or `YYYY` text before grouping, or, since live test round 5 of 2026-10-15
-  ("Tagesmittel pro Sensor" on readings every 13 minutes), into the first moment of its
-  `hour`, `day` or ISO `week` (its Monday), which stays a datetime, so the result keeps
-  a time axis: a day and a week are written as dates, an hour with its time and offset.
-  The buckets follow the column's clock as stored: a column with one UTC offset is cut
-  at its own midnight, one the parser wrote in UTC (several offsets) at UTC midnight,
+  `YYYY-Qn` or `YYYY` text before grouping, or into the first moment of its `hour`, `day`
+  or ISO `week` (its Monday), which stays a datetime, so the result keeps a time axis: a
+  day and a week are written as dates, an hour with its time and offset. For a month,
+  quarter or year key the change line names that text form
+  (`(month, as text labels YYYY-MM)`), since a condition on the key then takes a value of
+  that form. The buckets follow the column's clock as stored: a column with one UTC offset
+  is cut at its own midnight, one the parser wrote in UTC (several offsets) at UTC midnight,
   and the change line names that offset. The result holds the key columns and the
   value columns named like their sources, or `count`; every other column is dropped, rows
   with a missing key form their own group, and the rows are sorted by the keys.
@@ -240,7 +241,13 @@ The operations:
     last `sort` ranked the rows by, the line counts and names the tied rows on each side
     (`_tie_note`). With `where` in place of `n` it keeps the rows for which 1 to 3 conditions
     all hold, a selection said positively ("only Miete and Strom", "only January"): its line
-    counts both sides and the dropped rows that had no value to test (`_unvalued_note`). Its
+    counts both sides and the dropped rows that had no value to test (`_unvalued_note`), and
+    then names the lowest and the highest kept value of each column of dates or period labels
+    a condition tests for a value ("in the rows kept, Month is at least '2024-03' and at most
+    '2024-08'"), each column whole or not at all (`_kept_bounds`). The two values claim nothing
+    about the ones between them, which an any-of selection or a gap in the data leaves out. A
+    text column of four-digit codes has the shape of year labels, so its line names its
+    lowest and highest kept code too. Its
     `target` (`plot`, the default, or `table`) is `prepare_data`'s business, not the engine's:
     by default the operation lands in the view of the plot and the table keeps every row
     (`plot_view.py`), and the engine applies it the same way wherever it lands.
@@ -256,8 +263,17 @@ The operations:
 Values in conditions are never evaluated: a condition compares text with text for a
 text column, numbers for a numeric column (the value is a dot-decimal number, which
 the model may also pass as a JSON number), moments for a datetime column (the value is
-an ISO date or date-time), `true`/`false` for a boolean column. The order tests are `gt`,
-`lt`, `ge` (at least) and `le` (at most). A date without a time is the whole day for `le`
+an ISO date or date-time), `true`/`false` for a boolean column. A text column of period
+labels of one shape (`2024-03`, `2024-Q1`, `2024`, as an `aggregate` writes them) compares as
+text too, so `eq`, `ne` and an order test there refuse a value of another date or period
+shape (`2024-01-01` on months) as an `invalid_operation` that names the column's form: as
+text, `2024-01` sorts before `2024-01-01`, and "from 2024-01-01" had left January out without
+an error. Only these value shapes are refused: `YYYY-MM`, `YYYY-Qn`, four digits, and an
+ISO date `YYYY-MM-DD` that stands alone, is followed by `T` or a space and any text (a
+time, with or without an offset), or is followed directly by the UTC offset `Z`, `±HH`,
+`±HHMM` or `±HH:MM`. A value of any other shape (`2024-1`, `01.01.2024`) compares as text
+as before, and so does any code on a column of four-digit codes kept text. The order tests
+are `gt`, `lt`, `ge` (at least) and `le` (at most). A date without a time is the whole day for `le`
 and `gt`: "until the 31st" takes in that day's rows whatever their time and "after the
 31st" none of them, where midnight alone would cut the day's rows in two. A missing cell
 matches only `is_missing`, and `not_missing` holds for every other cell, so "the rows
@@ -521,8 +537,28 @@ _VERBS: dict[str, str] = {
     "first": "took the first value of",
     "last": "took the last value of",
 }
-_PERIOD_LABEL_SHAPES = (YEAR_MONTH, re.compile(r"[0-9]{4}-Q[1-4]"), re.compile(r"[0-9]{4}"))
+_QUARTER_LABEL = re.compile(r"[0-9]{4}-Q[1-4]")
+_FOUR_DIGITS = re.compile(r"[0-9]{4}")
+_PERIOD_LABEL_SHAPES = (YEAR_MONTH, _QUARTER_LABEL, _FOUR_DIGITS)
 """The labels an `aggregate` with a `period` writes (`2024-03`, `2024-Q1`, `2024`): text whose order is the time's."""
+_ISO_DATE_VALUE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[T ].*|Z|[+-][0-9]{2}(?::?[0-9]{2})?)?")
+"""A condition value in the shape of an ISO date: alone (`2024-03-01`), followed by `T` or a space and any text
+(`2024-03-01T10:00`), or followed directly by the UTC offset `Z`, `±HH`, `±HHMM` or `±HH:MM` (`2024-03-01Z`,
+`2024-03-01+01`, `2024-03-01-0500`, `2024-03-01+01:00`)."""
+_LABEL_FORMS: dict[re.Pattern[str], str] = {
+    YEAR_MONTH: "text labels YYYY-MM, such as 2024-03",
+    _QUARTER_LABEL: "text labels YYYY-Qn, such as 2024-Q1",
+    _FOUR_DIGITS: "text labels of four digits, such as 2024",
+}
+"""A column of period labels in a refusal's words, by its shape: the form with one example of it, never a cell. Four
+digits are no years by their shape alone (postal codes and ids kept text have it too), so their words say digits."""
+_VALUE_FORMS: dict[re.Pattern[str], str] = {
+    _ISO_DATE_VALUE: "a date",
+    YEAR_MONTH: "YYYY-MM",
+    _QUARTER_LABEL: "YYYY-Qn",
+    _FOUR_DIGITS: "four digits",
+}
+"""The date and period shapes a condition value can have on a column of period labels, in a refusal's words."""
 _DIVISIONS = (ast.Div, ast.FloorDiv, ast.Mod)
 _WHOLE_OPERATORS = (ast.Add, ast.Sub, ast.Mult, ast.FloorDiv, ast.Mod)
 _WHOLE_FUNCTIONS = frozenset(("abs", "sign", "min", "max"))
@@ -2004,7 +2040,8 @@ def _keep_where(frame: pd.DataFrame, where: Sequence[Condition], carried: _Carri
     """The rows for which every condition holds, the others dropped and counted.
 
     No matching row is refused, as a `drop_rows` that matches every row is. When every row matches, every row
-    stays and the line says so.
+    stays and the line says so. Either line ends with the lowest and the highest value the kept rows have in each
+    tested column of dates or period labels (`_kept_bounds`).
     """
     mask, clauses = _rows_where(frame, where, carried)
     total, matching = len(frame), int(mask.sum())
@@ -2012,13 +2049,62 @@ def _keep_where(frame: pd.DataFrame, where: Sequence[Condition], carried: _Carri
         raise PrepareError("empty_result", "no row matches the conditions; no row would remain")
     words = " and ".join(clauses)
     if matching == total:
-        return frame, f"kept all {_count(total, 'row')}; every one matches {words}"
+        head = f"kept all {_count(total, 'row')}; every one matches "
+        return frame, _kept_line(head, words, "", _kept_bounds(frame, frame, where, carried))
     kept, dropped = frame[mask].reset_index(drop=True), frame[~mask]
     head = f"kept {matching} of {_count(total, 'row')} where "
     tail = f", {total - matching} dropped" + _unvalued_note(dropped, where) + _offsets_note(dropped, kept)
-    # The conditions give way, never the counts: the caller wrote the conditions, and the line's own clip would cut
-    # from the end, where the rows without a value and the amounts below 0 are counted.
-    return kept, head + _clip(words, max(MAX_NOTE_CHARS - len(head) - len(tail), 1)) + tail
+    return kept, _kept_line(head, words, tail, _kept_bounds(frame, kept, where, carried))
+
+
+def _kept_line(head: str, words: str, tail: str, bounds: list[str]) -> str:
+    """A `keep_rows` line: `head`, the conditions (`words`), the counts (`tail`), then the lowest and the highest kept
+    value of each column in `bounds`.
+
+    The conditions give way, never the counts: the caller wrote the conditions, and the line's own clip would cut
+    from the end, where the rows without a value and the amounts below 0 are counted. A column's two values are added
+    whole or not at all, in the order of the conditions, as long as the line keeps one character of the conditions:
+    half a date would name a value the rows do not have.
+    """
+    named = ""
+    for part in bounds:
+        longer = f"{named} and {part}" if named else f"; in the rows kept, {part}"
+        if len(head) + 1 + len(tail) + len(longer) > MAX_NOTE_CHARS:
+            break
+        named = longer
+    rest = tail + named
+    return head + _clip(words, max(MAX_NOTE_CHARS - len(head) - len(rest), 1)) + rest
+
+
+def _kept_bounds(frame: pd.DataFrame, kept: pd.DataFrame, where: Sequence[Condition], carried: _Carried) -> list[str]:
+    """The lowest and the highest value of the `kept` rows in each column of dates or period labels that `where`
+    tests for a value, as `Day is at least 2024-01-05 and at most 2024-03-31` (`Month is at least '2024-03' and at
+    most '2024-08'`; `Month is '2024-03'` when they are the same).
+
+    The counts alone do not say which part of a span of time stayed: a selection that starts a month late is seen in
+    the line. The two values claim nothing about the ones between them, which an any-of selection or a gap in the
+    data leaves out, so "from A to B" would read as an unbroken range the rows may not have. Period labels of one
+    shape sort as text in time order, so their smallest and largest label are the earliest and the latest. A text
+    column of four-digit codes has the shape of year labels and gets its lowest and highest code the same way, in
+    words that fit codes as well as years.
+    """
+    bounds: list[str] = []
+    for column in _distinct([condition.column for condition in where if condition.test not in VALUE_FREE_TESTS]):
+        series = frame[column]
+        dates = _kind(series) == "datetime"
+        if not dates and not _period_labels_only(series):
+            continue
+        values = kept[column].dropna()
+        if values.empty:
+            continue
+        with_time = bool(_with_time(series, carried))
+        lowest, highest = (_cell_text(value, with_time) for value in (values.min(), values.max()))
+        if not dates:  # text, quoted as a condition's text value is
+            lowest, highest = f"'{lowest}'", f"'{highest}'"
+        bounds.append(
+            f"{column} is {lowest}" if lowest == highest else f"{column} is at least {lowest} and at most {highest}"
+        )
+    return bounds
 
 
 def _unvalued_note(dropped: pd.DataFrame, where: Sequence[Condition]) -> str:
@@ -2483,10 +2569,18 @@ def _order_rows(frame: pd.DataFrame, keys: list[str], order: str, what: str) -> 
 
 def _period_labels_only(series: pd.Series) -> bool:
     """Whether a text column holds period labels of one shape only (`_PERIOD_LABEL_SHAPES`), and at least one."""
+    return _label_shape(series) is not None
+
+
+def _label_shape(series: pd.Series) -> re.Pattern[str] | None:
+    """The one shape of `_PERIOD_LABEL_SHAPES` every cell of a text column has, or None (also for no cell at all)."""
     if _kind(series) != "text":
-        return False
-    cells = [cell for cell in series if isinstance(cell, str)]
-    return bool(cells) and any(all(shape.fullmatch(cell) for cell in cells) for shape in _PERIOD_LABEL_SHAPES)
+        return None
+    cells = list(series.dropna())
+    # A cell that is no text has no shape, and the lowest and highest label are compared as text.
+    if not cells or not all(isinstance(cell, str) for cell in cells):
+        return None
+    return next((shape for shape in _PERIOD_LABEL_SHAPES if all(shape.fullmatch(cell) for cell in cells)), None)
 
 
 def _sequences(frame: pd.DataFrame, keys: list[str], ordered: pd.Index) -> list[list[Hashable]]:
@@ -3708,6 +3802,7 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
             raise PrepareError("invalid_operation", f"column '{column}' is boolean; {test} does not apply")
         target = value.casefold() == "true"
     else:
+        _check_label_value(series, value, column)
         target = value
     if test == "eq":
         return _bools(series == target)
@@ -3720,6 +3815,28 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
     if test == "le":
         return _bools(series <= target)
     return _bools(series < target)
+
+
+def _check_label_value(series: pd.Series, value: str, column: str) -> None:
+    """Refuse a value of another date or period shape than the period labels of a text column it is compared with.
+
+    Labels compare as text, so a bound of another shape gives a wrong answer without an error: `2024-01` sorts
+    before `2024-01-01`, and `ge 2024-01-01` leaves January out. A value with no date or period shape keeps the
+    comparison as text, so a column of four-digit codes kept text still takes `eq` and `ne` of any code. The message
+    names the column's form from its shape alone, so the bound can be given again in that form.
+    """
+    text = value.strip()
+    given = next((shape for shape in _VALUE_FORMS if shape.fullmatch(text)), None)
+    if given is None:
+        return
+    shape = _label_shape(series)
+    if shape is None or shape is given:
+        return
+    raise PrepareError(
+        "invalid_operation",
+        f"column '{column}' holds {_LABEL_FORMS[shape]}, which compare as text: give the value in that form, "
+        f"not as {_VALUE_FORMS[given]}",
+    )
 
 
 def condition_words(condition: Condition, *, text: bool) -> str:
@@ -4151,7 +4268,16 @@ def _check_failed(column: str, failed: int, present: int, what: str) -> None:
         raise PrepareError("type_mismatch", f"column '{column}': {failed} of {present} cells cannot be read as {what}")
 
 
-_PERIOD_WORDS = {"week": "ISO week, each as its Monday", "hour": "hour", "day": "day"}
+_PERIOD_WORDS = {
+    "week": "ISO week, each as its Monday",
+    "hour": "hour",
+    "day": "day",
+    "month": "month, as text labels YYYY-MM",
+    "quarter": "quarter, as text labels YYYY-Qn",
+    "year": "year, as text labels YYYY",
+}
+"""How an `aggregate` line names its period and the form of the key it writes: a month, a quarter and a year key
+is text from then on, so a condition on it takes a value of the same form (`_check_label_value`)."""
 
 
 def _period_starts(series: pd.Series, period: str) -> pd.Series:

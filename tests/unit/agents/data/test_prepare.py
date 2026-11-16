@@ -1398,7 +1398,9 @@ class TestAggregate:
         )
 
         assert rows(prepared) == ["Datum,Umsatz", "2024-01,2000.5", "2024-02,450.25", "2024-03,999.75"]
-        assert prepared.changes[1] == "summed Umsatz by Datum (month): 3 rows, 2 other columns dropped"
+        assert prepared.changes[1] == (
+            "summed Umsatz by Datum (month, as text labels YYYY-MM): 3 rows, 2 other columns dropped"
+        )
         assert dtypes(prepared) == {"Datum": "text", "Umsatz": "number"}
 
     @pytest.mark.parametrize(("how", "result"), [("sum", "25.3"), ("mean", "6.325")])
@@ -1431,7 +1433,9 @@ class TestAggregate:
             "Hund,2024-Q1,833.5",
             "Katze,2024-Q1,475",
         ]
-        assert prepared.changes == ["averaged Umsatz by Tier and Datum (quarter): 3 rows, 1 other column dropped"]
+        assert prepared.changes == [
+            "averaged Umsatz by Tier and Datum (quarter, as text labels YYYY-Qn): 3 rows, 1 other column dropped"
+        ]
 
     def test_year_min_and_max(self) -> None:
         minimum = prepare(
@@ -1441,8 +1445,10 @@ class TestAggregate:
 
         assert rows(minimum) == ["Datum,Umsatz", "2024,150"]
         assert rows(maximum) == ["Datum,Tier", "2024,Katze"]
-        assert minimum.changes == ["took the minimum of Umsatz by Datum (year): 1 row, 2 other columns dropped"]
-        assert maximum.changes[0].startswith("took the maximum of Tier by Datum (year)")
+        assert minimum.changes == [
+            "took the minimum of Umsatz by Datum (year, as text labels YYYY): 1 row, 2 other columns dropped"
+        ]
+        assert maximum.changes[0].startswith("took the maximum of Tier by Datum (year, as text labels YYYY)")
 
     def test_a_missing_key_forms_its_own_group(self) -> None:
         prepared = prepare("k,v\na,1\n,2\na,3\n", {"op": "aggregate", "by": ["k"], "column": "v", "how": "sum"})
