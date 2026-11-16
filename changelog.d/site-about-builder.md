@@ -3,30 +3,52 @@
 - **The about page says who built the site and how.** Under its lede, "who
   built it" names Markus Neusinger with his photo, links to LinkedIn, GitHub
   and his own site neusinger.com, and his other projects, and introduces him
-  in his own words: a chart nerd, physicist by training and data analyst by
-  trade, who has built anyplot alone in Visp since November 2025, with AI
-  agents writing the code while he decides, tests and sends back. "how it is
-  built" says that AI models write the code of the site, the API, and the
-  agents, that he decides what gets built, cuts the work into tasks and tests
-  what comes back, that a new spec needs his approval and that outside the
-  plot pipeline the agents merge nothing without his OK; it links the
-  README's "How I build anyplot" and "Engineering highlights" and the AI
-  workflow page. `test_readme_claims.py` checks that those files and headings
-  exist, so a renamed heading fails a test instead of a link on the site, and
-  holds both "since November 2025" to the README. One person builds the site,
-  so the whole page and its crawler copy speak in the first person singular,
-  "I" and never "we" or "humans". The author in the structured data names
+  in his own words: a chart nerd, physicist by training and senior data
+  analyst by trade, who built and ran a platform for blockchain market data
+  from 2022 to 2024, largely without AI, and has built anyplot alone and in
+  his own time in Visp since November 2025, with AI agents writing the code
+  while he decides, tests and sends back. "how it is built" says that AI
+  models write the code of the site, the API, and the agents, that he decides
+  what gets built, cuts the work into tasks and tests what comes back, and
+  that outside the plot pipeline the agents merge nothing without his OK; it
+  links the README's "How I build anyplot" and "Engineering highlights" and
+  the AI workflow page. `test_readme_claims.py` checks that those files and
+  headings exist, so a renamed heading fails a test instead of a link on the
+  site, holds "since November 2025" to the README, and holds "senior" and the
+  platform's years to the AI workflow page. One person builds the site, so
+  the whole page and its crawler copy speak in the first person singular, "I"
+  and never "we" or "humans". The author in the structured data names
   neusinger.com too.
+- **The about page says who sets the rubric and how the chat's agents
+  work.** The review section adds that what counts as a good plot is the
+  builder's call, that AI helped turn it into 24 criteria and their points,
+  and that the rubric has changed more than thirty times since November 2025,
+  for example after a review passed a plot whose title was cut off. "use with
+  my data" gets a second paragraph: one agent talks to you, an adapter writes
+  the code changes and a reviewer scores the render, plain code runs the loop,
+  a validator reads the code before anything runs, and a run makes one repair
+  and two reviews at most; it names the builder's rules (open to everyone, no
+  login, hosted in the EU, nothing kept unless you send feedback) and links
+  the agent design document, which records his decisions with their dates.
+  The palette section says it took four rounds. `test_readme_claims.py` holds
+  the 24 to the criteria registry, the repair and the reviews to the agents'
+  settings, and the four rounds to `docs/reference/palette-variants/`. The
+  crawler copy follows, except for the palette, which it has no section for.
+- **The README shows a push-back case.** Under "I know when to push back", a
+  nested case tells how real weather downloads broke the import of pasted
+  data, and that pasted data has had to work with notes, metadata or total
+  rows around the table since #12166.
 - **The landing hero names its builder.** The eyebrow above the headline
   reads "the open plot catalogue · by Markus Neusinger", the name a link to
   the about page and the hero's first link for the keyboard, and the intro
   adds "I approve new specs and set the rules." The masthead, the OG image
   and the crawler copy keep "the open plot catalogue" alone.
 - **The about page's stack table lists the checks.** A "checks" row names
-  tests and lint on every code pull request, the 80 % patch-coverage target
-  of `codecov.yml`, CodeQL, every migration run on a throwaway PostgreSQL,
-  and the check of the live site after a merge, which the merging agent runs
-  by rule. `test_readme_claims.py` holds the target to `codecov.yml`.
+  tests and lint on every pull request that changes code outside the plot
+  catalogue, the 80 % patch-coverage target of `codecov.yml`, CodeQL, every
+  migration run on a throwaway PostgreSQL, and the check of the live site
+  after a merge, which the merging agent runs by rule.
+  `test_readme_claims.py` holds the target to `codecov.yml`.
 
 ### Changed
 
@@ -64,8 +86,9 @@
   the builder does (approves the specs, sets the rules); a test compares the
   diagram character for character, and `test_readme_claims.py` holds its two
   numbers to their sources. The origin adds where pyplots.ai came from,
-  everyday work, and what it covers today, fifteen libraries in four
-  languages, counted from the library registry. The "use with my data"
+  showing colleagues a chart in everyday work, what they and later people who
+  found it online wanted from it, and what it covers today, fifteen libraries
+  in four languages, counted from the library registry. The "use with my data"
   section says, as the chat's explainer does, that `.use_my_data()` sits on a
   plot's page. The crawler copy follows each change.
 - **The landing page's description drops "human ideas, ai builds the
@@ -76,7 +99,9 @@
   human-shaped", "Humans curate; AI executes", "a catalogue that maintains
   itself") and the old diagram for the page's own sentences, and its voice
   section says that the site speaks as its single builder, in the first
-  person singular.
+  person singular, while meta descriptions and crawler copies describe the
+  site in the third person. Its pipeline line, its example of a spec and its
+  positioning no longer speak of "humans" or "we".
 - **The README counts the releases and names the approvals.** "How I build
   anyplot" introduces a physicist and data analyst and adds that 16 releases
   have shipped, a count `test_readme_claims.py` holds to the version
@@ -85,7 +110,8 @@
   outside the plot pipeline the agents merge nothing without his OK. The
   pipeline's step 2 says that since September 2026 the merge job ignores an
   `approved` label from any other account, and `test_readme_claims.py` holds
-  that to the merge job's condition in `spec-create.yml`.
+  that to the merge job's condition in `spec-create.yml`. Its contribution
+  steps say "I review and approve it" in place of "The maintainer".
 
 ### Fixed
 
@@ -115,17 +141,20 @@
   README's pipeline step too. The crawler body says the same, and
   `test_readme_claims.py` pins the floor, the step, the nightly schedule and
   the checks, and keeps the blank-image check out of the README's step.
-- **Three sentences no longer say more than holds.** The about page and the
+- **Four sentences no longer say more than holds.** The about page and the
   README said that no generated plot is ever patched by hand, though the
   palette swap of May 2026 edited the plots' code catalogue-wide; they now
   state the rule: a wrong plot is fixed in its spec or a rule and
   regenerated. The README's highlight said the session id never appears in a
   URL; that holds for the public chat, whose id travels in a header, while
-  the admin chat's routes carry it in the path. The AI workflow page says the
-  blank site of 2026-10-22 lasted about 45 minutes, as `CLAUDE.md` and the
-  README do. `test_readme_claims.py` holds the header to the public chat's
-  routes and the minutes to the README's, and fails if one of the old
-  sentences returns to the README or the workflow page.
+  the admin chat's routes carry it in the path. The AI workflow page said the
+  same of every URL and now says the public chat's session id left its URLs.
+  The AI workflow page, the guardrails and the Dependabot command say the
+  site was blank for about 45 minutes on 2026-10-22, as `CLAUDE.md` and the
+  README do, instead of when it was noticed. `test_readme_claims.py` holds
+  the header to the public chat's routes and the minutes to the README's,
+  and fails if one of the old sentences returns to the README or the
+  workflow page.
 - **Back leaves a redirected address in one step.** A fresh load of the old
   chat address `/debug/agent` or of a language address `/{spec}/{language}`
   left the old address one step back in the history, so Back landed on it and
