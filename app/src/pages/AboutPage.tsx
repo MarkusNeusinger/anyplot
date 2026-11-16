@@ -215,12 +215,13 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>how it is built</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              models write anyplot&apos;s code — the site, the api, and the agents behind &ldquo;use
-              with my data&rdquo; — and I lead them, with my experience across data, backends,
-              frontends and hosting. work goes to Claude Code, Claude in GitHub Actions, Gemini or
-              Copilot by what it needs and what it costs; I test what comes back and return it until
-              it&apos;s right. what I correct becomes a rule the agents follow, and a mistake that
-              comes back becomes a test or a written rule.
+              ai models write anyplot&apos;s code: the site, the api, and the agents behind
+              &ldquo;use with my data&rdquo;. I decide what gets built, cut the work into tasks and
+              give each one to Claude Code, Claude in GitHub Actions, Gemini or Copilot, depending on
+              what it needs and what it costs. I test what comes back and send it back until
+              it&apos;s right. a new spec needs my approval, and outside the plot pipeline the agents
+              merge nothing without my OK. what I correct becomes a rule the agents follow. I have
+              built it with ai agents since November 2025.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               more on GitHub: <Ext href={HOW_I_BUILD_URL}>how I build anyplot</Ext> and{' '}

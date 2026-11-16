@@ -1279,7 +1279,9 @@ class TestSeoProxyRouter:
             "On anyplot they write the code; I decide, test and send back.",
             "I have built it alone since November 2025, in Visp, a small town in the Swiss Alps.",
             "I wanted one place to find the right plot for my data.",
-            "Models write anyplot's code",
+            "AI models write anyplot's code: the site, the API, and the agents behind Use with my data.",
+            "A new spec needs my approval, and outside the plot pipeline the agents merge nothing without my OK.",
+            "I have built it with AI agents since November 2025.",
             # The stack the description names, from the page's table.
             "The site runs on React 19, Vite, MUI 9 with MUI X and TypeScript.",
             "The API runs on Python 3.14, FastAPI, SQLAlchemy and PostgreSQL 18.",

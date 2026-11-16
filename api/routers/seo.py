@@ -1336,11 +1336,12 @@ _ABOUT_BOT_BODY = (
     "and send back. I have built it alone since November 2025, in Visp, a small town in the Swiss "
     "Alps. I wanted one place to find the right plot for my data.</p>"
     "<h2>How it is built</h2>"
-    "<p>Models write anyplot's code (the site, the API, and the agents behind Use with my data), and "
-    "I lead them, with my experience across data, backends, frontends and hosting. Work goes to "
-    "Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs; I "
-    "test what comes back and return it until it's right. What I correct becomes a rule the "
-    "agents follow, and a mistake that comes back becomes a test or a written rule. More on GitHub: "
+    "<p>AI models write anyplot's code: the site, the API, and the agents behind Use with my data. I "
+    "decide what gets built, cut the work into tasks and give each one to Claude Code, Claude in "
+    "GitHub Actions, Gemini or Copilot, depending on what it needs and what it costs. I test what "
+    "comes back and send it back until it's right. A new spec needs my approval, and outside the "
+    "plot pipeline the agents merge nothing without my OK. What I correct becomes a rule the agents "
+    "follow. I have built it with AI agents since November 2025. More on GitHub: "
     '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot">'
     "How I build anyplot</a> and "
     '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#engineering-highlights">'

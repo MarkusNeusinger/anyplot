@@ -108,12 +108,22 @@ describe('AboutPage', () => {
     expect(screen.queryByText(/by a physicist and data analyst/)).not.toBeInTheDocument();
   });
 
-  it('says models write the code and links the README sections and the workflow page', () => {
+  // spec-create.yml merges a spec only on the owner's `approved`; outside the plot pipeline a pull
+  // request merges only on his named OK (CLAUDE.md, "PR Follow-Through").
+  it('says ai models write the code, what I do, and links the README sections and the workflow page', () => {
     render(<AboutPage />);
 
-    expect(
-      screen.getByText(/models write anyplot.s code — the site, the api, and the agents/)
-    ).toBeInTheDocument();
+    const paragraph = screen.getByText(
+      /^ai models write anyplot.s code: the site, the api, and the agents behind .use with my data.\./
+    );
+    for (const sentence of [
+      /I decide what gets built, cut the work into tasks and give each one to Claude Code, Claude in GitHub Actions, Gemini or Copilot, depending on what it needs and what it costs\./,
+      /I test what comes back and send it back until it.s right\./,
+      /a new spec needs my approval, and outside the plot pipeline the agents merge nothing without my OK\./,
+      /what I correct becomes a rule the agents follow\. I have built it with ai agents since November 2025\.$/,
+    ]) {
+      expect(paragraph).toHaveTextContent(sentence);
+    }
     for (const [name, href] of [
       ['how I build anyplot', `${REPO}/blob/main/README.md#how-i-build-anyplot`],
       ['engineering highlights', `${REPO}/blob/main/README.md#engineering-highlights`],

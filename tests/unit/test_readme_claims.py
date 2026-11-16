@@ -376,7 +376,11 @@ def test_about_page_and_its_bot_copy_date_the_start_as_the_readme_does():
     """
     since = re.search(r"Since (\w+ \d{4}), more than", collapse(section(read(README), "How I build anyplot")))
     assert since, "README.md 'How I build anyplot' no longer says since when the owner's pull requests have merged"
-    for phrase in (f"it started in {since.group(1)} as pyplots.ai", f"I have built it alone since {since.group(1)},"):
+    for phrase in (
+        f"it started in {since.group(1)} as pyplots.ai",
+        f"I have built it alone since {since.group(1)},",
+        f"I have built it with AI agents since {since.group(1)}.",
+    ):
         for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
             assert phrase.lower() in collapse(text).lower(), f"{name}: '{phrase}', as the README says"
 
