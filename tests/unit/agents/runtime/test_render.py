@@ -512,6 +512,12 @@ class TestGates:
         assert data_rows("a,b\n1,2\n3,4\n") == 2
         assert error_summary("") == "no error output"
 
+    def test_data_rows_counts_records_not_lines(self) -> None:
+        """A quoted cell keeps the line break a pasted cell held: two lines of the file, one row of the table."""
+        assert data_rows('Shelf,Count,Remark\nA1,4,"top row\nleft side"\nB2,7,plain\n') == 2
+        assert data_rows("a,b\n\n1,2\n\n3,4\n\n") == 2
+        assert data_rows("a,b\n") == 0 and data_rows("") == 0
+
 
 class TestHarness:
     def test_real_render_of_the_adapted_catalogue_file(self, tmp_path: Path) -> None:

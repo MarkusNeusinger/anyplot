@@ -14,7 +14,9 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 * `get_spec_brief`: title, description, data roles and notes of the spec, fenced as
   `<spec_text>` (spec text starts as a public issue).
 * `get_current_code(version)`: the exported `plot.py` of a version (0 is the latest),
-  or the normalised catalogue code before the first version, fenced as `<catalogue_code>`.
+  or the normalised catalogue code before the first version, fenced as `<catalogue_code>`;
+  for a version also what its downloaded data holds (`version_data`: the rows of each file
+  that carries the data, and the view of the plot it drew them through, as counts).
 * `set_bindings(bindings)`: `apply_bindings` plus a state write; refused while the
   pipeline runs. Its result says whether the data is still `data_confirmed`: bindings that
   only leave out confirmed number series (`y2`) keep the confirmation (`narrowed_confirmation`,
@@ -186,7 +188,7 @@ from ..plugins.tool_safety import (
 )
 from ..policy import DATA_PREAMBLE, fence, file_name_block, refusal, user_notes_block
 from ..render.contract import DataJob, DataOutput, RendererUnavailable
-from ..render.gates import error_summary
+from ..render.gates import data_rows, error_summary
 from ..render.harness import DATA_EXIT
 from ..render.runtimes.python import DATA_FILE_NAME
 from ..render.serial import RenderBusy
@@ -194,13 +196,14 @@ from ..schemas import (
     CURRENT_VERSION,
     MAX_COLUMNS,
     MAX_ROWS,
+    PAGE_ARTIFACT,
     Binding,
     DatasetProfile,
     KeepRequestArgs,
     PipelineArgs,
     SwitchArgs,
 )
-from ..services import get_services
+from ..services import CodeVersion, get_services
 from ..session_state import (
     PLOT_LANGUAGE,
     SessionView,
@@ -296,7 +299,10 @@ async def get_spec_brief(tool_context: ToolContext) -> dict[str, Any]:
 
 
 async def get_current_code(version: int, tool_context: ToolContext) -> dict[str, Any]:
-    """Return the plot's code. version 0 is the latest version; before the first plot it is the catalogue code."""
+    """Return the plot's code. version 0 is the latest version; before the first plot it is the catalogue code.
+    A version also says what its downloaded data holds: `data.rows`, the rows in each file that carries the data,
+    and `data.view`, present when the version drew `rows` of the table's `of_rows` rows through a view of the plot;
+    `data.rows` is below `data.view.rows` when rows of the view that share a key were combined for the plot."""
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
@@ -305,11 +311,32 @@ async def get_current_code(version: int, tool_context: ToolContext) -> dict[str,
     if stored is None and version:
         return _error("unknown_version")
     code = stored.export if stored is not None else view.normalised
-    return {
+    result: dict[str, Any] = {
         "status": "ok",
         "version": stored.number if stored is not None else 0,
         "code": DATA_PREAMBLE + "\n" + fence("catalogue_code", code),
     }
+    if stored is not None:
+        result["data"] = version_data(stored)
+    return result
+
+
+def version_data(stored: CodeVersion) -> dict[str, Any]:
+    """What a version's downloaded data holds, counted from the version itself: the rows of `data.csv`, and for a
+    JavaScript plot those of its `plot.html`, which embeds the typed table (`data_json`); and the view of the plot the
+    version drew them through (`CodeVersion.view_rows`). After rows of a view that share the plot's key were combined
+    for the run, the files hold fewer rows than the view's count.
+
+    The version's own facts, never the session's: the session block names the view in force now, which a later
+    change of the view, an undo or a switch of the library may have moved away from what this version drew. Integers
+    and fixed file names only, so nothing in it needs a fence."""
+    rows: dict[str, int] = {"data.csv": data_rows(stored.data_csv)}
+    if PAGE_ARTIFACT in stored.artifacts() and stored.data_json is not None:
+        rows[PAGE_ARTIFACT] = len(json.loads(stored.data_json)["data"])
+    data: dict[str, Any] = {"rows": rows}
+    if stored.view_rows is not None:
+        data["view"] = {"rows": stored.view_rows.rows, "of_rows": stored.view_rows.of_rows}
+    return data
 
 
 async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext) -> dict[str, Any]:
