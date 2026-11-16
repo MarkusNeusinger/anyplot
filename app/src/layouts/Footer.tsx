@@ -29,17 +29,21 @@ const linkSx = {
   },
 } as const;
 
-const ISSUE_CHOOSER_URL = `${GITHUB_URL}/issues/new/choose`;
-
-// The five links need 356px in one row with MonoLisa at 14px. Below 400px the row would break
-// before its last link and end on a "·", so the site's own pages take a row of their own there.
-const NARROW = '@media (max-width: 399.95px)';
-const siteRowSx = {
-  display: 'flex',
-  flexBasis: '100%',
-  justifyContent: 'center',
-  gap: 1,
-} as const;
+// The single row is 457px wide with MonoLisa at 14px and sits centred. From 600px up nothing
+// lifts the floating buttons (useFooterLift), so the row has to end left of the scroll-to-top
+// button on /specs and /plots, 112px from the right edge: it clears it from 682px, by 8px from
+// 698px, and a classic 15px scrollbar (it narrows the layout, not the media query) adds its width
+// to both. At 720px, where the masthead also takes one row, it clears it by 19px, 12px with that
+// scrollbar. The row's text is in rem and follows the browser's default font size; its gaps and
+// the corner buttons are in px and do not. So the row also waits for 45em, which is 720px at the
+// 16px default and moves with that setting: 900px at 20px, where the row is 555px wide and a
+// 720px bound alone would let it run under the button up to about 780px. 720px stays the floor,
+// because with 45em alone a 13px default puts the row 3.5px under the button at 600px. With both
+// bounds the row keeps at least the clearance it has at the default. Below them the name takes a
+// line of its own between "github · mcp" and "about · legal", rows short enough to stay clear of
+// the corner at any width.
+const ONE_ROW = '@media (min-width: 720px) and (min-width: 45em)';
+const separatorBesideNameSx = { display: 'none', [ONE_ROW]: { display: 'inline' } } as const;
 
 export function Footer() {
   return (
@@ -64,32 +68,18 @@ export function Footer() {
         github
       </Link>
       <span>·</span>
-      <Link href={ISSUE_CHOOSER_URL} target="_blank" rel="noopener noreferrer" sx={linkSx}>
-        report
+      <Link component={RouterLink} to={paths.mcp} sx={linkSx}>
+        mcp
       </Link>
-      <Box component="span" sx={{ [NARROW]: { display: 'none' } }}>
+      <Box component="span" sx={separatorBesideNameSx}>
         ·
       </Box>
-      {/* The site's own pages: in the row above 400px, a row of their own below. */}
-      <Box component="span" sx={{ display: 'contents', [NARROW]: siteRowSx }}>
-        <Link component={RouterLink} to={paths.mcp} sx={linkSx}>
-          mcp
-        </Link>
-        <span>·</span>
-        <Link component={RouterLink} to={paths.about} sx={linkSx}>
-          about
-        </Link>
-        <span>·</span>
-        <Link component={RouterLink} to={paths.legal} sx={linkSx}>
-          legal
-        </Link>
-      </Box>
-      {/* Below md the name takes a line of its own: the links alone stay clear of the floating
-          buttons in the corner, which useFooterLift lifts only below sm. */}
-      <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
-        ·
-      </Box>
-      <Box component="span" sx={{ flexBasis: { xs: '100%', md: 'auto' }, textAlign: 'center' }}>
+      {/* A full-width line below the single row's width; the link inside keeps its own width,
+          so its hover underline stays as long as the name. */}
+      <Box
+        component="span"
+        sx={{ flexBasis: '100%', textAlign: 'center', [ONE_ROW]: { flexBasis: 'auto' } }}
+      >
         <Link
           href="https://www.linkedin.com/in/markus-neusinger/"
           target="_blank"
@@ -99,6 +89,16 @@ export function Footer() {
           markus neusinger
         </Link>
       </Box>
+      <Box component="span" sx={separatorBesideNameSx}>
+        ·
+      </Box>
+      <Link component={RouterLink} to={paths.about} sx={linkSx}>
+        about
+      </Link>
+      <span>·</span>
+      <Link component={RouterLink} to={paths.legal} sx={linkSx}>
+        legal
+      </Link>
     </Box>
   );
 }

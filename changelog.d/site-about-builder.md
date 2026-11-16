@@ -13,12 +13,15 @@
 
 ### Changed
 
-- **About takes the place of mcp in the main navigation, and the footer links
-  mcp.** The bar keeps seven entries. The MCP page stays one click away from
-  the footer, the about page and the landing page. The footer reads github,
-  report, mcp, about, legal, then the builder's name, which phones and tablets
-  now show too, on a line of its own below 900 px. Below 400 px the site's own
-  pages take a row of their own, so no row ends on a separator.
+- **About takes the place of mcp in the main navigation, and mcp the place of
+  report in the footer.** The bar keeps seven entries. The MCP page stays one
+  click away from the footer, the about page and the landing page. The footer
+  reads github, mcp, the builder's name, about, legal: issues are filed on
+  GitHub or from a spec page's "report issue" link, and the name stays in the
+  middle and now shows on phones and tablets too. From 720 px, or wider with a
+  larger browser font size, the footer is one row; below that it takes three
+  centred rows, github and mcp, the name, about and legal, so no row ends on a
+  separator or runs under the scroll-to-top button.
 - **The stack and the running costs moved from the legal page to the about
   page.** The legal page keeps the legal notice and the privacy policy; a link
   to `/legal#transparency` leads to `/about#transparency`, which a fresh load

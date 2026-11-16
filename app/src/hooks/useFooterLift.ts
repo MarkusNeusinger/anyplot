@@ -23,7 +23,8 @@ export function useFooterLift(): string {
     let rafId = 0;
     const update = () => {
       // Only narrow mobile viewports actually collide — at MUI's sm breakpoint
-      // and above the footer's last link sits well left of the FAB row.
+      // and above the footer's links stay left of the FAB row, because the
+      // footer keeps short rows until its single row clears it (Footer.tsx).
       if (window.innerWidth >= 600) {
         setLift(0);
         return;

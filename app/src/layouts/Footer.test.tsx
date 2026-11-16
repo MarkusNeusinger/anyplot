@@ -3,145 +3,153 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Footer } from 'src/layouts/Footer';
 import { render, screen, styleAt, userEvent } from 'src/test-utils';
 
+const ENTRIES = ['github', 'mcp', 'markus neusinger', 'about', 'legal'];
+
+// The test environment's handle on its document: the analytics hook sends only on anyplot.ai.
+declare const jsdom: { reconfigure: (options: { url: string }) => void };
+
 describe('Footer', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-  });
-
-  it('renders footer links', () => {
-    render(<Footer />);
-
-    expect(screen.getByText('github')).toBeInTheDocument();
-    expect(screen.getByText('report')).toBeInTheDocument();
-    expect(screen.getByText('mcp')).toBeInTheDocument();
-    expect(screen.getByText('about')).toBeInTheDocument();
-    expect(screen.getByText('legal')).toBeInTheDocument();
-  });
-
-  it('renders markus neusinger link', () => {
-    render(<Footer />);
-
-    expect(screen.getByText('markus neusinger')).toBeInTheDocument();
+    jsdom.reconfigure({ url: 'http://localhost:3000/' });
   });
 
   // Keyboard and screen-reader order follow the DOM, so the DOM carries the order the eye reads,
   // and no CSS `order` reshuffles it at any width.
-  it('reads in the order it shows, the name last', () => {
+  it('reads github, mcp, the name, about, legal, in the order it shows', () => {
     const { container } = render(<Footer />);
 
     const footer = container.querySelector('footer')!;
-    expect(Array.from(footer.querySelectorAll('a')).map(a => a.textContent)).toEqual([
-      'github',
-      'report',
-      'mcp',
-      'about',
-      'legal',
-      'markus neusinger',
-    ]);
+    expect(Array.from(footer.querySelectorAll('a')).map(a => a.textContent)).toEqual(ENTRIES);
     for (const el of Array.from(footer.querySelectorAll('*'))) {
-      for (const width of [320, 399, 400, 600, 899, 900, 1440]) {
+      for (const width of [320, 390, 600, 719, 720, 900, 1440]) {
         expect(styleAt(el, width).order).toBe('');
       }
     }
   });
 
-  it('shows the name at every width, on a line of its own below md', () => {
+  // Issues are filed from GitHub itself or from a spec page's suggestion link.
+  it('has no report entry', () => {
+    const { container } = render(<Footer />);
+
+    const footer = container.querySelector('footer')!;
+    expect(footer.textContent).not.toMatch(/report/i);
+    for (const a of Array.from(footer.querySelectorAll('a'))) {
+      expect(a.getAttribute('href')).not.toContain('/issues/new');
+    }
+  });
+
+  // At the 16px default font size, the single row would run under the scroll-to-top button below
+  // 720px, and nothing lifts that button from 600px up, so the name takes the middle line of three
+  // and its two separators go: no line starts or ends on a "·".
+  it('puts the name on a line of its own below 720px and keeps one row from 720px', () => {
     render(<Footer />);
 
     const link = screen.getByRole('link', { name: 'markus neusinger' });
-    expect(link).toHaveAttribute('href', 'https://www.linkedin.com/in/markus-neusinger/');
     const footer = link.closest('footer')!;
-    for (const width of [320, 390, 600, 900, 1440]) {
-      for (let el: Element | null = link; el && el !== footer; el = el.parentElement) {
-        expect(styleAt(el, width).display).not.toBe('none');
+    const line = link.parentElement!;
+    const before = line.previousElementSibling!;
+    const after = line.nextElementSibling!;
+    expect(before).toHaveTextContent('·');
+    expect(after).toHaveTextContent('·');
+    const otherSeparators = Array.from(footer.children).filter(
+      el => el.textContent === '·' && el !== before && el !== after
+    );
+    expect(otherSeparators).toHaveLength(2);
+
+    for (const width of [320, 390, 600, 719]) {
+      expect(styleAt(line, width).flexBasis).toBe('100%');
+      expect(styleAt(before, width).display).toBe('none');
+      expect(styleAt(after, width).display).toBe('none');
+    }
+    for (const width of [720, 900, 1440]) {
+      expect(styleAt(line, width).flexBasis).toBe('auto');
+      expect(styleAt(before, width).display).toBe('inline');
+      expect(styleAt(after, width).display).toBe('inline');
+    }
+    for (const width of [320, 390, 600, 719, 720, 900, 1440]) {
+      for (const el of [...otherSeparators, ...Array.from(footer.querySelectorAll('a'))]) {
+        for (let node: Element | null = el; node && node !== footer; node = node.parentElement) {
+          expect(styleAt(node, width).display).not.toBe('none');
+        }
       }
     }
-    // Below md the separator before the name goes and the name fills a line, so no row ends on a
-    // "·" and the row of links stays clear of the floating buttons (useFooterLift lifts them only
-    // below 600px; with MonoLisa at 600px the row ends at x=478, the button starts at x=536).
-    const line = link.parentElement!;
-    const separatorBeforeName = line.previousElementSibling!;
-    expect(separatorBeforeName).toHaveTextContent('·');
-    for (const width of [320, 390, 600, 899]) {
-      expect(styleAt(line, width).flexBasis).toBe('100%');
-      expect(styleAt(separatorBeforeName, width).display).toBe('none');
-    }
-    expect(styleAt(line, 900).flexBasis).toBe('auto');
-    expect(styleAt(separatorBeforeName, 900).display).toBe('inline');
   });
 
-  // The five links need 356px in one row with MonoLisa at 14px, so below 400px the site's own
-  // pages take a row of their own instead of the row breaking before "legal" after a "·".
-  it('gives the site pages a row of their own below 400px', () => {
+  // The row's text grows with the browser's default font size and the corner buttons do not, so a
+  // larger default needs a wider screen before the row fits beside them; a smaller one never
+  // brings the row in below 720px, where its px gaps would still reach the button.
+  it('takes one row later with a larger default font size and never before 720px', () => {
     render(<Footer />);
 
-    const group = screen.getByRole('link', { name: 'mcp' }).parentElement!;
-    expect(group).toContainElement(screen.getByRole('link', { name: 'legal' }));
-    const separatorBeforeGroup = group.previousElementSibling!;
-    expect(separatorBeforeGroup).toHaveTextContent('·');
-    for (const width of [320, 390, 399]) {
-      expect(styleAt(group, width).display).toBe('flex');
-      expect(styleAt(group, width).flexBasis).toBe('100%');
-      expect(styleAt(separatorBeforeGroup, width).display).toBe('none');
-    }
-    for (const width of [400, 600, 1440]) {
-      expect(styleAt(group, width).display).toBe('contents');
-      expect(styleAt(separatorBeforeGroup, width).display).not.toBe('none');
-    }
+    const line = screen.getByRole('link', { name: 'markus neusinger' }).parentElement!;
+    const separators = [line.previousElementSibling!, line.nextElementSibling!];
+    const layout = (width: number, fontSize: number) => ({
+      basis: styleAt(line, width, fontSize).flexBasis,
+      separators: separators.map(el => styleAt(el, width, fontSize).display),
+    });
+    const threeRows = { basis: '100%', separators: ['none', 'none'] };
+    const oneRow = { basis: 'auto', separators: ['inline', 'inline'] };
+
+    for (const width of [720, 780, 899]) expect(layout(width, 20)).toEqual(threeRows);
+    for (const width of [900, 1440]) expect(layout(width, 20)).toEqual(oneRow);
+    for (const width of [600, 719]) expect(layout(width, 13)).toEqual(threeRows);
+    expect(layout(720, 13)).toEqual(oneRow);
   });
 
-  it('sends no event for a link: the tracker script counts the outbound ones itself', async () => {
+  it('sends no event for any entry: the tracker script counts the outbound ones itself', async () => {
+    jsdom.reconfigure({ url: 'https://anyplot.ai/' });
     const plausible = vi.fn();
     vi.stubGlobal('plausible', plausible);
     const user = userEvent.setup();
     render(<Footer />);
 
-    await user.click(screen.getByText('mcp'));
-    await user.click(screen.getByText('about'));
-    await user.click(screen.getByText('legal'));
+    for (const name of ENTRIES) {
+      await user.click(screen.getByRole('link', { name }));
+    }
 
     expect(plausible).not.toHaveBeenCalled();
   });
 
-  it('renders github link to repo home', () => {
+  it('links github to the repository in a new tab', () => {
     render(<Footer />);
 
-    const githubLink = screen.getByText('github').closest('a');
+    const githubLink = screen.getByRole('link', { name: 'github' });
     expect(githubLink).toHaveAttribute('href', 'https://github.com/MarkusNeusinger/anyplot');
     expect(githubLink).toHaveAttribute('target', '_blank');
     expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('renders report link to issue chooser', () => {
+  it('links mcp to /mcp inside the site', () => {
     render(<Footer />);
 
-    const reportLink = screen.getByText('report').closest('a');
-    expect(reportLink).toHaveAttribute(
-      'href',
-      'https://github.com/MarkusNeusinger/anyplot/issues/new/choose'
-    );
-    expect(reportLink).toHaveAttribute('target', '_blank');
-  });
-
-  it('renders mcp as internal router link to /mcp', () => {
-    render(<Footer />);
-
-    const mcpLink = screen.getByText('mcp').closest('a');
+    const mcpLink = screen.getByRole('link', { name: 'mcp' });
     expect(mcpLink).toHaveAttribute('href', '/mcp');
     expect(mcpLink).not.toHaveAttribute('target');
   });
 
-  it('renders about as internal router link to /about', () => {
+  it('links the name to LinkedIn in a new tab', () => {
     render(<Footer />);
 
-    const aboutLink = screen.getByText('about').closest('a');
-    expect(aboutLink).toHaveAttribute('href', '/about');
+    const nameLink = screen.getByRole('link', { name: 'markus neusinger' });
+    expect(nameLink).toHaveAttribute('href', 'https://www.linkedin.com/in/markus-neusinger/');
+    expect(nameLink).toHaveAttribute('target', '_blank');
+    expect(nameLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('renders legal as internal router link to /legal', () => {
+  it('links about to /about inside the site', () => {
     render(<Footer />);
 
-    const legalLink = screen.getByText('legal').closest('a');
+    const aboutLink = screen.getByRole('link', { name: 'about' });
+    expect(aboutLink).toHaveAttribute('href', '/about');
+    expect(aboutLink).not.toHaveAttribute('target');
+  });
+
+  it('links legal to /legal inside the site', () => {
+    render(<Footer />);
+
+    const legalLink = screen.getByRole('link', { name: 'legal' });
     expect(legalLink).toHaveAttribute('href', '/legal');
+    expect(legalLink).not.toHaveAttribute('target');
   });
 });
