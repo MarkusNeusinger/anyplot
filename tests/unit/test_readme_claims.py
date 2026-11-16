@@ -31,6 +31,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+import yaml
 
 from core.constants import LIBRARIES_METADATA, QUALITY_THRESHOLD_APPROVAL, QUALITY_THRESHOLD_FINAL_APPROVAL
 from core.defects import CRITERIA
@@ -146,6 +147,26 @@ def field_default(relative: str, class_name: str, field: str) -> object:
                     value = keyword.value
                 return ast.literal_eval(value)
     raise AssertionError(f"{relative} has no {class_name}.{field}")
+
+
+def annotated_kind(relative: str, name: str) -> tuple[str, dict[str, object]]:
+    """The marker of a module-level `NAME = Annotated[T, Kind(...)]`: `Kind` (`Header`, `Path`, ...) and its literal
+    keyword arguments.
+
+    `module_constant` cannot read these: `Annotated[...]` is no literal.
+    """
+    for node in source_tree(relative).body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
+            value = node.value
+            if isinstance(value, ast.Subscript) and isinstance(value.slice, ast.Tuple):
+                marker = value.slice.elts[-1]
+                if isinstance(marker, ast.Call) and isinstance(marker.func, ast.Name):
+                    literals = {
+                        k.arg: k.value.value for k in marker.keywords if k.arg and isinstance(k.value, ast.Constant)
+                    }
+                    return marker.func.id, literals
+            raise AssertionError(f"{relative}: {name} is no Annotated[T, Kind(...)]")
+    raise AssertionError(f"{relative} has no module constant {name}")
 
 
 def review_bar() -> tuple[int, int]:
@@ -264,6 +285,41 @@ def test_highlights_state_the_session_idle_time():
     assert near(highlights, phrase, "idle"), f"sessions are dropped after {phrase} idle"
 
 
+def test_highlights_state_the_patch_rule_not_an_absolute():
+    """ "No generated plot is patched by hand" does not hold: the palette swap of May 2026 edited the plots' code
+    catalogue-wide. The highlight states the rule a wrong plot follows instead."""
+    highlights = collapse(section(read(README), "Engineering highlights"))
+    assert "A wrong plot is fixed in its spec or in a rule and then regenerated, not patched by hand." in highlights, (
+        "README.md: the review-loop highlight no longer states how a wrong plot is fixed"
+    )
+    assert "No generated plot is patched by hand" not in highlights, "README.md: the palette swap was a patch by hand"
+
+
+def test_highlights_put_the_public_chats_session_id_in_a_header():
+    """The public chat reads its session id from a header, and no public route takes it from the path or the query.
+
+    The admin chat's routes carry it in their path, which is why the highlight names the public chat; "the session id
+    never appears in a URL" holds only once the admin chat's id leaves the path too.
+    """
+    public, admin = "api/routers/agent_public.py", "api/routers/agent.py"
+    kind, keywords = annotated_kind(public, "SessionId")
+    assert (kind, keywords.get("alias")) == ("Header", "X-Anyplot-Session"), f"{public}: SessionId is a {kind}"
+    for node in ast.walk(source_tree(public)):
+        if isinstance(node, ast.arg) and node.arg == "sid":
+            assert isinstance(node.annotation, ast.Name) and node.annotation.id == "SessionId", (
+                f"{public}: a function takes `sid` as something other than the SessionId header"
+            )
+    routes = re.findall(r'^@router\.\w+\("([^"]*)"', read(ROOT / public), re.MULTILINE)
+    assert routes, f'{public} no longer declares its routes as @router.<method>("<path>")'
+    assert not [route for route in routes if "sid" in route], f"{public}: a route carries the session id in its path"
+    highlights = collapse(section(read(README), "Engineering highlights"))
+    assert "the public chat's session id travels in a header, not in a URL" in highlights, (
+        "README.md: the privacy highlight no longer says where the public chat's session id travels"
+    )
+    if annotated_kind(admin, "SessionId")[0] == "Path":
+        assert "never appears in a URL" not in highlights, f"README.md: {admin} carries the session id in its path"
+
+
 def test_architecture_names_the_default_model():
     architecture = section(read(README), "Architecture")
     model = field_default("agents/anyplot/settings.py", "AgentSettings", "model")
@@ -337,11 +393,43 @@ def test_about_page_and_its_bot_copy_name_only_the_checks_a_workflow_runs():
         assert not re.search(r"\bblank\b", checks, re.IGNORECASE), "README.md: no workflow checks for a blank image"
 
 
+def test_the_pipeline_step_says_only_the_owners_label_merges_a_spec():
+    """Step 2: spec-create.yml's merge job runs on the `approved` label only when the repository owner added it."""
+    workflow = yaml.safe_load(read(ROOT / ".github" / "workflows" / "spec-create.yml"))
+    condition = workflow["jobs"]["merge"]["if"]
+    assert "||" not in condition, "spec-create.yml's merge job no longer requires every condition of its if:"
+    conditions = {part.strip() for part in condition.split("&&")}
+    for required in ("github.event.label.name == 'approved'", "github.event.sender.login == github.repository_owner"):
+        assert required in conditions, f"spec-create.yml's merge job no longer requires {required}"
+    step = re.search(r"^2\. \*\*Specification\.\*\*(.*?)^3\. ", read(README), re.MULTILINE | re.DOTALL)
+    assert step, "README.md no longer has the pipeline's specification step"
+    assert (
+        "I approve it on the issue; since September 2026 the merge job ignores the label from any other account."
+        in collapse(step.group(1))
+    ), "README.md: the specification step no longer says that only the owner's label merges a spec"
+
+
 def test_about_page_and_its_bot_copy_state_the_owners_year_as_the_readme_does():
     match = re.search(r"since (\d{4}) I've built", collapse(section(read(README), "How I build anyplot")))
     assert match, "README.md 'How I build anyplot' no longer says since when the owner has built data systems"
     for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", read(SEO))):
         assert near(text, match.group(1), "since"), f"{name}: since {match.group(1)}, as the README says"
+
+
+def test_the_readme_introduces_the_owner_as_the_about_page_does():
+    """The README's "a physicist and data analyst" is the About page's "physicist by training, data analyst by trade".
+
+    Text held to text, as the year above: neither has a source in code.
+    """
+    intro = collapse(section(read(README), "How I build anyplot"))
+    assert "a physicist and data analyst:" in intro, (
+        "README.md 'How I build anyplot' no longer names the owner's trades"
+    )
+    assert "working in data and AI" not in intro, "README.md: the About page names the trades, not a field"
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert "physicist by training, data analyst by trade" in collapse(text).lower(), (
+            f"{name}: physicist by training, data analyst by trade, as the README says"
+        )
 
 
 # English month names, fixed: `calendar.month_name` follows the locale.
@@ -460,6 +548,22 @@ def test_the_workflow_page_floor_on_recorded_decisions_holds():
         re.findall(r"owner (?:decision|rule|request)", read(ROOT / "docs" / "concepts" / "agent-network.md"), re.I)
     )
     assert recorded > int(match.group(1)), f"agent-network.md names {recorded} owner decisions, rules or requests"
+
+
+def test_the_workflow_page_times_the_blank_site_as_the_readme_does():
+    """The blank site of 2026-10-22 lasts as long on the AI workflow page as in the README's highlights."""
+    readme = re.search(
+        r"left anyplot\.ai blank for (\d+) minutes", collapse(section(read(README), "Engineering highlights"))
+    )
+    assert readme, "README.md's highlights no longer say how long anyplot.ai was blank"
+    entry = re.search(
+        r"^- \*\*2026-10-22, a blank site\.\*\*(.*?)(?=^- |\Z)", read(WORKFLOW_PAGE), re.MULTILINE | re.DOTALL
+    )
+    assert entry, "ai-workflow.md no longer has the entry on the blank site of 2026-10-22"
+    page = re.search(r"rendered blank for about (\d+) minutes\.", collapse(entry.group(1)))
+    assert page, "ai-workflow.md: the blank-site entry no longer says how long the site was blank"
+    assert page.group(1) == readme.group(1), f"ai-workflow.md: {page.group(1)} minutes; README.md: {readme.group(1)}"
+    assert "I noticed" not in entry.group(1), "ai-workflow.md: the entry states the outage, not when it was noticed"
 
 
 def test_the_readme_counts_the_releases_of_the_changelog():

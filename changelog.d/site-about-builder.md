@@ -84,7 +84,8 @@
   step 4); it adds that a new spec needs the owner's approval and that
   outside the plot pipeline the agents merge nothing without his OK. The
   pipeline's step 2 says that since September 2026 the merge job ignores an
-  `approved` label from any other account.
+  `approved` label from any other account, and `test_readme_claims.py` holds
+  that to the merge job's condition in `spec-create.yml`.
 
 ### Fixed
 
@@ -122,7 +123,9 @@
   URL; that holds for the public chat, whose id travels in a header, while
   the admin chat's routes carry it in the path. The AI workflow page says the
   blank site of 2026-10-22 lasted about 45 minutes, as `CLAUDE.md` and the
-  README do.
+  README do. `test_readme_claims.py` holds the header to the public chat's
+  routes and the minutes to the README's, and fails if any of the three
+  sentences returns to its old wording.
 - **Back leaves a redirected address in one step.** A fresh load of the old
   chat address `/debug/agent` or of a language address `/{spec}/{language}`
   left the old address one step back in the history, so Back landed on it and
