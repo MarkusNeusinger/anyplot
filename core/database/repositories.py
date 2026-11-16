@@ -334,8 +334,8 @@ class LanguageRepository(BaseRepository[Language]):
 class ImplRepository(BaseRepository[Impl]):
     """Repository for Impl operations.
 
-    An implementation is keyed by (spec_id, language_id, library_id), and every method that
-    reads or writes one implementation takes all three: `language_id` has no default, because
+    An implementation is keyed by (spec_id, language_id, library_id), and `get_code`,
+    `get_by_spec_and_library` and `upsert` take all three: `language_id` has no default, because
     a lookup under another language finds no row and reads like a missing implementation.
     A caller without the language at hand takes it from `core.constants.LIBRARY_LANGUAGES`.
     """
