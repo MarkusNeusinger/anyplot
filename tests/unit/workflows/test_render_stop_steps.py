@@ -7,7 +7,7 @@ from other code than the PR head holds (test_render_hash_steps.py). The step
 - A first generation gets the label `ai-render-mismatch` and stays open; no
   review, no score, no header commit, and the run ends as failed. The
   watchdog rescues nothing that carries the label and reports it. A later
-  review that goes on removes the label.
+  review whose check reads `match` removes the label.
 - A regeneration runs no review either; the regen gate keeps the live
   implementation (`render_mismatch`), and the keep path closes the PR.
 
@@ -149,7 +149,7 @@ class TestStopStep:
 
 
 class TestClearStep:
-    """The label of an earlier stop goes once a later review has checked the hash again and goes on."""
+    """The label of an earlier stop goes once a later review's check reads `match`."""
 
     def _clear(self, tmp_path: Path, **env: str):
         return _run(str(_step(REVIEW, CLEAR)["run"]), tmp_path, tmp_path, PR_NUM="7", **env)
@@ -176,15 +176,51 @@ class TestClearStep:
         if views == 3 or edits == 3:
             assert "the watchdog keeps skipping the PR" in result.stdout
 
-    def test_it_runs_only_once_the_review_goes_on(self):
-        """Not at the start of the run: a run that dies before the check (cloud auth) must leave the PR parked."""
+    def test_it_runs_only_after_a_check_that_reads_match(self):
+        """Only a positive match unparks the PR.
+
+        A check that was skipped (cloud auth) or crashed has no `status`
+        output, and `missing` and `unreadable` have shown nothing about the
+        renders, so the label of an earlier mismatch stays in all four cases.
+        """
         names = _names()
         assert names[names.index("Verify both theme renders exist") + 1] == CLEAR
         assert names.index(STOP) < names.index(CLEAR) < names.index(RUN_REVIEW)
         step = _step(REVIEW, CLEAR)
-        # No status function, so a failed verify (or any earlier failure) skips it.
-        assert step["if"] == STOPPED
+        # No status function, so a failed verify (or any earlier failure) skips it as well.
+        assert step["if"] == "steps.render_hash.outputs.status == 'match'"
         assert "continue-on-error" not in step
+
+    @pytest.mark.parametrize(
+        ("staged", "head", "extra", "status"),
+        [
+            ("print(1)\n", "print(1)\n", [], "match"),
+            ("print(1)\n", "print(2)\n", [], "mismatch"),
+            (None, "print(1)\n", [], "missing"),
+            ("print(1)\n", "print(1)\n", ["--fetch-error=ServiceException: 503"], "unreadable"),
+        ],
+    )
+    def test_the_check_writes_the_status_the_step_keys_on(self, tmp_path, monkeypatch, staged, head, extra, status):
+        output = tmp_path / "output"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(output))
+        monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+        hash_file, source = tmp_path / "render.sha256", tmp_path / "head.py"
+        source.write_text(head, encoding="utf-8")
+        if staged is not None:
+            (tmp_path / "rendered.py").write_text(staged, encoding="utf-8")
+            write = [
+                "write",
+                "--source",
+                str(tmp_path / "rendered.py"),
+                "--language",
+                "python",
+                "--out",
+                str(hash_file),
+            ]
+            assert render_hash.main(write) == 0
+        check = ["check", "--hash", str(hash_file), "--source", str(source), "--language", "python", "--head", "a" * 40]
+        assert render_hash.main([*check, *extra]) == 0
+        assert output.read_text(encoding="utf-8").splitlines()[0] == f"status={status}"
 
 
 # --- the keep path of a stopped regeneration: gate, early verdict, verdict -----------------------
@@ -347,6 +383,9 @@ class TestWiring:
         between = names[names.index(STOP) + 1 : names.index(GATE)]
         still_running = [n for n in between if STOPPED not in str(_step(REVIEW, n).get("if", ""))]
         review_keyed = [n for n in still_running if "steps.review." in str(_step(REVIEW, n).get("if", ""))]
+        # The label's removal keys on a match of the check, and a stop is a mismatch.
+        assert CLEAR in still_running
+        still_running.remove(CLEAR)
         assert sorted(set(still_running) - set(review_keyed)) == [
             "Contract check (record-only)",
             "Download previous production renders (regen)",
@@ -401,7 +440,8 @@ class TestWiring:
 
     def test_only_the_stop_and_the_gate_steps_read_the_outputs(self):
         text = (WORKFLOWS / REVIEW).read_text(encoding="utf-8")
-        assert set(re.findall(r"steps\.render_hash\.outputs\.(\w+)", text)) == {"stop"}
+        # `stop` switches the stop step on, `status` the removal of the label after a match.
+        assert set(re.findall(r"steps\.render_hash\.outputs\.(\w+)", text)) == {"stop", "status"}
         assert set(re.findall(r"steps\.render_stop\.outputs\.(\w+)", text)) == {"stopped", "keep"}
 
     def test_the_names_agree_across_the_workflows_and_the_scripts(self):

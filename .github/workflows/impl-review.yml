@@ -728,13 +728,15 @@ jobs:
       # `ai-render-mismatch` says that this PR's review stopped because its
       # staged renders were made from other code ("Stop on a render hash
       # mismatch"), and the watchdog rescues no PR that carries it. It goes
-      # only here, once this run has checked the hash again without a stop and
-      # has its renders: a run that ends earlier (cloud auth, a missing
-      # render) leaves the PR parked as it was. A label that stays although
-      # the review went on would hide the PR from every watchdog rescue, so
-      # the read and the removal get three attempts each. Best effort.
+      # only here, once this run's check has read `match` and the run has its
+      # renders. A run that ends earlier (cloud auth, a missing render), a
+      # check that did not run or crashed, and a hash that is missing or
+      # unreadable all leave the label where it is: none of them has shown
+      # that the renders now come from this code. A label that stays although
+      # the hash matches would hide the PR from every watchdog rescue, so the
+      # read and the removal get three attempts each. Best effort.
       - name: Clear the ai-render-mismatch label
-        if: steps.render_stop.outputs.stopped != 'true'
+        if: steps.render_hash.outputs.status == 'match'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
@@ -758,7 +760,7 @@ jobs:
           fi
           for attempt in 1 2 3; do
             if gh pr edit "$PR_NUM" --remove-label "ai-render-mismatch" 2> "$RUNNER_TEMP/render-clear.err"; then
-              echo "::notice::Removed ai-render-mismatch from PR #${PR_NUM}: this review checked the render hash again and goes on"
+              echo "::notice::Removed ai-render-mismatch from PR #${PR_NUM}: this review's render hash check reads match"
               exit 0
             fi
             echo "::warning::removing ai-render-mismatch failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/render-clear.err" | tr '\n' ' ')"

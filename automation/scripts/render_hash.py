@@ -126,12 +126,25 @@ def strip_header(text: str, language: str) -> str:
     return text[match.end() :] if match else text
 
 
+def _trim_blank_lines(text: str) -> str:
+    """``text`` without the whitespace-only lines at its start and its end; every other character stays."""
+    lines = text.split("\n")
+    start, end = 0, len(lines)
+    while start < end and not lines[start].strip():
+        start += 1
+    while end > start and not lines[end - 1].strip():
+        end -= 1
+    return "\n".join(lines[start:end])
+
+
 def code_hash(data: bytes, language: str) -> str:
     """sha256 of the source without its header; the score, line endings and blank lines around the code do not count.
 
     The writer reads the file in text mode and writes ``\\n``, and it puts a
     line break after a header it has to prepend, so neither may change the
-    hash of unchanged code.
+    hash of unchanged code. Only whole blank lines are dropped: the
+    indentation of the first line of code and the spaces at the end of the
+    last one are code, and the writer never touches them.
 
     The score is reset first, as for the render hash. impl-generate stages the
     hash of the file as the generator left it and commits the file with
@@ -141,7 +154,7 @@ def code_hash(data: bytes, language: str) -> str:
     number on one side and as ``pending`` on the other.
     """
     text = data.decode("utf-8", errors="surrogateescape").replace("\r\n", "\n").replace("\r", "\n")
-    body = strip_header(regen_gate.reset_header_score(text), language).strip()
+    body = _trim_blank_lines(strip_header(regen_gate.reset_header_score(text), language))
     return hashlib.sha256(body.encode("utf-8", errors="surrogateescape")).hexdigest()
 
 

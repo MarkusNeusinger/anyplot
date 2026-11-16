@@ -241,6 +241,25 @@ class TestCodeHash:
             _python("pending", body=body.replace("50/100", "51/100")), "python"
         )
 
+    def test_only_whole_blank_lines_around_the_code_are_ignored(self):
+        text = _python("pending").decode()
+        same = code_hash(text.encode(), "python")
+        # Indentation of the first line of code, and spaces at the end of the last one, are code.
+        indented = text.replace('"""\n\nimport os', '"""\n\n import os')
+        trailing = text.rstrip("\n") + "  \n"
+        assert indented != text and trailing != text
+        assert code_hash(indented.encode(), "python") != same
+        assert code_hash(trailing.encode(), "python") != same
+        # Lines that hold nothing but whitespace, before and after the code, are not.
+        padded = text.replace('"""\n\nimport os', '"""\n\n   \n\t\nimport os') + "\n  \n\n"
+        assert padded != text and code_hash(padded.encode(), "python") == same
+
+    @pytest.mark.parametrize("language", LANGUAGES)
+    def test_a_file_that_is_only_a_header_hashes_like_an_empty_one(self, language):
+        generated, _ = PAIRS[language]
+        header_only = generated[: len(generated) - len(strip_header(generated, language))]
+        assert code_hash(header_only.encode(), language) == hashlib.sha256(b"").hexdigest()
+
 
 class TestCompare:
     def _files(self, tmp_path: Path, staged: bytes, head: bytes | None) -> tuple[Path, Path]:
