@@ -25,4 +25,7 @@
   list in `docs/reference/database.md` promised anonymous session ids, usage data deleted
   after 90 days and no personal data, and its first item broke off mid-sentence. It now
   names what each store holds, with the file that shows it, and points to the privacy
-  section of the legal page for how long data is kept and where it runs.
+  section of the legal page for how long data is kept and where it runs. Its storage
+  overview no longer has only an admin send a feedback case of the agent chat, and it says
+  that a case keeps the conversation and up to 5 sample rows of the data even when the data
+  file is left out.
