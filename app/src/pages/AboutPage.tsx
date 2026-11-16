@@ -221,11 +221,11 @@ export function AboutPage() {
             <Box sx={textStyle}>
               ai models write anyplot&apos;s code: the site, the api, and the agents behind
               &ldquo;use with my data&rdquo;. I decide what gets built, cut the work into tasks and
-              give each one to Claude Code, Claude in GitHub Actions, Gemini or Copilot, depending on
-              what it needs and what it costs. I test what comes back and send it back until
-              it&apos;s right. a new spec needs my approval, and outside the plot pipeline the agents
-              merge nothing without my OK. what I correct becomes a rule the agents follow. I have
-              built it with ai agents since November 2025.
+              give each one to Claude Code, Claude in GitHub Actions, Gemini or Copilot, depending
+              on what it needs and what it costs. I test what comes back and send it back until
+              it&apos;s right. a new spec needs my approval, and outside the plot pipeline the
+              agents merge nothing without my OK. what I correct becomes a rule the agents follow. I
+              have built it with ai agents since November 2025.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               more on GitHub: <Ext href={HOW_I_BUILD_URL}>how I build anyplot</Ext> and{' '}
@@ -279,10 +279,10 @@ export function AboutPage() {
               <Box component="code" sx={inlineCodeSx}>
                 .use_my_data()
               </Box>{' '}
-              on its page, and paste your data. an agent adapts that plot&apos;s code to your columns,
-              renders it in a sandbox with no network access, reviews the render against the
-              catalogue&apos;s rubric, repairs it once if needed, and hands back the image and the
-              code. your chat and data live only in server memory and are deleted after an hour
+              on its page, and paste your data. an agent adapts that plot&apos;s code to your
+              columns, renders it in a sandbox with no network access, reviews the render against
+              the catalogue&apos;s rubric, repairs it once if needed, and hands back the image and
+              the code. your chat and data live only in server memory and are deleted after an hour
               idle, unless you send feedback.
             </Box>
           </Box>
@@ -462,9 +462,10 @@ export function AboutPage() {
               grew out of everyday work: finding plot ideas, and showing colleagues a chart instead
               of explaining it at length. people wanted two things from it. they wanted ideas for
               which plot fits their data. and they wanted to get to know libraries they hadn&apos;t
-              used yet, since each has its own strengths. after a few months on pyplots.ai, I decided
-              to go bigger. in April 2026 it became anyplot.ai. today it covers fifteen libraries in
-              four languages, and one colorblind-safe palette travels across all of them.
+              used yet, since each has its own strengths. after a few months on pyplots.ai, I
+              decided to go bigger. in April 2026 it became anyplot.ai. today it covers fifteen
+              libraries in four languages, and one colorblind-safe palette travels across all of
+              them.
             </Box>
           </Box>
         </Box>

@@ -164,8 +164,8 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
         >
           every plot begins as a library-agnostic spec. ai drafts implementations across every
           supported library, validates them against quality criteria, and keeps them current. I
-          approve new specs and set the rules. you discover, copy, and adapt — plug in{' '}
-          <em>your</em> data. that&apos;s it.
+          approve new specs and set the rules. you discover, copy, and adapt — plug in <em>your</em>{' '}
+          data. that&apos;s it.
         </Box>
 
         <TypewriterText

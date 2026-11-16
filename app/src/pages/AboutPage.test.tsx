@@ -214,7 +214,9 @@ describe('AboutPage', () => {
     ).toHaveTextContent(
       /I update the spec and regenerate its libraries\. I don.t fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs\.$/
     );
-    expect(screen.queryByText(/maintains itself|humans curate|never patch/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/maintains itself|humans curate|never patch/)
+    ).not.toBeInTheDocument();
     expect(screen.getByText(/my own colourblind-safe categorical palette/)).toBeInTheDocument();
     expect(screen.getByText(/ignore this entirely\. I make it the default\./)).toBeInTheDocument();
   });

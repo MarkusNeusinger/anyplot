@@ -63,7 +63,9 @@ describe('HeroSection', () => {
 
     const builder = screen.getByRole('link', { name: 'Markus Neusinger' });
     expect(builder).toHaveAttribute('href', '/about');
-    expect(builder.parentElement).toHaveTextContent(/^the open plot catalogue · by Markus Neusinger$/);
+    expect(builder.parentElement).toHaveTextContent(
+      /^the open plot catalogue · by Markus Neusinger$/
+    );
     // The first link of the hero: the eyebrow sits above the headline.
     await user.tab();
     expect(builder).toHaveFocus();
@@ -72,9 +74,7 @@ describe('HeroSection', () => {
   it('says in the intro who approves the specs and sets the rules', () => {
     render(<HeroSection potd={null} />);
 
-    expect(
-      screen.getByText(/^every plot begins as a library-agnostic spec\./)
-    ).toHaveTextContent(
+    expect(screen.getByText(/^every plot begins as a library-agnostic spec\./)).toHaveTextContent(
       /^every plot begins as a library-agnostic spec\. ai drafts implementations across every supported library, validates them against quality criteria, and keeps them current\. I approve new specs and set the rules\. you discover, copy, and adapt — plug in your data\. that.s it\.$/
     );
   });
