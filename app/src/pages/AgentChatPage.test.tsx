@@ -684,11 +684,12 @@ afterEach(() => {
 });
 
 describe('AgentChatPage gating', () => {
-  it('is the 404 page when the build has no agent chat', () => {
+  it.each([PAGE, '/agent'])('is the 404 page at %s when the build has no agent chat', path => {
     flags.agentChat = false;
     localStorage.setItem(ADMIN_HINT_KEY, '1');
-    renderAt(PAGE);
+    renderAt(path);
     expect(screen.getByLabelText('Page not found')).toBeInTheDocument();
+    expect(screen.queryByTestId('agent-intro')).not.toBeInTheDocument();
     expect(agentCalls()).toHaveLength(0);
   });
 
@@ -780,19 +781,40 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('admin-menu')).toBeInTheDocument();
   });
 
-  it('explains the missing parameters instead of opening a session', async () => {
+  it.each(['/agent', '/agent?spec=scatter-basic&library=excel'])(
+    'explains the chat at %s instead of opening a session',
+    async path => {
+      flags.isDev = true;
+      renderAt(path);
+      const intro = await screen.findByTestId('agent-intro');
+      expect(intro).toHaveTextContent(/an agent adapts that plot's code to your columns/);
+      expect(within(intro).getByRole('link', { name: 'pick any plot' })).toHaveAttribute(
+        'href',
+        '/plots'
+      );
+      expect(
+        within(intro).getByRole('link', { name: 'scatter-basic in matplotlib' })
+      ).toHaveAttribute(
+        'href',
+        '/agent?spec=scatter-basic&library=matplotlib&language=python&source=agent_intro'
+      );
+      await waitFor(() => expect(document.title).toBe('use with my data | anyplot.ai'));
+      // The admin check only: no session, no status read of the chat.
+      expect(agentCalls().map(([input]) => pathOf(input))).toEqual(['/debug/agent/status']);
+      // The admin's page is a visitor's: the explainer has no admin menu either.
+      expect(screen.queryByTestId('admin-menu')).not.toBeInTheDocument();
+    }
+  );
+
+  it("opens the chat from the explainer's example, and records nothing for an admin", async () => {
     flags.isDev = true;
-    renderAt('/agent?spec=scatter-basic&library=excel');
-    // The plot page's entry since 2026-11-02 is `.use_my_data()`.
-    expect(await screen.findByText(/open it from a plot/)).toHaveTextContent(
-      "open it from a plot's .use_my_data(), or start with scatter-basic in matplotlib."
-    );
-    expect(screen.getByRole('link', { name: 'scatter-basic in matplotlib' })).toHaveAttribute(
-      'href',
-      '/agent?spec=scatter-basic&library=matplotlib&language=python'
-    );
-    // The admin check only.
-    expect(agentCalls().map(([input]) => pathOf(input))).toEqual(['/debug/agent/status']);
+    renderAt('/agent');
+    fireEvent.click(await screen.findByRole('link', { name: 'scatter-basic in matplotlib' }));
+    expect(await screen.findByLabelText('Message')).toBeInTheDocument();
+    expect(agentCalls().map(([input]) => pathOf(input))).toContain('/debug/agent/sessions');
+    // The source goes from the address once read, as for every entry.
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(PAGE));
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('agent_open', expect.anything());
   });
 
   it('falls back to the visitor lane when the admin check is refused, and says the session expired', async () => {

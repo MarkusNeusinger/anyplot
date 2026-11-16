@@ -191,27 +191,18 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
           >
             |
           </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-            <SecondaryLink
-              to={paths.mcp}
-              subject="mcp"
-              verb="connect"
-              ariaLabel="Connect via MCP"
-              onClick={() => trackEvent('nav_click', { source: 'hero_mcp', target: paths.mcp })}
-            />
-            <SecondaryLink
-              href="https://github.com/MarkusNeusinger/anyplot"
-              subject="github"
-              verb="clone"
-              ariaLabel="Clone on GitHub"
-              external
-              onClick={() => trackEvent('nav_click', { source: 'hero_github', target: 'github' })}
-            />
-          </Box>
+          <SecondaryLink
+            href="https://github.com/MarkusNeusinger/anyplot"
+            subject="github"
+            verb="clone"
+            ariaLabel="Clone on GitHub"
+            external
+            onClick={() => trackEvent('nav_click', { source: 'hero_github', target: 'github' })}
+          />
         </Box>
-        <AgentLaneLine
+        <AgentEntry
           onClick={() =>
-            trackEvent('nav_click', { source: 'hero_use_my_data', target: paths.plots })
+            trackEvent('nav_click', { source: 'hero_use_my_data', target: paths.agent })
           }
         />
       </Box>
@@ -226,35 +217,45 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
 }
 
 /**
- * The one line that announces "use with my data", shown only while the public agent lane
- * is open (`useAgentLaneOpen`), so closing the lane on the server removes it too. It leads
- * to the catalogue rather than into the chat: the entry is `.use_my_data()` beside a plot
- * page's library carousel, so the visitor picks the plot first. Tracked as
+ * The hero's entry to "use with my data", shown only while the public agent lane is open
+ * (`useAgentLaneOpen`), so closing the lane on the server removes it too. Two lines in one
+ * link, as the chat's plot button names its action over what a click does: the name,
+ * `.use_my_data()`, the idiom of the plot page's own entry, over one line in plain words on
+ * what the feature does, so a reader who does not read code learns it exists. A text link in
+ * the secondary links' size, so it never outweighs `plots.browse()`. It leads to `/agent`
+ * without a plot, which explains the chat and leads on to the catalogue or to a few example
+ * plots: the visitor still picks the plot before a chat opens. Tracked as
  * `nav_click{source: hero_use_my_data}`. No "experimental" here: the chat's notice says it.
  */
-export const AGENT_LANE_LINE = 'new: pick any plot, then .use_my_data()';
-/** The line's accessible name, in words rather than the method-call style. */
-export const AGENT_LANE_LABEL = 'New: pick any plot, then use it with my data';
+export const AGENT_ENTRY_NAME = '.use_my_data()';
+/** What the feature does, in plain words. */
+export const AGENT_ENTRY_TEXT = 'an ai agent adapts any plot to your data';
+/** The link's accessible name: words rather than the method-call style, the plain line kept. */
+export const AGENT_ENTRY_LABEL = 'Use with my data: an AI agent adapts any plot to your data';
 
-function AgentLaneLine({ onClick }: { onClick: () => void }) {
+function AgentEntry({ onClick }: { onClick: () => void }) {
   const open = useAgentLaneOpen();
   if (open !== true) return null;
   return (
     <Box
       component={RouterLink}
-      to={paths.plots}
+      to={paths.agent}
       onClick={onClick}
-      aria-label={AGENT_LANE_LABEL}
+      aria-label={AGENT_ENTRY_LABEL}
+      data-testid="hero-agent-entry"
       sx={{
         animation: 'rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s backwards',
-        display: 'inline-block',
+        display: 'inline-flex',
+        flexDirection: 'column',
+        gap: 0.25,
         mt: 3,
         fontFamily: typography.mono,
         fontSize: '13px',
+        lineHeight: 1.5,
         color: 'var(--ink-soft)',
         textDecoration: 'none',
-        transition: 'color 0.2s',
-        '&:hover': { color: colors.primary },
+        '& .entry-name': { color: 'var(--ink)', fontWeight: 500, transition: 'color 0.2s' },
+        '&:hover .entry-name': { color: colors.primary },
         '&:focus-visible': {
           outline: `2px solid ${colors.primary}`,
           outlineOffset: 2,
@@ -262,10 +263,10 @@ function AgentLaneLine({ onClick }: { onClick: () => void }) {
         },
       }}
     >
-      {/* A no-break space keeps the arrow with `.use_my_data()` when a narrow phone wraps
-          the line. */}
-      # {AGENT_LANE_LINE}
-      {' '}→
+      <Box component="span" className="entry-name">
+        {AGENT_ENTRY_NAME} →
+      </Box>
+      <Box component="span">{AGENT_ENTRY_TEXT}</Box>
     </Box>
   );
 }

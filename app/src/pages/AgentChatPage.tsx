@@ -148,6 +148,12 @@
  * 3. Analytics: while the page serves an admin (either lane), it sends no pageview and no
  *    event (`src/analytics/mute.ts`), so the admin's own use never counts as a visitor's.
  *
+ * Past the gates, a query without a catalogue pair (no spec, or a library the catalogue does not
+ * have) is the explainer (`AgentIntro`, the landing page's `.use_my_data()` leads there): what
+ * the chat does, a few example pairs and the way to the catalogue. It opens no session; the only
+ * requests before it are the gates' own, the lane's door and, in an admin's browser, the admin
+ * check.
+ *
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
 
@@ -198,6 +204,7 @@ import {
   type AdminMode,
   AdminSection,
 } from 'src/sections/agent-chat/AdminMenu';
+import { AGENT_INTRO_SOURCE, AgentIntro } from 'src/sections/agent-chat/AgentIntro';
 import { attachmentSummary } from 'src/sections/agent-chat/attachmentText';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatFrame, FrameRule, StatusLine } from 'src/sections/agent-chat/ChatFrame';
@@ -255,8 +262,17 @@ import { readAdminToken, readViewAsVisitor, setViewAsVisitor } from 'src/utils/a
 import type { ThemedPreviewSource } from 'src/utils/themedPreview';
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
-/** Where `agent_open` says the visitor came from: the plot page, the landing page, the spec hub. */
-const OPEN_SOURCES = new Set(['plot_page', 'landing', 'spec_hub', 'plot_of_the_day']);
+/**
+ * Where `agent_open` says the visitor came from: the plot page, the landing page, the spec hub,
+ * the plot of the day, or an example of this page's explainer (`AgentIntro`).
+ */
+const OPEN_SOURCES = new Set([
+  'plot_page',
+  'landing',
+  'spec_hub',
+  'plot_of_the_day',
+  AGENT_INTRO_SOURCE,
+]);
 /**
  * The chat column's width: it grows with the window up to this (960 until 2026-11-02; owner:
  * use the room of a wide screen), so the data card with its grid, the plot cards and the code
@@ -445,17 +461,10 @@ export function AgentChatPage() {
   }
   if (!valid) {
     return (
-      <Notice title="use with my data">
-        open it from a plot&apos;s <code>.use_my_data()</code>, or start with{' '}
-        <Box
-          component={RouterLink}
-          to={paths.agentChat('scatter-basic', 'matplotlib', 'python')}
-          sx={proseLinkStyle}
-        >
-          scatter-basic in matplotlib
-        </Box>
-        .
-      </Notice>
+      <>
+        <NoIndex />
+        <AgentIntro />
+      </>
     );
   }
   const token = adminLane ? readAdminToken() : PUBLIC_LANE;

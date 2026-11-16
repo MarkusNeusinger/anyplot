@@ -824,7 +824,7 @@ Two forms of the pseudo-function style, used in different contexts:
 Examples of the explicit form:
 
 - Hero CTAs: `plots.browse()`, `plots.find()`
-- Secondary links: `github.clone()`, `mcp.connect()`
+- Secondary links: `github.clone()`
 - Search prompt: `❯ plots.find(_▌)` (or bare `.find()` inside a detail pane)
 - Page-level fallbacks: `page.miss()`, `results.empty()`
 

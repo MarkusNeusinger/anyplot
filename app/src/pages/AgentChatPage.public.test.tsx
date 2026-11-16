@@ -69,15 +69,19 @@ function stubFetch() {
   );
 }
 
-function renderPage(library = 'matplotlib', language = 'python', extra = '') {
+function renderPath(path: string) {
   const router = createMemoryRouter([{ path: '/agent', element: <AgentChatPage /> }], {
-    initialEntries: [`/agent?spec=scatter-basic&library=${library}&language=${language}${extra}`],
+    initialEntries: [path],
   });
   return render(
     <ThemeProvider theme={theme}>
       <RouterProvider router={router} />
     </ThemeProvider>
   );
+}
+
+function renderPage(library = 'matplotlib', language = 'python', extra = '') {
+  return renderPath(`/agent?spec=scatter-basic&library=${library}&language=${language}${extra}`);
 }
 
 /** One route's answer in place of the stub's, every other route as before. */
@@ -136,7 +140,7 @@ describe('AgentChatPage on the public lane', () => {
     });
   });
 
-  it.each(['spec_hub', 'plot_page', 'plot_of_the_day'])(
+  it.each(['spec_hub', 'plot_page', 'plot_of_the_day', 'agent_intro'])(
     "records a visitor's open from %s, then drops the source",
     async source => {
       renderPage('matplotlib', 'python', `&source=${source}`);
@@ -306,6 +310,55 @@ describe('AgentChatPage on the public lane', () => {
   it('carries the Highcharts note while the session plots in Highcharts', async () => {
     renderPage('highcharts', 'javascript');
     expect(await screen.findByTestId('highcharts-licence')).toHaveTextContent(HIGHCHARTS_NOTE);
+  });
+
+  it("explains the chat to a visitor at /agent without a plot, and asks nothing but the lane's door", async () => {
+    renderPath('/agent');
+    const intro = await screen.findByTestId('agent-intro');
+    await waitFor(() => expect(document.title).toBe('use with my data | anyplot.ai'));
+    expect(document.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      expect.stringContaining("an agent adapts that plot's code to your columns")
+    );
+    // A tool page, never one to index, also as the explainer.
+    expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex, nofollow'
+    );
+    expect(within(intro).getByRole('link', { name: 'pick any plot' })).toHaveAttribute(
+      'href',
+      '/plots'
+    );
+    expect(within(intro).getByRole('link', { name: 'Browse plots' })).toHaveAttribute(
+      'href',
+      '/plots'
+    );
+    // One example per language, each opening the chat on its pair with the explainer's source.
+    const examples = within(
+      within(intro).getByRole('list', { name: 'or start with' })
+    ).getAllByRole('listitem');
+    expect(examples.map(item => item.textContent)).toEqual([
+      'scatter-basic in matplotlib·python',
+      'line-basic in ggplot2·r',
+      'bar-basic in d3·javascript',
+    ]);
+    expect(examples.map(item => within(item).getByRole('link').getAttribute('href'))).toEqual([
+      '/agent?spec=scatter-basic&library=matplotlib&language=python&source=agent_intro',
+      '/agent?spec=line-basic&library=ggplot2&language=r&source=agent_intro',
+      '/agent?spec=bar-basic&library=d3&language=javascript&source=agent_intro',
+    ]);
+    // Text and links only: no session, no status read, no debug call, no `agent_open`.
+    expect(calls.map(call => call.url.pathname)).toEqual(['/agent/lane']);
+    expect(analytics.trackEvent).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('experimental-notice')).not.toBeInTheDocument();
+  });
+
+  it('says the assistant is closed at /agent without a plot while the lane is, as before', async () => {
+    laneOpen = false;
+    renderPath('/agent');
+    expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
+    expect(screen.queryByTestId('agent-intro')).not.toBeInTheDocument();
+    expect(calls.every(call => call.url.pathname.endsWith('/agent/lane'))).toBe(true);
   });
 
   it('says the assistant is closed while the lane is, and opens nothing', async () => {
