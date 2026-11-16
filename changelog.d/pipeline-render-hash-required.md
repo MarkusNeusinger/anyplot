@@ -1,22 +1,27 @@
 ### Changed
 
 - **Only a matching render hash lets a review run.** A staged `render.sha256`
-  that is missing, holds no hash, or has one line and doesn't fit now stops
-  `impl-review.yml` like a mismatch does: nothing is scored and no header is
+  that is missing, holds no hash, or has no code hash and doesn't fit now
+  stops `impl-review.yml` like a mismatch does, and so does an implementation
+  that can't be read at the PR head: nothing is scored and no header is
   committed. A first generation is parked with the label
-  `ai-render-unverified` (it replaces `ai-render-mismatch`, which no PR had
-  carried yet), and a gated regeneration is kept with the new returning code
-  `render_unverified`. A hash that couldn't be downloaded after three attempts
-  isn't a finding about the renders: a first generation then ends as a failed
-  review that the watchdog starts again once, and a regeneration is kept. The
-  check also reads the gcloud storage wording of a missing object as "no
-  hash".
+  `ai-render-unverified`, the one label for every such stop, and a gated
+  regeneration is kept with the new returning code `render_unverified`. A hash
+  that couldn't be downloaded after three attempts isn't a finding about the
+  renders: a first generation then ends as a failed review, which the watchdog
+  starts again once unless it already rescued that PR, and a regeneration is
+  kept. The check also reads the gcloud storage wording of a missing object as
+  "no hash", and its PR comment prints a command only for a spec ID and a
+  library name of the expected shape. The weekly regeneration review doesn't
+  count a render-hash keep as a missing pair artifact: no review ran, so
+  there is no pair to stage.
 - **A run that can't stage `render.sha256` fails.** The hash write is its own
-  step in `impl-generate.yml` and `impl-repair.yml`, last and fatal, so no PR
-  reaches its review without a hash. In impl-generate the failure counts as an
-  infrastructure failure: the pair is generated again without spending one of
-  its three attempts. In impl-repair it takes the repair's crash path, and the
-  comment names it.
+  step in `impl-generate.yml` and `impl-repair.yml`, last and fatal, with five
+  upload attempts, so a run that can't stage the hash never hands its PR to
+  the review. In impl-generate the failure counts as an infrastructure
+  failure: the pair is generated again without spending one of its three
+  attempts. In impl-repair it takes the repair's crash path, and the comment
+  names it.
 
 ### Fixed
 
@@ -24,8 +29,8 @@
   "Handle generation failure" piped `gh api` into `awk` and relied on a shell
   option that GitHub Actions doesn't set by default, so a failed count read
   as zero earlier failures and bought another full generation. The call's own
-  exit status now decides, and the handler's tests also run under plain
-  `bash -e`.
+  exit status now decides, after three attempts, and the handler's tests also
+  run under plain `bash -e`.
 
 ### Removed
 

@@ -912,7 +912,7 @@ jobs:
             cp "${IMPL_DIR}/${f}" "/tmp/anyplot-plot-cache/${f}" 2>/dev/null || true
           done
           # The file those renders came from, before the checkout below puts
-          # the pushed branch in its place: "Upload to GCS Staging" hashes it.
+          # the pushed branch in its place: "Stage the render hash" hashes it.
           cp "${IMPL_DIR}/${LIBRARY}${EXT}" "$RUNNER_TEMP/render-source" 2>/dev/null || rm -f "$RUNNER_TEMP/render-source"
 
           # Render freshness (warn-only): a render older than the file was made
@@ -1671,11 +1671,14 @@ jobs:
       # Written last, after every render of this run is staged (the earlier
       # run's hash went before them, in the step above), and fatal: the review
       # stops on renders without a hash, so a run that cannot stage one must
-      # not hand its PR to the review. The upload gets three attempts. A
-      # failure here is a storage failure like a failed render upload, and
-      # "Handle generation failure" treats it as one: the pair is generated
-      # again without spending its attempts. Its own step, so that handler
-      # reads the step's outcome.
+      # not hand its PR to the review. The upload gets five attempts over
+      # about 100 seconds: one small object, and the alternative is another
+      # whole generation. A failure here, to compute the hash or to upload
+      # it, is classed with storage failures like a failed render upload,
+      # and "Handle generation failure" treats it as one: the pair is
+      # generated again without spending its attempts, up to the
+      # infrastructure cap. Its own step, so that handler reads the step's
+      # outcome.
       - name: Stage the render hash
         id: render_hash
         if: steps.pr.outputs.pr_exists == 'true'
@@ -1694,14 +1697,14 @@ jobs:
              && git show "${GITHUB_SHA}:automation/scripts/impl_header.py" > "$TOOLS/impl_header.py" \
              && python3 "$TOOLS/render_hash.py" write --source "$RUNNER_TEMP/render-source" --language "$LANGUAGE" \
                   --out "$RUNNER_TEMP/render.sha256"; then
-            WHY="the upload failed three times"
-            for attempt in 1 2 3; do
+            WHY="the upload failed five times"
+            for attempt in 1 2 3 4 5; do
               if gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
                 STAGED_HASH=true
                 break
               fi
-              echo "::warning::render.sha256 upload failed (attempt ${attempt}/3)"
-              if [ "$attempt" -lt 3 ]; then sleep $((attempt * 5)); fi
+              echo "::warning::render.sha256 upload failed (attempt ${attempt}/5)"
+              if [ "$attempt" -lt 5 ]; then sleep $((attempt * 10)); fi
             done
           fi
           if [ "$STAGED_HASH" = true ]; then
@@ -2075,10 +2078,22 @@ jobs:
           INFRA_TAG="<!-- impl-fail-cause:infra -->"
           CAMPAIGN_CUTOFF=$(date -u -d "${CAMPAIGN_WINDOW_H} hours ago" +%Y-%m-%dT%H:%M:%SZ)
           # One paginated call, two numbers per page ("<genuine> <infra>"), summed by awk.
-          if PAGES=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
-               --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | \"\(map(select(.body | contains(\"$INFRA_TAG\") | not)) | length) \(map(select(.body | contains(\"$INFRA_TAG\"))) | length)\"") \
-             && COUNTS=$(printf '%s\n' "$PAGES" | awk '{ g += $1; i += $2 } END { print (g + 0) " " (i + 0) }') \
-             && [[ "$COUNTS" =~ ^[0-9]+\ [0-9]+$ ]]; then
+          # Three attempts: the cap fails closed on a count that cannot be
+          # read, so one failed call would end the pair's retries, and mark a
+          # first generation as failed.
+          COUNTS=""
+          for attempt in 1 2 3; do
+            if PAGES=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
+                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | \"\(map(select(.body | contains(\"$INFRA_TAG\") | not)) | length) \(map(select(.body | contains(\"$INFRA_TAG\"))) | length)\"") \
+               && COUNTS=$(printf '%s\n' "$PAGES" | awk '{ g += $1; i += $2 } END { print (g + 0) " " (i + 0) }') \
+               && [[ "$COUNTS" =~ ^[0-9]+\ [0-9]+$ ]]; then
+              break
+            fi
+            COUNTS=""
+            echo "::warning::Failure-count read failed (attempt ${attempt}/3)"
+            [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+          done
+          if [ -n "$COUNTS" ]; then
             FAILURE_COUNT=${COUNTS% *}
             INFRA_COUNT=${COUNTS#* }
             echo "::notice::Previous failures for ${LIBRARY}/${SPEC_ID} since ${CAMPAIGN_CUTOFF}: $FAILURE_COUNT (plus $INFRA_COUNT infrastructure failures, not counted)"

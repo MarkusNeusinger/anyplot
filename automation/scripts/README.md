@@ -137,8 +137,9 @@ becomes keep with `readiness_regression` when that verdict is `regression`;
 every other status changes nothing. With `--render-mismatch` it keeps with
 `render_mismatch` before anything else is read, and with `--render-unverified`
 with `render_unverified`: impl-review's render-hash check stopped the review
-(the renders were made from other code, or the hash is missing or unreadable),
-so there is no score, and the record's `adapt.review` reads `skipped`.
+(the renders were made from other code, the hash is missing or couldn't be
+read, or the implementation at the head couldn't be read), so there is no
+score, and the record's `adapt.review` reads `skipped`.
 `adapt-route` writes `adapt_route`, `adapt_why`,
 `adapt_prev`, and `adapt_new` before the review, and always exits 0. impl-review
 passes that result back to `decide` as `--adapt-route-held`. The record gains

@@ -78,7 +78,8 @@ impl-review's render-hash check stopped the review (``render_hash.py``), so
 there is no score to judge. ``--render-mismatch`` says the staged renders
 were made from other code than the PR head holds (``render_mismatch``);
 ``--render-unverified`` says nothing ties them to that code, because the
-hash is missing or could not be read (``render_unverified``).
+hash is missing or could not be read, or the implementation at the head could
+not be read (``render_unverified``).
 
 Anything missing or malformed fails closed to ``keep``. The classification
 keys (``prev_checklist``, ``prev_weaknesses``, ``rule``, ``kind``) never
@@ -3585,7 +3586,7 @@ def build_parser() -> argparse.ArgumentParser:
     dec.add_argument(
         "--render-unverified",
         action="store_true",
-        help="the check stopped the review because the hash is missing or unreadable: keep, whatever else is given",
+        help="the check stopped the review without a mismatch (the hash or the head is missing or unreadable): keep",
     )
     dec.add_argument("--canvas-failed", action="store_true")
     dec.add_argument("--change-request-present", action="store_true")

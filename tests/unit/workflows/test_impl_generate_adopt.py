@@ -120,11 +120,16 @@ printf '%s\\n' "$*" >> "$UV_LOG"
 exit 0
 """
 # Records every call as one JSON array per line; `gh api` answers the failure count
-# ("<genuine> <infrastructure>", $GH_API_COUNTS), or fails with GH_FAIL_API=1.
+# ("<genuine> <infrastructure>", $GH_API_COUNTS). It fails every time with
+# GH_FAIL_API=1, and its first N calls with GH_FAIL_API_TIMES=N.
 FAKE_GH = """#!/bin/sh
 "$TEST_PYTHON" -c 'import json, sys; print(json.dumps(sys.argv[1:]))' "$@" >> "$GH_LOG"
 case "$1" in
-  api) [ "${GH_FAIL_API:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+  api) calls=$(cat "$GH_LOG.api" 2>/dev/null || echo 0)
+       calls=$((calls + 1))
+       echo "$calls" > "$GH_LOG.api"
+       [ "${GH_FAIL_API:-0}" = "1" ] && { echo "HTTP 502" >&2; exit 1; }
+       [ "$calls" -le "${GH_FAIL_API_TIMES:-0}" ] && { echo "HTTP 502" >&2; exit 1; }
        echo "${GH_API_COUNTS:-0 0}" ;;
 esac
 exit 0
@@ -838,6 +843,7 @@ class Handler:
         _git(self.cwd, "init", "-q")
         self.bin = tmp / "bin"
         _executable(self.bin / "gh", FAKE_GH)
+        _executable(self.bin / "sleep", "#!/bin/sh\n")  # the count read backs off between its attempts
         self.log = tmp / "gh.log"
         step = _step("impl-generate.yml", HANDLER_STEP)
         self.script = _render(str(step["run"]), {"github.repository": "owner/repo", "github.run_id": "1"})
@@ -1008,6 +1014,22 @@ class TestFailureCountRead:
         assert handler.dispatches() == []
         assert "Failure-count API call failed — failing closed" in result.stdout
         assert "Previous failures for" not in result.stdout
+        assert len([call for call in handler.calls() if call[0] == "api"]) == 3
+        assert result.stdout.count("::warning::Failure-count read failed (attempt ") == 3
+
+    @pytest.mark.parametrize("shell", [BASH_E, PIPEFAIL], ids=["bash-e", "pipefail"])
+    @pytest.mark.parametrize(("counts", "retried"), [("0 0", True), ("2 0", False)])
+    def test_one_failed_call_does_not_end_the_retries(
+        self, tmp_path: Path, shell: tuple[str, ...], counts: str, retried: bool
+    ) -> None:
+        """Failing closed on the first error would mark a first generation as failed for one API blip."""
+        handler = Handler(tmp_path)
+        result = handler.run(source_ref="", adopt_cause="", shell=shell, GH_FAIL_API_TIMES="2", GH_API_COUNTS=counts)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert result.stdout.count("::warning::Failure-count read failed (attempt ") == 2
+        assert "failing closed" not in result.stdout
+        assert f"Previous failures for muix/{SPEC}" in result.stdout
+        assert bool(handler.dispatches()) == retried
 
     @pytest.mark.parametrize("shell", [BASH_E, PIPEFAIL], ids=["bash-e", "pipefail"])
     @pytest.mark.parametrize(("counts", "retried"), [("0 0", True), ("2 0", False), ("0 7", True)])

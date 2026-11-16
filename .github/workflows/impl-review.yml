@@ -580,7 +580,7 @@ jobs:
           BODY="$RUNNER_TEMP/render-hash-comment.md"
           rm -f "$HASH" "$SRC" "$BODY"
           # What the comment says happens next after a stop.
-          WORDING=(--spec-id "$SPEC_ID" --library "$LIBRARY")
+          WORDING=(--spec-id "$SPEC_ID" --library "$LIBRARY" --pr-number "$PR_NUM")
           [ "$IS_REGEN" = "true" ] && WORDING+=(--regeneration)
           # Three attempts, like the render download: one failed read must not
           # turn into `unreadable`. A missing object is an answer (no hash),
@@ -636,7 +636,15 @@ jobs:
       # - The hash could not be downloaded (`retry`): `ai-review-failed`, the
       #   label of a review that failed, so the watchdog's Case 1 starts the
       #   review again once at its next scan. The storage failed; the renders
-      #   were not judged.
+      #   were not judged. Case 1 rescues a PR once in its life
+      #   (`ai-review-rescued` is never removed), and this stop draws on that
+      #   one rescue like every other failed review: for a PR that already
+      #   had it, the step says that the review must be started by hand. A PR
+      #   that is already parked (`ai-render-unverified`, here through a
+      #   review someone started by hand) stays parked and gets no second
+      #   label: the watchdog skips it before Case 1, so `ai-review-failed`
+      #   would promise a restart that never comes. Labels that cannot be
+      #   read count as neither.
       # - Every other cause: the label `ai-render-unverified`, and the PR
       #   stays open until the pair is generated again, which replaces its
       #   branch and so closes it (the check's comment gives the command).
@@ -672,10 +680,29 @@ jobs:
             exit 0
           fi
           if [ "$RETRY" = "true" ]; then
+            RERUN="gh workflow run impl-review.yml -f pr_number=${PR_NUM}"
+            LABELS=""
+            for attempt in 1 2 3; do
+              if LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2> "$RUNNER_TEMP/render-stop-labels.err"); then
+                break
+              fi
+              LABELS=""
+              echo "::warning::gh pr view (labels) failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/render-stop-labels.err" | tr '\n' ' ')"
+              [ "$attempt" -lt 3 ] && sleep $((attempt * 5))
+            done
+            if grep -qxF "ai-render-unverified" <<< "$LABELS"; then
+              echo "::warning::render_stop spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} regeneration=false cause=${CAUSE}: no review; the PR stays parked (ai-render-unverified)"
+              echo "**Render hash:** the review of PR #${PR_NUM} did not run (${CAUSE}); the PR stays parked with \`ai-render-unverified\`, and no workflow starts the review again: \`${RERUN}\`." >> "$GITHUB_STEP_SUMMARY"
+              echo "::error::The review of PR #${PR_NUM} stopped on the render hash (${CAUSE}): nothing was scored. The PR stays parked (ai-render-unverified), and no workflow starts the review again: ${RERUN}"
+              exit 1
+            fi
             LABEL="ai-review-failed"
             COLOR="d73a4a"
             DESCRIPTION="AI review failed; watchdog re-dispatches once"
             NEXT="the watchdog starts the review again once"
+            if grep -qxF "ai-review-rescued" <<< "$LABELS"; then
+              NEXT="the watchdog has already rescued this PR once and only reports it now; start the review by hand (${RERUN})"
+            fi
             WITHOUT="without the label the watchdog treats the PR as stalled and acts after its stale window (Case 5 runs the review, Case 2 the repair again); add the label by hand"
           else
             LABEL="ai-render-unverified"
@@ -2810,8 +2837,11 @@ jobs:
           WB_SCORE: ${{ steps.writeback.outputs.score }}
           NOTHING_TO_REPAIR: ${{ steps.early_verdict.outputs.nothing_to_repair }}
           REVIEW_SKIPPED: ${{ steps.adapt.outputs.review_skipped }}
-          # "Stop on the render hash" stopped the review of a regeneration.
+          # "Stop on the render hash" stopped the review of a regeneration,
+          # and why. Not the gate's code: a gate that crashed keeps the
+          # implementation with another one.
           RENDER_STOPPED: ${{ steps.render_stop.outputs.keep }}
+          RENDER_STOP_CODE: ${{ steps.render_stop.outputs.code }}
           ADAPT_COUNTED: ${{ steps.gate.outputs.adapt_counted }}
           ADAPT_OVERRULED: ${{ steps.gate.outputs.adapt_overruled }}
         run: |
@@ -2867,13 +2897,14 @@ jobs:
               RENDER="this render (score ${SCORE})"
             fi
             # The keep comment's first sentence. After a render-hash stop the
-            # gate compared nothing: no review ran. The gate's code says why.
+            # gate compared nothing: no review ran. The stop's own code says
+            # why.
             KEPT_WHY="The regen gate compared ${RENDER} with the implementation on main and kept the latter."
             if [ "$RENDER_STOPPED" = "true" ]; then
-              if [ "$GATE_CODE" = "render_mismatch" ]; then
+              if [ "$RENDER_STOP_CODE" = "render_mismatch" ]; then
                 KEPT_WHY="No review ran: the staged renders of this PR were not made from the code at its head (see the render hash comment above), so the regen gate kept the implementation on main."
               else
-                KEPT_WHY="No review ran: nothing ties the staged renders of this PR to the code at its head, because the render hash is missing or could not be read (see the render hash comment above), so the regen gate kept the implementation on main."
+                KEPT_WHY="No review ran: nothing ties the staged renders of this PR to the code at its head, because the render hash is missing or could not be read, or the implementation at the head could not be read (see the render hash comment above), so the regen gate kept the implementation on main."
               fi
             fi
             # Keep only: what happened to the re-score of the live

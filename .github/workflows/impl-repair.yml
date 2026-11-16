@@ -692,7 +692,8 @@ jobs:
 
       # render.sha256 of the repaired file ("Check the repair's push" made
       # sure it is the pushed one), as impl-generate stages it: both hashes,
-      # from this workflow's ref, never promoted, three upload attempts.
+      # from this workflow's ref, never promoted, five upload attempts over
+      # about 100 seconds.
       # Written last, after the repaired renders and their records are staged
       # (the hash of the code before the repair went before them, in the step
       # above), and fatal: the review stops on renders without a hash, so a
@@ -700,6 +701,10 @@ jobs:
       # failure takes the repair's ordinary crash path ("Handle repair
       # failure", which names it). Its own step, so that handler reads the
       # step's outcome.
+      # That path is expensive here, which is why the upload tries so long:
+      # the repair's push has landed, so the one automatic retry starts from
+      # the repaired file and passes "Check the repair's push" only when it
+      # changes that file again.
       - name: Stage the render hash
         id: render_hash
         if: success()
@@ -720,14 +725,14 @@ jobs:
              && git show "${GITHUB_SHA}:automation/scripts/impl_header.py" > "$TOOLS/impl_header.py" \
              && python3 "$TOOLS/render_hash.py" write --source "$IMPL_DIR/${LIBRARY}${EXT}" --language "$LANGUAGE" \
                   --out "$RUNNER_TEMP/render.sha256"; then
-            WHY="the upload failed three times"
-            for attempt in 1 2 3; do
+            WHY="the upload failed five times"
+            for attempt in 1 2 3 4 5; do
               if gsutil -h "Cache-Control:no-store" cp "$RUNNER_TEMP/render.sha256" "${STAGING_PATH}/render.sha256"; then
                 STAGED_HASH=true
                 break
               fi
-              echo "::warning::render.sha256 upload failed (attempt ${attempt}/3)"
-              if [ "$attempt" -lt 3 ]; then sleep $((attempt * 5)); fi
+              echo "::warning::render.sha256 upload failed (attempt ${attempt}/5)"
+              if [ "$attempt" -lt 5 ]; then sleep $((attempt * 10)); fi
             done
           fi
           if [ "$STAGED_HASH" = true ]; then

@@ -115,8 +115,15 @@ def _bin(tmp_path: Path, fake_gh: str = FAKE_GH) -> str:
     return f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
 
 
+PIPEFAIL = ("bash", "-eo", "pipefail", "-c")
+# What Actions runs a step with when neither the step nor the workflow sets a
+# shell. A pipeline's failure passes unseen under it, so a step that holds
+# under pipefail alone has not been shown to hold in production.
+BASH_E = ("bash", "-e", "-c")
+
+
 def _run(
-    script: str, cwd: Path, tmp_path: Path, *, fake_gh: str = FAKE_GH, **env: str
+    script: str, cwd: Path, tmp_path: Path, *, fake_gh: str = FAKE_GH, shell: tuple[str, ...] = PIPEFAIL, **env: str
 ) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:
     assert "${{" not in script
     log = tmp_path / "gh_log"
@@ -130,7 +137,7 @@ def _run(
         runner_temp.mkdir(exist_ok=True)
         env["RUNNER_TEMP"] = str(runner_temp)
     result = subprocess.run(
-        ["bash", "-eo", "pipefail", "-c", script],
+        [*shell, script],
         cwd=cwd,
         env={**base, "PATH": _bin(tmp_path, fake_gh), "GH_LOG": str(log), "GH_TOKEN": "unused", **env},
         capture_output=True,

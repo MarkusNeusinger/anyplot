@@ -125,9 +125,12 @@ with evidence — never let the user ask "still running?".
   model: regenerate fresh, don't re-review.
 - **A PR labelled `ai-render-unverified` is parked on purpose**: its
   review stopped because the staged renders were made from other code
-  than the PR holds, or because their `render.sha256` is missing or
-  unreadable, the review run is red, and neither the watchdog nor a
-  re-review of the same staging moves it. The queue doesn't
+  than the PR holds, their `render.sha256` is missing or holds no hash,
+  or the file at the PR head could not be read. The review run is red,
+  and neither the watchdog nor a re-review of the same staging moves
+  it. (A hash that could not be downloaded is another case: that PR
+  gets `ai-review-failed`, and the watchdog starts its review again
+  once, unless it already rescued that PR.) The queue doesn't
   move it either: `run_queue.sh` skips a spec while one of its
   implementation PRs is open (`skip <spec>: generate run or PR still
   in flight (needs a look)`), and that includes a parked one, because

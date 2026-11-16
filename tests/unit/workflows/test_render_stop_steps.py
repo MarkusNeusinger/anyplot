@@ -11,13 +11,17 @@ hash" then stops the review:
   review whose check reads `match` removes the label.
 - A first generation whose hash could not be downloaded gets `ai-review-failed`
   instead, the label of a failed review, so the watchdog runs the review again.
+  It does that once per PR and never for a parked one, so the step reads the
+  labels first: a parked PR gets no second label, and a rescued one is told
+  that the review must be started by hand.
 - A regeneration runs no review either; the regen gate keeps the live
   implementation (`render_mismatch` or `render_unverified`), and the keep path
   closes the PR.
 
-These tests run the step scripts with a stub `gh`, and pin the `if:` wiring
-that no local run reaches: which steps a stop switches off, and which three
-the keep path switches on.
+These tests run the step scripts with a stub `gh`, under `bash -e` (what
+Actions runs them with) and under pipefail, and pin the `if:` and `env:`
+wiring that no local run reaches: which steps a stop switches off, which
+three the keep path switches on, and what each step is handed.
 """
 
 from __future__ import annotations
@@ -32,7 +36,17 @@ import pytest
 import yaml
 
 from automation.scripts import regen_gate, regen_pick_pairs, render_hash
-from tests.unit.workflows.test_pipeline_retry_gaps import VERDICT_STEP, _calls, _code_only, _run, _step, _steps
+from tests.unit.workflows.test_pipeline_retry_gaps import (
+    BASH_E,
+    FAKE_GH_WATCHDOG,
+    PIPEFAIL,
+    VERDICT_STEP,
+    _calls,
+    _code_only,
+    _run,
+    _step,
+    _steps,
+)
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -64,6 +78,27 @@ SWITCHED_ON = [GATE, EARLY, VERDICT_STEP]
 ENV = {"PR_NUM": "7", "SPEC_ID": "spec-a", "LIBRARY": "plotly"}
 
 
+SHELLS = {"bash-e": BASH_E, "pipefail": PIPEFAIL}
+# The shell the step scripts of the running test use (see `both_shells`).
+_ACTIVE = {"shell": PIPEFAIL}
+
+
+@pytest.fixture(params=sorted(SHELLS))
+def both_shells(request):
+    """Run a class's step scripts under both shells.
+
+    None of these steps sets `shell:`, so Actions runs them under `bash -e`,
+    where a failed command inside a pipeline passes unseen.
+    """
+    _ACTIVE["shell"] = SHELLS[request.param]
+    yield
+    _ACTIVE["shell"] = PIPEFAIL
+
+
+def _run_step(script: str, cwd: Path, tmp_path: Path, **env: str):
+    return _run(script, cwd, tmp_path, shell=_ACTIVE["shell"], **env)
+
+
 def _names() -> list[str]:
     return [str(s.get("name")) for s in _steps(REVIEW)]
 
@@ -71,7 +106,7 @@ def _names() -> list[str]:
 def _stop(tmp_path: Path, **env: str):
     """The stop step, by default after a mismatch (what the check wrote for it)."""
     output, summary = tmp_path / "output", tmp_path / "summary"
-    result, calls = _run(
+    result, calls = _run_step(
         str(_step(REVIEW, STOP)["run"]),
         tmp_path,
         tmp_path,
@@ -91,7 +126,14 @@ PARKING = [
 ]
 
 
+@pytest.mark.usefixtures("both_shells")
 class TestStopStep:
+    def test_none_of_these_steps_sets_a_shell(self):
+        workflow = yaml.safe_load((WORKFLOWS / REVIEW).read_text(encoding="utf-8"))
+        assert "defaults" not in workflow and all("defaults" not in job for job in workflow["jobs"].values())
+        for name in (STOP, CLEAR, GATE, EARLY, VERDICT_STEP):
+            assert "shell" not in _step(REVIEW, name), name
+
     @pytest.mark.parametrize(("cause", "code"), PARKING)
     def test_a_first_generation_gets_the_label_and_nothing_else(self, tmp_path, cause, code):
         result, calls, output = _stop(tmp_path, IS_REGEN="false", CAUSE=cause, KEEP_CODE=code)
@@ -123,9 +165,60 @@ class TestStopStep:
         assert created[2] == render_hash.RETRY_LABEL
         # The description the other two places give that label, so whichever creates it first agrees.
         assert created[created.index("--description") + 1] == "AI review failed; watchdog re-dispatches once"
-        assert len(calls) == 2
+        # One read of the labels (is the PR parked, was it rescued), the label, and nothing else.
+        assert len(_calls(calls, "pr", "view")) == 1 and len(calls) == 3
         assert render_hash.STOP_LABEL not in result.stdout
         assert "The PR carries ai-review-failed: the watchdog starts the review again once." in result.stdout
+
+    FETCH = {"IS_REGEN": "false", "CAUSE": "fetch", "RETRY": "true", "KEEP_CODE": render_hash.UNVERIFIED_CODE}
+    RERUN = "gh workflow run impl-review.yml -f pr_number=7"
+
+    @pytest.mark.parametrize("labels", ["ai-render-unverified", "quality:72 ai-attempt-1 ai-render-unverified"])
+    def test_a_failed_download_on_a_parked_pr_leaves_it_parked(self, tmp_path, labels):
+        """The watchdog skips a parked PR before it looks for a failed review: the label would promise nothing."""
+        result, calls, output = _stop(tmp_path, GH_LABELS=labels, **self.FETCH)
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert output == "stopped=true\n"
+        assert not _calls(calls, "pr", "edit") and not _calls(calls, "label", "create")
+        assert render_hash.RETRY_LABEL not in result.stdout
+        assert "the watchdog starts the review again" not in result.stdout
+        expected = (
+            "::error::The review of PR #7 stopped on the render hash (fetch): nothing was scored. The PR stays "
+            f"parked (ai-render-unverified), and no workflow starts the review again: {self.RERUN}"
+        )
+        assert expected in result.stdout
+        assert "regeneration=false cause=fetch: no review; the PR stays parked" in result.stdout
+
+    def test_a_failed_download_on_a_rescued_pr_says_that_nothing_restarts_it(self, tmp_path):
+        """The watchdog rescues a PR once in its life; after that it only reports the label."""
+        result, calls, output = _stop(tmp_path, GH_LABELS="ai-review-rescued quality:72", **self.FETCH)
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert output == "stopped=true\n"
+        # Still the label of a failed review: the watchdog's report is how the PR gets seen.
+        assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--add-label", render_hash.RETRY_LABEL]]
+        assert "the watchdog starts the review again once" not in result.stdout
+        expected = (
+            "The PR carries ai-review-failed: the watchdog has already rescued this PR once and only reports it "
+            f"now; start the review by hand ({self.RERUN})."
+        )
+        assert expected in result.stdout
+
+    def test_labels_that_cannot_be_read_count_as_neither(self, tmp_path):
+        """Three attempts, then the label as before: a failed read must not hide the PR from the watchdog."""
+        result, calls, output = _stop(tmp_path, GH_FAIL_VIEW="1", **self.FETCH)
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert output == "stopped=true\n"
+        assert len(_calls(calls, "pr", "view")) == 3
+        assert result.stdout.count("::warning::gh pr view (labels) failed (attempt ") == 3
+        assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--add-label", render_hash.RETRY_LABEL]]
+        assert "The PR carries ai-review-failed: the watchdog starts the review again once." in result.stdout
+
+    @pytest.mark.parametrize(("cause", "code"), PARKING)
+    def test_only_a_failed_download_reads_the_labels(self, tmp_path, cause, code):
+        """Every other cause parks the PR whatever it carries, so a failing read cannot get in its way."""
+        result, calls, _ = _stop(tmp_path, IS_REGEN="false", CAUSE=cause, KEEP_CODE=code, GH_FAIL_VIEW="1")
+        assert result.returncode == 1 and not _calls(calls, "pr", "view")
+        assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--add-label", render_hash.STOP_LABEL]]
 
     @pytest.mark.parametrize(
         ("env", "code"),
@@ -199,11 +292,12 @@ class TestStopStep:
         assert lines[0] == 'echo "stopped=true" >> "$GITHUB_OUTPUT"'
 
 
+@pytest.mark.usefixtures("both_shells")
 class TestClearStep:
     """The label of an earlier stop goes once a later review's check reads `match`."""
 
     def _clear(self, tmp_path: Path, **env: str):
-        return _run(str(_step(REVIEW, CLEAR)["run"]), tmp_path, tmp_path, PR_NUM="7", **env)
+        return _run_step(str(_step(REVIEW, CLEAR)["run"]), tmp_path, tmp_path, PR_NUM="7", **env)
 
     def test_the_label_goes_when_it_is_there(self, tmp_path):
         result, calls = self._clear(tmp_path, GH_LABELS=f"quality:85 {render_hash.STOP_LABEL}")
@@ -304,7 +398,7 @@ def _gate(tmp_path: Path, **env: str):
     work.mkdir(exist_ok=True)
     output = tmp_path / "gate_output"
     output.unlink(missing_ok=True)
-    result, _ = _run(
+    result, _ = _run_step(
         str(_step(REVIEW, GATE)["run"]),
         work,
         tmp_path,
@@ -325,6 +419,7 @@ KEEPS = [
 ]
 
 
+@pytest.mark.usefixtures("both_shells")
 class TestKeepPath:
     @pytest.mark.parametrize(("handed", "code", "reason"), KEEPS, ids=["mismatch", "unverified", "no-code"])
     def test_the_gate_keeps_without_any_review_file(self, tmp_path, handed, code, reason):
@@ -348,7 +443,9 @@ class TestKeepPath:
     def test_the_early_verdict_marks_the_keep(self, tmp_path):
         env = {"PR_NUM": "7", "SCORE": "", "ATTEMPT_COUNT": "0", "IS_REGEN": "true", "GATE_VERDICT": "keep"}
         output = tmp_path / "output"
-        result, calls = _run(str(_step(REVIEW, EARLY)["run"]), tmp_path, tmp_path, GITHUB_OUTPUT=str(output), **env)
+        result, calls = _run_step(
+            str(_step(REVIEW, EARLY)["run"]), tmp_path, tmp_path, GITHUB_OUTPUT=str(output), **env
+        )
         assert result.returncode == 0, result.stdout + result.stderr
         assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--add-label", "regen:kept"]]
         assert output.read_text(encoding="utf-8") == "approved=false\n"
@@ -358,13 +455,15 @@ class TestKeepPath:
         gate, outputs, runner = _gate(tmp_path, RENDER_KEEP="true", RENDER_STOP_CODE=code)
         assert gate.returncode == 0, gate.stdout + gate.stderr
         work = tmp_path / "work"
-        result, calls = _run(
+        result, calls = _run_step(
             str(_step(REVIEW, VERDICT_STEP)["run"]),
             work,
             tmp_path,
             RUNNER_TEMP=str(runner),
             **{
                 **ENV,
+                # What the stop step handed the gate; the verdict step reads it for its comment.
+                "RENDER_STOP_CODE": code,
                 "LANGUAGE": "python",
                 "EXT": ".py",
                 "SCORE": "",
@@ -399,7 +498,7 @@ class TestKeepPath:
             (
                 "render_unverified",
                 "No review ran: nothing ties the staged renders of this PR to the code at its head, because the "
-                "render hash is missing or could not be read",
+                "render hash is missing or could not be read, or the implementation at the head could not be read",
             ),
         ],
     )
@@ -417,6 +516,22 @@ class TestKeepPath:
         assert f"**Stored review:** unchanged (the gate has no re-score of the live implementation: {code})." in body
         (marker,) = regen_gate.parse_record_markers(body)
         assert (marker["code"], marker["verdict"], marker["writeback"]) == (code, "keep", "no_rescore")
+
+    @pytest.mark.parametrize(
+        ("stop_code", "why"),
+        [
+            ("render_mismatch", "No review ran: the staged renders of this PR were not made from the code at its head"),
+            ("render_unverified", "No review ran: nothing ties the staged renders of this PR to the code at its head"),
+        ],
+    )
+    def test_the_reason_is_the_stops_own_and_not_the_gates(self, tmp_path, stop_code, why):
+        """A gate that crashed keeps with another code; the comment must still say what the check found."""
+        result, calls = self._verdict(
+            tmp_path, stop_code, RENDER_STOPPED="true", GATE_CODE="script_crashed", GATE_REASON="the gate crashed"
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        (comment,) = _calls(calls, "pr", "comment")
+        assert why in Path(comment[-1]).read_text(encoding="utf-8")
 
     def test_without_the_flag_the_comment_is_the_ordinary_keep(self, tmp_path):
         """The control: the same run as an ordinary keep after a review, whose write-back is missing."""
@@ -483,11 +598,30 @@ class TestWiring:
 
     def test_the_steps_get_what_they_read(self):
         """The step tests inject these values themselves, so the wiring is pinned here."""
-        assert _step(REVIEW, CHECK)["env"]["IS_REGEN"] == "${{ steps.regen.outputs.is_regen }}"
-        assert _step(REVIEW, VERDICT_STEP)["env"]["RENDER_STOPPED"] == "${{ steps.render_stop.outputs.keep }}"
+        check = _step(REVIEW, CHECK)["env"]
+        assert check["IS_REGEN"] == "${{ steps.regen.outputs.is_regen }}"
+        # A wrong name here reads as an empty string: the check would then compare
+        # another path, find no file, and stop every review.
+        assert check["HEAD_SHA"] == "${{ steps.pr.outputs.head_sha }}"
+        assert check["SPEC_ID"] == "${{ steps.pr.outputs.specification_id }}"
+        assert check["LIBRARY"] == "${{ steps.pr.outputs.library }}"
+        assert check["LANGUAGE"] == "${{ steps.lang.outputs.language }}"
+        assert check["EXT"] == "${{ steps.lang.outputs.ext }}"
+        verdict = _step(REVIEW, VERDICT_STEP)["env"]
+        assert verdict["RENDER_STOPPED"] == "${{ steps.render_stop.outputs.keep }}"
+        assert verdict["RENDER_STOP_CODE"] == "${{ steps.render_stop.outputs.code }}"
+        assert verdict["GATE_CODE"] == "${{ steps.gate.outputs.code }}"
         for name in (CHECK, STOP, CLEAR):
             assert _step(REVIEW, name)["env"]["GH_TOKEN"] == "${{ secrets.GITHUB_TOKEN }}", name
             assert _step(REVIEW, name)["env"]["PR_NUM"] == "${{ steps.pr.outputs.pr_number }}", name
+
+    def test_the_check_reads_the_file_the_review_reads(self):
+        """The path and the names the check is run with, built from the step's own variables."""
+        script = _code_only(str(_step(REVIEW, CHECK)["run"]))
+        assert 'git show "${HEAD_SHA}:plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}" > "$SRC"' in script
+        assert '"gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/render.sha256" "$HASH"' in script
+        assert 'WORDING=(--spec-id "$SPEC_ID" --library "$LIBRARY" --pr-number "$PR_NUM")' in script
+        assert '--head "$HEAD_SHA"' in script and '--language "$LANGUAGE"' in script
 
     def test_the_gate_still_needs_a_regeneration(self):
         assert _step(REVIEW, GATE)["if"].startswith("steps.regen.outputs.is_regen == 'true' && (")
@@ -549,6 +683,46 @@ class TestWiring:
         assert "::warning::PR #$num: review stopped on the render hash" in block and block.endswith("continue")
         # Before every case that rescues: none of them may see the PR.
         assert skip < script.index("# Case 0:") < script.index("# Case 1:") < script.index("# Case 2:")
+
+    # A PR as the watchdog's scan lists it, last touched long before the stale window.
+    def _scan(self, tmp_path: Path, labels: str):
+        prs = [
+            {
+                "number": 7,
+                "labels": [{"name": name} for name in labels.split()],
+                "headRefName": "implementation/spec-a/plotly",
+                "updatedAt": "2026-01-01T00:00:00Z",
+            }
+        ]
+        return _run(
+            _step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"],
+            tmp_path,
+            tmp_path,
+            fake_gh=FAKE_GH_WATCHDOG,
+            GH_REPO="owner/repo",
+            STALE_HOURS="4",
+            DRY_RUN="false",
+            GH_PRS_JSON=json.dumps(prs),
+            GH_FRESH_LABELS=labels,
+        )
+
+    # Each set of labels without the parking label is one the scan acts on.
+    RESCUED_WITHOUT_THE_LABEL = ["ai-review-failed", "ai-rejected ai-attempt-1 quality:72", "quality:72"]
+
+    @pytest.mark.parametrize("labels", RESCUED_WITHOUT_THE_LABEL)
+    def test_the_scan_leaves_a_parked_pr_alone(self, tmp_path, labels):
+        """Run, not read: a skip that lost its `continue` would still print the warning and then rescue the PR."""
+        result, calls = self._scan(tmp_path, f"{labels} {render_hash.STOP_LABEL}")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert not _calls(calls, "workflow", "run") and not _calls(calls, "pr", "edit")
+        assert "::warning::PR #7: review stopped on the render hash (ai-render-unverified)" in result.stdout
+
+    @pytest.mark.parametrize("labels", RESCUED_WITHOUT_THE_LABEL)
+    def test_the_same_pr_without_the_label_is_rescued(self, tmp_path, labels):
+        """The control: these are PRs the scan dispatches for, so the test above shows the skip and not an idle scan."""
+        result, calls = self._scan(tmp_path, labels)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _calls(calls, "workflow", "run")
 
     def test_generating_the_pair_again_replaces_the_stopped_pr(self):
         """What the stop comment tells the reader: impl-generate deletes the pair's branch, which closes its PR."""

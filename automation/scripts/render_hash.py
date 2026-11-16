@@ -30,8 +30,9 @@ are not tied to this code (``cause``):
   That holds for a one-line file as well. The writer has written two lines
   since the code hash exists, so a one-line file is left from an older run.
 - ``missing``: staging holds no ``render.sha256``. The writers put it there
-  last and fail their run when they cannot, so renders without one are not
-  this run's.
+  last and fail their run when they cannot, so no finished run stands behind
+  the renders: a run failed or was cancelled before it wrote the hash, an
+  earlier run or a manual upload left them, or nothing is staged at all.
 - ``content``: the file holds no sha256.
 - ``head``: the implementation at the PR head could not be read.
 - ``fetch``: the file could not be downloaded, which is a failure of the
@@ -39,10 +40,10 @@ are not tied to this code (``cause``):
 
 Every cause stops the review (``stop=true``). ``fetch`` also writes
 ``retry=true``: the same review may well pass an hour later, so impl-review
-ends it as a failed review that the watchdog starts again, where the other
-causes park the PR. On a gated regeneration every cause is a keep, with the
-code in ``code``: ``render_mismatch`` for a mismatch and ``render_unverified``
-for the rest.
+ends it as a failed review, which the watchdog starts again once per PR,
+where the other causes park the PR. On a gated regeneration every cause is a
+keep, with the code in ``code``: ``render_mismatch`` for a mismatch and
+``render_unverified`` for the rest.
 
 The name is not ``plot-*``: review and merge copy exactly those objects, and
 the hash must never reach production.
@@ -53,7 +54,7 @@ Subcommands::
 
     render_hash.py check --hash render.sha256 --source IMPL_AT_HEAD --language LANGUAGE --head SHA \
         [--fetch-error TEXT] [--run-url URL] [--comment-out FILE] \
-        [--regeneration] [--spec-id S --library B]
+        [--regeneration] [--spec-id S --library B] [--pr-number N]
 
 ``write`` writes ``<render hash>  <source>`` (the ``sha256sum`` format) and
 ``<code hash>  code``. ``check`` writes
@@ -89,6 +90,10 @@ else:  # run as a script: the regen_gate.py next to this file (the workflow-ref 
 
 
 HASH_RE = re.compile(r"[0-9a-f]{64}")
+# The shape of a spec id and of a library name. Both reach ``check`` from the
+# PR's branch name, which a fork chooses freely, and the comment puts them
+# into a command the reader is meant to copy.
+SLUG_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 # One comment per status, cause and head (impl-review dedupes on this line).
 MARKER = "<!-- render-hash:v2 status={status} cause={cause} head={head} -->"
 LANGUAGES = ("python", "r", "julia", "javascript")
@@ -248,6 +253,11 @@ def compare(hash_file: Path, source: Path, fetch_error: str = "", language: str 
     data = source.read_bytes() if source.is_file() else None
     head = render_hash(data) if data is not None else ""
     if fetch_error:
+        # The caller cuts the error at a byte count, which can split a
+        # character, and argv then carries the stray bytes as surrogates that
+        # no UTF-8 writer accepts. Replace them here: the text goes to the
+        # log, the comment and the summary.
+        fetch_error = fetch_error.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
         reason = f"staging could not be read ({regen_gate._one_line(fetch_error)[:200]})"
         return Comparison("unreadable", head=head, reason=reason, cause=CAUSE_FETCH)
     if not hash_file.is_file():
@@ -267,9 +277,21 @@ def compare(hash_file: Path, source: Path, fetch_error: str = "", language: str 
 
 
 def comment(
-    result: Comparison, head: str, run_url: str, *, regeneration: bool = False, spec_id: str = "", library: str = ""
+    result: Comparison,
+    head: str,
+    run_url: str,
+    *,
+    regeneration: bool = False,
+    spec_id: str = "",
+    library: str = "",
+    pr_number: str = "",
 ) -> str:
-    """The PR comment for every status but a match: what was found, and what happens to the PR."""
+    """The PR comment for every status but a match: what was found, and what happens to the PR.
+
+    ``spec_id``, ``library`` and ``pr_number`` go into commands the reader
+    copies, so each is written only in its own shape and as a placeholder
+    otherwise.
+    """
     short = head[:7] or "the head"
     title = "Staged renders not checked against this code"
     if result.cause == CAUSE_MISMATCH:
@@ -280,14 +302,15 @@ def comment(
         )
         if result.form == FORM_LEGACY:
             what += (
-                " The file holds one hash only. Every render path has written two since the code hash exists, "
-                "so this file is left from an older run."
+                " The file holds no code hash that this check can read. Every render path has written one since "
+                "the code hash exists, so the file is left from an older run or was changed afterwards."
             )
     elif result.cause == CAUSE_MISSING:
         what = (
-            f"The staged renders carry no `render.sha256`, so nothing ties them to the implementation at `{short}`. "
-            "Every render path writes the hash last and fails its run when it cannot, so renders without one were "
-            "not staged by this PR's own run: they are left from an earlier run or were put there by hand."
+            f"Staging holds no `render.sha256` for this PR, so nothing ties its renders to the implementation at "
+            f"`{short}`. Every render path writes the hash last, after the renders. Without one, the run that "
+            "staged the renders did not finish (it failed or was cancelled before it wrote the hash), the renders "
+            "are left from an earlier run or were put there by hand, or nothing was staged at all."
         )
     elif result.cause == CAUSE_FETCH:
         what = (
@@ -303,9 +326,19 @@ def comment(
             "returns after the attempt window."
         )
     elif result.retry:
+        # The watchdog rescues a failed review once per PR
+        # (`ai-review-rescued` stays on the PR for good), and it skips a
+        # parked PR before it looks at anything else, so the restart is a
+        # promise with two exceptions.
+        number = pr_number if pr_number.isascii() and pr_number.isdigit() else "<this PR's number>"
         then += (
-            f"This run ends as failed and labels the PR `{RETRY_LABEL}`, so the watchdog starts the review again "
-            "once, at its next scan within six hours. If the download fails then as well, the PR needs a look."
+            f"This run ends as failed. Unless the PR is already parked with `{STOP_LABEL}`, it labels the PR "
+            f"`{RETRY_LABEL}`, and the watchdog starts the review again once, at its next scan within six hours. "
+            "The watchdog does that once per PR. If it has already rescued this PR (`ai-review-rescued`), if the "
+            "PR is parked, or if the download fails again, start the review by hand:\n\n"
+            "```\n"
+            f"gh workflow run impl-review.yml -f pr_number={number}\n"
+            "```"
         )
     else:
         then += (
@@ -313,6 +346,8 @@ def comment(
             "picks it up again by itself."
         )
         if spec_id and library:
+            if not (SLUG_RE.fullmatch(spec_id) and SLUG_RE.fullmatch(library)):
+                spec_id, library = "<spec-id>", "<library>"
             # impl-generate.yml deletes the pair's branch before it creates it
             # anew ("Create implementation branch"), which closes this PR. The
             # command is the plain generation; a forced or adopted run takes
@@ -389,6 +424,7 @@ def cmd_check(args: argparse.Namespace) -> int:
                 regeneration=args.regeneration,
                 spec_id=args.spec_id,
                 library=args.library,
+                pr_number=args.pr_number,
             )
             Path(args.comment_out).write_text(text, encoding="utf-8")
     outputs = {
@@ -427,6 +463,7 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("--regeneration", action="store_true", help="the comment names the regen gate's keep")
     check.add_argument("--spec-id", default="", help="for the comment's command on a first generation")
     check.add_argument("--library", default="", help="for the comment's command on a first generation")
+    check.add_argument("--pr-number", default="", help="for the comment's command after a failed download")
     check.set_defaults(func=cmd_check)
     return parser
 

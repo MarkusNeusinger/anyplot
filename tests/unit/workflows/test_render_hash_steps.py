@@ -8,11 +8,11 @@ impl-repair fails unless it pushed a change to the implementation and the
 workspace holds that file, and fails without both renders; impl-generate fails
 unless the pushed branch carries the file in the workspace. Both stage
 `render.sha256` with two hashes (the file with its score reset, and its code
-without the header), and impl-review compares it with the file at the PR head.
-A mismatch against such a file sets `stop=true` (rule P2b; what the workflow
-does with it is in test_render_stop_steps.py); everything else only warns.
-Both also record, warn-only, whether a render is older than the implementation
-file.
+without the header) in a step of its own, last and fatal, and impl-review
+compares it with the file at the PR head. Only a match lets the review run:
+every other result sets `stop=true` and names its cause (rule P2b; what the
+workflow does with it is in test_render_stop_steps.py). Both also record,
+warn-only, whether a render is older than the implementation file.
 
 The step scripts run here under `bash -e` (the Actions default) and
 `bash -eo pipefail`, against a scratch origin whose workflow-ref commit carries
@@ -362,6 +362,31 @@ def test_a_failed_gate_is_named_in_the_crash_comment(tmp_path, markers, expected
     assert "Claude Code Action" not in "\n".join(comment)
 
 
+@pytest.mark.parametrize(
+    ("env", "named"),
+    [
+        ({"RENDER_HASH_OUTCOME": "failure"}, True),
+        # The gate that failed first keeps its name, and a hash step that never ran names nothing.
+        ({"RENDER_HASH_OUTCOME": "failure", "GATE": "G1"}, False),
+        ({"RENDER_HASH_OUTCOME": "skipped"}, False),
+        ({"RENDER_HASH_OUTCOME": ""}, False),
+    ],
+    ids=["hash-failed", "gate-failed-first", "hash-skipped", "no-outcome"],
+)
+def test_a_failed_hash_write_is_named_in_the_crash_comment(tmp_path, env, named):
+    """ "Stage the render hash" failed after every gate passed: the comment says so instead of blaming Claude."""
+    base = {"PR_NUM": "7", "SPEC_ID": "spec-a", "LIBRARY": "plotly", "ATTEMPT": "2", "MODEL": "sonnet", "GATE": ""}
+    script = str(_step("impl-repair.yml", "Handle repair failure")["run"])
+    result, calls = _run(script, tmp_path, tmp_path, REPOSITORY="o/r", RUN_ID="1", GH_MARKERS="0", **{**base, **env})
+    assert result.returncode == 0, result.stdout + result.stderr
+    (comment,) = _calls(calls, "pr", "comment")
+    text = "\n".join(comment)
+    assert ("render.sha256 could not be staged beside the repaired renders" in text) == named
+    if named:
+        assert "Claude Code Action" not in text
+        assert len(_calls(calls, "workflow", "run")) == 1  # the one auto-retry
+
+
 # --- impl-generate: the branch gate and the render source ---------------------------------------
 
 GENERATE = str(_step("impl-generate.yml", "Create library metadata file")["run"])
@@ -549,18 +574,19 @@ class TestUploadStagesTheHash:
         assert not [c for c in calls[written + 1 :] if " cp " in c or "rsync" in c]
         assert repo.staged_hash() == render_hash(CODE.format(score="pending", x=5).encode())
 
-    @pytest.mark.parametrize(("failures", "staged"), [(2, True), (3, False)], ids=["third-attempt", "all-fail"])
-    def test_the_hash_upload_gets_three_attempts_and_then_fails_the_run(
+    @pytest.mark.parametrize(("failures", "staged"), [(4, True), (5, False)], ids=["fifth-attempt", "all-fail"])
+    def test_the_hash_upload_gets_five_attempts_and_then_fails_the_run(
         self, tmp_path, shell, workflow, step, source, failures, staged
     ):
+        """One small object, and the alternative is a whole generation or repair: it tries longer than the renders."""
         repo = Repo(tmp_path)
         result = self._upload(repo, workflow, step, source, shell, GSUTIL_FAIL_HASH_UPLOADS=str(failures))
         assert result.returncode == (0 if staged else 1), result.stdout + result.stderr
         attempts = [c for c in repo.read("gsutil.log").splitlines() if " cp " in c and c.endswith("/render.sha256")]
-        assert len(attempts) == 3
+        assert len(attempts) == 5
         assert result.stdout.count("::warning::render.sha256 upload failed (attempt ") == failures
         assert ("::notice::Staged render.sha256" in result.stdout) == staged
-        assert ("::error::render.sha256 not staged (the upload failed three times)" in result.stdout) == (not staged)
+        assert ("::error::render.sha256 not staged (the upload failed five times)" in result.stdout) == (not staged)
         assert (repo.staged_hash() is not None) == staged
 
     def test_without_the_tools_the_run_fails_and_a_stale_hash_goes(self, tmp_path, shell, workflow, step, source):
@@ -579,7 +605,7 @@ class TestUploadStagesTheHash:
         path = repo.runner / source if source == "render-source" else repo.ws / source
         path.write_text(CODE.format(score="87/100", x=5), encoding="utf-8")
         (repo.gcs / STAGING / "render.sha256").write_text("f" * 64 + "\n", encoding="utf-8")
-        result = repo.run(str(_step(workflow, HASH_STEP)["run"]), shell, GSUTIL_FAIL_HASH_UPLOADS="3")
+        result = repo.run(str(_step(workflow, HASH_STEP)["run"]), shell, GSUTIL_FAIL_HASH_UPLOADS="5")
         assert result.returncode == 1 and repo.staged_hash() is None
 
 
@@ -604,6 +630,45 @@ class TestTheHashStepIsFatalAndNamed:
         # Like the upload step: no status function, so a failed upload skips it.
         assert _step("impl-generate.yml", HASH_STEP)["if"] == "steps.pr.outputs.pr_exists == 'true'"
         assert _step("impl-repair.yml", HASH_STEP)["if"] == "success()"
+
+    def test_it_is_handed_the_pair_it_hashes(self):
+        """The step tests inject these values themselves, and the step is fatal.
+
+        A name that doesn't exist reads as an empty string: the writer would
+        then refuse the language, or the hash would land in another folder,
+        and every run of the workflow would fail or stage nothing the review
+        finds.
+        """
+        generate = _step("impl-generate.yml", HASH_STEP)["env"]
+        assert generate == {
+            "SPEC_ID": "${{ steps.inputs.outputs.specification_id }}",
+            "LANGUAGE": "${{ steps.inputs.outputs.language }}",
+            "LIBRARY": "${{ steps.inputs.outputs.library }}",
+        }
+        repair = _step("impl-repair.yml", HASH_STEP)["env"]
+        assert repair == {
+            "SPEC_ID": "${{ inputs.specification_id }}",
+            "LIBRARY": "${{ inputs.library }}",
+            "LANGUAGE": "${{ steps.lang.outputs.language }}",
+            "EXT": "${{ steps.lang.outputs.ext }}",
+        }
+        # The same names the upload step before it stages the renders under.
+        for workflow, upload, _ in UPLOADS:
+            staged = _step(workflow, upload)["env"]
+            hashed = _step(workflow, HASH_STEP)["env"]
+            for key in ("SPEC_ID", "LANGUAGE", "LIBRARY"):
+                assert staged[key] == hashed[key], (workflow, key)
+
+    @pytest.mark.parametrize(("workflow", "step", "source"), UPLOADS, ids=["generate", "repair"])
+    def test_it_stages_where_the_review_reads(self, workflow, step, source):
+        script = _code_only(str(_step(workflow, HASH_STEP)["run"]))
+        assert 'STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"' in script
+        assert '--language "$LANGUAGE"' in script
+        if workflow == "impl-repair.yml":
+            assert 'IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"' in script
+            assert '--source "$IMPL_DIR/${LIBRARY}${EXT}"' in script
+        else:
+            assert '--source "$RUNNER_TEMP/render-source"' in script
 
     def test_generate_treats_the_failure_as_infrastructure(self):
         """A storage failure must not spend the pair's three attempts or mark the library as failed."""
