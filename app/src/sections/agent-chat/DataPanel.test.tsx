@@ -1314,7 +1314,7 @@ describe('DataPanel working states', () => {
 const CHANGES = [
   "renamed 'Study Hours' to 'Hours'",
   "dropped 1 row where Tier = 'Gesamt'",
-  'summed Umsatz by Datum (month): 3 rows, 2 other columns dropped',
+  'summed Umsatz by Datum (month, as text labels YYYY-MM): 3 rows, 2 other columns dropped',
 ];
 
 /**

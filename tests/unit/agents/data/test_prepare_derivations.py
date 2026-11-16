@@ -631,7 +631,9 @@ class TestAggregateSeveral:
             "2024-02,1290.6,355.8",
             "2024-03,1400.7,401.1",
         ]
-        assert prepared.changes == ["took the last value (by time) of Bezug and Einspeisung by Datum (month): 3 rows"]
+        assert prepared.changes == [
+            "took the last value (by time) of Bezug and Einspeisung by Datum (month, as text labels YYYY-MM): 3 rows"
+        ]
 
     def test_two_date_keys_order_by_the_first_then_the_second_and_keep_ties_in_row_order(self) -> None:
         """Two stable passes: the first key decides, the second breaks its ties, and equal moments keep their rows."""
@@ -791,7 +793,10 @@ class TestKeepRowsThatMatch:
         prepared = prepare(text, keep(*january))
 
         assert cells(prepared, 1) == ["2", "3"]
-        assert prepared.changes == ["kept 2 of 4 rows where t ≥ 2024-01-01 and t ≤ 2024-01-31, 2 dropped"]
+        assert prepared.changes == [
+            "kept 2 of 4 rows where t ≥ 2024-01-01 and t ≤ 2024-01-31, 2 dropped; in the rows kept, t is at least "
+            "2024-01-01T00:00:00 and at most 2024-01-31T18:30:00"
+        ]
 
     def test_the_line_says_how_many_dropped_rows_had_no_value_to_test(self) -> None:
         """Graz has no revenue: it did not fail "at least 800", it had nothing to test, and the count alone would
