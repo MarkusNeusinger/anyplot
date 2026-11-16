@@ -458,11 +458,13 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>origin</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              it started in November 2025 as pyplots.ai, a catalogue of Python plotting examples.
-              people wanted two things from it. they wanted ideas for which plot fits their data.
-              and they wanted to get to know libraries they hadn&apos;t used yet, since each has its
-              own strengths. after a few months on pyplots.ai, I decided to go bigger. in April 2026
-              it became anyplot.ai. one colorblind-safe palette travels across every library.
+              it started in November 2025 as pyplots.ai, a catalogue of Python plotting examples. it
+              grew out of everyday work: finding plot ideas, and showing colleagues a chart instead
+              of explaining it at length. people wanted two things from it. they wanted ideas for
+              which plot fits their data. and they wanted to get to know libraries they hadn&apos;t
+              used yet, since each has its own strengths. after a few months on pyplots.ai, I decided
+              to go bigger. in April 2026 it became anyplot.ai. today it covers fifteen libraries in
+              four languages, and one colorblind-safe palette travels across all of them.
             </Box>
           </Box>
         </Box>

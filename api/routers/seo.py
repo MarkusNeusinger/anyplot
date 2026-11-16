@@ -1396,11 +1396,13 @@ _ABOUT_BOT_BODY = (
     '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>. '
     "Running costs about $60 a month (October 2026).</p>"
     "<h2>Origin</h2>"
-    "<p>It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples. People "
-    "wanted two things from it. They wanted ideas for which plot fits their data. And they wanted to "
-    "get to know libraries they hadn't used yet, since each has its own strengths. After a few months "
-    "on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai. One colorblind-safe "
-    "palette travels across every library.</p>"
+    "<p>It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples. It grew "
+    "out of everyday work: finding plot ideas, and showing colleagues a chart instead of explaining "
+    "it at length. People wanted two things from it. They wanted ideas for which plot fits their "
+    "data. And they wanted to get to know libraries they hadn't used yet, since each has its own "
+    "strengths. After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became "
+    "anyplot.ai. Today it covers fifteen libraries in four languages, and one colorblind-safe palette "
+    "travels across all of them.</p>"
     "<h2>Open</h2>"
     '<p>Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
     "propose a new plot type via a "

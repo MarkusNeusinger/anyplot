@@ -191,6 +191,14 @@ describe('AboutPage', () => {
       )
     ).toBeInTheDocument();
     expect(document.body).not.toHaveTextContent(/weekend/);
+    // test_readme_claims.py holds the two counts to the library registry.
+    const origin = screen.getByText(/^it started in November 2025/);
+    expect(origin).toHaveTextContent(
+      /pyplots\.ai, a catalogue of Python plotting examples\. it grew out of everyday work: finding plot ideas, and showing colleagues a chart instead of explaining it at length\. people wanted two things/
+    );
+    expect(origin).toHaveTextContent(
+      /it became anyplot\.ai\. today it covers fifteen libraries in four languages, and one colorblind-safe palette travels across all of them\.$/
+    );
   });
 
   // One person builds the site, so the page speaks as "I", never as "we".

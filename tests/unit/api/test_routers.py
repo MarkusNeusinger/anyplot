@@ -1262,8 +1262,11 @@ class TestSeoProxyRouter:
         )
         for sentence in (
             "It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples.",
+            "It grew out of everyday work: finding plot ideas, and showing colleagues a chart instead of "
+            "explaining it at length.",
             "After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai.",
-            "One colorblind-safe palette travels across every library.",
+            "Today it covers fifteen libraries in four languages, and one colorblind-safe palette travels "
+            "across all of them.",
         ):
             assert sentence in text, sentence
         assert "weekend" not in text

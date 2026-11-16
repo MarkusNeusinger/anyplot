@@ -389,6 +389,17 @@ def test_about_page_and_its_bot_copy_date_the_start_as_the_readme_does():
             assert phrase.lower() in collapse(text).lower(), f"{name}: '{phrase}', as the README says"
 
 
+def test_about_page_and_its_bot_copy_count_the_libraries_and_languages_in_the_origin():
+    """The origin's "today it covers N libraries in M languages" counts the library registry."""
+    libraries = len(LIBRARIES_METADATA)
+    languages = len({library["language_id"] for library in LIBRARIES_METADATA})
+    phrase = f"today it covers {NUMBER_WORDS[libraries]} libraries in {NUMBER_WORDS[languages]} languages"
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert phrase in collapse(text).lower(), (
+            f"{name}: the registry has {libraries} libraries in {languages} languages"
+        )
+
+
 def test_about_page_and_its_bot_copy_state_the_patch_coverage_target():
     """The stack's checks row names the patch-coverage target that codecov.yml sets."""
     patch = read(ROOT / "codecov.yml").split("\n    patch:\n", 1)[1].split("\n  ignore:", 1)[0]
