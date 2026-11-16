@@ -22,7 +22,9 @@ same path as a user's: the ScopeGuard, Budget and ToolSafety plugins, the run qu
 the data judge, the pipeline and its gates. The models come from the settings, the
 render backend from `AGENT_RENDERER`: `remote` renders on a deployed renderer, `local`
 in Docker, `fake` returns fixture PNGs (a dry run of everything but the render; the
-models are still real). Per run it records the status and reason, attempts, gate
+models are still real). Per run it records the status and reason (a reply the service
+withheld or the root never wrote is a status of its own, or `reply_error` beside a plot:
+the model's outcome, never an outage, `MODEL_ERRORS`), attempts, gate
 failures by gate, validator rejections, edit-apply failures, the reviewer's verdict,
 LLM calls, tokens by kind, `model_version`, the cost at list price
 (`agents/evals/pricing.py`), the time to the first event, the end-to-end time, and
@@ -191,6 +193,11 @@ ERROR_STATUSES = frozenset({"harness_error", "error"})
 """The pipeline's `error` class that means the renderer is down, not that the model failed."""
 MAX_ERRORS_IN_A_ROW = 3
 """Runs in a row that ended in an error (pipeline or harness) before the matrix stops as an outage."""
+MODEL_ERRORS = frozenset({"unverified_figure", "no_reply"})
+"""The `error` codes that are the model's outcome, not an outage: the service withheld the root's reply for a figure
+no source held (`unverified_figure`), or the root wrote no reply, also when asked once more (`no_reply`). A run
+without a plot takes the code as its status, a run beside a plot keeps the plot's status and the code under
+`reply_error`; neither is an error (`is_error`), so neither stops the matrix nor keeps the run out of a baseline."""
 DEVELOPER_RENDERERS: tuple[str, ...] = ("remote", "local")
 GCLOUD_TOKEN_COMMAND: tuple[str, ...] = ("gcloud", "auth", "print-identity-token")
 TOKEN_REFRESH_MARGIN_S = 600.0
@@ -748,6 +755,7 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "turns": 0,
         "png": None,
         "error": None,
+        "reply_error": None,
         "pipeline_error": None,
         # Schema 2: where the run stopped, attempt by attempt and call by call (all content-free).
         "stage": None,
@@ -1021,17 +1029,22 @@ def book_turn(record: dict[str, Any], turn: Turn) -> dict[str, Any] | None:
     elapsed = done if done is not None else last
     if elapsed is not None:
         record["e2e_s"] = (record["e2e_s"] or 0.0) + elapsed
+    code = error.get("code") if error is not None else None
     if plot is not None:
         record["status"] = plot.get("status")
         record["reason"] = plot.get("reason")
         record["attempts"] = int(plot.get("attempts") or 0)
         record["residual_defects"] = list(plot.get("residual_defects") or [])
-        if error is not None:
-            record["error"] = error.get("code")
+        if code in MODEL_ERRORS:
+            record["reply_error"] = code  # the plot stands; the reply beside it was the model's miss
+        elif error is not None:
+            record["error"] = code
     elif refusal is not None:
         record["status"], record["reason"] = "refused", refusal.get("code")
+    elif code in MODEL_ERRORS:
+        record["status"] = record["reply_error"] = code
     elif error is not None:
-        record["status"], record["reason"] = "error", error.get("code")
+        record["status"], record["reason"] = "error", code
     else:
         record["status"], record["reason"] = "error", "no_result"
     return plot
@@ -1517,6 +1530,7 @@ def is_error(run: dict[str, Any]) -> bool:
     (`status == "error"`: a session that could not open, a judge outage, a turn that
     ended with `capacity` or without a result, a shipped plot without its PNG), the
     pipeline's `failed (error)`, and an `error` event that came with a plot all count.
+    A withheld or missing reply (`MODEL_ERRORS`) is the model's outcome and does not.
     """
     return (
         run.get("status") in ERROR_STATUSES

@@ -1,0 +1,12 @@
+{
+  "dataset_text": "month,loans\nJan,1204\nFeb,987\nMar,1530\nApr,842\n",
+  "before_memory": [
+    {"id": "m1", "kind": "reference_line", "target": "y", "text": "horizontal reference line at y = 1150", "turn": 2}
+  ],
+  "message": "Does the plot keep the reference line, and at which value?",
+  "expected_operations": [],
+  "figures": "clean",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["figures", "memory"]
+}

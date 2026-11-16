@@ -595,7 +595,9 @@ TURN_REFUSALS = frozenset(
     "out_of_scope needs_data other_library unsupported_content locked_out session_closed budget service_paused"
     " rate_limited daily_limit other".split()
 )
-TURN_ERRORS = frozenset("guard_unavailable capacity run_limit deadline no_reply internal cancelled other".split())
+TURN_ERRORS = frozenset(
+    "guard_unavailable capacity run_limit deadline no_reply unverified_figure internal cancelled other".split()
+)
 TURN_TOOLS = frozenset(
     "get_dataset_profile get_spec_brief get_current_code set_bindings set_language keep_plot_request forget"
     " switch_plot prepare_data query_data generate_data run_data_code plot_pipeline other".split()
@@ -621,15 +623,16 @@ CALL_CODES = frozenset(
     " unsupported_operation url_or_path_not_allowed validation version_not_kept".split()
 )
 TURN_GUARDS = frozenset(
-    "scope_guard output_guard empty_reply root_refusal reply_language shipped_reply plot_button budget_exempt"
-    " budget_halt queue session_closed message_limit".split()
+    "scope_guard output_guard empty_reply root_refusal number_provenance reply_language shipped_reply plot_button"
+    " budget_exempt budget_halt queue session_closed message_limit".split()
 )
 GUARD_VERDICTS = frozenset(
     "in_scope out_of_scope needs_data other_library unsupported_content locked_out service_paused budget"
     " guard_unavailable paste_note_rescues_spent paste_note_in_scope session_closed close_warning"
     " served_library_in_scope language_offer language_offer_failed language_detected language_write_failed"
-    " not_offered reply_too_long shortened reply_cut reasked empty_kept no_reply mismatch reask_failed error dropped"
-    " kept asked exempt rate_limited daily_limit started expired withdrawn run_limit full other".split()
+    " not_offered reply_too_long shortened reply_cut reasked empty_kept no_reply clean unsourced_logged withheld"
+    " mismatch reask_failed error dropped kept asked exempt rate_limited daily_limit started expired withdrawn"
+    " run_limit full other".split()
 )
 PREP_OPS = frozenset(
     "rename drop_columns drop_rows set_type aggregate sort pivot_longer pivot_wider classify derive make_date"

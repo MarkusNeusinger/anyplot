@@ -1,0 +1,8 @@
+{
+  "message": "How many rows can a table have at most here, and how large may a CSV file be?",
+  "expected_operations": [],
+  "figures": "not_withheld",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["figures", "service_limit"]
+}

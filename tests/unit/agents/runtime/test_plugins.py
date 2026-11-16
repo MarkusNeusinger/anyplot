@@ -768,6 +768,9 @@ class TestOutputGuard:
         model = ScriptedRoot([gemini_response({"text": SHORT_SUMMARY})])
         monkeypatch.setattr(reply_language, "root_model", lambda: model)
         ledger.root_request = root_request()
+        # The summary's counts come from the profile the turn read: on a turn without a tool, a count the long reply
+        # did not state would be one no source holds (`number_provenance.replacement_allowed`).
+        ledger.tools = ["get_dataset_profile"]
 
         with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
             replaced = await ScopeGuardPlugin().on_event_callback(

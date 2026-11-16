@@ -41,6 +41,7 @@ from agents.evals.prep import (
     score,
     score_from_version,
     score_plot_request,
+    select_cases,
     verdict_of,
 )
 from agents.main import Runtime
@@ -100,7 +101,7 @@ def runtime() -> Runtime:
 
 class TestFixtures:
     def test_the_set_covers_every_operation_in_both_languages(self) -> None:
-        cases = load_cases(DEFAULT_CASES)
+        cases = select_cases(load_cases(DEFAULT_CASES), set())  # the default run: no opt-in case
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
@@ -278,6 +279,32 @@ class TestFixtures:
         assert len(formulas) == 4 and {item.locale for item in formulas} == {"de", "en"}
         assert tags["grid"] == 1 and tags["parametric"] == 1
         assert any(item.dataset_text is None for item in formulas) and any(item.dataset_text for item in formulas)
+
+    def test_the_figures_cases_run_only_when_their_tag_is_asked_for(self) -> None:
+        """Nine cases measure the check of the figures in a reply, not the routing: a total, a rounded mean and a total
+        in German and in French, each queried before the reply states it, a limit of the service, small counts, a
+        remembered figure (`before_memory`), a worked sum, and a print resolution, whose verdict is only recorded."""
+        every = load_cases(DEFAULT_CASES)
+        opt_in = select_cases(every, {"figures"})
+        expected_figures = {item.id: item.figures for item in every if item.figures is not None}
+
+        assert {item.id: item.figures for item in opt_in} == expected_figures
+        assert expected_figures == {
+            "de-zahlen-summe-der-betraege": "queried",
+            "en-figures-limit-of-the-service": "not_withheld",
+            "en-figures-print-resolution": "record",
+            "en-figures-remembered-line": "clean",
+            "en-figures-rounded-mean": "clean",
+            "en-figures-small-counts": "clean",
+            "en-figures-total-of-a-paste": "queried",
+            "en-figures-worked-sum": "not_withheld",
+            "fr-chiffres-total-des-montants": "queried",
+        }
+        assert len(every) == 141 and all("figures" in item.tags for item in opt_in)
+        # A locale or another of their tags never pulls them in; with their own tag beside it, both sets run.
+        assert not any(item.figures for item in select_cases(every, {"de", "fr", "data_question", "decimal_comma"}))
+        both = select_cases(every, {"fr", "figures"})
+        assert {item.id for item in both} == {item.id for item in every if item.locale == "fr"} | set(expected_figures)
 
     def test_the_data_code_cases(self) -> None:
         """Python, NumPy, JavaScript, R and a textbook formula run; a plot call is stripped; a file read and a
@@ -1269,7 +1296,9 @@ class TestRun:
         A turn without a call shows which of the operations the server makes itself; the root makes the others.
         """
         cases = [item for item in load_cases(DEFAULT_CASES) if item.scored_by_table]
-        swap_models("anthropic-vertex", script_for(*([{"text": "4 rows."}] for _ in cases)))
+        # Replies without a figure: a row count no source of the case holds would be asked for again (number_provenance),
+        # which would take the next case's scripted answer.
+        swap_models("anthropic-vertex", script_for(*([{"text": "Done."}] for _ in cases)))
         silent = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
         root_turns = []
         for item, quiet in zip(cases, silent, strict=True):
@@ -1298,7 +1327,7 @@ class TestRun:
             if item.plot_request:
                 # The order or the figure beside the data change: kept for the plot, as the root's rule has it.
                 calls.append({"call": "keep_plot_request", "args": {"change_request": "largest first"}})
-            root_turns.append([*calls, {"text": "Done: 4 rows."}])
+            root_turns.append([*calls, {"text": "Done."}])
         swap_models("anthropic-vertex", script_for(*root_turns))
 
         results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
@@ -1797,6 +1826,100 @@ class TestRun:
         assert result.operations is None and result.match is None
         assert result.cause == "error: guard_unavailable"
 
+    def test_a_withheld_reply_is_a_miss_of_its_own_and_every_figure_check_is_counted(
+        self, services: Services, swap_models
+    ) -> None:
+        """A reply the service withheld is the model's outcome, never an outage: the case is answered, scored and a
+        miss with its own cause. The verdicts of the check come from the plugin's collector, split by the tool calls
+        each turn holds when it ends; the unsourced figures only into the log the flag keeps."""
+        memory = [{"id": "m1", "kind": "reference_line", "target": "y", "text": "line at y = 1150", "turn": 2}]
+        cases = [
+            case("f-001", "what do the scores add up to?", [], figures="not_withheld"),
+            case("f-002", "what is the highest score?", [], figures="clean"),
+            case("f-003", "is the line kept?", [], figures="clean", before_memory=memory),
+        ]
+        root_turns: list[list[dict[str, Any]]] = [
+            # Asked once for its figure, and the answer still states it: withheld.
+            [{"text": "The scores add up to 1,618.03."}, {"text": "About 1,618.03 in all."}],
+            [{"call": "get_dataset_profile", "args": {}}, {"text": "The highest score is 85, the lowest 55."}],
+            [{"text": "The line at y = 1150 is still kept."}],
+        ]
+        fake: FakeAnthropic = swap_models("anthropic-vertex", script_for(*root_turns))
+        log = prep.FigureLog(keep_figures=True)
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services, figures=log))
+
+        withheld, profiled, remembered = results
+        assert (withheld.operations, withheld.match, withheld.reply_error) == ([], False, "unverified_figure")
+        assert withheld.figure_verdicts == ["reasked", "withheld"] and withheld.figures_miss
+        assert (profiled.match, profiled.figure_verdicts, profiled.figures_miss) == (True, ["clean"], False)
+        assert (remembered.match, remembered.figure_verdicts) == (True, ["clean"])
+        assert "line at y = 1150" in json.dumps(fake.calls[-1])  # the session block listed the entry
+        scored = prep.score(cases, results)
+        summary = scored["summary"]
+        assert (summary["unavailable"], summary["reply_errors"], summary["figures_misses"]) == (
+            0,
+            {"unverified_figure": 1},
+            1,
+        )
+        assert summary["figure_verdicts"] == {
+            "with_tool": {"clean": 1},
+            "without_tool": {"clean": 1, "reasked": 1, "withheld": 1},
+        }
+        assert "1,618" not in json.dumps(scored) and "reply unverified figure" in prep.table(cases, results)
+        assert log.unsourced == {
+            "f-001": [
+                {"verdict": "reasked", "tools": False, "unsourced": ["1,618.03"]},
+                {"verdict": "withheld", "tools": False, "unsourced": ["1,618.03"]},
+            ]
+        }
+        assert log.checks == {}  # every case's checks were taken
+
+    def test_a_withheld_reply_is_a_miss_in_a_case_that_scores_no_figures(self, services: Services, swap_models) -> None:
+        """Every case, not only one with `figures`: a turn whose reply was withheld answered nothing, so a case whose
+        operations match (here none, as expected) is a miss all the same."""
+        script = script_for([{"text": "The scores add up to 2,718.28."}, {"text": "About 2,718.28 in all."}])
+        swap_models("anthropic-vertex", script)
+        cases = [case("w-001", "what do the scores add up to?", [])]
+
+        (result,) = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert (result.operations, result.ops_exact, result.figures_miss) == ([], True, False)
+        assert (result.reply_error, result.match) == ("unverified_figure", False)
+
+
+class TestScoreFigures:
+    @pytest.mark.parametrize(
+        ("expected", "verdicts", "questions", "reply_error", "miss"),
+        [
+            ("queried", ["clean"], 1, None, False),
+            ("queried", ["clean"], 0, None, True),
+            ("queried", ["reasked", "clean"], 1, None, True),
+            ("clean", [], 0, None, False),
+            ("clean", ["unsourced_logged"], 1, None, True),
+            ("not_withheld", ["reasked", "clean"], 0, None, False),
+            ("not_withheld", ["reasked", "withheld"], 0, None, True),
+            ("not_withheld", [], 0, "unverified_figure", True),
+            ("record", ["reasked", "withheld"], 0, "unverified_figure", False),
+            (None, ["withheld"], 0, None, False),
+        ],
+    )
+    def test_each_expectation(
+        self, expected: Any, verdicts: list[str], questions: int, reply_error: str | None, miss: bool
+    ) -> None:
+        result = CaseResult("x-001", [], [], [], True)
+        result.figure_verdicts, result.questions, result.reply_error = verdicts, questions, reply_error
+
+        prep.score_figures(result, expected)
+
+        assert (result.figures_miss, result.match) == (miss, not miss)
+
+    def test_a_memory_entry_that_is_no_entry_is_a_setup_error(self) -> None:
+        broken = case("x-002", "is the line kept?", [], before_memory=[{"id": "m1", "kind": "wish", "text": "x"}])
+
+        with pytest.raises(SetupError, match="before_memory"):
+            check_cases([broken])
+
 
 class TestMain:
     @pytest.fixture(autouse=True)
@@ -1848,6 +1971,13 @@ class TestMain:
             prep.main(["--cases", str(tmp_path / "missing"), "--out", str(tmp_path)], services=services) == EXIT_SETUP
         )
         assert prep.main(["--cases", str(DEFAULT_CASES), "--tags", "nothing"], services=services) == EXIT_SETUP
+
+    def test_a_run_without_the_opt_in_tag_takes_no_opt_in_case(self, tmp_path: Path, services: Services) -> None:
+        only = case("o-001", "what do the scores add up to?", [], tags=["figures"], figures="queried")
+        (tmp_path / f"{only.id}.json").write_text(json.dumps(only.model_dump(exclude={"id"})), encoding="utf-8")
+
+        assert prep.main(["--cases", str(tmp_path), "--tags", "en"], services=services) == EXIT_SETUP
+        assert prep.main(["--cases", str(tmp_path)], services=services) == EXIT_SETUP
 
     def test_a_backend_that_cannot_be_built_is_a_setup_error(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]

@@ -1,0 +1,9 @@
+{
+  "dataset_text": "branch,loans\nHarbor,1204.5\nMill,987.25\nStation,1530.75\nGarden,842\n",
+  "message": "What do the loans of all branches add up to?",
+  "expected_operations": [],
+  "figures": "queried",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["figures", "data_question"]
+}

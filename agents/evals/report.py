@@ -178,6 +178,8 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "harness_errors": len(runs) - len(counted),
         "pipeline_errors": sum(1 for run in counted if run.get("reason") == "error"),
         "statuses": dict(sorted(Counter(str(run.get("status")) for run in runs).items())),
+        # A withheld or missing reply, with a plot or without one: the model's outcome (`matrix.MODEL_ERRORS`).
+        "reply_errors": _values(runs, "reply_error"),
         "passed": len(passed),
         "pass_rate": _rate(len(passed), len(runs)),
         "repaired_passes": sum(1 for run in passed if (run.get("attempts") or 0) >= 2),
@@ -495,6 +497,10 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
                 ", ".join(f"{name} {n}" for name, n in (summary.get("probe_errors") or {}).items()) or "0",
             ],
             ["Statuses", ", ".join(f"{name} {count}" for name, count in (summary.get("statuses") or {}).items())],
+            [
+                "Replies withheld or missing",
+                ", ".join(f"{name} {count}" for name, count in (summary.get("reply_errors") or {}).items()) or "0",
+            ],
             ["Cost at list price", _usd(summary.get("cost_total_usd"))],
             ["Cost per successful plot", _usd(summary.get("cost_per_success_usd"))],
             ["Median cost per successful plot", _usd(summary.get("median_cost_per_success_usd"))],

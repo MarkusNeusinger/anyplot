@@ -1,0 +1,9 @@
+{
+  "dataset_text": "day,visits\nMon,122\nTue,152\nWed,131\nThu,158\nFri,147\nSat,83\n",
+  "message": "Roughly what is the average number of visits per day, to one decimal?",
+  "expected_operations": [],
+  "figures": "clean",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["figures", "rounding"]
+}

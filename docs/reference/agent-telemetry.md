@@ -277,6 +277,14 @@ own `not_ready`. No field is new, but three readings change from that date on:
   `no_reply` after such a refusal: no `plot` event went to the page. Before, the `not_ready` event counted as the
   turn's answer.
 
+### Values added on 2026-11-16
+
+- **`chat_turn.error` `unverified_figure`.** The root's reply stated a figure that no tool result, no message of the
+  user, no session block and no limit of the service held, also after the service asked it once more, and the service
+  withheld the reply
+  (`AGENT_NUMBER_PROVENANCE=enforce`, `agents/anyplot/plugins/number_provenance.py`). Before, such a reply went out.
+  The turn's `kind` is `error`.
+
 ## Where the lines go
 
 | Resource | Name | Notes |

@@ -26,6 +26,11 @@ export const ERROR_TEXT: Record<string, string> = {
   guard_unavailable: 'the scope check is unavailable right now; try again',
   // The assistant wrote no reply, also when asked once more; a paste stays unsummarized for the next message.
   no_reply: 'the assistant sent no reply; send your message again',
+  // The assistant's reply stated a figure that no source backed, also when asked once more, so the service withheld
+  // the whole reply. A plot or a data change the turn made stays, so the line asks for the figure alone: sending
+  // the whole message again would make the change twice.
+  unverified_figure:
+    'the reply was withheld: a figure in it had no source; what the turn changed stays, so ask for the figure only',
   upstream: 'the agents service did not answer or cut the stream',
   internal: 'something went wrong on the server',
   // Per window since 2026-10-21: the user's other windows never cause it.

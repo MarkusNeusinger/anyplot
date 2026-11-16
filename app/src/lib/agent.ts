@@ -1872,6 +1872,9 @@ export const STREAM_ERROR_CODES = [
   'guard_unavailable',
   // The assistant wrote no reply, also when the service asked it once more.
   'no_reply',
+  // The assistant's reply stated a figure that no tool result, message or session fact held, also when the service
+  // asked it once more, and the service withheld the reply.
+  'unverified_figure',
   'upstream',
   'internal',
 ] as const;

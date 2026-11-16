@@ -4634,7 +4634,7 @@ async def test_a_note_judged_out_of_scope_is_read_beside_its_table_and_answered(
     judge reads such a note beside the spec's title and the table's column names, never a cell, and a note's
     `out_of_scope` goes on to the root like its `needs_data`."""
     script = default_script()
-    script["root"] = [{"text": "4 rows of hours and scores; most students study 2 to 3 hours."}]
+    script["root"] = [{"text": "4 rows of hours and scores; most students study a few hours."}]
     fake = swap_models("anthropic-vertex", script)
     sid = await open_session(client, with_data=False)
     judge.script = [

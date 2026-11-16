@@ -116,7 +116,22 @@ A case is `unavailable` when its dataset could not be stored (`503 guard_unavail
 or its turn ended with an `error` event (the judge down, `capacity`); it counts in no
 rate, and more than `--max-unavailable` (10 percent) of them exit 4. A dataset the
 judge refuses (`403 data_refused`) is a miss, because the fixtures are synthetic
-tables that must pass.
+tables that must pass. A turn whose `error` is a withheld or missing reply
+(`unverified_figure`, `no_reply`: `matrix.MODEL_ERRORS`) is the model's outcome, never
+an outage: the case is read and scored as any, then counted a miss with that cause
+(`reply_error`, summed under `reply_errors`).
+
+The number-provenance check of every reply goes to the run's `FigureLog`
+(`number_provenance.collect_figures`): each case keeps its verdicts (`figure_verdicts`), and the
+summary counts them split by the tool calls the turn holds when it ends (`_figure_verdicts`). A
+case with `figures` scores them (`score_figures`, `FIGURES_EXPECTATIONS`: `queried`, `clean`,
+`not_withheld`, or `record` for an open product choice), and `before_memory` stores plot
+memory entries before the message, as after a context window that dropped the message that
+set them. The cases tagged `figures` measure that check, not the root's routing, so their first
+runs hold misses by design: they run only when a run asks for their tag (`OPT_IN_TAGS`,
+`--tags figures`). `--unsourced-figures` also writes the unsourced figures of each case's
+replies, as written, to a file beside the report, for tuning the check on the invented fixture
+data; the report itself never holds one.
 
 A case makes about five model calls: the dataset judge, the scope judge, and the root
 two or three times (a profile read, the tool call, the reply). Under the Vertex quota
@@ -163,6 +178,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from agents.evals.matrix import (
     ATTRIBUTION_LOGGER,
     EVAL_GLOBAL_DAILY_TOKENS,
+    MODEL_ERRORS,
     MODEL_PROVIDERS,
     PROVIDER_DEFAULTS,
     AttributionCollector,
@@ -250,6 +266,16 @@ CONDITION_OPERATIONS = frozenset({"drop_rows", "blank", "keep_rows"})
 """The operations whose `where` is one list of conditions that must all hold."""
 MAX_REPLY_NAMES = 6
 """The texts one case may ask its reply to contain (`PrepCase.reply_names`)."""
+FiguresExpectation = Literal["queried", "clean", "not_withheld", "record"]
+FIGURES_EXPECTATIONS: dict[str, str] = {
+    "queried": "a query_data call, and every check of the turn's replies clean",
+    "clean": "every check of the turn's replies clean: none asked again, logged unsourced, kept out or withheld",
+    "not_withheld": "no reply withheld: a second ask may come, as long as its answer goes out",
+    "record": "the verdicts are only reported: the case's figure is an open product choice",
+}
+"""What a case's `figures` asks of the number-provenance verdicts of its turn (`score_figures`)."""
+OPT_IN_TAGS: frozenset[str] = frozenset({"figures"})
+"""The tags whose cases run only when a run asks for that tag (`select_cases`): they measure a check, not the routing."""
 VIEW_OPS = ("reset_view", "apply_view")
 """The operations that settle the view of the plot and change no table by themselves (`plot_view.route`)."""
 COMPUTE_PROBE_ROWS = 8
@@ -357,6 +383,13 @@ class PrepCase(BaseModel):
     N), which leaves the table as it is, `none` for a turn that must leave no view (a cleaning step, rows the user
     asks out of the table itself). The table a plot would draw is the same either way, so only this tells a turn
     that cut the table from one that set the view. None leaves it unscored."""
+    figures: FiguresExpectation | None = None
+    """What the number-provenance check of the turn's replies must find (`score_figures`, `FIGURES_EXPECTATIONS`);
+    None leaves it unscored, though the report counts every case's verdicts."""
+    before_memory: list[dict[str, Any]] = Field(default_factory=list, max_length=MAX_BEFORE_VERSIONS)
+    """Entries of the plot memory before the message (`memory.MemoryEntry` each), stored in the session as a plot's
+    `remember` would have stored them, so the session block lists them while no message that set them is in the
+    request, as after the context window dropped it."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -451,6 +484,19 @@ def load_cases(directory: Path) -> list[PrepCase]:
         except (OSError, ValueError, TypeError, ValidationError) as exc:
             raise SetupError(f"{path} does not load: {exc}") from exc
     return cases
+
+
+def select_cases(cases: Sequence[PrepCase], wanted: set[str]) -> list[PrepCase]:
+    """The cases a run takes: every case, or with `wanted` those with any of its tags (a locale is a tag); a case with
+    an opt-in tag (`OPT_IN_TAGS`) only when `wanted` names that tag."""
+    chosen = []
+    for case in cases:
+        tags = {case.locale, *case.tags}
+        opt_in = OPT_IN_TAGS & tags
+        if (opt_in and not opt_in & wanted) or (wanted and not wanted & tags):
+            continue
+        chosen.append(case)
+    return chosen
 
 
 def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> list[str]:
@@ -981,6 +1027,15 @@ class CaseResult:
     question_miss: bool = False
     """The case says which rows its question is about (`PrepCase.asks`), and the turn asked of the others or asked
     nothing: the case is a miss (`score_question`)."""
+    figure_verdicts: list[str] = field(default_factory=list)
+    """The number-provenance verdicts of the turn's replies, in order (`number_provenance.collect_figures`): closed
+    codes, never a figure."""
+    figures_miss: bool = False
+    """The case says what the check of its figures must find (`PrepCase.figures`), and the verdicts differ: the case
+    is a miss (`score_figures`)."""
+    reply_error: str | None = None
+    """The turn ended with the service's `error` for a withheld or missing reply (`matrix.MODEL_ERRORS`): the model's
+    outcome, so the case is answered and a miss with this cause, never `unavailable`."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -1011,6 +1066,23 @@ def _book(result: CaseResult, lines: list[dict[str, Any]], settings: AgentSettin
 
 
 @dataclass
+class FigureLog:
+    """The number-provenance checks of a run by request id, as the plugin hands them to an eval
+    (`number_provenance.collect_figures`): their verdicts for the report, and with `keep_figures` (`--unsourced-figures`)
+    the unsourced figures as written, per case, for a local file of their own, never the report."""
+
+    keep_figures: bool = False
+    checks: dict[str, list[Any]] = field(default_factory=dict)
+    unsourced: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+
+    def add(self, check: Any) -> None:
+        self.checks.setdefault(check.request_id, []).append(check)
+
+    def take(self, request_id: str) -> list[Any]:
+        return self.checks.pop(request_id, [])
+
+
+@dataclass
 class CaseRunner:
     """Runs cases one at a time against the in-process app, the model and the judge the settings name."""
 
@@ -1018,6 +1090,7 @@ class CaseRunner:
     runtime: Runtime
     collector: AttributionCollector
     settings: AgentSettings
+    figures: FigureLog | None = None
 
     async def run(self, case: PrepCase) -> CaseResult:
         from agents.anyplot.data.parse import parse_dataset
@@ -1066,6 +1139,8 @@ class CaseRunner:
                     await self._make_versions(user, sid, case.before_operations)
                 if case.before_view:
                     await self._set_view(user, sid, case.before_view)
+            if case.before_memory:
+                await self._remember(user, sid, case.before_memory)
             summary_turn = case.action == "summarize_data" or case.first_turn
             start = await self._start_version(user, sid, case.expected_from_version) if case.scored_by_table else None
             listed = await self._listed_conversions(user, sid)
@@ -1074,13 +1149,17 @@ class CaseRunner:
             message = {"action": case.action} if case.action is not None else {"text": case.message}
             turn = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers("m"), json=message)
             _book(result, self.collector.take(f"{tag}-m"), self.settings)
+            self._figures(result, case.id, f"{tag}-m")
             if turn.status_code != 200:
                 result.cause = f"turn: {_detail(turn)}"
                 return result
             events = parse_events([(time.monotonic(), turn.content)], started)
             rows: set[int] = set()
             for _, name, data in events:
-                if name == "error":
+                if name == "error" and data.get("code") in MODEL_ERRORS:
+                    # The model's outcome, not an outage: the turn is read and scored, then counted a miss.
+                    result.reply_error = str(data.get("code"))
+                elif name == "error":
                     result.cause = f"error: {data.get('code')}"
                     return result
                 if name == "refusal":
@@ -1106,6 +1185,9 @@ class CaseRunner:
                 rows=rows if summary_turn else None,
                 names=case.reply_names,
             )
+            score_figures(result, case.figures)
+            if result.reply_error is not None:
+                result.match = False
         finally:
             result.latency_s = round(time.monotonic() - started, 3)
             if sid is not None:
@@ -1117,7 +1199,29 @@ class CaseRunner:
                     )
             for step in ("s", "d", "m", "x"):
                 self.collector.take(f"{tag}-{step}")
+                if self.figures is not None:
+                    self.figures.take(f"{tag}-{step}")
         return result
+
+    def _figures(self, result: CaseResult, case_id: str, request_id: str) -> None:
+        """The number-provenance verdicts of the turn; its unsourced figures only into the log's own file."""
+        if self.figures is None:
+            return
+        checks = self.figures.take(request_id)
+        result.figure_verdicts = [check.verdict for check in checks]
+        if self.figures.keep_figures and any(check.unsourced for check in checks):
+            self.figures.unsourced[case_id] = [
+                {"verdict": check.verdict, "tools": check.tools, "unsourced": list(check.unsourced)}
+                for check in checks
+                if check.unsourced
+            ]
+
+    async def _remember(self, user: str, sid: str, entries: Sequence[dict[str, Any]]) -> None:
+        """The case's plot memory, stored as a plot's `remember` stores it; no model call."""
+        from agents.anyplot.memory import MEMORY, MemoryEntry
+
+        memory = [MemoryEntry.model_validate(entry).model_dump(mode="json") for entry in entries]
+        await self.runtime.write_state(await self.runtime.session(user, sid), {MEMORY: memory})
 
     async def _mark_summarized(self, user: str, sid: str) -> None:
         """The data as the page leaves it after the summary turn: no longer pasted just now (`SUMMARY_PENDING`)."""
@@ -1404,6 +1508,24 @@ def score_question(result: CaseResult, asks: Literal["view", "table"] | None) ->
         result.match = False
 
 
+def score_figures(result: CaseResult, expected: FiguresExpectation | None) -> None:
+    """Whether the number-provenance verdicts of the turn's replies (`result.figure_verdicts`) are what the case asks
+    (`FIGURES_EXPECTATIONS`); a miss otherwise. A case without the expectation, or one that only records, is not
+    scored."""
+    if expected is None or expected == "record":
+        return
+    verdicts = set(result.figure_verdicts)
+    withheld = "withheld" in verdicts or result.reply_error is not None
+    if expected == "not_withheld":
+        result.figures_miss = withheld
+    else:
+        result.figures_miss = withheld or not verdicts <= {"clean"}
+        if expected == "queried":
+            result.figures_miss |= not result.questions
+    if result.figures_miss:
+        result.match = False
+
+
 def score_conversions(result: CaseResult, owed: Sequence[Sequence[dict[str, Any]]], decimal: str) -> None:
     """How many of the `certain` conversions `owed` the turn made; a skipped one makes the case a miss."""
     made = sum(all(line in result.found for line in canonical_operations(item, decimal)) for item in owed)
@@ -1482,21 +1604,36 @@ def closes_with_invitation(text: str) -> bool:
 
 
 async def run_cases(
-    cases: Sequence[PrepCase], *, runtime: Runtime, services: Services, pacer: Pacer | None = None, echo: Any = None
+    cases: Sequence[PrepCase],
+    *,
+    runtime: Runtime,
+    services: Services,
+    pacer: Pacer | None = None,
+    echo: Any = None,
+    figures: FigureLog | None = None,
 ) -> list[CaseResult]:
     """Every case through the in-process app, one at a time and paced by `pacer`, in the case order.
 
     Every usage-telemetry line is tagged `harness` (docs/reference/agent-telemetry.md); the process's source is
-    restored on every exit.
+    restored on every exit. The number-provenance checks go to `figures` (a fresh log when None), whose verdicts each
+    case's result keeps.
     """
     from agents.anyplot import telemetry
+    from agents.anyplot.plugins.number_provenance import collect_figures
 
-    with telemetry.harness():
-        return await _run_cases(cases, runtime=runtime, services=services, pacer=pacer, echo=echo)
+    log = figures if figures is not None else FigureLog()
+    with telemetry.harness(), collect_figures(log.add):
+        return await _run_cases(cases, runtime=runtime, services=services, pacer=pacer, echo=echo, figures=log)
 
 
 async def _run_cases(
-    cases: Sequence[PrepCase], *, runtime: Runtime, services: Services, pacer: Pacer | None, echo: Any
+    cases: Sequence[PrepCase],
+    *,
+    runtime: Runtime,
+    services: Services,
+    pacer: Pacer | None,
+    echo: Any,
+    figures: FigureLog,
 ) -> list[CaseResult]:
     from agents import main as service
     from agents.anyplot.services import set_services
@@ -1516,7 +1653,7 @@ async def _run_cases(
     try:
         transport = httpx.ASGITransport(app=service.app)
         async with httpx.AsyncClient(transport=transport, base_url="http://agents", timeout=None) as client:
-            runner = CaseRunner(client, runtime, collector, settings)
+            runner = CaseRunner(client, runtime, collector, settings, figures)
             for index, case in enumerate(cases, start=1):
                 if pacer is not None:
                     await pacer.wait()
@@ -1569,6 +1706,16 @@ def _replies(answered: Sequence[CaseResult]) -> dict[str, Any]:
     }
 
 
+def _figure_verdicts(answered: Sequence[CaseResult]) -> dict[str, dict[str, int]]:
+    """The number-provenance verdicts of the answered cases, split by the tool calls each turn holds when it ends. A
+    turn without a tool that was asked again and then called one counts all its verdicts under `with_tool`, so the
+    split does not separate the check's two regimes (ask and withhold before a tool, only log after one)."""
+    split: dict[str, Counter[str]] = {"with_tool": Counter(), "without_tool": Counter()}
+    for result in answered:
+        split["with_tool" if result.tool_calls else "without_tool"].update(result.figure_verdicts)
+    return {name: dict(sorted(counts.items())) for name, counts in split.items()}
+
+
 def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str, Any]:
     """The summary, the per-tag table and the misses of one run."""
     by_id = {result.id: result for result in results}
@@ -1584,6 +1731,10 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         "plot_request_misses": sum(1 for _, result in pairs if result.plot_request_miss),
         "view_misses": sum(1 for _, result in pairs if result.view_miss),
         "question_misses": sum(1 for _, result in pairs if result.question_miss),
+        "figures_misses": sum(1 for _, result in pairs if result.figures_miss),
+        # A withheld or missing reply: the model's miss, never an outage (`matrix.MODEL_ERRORS`).
+        "reply_errors": dict(sorted(Counter(r.reply_error for _, r in pairs if r.reply_error is not None).items())),
+        "figure_verdicts": _figure_verdicts([result for _, result in pairs if result.operations is not None]),
         "llm_calls": sum(result.llm_calls for _, result in pairs),
         "cost_usd": round(sum(result.cost_usd for _, result in pairs), 8),
     }
@@ -1611,6 +1762,9 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "questions": result.questions,
             "questions_of_view": result.questions_of_view,
             "question_miss": result.question_miss,
+            "figure_verdicts": result.figure_verdicts,
+            "figures_miss": result.figures_miss,
+            "reply_error": result.reply_error,
             "plot_wishes": result.plot_wishes,
             "plot_wishes_kept": result.plot_wishes_kept,
             "tool_calls": result.tool_calls,
@@ -1692,6 +1846,10 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
             if result.question_miss:
                 asked = f"{result.questions_of_view} of {result.questions} questions asked of the view"
                 outcome += f", {asked}, expected the {case.asks}"
+            if result.reply_error:
+                outcome += f", reply {result.reply_error.replace('_', ' ')}"
+            if result.figures_miss:
+                outcome += f", figures: {'/'.join(result.figure_verdicts) or 'no check'}, expected {case.figures}"
             if result.reply_miss:
                 outcome += f", reply: {result.reply_miss.replace('_', ' ')}"
         rows.append((case.id, expected, found, outcome))
@@ -1730,6 +1888,17 @@ def summary_text(scored: dict[str, Any], reasons: list[str]) -> str:
         )
     if summary["conversions_owed"]:
         lines.append(f"certain conversions made: {summary['conversions_made']} of {summary['conversions_owed']}")
+    figure_verdicts = summary.get("figure_verdicts") or {}
+    if any(figure_verdicts.values()):
+        lines.append(
+            "figure checks: "
+            + "; ".join(
+                f"{name.replace('_', ' ')} " + (", ".join(f"{verdict} {n}" for verdict, n in counts.items()) or "none")
+                for name, counts in figure_verdicts.items()
+            )
+        )
+    if summary.get("reply_errors"):
+        lines.append("replies: " + ", ".join(f"{n} x {code}" for code, n in summary["reply_errors"].items()))
     if scored["unavailable_causes"]:
         lines.append(
             "unavailable: " + ", ".join(f"{count} x {cause}" for cause, count in scored["unavailable_causes"].items())
@@ -1747,7 +1916,13 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         description="Score the root's prepare_data and generate_data choices on the prep cases.",
     )
     parser.add_argument("--cases", type=Path, default=DEFAULT_CASES, help="case directory (default fixtures/prep)")
-    parser.add_argument("--tags", help="only the cases with any of these comma-separated tags (a locale is a tag)")
+    parser.add_argument(
+        "--tags",
+        help=(
+            "only the cases with any of these comma-separated tags (a locale is a tag); a case with an opt-in tag "
+            f"({', '.join(sorted(OPT_IN_TAGS))}) runs only when that tag is named"
+        ),
+    )
     parser.add_argument("--provider", choices=sorted(PROVIDER_DEFAULTS), help="model family (default: the settings)")
     parser.add_argument("--model", help="the root's model; the provider's default when only --provider")
     parser.add_argument("--judge-model", help="the judges' model; the provider's default when only --provider")
@@ -1769,6 +1944,14 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         help=(
             "replies that close with a question or an invitation the turn was not blocked for, run over "
             f"{MAX_REPLY_WORDS} words, or summarize without a row count"
+        ),
+    )
+    parser.add_argument(
+        "--unsourced-figures",
+        action="store_true",
+        help=(
+            "also write the unsourced figures of each case's replies, as written, to a local file beside the report, "
+            "to tune the number-provenance check on the invented fixture data (never on a user's data)"
         ),
     )
     args = parser.parse_args(argv)
@@ -1845,12 +2028,18 @@ def check_cases(cases: Sequence[PrepCase]) -> None:
     from agents.anyplot.data.generate import GenerateError
     from agents.anyplot.data.parse import ParseError, parse_dataset
     from agents.anyplot.data.prepare import PrepareArgs, PrepareError, apply_and_parse
+    from agents.anyplot.memory import MemoryEntry
 
     for case in cases:
         try:
             canonical_operations(case.expected_operations, ".")
         except ValidationError as exc:
             raise SetupError(f"case {case.id}: expected_operations do not validate: {exc}") from exc
+        for place, entry in enumerate(case.before_memory):
+            try:
+                MemoryEntry.model_validate(entry)
+            except ValidationError as exc:
+                raise SetupError(f"case {case.id}: before_memory[{place}] is no memory entry: {exc}") from exc
         try:
             versions = [parse_dataset(case.dataset_text)] if case.dataset_text is not None else []
         except ParseError as exc:
@@ -1913,9 +2102,9 @@ def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, servi
         wanted: set[str] = set()
         if args.tags:
             wanted = {tag.strip() for tag in args.tags.split(",") if tag.strip()}
-            cases = [case for case in cases if wanted & {case.locale, *case.tags}]
-            if not cases:
-                raise SetupError(f"no case carries any of the tags {', '.join(sorted(wanted))}")
+        cases = select_cases(cases, wanted)
+        if not cases:
+            raise SetupError(f"no case carries any of the tags {', '.join(sorted(wanted))}" if wanted else "no case")
         from agents import main as service
         from agents.anyplot.services import Services
         from agents.anyplot.settings import get_settings
@@ -1939,6 +2128,7 @@ def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, servi
         print(f"setup error: {exc}", file=sys.stderr)
         return EXIT_SETUP
     pacer = Pacer(args.calls_per_minute / CALLS_PER_CASE) if args.calls_per_minute else None
+    figures = FigureLog(keep_figures=args.unsourced_figures)
     results = asyncio.run(
         run_cases(
             cases,
@@ -1946,6 +2136,7 @@ def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, servi
             services=services,
             pacer=pacer,
             echo=lambda text: print(text, file=sys.stderr, flush=True),
+            figures=figures,
         )
     )
     scored = score(cases, results)
@@ -1967,6 +2158,11 @@ def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, servi
     print(table(cases, results))
     print(summary_text(scored, reasons))
     print(f"report: {path}")
+    if args.unsourced_figures:
+        # Reply text, so a file of its own, which the report never points to; the fixtures' data is invented.
+        figures_path = path.with_name(f"{path.stem}-unsourced.json")
+        figures_path.write_text(json.dumps(figures.unsourced, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"unsourced figures: {figures_path}")
     return code
 
 
