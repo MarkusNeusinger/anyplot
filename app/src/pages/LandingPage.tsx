@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
@@ -9,7 +9,7 @@ import { GITHUB_URL } from 'src/constants';
 import { useAnalytics, useAppData } from 'src/hooks';
 import { type FeaturedImpl, useFeaturedSpecs } from 'src/hooks/useFeaturedSpecs';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import { usePlotOfTheDay } from 'src/hooks/usePlotOfTheDay';
+import { PlotOfTheDayLoadContext, usePlotOfTheDay } from 'src/hooks/usePlotOfTheDay';
 import { paths, specPath } from 'src/routes/paths';
 import { HeroSection } from 'src/sections/landing/HeroSection';
 import { LibrariesSection } from 'src/sections/landing/LibrariesSection';
@@ -20,7 +20,11 @@ import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 export function LandingPage() {
   const { librariesData, stats, loadFailed, reloadAppData } = useAppData();
-  const potd = usePlotOfTheDay();
+  const { potd, status: potdStatus, retry: retryPotd } = usePlotOfTheDay();
+  const potdLoad = useMemo(
+    () => ({ status: potdStatus, retry: retryPotd }),
+    [potdStatus, retryPotd]
+  );
   const featured = useFeaturedSpecs(5);
   const navigate = useNavigate();
   const { trackEvent } = useAnalytics();
@@ -52,7 +56,9 @@ export function LandingPage() {
           pb: { xs: 4, md: 7 },
         }}
       >
-        <HeroSection potd={potd} />
+        <PlotOfTheDayLoadContext.Provider value={potdLoad}>
+          <HeroSection potd={potd} />
+        </PlotOfTheDayLoadContext.Provider>
         <NumbersStrip stats={stats} failed={loadFailed} onRetry={reloadAppData} />
       </Box>
 
@@ -337,36 +343,51 @@ function LabelledPaletteStrip() {
         // Silently ignore — the user can still read the hex on the swatch.
       });
   };
+  // One column per hue holds its colour block and its name, so a name moves with its colour
+  // when the hovered (or, on a touch screen, tapped) hue expands and the rest contract.
+  // A contracted column is narrower than most names, so while a hue is expanded only its
+  // own name shows; the others fade out instead of overprinting each other.
   return (
-    <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          borderRadius: '6px',
-          overflow: 'hidden',
-          '&:hover .swatch': { flex: 0.6 },
-          '&:hover .swatch:hover': { flex: 3 },
-        }}
-      >
-        {PALETTE.map(({ background, hex }) => {
-          const copied = copiedHex === hex;
-          return (
+    <Box
+      data-strip
+      sx={{
+        display: 'flex',
+        '&:hover .swatch': { flex: 0.6 },
+        '&:hover .swatch:hover': { flex: 3 },
+        '&:hover .swatch:not(:hover) .hue-name': { opacity: 0 },
+      }}
+    >
+      {PALETTE.map(({ background, hex, name }) => {
+        const copied = copiedHex === hex;
+        return (
+          <Box
+            key={background}
+            className="swatch"
+            data-hue={name}
+            sx={{
+              flex: 1,
+              // Without it the nowrap hex label sets a ~70 px minimum, and on a phone the
+              // strip overflows: the last colours are clipped and drift from their names.
+              minWidth: 0,
+              transition: 'flex 0.3s',
+              display: 'flex',
+              flexDirection: 'column',
+              '&:first-of-type .hue-block': { borderRadius: '6px 0 0 6px' },
+              '&:last-of-type .hue-block': { borderRadius: '0 6px 6px 0' },
+            }}
+          >
             <Box
-              key={background}
               component="button"
               type="button"
               aria-label={`Copy ${hex} to clipboard`}
               onClick={() => handleCopy(hex)}
-              className="swatch"
+              className="hue-block"
+              data-hue-block
               sx={{
-                flex: 1,
-                // Without it the nowrap hex label sets a ~70 px minimum, and on a phone the
-                // strip overflows: the last swatches are clipped and drift from their names.
-                minWidth: 0,
                 height: 120,
                 background,
-                transition: 'flex 0.3s',
                 position: 'relative',
+                overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -395,37 +416,32 @@ function LabelledPaletteStrip() {
                 {copied ? 'copied ✓' : hex}
               </Box>
             </Box>
-          );
-        })}
-      </Box>
-      {/* Equal columns, one under each swatch: `minmax(0, 1fr)` so a long name cannot widen
-          its column, and a flex cell so a name wider than its column (lavender on a 320 px
-          phone) overflows evenly on both sides and stays centred under its swatch. */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${PALETTE.length}, minmax(0, 1fr))`,
-          mt: 1,
-        }}
-      >
-        {PALETTE.map(({ background, name }) => (
-          <Box
-            key={background}
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              fontFamily: typography.mono,
-              fontSize: { xs: 'clamp(8px, 2.5vw, 9px)', md: '10px' },
-              color: semanticColors.mutedText,
-              textAlign: 'center',
-              px: 0.5,
-              lineHeight: 1.3,
-            }}
-          >
-            {name}
+            {/* A flex cell, so a name wider than its column (lavender on a 320 px phone)
+                overflows evenly on both sides and stays centred under its colour. Two lines
+                are reserved because a name wraps in a narrow column and unwraps in the
+                expanded one; the strip's height stays the same in every state. */}
+            <Box
+              className="hue-name"
+              data-hue-name
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                mt: 1,
+                minHeight: '2.6em',
+                fontFamily: typography.mono,
+                fontSize: { xs: 'clamp(8px, 2.5vw, 9px)', md: '10px' },
+                color: semanticColors.mutedText,
+                textAlign: 'center',
+                px: 0.5,
+                lineHeight: 1.3,
+                transition: 'opacity 0.2s',
+              }}
+            >
+              {name}
+            </Box>
           </Box>
-        ))}
-      </Box>
+        );
+      })}
     </Box>
   );
 }

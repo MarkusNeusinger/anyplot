@@ -136,6 +136,11 @@ export function useFilterFetch({
         setHasMore(shuffled.length > BATCH_SIZE);
       } catch {
         if (abortController.signal.aborted) return;
+        // The plots of the previous filter would stand under the new chips as if they were
+        // this filter's result; the error line stands alone instead.
+        setAllImages([]);
+        setDisplayedImages([]);
+        setHasMore(false);
         setError(FILTER_FETCH_ERROR);
       } finally {
         if (!abortController.signal.aborted) {

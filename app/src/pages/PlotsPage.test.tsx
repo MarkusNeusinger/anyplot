@@ -20,6 +20,7 @@ const {
     specsData: [] as { id: string; title: string }[],
     specTitles: {} as Record<string, string>,
     error: '',
+    images: [] as { spec_id: string; library: string; url: string }[],
   },
 }));
 
@@ -33,8 +34,8 @@ vi.mock('src/hooks', () => ({
     globalCounts: null,
     orCounts: [],
     specTitles: state.specTitles,
-    allImages: [],
-    displayedImages: [],
+    allImages: state.images,
+    displayedImages: state.images,
     hasMore: false,
     loading: false,
     error: state.error,
@@ -80,6 +81,7 @@ describe('PlotsPage', () => {
     state.specsData = [];
     state.specTitles = {};
     state.error = '';
+    state.images = [];
   });
 
   describe('error banner', () => {
@@ -97,6 +99,16 @@ describe('PlotsPage', () => {
       state.activeFilters = [{ category: 'lib', values: ['matplotlib'] }];
       render(<PlotsPage />);
       expect(screen.queryByText('no plots match these filters.')).toBeNull();
+      expect(screen.queryByTestId('images-grid')).toBeNull();
+    });
+
+    it('shows no plots under the error line, even if plots are still in the state', () => {
+      state.error = 'plots did not load';
+      state.images = [
+        { spec_id: 'scatter-basic', library: 'matplotlib', url: 'https://cdn.example.com/a.png' },
+      ];
+      render(<PlotsPage />);
+      expect(screen.getByRole('alert')).toHaveTextContent('plots did not load');
       expect(screen.queryByTestId('images-grid')).toBeNull();
     });
 

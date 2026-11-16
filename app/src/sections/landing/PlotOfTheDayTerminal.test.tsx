@@ -31,7 +31,8 @@ vi.mock('src/hooks/useLayoutContext', async () => {
   return { ...actual, useTheme: () => ({ isDark: false, toggle: vi.fn() }) };
 });
 
-import { PlotOfTheDayTerminal } from 'src/sections/landing/PlotOfTheDayTerminal';
+import { PlotOfTheDayLoadContext } from 'src/hooks/usePlotOfTheDay';
+import { PlotOfTheDayTerminal, POTD_LOAD_ERROR } from 'src/sections/landing/PlotOfTheDayTerminal';
 
 const potd = {
   spec_id: 'scatter-basic',
@@ -99,6 +100,52 @@ describe('PlotOfTheDayTerminal', () => {
     expect(frame).toHaveAttribute('aria-hidden', 'true');
     expect(frame.querySelectorAll('a, button, img')).toHaveLength(0);
     expect(frame).toHaveTextContent(/^\$>>>\/\/ plot of the day$/);
+  });
+
+  it('keeps the frame after a failed request and says so, with a .retry()', async () => {
+    const user = userEvent.setup();
+    const retry = vi.fn();
+    const { container, rerender } = render(
+      <PlotOfTheDayLoadContext.Provider value={{ status: 'loading', retry }}>
+        <PlotOfTheDayTerminal potd={null} />
+      </PlotOfTheDayLoadContext.Provider>
+    );
+    const frame = container.firstElementChild;
+    expect(frame).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    rerender(
+      <PlotOfTheDayLoadContext.Provider value={{ status: 'failed', retry }}>
+        <PlotOfTheDayTerminal potd={null} />
+      </PlotOfTheDayLoadContext.Provider>
+    );
+    // Same element as the loading frame: the box does not move, and the entrance does not replay.
+    expect(container.firstElementChild).toBe(frame);
+    expect(frame).not.toHaveAttribute('aria-hidden');
+    expect(screen.getByRole('alert')).toHaveTextContent(POTD_LOAD_ERROR);
+    expect(POTD_LOAD_ERROR).toBe('plot of the day did not load');
+    expect(frame?.querySelectorAll('a, img')).toHaveLength(0);
+
+    await user.click(screen.getByRole('button', { name: 'Retry loading the plot of the day' }));
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders no card when the API answered without a plot of the day', () => {
+    const { container } = render(
+      <PlotOfTheDayLoadContext.Provider value={{ status: 'none', retry: vi.fn() }}>
+        <PlotOfTheDayTerminal potd={null} />
+      </PlotOfTheDayLoadContext.Provider>
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders no card for a plot of the day without a preview image', () => {
+    const { container } = render(
+      <PlotOfTheDayLoadContext.Provider value={{ status: 'ready', retry: vi.fn() }}>
+        <PlotOfTheDayTerminal potd={{ ...potd, preview_url: null }} />
+      </PlotOfTheDayLoadContext.Provider>
+    );
+    expect(container).toBeEmptyDOMElement();
   });
 
   it('keeps the frame element when the plot arrives, so the entrance does not replay', () => {

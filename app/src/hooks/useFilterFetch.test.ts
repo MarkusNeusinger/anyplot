@@ -216,6 +216,29 @@ describe('useFilterFetch', () => {
       expect(result.current.loading).toBe(false);
     });
 
+    it('drops the plots of the previous filter when the next filter fails', async () => {
+      fetchMock.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiResponse) });
+      fetchMock.mockRejectedValueOnce(new Error('Network error'));
+
+      const { result, rerender } = renderHook(
+        ({ filters }: { filters: ActiveFilters }) => useFilterFetch({ activeFilters: filters }),
+        {
+          initialProps: { filters: [{ category: 'lib', values: ['matplotlib'] }] as ActiveFilters },
+        }
+      );
+      await waitFor(() => {
+        expect(result.current.allImages).toHaveLength(50);
+      });
+
+      rerender({ filters: [] });
+      await waitFor(() => {
+        expect(result.current.error).toBe(FILTER_FETCH_ERROR);
+      });
+      expect(result.current.allImages).toEqual([]);
+      expect(result.current.displayedImages).toEqual([]);
+      expect(result.current.hasMore).toBe(false);
+    });
+
     it('retry runs the fetch for the same filters again and clears the error on success', async () => {
       fetchMock.mockRejectedValueOnce(new Error('Network error'));
       fetchMock.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockApiResponse) });

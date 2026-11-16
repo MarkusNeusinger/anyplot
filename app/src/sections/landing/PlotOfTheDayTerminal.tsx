@@ -1,12 +1,15 @@
+import { useContext } from 'react';
+
 import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
+import { RetryButton } from 'src/components/RetryButton';
 import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useAgentEligibility } from 'src/hooks/useAgentEligibility';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
+import { type PlotOfTheDayData, PlotOfTheDayLoadContext } from 'src/hooks/usePlotOfTheDay';
 import { agentChatPath, specPath } from 'src/routes/paths';
 import { USE_MY_DATA_LABEL } from 'src/sections/spec-detail/LibraryPills';
 import { colors, typography } from 'src/theme';
@@ -15,6 +18,9 @@ import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 /** `agent_open{source}` for the chat opened from this card (`docs/reference/plausible.md`). */
 const AGENT_SOURCE = 'plot_of_the_day';
+
+/** The line in the reserved frame once the request still failed after apiGet's retries. */
+export const POTD_LOAD_ERROR = 'plot of the day did not load';
 
 /** A text action in the prompt header, beside the filename: muted, green on hover. */
 const headerActionSx = {
@@ -93,6 +99,8 @@ function plotFrameSx(maxPlotHeight: string) {
  * Until the plot of the day is there to show, it renders the same frame empty, so
  * the box is reserved and the content below it does not jump down when the plot
  * arrives (in the one-column layout of a tablet the card sits above the numbers).
+ * If the request fails, the frame stays and says so, with a `.retry()`; the request's
+ * status comes from `PlotOfTheDayLoadContext`, which the landing page provides.
  */
 export function PlotOfTheDayTerminal({
   potd,
@@ -102,6 +110,7 @@ export function PlotOfTheDayTerminal({
 }: PlotOfTheDayTerminalProps) {
   const { isDark } = useTheme();
   const { trackEvent } = useAnalytics();
+  const load = useContext(PlotOfTheDayLoadContext);
   // `.use_my_data()` for the plot of the day: one eligibility request per view, as on the
   // spec pages; no entry while it probes, for a closed lane, or for an ineligible pair.
   const agentLane = useAgentEligibility(potd?.spec_id, potd?.library_id);
@@ -132,15 +141,52 @@ export function PlotOfTheDayTerminal({
   } as const;
 
   if (!potd || !previewUrl) {
+    // An answer without a plot to show will not change on its own: no card, as before the
+    // frame was reserved.
+    if (load.status === 'none' || potd) return null;
+    // A failed request keeps the frame, so the content below does not move up, and says so
+    // inside the 16:10 box, with a `.retry()`.
+    const retry = load.status === 'failed' ? load.retry : undefined;
     return (
-      <Box sx={frameSx} aria-hidden="true" data-testid="potd-terminal-placeholder">
-        <Box sx={headerSx}>
+      <Box
+        sx={frameSx}
+        aria-hidden={retry ? undefined : 'true'}
+        data-testid="potd-terminal-placeholder"
+      >
+        <Box sx={headerSx} aria-hidden="true">
           <Box component="span" sx={{ color: colors.primary, fontWeight: 700 }}>
             $
           </Box>
         </Box>
-        <Box sx={{ ...plotFrameSx(maxPlotHeight), bgcolor: 'var(--bg-elevated)' }} />
-        <Box sx={footerSx}>
+        <Box
+          sx={{
+            ...plotFrameSx(maxPlotHeight),
+            bgcolor: 'var(--bg-elevated)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {retry && (
+            <Box
+              role="alert"
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 1.5,
+                px: 2,
+              }}
+            >
+              <Box component="span" sx={{ fontSize: '12px', color: 'var(--ink-muted)' }}>
+                {POTD_LOAD_ERROR}
+              </Box>
+              <RetryButton onClick={retry} label="Retry loading the plot of the day" />
+            </Box>
+          )}
+        </Box>
+        <Box sx={footerSx} aria-hidden="true">
           <Box component="span" sx={{ color: colors.primary }}>
             &gt;&gt;&gt;
           </Box>

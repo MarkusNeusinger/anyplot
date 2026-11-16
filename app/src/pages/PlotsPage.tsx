@@ -296,7 +296,7 @@ export function PlotsPage() {
 
       {/* After a failed load the empty states would claim that nothing matches; the error
           line above says what happened instead. */}
-      {(!error || displayedImages.length > 0) && (
+      {!error && (
         <ImagesGrid
           images={displayedImages}
           viewMode={noFilters ? 'library' : 'spec'}
