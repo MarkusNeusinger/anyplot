@@ -53,6 +53,7 @@ from typing import Any, Literal, Protocol
 # `CASE_ID_PATTERN` is re-exported for the routes, which validate ids against it.
 from core.agent_cases import CASE_ID_PATTERN as CASE_ID_PATTERN
 from core.agent_cases import CASE_PREFIX, CODE_FILE_NAMES, MANIFEST_NAME, MANIFEST_SCHEMA, case_object
+from core.constants import library_file_extension
 
 
 CASE_STATUS_NEW = "new"
@@ -77,9 +78,13 @@ _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 _THEMES = ("light", "dark")
 _FILE_KEYS = frozenset({"images", "data_csv"})
 """The version fields that become files of their own and stay out of the manifest's `bundle`."""
-# The first line of an exported `plot.py` (agents/anyplot/code/export.py, `attribution`):
-# `# Adapted by anyplot.ai from <spec> (<library>[ <version>]) for your data.csv;`.
-_EXPORT_LIBRARY = re.compile(r"\A# Adapted by anyplot\.ai from [a-z0-9-]+ \(([a-z][a-z0-9]*)[ )]")
+# The first line of exported code (agents/anyplot/code/export.py, `attribution`):
+# `# Adapted by anyplot.ai from <spec> (<library>[ <version>]) for your data.csv;`, with `//` in place of `#`
+# for JavaScript, whose export is a script the exported page runs. The regression importer
+# (agents/evals/import_case.py) imports nothing from the repository and keeps a copy; its test holds the two equal.
+_EXPORT_LIBRARY = re.compile(
+    r"\A(?P<marker>#|//) Adapted by anyplot\.ai from [a-z0-9-]+ \((?P<library>[a-z][a-z0-9]*)[ )]"
+)
 
 
 class BundleError(ValueError):
@@ -246,7 +251,7 @@ def version_library(version: dict[str, Any], session: dict[str, Any]) -> str | N
     The bundle's version items carry no `library` yet, and the session's library is the
     one at submission time, which differs after a library switch. So: the version's own
     `library` when a newer agents service sends one, else the library the exported
-    `plot.py` names in its first line, else the session's.
+    code names in its first line (`#` or `//` header), else the session's.
     """
     own = _text(version.get("library"))
     if own:
@@ -254,7 +259,7 @@ def version_library(version: dict[str, Any], session: dict[str, Any]) -> str | N
     code = version.get("plot_py")
     match = _EXPORT_LIBRARY.match(code) if isinstance(code, str) else None
     if match:
-        return match.group(1)
+        return match.group("library")
     return _text(session.get("library"))
 
 
@@ -914,13 +919,16 @@ def _without_export_header(code: str) -> str:
     """The exported code without its attribution header (agents/anyplot/code/export.py, `attribution`).
 
     Only when the first line is the header's: then the leading comment lines up to the
-    first blank line, and that blank line, which the export adds after its two lines.
+    first blank line, and that blank line, which the export adds after its two lines. The
+    comment marker is the header's own, `#` or JavaScript's `//`.
     """
-    if not _EXPORT_LIBRARY.match(code):
+    header = _EXPORT_LIBRARY.match(code)
+    if not header:
         return code
+    marker = header.group("marker")
     lines = code.split("\n")
     start = 0
-    while start < len(lines) and lines[start].startswith("#"):
+    while start < len(lines) and lines[start].startswith(marker):
         start += 1
     if start < len(lines) and not lines[start].strip():
         start += 1
@@ -936,18 +944,20 @@ def _diff_lines(text: str) -> list[str]:
 
 
 def code_diff(original: str, adapted: str, *, spec_id: str, library_id: str) -> str:
-    """A unified diff from the catalogue's code to a case's exported `plot.py`; empty when they agree.
+    """A unified diff from the catalogue's code to a case's exported code; empty when they agree.
 
     The export's attribution header is dropped first, so its two comment lines do not read as
     a change. Each line counts as newline-terminated, so a missing final newline on either
-    side does not glue two diff lines together.
+    side does not glue two diff lines together. Both labels carry the library's file
+    extension (`core.constants.library_file_extension`), the one its language's code file has.
     """
+    extension = library_file_extension(library_id)
     return "".join(
         difflib.unified_diff(
             _diff_lines(original),
             _diff_lines(_without_export_header(adapted)),
-            fromfile=f"catalogue/{spec_id}/{library_id}.py",
-            tofile="case/plot.py",
+            fromfile=f"catalogue/{spec_id}/{library_id}{extension}",
+            tofile=f"case/plot{extension}",
             n=3,
         )
     )

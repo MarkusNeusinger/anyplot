@@ -44,7 +44,8 @@ from api.agent_cases import (
     version_library,
     write_case,
 )
-from core.agent_cases import CASE_FILE_NAMES, row_from_manifest
+from core.agent_cases import CASE_FILE_NAMES, CODE_FILE_NAMES, row_from_manifest
+from core.constants import LIBRARY_LANGUAGES, library_file_extension
 from core.database import FEEDBACK_STATUSES
 
 
@@ -84,6 +85,11 @@ def test_prompt_hash_is_stable_and_order_free() -> None:
             {"plot_py": "# Adapted by anyplot.ai from bar-grouped (matplotlib) for your data.csv;\n"},
             {"library": "seaborn"},
             "matplotlib",
+        ),
+        (
+            {"plot_py": "// Adapted by anyplot.ai from scatter-basic (chartjs 4.4.7) for your data.csv;\n"},
+            {"library": "d3"},
+            "chartjs",
         ),
         ({"plot_py": "import pandas as pd\n"}, {"library": "seaborn"}, "seaborn"),
         ({}, {}, None),
@@ -699,8 +705,46 @@ def test_code_diff_drops_the_export_header() -> None:
     assert "# run:" not in diff
 
 
+def test_code_diff_drops_a_script_export_header() -> None:
+    """A JavaScript export's two header lines are `//` comments; they do not read as a change either."""
+    adapted = (
+        "// Adapted by anyplot.ai from scatter-basic (chartjs 4.4.7) for your data.csv;\n"
+        "// run: open plot.html in a browser, which runs this code with the chart library, the light theme and your data\n"
+        "\nconst chart = new Chart(ctx, config);\n"
+    )
+    original = "const chart = new Chart(ctx, config);\nchart.update();\n"
+    diff = code_diff(original, adapted, spec_id="scatter-basic", library_id="chartjs")
+    assert diff.startswith("--- catalogue/scatter-basic/chartjs.js\n+++ case/plot.js\n")
+    assert "-chart.update();\n" in diff
+    assert "Adapted by" not in diff
+    assert "// run:" not in diff
+
+
+@pytest.mark.parametrize(
+    ("library_id", "extension"), [("matplotlib", ".py"), ("ggplot2", ".R"), ("makie", ".jl"), ("muix", ".tsx")]
+)
+def test_code_diff_names_both_sides_with_the_library_s_extension(library_id, extension) -> None:
+    diff = code_diff("x\n", "y\n", spec_id="s", library_id=library_id)
+    assert diff.startswith(f"--- catalogue/s/{library_id}{extension}\n+++ case/plot{extension}\n")
+
+
+def test_every_library_s_case_label_is_a_case_code_file_name() -> None:
+    """The diff's `case/plot<ext>` label names a file a case stores, for every library of the registry."""
+    assert {f"plot{library_file_extension(library)}" for library in LIBRARY_LANGUAGES} <= set(CODE_FILE_NAMES)
+
+
 def test_code_diff_is_empty_when_only_the_header_differs() -> None:
     assert code_diff("import pandas as pd\n", PLOT_PY, spec_id="s", library_id="l") == ""
+
+
+def test_code_diff_is_empty_when_only_a_script_header_differs() -> None:
+    original = "const chart = new Chart(ctx, config);\n"
+    adapted = (
+        "// Adapted by anyplot.ai from scatter-basic (chartjs 4.4.7) for your data.csv;\n"
+        "// run: open plot.html in a browser, which runs this code with the chart library, the light theme and your data\n"
+        "\n" + original
+    )
+    assert code_diff(original, adapted, spec_id="scatter-basic", library_id="chartjs") == ""
 
 
 def test_code_diff_shows_two_hunks_for_two_distant_changes() -> None:

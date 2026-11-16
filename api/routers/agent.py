@@ -80,7 +80,7 @@ from core.agent_cases import (
     triage_updates,
 )
 from core.config import settings
-from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
+from core.constants import LIBRARY_LANGUAGES, MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 from core.database import FEEDBACK_REACTIONS, AgentFeedback, AgentFeedbackRepository, ImplRepository, SpecRepository
 from core.utils import strip_noqa_comments
 
@@ -2128,8 +2128,11 @@ async def get_agent_case(case_id: CaseId, ctx: Ctx, cases: Cases, db: Db) -> Cas
         raise _storage_failed(case_id, ctx, exc) from exc
     siblings = await repo.siblings(row.session_hash, row.result_version, row.id)
     impl = None
-    if row.spec_id and row.library_id:
-        impl = await ImplRepository(db).get_code(row.spec_id, row.library_id)
+    # The row holds no programming language (its `locale` is the session's UI locale), so the catalogue's
+    # language comes from the registry; a library outside it has no catalogue implementation to diff against.
+    language = LIBRARY_LANGUAGES.get(row.library_id) if row.library_id else None
+    if row.spec_id and row.library_id and language is not None:
+        impl = await ImplRepository(db).get_code(row.spec_id, row.library_id, language)
     original = strip_noqa_comments(impl.code) if impl is not None else None
     catalogue_version = impl.library_version if impl is not None else None
     if manifest is None:
