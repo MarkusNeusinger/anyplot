@@ -397,6 +397,8 @@ class TestReturningKeeps:
             "adapt_regression"
         }
         assert "adapt_regression" not in rp.RETURN_CODES and not judged & rp.RETURN_CODES
+        # A technical keep: the renders were not of the code, which says nothing about the code.
+        assert "render_mismatch" in rp.RETURN_CODES
 
 
 class TestFoldPulls:
