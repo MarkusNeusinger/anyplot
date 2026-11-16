@@ -25,7 +25,10 @@ PAIR = re.compile(r"\{\s*spec:\s*'(?P<spec>[a-z0-9-]+)',\s*library:\s*'(?P<libra
 def example_pairs() -> list[tuple[str, str]]:
     block = EXAMPLES_BLOCK.search(AGENT_INTRO.read_text(encoding="utf-8"))
     assert block is not None, "AgentIntro.tsx has no `const AGENT_EXAMPLES = [...] as const;`"
-    return [(match["spec"], match["library"]) for match in PAIR.finditer(block["body"])]
+    pairs = [(match["spec"], match["library"]) for match in PAIR.finditer(block["body"])]
+    # A pair written in another shape would otherwise be skipped without a sound.
+    assert len(pairs) == block["body"].count("spec:"), "an AGENT_EXAMPLES entry is not `{ spec: '…', library: '…' }`"
+    return pairs
 
 
 def test_the_examples_are_read_from_the_source():
