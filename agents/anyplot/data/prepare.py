@@ -252,6 +252,21 @@ The operations:
     `unsupported_operation` before any operation runs, and `prepare_data` answers with a
     fixed sentence in the session language instead of the root telling the user to fix
     the file.
+* Two operations only `query_data` takes (`QueryOperation`), since a question's answer is never
+  stored; `prepare_data` refuses both, so no stored version comes from either:
+  * `aggregate` with `by` left out, empty or null (`QueryAggregate`): every row the call reads is
+    one group, so a grand total, a mean or a count over all rows is one step and one row. Its change
+    line counts, per value column, the rows without a value that the figure leaves out, or all of
+    them in one count when the column names leave the line no room for one count each.
+  * `fit`: the straight line of the number column `y` on the number column `x` by ordinary least
+    squares over the rows the call reads at that point, as one row of `slope`, `intercept`,
+    `r_squared` and `n` (`FIT_COLUMNS`) that a later `compute` of the same call can use. It is
+    computed in exact fractions of the cells as `data.csv` writes them, with one rounding to a float
+    per value at the end, never to fewer digits. Rows without a value in `x` or `y` are left out and
+    counted; fewer than two rows, an `x` with one value only, and a column that holds no numbers are
+    refused (a date column takes a `date_number` first, as for `compute`); `r_squared` is empty when
+    `y` has one value only, which the change line says.
+  `apply_and_parse`, the one path from operations to a stored version, refuses both.
 
 Values in conditions are never evaluated: a condition compares text with text for a
 text column, numbers for a numeric column (the value is a dot-decimal number, which
@@ -307,6 +322,7 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, timedelta, tzinfo
 from decimal import ROUND_FLOOR, InvalidOperation, localcontext
 from decimal import Decimal as ExactDecimal
+from fractions import Fraction
 from typing import Annotated, Any, Literal, Self
 
 import numpy as np
@@ -393,6 +409,7 @@ APPLY_VIEW_REFUSAL = (
 )
 SHOWN_TIED_ROWS = 3  # of the rows of a tie on each side of a top N's cut, the ones its change line names
 TIED_NAME_CHARS = 20  # of one such row's name in that line, which names up to twice `SHOWN_TIED_ROWS` of them
+NOTE_HEAD_CHARS = 60  # of a change line's start kept beside its counts, so the line still names the step they count
 TargetType = Literal["number", "datetime", "text"]
 DateFormat = Literal[
     "DD.MM.YYYY",
@@ -844,6 +861,21 @@ class Aggregate(_Strict):
         return [self.column] if self.column is not None else list(self.columns or [])
 
 
+class QueryAggregate(Aggregate):
+    """An `aggregate` as `query_data` takes it: `by` may be left out, empty or null, and then every row the query
+    reads is one group, so the result is one row (a grand total, a mean or a count over all rows). Only a question
+    takes it: `prepare_data` keeps `Aggregate`, which needs one or two keys, so no stored version comes from an
+    aggregate without a key."""
+
+    by: list[ColumnName] = Field(default_factory=list, max_length=MAX_KEYS)
+
+    @field_validator("by", mode="before")
+    @classmethod
+    def _null_is_no_key(cls, value: Any) -> Any:
+        # A null `by` means the same as a left-out one, as `column`, `columns` and `period` take null.
+        return [] if value is None else value
+
+
 class Sort(_Strict):
     op: Literal["sort"]
     column: ColumnName
@@ -1079,6 +1111,18 @@ class Unsupported(_Strict):
     family: UnsupportedFamily
 
 
+class Fit(_Strict):
+    """The straight line of the number column `y` on the number column `x` by ordinary least squares over the rows the
+    query reads at that point, as one row of `FIT_COLUMNS` that a later step of the same query can compute with.
+
+    Only `query_data` takes it (`QueryOperation`): its row is an answer, never the user's table.
+    """
+
+    op: Literal["fit"]
+    x: ColumnName
+    y: ColumnName
+
+
 Operation = Annotated[
     Rename
     | DropColumns
@@ -1107,6 +1151,43 @@ Operation = Annotated[
     | Unsupported,
     Field(discriminator="op"),
 ]
+QueryOperation = Annotated[
+    Rename
+    | DropColumns
+    | DropRows
+    | SetType
+    | QueryAggregate
+    | Sort
+    | PivotLonger
+    | PivotWider
+    | Classify
+    | Derive
+    | MakeDate
+    | RowNumber
+    | DateNumber
+    | Split
+    | Extract
+    | Strip
+    | Replace
+    | Compute
+    | Diff
+    | Rolling
+    | Blank
+    | KeepRows
+    | ResetView
+    | ApplyView
+    | Unsupported
+    | Fit,
+    Field(discriminator="op"),
+]
+"""The operations of `query_data` (`query.QueryArgs`): `Operation`'s, with an `aggregate` whose `by` may be left out
+(`QueryAggregate`), and `fit`. A question's answer is never stored, so only a question takes them: `prepare_data`
+refuses both."""
+FIT_COLUMNS = ("slope", "intercept", "r_squared", "n")
+"""The columns of a `fit`'s one row, in order: what a later `compute` of the same query names in its `inputs`."""
+QUERY_ONLY_REFUSAL = (
+    "fit and an aggregate without by answer a question and never change the data: query_data takes them"
+)
 
 
 class PrepareArgs(BaseModel):
@@ -1130,7 +1211,7 @@ class PrepareArgs(BaseModel):
         return operations
 
 
-_ROW_CHANGING = (DropRows, Aggregate, Sort, PivotLonger, PivotWider, KeepRows)
+_ROW_CHANGING = (DropRows, Aggregate, Sort, PivotLonger, PivotWider, KeepRows, Fit)
 """The operations after which a row of the frame is no longer the pasted row of the same place."""
 _ROW_FILTERS = (DropRows, KeepRows)
 """The operations that only take rows out: the rows left keep their order and their cells, so a `sort` before them
@@ -1140,10 +1221,13 @@ still says what the rows are ranked by."""
 # --- Applying ---------------------------------------------------------------------------------
 
 
-def apply_operations(parsed: ParsedDataset, operations: list[Operation], language: str = DEFAULT_LANGUAGE) -> Prepared:
+def apply_operations(
+    parsed: ParsedDataset, operations: Sequence[Operation | Fit], language: str = DEFAULT_LANGUAGE
+) -> Prepared:
     """Apply `operations` in order to the canonical CSV of `parsed`; raises `PrepareError`.
 
-    `language` is the session language, which names the column of a `date_number` that names none.
+    `language` is the session language, which names the column of a `date_number` that names none. The engine also
+    applies the operations only a question takes (`QueryOperation`); `apply_and_parse` keeps them from a version.
     """
     if not operations:
         raise PrepareError("invalid_operation", "there is no operation to apply")
@@ -1235,8 +1319,15 @@ def apply_and_parse(
     and `ParseError` only for a bug, since the operations keep every parser cap.
 
     The one path from operations to a version, shared by the root's `prepare_data` and the conversions the server
-    makes on a paste (`paste_conversions.py`), so both store the same data for the same operations.
+    makes on a paste (`paste_conversions.py`), so both store the same data for the same operations. An operation only
+    a question takes (`QueryOperation`: a `fit`, an `aggregate` without `by`) is refused here too, beside the models
+    that keep it out of `prepare_data`, so no stored version comes from either.
     """
+    if any(
+        isinstance(operation, Fit) or (isinstance(operation, Aggregate) and not operation.by)
+        for operation in operations
+    ):
+        raise PrepareError("invalid_operation", QUERY_ONLY_REFUSAL)
     prepared = apply_operations(parsed, operations, language=language)
     # The columns `set_type text` made text stay text: the re-parse would type them by content again.
     # The CSV is the service's own: every row stays, also a `Total` category a sort moved to the end.
@@ -1247,7 +1338,7 @@ def apply_and_parse(
     return prepared, with_date_notes(again, prepared)
 
 
-def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tuple[pd.DataFrame, str]:
+def _apply(frame: pd.DataFrame, operation: Operation | Fit, carried: _Carried) -> tuple[pd.DataFrame, str]:
     match operation:
         case Rename():
             return _rename(frame, operation, carried)
@@ -1293,6 +1384,8 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
             return _blank(frame, operation, carried)
         case KeepRows():
             return _keep_rows(frame, operation, carried)
+        case Fit():
+            return _fit(frame, operation, carried)
         case ResetView():  # `apply_operations` refuses it before any operation runs
             raise PrepareError("invalid_operation", RESET_VIEW_REFUSAL)
         case ApplyView():  # likewise
@@ -1897,7 +1990,8 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     for name, kind in kinds.items():
         if kind == "boolean" and op.how in ("sum", "mean"):
             work[name] = work[name].astype("Int64")
-    grouped = work.groupby(keys, dropna=False, sort=True)
+    # Without a key (a question's `QueryAggregate`), every row is one group, reduced by the same code as a group's.
+    grouped = work.groupby(keys, dropna=False, sort=True) if keys else work.groupby(np.zeros(len(work), dtype=np.int64))
     reduced: list[pd.Series] = []
     rounded = cast = 0
     for name in values:
@@ -1905,7 +1999,7 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
         reduced.append(series.rename(value_names[0] if op.how == "count" else name))
         rounded += whole_rounded_count
         cast += cast_count
-    result = pd.concat(reduced, axis=1).reset_index()
+    result = pd.concat(reduced, axis=1).reset_index(drop=not keys)
     result.columns = pd.Index([*keys, *value_names])
     carried.keep_only([*keys, *value_names])
     if op.period in DATE_PERIODS:
@@ -1925,13 +2019,37 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     verb = _VERBS[op.how]
     if op.how in ("first", "last"):
         verb = verb.replace(" value", " value (by time)" if date_keys and op.period else " value (in row order)")
-    change = f"{verb} {_listed(values)} by {by}: {_count(len(result), 'row')}"
+    if keys:
+        over = f"by {by}"
+    else:
+        over = f"over all {_count(len(frame), 'row')}" if len(frame) != 1 else "over the 1 row"
+    change = f"{verb} {_listed(values)} {over}: {_count(len(result), 'row')}"
     other = frame.shape[1] - len(keys) - len(values)
     if other:
         change += f", {_count(other, 'other column')} dropped"
-    if cast:
-        return result, _with_notice(change, cast_note(cast, f"in {_listed(values)}"))
-    return result, _with_notice(change, whole_rounded(rounded) if rounded else "")
+    notice = cast_note(cast, f"in {_listed(values)}") if cast else whole_rounded(rounded) if rounded else ""
+    if not keys:
+        # Without a key the line names the rows the figures are over, so it counts the rows each figure leaves out
+        # too, in the room the other notice and the shortest start of the line leave (", " before each notice).
+        room = MAX_NOTE_CHARS - min(len(change), NOTE_HEAD_CHARS) - 2 - (len(notice) + 2 if notice else 0)
+        notice = _joined(_left_out_note(frame, values, room), notice)
+    return result, _with_notice(change, notice)
+
+
+def _left_out_note(frame: pd.DataFrame, columns: list[str], room: int) -> str:
+    """The rows without a value in each value column of an `aggregate` without a key: a sum, a mean, a count, a
+    minimum or a first value reads only the cells that hold one. One count per column, since the columns can miss
+    different rows. Past `room` characters the names give way to the total of the empty cells: `room` is what the
+    line's other notice and the shortest start it keeps (`NOTE_HEAD_CHARS`) leave, so `_with_notice` shortens the
+    start of the line and never a count."""
+    missing = {name: int(frame[name].isna().sum()) for name in columns}
+    notes = _joined(
+        *(f"{_count(count, 'row')} without a value in {name} left out" for name, count in missing.items() if count)
+    )
+    if not notes or len(notes) <= room:
+        return notes
+    cells, hit = sum(missing.values()), sum(1 for count in missing.values() if count)
+    return f"{_count(cells, 'empty cell')} in {hit} of the {len(columns)} value columns left out"
 
 
 def _reduce(grouped: Any, values: pd.Series, how: str) -> tuple[pd.Series, int, int]:
@@ -2335,11 +2453,12 @@ def _derived(
 
 
 def _with_notice(change: str, notice: str) -> str:
-    """`change` with `notice` appended, the notice never cut: `apply_operations` clips every line to
-    `MAX_NOTE_CHARS`, and a rounding count lost to the clip would be a silent loss again (review of #12196)."""
+    """`change` with `notice` appended, the notice never cut while `change` can give way: `apply_operations` clips
+    every line to `MAX_NOTE_CHARS`, and a count lost to the clip would be a silent loss again. A notice that leaves
+    `change` no room shortens it to its ellipsis, never keeps it whole for the line's clip to cut the notice."""
     if not notice:
         return change
-    return f"{_clip(change, MAX_NOTE_CHARS - len(notice) - 2)}, {notice}"
+    return f"{_clip(change, max(MAX_NOTE_CHARS - len(notice) - 2, 1))}, {notice}"
 
 
 def _integer_result(frame: pd.DataFrame, columns: list[str], how: str) -> tuple[pd.Series, int]:
@@ -2535,6 +2654,77 @@ def _number_input(frame: pd.DataFrame, column: str, what: str) -> None:
         return
     hint = "date_number turns dates into numbers" if kind == "datetime" else "set_type it to number first"
     raise PrepareError("type_mismatch", f"column '{column}' is {kind}; {what} needs number columns: {hint}")
+
+
+# --- fit -------------------------------------------------------------------------------------
+
+
+def _fit(frame: pd.DataFrame, op: Fit, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """The least-squares line of `op.y` on `op.x` over the rows that have both, as one row of `FIT_COLUMNS`.
+
+    The sums are exact fractions of the cells as `data.csv` writes them (`_fraction`), so the slope, the intercept and
+    r squared are each rounded once, to the nearest float, and never to fewer digits: a number the root quotes is the
+    data's, not the noise of a float computation. Rows without a value in `x` or `y` are left out and counted. Fewer
+    than two rows and an `x` with one value only have no line and are refused; a `y` with one value only has a line
+    (slope 0) but no r squared, whose cell stays empty, as the line says.
+    """
+    columns = _distinct([op.x, op.y])
+    for column in columns:
+        _number_input(frame, column, "fit")
+    present = frame[op.x].notna() & frame[op.y].notna()
+    left_out = int((~present).sum())
+    xs = [_fraction(value, op.x) for value in frame.loc[present, op.x]]
+    ys = [_fraction(value, op.y) for value in frame.loc[present, op.y]]
+    count = len(xs)
+    if count < 2:
+        has = "row has" if count == 1 else "rows have"
+        raise PrepareError(
+            "invalid_operation", f"fit needs at least 2 rows with a value in {_listed(columns)}; {count} {has}"
+        )
+    sum_x, sum_y = sum(xs, Fraction(0)), sum(ys, Fraction(0))
+    # The centred sums of squares and products, exact: Σ(x - x̄)² = Σx² - (Σx)²/n, and so on.
+    sxx = sum((value * value for value in xs), Fraction(0)) - sum_x * sum_x / count
+    sxy = sum((a * b for a, b in zip(xs, ys, strict=True)), Fraction(0)) - sum_x * sum_y / count
+    syy = sum((value * value for value in ys), Fraction(0)) - sum_y * sum_y / count
+    if not sxx:
+        raise PrepareError(
+            "invalid_operation", f"column '{op.x}' has one value in all {count} rows the fit reads, so no line fits"
+        )
+    slope = sxy / sxx
+    intercept = (sum_y - slope * sum_x) / count
+    try:
+        r_squared = float(sxy * sxy / (sxx * syy)) if syy else math.nan
+        slope_name, intercept_name, r_squared_name, n_name = FIT_COLUMNS
+        result = pd.DataFrame(
+            {
+                slope_name: [float(slope)],
+                intercept_name: [float(intercept)],
+                r_squared_name: pd.array([r_squared], dtype="float64"),
+                n_name: pd.array([count], dtype="Int64"),
+            }
+        )
+    except OverflowError:  # a slope past what a float holds: steep data over a tiny spread of x
+        raise PrepareError("invalid_operation", "the fit's slope or intercept lies outside the number range") from None
+    carried.keep_only([])  # four new columns: nothing carried about the source columns holds for them
+    change = (
+        f"fit of {op.y} on {op.x} by least squares over {_count(count, 'row')}: 1 row of {_listed(list(FIT_COLUMNS))}"
+    )
+    notes = [
+        f"{_count(left_out, 'row')} without a value in {' or '.join(columns)} left out" if left_out else "",
+        f"r_squared is empty: {op.y} has one value in all {count} rows" if not syy else "",
+    ]
+    return result, _with_notice(change, _joined(*notes))
+
+
+def _fraction(value: Any, column: str) -> Fraction:
+    """A number cell as an exact fraction of what `data.csv` writes: a whole number as it is, a float as its shortest
+    form (`repr`), the decimal the user reads, as `_decimal_total` adds them."""
+    if isinstance(value, int | np.integer):
+        return Fraction(int(value))
+    number = float(value)
+    if not math.isfinite(number):
+        raise PrepareError("invalid_operation", f"column '{column}' holds a value that is no finite number")
+    return Fraction(repr(number))
 
 
 # --- compute ---------------------------------------------------------------------------------
@@ -4268,6 +4458,9 @@ def _count(number: int, noun: str) -> str:
 
 
 def _clip(text: str, limit: int) -> str:
+    """`text` cut to `limit` characters, the last of them an ellipsis. A limit below 1 counts as 1: a negative slice
+    would keep nearly all of `text` instead."""
+    limit = max(limit, 1)
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 

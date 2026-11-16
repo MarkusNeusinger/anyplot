@@ -6,6 +6,7 @@ any drift fail CI: a field or a `Literal` value added to a model and left out of
 case of a renamed op. A nested model is checked in the line of the first operation that holds it (a condition in
 `drop_rows`, whose line the others refer to with "conditions as in drop_rows"). The tool lines of `prepare_data` and
 `query_data` name every argument of the models ToolSafety checks them with, in the order of the tool's signature.
+The operations only `query_data` takes (`QueryOperation`, such as `fit`) have their lines in the same list.
 """
 
 import inspect
@@ -17,7 +18,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from agents.anyplot.data.prepare import Operation, PrepareArgs
+from agents.anyplot.data.prepare import Operation, PrepareArgs, QueryOperation
 from agents.anyplot.data.query import QueryArgs
 from agents.anyplot.schemas import FromVersion
 from agents.anyplot.tools.session import prepare_data, query_data
@@ -25,11 +26,19 @@ from agents.anyplot.tools.session import prepare_data, query_data
 
 ROOT = Path(__file__).resolve().parents[4]
 PROMPT = (ROOT / "agents" / "anyplot" / "prompts" / "root.md").read_text(encoding="utf-8")
-MODELS: list[type[BaseModel]] = list(typing.get_args(typing.get_args(Operation)[0]))
 
 
 def op_name(model: type[BaseModel]) -> str:
     return str(typing.get_args(model.model_fields["op"].annotation)[0])
+
+
+SHARED: list[type[BaseModel]] = list(typing.get_args(typing.get_args(Operation)[0]))
+MODELS: list[type[BaseModel]] = SHARED + [
+    model
+    for model in typing.get_args(typing.get_args(QueryOperation)[0])
+    if op_name(model) not in {op_name(shared) for shared in SHARED}
+]
+"""Every operation model with a line of its own: `prepare_data`'s, then the ones only `query_data` takes."""
 
 
 def op_line(op: str) -> str:
@@ -91,6 +100,17 @@ def test_every_model_has_its_line() -> None:
     documented = [line.split('"op": "', 1)[1].split('"', 1)[0] for line in PROMPT.splitlines() if '- `{"op": "' in line]
 
     assert sorted(documented) == sorted(ops)
+
+
+def test_the_texts_name_what_only_a_question_takes() -> None:
+    """An `aggregate` without `by` shares its op name with `prepare_data`'s, so `MODELS` holds no model of its own for
+    it and the field check never reads its clause: the root learns of the one-step total from these words alone, in
+    the operation's line, the question rule and the tool's description."""
+    assert "; in `query_data` only, `by` may be left out," in op_line("aggregate")
+    assert "` (only in `query_data`: " in op_line("fit")
+    assert "`aggregate` for a total or a mean per group, without `by` for one over all rows; `fit` for" in PROMPT
+    description = " ".join((query_data.__doc__ or "").split())
+    assert "and over all rows an aggregate without by; fit (x, y) is the least-squares line" in description
 
 
 TOOL_ARGUMENTS: dict[str, tuple[type[BaseModel], Callable[..., Any]]] = {
