@@ -70,31 +70,39 @@ function FactTable({
   );
 }
 
-/** 13 px, the floor for muted text on the site: `fontSize.sm` (12.8 px) sits under it. */
+/** 13 px, the smallest size this page allows at phone width: `fontSize.sm` (12.8 px) is under it. */
 const KEPT_FONT_SIZE = '0.8125rem';
 
 /**
  * A fact row's second line: how long its data is kept and where it runs, as `label: value`
  * pairs. A span shown as a block, so it can sit inside an anchor span such as #shared-links.
+ * The labels are muted and the values keep the cell's ink, because the period is the fact a
+ * reader looks for. On a phone each pair takes a line of its own, where a separator would only
+ * start a line, so it is hidden there; it stays in the text, so the line's text is the same at
+ * every width.
  */
 function Kept({ items }: { items: [string, ReactNode][] }) {
   return (
     <Box
       component="span"
       data-kept-line=""
-      sx={{
-        display: 'block',
-        mt: 0.75,
-        fontSize: KEPT_FONT_SIZE,
-        lineHeight: 1.6,
-        color: semanticColors.mutedText,
-      }}
+      sx={{ display: 'block', mt: 0.75, fontSize: KEPT_FONT_SIZE, lineHeight: 1.6 }}
     >
       {items.map(([label, value], i) => (
-        <span key={label}>
-          {i > 0 && ' · '}
-          {label}: {value}
-        </span>
+        <Box component="span" key={label} sx={{ display: { xs: 'block', sm: 'inline' } }}>
+          {i > 0 && (
+            <Box
+              component="span"
+              sx={{ display: { xs: 'none', sm: 'inline' }, color: semanticColors.mutedText }}
+            >
+              {' · '}
+            </Box>
+          )}
+          <Box component="span" sx={{ color: semanticColors.mutedText }}>
+            {label}:
+          </Box>{' '}
+          {value}
+        </Box>
       ))}
     </Box>
   );
@@ -304,7 +312,7 @@ export function LegalPage() {
                     <Kept
                       items={[
                         ['kept', '30 days'],
-                        ['where', <GoogleCloud services="Run, Logging" />],
+                        ['where', <GoogleCloud services="Logging" />],
                       ]}
                     />
                   </>,
@@ -390,8 +398,10 @@ export function LegalPage() {
               ]}
             />
             <Typography sx={{ ...textStyle, mt: 2 }}>
-              Google Cloud and Cloudflare process data under their data processing terms, including
-              their safeguards for transfers outside Switzerland and the EU.
+              hosting: <GoogleCloud services="Run, SQL, Storage, Logging, BigQuery" />; cdn / ddos /
+              bot check: Cloudflare (global, EU data centers for EU visitors). Google Cloud and
+              Cloudflare process data under their data processing terms, including their safeguards
+              for transfers outside Switzerland and the EU.
             </Typography>
 
             <Typography sx={subheadingStyle}>legal bases (GDPR)</Typography>

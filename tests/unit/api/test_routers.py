@@ -1253,8 +1253,10 @@ class TestSeoProxyRouter:
         assert "kept until you ask to delete it" in response.text
         # The server logs sit in the EU (the `_Default` sink's europe-west4 bucket).
         assert "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4)" in response.text
-        # The hosting sentence names what LegalPage.tsx's hosting row names, BigQuery included.
+        # The hosting sentence names what LegalPage.tsx's hosting sentence names, BigQuery and
+        # Cloudflare's role as the CDN included.
         assert "Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands" in response.text
+        assert "CDN / DDoS / bot check: Cloudflare (global, EU data centers for EU visitors)." in response.text
         # The machine-read line, mirrored from the human page's "machine readers" row.
         assert "Machine readers: each request by a crawler, an AI assistant or an MCP client" in response.text
         assert "without IP address or user-agent, kept up to 180 days" in response.text
@@ -1267,7 +1269,8 @@ class TestSeoProxyRouter:
             "The counts are kept without a time limit in Google Cloud SQL in the Netherlands (europe-west4)",
             "Edge: Cloudflare (global, EU data centers for EU visitors) uses your IP address",
             "kept until you ask to delete it, in Google Cloud SQL in the Netherlands (europe-west4)",
-            "Cloudflare (global, EU data centers for EU visitors) also uses these signals",
+            # The bot check's place stands at its first mention, so it reads as the check's own.
+            "Cloudflare Turnstile (global, EU data centers for EU visitors) checks that a browser",
         ):
             assert fact in response.text, fact
         # The right to object carries the condition that makes it one, as on the human page.
@@ -1293,7 +1296,7 @@ class TestSeoProxyRouter:
             "your plot votes, a release number",
             "given when you send it and withdrawable at any time by asking",
             # The bot check, as LegalPage.tsx's "bot check" row states it.
-            "Cloudflare Turnstile checks that a browser, not a script, is asking",
+            "checks that a browser, not a script, is asking",
             "user-agent and TLS fingerprint",
             "with no cookie",
             "as its own controller, to improve the check",

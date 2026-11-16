@@ -78,7 +78,7 @@ describe('LegalPage', () => {
       [
         'server logs',
         0,
-        'kept: 30 days · where: Google Cloud (Run, Logging) in the Netherlands (europe-west4)',
+        'kept: 30 days · where: Google Cloud (Logging) in the Netherlands (europe-west4)',
       ],
       [
         'machine readers',
@@ -122,17 +122,12 @@ describe('LegalPage', () => {
     // The separate period and place tables are gone, their figures moved into the rows.
     expect(screen.queryByText('how long it stays')).not.toBeInTheDocument();
     expect(screen.queryByText('where it runs')).not.toBeInTheDocument();
-    // Between them, the rows still place all of Google Cloud's services in the EU region.
-    const googleCloud = Array.from(document.querySelectorAll('[data-kept-line]'))
-      .map(line => line.textContent ?? '')
-      .join(' ');
-    for (const service of ['Run', 'SQL', 'Storage', 'Logging', 'BigQuery']) {
-      expect(googleCloud).toMatch(
-        new RegExp(
-          `Google Cloud \\([^)]*\\b${service}\\b[^)]*\\) in the Netherlands \\(europe-west4\\)`
-        )
-      );
-    }
+    // The two place rows that hold for the whole site stay, word for word, as the sentence
+    // before the transfers: they also place what no row does, such as the servers that hold a
+    // session in memory, and Cloudflare's role as the cdn.
+    expect(screen.getByText(/transfers outside Switzerland and the EU/)).toHaveTextContent(
+      'hosting: Google Cloud (Run, SQL, Storage, Logging, BigQuery) in the Netherlands (europe-west4); cdn / ddos / bot check: Cloudflare (global, EU data centers for EU visitors). Google Cloud and Cloudflare process data'
+    );
     // The page states the current state only: no notes on what older entries still carry.
     expect(screen.queryByText(/before the move/)).not.toBeInTheDocument();
     expect(screen.queryByText(/unsalted/)).not.toBeInTheDocument();
