@@ -51,6 +51,16 @@ probes that failed by count, and `unbacked_quotes` how many passages the root's 
 shipped plot quote that no drawn text and no requested text holds (`unbacked_quotes`; the
 replies and texts are compared in process and never stored).
 
+A case with `before_view` sets a view of the plot after the confirmation (`store_view`: no
+route sets one, so the harness stores it as `prepare_data` does), and with `view_checks.clear`
+it clears the view after the plot with the page's `.show_all()` (`{"action":
+"show_all_rows"}`, the follow-up turn). Its record's `view` (`view_record`) holds, content-free:
+the rows the shipped version drew (`CodeVersion.view_rows`, the fact every adapter and reviewer
+request of that run carried), the adapter and reviewer calls and the answered reviews of those
+turns, whether a review raised DQ-03, and whether a drawn text names the view in its own words;
+the same for the clearing turn under `cleared`; and the case's `checks`. They do not decide a
+pass.
+
 Outputs, under `--out` (default `agents/evals/reports/`, git-ignored):
 
 * `<date>-<model>.json`, the report (`-2`, `-3`, ... when the name is taken), and
@@ -154,10 +164,11 @@ from agents.evals.report import (
 
 
 if TYPE_CHECKING:  # importing agents.anyplot builds the agents, so the runtime imports wait for `configure`
+    from agents.anyplot.plot_view import PlotView
     from agents.anyplot.render.contract import RuntimeAdapter
     from agents.anyplot.services import Services
     from agents.anyplot.settings import AgentSettings
-    from agents.evals.cases import EvalCase, FollowUpChecks
+    from agents.evals.cases import EvalCase, FollowUpChecks, ViewChecks
     from agents.main import Runtime
 
 
@@ -729,6 +740,7 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "unbacked_quotes": 0,
         "checks": {},
         "checks_passed": None,
+        "view": None,
         "residual_defects": [],
         "gate_failures": {},
         "validator_rejections": {},
@@ -1120,9 +1132,36 @@ async def store_data_steps(runtime: "Runtime", user: str, sid: str, steps: Seque
         await runtime.write_state(session, version.delta)
 
 
+async def store_view(runtime: "Runtime", user: str, sid: str, operations: Sequence[dict[str, Any]]) -> "PlotView":
+    """A view of the plot set on the session's current table as `prepare_data` sets one for the root: the call
+    routed and merged into an empty view (`plot_view.route`, `plot_view.merged`), checked against the table
+    (`plot_view.view_of`) and stored with `plot_view.settled_delta`; no model call. No route sets a view (the page's
+    `.show_all()` only clears one), so a matrix case's `before_view` (`EvalCase.before_view`) and a prep case's
+    earlier view (`prep.PrepCase.before_view`) both come this way. Their operations passed the `Operation` models and
+    `route` already, so a view that does not fit the table raises here: a fixture bug, never a view the run would
+    silently clear."""
+    from pydantic import TypeAdapter
+
+    from agents.anyplot.data.prepare import Operation
+    from agents.anyplot.plot_view import PlotView, merged, route, settled_delta, view_of
+    from agents.anyplot.services import get_services
+    from agents.anyplot.session_state import read_session
+
+    session = await runtime.session(user, sid)
+    view = read_session(session.state)
+    stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+    if view is None or stored is None:
+        raise RuntimeError("the case's session has no data to set a view on")
+    held = merged(PlotView(), route(TypeAdapter(list[Operation]).validate_python(list(operations))))
+    view_of(stored.as_parsed(), held, view.language)
+    await runtime.write_state(session, settled_delta(held))
+    return held
+
+
 def version_facts(sid: str, number: Any) -> dict[str, Any] | None:
-    """What `follow_up_checks` reads of the shipped version `number`: its code, plot language, theme, drawn texts
-    and missed requested texts, from the in-process services; None for a version it does not hold."""
+    """What `follow_up_checks` and `view_record` read of the shipped version `number`: its code, plot language,
+    theme, drawn texts, missed requested texts, and the view it drew with its rows (`CodeVersion.view`,
+    `CodeVersion.view_rows`), from the in-process services; None for a version it does not hold."""
     from agents.anyplot.services import get_services
 
     if not isinstance(number, int) or isinstance(number, bool) or number < 1:
@@ -1138,6 +1177,8 @@ def version_facts(sid: str, number: Any) -> dict[str, Any] | None:
         "theme": version.theme,
         "texts": dict(shows.texts) if shows is not None and shows.texts is not None else None,
         "requested_not_found": list(shows.requested_not_found) if shows is not None else [],
+        "view": version.view,
+        "view_rows": version.view_rows.model_dump(mode="json") if version.view_rows is not None else None,
     }
 
 
@@ -1185,6 +1226,136 @@ def follow_up_checks(
         found[f"texts:{role}"] = ok and bool(texts) and texts != (base.get("texts") or {}).get(role)
     found["requested_found"] = ok and not shipped.get("requested_not_found")
     return found
+
+
+VIEW_TEXT_ROLES: tuple[str, ...] = ("title", "subtitle", "legend", "annotations", "other texts")
+"""The drawn-text roles (`PlotShows.texts`) where a label names the rows a figure covers: every role but the axis
+labels and the tick labels, which name the bound columns and their values, whatever rows the plot draws."""
+_WHOLE_NUMBER = re.compile(r"\d+")
+
+
+def view_tokens(view: "PlotView") -> list[tuple[str, ...]]:
+    """The view's parts as the words its own line writes them (`PlotView.parts`), one tuple per part: the values an
+    `eq` or `contains` condition keeps, and the N of the top N. A condition that compares by order (`gt`, `le`) or
+    tests for a missing cell has no word of its own a label would repeat, so it is left out."""
+    parts: list[tuple[str, ...]] = []
+    for where in view.selections:
+        for condition in where:
+            if condition.test not in ("eq", "contains"):
+                continue
+            values = [condition.value] if condition.value is not None else list(condition.values or [])
+            if values:
+                parts.append(tuple(str(value) for value in values))
+    if view.top is not None:
+        parts.append((str(view.top.n),))
+    return parts
+
+
+def holds_token(text: str, token: str) -> bool:
+    """`token` stands whole in `text`, case-folded: a whole number never as part of another number (`4` stands in
+    `Top 4` and `n = 4`, not in `45`, `12.4` or `4,5`), any other token never as part of a longer word
+    (`_stands_in`: `Nord` stands in `Site Nord`, not in `Nordique`). A number the plot writes as a word is missed."""
+    wanted = token.casefold().strip()
+    if not wanted:
+        return False
+    if _WHOLE_NUMBER.fullmatch(wanted):
+        return re.search(rf"(?<!\d)(?<!\d[.,]){wanted}(?!\d)(?![.,]\d)", text.casefold()) is not None
+    return _stands_in(wanted, text.casefold())
+
+
+def _view_texts(facts: dict[str, Any] | None) -> list[str] | None:
+    """The drawn texts of a version in `VIEW_TEXT_ROLES`, or None when it shipped none to read."""
+    texts = (facts or {}).get("texts")
+    if facts is None or not isinstance(texts, dict):
+        return None
+    return [str(text) for role in VIEW_TEXT_ROLES for text in texts.get(role) or []]
+
+
+def turn_view_facts(lines: list[dict[str, Any]]) -> dict[str, Any]:
+    """What a view case records of its turns, from their attribution lines: the adapter and reviewer model calls,
+    the reviews that answered (`pipeline_review` lines `ok` or `defects`; an unreadable answer and its retry are
+    none), and whether any of those reviews raised a DQ-03 line, also one a later round repaired."""
+    calls = Counter(agent_kind(line.get("agent")) for line in lines if line.get("hook") == "model")
+    reviews = [
+        line for line in lines if line.get("hook") == "pipeline_review" and line.get("verdict") in ("ok", "defects")
+    ]
+    return {
+        "adapter_calls": calls["adapter"],
+        "reviewer_calls": calls["reviewer"],
+        "review_rounds": len(reviews),
+        "dq03_raised": any("DQ-03" in (line.get("defects") or []) for line in reviews),
+    }
+
+
+def view_record(
+    checks: "ViewChecks",
+    view: "PlotView",
+    drawn: dict[str, Any] | None,
+    lines: list[dict[str, Any]],
+    cleared: dict[str, Any] | None = None,
+    cleared_lines: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """A view case's `view` record: the facts of its turns under the view, of its clearing turn when it ran one, and
+    the case's checks, all content-free (counts and booleans; the view's words and the drawn texts stay in process).
+
+    `drawn` is the version the turns under the view shipped (`version_facts`), `lines` their attribution lines;
+    `cleared` and `cleared_lines` the same for the `.show_all()` turn, `cleared_lines` None when none ran.
+
+    - `drawn_rows`: the rows that version drew, `{rows, of_rows}` of its `view_rows`, the `DrawnRows` the pipeline
+      builds once per run and hands to every adapter and reviewer request of it; None when it stored none.
+      `words_hold_view` says whether the server's view words there hold every part of the case's view.
+    - `named`: whether every part of the view (`view_tokens`) stands in a drawn text of `VIEW_TEXT_ROLES`; None
+      when the version shipped no drawn texts (`PlotShows.texts` keeps a few texts per role, so size a case's marks
+      to fit them) or the view has no part a label repeats (`load_case` refuses `named` and `clear` for such a view).
+    - `cleared`: `every_row`, the clearing turn shipped a new version that drew no view; `still_named`, a part of
+      the view still stands in one of its drawn texts.
+
+    `checks` hold only once the turns under the view shipped, as a follow-up's do: `drawn_rows` (fewer rows than the
+    table's, under the view's words) always, and `named`, `no_dq03` (no review of any turn raised DQ-03),
+    `cleared_every_row` and `cleared_unnamed` as `checks` asks."""
+    parts = view_tokens(view)
+    rows = (drawn or {}).get("view_rows")
+    # A view without a part a label repeats leaves nothing to read: unknown, never a pass by an empty `all`.
+    texts = _view_texts(drawn) if parts else None
+    record: dict[str, Any] = {
+        "drawn_rows": {"rows": rows["rows"], "of_rows": rows["of_rows"]} if rows else None,
+        "words_hold_view": all(any(holds_token(str(rows["view"]), token) for token in part) for part in parts)
+        if rows and parts
+        else None,
+        **turn_view_facts(lines),
+        "named": all(any(holds_token(text, token) for text in texts for token in part) for part in parts)
+        if texts is not None
+        else None,
+        "cleared": None,
+        "checks": {},
+    }
+    if cleared_lines is not None:
+        after = _view_texts(cleared) if parts else None
+        record["cleared"] = {
+            "every_row": cleared is not None
+            and cleared.get("number") != (drawn or {}).get("number")
+            and cleared.get("view") is None,
+            **turn_view_facts(cleared_lines),
+            "still_named": any(holds_token(text, token) for text in after for part in parts for token in part)
+            if after is not None
+            else None,
+        }
+    if drawn is None:
+        return record
+    # The view's words are checked where the view has a part a label repeats; the counts always.
+    found = {
+        "drawn_rows": rows is not None and rows["rows"] < rows["of_rows"] and record["words_hold_view"] is not False
+    }
+    if checks.named:
+        found["named"] = record["named"] is True
+    if checks.no_dq03:
+        found["no_dq03"] = not record["dq03_raised"] and not (record["cleared"] or {}).get("dq03_raised")
+    if checks.clear:
+        after_clear = record["cleared"] or {}
+        found["cleared_every_row"] = after_clear.get("every_row") is True
+        found["cleared_unnamed"] = after_clear.get("still_named") is False
+    record["checks"] = found
+    return record
 
 
 def finish_record(record: dict[str, Any]) -> None:
@@ -1268,16 +1439,59 @@ class CaseRunner:
             return
         if not await self._confirm(record, sid, headers("c")):
             return
-        plot = await self._kept_turn(record, case, repeat, sid, {"action": "create_plot"}, headers("m1"), "m1")
+        held = None
+        if case.before_view:
+            if self.runtime is None:
+                raise RuntimeError("a case with a view of the plot needs the app's runtime")
+            # After the confirmation, which a view never needs: the user confirms the table, the view only picks rows.
+            held = await store_view(self.runtime, user, sid, case.before_view)
+        lines: list[dict[str, Any]] = []
+        plot = await self._kept_turn(
+            record, case, repeat, sid, {"action": "create_plot"}, headers("m1"), "m1", lines=lines
+        )
         if case.change_request and record["status"] in SHIPPED:
             first = version_facts(sid, plot.get("version")) if plot is not None else None
-            plot = await self._kept_turn(record, case, repeat, sid, {"text": case.change_request}, headers("m2"), "m2")
+            plot = await self._kept_turn(
+                record, case, repeat, sid, {"text": case.change_request}, headers("m2"), "m2", lines=lines
+            )
             if case.checks is not None:
                 shipped = version_facts(sid, plot.get("version")) if plot is not None else None
                 record["checks"] = follow_up_checks(case.checks, first, shipped)
                 record["checks_passed"] = all(record["checks"].values())
+        if held is not None:
+            plot = await self._view_turns(record, case, repeat, sid, held, plot, lines, headers("m2"))
         if plot is not None and record["status"] in SHIPPED:
             await self._save_png(record, case, repeat, sid, plot, headers("a"))
+
+    async def _view_turns(
+        self,
+        record: dict[str, Any],
+        case: "EvalCase",
+        repeat: int,
+        sid: str,
+        held: "PlotView",
+        plot: dict[str, Any] | None,
+        lines: list[dict[str, Any]],
+        headers: dict[str, str],
+    ) -> dict[str, Any] | None:
+        """A view case's `view` record (`view_record`) over the turns under its view, after the `.show_all()` turn
+        that clears the view when the case asks for it; the clearing is the case's follow-up, so it takes the
+        follow-up's request id. Returns the plot the case ends with, which `_save_png` keeps."""
+        from agents.evals.cases import ViewChecks
+
+        checks = case.view_checks or ViewChecks()
+        drawn = version_facts(sid, plot.get("version")) if record["status"] in SHIPPED and plot is not None else None
+        cleared: dict[str, Any] | None = None
+        cleared_lines: list[dict[str, Any]] | None = None
+        if checks.clear and drawn is not None:
+            cleared_lines = []
+            plot = await self._kept_turn(
+                record, case, repeat, sid, {"action": "show_all_rows"}, headers, "m2", lines=cleared_lines
+            )
+            if record["status"] in SHIPPED and plot is not None:
+                cleared = version_facts(sid, plot.get("version"))
+        record["view"] = view_record(checks, held, drawn, lines, cleared, cleared_lines)
+        return plot
 
     async def _open(self, record: dict[str, Any], case: "EvalCase", user: str, headers: dict[str, str]) -> str | None:
         body = {
@@ -1353,19 +1567,29 @@ class CaseRunner:
         body: dict[str, str],
         headers: dict[str, str],
         turn: str,
+        *,
+        lines: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any] | None:
         """A turn whose renders the recorder keeps (`--keep-attempts`); a plain turn without one."""
         if self.recorder is None:
-            return await self._turn(record, sid, body, headers)
+            return await self._turn(record, sid, body, headers, lines=lines)
         self.recorder.begin(f"{case.case_id}-r{repeat}-{turn}", record.setdefault("attempt_renders", []))
         try:
-            return await self._turn(record, sid, body, headers)
+            return await self._turn(record, sid, body, headers, lines=lines)
         finally:
             self.recorder.end()
 
     async def _turn(
-        self, record: dict[str, Any], sid: str, body: dict[str, str], headers: dict[str, str]
+        self,
+        record: dict[str, Any],
+        sid: str,
+        body: dict[str, str],
+        headers: dict[str, str],
+        *,
+        lines: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any] | None:
+        """One `/messages` turn, booked into `record`; its attribution lines also go to `lines` when given, for a
+        reading of the turn on its own (`turn_view_facts`)."""
         self.timed.chunks.clear()
         started = time.monotonic()
         params = {"theme": self.theme} if self.theme else None
@@ -1376,7 +1600,10 @@ class CaseRunner:
             parse_events(self.timed.chunks, started) if response.status_code == 200 else [],
         )
         plot = book_turn(record, turn)
-        book_attribution(record, self.collector.take(headers["X-Request-Id"]), self.settings)
+        taken = self.collector.take(headers["X-Request-Id"])
+        book_attribution(record, taken, self.settings)
+        if lines is not None:
+            lines.extend(taken)
         if plot is not None and record["status"] in SHIPPED:
             replies = [str(data.get("text") or "") for _, name, data in turn.events if name == "message"]
             record["unbacked_quotes"] += unbacked_quotes(replies, shipped_shows(sid, plot.get("version")))
@@ -1703,6 +1930,11 @@ async def _run_matrix(
         result.notes.append(
             f"{len(summary['check_failures'])} follow-up checks failed ({'; '.join(summary['check_failures'])}): "
             "a part of the follow-up did not reach the shipped plot"
+        )
+    if summary.get("view_check_failures"):
+        result.notes.append(
+            f"{len(summary['view_check_failures'])} view checks failed "
+            f"({'; '.join(summary['view_check_failures'])}): compare the renders of these runs with their view"
         )
     if stopped == "outage":
         result.exit_code = EXIT_OUTAGE

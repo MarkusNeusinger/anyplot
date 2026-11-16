@@ -180,6 +180,16 @@ class TestFromABundleFile:
         source = read_bundle_file(_bundle_file(tmp_path, bundle), 2)
         assert build_case(source, None).case["library"] == "matplotlib"
 
+    def test_the_library_of_a_script_export_is_the_one_its_header_names(self, tmp_path) -> None:
+        """A JavaScript export's header is a `//` comment; after a library switch it still names the version's library."""
+        bundle = _bundle()
+        bundle["session"]["library"] = "d3"
+        bundle["versions"][1]["plot_py"] = (
+            "// Adapted by anyplot.ai from scatter-basic (chartjs 4.4.7) for your data.csv;\n"
+            "// run: open plot.html in a browser\n\nconst chart = new Chart(ctx, config);\n"
+        )
+        assert import_case.library_of(read_bundle_file(_bundle_file(tmp_path, bundle), 2)) == "chartjs"
+
     def test_a_detected_session_language_is_chosen_by_the_case(self, tmp_path, promoted) -> None:
         """The replay sends its first plot as `create_plot`, which detects nothing, so the case chooses the language."""
         bundle = _bundle()
@@ -451,8 +461,10 @@ class TestChangeRequest:
 def test_the_copied_constants_match_their_sources() -> None:
     from agents.anyplot.plugins.scope_guard import JUDGED_REFUSALS, WITHHELD, withheld_text
     from agents.main import ACTION_MESSAGES
+    from api import agent_cases
     from core.database import FEEDBACK_REACTIONS
 
+    assert import_case._EXPORT_LIBRARY.pattern == agent_cases._EXPORT_LIBRARY.pattern
     assert ACTION_MESSAGES["create_plot"] == CREATE_PLOT_MESSAGE
     assert all(text.startswith(import_case.ACTION_PREFIX) for text in ACTION_MESSAGES.values())
     placeholders = [WITHHELD, *(withheld_text(code) for code in JUDGED_REFUSALS)]

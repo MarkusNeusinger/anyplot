@@ -64,7 +64,7 @@ from .ledger import (
     usage_breakdown,
     usage_tokens,
 )
-from .tool_safety import ToolSafetyPlugin, call_key, pipeline_bound, recorded_name
+from .tool_safety import ToolSafetyPlugin, call_key, pipeline_bound, recorded_name, recorded_shape
 
 
 logger = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ class BudgetPlugin(BasePlugin):
             user = ledger.user_id or tool_context.session.user_id
             if not usage.runs_ok(user, settings, ledger.tier):
                 attribution("budget_pipeline", ledger, verdict="refused")
-                return self._refused(tool_context, tool.name)
+                return self._refused(tool_context, tool.name, tool_args)
             # What the run's telemetry buckets (`telemetry.runs_today_bucket`, `tokens_today_bucket`): how far into
             # the day's limits the user was when this run was booked, measured against the public budget for every
             # tier so the numbers stay comparable. The user id never leaves the usage book.
@@ -190,16 +190,18 @@ class BudgetPlugin(BasePlugin):
             return None
         except Exception as exc:
             logger.warning("pipeline budget failed: %s", type(exc).__name__)
-            return self._refused(tool_context, tool.name)
+            return self._refused(tool_context, tool.name, tool_args)
 
     @staticmethod
-    def _refused(tool_context: ToolContext, name: str) -> dict[str, Any]:
+    def _refused(tool_context: ToolContext, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """The `budget` refusal of a pipeline run, noted in the turn's record (`RequestLedger.tool_calls`) where the
-        root made the call: the answer ends the plugin chain, so ToolSafety never sees the call before it closes."""
+        root made the call, with the shape of its arguments: the answer ends the plugin chain, so ToolSafety never
+        sees the call before it closes."""
         try:
             if tool_context.agent_name == ROOT_AGENT:
                 ledger = ledger_for(tool_context.invocation_id)
-                ledger.open_call(call_key(tool_context, name), recorded_name(name), "budget")
+                shape = recorded_shape(name, arguments, tool_context)
+                ledger.open_call(call_key(tool_context, name), recorded_name(name), "budget", shape=shape)
         except Exception as exc:
             logger.warning("tool call record failed: %s", type(exc).__name__)
         return {"status": "error", "code": "budget"}

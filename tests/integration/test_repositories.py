@@ -332,7 +332,7 @@ class TestImplRepository:
     async def test_get_by_spec_and_library(self, test_db_with_data):
         """Should fetch specific implementation."""
         repo = ImplRepository(test_db_with_data)
-        impl = await repo.get_by_spec_and_library("scatter-basic", "matplotlib")
+        impl = await repo.get_by_spec_and_library("scatter-basic", "matplotlib", "python")
 
         assert impl is not None
         assert impl.spec_id == "scatter-basic"
@@ -342,7 +342,7 @@ class TestImplRepository:
     async def test_get_by_spec_and_library_not_found(self, test_db_with_data):
         """Should return None for non-existent implementation."""
         repo = ImplRepository(test_db_with_data)
-        impl = await repo.get_by_spec_and_library("scatter-basic", "plotly")
+        impl = await repo.get_by_spec_and_library("scatter-basic", "plotly", "python")
 
         assert impl is None
 
@@ -394,7 +394,7 @@ class TestImplRepository:
         """Should create new implementation via upsert."""
         repo = ImplRepository(test_db_with_data)
 
-        impl = await repo.upsert("scatter-basic", "seaborn", {"code": "updated code", "quality_score": 96.0})
+        impl = await repo.upsert("scatter-basic", "seaborn", {"code": "updated code", "quality_score": 96.0}, "python")
         assert impl.spec_id == "scatter-basic"
         assert impl.library_id == "seaborn"
         assert impl.quality_score == 96.0
@@ -403,7 +403,7 @@ class TestImplRepository:
         """Should update existing implementation via upsert."""
         repo = ImplRepository(test_db_with_data)
 
-        impl = await repo.upsert("scatter-basic", "matplotlib", {"quality_score": 98.0})
+        impl = await repo.upsert("scatter-basic", "matplotlib", {"quality_score": 98.0}, "python")
         assert impl.spec_id == "scatter-basic"
         assert impl.library_id == "matplotlib"
         assert impl.quality_score == 98.0
@@ -527,7 +527,7 @@ class TestFeedbackRepository:
     async def test_version_start_is_the_implementations_updated(self, test_db_with_data):
         """The current version began at `impls.updated`; no `updated`, or no row, means one version."""
         updated = datetime(2026, 11, 8, 4, 54, 13)
-        await ImplRepository(test_db_with_data).upsert("scatter-basic", "matplotlib", {"updated": updated})
+        await ImplRepository(test_db_with_data).upsert("scatter-basic", "matplotlib", {"updated": updated}, "python")
         repo = FeedbackRepository(test_db_with_data)
 
         assert await repo.version_start("scatter-basic", "matplotlib") == updated
@@ -606,7 +606,7 @@ class TestFeedbackRepository:
         from datetime import timedelta
 
         start = datetime(2026, 11, 8, 12, 0, 0)
-        await ImplRepository(test_db_with_data).upsert("scatter-basic", "matplotlib", {"updated": start})
+        await ImplRepository(test_db_with_data).upsert("scatter-basic", "matplotlib", {"updated": start}, "python")
         repo = FeedbackRepository(test_db_with_data)
 
         async def vote(spec, library, reaction, hours, session=None, language="python"):

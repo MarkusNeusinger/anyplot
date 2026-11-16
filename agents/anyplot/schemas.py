@@ -501,6 +501,28 @@ class AdaptPlan(_ModelOutput):
         return self
 
 
+class DrawnRows(_ServerContract):
+    """Which rows of the table a plot run draws, when that is no plain "every row": built by the server
+    (`plot_view.Viewed.drawn_rows`, `pipeline.run_pipeline`) for the adapter and the reviewer, which write and judge
+    the figures the plot draws over those rows.
+
+    Under a view of the plot `df` holds only the rows the view leaves, so a total, a mean or an n the plot draws
+    covers `rows` of the table's `of_rows`, the selection `view` names, and its label has to say so: the plot, its
+    code and its `data.csv` then agree on the figure. A run whose base version drew a view and that draws every row now carries `rows` equal to `of_rows`
+    and an empty `view`, so a label written for the old selection does not survive the clearing. Every other run
+    carries none. Never a `PlotResult` field: the root reads the same counts in the plot's first `changes` line."""
+
+    rows: NonNegativeInt
+    """The table's rows the plot draws: the rows the view leaves (`plot_view.Viewed.rows`). Rows of the view that
+    share the plot's key and were combined for the run (`repeated_keys.combine_in_view`) count before the combine,
+    as the plot's line counts them."""
+    of_rows: NonNegativeInt
+    """The rows of the table the view was applied to (`plot_view.Viewed.of_rows`)."""
+    view: str = Field(default="", max_length=MAX_CHANGE_CHARS)
+    """The view's words (`plot_view.PlotView.words`), cut as the plot's first `changes` line cuts them: the user's
+    column names and values, so fenced as data wherever they go. Empty for every row."""
+
+
 class AdaptRequest(_ServerContract):
     """Everything one adapter call sees, assembled by the pipeline from server state."""
 
@@ -534,6 +556,9 @@ class AdaptRequest(_ServerContract):
     file_name: str = Field(default="", max_length=MAX_FILE_NAME_CHARS)
     """The screened name of the file the data was dropped from (`StoredDataset.file_name`), empty when none or
     withheld: a hint at the subject, fenced on its own as data, never among the notes."""
+    drawn_rows: DrawnRows | None = None
+    """The rows of the table the plot draws (`DrawnRows`): set under a view of the plot and on the run that clears
+    one, so a figure the plot draws names the rows it covers."""
 
 
 # --- Review ----------------------------------------------------------------------------
@@ -563,6 +588,9 @@ class ReviewRequest(_ServerContract):
     """The texts and number formats the user asked to see, for the reviewer to find in the image: set only for a
     render without drawn texts on a runtime whose reviewer checks them (`RuntimeAdapter.review_texts`), so every
     other review request stays as it was."""
+    drawn_rows: DrawnRows | None = None
+    """The rows of the table the plot draws (`AdaptRequest.drawn_rows`), for the reviewer to judge the scope a drawn
+    figure's label claims."""
 
 
 class Defect(_ModelOutput):

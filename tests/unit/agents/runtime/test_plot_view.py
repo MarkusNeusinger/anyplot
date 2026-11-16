@@ -39,7 +39,7 @@ from agents.anyplot.plot_view import (
 from agents.anyplot.plugins.ledger import ToolCall, ledger_for
 from agents.anyplot.plugins.tool_safety import TOOL_ALLOWED, call_outcome, changed_data
 from agents.anyplot.render.backends.fake import FakeBackend
-from agents.anyplot.schemas import Binding
+from agents.anyplot.schemas import MAX_CHANGE_CHARS, Binding, DrawnRows
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import DATASET_ID, PLOT_VIEW_BEFORE, read_session
 from agents.anyplot.tools.session import (
@@ -215,6 +215,17 @@ class TestViewOf:
 
         assert (empty.value.code, unknown.value.code) == ("empty_result", "unknown_column")
 
+    def test_a_stored_view_with_a_day_bound_on_period_labels_is_cleared_when_read(self) -> None:
+        """Quarter labels compare as text, so a day bound on them is refused: a view stored with one before draws
+        every row again, with the line that says so, and reading the session goes on."""
+        table = shown("Quartal,Menge\n2017-Q4,4\n2018-Q1,5\n2018-Q2,6\n")
+        state = plot_view.view_delta(view_from(only("Quartal", "ge", "2018-01-01")))
+
+        held = plot_view.current(state, table)
+
+        assert table.column_dtypes["Quartal"] == "text"
+        assert held.view.empty and held.viewed is None and held.cleared == CLEARED_LINE
+
     def test_the_note_of_a_run_keeps_its_counts_and_shortens_the_views_words(self) -> None:
         table = parse_dataset(CITIES)
         view = view_from(only("Land", "eq", "CH"), *TOP_2)
@@ -226,6 +237,35 @@ class TestViewOf:
         short = seen.note(view, 3, 60)
         assert short.startswith("The plot draws 2 of the 5 rows of data v3 (view: ") and short.endswith("…)")
         assert len(short) == 60
+
+    def test_the_adapter_and_the_reviewer_get_the_notes_counts_and_the_views_words(self) -> None:
+        table = parse_dataset(CITIES)
+        view = view_from(only("Land", "eq", "CH"), *TOP_2)
+
+        drawn = view_of(table, view).drawn_rows(view)
+
+        assert drawn == DrawnRows(rows=2, of_rows=5, view="Land = 'CH'; top 2 by Umsatz")
+
+    def test_a_view_at_its_widest_gives_way_in_its_words_and_never_fails_the_request(self) -> None:
+        """Three selections of twenty long values each: the words pass a change line's limit, the counts stand."""
+        halls = [f"Lagerhalle {number:02d} am Westkai" for number in range(20)]
+        table = parse_dataset(
+            "Halle,Zone,Typ,Gewicht\n" + "".join(f"{hall},{hall},{hall},{n}\n" for n, hall in enumerate(halls))
+        )
+        selections = [
+            {"op": "keep_rows", "where": [{"column": column, "test": "eq", "values": halls}]}
+            for column in ("Halle", "Zone", "Typ")
+        ]
+        view = view_from(
+            *selections, {"op": "sort", "column": "Gewicht", "descending": True}, {"op": "keep_rows", "n": 4}
+        )
+
+        drawn = view_of(table, view).drawn_rows(view)
+
+        words = view.words(["Halle", "Zone", "Typ"])
+        assert len(view.selections) == 3 and len(words) > MAX_CHANGE_CHARS
+        assert (drawn.rows, drawn.of_rows, len(drawn.view)) == (4, 20, MAX_CHANGE_CHARS)
+        assert drawn.view == words[: MAX_CHANGE_CHARS - 1] + "…"
 
 
 class TestPrepareData:

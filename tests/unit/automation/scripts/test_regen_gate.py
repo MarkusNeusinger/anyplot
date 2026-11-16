@@ -378,6 +378,30 @@ class TestFailClosed:
         assert result.verdict == KEEP
         assert "canvas" in result.reason
 
+    def test_a_render_mismatch_keeps_a_regeneration_that_would_merge(self):
+        assert decide(_inp()).verdict == MERGE
+        result = decide(_inp(render_mismatch=True))
+        assert (result.verdict, result.code) == (KEEP, "render_mismatch")
+        assert "not made from the code at the PR head" in result.reason
+
+    @pytest.mark.parametrize(
+        "overrides",
+        [
+            {"canvas_failed": True},
+            {"score": None, "regen": None},
+            {"score": 0},
+            {"prev_renders": False},
+            {"context_ok": False},
+            {"regen": None, "regen_error": "review_regen.json missing"},
+        ],
+        ids=["canvas", "no-review", "score-zero", "no-prev-renders", "no-context", "no-regen-json"],
+    )
+    def test_a_render_mismatch_comes_before_every_other_keep(self, overrides):
+        # No review ran, so the score, the review's files and the gates that
+        # read the renders have nothing to say about this code.
+        assert decide(_inp(**overrides)).code != "render_mismatch"
+        assert decide(_inp(render_mismatch=True, **overrides)).code == "render_mismatch"
+
     def test_missing_prev_renders_keeps(self):
         result = decide(_inp(prev_renders=False))
         assert result.verdict == KEEP
@@ -778,6 +802,30 @@ class TestCli:
         assert record["improvements"]["visible"] == 0
         assert record["improvements"]["permission"] == 1
 
+    def test_decide_keeps_a_render_mismatch_without_any_review_file(self, tmp_path, monkeypatch, capsys):
+        """impl-review stops before the review: no score, no review_regen.json, no checklist."""
+        out = tmp_path / "gh_output"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+        monkeypatch.chdir(tmp_path)
+        summary, record_file = tmp_path / "summary.md", tmp_path / "record.json"
+        args = ["decide", "--spec-id", "bubble-basic", "--library", "altair", "--score", "", "--prev-stored", "88"]
+        args += ["--regen-json", "review_regen.json", "--weaknesses-json", str(tmp_path / "absent.json")]
+        args += ["--prev-renders", "missing", "--summary-out", str(summary), "--record-out", str(record_file)]
+        assert main([*args, "--pr", "7", "--render-mismatch"]) == 0
+        stdout = capsys.readouterr().out
+        assert "verdict=keep code=render_mismatch" in stdout and "new=n/a" in stdout
+        assert "verdict=keep" in out.read_text() and "code=render_mismatch" in out.read_text()
+        assert "not made from the code at the PR head" in summary.read_text()
+        record = json.loads(record_file.read_text(encoding="utf-8"))
+        assert (record["verdict"], record["code"]) == ("keep", "render_mismatch")
+        assert validate_record(record) == []
+        # No review ran, although nothing passed --review-skipped (that step did not run either).
+        assert record["adapt"]["review"] == "skipped"
+        # The control: the same call without the stop says the review ran.
+        assert main([*args, "--pr", "7"]) == 0
+        control = json.loads(record_file.read_text(encoding="utf-8"))
+        assert (control["code"], control["adapt"]["review"]) == ("no_score", "ran")
+
     def test_decide_invalid_json_keeps(self, tmp_path, monkeypatch, capsys):
         monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
         regen = tmp_path / "review_regen.json"
@@ -810,6 +858,7 @@ class TestReasonCodes:
     @pytest.mark.parametrize(
         ("overrides", "code"),
         [
+            ({"render_mismatch": True}, "render_mismatch"),
             ({"canvas_failed": True}, "canvas_failed"),
             ({"score": None}, "no_score"),
             ({"score": 0}, "score_zero"),
@@ -841,6 +890,7 @@ class TestReasonCodes:
 
     def test_every_code_is_declared(self):
         seen = {
+            decide(_inp(render_mismatch=True)).code,
             decide(_inp(canvas_failed=True)).code,
             decide(_inp(score=None)).code,
             decide(_inp(score=0)).code,
@@ -3512,6 +3562,11 @@ class TestAdaptDecision:
         result = decide(_adapt_inp(score=None, regen=None, canvas_failed=True, adapt=_adapt(review_skipped=True)))
         assert (result.verdict, result.code) == (KEEP, "canvas_failed")
         assert result.adapt is not None and result.adapt.why == "canvas_failed"
+
+    def test_a_render_mismatch_keeps_what_the_adapt_route_would_merge(self):
+        assert decide(_adapt_inp(score=None, regen=None, adapt=_adapt(review_skipped=True))).verdict == MERGE
+        result = decide(_adapt_inp(score=None, regen=None, render_mismatch=True, adapt=_adapt(review_skipped=True)))
+        assert (result.verdict, result.code) == (KEEP, "render_mismatch")
 
     def test_the_review_free_exit_needs_the_flag(self):
         result = decide(_adapt_inp(score=None, regen=None))

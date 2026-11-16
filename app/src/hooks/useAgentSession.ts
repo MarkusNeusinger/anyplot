@@ -161,11 +161,11 @@
  * takes the list a removal answers (`forgetMemory`, `.forget()`). A read that
  * fails, or a server without the route, leaves the list as it was; a read
  * overtaken by a newer one or by a removal's answer is dropped. The admin
- * fan-out's sessions read none. A shipped version names the decisions it kept
- * and added by id (`plot.memory`); the version keeps their texts
- * (`PlotVersion.decisions`), the kept ones from the list it arrives on, the
- * added ones from the read after its turn, so its card says what it kept also
- * after a later `.forget()`.
+ * fan-out's sessions read none. A shipped version names the decisions it kept,
+ * added and did not use by id (`plot.memory`); the version keeps their texts
+ * (`PlotVersion.decisions`), the kept and unused ones from the list it arrives
+ * on, the added ones from the read after its turn, so its card says what it
+ * kept also after a later `.forget()`.
  *
  * Saving: `saveSession` (`.save()`) downloads the session's feedback case,
  * the conversation, code, images and config the agents service assembles,
@@ -354,9 +354,9 @@ export interface PlotVersion {
   /** The last feedback case stored for this version; absent until one is sent. */
   feedback?: FeedbackRecord;
   /**
-   * The decisions the version kept and added (`result.memory`), with their texts as the plot
-   * memory listed them; absent when the server named none (`VersionMemory`), which shows no kept
-   * label and no kept line.
+   * The decisions the version kept, added and did not use (`result.memory`), with their texts as
+   * the plot memory listed them; absent when the server named none (`VersionMemory`), which shows
+   * no kept label and no kept line.
    */
   decisions?: VersionDecisions;
   /**
@@ -376,21 +376,25 @@ export interface VersionDecision {
   text: string | null;
 }
 
-/** A version's decisions, from before the run (`kept`) and from the run itself (`added`). */
+/**
+ * A version's decisions: from before the run (`kept`), from the run itself (`added`), and from
+ * before the run with a text the plot does not draw (`unused`), which stay remembered.
+ */
 export interface VersionDecisions {
   kept: VersionDecision[];
   added: VersionDecision[];
+  unused: VersionDecision[];
 }
 
 /**
- * A version's decisions with the texts `memory` names: the kept ones resolve against the list read
- * before the run, the added ones once the read after the turn's `done` lists them
+ * A version's decisions with the texts `memory` names: the kept and unused ones resolve against
+ * the list read before the run, the added ones once the read after the turn's `done` lists them
  * (`resolveDecisions`).
  */
 function versionDecisions(ids: VersionMemory, memory: PlotMemory | null): VersionDecisions {
   const texts = new Map((memory?.entries ?? []).map(entry => [entry.id, entry.text]));
   const named = (id: string): VersionDecision => ({ id, text: texts.get(id) ?? null });
-  return { kept: ids.kept.map(named), added: ids.added.map(named) };
+  return { kept: ids.kept.map(named), added: ids.added.map(named), unused: ids.unused.map(named) };
 }
 
 /**
@@ -413,11 +417,18 @@ function resolveDecisions(
   const next: Record<number, PlotVersion> = {};
   for (const [key, version] of Object.entries(versions)) {
     const decisions = version.decisions;
-    const kept = decisions ? fill(decisions.kept) : null;
-    const added = decisions ? fill(decisions.added) : null;
-    if (decisions && kept && added && (kept !== decisions.kept || added !== decisions.added)) {
+    const filled = decisions
+      ? { kept: fill(decisions.kept), added: fill(decisions.added), unused: fill(decisions.unused) }
+      : null;
+    if (
+      decisions &&
+      filled &&
+      (filled.kept !== decisions.kept ||
+        filled.added !== decisions.added ||
+        filled.unused !== decisions.unused)
+    ) {
       changed = true;
-      next[Number(key)] = { ...version, decisions: { kept, added } };
+      next[Number(key)] = { ...version, decisions: filled };
     } else {
       next[Number(key)] = version;
     }

@@ -853,11 +853,16 @@ describe('ResultCard', () => {
 
   describe('the decisions it kept and added', () => {
     const LONG = 'horizontal reference line at y = 7, dashed, in the colour of the first series';
-    const decided = (kept: (string | null)[], added: (string | null)[]) =>
+    const decided = (
+      kept: (string | null)[],
+      added: (string | null)[],
+      unused: (string | null)[] = []
+    ) =>
       makeVersion({
         decisions: {
           kept: kept.map((text, index) => ({ id: `m${index + 1}`, text })),
           added: added.map((text, index) => ({ id: `m${index + 10}`, text })),
+          unused: unused.map((text, index) => ({ id: `m${index + 20}`, text })),
         },
       });
     const phone = () =>
@@ -899,7 +904,27 @@ describe('ResultCard', () => {
       ).toBeTruthy();
     });
 
-    it('shows no line for two empty lists, and never kept 0', () => {
+    it('names the decisions whose text the plot does not draw last, apart from the kept ones', () => {
+      renderCard({
+        version: decided(['line at y = 7'], [], ["title: 'Harbour arrivals'", null]),
+      });
+      const line = screen.getByTestId('result-decisions');
+      expect(line.firstElementChild).toHaveTextContent(
+        /^kept: line at y = 7 · not used: title: 'Harbour arrivals' · 1 more$/
+      );
+      expect(line).toHaveTextContent(
+        "kept: line at y = 7; not used: title: 'Harbour arrivals', and 1 more decision"
+      );
+    });
+
+    it('shows a version that used none of its remembered texts', () => {
+      renderCard({ version: decided([], [], [null]) });
+      expect(screen.getByTestId('result-decisions').firstElementChild).toHaveTextContent(
+        /^not used: 1 decision$/
+      );
+    });
+
+    it('shows no line for empty lists, and never kept 0', () => {
       renderCard({ version: decided([], []), summary: 'title in German' });
       expect(screen.getByTestId('result-label')).toHaveTextContent(
         /^plot v2 · matplotlib · title in German$/
@@ -1031,7 +1056,7 @@ describe('ResultCard', () => {
       );
       renderCard({
         version: viewed({
-          decisions: { kept: [{ id: 'm1', text: 'title in German' }], added: [] },
+          decisions: { kept: [{ id: 'm1', text: 'title in German' }], added: [], unused: [] },
         }),
         onShowAll: vi.fn(),
       });

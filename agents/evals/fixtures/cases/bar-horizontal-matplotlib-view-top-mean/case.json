@@ -1,0 +1,17 @@
+{
+  "spec_id": "bar-horizontal",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {"role": "category", "column": "Workshop"},
+    {"role": "value", "column": "Booked seats (%)"}
+  ],
+  "expected": "accepted",
+  "tags": ["categorical", "small", "view", "view-mean"],
+  "source": "hand-written synthetic data: the catalogue file draws a mean line with an annotation, and a top-4 view of the plot leaves 4 of the 6 rows, so the mean covers the view's rows",
+  "before_view": [
+    {"op": "sort", "column": "Booked seats (%)", "descending": true},
+    {"op": "keep_rows", "n": 4}
+  ],
+  "view_checks": {"named": true}
+}

@@ -3615,7 +3615,10 @@ describe("agentReducer: a version's remembered decisions", () => {
   const LINE = entry('m1', 'reference line at y = 7');
   const TITLE = entry('m2', 'title in German');
   const LOG = entry('m3', 'log scale on y');
-  const version = (number: number, memory?: { kept: string[]; added: string[] }) => ({
+  const version = (
+    number: number,
+    memory?: { kept: string[]; added: string[]; unused: string[] }
+  ) => ({
     number,
     library: 'seaborn',
     result: { ...(PLOT_OK as PlotResult), version: number, ...(memory ? { memory } : {}) },
@@ -3635,7 +3638,7 @@ describe("agentReducer: a version's remembered decisions", () => {
   it('takes the kept texts from the list it arrives on and the added ones from the read after its turn', () => {
     const added = agentReducer(start(list(LINE, TITLE)), {
       type: 'version_add',
-      version: version(4, { kept: ['m1', 'm2'], added: ['m3'] }),
+      version: version(4, { kept: ['m1', 'm2'], added: ['m3'], unused: [] }),
     });
     expect(decisionsOf(added, 4)).toEqual({
       kept: [
@@ -3643,6 +3646,7 @@ describe("agentReducer: a version's remembered decisions", () => {
         { id: 'm2', text: TITLE.text },
       ],
       added: [{ id: 'm3', text: null }],
+      unused: [],
     });
     const read = agentReducer(added, {
       type: 'memory_sync',
@@ -3659,24 +3663,38 @@ describe("agentReducer: a version's remembered decisions", () => {
   it('keeps a text unknown while no list names it, counts it all the same, and fills it from a later list', () => {
     const added = agentReducer(start(null), {
       type: 'version_add',
-      version: version(2, { kept: ['m1'], added: [] }),
+      version: version(2, { kept: ['m1'], added: [], unused: ['m2'] }),
     });
     expect(decisionsOf(added, 2)?.kept).toEqual([{ id: 'm1', text: null }]);
+    expect(decisionsOf(added, 2)?.unused).toEqual([{ id: 'm2', text: null }]);
     // The read after the turn failed: nothing to fill.
     const unread = agentReducer(added, { type: 'memory_unread' });
     expect(decisionsOf(unread, 2)?.kept).toEqual([{ id: 'm1', text: null }]);
-    const later = agentReducer(unread, { type: 'memory_sync', memory: list(LINE) });
+    const later = agentReducer(unread, { type: 'memory_sync', memory: list(LINE, TITLE) });
     expect(decisionsOf(later, 2)?.kept).toEqual([{ id: 'm1', text: LINE.text }]);
+    expect(decisionsOf(later, 2)?.unused).toEqual([{ id: 'm2', text: TITLE.text }]);
   });
 
-  it('gives a version without the field no decisions, and two empty lists two empty lists', () => {
+  it('names the decisions a version did not use from the list it arrives on', () => {
+    const added = agentReducer(start(list(LINE, TITLE)), {
+      type: 'version_add',
+      version: version(3, { kept: ['m1'], added: [], unused: ['m2'] }),
+    });
+    expect(decisionsOf(added, 3)).toEqual({
+      kept: [{ id: 'm1', text: LINE.text }],
+      added: [],
+      unused: [{ id: 'm2', text: TITLE.text }],
+    });
+  });
+
+  it('gives a version without the field no decisions, and empty lists empty lists', () => {
     const without = agentReducer(start(list(LINE)), { type: 'version_add', version: version(1) });
     expect(without.versions[1]).not.toHaveProperty('decisions');
     const empty = agentReducer(without, {
       type: 'version_add',
-      version: version(2, { kept: [], added: [] }),
+      version: version(2, { kept: [], added: [], unused: [] }),
     });
-    expect(decisionsOf(empty, 2)).toEqual({ kept: [], added: [] });
+    expect(decisionsOf(empty, 2)).toEqual({ kept: [], added: [], unused: [] });
     // A later list leaves both as they are.
     const read = agentReducer(empty, { type: 'memory_sync', memory: list(LINE), afterTurn: true });
     expect(read.versions).toBe(empty.versions);
