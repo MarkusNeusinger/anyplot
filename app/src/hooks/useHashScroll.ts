@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
-/** Where a linked section lands: below the sticky masthead (42 to 44 px), with a little air. */
+/** Where a linked section lands: below the sticky masthead (43 to 45 px), with a little air. */
 export const ANCHOR_SX = { scrollMarginTop: '56px' } as const;
 
 /**

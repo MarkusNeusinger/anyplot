@@ -30,8 +30,8 @@ export function FactTable({
       sx={{
         ...tableStyle,
         '& .MuiTableCell-body': { verticalAlign: 'top' },
-        // :first-child, not :first-of-type: the label is a <th>, so the value <td> is a first of its type too.
-        '& .MuiTableCell-root:first-child': {
+        // The label is the row's only <th>; the fact is a <td>.
+        '& th.MuiTableCell-root': {
           fontWeight: 500,
           color: 'var(--ink-soft)',
           width: labelWidth,
