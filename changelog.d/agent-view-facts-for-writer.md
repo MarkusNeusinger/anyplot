@@ -14,11 +14,11 @@
   defect. The chat is told that a total, a mean or a count the plot draws
   covers only the rows it draws, and asking for a version's code also says
   how many rows its `data.csv` (and a JavaScript plot's `plot.html`) holds
-  and which view it drew.
+  and which view it drew. (#13142)
 - **A cell with a line break counts as one row.** In "Use with my data",
   the render check that compares the points a plot draws with its rows
   counted the lines of `data.csv`, so a quoted cell over two lines, as a
   cell pasted from a spreadsheet can hold, counted as two rows. That check
   now counts the table's rows, and so do the same check when you switch
   the theme of a plot and the row count the chat reports for a version's
-  data.
+  data. (#13142)
