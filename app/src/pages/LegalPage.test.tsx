@@ -281,7 +281,7 @@ describe('LegalPage', () => {
     // limits on the salted address: both uses of an identifier, so the ids row names them while
     // the sentences that state the limits stand on the assistant's page.
     expect(screen.getByRole('row', { name: /^ids\s/ })).toHaveTextContent(
-      /^ids\s*a random tab id stands in for you: the daily limits and a pause after misuse count on it, and the per-network limits count your IP address; both are salted with a value/
+      /^ids\s*a random tab id stands in for you: the per-tab limits and a pause after misuse count on it, and the per-network limits count your IP address; both ids are salted with a value/
     );
     expect(
       screen.getByText(

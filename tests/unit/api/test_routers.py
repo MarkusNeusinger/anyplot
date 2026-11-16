@@ -1349,8 +1349,8 @@ class TestSeoProxyRouter:
             "Don't paste personal data you are not allowed to share",
             # The ids keep what the limits count on, the salted tab id and the salted IP address,
             # both personal data; the sentences that state the limits stand on the assistant's page.
-            "<li>Ids: a random tab id stands in for you: the daily limits and a pause after misuse count on "
-            "it, and the per-network limits count your IP address; both are salted with a value",
+            "<li>Ids: a random tab id stands in for you; the per-tab limits and a pause after misuse count on "
+            "it, and the per-network limits count your IP address. Both ids are salted with a value",
             "salted with a value that lives only as long as the server instance",
             "so they are pseudonymous",
             "it starts unticked, which leaves out that file only",
