@@ -1367,8 +1367,8 @@ _ABOUT_BOT_BODY = (
     '<a href="https://anyplot.ai/stats">stats page</a> shows the score distribution per library.</p>'
     "<h2>Use with my data</h2>"
     "<p>Experimental, open to everyone since 2 November 2026. "
-    '<a href="https://anyplot.ai/plots">Pick any plot</a>, choose .use_my_data(), and paste your '
-    "data. An agent adapts that plot's code to your columns, renders it in a sandbox with no "
+    '<a href="https://anyplot.ai/plots">Pick any plot</a>, choose .use_my_data() on its page, and '
+    "paste your data. An agent adapts that plot's code to your columns, renders it in a sandbox with no "
     "network access, reviews the render against the catalogue's rubric, repairs it once if "
     "needed, and hands back the image and the code. Your chat and data live only in server "
     "memory and are deleted after an hour idle, unless you send feedback.</p>"

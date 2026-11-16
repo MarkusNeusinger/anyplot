@@ -1241,6 +1241,7 @@ class TestSeoProxyRouter:
         # bot parity with the page's review, chat and MCP sections (AboutPage.tsx)
         for heading in ("<h2>Review</h2>", "<h2>Use with my data</h2>", "<h2>MCP server</h2>"):
             assert heading in response.text
+        assert "choose .use_my_data() on its page, and paste your data." in response.text
         assert "rubric of 24 criteria" in response.text
         # The MCP section's pointer at the machine readers on the stats page, as AboutPage.tsx has it.
         assert "how many assistants and crawlers read the catalogue and how many came on behalf of a person" in (

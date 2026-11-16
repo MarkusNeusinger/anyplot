@@ -278,9 +278,9 @@ export function AboutPage() {
               {proseLink(paths.plots, 'pick any plot')}, choose{' '}
               <Box component="code" sx={inlineCodeSx}>
                 .use_my_data()
-              </Box>
-              , and paste your data. an agent adapts that plot&apos;s code to your columns, renders
-              it in a sandbox with no network access, reviews the render against the
+              </Box>{' '}
+              on its page, and paste your data. an agent adapts that plot&apos;s code to your columns,
+              renders it in a sandbox with no network access, reviews the render against the
               catalogue&apos;s rubric, repairs it once if needed, and hands back the image and the
               code. your chat and data live only in server memory and are deleted after an hour
               idle, unless you send feedback.

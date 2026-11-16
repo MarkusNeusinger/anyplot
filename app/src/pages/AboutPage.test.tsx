@@ -254,6 +254,17 @@ describe('AboutPage', () => {
     }
   });
 
+  // The explainer at /agent says the same: .use_my_data() sits on a plot's page.
+  it('says where .use_my_data() is, as the chat explainer does', () => {
+    render(<AboutPage />);
+
+    expect(
+      screen.getByText(/^experimental, open to everyone since 2 november 2026\./)
+    ).toHaveTextContent(
+      /pick any plot, choose \.use_my_data\(\) on its page, and paste your data\. an agent adapts/
+    );
+  });
+
   it('names the machine readers on the stats page in the mcp section', () => {
     render(<AboutPage />);
 
