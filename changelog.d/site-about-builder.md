@@ -17,8 +17,7 @@
   the footer, the about page and the landing page. The footer reads github,
   report, mcp, about, legal, then the builder's name, which phones and tablets
   now show too, on a line of its own below 900 px. Below 400 px the site's own
-  pages take a row of their own, so no row ends on a separator. Keyboard and
-  screen readers meet the links in the order they are shown.
+  pages take a row of their own, so no row ends on a separator.
 - **The stack and the running costs moved from the legal page to the about
   page.** The legal page keeps the legal notice and the privacy policy; a link
   to `/legal#transparency` leads to `/about#transparency`, which a fresh load
