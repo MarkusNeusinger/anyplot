@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 76/100 | Updated: 2026-05-08
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap, to_rgb
 
 
 # Theme tokens
@@ -17,24 +18,28 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+LIGHT_INK = "#F0EFE8"  # annotation color on dark cells
+DARK_INK = "#1A1A17"  # annotation color on light cells
 
-# Data - Real estate features for correlation analysis
-np.random.seed(42)
+# Imprint diverging colormap: red (negative) - page color (zero) - blue (positive)
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", PAGE_BG, "#4467A3"])
+
+# Constants
+CORR_LABEL = "Correlation coefficient"  # color bar title
+
+# Data: replace this block with your own correlation matrix, for example df = observations.corr()
+# Real estate features, 200 synthetic listings; df is the labeled square correlation matrix
+rng = np.random.default_rng(42)
 n_samples = 200
-
-# Generate realistic correlated real estate data
-sqft = np.random.normal(2000, 500, n_samples)
-bedrooms = np.round(sqft / 600 + np.random.normal(0, 0.5, n_samples)).clip(1, 6)
-bathrooms = np.round(bedrooms * 0.7 + np.random.normal(0, 0.3, n_samples)).clip(1, 4)
-age = np.random.exponential(20, n_samples).clip(0, 80)
-price = sqft * 150 + bedrooms * 15000 - age * 2000 + np.random.normal(0, 30000, n_samples)
-garage = np.round(bedrooms * 0.4 + np.random.normal(0, 0.3, n_samples)).clip(0, 3)
-lot_size = sqft * 2 + np.random.normal(0, 1000, n_samples)
-distance_downtown = np.random.exponential(10, n_samples).clip(1, 40)
-crime_rate = distance_downtown * 0.3 + np.random.normal(5, 2, n_samples)
-
-# Create DataFrame with descriptive column names including units
+sqft = rng.normal(2000, 500, n_samples)
+bedrooms = np.round(sqft / 600 + rng.normal(0, 0.5, n_samples)).clip(1, 6)
+bathrooms = np.round(bedrooms * 0.7 + rng.normal(0, 0.3, n_samples)).clip(1, 4)
+age = rng.exponential(20, n_samples).clip(0, 80)
+price = sqft * 150 + bedrooms * 15000 - age * 2000 + rng.normal(0, 30000, n_samples)
+garage = np.round(bedrooms * 0.4 + rng.normal(0, 0.3, n_samples)).clip(0, 3)
+lot_size = sqft * 2 + rng.normal(0, 1000, n_samples)
+distance = rng.exponential(10, n_samples).clip(1, 40)
+crime = distance * 0.3 + rng.normal(5, 2, n_samples)
 df = pd.DataFrame(
     {
         "Price ($K)": price / 1000,
@@ -42,57 +47,56 @@ df = pd.DataFrame(
         "Bedrooms": bedrooms,
         "Bathrooms": bathrooms,
         "Age (years)": age,
-        "Garage Spots": garage,
+        "Garage spots": garage,
         "Lot (sq ft)": lot_size,
-        "Distance (mi)": distance_downtown,
-        "Crime Index": crime_rate,
+        "Distance (mi)": distance,
+        "Crime index": crime,
     }
-)
+).corr()
 
-# Compute correlation matrix
-corr_matrix = df.corr()
+# Plot
+mask = np.triu(np.ones(df.shape, dtype=bool), k=1)
 
-# Create mask for upper triangle
-mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
-
-# Plot - Square format for symmetric matrix
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
-
-# Create heatmap with seaborn
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 sns.heatmap(
-    corr_matrix,
+    df,
     mask=mask,
     annot=True,
     fmt=".2f",
-    cmap="BrBG",
+    cmap=imprint_div,
     center=0,
     vmin=-1,
     vmax=1,
     square=True,
-    linewidths=0.5,
-    linecolor=INK_SOFT,
-    cbar_kws={"shrink": 0.8, "label": "Correlation Coefficient"},
-    annot_kws={"size": 14, "color": INK},
+    linewidths=0.6,
+    linecolor=PAGE_BG,
+    cbar_kws={"shrink": 0.75, "ticks": [-1, -0.5, 0, 0.5, 1], "pad": 0.03},
+    annot_kws={"size": 7},
     ax=ax,
 )
 
+# Annotation color follows cell darkness so numbers stay legible at both ends
+norm = plt.Normalize(-1, 1)
+for text in ax.texts:
+    col, row = int(text.get_position()[0]), int(text.get_position()[1])
+    r, g, b = to_rgb(imprint_div(norm(df.iloc[row, col])))
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    text.set_color(LIGHT_INK if luminance < 0.4 else DARK_INK)
+
 # Style
-ax.set_facecolor(PAGE_BG)
-ax.set_title("heatmap-correlation · seaborn · anyplot.ai", fontsize=24, pad=20, color=INK)
-ax.set_xlabel("", fontsize=0)
-ax.set_ylabel("", fontsize=0)
-ax.tick_params(axis="both", labelsize=14, colors=INK_SOFT)
+ax.set_title("heatmap-correlation · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
+ax.set_xlabel("")
+ax.set_ylabel("")
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
+plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+plt.setp(ax.get_yticklabels(), rotation=0)
 
-# Rotate labels for readability
-plt.xticks(rotation=45, ha="right")
-plt.yticks(rotation=0)
-
-# Style colorbar
 cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=14, colors=INK_SOFT)
-cbar.ax.set_ylabel("Correlation Coefficient", fontsize=16, color=INK)
-cbar.ax.yaxis.set_label_position("right")
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar.set_label(CORR_LABEL, fontsize=9, color=INK)
+cbar.outline.set_edgecolor(INK_SOFT)
 cbar.ax.set_facecolor(PAGE_BG)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.2, right=0.92, top=0.93, bottom=0.17)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
