@@ -6,7 +6,14 @@
  * (`agents/anyplot/turn_record.py`), which the API closes again.
  */
 
-import type { AgentCaseToolCall, AgentCaseTurn, AgentCaseTurns } from 'src/lib/agent';
+import type {
+  AgentCaseCallShape,
+  AgentCaseCondition,
+  AgentCaseOperation,
+  AgentCaseToolCall,
+  AgentCaseTurn,
+  AgentCaseTurns,
+} from 'src/lib/agent';
 
 /** `ok` went as planned, `warn` a refusal, a cap or a check that changed the reply, `bad` a failure. */
 export type Severity = 'ok' | 'warn' | 'bad';
@@ -92,6 +99,100 @@ export function callLabel(call: AgentCaseToolCall): string {
   if (call.verdict !== 'allowed') return `${call.tool} refused: ${call.verdict}`;
   const outcome = call.outcome === 'ok' ? '' : `: ${call.outcome}`;
   return `${call.tool}${outcome}${call.code ? ` · ${call.code}` : ''}`;
+}
+
+/** The codes an operation may carry, in the order its line names them. */
+const OPERATION_FIELDS = [
+  'mode',
+  'target',
+  'order',
+  'how',
+  'period',
+  'keys',
+  'type',
+  'date_format',
+  'decimal',
+  'unit',
+  'keep',
+  'family',
+] as const;
+
+/** A call's own codes, in the order its shape line names them. */
+const SHAPE_FIELDS = [
+  'from_version',
+  'limit',
+  'base',
+  'theme',
+  'combine',
+  'change_request',
+  'expected_texts',
+  'remember',
+  'applies_to',
+  'plot',
+] as const;
+
+/**
+ * What each flag of a call's shape reads as, true and false: a question that
+ * named no limit still gets the default one, and a `switch_plot` without
+ * `plot` plots later.
+ */
+const FLAG_WORDS: Partial<Record<(typeof SHAPE_FIELDS)[number], [string, string]>> = {
+  limit: ['named', 'default'],
+  change_request: ['yes', 'no'],
+  plot: ['at once', 'later'],
+};
+
+/** A decimal mark by its name: a bare `,` or `.` after a label reads as stray punctuation. */
+const DECIMAL_WORDS: Record<string, string> = { '.': 'dot', ',': 'comma' };
+
+/**
+ * One condition as text, each part labelled: `datetime column ge iso_date
+ * value`, and without a value `integer column not_missing`. A column whose
+ * kind the record could not read is an `unknown-kind column`, since `unknown
+ * column` would read as a column that is not there.
+ */
+function conditionLabel(condition: AgentCaseCondition): string {
+  const kind = condition.column_kind === 'unknown' ? 'unknown-kind' : condition.column_kind;
+  const head = `${kind} column ${condition.test}`;
+  return condition.value_shape === 'none' ? head : `${head} ${condition.value_shape} value`;
+}
+
+/**
+ * One data operation as text: its name, each code it carries, and its
+ * conditions: `keep_rows · mode: where · target: plot · conditions: datetime
+ * column ge iso_date value, text column eq list value`.
+ */
+export function operationLabel(operation: AgentCaseOperation): string {
+  const codes = OPERATION_FIELDS.flatMap(key => {
+    const value = operation[key];
+    if (value === null || value === undefined) return [];
+    return [`${key}: ${key === 'decimal' ? (DECIMAL_WORDS[String(value)] ?? value) : value}`];
+  });
+  const conditions = (operation.conditions ?? []).map(conditionLabel);
+  if (conditions.length > 0) codes.push(`conditions: ${conditions.join(', ')}`);
+  return [operation.op, ...codes].join(' · ');
+}
+
+/**
+ * The shape of a call's arguments as lines: the call's own codes first
+ * (`base: previous · change_request: yes · expected_texts: 2 · remember:
+ * title`, `from_version: current · limit: default`), then one line per data
+ * operation.
+ */
+export function shapeLines(shape: AgentCaseCallShape | null | undefined): string[] {
+  if (!shape) return [];
+  const codes = SHAPE_FIELDS.flatMap(key => {
+    const value = shape[key];
+    if (value === null || value === undefined) return [];
+    if (typeof value === 'boolean') {
+      const [yes, no] = FLAG_WORDS[key] ?? ['yes', 'no'];
+      return [`${key}: ${value ? yes : no}`];
+    }
+    if (Array.isArray(value)) return value.length > 0 ? [`${key}: ${value.join(', ')}`] : [];
+    return [`${key}: ${value}`];
+  });
+  const operations = (shape.operations ?? []).map(operationLabel);
+  return [...(codes.length > 0 ? [codes.join(' · ')] : []), ...operations];
 }
 
 function folded(items: { label: string; severity: Severity }[]): TurnChip[] {

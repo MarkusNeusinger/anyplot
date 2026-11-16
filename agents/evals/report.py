@@ -35,6 +35,13 @@ library's render reports them (`texts_expected`, every library since 2026-11-01)
 shipped plot quote that no drawn text and no requested text holds (`matrix.unbacked_quotes`),
 and `probe_errors` the failed probes by class. The matrix prints a note when any of the
 first two is above zero; none decides a pass.
+**View of the plot.** The runs of a case with `before_view` carry a `view` record
+(`matrix.view_record`), summed in `view`: the runs, how many drew the view's rows, how many name
+the view in a drawn text (of those whose texts could be read), how many had a review raise
+DQ-03, and, of the runs that cleared the view, how many still name it. `view_check_failures`
+names each view check that did not hold (`<case> r<repeat>: view:<check>`); none decides a
+pass, since a label can name a view in words the check cannot read (a number written as a
+word).
 **Accept-match** compares the harness outcome (`accepted` when the status is `ok`, the
 reviewer's pass) with a case's `expected` value; cases that expect `unknown` are left
 out.
@@ -139,6 +146,25 @@ def _adapter_by_attempt(runs: list[dict[str, Any]]) -> dict[str, dict[str, int]]
     return {attempt: dict(sorted(outcomes.items())) for attempt, outcomes in sorted(total.items())}
 
 
+def _view_summary(runs: list[dict[str, Any]]) -> dict[str, int]:
+    """The `view` records of the runs under a view of the plot, summed (see the module docstring)."""
+    views = [run["view"] for run in runs if isinstance(run.get("view"), dict)]
+    cleared = [view["cleared"] for view in views if isinstance(view.get("cleared"), dict)]
+    return {
+        "runs": len(views),
+        "drew_view_rows": sum(1 for view in views if (view.get("checks") or {}).get("drawn_rows")),
+        "named": sum(1 for view in views if view.get("named") is True),
+        "named_measured": sum(1 for view in views if view.get("named") is not None),
+        "dq03_raised": sum(
+            1 for view in views if view.get("dq03_raised") or (view.get("cleared") or {}).get("dq03_raised")
+        ),
+        "review_rounds": sum(int(view.get("review_rounds") or 0) for view in views),
+        "cleared": len(cleared),
+        "cleared_every_row": sum(1 for item in cleared if item.get("every_row") is True),
+        "still_named": sum(1 for item in cleared if item.get("still_named") is True),
+    }
+
+
 def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
     """The headline numbers of a run list.
 
@@ -170,6 +196,13 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         f"{run.get('case_id')} r{run.get('repeat')}: {name}"
         for run in runs
         for name, held in (run.get("checks") or {}).items()
+        if not held
+    )
+    view_check_failures = sorted(
+        f"{run.get('case_id')} r{run.get('repeat')}: view:{name}"
+        for run in runs
+        if isinstance(run.get("view"), dict)
+        for name, held in (run["view"].get("checks") or {}).items()
         if not held
     )
     return {
@@ -223,6 +256,8 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "unbacked_quote_runs": sorted(str(run.get("case_id")) for run in quoting),
         "checked": sum(1 for run in runs if run.get("checks")),
         "check_failures": check_failures,
+        "view": _view_summary(runs),
+        "view_check_failures": view_check_failures,
         "probe_errors": _counter(runs, "probe_errors"),
         "model_versions": sorted({version for run in runs for version in run.get("model_versions") or []}),
         "by_perturbation": _group(runs, lambda run: str(run.get("perturbation") or "custom")),
@@ -436,6 +471,24 @@ def _failure_reason(run: dict[str, Any]) -> str:
     return f"{text} [{stage}]".strip() if stage else text
 
 
+def _view_rows(summary: dict[str, Any]) -> list[list[str]]:
+    """The summary row of the runs under a view of the plot; none for a report without such runs."""
+    view = summary.get("view") or {}
+    if not view.get("runs"):
+        return []
+    failures = summary.get("view_check_failures") or []
+    return [
+        [
+            "Runs under a view of the plot",
+            f"{view['runs']} runs: drew the view's rows {view.get('drew_view_rows', 0)}, named the view "
+            f"{view.get('named', 0)} of {view.get('named_measured', 0)} read, DQ-03 raised {view.get('dq03_raised', 0)}"
+            f", {view.get('review_rounds', 0)} reviews; cleared {view.get('cleared', 0)}, every row "
+            f"{view.get('cleared_every_row', 0)}, still named {view.get('still_named', 0)}; "
+            f"{len(failures)} view checks failed" + "".join(f"; {failure}" for failure in failures),
+        ]
+    ]
+
+
 def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
     """The Markdown summary written next to the JSON report."""
     stamp, summary = report.get("stamp") or {}, report.get("summary") or {}
@@ -492,6 +545,7 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
                 f"{len(summary.get('check_failures') or [])} in {summary.get('checked', 0)} checked runs"
                 + "".join(f"; {failure}" for failure in summary.get("check_failures") or []),
             ],
+            *_view_rows(summary),
             [
                 "Probe errors",
                 ", ".join(f"{name} {n}" for name, n in (summary.get("probe_errors") or {}).items()) or "0",

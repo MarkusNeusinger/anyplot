@@ -1127,9 +1127,10 @@ class TestMessagesStream:
         assert events[1] == ("plot", plot)
 
     def test_the_turn_outcome_the_memory_and_the_round_cap_pass(self, client, upstream) -> None:
-        """`done.turn`, a version's `memory` and a step's `max_attempts` reach the page; unknown fields still drop."""
+        """`done.turn`, a version's `memory` (with the decisions the plot did not use) and a step's `max_attempts` reach
+        the page; unknown fields still drop."""
         status = {"step": "adapting", "attempt": 1, "max_attempts": 3, "cap": 9}
-        memory = {"kept": ["m1", "m2", "m3"], "added": ["m4"]}
+        memory = {"kept": ["m1", "m3"], "added": ["m4"], "unused": ["m2"]}
         plot = {"status": "ok", "attempts": 1, "artifacts": [], "version": 4, "memory": memory, "plan": "secret"}
         done = {"llm_calls": 4, "tokens": 900, "turn": "kept", "turns": ["x"]}
         body = "".join(
@@ -2037,7 +2038,64 @@ TURNS = {
             "kind": "plot",
             "refusal": None,
             "error": None,
-            "tools": [{"tool": "plot_pipeline", "verdict": "allowed", "outcome": "shipped", "code": None}],
+            "tools": [
+                {
+                    "tool": "plot_pipeline",
+                    "verdict": "allowed",
+                    "outcome": "shipped",
+                    "code": None,
+                    "shape": {
+                        "operations": None,
+                        "from_version": None,
+                        "limit": None,
+                        "base": "previous",
+                        "theme": None,
+                        "combine": None,
+                        "change_request": True,
+                        "expected_texts": 0,
+                        "remember": ["scale"],
+                        "applies_to": None,
+                        "plot": None,
+                    },
+                },
+                {
+                    "tool": "query_data",
+                    "verdict": "allowed",
+                    "outcome": "ok",
+                    "code": None,
+                    "shape": {
+                        "operations": [
+                            {
+                                "op": "keep_rows",
+                                "mode": "where",
+                                "target": None,
+                                "order": None,
+                                "conditions": [{"test": "gt", "value_shape": "number", "column_kind": "integer"}],
+                                "how": None,
+                                "period": None,
+                                "keys": None,
+                                "type": None,
+                                "date_format": None,
+                                "decimal": None,
+                                "unit": None,
+                                "keep": None,
+                                "family": None,
+                            }
+                        ],
+                        "from_version": "current",
+                        "limit": False,
+                        "base": None,
+                        "theme": None,
+                        "combine": None,
+                        "change_request": None,
+                        "expected_texts": None,
+                        "remember": None,
+                        "applies_to": None,
+                        "plot": None,
+                    },
+                },
+                {"tool": "get_spec_brief", "verdict": "allowed", "outcome": "ok", "code": None, "shape": None},
+            ],
             "tools_dropped": 0,
             "guards": [{"guard": "shipped_reply", "verdict": "dropped"}],
             "guards_dropped": 0,

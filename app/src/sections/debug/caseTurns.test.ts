@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import type { AgentCaseTurn, AgentCaseTurns } from 'src/lib/agent';
+import type {
+  AgentCaseCallShape,
+  AgentCaseOperation,
+  AgentCaseTurn,
+  AgentCaseTurns,
+} from 'src/lib/agent';
 import {
   callLabel,
   endLine,
   guardSeverity,
+  operationLabel,
+  shapeLines,
   sharedTurns,
   turnChips,
   turnSeverity,
@@ -177,5 +184,117 @@ describe('the matrix lines', () => {
     expect(
       callLabel({ tool: 'plot_pipeline', verdict: 'allowed', outcome: 'failed', code: 'render' })
     ).toBe('plot_pipeline: failed · render');
+  });
+});
+
+const operation = (overrides: Partial<AgentCaseOperation>): AgentCaseOperation => ({
+  op: 'sort',
+  mode: null,
+  target: null,
+  order: null,
+  conditions: null,
+  how: null,
+  period: null,
+  keys: null,
+  type: null,
+  date_format: null,
+  decimal: null,
+  unit: null,
+  keep: null,
+  family: null,
+  ...overrides,
+});
+
+const shape = (overrides: Partial<AgentCaseCallShape>): AgentCaseCallShape => ({
+  operations: null,
+  from_version: null,
+  limit: null,
+  base: null,
+  theme: null,
+  combine: null,
+  change_request: null,
+  expected_texts: null,
+  remember: null,
+  applies_to: null,
+  plot: null,
+  ...overrides,
+});
+
+describe('the shape of a call', () => {
+  it('writes an operation with its codes and its conditions, each part labelled', () => {
+    const selection = operation({
+      op: 'keep_rows',
+      mode: 'where',
+      target: 'plot',
+      conditions: [
+        { test: 'ge', value_shape: 'iso_date', column_kind: 'datetime' },
+        { test: 'eq', value_shape: 'list', column_kind: 'text' },
+      ],
+    });
+    expect(operationLabel(selection)).toBe(
+      'keep_rows · mode: where · target: plot · conditions: datetime column ge iso_date value, text column eq list value'
+    );
+    const dropped = operation({
+      op: 'drop_rows',
+      conditions: [{ test: 'not_missing', value_shape: 'none', column_kind: 'integer' }],
+    });
+    expect(operationLabel(dropped)).toBe('drop_rows · conditions: integer column not_missing');
+    expect(
+      operationLabel(operation({ op: 'aggregate', how: 'sum', period: 'month', keys: 2 }))
+    ).toBe('aggregate · how: sum · period: month · keys: 2');
+    expect(operationLabel(operation({ op: 'rename' }))).toBe('rename');
+  });
+
+  it('names a decimal mark and a column whose kind is unknown', () => {
+    expect(operationLabel(operation({ op: 'set_type', type: 'number', decimal: ',' }))).toBe(
+      'set_type · type: number · decimal: comma'
+    );
+    expect(operationLabel(operation({ op: 'set_type', type: 'number', decimal: '.' }))).toBe(
+      'set_type · type: number · decimal: dot'
+    );
+    const selection = operation({
+      op: 'keep_rows',
+      mode: 'where',
+      conditions: [{ test: 'eq', value_shape: 'text', column_kind: 'unknown' }],
+    });
+    expect(operationLabel(selection)).toBe(
+      'keep_rows · mode: where · conditions: unknown-kind column eq text value'
+    );
+  });
+
+  it('writes the call’s own codes first, then one line per operation', () => {
+    const question = shape({
+      from_version: 'current',
+      limit: false,
+      operations: [operation({ op: 'apply_view' }), operation({ op: 'sort', order: 'descending' })],
+    });
+    expect(shapeLines(question)).toEqual([
+      'from_version: current · limit: default',
+      'apply_view',
+      'sort · order: descending',
+    ]);
+    expect(shapeLines(shape({ from_version: 'numbered', limit: true }))).toEqual([
+      'from_version: numbered · limit: named',
+    ]);
+    const run = shape({
+      base: 'previous',
+      change_request: true,
+      expected_texts: 2,
+      remember: ['title', 'scale'],
+    });
+    expect(shapeLines(run)).toEqual([
+      'base: previous · change_request: yes · expected_texts: 2 · remember: title, scale',
+    ]);
+    expect(shapeLines(shape({ change_request: false, expected_texts: 0 }))).toEqual([
+      'change_request: no · expected_texts: 0',
+    ]);
+    expect(shapeLines(shape({ plot: false }))).toEqual(['plot: later']);
+    expect(shapeLines(shape({ plot: true }))).toEqual(['plot: at once']);
+  });
+
+  it('has no line for a call without a shape or with an empty list only', () => {
+    expect(shapeLines(null)).toEqual([]);
+    expect(shapeLines(undefined)).toEqual([]);
+    expect(shapeLines(shape({ remember: [] }))).toEqual([]);
   });
 });

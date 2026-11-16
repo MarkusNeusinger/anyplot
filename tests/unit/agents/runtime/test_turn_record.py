@@ -9,16 +9,32 @@ import asyncio
 import json
 import logging
 import re
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Iterable, Iterator
 from dataclasses import asdict, fields
 from pathlib import Path
-from typing import Any, cast, get_args, get_type_hints
+from types import UnionType
+from typing import Annotated, Any, Literal, Union, cast, get_args, get_origin, get_type_hints
 
 import httpx
 import pytest
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic.fields import FieldInfo
 
 from agents.anyplot import telemetry
 from agents.anyplot.agent import WITHHELD_LINE
+from agents.anyplot.data import prepare
+from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.prepare import (
+    MAX_CONDITIONS,
+    MAX_KEYS,
+    MAX_OPERATIONS,
+    Condition,
+    KeepRows,
+    PrepareArgs,
+    PrepareError,
+    Sort,
+)
+from agents.anyplot.data.query import DEFAULT_QUERY_ROWS, QueryArgs, run_query
 from agents.anyplot.memory import MemoryRefused
 from agents.anyplot.models import FakeJudge, JudgeVerdict, Verdict
 from agents.anyplot.plugins import tool_safety
@@ -39,25 +55,41 @@ from agents.anyplot.plugins.root_refusal import RETRY_LINE
 from agents.anyplot.plugins.scope_guard import withheld_text
 from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin
 from agents.anyplot.policy import refusal
+from agents.anyplot.schemas import MAX_EXPECTED_TEXTS, MAX_REMEMBER, KeepRequestArgs, PipelineArgs, SwitchArgs
 from agents.anyplot.services import Services
 from agents.anyplot.settings import get_settings
 from agents.anyplot.tools import session as session_tools
 from agents.anyplot.turn_record import (
+    CONDITION_OPS,
     HOOK_VERDICTS,
+    KIND_KEEPING_OPS,
     MAX_KEPT_TURNS,
     MAX_RECORD_GUARDS,
     MAX_RECORD_PREP_OPS,
     MAX_RECORD_TOOLS,
     OUTCOME_CODES,
     OUTSIDE_HOOKS,
+    RANK_KEEPING_OPS,
+    SHAPED_TOOLS,
+    CallShape,
+    CombineChoice,
     GuardLine,
     HookVerdict,
+    KeepTarget,
+    PlotBase,
+    QueryOnlyOp,
     RecordedCall,
+    RecordedCondition,
+    RecordedOp,
     TurnRecord,
     TurnRecords,
     build,
+    call_shape,
     guard_line,
+    literal_values,
+    operation_shape,
     result_code,
+    value_shape,
 )
 from agents.main import MessageBody, QueueOutcome, Runtime, TurnFacts, _keep_turn, app, get_runtime, post_message
 
@@ -171,15 +203,269 @@ class TestClosedSets:
         assert agent_cases.TURN_GUARDS == TURN_HOOKS
         assert agent_cases.GUARD_VERDICTS == set(get_args(HookVerdict))
         assert agent_cases.PREP_OPS == telemetry.PREP_OPS
+        assert agent_cases.QUERY_ONLY_OPS == literal_values(QueryOnlyOp)
         assert names(agent_cases.CaseTurn) == set(TurnRecord.model_fields)
         assert names(agent_cases.CaseToolCall) == set(RecordedCall.model_fields)
         assert names(agent_cases.CaseGuardLine) == set(GuardLine.model_fields)
+        assert names(agent_cases.CaseCallShape) == set(CallShape.model_fields)
+        assert names(agent_cases.CaseOperation) == set(RecordedOp.model_fields)
+        assert names(agent_cases.CaseCondition) == set(RecordedCondition.model_fields)
         assert (agent_cases._MAX_TURN_TOOLS, agent_cases._MAX_TURN_GUARDS, agent_cases._MAX_TURN_PREP_OPS) == (
             MAX_RECORD_TOOLS,
             MAX_RECORD_GUARDS,
             MAX_RECORD_PREP_OPS,
         )
         assert agent_cases._MAX_TURNS == MAX_KEPT_TURNS
+
+    def test_the_api_reads_a_shape_in_each_fields_own_vocabulary(self) -> None:
+        """Every closed field of a call's shape has its own set in the API, equal to the record's, by its name; the
+        lists and counts keep the tools' own argument bounds."""
+        from api import agent_cases
+
+        closed = {
+            name: literal_values(field.annotation)
+            for model in (CallShape, RecordedOp, RecordedCondition)
+            for name, field in model.model_fields.items()
+            if literal_values(field.annotation)
+        }
+        assert closed == agent_cases.SHAPE_CODES
+        assert closed["op"] == telemetry.PREP_OPS | literal_values(QueryOnlyOp) | {"other"}
+        assert (
+            agent_cases._MAX_SHAPE_OPERATIONS,
+            agent_cases._MAX_SHAPE_CONDITIONS,
+            agent_cases._MAX_SHAPE_KEYS,
+            agent_cases._MAX_SHAPE_EXPECTED_TEXTS,
+            agent_cases._MAX_SHAPE_REMEMBER,
+        ) == (MAX_OPERATIONS, MAX_CONDITIONS, MAX_KEYS, MAX_EXPECTED_TEXTS, MAX_REMEMBER)
+
+    def test_the_shapes_inline_sets_are_the_argument_models_own(self) -> None:
+        """The three closed sets the argument models write inline, pinned to them."""
+        assert literal_values(KeepTarget) == literal_values(KeepRows.model_fields["target"].annotation)
+        assert literal_values(PlotBase) == literal_values(PipelineArgs.model_fields["base"].annotation)
+        assert literal_values(CombineChoice) == literal_values(PipelineArgs.model_fields["combine"].annotation)
+        assert SHAPED_TOOLS <= set(tool_safety.ARGUMENTS) and SHAPED_TOOLS <= telemetry.TOOL_NAMES
+
+    def test_the_shapes_operation_sets_are_the_engines(self) -> None:
+        """The operations that keep a `sort`'s ranking are the engine's row filters, and every operation with
+        conditions of its own records them (`classify`'s sit in its rules)."""
+        operations = get_args(get_args(prepare.Operation)[0])
+        assert RANK_KEEPING_OPS == prepare._ROW_FILTERS
+        assert {model for model in operations if "where" in model.model_fields} == set(CONDITION_OPS)
+
+    def test_the_query_only_operations_are_the_question_models_own(self) -> None:
+        """The names a shape records beside `Operation`'s are the `op` of every model only `query_data` takes, so an
+        operation a question gains later fails here instead of reading `other` unnoticed."""
+
+        def names(union: Any) -> set[str]:
+            return {get_args(model.model_fields["op"].annotation)[0] for model in get_args(get_args(union)[0])}
+
+        assert literal_values(QueryOnlyOp) == names(prepare.QueryOperation) - names(prepare.Operation)
+        assert literal_values(RecordedOp.model_fields["op"].annotation) == names(prepare.QueryOperation) | {"other"}
+
+    def test_the_operations_that_keep_a_columns_kind_are_pinned(self) -> None:
+        """Only these choose or order rows, drop columns or clear the view. Any other operation may reshape the table
+        or change a column's kind (an `aggregate`, a pivot, a `split`, a `classify`, a `set_type`, a `blank`), so a
+        condition after it must read `unknown`: an operation added here has to keep every column's name and kind."""
+        assert KIND_KEEPING_OPS == {"drop_rows", "keep_rows", "sort", "drop_columns", "reset_view"}
+        assert KIND_KEEPING_OPS <= telemetry.PREP_OPS
+
+
+SMALL_BOUND = max(MAX_OPERATIONS, MAX_CONDITIONS, MAX_KEYS, MAX_EXPECTED_TEXTS, MAX_REMEMBER)
+"""The largest count or list a call's shape may hold: the tools' own argument bounds. A larger bound could carry a
+figure of the user's words, a top N's n or a row limit."""
+RECORD_COUNTERS = frozenset(
+    {"TurnRecord.turn", "TurnRecord.tools_dropped", "TurnRecord.guards_dropped", "TurnRecord.prep_ops_dropped"}
+)
+"""The record's own counts, which may pass `SMALL_BOUND`: the turn's number and what each list's bound left out."""
+RECORD_LISTS = frozenset({"TurnRecord.tools", "TurnRecord.guards", "TurnRecord.prep_ops"})
+"""The record's own lists, bounded by `MAX_RECORD_TOOLS`, `MAX_RECORD_GUARDS` and `MAX_RECORD_PREP_OPS`."""
+
+
+def _bound(metadata: Iterable[Any], constraint: str) -> int | None:
+    """The bound a field's constraints, or those of a `Field` inside an `Annotated`, set as `constraint` (`le`,
+    `max_length`), or None."""
+    for item in metadata:
+        if isinstance(item, FieldInfo):
+            inner = _bound(item.metadata, constraint)
+            if inner is not None:
+                return inner
+        elif isinstance(getattr(item, constraint, None), int):
+            return cast(int, getattr(item, constraint))
+    return None
+
+
+def _small(metadata: Iterable[Any], constraint: str, where: str, exempt: frozenset[str], what: str) -> list[str]:
+    bound = _bound(metadata, constraint)
+    if bound is None:
+        return [f"{where}: {what} without a bound"]
+    return [] if bound <= SMALL_BOUND or where in exempt else [f"{where}: {what} bounded at {bound}"]
+
+
+def open_fields(model: type[BaseModel]) -> list[str]:
+    """Every field of `model` and the models it nests that could hold more than a closed code: a `str` outside a
+    `Literal`, an int or a list without a small upper bound (`SMALL_BOUND`, the record's own counts and lists
+    excepted by name), a model that takes other fields."""
+    found = [] if model.model_config.get("extra") == "forbid" else [f"{model.__name__}: extra fields"]
+    for name, field in model.model_fields.items():
+        found += _open_parts(field.annotation, list(field.metadata), f"{model.__name__}.{name}")
+    return found
+
+
+def _open_parts(kind: Any, metadata: list[Any], where: str) -> list[str]:
+    origin = get_origin(kind)
+    if origin is Literal:
+        return [] if all(isinstance(value, str) for value in get_args(kind)) else [where]
+    if origin is Annotated:
+        base, *meta = get_args(kind)
+        return _open_parts(base, [*metadata, *meta], where)
+    if origin in (Union, UnionType):
+        return [part for arg in get_args(kind) for part in _open_parts(arg, metadata, where)]
+    if origin is list:
+        return _small(metadata, "max_length", where, RECORD_LISTS, "a list") + _open_parts(get_args(kind)[0], [], where)
+    if kind is type(None) or kind is bool:
+        return []
+    if kind is int:
+        return _small(metadata, "le", where, RECORD_COUNTERS, "an int")
+    if isinstance(kind, type) and issubclass(kind, BaseModel):
+        return open_fields(kind)
+    return [f"{where}: {kind!r}"]
+
+
+class TestStructure:
+    def test_the_record_holds_no_free_text_and_no_unbounded_value(self) -> None:
+        """Every string of the record is a `Literal`, every int and list of a call's shape is bounded by the tools'
+        own small bounds, and every model forbids other fields: the guarantee is in the types."""
+        assert open_fields(TurnRecord) == []
+
+    def test_the_walk_finds_a_free_string_and_a_count_that_could_carry_a_figure(self) -> None:
+        class Leaky(BaseModel):
+            model_config = ConfigDict(extra="forbid")
+            column: str
+            rows: int
+            names: list[Literal["a"]]
+            top: Annotated[int, Field(ge=1, le=20_000)]
+            limits: list[Literal["a"]] = Field(max_length=25)
+            turn: Annotated[int, Field(le=100)]  # a name the record's own counter has, on another model
+
+        assert open_fields(Leaky) == [
+            "Leaky.column: <class 'str'>",
+            "Leaky.rows: an int without a bound",
+            "Leaky.names: a list without a bound",
+            "Leaky.top: an int bounded at 20000",
+            "Leaky.limits: a list bounded at 25",
+            "Leaky.turn: an int bounded at 100",
+        ]
+
+    @pytest.mark.parametrize("model", [CallShape, RecordedOp, RecordedCondition])
+    def test_each_shape_model_forbids_any_other_field(self, model: type[BaseModel]) -> None:
+        fields = {"op": "sort", "test": "eq", "value_shape": "text", "column_kind": "text"}
+        model.model_validate({name: value for name, value in fields.items() if name in model.model_fields})
+        with pytest.raises(ValidationError, match="extra"):
+            model.model_validate({"op": "sort", "test": "eq", "value_shape": "text", "column_kind": "text", "x": "y"})
+
+    def test_a_record_at_its_bounds_stays_far_below_the_bundles_cap(self) -> None:
+        """The figure `MAX_KEPT_TURNS` states: every list full, every code its longest, every shape at its schema
+        maximum, which no real call reaches (an operation takes only its own fields)."""
+        from api.routers.agent import MAX_BUNDLE_BYTES
+
+        condition = RecordedCondition(test="not_missing", value_shape="iso_datetime", column_kind="datetime")
+        operation = RecordedOp(
+            op="pivot_longer",
+            mode="first_n",
+            target="table",
+            order="descending",
+            conditions=[condition] * MAX_CONDITIONS,
+            how="percent_change",
+            period="quarter",
+            keys=MAX_KEYS,
+            type="datetime",
+            date_format="DD.MM.YYYY",
+            decimal=",",
+            unit="decimal_year",
+            keep="letters",
+            family="combine_tables",
+        )
+        shape = CallShape(
+            operations=[operation] * MAX_OPERATIONS,
+            from_version="numbered",
+            limit=True,
+            base="catalogue",
+            theme="light",
+            combine="mean",
+            change_request=True,
+            expected_texts=MAX_EXPECTED_TEXTS,
+            remember=["reference_line"] * MAX_REMEMBER,
+            applies_to="replies",
+            plot=True,
+        )
+        call = RecordedCall(
+            tool="get_dataset_profile",
+            verdict="too_many_generate_calls",
+            outcome="unconfirmed",
+            code="plot_type_switch_unavailable",
+            shape=shape,
+        )
+        record = TurnRecord(
+            turn=100_000,
+            action="summarize_data",
+            kind="example",
+            refusal="unsupported_content",
+            error="guard_unavailable",
+            tools=[call] * MAX_RECORD_TOOLS,
+            tools_dropped=10_000_000,
+            guards=[GuardLine(guard="reply_language", verdict="paste_note_rescues_spent")] * MAX_RECORD_GUARDS,
+            guards_dropped=10_000_000,
+            prep_ops=["pivot_longer"] * MAX_RECORD_PREP_OPS,
+            prep_ops_dropped=10_000_000,
+        )
+
+        size = len(json.dumps(record.model_dump(mode="json")).encode("utf-8"))
+
+        assert size <= 105_000
+        assert MAX_KEPT_TURNS * size < MAX_BUNDLE_BYTES / 6
+
+    def test_a_typical_turns_record_stays_within_a_few_kilobytes(self) -> None:
+        """The other figure `MAX_KEPT_TURNS` states: a plot turn, and a turn of four calls with their shapes."""
+        kinds = {"Day": "datetime", "Shop": "text", "Units": "integer"}
+        question = QueryArgs.model_validate(
+            {
+                "operations": [
+                    where(
+                        {"column": "Day", "test": "ge", "value": "2031-01-01"},
+                        {"column": "Shop", "test": "eq", "value": "A"},
+                    ),
+                    {"op": "aggregate", "by": ["Shop"], "column": "Units", "how": "sum"},
+                ]
+            }
+        )
+        change = PrepareArgs.model_validate(
+            {
+                "operations": [
+                    {"op": "set_type", "column": "Units", "type": "number"},
+                    {"op": "derive", "name": "Rate", "how": "ratio", "columns": ["Units", "Units"]},
+                ]
+            }
+        )
+        run = PipelineArgs.model_validate(
+            {"change_request": "a title", "expected_texts": ["T"], "remember": [{"kind": "title", "text": "T"}]}
+        )
+        plot = call_shape("plot_pipeline", run)
+        busy = RequestLedger(turn=7, prep_ops=["set_type", "derive"])
+        busy.tool_calls = [
+            ToolCall("get_dataset_profile", "allowed", "ok"),
+            ToolCall("query_data", "allowed", "ok", shape=call_shape("query_data", question, lambda: kinds)),
+            ToolCall("prepare_data", "allowed", "changed", shape=call_shape("prepare_data", change, lambda: kinds)),
+            ToolCall("plot_pipeline", "data_changed_this_turn", "kept", shape=plot),
+        ]
+        busy.guards = [("scope_guard", "in_scope"), ("queue", "started"), ("output_guard", "reply_too_long")]
+        plotted = RequestLedger(turn=3, tool_calls=[ToolCall("plot_pipeline", "allowed", "shipped", shape=plot)])
+        plotted.guards = [("queue", "started"), ("budget_exempt", "exempt")]
+
+        def size(ledger: RequestLedger, action: str) -> int:
+            return len(json.dumps(build(ledger, action).model_dump(mode="json")).encode("utf-8"))
+
+        assert size(plotted, "create_plot") <= 700
+        assert size(busy, "text") <= 2_500
 
 
 # --- the record from a ledger ---------------------------------------------------------------
@@ -326,6 +612,447 @@ class TestGuardCapture:
         assert line is not None and (line.guard, line.verdict) == ("queue", "other")
 
 
+# --- the shape of a call's arguments --------------------------------------------------------
+
+KINDS = {"Delivered": "datetime", "Depot": "text", "Parcels": "integer", "Weight kg": "number", "Late": "boolean"}
+"""An invented table's column kinds, as its profile classes them."""
+
+
+def where(*conditions: dict[str, Any], target: str = "plot") -> dict[str, Any]:
+    return {"op": "keep_rows", "where": list(conditions), "target": target}
+
+
+def prepared(*operations: dict[str, Any], **extra: Any) -> CallShape:
+    shape = call_shape(
+        "prepare_data", PrepareArgs.model_validate({"operations": list(operations), **extra}), lambda: KINDS
+    )
+    assert shape is not None and shape.operations is not None
+    return shape
+
+
+def conditions(shape: CallShape, index: int = 0) -> list[tuple[str, str, str]]:
+    assert shape.operations is not None
+    found = shape.operations[index].conditions or []
+    return [(condition.test, condition.value_shape, condition.column_kind) for condition in found]
+
+
+def asked(*operations: dict[str, Any], **extra: Any) -> CallShape:
+    shape = call_shape("query_data", QueryArgs.model_validate({"operations": list(operations), **extra}), lambda: KINDS)
+    assert shape is not None and shape.operations is not None
+    return shape
+
+
+class TestValueShape:
+    @pytest.mark.parametrize(
+        ("value", "shape"),
+        [
+            ("1250", "year"),  # four digits read as a year, whatever they mean
+            ("2031-07", "year_month"),
+            ("2031-Q3", "year_quarter"),
+            ("2031-07-14", "iso_date"),
+            (" 2031-07-14 ", "iso_date"),  # stripped, as the engine strips it
+            ("2031-07-14T08:30", "iso_datetime"),
+            ("2031-07-14 08:30:00+02:00", "iso_datetime"),
+            ("2031-02-30", "text"),  # no such day
+            ("20310714", "number"),  # the basic form is no ISO date to the record
+            ("-3.75", "number"),
+            ("12", "number"),
+            ("4e3", "number"),
+            ("1e999", "text"),  # past the float range: the engine refuses it as a number
+            ("1,5", "text"),
+            ("Depot A", "text"),
+            ("", "none"),
+            ("   ", "text"),  # a text test compares it as it is: a value, not none
+            (" ", "text"),
+        ],
+    )
+    def test_each_shape_from_an_invented_value(self, value: str, shape: str) -> None:
+        assert value_shape(Condition(column="Depot", test="eq", value=value)) == shape
+
+    def test_a_list_a_missing_value_and_a_json_number(self) -> None:
+        assert value_shape(Condition(column="Depot", test="eq", values=["East", "West"])) == "list"
+        assert value_shape(Condition(column="Depot", test="is_missing")) == "none"
+        assert value_shape(Condition.model_validate({"column": "Parcels", "test": "gt", "value": 40})) == "number"
+
+    def test_a_value_of_only_spaces_is_one_the_engine_uses(self) -> None:
+        """The engine's `contains` keeps the rows whose text holds the space, so the record names a text value."""
+        selection = where({"column": "Depot", "test": "contains", "value": " "})
+        args = QueryArgs.model_validate({"operations": [selection]})
+
+        result = run_query(parse_dataset("Depot,Parcels\nDepot A,3\nWest,4\nDepot B,5\n"), list(args.operations))
+
+        assert result.total_rows == 2
+        assert conditions(asked(selection)) == [("contains", "text", "text")]
+
+    @pytest.mark.parametrize("text", ["17", "-0.5", ".5", "5.", "+3e-2", "1e999", "0x1F", "1_000", "1,5", "nan", "inf"])
+    def test_the_number_shape_is_the_engines(self, text: str) -> None:
+        """A value reads `number` exactly when the engine reads it as one (`prepare._number`)."""
+        try:
+            prepare._number(text, "Parcels")
+        except PrepareError:
+            engine = False
+        else:
+            engine = True
+        assert (value_shape(Condition(column="Parcels", test="gt", value=text)) == "number") is engine
+
+
+class TestCallShape:
+    def test_a_selection_keeps_its_test_value_shape_and_column_kind_never_a_value(self) -> None:
+        shape = prepared(
+            where(
+                {"column": "Delivered", "test": "ge", "value": "2031-07-01"},
+                {"column": "Depot", "test": "eq", "values": ["Depot A", "Depot B"]},
+                {"column": "Parcels", "test": "not_missing"},
+            ),
+            where(
+                {"column": "Late", "test": "eq", "value": "false"},
+                {"column": "Weight kg", "test": "le", "value": "0.8"},
+            ),
+        )
+
+        assert shape.operations is not None
+        keep, _ = shape.operations
+        assert (keep.op, keep.mode, keep.target, keep.order) == ("keep_rows", "where", "plot", None)
+        assert conditions(shape) == [
+            ("ge", "iso_date", "datetime"),
+            ("eq", "list", "text"),
+            ("not_missing", "none", "integer"),
+        ]
+        assert conditions(shape, 1) == [("eq", "text", "boolean"), ("le", "number", "number")]
+        assert shape.from_version == "current"
+        raw = shape.model_dump_json()
+        assert all(word not in raw for word in ("Delivered", "Depot", "2031", "Late", "0.8"))
+
+    def test_the_conditions_of_a_drop_rows_and_a_blank_and_none_of_a_classify(self) -> None:
+        """The conditions that take rows out or empty cells read like a selection's; a `classify`'s rules name labels
+        and keep its name alone."""
+        shape = prepared(
+            {"op": "drop_rows", "where": [{"column": "Delivered", "test": "lt", "value": "2031-07"}]},
+            {"op": "blank", "columns": ["Weight kg"], "where": [{"column": "Weight kg", "test": "eq", "value": "-1"}]},
+            {
+                "op": "classify",
+                "name": "Size",
+                "rules": [{"where": [{"column": "Parcels", "test": "gt", "value": "40"}], "label": "large"}],
+            },
+        )
+
+        assert shape.operations is not None
+        dropped, blanked, classified = shape.operations
+        assert conditions(shape) == [("lt", "year_month", "datetime")]
+        assert conditions(shape, 1) == [("eq", "number", "number")]
+        assert (dropped.mode, dropped.target, blanked.mode, blanked.target) == (None, None, None, None)
+        assert classified.model_dump(exclude_none=True) == {"op": "classify"}
+        assert all(word not in shape.model_dump_json() for word in ("Size", "large", "40", "-1", "2031"))
+
+    def test_a_target_is_recorded_only_where_the_call_lands_by_it(self) -> None:
+        """`query_data` ignores a `keep_rows`'s `target`, and a `prepare_data` that names the version it starts from
+        rebuilds the table and sends every selection to it, so the record leaves the target out of both; a
+        `prepare_data` from `current` lands by it."""
+        selection = where({"column": "Parcels", "test": "gt", "value": "3"})
+        question = asked(where({"column": "Parcels", "test": "gt", "value": "3"}, target="table"))
+        change = prepared(where({"column": "Parcels", "test": "gt", "value": "3"}, target="table"))
+        rebuilt = [prepared(selection, from_version=version) for version in (2, "original")]
+        unknown = RecordedCondition(test="gt", value_shape="number", column_kind="unknown")
+
+        assert question.operations is not None and change.operations is not None
+        assert (question.operations[0].target, change.operations[0].target) == (None, "table")
+        assert [(shape.from_version, shape.operations) for shape in rebuilt] == [
+            (kind, [RecordedOp(op="keep_rows", mode="where", conditions=[unknown])])
+            for kind in ("numbered", "original")
+        ]
+
+    def test_a_top_n_after_its_sort_and_a_selection_for_the_table(self) -> None:
+        shape = prepared(
+            {"op": "sort", "column": "Weight kg", "descending": True},
+            {"op": "keep_rows", "n": 7},
+            where({"column": "Weight kg", "test": "gt", "value": "2.5"}, target="table"),
+        )
+
+        assert shape.operations is not None
+        sort, top, selection = shape.operations
+        assert (sort.op, sort.order) == ("sort", "descending")
+        assert (top.mode, top.target, top.order, top.conditions) == ("first_n", "plot", "descending", None)
+        assert (selection.mode, selection.target, selection.order) == ("where", "table", None)
+        assert conditions(shape, 2) == [("gt", "number", "number")]
+        assert "7" not in shape.model_dump_json()  # the first n rows, never how many
+
+    def test_a_top_n_keeps_its_ranking_across_row_filters_and_loses_it_after_any_other_step(self) -> None:
+        """The engine keeps the ranking of a `sort` while only row filters follow it (`prepare._ROW_FILTERS`)."""
+        filtered = prepared(
+            {"op": "sort", "column": "Parcels", "descending": True},
+            {"op": "drop_rows", "where": [{"column": "Depot", "test": "eq", "value": "Depot A"}]},
+            {"op": "keep_rows", "where": [{"column": "Late", "test": "eq", "value": "false"}], "target": "table"},
+            {"op": "keep_rows", "n": 3},
+        )
+        changed = prepared(
+            {"op": "sort", "column": "Parcels"},
+            {"op": "set_type", "column": "Depot", "type": "text"},
+            {"op": "keep_rows", "n": 3},
+        )
+        asked_top = asked(
+            {"op": "sort", "column": "Parcels"},
+            {"op": "keep_rows", "where": [{"column": "Late", "test": "eq", "value": "false"}]},
+            {"op": "keep_rows", "n": 3},
+        )
+
+        assert filtered.operations is not None and changed.operations is not None
+        assert asked_top.operations is not None
+        assert (filtered.operations[3].mode, filtered.operations[3].order) == ("first_n", "descending")
+        assert filtered.operations[2].order is None  # a selection is no top N
+        assert changed.operations[2].order is None
+        assert asked_top.operations[2].order == "ascending"
+        assert prepared({"op": "keep_rows", "n": 3}).operations == [
+            RecordedOp(op="keep_rows", mode="first_n", target="plot")
+        ]
+
+    def test_the_codes_of_the_other_operations(self) -> None:
+        shape = prepared(
+            {
+                "op": "aggregate",
+                "by": ["Depot", "Late"],
+                "columns": ["Parcels", "Weight kg"],
+                "how": "sum",
+                "period": "month",
+            },
+            {"op": "set_type", "column": "Parcels", "type": "number", "decimal": ","},
+            {"op": "derive", "name": "Share", "how": "share", "columns": ["Parcels"]},
+            {"op": "date_number", "column": "Delivered", "unit": "days"},
+            {"op": "rename", "column": "Depot", "name": "Lager"},
+        )
+
+        assert shape.operations is not None
+        aggregate, set_type, derive, date_number, rename = shape.operations
+        assert (aggregate.how, aggregate.period, aggregate.keys) == ("sum", "month", 2)
+        assert (set_type.type, set_type.date_format, set_type.decimal) == ("number", None, ",")
+        assert derive.how == "share" and date_number.unit == "days"
+        assert rename.model_dump(exclude_none=True) == {"op": "rename"}  # a name alone: no code to keep
+
+    def test_a_set_type_keeps_its_date_format(self) -> None:
+        shape = prepared({"op": "set_type", "column": "Depot", "type": "datetime", "date_format": "DD.MM.YYYY"})
+
+        assert shape.operations is not None
+        assert shape.operations[0].model_dump(exclude_none=True) == {
+            "op": "set_type",
+            "type": "datetime",
+            "date_format": "DD.MM.YYYY",
+        }
+
+    @pytest.mark.parametrize("column", ["Depot", "Parcels"])
+    def test_a_condition_after_an_aggregate_reads_an_unknown_kind(self, column: str) -> None:
+        """An `aggregate` makes new rows of its key and value columns, so a later condition on either is not the
+        stored table's to state; asked of the table, so no view reads the table anew in between."""
+        steps = (
+            {"op": "aggregate", "by": ["Depot"], "column": "Parcels", "how": "sum"},
+            where({"column": column, "test": "eq", "value": "4"}, target="table"),
+        )
+
+        assert conditions(prepared(*steps), 1) == [("eq", "number", "unknown")]
+        assert conditions(asked(*steps), 1) == [("eq", "number", "unknown")]
+
+    def test_extract_rolling_and_a_gap(self) -> None:
+        shape = prepared(
+            {"op": "extract", "column": "Depot", "keep": "digits", "name": "Depot no"},
+            {"op": "rolling", "name": "Avg", "column": "Parcels", "how": "mean", "window": 3, "order": "Delivered"},
+        )
+        gap = prepared({"op": "unsupported", "family": "fill_values"})
+
+        assert shape.operations is not None and gap.operations is not None
+        assert (shape.operations[0].keep, shape.operations[1].how) == ("digits", "mean")
+        assert gap.operations[0].family == "fill_values"
+        assert "3" not in shape.model_dump_json()  # the window's rows, never how many
+
+    def test_a_column_kind_holds_only_while_the_operations_before_keep_it(self) -> None:
+        """A row filter, a sort and a dropped column keep the table's kinds; any other step may change a column, so
+        a later condition's column reads `unknown`; so does a column the table lacks."""
+        shape = prepared(
+            {"op": "drop_rows", "where": [{"column": "Late", "test": "eq", "value": "true"}]},
+            {"op": "drop_columns", "columns": ["Weight kg"]},
+            where(
+                {"column": "Weight kg", "test": "gt", "value": "1"}, {"column": "Parcels", "test": "gt", "value": "1"}
+            ),
+            {"op": "set_type", "column": "Depot", "type": "number"},
+            where({"column": "Parcels", "test": "lt", "value": "9"}, {"column": "Ghost", "test": "lt", "value": "9"}),
+        )
+
+        assert conditions(shape, 2) == [("gt", "number", "unknown"), ("gt", "number", "integer")]
+        assert conditions(shape, 4) == [("lt", "number", "unknown"), ("lt", "number", "unknown")]
+        assert conditions(shape) == [("eq", "text", "boolean")]  # the drop_rows reads the table it starts from
+
+    def test_a_blank_may_change_a_kind_so_a_later_condition_reads_unknown(self) -> None:
+        shape = prepared(
+            {"op": "blank", "columns": ["Depot"], "where": [{"column": "Parcels", "test": "lt", "value": "0"}]},
+            where({"column": "Depot", "test": "eq", "value": "12"}, target="table"),
+        )
+
+        assert conditions(shape) == [("lt", "number", "integer")]
+        assert conditions(shape, 1) == [("eq", "number", "unknown")]
+
+    def test_a_selection_for_the_view_after_a_table_step_reads_a_table_read_anew(self) -> None:
+        """`prepare_data` stores the table's steps as a version and applies the view's to it: the kinds of that version
+        are not the current table's to state. Without a table step before it, the view applies to the current table."""
+        after_step = prepared(
+            {"op": "drop_rows", "where": [{"column": "Late", "test": "eq", "value": "true"}]},
+            where({"column": "Parcels", "test": "gt", "value": "3"}),
+        )
+        cleared_first = prepared({"op": "reset_view"}, where({"column": "Parcels", "test": "gt", "value": "3"}))
+        top = prepared(
+            {"op": "set_type", "column": "Depot", "type": "text"},
+            where({"column": "Parcels", "test": "gt", "value": "3"}),
+            {"op": "sort", "column": "Parcels", "descending": True},
+            {"op": "keep_rows", "n": 3},
+        )
+
+        assert conditions(after_step, 1) == [("gt", "number", "unknown")]
+        assert conditions(cleared_first, 1) == [("gt", "number", "integer")]
+        assert conditions(top, 1) == [("gt", "number", "unknown")]
+
+    def test_the_kinds_are_read_only_for_a_selection_of_the_current_table(self) -> None:
+        reads: list[int] = []
+
+        def kinds() -> dict[str, str]:
+            reads.append(1)
+            return KINDS
+
+        no_selection = PrepareArgs.model_validate({"operations": [{"op": "sort", "column": "Parcels"}]})
+        earlier = PrepareArgs.model_validate(
+            {"from_version": "2", "operations": [where({"column": "Parcels", "test": "gt", "value": "3"})]}
+        )
+        assert call_shape("prepare_data", no_selection, kinds) is not None and reads == []
+        shape = call_shape("prepare_data", earlier, kinds)
+        assert shape is not None and reads == []
+        assert (shape.from_version, conditions(shape)) == ("numbered", [("gt", "number", "unknown")])
+        original = call_shape(
+            "prepare_data", PrepareArgs.model_validate({"from_version": "original", "operations": []})
+        )
+        assert original is not None and (original.from_version, original.operations) == ("original", [])
+
+    def test_a_question_says_whether_it_named_a_limit_and_asks_of_the_view_by_its_first_operation(self) -> None:
+        asked = QueryArgs.model_validate(
+            {
+                "operations": [{"op": "apply_view"}, where({"column": "Depot", "test": "contains", "value": "lager"})],
+                "limit": 5,
+            }
+        )
+        plain = QueryArgs.model_validate({"operations": []})
+
+        shape, bare = call_shape("query_data", asked, lambda: KINDS), call_shape("query_data", plain)
+
+        assert shape is not None and bare is not None and shape.operations is not None
+        assert [operation.op for operation in shape.operations] == ["apply_view", "keep_rows"]
+        # The view's rows are read anew, so a column's kind after `apply_view` is not the table's to state.
+        assert conditions(shape, 1) == [("contains", "text", "unknown")]
+        assert (shape.limit, bare.limit, bare.operations) == (True, False, [])
+        assert "5" not in shape.model_dump_json()
+
+    def test_a_question_records_a_total_over_every_row_and_a_fit_by_its_name(self) -> None:
+        """An `aggregate` without `by` counts no key (`keys` 0), also where ToolSafety notes the call; a `fit` records
+        its name and no other field, never its columns."""
+        grand_total = {"operations": [{"op": "aggregate", "column": "Parcels", "how": "sum"}]}
+        fit = {"operations": [{"op": "fit", "x": "Weight kg", "y": "Parcels"}]}
+
+        total_shape = call_shape("query_data", QueryArgs.model_validate(grand_total))
+        fit_shape = call_shape("query_data", QueryArgs.model_validate(fit))
+        noted = tool_safety.recorded_shape("query_data", grand_total, cast(Any, FakeContext()))
+
+        assert total_shape is not None and total_shape.operations == [RecordedOp(op="aggregate", how="sum", keys=0)]
+        assert noted == total_shape
+        assert fit_shape is not None and fit_shape.operations == [RecordedOp(op="fit")]
+        assert "Parcels" not in fit_shape.model_dump_json() and "Weight" not in fit_shape.model_dump_json()
+
+    def test_a_limit_named_at_its_default_still_reads_named(self) -> None:
+        """Whether the call named a limit, not whether it differs from the default the tool applies."""
+        named = call_shape("query_data", QueryArgs.model_validate({"operations": [], "limit": DEFAULT_QUERY_ROWS}))
+
+        assert named is not None and named.limit is True
+
+    def test_a_plot_run_and_a_kept_request(self) -> None:
+        run = PipelineArgs.model_validate(
+            {
+                "change_request": "Titel: Pakete je Depot",
+                "base": "previous",
+                "theme": "dark",
+                "combine": "mean",
+                "expected_texts": ["Pakete je Depot", "kg"],
+                "remember": [
+                    {"kind": "title", "text": "Titel: Pakete je Depot", "expected_text": "Pakete je Depot"},
+                    {"kind": "reference_line", "text": "line at 40", "replaces": "m12"},
+                ],
+            }
+        )
+        kept = KeepRequestArgs.model_validate(
+            {
+                "change_request": "Depot A first",
+                "expected_texts": ["Depot A"],
+                "remember": [{"kind": "sort", "text": "Depot A first"}],
+            }
+        )
+        remembered = KeepRequestArgs.model_validate({"remember": [{"kind": "color", "text": "Depot B in grey"}]})
+
+        shape, held = call_shape("plot_pipeline", run), call_shape("keep_plot_request", kept)
+        held_kinds = call_shape("keep_plot_request", remembered)
+
+        assert shape is not None and held is not None and held_kinds is not None
+        assert shape.model_dump(exclude_none=True) == {
+            "base": "previous",
+            "theme": "dark",
+            "combine": "mean",
+            "change_request": True,
+            "expected_texts": 2,
+            "remember": ["title", "reference_line"],
+        }
+        # A kept request has no base, theme or combine choice: what it asks for, as a plot run's.
+        assert held.model_dump(exclude_none=True) == {"change_request": True, "expected_texts": 1, "remember": ["sort"]}
+        assert held_kinds.model_dump(exclude_none=True) == {
+            "change_request": False,
+            "expected_texts": 0,
+            "remember": ["color"],
+        }
+        empty = call_shape("plot_pipeline", PipelineArgs.model_validate({"change_request": "   "}))
+        assert empty is not None and (empty.change_request, empty.expected_texts) == (False, 0)
+        raw = shape.model_dump_json() + held.model_dump_json() + held_kinds.model_dump_json()
+        assert all(word not in raw for word in ("Pakete", "Depot", "kg", "m12", "40", "grey"))
+
+    def test_the_closed_arguments_of_the_other_tools_and_none_for_the_rest(self) -> None:
+        language = tool_safety.ARGUMENTS["set_language"].model_validate({"language": "Deutsch", "applies_to": "plot"})
+        switch = SwitchArgs.model_validate({"library": "plotly", "plot": False, "spec_id": "line-basic"})
+
+        assert call_shape("set_language", language) == CallShape(applies_to="plot")
+        assert call_shape("switch_plot", switch) == CallShape(plot=False)
+        code = tool_safety.ARGUMENTS["run_data_code"].model_validate({"code": "df = 1", "source_language": "r"})
+        assert call_shape("run_data_code", code) is None
+        assert (
+            call_shape("get_current_code", tool_safety.ARGUMENTS["get_current_code"].model_validate({"version": 3}))
+            is None
+        )
+
+    def test_a_name_or_test_outside_its_set_reads_other(self) -> None:
+        """The validated arguments cannot hold one; built around the validation, the record still closes them."""
+        odd = Condition.model_construct(column="Depot", test="matches", value="N.*", values=None)
+        keep = KeepRows.model_construct(op="keep_rows", n=None, where=[odd], target="plot")
+        shuffled = Sort.model_construct(op="shuffle", column="Depot", descending=False)
+
+        assert operation_shape(keep, None, KINDS).conditions == [
+            RecordedCondition(test="other", value_shape="text", column_kind="text")
+        ]
+        assert (operation_shape(shuffled, None, None).op, operation_shape(shuffled, None, None).order) == (
+            "other",
+            "ascending",
+        )
+
+    def test_the_lists_keep_the_tools_own_bounds(self) -> None:
+        condition = RecordedCondition(test="eq", value_shape="text", column_kind="text")
+        with pytest.raises(ValidationError, match="at most"):
+            RecordedOp(op="keep_rows", conditions=[condition] * (MAX_CONDITIONS + 1))
+        with pytest.raises(ValidationError, match="at most"):
+            CallShape(operations=[RecordedOp(op="sort")] * (MAX_OPERATIONS + 1))
+        with pytest.raises(ValidationError, match="at most"):
+            CallShape(remember=["title"] * (MAX_REMEMBER + 1))
+        with pytest.raises(ValidationError, match="less than or equal"):
+            CallShape(expected_texts=MAX_EXPECTED_TEXTS + 1)
+        with pytest.raises(ValidationError):
+            RecordedOp(op="aggregate", keys=MAX_KEYS + 1)
+
+
 # --- the calls as ToolSafety notes them -----------------------------------------------------
 
 
@@ -433,6 +1160,49 @@ class TestCalls:
 
         assert entries(ledger) == [("get_dataset_profile", "allowed", "error", "invalid_arguments")]
 
+    async def test_each_call_keeps_its_shape_through_its_answer_a_refusal_and_an_error(
+        self, ledger: RequestLedger
+    ) -> None:
+        """The shape is noted before the guards answer, so a refused call keeps it too, and closing or failing a call
+        keeps it; arguments that do not validate have none. Without a session the kinds read `unknown`."""
+        selection = {"operations": [where({"column": "Depot", "test": "eq", "value": "Depot B"})]}
+        ledger.plot_action = True  # a plot button's turn: `prepare_data` is refused as confirmed
+        for call_id, name, args, result in [
+            ("c1", "query_data", selection, {"status": "ok", "rows": 2}),
+            ("c2", "prepare_data", selection, None),
+            ("c3", "query_data", {"operations": [{"op": "keep_rows"}]}, None),
+            ("c4", "query_data", {"operations": [], "limit": 3}, None),
+        ]:
+            context = FakeContext(call_id)
+            refusal = await before(name, args, context)
+            if call_id == "c4":
+                answer = await raised(name, context, RuntimeError("Kontostand 1.234 EUR"))
+                await after(name, context, answer)
+            else:
+                await after(name, context, refusal or result)
+
+        calls = build(ledger, None).tools
+        assert [(call.tool, call.verdict, call.outcome) for call in calls] == [
+            ("query_data", "allowed", "ok"),
+            ("prepare_data", "plot_as_confirmed", "refused"),
+            ("query_data", "invalid_arguments", "refused"),
+            ("query_data", "allowed", "error"),
+        ]
+        first, refused, invalid, failed = (call.shape for call in calls)
+        assert first is not None and refused is not None
+        assert conditions(first) == conditions(refused) == [("eq", "text", "unknown")]
+        assert invalid is None
+        assert failed is not None and (failed.operations, failed.limit) == ([], True)
+        raw = json.dumps([call.model_dump(mode="json") for call in calls])
+        assert "Depot" not in raw
+
+    async def test_a_readers_call_has_no_shape(self, ledger: RequestLedger) -> None:
+        context = FakeContext("c1")
+        await before("get_dataset_profile", {}, context)
+        await after("get_dataset_profile", context, {"status": "ok", "rows": 3})
+
+        assert build(ledger, None).tools[0].shape is None
+
 
 # --- whole turns ----------------------------------------------------------------------------
 
@@ -515,6 +1285,40 @@ class TestTurns:
         assert (record["turn"], record["action"], record["kind"]) == (1, "create_plot", "plot")
         assert tools(record) == [("plot_pipeline", "allowed", "shipped", None)]
         assert guards(record) == [("queue", "started"), ("budget_exempt", "exempt")]
+        shape = {key: value for key, value in record["tools"][0]["shape"].items() if value is not None}
+        assert shape == {"base": "catalogue", "change_request": False, "expected_texts": 0, "remember": []}
+
+    async def test_a_question_records_the_kinds_of_the_tables_columns(
+        self, client: httpx.AsyncClient, swap_models, lines: pytest.LogCaptureFixture
+    ) -> None:
+        """The kinds come from the profile of the session's current table; the names and values stay out."""
+        question = {
+            "call": "query_data",
+            "args": {
+                "operations": [
+                    where(
+                        {"column": "Study Hours", "test": "ge", "value": "2.5"},
+                        {"column": "Exam Score", "test": "lt", "value": 70},
+                        {"column": "Student", "test": "eq", "values": ["S01", "S07"]},
+                    )
+                ]
+            },
+        }
+        swap_models("gemini", {"root": [question, {"text": "Four students."}]})
+        sid = await open_session(client)
+
+        await turn(client, sid, "who studied long but scored low?")
+
+        record = await last(client, sid, lines)
+        assert tools(record) == [("query_data", "allowed", "ok", None)]
+        (operation,) = record["tools"][0]["shape"]["operations"]
+        assert [(item["test"], item["value_shape"], item["column_kind"]) for item in operation["conditions"]] == [
+            ("ge", "number", "number"),
+            ("lt", "number", "integer"),
+            ("eq", "list", "text"),
+        ]
+        raw = json.dumps(record)
+        assert all(word not in raw for word in ("Study Hours", "Exam Score", "Student", "S07", "2.5", "70"))
 
     async def test_a_withheld_message(
         self, client: httpx.AsyncClient, swap_models, judge: FakeJudge, lines: pytest.LogCaptureFixture
@@ -757,6 +1561,7 @@ class TestTurns:
         record = await last(client, sid, lines)
         assert tools(record) == [("plot_pipeline", "budget", "refused", None)]
         assert (record["kind"], record["refusal"]) == ("talk", None)
+        assert record["tools"][0]["shape"]["base"] == "catalogue"  # the Budget plugin notes the shape too
 
     async def test_a_tool_exception(
         self, client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, lines: pytest.LogCaptureFixture
@@ -984,8 +1789,31 @@ class TestBundle:
 async def test_no_content_and_no_id_in_the_record(
     client: httpx.AsyncClient, swap_models, lines: pytest.LogCaptureFixture
 ) -> None:
-    """The canary: a session with distinctive column names, cells, notes, a file name and a message, and a
-    `get_current_code` call whose answer holds the program, leaves none of them, and no id, in the record."""
+    """The canary: a session with distinctive column names, cells, notes, a file name and a message, a
+    `get_current_code` call whose answer holds the program, and a question and a plot request that name the canary
+    column and cell, leaves none of them, and no id, in the record."""
+    question = {
+        "call": "query_data",
+        "args": {
+            "operations": [
+                where(
+                    {"column": COLUMN_CANARY, "test": "gt", "value": "3"},
+                    {"column": "Student", "test": "eq", "value": CELL_CANARY},
+                ),
+                {"op": "sort", "column": COLUMN_CANARY, "descending": True},
+            ],
+            "columns": [COLUMN_CANARY],
+            "limit": 4,
+        },
+    }
+    kept = {
+        "call": "keep_plot_request",
+        "args": {
+            "change_request": f"title {MESSAGE_CANARY}",
+            "expected_texts": [CELL_CANARY],
+            "remember": [{"kind": "title", "text": f"title {MESSAGE_CANARY}", "expected_text": CELL_CANARY}],
+        },
+    }
     swap_models(
         "gemini",
         {
@@ -994,6 +1822,9 @@ async def test_no_content_and_no_id_in_the_record(
                 {"text": "Here it is."},
                 {"call": "get_current_code", "args": {"version": 1}},
                 {"text": "That is the code."},
+                question,
+                kept,
+                {"text": "One row, and the title is kept."},
             ],
             "adapter": [{"json": SCATTER_PLAN}],
             "reviewer": [{"json": VERDICT_OK}],
@@ -1008,9 +1839,18 @@ async def test_no_content_and_no_id_in_the_record(
 
     await turn(client, sid, action="create_plot")
     await turn(client, sid, f"show me the code {MESSAGE_CANARY}")
+    await turn(client, sid, f"which rows hold {CELL_CANARY}, and keep a title {MESSAGE_CANARY}")
 
-    kept = await records(client, sid, lines)
-    assert tools(kept[-1]) == [("get_current_code", "allowed", "ok", None)]
+    kept_records = await records(client, sid, lines)
+    assert tools(kept_records[1]) == [("get_current_code", "allowed", "ok", None)]
+    asked, held = kept_records[2]["tools"]
+    assert (asked["tool"], held["tool"]) == ("query_data", "keep_plot_request")
+    assert [item["column_kind"] for item in asked["shape"]["operations"][0]["conditions"]] == ["integer", "text"]
+    assert (held["shape"]["remember"], held["shape"]["expected_texts"], held["shape"]["change_request"]) == (
+        ["title"],
+        1,
+        True,
+    )
     raw = json.dumps((await bundle_of(client, sid, ""))["turns"])
     for canary in (COLUMN_CANARY, CELL_CANARY, NOTE_CANARY, FILE_CANARY, MESSAGE_CANARY, USER, sid, "req-1"):
         assert canary not in raw, canary

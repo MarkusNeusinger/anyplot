@@ -17,6 +17,7 @@ import {
   callLabel,
   endLine,
   type Severity,
+  shapeLines,
   sharedTurns,
   type TurnChip,
   turnChips,
@@ -62,13 +63,18 @@ function Chip({ chip }: { chip: TurnChip }) {
   );
 }
 
-/** A list of the record's entries, and what its bound left out (`note` as singular and plural). */
+/**
+ * A list of the record's entries, each with its own detail lines (a call's
+ * shape), and what its bound left out (`note` as singular and plural).
+ */
 function Entries({
   items,
+  details = [],
   dropped,
   note,
 }: {
   items: string[];
+  details?: string[][];
   dropped: number;
   note: [string, string];
 }) {
@@ -78,7 +84,26 @@ function Entries({
       {items.length > 0 && (
         <Box component="ol" sx={{ m: 0, pl: 2.5, overflowWrap: 'anywhere' }}>
           {items.map((item, index) => (
-            <li key={index}>{item}</li>
+            <li key={index}>
+              {item}
+              {(details[index]?.length ?? 0) > 0 && (
+                <Box
+                  component="ul"
+                  sx={{
+                    ...detailMutedSx,
+                    m: 0,
+                    pl: 2,
+                    listStyle: 'none',
+                    // A hanging indent: a wrapped line continues inside its own line, not at the next one's start.
+                    '& > li': { pl: '2ch', textIndent: '-2ch' },
+                  }}
+                >
+                  {details[index].map((line, at) => (
+                    <li key={at}>{line}</li>
+                  ))}
+                </Box>
+              )}
+            </li>
           ))}
         </Box>
       )}
@@ -127,6 +152,7 @@ function TurnDetails({
             call =>
               `${callLabel(call)}${call.verdict === 'allowed' || call.outcome === 'refused' ? '' : ` (${call.outcome})`}`
           )}
+          details={record.tools.map(call => shapeLines(call.shape))}
           dropped={record.tools_dropped}
           note={['later call', 'later calls']}
         />

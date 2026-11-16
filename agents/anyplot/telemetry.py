@@ -629,8 +629,10 @@ class PipelineRun(_Event):
     memory_entries: Count = 0
     """The plot memory's entries the run handed the adapter and the reviewer as standing decisions."""
     remembered: Count = 0
-    """The entries the shipped run stored in the plot memory (`PipelineArgs.remember`); 0 for a run that shipped
-    nothing, which stores none."""
+    """The entries the shipped run stored in the plot memory: its `remember` items (`PipelineArgs.remember`, a kept
+    note's) and the server's replacement of a standing title, subtitle or axis label its render replaced
+    (`memory.replace_drawn`), so it can count more than the root's items; 0 for a run that shipped nothing, which
+    stores none."""
     memory_full: bool = False
     """The shipped run's decisions found no room in the plot memory (`PlotResult.memory_full`)."""
 

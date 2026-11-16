@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Day,Height (mm)\n2,132\n4,132\n6,158\n8,165\n10,186\n12,204\n14,203\n16,231\n18,238\n20,251\n",
+  "message": "Fit a straight line of the height on the day: what height does it give for day 40?",
+  "expected_operations": [],
+  "question_ops": ["fit", "compute"],
+  "reply_names": ["393"],
+  "locale": "en",
+  "tags": ["data_question", "fit", "fit_formula"]
+}
