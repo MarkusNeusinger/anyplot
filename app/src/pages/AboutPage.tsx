@@ -22,6 +22,11 @@ import {
 
 const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp';
 
+// One sentence for search results and link previews, the same as the crawler copy's
+// (api/routers/seo.py); each of its four parts is a section of this page.
+const DESCRIPTION =
+  'About anyplot.ai: who built it, how AI agents write and review the catalogue, the stack, and what it costs to run.';
+
 // Files and headings on main, as GitHub renders them. Each path and heading anchor is written out
 // after GITHUB_URL so tests/unit/test_readme_claims.py can find it and fail when a file moves or a
 // heading is renamed.
@@ -81,15 +86,9 @@ export function AboutPage() {
     <>
       <>
         <title>about | anyplot.ai</title>
-        <meta
-          name="description"
-          content="a catalogue of plotting examples across fifteen libraries in python, r, julia, and javascript. plot ideas come from humans; ai drafts the spec, generates code for every library, and reviews each implementation."
-        />
+        <meta name="description" content={DESCRIPTION} />
         <meta property="og:title" content="about | anyplot.ai" />
-        <meta
-          property="og:description"
-          content="humans submit ideas. ai drafts specs, generates code, reviews. humans approve."
-        />
+        <meta property="og:description" content={DESCRIPTION} />
         <link rel="canonical" href="https://anyplot.ai/about" />
       </>
 

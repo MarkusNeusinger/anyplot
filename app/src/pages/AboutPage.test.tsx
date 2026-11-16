@@ -25,6 +25,37 @@ describe('AboutPage', () => {
     expect(headings).toContain('transparency');
   });
 
+  it('describes itself by the four things it covers, each a section of the page', () => {
+    render(<AboutPage />);
+
+    const description =
+      'About anyplot.ai: who built it, how AI agents write and review the catalogue, the stack, and what it costs to run.';
+    expect(description.length).toBeLessThanOrEqual(155);
+    expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      description
+    );
+    expect(document.head.querySelector('meta[property="og:description"]')).toHaveAttribute(
+      'content',
+      description
+    );
+    // who built it; how ai agents write (how it is built, pipeline) and review the catalogue;
+    // the stack and the running costs under transparency.
+    const headings = screen.getAllByRole('heading').map(h => h.textContent);
+    for (const heading of [
+      'who built it',
+      'how it is built',
+      'pipeline',
+      'review',
+      'transparency',
+    ]) {
+      expect(headings).toContain(heading);
+    }
+    const transparency = document.getElementById('transparency')!;
+    expect(transparency).toContainElement(screen.getByText('technology stack'));
+    expect(transparency).toContainElement(screen.getByText('monthly running costs (October 2026)'));
+  });
+
   it('names the builder with his photo and the links to his profiles', () => {
     render(<AboutPage />);
 

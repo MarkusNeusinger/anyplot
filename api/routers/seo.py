@@ -1391,7 +1391,10 @@ async def seo_about():
     return HTMLResponse(
         _render_bot_html(
             title="About | anyplot.ai",
-            description="About anyplot.ai — library-agnostic, AI-powered plotting.",
+            description=(
+                "About anyplot.ai: who built it, how AI agents write and review the catalogue, "
+                "the stack, and what it costs to run."
+            ),
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/about",
             body=_ABOUT_BOT_BODY,

@@ -1209,6 +1209,14 @@ class TestSeoProxyRouter:
         assert "text/html" in response.headers["content-type"]
         assert "og:title" in response.text
         assert "https://anyplot.ai/about" in response.text
+        # The same description as AboutPage.tsx, in the meta tags search engines and link previews read.
+        description = (
+            "About anyplot.ai: who built it, how AI agents write and review the catalogue, "
+            "the stack, and what it costs to run."
+        )
+        assert len(description) <= 155
+        assert f'<meta name="description" content="{description}" />' in response.text
+        assert f'<meta property="og:description" content="{description}" />' in response.text
         # registry-derived count + the pipeline sequence
         assert "15 libraries" in response.text
         assert "AI-drafted, human-approved" in response.text
