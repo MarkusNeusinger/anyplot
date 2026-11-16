@@ -151,10 +151,12 @@
  *    event (`src/analytics/mute.ts`), so the admin's own use never counts as a visitor's.
  *
  * Past the gates, a query without a catalogue pair (no spec, or a library the catalogue does not
- * have) is the explainer (`AgentIntro`, the landing page's `.use_my_data()` leads there): what
- * the chat does, a few example pairs and the way to the catalogue. It opens no session; the only
- * requests before it are the gates' own, the lane's door and, in an admin's browser, the admin
- * check.
+ * have; `namesAgentChat`) is the explainer (`AgentIntro`, the landing page's `.use_my_data()`
+ * leads there): what the chat does, a few example pairs, the way to the catalogue and the
+ * assistant's terms. It opens no session; the only requests before it are the gates' own, the
+ * lane's door and, in an admin's browser, the admin check. The site's feedback button, which the
+ * layout hides wherever the query names a pair, stands on it: the explainer has no feedback of
+ * its own.
  *
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
@@ -169,7 +171,7 @@ import GlobalStyles from '@mui/material/GlobalStyles';
 import { setAnalyticsMuted } from 'src/analytics/mute';
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import { SectionHeader } from 'src/components/SectionHeader';
-import { LIB_TO_LANG, LIBRARIES } from 'src/constants';
+import { LIB_TO_LANG } from 'src/constants';
 import { CONFIG } from 'src/global-config';
 import { useAgentAdmin } from 'src/hooks/useAgentAdmin';
 import { useAgentLaneOpen } from 'src/hooks/useAgentLaneOpen';
@@ -199,7 +201,7 @@ import {
 } from 'src/lib/agent';
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
-import { paths, specPath } from 'src/routes/paths';
+import { namesAgentChat, paths, specPath } from 'src/routes/paths';
 import {
   AdminMenu,
   AdminMeters,
@@ -263,7 +265,6 @@ import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminToken, readViewAsVisitor, setViewAsVisitor } from 'src/utils/adminAuth';
 import type { ThemedPreviewSource } from 'src/utils/themedPreview';
 
-const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 /**
  * A chat is its spec, shown for a library the page knows: another spec, none, or an address
  * without a known library (all three show the explainer or another chat) on the same path `/agent`
@@ -275,8 +276,7 @@ const leavesChat: LeavesPage = (current, next) => {
   if (leavesPath(current, next)) return true;
   const there = new URLSearchParams(next.search);
   return (
-    new URLSearchParams(current.search).get('spec') !== there.get('spec') ||
-    !(LIBRARIES as readonly string[]).includes(there.get('library') ?? '')
+    new URLSearchParams(current.search).get('spec') !== there.get('spec') || !namesAgentChat(there)
   );
 };
 /**
@@ -398,7 +398,9 @@ export function AgentChatPage() {
   // `?library=matplotlib&language=javascript` would otherwise pick the wrong
   // highlighter and a back link to a page that does not exist.
   const language = LIB_TO_LANG[library] ?? 'python';
-  const valid = SPEC_PATTERN.test(spec) && (LIBRARIES as readonly string[]).includes(library);
+  // A catalogue pair in the query: the chat, else the explainer. The layout reads the same rule
+  // for the site's feedback button, which stands on the explainer only (`RootLayout`).
+  const valid = namesAgentChat(params);
 
   // A layout effect: the layout records this page's pageview in its own layout effect, which
   // runs after this one, so the switch is on before anything is recorded; and its cleanup runs

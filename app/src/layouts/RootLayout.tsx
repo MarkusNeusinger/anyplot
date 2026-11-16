@@ -13,7 +13,7 @@ import { useStay } from 'src/hooks/useStay';
 import { Footer } from 'src/layouts/Footer';
 import { MastheadRule } from 'src/layouts/MastheadRule';
 import { NavBar } from 'src/layouts/NavBar';
-import { isPlotsPath, paths } from 'src/routes/paths';
+import { isAgentChatAddress, isPlotsPath, paths } from 'src/routes/paths';
 
 const containerSx = {
   px: { xs: 2, sm: 4, md: 8, lg: 12 },
@@ -35,8 +35,10 @@ export function RootLayout() {
   const { effective } = useTheme();
   const mastheadSticks = pathname !== paths.plots;
   // The agent chat has a feedback row of its own on every result, and the chat's for a session
-  // without one; on a phone the site's button covered the composer's buttons and the replies.
-  const siteFeedback = pathname !== paths.agent;
+  // without one; on a phone the site's button covered the composer's buttons and the replies. The
+  // explainer at `/agent` without a pair has neither, so the button stands there. The page picks
+  // chat or explainer by the same rule (`namesAgentChat`).
+  const siteFeedback = !isAgentChatAddress(pathname, search);
 
   // Set synchronously during render so the pageview below and a child page's
   // first event carry the theme prop.

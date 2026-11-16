@@ -1,3 +1,5 @@
+import { LIBRARIES } from 'src/constants';
+
 /**
  * URL builder for spec/language/library pages.
  *
@@ -32,6 +34,30 @@ export function agentChatPath(
  * admin address `/debug/agent` keeps (`agentChatRedirect`).
  */
 export const AGENT_CHAT_PARAMS = ['spec', 'library', 'language', 'source'] as const;
+
+/** A spec id as the chat takes it from its query. */
+const AGENT_SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
+
+/**
+ * Whether an `/agent` query names a chat: a well-formed spec id and a library the catalogue has.
+ * With one the page is the chat on that pair, without one the explainer (`AgentChatPage`). The
+ * layout decides by the same rule where the site's feedback button stands (`RootLayout`), so the
+ * two never disagree about which page is a chat. `LIBRARIES` is read at the call, not at import.
+ */
+export function namesAgentChat(query: URLSearchParams): boolean {
+  return (
+    AGENT_SPEC_PATTERN.test(query.get('spec') ?? '') &&
+    LIBRARIES.includes(query.get('library') ?? '')
+  );
+}
+
+/**
+ * Whether an address is the agent chat: `/agent`, also with a trailing slash as the router serves
+ * it, with a query that names a chat (`namesAgentChat`).
+ */
+export function isAgentChatAddress(pathname: string, search: string): boolean {
+  return pathname.replace(/\/+$/, '') === '/agent' && namesAgentChat(new URLSearchParams(search));
+}
 
 /**
  * Reserved top-level paths that must never be assigned as spec ids.
