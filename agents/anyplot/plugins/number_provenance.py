@@ -258,8 +258,9 @@ def _add_response(sources: Sources, name: str | None, response: Any) -> None:
 
 
 def request_sources(request: LlmRequest, state: Any) -> Sources:
-    """The numbers the root had from a source when it wrote the reply to `request`: the tool results, the session
-    block with its plot memory apart, the user's messages and the service's limits."""
+    """The numbers the root had from a source when it wrote the reply to `request`, each under its kind: the tool
+    results, with a plot result's notes and drawn texts and the plot's code apart, the session block with its plot
+    memory apart, the user's messages and the service's limits."""
     sources = Sources()
     for content in request.contents:
         parts = content.parts or []

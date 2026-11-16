@@ -73,7 +73,7 @@ another provider, model or location.
 | `AGENT_DATA_RUN_TIMEOUT_S` | `20` | Seconds one data snippet may run, at most 30 |
 | `AGENT_DAILY_DATA_RUNS` | `30` | `run_data_code` runs per user and day. An admin is exempt |
 | `AGENT_NARROWED_BINDINGS` | `keep` | The root's `set_bindings` that only leaves out confirmed number series (`y2`, `y3`, ...): `keep` keeps the user's confirmation, `reset` asks for a confirmation again |
-| `AGENT_NUMBER_PROVENANCE` | `enforce` | The check of the figures in the root's reply against the tool results, the session block, the user's words and the service's limits: `enforce` (a turn without a tool call whose reply states an unsourced figure is asked again once with the tools, and a reply that still states one is withheld with `error{code:"unverified_figure"}`, also after the tools that answer called; a turn that ran a tool and was not asked again is only logged), `log` (only logged) or `off` |
+| `AGENT_NUMBER_PROVENANCE` | `enforce` | The check of the figures in the root's reply against the tool results, the session block, the user's messages, the service's limits, the plot memory, and a plot's notes, code and drawn texts: `enforce` (a turn without a tool call whose reply states an unsourced figure is asked again once with the tools, and a reply that still states one is withheld with `error{code:"unverified_figure"}`, also after the tools that answer called; a turn that ran a tool and was not asked again is only logged), `log` (only logged) or `off` |
 | `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline, enforced through `abort_signal` |
 | `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline; below the hard one |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry and the half-second wait before it included |
@@ -563,12 +563,12 @@ class AgentSettings(BaseSettings):
 
     number_provenance: Literal["off", "log", "enforce"] = "enforce"
     """The check of the figures in the root's final reply (`AGENT_NUMBER_PROVENANCE`, `plugins/number_provenance.py`):
-    a figure must stand in a tool result, the session block, the user's words or the service's limits. `enforce`: a
-    reply of a turn that ran no tool and states a figure no source holds is asked for once more with the tools, and a
-    reply that still states one is withheld (`error{code:"unverified_figure"}`), also after the tools that answer
-    called; a turn that ran a tool and was not asked again is only logged, and the replacement replies of the other
-    plugins' re-asks are held to the same rule. `log`: every reply is only logged, never asked for again or withheld.
-    `off`: no check."""
+    a figure must stand in a tool result, the session block, the user's messages, the service's limits, the plot
+    memory, or a plot's notes, code or drawn texts. `enforce`: a reply of a turn that ran no tool and states a figure
+    no source holds is asked for once more with the tools, and a reply that still states one is withheld
+    (`error{code:"unverified_figure"}`), also after the tools that answer called; a turn that ran a tool and was not
+    asked again is only logged, and the replacement replies of the other plugins' re-asks are held to the same rule.
+    `log`: every reply is only logged, never asked for again or withheld. `off`: no check."""
 
     request_deadline_s: PositiveInt = 540
     """Hard request deadline in seconds, enforced through `abort_signal` (`AGENT_REQUEST_DEADLINE_S`).

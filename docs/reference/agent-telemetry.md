@@ -279,11 +279,11 @@ own `not_ready`. No field is new, but three readings change from that date on:
 
 ### Values added on 2026-11-16
 
-- **`chat_turn.error` `unverified_figure`.** The root's reply stated a figure that no tool result, no message of the
-  user, no session block and no limit of the service held, also after the service asked it once more, and the service
-  withheld the reply
-  (`AGENT_NUMBER_PROVENANCE=enforce`, `agents/anyplot/plugins/number_provenance.py`). Before, such a reply went out.
-  The turn's `kind` is `error`.
+- **`chat_turn.error` `unverified_figure`.** The root's reply stated a figure that none of its sources held, also after
+  the service asked it once more, and the service withheld the reply (`AGENT_NUMBER_PROVENANCE=enforce`,
+  `agents/anyplot/plugins/number_provenance.py`). Its sources are a tool result, the session block, the user's
+  messages, the service's limits, the plot memory, and a plot's notes, code and drawn texts. Before, such a reply went
+  out. The turn's `kind` is `error`.
 
 ## Where the lines go
 
