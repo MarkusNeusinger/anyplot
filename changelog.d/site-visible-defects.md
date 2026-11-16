@@ -36,7 +36,8 @@
   (820 px) drops from 0.18 to under 0.001. On a phone (390 px) with the card
   in view, the late `.use_my_data()` shifted the page by 0.18 and now by
   under 0.001. If the request fails, the frame stays and says
-  `plot of the day did not load`, with `.retry()`.
+  `plot of the day did not load`, with `.retry()`. The request, with its
+  retries, stops when the visitor leaves the page or asks again.
 - **A failed load on the plots page clears and can be retried.** The error
   banner is cleared when the next fetch starts. It says `plots did not load`
   instead of the raw exception with status and URL, and offers `.retry()`.

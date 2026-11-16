@@ -66,4 +66,29 @@ describe('usePlotOfTheDay', () => {
     await waitFor(() => expect(result.current.status).toBe('ready'));
     expect(result.current.potd).toEqual(potd);
   });
+
+  it('aborts the request when the page goes away, so apiGet stops retrying', () => {
+    fetchMock.mockImplementationOnce(() => new Promise(() => {}));
+    const { unmount } = renderHook(() => usePlotOfTheDay());
+    const signal = (fetchMock.mock.calls[0][1] as RequestInit).signal!;
+    expect(signal.aborted).toBe(false);
+
+    unmount();
+    expect(signal.aborted).toBe(true);
+  });
+
+  it('aborts the pending request when a retry asks again', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 404, statusText: 'Not Found' });
+    fetchMock.mockImplementation(() => new Promise(() => {}));
+    const { result } = renderHook(() => usePlotOfTheDay());
+    await waitFor(() => expect(result.current.status).toBe('failed'));
+
+    act(() => result.current.retry());
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const second = (fetchMock.mock.calls[1][1] as RequestInit).signal!;
+    act(() => result.current.retry());
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    expect(second.aborted).toBe(true);
+    expect(result.current.status).toBe('loading');
+  });
 });

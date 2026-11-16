@@ -142,6 +142,7 @@ export function useFilterFetch({
         // counts stay: they count the whole catalogue, which no filter changes.
         setAllImages([]);
         setDisplayedImages([]);
+        setSpecTitles({});
         setHasMore(false);
         setFilterCounts(null);
         setOrCounts([]);

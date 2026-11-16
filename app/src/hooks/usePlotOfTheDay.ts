@@ -47,19 +47,19 @@ export function usePlotOfTheDay(): PlotOfTheDayState {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    apiGet<PlotOfTheDayData | null>(endpoints.plotOfTheDay)
+    // Aborting, not only ignoring the answer: apiGet retries with backoff, and those retries
+    // would keep asking after the visitor has left the page or asked again.
+    const controller = new AbortController();
+    apiGet<PlotOfTheDayData | null>(endpoints.plotOfTheDay, { signal: controller.signal })
       .then(data => {
-        if (cancelled) return;
+        if (controller.signal.aborted) return;
         setPotd(data);
         setStatus(data ? 'ready' : 'none');
       })
       .catch(() => {
-        if (!cancelled) setStatus('failed');
+        if (!controller.signal.aborted) setStatus('failed');
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [attempt]);
 
   return { potd, status, retry };

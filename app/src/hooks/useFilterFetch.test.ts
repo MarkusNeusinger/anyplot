@@ -236,6 +236,7 @@ describe('useFilterFetch', () => {
       });
       expect(result.current.allImages).toEqual([]);
       expect(result.current.displayedImages).toEqual([]);
+      expect(result.current.specTitles).toEqual({});
       expect(result.current.hasMore).toBe(false);
     });
 
