@@ -46,7 +46,7 @@ describe('NavBar', () => {
   });
 
   // Eight labels beside the logo and the search need about 750px, so phones and tablets keep the
-  // two-row masthead and the single row starts at md (scratch measurements in the PR).
+  // two-row masthead and the single row starts at md.
   it('keeps two rows below md and one from md', () => {
     const { container } = render(<NavBar />);
 

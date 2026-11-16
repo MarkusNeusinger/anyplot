@@ -1337,7 +1337,7 @@ _ABOUT_BOT_BODY = (
     "he leads them, with his experience across data, backends, frontends and hosting. Work goes to "
     "Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs; he "
     "tests what comes back and returns it until it's right. What he corrects becomes a rule the "
-    "agents follow, and a mistake that comes back becomes a test. More on GitHub: "
+    "agents follow, and a mistake that comes back becomes a test or a written rule. More on GitHub: "
     '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot">'
     "How I build anyplot</a> and "
     '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#engineering-highlights">'
