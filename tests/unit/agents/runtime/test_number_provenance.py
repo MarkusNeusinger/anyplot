@@ -977,3 +977,56 @@ async def test_a_second_ask_that_calls_a_tool_is_checked_again_after_it(
 
     assert [name for name, _ in turn] == events
     assert len([request for request in fake.requests if kind_of(request) == "root"]) == 3
+
+
+QUERY = {"operations": [], "columns": ["Exam Score"], "limit": 3}
+"""A question of the data that returns three scores, none of them the invented total."""
+
+
+def shape(request: LlmRequest) -> list[tuple[str | None, list[str]]]:
+    """Each content of a request as its role and the kinds of its parts."""
+    kinds = []
+    for content in request.contents:
+        parts = []
+        for part in content.parts or []:
+            if part.function_call is not None:
+                parts.append(f"call:{part.function_call.name}")
+            elif part.function_response is not None:
+                parts.append(f"result:{part.function_response.name}")
+            elif part.text:
+                parts.append("text")
+        kinds.append((content.role, parts))
+    return kinds
+
+
+async def test_the_reask_line_never_reaches_the_request_after_its_tool_call(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """The re-ask line quotes the reply's unsourced figures in a user-role turn, and the check reads every user turn of
+    the root's request as the user's own words. Were the line to reach the request ADK builds after the tool the second
+    ask called, the figure it quotes would source itself, and a reply that repeats it would pass. The line and the
+    first reply live only in the second ask's copy of the request; the event ADK stores is the answer's tool call, so
+    the next request holds the user's message, that call and its result, and the repeated figure is withheld."""
+    script = [{"text": INVENTED}, {"call": "query_data", "args": QUERY}, {"text": INVENTED}]
+    fake = swap_models("gemini", {"root": script})
+    sid = await open_session(client)
+
+    turn = await say(client, sid, "what do the scores add up to?")
+
+    first, reask, after = [request for request in fake.requests if kind_of(request) == "root"]
+    assert shape(reask)[-2:] == [("model", ["text"]), ("user", ["text"])]
+    assert '"1,618.03"' in (reask.contents[-1].parts[0].text or "")
+    assert shape(after) == [*shape(first), ("model", ["call:query_data"]), ("user", ["result:query_data"])]
+    (result,) = [part.function_response for part in after.contents[-1].parts or [] if part.function_response]
+    assert result.response is not None and result.response.get("status") != "error"
+    held = json.dumps([content.model_dump(mode="json") for content in after.contents])
+    assert REASK_LINE.split("{figures}")[0] not in held and "1,618" not in held
+    assert request_sources(after, {}).kind_of(one("1,618.03")) is None
+    assert [name for name, _ in turn] == ["ready", "error", "done"]
+    assert turn[1][1] == {"code": UNVERIFIED_FIGURE, "ref": "req-1"}
+    (record,) = (await bundle(client, sid))["turns"]["records"]
+    assert [(line["guard"], line["verdict"]) for line in record["guards"]] == [
+        ("scope_guard", "in_scope"),
+        (HOOK, "reasked"),
+        (HOOK, "withheld"),
+    ]
