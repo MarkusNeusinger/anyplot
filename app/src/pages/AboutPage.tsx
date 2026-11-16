@@ -236,11 +236,12 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>pipeline</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              humans curate; ai executes. the catalogue maintains itself: every night a job
-              regenerates the oldest implementations, and a new version replaces the live one only
-              when a review of both finds a fixed defect and no regression; when a better example
-              pattern emerges, I update the spec and every library regenerates. I never patch
-              generated code by hand.
+              the pipeline runs on its own schedule, by rules I set. every night a job regenerates
+              the oldest implementations, and a new version replaces the live one only when a review
+              of both finds a fixed defect and no regression; when a better example pattern emerges,
+              I update the spec and regenerate its libraries. I don&apos;t fix a plot by editing its
+              code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it
+              governs.
             </Box>
             <Box sx={{ ...codeBlockStyle, whiteSpace: 'pre', fontSize: '13px', mt: 3 }}>
               {PIPELINE_BLOCK}

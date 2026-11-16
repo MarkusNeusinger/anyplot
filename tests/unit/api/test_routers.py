@@ -1227,10 +1227,13 @@ class TestSeoProxyRouter:
             "something repeatedly fails."
         ) in response.text
         assert "AI-drafted, human-approved" in response.text
-        # In the first person, as AboutPage.tsx says it.
-        assert "I update the spec and every library regenerates. I never patch generated code by hand." in (
-            response.text
-        )
+        # In the first person, as AboutPage.tsx says it, and as a rule rather than an absolute.
+        assert "The pipeline runs on its own schedule, by rules I set." in response.text
+        assert (
+            "I update the spec and regenerate its libraries. I don't fix a plot by editing its code: a patch "
+            "fixes one plot, a fix to the spec or a rule reaches every plot it governs."
+        ) in response.text
+        assert "never patch" not in response.text
         # bot parity with the page's review, chat and MCP sections (AboutPage.tsx)
         for heading in ("<h2>Review</h2>", "<h2>Use with my data</h2>", "<h2>MCP server</h2>"):
             assert heading in response.text

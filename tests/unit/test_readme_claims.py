@@ -296,7 +296,7 @@ def test_about_page_and_its_bot_copy_claim_no_regeneration_on_a_library_release(
     cron = re.search(r"^\s+schedule:\s*\n\s+- cron: '([^']+)'", triggers, re.MULTILINE)
     assert cron, "daily-regen.yml no longer runs on a schedule"
     assert cron.group(1).split()[2:] == ["*", "*", "*"], f"daily-regen.yml no longer runs every day: {cron.group(1)}"
-    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", read(SEO))):
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
         prose = collapse(text).lower()
         assert "ships a new release" not in prose, f"{name}: no workflow re-runs the pipeline on a library release"
         assert "every night a job regenerates the oldest implementations" in prose, f"{name}: the nightly job"
