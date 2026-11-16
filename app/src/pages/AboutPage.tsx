@@ -22,8 +22,9 @@ import {
 
 const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp';
 
-// Files and headings on main, as GitHub renders them. Each address is written out in full so
-// tests/unit/test_readme_claims.py can find it and fail when a file moves or a heading is renamed.
+// Files and headings on main, as GitHub renders them. Each path and heading anchor is written out
+// after GITHUB_URL so tests/unit/test_readme_claims.py can find it and fail when a file moves or a
+// heading is renamed.
 const HOW_I_BUILD_URL = `${GITHUB_URL}/blob/main/README.md#how-i-build-anyplot`;
 const HIGHLIGHTS_URL = `${GITHUB_URL}/blob/main/README.md#engineering-highlights`;
 const AI_WORKFLOW_URL = `${GITHUB_URL}/blob/main/docs/concepts/ai-workflow.md`;
@@ -162,6 +163,17 @@ export function AboutPage() {
                   >
                     MarkusNeusinger
                   </Link>
+                  <br />
+                  {/* no noreferrer — his own site, keep the referrer for its analytics */}
+                  web:{' '}
+                  <Link
+                    href="https://neusinger.com"
+                    target="_blank"
+                    rel="noopener"
+                    sx={proseLinkStyle}
+                  >
+                    neusinger.com
+                  </Link>
                 </Typography>
                 <Typography sx={{ ...textStyle, mb: 0 }}>
                   a physicist working in data and ai: since 2013 he has built data pipelines,
@@ -242,13 +254,12 @@ export function AboutPage() {
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
               every implementation is scored before it ships. automated checks come first: the code
-              runs, the image isn&apos;t blank, the canvas has its size. then an ai reviewer scores
-              the render on a 100-point rubric of 24 criteria — visual quality, design, spec
-              compliance, data quality, code quality, and library mastery — blind to any earlier
-              score. a first review needs 90; below that, ai repairs the defects the review named
-              and the plot is reviewed again, up to four times, and the bar drops 10 points per
-              repair, to 50 at the last review. the {proseLink(paths.stats, 'stats page')} shows the
-              score distribution per library.
+              runs, the canvas has its size. then an ai reviewer scores the render on a 100-point
+              rubric of 24 criteria — visual quality, design, spec compliance, data quality, code
+              quality, and library mastery — blind to any earlier score. a first review needs 90;
+              below that, ai repairs the defects the review named and the plot is reviewed again, up
+              to four times, and the bar drops 10 points per repair, to 50 at the last review. the{' '}
+              {proseLink(paths.stats, 'stats page')} shows the score distribution per library.
             </Box>
           </Box>
         </Box>

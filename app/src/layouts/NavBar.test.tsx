@@ -60,7 +60,8 @@ describe('NavBar', () => {
     currentPath = '/';
   });
 
-  it('lists eight pages, about last', () => {
+  // /mcp is reached from the footer, the about page and the landing page instead.
+  it('lists seven pages, about last', () => {
     const { container } = render(<NavBar />);
 
     const targets = Array.from(container.querySelectorAll('ul a')).map(a => a.getAttribute('href'));
@@ -71,47 +72,29 @@ describe('NavBar', () => {
       '/libraries',
       '/stats',
       '/palette',
-      '/mcp',
       '/about',
     ]);
   });
 
-  // Eight labels beside the logo and the search need about 750px, so phones and tablets keep the
-  // two-row masthead and the single row starts at md.
-  it('keeps two rows below md and one from md', () => {
+  // With MonoLisa the logo, the seven short labels and the search need 716px in one row; below
+  // that the grid wrapped the logo onto two lines and pushed the search past the edge.
+  it('keeps two rows below 720px and one from 720px', () => {
     const { container } = render(<NavBar />);
 
     const nav = container.querySelector('nav')!;
-    for (const width of [320, 390, 600, 820, 899]) {
+    for (const width of [320, 390, 600, 719]) {
       expect(styleAt(nav, width).gridTemplateAreas).toBe('"logo search" "nav nav"');
     }
-    for (const width of [900, 1440]) {
+    for (const width of [720, 900, 1440]) {
       expect(styleAt(nav, width).gridTemplateAreas).toBe('"logo nav search"');
     }
   });
 
-  // Only phones need the short labels; a tablet's two-row masthead has room for the full words.
-  it('shows the short labels on phones and the full ones from 600px', () => {
-    const { container } = render(<NavBar />);
-
-    const [full, short] = Array.from(container.querySelectorAll('a[href="/libraries"] > span'));
-    expect(full).toHaveTextContent('libraries');
-    expect(short).toHaveTextContent('libs');
-    for (const width of [320, 390, 599]) {
-      expect(styleAt(full, width).display).toBe('none');
-      expect(styleAt(short, width).display).toBe('inline');
-    }
-    for (const width of [600, 820, 900, 1440]) {
-      expect(styleAt(full, width).display).toBe('inline');
-      expect(styleAt(short, width).display).toBe('none');
-    }
-  });
-
-  // jsdom lays nothing out, so this pins the declared geometry: on a phone the marker is a dot
+  // jsdom lays nothing out, so this pins the declared geometry: below 360px the marker is a dot
   // that fits, with 2px to spare on each side, into the 8px a row at its tightest leaves between
-  // two labels. With MonoLisa at 320px the gap is 9.3px and the dot keeps 3.3px from the label
-  // before it.
-  it('keeps the active marker of a phone clear of the label before it', () => {
+  // two labels. With MonoLisa at 320px the gap is 9.6px and the dot keeps 3.6px from the label
+  // before it; from 360px the gap is 16px or more, wide enough for the "•" glyph.
+  it('keeps the active marker of a narrow phone clear of the label before it', () => {
     currentPath = '/about';
     const { container } = render(<NavBar />);
 
@@ -135,14 +118,16 @@ describe('NavBar', () => {
     const leastGap = px(styleAt(row, 320).columnGap || styleAt(row, 320).gap);
     expect(labelStart - (left + width)).toBeGreaterThanOrEqual(2);
     expect(leastGap - (labelStart - left)).toBeGreaterThanOrEqual(2);
+    expect(beforeStyleAt(active, 359).content).toBe('""');
 
-    // A wider screen keeps the "•" glyph.
-    expect(beforeStyleAt(active, 600).content).toBe('"•"');
+    // From 360px the marker is the "•" glyph, as before.
+    expect(beforeStyleAt(active, 360).content).toBe('"•"');
+    expect(beforeStyleAt(active, 360).left).toBe('-4px');
     expect(beforeStyleAt(active, 1440).content).toBe('"•"');
     expect(beforeStyleAt(active, 1440).left).toBe('-12px');
 
     // Only the active link carries a marker.
-    expect(beforeStyleAt(container.querySelector('a[href="/mcp"]')!, 320).content).toBe('');
+    expect(beforeStyleAt(container.querySelector('a[href="/stats"]')!, 320).content).toBe('');
   });
 
   it('sends no event for the menu: the pageview that follows names the page', async () => {

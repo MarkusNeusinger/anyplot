@@ -13,6 +13,7 @@ describe('Footer', () => {
 
     expect(screen.getByText('github')).toBeInTheDocument();
     expect(screen.getByText('report')).toBeInTheDocument();
+    expect(screen.getByText('mcp')).toBeInTheDocument();
     expect(screen.getByText('about')).toBeInTheDocument();
     expect(screen.getByText('legal')).toBeInTheDocument();
   });
@@ -23,7 +24,28 @@ describe('Footer', () => {
     expect(screen.getByText('markus neusinger')).toBeInTheDocument();
   });
 
-  it('shows the name at every width, on a line of its own on phones', () => {
+  // Keyboard and screen-reader order follow the DOM, so the DOM carries the order the eye reads,
+  // and no CSS `order` reshuffles it at any width.
+  it('reads in the order it shows, the name last', () => {
+    const { container } = render(<Footer />);
+
+    const footer = container.querySelector('footer')!;
+    expect(Array.from(footer.querySelectorAll('a')).map(a => a.textContent)).toEqual([
+      'github',
+      'report',
+      'mcp',
+      'about',
+      'legal',
+      'markus neusinger',
+    ]);
+    for (const el of Array.from(footer.querySelectorAll('*'))) {
+      for (const width of [320, 399, 400, 600, 899, 900, 1440]) {
+        expect(styleAt(el, width).order).toBe('');
+      }
+    }
+  });
+
+  it('shows the name at every width, on a line of its own below md', () => {
     render(<Footer />);
 
     const link = screen.getByRole('link', { name: 'markus neusinger' });
@@ -34,33 +56,38 @@ describe('Footer', () => {
         expect(styleAt(el, width).display).not.toBe('none');
       }
     }
-    // Below md it closes the footer, on its own line, so no row ends on a separator.
+    // Below md the separator before the name goes and the name fills a line, so no row ends on a
+    // "·" and the row of links stays clear of the floating buttons (useFooterLift lifts them only
+    // below 600px; with MonoLisa at 600px the row ends at x=478, the button starts at x=536).
     const line = link.parentElement!;
+    const separatorBeforeName = line.previousElementSibling!;
+    expect(separatorBeforeName).toHaveTextContent('·');
     for (const width of [320, 390, 600, 899]) {
       expect(styleAt(line, width).flexBasis).toBe('100%');
-      expect(styleAt(line, width).order).toBe('1');
+      expect(styleAt(separatorBeforeName, width).display).toBe('none');
     }
     expect(styleAt(line, 900).flexBasis).toBe('auto');
-    expect(styleAt(line, 900).order).toBe('0');
+    expect(styleAt(separatorBeforeName, 900).display).toBe('inline');
   });
 
-  // The floating buttons in the bottom-right corner lift above the footer only below 600px
-  // (useFooterLift). jsdom lays nothing out, so this pins the layout that keeps the row of links
-  // short from 600 to 899px: the name and its separator leave the row, and only the four short
-  // links share it. With MonoLisa at 600px that row ends at x=450, left of the button at x=536.
-  it('keeps the name out of the row of links up to md, so the row stays clear of the buttons', () => {
-    const { container } = render(<Footer />);
+  // The five links need 356px in one row with MonoLisa at 14px, so below 400px the site's own
+  // pages take a row of their own instead of the row breaking before "legal" after a "·".
+  it('gives the site pages a row of their own below 400px', () => {
+    render(<Footer />);
 
-    const footer = container.querySelector('footer')!;
-    const name = screen.getByRole('link', { name: 'markus neusinger' }).parentElement!;
-    const separatorBeforeName = name.previousElementSibling!;
-    expect(separatorBeforeName).toHaveTextContent('·');
-    for (const width of [600, 700, 899]) {
-      expect(styleAt(separatorBeforeName, width).display).toBe('none');
-      expect(styleAt(name, width).flexBasis).toBe('100%');
+    const group = screen.getByRole('link', { name: 'mcp' }).parentElement!;
+    expect(group).toContainElement(screen.getByRole('link', { name: 'legal' }));
+    const separatorBeforeGroup = group.previousElementSibling!;
+    expect(separatorBeforeGroup).toHaveTextContent('·');
+    for (const width of [320, 390, 399]) {
+      expect(styleAt(group, width).display).toBe('flex');
+      expect(styleAt(group, width).flexBasis).toBe('100%');
+      expect(styleAt(separatorBeforeGroup, width).display).toBe('none');
     }
-    expect(styleAt(separatorBeforeName, 900).display).toBe('inline');
-    expect(footer.querySelectorAll('a')).toHaveLength(5);
+    for (const width of [400, 600, 1440]) {
+      expect(styleAt(group, width).display).toBe('contents');
+      expect(styleAt(separatorBeforeGroup, width).display).not.toBe('none');
+    }
   });
 
   it('sends no event for a link: the tracker script counts the outbound ones itself', async () => {
@@ -69,6 +96,7 @@ describe('Footer', () => {
     const user = userEvent.setup();
     render(<Footer />);
 
+    await user.click(screen.getByText('mcp'));
     await user.click(screen.getByText('about'));
     await user.click(screen.getByText('legal'));
 
@@ -93,6 +121,14 @@ describe('Footer', () => {
       'https://github.com/MarkusNeusinger/anyplot/issues/new/choose'
     );
     expect(reportLink).toHaveAttribute('target', '_blank');
+  });
+
+  it('renders mcp as internal router link to /mcp', () => {
+    render(<Footer />);
+
+    const mcpLink = screen.getByText('mcp').closest('a');
+    expect(mcpLink).toHaveAttribute('href', '/mcp');
+    expect(mcpLink).not.toHaveAttribute('target');
   });
 
   it('renders about as internal router link to /about', () => {

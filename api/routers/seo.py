@@ -208,6 +208,7 @@ _HOME_JSONLD = {
                 "@type": "Person",
                 "name": "Markus Neusinger",
                 "url": "https://www.linkedin.com/in/markus-neusinger/",
+                "sameAs": ["https://neusinger.com"],
             },
             "keywords": [name.lower() for name in LANGUAGE_NAMES.values()]
             + [name.lower() for name in LIBRARY_NAMES.values()]
@@ -1327,7 +1328,8 @@ _ABOUT_BOT_BODY = (
     "<h2>Who built it</h2>"
     "<p>Markus Neusinger "
     '(<a href="https://www.linkedin.com/in/markus-neusinger/">LinkedIn</a>, '
-    '<a href="https://github.com/MarkusNeusinger">GitHub</a>), a physicist working in data and AI: '
+    '<a href="https://github.com/MarkusNeusinger">GitHub</a>, '
+    '<a href="https://neusinger.com">neusinger.com</a>), a physicist working in data and AI: '
     "since 2013 he has built data pipelines, analyses and machine learning, and the apps people use "
     "them through. He built anyplot in Visp, a small town in the Swiss Alps, looking for one place to "
     "find the right plot for the data in front of him, and a way to explore what each library does "
@@ -1352,7 +1354,7 @@ _ABOUT_BOT_BODY = (
     "regenerates. Generated code is never patched by hand.</p>"
     "<h2>Review</h2>"
     "<p>Every implementation is scored before it ships. Automated checks come first: the code "
-    "runs, the image isn't blank, the canvas has its size. Then an AI reviewer scores the render "
+    "runs, the canvas has its size. Then an AI reviewer scores the render "
     "on a 100-point rubric of 24 criteria (visual quality, design, spec compliance, data quality, "
     "code quality, and library mastery), blind to any earlier score. A first review needs 90; "
     "below that, AI repairs the defects the review named and the plot is reviewed again, up to "
@@ -1377,9 +1379,7 @@ _ABOUT_BOT_BODY = (
     '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>; '
     "the catalogue content is MIT-licensed. Running costs about $60 a month (October 2026).</p>"
     "<h2>Open</h2>"
-    "<p>Source, specs and pipeline live at "
-    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a> '
-    '(MIT). Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
+    '<p>Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
     "propose a new plot type via a "
     '<a href="https://github.com/MarkusNeusinger/anyplot/issues/new?labels=spec-request">spec request</a>.</p>'
 )

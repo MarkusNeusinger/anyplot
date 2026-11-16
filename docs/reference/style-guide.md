@@ -298,7 +298,7 @@ The second version is shorter, says what's actually happening (humans submit ide
 
 Narrative hooks for talking about anyplot — adapt to context, don't recite verbatim:
 
-**The pipeline story:** Humans submit plot ideas as GitHub issues. AI drafts the spec from each idea; humans approve it before any code is generated. AI then generates implementations across every supported library from the same spec — Python for most, plus R, Julia, and JavaScript — and reviews each one for visual quality and spec compliance. When something doesn't pass review, AI retries — and when it keeps failing, we refine the spec or tune the AI rules. We never patch the code by hand. That makes anyplot a catalogue that maintains itself: when matplotlib ships a new release, we re-run the pipeline; when a better example pattern emerges, we update the spec and every library regenerates. Humans curate; AI executes.
+**The pipeline story:** Humans submit plot ideas as GitHub issues. AI drafts the spec from each idea; humans approve it before any code is generated. AI then generates implementations across every supported library from the same spec — Python for most, plus R, Julia, and JavaScript — and reviews each one for visual quality and spec compliance. When something doesn't pass review, AI retries — and when it keeps failing, we refine the spec or tune the AI rules. We never patch the code by hand. That makes anyplot a catalogue that maintains itself: every night a job regenerates the oldest implementations, and a new version replaces the live one only when a review of both finds a fixed defect and no regression; when a better example pattern emerges, we update the spec and every library regenerates. Humans curate; AI executes.
 
 **The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of color vision deficiency — most plotting libraries ignore this entirely. We make it the default.
 
@@ -941,22 +941,22 @@ Horizontal text links, no icons, no boxes. On hover, a 1px green underline anima
 
 The `cubic-bezier(0.4, 0, 0.2, 1)` is the standard material-motion "ease-in-out" curve — smooth but with enough snap to feel crisp.
 
-**Mobile and tablet NavBar (below md, < 900px).** The nav collapses into a two-row grid so nothing drops off:
+**Mobile NavBar (below 720px).** The nav collapses into a two-row grid so nothing drops off:
 
 ```
-┌─────────────────────────────────────────┐
-│ any.plot()                plots.search()│  row 1: logo + search link
-├─────────────────────────────────────────┤
-│ specs plots map libs stats pal mcp about│  row 2: eight items · space-between
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│ any.plot()            plots.search()│  row 1: logo + search link
+├─────────────────────────────────────┤
+│ specs plots map libs stats pal about│  row 2: seven items · space-between
+└─────────────────────────────────────┘
 ```
 
 - Row 1: `any.plot()` wordmark (18px xs, 22px sm), `plots.search()` method-call link (11px xs, 12px sm) right-aligned.
-- Row 2: all eight nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels kick in on phones (below sm), where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `mcp`, `about` as-is. From sm a tablet's row has room for the full labels.
-- Active marker on phones (below sm): a drawn 4px green dot, 2px before the label, instead of the `•` glyph, because at 320px the gap before a label is about 9px, narrower than the glyph's box. From sm the marker is the glyph.
-- Eight items beside the logo and the search need about 750px, so the single row starts at md, not sm.
-- Font size: 12px below md, shrinking on phones narrower than 364px (`clamp(10.5px, 3.3vw, 12px)`) so the eight labels keep at least 8px apart down to 320px; 12px from md, 13px from lg. Gap (the least space between two labels): 1 (8px) below md, 2.25 from md, 3.5 from lg.
-- The tap padding (14px × 8px, cancelled by a negative margin) applies below md, phones and tablets alike.
+- Row 2: all seven nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels kick in below md, where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `about` as-is.
+- The single row starts at 720px, not at sm: with MonoLisa the logo, the seven short labels and the search need 716px, and below that the grid wrapped the logo onto two lines and pushed the search past the edge.
+- Active marker below 360px: a drawn 4px green dot, 2px before the label, instead of the `•` glyph. At 320px the gap before a label is 9.6px, narrower than the glyph's 11.5px box plus 3px.
+- Font size ramps 12px xs → 12px sm → 13px md. Gap (the least space between two labels) ramps 1 (8px) xs → 2.25 sm → 2.5 md → 3.5 lg: 8px lets seven labels fit a 320px phone, and from 900px to 1199px the full labels at 13px leave the logo room for one line only with 20px gaps.
+- `/mcp` has no slot in the bar; the footer, the about page and the landing page link it.
 - The NavBar is static (flows with the page). On `/plots` the masthead *also* flows so the FilterBar is the only sticky surface; on every other page the masthead stays sticky while the NavBar scrolls away naturally.
 
 **Masthead on mobile.** `ThemeToggle` collapses to the glyph only (`◐` / `☀`) — label hidden via `display: { xs: 'none', sm: 'inline' }` — so the breadcrumb (`~/anyplot.ai · main · v1.1.0`) has room to stay visible even on narrow viewports. Grid columns on xs are `1fr auto auto` (left breadcrumb takes all remaining width, toggle hugs the right edge); on sm+ it's `1fr auto 1fr` with the block-comment tagline in the middle.

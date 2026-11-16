@@ -292,6 +292,28 @@ def test_about_page_and_its_bot_copy_claim_no_regeneration_on_a_library_release(
         assert "every night a job regenerates the oldest implementations" in prose, f"{name}: the nightly job"
 
 
+def test_about_page_and_its_bot_copy_name_only_the_checks_a_workflow_runs():
+    """Before the review, impl-generate.yml requires both renders and impl-review.yml gates the canvas size."""
+    generate = read(ROOT / ".github" / "workflows" / "impl-generate.yml")
+    review = read(ROOT / ".github" / "workflows" / "impl-review.yml")
+    assert "implementation failed to produce both theme renders" in generate, (
+        "impl-generate.yml no longer stops when the code produced no render"
+    )
+    assert "- name: Canvas dimension gate" in review, "impl-review.yml no longer gates the canvas size"
+    # core/canvas.py has a blank-image check (AR-04), but no workflow calls it.
+    workflows = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+    blank_checked = any(re.search(r"check_blank|is_blank_png", read(path)) for path in workflows)
+    about_body = read(SEO).split("\n_ABOUT_BOT_BODY = (", 1)[1].split("\n)\n", 1)[0]
+    # The bot copy is a run of string literals, one per source line; join them back into one text.
+    about_body = re.sub(r"[\"']\s*\n\s*f?[\"']", "", about_body)
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_body)):
+        prose = collapse(text).lower()
+        assert "automated checks come first: the code runs, the canvas has its size." in prose, f"{name}: the checks"
+        if not blank_checked:
+            # A word of its own: `target="_blank"` is no claim.
+            assert not re.search(r"\bblank\b", prose), f"{name}: no workflow checks for a blank image"
+
+
 def test_about_page_and_its_bot_copy_state_the_owners_year_as_the_readme_does():
     match = re.search(r"since (\d{4}) I've built", collapse(section(read(README), "How I build anyplot")))
     assert match, "README.md 'How I build anyplot' no longer says since when the owner has built data systems"

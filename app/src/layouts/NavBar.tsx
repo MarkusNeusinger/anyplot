@@ -17,28 +17,35 @@ const NAV_LINKS: { label: string; to: string; short?: string }[] = [
   { label: 'libraries', to: '/libraries', short: 'libs' },
   { label: 'stats', to: '/stats' },
   { label: 'palette', to: '/palette', short: 'pal' },
-  { label: 'mcp', to: '/mcp' },
   { label: 'about', to: '/about' },
 ];
+
+// Logo, seven short labels and the search share one row from 716px up with MonoLisa; below that the
+// grid squeezed the logo onto two lines and pushed the search past the edge. So the two-row
+// masthead of phones runs up to 719px.
+const ONE_ROW = '@media (min-width: 720px)';
+
+// Below 353px the row's gaps are narrower than the box of the "•" glyph plus 3px, so the marker
+// there is a drawn 4px dot that ends 2px before its label: its box is its ink.
+const NARROW_PHONE = '@media (max-width: 359.95px)';
 
 const linkSx = {
   color: 'var(--ink-soft)',
   textDecoration: 'none',
   position: 'relative' as const,
   display: 'inline-block',
-  // Below md (the two-row masthead of phones and tablets) the padding grows the
-  // tap target to >= 44px; the negative margin compensates so the masthead
-  // layout doesn't shift.
-  padding: { xs: '14px 8px', md: '4px 0' },
-  margin: { xs: '-14px -8px', md: 0 },
+  // On xs the padding grows the tap target to >= 44px; the negative margin
+  // compensates so the masthead layout doesn't shift.
+  padding: { xs: '14px 8px', sm: '4px 0' },
+  margin: { xs: '-14px -8px', sm: 0 },
   transition: 'color 0.2s',
   '&::after': {
     content: '""',
     position: 'absolute' as const,
-    // Keep the hover underline hugging the text despite the tap padding
-    bottom: { xs: '10px', md: 0 },
-    left: { xs: '8px', md: 0 },
-    right: { xs: '8px', md: 0 },
+    // Keep the hover underline hugging the text despite the xs tap padding
+    bottom: { xs: '10px', sm: 0 },
+    left: { xs: '8px', sm: 0 },
+    right: { xs: '8px', sm: 0 },
     height: '1px',
     background: colors.primary,
     transform: 'scaleX(0)',
@@ -51,9 +58,9 @@ const linkSx = {
   },
   '&:focus-visible': {
     outline: `2px solid ${colors.primary}`,
-    // Pull the ring back toward the text below md, where the box carries the
+    // Pull the ring back toward the text on xs, where the box carries the
     // invisible tap padding
-    outlineOffset: { xs: '-10px', md: '2px' },
+    outlineOffset: { xs: '-10px', sm: '2px' },
   },
 } as const;
 
@@ -61,21 +68,23 @@ const activeLinkSx = {
   ...linkSx,
   color: 'var(--ink)',
   '&::before': {
-    // On phones the gap before a label can be as narrow as 9px, narrower than the box of the
-    // "•" glyph, so the marker is a drawn 4px dot there: its box is its ink, and it ends 2px
-    // before its own label. From sm the marker is the glyph.
-    content: { xs: '""', sm: '"•"' },
-    width: { xs: '4px', sm: 'auto' },
-    height: { xs: '4px', sm: 'auto' },
-    borderRadius: { xs: '50%', sm: 0 },
-    backgroundColor: { xs: colors.primary, sm: 'transparent' },
+    content: '"•"',
     color: colors.primary,
     position: 'absolute' as const,
-    // Offsets track the tap padding so the marker stays next to the text
-    left: { xs: '2px', sm: '-4px', md: '-12px' },
+    // Offsets track the xs tap padding so the bullet stays next to the text
+    left: { xs: '-4px', sm: '-12px' },
     fontSize: '18px',
     lineHeight: 1,
-    top: { xs: 'calc(50% - 2px)', sm: '13px', md: '3px' },
+    top: { xs: '13px', sm: '3px' },
+    [NARROW_PHONE]: {
+      content: '""',
+      width: '4px',
+      height: '4px',
+      borderRadius: '50%',
+      backgroundColor: colors.primary,
+      left: '2px',
+      top: 'calc(50% - 2px)',
+    },
   },
 } as const;
 
@@ -118,17 +127,19 @@ export function NavBar() {
       component="nav"
       sx={{
         display: 'grid',
-        // Below md: two rows (logo+search top, nav-links spanning wide below).
-        // From md: single row: logo | nav-links | search. Eight links beside the
-        // logo and the search need about 750 px, so a tablet width keeps two rows.
-        gridTemplateColumns: { xs: '1fr auto', md: 'auto 1fr auto' },
-        gridTemplateAreas: {
-          xs: `"logo search" "nav nav"`,
-          md: `"logo nav search"`,
-        },
+        // Below 720px: two rows (logo+search top, nav-links spanning wide below).
+        // From 720px: single row: logo | nav-links | search.
+        gridTemplateColumns: '1fr auto',
+        gridTemplateAreas: `"logo search" "nav nav"`,
         alignItems: 'center',
-        rowGap: { xs: 1.25, md: 0 },
-        columnGap: { xs: 1.5, md: 4 },
+        rowGap: 1.25,
+        columnGap: 1.5,
+        [ONE_ROW]: {
+          gridTemplateColumns: 'auto 1fr auto',
+          gridTemplateAreas: `"logo nav search"`,
+          rowGap: 0,
+          columnGap: 4,
+        },
         py: { xs: 1.25, sm: 2 },
         borderBottom: '1px solid var(--rule)',
       }}
@@ -167,23 +178,23 @@ export function NavBar() {
         </Box>
       </Box>
 
-      {/* Nav links — full row below md (shorthand labels on phones), inline from md */}
+      {/* Nav links — full row below 720px (shorthand labels below md), inline from 720px */}
       <Box
         component="ul"
         sx={{
           gridArea: 'nav',
           display: 'flex',
-          // The gap is the least space between two labels; below md the row spreads them wider.
-          // From md to lg the row runs at 12px with 18px gaps: at 900px the full labels, the logo
-          // and the search then fill all but ~13px, and the active "•" keeps clear of its neighbour.
-          gap: { xs: 1, md: 2.25, lg: 3.5 },
+          // The gap is the least space between two labels; in the full-width row space-between
+          // spreads them wider. 8px lets seven labels fit a 320px phone. From 900 to 1199px the
+          // full labels at 13px leave the logo room for one line only with 20px gaps.
+          gap: { xs: 1, sm: 2.25, md: 2.5, lg: 3.5 },
           listStyle: 'none',
           m: 0,
           p: 0,
           fontFamily: typography.mono,
-          // 12px from a 364px screen up; narrower phones shrink it so eight labels keep 8px apart.
-          fontSize: { xs: 'clamp(10.5px, 3.3vw, 12px)', sm: '12px', lg: '13px' },
-          justifyContent: { xs: 'space-between', md: 'flex-start' },
+          fontSize: { xs: '12px', sm: '12px', md: '13px' },
+          justifyContent: 'space-between',
+          [ONE_ROW]: { justifyContent: 'flex-start' },
           flexWrap: 'nowrap',
         }}
       >
@@ -194,11 +205,11 @@ export function NavBar() {
               to={link.to}
               sx={location.pathname === link.to ? activeLinkSx : linkSx}
             >
-              {/* Full label from sm, short label on phones where it saves room */}
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              {/* Full label on ≥md, short label on smaller screens where it saves room */}
+              <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
                 {link.label}
               </Box>
-              <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
                 {link.short || link.label}
               </Box>
             </Box>
@@ -215,23 +226,23 @@ export function NavBar() {
           gridArea: 'search',
           all: 'unset',
           fontFamily: typography.mono,
-          fontSize: { xs: '11px', sm: '12px', lg: '13px' },
+          fontSize: { xs: '11px', sm: '12px', md: '13px' },
           color: 'var(--ink-soft)',
           cursor: 'pointer',
           transition: 'color 0.2s',
           textAlign: 'right',
           position: 'relative',
-          // Below md the padding grows the tap target to >= 44px; the negative
+          // On xs the padding grows the tap target to >= 44px; the negative
           // margin compensates so the masthead layout doesn't shift.
-          padding: { xs: '14px 8px', md: 0 },
-          margin: { xs: '-14px -8px', md: 0 },
+          padding: { xs: '14px 8px', sm: 0 },
+          margin: { xs: '-14px -8px', sm: 0 },
           '& .subj': { opacity: 0.55, transition: 'opacity 0.2s' },
           '&:hover': { color: colors.primary },
           '&:hover .subj': { opacity: 0.8 },
           // `all: unset` strips the UA focus ring — restore a visible one
           '&:focus-visible': {
             outline: `2px solid ${colors.primary}`,
-            outlineOffset: { xs: '-10px', md: '2px' },
+            outlineOffset: { xs: '-10px', sm: '2px' },
           },
         }}
       >

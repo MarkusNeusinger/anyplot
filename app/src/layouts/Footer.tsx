@@ -31,6 +31,16 @@ const linkSx = {
 
 const ISSUE_CHOOSER_URL = `${GITHUB_URL}/issues/new/choose`;
 
+// The five links need 356px in one row with MonoLisa at 14px. Below 400px the row would break
+// before its last link and end on a "·", so the site's own pages take a row of their own there.
+const NARROW = '@media (max-width: 399.95px)';
+const siteRowSx = {
+  display: 'flex',
+  flexBasis: '100%',
+  justifyContent: 'center',
+  gap: 1,
+} as const;
+
 export function Footer() {
   return (
     <Box
@@ -44,8 +54,7 @@ export function Footer() {
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: 1,
-        // A step smaller on phones, so the four short links share one row down to 320px.
-        fontSize: { xs: fontSize.sm, sm: fontSize.md },
+        fontSize: fontSize.md,
         fontFamily: typography.mono,
         color: semanticColors.mutedText,
         letterSpacing: '0.08em',
@@ -58,20 +67,29 @@ export function Footer() {
       <Link href={ISSUE_CHOOSER_URL} target="_blank" rel="noopener noreferrer" sx={linkSx}>
         report
       </Link>
-      {/* Below md the name takes a line of its own under the links: no row ends on a "·", and the
-          row of links stays short enough to keep clear of the floating buttons in the corner,
-          which useFooterLift lifts only below sm. */}
+      <Box component="span" sx={{ [NARROW]: { display: 'none' } }}>
+        ·
+      </Box>
+      {/* The site's own pages: in the row above 400px, a row of their own below. */}
+      <Box component="span" sx={{ display: 'contents', [NARROW]: siteRowSx }}>
+        <Link component={RouterLink} to={paths.mcp} sx={linkSx}>
+          mcp
+        </Link>
+        <span>·</span>
+        <Link component={RouterLink} to={paths.about} sx={linkSx}>
+          about
+        </Link>
+        <span>·</span>
+        <Link component={RouterLink} to={paths.legal} sx={linkSx}>
+          legal
+        </Link>
+      </Box>
+      {/* Below md the name takes a line of its own: the links alone stay clear of the floating
+          buttons in the corner, which useFooterLift lifts only below sm. */}
       <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
         ·
       </Box>
-      <Box
-        component="span"
-        sx={{
-          order: { xs: 1, md: 0 },
-          flexBasis: { xs: '100%', md: 'auto' },
-          textAlign: 'center',
-        }}
-      >
+      <Box component="span" sx={{ flexBasis: { xs: '100%', md: 'auto' }, textAlign: 'center' }}>
         <Link
           href="https://www.linkedin.com/in/markus-neusinger/"
           target="_blank"
@@ -81,14 +99,6 @@ export function Footer() {
           markus neusinger
         </Link>
       </Box>
-      <span>·</span>
-      <Link component={RouterLink} to={paths.about} sx={linkSx}>
-        about
-      </Link>
-      <span>·</span>
-      <Link component={RouterLink} to={paths.legal} sx={linkSx}>
-        legal
-      </Link>
     </Box>
   );
 }

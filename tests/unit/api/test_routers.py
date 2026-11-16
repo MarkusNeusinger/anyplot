@@ -1241,9 +1241,15 @@ class TestSeoProxyRouter:
         ):
             assert fact in response.text, fact
         assert "ships a new release" not in response.text
+        # The checks before the review are the ones a workflow runs; none looks for a blank image.
+        assert "Automated checks come first: the code runs, the canvas has its size." in response.text
+        assert "blank" not in response.text
+        # The source and its licence are stated once, under Transparency.
+        assert response.text.count('<a href="https://github.com/MarkusNeusinger/anyplot">') == 1
         for link in (
             "https://www.linkedin.com/in/markus-neusinger/",
             "https://github.com/MarkusNeusinger",
+            "https://neusinger.com",
             "https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot",
             "https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#engineering-highlights",
             "https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/ai-workflow.md",

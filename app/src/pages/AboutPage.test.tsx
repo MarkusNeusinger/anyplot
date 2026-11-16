@@ -47,6 +47,12 @@ describe('AboutPage', () => {
       'href',
       'https://github.com/MarkusNeusinger'
     );
+    // His own site, like the other projects: no noreferrer, so its analytics see the referrer.
+    const site = screen.getByRole('link', { name: 'neusinger.com' });
+    expect(site).toHaveAttribute('href', 'https://neusinger.com');
+    expect(site).toHaveAttribute('target', '_blank');
+    expect(site).toHaveAttribute('rel', 'noopener');
+    expect(builder).toContainElement(site);
     // Introduced once: the origin section no longer describes him anonymously.
     expect(screen.queryByText(/by a physicist and data analyst/)).not.toBeInTheDocument();
   });
@@ -69,10 +75,16 @@ describe('AboutPage', () => {
   });
 
   // impl-review.yml lowers the bar 10 points per repair down to 50, and daily-regen.yml runs on a
-  // nightly cron; no workflow runs when a library ships a release.
+  // nightly cron; no workflow runs when a library ships a release. The checks before the review
+  // are the ones a workflow runs: the renders exist and the canvas gate; none checks for a blank
+  // image.
   it('states the review bar and the nightly regeneration as the workflows run them', () => {
     render(<AboutPage />);
 
+    expect(
+      screen.getByText(/automated checks come first: the code\s+runs, the canvas has its size\./)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/blank/)).not.toBeInTheDocument();
     expect(
       screen.getByText(/the bar drops 10 points per\s+repair, to 50 at the last review/)
     ).toBeInTheDocument();
