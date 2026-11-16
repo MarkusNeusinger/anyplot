@@ -135,7 +135,7 @@ impl-generate.yml
        |
        v
 impl-review.yml
-  |-- Checks the staged render.sha256 against the PR head (warn-only)
+  |-- Checks the staged render.sha256 against the PR head (a mismatch stops the review)
   |-- Checks the file's static contract: title, theme, save target, colours, colormaps (record-only)
   |-- Python: adaptability check of the PR's file and its predecessor (record-only)
   |-- Python: readiness check of the staged scan record against the PR head and main
@@ -242,26 +242,53 @@ The gates fail the run:
 
 A failed repair gate takes the ordinary crash path ("Handle repair failure"): `ai-rejected` comes back, the attempt is retried once, and the PR comment names the gate.
 
-The render hash only warns. `impl-generate.yml` and `impl-repair.yml` stage `render.sha256` beside the PNGs: the sha256 of the implementation the renders came from, with its `Quality:` header line reset to `pending` (`automation/scripts/render_hash.py`, which applies `regen_gate.reset_header_score`, the rewrite `sanitize-source --pending` makes). The generator's own header score and the pipeline's reset to `pending` therefore never change it. impl-generate hashes the file as the generator left it in the workspace, before the checkout of the pushed branch; impl-repair hashes the file its push gate just checked. The object isn't named `plot-*`, so neither the review's download nor the promotion copies it. Like every object in the bucket it's publicly readable while it's staged; it's the hash of code that's public anyway.
+The render hash ties the staged renders to the code under review, and a mismatch stops the review. `impl-generate.yml` and `impl-repair.yml` stage `render.sha256` beside the PNGs (`automation/scripts/render_hash.py`). The file holds two hashes of the implementation the renders came from:
+
+- **The render hash** is the sha256 of the file with its `Quality:` header line reset to `pending` (`regen_gate.reset_header_score`, the rewrite `sanitize-source --pending` makes). The generator's own header score and the pipeline's reset to `pending` therefore never change it.
+- **The code hash** is the sha256 of the file without its header, with the score reset the same way. The review's own header commit rewrites the whole generated header (first line, library version, date, score), so after that commit the head has another render hash although no line of code changed. The code hash leaves out exactly the block that the header writer replaces: the leading docstring in Python, the leading `#'` lines in R, the leading `#` lines in Julia, and the `// anyplot.ai` header block in JavaScript. A JavaScript file's `//#` directives aren't header: the render harness reads them, so they count. Line endings and blank lines around the code don't count. The score is reset first because impl-generate commits the file with `Quality: pending` after it staged the hash: in a file whose score line sits outside that block, such as one that starts with a shebang, the number would otherwise count on one side only.
+
+impl-generate hashes the file as the generator left it in the workspace, before the checkout of the pushed branch; impl-repair hashes the file its push gate just checked. Both pass the language to the writer, which fails without a known one, so a file never holds one hash only. The object isn't named `plot-*`, so neither the review's download nor the promotion copies it. Like every object in the bucket it's publicly readable while it's staged; it's the hash of code that's public anyway.
 
 Both upload steps remove an earlier `render.sha256` before the new renders arrive and write the new one last, with three attempts. When the write fails, the review reports the hash as `missing`. A hash of other code can stay beside this run's renders only when both removals fail too, the one before the upload and the one after the failed write. The review's download of the hash gets three attempts as well, so one failed read doesn't turn into `unreadable`.
 
 Both workflows also write a `**Render freshness:**` line to the job summary, `fresh` or `stale` with the PNGs it names, and a `render_freshness status=stale` warning when a PNG is older than the implementation file. A stale render was made before the file was last written; the check compares modification times, so the bytes may or may not have changed. The generator and the repair format the file after they render it, so the line records how often a write follows the render. It doesn't fail the run, and impl-generate leaves it out when the workspace holds no render.
 
-`impl-review.yml` runs "Check the render hash (warn-only)" right after it downloads the renders. It compares the staged hash with the file at the PR head and reports one of four results in the job summary:
+`impl-review.yml` runs "Check the render hash" right after it downloads the renders. It compares the staged file with the file at the PR head and reports one of four results in the job summary:
 
-| Result | Meaning | PR comment |
-|---|---|---|
-| `match` | The staged renders come from the code under review. | None |
-| `mismatch` | The staged hash belongs to other code. | Yes |
-| `missing` | Staging has no `render.sha256`, for example renders staged before the hash existed. | Yes |
-| `unreadable` | Staging or the file at the head couldn't be read. | Yes |
+| Result | Meaning | PR comment | Review |
+|---|---|---|---|
+| `match` | The staged renders come from the code under review: the render hash fits, or the code hash fits and only the header differs. | None | Runs |
+| `mismatch` | Neither hash fits: the renders were made from other code. | Yes | Stops |
+| `missing` | Staging has no `render.sha256`, for example renders staged before the hash existed. | Yes | Runs |
+| `unreadable` | Staging or the file at the head couldn't be read. | Yes | Runs |
 
-The comment starts with `<!-- render-hash:v1 status=… head=… -->`, and a PR gets it once per status and head: a re-review or a resumed review of the same head posts nothing new. Nothing in the check changes the review, its score, or the verdict.
+The comment starts with `<!-- render-hash:v1 status=… head=… -->`, and a PR gets it once per status and head: a re-review or a resumed review of the same head posts nothing new. The log has one line per check. A match writes the notice `render_hash status=match sha256=… head=… via=… form=…`, where `via` names the hash that fit (`file` or `code`). Every other result writes the warning `render_hash status=… head=… form=… stop=…`.
+
+Only a `mismatch` stops the review. A hash that is missing or couldn't be read only warns, as before: there is nothing to compare the code with. A `mismatch` against a `render.sha256` without a code hash (`form=legacy`, a file staged before the code hash existed) only warns too, because the check can't tell the review's header commit from other code.
+
+#### What a mismatch does
+
+The step "Stop on a render hash mismatch" runs when the check reports `stop=true`. The review doesn't run: nothing is scored, and no header is committed. What happens to the PR depends on what it is:
+
+- **A first generation**, including the re-review after a repair, gets the label `ai-render-mismatch` and stays open. The review run ends as failed once the label is on, like every other end of the review without a verdict, so the run list shows the stop; nothing acts on that failure. No workflow picks the PR up again by itself: the watchdog rescues nothing that carries the label and reports the PR on every scan. A later review of the same PR, such as a manual re-run, checks the hash again and removes the label only when that check reads `match`. A hash that is missing or unreadable then, or a check that didn't run, leaves the label on: none of them shows that the renders now come from this code.
+- **A forced regeneration** (`regen:forced`: dispatched with `regen_gate=false` or in adopt mode) takes the same path as a first generation, as its review does.
+- **A gated regeneration** gets no label. The regen gate keeps the live implementation with the code `render_mismatch`, and the keep path closes the PR like every other keep: `regen:kept`, the comment with the gate record, no re-score of the live implementation. The run ends as successful, because a keep is a verdict. The keep is a returning one, so the pair comes back after the attempt window (see [Daily regeneration modes](#daily-regeneration-modes)).
+
+The label is never `ai-review-failed`: the watchdog would re-review the same staging, and after a repair it would run the repair again. If the label can't be added, the review still doesn't run, but the watchdog then treats the PR like any other stalled one.
+
+To continue a stopped PR, generate the pair again the way the PR was made. For a plain generation:
+
+```bash
+gh workflow run bulk-generate.yml -f specification_id=<spec-id> -f library=<library>
+```
+
+`impl-generate.yml` deletes the pair's branch before it creates it anew, so the run closes the stopped PR and opens a new one with its own renders and review. The check's comment on the stopped PR gives the same command.
+
+That command generates the file anew, and for a pair that is live on `main` the regen gate decides. A forced or adopted PR needs its own inputs again, which its description names: add `-f regen_gate=false`, or `-f source_ref=<ref>` with `-f source_model=<model>` (see [Adopt implementations from a branch](#adopt-implementations-from-a-branch)).
 
 `scripts/migrate_render_and_upload.py`, the manual re-render that promotes straight from staging, copies only the `plot-*` objects, as `impl-merge.yml` does, so a staged `render.sha256` or `adapt/` record never reaches production.
 
-The review's own header commit rewrites the whole generated header (title, library version, date), not only the score. A re-review of the same staging after that commit, such as a rescue re-dispatch, can therefore report `mismatch` although the code didn't change. A repair renders after that commit, so its hash already covers the rewritten header.
+A re-review of the same staging after the review's header commit, such as a manual re-run, reads `match` through the code hash (`via=code`). A repair renders after that commit, so its render hash already covers the rewritten header.
 
 #### Contract check (record-only)
 
@@ -374,6 +401,7 @@ PR. The same test checks that every pin resolves.
 | `ai-attempt-1/2/3/4` | Retry counter | Workflow |
 | `ai-review-paused` | Claude stopped the PR's review (a spend or usage limit, or refused credentials): no score, no verdict. The watchdog skips the PR; pair mode or a manual rerun resumes it, and the next review removes the label (see [When Claude stops a session](#when-claude-stops-a-session)) | Workflow |
 | `ai-repair-paused` | Claude stopped the PR's repair, next to `ai-rejected`; the attempt isn't used up. The watchdog skips the PR; pair mode or a manual restart resumes it, and the next repair removes the label | Workflow |
+| `ai-render-mismatch` | The review of a first generation or a forced regeneration stopped: the staged renders were made from other code than the PR holds. No score, no verdict. The watchdog skips the PR and reports it; generating the pair again replaces the PR, and a review of the same PR whose check reads `match` removes the label (see [What a mismatch does](#what-a-mismatch-does)) | Workflow |
 | `quality:XX` | Quality score (e.g., quality:92) | Workflow |
 | `quality-poor` | Score < 50, needs fundamental fixes | Workflow |
 | `regen` | Regeneration of an implementation that is live on main (marker for humans and the watchdog; `impl-review.yml` decides "regeneration" from `origin/main`) | Workflow |
@@ -482,6 +510,8 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
    **Adapt regression.** On every spec, when the predecessor passes the adaptability check and the new source fails it, the live implementation stays (`adapt_regression`), whatever else would replace it. The same holds without a smoke run: when the predecessor passes the static check, its smoke run is missing, stale, or skipped, and the new source fails the static check. Converted code stays converted.
 
    **Readiness regression.** When the agent chat's validator refuses the new source for something it didn't refuse the predecessor for, the live implementation stays as well (`readiness_regression`). The gate doesn't scan: it reads the verdict of the review's "Readiness check" step (see [Readiness check and the readiness regression](#readiness-check-and-the-readiness-regression)). Only the status `regression` keeps; a missing, stale, or malformed record never does. When both regressions hold, the code is `adapt_regression`.
+
+   **Render mismatch.** When the review's render-hash check finds that the staged renders were made from other code than the PR head holds, no review runs, and the gate keeps the live implementation before it reads anything else (`render_mismatch`, `decide --render-mismatch`; see [What a mismatch does](#what-a-mismatch-does)). The keep has no score and no re-score of the live implementation.
 4. Replace: `regen:improved`, then `regen:adapt` when the adapt route counted or `regen:adapt-overruled` when the review overruled it, then `ai-approved`, a PR comment with the same summary (stored, re-scored, and new score, improvements, regressions, reason), then the normal merge. Keep: `regen:adapt-overruled` when the review overruled the adapt route, then `regen:kept`, the PR is closed with that comment, the issue gets `impl:{library}:done` back, and the live code and GCS production stay as they are. The re-score of the live implementation becomes its stored review through a separate metadata PR (see [Stored review on a keep](#stored-review-on-a-keep)).
 
 A crashed regen review is auto-retried once by `impl-review.yml`; after that the PR carries `ai-review-failed` and the watchdog only flags it — it never dispatches a further review for a regeneration. The same one-retry budget covers a review of any PR that scored but failed before a verdict label landed, for example on a GitHub 5xx (see [Review recovery](#review-recovery)).
@@ -540,7 +570,7 @@ Located in `.github/workflows/`:
 | `bulk-generate.yml` | Batch implementation generation |
 | `review-retest.yml` | Dispatch-only measurement: re-runs the AI quality review on the frozen retest set (several fresh sessions per item, regen pairs in both orders) for one rules version, and reports score spread, verdict flips, weakness agreement, and gate order bias against a baseline arm. Read-only tokens; writes nothing outside its own artifacts. See [Review retest](review-retest.md) |
 | `daily-regen.yml` | Cron-driven regeneration of the oldest implementations (once a day at 02:17 UTC, off the top of the hour to dodge GitHub's scheduler overload). A spec's age counts from the newer of its last merged update and the last activity on its spec issue (every regen touches the issue), so a kept regeneration is not re-picked the next night. Any activity on the issue — a comment, a label, a report — postpones that spec's regen the same way. With the repository variable `REGEN_PAIRS_PER_DAY`, the scheduled run regenerates single (spec, library) pairs instead of whole specs; see [Daily regeneration modes](#daily-regeneration-modes) |
-| `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews, repairs (including a repair that crashed after a rejection), merges and generations (straight to `impl-generate.yml`, marked only once the run exists), re-closes open `regen:kept` PRs, never rescues a regeneration into repair or re-dispatches its failed review (it flags it for manual attention instead; "regeneration" = the `regen` label or the implementation file on main, unless `regen:forced`), skips a PR whose review or repair Claude stopped (`ai-review-paused`, `ai-repair-paused`), and rescues daily-regen when its cron is silently starved by GitHub (>26 h without a run) |
+| `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews, repairs (including a repair that crashed after a rejection), merges and generations (straight to `impl-generate.yml`, marked only once the run exists), re-closes open `regen:kept` PRs, never rescues a regeneration into repair or re-dispatches its failed review (it flags it for manual attention instead; "regeneration" = the `regen` label or the implementation file on main, unless `regen:forced`), skips a PR whose review or repair Claude stopped (`ai-review-paused`, `ai-repair-paused`), skips and reports a PR whose review stopped on a render hash mismatch (`ai-render-mismatch`), and rescues daily-regen when its cron is silently starved by GitHub (>26 h without a run) |
 | `report-validate.yml` | Validates user-submitted issue reports |
 | `sync-postgres.yml` | Syncs `plots/` filesystem state to PostgreSQL on push to main, and runs `alembic upgrade head` against Cloud SQL first; a push that only adds a revision under `alembic/versions/` triggers it too, and so does one that changes a pin the library versions are read from (`uv.lock`, `package-lock.json`, `Manifest.toml`, `.python-version`, a setup action) |
 | `sync-labels.yml` | Auto-syncs spec/impl labels after manual PR merges |
@@ -702,9 +732,10 @@ night:
     construct the agent chat's validator refuses, which most regenerations
     don't add.
   - A technical keep, where the gate kept because something failed, not
-    because it judged the new render worse: `canvas_failed`, `no_score`,
-    `prev_renders_missing`, `context_failed`, `regen_json_missing`,
-    `regen_json_unreadable`, `regen_json_invalid`, or `script_crashed`.
+    because it judged the new render worse: `render_mismatch`,
+    `canvas_failed`, `no_score`, `prev_renders_missing`, `context_failed`,
+    `regen_json_missing`, `regen_json_unreadable`, `regen_json_invalid`, or
+    `script_crashed`.
 
   A returning keep only holds the pair for the window. After the window, the
   pair returns at its age from before the keep, usually its metadata

@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Order,Stand,Cups\nA01,Plaza,38\nA02,Pier,20\nA03,Station,9\nA04,Pier,34\nA05,Station,11\nA06,Plaza,26\nA07,Pier,37\nA08,Station,14\nA09,Pier,10\nA10,Plaza,21\nA11,Pier,15\nA12,Pier,25\nA13,Plaza,9\nA14,Station,11\nA15,Pier,28\nA16,Station,26\nA17,Pier,26\nA18,Station,20\nA19,Pier,15\nA20,Pier,25\nA21,Pier,17\nA22,Plaza,12\nA23,Station,11\nA24,Station,17\nA25,Station,34\nA26,Station,13\nA27,Pier,26\nA28,Station,28\nA29,Pier,19\nA30,Pier,25\nA31,Station,10\nA32,Station,9\nA33,Station,14\nA34,Plaza,29\n",
+  "message": "How many cups were sold in total, over all the orders?",
+  "expected_operations": [],
+  "question_ops": ["total"],
+  "reply_names": ["684"],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["data_question", "grand_total"]
+}

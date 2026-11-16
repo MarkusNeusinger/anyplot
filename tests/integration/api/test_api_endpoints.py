@@ -382,7 +382,7 @@ class TestFeedbackEndpoint:
             {**vote, "reaction": "thumbs_down", "created_at": now - timedelta(days=3)}
         )
         await ImplRepository(test_db_with_data).upsert(
-            "scatter-basic", "matplotlib", {"updated": now - timedelta(days=1)}
+            "scatter-basic", "matplotlib", {"updated": now - timedelta(days=1)}, "python"
         )
 
         new_version = await client.post("/feedback", json={**vote, "reaction": "thumbs_up"})

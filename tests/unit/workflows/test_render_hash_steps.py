@@ -7,14 +7,17 @@ origin/main under cached renders when the branch was never pushed. Now
 impl-repair fails unless it pushed a change to the implementation and the
 workspace holds that file, and fails without both renders; impl-generate fails
 unless the pushed branch carries the file in the workspace. Both stage
-`render.sha256`, and impl-review compares it with the file at the PR head,
-warn-only. Both also record, warn-only, whether a render is older than the
-implementation file.
+`render.sha256` with two hashes (the file with its score reset, and its code
+without the header), and impl-review compares it with the file at the PR head.
+A mismatch against such a file sets `stop=true` (rule P2b; what the workflow
+does with it is in test_render_stop_steps.py); everything else only warns.
+Both also record, warn-only, whether a render is older than the implementation
+file.
 
 The step scripts run here under `bash -e` (the Actions default) and
 `bash -eo pipefail`, against a scratch origin whose workflow-ref commit carries
-the real render_hash.py and regen_gate.py, with a stub `gsutil` over a
-directory that stands in for the bucket and the stub `gh` of
+the real render_hash.py, regen_gate.py and impl_header.py, with a stub `gsutil`
+over a directory that stands in for the bucket and the stub `gh` of
 test_pipeline_retry_gaps.
 """
 
@@ -27,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from automation.scripts.render_hash import read_hash, render_hash
+from automation.scripts.render_hash import code_hash, read_hash, read_hashes, render_hash
 from tests.unit.workflows.test_pipeline_retry_gaps import _calls, _run, _step, _steps
 
 
@@ -39,6 +42,18 @@ STAGING = f"anyplot-images/staging/{SPEC}/{LANG}/{LIB}"
 SHELLS = [["bash", "-e", "-c"], ["bash", "-eo", "pipefail", "-c"]]
 SHELL_IDS = ["bash-e", "pipefail"]
 CODE = '""" anyplot.ai\nscatter-basic: Basic Scatter Plot\nQuality: {score} | Created: 2026-11-09\n"""\n\nx = {x}\n'
+# The modules the hash writer needs beside it: generate and repair extract
+# them from the workflow ref, impl-review copies them into regen-tools.
+HASH_TOOLS = ("render_hash.py", "regen_gate.py", "impl_header.py")
+# A JavaScript pair: the file the generate job hashes has no extension, and
+# its `//#` directive is part of the code hash.
+JS_LIB, JS_EXT = "d3", ".js"
+JS_IMPL = f"plots/{SPEC}/implementations/javascript/{JS_LIB}{JS_EXT}"
+JS_STAGING = f"anyplot-images/staging/{SPEC}/javascript/{JS_LIB}"
+JS_CODE = (
+    "// anyplot.ai\n// scatter-basic: Basic Scatter Plot\n// Quality: pending | Created: 2026-11-09\n"
+    "//# anyplot-orientation: square\n\nconst t = window.ANYPLOT_TOKENS;\n"
+)
 
 # A bucket in $FAKE_GCS. `cp gs://… LOCAL` fails like gsutil on a missing
 # object, or with a 503 when GSUTIL_FAIL=1 or for the first
@@ -119,7 +134,7 @@ class Repo:
             (self.bin / name).chmod(0o755)
         self.git("init", "-q", "-b", "main")
         (self.ws / "automation" / "scripts").mkdir(parents=True)
-        for name in ("render_hash.py", "regen_gate.py"):
+        for name in HASH_TOOLS:
             shutil.copy(TOOLS / name, self.ws / "automation" / "scripts" / name)
         self.commit({IMPL: CODE.format(score="pending", x=1)}, "workflow ref")
         self.workflow_sha = self.git("rev-parse", "HEAD")
@@ -187,6 +202,11 @@ class Repo:
     def staged_hash(self) -> str | None:
         path = self.gcs / STAGING / "render.sha256"
         return read_hash(path) if path.exists() else None
+
+    def staged_hashes(self, staging: str = STAGING) -> tuple[str | None, str | None]:
+        """(render hash, code hash) of the staged file; (None, None) when nothing is staged."""
+        path = self.gcs / staging / "render.sha256"
+        return read_hashes(path) if path.exists() else (None, None)
 
 
 def _names(workflow: str) -> list[str]:
@@ -460,6 +480,44 @@ class TestUploadStagesTheHash:
         assert upload.startswith("-h Cache-Control:no-store cp ")
         assert not [c for c in calls if "acl" in c and "render.sha256" in c]
 
+    def test_both_hashes_are_staged(self, tmp_path, shell, workflow, step, source):
+        """Without the code hash the review could not enforce anything: it is the second line."""
+        repo = Repo(tmp_path)
+        result = self._upload(repo, workflow, step, source, shell)
+        assert result.returncode == 0, result.stdout + result.stderr
+        rendered = CODE.format(score="87/100", x=5).encode()
+        assert repo.staged_hashes() == (render_hash(rendered), code_hash(rendered, "python"))
+        assert "language=python" in result.stdout
+
+    def test_a_javascript_file_is_hashed_with_its_directive(self, tmp_path, shell, workflow, step, source):
+        """The language comes from the step's env: the copy the generate job hashes has no extension."""
+        repo = Repo(tmp_path)
+        (repo.ws / JS_IMPL).parent.mkdir(parents=True)
+        for theme in ("light", "dark"):
+            (repo.ws / JS_IMPL).parent.joinpath(f"plot-{theme}.png").write_bytes(b"png")
+        path = repo.runner / source if source == "render-source" else repo.ws / JS_IMPL
+        path.write_text(JS_CODE, encoding="utf-8")
+        script = str(_step(workflow, step)["run"])
+        result = repo.run(script, shell, LANGUAGE="javascript", LIBRARY=JS_LIB, EXT=JS_EXT)
+        assert result.returncode == 0, result.stdout + result.stderr
+        staged, code = repo.staged_hashes(JS_STAGING)
+        assert (staged, code) == (render_hash(JS_CODE.encode()), code_hash(JS_CODE.encode(), "javascript"))
+        assert code != code_hash(JS_CODE.replace("square", "landscape").encode(), "javascript")
+
+    def test_without_a_known_language_no_hash_is_staged(self, tmp_path, shell, workflow, step, source):
+        """Half a file would read as one staged before the code hash existed, which is never enforced."""
+        repo = Repo(tmp_path)
+        cobol = (repo.ws / f"plots/{SPEC}/implementations/cobol").resolve()
+        cobol.mkdir(parents=True)
+        for theme in ("light", "dark"):
+            (cobol / f"plot-{theme}.png").write_bytes(b"png")
+        path = repo.runner / source if source == "render-source" else cobol / f"{LIB}{EXT}"
+        path.write_text(CODE.format(score="87/100", x=5), encoding="utf-8")
+        result = repo.run(str(_step(workflow, step)["run"]), shell, LANGUAGE="cobol")
+        assert result.returncode == 0, result.stdout + result.stderr  # never fatal
+        assert "::warning::render.sha256 not staged" in result.stdout
+        assert not list(repo.gcs.rglob("render.sha256"))
+
     def test_an_earlier_hash_goes_before_the_renders_arrive(self, tmp_path, shell, workflow, step, source):
         """A hash of other code never sits beside this run's renders, whatever happens to the write."""
         repo = Repo(tmp_path)
@@ -496,22 +554,35 @@ class TestUploadStagesTheHash:
         assert repo.staged_hash() is None
 
 
-# --- impl-review: the warn-only check ------------------------------------------------------------
+# --- impl-review: the check ---------------------------------------------------------------------
 
-REVIEW_STEP = "Check the render hash (warn-only)"
+REVIEW_STEP = "Check the render hash"
+# The file as the generator committed it, before impl-review's header commit
+# gave it the header of CODE: other header lines, the same code.
+GENERATED = '"""anyplot.ai\nscatter-basic: Basic Scatter Plot\nLibrary: matplotlib | Python 3.14\n"""\n\nx = 1\n'
+
+
+def _review_tools(repo: Repo) -> None:
+    tools = repo.runner / "regen-tools"
+    tools.mkdir()
+    for name in HASH_TOOLS:
+        shutil.copy(TOOLS / name, tools / name)
+
+
+def _stage(repo: Repo, staged: str, code: str | None = None, staging: str = STAGING) -> None:
+    """Stage a render.sha256: both hashes, or the render hash alone (a file from before the code hash)."""
+    (repo.gcs / staging).mkdir(parents=True)
+    text = f"{staged}  x\n" + (f"{code}  code\n" if code is not None else "")
+    (repo.gcs / staging / "render.sha256").write_text(text, encoding="utf-8")
 
 
 @pytest.mark.parametrize("shell", SHELLS, ids=SHELL_IDS)
 class TestReviewCheck:
-    def _review(self, tmp_path: Path, shell, staged: str | None, **env: str):
+    def _review(self, tmp_path: Path, shell, staged: str | None, code: str | None = None, **env: str):
         repo = Repo(tmp_path)
-        tools = repo.runner / "regen-tools"
-        tools.mkdir()
-        for name in ("render_hash.py", "regen_gate.py"):
-            shutil.copy(TOOLS / name, tools / name)
+        _review_tools(repo)
         if staged is not None:
-            (repo.gcs / STAGING).mkdir(parents=True)
-            (repo.gcs / STAGING / "render.sha256").write_text(f"{staged}  x\n", encoding="utf-8")
+            _stage(repo, staged, code)
         # "Hide the previous review" rewrites the workspace copy; the check reads the head.
         (repo.ws / IMPL).write_text("rewritten\n", encoding="utf-8")
         script = str(_step("impl-review.yml", REVIEW_STEP)["run"])
@@ -520,24 +591,93 @@ class TestReviewCheck:
 
     def test_renders_of_the_head_post_nothing(self, tmp_path, shell):
         # Generated with `Quality: pending`, reviewed at the head that stores 72/100.
-        result, repo = self._review(tmp_path, shell, render_hash(CODE.format(score="pending", x=1).encode()))
+        pending = CODE.format(score="pending", x=1).encode()
+        result, repo = self._review(tmp_path, shell, render_hash(pending), code_hash(pending, "python"))
         assert result.returncode == 0, result.stdout + result.stderr
         assert not _calls(repo.gh_calls(), "pr", "comment")
-        assert repo.read("output") == "status=match\n"
+        assert repo.read("output") == "status=match\nstop=false\n"
         assert "**Render hash:** match" in repo.read("summary")
+        assert "via=file form=two-line" in result.stdout
+
+    def test_the_head_after_the_reviews_header_commit_still_matches(self, tmp_path, shell):
+        """A manual re-review: the head's header is the review's, and its code is the staged one."""
+        generated = GENERATED.encode()
+        result, repo = self._review(tmp_path, shell, render_hash(generated), code_hash(generated, "python"))
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert repo.read("output") == "status=match\nstop=false\n"
+        assert not _calls(repo.gh_calls(), "pr", "comment")
+        assert "only the file header differs" in repo.read("summary")
+        assert "via=code form=two-line" in result.stdout
 
     @pytest.mark.parametrize(
-        ("staged", "env", "status"),
-        [("f" * 64, {}, "mismatch"), (None, {}, "missing"), ("f" * 64, {"GSUTIL_FAIL": "1"}, "unreadable")],
+        ("staged", "code", "env", "status", "stop"),
+        [
+            ("f" * 64, "e" * 64, {}, "mismatch", "true"),
+            ("f" * 64, None, {}, "mismatch", "false"),  # staged before the code hash existed
+            (None, None, {}, "missing", "false"),
+            ("f" * 64, "e" * 64, {"GSUTIL_FAIL": "1"}, "unreadable", "false"),
+        ],
+        ids=["mismatch", "legacy-mismatch", "missing", "unreadable"],
     )
-    def test_anything_else_comments_once_and_never_fails(self, tmp_path, shell, staged, env, status):
-        result, repo = self._review(tmp_path, shell, staged, **env)
+    def test_anything_else_comments_once_and_never_fails(self, tmp_path, shell, staged, code, env, status, stop):
+        """Only a mismatch against a file with a code hash asks for a stop; the step itself never fails."""
+        result, repo = self._review(tmp_path, shell, staged, code, **env)
         assert result.returncode == 0, result.stdout + result.stderr
         (comment,) = _calls(repo.gh_calls(), "pr", "comment")
         assert comment[:4] == ["pr", "comment", "7", "--body-file"]
         assert f"<!-- render-hash:v1 status={status} head={repo.start_sha} -->" in Path(comment[4]).read_text()
-        assert repo.read("output") == f"status={status}\n"
+        assert repo.read("output") == f"status={status}\nstop={stop}\n"
         assert f"::warning::render_hash status={status}" in result.stdout
+
+    @pytest.mark.parametrize(
+        ("regen", "has", "lacks"),
+        [
+            (
+                "false",
+                ["labels this PR `ai-render-mismatch`", f"-f specification_id={SPEC} -f library={LIB}"],
+                "render_mismatch",
+            ),
+            ("true", ["The regen gate keeps the live implementation (`render_mismatch`)"], "ai-render-mismatch"),
+        ],
+        ids=["first-generation", "regeneration"],
+    )
+    def test_the_stop_comment_says_what_happens_next(self, tmp_path, shell, regen, has, lacks):
+        result, repo = self._review(tmp_path, shell, "f" * 64, "e" * 64, IS_REGEN=regen)
+        assert result.returncode == 0, result.stdout + result.stderr
+        (comment,) = _calls(repo.gh_calls(), "pr", "comment")
+        body = Path(comment[4]).read_text(encoding="utf-8")
+        assert "The review did not run" in body and lacks not in body
+        assert all(text in body for text in has)
+
+    def test_the_output_is_written_before_the_comment_is_posted(self, tmp_path, shell):
+        """A stop must survive a comment that cannot be posted or a listing that fails."""
+        result, repo = self._review(tmp_path, shell, "f" * 64, "e" * 64, GH_COMMENT_RC="1", GH_FAIL_API="1")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert repo.read("output") == "status=mismatch\nstop=true\n"
+        assert "::warning::render-hash comment not posted on PR #7" in result.stdout
+
+    @pytest.mark.parametrize(
+        ("head", "status", "stop"),
+        [("square", "match", "false"), ("landscape", "mismatch", "true")],
+        ids=["header-commit", "other-directive"],
+    )
+    def test_a_javascript_head_is_read_with_its_directive(self, tmp_path, shell, head, status, stop):
+        """The step passes the language: the head's copy has no extension to read it from."""
+        repo = Repo(tmp_path)
+        _review_tools(repo)
+        reviewed = (
+            "// anyplot.ai\n// scatter-basic: Basic Scatter Plot\n// Library: d3 7.9.0 | JavaScript 22.23.3\n"
+            f"// Quality: 91/100 | Updated: 2026-11-15\n//# anyplot-orientation: {head}\n\n"
+            "const t = window.ANYPLOT_TOKENS;\n"
+        )
+        repo.commit({JS_IMPL: reviewed}, "chore: store the review")
+        repo.push()
+        _stage(repo, render_hash(JS_CODE.encode()), code_hash(JS_CODE.encode(), "javascript"), JS_STAGING)
+        script = str(_step("impl-review.yml", REVIEW_STEP)["run"])
+        env = {"LANGUAGE": "javascript", "LIBRARY": JS_LIB, "EXT": JS_EXT}
+        result = repo.run(script, shell, PR_NUM="7", HEAD_SHA=repo.git("rev-parse", "HEAD"), **env)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert repo.read("output") == f"status={status}\nstop={stop}\n"
 
     @staticmethod
     def _downloads(repo: Repo) -> list[str]:
@@ -547,21 +687,22 @@ class TestReviewCheck:
         staged = render_hash(CODE.format(score="pending", x=1).encode())
         result, repo = self._review(tmp_path, shell, staged, GSUTIL_FAIL_DOWNLOADS="2")
         assert result.returncode == 0, result.stdout + result.stderr
-        assert repo.read("output") == "status=match\n"
+        assert repo.read("output") == "status=match\nstop=false\n"
         assert result.stdout.count("::warning::render.sha256 download failed (attempt ") == 2
         assert len(self._downloads(repo)) == 3
         assert not _calls(repo.gh_calls(), "pr", "comment")
 
     def test_only_three_failed_downloads_read_unreadable(self, tmp_path, shell):
-        result, repo = self._review(tmp_path, shell, "f" * 64, GSUTIL_FAIL="1")
+        result, repo = self._review(tmp_path, shell, "f" * 64, "e" * 64, GSUTIL_FAIL="1")
         assert result.returncode == 0, result.stdout + result.stderr
-        assert repo.read("output") == "status=unreadable\n"
+        # A hash that could not be read never stops the review.
+        assert repo.read("output") == "status=unreadable\nstop=false\n"
         assert len(self._downloads(repo)) == 3
 
     def test_a_missing_hash_is_an_answer_and_is_not_retried(self, tmp_path, shell):
         result, repo = self._review(tmp_path, shell, None)
         assert result.returncode == 0, result.stdout + result.stderr
-        assert repo.read("output") == "status=missing\n"
+        assert repo.read("output") == "status=missing\nstop=false\n"
         assert len(self._downloads(repo)) == 1
         assert "download failed" not in result.stdout
 
@@ -611,7 +752,10 @@ def test_the_review_checks_after_the_download_and_before_the_review():
     assert names.index("Download plot images from staging") + 1 == names.index(REVIEW_STEP)
     assert names.index(REVIEW_STEP) < names.index("Hide the previous review") < names.index("Run AI Quality Review")
     assert step["continue-on-error"] is True and step["if"] == "steps.gcs.outcome == 'success'"
-    assert "id" not in step  # no later step can key a decision on it
+    # Its `stop` output is what "Stop on a render hash mismatch" keys on, and nothing else does.
+    assert step["id"] == "render_hash"
+    assert step["env"]["LANGUAGE"] == "${{ steps.lang.outputs.language }}"
+    assert '--language "$LANGUAGE"' in str(step["run"])
 
 
 def test_the_repair_gate_sits_between_claude_and_the_renders():

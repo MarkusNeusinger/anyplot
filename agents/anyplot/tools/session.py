@@ -14,7 +14,10 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 * `get_spec_brief`: title, description, data roles and notes of the spec, fenced as
   `<spec_text>` (spec text starts as a public issue).
 * `get_current_code(version)`: the exported `plot.py` of a version (0 is the latest),
-  or the normalised catalogue code before the first version, fenced as `<catalogue_code>`.
+  or the normalised catalogue code before the first version, fenced as `<catalogue_code>`;
+  for a version also what its downloaded data holds (`version_data`: the rows in each file
+  that carries the data, and the view of the plot it drew them through, as counts under
+  keys that explain themselves, since the tool's description stays one sentence).
 * `set_bindings(bindings)`: `apply_bindings` plus a state write; refused while the
   pipeline runs. Its result says whether the data is still `data_confirmed`: bindings that
   only leave out confirmed number series (`y2`) keep the confirmation (`narrowed_confirmation`,
@@ -81,7 +84,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   alone, `plot_outdated`; `reset_view` clears the view, and a view that does not fit the table the call
   leaves refuses the whole call.
 * `query_data(operations, columns, limit, from_version)`: a question about the data answered from a copy
-  (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, then
+  (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, or of the two only a
+  question takes (`prepare.QueryOperation`: an `aggregate` without `by`, a `fit`), then
   the first `limit` rows (at most 25) in at most eight columns, fenced as `<user_data>`, with
   the total row count and the change lines. Nothing is stored: the dataset, its version, the
   bindings and the confirmation stay as they are, so a question never mutates the user's data.
@@ -106,6 +110,7 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 import json
 import math
 import secrets
+from collections.abc import Sequence
 from dataclasses import replace
 from typing import Any
 
@@ -127,6 +132,7 @@ from ..data.prepare import (
     PrepareArgs,
     Prepared,
     PrepareError,
+    QueryOperation,
     Unsupported,
     apply_and_parse,
     validation_lines,
@@ -186,7 +192,7 @@ from ..plugins.tool_safety import (
 )
 from ..policy import DATA_PREAMBLE, fence, file_name_block, refusal, user_notes_block
 from ..render.contract import DataJob, DataOutput, RendererUnavailable
-from ..render.gates import error_summary
+from ..render.gates import data_rows, error_summary
 from ..render.harness import DATA_EXIT
 from ..render.runtimes.python import DATA_FILE_NAME
 from ..render.serial import RenderBusy
@@ -194,13 +200,14 @@ from ..schemas import (
     CURRENT_VERSION,
     MAX_COLUMNS,
     MAX_ROWS,
+    PAGE_ARTIFACT,
     Binding,
     DatasetProfile,
     KeepRequestArgs,
     PipelineArgs,
     SwitchArgs,
 )
-from ..services import get_services
+from ..services import CodeVersion, get_services
 from ..session_state import (
     PLOT_LANGUAGE,
     SessionView,
@@ -305,11 +312,41 @@ async def get_current_code(version: int, tool_context: ToolContext) -> dict[str,
     if stored is None and version:
         return _error("unknown_version")
     code = stored.export if stored is not None else view.normalised
-    return {
+    result: dict[str, Any] = {
         "status": "ok",
         "version": stored.number if stored is not None else 0,
         "code": DATA_PREAMBLE + "\n" + fence("catalogue_code", code),
     }
+    if stored is not None:
+        result["data"] = version_data(stored)
+    return result
+
+
+def version_data(stored: CodeVersion) -> dict[str, Any]:
+    """What a version's downloaded data holds, counted from the version itself, as the `data` field of
+    `get_current_code`'s result:
+
+    * `rows_in_file`: the rows of `data.csv`, and for a JavaScript plot those of its `plot.html`, which embeds the
+      typed table (`data_json`), keyed by file name. Counted as records, so a quoted cell with a line break is one row.
+    * `view`: present when the version drew its rows through a view of the plot (`CodeVersion.view_rows`): it drew
+      `rows` of the table's `of_rows` rows. `rows_in_file` is below `view.rows` when rows of the view that share the
+      plot's key were combined for the run (`repeated_keys.combine_in_view`), which the run's change line says
+      (`fidelity.combined_in_view_line`).
+
+    The tool's description, which the root reads on every turn, stays one sentence: the root needs these facts only
+    when it reads a version, so the keys carry their meaning and this docstring explains them. A longer description,
+    with a prompt clause that sent the root here, tipped one routing case into adding a column nobody asked for.
+
+    The version's own facts, never the session's: the session block names the view in force now, which a later
+    change of the view, an undo or a switch of the library may have moved away from what this version drew. Integers
+    and fixed file names only, so nothing in it needs a fence."""
+    rows: dict[str, int] = {"data.csv": data_rows(stored.data_csv)}
+    if PAGE_ARTIFACT in stored.artifacts() and stored.data_json is not None:
+        rows[PAGE_ARTIFACT] = len(json.loads(stored.data_json)["data"])
+    data: dict[str, Any] = {"rows_in_file": rows}
+    if stored.view_rows is not None:
+        data["view"] = {"rows": stored.view_rows.rows, "of_rows": stored.view_rows.of_rows}
+    return data
 
 
 async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext) -> dict[str, Any]:
@@ -491,7 +528,9 @@ def _conversion_outcome(
     return "date" if any(dtypes.get(name) == "datetime" for name in made) else "number"
 
 
-def capability_gap(operations: list[Operation], view: SessionView, tool_context: ToolContext) -> dict[str, Any] | None:
+def capability_gap(
+    operations: Sequence[Operation | QueryOperation], view: SessionView, tool_context: ToolContext
+) -> dict[str, Any] | None:
     """The answer to an `unsupported` operation among `operations`, None without one.
 
     A change no operation can make: the service's own sentence in the session language (`refusals.yaml`,
@@ -810,11 +849,13 @@ async def query_data(
 ) -> dict[str, Any]:
     """Answer a question about the user's data without changing it: the operations are applied to a copy and the first rows of the result come back as a small table; nothing is stored, and the data, its version and its confirmation stay as they are.
 
-    operations: zero to five operations of the same set as prepare_data, applied in order (keep only some rows with
-    keep_rows and where, such as test eq on the year asked about; a top N is a sort with limit; a share, a percent
-    change or an index is a derive, a change from the row before a diff, another formula a compute; a total or a mean
-    per group an aggregate; apply_view first asks the question of the rows the view of the plot shows instead of
-    every row of the table). columns: the columns to return, at most 8
+    operations: zero to five operations of the same set as prepare_data, plus fit, applied in order (keep only some
+    rows with keep_rows and where, such as test eq on the year asked about; a top N is a sort with limit; a share, a
+    percent change or an index is a derive, a change from the row before a diff, another formula a compute; a total
+    or a mean per group an aggregate, and over all rows an aggregate without by; fit (x, y) is the least-squares line
+    of the number column y on the number column x as one row of slope, intercept, r_squared and n, which a later
+    compute can use; apply_view first asks the question of the rows the view of the plot shows instead of every row
+    of the table). columns: the columns to return, at most 8
     (default: the first 8). limit: the rows to return, 1 to 25 (default 10). from_version: the version to read,
     "current" (the default), "original" (the first version, the table as the user pasted or opened it) or a version
     number the session block lists. Returns the table (columns and rows), the number of rows of the whole result,

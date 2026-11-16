@@ -166,8 +166,9 @@ class TestLaterReviewsStartBlind:
         assert names.index(RESTORE) < names.index(METADATA)
         hide, restore = _step("impl-review.yml", HIDE), _step("impl-review.yml", RESTORE)
         # Every review, not only attempt 2 and later: a manual re-review or a
-        # watchdog bootstrap of a scored PR runs at attempt 0.
-        assert "if" not in hide
+        # watchdog bootstrap of a scored PR runs at attempt 0. Only a review
+        # that a render hash mismatch stopped has nothing to hide.
+        assert hide["if"] == "steps.render_stop.outputs.stopped != 'true'"
         assert restore["if"] == "always()"
         # Neither can fail the job.
         assert hide["continue-on-error"] is True and restore["continue-on-error"] is True

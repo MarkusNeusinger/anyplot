@@ -75,12 +75,13 @@ The operations:
   each month). `first` and `last` take a group's first and last value that is there, in
   the order of the rows, or, with a `period`, of the datetime keys' moments, so the
   last reading of a month is its latest one. A `period` turns every datetime key into `YYYY-MM`,
-  `YYYY-Qn` or `YYYY` text before grouping, or, since live test round 5 of 2026-10-15
-  ("Tagesmittel pro Sensor" on readings every 13 minutes), into the first moment of its
-  `hour`, `day` or ISO `week` (its Monday), which stays a datetime, so the result keeps
-  a time axis: a day and a week are written as dates, an hour with its time and offset.
-  The buckets follow the column's clock as stored: a column with one UTC offset is cut
-  at its own midnight, one the parser wrote in UTC (several offsets) at UTC midnight,
+  `YYYY-Qn` or `YYYY` text before grouping, or into the first moment of its `hour`, `day`
+  or ISO `week` (its Monday), which stays a datetime, so the result keeps a time axis: a
+  day and a week are written as dates, an hour with its time and offset. For a month,
+  quarter or year key the change line names that text form
+  (`(month, as text labels YYYY-MM)`), since a condition on the key then takes a value of
+  that form. The buckets follow the column's clock as stored: a column with one UTC offset
+  is cut at its own midnight, one the parser wrote in UTC (several offsets) at UTC midnight,
   and the change line names that offset. The result holds the key columns and the
   value columns named like their sources, or `count`; every other column is dropped, rows
   with a missing key form their own group, and the rows are sorted by the keys.
@@ -240,7 +241,13 @@ The operations:
     last `sort` ranked the rows by, the line counts and names the tied rows on each side
     (`_tie_note`). With `where` in place of `n` it keeps the rows for which 1 to 3 conditions
     all hold, a selection said positively ("only Miete and Strom", "only January"): its line
-    counts both sides and the dropped rows that had no value to test (`_unvalued_note`). Its
+    counts both sides and the dropped rows that had no value to test (`_unvalued_note`), and
+    then names the lowest and the highest kept value of each column of dates or period labels
+    a condition tests for a value ("in the rows kept, Month is at least '2024-03' and at most
+    '2024-08'"), each column whole or not at all (`_kept_bounds`). The two values claim nothing
+    about the ones between them, which an any-of selection or a gap in the data leaves out. A
+    text column of four-digit codes has the shape of year labels, so its line names its
+    lowest and highest kept code too. Its
     `target` (`plot`, the default, or `table`) is `prepare_data`'s business, not the engine's:
     by default the operation lands in the view of the plot and the table keeps every row
     (`plot_view.py`), and the engine applies it the same way wherever it lands.
@@ -252,12 +259,36 @@ The operations:
     `unsupported_operation` before any operation runs, and `prepare_data` answers with a
     fixed sentence in the session language instead of the root telling the user to fix
     the file.
+* Two operations only `query_data` takes (`QueryOperation`), since a question's answer is never
+  stored; `prepare_data` refuses both, so no stored version comes from either:
+  * `aggregate` with `by` left out, empty or null (`QueryAggregate`): every row the call reads is
+    one group, so a grand total, a mean or a count over all rows is one step and one row. Its change
+    line counts, per value column, the rows without a value that the figure leaves out, or all of
+    them in one count when the column names leave the line no room for one count each.
+  * `fit`: the straight line of the number column `y` on the number column `x` by ordinary least
+    squares over the rows the call reads at that point, as one row of `slope`, `intercept`,
+    `r_squared` and `n` (`FIT_COLUMNS`) that a later `compute` of the same call can use. It is
+    computed in exact fractions of the cells as `data.csv` writes them, with one rounding to a float
+    per value at the end, never to fewer digits. Rows without a value in `x` or `y` are left out and
+    counted; fewer than two rows, an `x` with one value only, and a column that holds no numbers are
+    refused (a date column with the `date_number` step to add, as a call the root can fix); `r_squared` is empty when
+    `y` has one value only, which the change line says.
+  `apply_and_parse`, the one path from operations to a stored version, refuses both.
 
 Values in conditions are never evaluated: a condition compares text with text for a
 text column, numbers for a numeric column (the value is a dot-decimal number, which
 the model may also pass as a JSON number), moments for a datetime column (the value is
-an ISO date or date-time), `true`/`false` for a boolean column. The order tests are `gt`,
-`lt`, `ge` (at least) and `le` (at most). A date without a time is the whole day for `le`
+an ISO date or date-time), `true`/`false` for a boolean column. A text column of period
+labels of one shape (`2024-03`, `2024-Q1`, `2024`, as an `aggregate` writes them) compares as
+text too, so `eq`, `ne` and an order test there refuse a value of another date or period
+shape (`2024-01-01` on months) as an `invalid_operation` that names the column's form: as
+text, `2024-01` sorts before `2024-01-01`, and "from 2024-01-01" had left January out without
+an error. Only these value shapes are refused: `YYYY-MM`, `YYYY-Qn`, four digits, and an
+ISO date `YYYY-MM-DD` that stands alone, is followed by `T` or a space and any text (a
+time, with or without an offset), or is followed directly by the UTC offset `Z`, `±HH`,
+`±HHMM` or `±HH:MM`. A value of any other shape (`2024-1`, `01.01.2024`) compares as text
+as before, and so does any code on a column of four-digit codes kept text. The order tests
+are `gt`, `lt`, `ge` (at least) and `le` (at most). A date without a time is the whole day for `le`
 and `gt`: "until the 31st" takes in that day's rows whatever their time and "after the
 31st" none of them, where midnight alone would cut the day's rows in two. A missing cell
 matches only `is_missing`, and `not_missing` holds for every other cell, so "the rows
@@ -307,6 +338,7 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, timedelta, tzinfo
 from decimal import ROUND_FLOOR, InvalidOperation, localcontext
 from decimal import Decimal as ExactDecimal
+from fractions import Fraction
 from typing import Annotated, Any, Literal, Self
 
 import numpy as np
@@ -393,6 +425,7 @@ APPLY_VIEW_REFUSAL = (
 )
 SHOWN_TIED_ROWS = 3  # of the rows of a tie on each side of a top N's cut, the ones its change line names
 TIED_NAME_CHARS = 20  # of one such row's name in that line, which names up to twice `SHOWN_TIED_ROWS` of them
+NOTE_HEAD_CHARS = 60  # of a change line's start kept beside its counts, so the line still names the step they count
 TargetType = Literal["number", "datetime", "text"]
 DateFormat = Literal[
     "DD.MM.YYYY",
@@ -521,8 +554,28 @@ _VERBS: dict[str, str] = {
     "first": "took the first value of",
     "last": "took the last value of",
 }
-_PERIOD_LABEL_SHAPES = (YEAR_MONTH, re.compile(r"[0-9]{4}-Q[1-4]"), re.compile(r"[0-9]{4}"))
+_QUARTER_LABEL = re.compile(r"[0-9]{4}-Q[1-4]")
+_FOUR_DIGITS = re.compile(r"[0-9]{4}")
+_PERIOD_LABEL_SHAPES = (YEAR_MONTH, _QUARTER_LABEL, _FOUR_DIGITS)
 """The labels an `aggregate` with a `period` writes (`2024-03`, `2024-Q1`, `2024`): text whose order is the time's."""
+_ISO_DATE_VALUE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[T ].*|Z|[+-][0-9]{2}(?::?[0-9]{2})?)?")
+"""A condition value in the shape of an ISO date: alone (`2024-03-01`), followed by `T` or a space and any text
+(`2024-03-01T10:00`), or followed directly by the UTC offset `Z`, `±HH`, `±HHMM` or `±HH:MM` (`2024-03-01Z`,
+`2024-03-01+01`, `2024-03-01-0500`, `2024-03-01+01:00`)."""
+_LABEL_FORMS: dict[re.Pattern[str], str] = {
+    YEAR_MONTH: "text labels YYYY-MM, such as 2024-03",
+    _QUARTER_LABEL: "text labels YYYY-Qn, such as 2024-Q1",
+    _FOUR_DIGITS: "text labels of four digits, such as 2024",
+}
+"""A column of period labels in a refusal's words, by its shape: the form with one example of it, never a cell. Four
+digits are no years by their shape alone (postal codes and ids kept text have it too), so their words say digits."""
+_VALUE_FORMS: dict[re.Pattern[str], str] = {
+    _ISO_DATE_VALUE: "a date",
+    YEAR_MONTH: "YYYY-MM",
+    _QUARTER_LABEL: "YYYY-Qn",
+    _FOUR_DIGITS: "four digits",
+}
+"""The date and period shapes a condition value can have on a column of period labels, in a refusal's words."""
 _DIVISIONS = (ast.Div, ast.FloorDiv, ast.Mod)
 _WHOLE_OPERATORS = (ast.Add, ast.Sub, ast.Mult, ast.FloorDiv, ast.Mod)
 _WHOLE_FUNCTIONS = frozenset(("abs", "sign", "min", "max"))
@@ -844,6 +897,21 @@ class Aggregate(_Strict):
         return [self.column] if self.column is not None else list(self.columns or [])
 
 
+class QueryAggregate(Aggregate):
+    """An `aggregate` as `query_data` takes it: `by` may be left out, empty or null, and then every row the query
+    reads is one group, so the result is one row (a grand total, a mean or a count over all rows). Only a question
+    takes it: `prepare_data` keeps `Aggregate`, which needs one or two keys, so no stored version comes from an
+    aggregate without a key."""
+
+    by: list[ColumnName] = Field(default_factory=list, max_length=MAX_KEYS)
+
+    @field_validator("by", mode="before")
+    @classmethod
+    def _null_is_no_key(cls, value: Any) -> Any:
+        # A null `by` means the same as a left-out one, as `column`, `columns` and `period` take null.
+        return [] if value is None else value
+
+
 class Sort(_Strict):
     op: Literal["sort"]
     column: ColumnName
@@ -1079,6 +1147,18 @@ class Unsupported(_Strict):
     family: UnsupportedFamily
 
 
+class Fit(_Strict):
+    """The straight line of the number column `y` on the number column `x` by ordinary least squares over the rows the
+    query reads at that point, as one row of `FIT_COLUMNS` that a later step of the same query can compute with.
+
+    Only `query_data` takes it (`QueryOperation`): its row is an answer, never the user's table.
+    """
+
+    op: Literal["fit"]
+    x: ColumnName
+    y: ColumnName
+
+
 Operation = Annotated[
     Rename
     | DropColumns
@@ -1107,6 +1187,43 @@ Operation = Annotated[
     | Unsupported,
     Field(discriminator="op"),
 ]
+QueryOperation = Annotated[
+    Rename
+    | DropColumns
+    | DropRows
+    | SetType
+    | QueryAggregate
+    | Sort
+    | PivotLonger
+    | PivotWider
+    | Classify
+    | Derive
+    | MakeDate
+    | RowNumber
+    | DateNumber
+    | Split
+    | Extract
+    | Strip
+    | Replace
+    | Compute
+    | Diff
+    | Rolling
+    | Blank
+    | KeepRows
+    | ResetView
+    | ApplyView
+    | Unsupported
+    | Fit,
+    Field(discriminator="op"),
+]
+"""The operations of `query_data` (`query.QueryArgs`): `Operation`'s, with an `aggregate` whose `by` may be left out
+(`QueryAggregate`), and `fit`. A question's answer is never stored, so only a question takes them: `prepare_data`
+refuses both."""
+FIT_COLUMNS = ("slope", "intercept", "r_squared", "n")
+"""The columns of a `fit`'s one row, in order: what a later `compute` of the same query names in its `inputs`."""
+QUERY_ONLY_REFUSAL = (
+    "fit and an aggregate without by answer a question and never change the data: query_data takes them"
+)
 
 
 class PrepareArgs(BaseModel):
@@ -1130,7 +1247,7 @@ class PrepareArgs(BaseModel):
         return operations
 
 
-_ROW_CHANGING = (DropRows, Aggregate, Sort, PivotLonger, PivotWider, KeepRows)
+_ROW_CHANGING = (DropRows, Aggregate, Sort, PivotLonger, PivotWider, KeepRows, Fit)
 """The operations after which a row of the frame is no longer the pasted row of the same place."""
 _ROW_FILTERS = (DropRows, KeepRows)
 """The operations that only take rows out: the rows left keep their order and their cells, so a `sort` before them
@@ -1140,10 +1257,13 @@ still says what the rows are ranked by."""
 # --- Applying ---------------------------------------------------------------------------------
 
 
-def apply_operations(parsed: ParsedDataset, operations: list[Operation], language: str = DEFAULT_LANGUAGE) -> Prepared:
+def apply_operations(
+    parsed: ParsedDataset, operations: Sequence[Operation | Fit], language: str = DEFAULT_LANGUAGE
+) -> Prepared:
     """Apply `operations` in order to the canonical CSV of `parsed`; raises `PrepareError`.
 
-    `language` is the session language, which names the column of a `date_number` that names none.
+    `language` is the session language, which names the column of a `date_number` that names none. The engine also
+    applies the operations only a question takes (`QueryOperation`); `apply_and_parse` keeps them from a version.
     """
     if not operations:
         raise PrepareError("invalid_operation", "there is no operation to apply")
@@ -1235,8 +1355,15 @@ def apply_and_parse(
     and `ParseError` only for a bug, since the operations keep every parser cap.
 
     The one path from operations to a version, shared by the root's `prepare_data` and the conversions the server
-    makes on a paste (`paste_conversions.py`), so both store the same data for the same operations.
+    makes on a paste (`paste_conversions.py`), so both store the same data for the same operations. An operation only
+    a question takes (`QueryOperation`: a `fit`, an `aggregate` without `by`) is refused here too, beside the models
+    that keep it out of `prepare_data`, so no stored version comes from either.
     """
+    if any(
+        isinstance(operation, Fit) or (isinstance(operation, Aggregate) and not operation.by)
+        for operation in operations
+    ):
+        raise PrepareError("invalid_operation", QUERY_ONLY_REFUSAL)
     prepared = apply_operations(parsed, operations, language=language)
     # The columns `set_type text` made text stay text: the re-parse would type them by content again.
     # The CSV is the service's own: every row stays, also a `Total` category a sort moved to the end.
@@ -1247,7 +1374,7 @@ def apply_and_parse(
     return prepared, with_date_notes(again, prepared)
 
 
-def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tuple[pd.DataFrame, str]:
+def _apply(frame: pd.DataFrame, operation: Operation | Fit, carried: _Carried) -> tuple[pd.DataFrame, str]:
     match operation:
         case Rename():
             return _rename(frame, operation, carried)
@@ -1293,6 +1420,8 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
             return _blank(frame, operation, carried)
         case KeepRows():
             return _keep_rows(frame, operation, carried)
+        case Fit():
+            return _fit(frame, operation, carried)
         case ResetView():  # `apply_operations` refuses it before any operation runs
             raise PrepareError("invalid_operation", RESET_VIEW_REFUSAL)
         case ApplyView():  # likewise
@@ -1897,7 +2026,8 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     for name, kind in kinds.items():
         if kind == "boolean" and op.how in ("sum", "mean"):
             work[name] = work[name].astype("Int64")
-    grouped = work.groupby(keys, dropna=False, sort=True)
+    # Without a key (a question's `QueryAggregate`), every row is one group, reduced by the same code as a group's.
+    grouped = work.groupby(keys, dropna=False, sort=True) if keys else work.groupby(np.zeros(len(work), dtype=np.int64))
     reduced: list[pd.Series] = []
     rounded = cast = 0
     for name in values:
@@ -1905,7 +2035,7 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
         reduced.append(series.rename(value_names[0] if op.how == "count" else name))
         rounded += whole_rounded_count
         cast += cast_count
-    result = pd.concat(reduced, axis=1).reset_index()
+    result = pd.concat(reduced, axis=1).reset_index(drop=not keys)
     result.columns = pd.Index([*keys, *value_names])
     carried.keep_only([*keys, *value_names])
     if op.period in DATE_PERIODS:
@@ -1925,13 +2055,37 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     verb = _VERBS[op.how]
     if op.how in ("first", "last"):
         verb = verb.replace(" value", " value (by time)" if date_keys and op.period else " value (in row order)")
-    change = f"{verb} {_listed(values)} by {by}: {_count(len(result), 'row')}"
+    if keys:
+        over = f"by {by}"
+    else:
+        over = f"over all {_count(len(frame), 'row')}" if len(frame) != 1 else "over the 1 row"
+    change = f"{verb} {_listed(values)} {over}: {_count(len(result), 'row')}"
     other = frame.shape[1] - len(keys) - len(values)
     if other:
         change += f", {_count(other, 'other column')} dropped"
-    if cast:
-        return result, _with_notice(change, cast_note(cast, f"in {_listed(values)}"))
-    return result, _with_notice(change, whole_rounded(rounded) if rounded else "")
+    notice = cast_note(cast, f"in {_listed(values)}") if cast else whole_rounded(rounded) if rounded else ""
+    if not keys:
+        # Without a key the line names the rows the figures are over, so it counts the rows each figure leaves out
+        # too, in the room the other notice and the shortest start of the line leave (", " before each notice).
+        room = MAX_NOTE_CHARS - min(len(change), NOTE_HEAD_CHARS) - 2 - (len(notice) + 2 if notice else 0)
+        notice = _joined(_left_out_note(frame, values, room), notice)
+    return result, _with_notice(change, notice)
+
+
+def _left_out_note(frame: pd.DataFrame, columns: list[str], room: int) -> str:
+    """The rows without a value in each value column of an `aggregate` without a key: a sum, a mean, a count, a
+    minimum or a first value reads only the cells that hold one. One count per column, since the columns can miss
+    different rows. Past `room` characters the names give way to the total of the empty cells: `room` is what the
+    line's other notice and the shortest start it keeps (`NOTE_HEAD_CHARS`) leave, so `_with_notice` shortens the
+    start of the line and never a count."""
+    missing = {name: int(frame[name].isna().sum()) for name in columns}
+    notes = _joined(
+        *(f"{_count(count, 'row')} without a value in {name} left out" for name, count in missing.items() if count)
+    )
+    if not notes or len(notes) <= room:
+        return notes
+    cells, hit = sum(missing.values()), sum(1 for count in missing.values() if count)
+    return f"{_count(cells, 'empty cell')} in {hit} of the {len(columns)} value columns left out"
 
 
 def _reduce(grouped: Any, values: pd.Series, how: str) -> tuple[pd.Series, int, int]:
@@ -2004,7 +2158,8 @@ def _keep_where(frame: pd.DataFrame, where: Sequence[Condition], carried: _Carri
     """The rows for which every condition holds, the others dropped and counted.
 
     No matching row is refused, as a `drop_rows` that matches every row is. When every row matches, every row
-    stays and the line says so.
+    stays and the line says so. Either line ends with the lowest and the highest value the kept rows have in each
+    tested column of dates or period labels (`_kept_bounds`).
     """
     mask, clauses = _rows_where(frame, where, carried)
     total, matching = len(frame), int(mask.sum())
@@ -2012,13 +2167,62 @@ def _keep_where(frame: pd.DataFrame, where: Sequence[Condition], carried: _Carri
         raise PrepareError("empty_result", "no row matches the conditions; no row would remain")
     words = " and ".join(clauses)
     if matching == total:
-        return frame, f"kept all {_count(total, 'row')}; every one matches {words}"
+        head = f"kept all {_count(total, 'row')}; every one matches "
+        return frame, _kept_line(head, words, "", _kept_bounds(frame, frame, where, carried))
     kept, dropped = frame[mask].reset_index(drop=True), frame[~mask]
     head = f"kept {matching} of {_count(total, 'row')} where "
     tail = f", {total - matching} dropped" + _unvalued_note(dropped, where) + _offsets_note(dropped, kept)
-    # The conditions give way, never the counts: the caller wrote the conditions, and the line's own clip would cut
-    # from the end, where the rows without a value and the amounts below 0 are counted.
-    return kept, head + _clip(words, max(MAX_NOTE_CHARS - len(head) - len(tail), 1)) + tail
+    return kept, _kept_line(head, words, tail, _kept_bounds(frame, kept, where, carried))
+
+
+def _kept_line(head: str, words: str, tail: str, bounds: list[str]) -> str:
+    """A `keep_rows` line: `head`, the conditions (`words`), the counts (`tail`), then the lowest and the highest kept
+    value of each column in `bounds`.
+
+    The conditions give way, never the counts: the caller wrote the conditions, and the line's own clip would cut
+    from the end, where the rows without a value and the amounts below 0 are counted. A column's two values are added
+    whole or not at all, in the order of the conditions, as long as the line keeps one character of the conditions:
+    half a date would name a value the rows do not have.
+    """
+    named = ""
+    for part in bounds:
+        longer = f"{named} and {part}" if named else f"; in the rows kept, {part}"
+        if len(head) + 1 + len(tail) + len(longer) > MAX_NOTE_CHARS:
+            break
+        named = longer
+    rest = tail + named
+    return head + _clip(words, max(MAX_NOTE_CHARS - len(head) - len(rest), 1)) + rest
+
+
+def _kept_bounds(frame: pd.DataFrame, kept: pd.DataFrame, where: Sequence[Condition], carried: _Carried) -> list[str]:
+    """The lowest and the highest value of the `kept` rows in each column of dates or period labels that `where`
+    tests for a value, as `Day is at least 2024-01-05 and at most 2024-03-31` (`Month is at least '2024-03' and at
+    most '2024-08'`; `Month is '2024-03'` when they are the same).
+
+    The counts alone do not say which part of a span of time stayed: a selection that starts a month late is seen in
+    the line. The two values claim nothing about the ones between them, which an any-of selection or a gap in the
+    data leaves out, so "from A to B" would read as an unbroken range the rows may not have. Period labels of one
+    shape sort as text in time order, so their smallest and largest label are the earliest and the latest. A text
+    column of four-digit codes has the shape of year labels and gets its lowest and highest code the same way, in
+    words that fit codes as well as years.
+    """
+    bounds: list[str] = []
+    for column in _distinct([condition.column for condition in where if condition.test not in VALUE_FREE_TESTS]):
+        series = frame[column]
+        dates = _kind(series) == "datetime"
+        if not dates and not _period_labels_only(series):
+            continue
+        values = kept[column].dropna()
+        if values.empty:
+            continue
+        with_time = bool(_with_time(series, carried))
+        lowest, highest = (_cell_text(value, with_time) for value in (values.min(), values.max()))
+        if not dates:  # text, quoted as a condition's text value is
+            lowest, highest = f"'{lowest}'", f"'{highest}'"
+        bounds.append(
+            f"{column} is {lowest}" if lowest == highest else f"{column} is at least {lowest} and at most {highest}"
+        )
+    return bounds
 
 
 def _unvalued_note(dropped: pd.DataFrame, where: Sequence[Condition]) -> str:
@@ -2335,11 +2539,12 @@ def _derived(
 
 
 def _with_notice(change: str, notice: str) -> str:
-    """`change` with `notice` appended, the notice never cut: `apply_operations` clips every line to
-    `MAX_NOTE_CHARS`, and a rounding count lost to the clip would be a silent loss again (review of #12196)."""
+    """`change` with `notice` appended, the notice never cut while `change` can give way: `apply_operations` clips
+    every line to `MAX_NOTE_CHARS`, and a count lost to the clip would be a silent loss again. A notice that leaves
+    `change` no room shortens it to its ellipsis, never keeps it whole for the line's clip to cut the notice."""
     if not notice:
         return change
-    return f"{_clip(change, MAX_NOTE_CHARS - len(notice) - 2)}, {notice}"
+    return f"{_clip(change, max(MAX_NOTE_CHARS - len(notice) - 2, 1))}, {notice}"
 
 
 def _integer_result(frame: pd.DataFrame, columns: list[str], how: str) -> tuple[pd.Series, int]:
@@ -2483,10 +2688,18 @@ def _order_rows(frame: pd.DataFrame, keys: list[str], order: str, what: str) -> 
 
 def _period_labels_only(series: pd.Series) -> bool:
     """Whether a text column holds period labels of one shape only (`_PERIOD_LABEL_SHAPES`), and at least one."""
+    return _label_shape(series) is not None
+
+
+def _label_shape(series: pd.Series) -> re.Pattern[str] | None:
+    """The one shape of `_PERIOD_LABEL_SHAPES` every cell of a text column has, or None (also for no cell at all)."""
     if _kind(series) != "text":
-        return False
-    cells = [cell for cell in series if isinstance(cell, str)]
-    return bool(cells) and any(all(shape.fullmatch(cell) for cell in cells) for shape in _PERIOD_LABEL_SHAPES)
+        return None
+    cells = list(series.dropna())
+    # A cell that is no text has no shape, and the lowest and highest label are compared as text.
+    if not cells or not all(isinstance(cell, str) for cell in cells):
+        return None
+    return next((shape for shape in _PERIOD_LABEL_SHAPES if all(shape.fullmatch(cell) for cell in cells)), None)
 
 
 def _sequences(frame: pd.DataFrame, keys: list[str], ordered: pd.Index) -> list[list[Hashable]]:
@@ -2535,6 +2748,86 @@ def _number_input(frame: pd.DataFrame, column: str, what: str) -> None:
         return
     hint = "date_number turns dates into numbers" if kind == "datetime" else "set_type it to number first"
     raise PrepareError("type_mismatch", f"column '{column}' is {kind}; {what} needs number columns: {hint}")
+
+
+# --- fit -------------------------------------------------------------------------------------
+
+
+def _fit(frame: pd.DataFrame, op: Fit, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """The least-squares line of `op.y` on `op.x` over the rows that have both, as one row of `FIT_COLUMNS`.
+
+    The sums are exact fractions of the cells as `data.csv` writes them (`_fraction`), so the slope, the intercept and
+    r squared are each rounded once, to the nearest float, and never to fewer digits: a number the root quotes is the
+    data's, not the noise of a float computation. Rows without a value in `x` or `y` are left out and counted. Fewer
+    than two rows and an `x` with one value only have no line and are refused; a `y` with one value only has a line
+    (slope 0) but no r squared, whose cell stays empty, as the line says.
+    """
+    columns = _distinct([op.x, op.y])
+    for column in columns:
+        _require(frame, column)
+        if _kind(frame[column]) == "datetime":
+            # A call the root can fix itself, so the way out stands here and not in its prompt: only the question
+            # knows the unit a date becomes a number in.
+            raise PrepareError(
+                "invalid_operation",
+                f"column '{column}' holds dates; fit needs number columns: add a date_number step for it before the "
+                "fit, with the unit the question asks about, and fit on that column",
+            )
+        _number_input(frame, column, "fit")
+    present = frame[op.x].notna() & frame[op.y].notna()
+    left_out = int((~present).sum())
+    xs = [_fraction(value, op.x) for value in frame.loc[present, op.x]]
+    ys = [_fraction(value, op.y) for value in frame.loc[present, op.y]]
+    count = len(xs)
+    if count < 2:
+        has = "row has" if count == 1 else "rows have"
+        raise PrepareError(
+            "invalid_operation", f"fit needs at least 2 rows with a value in {_listed(columns)}; {count} {has}"
+        )
+    sum_x, sum_y = sum(xs, Fraction(0)), sum(ys, Fraction(0))
+    # The centred sums of squares and products, exact: Σ(x - x̄)² = Σx² - (Σx)²/n, and so on.
+    sxx = sum((value * value for value in xs), Fraction(0)) - sum_x * sum_x / count
+    sxy = sum((a * b for a, b in zip(xs, ys, strict=True)), Fraction(0)) - sum_x * sum_y / count
+    syy = sum((value * value for value in ys), Fraction(0)) - sum_y * sum_y / count
+    if not sxx:
+        raise PrepareError(
+            "invalid_operation", f"column '{op.x}' has one value in all {count} rows the fit reads, so no line fits"
+        )
+    slope = sxy / sxx
+    intercept = (sum_y - slope * sum_x) / count
+    try:
+        r_squared = float(sxy * sxy / (sxx * syy)) if syy else math.nan
+        slope_name, intercept_name, r_squared_name, n_name = FIT_COLUMNS
+        result = pd.DataFrame(
+            {
+                slope_name: [float(slope)],
+                intercept_name: [float(intercept)],
+                r_squared_name: pd.array([r_squared], dtype="float64"),
+                n_name: pd.array([count], dtype="Int64"),
+            }
+        )
+    except OverflowError:  # a slope past what a float holds: steep data over a tiny spread of x
+        raise PrepareError("invalid_operation", "the fit's slope or intercept lies outside the number range") from None
+    carried.keep_only([])  # four new columns: nothing carried about the source columns holds for them
+    change = (
+        f"fit of {op.y} on {op.x} by least squares over {_count(count, 'row')}: 1 row of {_listed(list(FIT_COLUMNS))}"
+    )
+    notes = [
+        f"{_count(left_out, 'row')} without a value in {' or '.join(columns)} left out" if left_out else "",
+        f"r_squared is empty: {op.y} has one value in all {count} rows" if not syy else "",
+    ]
+    return result, _with_notice(change, _joined(*notes))
+
+
+def _fraction(value: Any, column: str) -> Fraction:
+    """A number cell as an exact fraction of what `data.csv` writes: a whole number as it is, a float as its shortest
+    form (`repr`), the decimal the user reads, as `_decimal_total` adds them."""
+    if isinstance(value, int | np.integer):
+        return Fraction(int(value))
+    number = float(value)
+    if not math.isfinite(number):
+        raise PrepareError("invalid_operation", f"column '{column}' holds a value that is no finite number")
+    return Fraction(repr(number))
 
 
 # --- compute ---------------------------------------------------------------------------------
@@ -3708,6 +4001,7 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
             raise PrepareError("invalid_operation", f"column '{column}' is boolean; {test} does not apply")
         target = value.casefold() == "true"
     else:
+        _check_label_value(series, value, column)
         target = value
     if test == "eq":
         return _bools(series == target)
@@ -3720,6 +4014,28 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
     if test == "le":
         return _bools(series <= target)
     return _bools(series < target)
+
+
+def _check_label_value(series: pd.Series, value: str, column: str) -> None:
+    """Refuse a value of another date or period shape than the period labels of a text column it is compared with.
+
+    Labels compare as text, so a bound of another shape gives a wrong answer without an error: `2024-01` sorts
+    before `2024-01-01`, and `ge 2024-01-01` leaves January out. A value with no date or period shape keeps the
+    comparison as text, so a column of four-digit codes kept text still takes `eq` and `ne` of any code. The message
+    names the column's form from its shape alone, so the bound can be given again in that form.
+    """
+    text = value.strip()
+    given = next((shape for shape in _VALUE_FORMS if shape.fullmatch(text)), None)
+    if given is None:
+        return
+    shape = _label_shape(series)
+    if shape is None or shape is given:
+        return
+    raise PrepareError(
+        "invalid_operation",
+        f"column '{column}' holds {_LABEL_FORMS[shape]}, which compare as text: give the value in that form, "
+        f"not as {_VALUE_FORMS[given]}",
+    )
 
 
 def condition_words(condition: Condition, *, text: bool) -> str:
@@ -4151,7 +4467,16 @@ def _check_failed(column: str, failed: int, present: int, what: str) -> None:
         raise PrepareError("type_mismatch", f"column '{column}': {failed} of {present} cells cannot be read as {what}")
 
 
-_PERIOD_WORDS = {"week": "ISO week, each as its Monday", "hour": "hour", "day": "day"}
+_PERIOD_WORDS = {
+    "week": "ISO week, each as its Monday",
+    "hour": "hour",
+    "day": "day",
+    "month": "month, as text labels YYYY-MM",
+    "quarter": "quarter, as text labels YYYY-Qn",
+    "year": "year, as text labels YYYY",
+}
+"""How an `aggregate` line names its period and the form of the key it writes: a month, a quarter and a year key
+is text from then on, so a condition on it takes a value of the same form (`_check_label_value`)."""
 
 
 def _period_starts(series: pd.Series, period: str) -> pd.Series:
@@ -4268,6 +4593,9 @@ def _count(number: int, noun: str) -> str:
 
 
 def _clip(text: str, limit: int) -> str:
+    """`text` cut to `limit` characters, the last of them an ellipsis. A limit below 1 counts as 1: a negative slice
+    would keep nearly all of `text` instead."""
+    limit = max(limit, 1)
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 

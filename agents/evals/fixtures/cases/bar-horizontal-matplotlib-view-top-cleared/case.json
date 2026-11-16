@@ -1,0 +1,17 @@
+{
+  "spec_id": "bar-horizontal",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {"role": "category", "column": "Workshop"},
+    {"role": "value", "column": "Booked seats (%)"}
+  ],
+  "expected": "accepted",
+  "tags": ["categorical", "small", "view", "view-mean", "view-cleared"],
+  "source": "hand-written synthetic data: the top-4 view of bar-horizontal-matplotlib-view-top-mean, then the page's .show_all(), after which the mean covers all 6 rows and no label may name the top 4",
+  "before_view": [
+    {"op": "sort", "column": "Booked seats (%)", "descending": true},
+    {"op": "keep_rows", "n": 4}
+  ],
+  "view_checks": {"named": true, "clear": true}
+}

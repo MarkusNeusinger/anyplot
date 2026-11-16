@@ -53,6 +53,7 @@ from typing import Any, Literal, Protocol
 # `CASE_ID_PATTERN` is re-exported for the routes, which validate ids against it.
 from core.agent_cases import CASE_ID_PATTERN as CASE_ID_PATTERN
 from core.agent_cases import CASE_PREFIX, CODE_FILE_NAMES, MANIFEST_NAME, MANIFEST_SCHEMA, case_object
+from core.constants import library_file_extension
 
 
 CASE_STATUS_NEW = "new"
@@ -77,9 +78,13 @@ _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 _THEMES = ("light", "dark")
 _FILE_KEYS = frozenset({"images", "data_csv"})
 """The version fields that become files of their own and stay out of the manifest's `bundle`."""
-# The first line of an exported `plot.py` (agents/anyplot/code/export.py, `attribution`):
-# `# Adapted by anyplot.ai from <spec> (<library>[ <version>]) for your data.csv;`.
-_EXPORT_LIBRARY = re.compile(r"\A# Adapted by anyplot\.ai from [a-z0-9-]+ \(([a-z][a-z0-9]*)[ )]")
+# The first line of exported code (agents/anyplot/code/export.py, `attribution`):
+# `# Adapted by anyplot.ai from <spec> (<library>[ <version>]) for your data.csv;`, with `//` in place of `#`
+# for JavaScript, whose export is a script the exported page runs. The regression importer
+# (agents/evals/import_case.py) imports nothing from the repository and keeps a copy; its test holds the two equal.
+_EXPORT_LIBRARY = re.compile(
+    r"\A(?P<marker>#|//) Adapted by anyplot\.ai from [a-z0-9-]+ \((?P<library>[a-z][a-z0-9]*)[ )]"
+)
 
 
 class BundleError(ValueError):
@@ -246,7 +251,7 @@ def version_library(version: dict[str, Any], session: dict[str, Any]) -> str | N
     The bundle's version items carry no `library` yet, and the session's library is the
     one at submission time, which differs after a library switch. So: the version's own
     `library` when a newer agents service sends one, else the library the exported
-    `plot.py` names in its first line, else the session's.
+    code names in its first line (`#` or `//` header), else the session's.
     """
     own = _text(version.get("library"))
     if own:
@@ -254,7 +259,7 @@ def version_library(version: dict[str, Any], session: dict[str, Any]) -> str | N
     code = version.get("plot_py")
     match = _EXPORT_LIBRARY.match(code) if isinstance(code, str) else None
     if match:
-        return match.group(1)
+        return match.group("library")
     return _text(session.get("library"))
 
 
@@ -455,14 +460,65 @@ class ManifestDetail:
 
 
 @dataclass(frozen=True)
+class CaseCondition:
+    """One condition of a `keep_rows`, `drop_rows` or `blank` (the agents' `turn_record.RecordedCondition`): its test,
+    the shape of its value and the kind of its column, never the value or the column."""
+
+    test: str
+    value_shape: str
+    column_kind: str
+
+
+@dataclass(frozen=True)
+class CaseOperation:
+    """One data operation of a call (the agents' `turn_record.RecordedOp`): its name and the codes of its kind; a field
+    that does not apply to the operation is None."""
+
+    op: str
+    mode: str | None
+    target: str | None
+    order: str | None
+    conditions: tuple[CaseCondition, ...] | None
+    how: str | None
+    period: str | None
+    keys: int | None
+    type: str | None
+    date_format: str | None
+    decimal: str | None
+    unit: str | None
+    keep: str | None
+    family: str | None
+
+
+@dataclass(frozen=True)
+class CaseCallShape:
+    """The shape of a call's arguments (the agents' `turn_record.CallShape`): closed codes, booleans and counts; a
+    field that does not apply to the tool is None."""
+
+    operations: tuple[CaseOperation, ...] | None
+    from_version: str | None
+    limit: bool | None
+    base: str | None
+    theme: str | None
+    combine: str | None
+    change_request: bool | None
+    expected_texts: int | None
+    remember: tuple[str, ...] | None
+    applies_to: str | None
+    plot: bool | None
+
+
+@dataclass(frozen=True)
 class CaseToolCall:
     """One root tool call of a turn (the agents' `turn_record.RecordedCall`): its name, the guards' verdict, what it
-    did, and the code of its answer."""
+    did, the code of its answer, and the shape of its arguments (None for a tool without one, and for a case from
+    before the record kept it)."""
 
     tool: str
     verdict: str
     outcome: str
     code: str | None
+    shape: CaseCallShape | None = None
 
 
 @dataclass(frozen=True)
@@ -636,11 +692,49 @@ PREP_OPS = frozenset(
     " row_number date_number split extract strip replace compute diff rolling blank keep_rows reset_view"
     " apply_view unsupported".split()
 )
+# The operations only a question takes (`turn_record.QueryOnlyOp`), which a call's shape records by name alone.
+QUERY_ONLY_OPS = frozenset({"fit"})
+SHAPE_CODES: dict[str, frozenset[str]] = {
+    # A call's shape (`turn_record.CallShape`, `RecordedOp`, `RecordedCondition`), each field's own set by its name.
+    "op": PREP_OPS | QUERY_ONLY_OPS | {"other"},
+    "test": frozenset("eq ne contains is_missing not_missing gt lt ge le other".split()),
+    "value_shape": frozenset("number iso_date iso_datetime year_month year_quarter year text list none".split()),
+    "column_kind": frozenset("integer number datetime boolean text unknown".split()),
+    "mode": frozenset({"where", "first_n"}),
+    "target": frozenset({"plot", "table"}),
+    "order": frozenset({"ascending", "descending"}),
+    "how": frozenset("sum mean count min max first last ratio difference share percent_change cumsum index".split()),
+    "period": frozenset("hour day week month quarter year".split()),
+    "type": frozenset({"number", "datetime", "text"}),
+    "date_format": frozenset(
+        "DD.MM.YYYY MM/DD/YYYY YYYY-MM-DD DD/MM/YYYY YYYYMMDD YYYYMM YYYY-MM MM/YYYY MM.YYYY YYYY".split()
+    ),
+    "decimal": frozenset({".", ","}),
+    "unit": frozenset({"year", "decimal_year", "days", "timestamp"}),
+    "keep": frozenset({"number", "digits", "letters"}),
+    "family": frozenset("fill_values edit_cells add_rows combine_tables text_pattern time_window other".split()),
+    "from_version": frozenset({"current", "original", "numbered"}),
+    "base": frozenset({"catalogue", "previous"}),
+    "theme": frozenset({"light", "dark"}),
+    "combine": frozenset({"sum", "mean"}),
+    "remember": frozenset(
+        "title subtitle axis_label scale limits ticks color marker line_style reference_line annotation legend theme"
+        " language sort layout other".split()
+    ),
+    "applies_to": frozenset({"both", "plot", "replies"}),
+}
 # The record's own bounds (`turn_record.MAX_KEPT_TURNS` and the `MAX_RECORD_*`), read again here.
 _MAX_TURNS = 50
 _MAX_TURN_TOOLS = 32
 _MAX_TURN_GUARDS = 24
 _MAX_TURN_PREP_OPS = 16
+# A shape's bounds, the tools' own argument bounds (`prepare.MAX_OPERATIONS`, `MAX_CONDITIONS`, `MAX_KEYS`,
+# `schemas.MAX_EXPECTED_TEXTS`, `MAX_REMEMBER`).
+_MAX_SHAPE_OPERATIONS = 5
+_MAX_SHAPE_CONDITIONS = 3
+_MAX_SHAPE_KEYS = 2
+_MAX_SHAPE_EXPECTED_TEXTS = 5
+_MAX_SHAPE_REMEMBER = 5
 
 
 def _closed(value: Any, allowed: frozenset[str]) -> str:
@@ -649,6 +743,74 @@ def _closed(value: Any, allowed: frozenset[str]) -> str:
 
 def _closed_or_none(value: Any, allowed: frozenset[str]) -> str | None:
     return None if value is None else _closed(value, allowed)
+
+
+def _flag(value: Any) -> bool | None:
+    return value if isinstance(value, bool) else None
+
+
+def _small_count(value: Any, bound: int) -> int | None:
+    count = _count(value)
+    return count if count is not None and count <= bound else None
+
+
+def _shape_code(item: dict[str, Any], name: str) -> str | None:
+    return _closed_or_none(item.get(name), SHAPE_CODES[name])
+
+
+def _condition(item: dict[str, Any]) -> CaseCondition:
+    return CaseCondition(
+        test=_closed(item.get("test"), SHAPE_CODES["test"]),
+        value_shape=_closed(item.get("value_shape"), SHAPE_CODES["value_shape"]),
+        column_kind=_closed(item.get("column_kind"), SHAPE_CODES["column_kind"]),
+    )
+
+
+def _operation(item: dict[str, Any]) -> CaseOperation:
+    conditions = item.get("conditions")
+    return CaseOperation(
+        op=_closed(item.get("op"), SHAPE_CODES["op"]),
+        mode=_shape_code(item, "mode"),
+        target=_shape_code(item, "target"),
+        order=_shape_code(item, "order"),
+        conditions=None
+        if conditions is None
+        else tuple(_condition(entry) for entry in _list(conditions)[:_MAX_SHAPE_CONDITIONS] if isinstance(entry, dict)),
+        how=_shape_code(item, "how"),
+        period=_shape_code(item, "period"),
+        keys=_small_count(item.get("keys"), _MAX_SHAPE_KEYS),
+        type=_shape_code(item, "type"),
+        date_format=_shape_code(item, "date_format"),
+        decimal=_shape_code(item, "decimal"),
+        unit=_shape_code(item, "unit"),
+        keep=_shape_code(item, "keep"),
+        family=_shape_code(item, "family"),
+    )
+
+
+def _call_shape(value: Any) -> CaseCallShape | None:
+    """A call's shape as a case shows it: None when the call has none (a tool without one, a case from before the
+    record kept it); every code closed again, every list within the tools' own bounds."""
+    if not isinstance(value, dict):
+        return None
+    operations, remember = value.get("operations"), value.get("remember")
+    return CaseCallShape(
+        operations=None
+        if operations is None
+        else tuple(_operation(item) for item in _list(operations)[:_MAX_SHAPE_OPERATIONS] if isinstance(item, dict)),
+        from_version=_shape_code(value, "from_version"),
+        limit=_flag(value.get("limit")),
+        base=_shape_code(value, "base"),
+        theme=_shape_code(value, "theme"),
+        combine=_shape_code(value, "combine"),
+        change_request=_flag(value.get("change_request")),
+        expected_texts=_small_count(value.get("expected_texts"), _MAX_SHAPE_EXPECTED_TEXTS),
+        remember=None
+        if remember is None
+        else tuple(_closed(kind, SHAPE_CODES["remember"]) for kind in _list(remember)[:_MAX_SHAPE_REMEMBER]),
+        applies_to=_shape_code(value, "applies_to"),
+        plot=_flag(value.get("plot")),
+    )
 
 
 def _bounded(items: list[Any], bound: int, dropped: Any, *, latest: bool = False) -> tuple[list[Any], int]:
@@ -683,6 +845,7 @@ def _turn(item: dict[str, Any], number: int) -> CaseTurn:
                 verdict=_closed(call.get("verdict"), CALL_VERDICTS),
                 outcome=_closed(call.get("outcome"), CALL_OUTCOMES),
                 code=_closed_or_none(call.get("code"), CALL_CODES),
+                shape=_call_shape(call.get("shape")),
             )
             for call in calls
         ),
@@ -756,13 +919,16 @@ def _without_export_header(code: str) -> str:
     """The exported code without its attribution header (agents/anyplot/code/export.py, `attribution`).
 
     Only when the first line is the header's: then the leading comment lines up to the
-    first blank line, and that blank line, which the export adds after its two lines.
+    first blank line, and that blank line, which the export adds after its two lines. The
+    comment marker is the header's own, `#` or JavaScript's `//`.
     """
-    if not _EXPORT_LIBRARY.match(code):
+    header = _EXPORT_LIBRARY.match(code)
+    if not header:
         return code
+    marker = header.group("marker")
     lines = code.split("\n")
     start = 0
-    while start < len(lines) and lines[start].startswith("#"):
+    while start < len(lines) and lines[start].startswith(marker):
         start += 1
     if start < len(lines) and not lines[start].strip():
         start += 1
@@ -778,18 +944,20 @@ def _diff_lines(text: str) -> list[str]:
 
 
 def code_diff(original: str, adapted: str, *, spec_id: str, library_id: str) -> str:
-    """A unified diff from the catalogue's code to a case's exported `plot.py`; empty when they agree.
+    """A unified diff from the catalogue's code to a case's exported code; empty when they agree.
 
     The export's attribution header is dropped first, so its two comment lines do not read as
     a change. Each line counts as newline-terminated, so a missing final newline on either
-    side does not glue two diff lines together.
+    side does not glue two diff lines together. Both labels carry the library's file
+    extension (`core.constants.library_file_extension`), the one its language's code file has.
     """
+    extension = library_file_extension(library_id)
     return "".join(
         difflib.unified_diff(
             _diff_lines(original),
             _diff_lines(_without_export_header(adapted)),
-            fromfile=f"catalogue/{spec_id}/{library_id}.py",
-            tofile="case/plot.py",
+            fromfile=f"catalogue/{spec_id}/{library_id}{extension}",
+            tofile=f"case/plot{extension}",
             n=3,
         )
     )

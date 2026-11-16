@@ -477,7 +477,8 @@ class TestAdaptStepWiring:
     def test_python_only_record_only_and_bounded(self):
         step = _step("impl-review.yml", ADAPT)
         assert step["id"] == "adapt"
-        assert step["if"] == "steps.lang.outputs.language == 'python'"
+        # Not after a render hash mismatch: the step could skip the review for the adapt route.
+        assert step["if"] == "steps.lang.outputs.language == 'python' && steps.render_stop.outputs.stopped != 'true'"
         assert step["continue-on-error"] is True
         assert step["timeout-minutes"] == 5
         assert "exit 1" not in _code_only(step["run"])
@@ -529,7 +530,10 @@ class TestAdaptStepWiring:
 
 class TestReviewFreeWiring:
     def test_the_review_is_skipped_only_on_the_switch(self):
-        assert _step("impl-review.yml", "Run AI Quality Review")["if"] == "steps.adapt.outputs.review_skipped != 'true'"
+        # And after a render hash mismatch (tests/unit/workflows/test_render_stop_steps.py).
+        assert _step("impl-review.yml", "Run AI Quality Review")["if"] == (
+            "steps.adapt.outputs.review_skipped != 'true' && steps.render_stop.outputs.stopped != 'true'"
+        )
 
     @pytest.mark.parametrize(
         "name",

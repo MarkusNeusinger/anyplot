@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-split: Split Violin Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-08
+Library: seaborn 0.13.2 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-16
 """
 
 import os
@@ -19,38 +19,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series always #009E73, second is #C475FD
-BRAND = "#009E73"
-SECONDARY = "#C475FD"
+# Imprint palette: canonical order, first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Salary comparison between genders across departments with varied distributions
-np.random.seed(42)
-
-departments = ["Engineering", "Marketing", "Sales", "Finance"]
-genders = ["Male", "Female"]
-
-data = []
-# Create diverse salary distributions with distinct patterns per department
-# to better showcase split violin comparative power
-salary_params = {
-    "Engineering": {"Male": (105000, 18000), "Female": (88000, 12000)},
-    "Marketing": {"Male": (68000, 10000), "Female": (78000, 14000)},
-    "Sales": {"Male": (72000, 22000), "Female": (62000, 14000)},
-    "Finance": {"Male": (82000, 11000), "Female": (85000, 16000)},
-}
-
-for dept in departments:
-    for gender in genders:
-        mean, std = salary_params[dept][gender]
-        n_samples = np.random.randint(100, 160)
-        salaries = np.random.normal(mean, std, n_samples)
-        salaries = np.clip(salaries, 25000, 185000)
-        for sal in salaries:
-            data.append({"Department": dept, "Gender": gender, "Salary": sal})
-
-df = pd.DataFrame(data)
-
-# Set seaborn theme with theme-adaptive colors
+# Library setup
 sns.set_theme(
     style="ticks",
     rc={
@@ -61,55 +33,73 @@ sns.set_theme(
         "text.color": INK,
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
-        "grid.color": INK,
-        "grid.alpha": 0.10,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Columns: set these to your table's column names
+REGION = "Region"  # role: category
+ENERGY = "Daily electricity use (kWh per household)"  # role: value
+SEASON = "Season"  # role: split_group
 
+# Data: replace this block with your own table, for example df = pd.read_csv("energy.csv")
+rng = np.random.default_rng(7)
+regions = ["Nordic", "Mediterranean", "Continental", "Atlantic", "Alpine"]
+# (mean, spread) per region for summer and winter; Nordic and Alpine winters are bimodal (cold snaps)
+params = {
+    "Nordic": {"Summer": [(9.0, 1.6)], "Winter": [(17.0, 2.5), (24.0, 2.0)]},
+    "Mediterranean": {"Summer": [(17.0, 3.0), (23.0, 2.2)], "Winter": [(11.0, 1.8)]},
+    "Continental": {"Summer": [(12.0, 2.0)], "Winter": [(15.0, 3.4)]},
+    "Atlantic": {"Summer": [(10.0, 1.4)], "Winter": [(12.5, 1.7)]},
+    "Alpine": {"Summer": [(8.5, 1.5)], "Winter": [(14.0, 2.0), (21.0, 2.4)]},
+}
+rows = []
+for region in regions:
+    for season, modes in params[region].items():
+        n = 220
+        pick = rng.integers(0, len(modes), n)
+        values = np.array([rng.normal(*modes[k]) for k in pick])
+        rows.append(pd.DataFrame({REGION: region, SEASON: season, ENERGY: np.clip(values, 3, None)}))
+df = pd.concat(rows, ignore_index=True)
+
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+
+n_seasons = df[SEASON].nunique()
 sns.violinplot(
     data=df,
-    x="Department",
-    y="Salary",
-    hue="Gender",
+    x=REGION,
+    y=ENERGY,
+    hue=SEASON,
     split=True,
     inner="quart",
-    palette={"Male": BRAND, "Female": SECONDARY},
-    linewidth=1.5,
+    cut=0,
+    density_norm="width",
+    palette=IMPRINT_PALETTE[:n_seasons],
+    linewidth=0.9,
+    inner_kws={"color": INK, "linewidth": 0.9},
     ax=ax,
 )
 
 # Style
-ax.set_title("violin-split · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
-ax.set_xlabel("Department", fontsize=20, color=INK)
-ax.set_ylabel("Annual Salary ($)", fontsize=20, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+title = "violin-split · python · seaborn · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=10)
+ax.set_xlabel(REGION, fontsize=10, color=INK)
+ax.set_ylabel(ENERGY, fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Format y-axis as currency
-ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"${x / 1000:.0f}K"))
-
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for spine in ["left", "bottom"]:
-    ax.spines[spine].set_color(INK_SOFT)
-
-# Grid - both axes for better readability
-ax.xaxis.grid(False)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.set_ylim(top=df[ENERGY].max() * 1.22)
+sns.despine(ax=ax)
+ax.yaxis.grid(True, color=INK, alpha=0.10, linewidth=0.6)
 ax.set_axisbelow(True)
 
-# Legend styling
-legend = ax.legend(title="Gender", fontsize=16, title_fontsize=18, loc="upper right", framealpha=0.95)
+legend = ax.legend(title=SEASON, fontsize=8, title_fontsize=9, loc="upper right", framealpha=0.95)
 legend.get_frame().set_facecolor(ELEVATED_BG)
 legend.get_frame().set_edgecolor(INK_SOFT)
 legend.get_title().set_color(INK)
 for text in legend.get_texts():
     text.set_color(INK)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
