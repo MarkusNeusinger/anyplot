@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
 import { FeedbackWidget } from 'src/components/FeedbackWidget';
+import { AGENT_CHAT_ENABLED } from 'src/global-config';
 import { useAnalytics } from 'src/hooks';
 import { setAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
@@ -40,8 +41,10 @@ export function RootLayout() {
   // button stands there. The page picks chat or explainer by the same rule (`namesAgentChat`).
   // The rule reads the address alone, so at a chat's address the button stays away also while
   // the page waits for the lane. With the lane closed no chat is open there, and the page's closed
-  // notice shows the button itself, by this same rule (`LaneClosed` in `AgentChatPage`).
-  const siteFeedback = !isAgentChatAddress(pathname, search);
+  // notice shows the button itself, by this same rule (`LaneClosed` in `AgentChatPage`). A build
+  // without the chat answers a chat's address with the 404 page (`routes/index.tsx`), which has no
+  // feedback of its own either, so there the button stands.
+  const siteFeedback = !(AGENT_CHAT_ENABLED && isAgentChatAddress(pathname, search));
 
   // Set synchronously during render so the pageview below and a child page's
   // first event carry the theme prop.

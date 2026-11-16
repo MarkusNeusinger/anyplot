@@ -6,6 +6,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const { setAmbient } = vi.hoisted(() => ({ setAmbient: vi.fn() }));
+const flags = vi.hoisted(() => ({ agentChat: true }));
+
+// The chat's build flag is pinned here, so the tests never depend on the environment's.
+vi.mock('src/global-config', async importOriginal => {
+  const actual = await importOriginal<typeof import('src/global-config')>();
+  return {
+    ...actual,
+    get AGENT_CHAT_ENABLED() {
+      return flags.agentChat;
+    },
+  };
+});
 
 vi.mock('src/hooks/useAnalytics', async () => {
   const actual =
@@ -80,6 +92,7 @@ describe('RootLayout', () => {
   let scrollSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    flags.agentChat = true;
     setAmbient.mockClear();
     scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   });
@@ -150,6 +163,18 @@ describe('RootLayout', () => {
       '/agent?spec=scatter-basic&library=excel',
       '/agent?spec=Scatter_Basic&library=matplotlib',
       '/agent?library=matplotlib',
+    ]) {
+      const { unmount } = renderAt(address);
+      expect(siteFeedback(), address).toBe(true);
+      unmount();
+    }
+  });
+
+  it('shows it at a chat address in a build without the chat, which answers there with the 404 page', () => {
+    flags.agentChat = false;
+    for (const address of [
+      '/agent?spec=scatter-basic&library=matplotlib&language=python',
+      '/agent?spec=line-basic&library=d3',
     ]) {
       const { unmount } = renderAt(address);
       expect(siteFeedback(), address).toBe(true);
