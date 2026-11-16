@@ -53,15 +53,32 @@ describe('LegalPage', () => {
   // A shortening pass is exactly what drops a qualifier — "30 days" silently
   // spreading over a store that has no timer, or the objection right losing
   // the condition that makes it one.
-  it('names the legal basis, the jurisdiction and the whole set of rights', () => {
+  it('names why the processing is allowed, the jurisdiction and the whole set of rights', () => {
     render(<LegalPage />);
 
-    expect(screen.getByText(/legitimate interest in protecting the site/)).toBeInTheDocument();
+    expect(screen.getByText('who is responsible')).toBeInTheDocument();
     expect(screen.getByText(/swiss data protection law applies/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/object to the processing on grounds relating to your particular situation/)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/complain to a supervisory authority/)).toBeInTheDocument();
+    // Each basis named in words with what it covers; consent given at the send and withdrawable.
+    expect(screen.getByText('why this is allowed')).toBeInTheDocument();
+    expect(screen.getByText(/a legitimate interest in protecting the site/)).toHaveTextContent(
+      "a legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits; your request: making the plot you ask the data assistant for; and your consent to a feedback case, given when you send it and withdrawable at any time by asking."
+    );
+    // Every right, the objection with the condition that makes it one.
+    expect(screen.getByText(/you can ask what is stored about you/)).toHaveTextContent(
+      'you can ask what is stored about you and have it corrected, erased or restricted, object to the processing for a reason specific to your situation, and complain to a data protection authority.'
+    );
+    // Plain words: what the law asks for, without the wording or the article numbers of legal texts.
+    const privacy = document.getElementById('privacy') as HTMLElement;
+    for (const term of [
+      /Art\.\s*\d/,
+      /legal bases/,
+      /controller/,
+      /supervisory/,
+      /particular situation/,
+      /on grounds relating/,
+    ]) {
+      expect(privacy.textContent, String(term)).not.toMatch(term);
+    }
   });
 
   it('gives each kind of data its own period and place, in its own row', () => {
@@ -156,13 +173,13 @@ describe('LegalPage', () => {
     // The browser's storage is named, not hidden behind "no cookies".
     expect(screen.getByText(/your plot\s+votes, a release number/)).toBeInTheDocument();
     // Turnstile, per Cloudflare's privacy addendum: what it reads, its storage item, no cookie,
-    // and Cloudflare's own controller role for improving the check.
+    // and that Cloudflare uses the signals for itself, to improve the check.
     expect(screen.getByRole('row', { name: /^bot check\s/ })).toHaveTextContent(
       /Cloudflare Turnstile checks that a browser, not a script, is asking/
     );
     expect(screen.getByText(/user-agent and TLS fingerprint/)).toBeInTheDocument();
     expect(screen.getByText(/with no cookie/)).toBeInTheDocument();
-    expect(screen.getByText(/as its own controller, to improve the check/)).toBeInTheDocument();
+    expect(screen.getByText(/on its own behalf, to improve the\s+check/)).toBeInTheDocument();
     expect(screen.getByText(/and Cloudflare Turnstile.s own\s+item/)).toBeInTheDocument();
     // The machine-read line, with the two things it never holds, under the anchor that
     // /legal#machine-readers lands on. Every request is a line, verified or not, so the row
@@ -188,7 +205,7 @@ describe('LegalPage', () => {
   // The data assistant's section, each claim pinned with the qualifier that
   // makes it true: experimental and open to everyone but pausable, training
   // excluded under Google Cloud's terms, the ids pseudonymous (not anonymous),
-  // the data file unticked by default, and each legal basis with its purpose.
+  // and the data file unticked by default.
   it('describes the experimental data assistant without overclaiming', () => {
     render(<LegalPage />);
 
@@ -233,18 +250,6 @@ describe('LegalPage', () => {
       screen.getByText(/it starts unticked, which leaves out that file only/)
     ).toBeInTheDocument();
     expect(screen.getByText(/first 5 rows/)).toBeInTheDocument();
-    // Each legal basis with what it covers; consent given at the send and withdrawable.
-    expect(
-      screen.getByRole('row', { name: /^Art\. 6\(1\)\(f\)\s*legitimate interest/ })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('row', { name: /^Art\. 6\(1\)\(b\)\s*your request: making the plot/ })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('row', {
-        name: /^Art\. 6\(1\)\(a\)\s*your consent to a feedback case, given when you send it and withdrawable at any time by asking$/,
-      })
-    ).toBeInTheDocument();
     // "No cookies" holds for visitors; admins get Cloudflare Access's login cookie.
     expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();
     expect(

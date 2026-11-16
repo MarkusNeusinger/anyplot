@@ -1274,8 +1274,12 @@ class TestSeoProxyRouter:
         ):
             assert fact in response.text, fact
         # The right to object carries the condition that makes it one, as on the human page.
-        assert "objection on grounds relating to your particular situation" in response.text
+        assert "object to the processing for a reason specific to your situation" in response.text
+        assert "object to the processing, and" not in response.text
         assert "restriction, objection, and" not in response.text
+        # Plain words, as on the human page: no article numbers and no wording of legal texts.
+        for term in ("Art. 6", "Legal bases", "controller", "supervisory", "particular situation"):
+            assert term not in response.text, term
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
@@ -1284,9 +1288,10 @@ class TestSeoProxyRouter:
             "Running costs about $60 a month (October 2026).",
             "a random id that ties your own submissions together",
             "the optional contact field",
-            "legitimate interest (Art. 6(1)(f) GDPR)",
+            "Why this is allowed: a legitimate interest in protecting the site, counting its readers, "
+            "and the assistant's telemetry and limits",
             "the Cloudflare Access login cookie",
-            "a complaint to a supervisory authority",
+            "and complain to a data protection authority",
             "transfers outside Switzerland and the EU",
             "cleared by the next feedback after ten minutes, and its salt dies with the server instance",
             "uses your IP address to rate-limit, filter bots and absorb DDoS attacks",
@@ -1299,7 +1304,7 @@ class TestSeoProxyRouter:
             "checks that a browser, not a script, is asking",
             "user-agent and TLS fingerprint",
             "with no cookie",
-            "as its own controller, to improve the check",
+            "Cloudflare also uses these signals on its own behalf, to improve the check",
         ):
             assert fact in response.text, fact
 
@@ -1316,8 +1321,8 @@ class TestSeoProxyRouter:
             "so they are pseudonymous",
             "it starts unticked, which leaves out that file only",
             "a licence from Highsoft",
-            "consent (Art. 6(1)(a) GDPR)",
-            "your request (Art. 6(1)(b) GDPR)",
+            "your request: making the plot you ask the data assistant for",
+            "your consent to a feedback case",
             # The page's periods and places for the assistant's data, each beside its data.
             "Telemetry: up to 180 days in Google Cloud Logging and BigQuery in the Netherlands (europe-west4)",
             "private bucket in Google Cloud Storage in the Netherlands (europe-west4) for 180 days",

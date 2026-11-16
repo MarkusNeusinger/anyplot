@@ -7,10 +7,17 @@
   further down. On a phone, each item of that line takes a line of its own. The two tables
   are gone; their two rows that hold for the whole site, the hosting on Google Cloud and
   Cloudflare as CDN, DDoS protection and bot check, stay as one sentence under the first
-  table. The legal bases stay a table of their own, because they are stated per purpose, not
-  per kind of data. The crawler copy of the page (`/seo-proxy/legal`) now says what the page
-  says, row by row: it gains the shared links it lacked, and the right to object gets back
-  its condition.
+  table. The crawler copy of the page (`/seo-proxy/legal`) now says what the page says, row
+  by row: it gains the shared links it lacked, and the right to object gets back its
+  condition.
+- **The privacy policy says in plain words what the law asks it to say.** On `/legal`, the
+  table of GDPR article numbers is gone: one sentence under "why this is allowed" names each
+  legal basis in words beside what it covers, a legitimate interest, your request and your
+  consent. The other terms of legal texts give way to everyday words: "who is responsible"
+  replaces "controller", the right to object keeps its condition without the statute's
+  phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
+  check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
+  says the same, word for word.
 
 ### Fixed
 

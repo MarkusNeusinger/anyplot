@@ -270,7 +270,7 @@ export function LegalPage() {
           <SectionHeader prompt="❯" title={<em>privacy policy</em>} />
 
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
-            <Typography sx={subheadingStyle}>controller</Typography>
+            <Typography sx={subheadingStyle}>who is responsible</Typography>
             <Typography sx={textStyle}>
               Markus Neusinger (see above). swiss data protection law applies, and the GDPR for
               visitors from the EU.
@@ -384,8 +384,8 @@ export function LegalPage() {
                     Turnstile checks that a browser, not a script, is asking: it reads your IP
                     address, user-agent and TLS fingerprint and keeps an item of its own in your
                     browser&apos;s storage, with no cookie. anyplot learns only whether the check
-                    passed. Cloudflare also uses these signals, as its own controller, to improve
-                    the check.
+                    passed. Cloudflare also uses these signals on its own behalf, to improve the
+                    check.
                     <Kept
                       items={[['where', 'Cloudflare (global, EU data centers for EU visitors)']]}
                     />
@@ -404,20 +404,13 @@ export function LegalPage() {
               for transfers outside Switzerland and the EU.
             </Typography>
 
-            <Typography sx={subheadingStyle}>legal bases (GDPR)</Typography>
-            <FactTable
-              rows={[
-                [
-                  'Art. 6(1)(f)',
-                  "legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits",
-                ],
-                ['Art. 6(1)(b)', 'your request: making the plot you ask the data assistant for'],
-                [
-                  'Art. 6(1)(a)',
-                  'your consent to a feedback case, given when you send it and withdrawable at any time by asking',
-                ],
-              ]}
-            />
+            <Typography sx={subheadingStyle}>why this is allowed</Typography>
+            <Typography sx={textStyle}>
+              a legitimate interest in protecting the site, counting its readers, and the
+              assistant&apos;s telemetry and limits; your request: making the plot you ask the data
+              assistant for; and your consent to a feedback case, given when you send it and
+              withdrawable at any time by asking.
+            </Typography>
 
             <Typography sx={subheadingStyle}>what we do not do</Typography>
             <Typography sx={textStyle}>
@@ -503,8 +496,8 @@ export function LegalPage() {
             <Typography sx={subheadingStyle}>your rights</Typography>
             <Typography sx={textStyle}>
               you can ask what is stored about you and have it corrected, erased or restricted,
-              object to the processing on grounds relating to your particular situation, and
-              complain to a supervisory authority. a few lines to{' '}
+              object to the processing for a reason specific to your situation, and complain to a
+              data protection authority. a few lines to{' '}
               <Link href="mailto:admin@anyplot.ai" sx={proseLinkStyle}>
                 admin@anyplot.ai
               </Link>{' '}
