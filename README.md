@@ -20,6 +20,10 @@ I'm [Markus Neusinger](https://linkedin.com/in/markus-neusinger/), a physicist a
 
 - **I set the course.** The vision, the decisions, and the structure that keeps a codebase written by agents from turning into a mess. Seven of those decisions are [below](#engineering-highlights).
 - **I know when to push back.** The models know a lot. The job is knowing which question to ask, when to make a model research a point properly, and when a confident answer is wrong. Security is a good example: I know what has to hold, private data and no way to abuse the service, and asking the right question is often enough for a model to find what still needs hardening.
+  - *Real data.* A model compared plot quality on invented datasets that fitted the plots too
+    neatly, so I had it fetch real weather downloads. A raw file with two metadata lines above the
+    table broke the import at once. Since then pasted data has to work with notes, metadata or total
+    rows around the table ([#12166](https://github.com/MarkusNeusinger/anyplot/pull/12166)).
 - **I split, assign, test, and send back.** Work goes to Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs. I test what comes back and return it until it's right.
 
 This isn't one prompt and a wait. Since November 2025, more than 950 pull requests from my account have merged and 16 releases have shipped. A new spec needs my approval, and outside the plot pipeline the agents merge nothing without my OK. What I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
@@ -298,7 +302,7 @@ You contribute ideas, not code: the pipeline writes every implementation.
 
 1. Open an issue, on GitHub or through a link on anyplot.ai.
 2. The AI validates and processes it.
-3. The maintainer reviews and approves it.
+3. I review and approve it.
 4. The pipeline generates or fixes the code, and the review gates it.
 
 Don't open pull requests with plot code. A plot with quality problems usually needs a better spec, not hand-edited code.
