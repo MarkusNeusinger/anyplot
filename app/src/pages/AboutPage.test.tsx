@@ -36,11 +36,11 @@ describe('AboutPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('describes itself by the four things it covers, each a section of the page', () => {
+  it('describes itself by its builder and the things it covers, each a section of the page', () => {
     render(<AboutPage />);
 
     const description =
-      'About anyplot.ai: who built it, how AI agents write and review the catalogue, the stack, and what it costs to run.';
+      'About anyplot.ai: built by Markus Neusinger with AI agents he directs. How the catalogue is written and reviewed, the stack, and what it costs to run.';
     expect(description.length).toBeLessThanOrEqual(155);
     expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
       'content',

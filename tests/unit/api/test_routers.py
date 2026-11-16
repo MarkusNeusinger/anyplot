@@ -1212,8 +1212,8 @@ class TestSeoProxyRouter:
         assert "https://anyplot.ai/about" in response.text
         # The same description as AboutPage.tsx, in the meta tags search engines and link previews read.
         description = (
-            "About anyplot.ai: who built it, how AI agents write and review the catalogue, "
-            "the stack, and what it costs to run."
+            "About anyplot.ai: built by Markus Neusinger with AI agents he directs. How the catalogue "
+            "is written and reviewed, the stack, and what it costs to run."
         )
         assert len(description) <= 155
         assert f'<meta name="description" content="{description}" />' in response.text

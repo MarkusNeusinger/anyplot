@@ -22,10 +22,11 @@ import {
 
 const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp';
 
-// One sentence for search results and link previews, the same as the crawler copy's
-// (api/routers/seo.py); each of its four parts is a section of this page.
+// For search results and link previews, the same as the crawler copy's (api/routers/seo.py): who
+// built the site and how, then the sections that say how the catalogue is written and reviewed,
+// the stack, and the running costs.
 const DESCRIPTION =
-  'About anyplot.ai: who built it, how AI agents write and review the catalogue, the stack, and what it costs to run.';
+  'About anyplot.ai: built by Markus Neusinger with AI agents he directs. How the catalogue is written and reviewed, the stack, and what it costs to run.';
 
 // Files and headings on main, as GitHub renders them. Each path and heading anchor is written out
 // after GITHUB_URL so tests/unit/test_readme_claims.py can find it and fail when a file moves or a
