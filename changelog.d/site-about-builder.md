@@ -26,8 +26,9 @@
   the four links share a centred line and the name takes the line below it.
   With a larger browser font size on a narrow phone the links break as github
   and mcp over about and legal, so no line ends on a separator. Keyboard and
-  screen readers follow the order each layout shows, and every line keeps at
-  least 11 px from the feedback and scroll-to-top buttons.
+  screen readers follow the order each layout shows, and with a browser font
+  size up to 24 px every line keeps at least 9 px from the feedback and
+  scroll-to-top buttons.
 - **The stack and the running costs moved from the legal page to the about
   page.** The legal page keeps the legal notice and the privacy policy; a link
   to `/legal#transparency` leads to `/about#transparency`, which a fresh load

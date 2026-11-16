@@ -50,8 +50,9 @@ const ONE_ROW = '@media (min-width: 720px) and (min-width: 45em)';
 // would come before the line fits. Below the bound the links break as their pairs, "github · mcp"
 // over "about · legal", and the separator between the pairs goes, so no line starts or ends on a
 // "·". On a phone the footer lift parks the buttons 13px above the footer's first line. From
-// 600px up the line comes closest to them at 600px with a 24px default, where it reaches 2px
-// into the scroll-to-top button's column and stays 11.8px above the button.
+// 600px up, with a default from 16 to 24px, the links' line comes closest to the scroll-to-top
+// button at 600px: 11.1px with a 23px default, and 9.3px with a 22px default when a classic
+// 15px scrollbar narrows the layout.
 const LINKS_ROW = '@media (min-width: 304px) and (min-width: 19em)';
 
 const pairSx = {
