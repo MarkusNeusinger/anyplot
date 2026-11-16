@@ -264,7 +264,7 @@ The operations:
     computed in exact fractions of the cells as `data.csv` writes them, with one rounding to a float
     per value at the end, never to fewer digits. Rows without a value in `x` or `y` are left out and
     counted; fewer than two rows, an `x` with one value only, and a column that holds no numbers are
-    refused (a date column takes a `date_number` first, as for `compute`); `r_squared` is empty when
+    refused (a date column with the `date_number` step to add, as a call the root can fix); `r_squared` is empty when
     `y` has one value only, which the change line says.
   `apply_and_parse`, the one path from operations to a stored version, refuses both.
 
@@ -2670,6 +2670,15 @@ def _fit(frame: pd.DataFrame, op: Fit, carried: _Carried) -> tuple[pd.DataFrame,
     """
     columns = _distinct([op.x, op.y])
     for column in columns:
+        _require(frame, column)
+        if _kind(frame[column]) == "datetime":
+            # A call the root can fix itself, so the way out stands here and not in its prompt: only the question
+            # knows the unit a date becomes a number in.
+            raise PrepareError(
+                "invalid_operation",
+                f"column '{column}' holds dates; fit needs number columns: add a date_number step for it before the "
+                "fit, with the unit the question asks about, and fit on that column",
+            )
         _number_input(frame, column, "fit")
     present = frame[op.x].notna() & frame[op.y].notna()
     left_out = int((~present).sum())

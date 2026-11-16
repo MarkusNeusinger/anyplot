@@ -349,7 +349,7 @@ class TestFit:
         ("operations", "data", "code", "words"),
         [
             ([{"op": "fit", "x": "lab", "y": "hardness"}], KILNS, "type_mismatch", "set_type it to number first"),
-            ([{"op": "fit", "x": "fired", "y": "hardness"}], KILNS, "type_mismatch", "date_number turns dates"),
+            ([{"op": "fit", "x": "fired", "y": "hardness"}], KILNS, "invalid_operation", "add a date_number step"),
             ([{"op": "fit", "x": "depth", "y": "hardness"}], KILNS, "unknown_column", "no column 'depth'"),
             (
                 [{"op": "keep_rows", "where": [{"column": "batch", "test": "eq", "value": "K1"}]}, FIT],
