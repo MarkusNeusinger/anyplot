@@ -389,6 +389,18 @@ def test_about_page_and_its_bot_copy_date_the_start_as_the_readme_does():
             assert phrase.lower() in collapse(text).lower(), f"{name}: '{phrase}', as the README says"
 
 
+def test_about_page_and_its_bot_copy_state_the_patch_coverage_target():
+    """The stack's checks row names the patch-coverage target that codecov.yml sets."""
+    patch = read(ROOT / "codecov.yml").split("\n    patch:\n", 1)[1].split("\n  ignore:", 1)[0]
+    targets = set(re.findall(r"target: (\d+)%", patch))
+    assert len(targets) == 1, f"codecov.yml sets more than one patch target, or none: {sorted(targets)}"
+    (target,) = targets
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert re.search(rf"an {target}(?: |&nbsp;)% patch-coverage target", collapse(text)), (
+            f"{name}: the patch-coverage target is {target} %, as codecov.yml sets it"
+        )
+
+
 def test_about_page_and_its_bot_copy_name_the_default_model():
     """The stack names the data assistant's model, as the README's architecture does."""
     model = field_default("agents/anyplot/settings.py", "AgentSettings", "model")

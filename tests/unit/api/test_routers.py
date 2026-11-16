@@ -1292,6 +1292,8 @@ class TestSeoProxyRouter:
             # The stack the description names, from the page's table.
             "The site runs on React 19, Vite, MUI 9 with MUI X and TypeScript.",
             "The API runs on Python 3.14, FastAPI, SQLAlchemy and PostgreSQL 18.",
+            "Checks: tests and lint on every code pull request, an 80 % patch-coverage target, CodeQL, every "
+            "migration run on a throwaway PostgreSQL, a check of the live site after a merge.",
             "Running costs about $60 a month (October 2026).",
             # The corrected pipeline and review claims (AboutPage.tsx says the same).
             "Every night a job regenerates the oldest implementations",

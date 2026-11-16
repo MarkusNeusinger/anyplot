@@ -398,6 +398,15 @@ export function AboutPage() {
                   </>,
                 ],
                 [
+                  'checks',
+                  // A no-break space keeps the percent sign with its number.
+                  <>
+                    tests and lint on every code pull request, an 80&nbsp;% patch-coverage target,
+                    CodeQL, every migration run on a throwaway PostgreSQL, a check of the live site
+                    after a merge
+                  </>,
+                ],
+                [
                   'editor, typography',
                   <>
                     <Ext href="https://www.jetbrains.com/pycharm/">JetBrains PyCharm</Ext>;{' '}

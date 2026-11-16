@@ -271,7 +271,7 @@ describe('AboutPage', () => {
     expect(screen.getByRole('link', { name: 'React' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /FastAPI/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /PostgreSQL/ })).toBeInTheDocument();
-    // Eight grouped rows, each label a row header.
+    // Nine grouped rows, each label a row header.
     for (const group of [
       'site',
       'api',
@@ -280,10 +280,19 @@ describe('AboutPage', () => {
       'google cloud',
       'edge & analytics',
       'reviews',
+      'checks',
       'editor, typography',
     ]) {
       expect(screen.getAllByRole('rowheader', { name: group }).length).toBeGreaterThan(0);
     }
+    // ci-tests.yml and ci-lint.yml on every code pull request, codecov.yml's patch target,
+    // codeql.yml, ci-migrations.yml; the live-site check is the merge rule in CLAUDE.md
+    // (scripts/site-smoke.mjs).
+    expect(
+      screen.getByRole('row', {
+        name: /^checks\s*tests and lint on every code pull request, an 80\s%\spatch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, a check of the live site after a merge$/,
+      })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('row', {
         name: /^data assistant\s*Google ADK, Claude Haiku 5\.5 via Vertex AI \(EU\)/,
