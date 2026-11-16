@@ -885,6 +885,49 @@ export interface AgentCaseLastRun {
   rounds: AgentCaseRound[];
 }
 
+/**
+ * One condition of a `keep_rows`, `drop_rows` or `blank`: its test, the
+ * shape of its value (`iso_date`), the kind of its column (`datetime`).
+ */
+export interface AgentCaseCondition {
+  test: string;
+  value_shape: string;
+  column_kind: string;
+}
+
+/** One data operation of a call: its name and the codes of its kind; a field that does not apply is `null`. */
+export interface AgentCaseOperation {
+  op: string;
+  mode: string | null;
+  target: string | null;
+  order: string | null;
+  conditions: AgentCaseCondition[] | null;
+  how: string | null;
+  period: string | null;
+  keys: number | null;
+  type: string | null;
+  date_format: string | null;
+  decimal: string | null;
+  unit: string | null;
+  keep: string | null;
+  family: string | null;
+}
+
+/** The shape of a call's arguments: closed codes, booleans and counts; a field that does not apply is `null`. */
+export interface AgentCaseCallShape {
+  operations: AgentCaseOperation[] | null;
+  from_version: string | null;
+  limit: boolean | null;
+  base: string | null;
+  theme: string | null;
+  combine: string | null;
+  change_request: boolean | null;
+  expected_texts: number | null;
+  remember: string[] | null;
+  applies_to: string | null;
+  plot: boolean | null;
+}
+
 /** One root tool call of a turn: the guards' `verdict` (`allowed` or a refusal), what it did, its answer's code. */
 export interface AgentCaseToolCall {
   tool: string;
@@ -892,6 +935,8 @@ export interface AgentCaseToolCall {
   /** `ok`, `changed`, `kept`, `shipped`, `failed`, `not_ready`, `unconfirmed`, `error`, `refused`, `unfinished`. */
   outcome: string;
   code: string | null;
+  /** The shape of its arguments; `null` for a tool without one, absent from an older case or API. */
+  shape?: AgentCaseCallShape | null;
 }
 
 /** One chat turn of the case's turn record: closed codes and counts only, never a word of the user. */
