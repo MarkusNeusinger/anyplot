@@ -161,7 +161,7 @@ def annotated_kind(relative: str, name: str) -> tuple[str, dict[str, object]]:
             if isinstance(value, ast.Subscript) and isinstance(value.slice, ast.Tuple):
                 marker = value.slice.elts[-1]
                 if isinstance(marker, ast.Call) and isinstance(marker.func, ast.Name):
-                    literals = {
+                    literals: dict[str, object] = {
                         k.arg: k.value.value for k in marker.keywords if k.arg and isinstance(k.value, ast.Constant)
                     }
                     return marker.func.id, literals
