@@ -7,7 +7,7 @@
   condition with a value of another date or period shape on such labels is
   now refused with the labels' form and an example, so the assistant can give
   the bound again in that form. A column of four-digit codes kept as text
-  compares as before.
+  compares as before. (#13140)
 - **The data lines name the form of a period key and the lowest and highest
   value that stayed.** The line of a sum or mean by month, quarter or year
   says that the key is now text labels and in which form
@@ -15,4 +15,4 @@
   its Monday. The line of "keep only the rows where" names the lowest and the
   highest kept value of each tested column of dates or period labels, so a
   selection that starts a month late shows in the result. The two values say
-  nothing about the values between them.
+  nothing about the values between them. (#13140)
