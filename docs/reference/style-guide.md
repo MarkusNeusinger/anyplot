@@ -306,7 +306,7 @@ Narrative hooks for talking about anyplot — adapt to context, don't recite ver
 
 **The catalogue story:** Thousands of examples across fifteen libraries in four languages, each reproducible and copy-pasteable. No ads. No affiliate links. No "suggested tutorials you might like." Just the plots and the code that made them.
 
-**The origin story:** It started as pyplots.ai, a small Python-only catalogue I built in a weekend. It grew when I realized people wanted the same examples across different libraries, and the same safe palette everywhere. anyplot is the grown-up version.
+**The origin story:** It started in November 2025 as pyplots.ai, a Python-only catalogue of plotting examples. It grew when I realized people wanted the same examples across different libraries, and the same safe palette everywhere. After a few months on pyplots.ai, I decided to go bigger, and in April 2026 it became anyplot.ai. anyplot is the grown-up version.
 
 **The personal touch:** Built in Visp, a small town in the Swiss Alps. By a data analyst who spent too many hours trying to figure out why the same chart looked different in seaborn than in plotly.
 

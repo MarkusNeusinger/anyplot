@@ -133,6 +133,38 @@ describe('AboutPage', () => {
     expect(screen.queryByText(/ships a\s+new release/)).not.toBeInTheDocument();
   });
 
+  // The first commit is from November 2025; CHANGELOG.md's 2.0.0 relaunch as anyplot.ai is from
+  // April 2026, which test_readme_claims.py pins.
+  it('tells the origin with the dates the repository shows', () => {
+    render(<AboutPage />);
+
+    expect(
+      screen.getByText(
+        /it started in November 2025 as pyplots\.ai, a catalogue of Python plotting examples\./
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /after a few months on pyplots\.ai, I decided to go bigger\. in April 2026 it became anyplot\.ai\./
+      )
+    ).toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(/weekend/);
+  });
+
+  // One person builds the site, so the page speaks as "I", never as "we".
+  it('speaks in the first person singular throughout', () => {
+    render(<AboutPage />);
+
+    expect(document.body).not.toHaveTextContent(/\b(we|our|ours|us)\b/i);
+    expect(
+      screen.getByText(
+        /I update the spec and every library regenerates\. I never patch generated code by hand\./
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/my own colourblind-safe categorical palette/)).toBeInTheDocument();
+    expect(screen.getByText(/ignore this entirely\. I make it the default\./)).toBeInTheDocument();
+  });
+
   it('keeps the library-agnostic point under the palette', () => {
     render(<AboutPage />);
 

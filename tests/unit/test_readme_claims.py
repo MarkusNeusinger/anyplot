@@ -321,6 +321,35 @@ def test_about_page_and_its_bot_copy_state_the_owners_year_as_the_readme_does():
         assert near(text, match.group(1), "since"), f"{name}: since {match.group(1)}, as the README says"
 
 
+# English month names, fixed: `calendar.month_name` follows the locale.
+_MONTHS = (
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+)
+
+
+def test_about_page_dates_the_rename_as_the_changelog_does():
+    """The origin's month of the rename to anyplot.ai is the month of the CHANGELOG's relaunch release."""
+    heading = re.search(
+        r"^## \[[\d.]+\] — (\d{4})-(\d{2})-\d{2} — anyplot\.ai Relaunch$", read(ROOT / "CHANGELOG.md"), re.MULTILINE
+    )
+    assert heading, "CHANGELOG.md no longer has the release that relaunched the site as anyplot.ai"
+    year, month = heading.group(1), _MONTHS[int(heading.group(2)) - 1]
+    assert f"in {month} {year} it became anyplot.ai." in collapse(read(ABOUT_PAGE)), (
+        f"AboutPage.tsx: the origin dates the rename to {month} {year}, as CHANGELOG.md does"
+    )
+
+
 # A GitHub address of a file on main, as the About page and its bot copy write it, with its heading anchor.
 _GITHUB_BLOB = re.compile(
     r"(?:\$\{GITHUB_URL\}|https://github\.com/MarkusNeusinger/anyplot)/blob/main/([\w./-]+)(#[\w-]+)?"

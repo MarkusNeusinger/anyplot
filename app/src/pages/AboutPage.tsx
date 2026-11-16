@@ -238,7 +238,7 @@ export function AboutPage() {
               humans curate; ai executes. the catalogue maintains itself: every night a job
               regenerates the oldest implementations, and a new version replaces the live one only
               when a review of both finds a fixed defect and no regression; when a better example
-              pattern emerges, we update the spec and every library regenerates. we never patch
+              pattern emerges, I update the spec and every library regenerates. I never patch
               generated code by hand.
             </Box>
             <Box sx={{ ...codeBlockStyle, whiteSpace: 'pre', fontSize: '13px', mt: 3 }}>
@@ -302,12 +302,12 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>palette</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              every plot uses <strong>imprint</strong>, our own colourblind-safe categorical palette
+              every plot uses <strong>imprint</strong>, my own colourblind-safe categorical palette
               — 8 hues plus 3 semantic anchors, tuned for warm-paper rendering and validated against
               the three main forms of colour vision deficiency. it sits in the same neighbourhood as
               Okabe-Ito, Paul Tol&apos;s &ldquo;muted&rdquo;, and ColorBrewer Set2 — about 8% of men
-              have some form of CVD, and most plotting libraries ignore this entirely. we make it
-              the default.
+              have some form of CVD, and most plotting libraries ignore this entirely. I make it the
+              default.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               a "gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or
@@ -443,11 +443,11 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>origin</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              it started as pyplots.ai, a small catalogue of python plotting examples. it grew when
-              it became clear people wanted two things from a catalogue like this: inspiration for
-              which plot fits their data, and a way to get to know libraries they hadn't used before
-              — each has its own specialties. anyplot is the grown-up version, anchored in a
-              colorblind-safe palette that travels across every library.
+              it started in November 2025 as pyplots.ai, a catalogue of Python plotting examples.
+              people wanted two things from it. they wanted ideas for which plot fits their data.
+              and they wanted to get to know libraries they hadn&apos;t used yet, since each has its
+              own strengths. after a few months on pyplots.ai, I decided to go bigger. in April 2026
+              it became anyplot.ai. one colorblind-safe palette travels across every library.
             </Box>
           </Box>
         </Box>
