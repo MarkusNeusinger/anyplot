@@ -49,7 +49,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 
 - Preview images (PNG, thumbnails)
 - Interactive HTML plots (plotly, bokeh, altair, etc.)
-- The files of each agent chat feedback case, in the private EU bucket `gs://anyplot-agent-cases` under `cases/<case_id>/` (the PNGs, `plot.py`, `data.csv` only when the sender ticked the box, and `manifest.json`); a lifecycle rule deletes them after 180 days
+- The files of each agent chat feedback case, in the private bucket `gs://anyplot-agent-cases` in the Netherlands (`europe-west4`, a single region) under `cases/<case_id>/` (the PNGs, `plot.py`, `data.csv` only when the sender ticked the box, and `manifest.json`); a lifecycle rule deletes them after 180 days
 
 ### Stored in GitHub
 
