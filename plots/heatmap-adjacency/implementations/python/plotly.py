@@ -1,19 +1,13 @@
 """ anyplot.ai
 heatmap-adjacency: Network Adjacency Matrix Heatmap
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 81/100 | Created: 2026-05-08
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-16
 """
 
 import os
-import sys
-
-
-# Prevent this file from shadowing the installed plotly package
-_here = os.path.dirname(os.path.abspath(__file__))
-sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
-del _here
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -23,9 +17,22 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data — 5 research domains, 6 terms each = 30 nodes
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
+# Imprint sequential colormap (single polarity): brand green to blue
+IMPRINT_SEQ = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+
+# Constants
+ABSENT_BELOW = 0.05  # co-occurrence below this strength counts as "no edge" and stays background-colored
+
+# Columns: set these to your table's labels
+SOURCE = "Source term"  # role: source
+TARGET = "Target term"  # role: target
+WEIGHT = "Co-occurrence strength"  # role: weight
+
+# Data: replace this block with your own square matrix, rows and columns indexed by (group, term), nodes ordered by group
+np.random.seed(42)
 domains = {
     "Machine Learning": ["neural net", "gradient", "backprop", "optimizer", "dropout", "attention"],
     "Neuroscience": ["synapse", "cortex", "dendrite", "neuron", "hippocampus", "axon"],
@@ -33,76 +40,88 @@ domains = {
     "Chemistry": ["molecule", "catalyst", "reaction", "bond", "polymer", "enzyme"],
     "Physics": ["quantum", "photon", "entropy", "wave", "spin", "field"],
 }
-
-nodes = []
-node_domain_idx = []
-for di, (_, terms) in enumerate(domains.items()):
-    nodes.extend(terms)
-    node_domain_idx.extend([di] * len(terms))
-
-n = len(nodes)
-
-# Symmetric co-occurrence matrix with block-diagonal cluster structure
-matrix = np.zeros((n, n))
-for i in range(n):
-    for j in range(i + 1, n):
-        if node_domain_idx[i] == node_domain_idx[j]:
-            val = np.random.uniform(0.55, 1.0)
+pairs = [(domain, term) for domain, terms in domains.items() for term in terms]
+n_nodes = len(pairs)
+weights = np.zeros((n_nodes, n_nodes))
+for i in range(n_nodes):
+    for j in range(i + 1, n_nodes):
+        if pairs[i][0] == pairs[j][0]:
+            weights[i, j] = weights[j, i] = np.random.uniform(0.55, 1.0)
         else:
-            val = np.random.uniform(0.0, 0.12)
-        matrix[i, j] = val
-        matrix[j, i] = val
+            weights[i, j] = weights[j, i] = np.random.uniform(0.0, 0.12)
+index = pd.MultiIndex.from_tuples(pairs, names=["Research domain", SOURCE])
+df = pd.DataFrame(weights, index=index, columns=pd.MultiIndex.from_tuples(pairs, names=["Research domain", TARGET]))
 
-# Cluster boundary positions (between consecutive domain groups)
-domain_size = 6
-boundaries = [domain_size * k for k in range(1, len(domains))]
+# Plot: reads only df and the constants above
+terms = df.index.get_level_values(-1)
+groups = df.index.get_level_values(0)  # a flat index has one level: no group boundaries
+n = len(df)
+boundaries = [i for i in range(1, n) if groups[i] != groups[i - 1]]
 
-# Plot
+# Absent edges become gaps, so the page background shows through and cannot be mistaken for a weak edge
+z = df.to_numpy(dtype=float)
+z = np.where(z < ABSENT_BELOW, np.nan, z)
+
 fig = go.Figure(
     go.Heatmap(
-        z=matrix,
-        x=nodes,
-        y=nodes,
-        colorscale="viridis",
+        z=z,
+        x=terms,
+        y=terms,
+        colorscale=IMPRINT_SEQ,
         zmin=0,
-        zmax=1,
+        zmax=np.nanmax(z),
+        xgap=1,
+        ygap=1,
         colorbar={
-            "title": {"text": "Co-occurrence<br>strength", "font": {"size": 20, "color": INK}, "side": "right"},
-            "tickfont": {"size": 16, "color": INK_SOFT},
-            "thickness": 28,
-            "len": 0.78,
+            "title": {"text": WEIGHT.replace(" ", "<br>", 1), "font": {"size": 12, "color": INK}, "side": "right"},
+            "tickfont": {"size": 10, "color": INK_SOFT},
+            "thickness": 14,
+            "len": 0.75,
+            "outlinewidth": 0,
         },
+        hoverongaps=False,
         hovertemplate="%{y} ↔ %{x}<br>Strength: %{z:.2f}<extra></extra>",
     )
 )
 
 # Cluster boundary lines separating research domains
 for b in boundaries:
-    fig.add_shape(
-        type="line", x0=b - 0.5, x1=b - 0.5, y0=-0.5, y1=n - 0.5, line={"color": INK, "width": 2.5}, xref="x", yref="y"
-    )
-    fig.add_shape(
-        type="line", x0=-0.5, x1=n - 0.5, y0=b - 0.5, y1=b - 0.5, line={"color": INK, "width": 2.5}, xref="x", yref="y"
-    )
+    fig.add_shape(type="line", x0=b - 0.5, x1=b - 0.5, y0=-0.5, y1=n - 0.5, line={"color": INK, "width": 1.5})
+    fig.add_shape(type="line", x0=-0.5, x1=n - 0.5, y0=b - 0.5, y1=b - 0.5, line={"color": INK, "width": 1.5})
 
+# Style
+title = "Research Domain Co-occurrence · heatmap-adjacency · python · plotly · anyplot.ai"
+title_size = max(11, round(16 * min(1.0, 67 / len(title))))
 fig.update_layout(
-    title={
-        "text": "Research Domain Co-occurrence · heatmap-adjacency · plotly · anyplot.ai",
-        "font": {"size": 24, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    width=600,
+    height=600,
+    title={"text": title, "font": {"size": title_size, "color": INK}, "x": 0.5, "xanchor": "center"},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     xaxis={
-        "tickfont": {"size": 13, "color": INK_SOFT}, "tickangle": -45, "showgrid": False, "linecolor": INK_SOFT, "zeroline": False
+        "title": {"text": TARGET, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "tickangle": -45,
+        "showgrid": False,
+        "zeroline": False,
+        "showline": False,
+        "constrain": "domain",
     },
     yaxis={
-        "tickfont": {"size": 13, "color": INK_SOFT}, "showgrid": False, "linecolor": INK_SOFT, "zeroline": False, "autorange": "reversed"
+        "title": {"text": SOURCE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": False,
+        "zeroline": False,
+        "showline": False,
+        "autorange": "reversed",
+        "scaleanchor": "x",
+        "constrain": "domain",
     },
-    margin={"l": 130, "r": 150, "t": 80, "b": 170},
+    margin={"l": 100, "r": 40, "t": 60, "b": 105},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1200, height=1200, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
