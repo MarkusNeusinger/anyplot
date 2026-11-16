@@ -14,13 +14,14 @@
   and the way on to the catalogue, under a title, a description, and an
   `og:title` and `og:description` of its own. The explainer's paragraph says
   that `.use_my_data()` is chosen on the plot's own page. Below the way on,
-  one line says how the chat is built, and its "on GitHub" links to the README's section on
-  the chat. Then the assistant's terms of use stand under the heading "ground
-  rules" in four quiet labelled lines: `your code`; `privacy`, which links to
-  the legal page's section on what the assistant stores; `limits`; and
-  `status`. The same heading and four lines stand under the "closed right
-  now" notice while the public lane is closed, so the terms stand at `/agent`
-  also while the operator has paused the assistant. The explainer opens no
+  one line says how the chat is built, and its "on GitHub" links to the
+  README's section on the chat. Then the assistant's terms of use stand under
+  the heading "ground rules" in four quiet labelled lines: `your code`;
+  `privacy`, which links to the legal page's section on what the assistant
+  stores; `limits`; and `status`. The same heading and four lines stand under
+  the "closed right now" notice while the public lane is closed, so the terms
+  stand at `/agent` also while the operator has paused the assistant. The
+  explainer opens no
   session: of the agent routes, a visitor's browser asks only the lane's
   door, which the API answers without the agents service. The site's
   feedback button stands on the explainer: the layout, which hid it on all of
