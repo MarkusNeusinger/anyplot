@@ -35,7 +35,7 @@ describe('LibraryCard', () => {
   });
 
   it.each([
-    ['highcharts', 'free · non-commercial'],
+    ['highcharts', 'free for non-commercial use'],
     ['muix', 'MIT · community'],
   ])('notes the licence of %s on its card', (name, note) => {
     render(<LibraryCard name={name} language="javascript" onClick={vi.fn()} />);

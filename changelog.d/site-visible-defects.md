@@ -19,7 +19,7 @@
   are now the same height, so their version and docs lines sit at the same
   height. Before, they were up to 42 px apart on desktop.
 - **The Highcharts card notes its licence.** The card reads
-  `free · non-commercial`, beside the note MUI X already had, on the
+  `free for non-commercial use`, beside the note MUI X already had, on the
   libraries page and the landing page.
 - **The landing page no longer jumps when the plot of the day arrives.** The
   terminal frame is reserved, empty, while the plot loads, and keeps its

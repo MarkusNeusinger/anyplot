@@ -34,7 +34,7 @@ const FRAMEWORK_LABEL: Record<string, string> = {
 // out: MUI X ships community-MIT while Pro/Premium stay out of scope, and
 // Highcharts is the one library not free for commercial use (/legal, "your code").
 const LICENSE_NOTE: Record<string, string> = {
-  highcharts: 'free · non-commercial',
+  highcharts: 'free for non-commercial use',
   muix: 'MIT · community',
 };
 
