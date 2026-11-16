@@ -1388,15 +1388,19 @@ async def seo_about():
 #
 # The strings are the page's own. tests/unit/test_agent_intro_crawler_copy.py
 # reads AgentIntro.tsx and fails when the title, the description, the intro's
-# two outer sentences, the example pairs or the terms here differ from it.
+# sentences around it, the example pairs or the terms here differ from it.
 AGENT_INTRO_TITLE = "use with my data | anyplot.ai"
 AGENT_INTRO_DESCRIPTION = (
     "pick any plot, choose .use_my_data() on its page, and paste your data. an agent adapts that plot's code "
     "to your columns, renders it in a sandbox with no network access, reviews the render against the "
     "catalogue's rubric, repairs it once if needed, and hands back the image and the code."
 )
-# The explainer's paragraph is the description between these two sentences.
+# The explainer's paragraph is the description between the opening sentence and
+# the two after it, the model's and the closing one.
 AGENT_INTRO_OPENING = "experimental, open to everyone since 2 november 2026."
+# The provider and the location as the legal page states them; they hold where the
+# agents service is deployed (agents/cloudbuild.yaml) and configured (agents/anyplot/settings.py).
+AGENT_INTRO_MODEL = "the model is Claude by Anthropic, served through Google Cloud Vertex AI in the EU."
 AGENT_INTRO_CLOSING = (
     "your chat and data live only in server memory and are deleted after an hour idle, unless you send feedback."
 )
@@ -1434,7 +1438,7 @@ def _build_agent_body() -> str:
     return (
         "<h1>use with my data</h1>"
         f"<p>{html.escape(AGENT_INTRO_OPENING, quote=False)} {paragraph} "
-        f"{html.escape(AGENT_INTRO_CLOSING, quote=False)}</p>"
+        f"{html.escape(AGENT_INTRO_MODEL, quote=False)} {html.escape(AGENT_INTRO_CLOSING, quote=False)}</p>"
         f"<h2>or start with</h2><ul>{examples}</ul>"
         '<p><a href="https://anyplot.ai/plots">Browse plots</a></p>'
         f"<dl>{terms}"

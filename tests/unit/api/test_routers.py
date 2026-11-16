@@ -1238,6 +1238,8 @@ class TestSeoProxyRouter:
             '<a href="https://anyplot.ai/plots">pick any plot</a>, choose <code>.use_my_data()</code> on its page, '
             "and paste your data."
         ) in response.text
+        # The model, as the legal page names it.
+        assert "the model is Claude by Anthropic, served through Google Cloud Vertex AI in the EU." in response.text
         # The three terms, word for word as the explainer has them, and the way to the privacy facts.
         for sentence in (
             "experimental, without warranty: results can be wrong and nobody checks them by hand. "

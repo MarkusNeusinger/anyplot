@@ -17,6 +17,7 @@ from tests.unit.test_agent_intro_examples import AGENT_INTRO, example_pairs
 
 
 SOURCE = AGENT_INTRO.read_text(encoding="utf-8")
+LEGAL_PAGE = AGENT_INTRO.parents[2] / "pages" / "LegalPage.tsx"
 
 TERMS_BLOCK = re.compile(r"const AGENT_TERMS: \[string, ReactNode\]\[\] = \[(?P<body>.*?)\n\];", re.DOTALL)
 TERM_LABEL = re.compile(r"\[\s*(?P<q>['\"])(?P<label>[^'\"]+)(?P=q),")
@@ -102,18 +103,33 @@ def test_the_title_and_description_are_the_pages():
     assert seo.AGENT_INTRO_DESCRIPTION == string_constant("AGENT_INTRO_DESCRIPTION")
 
 
+def copy_paragraph() -> str:
+    """The copy's paragraph from its constants: the opening, the description, the model, the closing."""
+    return " ".join(
+        (seo.AGENT_INTRO_OPENING, seo.AGENT_INTRO_DESCRIPTION, seo.AGENT_INTRO_MODEL, seo.AGENT_INTRO_CLOSING)
+    )
+
+
 def test_the_paragraph_around_the_description_is_the_pages():
     # The page writes its paragraph out in JSX, across lines and around a link and a code span,
     # rather than from the description constant; read as JSX renders it, it is the copy's opening
-    # sentence, the description and the closing sentence, so neither side can drift from the other.
-    expected = f"{seo.AGENT_INTRO_OPENING} {seo.AGENT_INTRO_DESCRIPTION} {seo.AGENT_INTRO_CLOSING}"
-    assert jsx_text(page_paragraph()) == expected
+    # sentence, the description, the model's sentence and the closing sentence, so neither side can
+    # drift from the other.
+    assert jsx_text(page_paragraph()) == copy_paragraph()
+
+
+def test_the_model_is_the_one_the_legal_page_names():
+    # The legal page's row on the model says where a visitor's text goes; the explainer names the same
+    # provider and location, so a change of either reaches both.
+    legal = LEGAL_PAGE.read_text(encoding="utf-8")
+    named = seo.AGENT_INTRO_MODEL.removeprefix("the model is ").removesuffix(".")
+    assert f"goes to {named} under" in legal, named
 
 
 def test_the_copy_serves_the_paragraph_and_the_terms():
     # The served body is built from the constants above; a slip in the builder would otherwise pass
     # every comparison of the constants with the page.
-    assert served_paragraph() == f"{seo.AGENT_INTRO_OPENING} {seo.AGENT_INTRO_DESCRIPTION} {seo.AGENT_INTRO_CLOSING}"
+    assert served_paragraph() == copy_paragraph()
     labels = [match["label"] for match in TERM_LABEL.finditer(terms_block())]
     assert re.findall(r"<dt>([^<]*)</dt>", seo._AGENT_BOT_BODY) == labels
     for label, text in seo.AGENT_TERMS:
