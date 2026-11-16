@@ -176,10 +176,10 @@ export function AboutPage() {
                 </Typography>
                 <Typography sx={{ ...textStyle, mb: 0 }}>
                   I&apos;m a chart nerd. physicist by training, data analyst by trade. since 2013 I
-                  have built data pipelines, models and the tools around them. lately with ai agents
-                  doing the legwork. anyplot is made the same way. I built it alone, in Visp, a
-                  small town in the Swiss Alps. I wanted one place to find the right plot for my
-                  data.
+                  have built data pipelines, models and the tools around them, lately with ai agents
+                  doing the legwork. on anyplot they write the code; I decide, test and send back. I
+                  have built it alone since November 2025, in Visp, a small town in the Swiss Alps.
+                  I wanted one place to find the right plot for my data.
                 </Typography>
               </Box>
             </Box>

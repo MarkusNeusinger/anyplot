@@ -1332,9 +1332,9 @@ _ABOUT_BOT_BODY = (
     '<a href="https://github.com/MarkusNeusinger">GitHub</a>, '
     '<a href="https://neusinger.com">neusinger.com</a>). I\'m a chart nerd. Physicist by training, '
     "data analyst by trade. Since 2013 I have built data pipelines, models and the tools around "
-    "them. Lately with AI agents doing the legwork. anyplot is made the same way. I built it alone, "
-    "in Visp, a small town in the Swiss Alps. I wanted one place to find the right plot for my "
-    "data.</p>"
+    "them, lately with AI agents doing the legwork. On anyplot they write the code; I decide, test "
+    "and send back. I have built it alone since November 2025, in Visp, a small town in the Swiss "
+    "Alps. I wanted one place to find the right plot for my data.</p>"
     "<h2>How it is built</h2>"
     "<p>Models write anyplot's code (the site, the API, and the agents behind Use with my data), and "
     "I lead them, with my experience across data, backends, frontends and hosting. Work goes to "

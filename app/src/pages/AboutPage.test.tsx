@@ -75,13 +75,14 @@ describe('AboutPage', () => {
     // In the first person, with the year the README's "How I build anyplot" gives, which
     // test_readme_claims.py pins.
     expect(builder).toHaveTextContent(
-      /I.m a chart nerd\. physicist by training, data analyst by trade\. since 2013 I have built data pipelines, models and the tools around them\./
+      /I.m a chart nerd\. physicist by training, data analyst by trade\. since 2013 I have built data pipelines, models and the tools around them, lately with ai agents doing the legwork\./
     );
     expect(builder).toHaveTextContent(
-      /lately with ai agents doing the legwork\. anyplot is made the same way\./
+      /on anyplot they write the code; I decide, test and send back\./
     );
+    // The month test_readme_claims.py holds to the README's "Since November 2025".
     expect(builder).toHaveTextContent(
-      /I built it alone, in Visp, a small town in the Swiss Alps\. I wanted one place to find the right plot for my data\./
+      /I have built it alone since November 2025, in Visp, a small town in the Swiss Alps\. I wanted one place to find the right plot for my data\./
     );
     // The builder speaks for himself: no sentence of the page describes him from outside.
     expect(document.body).not.toHaveTextContent(/\bhe (has|built|leads|tests|corrects)\b/);

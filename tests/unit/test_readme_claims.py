@@ -369,15 +369,16 @@ def test_about_page_and_its_bot_copy_date_the_rename_as_the_changelog_does():
 
 
 def test_about_page_and_its_bot_copy_date_the_start_as_the_readme_does():
-    """The origin starts in the month the README counts the owner's merged pull requests from.
+    """The origin, and the builder's own account, start in the month the README counts the owner's merged pull
+    requests from.
 
     Text held to text, so the two cannot drift apart; neither proves the date, which is the first commit's.
     """
     since = re.search(r"Since (\w+ \d{4}), more than", collapse(section(read(README), "How I build anyplot")))
     assert since, "README.md 'How I build anyplot' no longer says since when the owner's pull requests have merged"
-    phrase = f"it started in {since.group(1)} as pyplots.ai".lower()
-    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
-        assert phrase in collapse(text).lower(), f"{name}: the origin starts in {since.group(1)}, as the README says"
+    for phrase in (f"it started in {since.group(1)} as pyplots.ai", f"I have built it alone since {since.group(1)},"):
+        for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+            assert phrase.lower() in collapse(text).lower(), f"{name}: '{phrase}', as the README says"
 
 
 def test_about_page_and_its_bot_copy_name_the_default_model():

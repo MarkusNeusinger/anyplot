@@ -1274,9 +1274,10 @@ class TestSeoProxyRouter:
         for fact in (
             "Markus Neusinger",
             "I'm a chart nerd. Physicist by training, data analyst by trade.",
-            "Since 2013 I have built data pipelines, models and the tools around them.",
-            "Lately with AI agents doing the legwork. anyplot is made the same way.",
-            "I built it alone, in Visp, a small town in the Swiss Alps.",
+            "Since 2013 I have built data pipelines, models and the tools around them, lately with AI agents "
+            "doing the legwork.",
+            "On anyplot they write the code; I decide, test and send back.",
+            "I have built it alone since November 2025, in Visp, a small town in the Swiss Alps.",
             "I wanted one place to find the right plot for my data.",
             "Models write anyplot's code",
             # The stack the description names, from the page's table.
