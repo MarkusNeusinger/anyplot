@@ -1285,6 +1285,8 @@ class TestSeoProxyRouter:
         assert "unsalted" not in response.text
         # The site-wide facts the human page states once each, the stored feedback fields included.
         for fact in (
+            # Who is responsible, under the page's own heading, not only as the legal notice's operator.
+            "Who is responsible: Markus Neusinger (see above). Swiss data protection law applies",
             "Running costs about $60 a month (October 2026).",
             "a random id that ties your own submissions together",
             "the optional contact field",

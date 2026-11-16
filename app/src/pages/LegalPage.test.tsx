@@ -67,7 +67,7 @@ describe('LegalPage', () => {
     expect(screen.getByText(/you can ask what is stored about you/)).toHaveTextContent(
       'you can ask what is stored about you and have it corrected, erased or restricted, object to the processing for a reason specific to your situation, and complain to a data protection authority.'
     );
-    // Plain words: what the law asks for, without the wording or the article numbers of legal texts.
+    // Plain words, without the wording or the article numbers of legal texts.
     const privacy = document.getElementById('privacy') as HTMLElement;
     for (const term of [
       /Art\.\s*\d/,

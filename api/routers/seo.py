@@ -1206,7 +1206,8 @@ _LEGAL_BOT_BODY = (
     'contact details on the <a href="https://anyplot.ai/legal">interactive page</a>.</p>'
     "<h2>Privacy</h2>"
     "<ul>"
-    "<li>Swiss data protection law applies, and the GDPR for visitors from the EU.</li>"
+    "<li>Who is responsible: Markus Neusinger (see above). Swiss data protection law applies, and "
+    "the GDPR for visitors from the EU.</li>"
     "<li>Analytics: Plausible Analytics (EU), through this domain, counts page views, searches, "
     "clicks, copies and downloads, only in aggregate, on a "
     '<a href="https://plausible.io/anyplot.ai">public dashboard</a>; no cookies, no cross-site id, '
