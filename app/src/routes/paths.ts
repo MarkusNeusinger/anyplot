@@ -1,3 +1,5 @@
+import { matchPath } from 'react-router-dom';
+
 import { LIBRARIES } from 'src/constants';
 
 /**
@@ -40,9 +42,10 @@ const AGENT_SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 
 /**
  * Whether an `/agent` query names a chat: a well-formed spec id and a library the catalogue has.
- * With one the page is the chat on that pair, without one the explainer (`AgentChatPage`). The
- * layout decides by the same rule where the site's feedback button stands (`RootLayout`), so the
- * two never disagree about which page is a chat. `LIBRARIES` is read at the call, not at import.
+ * With one the page is the chat on that pair, without one the explainer (`AgentChatPage`); either
+ * waits for the lane first. The layout reads the same rule, through `isAgentChatAddress`, for
+ * where the site's feedback button stands (`RootLayout`). `LIBRARIES` is read at the call, not at
+ * import.
  */
 export function namesAgentChat(query: URLSearchParams): boolean {
   return (
@@ -52,11 +55,13 @@ export function namesAgentChat(query: URLSearchParams): boolean {
 }
 
 /**
- * Whether an address is the agent chat: `/agent`, also with a trailing slash as the router serves
- * it, with a query that names a chat (`namesAgentChat`).
+ * Whether an address is the agent chat: a path the router serves as the chat page, with a query
+ * that names a chat (`namesAgentChat`). The path is matched as the router matches it
+ * (`matchPath`), so a trailing slash or another case (`/Agent`), which the router also serves as
+ * the chat page, counts too.
  */
 export function isAgentChatAddress(pathname: string, search: string): boolean {
-  return pathname.replace(/\/+$/, '') === '/agent' && namesAgentChat(new URLSearchParams(search));
+  return matchPath(paths.agent, pathname) !== null && namesAgentChat(new URLSearchParams(search));
 }
 
 /**

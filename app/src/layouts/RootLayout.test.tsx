@@ -126,11 +126,13 @@ describe('RootLayout', () => {
     expect(siteFeedback()).toBe(false);
   });
 
-  it('hides it in a chat also with a trailing slash or without the language', () => {
+  it('hides it in a chat also with a trailing slash, another case or without the language', () => {
     for (const address of [
       '/agent/?spec=scatter-basic&library=matplotlib&language=python',
       '/agent?spec=line-basic&library=d3',
       '/agent?library=ggplot2&spec=bar-basic&source=agent_intro',
+      // The router serves this as the chat page too: it matches paths without regard to case.
+      '/Agent?spec=bar-basic&library=ggplot2',
     ]) {
       const { unmount } = renderAt(address);
       expect(siteFeedback(), address).toBe(false);

@@ -32,9 +32,12 @@ describe('namesAgentChat', () => {
 });
 
 describe('isAgentChatAddress', () => {
-  it('is the chat at /agent with a pair, with or without a trailing slash', () => {
+  it('is the chat at /agent with a pair, at every path the router serves as the chat page', () => {
     expect(isAgentChatAddress('/agent', '?spec=bar-basic&library=ggplot2')).toBe(true);
     expect(isAgentChatAddress('/agent/', '?spec=bar-basic&library=ggplot2')).toBe(true);
+    // The router matches paths without regard to case, so this address renders the chat too.
+    expect(isAgentChatAddress('/Agent', '?spec=bar-basic&library=ggplot2')).toBe(true);
+    expect(isAgentChatAddress('/AGENT/', '?spec=bar-basic&library=ggplot2')).toBe(true);
   });
 
   it('is no chat without a pair, or on another path with the same query', () => {
@@ -42,6 +45,8 @@ describe('isAgentChatAddress', () => {
     expect(isAgentChatAddress('/agent', '?spec=bar-basic')).toBe(false);
     expect(isAgentChatAddress('/debug/agent', '?spec=bar-basic&library=ggplot2')).toBe(false);
     expect(isAgentChatAddress('/plots', '?spec=bar-basic&library=ggplot2')).toBe(false);
+    expect(isAgentChatAddress('/agent/x', '?spec=bar-basic&library=ggplot2')).toBe(false);
+    expect(isAgentChatAddress('/agents', '?spec=bar-basic&library=ggplot2')).toBe(false);
   });
 });
 
