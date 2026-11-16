@@ -23,8 +23,8 @@
   libraries page and the landing page.
 - **The landing page no longer jumps when the plot of the day arrives.** The
   terminal frame is reserved, empty, while the plot loads. Its footer has as
-  many rows as the card's, so the frame keeps its height at every width from
-  320 px up; a title too long for its row is cut with an ellipsis instead of
+  many rows as the card's, so the footer no longer grows when the plot
+  arrives; a title too long for its row is cut with an ellipsis instead of
   wrapping. On a tablet, with the plot-of-the-day answer delayed by 1.5 s,
   the layout shift drops from 0.18 to under 0.001. If the request fails, the
   frame stays and says `plot of the day did not load`, with `.retry()`.
