@@ -1261,19 +1261,16 @@ class TestSeoProxyRouter:
         assert "CDN / DDoS / bot check" not in response.text
         assert response.text.count("EU data centers for EU visitors") == 1
         # The machine-read lines and the share counters, mirrored from the human page's shared row:
-        # each period tied to its own store, the place once, each kind's own negative beside it and
-        # the negative both share after them.
+        # what each counts, each period tied to its own store, the place once, and the negative both
+        # share after them. The fields beyond that hold nothing about a person and stand in the docs.
         assert "Machine readers and shared links: each request by a crawler, an AI assistant or an MCP" in (
             response.text
         )
         for fact in (
             "Server logs: IP address, URL and user-agent of each request, for security and debugging; kept 30 days",
-            "one content-free line (vendor and purpose, whether Cloudflare verified it, the page or file, "
-            "the status), with nothing about anyone's browsing, kept up to 180 days in Google Cloud "
-            "Logging and BigQuery.",
-            "Shared links: link previews that messengers and social networks fetch are counted per day, "
-            "platform and page, and whether Cloudflare verified the fetcher, with no time of day and "
-            "nothing about who shared, kept without a time limit in Google Cloud SQL.",
+            "client is one line, kept up to 180 days in Google Cloud Logging and BigQuery.",
+            "Shared links: counts of the link previews that messengers and social networks fetch, kept "
+            "without a time limit in Google Cloud SQL.",
             "Both in the Netherlands (europe-west4). Neither holds an IP address or a user-agent.</li>",
             # Cloudflare's place at its first mention, then the edge and the check, which runs only on
             # the three actions, apart.
@@ -1300,6 +1297,9 @@ class TestSeoProxyRouter:
             "data protection law",
         ):
             assert term not in response.text, term
+        # "No time of day" was true of the shares only; it went with their other fields rather than
+        # being stretched over the machine-read lines, which carry a timestamp.
+        assert "time of day" not in response.text
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text

@@ -323,18 +323,14 @@ export function LegalPage() {
                   // lands on a line start rather than mid-sentence; their span runs to the end of
                   // the cell, so it also covers the negative and the periods both kinds share.
                   <Box component="span" id="machine-readers" sx={ANCHOR_SX}>
-                    crawlers, ai assistants and mcp clients: one content-free line per request, with
-                    vendor and purpose, whether Cloudflare verified it, the page or file and the
-                    status, and nothing about anyone&apos;s browsing.
+                    crawlers, ai assistants and mcp clients: one line per request.
                     <Box
                       component="span"
                       id="shared-links"
                       sx={{ ...ANCHOR_SX, display: 'block', mt: 0.75 }}
                     >
-                      shared links: link previews that messengers and social networks fetch, counted
-                      per day, platform and page, and whether Cloudflare verified the fetcher, with
-                      no time of day and nothing about who shared. neither holds an IP address or a
-                      user-agent.
+                      shared links: counts of the link previews that messengers and social networks
+                      fetch. neither holds an IP address or a user-agent.
                       <Kept
                         items={[
                           ['machine reads', 'up to 180 days (Logging, BigQuery)'],

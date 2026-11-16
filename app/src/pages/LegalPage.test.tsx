@@ -207,25 +207,30 @@ describe('LegalPage', () => {
     // The machine-read lines and the share counters share a row, and each tile on /stats links
     // its own anchor in it. #machine-readers wraps the whole cell; #shared-links is a block that
     // starts with its own name and runs to the end. So each anchor holds its own text, the
-    // negative both kinds share and both periods. Each kind keeps its own negative, worded for
-    // what its store can and cannot hold: the lines say nothing about anyone's browsing, the
-    // counters nothing about who shared. Every request is a line, verified or not, so the row
-    // claims no "verified only".
+    // negative both kinds share, both periods and the place. Every request is a line, verified or
+    // not, so the row claims no "verified only". What a line or a counter holds beyond that holds
+    // nothing about a person and lives in docs/reference/machine-readers.md and
+    // docs/reference/plausible.md.
     const machineReaders = document.getElementById('machine-readers') as HTMLElement;
     const sharedLinks = document.getElementById('shared-links') as HTMLElement;
     expect(machineReaders).toContainElement(sharedLinks);
     expect(machineReaders).toHaveTextContent(
-      /^crawlers, ai assistants and mcp clients: one content-free line per request, with vendor and purpose, whether Cloudflare verified it, the page or file and the status, and nothing about anyone.s browsing\.\s*shared links:/
+      /^crawlers, ai assistants and mcp clients: one line per request\.\s*shared links:/
     );
-    // What a share is (the tile's header says the legal page explains it), what a counter holds,
-    // each thing it never holds.
+    // What a share is (the tile's header says the legal page explains it) and what neither store
+    // ever holds.
     expect(sharedLinks).toHaveTextContent(
-      /^shared links: link previews that messengers and social networks fetch, counted per day, platform and page, and whether Cloudflare verified the fetcher, with no time of day and nothing about who shared\. neither holds an IP address or a user-agent\./
+      /^shared links: counts of the link previews that messengers and social networks fetch\. neither holds an IP address or a user-agent\./
     );
     for (const anchor of [machineReaders, sharedLinks]) {
+      expect(anchor).toHaveTextContent(/neither holds an IP address or a user-agent\./);
       expect(anchor).toHaveTextContent(/machine reads: up to 180 days \(Logging, BigQuery\)/);
       expect(anchor).toHaveTextContent(/shares: no time limit \(SQL\)/);
+      expect(anchor).toHaveTextContent(/where: Google Cloud in the Netherlands \(europe-west4\)/);
     }
+    // The shares' "no time of day" is not stretched over the machine-read lines, which carry a
+    // timestamp: it went with the other fields.
+    expect(machineReaders).not.toHaveTextContent(/time of day/);
     // The page does not say why an unverified share is no verdict on it; the tile's hint on the
     // word "unverified" does, so it has to keep saying it.
     expect(UNVERIFIED_HINT).toMatch(
@@ -381,25 +386,30 @@ describe('LegalPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('opens a fresh load of /legal#assistant at the assistant section', () => {
-    // The route is lazy, so the browser's own jump to the fragment finds nothing; the page scrolls itself.
-    const original = Element.prototype.scrollIntoView;
-    const scrollIntoView = vi.fn();
-    Element.prototype.scrollIntoView = scrollIntoView;
-    try {
-      rtlRender(
-        <ThemeProvider theme={theme}>
-          <MemoryRouter initialEntries={['/legal#assistant']}>
-            <LegalPage />
-          </MemoryRouter>
-        </ThemeProvider>
-      );
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView.mock.contexts[0]).toHaveAttribute('id', 'assistant');
-    } finally {
-      Element.prototype.scrollIntoView = original;
+  // The chat links #assistant, the two tiles on /stats link #machine-readers and #shared-links.
+  it.each(['assistant', 'machine-readers', 'shared-links'])(
+    'opens a fresh load of /legal#%s at its place',
+    anchor => {
+      // The route is lazy, so the browser's own jump to the fragment finds nothing; the page
+      // scrolls itself.
+      const original = Element.prototype.scrollIntoView;
+      const scrollIntoView = vi.fn();
+      Element.prototype.scrollIntoView = scrollIntoView;
+      try {
+        rtlRender(
+          <ThemeProvider theme={theme}>
+            <MemoryRouter initialEntries={[`/legal#${anchor}`]}>
+              <LegalPage />
+            </MemoryRouter>
+          </ThemeProvider>
+        );
+        expect(scrollIntoView).toHaveBeenCalledTimes(1);
+        expect(scrollIntoView.mock.contexts[0]).toHaveAttribute('id', anchor);
+      } finally {
+        Element.prototype.scrollIntoView = original;
+      }
     }
-  });
+  );
 
   // The repository vendors JetBrains Mono (agents/anyplot/render/fonts/) under
   // the SIL OFL 1.1, so the MIT claim needs its qualifier and the font its own
