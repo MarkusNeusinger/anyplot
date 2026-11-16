@@ -1194,8 +1194,12 @@ that crashed (`key`, `timeout`, `memory`), never an error message.
 
 `turns` is the record of the session's latest turns, in every form of the
 bundle too: `records`, in turn order, and `dropped`, how many older turns the
-record no longer holds (it keeps the latest 50). Each record holds closed codes
-only, never an argument, a result, your words, an id or a time:
+record no longer holds (it keeps the latest 50). Each record holds closed codes,
+booleans and small counts only, besides its own bounded counters: the turn's
+number and the three `*_dropped` counts. Of a call's arguments it keeps only
+those that are closed codes already and the shape of the rest, never a column
+name, a value of your data, a bound, an expression, a text, a result, your
+words, an id, a hash or a time:
 
 - `turn`, `action`, `kind`, `refusal` and `error`: the turn's number and how it
   ended, as the usage telemetry's `chat_turn` line records them. Turn N is the
@@ -1203,12 +1207,39 @@ only, never an argument, a result, your words, an id or a time:
   (`session_closed`, `budget_halt` or `message_limit` in its `guards`) adds no
   line, so it has the number of the line that the next turn adds.
 - `tools`: every tool call of the turn in order, refused calls included, each as
-  `{tool, verdict, outcome, code}`. `verdict` is `allowed` or the guard's refusal
-  code, `outcome` what the call did (`ok`, `changed`, `shipped`, `error`,
+  `{tool, verdict, outcome, code, shape}`. `verdict` is `allowed` or the guard's
+  refusal code, `outcome` what the call did (`ok`, `changed`, `shipped`, `error`,
   `unfinished` for a call that had not answered when the turn ended, and so on),
   and `code` the code of its answer (`invalid_operations`,
   `incomplete_bindings`), or `null`. At most 32 per turn; `tools_dropped` counts
-  the rest.
+  the rest. Each call's `shape` is the shape of its arguments, `null` for a tool
+  without one and for arguments that didn't validate. A field of `shape` that
+  doesn't apply to the tool is `null`:
+  - `operations` (`prepare_data`, `query_data`): each operation in order as
+    `{op, ...}` with the codes of its kind, such as `how`, `period` and `keys`
+    (the count of its `by` columns, 0 for a `query_data` aggregate over every
+    row) of an `aggregate` or `order` of a `sort`, and `op` alone for a `fit`,
+    which only `query_data` takes. A `keep_rows` adds `mode` (`where` or
+    `first_n`), its `target` in a `prepare_data` whose `from_version` is
+    `current` (`query_data` ignores it, and a call that names the version it
+    starts from sends every selection to the table), and with `first_n` the
+    `order` of the top N: the direction of the call's last `sort` before it,
+    with only row filters in between. A `keep_rows`,
+    `drop_rows` or `blank` adds its `conditions`, each as
+    `{test, value_shape, column_kind}`: `value_shape` is the shape of the value
+    (`number`, `iso_date`, `iso_datetime`, `year_month`, `year_quarter`,
+    `year`, `text`, `list`, `none`) and `column_kind` the column's kind in the
+    current table (`integer`, `number`, `datetime`, `boolean`, `text`). A
+    `column_kind` of `unknown` means the record doesn't state the kind: the call
+    starts from an earlier version, an operation before the condition may change
+    the column or reads the rows anew, or the table lacks the column.
+  - `from_version` (`current`, `original`, `numbered`) and, for `query_data`,
+    `limit`: whether the call named a row limit. A `query_data` whose first
+    operation is `apply_view` asked of the rows the plot draws.
+  - `base`, `theme` and `combine` for `plot_pipeline`; `change_request`
+    (whether the call carried one), `expected_texts` (a count) and `remember`
+    (the kind of each item) for `plot_pipeline` and `keep_plot_request`;
+    `applies_to` for `set_language`; `plot` for `switch_plot`.
 - `guards`: the verdicts of the turn's guards in order, each as
   `{guard, verdict}`, such as `{"guard": "output_guard", "verdict": "reply_cut"}`.
   The scope judge's `attack` reads `out_of_scope`. The latest 24 per turn;

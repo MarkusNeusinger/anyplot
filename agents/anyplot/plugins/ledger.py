@@ -68,12 +68,16 @@ import time
 from collections import OrderedDict, deque
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
-from typing import Any, Literal, cast, get_args
+from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
 from ..schemas import Theme
 from ..settings import AgentSettings
+
+
+if TYPE_CHECKING:  # the record's model imports this module
+    from ..turn_record import CallShape
 
 
 ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
@@ -214,20 +218,23 @@ TURN_HOOKS: frozenset[str] = frozenset(get_args(TurnHook))
 
 @dataclass(frozen=True, slots=True)
 class ToolCall:
-    """One root tool call of the turn: its name, the guards' verdict and what it did, closed codes only.
+    """One root tool call of the turn: its name, the guards' verdict, what it did and the shape of its arguments.
 
     `tool` is a root tool's name or `other` (a name the model made up); `verdict` a `GuardVerdict`; `outcome` a
     `CallOutcome`; `code` the closed code of its answer (`turn_record.OutcomeCode`: an error's `code`, the `reason` of
     a stop or a failed run, or ToolSafety's refusal of the result), None for an answer without one and for a call a
-    guard refused, whose `verdict` says why. Never an argument, a result or a word of the user: what the turn's
+    guard refused, whose `verdict` says why; `shape` the closed shape of its arguments (`turn_record.CallShape`), None
+    for a tool without one. Never an argument's value beyond that shape, a result or a word of the user: what the turn's
     outcome (`stream.turn_outcome`) reads, and what the turn's record in the feedback case carries
     (`turn_record.TurnRecord`). The record keeps the order the guards saw the calls in: ToolSafety notes each call
-    before it runs, and the Budget plugin a pipeline run it refuses first."""
+    before it runs, and the Budget plugin a pipeline run it refuses first. Two calls compare by what they did, not by
+    their shape."""
 
     tool: str
     verdict: GuardVerdict = TOOL_ALLOWED
     outcome: CallOutcome = "unfinished"
     code: str | None = None
+    shape: "CallShape | None" = field(default=None, compare=False)
 
 
 def finish_name(value: Any) -> str | None:
@@ -451,11 +458,15 @@ class RequestLedger:
         """How many calls of `tool` ToolSafety allowed in this turn (`tools`): what every per-turn cap counts."""
         return self.tools.count(tool)
 
-    def open_call(self, key: str, tool: str, verdict: str, *, refused: CallOutcome = "refused") -> None:
-        """Note a root tool call as the guards judged it; a refused one is closed already, `refused` or what the
-        refusal itself did (a `plot_pipeline` refused before the run that kept the request: `kept`)."""
+    def open_call(
+        self, key: str, tool: str, verdict: str, *, refused: CallOutcome = "refused", shape: "CallShape | None" = None
+    ) -> None:
+        """Note a root tool call as the guards judged it, with the shape of its arguments; a refused one is closed
+        already, `refused` or what the refusal itself did (a `plot_pipeline` refused before the run that kept the
+        request: `kept`)."""
         closed = guard_verdict(verdict)
-        self.tool_calls.append(ToolCall(tool, closed, "unfinished" if closed == TOOL_ALLOWED else refused))
+        outcome: CallOutcome = "unfinished" if closed == TOOL_ALLOWED else refused
+        self.tool_calls.append(ToolCall(tool, closed, outcome, shape=shape))
         self.open_calls.setdefault(key, []).append(len(self.tool_calls) - 1)
 
     def close_call(
@@ -477,7 +488,7 @@ class RequestLedger:
             del self.open_calls[key]
         call = self.tool_calls[index]
         if call.outcome == "unfinished":
-            self.tool_calls[index] = ToolCall(call.tool, call.verdict, outcome, code)
+            self.tool_calls[index] = replace(call, outcome=outcome, code=code)
 
     def fail_call(self, key: str, code: str) -> None:
         """Note the error answer of an opened call that raised (`on_tool_error_callback`), before its close: a call
@@ -488,7 +499,7 @@ class RequestLedger:
         for index in self.open_calls.get(key, []):
             call = self.tool_calls[index]
             if call.outcome == "unfinished":
-                self.tool_calls[index] = ToolCall(call.tool, call.verdict, "error", code)
+                self.tool_calls[index] = replace(call, outcome="error", code=code)
                 return
 
     def note_guard(self, hook: str, verdict: Any) -> None:

@@ -61,8 +61,11 @@
   code of the answer (`turn_record.result_code`: the refusal's code when the checks refused the result);
   `on_tool_error_callback` notes the error of a call that raised first (`RequestLedger.fail_call`), since a call ADK
   could not find gets no after-tool callback; the Budget plugin notes a pipeline run it refuses before this plugin
-  sees it, refused by `budget`. Closed names and codes only, never an argument or a result: the `done` event's `turn`
-  reads it, and the turn's record in the feedback case carries it (`turn_record.py`).
+  sees it, refused by `budget`. Closed names and codes only and, of a call's arguments, only those that are closed
+  codes already and the shape of the rest (below), never a value beyond that shape and never a result: the `done`
+  event's `turn` reads it, and the turn's record in the feedback case carries it (`turn_record.py`).
+  `before_tool_callback` also notes the shape of a call's arguments (`recorded_shape`, `turn_record.call_shape`),
+  refused calls included: closed codes, booleans and counts, never a column name, a value of the data or a text.
 
 Every refusal is `{"status": "error", "code": <ErrorCode>}`, a cap's and a stop's before the run with a `message`. The
 codes are closed (`ErrorCode`, `ledger.SafetyCode`). The plugin never raises.
@@ -93,7 +96,7 @@ from ..repeated_keys import choice_is_open
 from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, NotReadyReason, PipelineArgs, PlotResult, SwitchArgs
 from ..services import get_services
 from ..session_state import read_session
-from ..turn_record import result_code
+from ..turn_record import SHAPED_TOOLS, CallShape, ColumnKinds, call_shape, result_code
 from .ledger import TOOL_ALLOWED, CallOutcome, RequestLedger, SafetyCode, argument_hash, attribution, ledger_for
 
 
@@ -342,6 +345,37 @@ failure); any other code there reads `unknown`."""
 def recorded_name(name: str) -> str:
     """A tool's name as the turn's record keeps it: a root tool's, else `other`, since the model writes the name."""
     return name if name in ARGUMENTS else "other"
+
+
+def column_kinds(tool_context: ToolContext) -> ColumnKinds:
+    """The kind of each column of the session's current table as its profile classes it, for the record's conditions
+    (`turn_record.ColumnKind`); None without a session or data, or when the table cannot be read, so its conditions'
+    columns read `unknown` and the rest of the shape stays."""
+    try:
+        view = read_session(tool_context.state)
+        if view is None or not view.dataset_id:
+            return None
+        stored = get_services().datasets.get(view.dataset_id, tool_context.session.id)
+    except Exception as exc:
+        logger.warning("column kinds for the record failed: %s", type(exc).__name__)
+        return None
+    return None if stored is None else {column.name: column.dtype for column in stored.profile.columns}
+
+
+def recorded_shape(name: str, arguments: dict[str, Any], tool_context: ToolContext) -> CallShape | None:
+    """The shape of a root call's arguments for the turn's record (`turn_record.call_shape`): None for a tool without
+    one and for arguments that do not validate, whose call is refused for them. It never raises, so the record never
+    refuses a call."""
+    if name not in SHAPED_TOOLS:
+        return None
+    try:
+        arguments_model = ARGUMENTS[name].model_validate(arguments)
+        return call_shape(name, arguments_model, lambda: column_kinds(tool_context))
+    except ValidationError:
+        return None
+    except Exception as exc:
+        logger.warning("tool call shape failed: %s", type(exc).__name__)
+        return None
 
 
 def call_key(tool_context: ToolContext, name: str) -> str:
@@ -650,7 +684,10 @@ class ToolSafetyPlugin(BasePlugin):
             if agent == ROOT_AGENT:
                 # A refusal before the run that kept the first plot's request did that much (`CallOutcome` `kept`).
                 kept = refusal is not None and refusal.get("request_kept") is True
-                self._open(ledger, tool_context, tool.name, verdict or TOOL_ALLOWED, "kept" if kept else "refused")
+                shape = recorded_shape(tool.name, tool_args, tool_context)
+                self._open(
+                    ledger, tool_context, tool.name, verdict or TOOL_ALLOWED, "kept" if kept else "refused", shape
+                )
             if refusal is None:
                 # The usage telemetry's `tools` (`telemetry.TOOL_NAMES` keeps only the root's known tools), and the one
                 # count of the turn's caps (`RequestLedger.calls_of`).
@@ -694,11 +731,16 @@ class ToolSafetyPlugin(BasePlugin):
 
     @staticmethod
     def _open(
-        ledger: RequestLedger, tool_context: ToolContext, name: str, verdict: str, refused: CallOutcome = "refused"
+        ledger: RequestLedger,
+        tool_context: ToolContext,
+        name: str,
+        verdict: str,
+        refused: CallOutcome = "refused",
+        shape: CallShape | None = None,
     ) -> None:
         """Note the root's call in the turn's record (`RequestLedger.tool_calls`); a failure here never refuses it."""
         try:
-            ledger.open_call(call_key(tool_context, name), recorded_name(name), verdict, refused=refused)
+            ledger.open_call(call_key(tool_context, name), recorded_name(name), verdict, refused=refused, shape=shape)
         except Exception as exc:
             logger.warning("tool call record failed: %s", type(exc).__name__)
 

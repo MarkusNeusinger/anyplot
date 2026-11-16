@@ -34,7 +34,7 @@ import re
 import uuid
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import aclosing
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
@@ -1888,13 +1888,59 @@ class CaseLastRunOut(BaseModel):
     rounds: list[CaseRoundOut]
 
 
+class CaseConditionOut(BaseModel):
+    """One condition of a `keep_rows`, `drop_rows` or `blank`: its test, the shape of its value and the kind of its
+    column."""
+
+    test: str
+    value_shape: str
+    column_kind: str
+
+
+class CaseOperationOut(BaseModel):
+    """One data operation of a call: its name and the codes of its kind; a field that does not apply is null."""
+
+    op: str
+    mode: str | None
+    target: str | None
+    order: str | None
+    conditions: list[CaseConditionOut] | None
+    how: str | None
+    period: str | None
+    keys: int | None
+    type: str | None
+    date_format: str | None
+    decimal: str | None
+    unit: str | None
+    keep: str | None
+    family: str | None
+
+
+class CaseCallShapeOut(BaseModel):
+    """The shape of a call's arguments: closed codes, booleans and counts; a field that does not apply is null."""
+
+    operations: list[CaseOperationOut] | None
+    from_version: str | None
+    limit: bool | None
+    base: str | None
+    theme: str | None
+    combine: str | None
+    change_request: bool | None
+    expected_texts: int | None
+    remember: list[str] | None
+    applies_to: str | None
+    plot: bool | None
+
+
 class CaseToolCallOut(BaseModel):
-    """One root tool call of a turn: the guards' verdict, what the call did, and the code of its answer."""
+    """One root tool call of a turn: the guards' verdict, what the call did, the code of its answer, and the shape of
+    its arguments (null for a tool without one, and for a case from before the record kept it)."""
 
     tool: str
     verdict: str
     outcome: str
     code: str | None
+    shape: CaseCallShapeOut | None = None
 
 
 class CaseGuardLineOut(BaseModel):
@@ -2151,7 +2197,13 @@ def _turns_out(turns: CaseTurns) -> CaseTurnsOut:
                 refusal=item.refusal,
                 error=item.error,
                 tools=[
-                    CaseToolCallOut(tool=call.tool, verdict=call.verdict, outcome=call.outcome, code=call.code)
+                    CaseToolCallOut(
+                        tool=call.tool,
+                        verdict=call.verdict,
+                        outcome=call.outcome,
+                        code=call.code,
+                        shape=CaseCallShapeOut.model_validate(asdict(call.shape)) if call.shape is not None else None,
+                    )
                     for call in item.tools
                 ],
                 tools_dropped=item.tools_dropped,

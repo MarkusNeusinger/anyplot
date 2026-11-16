@@ -19,10 +19,13 @@ from api.agent_cases import (
     CASE_MEDIA_TYPES,
     CASE_STATUS_NEW,
     BundleError,
+    CaseCallShape,
+    CaseCondition,
     CaseConflict,
     CaseFile,
     CaseGuardLine,
     CaseLastRun,
+    CaseOperation,
     CaseRound,
     CaseToolCall,
     CaseTurn,
@@ -541,6 +544,123 @@ def test_manifest_detail_closes_the_turn_record_to_its_vocabularies() -> None:
     assert only.guards_dropped == 1 + 6
     assert only.prep_ops == ("derive", "other")
     assert manifest_detail({"bundle": {"turns": "none"}}, 0).turns is None
+
+
+NULL_OPERATION = dict.fromkeys(
+    ("mode", "target", "order", "conditions", "how", "period", "keys", "type", "date_format", "decimal", "unit")
+    + ("keep", "family")
+)
+NULL_SHAPE = dict.fromkeys(
+    ("operations", "from_version", "limit", "base", "theme", "combine", "change_request", "expected_texts")
+    + ("remember", "applies_to", "plot")
+)
+
+
+def _shaped_turn(*calls: tuple[str, object]) -> dict[str, object]:
+    return {
+        **PREP_TURN,
+        "tools": [
+            {"tool": tool, "verdict": "allowed", "outcome": "ok", "code": None, "shape": shape} for tool, shape in calls
+        ],
+    }
+
+
+def test_manifest_detail_reads_a_calls_shape() -> None:
+    """An invented data change's shape and a plot run's, field by field; a call without a shape key (a case from
+    before the record kept it) has none, not `other`."""
+    condition = {"test": "ge", "value_shape": "iso_date", "column_kind": "datetime"}
+    selection = {**NULL_OPERATION, "op": "keep_rows", "mode": "where", "target": "plot", "conditions": [condition]}
+    dropped = {**NULL_OPERATION, "op": "drop_rows", "conditions": [{**condition, "test": "is_missing"}]}
+    change = {**NULL_SHAPE, "operations": [dropped, selection, {**NULL_OPERATION, "op": "sort", "order": "descending"}]}
+    plot = {**NULL_SHAPE, "base": "previous", "change_request": True, "expected_texts": 2, "remember": ["title"]}
+    manifest = {
+        "bundle": {
+            "turns": {"records": [_shaped_turn(("prepare_data", change), ("plot_pipeline", plot), ("forget", None))]}
+        }
+    }
+    manifest["bundle"]["turns"]["records"][0]["tools"].append({"tool": "get_spec_brief", "verdict": "allowed"})
+
+    turns = manifest_detail(manifest, 0).turns
+
+    assert turns is not None
+    changed, run, bare, older = (call.shape for call in turns.records[0].tools)
+    assert changed == CaseCallShape(
+        **{
+            **NULL_SHAPE,
+            "operations": (
+                CaseOperation(
+                    **{
+                        **dropped,
+                        "conditions": (
+                            CaseCondition(test="is_missing", value_shape="iso_date", column_kind="datetime"),
+                        ),
+                    }
+                ),
+                CaseOperation(
+                    **{
+                        **selection,
+                        "conditions": (CaseCondition(test="ge", value_shape="iso_date", column_kind="datetime"),),
+                    }
+                ),
+                CaseOperation(**{**NULL_OPERATION, "op": "sort", "order": "descending"}),
+            ),
+        }
+    )
+    assert run == CaseCallShape(**{**plot, "remember": ("title",)})
+    assert bare is None and older is None
+
+
+def test_manifest_detail_reads_a_questions_total_and_fit() -> None:
+    """A question's aggregate over every row keeps its `keys` of 0, and a `fit` reads by its own name."""
+    total = {**NULL_OPERATION, "op": "aggregate", "how": "sum", "keys": 0}
+    question = {**NULL_SHAPE, "operations": [total, {**NULL_OPERATION, "op": "fit"}], "from_version": "current"}
+    manifest = {"bundle": {"turns": {"records": [_shaped_turn(("query_data", question))]}}}
+
+    turns = manifest_detail(manifest, 0).turns
+
+    assert turns is not None
+    shape = turns.records[0].tools[0].shape
+    assert shape is not None and shape.operations == (CaseOperation(**total), CaseOperation(**NULL_OPERATION, op="fit"))
+
+
+def test_manifest_detail_closes_a_shape_to_each_fields_own_vocabulary() -> None:
+    """A value outside its field's set reads `other`, a code of another field too; a count past its bound, a
+    non-boolean flag and a list past the tools' own bounds are dropped, never shown."""
+    noisy_operation = {
+        "op": "Zürich",
+        "mode": "first_n",
+        "target": "descending",
+        "conditions": [{"test": "eq", "value_shape": "Zürich", "column_kind": 7}] * 5,
+        "keys": 9,
+        "decimal": ";",
+    }
+    noisy = {
+        "operations": [noisy_operation] * 8,
+        "from_version": "3",
+        "limit": "yes",
+        "expected_texts": 99,
+        "remember": ["title", "Zürich"] * 4,
+        "plot": 1,
+    }
+    manifest = {"bundle": {"turns": {"records": [_shaped_turn(("query_data", noisy), ("query_data", "shape"))]}}}
+
+    turns = manifest_detail(manifest, 0).turns
+
+    assert turns is not None
+    shape, text = (call.shape for call in turns.records[0].tools)
+    assert text is None and shape is not None and shape.operations is not None
+    assert len(shape.operations) == 5
+    operation = shape.operations[0]
+    assert (operation.op, operation.mode, operation.target, operation.keys, operation.decimal) == (
+        "other",
+        "first_n",
+        "other",
+        None,
+        "other",
+    )
+    assert operation.conditions == (CaseCondition(test="eq", value_shape="other", column_kind="other"),) * 3
+    assert (shape.from_version, shape.limit, shape.expected_texts, shape.plot) == ("other", None, None, None)
+    assert shape.remember == ("title", "other", "title", "other", "title")
 
 
 def test_gcs_download_returns_the_objects_bytes(monkeypatch) -> None:
