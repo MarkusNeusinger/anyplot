@@ -139,8 +139,11 @@ class TestFixtures:
         # view, "all rows again" clears it (`reset_view`), and two put it in the table's place (`apply_view`): the
         # rows shown summed per month, and a French "keep only these in the table itself". And two questions under
         # a view (`view_question`, `asks`): one about what the plot shows, one about the whole table; both change
-        # nothing, so the view they found is still set.
-        assert len(cases) == 132
+        # nothing, so the view they found is still set. Since 2026-11-16, four questions whose figure only a question's
+        # own operation gives (`question_ops`, a figure the reply names): a grand total of more rows than a question
+        # returns, a slope and an intercept asked in French, a fit and a formula on its row, and a fit of the rows the
+        # plot shows.
+        assert len(cases) == 136
         views = {item.id: item.view for item in cases if item.view is not None}
         assert sorted(case_id for case_id, landing in views.items() if landing == "set") == [
             "de-frage-zur-ganzen-tabelle",
@@ -150,6 +153,7 @@ class TestFixtures:
             "en-keep-at-least",
             "en-keep-two-categories",
             "en-question-about-the-rows-shown",
+            "en-question-fit-of-rows-shown",
             "en-top-revenue-keep-rows",
             "en-view-top-15-after-10",
             "fr-garder-deux-villes",
@@ -168,7 +172,11 @@ class TestFixtures:
         assert len(built_on) == 4 and all(item.before_view and item.view is not None for item in built_on)
         assert sum(1 for item in built_on if item.expected_operations[0] == {"op": "apply_view"}) == 2
         asked = {item.id: item.asks for item in cases if item.asks is not None}
-        assert asked == {"en-question-about-the-rows-shown": "view", "de-frage-zur-ganzen-tabelle": "table"}
+        assert asked == {
+            "en-question-about-the-rows-shown": "view",
+            "de-frage-zur-ganzen-tabelle": "table",
+            "en-question-fit-of-rows-shown": "view",
+        }
         assert all(item.before_view and not item.expected_operations for item in cases if item.asks is not None)
         assert sorted(item.id for item in cases if item.before_view) == sorted([*asked, *(i.id for i in built_on)])
         (in_table,) = [item for item in cases if "in_table" in item.tags]
@@ -189,7 +197,20 @@ class TestFixtures:
         assert tie.reply_names == ["Basel", "Genf"] and all(
             name in (tie.dataset_text or "") for name in tie.reply_names
         )
-        assert [item.id for item in cases if item.reply_names] == [tie.id]
+        figures = {item.id: item.question_ops for item in cases if item.question_ops}
+        assert figures == {
+            "en-question-grand-total-long-table": ["total"],
+            "fr-question-pente": ["fit"],
+            "en-question-fit-then-formula": ["fit", "compute"],
+            "en-question-fit-of-rows-shown": ["fit"],
+        }
+        # A figure a question asks for is no text of the table, and it reads the same in every number format.
+        assert sorted(item.id for item in cases if item.reply_names) == sorted([tie.id, *figures])
+        for item in cases:
+            if item.question_ops:
+                assert not item.expected_operations and "data_question" in item.tags, item.id
+                assert all(name.isdigit() and int(name) < 1000 for name in item.reply_names), item.id
+                assert not any(name in (item.dataset_text or "") for name in item.reply_names), item.id
         wishes = [item for item in cases if item.plot_request]
         assert sorted(item.id for item in wishes) == [
             "de-groesste-zuerst",
@@ -223,6 +244,7 @@ class TestFixtures:
             "fr-garder-deux-villes",
             "fr-lignes-de-test-en-trop",
             "fr-plus-grands-d-abord",
+            "fr-question-pente",
             "fr-summary-mois-recents-d-abord",
             "fr-total-dans-le-titre",
             "fr-trier-le-tableau",
@@ -278,6 +300,33 @@ class TestFixtures:
         assert len(formulas) == 4 and {item.locale for item in formulas} == {"de", "en"}
         assert tags["grid"] == 1 and tags["parametric"] == 1
         assert any(item.dataset_text is None for item in formulas) and any(item.dataset_text for item in formulas)
+
+    def test_the_figures_of_the_question_cases_are_the_servers_answers(self) -> None:
+        """No unit run asks a model, so the query a right turn makes stands here: the figure the reply has to name is
+        a cell of the server's answer, and the case of the rows shown reads them through its earlier view."""
+        from agents.anyplot.data.query import QueryArgs, run_query
+
+        at_40 = {"op": "compute", "name": "at_40", "expression": "b + 40*m", "inputs": {"b": "intercept", "m": "slope"}}
+        right = {
+            "en-question-grand-total-long-table": [{"op": "aggregate", "column": "Cups", "how": "sum"}],
+            "fr-question-pente": [{"op": "fit", "x": "Semaine", "y": "Abonnés"}],
+            "en-question-fit-then-formula": [{"op": "fit", "x": "Day", "y": "Height (mm)"}, at_40],
+            "en-question-fit-of-rows-shown": [{"op": "fit", "x": "Month", "y": "Visitors"}],
+        }
+        cases = {item.id: item for item in load_cases(DEFAULT_CASES)}
+
+        def cells(case_id: str, operations: list[dict[str, Any]]) -> set[str]:
+            args = QueryArgs.model_validate({"operations": operations})
+            answer = run_query(parse_dataset(cases[case_id].dataset_text or ""), args.operations)
+            return {cell for row in answer.rows for cell in row}
+
+        for case_id, operations in right.items():
+            item = cases[case_id]
+            # The earlier view's `keep_rows`, as `apply_view` puts the rows shown in the table's place.
+            assert set(item.reply_names) <= cells(case_id, [*item.before_view, *operations]), case_id
+            assert set(item.question_ops) <= {prep.question_op(operation) for operation in operations}, case_id
+        # Every row of the table gives another slope, so a question asked of the whole table misses the figure.
+        assert "128" not in cells("en-question-fit-of-rows-shown", right["en-question-fit-of-rows-shown"])
 
     def test_the_data_code_cases(self) -> None:
         """Python, NumPy, JavaScript, R and a textbook formula run; a plot call is stripped; a file read and a
@@ -558,6 +607,36 @@ class TestCanonical:
             "split Range at '–' into lo, hi",
             "strip prefix '#' of Code as c",  # a prefix's own spaces count for nothing
         ]
+
+    @pytest.mark.parametrize(
+        ("operation", "phrase"),
+        [
+            ({"op": "aggregate", "column": "Cups", "how": "sum"}, "aggregate Cups sum over all rows"),
+            ({"op": "aggregate", "by": [], "columns": ["a", "b"], "how": "max"}, "aggregate a, b max over all rows"),
+            (
+                {"op": "aggregate", "by": None, "column": "Cups", "how": "mean", "period": None},
+                "aggregate Cups mean over all rows",
+            ),
+            ({"op": "fit", "x": "Day", "y": "Height"}, "fit Height on Day"),
+        ],
+    )
+    def test_describe_what_only_a_question_takes(self, operation: dict[str, Any], phrase: str) -> None:
+        """Such an item never passes the `Operation` models, so the report shows its raw line: no key may be missing."""
+        assert describe(json.dumps(operation)) == phrase
+
+    @pytest.mark.parametrize(
+        ("by", "name"),
+        [({}, "total"), ({"by": []}, "total"), ({"by": None}, "total"), ({"by": ["Cairn"]}, "aggregate")],
+        ids=["left_out", "empty", "null", "one_key"],
+    )
+    def test_an_aggregate_without_a_key_is_a_total_however_by_is_left_out(self, by: dict[str, Any], name: str) -> None:
+        """The server takes a left-out, an empty and a null `by` alike, so a case scores them alike."""
+        assert prep.question_op({"op": "aggregate", "column": "Kelp", "how": "sum", **by}) == name
+
+    def test_question_ops_name_operations_a_question_takes(self) -> None:
+        with pytest.raises(SetupError, match="o-009: question_ops names no operation of a question: slope"):
+            check_cases([case("o-009", "what is the slope?", [], question_ops=["fit", "slope"])])
+        check_cases([case("o-010", "what is the total?", [], question_ops=["total", "keep_rows"])])
 
     def test_classify_keeps_its_rule_order_and_ignores_the_order_of_a_rules_conditions(self) -> None:
         high = {"column": "y", "test": "gt", "value": "0.5"}
@@ -1203,6 +1282,85 @@ class TestRun:
         assert results[3].tool_calls == ["get_dataset_profile"] and results[3].found == []
         assert len(fake.calls) == 8
         assert len(services.datasets) == 0  # every session was deleted
+
+    def test_the_operations_of_answered_questions_are_read_and_scored(self, services: Services, swap_models) -> None:
+        """A case that names `question_ops` passes when the server answered a question with them: a grand total is an
+        `aggregate` without `by`, and a refused call computed nothing."""
+        total = {"op": "aggregate", "column": "Exam Score", "how": "sum"}
+        per_hours = {**total, "by": ["Study Hours"]}
+        fit = {"op": "fit", "x": "Study Hours", "y": "Exam Score"}
+        at_ten = {
+            "op": "compute",
+            "name": "at_10",
+            "expression": "b + 10*m",
+            "inputs": {"b": "intercept", "m": "slope"},
+        }
+        cases = [
+            case("o-001", "what do the scores add up to?", [], question_ops=["total"]),
+            case("o-002", "what score does the trend give for 10 hours?", [], question_ops=["fit", "compute"]),
+            case("o-003", "what is the slope?", [], question_ops=["fit"]),
+            case("o-004", "what do the scores add up to?", [], question_ops=["total"]),
+        ]
+        root_turns = [
+            [{"call": "query_data", "args": {"operations": [total]}}, {"text": "They add up to 270."}],
+            [{"call": "query_data", "args": {"operations": [fit, at_ten]}}, {"text": "About 103 points."}],
+            # Refused (a fit without its y), then a sort the server answers: the slope in the reply is the root's own,
+            # and the refused fit is never credited to the answer that came after it.
+            [
+                {"call": "query_data", "args": {"operations": [{"op": "fit", "x": "Study Hours"}]}},
+                {"call": "query_data", "args": {"operations": [{"op": "sort", "column": "Exam Score"}]}},
+                {"text": "5."},
+            ],
+            [{"call": "query_data", "args": {"operations": [per_hours]}}, {"text": "They add up to 270."}],
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.questions for result in results] == [1, 1, 2, 1]
+        assert [result.question_ops for result in results] == [["total"], ["fit", "compute"], ["sort"], ["aggregate"]]
+        assert [result.match for result in results] == [True, True, False, False]
+        assert [result.question_ops_miss for result in results] == [False, False, True, True]
+        assert ", questions used aggregate, expected total" in prep.table(cases, results)
+        assert [miss["question_ops"] for miss in score(cases, results)["misses"]] == [["sort"], ["aggregate"]]
+
+    def test_the_question_cases_match_when_the_server_gives_their_figures(
+        self, services: Services, swap_models
+    ) -> None:
+        """The four question fixtures end to end: a turn that asks the right question and names the server's figure
+        matches, the rows the plot shows asked of with `apply_view` first."""
+        at_40 = {"op": "compute", "name": "at_40", "expression": "b + 40*m", "inputs": {"b": "intercept", "m": "slope"}}
+        right = {
+            "en-question-grand-total-long-table": (
+                [{"op": "aggregate", "column": "Cups", "how": "sum"}],
+                "684 cups over all 34 orders.",
+            ),
+            "fr-question-pente": (
+                [{"op": "fit", "x": "Semaine", "y": "Abonnés"}],
+                "La pente est de 146 abonnés par semaine, l'ordonnée à l'origine de 215.",
+            ),
+            "en-question-fit-then-formula": (
+                [{"op": "fit", "x": "Day", "y": "Height (mm)"}, at_40],
+                "The line gives 393 mm for day 40.",
+            ),
+            "en-question-fit-of-rows-shown": (
+                [{"op": "apply_view"}, {"op": "fit", "x": "Month", "y": "Visitors"}],
+                "Over the Harbor points the plot shows, the trend adds 128 visitors per month.",
+            ),
+        }
+        cases = [item for item in load_cases(DEFAULT_CASES) if item.id in right]
+        root_turns = [
+            [{"call": "query_data", "args": {"operations": right[item.id][0]}}, {"text": right[item.id][1]}]
+            for item in cases
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [(result.id, result.match, result.reply_miss) for result in results] == [
+            (item.id, True, None) for item in cases
+        ]
+        assert all(result.question_ops == [prep.question_op(op) for op in right[result.id][0]] for result in results)
 
     def test_a_case_passes_by_the_table_its_turn_leaves(self, services: Services, swap_models) -> None:
         """Other operations that leave the same table match, with `ops_exact` false; another table misses and says

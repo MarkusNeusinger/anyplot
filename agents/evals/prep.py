@@ -155,7 +155,7 @@ from collections.abc import Collection, MutableMapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal, get_args
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
@@ -253,6 +253,8 @@ MAX_REPLY_NAMES = 6
 """The texts one case may ask its reply to contain (`PrepCase.reply_names`)."""
 VIEW_OPS = ("reset_view", "apply_view")
 """The operations that settle the view of the plot and change no table by themselves (`plot_view.route`)."""
+TOTAL_OP = "total"
+"""How a turn's question operations name an `aggregate` without `by` (`question_op`): a grand total in one step."""
 COMPUTE_PROBE_ROWS = 8
 """The rows of invented values two `compute` expressions are compared on (`comparison_key`)."""
 COMPUTE_PROBES: tuple[tuple[float, float, float], ...] = ((150.5, 7.913, 21.7), (1.5, 0.913, 2.17))
@@ -341,9 +343,10 @@ class PrepCase(BaseModel):
     (`score_plot_request`). The data operations are scored as in every case, so a table the turn sorted for such an
     order is a miss by its rows."""
     reply_names: list[str] = Field(default_factory=list, max_length=MAX_REPLY_NAMES)
-    """Texts of the fixture's own data the reply has to contain, each as written: what the user must hear about and
-    the table cannot show, such as the rows a top N left out of a tie. A reply without one of them is the reply miss
-    `unnamed` (`measure_reply`)."""
+    """Texts the reply has to contain, each as written: what the user must hear about and the table cannot show, such
+    as the rows a top N left out of a tie, or the figure a question asks for (a whole number below 1000, which reads
+    the same in every language's number format). A reply without one of them is the reply miss `unnamed`
+    (`measure_reply`)."""
     before_view: list[dict[str, Any]] = Field(default_factory=list, max_length=MAX_BEFORE_VERSIONS)
     """The view of the plot in force before the message, as the `keep_rows` of an earlier turn set it (their
     operations, routed as `prepare_data` routes them): the harness stores it in the session, the session block lists
@@ -353,6 +356,11 @@ class PrepCase(BaseModel):
     """Which rows the turn's question is about while a view of the plot is in force (`score_question`): the rows the
     plot draws (`view`: its `query_data` calls start with `apply_view`) or every row of the table (`table`). For a
     question case with `before_view`; None leaves it unscored."""
+    question_ops: list[str] = Field(default_factory=list)
+    """The operations the turn's questions must use, by name (`fit`, `compute`, or `total` for an `aggregate` without
+    `by`): each must be among the operations of the `query_data` calls the server answered, in any call and order
+    (`score_question_ops`). For a question whose figure an operation gives, so the reply's figure is the server's, not
+    one the root worked out from the rows it read; empty leaves it unscored."""
     view: Literal["set", "none"] | None = None
     """Where the turn's choice of rows has to land (`score_view`): `set` for a view of the plot (a selection, a top
     N), which leaves the table as it is, `none` for a turn that must leave no view (a cleaning step, rows the user
@@ -870,9 +878,12 @@ def describe(line: str) -> str:
         extra = [data[key] for key in ("date_format", "decimal") if key in data]
         return f"set_type {data['column']} {data['type']}" + (f" ({', '.join(extra)})" if extra else "")
     if op == "aggregate":
-        period = f"/{data['period']}" if "period" in data else ""
-        values = data["column"] if "column" in data else ", ".join(data["columns"])
-        return f"aggregate {values} {data['how']} by {', '.join(data['by'])}{period}"
+        period = f"/{data['period']}" if data.get("period") else ""
+        values = data["column"] if data.get("column") else ", ".join(data["columns"])
+        over = f"by {', '.join(data['by'])}" if data.get("by") else "over all rows"  # a question's grand total
+        return f"aggregate {values} {data['how']} {over}{period}"
+    if op == "fit":
+        return f"fit {data['y']} on {data['x']}"
     if op == "compute":
         inputs = ", ".join(f"{name}={column}" for name, column in data["inputs"].items())
         return f"compute {data['name']} = {data['expression']} ({inputs})"
@@ -979,6 +990,11 @@ class CaseResult:
     """The turn's `query_data` calls."""
     questions_of_view: int = 0
     """Those of them that asked of the rows the plot draws: their operations start with `apply_view`."""
+    question_ops: list[str] = field(default_factory=list)
+    """The operations of those calls the server answered, by name and in order (`question_op`)."""
+    question_ops_miss: bool = False
+    """The case names operations its questions must use (`PrepCase.question_ops`), and the turn's answered questions
+    left one out: the case is a miss (`score_question_ops`)."""
     question_miss: bool = False
     """The case says which rows its question is about (`PrepCase.asks`), and the turn asked of the others or asked
     nothing: the case is a miss (`score_question`)."""
@@ -1098,6 +1114,7 @@ class CaseRunner:
             score_plot_request(result, case.plot_request)
             score_view(result, case.view, await self._view_held(user, sid))
             score_question(result, case.asks)
+            score_question_ops(result, case.question_ops)
             if summary_turn and pasted_rows is not None:
                 rows.add(pasted_rows)
             measure_reply(
@@ -1252,6 +1269,7 @@ class CaseRunner:
         operations: list[dict[str, Any]] = list(made.operations) if made is not None else []
         result.server_operations = len(operations)
         texts: list[str] = []
+        asked_ops: dict[str, list[str]] = {}  # each `query_data` call's operations by name, by the call's id
         for event in session.events:
             if event.author == ROOT_AUTHOR and event.content is not None:
                 replies = [part.text for part in event.content.parts or [] if part.text and not part.thought]
@@ -1269,6 +1287,9 @@ class CaseRunner:
                     first = asked[0] if isinstance(asked, list) and asked else None
                     result.questions += 1
                     result.questions_of_view += isinstance(first, dict) and first.get("op") == "apply_view"
+                    listed = asked if isinstance(asked, list) else []
+                    if call.id:  # ADK gives every call an id and its answer the same one
+                        asked_ops[call.id] = [question_op(item) for item in listed if isinstance(item, dict)]
                 if call.name == PREPARE_TOOL and isinstance(call.args, dict):
                     items = call.args.get("operations")
                     if isinstance(items, list):
@@ -1276,6 +1297,12 @@ class CaseRunner:
                 elif call.name == GENERATE_TOOL and isinstance(call.args, dict):
                     operations.append({"op": GENERATE_TOOL, **call.args})
             for response in event.get_function_responses():
+                if response.name == QUERY_TOOL and response.id:
+                    # Paired by id, so the answers to calls made at once land right; a refused question computed
+                    # nothing.
+                    names = asked_ops.pop(response.id, [])
+                    if isinstance(response.response, dict) and response.response.get("status") == "ok":
+                        result.question_ops.extend(names)
                 if response.name in PLOT_TOOLS:
                     kept = response.response if isinstance(response.response, dict) else {}
                     # Kept for the next plot (the tool's own answer, or a run stopped before it started), or drawn.
@@ -1397,6 +1424,21 @@ def score_question(result: CaseResult, asks: Literal["view", "table"] | None) ->
     asked_right = of_view == result.questions if asks == "view" else of_view == 0
     result.question_miss = not result.questions or not asked_right
     if result.question_miss:
+        result.match = False
+
+
+def question_op(item: dict[str, Any]) -> str:
+    """One operation of a `query_data` call by name: its `op`, and `TOTAL_OP` for an `aggregate` whose `by` is left
+    out, empty or null."""
+    op = str(item.get("op"))
+    return TOTAL_OP if op == "aggregate" and not item.get("by") else op
+
+
+def score_question_ops(result: CaseResult, wanted: Sequence[str]) -> None:
+    """Whether the turn's answered questions used every operation the case names (`PrepCase.question_ops`), so the
+    figure the reply states is one the server computed. A miss otherwise, and a case without names is not scored."""
+    result.question_ops_miss = any(name not in result.question_ops for name in wanted)
+    if result.question_ops_miss:
         result.match = False
 
 
@@ -1606,6 +1648,8 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "view_miss": result.view_miss,
             "questions": result.questions,
             "questions_of_view": result.questions_of_view,
+            "question_ops": result.question_ops,
+            "question_ops_miss": result.question_ops_miss,
             "question_miss": result.question_miss,
             "plot_wishes": result.plot_wishes,
             "plot_wishes_kept": result.plot_wishes_kept,
@@ -1688,6 +1732,9 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
             if result.question_miss:
                 asked = f"{result.questions_of_view} of {result.questions} questions asked of the view"
                 outcome += f", {asked}, expected the {case.asks}"
+            if result.question_ops_miss:
+                used = ", ".join(result.question_ops) or "nothing"
+                outcome += f", questions used {used}, expected {', '.join(case.question_ops)}"
             if result.reply_miss:
                 outcome += f", reply: {result.reply_miss.replace('_', ' ')}"
         rows.append((case.id, expected, found, outcome))
@@ -1833,20 +1880,26 @@ def stamp(settings: AgentSettings, cases: Sequence[PrepCase]) -> dict[str, Any]:
 
 
 def check_cases(cases: Sequence[PrepCase]) -> None:
-    """Every expected operation list passes the `Operation` and `Generate` models, a case's earlier changes apply to
-    its dataset one after the other, and a case scored by its table gets one: its expected operations apply to the
+    """Every expected operation list passes the `Operation` and `Generate` models, every name in `question_ops` is an
+    operation a question takes, a case's earlier changes apply to its dataset one after the other, and a case scored
+    by its table gets one: its expected operations apply to the
     version they start from (`expected_result`) and change its table as the scoring compares it (`table_difference`,
     the case's `row_order`), since a table they leave as it is cannot tell them from no data call (such a case is
     `strict_operations`). Raises `SetupError` otherwise."""
     from agents.anyplot.data.generate import GenerateError
     from agents.anyplot.data.parse import ParseError, parse_dataset
-    from agents.anyplot.data.prepare import PrepareArgs, PrepareError, apply_and_parse
+    from agents.anyplot.data.prepare import PrepareArgs, PrepareError, QueryOperation, apply_and_parse
 
+    models = get_args(get_args(QueryOperation)[0])
+    asked_ops = {TOTAL_OP, *(get_args(model.model_fields["op"].annotation)[0] for model in models)}
     for case in cases:
         try:
             canonical_operations(case.expected_operations, ".")
         except ValidationError as exc:
             raise SetupError(f"case {case.id}: expected_operations do not validate: {exc}") from exc
+        unknown = sorted(set(case.question_ops) - asked_ops)
+        if unknown:
+            raise SetupError(f"case {case.id}: question_ops names no operation of a question: {', '.join(unknown)}")
         try:
             versions = [parse_dataset(case.dataset_text)] if case.dataset_text is not None else []
         except ParseError as exc:

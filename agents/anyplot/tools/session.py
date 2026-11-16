@@ -83,7 +83,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   alone, `plot_outdated`; `reset_view` clears the view, and a view that does not fit the table the call
   leaves refuses the whole call.
 * `query_data(operations, columns, limit, from_version)`: a question about the data answered from a copy
-  (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, then
+  (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, or of the two only a
+  question takes (`prepare.QueryOperation`: an `aggregate` without `by`, a `fit`), then
   the first `limit` rows (at most 25) in at most eight columns, fenced as `<user_data>`, with
   the total row count and the change lines. Nothing is stored: the dataset, its version, the
   bindings and the confirmation stay as they are, so a question never mutates the user's data.
@@ -108,6 +109,7 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 import json
 import math
 import secrets
+from collections.abc import Sequence
 from dataclasses import replace
 from typing import Any
 
@@ -129,6 +131,7 @@ from ..data.prepare import (
     PrepareArgs,
     Prepared,
     PrepareError,
+    QueryOperation,
     Unsupported,
     apply_and_parse,
     validation_lines,
@@ -518,7 +521,9 @@ def _conversion_outcome(
     return "date" if any(dtypes.get(name) == "datetime" for name in made) else "number"
 
 
-def capability_gap(operations: list[Operation], view: SessionView, tool_context: ToolContext) -> dict[str, Any] | None:
+def capability_gap(
+    operations: Sequence[Operation | QueryOperation], view: SessionView, tool_context: ToolContext
+) -> dict[str, Any] | None:
     """The answer to an `unsupported` operation among `operations`, None without one.
 
     A change no operation can make: the service's own sentence in the session language (`refusals.yaml`,
@@ -837,11 +842,13 @@ async def query_data(
 ) -> dict[str, Any]:
     """Answer a question about the user's data without changing it: the operations are applied to a copy and the first rows of the result come back as a small table; nothing is stored, and the data, its version and its confirmation stay as they are.
 
-    operations: zero to five operations of the same set as prepare_data, applied in order (keep only some rows with
-    keep_rows and where, such as test eq on the year asked about; a top N is a sort with limit; a share, a percent
-    change or an index is a derive, a change from the row before a diff, another formula a compute; a total or a mean
-    per group an aggregate; apply_view first asks the question of the rows the view of the plot shows instead of
-    every row of the table). columns: the columns to return, at most 8
+    operations: zero to five operations of the same set as prepare_data, plus fit, applied in order (keep only some
+    rows with keep_rows and where, such as test eq on the year asked about; a top N is a sort with limit; a share, a
+    percent change or an index is a derive, a change from the row before a diff, another formula a compute; a total
+    or a mean per group an aggregate, and over all rows an aggregate without by; fit (x, y) is the least-squares line
+    of the number column y on the number column x as one row of slope, intercept, r_squared and n, which a later
+    compute can use; apply_view first asks the question of the rows the view of the plot shows instead of every row
+    of the table). columns: the columns to return, at most 8
     (default: the first 8). limit: the rows to return, 1 to 25 (default 10). from_version: the version to read,
     "current" (the default), "original" (the first version, the table as the user pasted or opened it) or a version
     number the session block lists. Returns the table (columns and rows), the number of rows of the whole result,

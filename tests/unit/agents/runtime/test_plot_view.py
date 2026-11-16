@@ -215,6 +215,17 @@ class TestViewOf:
 
         assert (empty.value.code, unknown.value.code) == ("empty_result", "unknown_column")
 
+    def test_a_stored_view_with_a_day_bound_on_period_labels_is_cleared_when_read(self) -> None:
+        """Quarter labels compare as text, so a day bound on them is refused: a view stored with one before draws
+        every row again, with the line that says so, and reading the session goes on."""
+        table = shown("Quartal,Menge\n2017-Q4,4\n2018-Q1,5\n2018-Q2,6\n")
+        state = plot_view.view_delta(view_from(only("Quartal", "ge", "2018-01-01")))
+
+        held = plot_view.current(state, table)
+
+        assert table.column_dtypes["Quartal"] == "text"
+        assert held.view.empty and held.viewed is None and held.cleared == CLEARED_LINE
+
     def test_the_note_of_a_run_keeps_its_counts_and_shortens_the_views_words(self) -> None:
         table = parse_dataset(CITIES)
         view = view_from(only("Land", "eq", "CH"), *TOP_2)
