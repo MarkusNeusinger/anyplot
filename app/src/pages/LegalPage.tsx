@@ -70,6 +70,51 @@ function FactTable({
   );
 }
 
+/** 13 px, the floor for muted text on the site: `fontSize.sm` (12.8 px) sits under it. */
+const KEPT_FONT_SIZE = '0.8125rem';
+
+/**
+ * A fact row's second line: how long its data is kept and where it runs, as `label: value`
+ * pairs. A span shown as a block, so it can sit inside an anchor span such as #shared-links.
+ */
+function Kept({ items }: { items: [string, ReactNode][] }) {
+  return (
+    <Box
+      component="span"
+      data-kept-line=""
+      sx={{
+        display: 'block',
+        mt: 0.75,
+        fontSize: KEPT_FONT_SIZE,
+        lineHeight: 1.6,
+        color: semanticColors.mutedText,
+      }}
+    >
+      {items.map(([label, value], i) => (
+        <span key={label}>
+          {i > 0 && ' · '}
+          {label}: {value}
+        </span>
+      ))}
+    </Box>
+  );
+}
+
+/**
+ * Where data runs on Google Cloud. The region stays on one line: a break at its hyphen
+ * ("europe-" / "west4") reads as two words.
+ */
+function GoogleCloud({ services }: { services: string }) {
+  return (
+    <>
+      Google Cloud ({services}) in the Netherlands{' '}
+      <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+        (europe-west4)
+      </Box>
+    </>
+  );
+}
+
 export function LegalPage() {
   const { hash } = useLocation();
 
@@ -249,11 +294,20 @@ export function LegalPage() {
                     </Link>
                     . its script is served through this domain: no cookies, no cross-site id, no IP
                     address kept.
+                    <Kept items={[['where', 'Plausible Analytics (EU, proxied)']]} />
                   </>,
                 ],
                 [
                   'server logs',
-                  'IP address, URL and user-agent of each request, for security and debugging.',
+                  <>
+                    IP address, URL and user-agent of each request, for security and debugging.
+                    <Kept
+                      items={[
+                        ['kept', '30 days'],
+                        ['where', <GoogleCloud services="Run, Logging" />],
+                      ]}
+                    />
+                  </>,
                 ],
                 [
                   'machine readers',
@@ -262,6 +316,12 @@ export function LegalPage() {
                     line: the vendor and purpose, whether Cloudflare verified it, the page or file
                     it asked for and the status. no IP address, no user-agent, nothing about
                     anyone&apos;s browsing.
+                    <Kept
+                      items={[
+                        ['kept', 'up to 180 days'],
+                        ['where', <GoogleCloud services="Logging, BigQuery" />],
+                      ]}
+                    />
                   </Box>,
                 ],
                 [
@@ -272,20 +332,56 @@ export function LegalPage() {
                     verified the fetcher as a bot it knows. no IP address, no user-agent, no time of
                     day, nothing about who shared. unverified is no verdict on a share: WhatsApp and
                     Signal fetch the preview from the sender&apos;s own phone, which nobody can
-                    verify. the counts are kept without a time limit.
+                    verify.
+                    <Kept
+                      items={[
+                        ['kept', 'no time limit'],
+                        ['where', <GoogleCloud services="SQL" />],
+                      ]}
+                    />
                   </Box>,
                 ],
                 [
                   'edge',
-                  'Cloudflare uses your IP address to rate-limit, filter bots and absorb DDoS attacks.',
+                  <>
+                    Cloudflare uses your IP address to rate-limit, filter bots and absorb DDoS
+                    attacks.
+                    <Kept
+                      items={[['where', 'Cloudflare (global, EU data centers for EU visitors)']]}
+                    />
+                  </>,
                 ],
                 [
                   'feedback',
-                  'message, reaction, optional contact, page, your window size, user-agent and a random id that ties your own submissions together, read only by the operator. a salted hash of your IP address limits spam.',
+                  <>
+                    message, reaction, optional contact, page, your window size, user-agent and a
+                    random id that ties your own submissions together, read only by the operator. a
+                    salted hash of your IP address limits spam.
+                    <Kept
+                      items={[
+                        ['entries', 'until you ask to delete them'],
+                        [
+                          'IP hash',
+                          'cleared by the next feedback after ten minutes; its salt dies with the server instance',
+                        ],
+                        ['where', <GoogleCloud services="SQL" />],
+                      ]}
+                    />
+                  </>,
                 ],
                 [
                   'bot check',
-                  "when you send feedback, rate a plot or open the data assistant, Cloudflare Turnstile checks that a browser, not a script, is asking: it reads your IP address, user-agent and TLS fingerprint and keeps an item of its own in your browser's storage, with no cookie. anyplot learns only whether the check passed. Cloudflare also uses these signals, as its own controller, to improve the check.",
+                  <>
+                    when you send feedback, rate a plot or open the data assistant, Cloudflare
+                    Turnstile checks that a browser, not a script, is asking: it reads your IP
+                    address, user-agent and TLS fingerprint and keeps an item of its own in your
+                    browser&apos;s storage, with no cookie. anyplot learns only whether the check
+                    passed. Cloudflare also uses these signals, as its own controller, to improve
+                    the check.
+                    <Kept
+                      items={[['where', 'Cloudflare (global, EU data centers for EU visitors)']]}
+                    />
+                  </>,
                 ],
                 [
                   'github',
@@ -293,45 +389,10 @@ export function LegalPage() {
                 ],
               ]}
             />
-
-            <Typography sx={subheadingStyle}>where it runs</Typography>
-            <FactTable
-              rows={[
-                [
-                  'hosting',
-                  'Google Cloud (Run, SQL, Storage, Logging, BigQuery) in the Netherlands (europe-west4)',
-                ],
-                ['cdn / ddos / bot check', 'Cloudflare (global, EU data centers for EU visitors)'],
-                ['analytics', 'Plausible Analytics (EU, proxied)'],
-                [
-                  'data assistant',
-                  'Claude by Anthropic via Google Cloud Vertex AI (EU), if you use it',
-                ],
-              ]}
-            />
-            <Typography sx={textStyle}>
+            <Typography sx={{ ...textStyle, mt: 2 }}>
               Google Cloud and Cloudflare process data under their data processing terms, including
               their safeguards for transfers outside Switzerland and the EU.
             </Typography>
-
-            <Typography sx={subheadingStyle}>how long it stays</Typography>
-            <FactTable
-              rows={[
-                ['server logs', '30 days'],
-                [
-                  'feedback IP hash',
-                  'cleared by the next feedback after ten minutes; its salt dies with the server instance',
-                ],
-                ['assistant telemetry', 'up to 180 days'],
-                ['machine readers', 'up to 180 days'],
-                [
-                  'shared links',
-                  'no time limit: counts per day, platform and page, verified or not',
-                ],
-                ['feedback case files', '180 days'],
-                ['feedback entries, case rows', 'until you ask to delete them'],
-              ]}
-            />
 
             <Typography sx={subheadingStyle}>legal bases (GDPR)</Typography>
             <FactTable
@@ -381,7 +442,17 @@ export function LegalPage() {
                 ],
                 [
                   'logs',
-                  'no content: never your text, data, column or file names. telemetry holds event types, formats, sizes, plot type, library, language code (rare ones as "other"), attempts, defect ids, statuses, latencies and token counts.',
+                  <>
+                    no content: never your text, data, column or file names. telemetry holds event
+                    types, formats, sizes, plot type, library, language code (rare ones as
+                    &quot;other&quot;), attempts, defect ids, statuses, latencies and token counts.
+                    <Kept
+                      items={[
+                        ['telemetry', 'up to 180 days'],
+                        ['where', <GoogleCloud services="Logging, BigQuery" />],
+                      ]}
+                    />
+                  </>,
                 ],
                 [
                   'ids',
@@ -399,6 +470,13 @@ export function LegalPage() {
                     . it starts unticked, which leaves out that file only. files go to a private
                     bucket in the Netherlands; a triage row keeps your reaction, message, a hash of
                     your tab id and the run&apos;s details.
+                    <Kept
+                      items={[
+                        ['case files', '180 days'],
+                        ['case rows', 'until you ask to delete them'],
+                        ['where', <GoogleCloud services="Storage, SQL" />],
+                      ]}
+                    />
                   </>,
                 ],
                 [

@@ -64,38 +64,75 @@ describe('LegalPage', () => {
     expect(screen.getByText(/complain to a supervisory authority/)).toBeInTheDocument();
   });
 
-  it('gives each store its own retention, and no store a borrowed one', () => {
+  it('gives each kind of data its own period and place, in its own row', () => {
     render(<LegalPage />);
 
-    // One table row per store, each with its own figure: the 30 days belong to
-    // the server logs only, and the feedback rows have no timer at all. The IP
-    // hash is cleared only when the next feedback arrives (api/routers/feedback.py
-    // `_clear_expired_ip_hashes`), so the row says so instead of a flat "ten minutes".
-    const retention: [string, string][] = [
-      ['server logs', '30 days'],
+    // Each row closes with one line on how long its data is kept and where it runs, so a reader
+    // never meets the data in one place and its period much further down. The whole line is
+    // pinned per row: the 30 days belong to the server logs only, the feedback entries and the
+    // case rows have no timer at all, and the feedback IP hash is cleared only when the next
+    // feedback arrives (api/routers/feedback.py `_clear_expired_ip_hashes`), not after a flat
+    // "ten minutes". `feedback` labels two rows, the site's and the data assistant's.
+    const keptLines: [string, number, string][] = [
+      ['analytics', 0, 'where: Plausible Analytics (EU, proxied)'],
       [
-        'feedback IP hash',
-        'cleared by the next feedback after ten minutes; its salt dies with the server instance',
+        'server logs',
+        0,
+        'kept: 30 days · where: Google Cloud (Run, Logging) in the Netherlands (europe-west4)',
       ],
-      ['assistant telemetry', 'up to 180 days'],
-      ['machine readers', 'up to 180 days'],
-      ['shared links', 'no time limit: counts per day, platform and page, verified or not'],
-      ['feedback case files', '180 days'],
-      ['feedback entries, case rows', 'until you ask to delete them'],
+      [
+        'machine readers',
+        0,
+        'kept: up to 180 days · where: Google Cloud (Logging, BigQuery) in the Netherlands (europe-west4)',
+      ],
+      [
+        'shared links',
+        0,
+        'kept: no time limit · where: Google Cloud (SQL) in the Netherlands (europe-west4)',
+      ],
+      ['edge', 0, 'where: Cloudflare (global, EU data centers for EU visitors)'],
+      [
+        'feedback',
+        0,
+        'entries: until you ask to delete them · IP hash: cleared by the next feedback after ten minutes; its salt dies with the server instance · where: Google Cloud (SQL) in the Netherlands (europe-west4)',
+      ],
+      ['bot check', 0, 'where: Cloudflare (global, EU data centers for EU visitors)'],
+      [
+        'logs',
+        0,
+        'telemetry: up to 180 days · where: Google Cloud (Logging, BigQuery) in the Netherlands (europe-west4)',
+      ],
+      [
+        'feedback',
+        1,
+        'case files: 180 days · case rows: until you ask to delete them · where: Google Cloud (Storage, SQL) in the Netherlands (europe-west4)',
+      ],
     ];
-    for (const [store, kept] of retention) {
-      expect(
-        screen.getByRole('row', { name: new RegExp(`^${store}\\s*${kept}$`) })
-      ).toBeInTheDocument();
+    const keptLineOf = (label: string, nth: number) =>
+      (
+        screen.getAllByRole('rowheader', { name: label })[nth].closest('tr') as HTMLElement
+      ).querySelector('[data-kept-line]')?.textContent;
+    for (const [label, nth, line] of keptLines) {
+      expect(keptLineOf(label, nth), label).toBe(line);
     }
-    // The label is the row's header, so a screen reader announces it before the figure.
-    expect(screen.getByRole('rowheader', { name: 'feedback IP hash' })).toBeInTheDocument();
-    // Google Cloud, its logs and BigQuery included, runs in the EU region.
-    expect(
-      screen.getByText(
-        /Google Cloud \(Run, SQL, Storage, Logging, BigQuery\) in the Netherlands \(europe-west4\)/
-      )
-    ).toBeInTheDocument();
+    // No other row carries such a line, so no period is borrowed by a row it does not belong
+    // to; github states neither a period nor a place.
+    expect(document.querySelectorAll('[data-kept-line]')).toHaveLength(keptLines.length);
+    expect(keptLineOf('github', 0)).toBeUndefined();
+    // The separate period and place tables are gone, their figures moved into the rows.
+    expect(screen.queryByText('how long it stays')).not.toBeInTheDocument();
+    expect(screen.queryByText('where it runs')).not.toBeInTheDocument();
+    // Between them, the rows still place all of Google Cloud's services in the EU region.
+    const googleCloud = Array.from(document.querySelectorAll('[data-kept-line]'))
+      .map(line => line.textContent ?? '')
+      .join(' ');
+    for (const service of ['Run', 'SQL', 'Storage', 'Logging', 'BigQuery']) {
+      expect(googleCloud).toMatch(
+        new RegExp(
+          `Google Cloud \\([^)]*\\b${service}\\b[^)]*\\) in the Netherlands \\(europe-west4\\)`
+        )
+      );
+    }
     // The page states the current state only: no notes on what older entries still carry.
     expect(screen.queryByText(/before the move/)).not.toBeInTheDocument();
     expect(screen.queryByText(/unsalted/)).not.toBeInTheDocument();
@@ -115,7 +152,7 @@ describe('LegalPage', () => {
     expect(
       screen.getByText(/a random id that ties your own submissions together/)
     ).toBeInTheDocument();
-    // The feedback's IP hash is salted; when it goes sits in the retention table.
+    // The feedback's IP hash is salted; when it goes stands on the feedback row's second line.
     expect(screen.getByText(/a salted hash of your IP address limits spam/)).toBeInTheDocument();
     // Plausible's real property is cookieless and identifier-free, not that
     // the script is ours — it is Plausible's, only served from our domain.
@@ -150,7 +187,7 @@ describe('LegalPage', () => {
     expect(sharedLinks).toHaveTextContent(/from the sender.s own phone/);
     expect(sharedLinks).toHaveTextContent(/no IP address, no\s+user-agent, no time of day/);
     expect(sharedLinks).toHaveTextContent(/nothing about who shared/);
-    expect(sharedLinks).toHaveTextContent(/kept\s+without a time limit/);
+    expect(sharedLinks).toHaveTextContent(/kept: no time limit/);
   });
 
   // The data assistant's section, each claim pinned with the qualifier that
@@ -224,9 +261,11 @@ describe('LegalPage', () => {
     expect(
       screen.getByText(/if you only browse the catalogue, none of it touches you/)
     ).toBeInTheDocument();
+    // Where the assistant's model runs stands in its own row, under the heading that limits it
+    // to those who use the assistant.
     expect(
       screen.getByRole('row', {
-        name: /^data assistant\s*Claude by Anthropic via Google Cloud Vertex AI \(EU\), if you use it$/,
+        name: /^the model\s*what you paste and write goes to Claude by Anthropic, served through Google Cloud Vertex AI in the EU/,
       })
     ).toBeInTheDocument();
     // The code's licence with the Highcharts exception, and the transfers.

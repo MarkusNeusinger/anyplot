@@ -1258,6 +1258,21 @@ class TestSeoProxyRouter:
         # The machine-read line, mirrored from the human page's "machine readers" row.
         assert "Machine readers: each request by a crawler, an AI assistant or an MCP client" in response.text
         assert "without IP address or user-agent, kept up to 180 days" in response.text
+        # Each kind of data carries its own period and place, as its row on the human page does.
+        for fact in (
+            "Server logs: IP address, URL and user-agent of each request, for security and debugging",
+            "kept up to 180 days in Google Cloud Logging and BigQuery in the Netherlands (europe-west4)",
+            "Shared links: when a messenger or a social network fetches a page's preview image",
+            "nothing about who shared",
+            "The counts are kept without a time limit in Google Cloud SQL in the Netherlands (europe-west4)",
+            "Edge: Cloudflare (global, EU data centers for EU visitors) uses your IP address",
+            "kept until you ask to delete it, in Google Cloud SQL in the Netherlands (europe-west4)",
+            "Cloudflare (global, EU data centers for EU visitors) also uses these signals",
+        ):
+            assert fact in response.text, fact
+        # The right to object carries the condition that makes it one, as on the human page.
+        assert "objection on grounds relating to your particular situation" in response.text
+        assert "restriction, objection, and" not in response.text
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
@@ -1274,7 +1289,9 @@ class TestSeoProxyRouter:
             "uses your IP address to rate-limit, filter bots and absorb DDoS attacks",
             "no name or email unless you type one",
             "may credit your public username",
-            "browsing the catalogue never reaches a model",
+            "so browsing never reaches a model",
+            "your plot votes, a release number",
+            "given when you send it and withdrawable at any time by asking",
             # The bot check, as LegalPage.tsx's "bot check" row states it.
             "Cloudflare Turnstile checks that a browser, not a script, is asking",
             "user-agent and TLS fingerprint",
@@ -1292,16 +1309,20 @@ class TestSeoProxyRouter:
             "experimental feature, and the operator may pause it",
             "Google Cloud Vertex AI in the EU",
             "nobody checks them by hand",
-            "salted with a value that lives as long as the server instance",
-            "it starts unticked",
-            "180 days",
+            "salted with a value that lives only as long as the server instance",
+            "so they are pseudonymous",
+            "it starts unticked, which leaves out that file only",
             "a licence from Highsoft",
             "consent (Art. 6(1)(a) GDPR)",
             "your request (Art. 6(1)(b) GDPR)",
-            "Telemetry: up to 180 days",
+            # The page's periods and places for the assistant's data, each beside its data.
+            "Telemetry: up to 180 days in Google Cloud Logging and BigQuery in the Netherlands (europe-west4)",
+            "private bucket in Google Cloud Storage in the Netherlands (europe-west4) for 180 days",
+            "The triage row stays until you ask to delete it, in Google Cloud SQL in the Netherlands",
             "cleared after an hour idle",
+            "keeps its last 16 results in memory",
             "it is not used for training",
-            "The triage row stays until you ask to delete it",
+            "Daily limits apply per tab and per network",
         ):
             assert fact in response.text, fact
 
