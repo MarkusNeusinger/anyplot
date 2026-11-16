@@ -557,7 +557,7 @@ steal like an artist._▌                           │                         
 - Size: `clamp(2.75rem, 4.5vw, 4.75rem)` on the H1 container, with `0.75em` on both spans.
 
 **Layer hierarchy (top to bottom, left column):**
-1. **Eyebrow** — `— the open plot catalogue · by Markus Neusinger`, lowercase, 11px MonoLisa upright, `--imprint-green`, tracked `.08em`, preceded by 18×1px green rule. The name links to the about page (`paths.about`) in the eyebrow's own colour, with no underline at rest, the site's green on hover and the hero links' focus ring for the keyboard. Only the landing hero carries the name: the masthead rule, the OG image and the crawler `<h1>` keep `the open plot catalogue`.
+1. **Eyebrow** — `— the open plot catalogue · by Markus Neusinger`, lowercase except the name, 11px MonoLisa upright, `--imprint-green`, tracked `.08em`, preceded by 18×1px green rule. The name links to the about page (`paths.about`) in the eyebrow's own colour, with no underline at rest, the site's green on hover and the hero links' focus ring for the keyboard. Only the landing hero carries the name: the masthead rule, the OG image and the crawler `<h1>` keep `the open plot catalogue`.
 2. **H1** — see above.
 3. **Subtitle** — `one spec · every library · always current.`, MonoLisa upright weight 500, 18px, `--ink`. Must fit on one line (`whiteSpace: nowrap` + stepped responsive size).
 4. **Intro prose** — 4–6 lines MonoLisa upright weight 300, `--ink-soft`, 18px. `<em>your</em>` renders as italic-ss01 script accent inline.
