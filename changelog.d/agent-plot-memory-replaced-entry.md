@@ -15,7 +15,7 @@
   replaced where the plot draws several different labels for that axis, as
   on panels with labels of their own or with a second y axis. This never
   adds an entry to an empty memory. A title filed with the target `plot`
-  and one filed without are now one title.
+  and one filed without are now one title. (#13143)
 - **The plot card says which remembered decisions the plot did not use.**
   A remembered decision whose text the plot does not draw now ends the
   card's decisions line as `not used: …` instead of standing under
@@ -23,4 +23,4 @@
   decision without a text, one written before the plot language changed,
   and every decision in a library whose reviewer checks the texts in the
   image still count as kept, so `not used:` appears on matplotlib, seaborn
-  and plotnine plots only.
+  and plotnine plots only. (#13143)
