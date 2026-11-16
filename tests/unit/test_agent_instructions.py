@@ -8,7 +8,7 @@ moves, a link rots, a rule gets tightened in one file and not the other, and
 the guide keeps reading as authoritative while it sends the next agent
 somewhere that no longer exists.
 
-Six cheap pins, none of which needs the database, the network or a checkout of
+Seven cheap pins, none of which needs the database, the network or a checkout of
 anything but this repository:
 
 1. every backtick-quoted repo path in the agent-facing files resolves;
@@ -19,7 +19,10 @@ anything but this repository:
 5. `.claude/guardrails.md` stays a companion — every section it carries maps to
    a binding one-liner in CLAUDE.md, and the file says so about itself;
 6. the model routing CLAUDE.md delegates to `agentic/docs/agent-operations.md`
-   is stated there, and CLAUDE.md still points at it.
+   is stated there, and CLAUDE.md still points at it;
+7. the `/audit` command's roster, its auditor files and the tree agree: every
+   path an auditor is sent to exists, every auditor has a file and a model, and
+   every top-level directory has an auditor or a stated reason to have none.
 
 (4) is deliberately a keyword pin, not a text diff: the two files address
 different audiences and paraphrase each other, so requiring byte equality would
@@ -33,6 +36,7 @@ This pins what the guides already say. It is not the place to introduce a rule
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -520,3 +524,98 @@ def test_agent_operations_defers_to_claude_md() -> None:
     assert "`claude.md` is the rule" in operations, (
         "`agentic/docs/agent-operations.md` must state that CLAUDE.md wins when the two disagree"
     )
+
+
+# The `/audit` command sends each auditor to the paths its file names. An
+# auditor sent to a path that is gone reports nothing about it, and so does a
+# directory no auditor is sent to: in both cases the report shows a clean area
+# where nobody looked.
+AUDIT_COMMAND = REPO_ROOT / "agentic" / "commands" / "audit.md"
+AUDITOR_FILES = sorted((REPO_ROOT / "agentic" / "commands" / "audit").glob("*-auditor.md"))
+
+# A row of the roster table: the auditor, its surface and dimensions, its model.
+# The last cell is taken as it stands, so a row with an empty or malformed model
+# cell is still a roster row and fails the model pin instead of dropping out of it.
+_ROSTER_ROW = re.compile(r"^\s*\| `([a-z-]+-auditor)` \|(.*)\|([^|\n]*)\|\s*$", re.M)
+# A row of the prompt index: the auditor and the file that holds its prompt.
+_INDEX_ROW = re.compile(r"^\| `([a-z-]+-auditor)` \| `(agentic/commands/audit/[a-z-]+-auditor\.md)`", re.M)
+_AUDIT_MODELS = {"opus", "fable"}
+
+# Top-level directories that deliberately have no auditor, each with its reason.
+_UNAUDITED_TOP_LEVEL = {
+    ".agents": "a link to `.claude/skills/`, which the agentic-auditor reads",
+    ".design-sync": "sync scaffolding that leaves the repository after 2026-12-14",
+    "changelog.d": "changelog fragments, which the changelog job checks",
+}
+
+
+def _audit_roster() -> dict[str, tuple[str, str]]:
+    """Each auditor of the roster table with its surface cells and its model."""
+    text = AUDIT_COMMAND.read_text(encoding="utf-8")
+    return {name: (cells, model.strip()) for name, cells, model in _ROSTER_ROW.findall(text)}
+
+
+@pytest.mark.parametrize("audit_file", [AUDIT_COMMAND, *AUDITOR_FILES], ids=lambda p: p.name)
+def test_audit_command_paths_resolve(audit_file: Path) -> None:
+    """Every backticked repo path in the audit command and its auditors exists."""
+    missing = sorted(
+        token
+        for token in _candidate_paths(audit_file.read_text(encoding="utf-8"))
+        if not (REPO_ROOT / token.strip("/")).exists()
+    )
+    assert not missing, f"{audit_file.name} sends an auditor to paths that do not exist: {missing}"
+
+
+def test_audit_roster_matches_the_auditor_files() -> None:
+    """The roster, the prompt index and the files on disk name the same auditors.
+
+    The orchestration reads the roster from `audit.md` and each prompt from its
+    file, so an auditor missing from one of the three is never run, or runs
+    without a prompt.
+    """
+    on_disk = {path.stem for path in AUDITOR_FILES}
+    roster = set(_audit_roster())
+    index = dict(_INDEX_ROW.findall(AUDIT_COMMAND.read_text(encoding="utf-8")))
+    assert on_disk, "no auditor files found under agentic/commands/audit/"
+    assert roster == on_disk, f"roster table and auditor files differ: {sorted(roster ^ on_disk)}"
+    assert set(index) == on_disk, f"prompt index and auditor files differ: {sorted(set(index) ^ on_disk)}"
+    misfiled = {name: path for name, path in index.items() if path != f"agentic/commands/audit/{name}.md"}
+    assert not misfiled, f"prompt index rows that point at another auditor's file: {misfiled}"
+
+
+def test_audit_roster_names_a_model_for_every_auditor() -> None:
+    """Each roster row ends in a model the routing knows.
+
+    A workflow agent started without a model inherits the session's, so a row
+    without one silently runs on whatever model happened to start the audit.
+    """
+    unknown = {name: model for name, (_, model) in _audit_roster().items() if model not in _AUDIT_MODELS}
+    assert not unknown, f"roster rows whose last cell is not one of {sorted(_AUDIT_MODELS)}: {unknown}"
+
+
+def test_every_tracked_top_level_directory_has_an_auditor() -> None:
+    """A new top-level directory is read by some auditor, or exempt for a reason.
+
+    A directory that arrives without an auditor looks clean in every later
+    report, however much code it holds.
+    """
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z"], cwd=REPO_ROOT, capture_output=True, check=True, text=True
+    ).stdout.split("\0")
+    top_level = {path.split("/", 1)[0] for path in tracked if "/" in path}
+    # The first segment of every path a roster row names. A row writes full
+    # paths, so a segment that is no top-level directory is not a surface.
+    named = {
+        token.split("/", 1)[0]
+        for cells, _ in _audit_roster().values()
+        for span in _BACKTICKED.findall(cells)
+        for token in span.split()
+        if "/" in token
+    }
+    unread = sorted(top_level - set(_UNAUDITED_TOP_LEVEL) - named)
+    assert not unread, (
+        f"no row of the roster table in agentic/commands/audit.md names these directories: {unread}; "
+        "give one an auditor, or add it to _UNAUDITED_TOP_LEVEL with its reason"
+    )
+    gone = sorted(set(_UNAUDITED_TOP_LEVEL) - top_level)
+    assert not gone, f"_UNAUDITED_TOP_LEVEL exempts directories that no longer exist: {gone}"

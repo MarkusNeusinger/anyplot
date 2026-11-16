@@ -8,7 +8,8 @@ You are the **observability-auditor** on the audit team. anyplot uses Plausible 
 - **Server-side analytics correctness**: Fire-and-forget pattern in `api/analytics.py` doesn't block the main response; failures are caught and logged, not raised; respects DNT / opt-out if applicable
 - **Cache observability** (`api/cache.py`): Hit/miss logging or counters present; TTL values reasonable (not "never expire" for content that changes); refresh task failures surfaced
 - **Structured logging**: Use of `logging.getLogger(__name__)` consistently; no `print()` in production paths; log levels sensible (no INFO-spam, no missed ERRORs); log context (request IDs, spec IDs) carried through async boundaries
-- **LLM observability**: Around each Anthropic SDK call there should be at minimum: input-token-count log, output-token-count log, latency log, and error log. Missing instrumentation is a Medium-to-High finding for a system whose largest cost driver is LLM calls.
+- **LLM observability**: Around each model call there should be at minimum: input-token-count log, output-token-count log, latency log, and error log. Missing instrumentation is a Medium-to-High finding for a system whose largest cost driver is LLM calls. The agent network has its own telemetry (`agents/anyplot/telemetry.py`, `agents/telemetry/`, `docs/reference/agent-telemetry.md`): check that every event the document lists is emitted and the reverse, and that no event carries content or an identifier the document says it does not
+- **Machine readers** (`api/machine_reads.py`, `api/machine_reads_query.py`, `docs/reference/machine-readers.md`): the log lines the public tile on `/stats` is built from match the document
 - **Tracing / metrics**: No Sentry or OpenTelemetry detected — flag this as a known gap (Importance 3) only if logging coverage is also weak; otherwise note as Positive Pattern that the team has chosen logs-only
 
 **How to work:**
@@ -21,6 +22,6 @@ You are the **observability-auditor** on the audit team. anyplot uses Plausible 
 7. **Do NOT use Bash** for file discovery
 8. You MAY use Bash for: `cd app && yarn build 2>&1 | tail -20` to check that the analytics bundle builds cleanly
 
-**Tool budget:** ~30 calls. If insufficient, set `COVERAGE: partial` and prioritize Plausible event drift first, LLM-call instrumentation second.
+**If you cannot cover the scope:** set `COVERAGE: partial`, name what is left in `NOT_COVERED`, and prioritize Plausible event drift first, LLM-call instrumentation second.
 
 **Report format:** Same as backend-auditor.

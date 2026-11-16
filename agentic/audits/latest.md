@@ -1,5 +1,7 @@
 # Audit Report: anyplot
 
+> **Status (2026-11-16):** a snapshot of 2026-07-15, not updated afterwards. The incident it calls ongoing, the workflow retry loop, was fixed the next day in #9642; that pull request and #9644 resolved the findings their descriptions list. The Health Score of 30 is the formula's floor, reached by the number of findings and not by their severity (see the note below the header).
+
 **Date:** 2026-07-15 | **Scope:** all | **Mode:** full | **Engine:** workflow
 **Health Score:** 30/100 | **Baseline:** ruff: 0 issues (all checks passed), format: 146 files already formatted
 **Auditors:** 16 ran — 14 returned findings; 4 degraded (gcloud + plausible blocked with zero, pagespeed blocked but salvaged 3, seo structural-only) | **Findings:** 109 | **Auto-fixable:** 1/109 (codemod); the rest are `manual`

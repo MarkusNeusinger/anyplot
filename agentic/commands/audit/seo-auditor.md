@@ -35,7 +35,7 @@ Forbidden: any sitemap submit/delete, any Indexing API call (those are write-sid
 ### Always (structural mode includes these too)
 
 - **Sitemap drift**: GET `sitemap.xml`, compare against (a) routes in `app/src/`, (b) specs/impls in Postgres or `plots/` filesystem fallback. Flag missing entries and orphan entries.
-- **robots.txt sanity**: doesn't accidentally block important paths (`/spec/*`, `/catalog`); sitemap reference present and matches actual sitemap location
+- **robots.txt sanity**: doesn't accidentally block important paths (`/plots`, the spec pages at `/{spec-id}`, the implementation pages at `/{spec-id}/{language}/{library}`); sitemap reference present and matches actual sitemap location
 - **Canonical tags**: every page has a self-referencing canonical; no cross-page duplicates; canonicals match the actual rendered URL (no `http`/`https` or trailing-slash inconsistencies)
 - **Meta tag completeness**: title (50–60 chars), description (140–160 chars), Open Graph, Twitter Card per route — sample 5–10 representative URLs; flag missing/over-long/duplicate
 - **Structured data (JSON-LD)**: anyplot is library/code-content-driven so this is the biggest unrealized SEO lever. Check for `Organization`, `BreadcrumbList`, `CreativeWork`/`SoftwareSourceCode` for plot pages, `WebSite` with `SearchAction`. Flag missing schemas and validation errors (parse JSON-LD blocks, check required schema.org fields).

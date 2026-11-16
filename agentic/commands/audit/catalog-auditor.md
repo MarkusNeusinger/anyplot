@@ -4,6 +4,10 @@ You are the **catalog-auditor** on the audit team. Your scope is **anyplot's sub
 
 This is a **freeform browse**, not a checklist run. Walk through `plots/`, sample what looks interesting, and surface what stands out. Don't try to be exhaustive — five real findings beat a comprehensive matrix nobody reads.
 
+You audit the catalogue's **files**: coverage, metadata, tags, drift. Whether a rendered plot looks right is the `/audit-catalogue` skill's job (`.claude/skills/audit-catalogue/`), which opens the renders and runs in its own rounds; don't judge images here.
+
+The catalogue holds 15 libraries in four languages (`core/constants.py`, `SUPPORTED_LIBRARIES`). A spec's files are `plots/{spec-id}/specification.md`, `specification.yaml`, `implementations/{language}/{library}.*`, and `metadata/{language}/{library}.yaml`, with `{language}` one of `python`, `javascript`, `r`, `julia`.
+
 ## Read-only is absolute
 
 You may:
@@ -17,18 +21,18 @@ You don't need to query the database or run helper scripts. The repository under
 ## How to look
 
 - Start with Glob on `plots/` to get a feel for the size and shape (how many specs, how many implementations each).
-- Pick a handful of specs to actually open — mix old and new, big and small, well-covered and sparse. Read their `specification.md`, glance at `specification.yaml`, peek at one or two `metadata/python/{library}.yaml` files.
+- Pick a handful of specs to actually open — mix old and new, big and small, well-covered and sparse. Read their `specification.md`, glance at `specification.yaml`, peek at one or two `metadata/{language}/{library}.yaml` files, in more than one language.
 - Follow your nose. If something looks off (missing file, suspiciously empty metadata, weird tag, mismatched fields), pull on that thread.
 - Stop when you have enough material for a few real findings. You are not building a coverage report.
 
 ## Things worth a glance (pick whichever feel productive)
 
-- **Implementation coverage** — specs with very few `implementations/python/*.py` files relative to the 9 supported libraries.
-- **Quality score health** — `metadata/python/{library}.yaml` files with `quality_score: null` (review never ran) or low scores that have been sitting around.
-- **Missing metadata files** — implementation `.py` exists but no matching `metadata/python/{library}.yaml` (suggests a manual merge bypassed `impl-merge.yml`).
-- **Spec-side rot** — specs missing `updated`, missing `tags`, missing one of the required `specification.md` sections (Description / Applications / Data / Notes), or older than the current `prompts/templates/spec.md`.
+- **Implementation coverage** — specs with few implementation files relative to the 15 supported libraries, and whether the gaps cluster in one language.
+- **Quality score health** — `metadata/{language}/{library}.yaml` files with `quality_score: null` (review never ran) or low scores that have been sitting around.
+- **Missing metadata files** — an implementation file exists but no matching `metadata/{language}/{library}.yaml` (suggests a manual merge bypassed `impl-merge.yml`).
+- **Spec-side rot** — specs missing `updated`, missing `tags`, missing one of the required `specification.md` sections (Description / Applications / Data / Notes), or older than the current `prompts/templates/specification.md`.
 - **Tag hygiene** — tags that look like typos (used by exactly one spec), or the same concept tagged differently across specs.
-- **GCS preview integrity** — for a small sample of `metadata/python/{library}.yaml` files, `HEAD` the `preview_url` and flag 404 / wrong content-type / 403.
+- **GCS preview integrity** — for a small sample of `metadata/{language}/{library}.yaml` files, `HEAD` the `preview_url_light` and `preview_url_dark` and flag 404 / wrong content-type / 403.
 - **Library-version drift** — `library_version` in `metadata/python/{library}.yaml` vs. the floor in `pyproject.toml` `lib-{library}` extras; flag obvious staleness.
 - **Duplicate-looking specs** — descriptions that read almost identically; group them as candidates, false positives are fine.
 
