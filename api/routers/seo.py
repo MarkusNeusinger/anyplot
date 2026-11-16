@@ -1212,8 +1212,8 @@ _LEGAL_BOT_BODY = (
     '<a href="https://plausible.io/anyplot.ai">public dashboard</a>; no cookies, no cross-site id, '
     "no IP address stored.</li>"
     "<li>Hosting: Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands (europe-west4).</li>"
-    "<li>Server logs: IP address, URL and user-agent of each request, read only to look into a fault "
-    "or an attack; kept 30 days in Google Cloud Logging in the Netherlands (europe-west4).</li>"
+    "<li>Server logs: IP address, URL and user-agent of each request, for security and debugging; "
+    "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4).</li>"
     "<li>Machine readers and shared links: each request by a crawler, an AI assistant or an MCP "
     "client is one content-free line (vendor and purpose, whether Cloudflare verified it, the page or "
     "file, the status), with nothing about anyone's browsing, kept up to 180 days in Google Cloud "

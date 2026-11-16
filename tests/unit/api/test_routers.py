@@ -1267,8 +1267,7 @@ class TestSeoProxyRouter:
             response.text
         )
         for fact in (
-            "Server logs: IP address, URL and user-agent of each request, read only to look into a fault "
-            "or an attack; kept 30 days",
+            "Server logs: IP address, URL and user-agent of each request, for security and debugging; kept 30 days",
             "one content-free line (vendor and purpose, whether Cloudflare verified it, the page or file, "
             "the status), with nothing about anyone's browsing, kept up to 180 days in Google Cloud "
             "Logging and BigQuery.",

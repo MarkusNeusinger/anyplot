@@ -282,10 +282,7 @@ describe('LegalPage', () => {
     // data.csv only, while the profile sample stays.
     const caseRow = screen.getAllByRole('row', { name: /^feedback\s/ })[1];
     expect(caseRow).toHaveTextContent(
-      /only when you send feedback, a private bucket keeps the conversation, a profile of your data with its first 5 rows, the plot.s code and images, and the whole data file only if you tick "# include data\.csv" \(it starts unticked, which leaves out that file only\)/
-    );
-    expect(caseRow).toHaveTextContent(
-      /a triage row keeps your reaction, message, a hash of your tab id and the run.s details/
+      /only when you send feedback: a private bucket keeps the conversation, a profile of your data with its first 5 rows, the plot.s code and images, and the whole data file only if you tick "# include data\.csv" \(it starts unticked, which leaves out that file only\), and a triage row keeps your reaction, message, a hash of your tab id and the run.s details\./
     );
     // "No cookies" holds for visitors; admins get Cloudflare Access's login cookie.
     expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();
@@ -313,9 +310,9 @@ describe('LegalPage', () => {
     // Nothing sent trains a model.
     expect(screen.getByText('no ai training')).toBeInTheDocument();
     expect(screen.getByText(/on what you send/)).toBeInTheDocument();
-    // The operator's own practice for the server logs: read only for a fault or an attack.
+    // The server logs' purpose stands beside the data they hold.
     expect(screen.getByRole('row', { name: /^server logs\s/ })).toHaveTextContent(
-      /IP address, URL and user-agent of each request, read only to look into a fault or an attack\./
+      /IP address, URL and user-agent of each request, for security and debugging\./
     );
   });
 

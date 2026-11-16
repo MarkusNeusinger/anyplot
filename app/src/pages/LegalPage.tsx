@@ -306,8 +306,7 @@ export function LegalPage() {
                 [
                   'server logs',
                   <>
-                    IP address, URL and user-agent of each request, read only to look into a fault
-                    or an attack.
+                    IP address, URL and user-agent of each request, for security and debugging.
                     <Kept
                       items={[
                         ['kept', '30 days'],
@@ -444,14 +443,14 @@ export function LegalPage() {
                 [
                   'feedback',
                   <>
-                    only when you send feedback, a private bucket keeps the conversation, a profile
+                    only when you send feedback: a private bucket keeps the conversation, a profile
                     of your data with its first 5 rows, the plot&apos;s code and images, and the
                     whole data file only if you tick{' '}
                     <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
                       &quot;# include data.csv&quot;
                     </Box>{' '}
-                    (it starts unticked, which leaves out that file only). a triage row keeps your
-                    reaction, message, a hash of your tab id and the run&apos;s details.
+                    (it starts unticked, which leaves out that file only), and a triage row keeps
+                    your reaction, message, a hash of your tab id and the run&apos;s details.
                     <Kept
                       items={[
                         ['case files', '180 days'],
