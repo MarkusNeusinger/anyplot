@@ -256,6 +256,7 @@ describe('parseAgentEvent', () => {
     expect(memory(mixed)).toEqual({ kept: ['m1'], added: [], unused: ['m2'] });
     expect(memory({ kept: ['m1'] })).toBeUndefined();
     expect(memory({ kept: ['m1'], added: [], unused: 'm2' })).toBeUndefined();
+    expect(memory({ kept: ['m1'], added: [], unused: null })).toBeUndefined();
     expect(memory(['m1'])).toBeUndefined();
     expect(memory(undefined)).toBeUndefined();
     expect(

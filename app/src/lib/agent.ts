@@ -2235,7 +2235,8 @@ export function longSuggestion(value: unknown): LongSuggestion | null {
  */
 function versionMemory(value: unknown): VersionMemory | null {
   if (!isRecord(value) || !Array.isArray(value.kept) || !Array.isArray(value.added)) return null;
-  const unused = value.unused ?? [];
+  // Only a missing field reads as none: a `null` is as malformed as any other value that is no list.
+  const unused = value.unused === undefined ? [] : value.unused;
   if (!Array.isArray(unused)) return null;
   const ids = (items: unknown[]) =>
     items.filter((id): id is string => typeof id === 'string' && MEMORY_ENTRY_ID.test(id));
