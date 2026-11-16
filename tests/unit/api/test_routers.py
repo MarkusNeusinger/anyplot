@@ -1232,7 +1232,9 @@ class TestSeoProxyRouter:
             assert heading in response.text
         for fact in (
             "Markus Neusinger",
-            "a physicist working in data and AI",
+            "I'm a chart nerd. Physicist by training, data analyst by trade.",
+            "Since 2013 I have built data pipelines, models and the tools around them.",
+            "I built it alone, in Visp, a small town in the Swiss Alps.",
             "Models write anyplot's code",
             "Running costs about $60 a month (October 2026).",
             # The corrected pipeline and review claims (AboutPage.tsx says the same).

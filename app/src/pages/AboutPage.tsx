@@ -176,11 +176,11 @@ export function AboutPage() {
                   </Link>
                 </Typography>
                 <Typography sx={{ ...textStyle, mb: 0 }}>
-                  I&apos;m a physicist working in data and ai: since 2013 I&apos;ve built data
-                  pipelines, analyses and machine learning, and the apps people use them through. I
-                  built anyplot in Visp, a small town in the Swiss Alps, looking for one place to
-                  find the right plot for the data in front of me — and a way to explore what each
-                  library does best.
+                  I&apos;m a chart nerd. physicist by training, data analyst by trade. since 2013 I
+                  have built data pipelines, models and the tools around them. lately with ai agents
+                  doing the legwork. anyplot is made the same way. I built it alone, in Visp, a
+                  small town in the Swiss Alps. I wanted one place to find the right plot for my
+                  data.
                 </Typography>
               </Box>
             </Box>

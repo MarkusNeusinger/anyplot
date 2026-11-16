@@ -1329,11 +1329,11 @@ _ABOUT_BOT_BODY = (
     "<p>Markus Neusinger "
     '(<a href="https://www.linkedin.com/in/markus-neusinger/">LinkedIn</a>, '
     '<a href="https://github.com/MarkusNeusinger">GitHub</a>, '
-    '<a href="https://neusinger.com">neusinger.com</a>). I\'m a physicist working in data and AI: '
-    "since 2013 I've built data pipelines, analyses and machine learning, and the apps people use "
-    "them through. I built anyplot in Visp, a small town in the Swiss Alps, looking for one place to "
-    "find the right plot for the data in front of me, and a way to explore what each library does "
-    "best.</p>"
+    '<a href="https://neusinger.com">neusinger.com</a>). I\'m a chart nerd. Physicist by training, '
+    "data analyst by trade. Since 2013 I have built data pipelines, models and the tools around "
+    "them. Lately with AI agents doing the legwork. anyplot is made the same way. I built it alone, "
+    "in Visp, a small town in the Swiss Alps. I wanted one place to find the right plot for my "
+    "data.</p>"
     "<h2>How it is built</h2>"
     "<p>Models write anyplot's code (the site, the API, and the agents behind Use with my data), and "
     "I lead them, with my experience across data, backends, frontends and hosting. Work goes to "
