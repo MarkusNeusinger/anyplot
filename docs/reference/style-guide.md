@@ -173,7 +173,7 @@ The first line (`any.plot() — any library.`) is the wordmark + product proposi
 - **"a catalogue of scientific plotting"** — editorial framing, when contextualizing the project in academic writing
 - **"from anyplot import *"** — code-playful, good for dev-audience posts
 - **"plots that everyone can see"** — accessibility-focused, good for technical articles about colorblind safety
-- **"human ideas. ai builds the rest."** — methodology framing, for about/methodology pages
+- **"the pipeline runs on its own schedule, by rules I set."** — methodology framing, for about/methodology pages
 
 Rotate alternatives as appropriate. The canonical hero block is always the first choice.
 
@@ -187,6 +187,8 @@ Rotate alternatives as appropriate. The canonical hero block is always the first
 ### 3.4 Voice & Tone
 
 See §2.2 for the five tone attributes (precise, understated, curious, respectful, slightly playful) and what to avoid.
+
+The site speaks as its single builder, in the first person singular ("I"), not as "we" or "humans".
 
 ### 3.5 Capitalization & Punctuation
 
@@ -254,11 +256,12 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 > Do:
 > ```
 > // pipeline
-> idea    → human-submitted        (github issue)
-> spec    → ai-drafted, human-approved
-> code    → ai-generated           (per library)
-> review  → ai-evaluated
-> fix     → ai-retries; humans tune rules
+> idea    → a github issue
+> spec    → ai drafts, I approve
+> code    → ai writes     (per library)
+> review  → ai scores     (24 criteria)
+> fix     → ai repairs    (up to 4 times)
+> rules   → I set and change them
 > ```
 >
 > Don't: `Powered by cutting-edge AI to bring you the best plotting examples!`
@@ -271,7 +274,7 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 
 > Instead of: `🚀 Supercharge your data viz workflow with AI-powered plot generation! Unlock 1000+ beautifully crafted charts across multiple libraries. Ship faster, iterate smarter, and empower your team to create stunning visualizations!`
 >
-> Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come from humans; AI drafts the spec, generates code for every library, and reviews each implementation. Humans approve specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
+> Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
 
 The second version is shorter, says what's actually happening (humans submit ideas + approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
 
@@ -284,7 +287,7 @@ The second version is shorter, says what's actually happening (humans submit ide
 - **Colorblind-safe by default**. Every example uses the imprint palette. This isn't a feature, it's a baseline.
 - **Copyable**. Every example is self-contained, with the full code visible and executable.
 - **Curated**. We don't aggregate every plot on the internet — we maintain a considered collection.
-- **AI-built, human-shaped.** Plot ideas come from humans (GitHub issues). Everything else — drafting the spec, generating code per library, reviewing it — runs on AI. Humans approve specs before any code is generated, and when something repeatedly fails review we either refine the spec or tune the AI rules. We never patch generated code by hand. The pipeline is documented and visible.
+- **The pipeline runs on its own schedule, by rules I set.** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs. The pipeline is documented and visible.
 
 **What anyplot is not:**
 
@@ -298,9 +301,9 @@ The second version is shorter, says what's actually happening (humans submit ide
 
 Narrative hooks for talking about anyplot — adapt to context, don't recite verbatim:
 
-**The pipeline story:** Humans submit plot ideas as GitHub issues. AI drafts the spec from each idea; humans approve it before any code is generated. AI then generates implementations across every supported library from the same spec — Python for most, plus R, Julia, and JavaScript — and reviews each one for visual quality and spec compliance. When something doesn't pass review, AI retries — and when it keeps failing, we refine the spec or tune the AI rules. We never patch the code by hand. That makes anyplot a catalogue that maintains itself: every night a job regenerates the oldest implementations, and a new version replaces the live one only when a review of both finds a fixed defect and no regression; when a better example pattern emerges, we update the spec and every library regenerates. Humans curate; AI executes.
+**The pipeline story:** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. A first review needs 90; below that, AI repairs the defects the review named and the plot is reviewed again, up to four times. The pipeline runs on its own schedule, by rules I set. Every night a job regenerates the oldest implementations, and a new version replaces the live one only when a review of both finds a fixed defect and no regression; when a better example pattern emerges, I update the spec and regenerate its libraries. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs.
 
-**The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of color vision deficiency — most plotting libraries ignore this entirely. We make it the default.
+**The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of color vision deficiency — most plotting libraries ignore this entirely. I make it the default.
 
 **The library-agnostic story:** A "Gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh. The palette travels with you across libraries. Switching tools doesn't mean re-learning your color grammar.
 
