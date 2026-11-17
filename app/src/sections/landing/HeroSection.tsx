@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 
 import { useAnalytics } from 'src/hooks';
 import { useAgentLaneOpen } from 'src/hooks/useAgentLaneOpen';
-import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
+import type { PlotOfTheDayData, PlotOfTheDayStatus } from 'src/hooks/usePlotOfTheDay';
 import { paths } from 'src/routes/paths';
 import { PlotOfTheDayTerminal } from 'src/sections/landing/PlotOfTheDayTerminal';
 import { TypewriterText } from 'src/sections/landing/TypewriterText';
@@ -12,6 +12,10 @@ import { colors, typography } from 'src/theme';
 
 interface HeroSectionProps {
   potd?: PlotOfTheDayData | null;
+  /** Where the plot-of-the-day request stands, for the terminal card. */
+  potdStatus?: PlotOfTheDayStatus;
+  /** Asks for the plot of the day again after a failed request. */
+  onRetryPotd?: () => void;
 }
 
 /**
@@ -20,7 +24,11 @@ interface HeroSectionProps {
  * on ultrawide. Each landing-page section below mirrors this width so the
  * page reads as one continuous grid.
  */
-export function HeroSection({ potd = null }: HeroSectionProps) {
+export function HeroSection({
+  potd = null,
+  potdStatus = 'loading',
+  onRetryPotd,
+}: HeroSectionProps) {
   const { trackEvent } = useAnalytics();
   return (
     <Box
@@ -219,6 +227,8 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
       {/* Right: terminal plot */}
       <PlotOfTheDayTerminal
         potd={potd}
+        status={potdStatus}
+        onRetry={onRetryPotd}
         sizes="(max-width: 899px) 92vw, (max-width: 1600px) 60vw, 1400px"
       />
     </Box>

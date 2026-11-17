@@ -700,6 +700,13 @@ In catalog tier (`max-width: 2200px`): `grid-template-columns: repeat(auto-fill,
 
 The plot panel sits inside a single ASCII-style box drawn with CSS borders. The box framing makes the panel feel like a terminal window rendered on editorial paper.
 
+The panel keeps one height from the first paint on (`app/src/sections/landing/PlotOfTheDayTerminal.tsx`). While the plot of the day loads, the same frame stands empty; if the request fails, it says `plot of the day did not load` with `.retry()`. Its prompt header and status footer have a number of rows that depends only on the panel's own width, a container query at 560 px, never on their content:
+
+- Narrower than 560 px, on a phone and in the narrow two-column hero from 900 px, the header puts its actions (`.use_my_data()` when the pair is eligible, and `github.open()`) on a second row, right-aligned, and the footer puts the library and `// plot of the day` on a second row. The empty and the failed frame hold both rows too, so `.use_my_data()`, which arrives with its own answer after the plot, does not add a row.
+- From 560 px, the header and the footer take one row each.
+
+A filename or a title too long for its row is cut with an ellipsis instead of wrapping.
+
 ```
 ┌─ ~/anyplot ──────────────────────┐
 │                                  │
@@ -1122,12 +1129,15 @@ The vertical plot stacks flanking the hero box on ultrawide viewports auto-scrol
 
 ### 8.6 Palette Strip Interaction
 
-The palette strip at the bottom responds to hover: normal state is even distribution, `:hover .sw` shrinks all colors to 50%, then `.sw:hover` expands the specific hovered color to 300%. Playful detail that invites interaction without being necessary.
+The palette strip at the bottom responds to hover: normal state is even distribution; while a color is hovered, the strip shrinks the other colors to `flex: 0.6` and expands that color to `flex: 3` (`LabelledPaletteStrip` in `app/src/pages/LandingPage.tsx`). Playful detail that invites interaction without being necessary.
+
+Each color's name sits in the same column as the color, so it moves with it. While one color is expanded, only that color's name shows, because a contracted column is narrower than most names. The columns have no minimum width (`min-width: 0`), so all eight fit a 320 px phone. Keyboard focus on a color expands it and shows its hex, as a hover does. On a touch screen the strip relies on the browser's hover emulation: where a tap leaves the tapped color hovered, as mobile browsers commonly do, it stays expanded until the next tap elsewhere. Under `prefers-reduced-motion` the strip changes without transitions.
 
 ```css
-.palette-strip .sw { flex: 1; transition: flex 0.3s; }
-.palette-strip:hover .sw { flex: 0.5; }
-.palette-strip .sw:hover { flex: 3; }
+.palette-strip .sw { flex: 1; min-width: 0; transition: flex 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.palette-strip:is(:hover, :has(:focus-visible)) .sw { flex: 0.6; }
+.palette-strip .sw:is(:hover, :has(:focus-visible)) { flex: 3; }
+@media (prefers-reduced-motion: reduce) { .palette-strip .sw { transition: none; } }
 ```
 
 ---

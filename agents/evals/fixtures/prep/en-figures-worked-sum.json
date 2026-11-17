@@ -1,0 +1,9 @@
+{
+  "dataset_text": "item,price\nTea,3.20\nCake,4.75\nSoup,5.65\n",
+  "message": "Add up the prices step by step and show me each step of the sum.",
+  "expected_operations": [],
+  "figures": "not_withheld",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["figures", "worked_calculation"]
+}

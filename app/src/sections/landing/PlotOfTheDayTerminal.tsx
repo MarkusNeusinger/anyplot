@@ -2,11 +2,12 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
+import { RetryButton } from 'src/components/RetryButton';
 import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useAgentEligibility } from 'src/hooks/useAgentEligibility';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
+import type { PlotOfTheDayData, PlotOfTheDayStatus } from 'src/hooks/usePlotOfTheDay';
 import { agentChatPath, specPath } from 'src/routes/paths';
 import { USE_MY_DATA_LABEL } from 'src/sections/spec-detail/LibraryPills';
 import { colors, typography } from 'src/theme';
@@ -15,6 +16,9 @@ import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 /** `agent_open{source}` for the chat opened from this card (`docs/reference/plausible.md`). */
 const AGENT_SOURCE = 'plot_of_the_day';
+
+/** The line in the reserved frame once the request still failed after apiGet's retries. */
+export const POTD_LOAD_ERROR = 'plot of the day did not load';
 
 /** A text action in the prompt header, beside the filename: muted, green on hover. */
 const headerActionSx = {
@@ -29,6 +33,10 @@ const headerActionSx = {
 
 interface PlotOfTheDayTerminalProps {
   potd: PlotOfTheDayData | null;
+  /** Where the plot-of-the-day request stands (`usePlotOfTheDay`). */
+  status: PlotOfTheDayStatus;
+  /** Asks again after a failed request; the failed frame offers it as `.retry()`. */
+  onRetry?: () => void;
   /** Sizes attribute for the responsive picture sources. */
   sizes?: string;
   /** Optional max-width override (defaults to `100%`, i.e. fills parent). */
@@ -42,14 +50,157 @@ interface PlotOfTheDayTerminalProps {
 }
 
 /**
+ * The card is wide from this width on (the frame is the query container): the prompt header
+ * and the status footer take one row each. Narrower, on a phone and in the narrow
+ * two-column card from 900 px, each takes two, because one row would leave the filename or
+ * the title only a few characters. The row counts depend on the card's width alone, never
+ * on its content, so the frame has the same height empty, with the plot, and after the
+ * eligibility answer adds `.use_my_data()`.
+ */
+const WIDE_CARD = '@container (min-width: 560px)';
+
+/**
+ * The prompt header: `$ runner filename` on the first row, the actions on the second in a
+ * narrow card; all on one row in a wide card.
+ */
+const headerSx = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: 0.75,
+  px: { xs: 2, md: 3 },
+  pt: { xs: 2.5, md: 3 },
+  pb: 1.5,
+  color: 'var(--ink-muted)',
+  fontSize: '12px',
+  [WIDE_CARD]: { flexWrap: 'nowrap' },
+} as const;
+
+/**
+ * The header's actions, `.use_my_data()` for an eligible pair and `github.open()`. In a
+ * narrow card they always take a row of their own, right-aligned below the filename, with or
+ * without `.use_my_data()`: that link arrives with a separate answer after the plot, and
+ * would otherwise move the pair to a new row then and push the page down. The empty and the
+ * failed frame hold the same row with nothing in it; a no-break space gives it the line's
+ * height.
+ */
+const headerActionsSx = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  gap: 1.75,
+  ml: 'auto',
+  flexBasis: '100%',
+  '&:empty::before': { content: '"\\00a0"' },
+  [WIDE_CARD]: { flexBasis: 'auto' },
+} as const;
+
+/**
+ * The status footer: `>>> title · library`, and `// plot of the day` at the right. It has
+ * the same number of rows in the empty frame and in the card, whatever the title, so the
+ * frame keeps its height when the plot arrives: two rows in a narrow card (`>>> title`,
+ * then the library and `// plot of the day`), one row in a wide one. A title too long for
+ * its row is cut with an ellipsis instead of wrapping.
+ */
+const footerSx = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 1.5,
+  flexWrap: 'wrap',
+  whiteSpace: 'nowrap',
+  px: { xs: 2, md: 3 },
+  py: 1.5,
+  fontSize: '11px',
+  color: 'var(--ink-muted)',
+  [WIDE_CARD]: { flexWrap: 'nowrap' },
+} as const;
+
+/** `>>>` and the title: the first row of a narrow card, the part that shrinks in a wide one. */
+const footerLeadSx = {
+  display: 'flex',
+  gap: 1.5,
+  minWidth: 0,
+  flexBasis: '100%',
+  [WIDE_CARD]: { flexBasis: 'auto' },
+} as const;
+
+/**
+ * The status footer of both states. Its children keep their places whether or not the title
+ * and the library are there, so when the plot arrives React keeps `// plot of the day` in its
+ * own node instead of turning it into the library name, which would move that text and count
+ * as a layout shift. Without a title it is hidden from screen readers, as the empty frame's
+ * glyphs carry no words.
+ */
+function StatusFooter({ title, library }: { title?: string; library?: string }) {
+  return (
+    <Box sx={footerSx} aria-hidden={title ? undefined : 'true'} data-testid="potd-terminal-footer">
+      <Box sx={footerLeadSx}>
+        <Box component="span" sx={{ color: colors.primary }}>
+          &gt;&gt;&gt;
+        </Box>
+        {title && (
+          <Box
+            component="span"
+            sx={{
+              color: 'var(--ink-soft)',
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {title}
+          </Box>
+        )}
+      </Box>
+      {/* In a narrow card the library starts the second row, where a leading dot would
+          dangle. */}
+      {library && (
+        <Box component="span" sx={{ display: 'none', [WIDE_CARD]: { display: 'inline' } }}>
+          ·
+        </Box>
+      )}
+      {library && <Box component="span">{library}</Box>}
+      <Box sx={{ flex: 1 }} />
+      <Box component="span" sx={{ opacity: 0.8 }}>
+        // plot of the day
+      </Box>
+    </Box>
+  );
+}
+
+/** The 16:10 plot frame between the dashed rules, capped at `maxPlotHeight`. */
+function plotFrameSx(maxPlotHeight: string) {
+  return {
+    display: 'block',
+    mx: 'auto',
+    width: { xs: 'calc(100% - 32px)', md: 'calc(100% - 48px)' },
+    maxWidth: `calc(${maxPlotHeight} * 1.6)`,
+    maxHeight: maxPlotHeight,
+    borderTop: '1px dashed var(--rule)',
+    borderBottom: '1px dashed var(--rule)',
+    bgcolor: 'var(--bg-surface)',
+    aspectRatio: '16 / 10',
+    position: 'relative',
+    overflow: 'hidden',
+  } as const;
+}
+
+/**
  * Terminal-framed plot-of-the-day card.
  *
  * Looks like a terminal window rendered on the editorial paper: thin border,
  * `~/anyplot` tab label, green prompt + filename header, plot image as console
  * output, status footer. Fills its container by default so parents control width.
+ *
+ * Until the plot of the day is there to show, it renders the same frame empty, so
+ * the box is reserved and the content below it does not jump down when the plot
+ * arrives (in the one-column layout of a tablet the card sits above the numbers).
+ * If the request fails, the frame stays and says so, with a `.retry()`.
  */
 export function PlotOfTheDayTerminal({
   potd,
+  status,
+  onRetry,
   sizes = '(max-width: 899px) 86vw, 1200px',
   maxWidth = '100%',
   maxPlotHeight = '55vh',
@@ -60,7 +211,87 @@ export function PlotOfTheDayTerminal({
   // spec pages; no entry while it probes, for a closed lane, or for an ineligible pair.
   const agentLane = useAgentEligibility(potd?.spec_id, potd?.library_id);
   const previewUrl = selectPreviewUrl(potd, isDark);
-  if (!potd || !previewUrl) return null;
+  // The root keeps the same element and styles in both states, so React keeps its node
+  // and the `rise` entrance does not play a second time when the plot arrives.
+  const frameSx = {
+    position: 'relative',
+    width: '100%',
+    maxWidth,
+    // The header's and the footer's row counts follow the card's own width (`WIDE_CARD`).
+    containerType: 'inline-size',
+    border: '1px solid var(--ink-muted)',
+    borderRadius: '6px',
+    bgcolor: 'var(--bg-surface)',
+    fontFamily: typography.mono,
+    animation: 'rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards',
+    '&::before': {
+      content: '"~/anyplot.ai"',
+      position: 'absolute',
+      top: '-0.7em',
+      left: 24,
+      px: 1.25,
+      bgcolor: 'var(--bg-page)',
+      fontFamily: typography.mono,
+      fontSize: '12px',
+      color: 'var(--ink-muted)',
+      letterSpacing: '0.05em',
+    },
+  } as const;
+
+  if (!potd || !previewUrl) {
+    // An answer without a plot to show will not change on its own: no card, as before the
+    // frame was reserved.
+    if (status === 'none' || potd) return null;
+    // A failed request keeps the frame, so the content below does not move up, and says so
+    // inside the 16:10 box, with a `.retry()`.
+    const failed = status === 'failed';
+    return (
+      <Box
+        sx={frameSx}
+        aria-hidden={failed ? undefined : 'true'}
+        data-testid="potd-terminal-placeholder"
+      >
+        <Box sx={headerSx} aria-hidden="true">
+          <Box component="span" sx={{ color: colors.primary, fontWeight: 700 }}>
+            $
+          </Box>
+          {/* The actions' row, held empty, so a narrow header has its two rows already. */}
+          <Box sx={headerActionsSx} data-testid="potd-terminal-actions" />
+        </Box>
+        <Box
+          sx={{
+            ...plotFrameSx(maxPlotHeight),
+            bgcolor: 'var(--bg-elevated)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {failed && (
+            <Box
+              role="alert"
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 1.5,
+                px: 2,
+              }}
+            >
+              <Box component="span" sx={{ fontSize: '12px', color: 'var(--ink-muted)' }}>
+                {POTD_LOAD_ERROR}
+              </Box>
+              {onRetry && (
+                <RetryButton onClick={onRetry} label="Retry loading the plot of the day" />
+              )}
+            </Box>
+          )}
+        </Box>
+        <StatusFooter />
+      </Box>
+    );
+  }
 
   // File extension + runner command follow the implementation language:
   // - ggplot2 (R) ships as .R + Rscript
@@ -99,44 +330,9 @@ export function PlotOfTheDayTerminal({
     : null;
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        width: '100%',
-        maxWidth,
-        border: '1px solid var(--ink-muted)',
-        borderRadius: '6px',
-        bgcolor: 'var(--bg-surface)',
-        fontFamily: typography.mono,
-        animation: 'rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards',
-        '&::before': {
-          content: '"~/anyplot.ai"',
-          position: 'absolute',
-          top: '-0.7em',
-          left: 24,
-          px: 1.25,
-          bgcolor: 'var(--bg-page)',
-          fontFamily: typography.mono,
-          fontSize: '12px',
-          color: 'var(--ink-muted)',
-          letterSpacing: '0.05em',
-        },
-      }}
-    >
+    <Box sx={frameSx}>
       {/* Prompt header — the filename links to the raw source on GitHub */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: 0.75,
-          px: { xs: 2, md: 3 },
-          pt: { xs: 2.5, md: 3 },
-          pb: 1.5,
-          color: 'var(--ink-muted)',
-          fontSize: '12px',
-        }}
-      >
+      <Box sx={headerSx}>
         <Box component="span" sx={{ color: colors.primary, fontWeight: 700 }}>
           $
         </Box>
@@ -175,18 +371,7 @@ export function PlotOfTheDayTerminal({
         >
           {displayFilename}
         </Box>
-        {/* The actions. With `.use_my_data()` beside it, the pair takes its own line on a
-            phone, right-aligned below the filename, so the filename keeps its width. */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 1.75,
-            ml: 'auto',
-            flexBasis: agentLink ? { xs: '100%', sm: 'auto' } : 'auto',
-          }}
-        >
+        <Box sx={headerActionsSx} data-testid="potd-terminal-actions">
           {agentLink && (
             <Box
               {...agentLink}
@@ -247,17 +432,7 @@ export function PlotOfTheDayTerminal({
           })
         }
         sx={{
-          display: 'block',
-          mx: 'auto',
-          width: { xs: 'calc(100% - 32px)', md: 'calc(100% - 48px)' },
-          maxWidth: `calc(${maxPlotHeight} * 1.6)`,
-          maxHeight: maxPlotHeight,
-          borderTop: '1px dashed var(--rule)',
-          borderBottom: '1px dashed var(--rule)',
-          bgcolor: 'var(--bg-surface)',
-          aspectRatio: '16 / 10',
-          position: 'relative',
-          overflow: 'hidden',
+          ...plotFrameSx(maxPlotHeight),
           cursor: 'pointer',
           '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: -2 },
         }}
@@ -291,32 +466,7 @@ export function PlotOfTheDayTerminal({
         </Box>
       </Box>
 
-      {/* Status footer */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          flexWrap: 'wrap',
-          px: { xs: 2, md: 3 },
-          py: 1.5,
-          fontSize: '11px',
-          color: 'var(--ink-muted)',
-        }}
-      >
-        <Box component="span" sx={{ color: colors.primary }}>
-          &gt;&gt;&gt;
-        </Box>
-        <Box component="span" sx={{ color: 'var(--ink-soft)' }}>
-          {potd.spec_title}
-        </Box>
-        <Box component="span">·</Box>
-        <Box component="span">{potd.library_name}</Box>
-        <Box sx={{ flex: 1 }} />
-        <Box component="span" sx={{ opacity: 0.8 }}>
-          // plot of the day
-        </Box>
-      </Box>
+      <StatusFooter title={potd.spec_title} library={potd.library_name} />
     </Box>
   );
 }

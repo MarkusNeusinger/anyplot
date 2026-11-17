@@ -29,9 +29,9 @@
   pipeline through `ctx.run_node`, so a walk from the root would miss them;
   `ALL_AGENTS` lists every agent for the registry test.
 * `app` carries the plugins in their fixed order, `ScopeGuard → Budget → ToolSafety →
-  EmptyReply → RootRefusal → ShippedReply → ReplyLanguage → ContextFilter(6)` (EmptyReply
-  and RootRefusal after Budget, which books the response they ask for again, and before
-  the two checks that read the answer they put in that response's place; the filter also
+  EmptyReply → RootRefusal → NumberProvenance → ShippedReply → ReplyLanguage → ContextFilter(6)`
+  (EmptyReply, RootRefusal and NumberProvenance after Budget, which books the response they ask
+  for again, and before the checks that read the answer they put in that response's place; the filter also
   takes the refused turns out of the root's request, `without_refused_turns`), behind the
   development-only fixture seed when
   `AGENT_DEV_FIXTURE` is set, and, on Claude only, a context-cache config so ADK
@@ -66,6 +66,7 @@ from .plot_view import current, view_before
 from .plugins.budget import BudgetPlugin
 from .plugins.empty_reply import EmptyReplyPlugin
 from .plugins.ledger import CURRENT_LEDGER, ledger_for
+from .plugins.number_provenance import NumberProvenancePlugin
 from .plugins.reply_language import ReplyLanguagePlugin
 from .plugins.root_refusal import RootRefusalPlugin
 from .plugins.scope_guard import ScopeGuardPlugin, withheld_messages, without_refused_turns
@@ -223,6 +224,16 @@ def memory_line(entry: MemoryEntry) -> str:
     """One memory entry as the session block lists it: `m3 axis_label/x: x-axis label: 'Zeit (h)'`."""
     where = f"{entry.kind}/{entry.target}" if entry.target else entry.kind
     return f"{entry.id} {where}: {entry.text}"
+
+
+def memory_block(memory: list[MemoryEntry]) -> str:
+    """The plot memory as the session block lists it: its heading, then the entries inside a data fence; empty for no
+    entries. The number-provenance check reads exactly this text as a source of its own kind (`memory`), apart from the
+    rest of the session block, since the root writes the entries itself (`plugins/number_provenance.py`)."""
+    if not memory:
+        return ""
+    entries = fence("tool_notes", "\n".join(memory_line(entry) for entry in memory))
+    return f"- {MEMORY_HEADING.format(count=len(memory))}\n{entries}"
 
 
 async def session_context(context: ReadonlyContext) -> str:
@@ -385,8 +396,7 @@ async def session_context(context: ReadonlyContext) -> str:
     memory = read_memory(context.state)
     if memory:
         # The entries are the root's own words for the user's requests: listed with their ids, inside a data fence.
-        lines.append(f"- {MEMORY_HEADING.format(count=len(memory))}")
-        lines.append(fence("tool_notes", "\n".join(memory_line(entry) for entry in memory)))
+        lines.append(memory_block(memory))
     name = english_name(view.language)
     if name is not None and name != "English":
         lines.append(REPLY_LANGUAGE_LINE.format(name=name))
@@ -485,6 +495,9 @@ def build_plugins() -> list[BasePlugin]:
         ToolSafetyPlugin(),
         EmptyReplyPlugin(),
         RootRefusalPlugin(),
+        # After the two checks whose answers it reads, before the two that read its own answer; ReplyLanguage returns
+        # a replacing reply, which ends the chain, so no check after it would see that reply either.
+        NumberProvenancePlugin(),
         ShippedReplyPlugin(),
         ReplyLanguagePlugin(),
         # The filter comes last and edits the request ReplyLanguage has kept, in place, so a second ask of any

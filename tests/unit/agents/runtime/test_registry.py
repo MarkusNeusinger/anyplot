@@ -20,6 +20,7 @@ from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import VertexClaude
 from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.empty_reply import EmptyReplyPlugin
+from agents.anyplot.plugins.number_provenance import NumberProvenancePlugin
 from agents.anyplot.plugins.reply_language import ReplyLanguagePlugin
 from agents.anyplot.plugins.root_refusal import RootRefusalPlugin
 from agents.anyplot.plugins.scope_guard import ScopeGuardPlugin
@@ -137,6 +138,7 @@ class TestRegistry:
             ToolSafetyPlugin,
             EmptyReplyPlugin,
             RootRefusalPlugin,
+            NumberProvenancePlugin,
             ShippedReplyPlugin,
             ReplyLanguagePlugin,
             ContextFilterPlugin,

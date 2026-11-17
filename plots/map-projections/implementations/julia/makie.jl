@@ -1,7 +1,7 @@
 # anyplot.ai
 # map-projections: World Map with Different Projections
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-05-23
+# Library: makie 0.24.16 | Julia 1.13.4
+# Quality: 79/100 | Updated: 2026-11-17
 
 using CairoMakie
 using Colors
@@ -200,7 +200,7 @@ function draw_tissot!(ax, proj_fn; fill_color=BRAND, r_deg=7.0, n_pts=60)
             end
         end
         !any_nan && length(pts) >= 3 && poly!(ax, pts;
-            color=(fill_color, 0.20f0),
+            color=(fill_color, 0.35f0),
             strokecolor=(fill_color, 0.85f0),
             strokewidth=0.9)
     end
@@ -229,8 +229,9 @@ end
 # --- Layout ---
 
 const merc_y85   = proj_mercator(0, 85.0)[2]
-const grat_alpha = THEME == "light" ? 0.55f0 : 0.70f0
-const grat_color = RGBAf(Float32(BRAND.r), Float32(BRAND.g), Float32(BRAND.b), grat_alpha)
+const grat_alpha = THEME == "light" ? 0.35f0 : 0.40f0
+const grat_color = RGBAf(Float32(INK_SOFT.r), Float32(INK_SOFT.g), Float32(INK_SOFT.b), grat_alpha)
+const LAND_FILL  = weighted_color_mean(0.30, INK_SOFT, PAGE_BG)
 const bord_color = RGBAf(Float32(INK_SOFT.r), Float32(INK_SOFT.g), Float32(INK_SOFT.b), 1.0f0)
 const land_stroke = RGBAf(Float32(INK_SOFT.r), Float32(INK_SOFT.g), Float32(INK_SOFT.b), 0.8f0)
 
@@ -276,7 +277,7 @@ for (proj_fn, title, row, col, bnd_pts, (xlo, xhi, ylo, yhi)) in specs
     ylims!(ax, ylo, yhi)
     poly!(ax, bnd_pts; color=ELEVATED_BG, strokewidth=0)
     draw_graticule!(ax, proj_fn; color=grat_color, linewidth=0.7)
-    draw_continents!(ax, proj_fn; fill_color=ELEVATED_BG, stroke_color=land_stroke)
+    draw_continents!(ax, proj_fn; fill_color=LAND_FILL, stroke_color=land_stroke)
     draw_tissot!(ax, proj_fn; fill_color=BRAND)
     poly!(ax, bnd_pts; color=(:white, 0.0f0), strokecolor=bord_color, strokewidth=1.5)
 end
