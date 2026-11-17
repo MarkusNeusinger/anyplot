@@ -68,13 +68,16 @@
   2025 through the first GitHub release (1.0.0), anyplot.ai (2.0.0), R
   (2.4.0), Julia and JavaScript (3.0.0) and, its last point before today, the
   4.0.0 release, whose notes open with the public "use with my data" page.
-  Each figure is a list that a screen reader reads in order, the chips and
-  the timeline named by the headings of their sections, and on a phone each
-  one stacks. `test_readme_claims.py` holds the rubric's points to
-  `prompts/quality-criteria.md` and each release on the timeline to its
-  `CHANGELOG.md` heading, and checks that the 4.0.0 release follows the day
-  the page's chat section gives for the chat's opening, a day it holds to the
-  agent design document; a test holds the chips to the palette tokens.
+  The page gives months, not days: a timeline label reads
+  "apr 2026 · 1.0.0", and the chat section has been open to everyone
+  "since november 2026". Each figure is a list that a screen reader reads in
+  order, the chips and the timeline named by the headings of their sections,
+  and on a phone each one stacks. `test_readme_claims.py` holds the rubric's
+  points to `prompts/quality-criteria.md` and each release on the timeline to
+  its `CHANGELOG.md` heading by its exact date; it holds the chat section's
+  month, on the page and in the crawler copy, to the opening day of the agent
+  design document, and checks that the 4.0.0 release follows that day. A test
+  holds the chips to the palette tokens.
 
 ### Changed
 

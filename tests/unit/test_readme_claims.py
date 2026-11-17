@@ -447,15 +447,18 @@ def test_about_page_timeline_dates_the_start_and_the_chat_as_the_page_does():
     assert f"it started in {_MONTHS[int(month) - 1]} {year} as pyplots.ai" in page, (
         "AboutPage.tsx: the timeline starts in the origin's month"
     )
-    # The page's chat section gives the day the chat opened; the timeline gives the release that
-    # carries it, which came out the day after. A release dated before the opening would be wrong.
-    opened = re.search(r"open to everyone since (\d{1,2}) ([a-z]+) (\d{4})\.", page)
-    assert opened is not None, "AboutPage.tsx: the chat section no longer dates its opening"
-    lower_months = [name.lower() for name in _MONTHS]
-    opening = datetime.date(int(opened[3]), lower_months.index(opened[2]) + 1, int(opened[1]))
-    assert f"Public since {opening.isoformat()} as an experimental page" in read(
-        ROOT / "docs" / "concepts" / "agent-network.md"
-    ), f"agent-network.md: the chat opened to everyone on {opening.isoformat()}"
+    # The agent design document gives the day the chat opened, and the page's chat section and its crawler copy give
+    # that day's month. The timeline gives the release that carries the chat, which came out the day after; a
+    # release dated before the opening would be wrong.
+    public = re.search(
+        r"Public since (\d{4}-\d{2}-\d{2}) as an experimental page",
+        read(ROOT / "docs" / "concepts" / "agent-network.md"),
+    )
+    assert public is not None, "agent-network.md no longer dates the chat's opening"
+    opening = datetime.date.fromisoformat(public[1])
+    month = f"{_MONTHS[opening.month - 1]} {opening.year}".lower()
+    for name, text in (("AboutPage.tsx", page), ("seo.py", collapse(about_bot_body()))):
+        assert f"open to everyone since {month}." in text.lower(), f"{name}: the chat opened to everyone in {month}"
     release = datetime.date.fromisoformat(events["use with my data"])
     assert datetime.timedelta(0) <= release - opening <= datetime.timedelta(days=7), (
         f"figureData.ts: the release of {release} does not follow the opening of {opening}"

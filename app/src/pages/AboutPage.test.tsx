@@ -324,7 +324,7 @@ describe('AboutPage', () => {
     render(<AboutPage />);
 
     expect(
-      screen.getByText(/^experimental, open to everyone since 2 november 2026\./)
+      screen.getByText(/^experimental, open to everyone since november 2026\./)
     ).toHaveTextContent(
       /pick any plot, choose \.use_my_data\(\) on its page, and paste your data\. an agent adapts/
     );

@@ -37,7 +37,10 @@ export const RUBRIC_PARTS: readonly (readonly [string, number])[] = [
 
 export const RUBRIC_CAPTION = '// rubric · 100 points · 24 criteria';
 
-/** A point of the origin timeline: its date (a month or a day), its release, and what it was. */
+/**
+ * A point of the origin timeline: its date (a month or a day), its release, and what it was. The
+ * label shows the month; the exact day places the point on the axis and goes into its `datetime`.
+ */
 export interface OriginEvent {
   when: string;
   version?: string;
@@ -60,10 +63,13 @@ export const ORIGIN_EVENTS: readonly OriginEvent[] = [
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
-/** How a point's date reads: a month as "nov 2025", a day as "2026-04-07 · 1.0.0" with its release. */
+/**
+ * How a point's date reads: its month, "nov 2025", with its release where it has one,
+ * "apr 2026 · 1.0.0".
+ */
 export function originDateLabel({ when, version }: OriginEvent): string {
-  const [year, month, day] = when.split('-');
-  const date = day ? when : `${MONTHS[Number(month) - 1]} ${year}`;
+  const [year, month] = when.split('-');
+  const date = `${MONTHS[Number(month) - 1]} ${year}`;
   return version ? `${date} · ${version}` : date;
 }
 

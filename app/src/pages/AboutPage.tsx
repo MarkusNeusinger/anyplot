@@ -322,7 +322,7 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>use with my data</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
-              experimental, open to everyone since 2 november 2026.{' '}
+              experimental, open to everyone since november 2026.{' '}
               {proseLink(paths.plots, 'pick any plot')}, choose{' '}
               <Box component="code" sx={inlineCodeSx}>
                 .use_my_data()

@@ -76,14 +76,15 @@ describe('layoutTimeline', () => {
     expect(points[points.length - 1].date).toBe('');
   });
 
-  it('writes a month as "nov 2025" and a day with its release', () => {
+  // Months, not days: the exact day only places the point on the axis.
+  it('writes each date as its month, with the release where there is one', () => {
     expect(ORIGIN_EVENTS.map(originDateLabel)).toEqual([
       'nov 2025',
-      '2026-04-07 · 1.0.0',
-      '2026-04-23 · 2.0.0',
-      '2026-05-18 · 2.4.0',
-      '2026-06-10 · 3.0.0',
-      '2026-11-03 · 4.0.0',
+      'apr 2026 · 1.0.0',
+      'apr 2026 · 2.0.0',
+      'may 2026 · 2.4.0',
+      'jun 2026 · 3.0.0',
+      'nov 2026 · 4.0.0',
     ]);
   });
 });

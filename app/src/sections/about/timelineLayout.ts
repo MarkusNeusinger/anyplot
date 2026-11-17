@@ -16,7 +16,7 @@ export const MAX_LEVEL = 3;
 
 export interface TimelinePoint {
   key: string;
-  /** The date line ("2026-04-07 · 1.0.0"); empty for today. */
+  /** The date line ("apr 2026 · 1.0.0"); empty for today. */
   date: string;
   /** The machine-readable date of the date line. */
   dateTime?: string;

@@ -16,11 +16,11 @@ describe('OriginTimeline', () => {
       Array.from(list.children).map(item => item.textContent?.replace(/\s+/g, ' ').trim())
     ).toEqual([
       'nov 2025 pyplots.ai',
-      '2026-04-07 · 1.0.0 first github release',
-      '2026-04-23 · 2.0.0 anyplot.ai',
-      '2026-05-18 · 2.4.0 r / ggplot2',
-      '2026-06-10 · 3.0.0 julia & javascript · 15 libraries',
-      '2026-11-03 · 4.0.0 use with my data',
+      'apr 2026 · 1.0.0 first github release',
+      'apr 2026 · 2.0.0 anyplot.ai',
+      'may 2026 · 2.4.0 r / ggplot2',
+      'jun 2026 · 3.0.0 julia & javascript · 15 libraries',
+      'nov 2026 · 4.0.0 use with my data',
       'today',
     ]);
   });

@@ -12,7 +12,7 @@ describe('monoWidth', () => {
 
   // At 11px the rounded advance is 7px, narrower than the fractional 7.04px, so that one counts.
   it('counts an 11px character at its fractional advance, which is wider', () => {
-    expect(monoWidth('2026-11-03 · 4.0.0', 11)).toBe(127);
+    expect(monoWidth('nov 2026 · 4.0.0', 11)).toBe(113);
   });
 
   it('is never narrower than either rendering, at the sizes the figures use', () => {
