@@ -99,3 +99,58 @@ describe('AgentIntro terms', () => {
     expect(intro.lastElementChild).toBe(terms);
   });
 });
+
+/**
+ * The declarations that reach `element` at phone width: its rules outside any media query, then
+ * those in MUI's query for `xs`, `(min-width:0px)`. jsdom applies no media query itself, so
+ * `getComputedStyle` would leave the `xs` values out.
+ */
+function phoneStyle(element: Element): Record<string, string> {
+  const style: Record<string, string> = {};
+  const take = (rules: CSSRuleList) => {
+    for (const rule of Array.from(rules)) {
+      if (!(rule instanceof CSSStyleRule) || !element.matches(rule.selectorText)) continue;
+      for (const name of Array.from(rule.style)) style[name] = rule.style.getPropertyValue(name);
+    }
+  };
+  const sheets = Array.from(document.styleSheets);
+  for (const sheet of sheets) take(sheet.cssRules);
+  for (const sheet of sheets) {
+    for (const rule of Array.from(sheet.cssRules)) {
+      if (rule instanceof CSSMediaRule && /^\(min-width:\s*0px\)$/.test(rule.media.mediaText)) {
+        take(rule.cssRules);
+      }
+    }
+  }
+  return style;
+}
+
+/*
+ * jsdom lays nothing out, so these pin the rules that make the two targets in sentences at phone
+ * width; a headless browser at 390 px measures each at 44 px, overlapping no other link and no
+ * label. The privacy link is a 44 px box the layout makes room for, so it reaches over neither its
+ * own label nor the next one, as a padding with a negative margin did. "on GitHub" keeps its place
+ * in the line and is padded to 44 px, on one line, so the full stop never lands alone below it.
+ */
+describe('AgentIntro touch targets at phone width', () => {
+  it('makes the privacy link a 44 px box that takes its own room', () => {
+    renderIntro();
+    const link = within(screen.getByTestId('agent-intro-terms')).getByRole('link', {
+      name: 'what is stored, where and for how long',
+    });
+    const style = phoneStyle(link);
+    expect(style.display).toBe('inline-flex');
+    expect(style['min-height']).toBe('44px');
+    expect(style['margin-top'] ?? '0px').not.toMatch(/^-/);
+    expect(style['margin-bottom'] ?? '0px').not.toMatch(/^-/);
+  });
+
+  it('pads "on GitHub" to 44 px around its 18 px of text, on one line', () => {
+    renderIntro();
+    const style = phoneStyle(screen.getByRole('link', { name: 'on GitHub' }));
+    expect(style['padding-top']).toBe('13px');
+    expect(style['padding-bottom']).toBe('13px');
+    // `white-space: nowrap`, which the style sheet stores as its longhands.
+    expect(style['text-wrap-mode']).toBe('nowrap');
+  });
+});

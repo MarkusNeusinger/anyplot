@@ -62,20 +62,38 @@ export const AGENT_INTRO_DESCRIPTION =
  */
 const AGENT_DESIGN_URL = `${GITHUB_URL}#use-with-my-data-agent-chat`;
 
-/** A link of the examples' list and the closing action: a 44 px target at phone width. */
+/**
+ * A link of the examples' list and the closing action: a box of its own, 44 px high at phone width
+ * and 32 px from `sm` up, which the layout makes room for.
+ */
 const targetSx = { display: 'inline-flex', alignItems: 'center', minHeight: { xs: 44, sm: 32 } };
 
 /**
- * The privacy line's link, which wraps to two lines on a phone up to about 390 px wide: one box
- * (an inline-block) for both lines, padded 12 px above and below at phone width, so it is a 44 px
- * target also on one line, with a negative margin of the same size that takes the padding back
- * out of the layout, so no line moves.
+ * The privacy line's link: at phone width the same box as the links above, 44 px high and in the
+ * layout, so its target stays between its own label and the next one instead of reaching over
+ * them. The link wraps inside the box on a phone up to about 390 px wide; on a wider phone it
+ * takes one line at the box's top, under its label like the other sentences, and the rest of the
+ * target lies below it. From `sm` up the label stands beside the sentence, so the box is only as
+ * tall as its text and the two stay level.
  */
 const privacyLinkSx = {
   ...proseLinkStyle,
-  display: 'inline-block',
-  py: { xs: 1.5, sm: 0 },
-  my: { xs: -1.5, sm: 0 },
+  display: 'inline-flex',
+  alignItems: 'flex-start',
+  minHeight: { xs: 44, sm: 0 },
+} as const;
+
+/**
+ * The link at the end of the line on how the chat is built. Inside a sentence, a 44 px box would
+ * make its line taller than the others, so at phone width the link keeps its place in the line and
+ * is padded 13 px above and below its 18 px of text instead, which does not move a line: the
+ * target reaches only into the plain text above it and stays well clear of the heading below. It
+ * stays on one line, so the target is one box.
+ */
+const githubLinkSx = {
+  ...proseLinkStyle,
+  whiteSpace: 'nowrap',
+  py: { xs: '13px', sm: 0 },
 } as const;
 
 /** The heading above the terms, here and under the closed notice. */
@@ -270,7 +288,7 @@ export function AgentIntro() {
           href={AGENT_DESIGN_URL}
           target="_blank"
           rel="noopener noreferrer"
-          sx={proseLinkStyle}
+          sx={githubLinkSx}
         >
           on GitHub
         </Box>
