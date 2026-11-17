@@ -18,7 +18,7 @@
   check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
   says the same, and now also names who is responsible.
 - **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to about
-  850 words (counted at 390 px), and on a phone (390 px) from 6590 to 5124 px high; on a desktop
+  860 words (counted at 390 px), and on a phone (390 px) from 6590 to 5124 px high; on a desktop
   (1440 px), from 3659 to 2738 px. The data assistant's status, its limits and the terms for
   your code now stand on its explainer page, `/agent`, which the assistant's first row
   links; what the limits count on, your tab id and your IP address, stays on the legal page.
@@ -43,9 +43,11 @@
   only the operator reads an entry: he reads them, and when he works on one, its message, page
   and reaction can go to the AI assistant he codes with, Claude by Anthropic. The data
   assistant's feedback row adds that he reads the cases together with that assistant: the
-  conversation, the data sample or file, the plot and its code. The crawler copy says the
-  same, and names the operator, not admins, as the holder of the Cloudflare Access login
-  cookie.
+  visitor's reaction and message, the conversation, the data sample or file, the plot and its
+  code. The crawler copy says the same, and names the operator, not admins, as the holder of
+  the Cloudflare Access login cookie. The feedback widget's thank-you line speaks as him too,
+  "I read every note.", and the prompt that the admin page copies for the coding assistant
+  asks it not to quote the visitor's message in a commit, a pull request or an issue.
 - **The legal notice links the About page.** Its disclaimer says the plot examples are
   generated and maintained by AI workflows and links the About page for how that works and
   the operator's part in it.
