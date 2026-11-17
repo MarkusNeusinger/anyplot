@@ -269,14 +269,16 @@ class TestStopStep:
         ]
         assert on_failure == [
             "Claude session summary",
+            "Name the denied tool calls",
             "Restore the stored review",
             "Re-dispatch review after a post-score failure",
         ]
-        # The first needs a review outcome, the last a review or a skipped one; the restore only resets the workspace.
-        assert (
-            "steps.review.outcome == 'success' || steps.review.outcome == 'failure'"
-            in _step(REVIEW, "Claude session summary")["if"]
-        )
+        # The first two need a review outcome, the last a review or a skipped one; the restore only resets the
+        # workspace.
+        for name in ("Claude session summary", "Name the denied tool calls"):
+            assert (
+                "steps.review.outcome == 'success' || steps.review.outcome == 'failure'" in _step(REVIEW, name)["if"]
+            ), name
         rescue = _step(REVIEW, "Re-dispatch review after a post-score failure")["if"]
         assert "steps.review.conclusion == 'success'" in rescue and "render_stop" not in rescue
         # And no workflow starts on a finished review run.

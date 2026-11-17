@@ -993,27 +993,31 @@ def materialize(
     shutil.copyfile(bundle_dir / predecessor / "plot-light.png", tmp.prev_light)
     shutil.copyfile(bundle_dir / predecessor / "plot-dark.png", tmp.prev_dark)
     shutil.copyfile(bundle_dir / predecessor / "metadata.yaml", tmp.prev_metadata)
-    ctx = _run_gate(
-        gate_script,
-        [
-            "context",
-            "--metadata",
-            str(tmp.prev_metadata),
-            "--spec-id",
-            spec_id,
-            "--language",
-            lang,
-            "--library",
-            library,
-            "--spec-file",
-            str(plots / "specification.md"),
-            "--omit-scores",
-            "--out-md",
-            str(tmp.prev_review),
-            "--out-weaknesses",
-            str(tmp.prev_weaknesses),
-        ],
-    )
+    try:
+        ctx = _run_gate(
+            gate_script,
+            [
+                "context",
+                "--metadata",
+                str(tmp.prev_metadata),
+                "--spec-id",
+                spec_id,
+                "--language",
+                lang,
+                "--library",
+                library,
+                "--spec-file",
+                str(plots / "specification.md"),
+                "--omit-scores",
+                "--out-md",
+                str(tmp.prev_review),
+                "--out-weaknesses",
+                str(tmp.prev_weaknesses),
+            ],
+        )
+    finally:
+        # It holds the stored score, and the reviewer's Read tool covers /tmp.
+        tmp.prev_metadata.unlink(missing_ok=True)
     raw = tmp.base / "anyplot-prev-impl-raw"
     shutil.copyfile(bundle_dir / predecessor / f"{library}{ext}", raw)
     try:

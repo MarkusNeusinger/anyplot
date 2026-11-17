@@ -432,13 +432,17 @@ jobs:
 
           # Previous review from main's metadata (the PR branch's copy was
           # reset to quality_score: null by impl-generate). Missing metadata
-          # yields no weakness ids and prev_stored=n/a.
-          if ! git show "origin/main:${META_FILE}" > /tmp/anyplot-prev-metadata.yaml 2>/dev/null; then
+          # yields no weakness ids and prev_stored=n/a. The copy holds the
+          # stored score, so it stays under $RUNNER_TEMP, outside the
+          # reviewer's /tmp/* reads; what the reviewer gets is the review
+          # without its scores, below.
+          PREV_META="$RUNNER_TEMP/anyplot-prev-metadata.yaml"
+          if ! git show "origin/main:${META_FILE}" > "$PREV_META" 2>/dev/null; then
             echo "::warning::${META_FILE} not on main — previous review unavailable"
-            echo "{}" > /tmp/anyplot-prev-metadata.yaml
+            echo "{}" > "$PREV_META"
           fi
           python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" context \
-            --metadata /tmp/anyplot-prev-metadata.yaml \
+            --metadata "$PREV_META" \
             --spec-id "$SPEC_ID" --language "$LANGUAGE" --library "$LIBRARY" \
             --spec-file "plots/${SPEC_ID}/specification.md" \
             --omit-scores \
@@ -730,8 +734,10 @@ jobs:
       # new render blind. Kept out of the working directory so a directory
       # listing during the blind pass does not surface them, and as
       # top-level /tmp files because `.claude/settings.json` allows the Read
-      # tool on `/tmp/*` only (a $RUNNER_TEMP path would be a denied read in
-      # the non-interactive action). Anything short of both files →
+      # tool on those only: `Read(//tmp/*)`. The two slashes are the absolute
+      # form; with one, the rule anchors at the project and covers nothing
+      # under /tmp, and the read is denied like a $RUNNER_TEMP path is in the
+      # non-interactive action. Anything short of both files →
       # prev_renders=missing, and the gate keeps the live implementation.
       - name: Download previous production renders (regen)
         id: prev_renders
@@ -1362,6 +1368,45 @@ jobs:
             echo "stopped=false" >> "$GITHUB_OUTPUT"
           fi
           echo "stop_reason=${reason}" >> "$GITHUB_OUTPUT"
+
+      # The tool calls the session was refused: their count, and one line per
+      # call with the tool and, for a file tool, the path. A regeneration
+      # review that is refused the predecessor's files takes the prompt's
+      # `PREV_RENDERS = missing` path, writes no review_regen.json, and the
+      # gate keeps the live implementation (`regen_json_missing`); without
+      # these lines the log holds a count nobody prints. Only a path is
+      # printed, cut to a fixed set of characters, and never the input of
+      # another tool: a command can hold anything. Never fatal.
+      - name: Name the denied tool calls
+        if: ${{ !cancelled() && (steps.review.outcome == 'success' || steps.review.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+          CLAUDE_STEP: impl-review
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          DENIAL_COUNT: >-
+            ([.[] | select(.type == "result")] | last | .permission_denials) as $denials
+            | if ($denials | type) == "array" then ($denials | length) else "n/a" end
+          DENIAL_LINES: >-
+            ([.[] | select(.type == "result")] | last | .permission_denials) as $denials
+            | if ($denials | type) != "array" then empty else $denials[]
+            | (.tool_name // "?" | tostring | gsub("[^A-Za-z0-9_.-]"; "?") | .[0:60]) as $tool
+            | (.tool_input | if type == "object" then (.file_path // .path // .notebook_path // "-") else "-" end
+               | tostring | gsub("[^A-Za-z0-9_./@+=~-]"; "?") | .[0:200]) as $path
+            | "tool=\($tool) path=\($path)" end
+        run: |
+          count=$(jq -r "$DENIAL_COUNT" "$EXECUTION_FILE" 2>/dev/null || true)
+          line="claude_denials step=${CLAUDE_STEP} spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} count=${count:-n/a}"
+          echo "::notice::${line}"
+          echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
+          denied=$(jq -r "$DENIAL_LINES" "$EXECUTION_FILE" 2>/dev/null || true)
+          while IFS= read -r call; do
+            if [ -n "$call" ]; then
+              echo "::warning::claude_denied step=${CLAUDE_STEP} spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} ${call}"
+            fi
+          done <<< "$denied"
 
       # Undo "Hide the previous review", whatever the review step did: the
       # metadata step below reads the metadata file from disk and rewrites
@@ -2086,7 +2131,7 @@ jobs:
           SCORE: ${{ steps.adapt.outputs.review_skipped == 'true' && steps.regen_ctx.outputs.prev_stored || steps.score.outputs.score }}
           BRANCH: ${{ steps.pr.outputs.branch }}
           REVIEW_CARRIED: ${{ steps.adapt.outputs.review_skipped == 'true' }}
-          CARRY_FROM: /tmp/anyplot-prev-metadata.yaml
+          CARRY_FROM: ${{ runner.temp }}/anyplot-prev-metadata.yaml
           # Review provenance (not synced to the database: sync_to_postgres
           # picks review keys by name). An empty value removes the key.
           REVIEW_MODEL: ${{ steps.review_model.outputs.model_id }}

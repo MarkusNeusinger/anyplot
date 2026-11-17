@@ -796,6 +796,38 @@ class TestMaterialize:
         ).read_bytes()
         assert tmp.prev_dark.read_bytes() == (bundle / other / "plot-dark.png").read_bytes()
 
+    def test_the_stored_score_does_not_stay_beside_the_predecessors_files(self, bundles, workspace, tmp_path):
+        """The reviewer's Read tool covers these files, and the metadata copy holds the stored score."""
+        tmp = rt.TmpPaths(tmp_path / "tmp")
+        bundle = bundles["out"] / "r-bubble-basic-matplotlib-v1-v0"
+        assert "quality_score: 88" in (bundle / "prev" / "metadata.yaml").read_text(encoding="utf-8")
+        cell = _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward")
+        out = rt.materialize(bundle, workspace, cell, GATE_SCRIPT, tmp=tmp)
+        assert out["prev_stored"] == "88"  # the context was read before the copy went
+        assert not tmp.prev_metadata.exists()
+        left = {path.name: path.read_bytes() for path in tmp.base.iterdir() if path.is_file()}
+        assert tmp.prev_review.name in left and tmp.prev_impl(".py").name in left
+        scored = sorted(name for name, body in left.items() if b"quality_score" in body and name != tmp.regen_gate.name)
+        assert scored == []
+
+    def test_the_metadata_copy_goes_when_the_context_fails(self, bundles, workspace, tmp_path, monkeypatch):
+        tmp = rt.TmpPaths(tmp_path / "tmp")
+
+        def failing(*args, **kwargs):
+            assert tmp.prev_metadata.is_file()  # the gate script reads it from here
+            raise rt.HarnessError("context failed")
+
+        monkeypatch.setattr(rt, "_run_gate", failing)
+        with pytest.raises(rt.HarnessError, match="context failed"):
+            rt.materialize(
+                bundles["out"] / "r-bubble-basic-matplotlib-v1-v0",
+                workspace,
+                _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward"),
+                GATE_SCRIPT,
+                tmp=tmp,
+            )
+        assert not tmp.prev_metadata.exists()
+
     def test_regen_cell_without_order_is_refused(self, bundles, workspace, tmp_path):
         with pytest.raises(rt.HarnessError, match="has no order"):
             rt.materialize(
