@@ -1,7 +1,7 @@
 """anyplot.ai
 shap-waterfall: SHAP Waterfall Plot for Feature Attribution
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-11-17
+Quality: pending | Updated: 2026-11-17
 """
 
 import os
