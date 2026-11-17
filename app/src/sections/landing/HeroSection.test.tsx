@@ -107,16 +107,21 @@ describe('HeroSection', () => {
     expect(css).not.toMatch(new RegExp(`\\.${bylineClass}\\{[^}]*display:none;`));
   });
 
-  it('keeps the name on one line, cued at rest, padded on phones and ringed around the name', () => {
+  it('keeps the name on one line, underlined on hover only, padded on phones and ringed around the name', () => {
     render(<HeroSection potd={null} />);
 
     const link = emotionClass(screen.getByRole('link', { name: 'Markus Neusinger' }));
     const css = styles();
     // The name never splits across lines.
     expect(css).toMatch(new RegExp(`\\.${link}\\{[^}]*white-space:nowrap;`));
-    // A dotted underline at rest in the text's own colour, a cue that does not depend on colour.
+    // No underline at rest: the border is there but transparent, so hover moves nothing.
     expect(css).toMatch(
-      new RegExp(`\\.${link}>span\\{[^}]*border-bottom:[^;]*dotted currentColor;`)
+      new RegExp(`\\.${link}>span\\{[^}]*border-bottom:[^;]*dotted transparent;`)
+    );
+    expect(css).not.toMatch(new RegExp(`\\.${link}\\{[^}]*text-decoration:underline`));
+    // Hover shows it, in the colour the name takes then.
+    expect(css).toMatch(
+      new RegExp(`\\.${link}:hover>span\\{[^}]*border-bottom-color:currentColor;`)
     );
     // Below sm (600 px) padding grows the touch target and an equal negative margin keeps the
     // text in place; from sm up both are reset.

@@ -45,10 +45,11 @@
   plot catalogue" at those widths; on narrower screens, where the masthead
   hides it, "the open plot catalogue" stands on a line of its own above the
   name. Only the name is a link, to the about page: it never breaks across
-  lines, carries a dotted underline at rest, is the hero's first link for the
-  keyboard, has a 44 px touch target on phones, and counts its clicks as
-  `nav_click` with the source `hero_about`. The intro adds "I approve new
-  specs and set the rules." The masthead, the OG image and the crawler copy
+  lines, has no underline at rest and shows the site's green with a dotted
+  underline on hover, is the hero's first link for the keyboard, has a 44 px
+  touch target on phones, and counts its clicks as `nav_click` with the
+  source `hero_about`. The intro adds "I approve new specs and set the
+  rules." The masthead, the OG image and the crawler copy
   keep "the open plot catalogue" alone.
 - **The about page's stack table lists the checks.** A "checks" row names
   tests and lint on every pull request that changes Python or frontend code
