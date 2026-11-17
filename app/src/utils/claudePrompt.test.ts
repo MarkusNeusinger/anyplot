@@ -54,34 +54,17 @@ describe('buildClaudePrompt', () => {
     expect(out).toMatch(/Open a pull request/);
   });
 
-  // The legal page's site feedback row (src/pages/LegalPage.tsx) names the message, the page and
-  // the reaction as what can go to the coding assistant: a fourth parameter changes that row too.
-  it('carries the message, the page and the reaction of an entry and none of its other fields', () => {
-    const entry = {
-      id: 'entry-id-5c1e',
-      message: 'The legend hides the last bar',
-      path: '/plots/bar-basic',
-      reaction: 'bug',
-      contact: 'reader@example.com',
-      session_id: 'random-id-9a47',
-      user_agent: 'Mozilla/5.0 (TestAgent)',
-      viewport: '390x844',
-    };
+  // The legal page's site feedback row (app/src/pages/LegalPage.tsx) names the message, the page
+  // and the reaction as what can go to the coding assistant: a fourth parameter changes that row
+  // too. Function.length does not count a parameter with a default value, so the copy test in
+  // app/src/pages/DebugPage.test.tsx pins that the entry's other fields stay out at the call site.
+  it('takes the message, the page and the reaction of an entry, and no other field', () => {
     expect(buildClaudePrompt).toHaveLength(3);
 
-    const out = buildClaudePrompt(entry.message, entry.path, entry.reaction);
+    const out = buildClaudePrompt('The legend hides the last bar', '/plots/bar-basic', 'bug');
     expect(out).toContain('> The legend hides the last bar');
     expect(out).toContain('on https://anyplot.ai/plots/bar-basic:');
     expect(out).toContain('following bug report on');
-    for (const field of [
-      entry.contact,
-      entry.id,
-      entry.session_id,
-      entry.user_agent,
-      entry.viewport,
-    ]) {
-      expect(out).not.toContain(field);
-    }
   });
 
   // The repository is public: the visitor's words stay out of what a session publishes there.
