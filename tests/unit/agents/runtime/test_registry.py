@@ -146,6 +146,17 @@ class TestRegistry:
         assert not any(isinstance(plugin, LoggingPlugin) for plugin in plugins)
         assert agent_module.app.name == "anyplot" and agent_module.app.root_agent is agent_module.root_agent
 
+    def test_the_design_doc_states_the_plugins_in_the_same_order(self) -> None:
+        """The concept page states the chain in one line. A plugin missing from that line, or standing elsewhere in
+        it, describes another service than the one that runs; a merge that takes an older copy of the page does that
+        without a conflict."""
+        order = [type(plugin).__name__.removesuffix("Plugin") for plugin in agent_module.app.plugins]
+        doc = (REPO / "docs" / "concepts" / "agent-network.md").read_text(encoding="utf-8")
+        stated = re.search(r"^Plugin order on `App`[^`]*: `([^`]+)`", doc, re.MULTILINE)
+
+        assert stated, "the line that states the plugin order is gone"
+        assert [name.split("(")[0] for name in stated.group(1).split(" → ")] == order
+
     def test_no_adk_server_or_executor_imports(self) -> None:
         forbidden = ("google.adk.cli", "code_executors", "LoggingPlugin", "google_search", "url_context", "AgentTool")
         for path in (REPO / "agents").rglob("*.py"):
