@@ -92,7 +92,10 @@ from automation.scripts.regen_gate import (
 # Bump when a harness change alters what a session sees or what a record
 # measures: resume (split_resume) and compare_arms treat another version as
 # another arm, and neither compares the dispatch commit.
-HARNESS_VERSION = "1"
+# "2": a regen cell's session reads the predecessor's files under /tmp with
+# the Read tool (in "1" that read was refused), and the predecessor's
+# metadata, which holds the stored score, no longer sits beside them.
+HARNESS_VERSION = "2"
 MAX_SESSIONS = 240
 # First commit whose regen_gate.py has `context --omit-scores` (the blind
 # re-score the harness reproduces); regen cells need rules at least this new.

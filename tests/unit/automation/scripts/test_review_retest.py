@@ -804,11 +804,22 @@ class TestMaterialize:
         cell = _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward")
         out = rt.materialize(bundle, workspace, cell, GATE_SCRIPT, tmp=tmp)
         assert out["prev_stored"] == "88"  # the context was read before the copy went
-        assert not tmp.prev_metadata.exists()
-        left = {path.name: path.read_bytes() for path in tmp.base.iterdir() if path.is_file()}
-        assert tmp.prev_review.name in left and tmp.prev_impl(".py").name in left
-        scored = sorted(name for name, body in left.items() if b"quality_score" in body and name != tmp.regen_gate.name)
-        assert scored == []
+        # Exactly the files the reviewer is meant to get: neither the metadata copy nor the unsanitized source.
+        assert {path.name for path in tmp.base.iterdir()} == {
+            tmp.prev_light.name,
+            tmp.prev_dark.name,
+            tmp.prev_review.name,
+            tmp.prev_weaknesses.name,
+            tmp.prev_impl(".py").name,
+            tmp.regen_gate.name,
+        }
+        for path in tmp.base.iterdir():
+            if path.name in (tmp.regen_gate.name, tmp.prev_light.name, tmp.prev_dark.name):
+                continue  # the gate script names the fields it reads; the renders are images
+            body = path.read_text(encoding="utf-8")
+            assert "quality_score" not in body, path.name
+            assert not re.search(r"Quality: \d+/100", body), path.name
+            assert "88" not in body, path.name  # the stored score itself, in any form
 
     def test_the_metadata_copy_goes_when_the_context_fails(self, bundles, workspace, tmp_path, monkeypatch):
         tmp = rt.TmpPaths(tmp_path / "tmp")
@@ -1257,7 +1268,7 @@ class TestCollect:
 def _record(cell: str, item: str, run: int, score: int, **extra) -> dict[str, Any]:
     record = {
         "v": 1,
-        "harness_version": "1",
+        "harness_version": rt.HARNESS_VERSION,
         "set": "v1",
         "cell": cell,
         "item": item,
@@ -1318,7 +1329,7 @@ class TestReport:
         )
         snippet = (tmp_path / "report" / "snippet.md").read_text(encoding="utf-8")
         assert snippet.splitlines()[0] == "### Review retest — set v1 core (2 fresh × 2)"
-        assert "Fresh: claude-opus-5-5 · rules bbbbbbb · harness v1" in snippet
+        assert f"Fresh: claude-opus-5-5 · rules bbbbbbb · harness v{rt.HARNESS_VERSION}" in snippet
         assert "| Items with split verdict at 90 | 1/1 |" in snippet
         assert "| Named-defect miss rate | 1/2 |" in snippet  # D1 on f-bubble-basic-matplotlib, missed in run 2
         assert "| Sessions / API-equivalent cost | 3/4 / $5 |" in snippet

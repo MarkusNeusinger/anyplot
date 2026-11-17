@@ -136,13 +136,16 @@ jobs:
           # failure mode (5x in 24h on 2026-05-06). Three attempts with linear
           # backoff (5s, 10s); keep stderr separate from stdout so warnings
           # (rate-limit notices, etc.) don't corrupt the JSON jq parses below.
+          # Under $RUNNER_TEMP, outside the reviewer's /tmp/* reads: a
+          # regeneration's PR body records the stored score ("previous
+          # quality N").
           PR_DATA=""
           for attempt in 1 2 3; do
-            if gh pr view "$PR_NUMBER" --json headRefName,headRefOid,body > /tmp/pr.json 2> /tmp/pr.err; then
-              PR_DATA=$(cat /tmp/pr.json)
+            if gh pr view "$PR_NUMBER" --json headRefName,headRefOid,body > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
+              PR_DATA=$(cat "$RUNNER_TEMP/pr.json")
               break
             fi
-            PERR=$(head -c 500 /tmp/pr.err | tr '\n' ' ')
+            PERR=$(head -c 500 "$RUNNER_TEMP/pr.err" | tr '\n' ' ')
             echo "::warning::gh pr view failed (attempt ${attempt}/3): ${PERR}"
             if [ "$attempt" -lt 3 ]; then
               sleep $((attempt * 5))
@@ -455,10 +458,13 @@ jobs:
           # the reviewer's copy has it hidden so the re-score cannot anchor.
           # Sanitizing is part of this step: if it fails, the step fails and
           # the gate keeps (--context-failed) rather than leak the score.
-          git show "origin/main:${IMPL_FILE}" > /tmp/anyplot-prev-impl-raw
+          # The review still runs then, so the copy with the score never
+          # sits under /tmp: a failed sanitizer would leave it there.
+          RAW="$RUNNER_TEMP/anyplot-prev-impl-raw"
+          git show "origin/main:${IMPL_FILE}" > "$RAW"
           python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" sanitize-source \
-            --source /tmp/anyplot-prev-impl-raw --out "/tmp/anyplot-prev-impl${EXT}"
-          rm -f /tmp/anyplot-prev-impl-raw
+            --source "$RAW" --out "/tmp/anyplot-prev-impl${EXT}"
+          rm -f "$RAW"
           echo "prev_lines=$(wc -l < "/tmp/anyplot-prev-impl${EXT}" | tr -d ' ')" >> $GITHUB_OUTPUT
           echo "new_lines=$(wc -l < "$IMPL_FILE" | tr -d ' ')" >> $GITHUB_OUTPUT
 
@@ -735,9 +741,10 @@ jobs:
       # listing during the blind pass does not surface them, and as
       # top-level /tmp files because `.claude/settings.json` allows the Read
       # tool on those only: `Read(//tmp/*)`. The two slashes are the absolute
-      # form; with one, the rule anchors at the project and covers nothing
-      # under /tmp, and the read is denied like a $RUNNER_TEMP path is in the
-      # non-interactive action. Anything short of both files →
+      # form; with one, the rule anchors where its settings file is (the
+      # project, or the directory of a file passed with --settings) and
+      # covers nothing under /tmp, and the read is denied like a $RUNNER_TEMP
+      # path is in the non-interactive action. Anything short of both files →
       # prev_renders=missing, and the gate keeps the live implementation.
       - name: Download previous production renders (regen)
         id: prev_renders
@@ -1370,43 +1377,77 @@ jobs:
           echo "stop_reason=${reason}" >> "$GITHUB_OUTPUT"
 
       # The tool calls the session was refused: their count, and one line per
-      # call with the tool and, for a file tool, the path. A regeneration
-      # review that is refused the predecessor's files takes the prompt's
-      # `PREV_RENDERS = missing` path, writes no review_regen.json, and the
-      # gate keeps the live implementation (`regen_json_missing`); without
-      # these lines the log holds a count nobody prints. Only a path is
-      # printed, cut to a fixed set of characters, and never the input of
-      # another tool: a command can hold anything. Never fatal.
+      # call with the tool and, for a file tool (FILE_TOOLS), its path. A
+      # regeneration review that is refused the predecessor's files has to
+      # find another way to them. One that treats them as missing writes no
+      # review_regen.json, and the gate keeps the live implementation
+      # (`regen_json_missing`). The action's own log gives the count alone.
+      # Nothing but a file tool's path is printed, cut to a fixed length and
+      # then to a fixed set of characters: a command, a URL or the argument
+      # of any other tool can hold anything. Python, not jq: jq refuses a
+      # whole file over one unpaired surrogate escape, and such a file would
+      # read as "nothing refused". Never fatal, and no later step reads it.
       - name: Name the denied tool calls
         if: ${{ !cancelled() && (steps.review.outcome == 'success' || steps.review.outcome == 'failure') }}
         continue-on-error: true
+        timeout-minutes: 2
         env:
           EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
           CLAUDE_STEP: impl-review
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
-          DENIAL_COUNT: >-
-            ([.[] | select(.type == "result")] | last | .permission_denials) as $denials
-            | if ($denials | type) == "array" then ($denials | length) else "n/a" end
-          DENIAL_LINES: >-
-            ([.[] | select(.type == "result")] | last | .permission_denials) as $denials
-            | if ($denials | type) != "array" then empty else $denials[]
-            | (.tool_name // "?" | tostring | gsub("[^A-Za-z0-9_.-]"; "?") | .[0:60]) as $tool
-            | (.tool_input | if type == "object" then (.file_path // .path // .notebook_path // "-") else "-" end
-               | tostring | gsub("[^A-Za-z0-9_./@+=~-]"; "?") | .[0:200]) as $path
-            | "tool=\($tool) path=\($path)" end
         run: |
-          count=$(jq -r "$DENIAL_COUNT" "$EXECUTION_FILE" 2>/dev/null || true)
-          line="claude_denials step=${CLAUDE_STEP} spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} count=${count:-n/a}"
-          echo "::notice::${line}"
-          echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
-          denied=$(jq -r "$DENIAL_LINES" "$EXECUTION_FILE" 2>/dev/null || true)
-          while IFS= read -r call; do
-            if [ -n "$call" ]; then
-              echo "::warning::claude_denied step=${CLAUDE_STEP} spec=${SPEC_ID} lib=${LIBRARY} pr=${PR_NUM} ${call}"
-            fi
-          done <<< "$denied"
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+
+          FILE_TOOLS = {"Read", "Edit", "Write", "NotebookEdit", "Glob", "Grep"}
+          PATH_KEYS = ("file_path", "path", "notebook_path")
+
+
+          def cut(value, limit, allowed):
+              """At most `limit` characters, each from `allowed`. Cut first: the cost never grows with the value."""
+              return re.sub(f"[^{allowed}]", "?", str(value)[:limit])
+
+
+          def given(value):
+              return value is not None and value is not False
+
+
+          def refused(path):
+              """The last result's list of refused calls, or None when there is no such list to read."""
+              try:
+                  with open(path, encoding="utf-8") as handle:
+                      messages = json.load(handle)
+              except Exception:  # no file, not JSON, not UTF-8, too deep: each is "n/a"
+                  return None
+              if not isinstance(messages, list):
+                  return None
+              results = [m for m in messages if isinstance(m, dict) and m.get("type") == "result"]
+              found = results[-1].get("permission_denials") if results else None
+              return found if isinstance(found, list) else None
+
+
+          env = os.environ
+          labels = (("step", "CLAUDE_STEP"), ("spec", "SPEC_ID"), ("lib", "LIBRARY"), ("pr", "PR_NUM"))
+          where = " ".join(f"{label}={cut(env.get(name, ''), 100, 'A-Za-z0-9_.-')}" for label, name in labels)
+          calls = refused(env.get("EXECUTION_FILE") or "")
+          line = f"claude_denials {where} count={'n/a' if calls is None else len(calls)}"
+          print(f"::notice::{line}", flush=True)
+          if env.get("GITHUB_STEP_SUMMARY"):
+              with open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+                  summary.write(f"- `{line}`\n")
+          for call in calls or []:
+              call = call if isinstance(call, dict) else {}
+              tool = str(call["tool_name"]) if given(call.get("tool_name")) else "?"
+              args = call.get("tool_input")
+              args = args if isinstance(args, dict) and tool in FILE_TOOLS else {}
+              path = next((args[key] for key in PATH_KEYS if given(args.get(key))), "-")
+              shown = cut(path, 200, "A-Za-z0-9_./@+=~-") or "-"
+              print(f"::warning::claude_denied {where} tool={cut(tool, 60, 'A-Za-z0-9_.-')} path={shown}", flush=True)
+          PY
 
       # Undo "Hide the previous review", whatever the review step did: the
       # metadata step below reads the metadata file from disk and rewrites
