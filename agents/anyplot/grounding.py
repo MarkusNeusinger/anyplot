@@ -8,8 +8,9 @@ user asked for "6,5 Mio." on the axis, the axis showed "6.0 M", and the reply cl
 Two measurements, both code:
 
 * `drawn_texts` reads the drawn texts the render's probe reports (the `labels` field) by
-  role, every one of them; `plot_texts` clips them into `PlotShows.texts`, which the root
-  reads fenced next to the result. Every library's render reports them since 2026-11-01:
+  role, every one of them; `plot_texts` builds `PlotShows.texts` from them, each role's
+  distinct count with all of its texts or both ends, which the root reads fenced next to the
+  result. Every library's render reports them since 2026-11-01:
   matplotlib, seaborn and plotnine through `harness.drawn_labels`, pygal, altair and
   lets-plot through `harness.install_text_probes`, the JavaScript libraries, plotly and bokeh
   through the browser harness (`render.mjs`, `writeTextProbe`), ggplot2 and Makie through the
@@ -19,7 +20,8 @@ Two measurements, both code:
   sees (`plugins/tool_safety.fence_pipeline_notes` drops it), and a run with requested texts
   then carries `UNVERIFIED_LINE` instead of a silent pass.
 * `expected_misses` checks each of the run's `expected_texts` (the texts and number formats
-  the user asked to see, verbatim) against all drawn texts, never the clipped summary. A
+  the user asked to see, verbatim) against all drawn texts, never the `PlotShows.texts`
+  record. A
   text (`Population 2025`, `Top 10`) must stand whole in one drawn text (case, spacing,
   quotes, dashes and mathtext markup aside). A number-format example (`format_unit`: a
   number with one short unit, `6,5 Mio.`, `12 %`, `CHF 6,5`) must draw its unit, and every
@@ -37,6 +39,7 @@ under `EXPECT_LINE_ID` that quotes it, and `reviewed_misses` reads those lines b
 render no readable review answered for keeps `UNVERIFIED_LINE`.
 """
 
+import math
 import re
 import unicodedata
 from collections.abc import Sequence
@@ -45,7 +48,7 @@ from typing import Any
 
 from core.defects import DEFECT_RE
 
-from .schemas import MAX_SHOWN_TEXT_CHARS, ShownGroup
+from .schemas import MAX_SHOWN_TEXT_CHARS, ShownGroup, ShownRole
 
 
 MAX_LABELS = 400
@@ -60,14 +63,14 @@ GROUP_LIMITS: dict[ShownGroup, int] = {
     "z axis label": 2,
     "other axis labels": 3,
     "legend": 12,
-    "x tick labels": 8,
-    "y tick labels": 8,
+    "x tick labels": 20,
+    "y tick labels": 20,
     "z tick labels": 8,
-    "annotations": 8,
+    "annotations": 16,
     "other texts": 6,
 }
-"""Distinct texts `PlotShows.texts` keeps per role: enough to quote a title or read a tick format, and
-at most 64 texts of `MAX_SHOWN_TEXT_CHARS` (about 5 KB) next to the result's other fields."""
+"""Distinct texts `PlotShows.texts` lists per role before cutting to both ends: at most 96 texts of
+`MAX_SHOWN_TEXT_CHARS` across the roles next to the result's other fields."""
 UNVERIFIED_LINE = (
     "SC-04 ({theme}): the requested texts could not be checked against the render "
     "→ compare them with the image. Likely cause: no drawn texts to check them against and no readable review."
@@ -243,14 +246,24 @@ def probe_error(probe: Any) -> str | None:
     return error if isinstance(error, str) and error in PROBE_ERRORS else "other"
 
 
-def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, list[str]] | None:
-    """`PlotShows.texts`: the drawn texts within `GROUP_LIMITS` and `MAX_SHOWN_TEXT_CHARS`, for the root's reply."""
+def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, ShownRole] | None:
+    """`PlotShows.texts`: per role, its distinct count and either every text or both ends within `GROUP_LIMITS`."""
     if drawn is None:
         return None
-    return {
-        group: list(dict.fromkeys(_clip(text, MAX_SHOWN_TEXT_CHARS) for text in texts))[: GROUP_LIMITS[group]]
-        for group, texts in drawn.groups.items()
-    }
+    roles: dict[ShownGroup, ShownRole] = {}
+    for group, raw_texts in drawn.groups.items():
+        distinct = list(dict.fromkeys(_clip(text, MAX_SHOWN_TEXT_CHARS) for text in raw_texts))
+        if not distinct:
+            continue
+        bound = GROUP_LIMITS[group]
+        count = len(distinct)
+        if count <= bound:
+            roles[group] = ShownRole(count=count, texts=distinct)
+        else:
+            head = math.ceil(bound / 2)
+            tail = bound // 2
+            roles[group] = ShownRole(count=count, first=distinct[:head], last=distinct[count - tail :])
+    return roles
 
 
 def _norm(text: str, *, quotes: bool = False) -> str:
@@ -331,15 +344,21 @@ def _quote(texts: Sequence[str], limit: int = 3) -> str:
     return ", ".join(f'"{text}"' for text in texts[:limit])
 
 
-def _observed(texts: dict[ShownGroup, list[str]], kind: str) -> str:
+def _listed(role: ShownRole | None) -> list[str]:
+    if role is None:
+        return []
+    return list(role.texts) if role.texts is not None else [*(role.first or ()), *(role.last or ())]
+
+
+def _observed(texts: dict[ShownGroup, ShownRole], kind: str) -> str:
     """What the plot shows instead, for the miss's line: the tick labels for a format, the title for a text."""
     if kind == "format":
         for group in TICK_GROUPS:
-            if texts.get(group):
-                return f"its {group} read {_quote(texts[group])}"
+            if listed := _listed(texts.get(group)):
+                return f"its {group} read {_quote(listed)}"
         return "it shows no tick labels"
-    if texts.get("title"):
-        return f"its title reads {_quote(texts['title'], 1)}"
+    if listed := _listed(texts.get("title")):
+        return f"its title reads {_quote(listed, 1)}"
     return "it has no title"
 
 

@@ -40,6 +40,7 @@ from pydantic import (
     TypeAdapter,
     ValidationInfo,
     field_validator,
+    model_serializer,
     model_validator,
 )
 
@@ -839,18 +840,42 @@ ShownText = Annotated[str, Field(min_length=1, max_length=MAX_SHOWN_TEXT_CHARS)]
 ReviewState = Literal["passed", "findings", "not_reviewed"]
 
 
+class ShownRole(_ServerContract):
+    """The drawn texts of one role in `PlotShows.texts`: their distinct count, and either all of them or both ends."""
+
+    count: int = Field(ge=1)
+    texts: list[ShownText] | None = Field(default=None, min_length=1)
+    first: list[ShownText] | None = Field(default=None, min_length=1)
+    last: list[ShownText] | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def _whole_or_ends(self) -> Self:
+        has_texts = self.texts is not None
+        has_ends = self.first is not None and self.last is not None
+        if has_texts == has_ends or (self.first is None) != (self.last is None):
+            raise ValueError("a role holds either texts or both first and last")
+        return self
+
+    @model_serializer
+    def _without_none(self) -> dict[str, Any]:
+        if self.texts is not None:
+            return {"count": self.count, "texts": list(self.texts)}
+        return {"count": self.count, "first": list(self.first or []), "last": list(self.last or [])}
+
+
 class PlotShows(_ServerContract):
     """What the shipped render shows, built by the server: the root's closing reply is grounded in it.
 
-    `texts` are the drawn texts by role, read from the render's probe (`grounding.plot_texts`);
-    None when the renderer reported none (a renderer older than the `labels` probe field).
+    `texts` are the drawn texts by role (`ShownRole`), read from the render's probe
+    (`grounding.plot_texts`); None when the renderer reported none (a renderer older than the
+    `labels` probe field).
     `review` is the verdict on exactly this render (`passed`: it met the ship bar), `score`
     the catalogue review's score, `requested_not_found` the `expected_texts` the drawn
     texts do not show (`grounding.expected_misses`). The texts are written by the code under
     test, so the root reads them fenced, as data.
     """
 
-    texts: dict[ShownGroup, list[ShownText]] | None = None
+    texts: dict[ShownGroup, ShownRole] | None = None
     review: ReviewState = "not_reviewed"
     score: int | None = Field(default=None, ge=0, le=100)
     requested_not_found: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)

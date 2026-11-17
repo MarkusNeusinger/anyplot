@@ -35,6 +35,7 @@ from agents.anyplot.dataset_versions import push_version
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.grounding import (
     GROUP_LIMITS,
+    MAX_LABELS,
     REQUESTED_MARK,
     UNVERIFIED_LINE,
     drawn_texts,
@@ -82,6 +83,7 @@ from agents.anyplot.schemas import (
     PlotShows,
     ReviewRequest,
     Round,
+    ShownRole,
 )
 from agents.anyplot.services import Services
 from agents.anyplot.session_state import BINDINGS, DATASET_ID, SessionView, initial_state
@@ -123,9 +125,10 @@ MILLIONS_EN = labels(
 """Live case Q1, round 1: the user asked for "6,5 Mio.", the axis drew English decimals and "M"."""
 
 
-def shown(probe: Any) -> dict[str, list[str]] | None:
-    """`PlotShows.texts` of a probe: the drawn texts, clipped for the reply."""
-    return cast(dict[str, list[str]] | None, plot_texts(drawn_texts(probe)))
+def shown(probe: Any) -> dict[str, dict[str, Any]] | None:
+    """`PlotShows.texts` of a probe as JSON data: per role, its distinct count and all texts or both ends."""
+    roles = plot_texts(drawn_texts(probe))
+    return None if roles is None else {group: role.model_dump(mode="json") for group, role in roles.items()}
 
 
 class TestPlotTexts:
@@ -133,12 +136,73 @@ class TestPlotTexts:
         texts = shown(MILLIONS_EN)
 
         assert texts == {
-            "title": ["Ständige Wohnbevölkerung nach Staatsangehörigkeit"],
-            "y axis label": ["Personen"],
-            "legend": ["Schweizer", "Ausländer"],
-            "x tick labels": ["1980", "2000"],
-            "y tick labels": ["5.5 M", "6.0 M", "6.5 M"],
+            "title": {"count": 1, "texts": ["Ständige Wohnbevölkerung nach Staatsangehörigkeit"]},
+            "y axis label": {"count": 1, "texts": ["Personen"]},
+            "legend": {"count": 2, "texts": ["Schweizer", "Ausländer"]},
+            "x tick labels": {"count": 2, "texts": ["1980", "2000"]},
+            "y tick labels": {"count": 3, "texts": ["5.5 M", "6.0 M", "6.5 M"]},
         }
+
+    def test_twelve_tick_labels_ship_in_full_with_their_count(self) -> None:
+        months = [f"2024-{month:02d}" for month in range(1, 13)]
+
+        texts = shown(labels(*(("x tick label", month) for month in months)))
+
+        assert texts == {"x tick labels": {"count": 12, "texts": months}}
+
+    def test_thirty_tick_labels_ship_with_count_and_both_ends_only(self) -> None:
+        days = [f"2024-01-{day:02d}" for day in range(1, 31)]
+        roles = plot_texts(drawn_texts(labels(*(("x tick label", day) for day in days))))
+
+        assert roles is not None
+        role = roles["x tick labels"]
+        assert role.texts is None
+        assert role.model_dump(mode="json") == {"count": 30, "first": days[:10], "last": days[-10:]}
+
+    def test_fifteen_legend_entries_ship_six_at_each_end(self) -> None:
+        entries = [f"Series {index}" for index in range(15)]
+
+        texts = shown(labels(*(("legend text", entry) for entry in entries)))
+
+        assert texts == {"legend": {"count": 15, "first": entries[:6], "last": entries[-6:]}}
+
+    def test_repeated_texts_count_once_before_the_record_is_cut(self) -> None:
+        distinct = [f"Region {index}" for index in range(25)]
+        long_prefix = "R" * (MAX_SHOWN_TEXT_CHARS + 5)
+        probe = labels(
+            *(("x tick label", item) for item in [*distinct, distinct[0], distinct[12], distinct[-1]]),
+            ("title", "Sales"),
+            ("title", "Sales"),
+            ("subtitle", long_prefix + "a"),
+            ("subtitle", long_prefix + "b"),  # identical once clipped to MAX_SHOWN_TEXT_CHARS
+        )
+
+        texts = shown(probe)
+
+        assert texts == {
+            "title": {"count": 1, "texts": ["Sales"]},
+            "subtitle": {"count": 1, "texts": ["R" * (MAX_SHOWN_TEXT_CHARS - 1) + "…"]},
+            "x tick labels": {"count": 25, "first": distinct[:10], "last": distinct[-10:]},
+        }
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"count": 0, "texts": ["a"]},
+            {"count": 1},
+            {"count": 1, "texts": []},
+            {"count": 2, "first": ["a"]},
+            {"count": 2, "last": ["b"]},
+            {"count": 2, "texts": ["a"], "first": ["a"]},
+            {"count": 2, "texts": ["a"], "last": ["b"]},
+            {"count": 2, "texts": ["a"], "first": ["a"], "last": ["b"]},
+            {"count": 2, "first": [], "last": ["b"]},
+            {"count": 1, "texts": ["a"], "extra": 1},
+        ],
+    )
+    def test_shown_role_validates_its_field_combinations(self, payload: dict[str, Any]) -> None:
+        with pytest.raises(ValueError):
+            ShownRole.model_validate(payload)
 
     def test_a_probe_without_labels_is_none_and_a_tampered_one_is_bounded(self) -> None:
         assert shown({"texts": []}) is None  # a renderer older than the field
@@ -155,8 +219,9 @@ class TestPlotTexts:
         assert texts is not None and list(texts) == ["legend"]
         drawn = drawn_texts(tampered)
         assert drawn is not None and not drawn.complete  # more entries than the harness writes
-        assert len(texts["legend"]) <= GROUP_LIMITS["legend"]
-        assert all(len(text) <= MAX_SHOWN_TEXT_CHARS for text in texts["legend"])
+        listed = texts["legend"].get("texts") or [*texts["legend"]["first"], *texts["legend"]["last"]]
+        assert len(listed) <= GROUP_LIMITS["legend"]
+        assert all(len(text) <= MAX_SHOWN_TEXT_CHARS for text in listed)
 
     def test_the_round_2_title_is_there_to_quote(self) -> None:
         """Live case: the reply said the title was not set while the image showed it."""
@@ -166,7 +231,7 @@ class TestPlotTexts:
         result = finish(run_shipping(texts=texts, reviewed_ok=True))
 
         assert result.shows is not None and result.shows.texts is not None
-        assert result.shows.texts["title"] == ["CO2-Emissionen pro Kopf nach Land, 1960–2023"]
+        assert result.shows.texts["title"] == ShownRole(count=1, texts=["CO2-Emissionen pro Kopf nach Land, 1960–2023"])
         assert result.shows.review == "passed"
 
 
@@ -248,13 +313,19 @@ class TestExpectedMisses:
         assert all(miss.line("light").startswith("SC-04") for miss in misses)  # a year-title is no format
 
     def test_the_twenty_second_tick_is_still_checked(self) -> None:
-        """Review of #12183: `shows` keeps 8 tick labels, the check reads all of them."""
-        ticks = [("x tick label", f"Kanton {index}") for index in range(21)] + [("x tick label", "Zürich")]
+        """`shows` lists the first 10 and last 10 of 30 tick labels; the check reads the unlisted middle too."""
+        ticks = [("x tick label", "Zürich" if index == 14 else f"Kanton {index}") for index in range(30)]
         drawn = drawn_texts(labels(*ticks))
+        misses = expected_misses(["Zürich"], drawn)
 
-        assert expected_misses(["Zürich"], drawn) == []
+        assert misses == []
         texts = plot_texts(drawn)
-        assert texts is not None and "Zürich" not in texts["x tick labels"]
+        assert texts is not None
+        role = texts["x tick labels"]
+        assert role.texts is None and role.first is not None and role.last is not None
+        assert "Zürich" not in [*role.first, *role.last]
+        result = finish(run_shipping(texts=texts, expect_misses=[m.expected for m in misses], reviewed_ok=True))
+        assert result.shows is not None and result.shows.requested_not_found == []
 
     def test_a_title_matches_across_case_spacing_dashes_quotes_and_mathtext(self) -> None:
         drawn = drawn_texts(labels(("title", "„CO$_2$-Emissionen pro Kopf,  1960-2023“")))
@@ -349,7 +420,14 @@ def largest_result(char: str) -> PlotResult:
         version=999,
         rounds=[Round(attempt=n, outcome="review", findings=99) for n in range(1, MAX_ATTEMPTS + 1)],
         shows=PlotShows(
-            texts={group: [char * MAX_SHOWN_TEXT_CHARS] * limit for group, limit in GROUP_LIMITS.items()},
+            texts={
+                group: ShownRole(
+                    count=MAX_LABELS,
+                    first=[char * MAX_SHOWN_TEXT_CHARS] * ((limit + 1) // 2),
+                    last=[char * MAX_SHOWN_TEXT_CHARS] * (limit // 2),
+                )
+                for group, limit in GROUP_LIMITS.items()
+            },
             review="findings",
             score=100,
             requested_not_found=[char * MAX_EXPECTED_TEXT_CHARS] * MAX_EXPECTED_TEXTS,
@@ -374,7 +452,9 @@ class TestShows:
         assert result.status == "needs_attention"
         assert result.residual_defects == [miss.line("light")]
         assert result.shows is not None and result.shows.requested_not_found == ["6,5 Mio."]
-        assert result.shows.texts is not None and result.shows.texts["y tick labels"] == ["5.5 M", "6.0 M", "6.5 M"]
+        assert result.shows.texts is not None and result.shows.texts["y tick labels"] == ShownRole(
+            count=3, texts=["5.5 M", "6.0 M", "6.5 M"]
+        )
 
     def test_an_unreviewed_render_without_probe_labels_says_so(self) -> None:
         run = run_shipping()
@@ -423,6 +503,15 @@ class TestShows:
 
         assert result_size(fenced) <= result_limit("plot_pipeline")
 
+    def test_the_two_byte_maximum_stays_within_the_tasks_share(self) -> None:
+        sizes = {
+            char: result_size(fence_pipeline_notes(largest_result(char).model_dump(mode="json")))
+            for char in ("x", "ä", "中")
+        }
+
+        assert sizes == {"x": 27_035, "ä": 49_415, "中": 71_795}
+        assert sizes["ä"] <= 50_700
+
     async def test_over_the_cap_shows_gives_way_before_the_result_is_refused(self) -> None:
         """Three-byte text throughout (CJK) at every cap: the plot still reaches the root, with fewer drawn texts."""
         context = SimpleNamespace(agent_name="anyplot", invocation_id="i", state={})
@@ -435,6 +524,23 @@ class TestShows:
         )
 
         assert replaced is not None and replaced.get("status") == "needs_attention"
+        assert "y tick labels" not in replaced["shows"] and result_size(replaced) <= result_limit("plot_pipeline")
+
+    async def test_over_the_cap_drops_tick_labels_while_keeping_titles_and_legend(self) -> None:
+        """When dropping tick labels and annotations suffices to fit the cap, titles and legend stay."""
+        context = SimpleNamespace(agent_name="anyplot", invocation_id="i", state={})
+        over = largest_result("ä").model_copy(update={"shows": largest_result("中").shows}).model_dump(mode="json")
+        assert result_size(fence_pipeline_notes(over)) > result_limit("plot_pipeline")
+
+        replaced = await ToolSafetyPlugin().after_tool_callback(
+            tool=cast(Any, SimpleNamespace(name="plot_pipeline")),
+            tool_args={},
+            tool_context=cast(Any, context),
+            result=over,
+        )
+
+        assert replaced is not None and replaced.get("status") == "needs_attention"
+        assert "title" in replaced["shows"] and "legend" in replaced["shows"]
         assert "y tick labels" not in replaced["shows"] and result_size(replaced) <= result_limit("plot_pipeline")
 
     def test_a_failed_or_not_ready_result_shows_nothing(self) -> None:
@@ -452,10 +558,28 @@ class TestShows:
         match = re.search(r"<tool_notes>\n(.*)\n</tool_notes>", fenced["shows"], re.DOTALL)
         assert match is not None
         inner = json.loads(match[1])
-        assert inner["texts"]["title"] == ["Ständige Wohnbevölkerung nach Staatsangehörigkeit"]
+        assert inner["texts"]["title"] == {"count": 1, "texts": ["Ständige Wohnbevölkerung nach Staatsangehörigkeit"]}
+
+    def test_the_fenced_role_records_hold_no_null_and_no_extra_key(self) -> None:
+        probe = labels(("title", "Score"), *(("x tick label", f"Day {day}") for day in range(30)))
+        result = finish(run_shipping(texts=plot_texts(drawn_texts(probe)), reviewed_ok=True, review_score=95))
+        dumped = result.model_dump(mode="json")
+
+        assert set(dumped["shows"]["texts"]["title"]) == {"count", "texts"}
+        assert set(dumped["shows"]["texts"]["x tick labels"]) == {"count", "first", "last"}
+        fenced = fence_pipeline_notes(dumped)
+        assert "null" not in fenced["shows"]
+        match = re.search(r"<tool_notes>\n(.*)\n</tool_notes>", fenced["shows"], re.DOTALL)
+        assert match is not None
+        inner = json.loads(match[1])
+        assert set(inner["texts"]) == {"title", "x tick labels"}
+        assert set(inner["texts"]["title"]) == {"count", "texts"}
+        assert set(inner["texts"]["x tick labels"]) == {"count", "first", "last"}
 
     @pytest.mark.parametrize("texts", [None, {}])
-    def test_a_result_without_drawn_texts_hands_the_root_no_texts(self, texts: dict[str, list[str]] | None) -> None:
+    def test_a_result_without_drawn_texts_hands_the_root_no_texts(
+        self, texts: dict[str, dict[str, Any]] | None
+    ) -> None:
         """User test of 2026-11-01: handed `texts: null`, the root told the user it could not read the title back.
         Without drawn texts the root gets no `texts` at all; an empty report (nothing drawn) stays as it is."""
         result = finish(run_shipping(texts=texts, reviewed_ok=True))
@@ -790,16 +914,19 @@ class TestTextProbes:
 
         harness.install_text_probes(str(plot), "light")
 
-        def read() -> dict[str, list[str]] | None:
+        def read() -> dict[str, dict[str, Any]] | None:
             return shown(json.loads((tmp_path / "probe-light.json").read_text(encoding="utf-8")))
 
         assert cairosvg.svg2png(bytestring=PYGAL_SVG, write_to="plot-light.png") == b"png"
-        assert (read() or {})["title"] == ["Bevölkerung"]
+        assert (read() or {})["title"] == {"count": 1, "texts": ["Bevölkerung"]}
         assert vl_convert.vegalite_to_png({"mark": "bar"}, vl_version="v6", scale=2, format_locale="de-DE") == b"png"
-        assert read() == {"title": ["Umsatz"]} and layouts[-1] == {"vl_version": "v6", "format_locale": "de-DE"}
+        assert read() == {"title": {"count": 1, "texts": ["Umsatz"]}} and layouts[-1] == {
+            "vl_version": "v6",
+            "format_locale": "de-DE",
+        }
         assert vl_convert.vega_to_png({"marks": []}, scale=2, theme="dark") == b"png" and layouts[-1] == {}
         assert bridge._generate_png({"kind": "plot"}, 800, 450, "px", 144, 2.0) == b"png"
-        assert read() == {"y axis label": ["CHF"]}
+        assert read() == {"y axis label": {"count": 1, "texts": ["CHF"]}}
 
         plain = tmp_path / "plain.py"
         plain.write_text("import matplotlib\n", encoding="utf-8")
@@ -837,7 +964,7 @@ class TestTextProbes:
         probe = tmp_path / "probe-dark.json"
         assert owner.export(PYGAL_SVG) == b"png" and calls == [PYGAL_SVG]
         texts = shown(json.loads(probe.read_text(encoding="utf-8")))
-        assert texts is not None and texts["title"] == ["Bevölkerung"]
+        assert texts is not None and texts["title"] == {"count": 1, "texts": ["Bevölkerung"]}
 
         # The read failed: the PNG still comes, and the probe drops the labels and names the error for the log.
         assert owner.export("<not svg") == b"png" and calls[-1] == "<not svg"

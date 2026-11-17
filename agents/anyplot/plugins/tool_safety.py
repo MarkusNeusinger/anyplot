@@ -206,11 +206,11 @@ RESULT_LIMITS: dict[str, int] = {
     GENERATE_TOOL: 16 * 1024,
     # The new profile, trimmed like get_dataset_profile's, plus one change line, or up to ten validator findings.
     DATA_CODE_TOOL: 16 * 1024,
-    # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200) with its `shows` (62 drawn texts of
-    # 80 characters, five requested texts of 120) is about 18 KB in one-byte and 35 KB in two-byte UTF-8 (German
-    # umlauts throughout). Above the cap `shows` gives way (`shrunk_shows`) before the result is refused. The
-    # `bindings` the run drew with add at most 50 roles of 32 characters and columns of 64, about 12 KB fenced in
-    # three-byte UTF-8, so they never push a shipped plot over.
+    # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200, 50 bindings of 32-character roles and
+    # 64-character columns) with its `shows` (96 drawn texts of 80 characters across the 12 roles at their
+    # `first`/`last` form, five requested texts of 120) is 27,035 bytes in one-byte, 49,415 bytes in two-byte (`ä`)
+    # and 71,795 bytes in three-byte UTF-8 against the 53,248-byte cap. Above the cap `shows` gives way
+    # (`shrunk_shows`) before the result is refused.
     PIPELINE_TOOL: 52 * 1024,
 }
 TEXT_LITERAL_KEYS = ("separator", "prefix", "suffix", "old", "new")
@@ -601,10 +601,19 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
         fenced[NOTES_KEY] = DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(notes, ensure_ascii=False))
     if result.get(SHOWS_KEY):
         shown = result[SHOWS_KEY]
-        if isinstance(shown, dict) and shown.get("texts") is None:
-            # No drawn texts (a probe that reported none, or `shrunk_shows`): the root gets no `texts` at all, so it
-            # has nothing to quote and no null to narrate (user test of 2026-11-01: "I couldn't read the title back").
-            shown = {key: value for key, value in shown.items() if key != "texts"}
+        if isinstance(shown, dict):
+            if shown.get("texts") is None:
+                # No drawn texts (a probe that reported none, or `shrunk_shows`): the root gets no `texts` at all, so it
+                # has nothing to quote and no null to narrate (user test of 2026-11-01: "I couldn't read the title back").
+                shown = {key: value for key, value in shown.items() if key != "texts"}
+            elif isinstance(shown.get("texts"), dict):
+                shown = {
+                    **shown,
+                    "texts": {
+                        group: {k: v for k, v in role.items() if v is not None} if isinstance(role, dict) else role
+                        for group, role in shown["texts"].items()
+                    },
+                }
         fenced[SHOWS_KEY] = SHOWS_PREAMBLE + "\n" + fence("tool_notes", json.dumps(shown, ensure_ascii=False))
     return fenced
 

@@ -220,6 +220,7 @@ from .schemas import (
     RoundStep,
     SandboxFailure,
     ShownGroup,
+    ShownRole,
     Verdict,
     artifact_names,
 )
@@ -488,7 +489,7 @@ class Candidate:
     changes: list[str] = field(default_factory=list)
     """What this render's code changed, for `PlotResult.changes`: the notes of every adapter call of the run
     up to this render that changed the code (`Run.changes`), so a best-scored earlier render reports its own."""
-    texts: dict[ShownGroup, list[str]] | None = None
+    texts: dict[ShownGroup, ShownRole] | None = None
     """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels, which
     the root never sees (`tool_safety.fence_pipeline_notes`)."""
     drawn: DrawnTexts | None = None
