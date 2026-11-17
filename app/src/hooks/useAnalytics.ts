@@ -143,16 +143,23 @@ function firstUseThisVisit(feature: UiFeature, now: number): boolean {
   return !featuresThisVisit.has(feature);
 }
 
-/** How long a search query may be when it is sent: catalogue words fit, a pasted text does not. */
+/**
+ * How long a search text may be, in characters, when the gallery compares it or sends a miss to
+ * the private list: catalogue words fit, a text pasted by mistake does not.
+ */
 export const MAX_QUERY_LENGTH = 40;
 
 /**
- * A typed search query as it is sent: lowercase, single spaces, cut at `MAX_QUERY_LENGTH`. The
- * public dashboard lists these, so "Scatter", "scatter " and "SCATTER" are one entry, and a
- * long text a visitor pasted by mistake does not stand there in full.
+ * A typed search text in one form: lowercase, single spaces, cut at `MAX_QUERY_LENGTH`
+ * characters. "Scatter", "scatter " and "SCATTER" are one text for the search's own bookkeeping
+ * and one row of the private list of misses (`src/lib/searchMiss.ts`), and a long pasted text is
+ * not kept in full. The cut counts characters, not UTF-16 units, so it never splits one in two.
+ * The API applies the same rule again (`normalize_query` in `api/search_misses.py`); the cases
+ * in `searchQuery.cases.json` hold the two to each other.
  */
 export function normalizeQuery(query: string): string {
-  return query.toLowerCase().trim().replace(/\s+/g, ' ').slice(0, MAX_QUERY_LENGTH).trimEnd();
+  const spaced = query.toLowerCase().trim().replace(/\s+/g, ' ');
+  return Array.from(spaced).slice(0, MAX_QUERY_LENGTH).join('').trimEnd();
 }
 
 /** The kinds of page a pageview is recorded as, in its `page` property. */
@@ -255,8 +262,11 @@ export function buildPlausibleUrl(): string {
     : `${ORIGIN}${pathPrefix || '/'}`;
 }
 
-/** Whether this is the live site: a preview, a local build and a test send nothing. */
-function inProduction(): boolean {
+/**
+ * Whether this is the live site: a preview, a local build and a test send nothing, to Plausible
+ * or to the private list of search misses.
+ */
+export function inProduction(): boolean {
   return typeof window !== 'undefined' && window.location.hostname === 'anyplot.ai';
 }
 

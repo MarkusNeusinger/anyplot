@@ -41,6 +41,7 @@ export const endpoints = {
   plotsFilter: (queryString = '') => `/plots/filter${queryString ? `?${queryString}` : ''}`,
   relatedSpecs: (specId: string, queryString: string) =>
     `/insights/related/${specId}?${queryString}`,
+  searchMiss: '/search/miss',
   spec: (specId: string) => `/specs/${specId}`,
   specs: '/specs',
   specsMap: '/specs/map',

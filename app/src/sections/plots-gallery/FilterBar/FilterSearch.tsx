@@ -7,6 +7,7 @@ import InputBase from '@mui/material/InputBase';
 import Tooltip from '@mui/material/Tooltip';
 
 import { normalizeQuery, type TrackEvent } from 'src/hooks/useAnalytics';
+import { MISS_PAUSE_MS, sendSearchMiss } from 'src/lib/searchMiss';
 import { type DropdownItem, FilterMenu } from 'src/sections/plots-gallery/FilterBar/FilterMenu';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
@@ -59,6 +60,16 @@ export function FilterSearch({
   // Dropdown keyboard navigation
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
+  // The finished text of a search that found nothing in the whole catalogue, waiting for the
+  // pause after the last keystroke (see the effect below `hiddenMatchCount`). Read and cleared
+  // synchronously by every way out of the search, before that way clears the text.
+  const pendingMissRef = useRef<string | null>(null);
+  const flushMiss = useCallback(() => {
+    const query = pendingMissRef.current;
+    pendingMissRef.current = null;
+    if (query) sendSearchMiss(query);
+  }, []);
+
   // Expand and open dropdown
   const handleSearchExpand = useCallback(() => {
     setIsSearchManuallyExpanded(true);
@@ -68,22 +79,25 @@ export function FilterSearch({
 
   // Collapse when empty and loses focus (only if there are filters)
   const handleSearchBlur = useCallback(() => {
+    // A visitor who leaves the field is done typing: a pending miss goes now.
+    flushMiss();
     // Delay to allow click events on dropdown to fire first
     setTimeout(() => {
       if (!searchQuery && !selectedCategory && !dropdownAnchor && activeFilters.length > 0) {
         setIsSearchManuallyExpanded(false);
       }
     }, 200);
-  }, [searchQuery, selectedCategory, dropdownAnchor, activeFilters.length]);
+  }, [flushMiss, searchQuery, selectedCategory, dropdownAnchor, activeFilters.length]);
 
   // Close dropdown and collapse if empty
   const handleDropdownClose = useCallback(() => {
+    flushMiss();
     setDropdownAnchor(null);
     setSelectedCategory(null);
     setSearchQuery('');
     setHighlightedIndex(-1);
     setIsSearchManuallyExpanded(false);
-  }, []);
+  }, [flushMiss]);
 
   // Select category from dropdown
   const handleCategorySelect = useCallback(
@@ -100,10 +114,10 @@ export function FilterSearch({
   const handleValueSelect = useCallback(
     (category: FilterCategory, value: string) => {
       onAddFilter(category, value);
-      // Track search if query was used (filter changes tracked via pageview)
-      const query = normalizeQuery(searchQuery);
-      if (query) {
-        onTrackEvent('search', { query, category });
+      // A pick from a typed search, by its category (filter changes are tracked via pageview).
+      // What was typed never goes to the public dashboard.
+      if (normalizeQuery(searchQuery)) {
+        onTrackEvent('search', { category });
       }
       setSelectedCategory(null);
       setSearchQuery('');
@@ -120,9 +134,10 @@ export function FilterSearch({
 
   // Back from a selected category to the category list
   const handleBackToCategories = useCallback(() => {
+    flushMiss();
     setSelectedCategory(null);
     setSearchQuery('');
-  }, []);
+  }, [flushMiss]);
 
   // Memoize search results to avoid recalculating on every render
   const searchResults = useMemo(
@@ -156,14 +171,41 @@ export function FilterSearch({
     }, 50);
   }, [onClearFilters, inputRef]);
 
-  // Track searches with no results (debounced, to discover missing specs)
+  // Whether the text finds nothing anywhere in the catalogue: not in the filtered plots, not in
+  // all of them, and in no category, the selected one or another. Only such a text is a miss for
+  // the private list. Unknown, and so no miss, until the global counts have loaded.
+  const missesCatalogue = useMemo(() => {
+    if (searchResults.length > 0 || hiddenMatchCount > 0 || !globalCounts) return false;
+    if (!normalizeQuery(searchQuery)) return false;
+    return getSearchResults(globalCounts, [], searchQuery, null, specTitles).length === 0;
+  }, [searchResults.length, hiddenMatchCount, globalCounts, searchQuery, specTitles]);
+
+  // A miss goes to the private list only as a finished text: once no key was pressed for
+  // MISS_PAUSE_MS, or when the field loses focus or the search closes before that (`flushMiss`).
+  // A fragment typed on the way to a longer text never goes: the next keystroke replaces it.
+  useEffect(() => {
+    const query = normalizeQuery(searchQuery);
+    if (!missesCatalogue || !query) {
+      pendingMissRef.current = null;
+      return;
+    }
+    pendingMissRef.current = query;
+    const timer = setTimeout(flushMiss, MISS_PAUSE_MS);
+    return () => clearTimeout(timer);
+  }, [searchQuery, missesCatalogue, flushMiss]);
+
+  // A miss still pending when the gallery goes away is finished too.
+  useEffect(() => flushMiss, [flushMiss]);
+
+  // Count searches with no results inside the active filters (debounced). The event carries no
+  // property: what was typed never goes to the public dashboard.
   const lastTrackedQueryRef = useRef<string>('');
   useEffect(() => {
     const query = normalizeQuery(searchQuery);
     // Only track if: query >= 2 chars, no results, not already tracked this query
     if (query.length >= 2 && searchResults.length === 0 && query !== lastTrackedQueryRef.current) {
       const timer = setTimeout(() => {
-        onTrackEvent('search_no_results', { query });
+        onTrackEvent('search_no_results');
         lastTrackedQueryRef.current = query;
       }, 200);
       return () => clearTimeout(timer);
@@ -368,6 +410,7 @@ export function FilterSearch({
             <CloseIcon
               onClick={e => {
                 e.stopPropagation();
+                flushMiss();
                 setSearchQuery('');
                 setSelectedCategory(null);
               }}

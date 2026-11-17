@@ -1,11 +1,19 @@
 import { useState } from 'react';
 
-import { fireEvent } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { MISS_PAUSE_MS, sendSearchMiss } from 'src/lib/searchMiss';
 import { FilterSearch } from 'src/sections/plots-gallery/FilterBar/FilterSearch';
 import { render, screen, waitFor } from 'src/test-utils';
 import type { ActiveFilters, FilterCounts } from 'src/types';
+
+// The private list's sender, replaced: what it is called with is what would be sent. The pause
+// stays the real one.
+vi.mock('src/lib/searchMiss', async importOriginal => ({
+  ...(await importOriginal<typeof import('src/lib/searchMiss')>()),
+  sendSearchMiss: vi.fn(),
+}));
 
 // Uses the real src/utils (fuse.js included) so keyboard navigation walks real results.
 const filterCounts: FilterCounts = {
@@ -99,10 +107,8 @@ describe('FilterSearch', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(defaultProps.onAddFilter).toHaveBeenCalledWith('plot', 'scatter');
-    expect(defaultProps.onTrackEvent).toHaveBeenCalledWith('search', {
-      query: 'scatter',
-      category: 'plot',
-    });
+    // The category of the pick, never what was typed: the dashboard is public.
+    expect(defaultProps.onTrackEvent).toHaveBeenCalledWith('search', { category: 'plot' });
   });
 
   it('closes the dropdown on Escape', async () => {
@@ -240,16 +246,172 @@ describe('FilterSearch', () => {
     expect(defaultProps.onAddFilter).toHaveBeenCalledWith('plot', 'bar');
   });
 
-  it('tracks search_no_results for queries without matches (debounced)', async () => {
+  it('tracks search_no_results for queries without matches (debounced), without the text', async () => {
     render(<FilterSearch {...defaultProps} />);
     const input = getSearchInput();
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'zzzzzz' } });
 
     await waitFor(() => {
-      expect(defaultProps.onTrackEvent).toHaveBeenCalledWith('search_no_results', {
-        query: 'zzzzzz',
-      });
+      expect(defaultProps.onTrackEvent).toHaveBeenCalledWith('search_no_results');
     });
+  });
+});
+
+describe('FilterSearch misses for the private list', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function type(text: string) {
+    fireEvent.change(getSearchInput(), { target: { value: text } });
+  }
+
+  function wait(ms: number) {
+    act(() => {
+      vi.advanceTimersByTime(ms);
+    });
+  }
+
+  function openSearch() {
+    fireEvent.focus(getSearchInput());
+  }
+
+  it('sends no fragment followed by more typing, and the finished text once after the pause', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+
+    type('zzqq');
+    wait(MISS_PAUSE_MS - 500);
+    type('zzqqx');
+    wait(MISS_PAUSE_MS - 500);
+    type('zzqqxy');
+    wait(MISS_PAUSE_MS - 1);
+    expect(sendSearchMiss).not.toHaveBeenCalled();
+
+    wait(1);
+    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
+    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+    wait(MISS_PAUSE_MS * 2);
+    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends the normalised text', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('  ZZQQ   Chart ');
+    wait(MISS_PAUSE_MS);
+
+    expect(sendSearchMiss).toHaveBeenCalledWith('zzqq chart');
+  });
+
+  it('sends a pending miss at once when the field loses focus, and not again after the pause', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('zzqqxy');
+    wait(300);
+    fireEvent.blur(getSearchInput());
+
+    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
+    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+    wait(MISS_PAUSE_MS);
+    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends a pending miss when Escape closes the search', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('zzqqxy');
+    fireEvent.keyDown(getSearchInput(), { key: 'Escape' });
+
+    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+  });
+
+  it('sends a pending miss when the text is cleared', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('zzqqxy');
+    fireEvent.click(screen.getByTestId('CloseIcon'));
+
+    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+    expect(getSearchInput()).toHaveValue('');
+  });
+
+  it('sends a pending miss when the gallery goes away', () => {
+    const view = render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('zzqqxy');
+    view.unmount();
+
+    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+  });
+
+  it('sends nothing for a text that finds plots outside the active filters', () => {
+    render(
+      <FilterSearch {...defaultProps} activeFilters={seabornFilters} filterCounts={seabornCounts} />
+    );
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Open filter search' }), {
+      key: 'Enter',
+    });
+    type('bar');
+    wait(MISS_PAUSE_MS);
+    fireEvent.blur(getSearchInput());
+
+    expect(sendSearchMiss).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing for a text another category knows', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    // The second category is the library: `python` finds no library, but it is a language.
+    fireEvent.keyDown(getSearchInput(), { key: 'ArrowDown' });
+    fireEvent.keyDown(getSearchInput(), { key: 'ArrowDown' });
+    fireEvent.keyDown(getSearchInput(), { key: 'Enter' });
+    expect(screen.getByLabelText('Search library')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Search library'), { target: { value: 'python' } });
+    expect(screen.getByLabelText('No matches')).toBeInTheDocument();
+    wait(MISS_PAUSE_MS);
+    fireEvent.blur(screen.getByLabelText('Search library'));
+
+    expect(sendSearchMiss).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing while the counts of all plots are unknown', () => {
+    render(<FilterSearch {...defaultProps} globalCounts={null} />);
+    openSearch();
+    type('zzqqxy');
+    wait(MISS_PAUSE_MS);
+    fireEvent.blur(getSearchInput());
+
+    expect(sendSearchMiss).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing for a text that finds something', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('scatter');
+    wait(MISS_PAUSE_MS);
+    fireEvent.blur(getSearchInput());
+
+    expect(sendSearchMiss).not.toHaveBeenCalled();
+  });
+
+  it('gives the public events no word of what was typed', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('zzqqxy');
+    wait(MISS_PAUSE_MS);
+    type('scatter');
+    fireEvent.keyDown(getSearchInput(), { key: 'Enter' });
+
+    const calls = vi.mocked(defaultProps.onTrackEvent).mock.calls;
+    expect(calls).toContainEqual(['search_no_results']);
+    expect(calls).toContainEqual(['search', { category: 'plot' }]);
+    expect(JSON.stringify(calls)).not.toMatch(/zzqqxy|scatter/);
   });
 });
