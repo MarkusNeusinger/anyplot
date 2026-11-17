@@ -29,12 +29,12 @@
   a validator reads the code before anything runs, and a run makes one repair
   and two reviews at most; it names the builder's rules (open to everyone, no
   login, hosted in the EU, what you paste or write kept only if you send
-  feedback) and links
-  the agent design document, which records his decisions with their dates.
-  The palette section says it took four rounds. `test_readme_claims.py` holds
-  the 24 to the criteria registry, the repair and the reviews to the agents'
-  settings, and the four rounds to `docs/reference/palette-variants/`. The
-  crawler copy follows, except for the palette, which it has no section for.
+  feedback) and links the agent design document, which records his decisions
+  with their dates. The palette section says it took four rounds.
+  `test_readme_claims.py` holds the 24 to the criteria registry, the repair
+  and the reviews to the agents' settings, and the four rounds to
+  `docs/reference/palette-variants/`. The crawler copy follows, except for
+  the palette, which it has no section for.
 - **The README shows a push-back case.** Under "I know when to push back", a
   nested case tells how real weather downloads broke the import of pasted
   data, and that pasted data has had to work with notes, metadata or total
@@ -154,8 +154,8 @@
   site was blank for about 45 minutes on 2026-10-22, as `CLAUDE.md` and the
   README do, instead of when it was noticed. `test_readme_claims.py` holds
   the header to the public chat's routes and the minutes to the README's,
-  and fails if one of the old sentences returns to the README or the
-  workflow page.
+  and fails if one of the old sentences returns to the README, the workflow
+  page, the guardrails or the Dependabot command.
 - **Back leaves a redirected address in one step.** A fresh load of the old
   chat address `/debug/agent` or of a language address `/{spec}/{language}`
   left the old address one step back in the history, so Back landed on it and
