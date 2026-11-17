@@ -1249,7 +1249,8 @@ _LEGAL_BOT_BODY = (
     '<a href="mailto:admin@anyplot.ai">admin@anyplot.ai</a> are enough, also to have a feedback case '
     "deleted early. Tell the operator what you sent and roughly when, or the contact you typed, so the "
     "entry can be found. Log lines cannot be picked out one by one: they delete themselves after 30 "
-    "days (server logs) or 180 days (machine reads, assistant telemetry).</li>"
+    "days (server logs) or 180 days (machine reads, assistant telemetry). Backups keep a deleted entry "
+    "for up to 30 days.</li>"
     "</ul>"
     '<h2 id="assistant">Data assistant (experimental)</h2>'
     "<ul>"

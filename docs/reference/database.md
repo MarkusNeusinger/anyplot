@@ -606,6 +606,10 @@ To see the current settings, run this read-only command:
 gcloud sql instances describe anyplot-db --format="yaml(settings.backupConfiguration)"
 ```
 
+A row deleted from the database therefore stays in the backups for up to 30 days. The privacy
+section of the legal page (`app/src/pages/LegalPage.tsx`, "your rights") and its crawler copy in
+`api/routers/seo.py` (`_LEGAL_BOT_BODY`) say so; if you change the retention, update both.
+
 ### Manual backups
 
 Before major changes:

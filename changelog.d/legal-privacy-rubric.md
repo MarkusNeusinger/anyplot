@@ -58,9 +58,9 @@
   on `/legal` now asks for what you sent and roughly when, or the contact you typed, so the
   operator can find the entry, and says that log lines cannot be deleted one by one: they
   delete themselves after 30 days (server logs) or 180 days (machine reads, assistant
-  telemetry), the periods their own rows give. The GitHub row adds that the operator removes
-  a credited username from its spec on request, while the public history keeps it. The
-  crawler copy says the same.
+  telemetry), the periods their own rows give, and that backups keep a deleted entry for up
+  to 30 days. The GitHub row adds that the operator removes a credited username from its spec
+  on request, while the public history keeps it. The crawler copy says the same.
 
 ### Fixed
 
