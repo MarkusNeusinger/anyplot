@@ -412,6 +412,14 @@ class TestCiTestsSpecSectionCheck:
         assert len(matches) == 1, f"expected exactly one step named {name!r}"
         return matches[0]
 
+    def _config_changes_pattern(self) -> re.Pattern[str]:
+        """The pattern CONFIG_CHANGES passes to `grep -E`, compiled with `re`."""
+        check = self._step("Check for testable changes")["run"]
+        [config] = [line for line in check.splitlines() if "CONFIG_CHANGES=$(" in line]
+        found = re.search(r"grep -E '([^']+)'", config)
+        assert found, "CONFIG_CHANGES no longer filters the changed files with grep -E '<pattern>'"
+        return re.compile(found.group(1))
+
     def test_step_runs_unconditionally_in_the_required_job(self) -> None:
         assert load_workflow("ci-tests.yml")["jobs"]["test"]["name"] == "Run Tests"
         step = self._step("Check spec characteristic sections")
@@ -458,11 +466,7 @@ class TestCiTestsSpecSectionCheck:
         """tests/unit/test_readme_claims.py reads README.md, docs/concepts/ai-workflow.md, docs/concepts/agent-network.md
         and AboutPage.tsx: a PR that only rewords one of them runs it, instead of leaving a stale claim or a dead link to
         the next Python PR. The paths go through the filter's own pattern, so a typo in it fails here."""
-        check = self._step("Check for testable changes")["run"]
-        [config] = [line for line in check.splitlines() if "CONFIG_CHANGES=$(" in line]
-        found = re.search(r"grep -E '([^']+)'", config)
-        assert found, "CONFIG_CHANGES no longer filters the changed files with grep -E '<pattern>'"
-        pattern = re.compile(found.group(1))
+        pattern = self._config_changes_pattern()
         root = WORKFLOWS_DIR.parent.parent
         for path in (
             "README.md",
@@ -476,6 +480,32 @@ class TestCiTestsSpecSectionCheck:
         # keeps out a README in another directory.
         assert not pattern.search("app/src/pages/AboutPage.tsx.bak")
         assert not pattern.search("app/README.md")
+
+    def test_a_changed_nginx_file_runs_the_unit_tests(self) -> None:
+        """test_app_origin_gate.py, test_csp_policy.py and test_machine_reads_nginx.py read app/nginx.conf and the files
+        beside it, and test_analytics_event_proxy.py reads app/nginx.conf through test_machine_reads_nginx.py: a PR
+        that changes only one of those files runs them. The paths are taken from the three tests' own source, so a file
+        under app/ that one of them starts reading fails here until the filter lists it."""
+        pattern = self._config_changes_pattern()
+        root = WORKFLOWS_DIR.parent.parent
+        tests_dir = root / "tests" / "unit" / "api"
+        proxy_test = (tests_dir / "test_analytics_event_proxy.py").read_text(encoding="utf-8")
+        assert "from tests.unit.api.test_machine_reads_nginx import CONF" in proxy_test
+        read: set[str] = set()
+        for name in ("test_app_origin_gate.py", "test_csp_policy.py", "test_machine_reads_nginx.py"):
+            source = (tests_dir / name).read_text(encoding="utf-8")
+            # A path the test builds as `ROOT / "app" / "x" / "y"`, written back as app/x/y.
+            paths = {
+                "/".join(["app", *re.findall(r'"([^"]+)"', parts)])
+                for parts in re.findall(r'"app"((?: / "[^"]+")+)', source)
+            }
+            assert "app/nginx.conf" in paths, f"{name} no longer builds the path of app/nginx.conf as ROOT / 'app' / …"
+            read |= paths
+        for path in sorted(read):
+            assert (root / path).is_file(), f"{path} is gone: update the filter"
+            assert pattern.search(path), f"a PR that changes only {path} skips the tests that read it"
+        # The closing `$` keeps out a copy saved beside the file.
+        assert not pattern.search("app/nginx.conf.orig")
 
     def test_step_needs_no_dependency_install(self) -> None:
         # The step runs on the pinned interpreter (regen_gate's `except A, B:` needs 3.14),

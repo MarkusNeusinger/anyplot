@@ -37,7 +37,13 @@
   `README.md`, or `LegalPage.tsx`, which the explainer's tests read, or only
   `AboutPage.tsx`, `docs/concepts/ai-workflow.md`, or
   `docs/concepts/agent-network.md`, which the test of the README's claims
-  reads along with the README.
+  reads along with the README, or only `app/nginx.conf`,
+  `origin-gate.conf.template`, `security-headers.conf`, the app's
+  `Dockerfile`, or `vite.config.ts`, which the tests of the origin gate, the
+  content security policy, the analytics proxy, and the machine-read lines
+  read. The filter is a workflow change with no local run: a unit test sends
+  each of these paths through its pattern, and only a pull request on GitHub
+  shows that the job starts.
 
 ### Fixed
 
