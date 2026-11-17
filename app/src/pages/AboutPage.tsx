@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -84,6 +86,9 @@ const inlineCodeSx = {
 export function AboutPage() {
   // A fresh load of /about#transparency (and of /legal#transparency, which leads here) lands on it.
   useHashScroll();
+  // The chips and the timeline are lists named by their section's heading.
+  const paletteHeadingId = useId();
+  const originHeadingId = useId();
 
   // An in-prose link to another page of the site, through the router.
   const proseLink = (to: string, label: string) => (
@@ -359,7 +364,7 @@ export function AboutPage() {
 
         {/* Palette */}
         <Box component="section" sx={sectionSx}>
-          <SectionHeader prompt="❯" title={<em>palette</em>} />
+          <SectionHeader id={paletteHeadingId} prompt="❯" title={<em>palette</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
               every plot uses <strong>imprint</strong>, my own colourblind-safe categorical palette
@@ -370,7 +375,7 @@ export function AboutPage() {
               — about 8% of men have some form of CVD, and most plotting libraries ignore this
               entirely. I make it the default.
             </Box>
-            <PaletteChips />
+            <PaletteChips labelledBy={paletteHeadingId} />
             <Box sx={{ ...textStyle, mt: 1 }}>
               the palette travels with you across libraries. switching tools doesn&apos;t mean
               re-learning your colour grammar.
@@ -511,7 +516,7 @@ export function AboutPage() {
 
         {/* Origin */}
         <Box component="section" sx={sectionSx}>
-          <SectionHeader prompt="❯" title={<em>origin</em>} />
+          <SectionHeader id={originHeadingId} prompt="❯" title={<em>origin</em>} />
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
               it started in November 2025 as pyplots.ai, a catalogue of Python plotting examples. it
@@ -522,7 +527,7 @@ export function AboutPage() {
               go bigger. in April 2026 it became anyplot.ai. today it covers fifteen libraries in
               four languages, and one colourblind-safe palette travels across all of them.
             </Box>
-            <OriginTimeline />
+            <OriginTimeline labelledBy={originHeadingId} />
           </Box>
         </Box>
 

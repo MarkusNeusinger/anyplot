@@ -274,6 +274,24 @@ describe('AboutPage', () => {
     expect(screen.queryByText(/curious about the stack/)).not.toBeInTheDocument();
   });
 
+  // A screen reader announces each list with its section's heading, so no new word is needed.
+  it('names the chips and the timeline by the headings of their sections', () => {
+    render(<AboutPage />);
+
+    const chips = screen.getByRole('list', { name: 'palette' });
+    expect(within(chips).getAllByRole('listitem')).toHaveLength(8);
+    expect(chips).toHaveTextContent(/^brand green #009E73/);
+    const timeline = screen.getByRole('list', { name: 'origin' });
+    expect(timeline.tagName).toBe('OL');
+    expect(timeline.firstElementChild).toHaveTextContent('nov 2025 pyplots.ai');
+    expect(screen.getByRole('heading', { name: 'palette' }).id).toBe(
+      chips.getAttribute('aria-labelledby')
+    );
+    expect(screen.getByRole('heading', { name: 'origin' }).id).toBe(
+      timeline.getAttribute('aria-labelledby')
+    );
+  });
+
   it('links the palette page through the router', () => {
     render(<AboutPage />);
 

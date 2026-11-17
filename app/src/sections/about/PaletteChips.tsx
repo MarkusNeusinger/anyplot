@@ -17,12 +17,17 @@ const ROW_MIN_WIDTH =
   (PALETTE.length - 1) * GAP;
 const row = `@container (min-width: ${ROW_MIN_WIDTH}px)` as const;
 
+export interface PaletteChipsProps {
+  /** The id of the element that names the list: the section's heading. */
+  labelledBy?: string;
+}
+
 /**
  * The palette's eight hues as chips in its order, with the names and hex values the palette page
  * shows. A chip under 3:1 against the page gets the palette page's 1px ink stroke, in the theme
  * that is on, so its edge stays visible; the name and hex under it carry what the colour says.
  */
-export function PaletteChips() {
+export function PaletteChips({ labelledBy }: PaletteChipsProps) {
   const { isDark } = useTheme();
   return (
     <Box sx={{ containerType: 'inline-size', mt: 1, mb: 3.5 }}>
@@ -30,6 +35,7 @@ export function PaletteChips() {
       <Box
         component="ul"
         role="list"
+        aria-labelledby={labelledBy}
         sx={{
           listStyle: 'none',
           p: 0,

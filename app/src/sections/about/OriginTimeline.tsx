@@ -22,6 +22,8 @@ const DOT = 7;
 export interface OriginTimelineProps {
   /** The day "today" stands at; the axis runs from the first point to it. */
   now?: Date;
+  /** The id of the element that names the list: the section's heading. */
+  labelledBy?: string;
 }
 
 /**
@@ -30,7 +32,7 @@ export interface OriginTimelineProps {
  * is a list down a rule, like a git log. Dots, leaders and the axis are drawn for the eye; the
  * list's text carries every date and what happened on it.
  */
-export function OriginTimeline({ now = new Date() }: OriginTimelineProps) {
+export function OriginTimeline({ now = new Date(), labelledBy }: OriginTimelineProps) {
   const points = layoutTimeline(ORIGIN_EVENTS, now);
   const levels = (side: 'up' | 'down') =>
     Math.max(1, ...points.filter(p => p.side === side).map(p => p.level));
@@ -43,6 +45,7 @@ export function OriginTimeline({ now = new Date() }: OriginTimelineProps) {
       <Box
         component="ol"
         role="list"
+        aria-labelledby={labelledBy}
         sx={{
           listStyle: 'none',
           m: 0,
