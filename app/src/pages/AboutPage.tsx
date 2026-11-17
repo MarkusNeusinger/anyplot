@@ -9,6 +9,7 @@ import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
 import { ANCHOR_SX, useHashScroll } from 'src/hooks/useHashScroll';
 import { paths } from 'src/routes/paths';
+import { OriginTimeline } from 'src/sections/about/OriginTimeline';
 import { PaletteChips } from 'src/sections/about/PaletteChips';
 import { PipelineFlow } from 'src/sections/about/PipelineFlow';
 import { RubricBar } from 'src/sections/about/RubricBar';
@@ -479,6 +480,7 @@ export function AboutPage() {
               go bigger. in April 2026 it became anyplot.ai. today it covers fifteen libraries in
               four languages, and one colourblind-safe palette travels across all of them.
             </Box>
+            <OriginTimeline />
           </Box>
         </Box>
 

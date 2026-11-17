@@ -37,6 +37,34 @@ export const RUBRIC_PARTS: readonly (readonly [string, number])[] = [
 
 export const RUBRIC_CAPTION = '// rubric · 100 points · 24 criteria';
 
+/** A point of the origin timeline: its date (a month or a day), its release, and what it was. */
+export interface OriginEvent {
+  when: string;
+  version?: string;
+  what: string;
+}
+
+// The origin's points in date order. test_readme_claims.py holds each release to its heading in
+// CHANGELOG.md (1.0.0 the oldest, so the first github release), the month to the origin's "it
+// started in November 2025" and the day of "use with my data" to the agent design document.
+export const ORIGIN_EVENTS: readonly OriginEvent[] = [
+  { when: '2025-11', what: 'pyplots.ai' },
+  { when: '2026-04-07', version: '1.0.0', what: 'first github release' },
+  { when: '2026-04-23', version: '2.0.0', what: 'anyplot.ai' },
+  { when: '2026-05-18', version: '2.4.0', what: 'r / ggplot2' },
+  { when: '2026-06-10', version: '3.0.0', what: 'julia & javascript · 15 libraries' },
+  { when: '2026-11-02', what: 'use with my data' },
+];
+
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+/** How a point's date reads: a month as "nov 2025", a day as "2026-04-07 · 1.0.0" with its release. */
+export function originDateLabel({ when, version }: OriginEvent): string {
+  const [year, month, day] = when.split('-');
+  const date = day ? when : `${MONTHS[Number(month) - 1]} ${year}`;
+  return version ? `${date} · ${version}` : date;
+}
+
 /** Splits "ai scores (24 criteria)" into the action and the detail in brackets under it. */
 export function splitDetail(does: string): [string, string | null] {
   const match = /^(.*?) (\(.+\))$/.exec(does);

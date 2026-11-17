@@ -205,6 +205,11 @@ describe('AboutPage', () => {
     expect(origin).toHaveTextContent(
       /it became anyplot\.ai\. today it covers fifteen libraries in four languages, and one colourblind-safe palette travels across all of them\.$/
     );
+    // The timeline follows the text, from the start to today.
+    const timeline = screen.getByText('first github release').closest('ol')!;
+    expect(origin.compareDocumentPosition(timeline)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(timeline.firstElementChild).toHaveTextContent('nov 2025 pyplots.ai');
+    expect(timeline.lastElementChild).toHaveTextContent(/^today$/);
   });
 
   // One person builds the site, so the page speaks as "I", never as "we".

@@ -395,6 +395,54 @@ def test_about_page_rubric_bar_has_the_points_of_the_quality_criteria():
     )
 
 
+def _origin_events() -> list[dict[str, str]]:
+    """The origin timeline's points as figureData.ts writes them: `{ when: '...', version: '...', what: '...' }`."""
+    figures = collapse(read(ABOUT_FIGURES))
+    block = figures[figures.index("export const ORIGIN_EVENTS") :].split("];", 1)[0]
+    return [dict(re.findall(r"(\w+): '([^']*)'", entry)) for entry in re.findall(r"\{([^{}]*)\}", block)]
+
+
+def test_about_page_timeline_dates_each_release_as_the_changelog_does():
+    """Each release on the origin timeline stands in CHANGELOG.md under its version and date, and the first is the
+    oldest version heading, which is what makes it the first GitHub release."""
+    headings = re.findall(r"^## \[([\d.]+)\] — (\d{4}-\d{2}-\d{2}) — (.+)$", read(ROOT / "CHANGELOG.md"), re.M)
+    dated = {version: (date, title) for version, date, title in headings}
+    releases = [event for event in _origin_events() if "version" in event]
+    assert len(releases) == 4, f"figureData.ts: the timeline has {len(releases)} releases, not 4"
+
+    def squash(text: str) -> str:
+        return re.sub(r"[^a-z0-9&/]", "", text.lower())
+
+    for event in releases:
+        assert event["version"] in dated, f"figureData.ts: CHANGELOG.md has no release {event['version']}"
+        date, title = dated[event["version"]]
+        assert event["when"] == date, f"figureData.ts: {event['version']} came out on {date}, not {event['when']}"
+        if event["what"] != "first github release":
+            # "julia & javascript · 15 libraries" in "Julia & JavaScript, 15 libraries & the Imprint palette".
+            for part in event["what"].split(" · "):
+                assert squash(part) in squash(title), f"figureData.ts: '{part}' is not in the heading '{title}'"
+    first = next(event for event in releases if event["what"] == "first github release")
+    assert first["version"] == headings[-1][0], f"CHANGELOG.md's oldest release is {headings[-1][0]}"
+
+
+def test_about_page_timeline_dates_the_start_and_the_chat_as_the_page_does():
+    """The timeline's month of the start is the origin's own, and the chat's day is the agent design document's."""
+    events = {event["what"]: event["when"] for event in _origin_events()}
+    year, month = events["pyplots.ai"].split("-")
+    page = collapse(read(ABOUT_PAGE))
+    assert f"it started in {_MONTHS[int(month) - 1]} {year} as pyplots.ai" in page, (
+        "AboutPage.tsx: the timeline starts in the origin's month"
+    )
+    day = events["use with my data"]
+    assert f"Public since {day} as an experimental page" in read(ROOT / "docs" / "concepts" / "agent-network.md"), (
+        f"agent-network.md: the chat opened to everyone on {day}"
+    )
+    year, month, date = day.split("-")
+    assert f"open to everyone since {int(date)} {_MONTHS[int(month) - 1].lower()} {year}." in page, (
+        f"AboutPage.tsx: the chat section dates the opening to {day}"
+    )
+
+
 def test_about_page_and_its_bot_copy_state_the_chats_repair_bounds():
     """The chat's second paragraph bounds a run as the README's highlight does: the agents' settings and pipeline."""
     attempts = field_default("agents/anyplot/settings.py", "AgentSettings", "max_attempts")
