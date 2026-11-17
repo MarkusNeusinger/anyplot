@@ -35,11 +35,17 @@
   and the reviews to the agents' settings, and the four rounds to
   `docs/reference/palette-variants/`. The crawler copy follows, except for
   the palette, which it has no section for.
-- **The README shows a push-back case.** Under "I know when to push back", a
-  nested case tells how real weather downloads broke the import of pasted
-  data, and that pasted data has had to work with notes, metadata or total
-  rows around the table since then. `test_readme_claims.py` holds that rule
-  to the agents' parser.
+- **The README shows three push-back cases.** Under "I know when to push
+  back", nested cases tell how real weather downloads broke the import of
+  pasted data, and that pasted data has had to work with notes, metadata or
+  total rows around the table since then; how a review scored a parliament
+  chart drawn with the real European Parliament groups 5 of 5 while three
+  libraries dodged the topic, which led to invented parties and seats and a
+  rubric that no longer marks a fictional chamber down; and how an audit
+  found pasted values rounded or dropped without a word, which led to the
+  rule that what you paste is what the data holds, or a line says what
+  changed and how often. They replace the abstract sentence on security.
+  `test_readme_claims.py` holds the first rule to the agents' parser.
 - **The landing hero names its builder.** From 900 px the eyebrow above the
   headline reads "by Markus Neusinger", since the masthead shows "the open
   plot catalogue" at those widths; on narrower screens, where the masthead
@@ -155,6 +161,31 @@
   `approved` label from any other account, and `test_readme_claims.py` holds
   that to the merge job's condition in `spec-create.yml`. Its contribution
   steps say "I review and approve it" in place of "The maintainer".
+- **The README's engineering highlights are six decisions, each with its
+  reason.** The review loop says why pipeline reviews run on Opus: on the
+  same plots it scored about 8 points below Sonnet, and its before-and-after
+  gaps spread far less across repeated runs. The regen gate tells the
+  experiment behind it, in which 39 of 75 regenerations merged after repairs
+  at the lowered bar, and the rule that a regeneration never makes an
+  implementation worse. New highlights tie a score to the code that drew it
+  through the render hash and say that a check counts before it blocks: the
+  figure check ships counting only, and every release runs the chat's evals
+  first. The privacy highlight states the telemetry rule and the feedback
+  exception, and the blank site of 2026-10-22 became a browser check after
+  every merge. The chat's architecture leaves the list; its sentence on one
+  repair round and two reviews now opens the README's "Use with my data"
+  section. "How I build anyplot" opens with the decisions the builder makes
+  and the records that keep them, and counts six of them below.
+  `test_readme_claims.py` holds each new claim to its source: the review
+  model's default and fallback in `impl-review.yml`, the gate's one-point
+  tolerance and adapt route, the render-hash steps and keep codes, the
+  figure check's `log` default, the release procedure's eval step, and the
+  count of decisions to the highlights' bullets.
+- **The month the chat opened keeps its capital.** `/agent`, the about page
+  and the crawler copy of each say "open to everyone since November 2026",
+  as a month is a name in the site's lowercase voice too; the timeline's
+  labels stay lowercase. `test_readme_claims.py` holds the month with its
+  case on all three, against the opening day in the agent design document.
 - **The site spells the colour-blindness words in British English.** The
   pages and their descriptions, the crawler copies, `llms.txt`, and the
   keywords and structured data of the page shell say "colourblind-safe", as
@@ -223,3 +254,17 @@
   "both renders exist and the canvas has its target size".
   `test_readme_claims.py` pins both sentences and the review's step that
   checks for both renders.
+- **The README and the about page no longer overstate the review and the
+  gate.** They said the reviewer scores "blind to any earlier score", but
+  only its working tree and its prompt are kept free of the stored score,
+  while the branch history and the pull request stay reachable. The README's
+  review step, the about page and its crawler copy now say "with the stored
+  score kept out of its working tree and its prompt", and a test holds them
+  to the step that hides the stored review before the reviewer runs. A fix
+  to a prompt, a spec or a rule reaches a plot when that plot is next
+  regenerated, not at once, as the README's highlight, the about page, its
+  crawler copy and the style guide now say. The gate highlight said a new
+  version replaces the live one only on a visible fix; it now says a fix the
+  review can verify and names the code conversion for the chat that passes
+  on an unchanged render. The nightly regeneration names "the oldest
+  implementations" in place of a count the schedule no longer uses.
