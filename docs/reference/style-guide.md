@@ -289,7 +289,7 @@ The second version is shorter, says what's actually happening (ideas come in as 
 - **Colourblind-safe by default**. Every example uses the imprint palette. This isn't a feature, it's a baseline.
 - **Copyable**. Every example is self-contained, with the full code visible and executable.
 - **Curated**. I don't aggregate every plot on the internet — I maintain a considered collection.
-- **The pipeline runs on its own schedule, by rules I set.** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs. The pipeline is documented and visible.
+- **The pipeline runs on its own schedule, by rules I set.** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs when that plot is next regenerated. The pipeline is documented and visible.
 
 **What anyplot is not:**
 
@@ -303,7 +303,7 @@ The second version is shorter, says what's actually happening (ideas come in as 
 
 Narrative hooks for talking about anyplot — adapt to context, don't recite verbatim:
 
-**The pipeline story:** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. The pipeline runs on its own schedule, by rules I set. Every night a job regenerates the oldest implementations, and a new version replaces the live one only when a review of both finds a fixed defect and no regression; when a better example pattern emerges, I update the spec and regenerate its libraries. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs.
+**The pipeline story:** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. The pipeline runs on its own schedule, by rules I set. Every night a job regenerates the oldest implementations, and a new version replaces the live one only when a review of both finds a fixed defect and no regression; when a better example pattern emerges, I update the spec and regenerate its libraries. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs when that plot is next regenerated.
 
 **The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of colour vision deficiency — most plotting libraries ignore this entirely. I make it the default.
 

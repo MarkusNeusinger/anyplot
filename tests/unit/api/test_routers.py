@@ -1235,7 +1235,8 @@ class TestSeoProxyRouter:
         assert "The pipeline runs on its own schedule, by rules I set." in response.text
         assert (
             "I update the spec and regenerate its libraries. I don't fix a plot by editing its code: a patch "
-            "fixes one plot, a fix to the spec or a rule reaches every plot it governs."
+            "fixes one plot, a fix to the spec or a rule reaches every plot it governs when that plot is next "
+            "regenerated."
         ) in response.text
         assert "never patch" not in response.text
         # bot parity with the page's review, chat and MCP sections (AboutPage.tsx)

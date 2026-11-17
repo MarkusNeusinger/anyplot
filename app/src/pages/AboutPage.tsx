@@ -287,7 +287,7 @@ export function AboutPage() {
               of both finds a fixed defect and no regression; when a better example pattern emerges,
               I update the spec and regenerate its libraries. I don&apos;t fix a plot by editing its
               code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it
-              governs.
+              governs when that plot is next regenerated.
             </Box>
             <PipelineFlow />
           </Box>

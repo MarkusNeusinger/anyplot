@@ -234,7 +234,7 @@ describe('AboutPage', () => {
         /^the pipeline runs on its own schedule, by rules I set\. every night a job regenerates/
       )
     ).toHaveTextContent(
-      /I update the spec and regenerate its libraries\. I don.t fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs\.$/
+      /I update the spec and regenerate its libraries\. I don.t fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs when that plot is next regenerated\.$/
     );
     expect(
       screen.queryByText(/maintains itself|humans curate|never patch/)
