@@ -449,6 +449,7 @@ There is one brand green, `#009E73`, in both themes. `#007A59` (`colors.primaryD
 7. Palette strip and any deliberate palette display
 8. Small status indicators (pulsing dot in plot-card header)
 9. Terminal prompt glyphs: `$` and `>>>` in the plot-of-the-day terminal, and `>>>` in the agent chat window's status line (§7.9). They always stand beside words, which carry the meaning.
+10. The builder's own steps in the pipeline figure of the about page (`I approve`, `I set and change them`), as text in the helper shade `--code-comment` (`#007A59` on cream, `#009E73` on dark), since `#009E73` reads only 3.08:1 as text on cream. They are labels in a figure, not emphasis in running text, and the "I" says whose step it is; the green repeats it.
 
 It does **not** appear in:
 

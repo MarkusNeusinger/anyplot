@@ -9,8 +9,8 @@ import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
 import { ANCHOR_SX, useHashScroll } from 'src/hooks/useHashScroll';
 import { paths } from 'src/routes/paths';
+import { PipelineFlow } from 'src/sections/about/PipelineFlow';
 import {
-  codeBlockStyle,
   colors,
   fontSize,
   proseLinkStyle,
@@ -35,16 +35,6 @@ const HOW_I_BUILD_URL = `${GITHUB_URL}/blob/main/README.md#how-i-build-anyplot`;
 const HIGHLIGHTS_URL = `${GITHUB_URL}/blob/main/README.md#engineering-highlights`;
 const AI_WORKFLOW_URL = `${GITHUB_URL}/blob/main/docs/concepts/ai-workflow.md`;
 const AGENT_NETWORK_URL = `${GITHUB_URL}/blob/main/docs/concepts/agent-network.md`;
-
-// The criteria and the repair count are the ones impl-review.yml applies; test_readme_claims.py holds
-// both to their sources.
-const PIPELINE_BLOCK = `// pipeline
-idea    → a github issue
-spec    → ai drafts, I approve
-code    → ai writes     (per library)
-review  → ai scores     (24 criteria)
-fix     → ai repairs    (up to 4 times)
-rules   → I set and change them`;
 
 const ctaSx = {
   fontFamily: typography.mono,
@@ -249,9 +239,7 @@ export function AboutPage() {
               code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it
               governs.
             </Box>
-            <Box sx={{ ...codeBlockStyle, whiteSpace: 'pre', fontSize: '13px', mt: 3 }}>
-              {PIPELINE_BLOCK}
-            </Box>
+            <PipelineFlow />
           </Box>
         </Box>
 

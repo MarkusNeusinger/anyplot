@@ -91,9 +91,9 @@
   schedule, by rules I set" in place of "humans curate; ai executes" and "the
   catalogue maintains itself", and the diagram names what AI does (drafts,
   writes, scores against the 24 criteria, repairs up to four times) and what
-  the builder does (approves the specs, sets the rules); a test compares the
-  diagram character for character, and `test_readme_claims.py` holds its two
-  numbers to their sources. The origin adds where pyplots.ai came from,
+  the builder does (approves the specs, sets the rules); a test reads its
+  steps in order, and `test_readme_claims.py` holds its two numbers to their
+  sources. The origin adds where pyplots.ai came from,
   showing colleagues a chart in everyday work, what they and later people who
   found it online wanted from it, and what it covers today, fifteen libraries
   in four languages, counted from the library registry. The "use with my data"

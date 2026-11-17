@@ -41,6 +41,8 @@ ROOT = Path(__file__).resolve().parents[2]
 README = ROOT / "README.md"
 WORKFLOW_PAGE = ROOT / "docs" / "concepts" / "ai-workflow.md"
 ABOUT_PAGE = ROOT / "app" / "src" / "pages" / "AboutPage.tsx"
+# The words and numbers of the About page's figures (pipeline, rubric, timeline).
+ABOUT_FIGURES = ROOT / "app" / "src" / "sections" / "about" / "figureData.ts"
 SEO = ROOT / "api" / "routers" / "seo.py"
 STYLE_GUIDE = ROOT / "docs" / "reference" / "style-guide.md"
 LINKED_DOCS = (README, WORKFLOW_PAGE)
@@ -354,12 +356,16 @@ def test_about_page_and_its_bot_copy_state_the_rubric_bar_and_mcp_tools():
         assert near(text, str(floor), "at the last review"), f"{name}: the last review's bar is {floor}"
         # 5, not 3: seo.py splits "Six tools" over two string literals (`Six " "tools`).
         assert near(text, NUMBER_WORDS[mcp_tool_count()], "tools", window=5), f"{name}: {mcp_tool_count()} MCP tools"
-    # The pipeline diagram writes both in digits, and so does the sentence on who set the rubric.
-    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
-        prose = collapse(text).lower()
-        assert f"ai scores ({len(CRITERIA)} criteria)" in prose, f"{name}: the diagram's criteria"
-        assert f"ai repairs (up to {repairs} times)" in prose, f"{name}: the diagram's repairs"
-        assert f"ai helped turn it into {len(CRITERIA)} criteria and their points." in prose, (
+    # The pipeline diagram writes both in digits, and so does the sentence on who set the rubric. On the page the
+    # diagram's words live in the figures' data module, each detail in one string with its action.
+    for name, diagram, text in (
+        ("AboutPage.tsx", read(ABOUT_FIGURES), read(ABOUT_PAGE)),
+        ("seo.py", about_bot_body(), about_bot_body()),
+    ):
+        diagram = collapse(diagram).lower()
+        assert f"ai scores ({len(CRITERIA)} criteria)" in diagram, f"{name}: the diagram's criteria"
+        assert f"ai repairs (up to {repairs} times)" in diagram, f"{name}: the diagram's repairs"
+        assert f"ai helped turn it into {len(CRITERIA)} criteria and their points." in collapse(text).lower(), (
             f"{name}: the rubric has {len(CRITERIA)} criteria"
         )
 

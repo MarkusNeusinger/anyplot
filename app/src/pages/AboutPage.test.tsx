@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 
 import { AboutPage } from 'src/pages/AboutPage';
-import { fireEvent, render, screen } from 'src/test-utils';
+import { fireEvent, render, screen, within } from 'src/test-utils';
 import { theme } from 'src/theme';
 
 vi.mock('src/hooks', () => ({
@@ -166,22 +166,16 @@ describe('AboutPage', () => {
     );
   });
 
-  // textContent, not toHaveTextContent: the matchers collapse whitespace, and the block's columns
-  // are spaces.
-  it('draws the pipeline as a block with its columns aligned', () => {
+  // PipelineFlow.test.tsx holds the steps' words and order; here, that the page shows the figure
+  // under the pipeline's text.
+  it('draws the pipeline under its text, as a figure of its steps', () => {
     render(<AboutPage />);
 
-    expect(screen.getByText(/^\/\/ pipeline/).textContent).toBe(
-      [
-        '// pipeline',
-        'idea    → a github issue',
-        'spec    → ai drafts, I approve',
-        'code    → ai writes     (per library)',
-        'review  → ai scores     (24 criteria)',
-        'fix     → ai repairs    (up to 4 times)',
-        'rules   → I set and change them',
-      ].join('\n')
-    );
+    const figure = screen.getByRole('figure', { name: '// pipeline' });
+    expect(within(figure).getAllByRole('listitem')).toHaveLength(5);
+    expect(
+      screen.getByText(/^the pipeline runs on its own schedule/).compareDocumentPosition(figure)
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     // One builder: the page names no "humans" anywhere.
     expect(document.body).not.toHaveTextContent(/\bhumans?\b/i);
   });
