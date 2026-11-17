@@ -468,10 +468,10 @@ export function LegalPage() {
                       &quot;# include data.csv&quot;
                     </Box>
                     ; the box starts unticked, which leaves out that file only. a triage row then
-                    keeps your reaction, message, hashes of your tab id and of the session, and the
-                    run&apos;s details. I read the cases together with the ai assistant I code with
-                    (Claude by Anthropic): your reaction and message, the conversation, the data
-                    sample or file, the plot and its code.
+                    keeps your reaction, message, hashes of your tab id and of the session id, and
+                    the run&apos;s details. I read the cases together with the ai assistant I code
+                    with (Claude by Anthropic): your reaction and message, the conversation, the
+                    data sample or file, the plot and its code, and the run&apos;s details.
                     <Kept
                       items={[
                         ['case files', '180 days'],

@@ -568,7 +568,7 @@ use. The privacy section of the legal page (`app/src/pages/LegalPage.tsx`, "only
 assistant (experimental)") describes it in its `logs` row: the fields in plain words and that no content
 is recorded. Its `ids` row says of the tab id and the IP address that they are salted and pseudonymous
 rather than anonymous; the telemetry's own key, the salted session hash, is not named on the page. The
-"hash of the session" the page names in its feedback row is another value: the unsalted one a feedback
+hash "of the session id" the page names in its feedback row is another value: the unsalted one a feedback
 case keeps (`session_hash` in `api/agent_cases.py`). The
 `logs` row's second line
 gives the 180-day retention and the EU location, so the period stands beside the data it belongs to. If you
