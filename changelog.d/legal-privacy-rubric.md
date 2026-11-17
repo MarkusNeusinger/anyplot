@@ -45,9 +45,12 @@
   assistant's feedback row adds that he reads the cases together with that assistant: the
   visitor's reaction and message, the conversation, the data sample or file, the plot and its
   code. The crawler copy says the same, and names the operator, not admins, as the holder of
-  the Cloudflare Access login cookie. The feedback widget's thank-you line speaks as him too,
-  "I read every note.", and the prompt that the admin page copies for the coding assistant
-  asks it not to quote the visitor's message in a commit, a pull request or an issue.
+  the Cloudflare Access login cookie.
+- **The feedback widget speaks as the operator, and the copied prompt asks not to quote the
+  visitor's message.** The widget's thank-you line now reads "I read every note.", as the
+  site's feedback row says "I read them". The prompt that the admin page copies for the coding
+  assistant asks it not to quote the visitor's message in a commit, a pull request or an
+  issue, because the repository is public.
 - **The legal notice links the About page.** Its disclaimer says the plot examples are
   generated and maintained by AI workflows and links the About page for how that works and
   the operator's part in it.
