@@ -186,6 +186,13 @@ class TestRows:
     def test_missing_pair_artifact_is_flagged(self, cw):
         assert "no_pair_artifact" in cw.build_row(_pull(), _comments(_record(), None), None, [])["flags"]
 
+    @pytest.mark.parametrize("code", ["render_mismatch", "render_unverified"])
+    def test_a_render_hash_keep_has_no_pair_to_miss(self, cw, code):
+        """The review never ran, so nothing was staged for the pair: that is the design, not a miss."""
+        record = _record(verdict="keep", code=code)
+        pull = _pull(labels=("regen", "regen:kept"), state="CLOSED")
+        assert "no_pair_artifact" not in cw.build_row(pull, _comments(record, None), None, [])["flags"]
+
 
 class TestAggregate:
     def _rows(self, cw):

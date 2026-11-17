@@ -384,6 +384,15 @@ class TestFailClosed:
         assert (result.verdict, result.code) == (KEEP, "render_mismatch")
         assert "not made from the code at the PR head" in result.reason
 
+    def test_an_unverified_render_keeps_a_regeneration_that_would_merge(self):
+        """The hash is missing or unreadable: nothing shows the renders are this code's."""
+        result = decide(_inp(render_unverified=True))
+        assert (result.verdict, result.code) == (KEEP, "render_unverified")
+        assert "nothing ties the staged renders to the code at the PR head" in result.reason
+        # Both flags at once cannot come from the workflow; the stronger finding wins.
+        assert decide(_inp(render_mismatch=True, render_unverified=True)).code == "render_mismatch"
+
+    @pytest.mark.parametrize("flag", ["render_mismatch", "render_unverified"])
     @pytest.mark.parametrize(
         "overrides",
         [
@@ -396,11 +405,11 @@ class TestFailClosed:
         ],
         ids=["canvas", "no-review", "score-zero", "no-prev-renders", "no-context", "no-regen-json"],
     )
-    def test_a_render_mismatch_comes_before_every_other_keep(self, overrides):
+    def test_a_render_hash_stop_comes_before_every_other_keep(self, overrides, flag):
         # No review ran, so the score, the review's files and the gates that
         # read the renders have nothing to say about this code.
-        assert decide(_inp(**overrides)).code != "render_mismatch"
-        assert decide(_inp(render_mismatch=True, **overrides)).code == "render_mismatch"
+        assert decide(_inp(**overrides)).code != flag
+        assert decide(_inp(**{flag: True}, **overrides)).code == flag
 
     def test_missing_prev_renders_keeps(self):
         result = decide(_inp(prev_renders=False))
@@ -802,7 +811,16 @@ class TestCli:
         assert record["improvements"]["visible"] == 0
         assert record["improvements"]["permission"] == 1
 
-    def test_decide_keeps_a_render_mismatch_without_any_review_file(self, tmp_path, monkeypatch, capsys):
+    @pytest.mark.parametrize(
+        ("flag", "code", "reason"),
+        [
+            ("--render-mismatch", "render_mismatch", "not made from the code at the PR head"),
+            ("--render-unverified", "render_unverified", "nothing ties the staged renders to the code at the PR head"),
+        ],
+    )
+    def test_decide_keeps_a_render_hash_stop_without_any_review_file(
+        self, tmp_path, monkeypatch, capsys, flag, code, reason
+    ):
         """impl-review stops before the review: no score, no review_regen.json, no checklist."""
         out = tmp_path / "gh_output"
         monkeypatch.setenv("GITHUB_OUTPUT", str(out))
@@ -811,13 +829,14 @@ class TestCli:
         args = ["decide", "--spec-id", "bubble-basic", "--library", "altair", "--score", "", "--prev-stored", "88"]
         args += ["--regen-json", "review_regen.json", "--weaknesses-json", str(tmp_path / "absent.json")]
         args += ["--prev-renders", "missing", "--summary-out", str(summary), "--record-out", str(record_file)]
-        assert main([*args, "--pr", "7", "--render-mismatch"]) == 0
+        assert main([*args, "--pr", "7", flag]) == 0
         stdout = capsys.readouterr().out
-        assert "verdict=keep code=render_mismatch" in stdout and "new=n/a" in stdout
-        assert "verdict=keep" in out.read_text() and "code=render_mismatch" in out.read_text()
-        assert "not made from the code at the PR head" in summary.read_text()
+        assert f"verdict=keep code={code}" in stdout and "new=n/a" in stdout
+        assert "verdict=keep" in out.read_text() and f"code={code}" in out.read_text()
+        assert reason in summary.read_text()
         record = json.loads(record_file.read_text(encoding="utf-8"))
-        assert (record["verdict"], record["code"]) == ("keep", "render_mismatch")
+        assert (record["verdict"], record["code"]) == ("keep", code)
+        # A code missing from REASON_CODES would make every reader drop the record.
         assert validate_record(record) == []
         # No review ran, although nothing passed --review-skipped (that step did not run either).
         assert record["adapt"]["review"] == "skipped"
@@ -859,6 +878,7 @@ class TestReasonCodes:
         ("overrides", "code"),
         [
             ({"render_mismatch": True}, "render_mismatch"),
+            ({"render_unverified": True}, "render_unverified"),
             ({"canvas_failed": True}, "canvas_failed"),
             ({"score": None}, "no_score"),
             ({"score": 0}, "score_zero"),
@@ -891,6 +911,7 @@ class TestReasonCodes:
     def test_every_code_is_declared(self):
         seen = {
             decide(_inp(render_mismatch=True)).code,
+            decide(_inp(render_unverified=True)).code,
             decide(_inp(canvas_failed=True)).code,
             decide(_inp(score=None)).code,
             decide(_inp(score=0)).code,
@@ -3563,10 +3584,12 @@ class TestAdaptDecision:
         assert (result.verdict, result.code) == (KEEP, "canvas_failed")
         assert result.adapt is not None and result.adapt.why == "canvas_failed"
 
-    def test_a_render_mismatch_keeps_what_the_adapt_route_would_merge(self):
+    @pytest.mark.parametrize("flag", ["render_mismatch", "render_unverified"])
+    def test_a_render_hash_stop_keeps_what_the_adapt_route_would_merge(self, flag):
         assert decide(_adapt_inp(score=None, regen=None, adapt=_adapt(review_skipped=True))).verdict == MERGE
-        result = decide(_adapt_inp(score=None, regen=None, render_mismatch=True, adapt=_adapt(review_skipped=True)))
-        assert (result.verdict, result.code) == (KEEP, "render_mismatch")
+        result = decide(_adapt_inp(score=None, regen=None, adapt=_adapt(review_skipped=True), **{flag: True}))
+        assert (result.verdict, result.code) == (KEEP, flag)
+        assert result.adapt is not None and result.adapt.review == "skipped"
 
     def test_the_review_free_exit_needs_the_flag(self):
         result = decide(_adapt_inp(score=None, regen=None))

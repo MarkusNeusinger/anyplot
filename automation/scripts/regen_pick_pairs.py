@@ -124,6 +124,7 @@ RETURN_CODES = frozenset(
         "regression",
         "readiness_regression",
         "render_mismatch",
+        "render_unverified",
         "canvas_failed",
         "no_score",
         "prev_renders_missing",
