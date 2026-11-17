@@ -87,7 +87,7 @@ const area = d3
   .x((d) => x(d.date))
   .y0(ih)
   .y1((d) => y(d.visitors))
-  .curve(d3.curveMonotoneX);
+  .curve(d3.curveLinear);
 
 g.append("path").datum(data).attr("fill", "url(#area-fill)").attr("d", area);
 
@@ -96,7 +96,7 @@ const line = d3
   .line()
   .x((d) => x(d.date))
   .y((d) => y(d.visitors))
-  .curve(d3.curveMonotoneX);
+  .curve(d3.curveLinear);
 
 g.append("path")
   .datum(data)
