@@ -622,6 +622,45 @@ Returns the plots with the most votes, one entry per implementation:
 
 ---
 
+## Search endpoints
+
+The private list of gallery searches that found nothing in the whole catalogue (`api/search_misses.py`, [The private list of search misses](plausible.md#the-private-list-of-search-misses)). A search text is what a visitor typed, so it travels in a request body on every route here, never in a URL or a header, and the API logs no part of it.
+
+### POST `/search/miss`
+
+**Purpose**: Count one gallery search that found nothing, for the owner's private list (`api/routers/search.py`)
+
+The body is `{"query": "<text>"}`. The API normalises the text again with the app's rule (lowercase, single spaces, cut at 40 characters) and counts it in the row of the UTC day and text (`search_misses`, [Database](database.md#search_misses)). Only the production service counts. The query string and the headers are never read for the text.
+
+The answer is always `204` with no body: for a text that was counted, one shorter than two characters after the normalisation, one past a limit, and any request outside production, so a caller learns nothing from it. The limits drop silently: 20 requests a minute per network, and once a UTC day holds 1,000 different texts, a text without a row that day. Rows more than 90 days old are deleted. A body that isn't a JSON object with a string `query` gets the framework's `422` (see [Request validation errors](#request-validation-errors)), whose entries keep `type`, `loc`, and `msg` and leave out `input` and `ctx`, so the answer never repeats the body.
+
+### GET `/debug/search-misses`
+
+**Purpose**: The private list for the "search misses" section on `/debug`, behind the admin gate
+
+Returns the texts of the last 90 UTC days, most searched first, up to 500 of them:
+
+```json
+{
+  "status": "ok",
+  "retention_days": 90,
+  "texts": 612,
+  "misses": [
+    {"query": "spider", "count": 12, "first_day": "2026-10-02", "last_day": "2026-11-17"}
+  ]
+}
+```
+
+`texts` is how many different texts the window holds, and `misses` lists up to 500 of them with their total `count` and their first and last UTC day. A tie goes to the text searched more recently. `status` is `unavailable` with an empty list when the query fails, which includes the table not being there yet.
+
+### DELETE `/debug/search-misses`
+
+**Purpose**: Remove one text from the private list, behind the admin gate
+
+The body is `{"query": "<text>"}`, the text as the list shows it. Every row of that text is deleted, whatever its day, and the answer is `{"deleted": <rows>}`: `0` for a text the list no longer holds. `503` when the database doesn't answer.
+
+---
+
 ## Agent chat
 
 > **Status (2026-11-06):** the admin routes under `/debug/agent` are live, and
@@ -1762,6 +1801,8 @@ A request whose body or parameters fail schema validation returns status 422 wit
 ```
 
 The body is always ASCII: any non-ASCII character in the echoed `input` is JSON-escaped, so text that cannot be encoded as UTF-8, such as a lone surrogate (the JSON string `"\ud800"`), still gets a 422 rather than a 500. `POST /feedback` rejects such text in any field this way.
+
+`POST /search/miss` is the exception to the echo: its body is what a visitor typed, so its entries keep `type`, `loc`, and `msg` only (`QuietBodyRoute` in `api/routers/search.py`).
 
 ### HTTP status codes
 

@@ -42,6 +42,9 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 **Shared links:**
 - One counter per day, platform, and page for the link previews that messengers and social networks fetch (`link_shares`): a count, with no address, no user agent, and no time of day
 
+**Search misses:**
+- One counter per day and text for the gallery searches that found nothing in the whole catalogue (`search_misses`): the text, the day, and a count, with no address, no user agent, no time of day, and no session; deleted after 90 days
+
 **Other:**
 - Library information (name, version, docs URL)
 
@@ -256,6 +259,14 @@ CREATE TABLE link_shares (
     CONSTRAINT ck_link_shares_page_valid
         CHECK (page IN ('home','plots','spec_overview','spec_detail'))
 );
+
+-- Search misses: one counter per day and text, private, kept for 90 days
+CREATE TABLE search_misses (
+    day DATE NOT NULL,                      -- The UTC day of the search
+    query VARCHAR(40) NOT NULL,             -- The text, normalised: lowercase, single spaces
+    count INTEGER NOT NULL,
+    PRIMARY KEY (day, query)
+);
 ```
 
 **Note**: Tags are stored as JSONB in the `specs` table (not a separate table).
@@ -419,6 +430,21 @@ Every column but the triage state copies the field of the same name in the case'
 **Why the key columns are never NULL**: the seven of them are the primary key, and the counter is one `INSERT ... ON CONFLICT DO UPDATE SET fetches = fetches + 1`. A NULL in a key conflicts with nothing, so every fetch would add a row and the count would stay at one.
 
 **What a row never holds**: an address, a user agent, or anything else of the request. The rows are kept without a time limit.
+
+---
+
+### `search_misses`
+
+**Purpose**: Keep a private list of the gallery searches that found nothing in the whole catalogue, so the owner sees what the catalogue lacks and which words the search doesn't know. The gallery sends the finished text of such a search to `POST /search/miss`, and the API adds one to the row of that day and text (`api/search_misses.py`). The section "search misses" on `/debug` reads the list and deletes a text. No public page shows it. The full description is in [Plausible analytics tracking](plausible.md#the-private-list-of-search-misses).
+
+**Key Fields**:
+- `day` - The UTC day of the search. No time of day is stored
+- `query` - The text, normalised by the API with the app's rule: lowercase, single spaces, at most 40 characters, and at least 2
+- `count` - How often the text was searched that day
+
+**How it is written**: the day and the text are the primary key, and the counter is one `INSERT ... ON CONFLICT DO UPDATE SET count = count + 1`, so two equal searches of a day are one row. Once a day holds 1,000 different texts, a new text is dropped while a text already there still counts. The API deletes the rows more than 90 days old, at most once per process and day; the owner's list shows the same window.
+
+**What a row never holds**: an address, a user agent, a time of day, a session, a hash, or anything else of the request. The text travels in the request body only and is never logged.
 
 ---
 
@@ -690,6 +716,7 @@ await session.execute(f"SELECT * FROM specs WHERE id = '{spec_id}'")
 ### Data privacy
 
 - No user data stored permanently, with one exception: the quick-feedback cases of the agent chat. When someone submits one, the case (the conversation, the code, the images, the message, a hashed user id, and `data.csv` when the box is ticked) is stored in the private bucket `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days. Its row in `agent_feedback` holds the message and the hashed ids, but no conversation, code, images or data, and stays
+- The gallery searches that found nothing (`search_misses`) hold the text a visitor typed, its day, and a count, with nothing that names the visitor, and are deleted after 90 days
 - Anonymous session IDs only
 - Usage data auto-deleted after 90 days
 - GDPR-compliant (no personal data)
