@@ -370,6 +370,31 @@ def test_about_page_and_its_bot_copy_state_the_rubric_bar_and_mcp_tools():
         )
 
 
+def test_about_page_rubric_bar_has_the_points_of_the_quality_criteria():
+    """The rubric bar's six parts are the point table of prompts/quality-criteria.md, in its order.
+
+    The page names a part as its review section does ("design" for Design Excellence), so a name must be the table's
+    category or its first word. The caption's total and criteria come from the criteria registry.
+    """
+    criteria_doc = read(ROOT / "prompts" / "quality-criteria.md")
+    table = criteria_doc[criteria_doc.index("### Point Distribution") :].split("**Total**", 1)[0]
+    categories = [(name, int(points)) for name, points in re.findall(r"^\| ([A-Z][\w ]+?) \| (\d+) \|", table, re.M)]
+    figures = read(ABOUT_FIGURES)
+    block = figures[figures.index("export const RUBRIC_PARTS") :].split("];", 1)[0]
+    parts = [(name, int(points)) for name, points in re.findall(r"\['([a-z ]+)', (\d+)\]", block)]
+    assert len(parts) == len(categories) == 6, f"figureData.ts: {parts}; quality-criteria.md: {categories}"
+    for (name, points), (category, table_points) in zip(parts, categories, strict=True):
+        assert category.lower() == name or category.lower().startswith(f"{name} "), (
+            f"figureData.ts: '{name}' stands where quality-criteria.md has '{category}'"
+        )
+        assert points == table_points, f"figureData.ts: {name} has {table_points} points, not {points}"
+    total = sum(table_points for _, table_points in categories)
+    assert total == sum(CRITERIA.values()), "quality-criteria.md: the point table and the criteria disagree"
+    assert f"'// rubric · {total} points · {len(CRITERIA)} criteria'" in figures, (
+        f"figureData.ts: the rubric's caption says {total} points and {len(CRITERIA)} criteria"
+    )
+
+
 def test_about_page_and_its_bot_copy_state_the_chats_repair_bounds():
     """The chat's second paragraph bounds a run as the README's highlight does: the agents' settings and pipeline."""
     attempts = field_default("agents/anyplot/settings.py", "AgentSettings", "max_attempts")

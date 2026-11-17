@@ -10,6 +10,7 @@ import { GITHUB_URL } from 'src/constants';
 import { ANCHOR_SX, useHashScroll } from 'src/hooks/useHashScroll';
 import { paths } from 'src/routes/paths';
 import { PipelineFlow } from 'src/sections/about/PipelineFlow';
+import { RubricBar } from 'src/sections/about/RubricBar';
 import {
   colors,
   fontSize,
@@ -263,6 +264,7 @@ export function AboutPage() {
               2025, for example after a review passed a plot whose title was cut off. the{' '}
               {proseLink(paths.stats, 'stats page')} shows the score distribution per library.
             </Box>
+            <RubricBar />
           </Box>
         </Box>
 

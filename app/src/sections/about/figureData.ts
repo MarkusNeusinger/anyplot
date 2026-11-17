@@ -23,6 +23,20 @@ export const PIPELINE_STEPS: readonly PipelineStep[] = [
 
 export const PIPELINE_RULES = { step: 'rules', me: 'I set and change them' } as const;
 
+// The rubric's six parts in its order, each with its points, named as the review section names
+// them. test_readme_claims.py holds the points to the table in prompts/quality-criteria.md and the
+// caption's total and criteria to the criteria registry.
+export const RUBRIC_PARTS: readonly (readonly [string, number])[] = [
+  ['visual quality', 30],
+  ['design', 20],
+  ['spec compliance', 15],
+  ['data quality', 15],
+  ['code quality', 10],
+  ['library mastery', 10],
+];
+
+export const RUBRIC_CAPTION = '// rubric · 100 points · 24 criteria';
+
 /** Splits "ai scores (24 criteria)" into the action and the detail in brackets under it. */
 export function splitDetail(does: string): [string, string | null] {
   const match = /^(.*?) (\(.+\))$/.exec(does);
