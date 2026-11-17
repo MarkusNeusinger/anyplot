@@ -349,10 +349,9 @@ describe('AboutPage', () => {
     // ci-tests.yml runs the Python tests when a pull request changes Python outside plots/ or a
     // config file it lists, and the frontend's lint and tests when it changes app/; ci-lint.yml
     // lints any Python change. A pull request that changes only other code (R, Julia, or
-    // JavaScript outside app/) starts neither, so the row names Python and frontend code
-    // only. codecov.yml's patch target, codeql.yml,
-    // ci-migrations.yml; the live-site check is the merge rule in CLAUDE.md
-    // (scripts/site-smoke.mjs).
+    // JavaScript outside app/) starts neither, so the row names Python and frontend code only.
+    // codecov.yml's patch target, codeql.yml, ci-migrations.yml; the live-site check is the merge
+    // rule in CLAUDE.md (scripts/site-smoke.mjs).
     expect(
       screen.getByRole('row', {
         name: /^checks\s*tests and lint on every pull request that changes Python or frontend code outside the plot catalogue, an 80\s%\spatch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, and by rule a check of the live site after a merge$/,
