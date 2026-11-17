@@ -10,6 +10,7 @@ import { theme } from 'src/theme';
 
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({ trackEvent: vi.fn() }),
+  useTheme: () => ({ isDark: false }),
 }));
 
 const REPO = 'https://github.com/MarkusNeusinger/anyplot';
@@ -246,6 +247,15 @@ describe('AboutPage', () => {
     ).toBeInTheDocument();
     // The two sentences carry the point alone; the penguin example before them is gone.
     expect(document.body).not.toHaveTextContent(/penguin/i);
+    // The eight chips stand between the palette's first paragraph and those two sentences.
+    const chip = screen.getByText('#009E73').closest('ul')!;
+    expect(within(chip).getAllByRole('listitem')).toHaveLength(8);
+    expect(screen.getByText(/^every plot uses/).compareDocumentPosition(chip)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(chip.compareDocumentPosition(screen.getByText(/^the palette travels with you/))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
     // The stack and costs now sit on this page: no pointer to the legal page for them.
     expect(screen.queryByText(/curious about the stack/)).not.toBeInTheDocument();
   });

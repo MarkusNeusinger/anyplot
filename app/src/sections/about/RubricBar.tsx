@@ -90,7 +90,7 @@ export function RubricBar() {
                 minWidth: 22,
                 color: 'var(--ink)',
                 fontWeight: 600,
-                [under]: visuallyHiddenSx,
+                [under]: { ...visuallyHiddenSx, minWidth: 0 },
               }}
             >
               {points}

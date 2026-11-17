@@ -9,6 +9,7 @@ import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
 import { ANCHOR_SX, useHashScroll } from 'src/hooks/useHashScroll';
 import { paths } from 'src/routes/paths';
+import { PaletteChips } from 'src/sections/about/PaletteChips';
 import { PipelineFlow } from 'src/sections/about/PipelineFlow';
 import { RubricBar } from 'src/sections/about/RubricBar';
 import {
@@ -326,6 +327,7 @@ export function AboutPage() {
               — about 8% of men have some form of CVD, and most plotting libraries ignore this
               entirely. I make it the default.
             </Box>
+            <PaletteChips />
             <Box sx={{ ...textStyle, mt: 1 }}>
               the palette travels with you across libraries. switching tools doesn&apos;t mean
               re-learning your colour grammar.
