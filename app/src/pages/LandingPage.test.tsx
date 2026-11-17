@@ -69,7 +69,7 @@ describe('LandingPage', () => {
 
     expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
       'content',
-      'any library. get inspired. grab the code. make it yours. 15 plotting libraries across python, r, julia & javascript, colorblind-safe, open source.'
+      'any library. get inspired. grab the code. make it yours. 15 plotting libraries across python, r, julia & javascript, colourblind-safe, open source.'
     );
   });
 

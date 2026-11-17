@@ -212,7 +212,7 @@ _HOME_JSONLD = {
             },
             "keywords": [name.lower() for name in LANGUAGE_NAMES.values()]
             + [name.lower() for name in LIBRARY_NAMES.values()]
-            + ["plotting", "data visualization", "charts", "code examples", "colorblind-safe", "imprint palette"],
+            + ["plotting", "data visualization", "charts", "code examples", "colourblind-safe", "imprint palette"],
             "isAccessibleForFree": True,
         },
         {
@@ -484,7 +484,7 @@ def _build_home_body(spec_count: int | None) -> str:
         "library, reviews it, and publishes the result with full source code.</p>"
         f"<p>The catalog covers {_LIBRARY_COUNT} libraries across {_LANGUAGE_LIST}: "
         f"{_LIBRARY_LIST}. Every implementation ships with light and dark theme previews, "
-        "uses the colorblind-safe Imprint palette, and can be browsed, copied, and adapted freely.</p>"
+        "uses the colourblind-safe Imprint palette, and can be browsed, copied, and adapted freely.</p>"
         '<p>Browse the catalog on the <a href="https://anyplot.ai/plots">plots</a> page, jump to any '
         'chart type via the <a href="https://anyplot.ai/specs">spec index</a>, or connect an AI '
         'assistant through the <a href="https://anyplot.ai/mcp">Model Context Protocol (MCP) server</a>.</p>'
@@ -1418,7 +1418,7 @@ _ABOUT_BOT_BODY = (
     "later people who found it online, wanted two things from it: ideas for which plot fits their "
     "data, and to get to know libraries they hadn't used yet, since each has its own strengths. "
     "After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai. "
-    "Today it covers fifteen libraries in four languages, and one colorblind-safe palette travels "
+    "Today it covers fifteen libraries in four languages, and one colourblind-safe palette travels "
     "across all of them.</p>"
     "<h2>Open</h2>"
     '<p>Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
@@ -1449,7 +1449,7 @@ async def seo_about():
 _PALETTE_SLOT_NAMES = ("green", "lavender", "blue", "ochre", "red", "cyan", "rose", "lime")
 _PALETTE_BOT_BODY = (
     "<h1>imprint — the anyplot palette</h1>"
-    "<p>A colorblind-safe categorical palette of 8 hues plus 3 semantic anchors, tuned for "
+    "<p>A colourblind-safe categorical palette of 8 hues plus 3 semantic anchors, tuned for "
     "warm-paper rendering and validated against deuteranopia, protanopia and tritanopia. "
     "Every plot in the catalogue uses it.</p>"
     "<h2>Categorical hues (slot order)</h2>"
@@ -1478,7 +1478,7 @@ async def seo_palette():
     return HTMLResponse(
         _render_bot_html(
             title="imprint palette | anyplot.ai",
-            description="Imprint — a colorblind-safe categorical palette of 8 hues plus 3 semantic anchors (amber, neutral, muted). Tuned for warm-paper rendering, validated against deuteranopia / protanopia / tritanopia. The palette every plot on anyplot.ai uses.",
+            description="Imprint — a colourblind-safe categorical palette of 8 hues plus 3 semantic anchors (amber, neutral, muted). Tuned for warm-paper rendering, validated against deuteranopia / protanopia / tritanopia. The palette every plot on anyplot.ai uses.",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/palette",
             body=_PALETTE_BOT_BODY,

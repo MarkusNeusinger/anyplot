@@ -114,7 +114,7 @@ describe('PalettePage', () => {
     expect(getGridLabels()).toEqual(IMPRINT_LABELS);
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colorblindness)' })
+      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colour blindness)' })
     );
     expect(getGridLabels()).toEqual(CVD_OPTIMAL_LABELS);
 

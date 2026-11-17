@@ -208,7 +208,7 @@ describe('AboutPage', () => {
       /pyplots\.ai, a catalogue of Python plotting examples\. it grew out of everyday work: showing colleagues a chart instead of explaining it at length\. they, and later people who found it online, wanted two things from it: ideas for which plot fits their data, and to get to know libraries they hadn.t used yet, since each has its own strengths\. after a few months/
     );
     expect(origin).toHaveTextContent(
-      /it became anyplot\.ai\. today it covers fifteen libraries in four languages, and one colorblind-safe palette travels across all of them\.$/
+      /it became anyplot\.ai\. today it covers fifteen libraries in four languages, and one colourblind-safe palette travels across all of them\.$/
     );
   });
 

@@ -92,7 +92,7 @@ Alternative casual forms:
 - "anyplot" (when domain isn't needed)
 - "ap" (in code: `import anyplot as ap`)
 
-**Relationship to pyplots.ai:** `pyplots.ai` is the predecessor. The rebrand is communicated as evolution, not replacement: "anyplot.ai is the next chapter of pyplots.ai — broader in scope (beyond Python), broader in language (beyond English), and anchored in a colorblind-safe palette that travels across every library."
+**Relationship to pyplots.ai:** `pyplots.ai` is the predecessor. The rebrand is communicated as evolution, not replacement: "anyplot.ai is the next chapter of pyplots.ai — broader in scope (beyond Python), broader in language (beyond English), and anchored in a colourblind-safe palette that travels across every library."
 
 ### 3.2 Logo
 
@@ -172,7 +172,7 @@ The first line (`any.plot() — any library.`) is the wordmark + product proposi
 
 - **"a catalogue of scientific plotting"** — editorial framing, when contextualizing the project in academic writing
 - **"from anyplot import *"** — code-playful, good for dev-audience posts
-- **"plots that everyone can see"** — accessibility-focused, good for technical articles about colorblind safety
+- **"plots that everyone can see"** — accessibility-focused, good for technical articles about colourblind safety
 - **"the pipeline runs on its own schedule, by rules I set."** — methodology framing, for about/methodology pages
 
 Rotate alternatives as appropriate. The canonical hero block is always the first choice.
@@ -189,6 +189,8 @@ Rotate alternatives as appropriate. The canonical hero block is always the first
 See §2.2 for the five tone attributes (precise, understated, curious, respectful, slightly playful) and what to avoid.
 
 The site speaks as its single builder, in the first person singular ("I"), not as "we" or "humans". Meta descriptions describe the site in the third person; a crawler copy that mirrors a page keeps the page's voice.
+
+Spelling: British English on the site (colour, catalogue, centre, licence as a noun). Proper names, citations, code and library or API names keep their own spelling (the MIT License, `color=`).
 
 ### 3.5 Capitalization & Punctuation
 
@@ -274,7 +276,7 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 
 > Instead of: `🚀 Supercharge your data viz workflow with AI-powered plot generation! Unlock 1000+ beautifully crafted charts across multiple libraries. Ship faster, iterate smarter, and empower your team to create stunning visualizations!`
 >
-> Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
+> Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. Every example uses the same colourblind-safe palette, so switching libraries never breaks your color grammar.`
 
 The second version is shorter, says what's actually happening (ideas come in as GitHub issues; I approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
 
@@ -284,7 +286,7 @@ The second version is shorter, says what's actually happening (ideas come in as 
 
 - A **reference catalogue**, like a cookbook or an atlas. You come for specific examples.
 - **Library-agnostic**, showing the same chart types across matplotlib, seaborn, plotly, and others.
-- **Colorblind-safe by default**. Every example uses the imprint palette. This isn't a feature, it's a baseline.
+- **Colourblind-safe by default**. Every example uses the imprint palette. This isn't a feature, it's a baseline.
 - **Copyable**. Every example is self-contained, with the full code visible and executable.
 - **Curated**. I don't aggregate every plot on the internet — I maintain a considered collection.
 - **The pipeline runs on its own schedule, by rules I set.** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs. The pipeline is documented and visible.
@@ -303,7 +305,7 @@ Narrative hooks for talking about anyplot — adapt to context, don't recite ver
 
 **The pipeline story:** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. The pipeline runs on its own schedule, by rules I set. Every night a job regenerates the oldest implementations, and a new version replaces the live one only when a review of both finds a fixed defect and no regression; when a better example pattern emerges, I update the spec and regenerate its libraries. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs.
 
-**The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of color vision deficiency — most plotting libraries ignore this entirely. I make it the default.
+**The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of colour vision deficiency — most plotting libraries ignore this entirely. I make it the default.
 
 **The library-agnostic story:** A "Gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh. The palette travels with you across libraries. Switching tools doesn't mean re-learning your color grammar.
 

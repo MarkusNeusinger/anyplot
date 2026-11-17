@@ -106,7 +106,7 @@ export function AboutPage() {
               a catalogue of plotting examples across fifteen libraries in python, r, julia, and
               javascript. plot ideas come in as GitHub issues; ai drafts the spec, generates code
               for every library, and reviews each implementation. I approve new specs and tune the
-              rules when something repeatedly fails. every example uses the same colorblind-safe
+              rules when something repeatedly fails. every example uses the same colourblind-safe
               palette, so switching libraries never breaks your color grammar.
             </Box>
           </Box>
@@ -486,7 +486,7 @@ export function AboutPage() {
               for which plot fits their data, and to get to know libraries they hadn&apos;t used
               yet, since each has its own strengths. after a few months on pyplots.ai, I decided to
               go bigger. in April 2026 it became anyplot.ai. today it covers fifteen libraries in
-              four languages, and one colorblind-safe palette travels across all of them.
+              four languages, and one colourblind-safe palette travels across all of them.
             </Box>
           </Box>
         </Box>

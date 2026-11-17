@@ -2,7 +2,7 @@
 
 > the open plot catalogue — every plot begins as a library-agnostic markdown spec; ai generates
 > and reviews implementations across fifteen libraries in python, r, julia and javascript.
-> browse, copy, adapt — colorblind-safe by default.
+> browse, copy, adapt — colourblind-safe by default.
 
 every plot page carries the runnable source code (MIT-licensed). catalog pages are served as
 prerendered HTML to recognised crawler user agents — if your client is not on that list you
@@ -50,7 +50,7 @@ and the spec itself at `.../plots/{spec_id}/specification.md`.
 ## Docs
 
 - [About](https://anyplot.ai/about): what anyplot is, who built it and how, how the ai pipeline works (idea → spec → code → review), tech stack and hosting costs
-- [Palette](https://anyplot.ai/palette): imprint, the colorblind-safe palette, with copy-paste snippets for python, r, julia and javascript
+- [Palette](https://anyplot.ai/palette): imprint, the colourblind-safe palette, with copy-paste snippets for python, r, julia and javascript
 - [MCP server](https://anyplot.ai/mcp): connect an ai agent to the catalog via Model Context Protocol — HTTP transport at https://api.anyplot.ai/mcp/
 - [Legal](https://anyplot.ai/legal): operator, legal notice and privacy policy
 

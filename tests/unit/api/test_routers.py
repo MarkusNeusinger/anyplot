@@ -1285,7 +1285,7 @@ class TestSeoProxyRouter:
             "They, and later people who found it online, wanted two things from it: ideas for which plot fits "
             "their data, and to get to know libraries they hadn't used yet, since each has its own strengths.",
             "After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai.",
-            "Today it covers fifteen libraries in four languages, and one colorblind-safe palette travels "
+            "Today it covers fifteen libraries in four languages, and one colourblind-safe palette travels "
             "across all of them.",
         ):
             assert sentence in text, sentence
