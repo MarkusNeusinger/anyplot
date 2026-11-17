@@ -14,7 +14,7 @@
   Every session that loads `.claude/settings.json` gets the rule: the Claude
   steps of `impl-generate`, `impl-repair`, `spec-create`, `daily-regen`,
   `util-claude`, and `report-validate`, and local sessions, now read files
-  directly under `/tmp` without asking.
+  directly under `/tmp` without asking. (#13160)
 - **The files that carry the stored score stay out of `/tmp`.** With a
   working rule, three files there would have put the stored score one read
   away from a review that scores blind: the copy of main's metadata, the
@@ -23,14 +23,14 @@
   All three now stay under `$RUNNER_TEMP`, and the retest removes its metadata
   copy once the context is built. This isn't a boundary: the session can
   still run Bash and `gh`, and the previous review it's handed can quote a
-  score in its own wording.
+  score in its own wording. (#13160)
 
 ### Added
 
 - **A review's log names the tool calls it was refused.** The new step "Name
   the denied tool calls" in `impl-review.yml` prints `claude_denials … count=N`
   and one warning per refused call, with the tool and, for a file tool, its
-  path. Until now the log gave the count alone.
+  path. Until now the log gave the count alone. (#13160)
 
 ### Changed
 
@@ -38,4 +38,4 @@
   predecessor's files with the Read tool and no longer finds the predecessor's
   metadata beside them. A resume doesn't reuse a cell recorded on version 1,
   and a comparison with a version 1 arm is flagged "harness changed": record
-  the baseline again before you compare.
+  the baseline again before you compare. (#13160)
