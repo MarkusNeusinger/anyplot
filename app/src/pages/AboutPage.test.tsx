@@ -346,9 +346,12 @@ describe('AboutPage', () => {
     ]) {
       expect(screen.getAllByRole('rowheader', { name: group }).length).toBeGreaterThan(0);
     }
-    // ci-tests.yml and ci-lint.yml, which skip a pull request of plot implementations and metadata
-    // only; codecov.yml's patch target, codeql.yml, ci-migrations.yml; the live-site check is the
-    // merge rule in CLAUDE.md (scripts/site-smoke.mjs).
+    // ci-tests.yml runs the Python tests when a pull request changes Python outside plots/ or a
+    // config file it lists, and the frontend's lint and tests when it changes app/; ci-lint.yml
+    // lints any Python change. A pull request that changes only other code (R, Julia, or
+    // JavaScript outside app/) starts neither. codecov.yml's patch target, codeql.yml,
+    // ci-migrations.yml; the live-site check is the merge rule in CLAUDE.md
+    // (scripts/site-smoke.mjs).
     expect(
       screen.getByRole('row', {
         name: /^checks\s*tests and lint on every pull request that changes code outside the plot catalogue, an 80\s%\spatch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, and by rule a check of the live site after a merge$/,
