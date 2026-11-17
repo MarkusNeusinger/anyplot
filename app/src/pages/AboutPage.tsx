@@ -422,9 +422,10 @@ export function AboutPage() {
                   'checks',
                   // A no-break space keeps the percent sign with its number.
                   <>
-                    tests and lint on every pull request that changes code outside the plot
-                    catalogue, an 80&nbsp;% patch-coverage target, CodeQL, every migration run on a
-                    throwaway PostgreSQL, and by rule a check of the live site after a merge
+                    tests and lint on every pull request that changes Python or frontend code
+                    outside the plot catalogue, an 80&nbsp;% patch-coverage target, CodeQL, every
+                    migration run on a throwaway PostgreSQL, and by rule a check of the live site
+                    after a merge
                   </>,
                 ],
                 [
