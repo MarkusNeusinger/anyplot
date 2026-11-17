@@ -425,6 +425,9 @@ describe('DebugPage', () => {
     expect(copied).toContain('bug report');
     expect(copied).toContain('> Axis labels overlap on mobile');
     expect(copied).toContain('Open a pull request');
+    // The legal page's site feedback row names only the message, the page and the reaction.
+    expect(copied).not.toContain('fb-1');
+    expect(copied).not.toContain('375x812');
   });
 });
 
