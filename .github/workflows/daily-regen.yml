@@ -20,9 +20,9 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || (github.
 # REGEN_ATTEMPT_WINDOW_DAYS variable, else 30 days) is not picked, and after
 # it queues behind every pair touched before it. A returning keep is the
 # exception: a kept PR whose gate record has the code `regression`,
-# `readiness_regression` or a technical one (render_mismatch, canvas_failed,
-# no_score, prev_renders_missing, context_failed, regen_json_*,
-# script_crashed; RETURN_CODES in the picker).
+# `readiness_regression` or a technical one (render_mismatch,
+# render_unverified, canvas_failed, no_score, prev_renders_missing,
+# context_failed, regen_json_*, script_crashed; RETURN_CODES in the picker).
 # It holds the pair for the window, then the pair returns at its age from
 # before the keep. The second returning keep in a row ages the pair like a
 # plain keep. Infrastructure failures and generations Claude stopped are not
