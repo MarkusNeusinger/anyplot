@@ -391,12 +391,14 @@ def test_about_page_and_its_bot_copy_claim_no_regeneration_on_a_library_release(
 
 
 def test_about_page_and_its_bot_copy_name_only_the_checks_a_workflow_runs():
-    """Before the review, impl-generate.yml requires both renders and impl-review.yml gates the canvas size."""
+    """Before the review, impl-generate.yml requires both renders, and impl-review.yml checks that both exist and
+    gates the canvas size."""
     generate = read(ROOT / ".github" / "workflows" / "impl-generate.yml")
     review = read(ROOT / ".github" / "workflows" / "impl-review.yml")
     assert "implementation failed to produce both theme renders" in generate, (
         "impl-generate.yml no longer stops when the code produced no render"
     )
+    assert "- name: Verify both theme renders exist" in review, "impl-review.yml no longer checks for both renders"
     assert "- name: Canvas dimension gate" in review, "impl-review.yml no longer gates the canvas size"
     # core/canvas.py has a blank-image check (AR-04), but no workflow calls it.
     workflows = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
@@ -407,12 +409,20 @@ def test_about_page_and_its_bot_copy_name_only_the_checks_a_workflow_runs():
         if not blank_checked:
             # A word of its own: `target="_blank"` is no claim.
             assert not re.search(r"\bblank\b", prose), f"{name}: no workflow checks for a blank image"
-    # The README's pipeline step lists the same checks. Only that sentence: the quality bar's "a blank image ...
-    # scores 0" is a rule of the rubric the reviewer applies, not a check a workflow runs.
+    # The README's pipeline steps name the same checks: generation stops without both renders, and the review step
+    # lists the renders and the canvas. Only those sentences: the quality bar's "a blank image ... scores 0" is a rule
+    # of the rubric the reviewer applies, not a check a workflow runs.
+    generation = re.search(r"^3\. \*\*Generation\.\*\*(.*?)^4\. ", read(README), re.MULTILINE | re.DOTALL)
+    assert generation, "README.md no longer has the pipeline's generation step"
+    assert "renders it in both themes; without both renders it stops." in collapse(generation.group(1)), (
+        "README.md: the generation step no longer says that it stops without both renders"
+    )
     step = re.search(r"^4\. \*\*Review\.\*\*(.*?)^5\. ", read(README), re.MULTILINE | re.DOTALL)
     assert step, "README.md no longer has the pipeline's review step"
     checks = collapse(step.group(1)).split(" An AI reviewer ", 1)[0]
-    assert "first runs automated checks:" in checks, "README.md: the review step no longer lists its automated checks"
+    assert "first runs automated checks: both renders exist and the canvas has its target size." in checks, (
+        "README.md: the review step no longer lists the renders and the canvas as its automated checks"
+    )
     if not blank_checked:
         assert not re.search(r"\bblank\b", checks, re.IGNORECASE), "README.md: no workflow checks for a blank image"
 
