@@ -1,5 +1,5 @@
-"""NumberProvenance: a figure in the root's final reply must stand in a source; an unsourced one is asked for once, then
-the reply is withheld.
+"""NumberProvenance: a figure in the root's final reply must stand in a source; under `enforce` an unsourced one is
+asked for once, then the reply is withheld, and under `log`, the default, it is only counted.
 
 The root prompt forbids a figure no tool produced in four places, and replies still stated totals, shares and fit
 results that no tool had computed, beside plots that were right. A figure in a reply comes from a tool result or the
@@ -18,11 +18,11 @@ Myanmar. A figure spelled out in words or written in other digits is not read, a
   as `memory`), the user's own messages (`user`), and the service's limits that the root's instructions state as
   facts (`service`, `service_limits`, built from the server's own constants, never from the prompt text). Never the
   static prompt, the root's own earlier replies or its tool arguments, and never another agent's relayed messages.
-* A turn that ran no tool (`ledger.tools` empty) whose reply states an unsourced figure is asked for once more, the
-  way RootRefusal and EmptyReply ask (`follow_up_request` with the tools, offered only while none ran): the reply as
-  the root's previous turn and `REASK_LINE`, which names the figures. The answer takes the reply's place in place
-  (`take_place`), so ShippedReply and ReplyLanguage, which follow, check it as any reply. Verdict `reasked`, and the
-  ledger keeps `figures_reasked`.
+* Under `enforce`, a turn that ran no tool (`ledger.tools` empty) whose reply states an unsourced figure is asked for
+  once more, the way RootRefusal and EmptyReply ask (`follow_up_request` with the tools, offered only while none
+  ran): the reply as the root's previous turn and `REASK_LINE`, which names the figures. The answer takes the reply's
+  place in place (`take_place`), so ShippedReply and ReplyLanguage, which follow, check it as any reply. Verdict
+  `reasked`, and the ledger keeps `figures_reasked`.
 * Once `figures_reasked` is set, the turn's final reply is checked again against the sources as they are then:
   at once for an answer in text, or after the tools an answer called, keyed on the flag, never on `ledger.tools`, so
   a figure still unsourced after a tool call is withheld too, and a reply without any figure still leaves its `clean`
@@ -40,12 +40,14 @@ Myanmar. A figure spelled out in words or written in other digits is not read, a
   replacement that states an unsourced figure the reply before it did not hold is not used, and that plugin keeps the
   reply it had (verdict `kept`, with `replacement` naming the re-ask). Otherwise the check of a replacement only logs.
 
-`AGENT_NUMBER_PROVENANCE` switches the check: `enforce` (the default, as above), `log` (every reply only logged) or
-`off`. Every reply that states a figure leaves a content-free attribution line (`number_provenance`, the verdict, the
-counts of figures read, unsourced, exempt, unread and sourced only by magnitude, and the sourced ones by kind as
-`from_<kind>`), never a figure or a word; the verdict goes into the turn's record. A failure of the check itself
-keeps the reply (verdict `error`). An eval may pass a collector (`collect_figures`), which alone receives the
-unsourced figures as written; the service passes none and keeps no figure anywhere.
+`AGENT_NUMBER_PROVENANCE` switches the check: `log` (the default: every reply only logged, none asked for again,
+withheld or kept out), `enforce` (as above) or `off`. `enforce` can fail a turn, so the lines of `log` count what it
+would ask again or withhold before it is switched on. Every reply that states a figure leaves a content-free
+attribution line (`number_provenance`, the verdict, the counts of figures read, unsourced, exempt, unread and sourced
+only by magnitude, and the sourced ones by kind as `from_<kind>`), never a figure or a word; the verdict goes into
+the turn's record. A failure of the check itself keeps the reply (verdict `error`). An eval may pass a collector
+(`collect_figures`), which alone receives the unsourced figures as written; the service passes none and keeps no
+figure anywhere.
 
 Outside the check: a figure spelled out in words or scaled by a word; and a figure the root itself put into a
 `change_request`, a `remember` item or `expected_texts`, which comes back through the plot's notes, its code, the

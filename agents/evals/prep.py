@@ -129,7 +129,9 @@ case with `figures` scores them (`score_figures`, `FIGURES_EXPECTATIONS`: `queri
 memory entries before the message, as after a context window that dropped the message that
 set them. The cases tagged `figures` measure that check, not the root's routing, so their first
 runs hold misses by design: they run only when a run asks for their tag (`OPT_IN_TAGS`,
-`--tags figures`). `--unsourced-figures` also writes the unsourced figures of each case's
+`--tags figures`). The check's default is `log`, under which no reply is asked again or withheld,
+so a run that measures the second ask and `not_withheld` sets `AGENT_NUMBER_PROVENANCE=enforce`.
+`--unsourced-figures` also writes the unsourced figures of each case's
 replies, as written, to a file beside the report, for tuning the check on the invented fixture
 data; the report itself never holds one.
 

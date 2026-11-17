@@ -139,6 +139,13 @@ def mode(monkeypatch: pytest.MonkeyPatch, value: str) -> None:
     get_settings.cache_clear()
 
 
+@pytest.fixture(autouse=True)
+def enforced(development_env: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every test here runs the check under `enforce` unless it sets another mode. The default is `log`, under which
+    no reply is asked for again or withheld, so a test of a figure that may stand would pass without the check."""
+    mode(monkeypatch, "enforce")
+
+
 # --- the sources --------------------------------------------------------------------------------------------------
 
 
@@ -689,8 +696,31 @@ class TestModes:
         assert text(response) == "The total is 8,642.13 books." and ledger.error is None
         assert not answers.requests and verdicts(caplog) == ["unsourced_logged"]
 
-    async def test_enforce_is_the_default(self) -> None:
-        assert get_settings().number_provenance == "enforce"
+    async def test_log_is_the_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AGENT_NUMBER_PROVENANCE")
+        get_settings.cache_clear()
+
+        assert get_settings().number_provenance == "log"
+
+    async def test_the_default_asks_nothing_again_and_withholds_nothing(
+        self,
+        ledger: RequestLedger,
+        services: Services,
+        caplog: pytest.LogCaptureFixture,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.delenv("AGENT_NUMBER_PROVENANCE")
+        get_settings.cache_clear()
+        answers = ScriptedRoot([])
+        monkeypatch.setattr(reply_language, "root_model", lambda: answers)
+        ledger.root_request = root_request()
+        response = gemini_response({"text": "The total is 8,642.13 books."})
+
+        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
+            await check(response)
+
+        assert text(response) == "The total is 8,642.13 books." and ledger.error is None
+        assert not answers.requests and verdicts(caplog) == ["unsourced_logged"]
 
 
 # --- the replies of the other plugins' re-asks --------------------------------------------------------------------
