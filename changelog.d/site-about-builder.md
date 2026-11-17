@@ -70,7 +70,7 @@
   4.0.0 release, whose notes open with the public "use with my data" page.
   The page gives months, not days: a timeline label reads
   "apr 2026 · 1.0.0", and the chat section has been open to everyone
-  "since november 2026". Each figure is a list that a screen reader reads in
+  "since November 2026". Each figure is a list that a screen reader reads in
   order, the chips and the timeline named by the headings of their sections,
   and on a phone each one stacks. `test_readme_claims.py` holds the rubric's
   points to `prompts/quality-criteria.md` and each release on the timeline to
