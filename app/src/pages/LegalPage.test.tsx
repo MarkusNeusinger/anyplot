@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material/styles';
 
+import { MAX_QUERY_LENGTH, normalizeQuery } from 'src/hooks/useAnalytics';
 import { LegalPage } from 'src/pages/LegalPage';
 import { UNVERIFIED_HINT } from 'src/sections/stats/sharedLinks';
 import { render, screen, within } from 'src/test-utils';
@@ -241,6 +242,16 @@ describe('LegalPage', () => {
     expect(
       screen.getByText(/no cookies, no cross-site id, no IP address kept/)
     ).toBeInTheDocument();
+    // One thing a visitor typed does reach Plausible: the gallery search's text, which
+    // FilterSearch sends with `search` and `search_no_results` (docs/reference/plausible.md,
+    // "Search"). The whole row, so the exception cannot fall off its end, and its case and cut
+    // held to the function that applies them before the text is sent.
+    const analytics = screen.getByRole('row', { name: /^analytics\s/ });
+    expect(analytics).toHaveTextContent(
+      /^analytics\s*Plausible counts page views, searches, clicks, copies and downloads, only in aggregate, on a public dashboard: no cookies, no cross-site id, no IP address kept\. one exception: the text of a gallery search \(lowercase, first 40 characters\) is sent too and shows on the dashboard\.\s*where: Plausible Analytics \(EU, proxied\)$/
+    );
+    expect(analytics).toHaveTextContent(`(lowercase, first ${MAX_QUERY_LENGTH} characters)`);
+    expect(normalizeQuery('Scatter Plot')).toBe('scatter plot');
     // The browser's storage is named, not hidden behind "no cookies".
     expect(screen.getByText(/your plot\s+votes, a release number/)).toBeInTheDocument();
     // Cloudflare's two uses stay apart: the cdn's use of your IP address, and the check that runs

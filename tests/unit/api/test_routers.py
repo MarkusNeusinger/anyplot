@@ -1309,6 +1309,11 @@ class TestSeoProxyRouter:
             # Who is responsible, under the page's own heading, not only as the legal notice's operator.
             "<li>Who is responsible: Markus Neusinger (see above).</li>",
             "Running costs about $60 a month (October 2026).",
+            # The one thing a visitor typed that reaches Plausible, as on the human page: the gallery
+            # search's text, lowercase and cut at 40 characters (app/src/hooks/useAnalytics.ts
+            # `normalizeQuery`; docs/reference/plausible.md, "Search"), through the item's end.
+            "no IP address stored. One exception: the text of a gallery search (lowercase, first 40 "
+            "characters) is sent too and shows on the dashboard.</li>",
             # Every field the feedback record holds, each by its name, then who reads it: the operator,
             # and the coding assistant the admin page's "copy prompt for Claude Code" button hands the
             # message, page and reaction to (app/src/utils/claudePrompt.ts).

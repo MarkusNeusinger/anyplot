@@ -277,6 +277,13 @@ and cut at 40 characters (`MAX_QUERY_LENGTH`): "Scatter", "scatter " and
 "SCATTER" are one entry, catalogue words and spec names fit, and a long text
 pasted into the box by mistake doesn't stand there in full.
 
+The analytics row of the legal page's privacy section
+(`app/src/pages/LegalPage.tsx`) and its crawler copy in `api/routers/seo.py`
+(`_LEGAL_BOT_BODY`) name this text as the one exception to what Plausible
+gets: sent in lowercase, cut at 40 characters, and shown on the dashboard. If
+you change `normalizeQuery()` or send typed text with another event, update
+both; `app/src/pages/LegalPage.test.tsx` holds the row to `MAX_QUERY_LENGTH`.
+
 ### Feedback
 
 `feedback_submitted` fires when the server stored a feedback entry. `source`

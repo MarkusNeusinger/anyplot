@@ -317,7 +317,9 @@ export function LegalPage() {
                     >
                       public dashboard
                     </Link>
-                    : no cookies, no cross-site id, no IP address kept.
+                    : no cookies, no cross-site id, no IP address kept. one exception: the text of a
+                    gallery search (lowercase, first 40 characters) is sent too and shows on the
+                    dashboard.
                     <Kept items={[['where', 'Plausible Analytics (EU, proxied)']]} />
                   </>,
                 ],
