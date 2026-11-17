@@ -260,8 +260,9 @@ export function AboutPage() {
           <SectionHeader prompt="❯" title={<em>review</em>} />
           <Box sx={proseColumnSx}>
             {/* "more than thirty" is a floor on the changes to prompts/quality-criteria.md after its
-                first commit (`git log -- prompts/quality-criteria.md` listed 35 when the sentence
-                was written). CI clones the repository shallow, so no test can count them. */}
+                first commit (`git log -- prompts/quality-criteria.md` listed 36 commits, 35 after
+                the first, when the sentence was written). CI clones the repository shallow, so no
+                test can count them. */}
             <Box sx={textStyle}>
               every implementation is scored before it ships. automated checks come first: the code
               runs, the canvas has its size. then an ai reviewer scores the render on a 100-point
