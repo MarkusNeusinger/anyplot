@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 
 import { AboutPage } from 'src/pages/AboutPage';
-import { fireEvent, render, screen, within } from 'src/test-utils';
+import { fireEvent, render, screen, styleAt, within } from 'src/test-utils';
 import { theme } from 'src/theme';
 
 vi.mock('src/hooks', () => ({
@@ -88,10 +88,19 @@ describe('AboutPage', () => {
     );
     // The builder speaks for himself: no sentence of the page describes him from outside.
     expect(document.body).not.toHaveTextContent(/\bhe (has|built|leads|tests|corrects)\b/);
-    expect(builder.querySelector('img')).toHaveAttribute(
+    // The file's own size, so the browser reserves the photo's height before it loads; decorative,
+    // since the name stands beside it.
+    const photo = builder.querySelector('img')!;
+    expect(photo).toHaveAttribute(
       'src',
-      'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp'
+      'https://storage.googleapis.com/anyplot-static/images/markusneusinger-684.webp'
     );
+    expect(photo).toHaveAttribute('width', '684');
+    expect(photo).toHaveAttribute('height', '1381');
+    expect(photo).toHaveAttribute('alt', '');
+    expect(photo).toHaveAttribute('aria-hidden', 'true');
+    // Narrower than the gutter needs, it stands beside the name at 110px, as before.
+    expect(styleAt(photo).width).toBe('110px');
     expect(screen.getByRole('link', { name: 'markus-neusinger' })).toHaveAttribute(
       'href',
       'https://www.linkedin.com/in/markus-neusinger/'

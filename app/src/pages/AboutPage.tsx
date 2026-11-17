@@ -23,7 +23,19 @@ import {
   typography,
 } from 'src/theme';
 
-const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp';
+const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger-684.webp';
+const AVATAR_WIDTH = 684;
+const AVATAR_HEIGHT = 1381;
+
+// The portrait hangs in the gutter left of the 760px column where that gutter holds it with its
+// 28px gap: the section 1248px wide or more, (1248 - 760) / 2 = 244 = 216 + 28. Keyed to the
+// section's own width, so a scrollbar or the page's side padding can never push it past the left
+// end of the section's rule.
+const PORTRAIT_GUTTER_WIDTH = 216;
+const PORTRAIT_GAP = 28;
+const PORTRAIT_TOP = 6;
+const PORTRAIT_SECTION_MIN = 760 + 2 * (PORTRAIT_GUTTER_WIDTH + PORTRAIT_GAP);
+const inGutter = `@container (min-width: ${PORTRAIT_SECTION_MIN}px)` as const;
 
 // For search results and link previews, the same as the crawler copy's (api/routers/seo.py): who
 // built the site and how, then the sections that say how the catalogue is written and reviewed,
@@ -106,9 +118,24 @@ export function AboutPage() {
         </Box>
 
         {/* Who built it */}
-        <Box component="section" id="builder" sx={{ ...sectionSx, ...ANCHOR_SX }}>
+        <Box
+          component="section"
+          id="builder"
+          sx={{ ...sectionSx, ...ANCHOR_SX, containerType: 'inline-size' }}
+        >
           <SectionHeader prompt="❯" title={<em>who built it</em>} />
-          <Box sx={proseColumnSx}>
+          <Box
+            sx={{
+              ...proseColumnSx,
+              position: 'relative',
+              // The portrait is out of the flow there, so the column keeps room for all of it
+              // and the next section never slides under it.
+              [inGutter]: {
+                minHeight:
+                  PORTRAIT_TOP + Math.ceil((PORTRAIT_GUTTER_WIDTH * AVATAR_HEIGHT) / AVATAR_WIDTH),
+              },
+            }}
+          >
             <Box
               sx={{
                 display: 'flex',
@@ -118,15 +145,30 @@ export function AboutPage() {
               }}
             >
               {/* Decorative: the name stands beside it. Not lazy: it sits on the first screen.
-                  110px wide so photo, name and links end above the fold of a 1440x900 screen. */}
+                  Where the gutter holds it, it hangs there at 216px, its top at the name's line:
+                  the photo gets room without taking any from the column, so name, links, bio and
+                  other projects keep its full width. Narrower, it stands beside the name (above
+                  it on a phone) at 110px, small enough that photo, name and links end on the
+                  first screen of a window 900px tall. */}
               <Box
                 component="img"
                 src={AVATAR_URL}
                 alt=""
                 aria-hidden="true"
-                width={240}
-                height={518}
-                sx={{ width: 110, height: 'auto', flexShrink: 0, display: 'block' }}
+                width={AVATAR_WIDTH}
+                height={AVATAR_HEIGHT}
+                sx={{
+                  width: 110,
+                  height: 'auto',
+                  flexShrink: 0,
+                  display: 'block',
+                  [inGutter]: {
+                    position: 'absolute',
+                    top: PORTRAIT_TOP,
+                    right: `calc(100% + ${PORTRAIT_GAP}px)`,
+                    width: PORTRAIT_GUTTER_WIDTH,
+                  },
+                }}
               />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
