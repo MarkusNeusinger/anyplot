@@ -115,8 +115,15 @@ def _bin(tmp_path: Path, fake_gh: str = FAKE_GH) -> str:
     return f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
 
 
+PIPEFAIL = ("bash", "-eo", "pipefail", "-c")
+# What Actions runs a step with when neither the step nor the workflow sets a
+# shell. A pipeline's failure passes unseen under it, so a step that holds
+# under pipefail alone has not been shown to hold in production.
+BASH_E = ("bash", "-e", "-c")
+
+
 def _run(
-    script: str, cwd: Path, tmp_path: Path, *, fake_gh: str = FAKE_GH, **env: str
+    script: str, cwd: Path, tmp_path: Path, *, fake_gh: str = FAKE_GH, shell: tuple[str, ...] = PIPEFAIL, **env: str
 ) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:
     assert "${{" not in script
     log = tmp_path / "gh_log"
@@ -130,7 +137,7 @@ def _run(
         runner_temp.mkdir(exist_ok=True)
         env["RUNNER_TEMP"] = str(runner_temp)
     result = subprocess.run(
-        ["bash", "-eo", "pipefail", "-c", script],
+        [*shell, script],
         cwd=cwd,
         env={**base, "PATH": _bin(tmp_path, fake_gh), "GH_LOG": str(log), "GH_TOKEN": "unused", **env},
         capture_output=True,
@@ -581,7 +588,30 @@ class TestWatchdogCase1:
         result, calls = self._scan(tmp_path)
         assert result.returncode == 0, result.stdout + result.stderr
         assert calls.count(self.DISPATCH) == 1
-        assert ["pr", "edit", "7", "--add-label", "ai-review-rescued", "--remove-label", "ai-review-failed"] in calls
+        assert _calls(calls, "pr", "edit") == [["pr", "edit", "7", "--add-label", "ai-review-rescued"]]
+
+    def test_the_rescue_never_removes_the_label_itself(self, tmp_path):
+        """The replacement review removes `ai-review-failed` when it starts.
+
+        A removal by the scan, after its dispatch, could take away the label a
+        fast replacement run had already put back (a second failed hash
+        download ends within a minute or two). The PR would then carry the
+        rescue marker alone, which no case of the scan sees.
+        """
+        _, calls = self._scan(tmp_path)
+        assert not [call for call in _calls(calls, "pr", "edit") if "--remove-label" in call]
+        # The other half of the handoff: with both labels on, the review's first label step clears the stale one.
+        clear = _step("impl-review.yml", "Clear a stale ai-review-failed label")["run"]
+        result, cleared = _run(clear, tmp_path, tmp_path, PR_NUM="7", GH_LABELS="ai-review-failed ai-review-rescued")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _calls(cleared, "pr", "edit") == [["pr", "edit", "7", "--remove-label", "ai-review-failed"]]
+
+    def test_a_rescue_whose_review_is_in_flight_is_left_alone(self, tmp_path):
+        """Both labels are the normal state between the rescue and the start of the replacement review."""
+        result, calls = self._scan(tmp_path, labels="ai-review-failed ai-review-rescued", GH_IN_FLIGHT_STATUS="queued")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "a review is queued or running" in result.stdout and "persists after rescue" not in result.stdout
+        assert self.DISPATCH not in calls and not _calls(calls, "pr", "edit")
 
     @pytest.mark.parametrize("status", ["queued", "in_progress", "pending", "waiting", "requested"])
     def test_a_review_in_flight_is_never_doubled(self, tmp_path, status):

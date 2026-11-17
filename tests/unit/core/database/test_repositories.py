@@ -4,6 +4,7 @@ Tests for database repository classes.
 Uses in-memory SQLite to test repository operations.
 """
 
+import inspect
 from datetime import date
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -312,7 +313,7 @@ class TestImplRepository:
     @pytest.mark.asyncio
     async def test_upsert_creates(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        impl = await repo.upsert("scatter-basic", "matplotlib", {"code": "print(1)", "quality_score": 90.0})
+        impl = await repo.upsert("scatter-basic", "matplotlib", {"code": "print(1)", "quality_score": 90.0}, "python")
         assert impl.spec_id == "scatter-basic"
         assert impl.library_id == "matplotlib"
         assert impl.quality_score == 90.0
@@ -320,14 +321,14 @@ class TestImplRepository:
     @pytest.mark.asyncio
     async def test_upsert_updates(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        await repo.upsert("scatter-basic", "matplotlib", {"code": "v1", "quality_score": 80.0})
-        impl = await repo.upsert("scatter-basic", "matplotlib", {"code": "v2", "quality_score": 95.0})
+        await repo.upsert("scatter-basic", "matplotlib", {"code": "v1", "quality_score": 80.0}, "python")
+        impl = await repo.upsert("scatter-basic", "matplotlib", {"code": "v2", "quality_score": 95.0}, "python")
         assert impl.quality_score == 95.0
 
     @pytest.mark.asyncio
     async def test_get_by_spec(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        await repo.upsert("scatter-basic", "matplotlib", {"code": "test"})
+        await repo.upsert("scatter-basic", "matplotlib", {"code": "test"}, "python")
         impls = await repo.get_by_spec("scatter-basic")
         assert len(impls) == 1
         assert impls[0].library_id == "matplotlib"
@@ -335,7 +336,7 @@ class TestImplRepository:
     @pytest.mark.asyncio
     async def test_get_by_library(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        await repo.upsert("scatter-basic", "matplotlib", {"code": "test"})
+        await repo.upsert("scatter-basic", "matplotlib", {"code": "test"}, "python")
         impls = await repo.get_by_library("matplotlib")
         assert len(impls) == 1
         assert impls[0].spec_id == "scatter-basic"
@@ -343,35 +344,56 @@ class TestImplRepository:
     @pytest.mark.asyncio
     async def test_get_code(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        await repo.upsert("scatter-basic", "matplotlib", {"code": "import matplotlib"})
-        impl = await repo.get_code("scatter-basic", "matplotlib")
+        await repo.upsert("scatter-basic", "matplotlib", {"code": "import matplotlib"}, "python")
+        impl = await repo.get_code("scatter-basic", "matplotlib", "python")
         assert impl is not None
         assert impl.code == "import matplotlib"
 
     @pytest.mark.asyncio
     async def test_get_code_not_found(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        impl = await repo.get_code("nonexistent", "matplotlib")
+        impl = await repo.get_code("nonexistent", "matplotlib", "python")
         assert impl is None
 
     @pytest.mark.asyncio
     async def test_get_by_spec_and_library(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        await repo.upsert("scatter-basic", "matplotlib", {"code": "test", "review_verdict": "APPROVED"})
-        impl = await repo.get_by_spec_and_library("scatter-basic", "matplotlib")
+        await repo.upsert("scatter-basic", "matplotlib", {"code": "test", "review_verdict": "APPROVED"}, "python")
+        impl = await repo.get_by_spec_and_library("scatter-basic", "matplotlib", "python")
         assert impl is not None
         assert impl.review_verdict == "APPROVED"
 
     @pytest.mark.asyncio
     async def test_get_by_spec_and_library_not_found(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        impl = await repo.get_by_spec_and_library("nonexistent", "matplotlib")
+        impl = await repo.get_by_spec_and_library("nonexistent", "matplotlib", "python")
         assert impl is None
+
+    @pytest.mark.asyncio
+    async def test_an_implementation_is_found_only_under_its_own_language(self, setup_data: AsyncSession) -> None:
+        setup_data.add(Library(id="ggplot2", name="ggplot2", language_id="r"))
+        await setup_data.commit()
+        repo = ImplRepository(setup_data)
+        created = await repo.upsert("scatter-basic", "ggplot2", {"code": "library(ggplot2)"}, "r")
+        assert created.language_id == "r"
+
+        code = await repo.get_code("scatter-basic", "ggplot2", "r")
+        full = await repo.get_by_spec_and_library("scatter-basic", "ggplot2", "r")
+        assert code is not None and code.code == "library(ggplot2)"
+        assert full is not None and full.id == created.id
+        assert await repo.get_code("scatter-basic", "ggplot2", "python") is None
+        assert await repo.get_by_spec_and_library("scatter-basic", "ggplot2", "python") is None
+
+    @pytest.mark.parametrize("method", ["get_code", "get_by_spec_and_library", "upsert"])
+    def test_the_language_has_no_default(self, method: str) -> None:
+        """A default language answers "not found" for every implementation in another language."""
+        parameter = inspect.signature(getattr(ImplRepository, method)).parameters["language_id"]
+        assert parameter.default is inspect.Parameter.empty
 
     @pytest.mark.asyncio
     async def test_get_total_code_lines(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        await repo.upsert("scatter-basic", "matplotlib", {"code": "line1\nline2\nline3"})
+        await repo.upsert("scatter-basic", "matplotlib", {"code": "line1\nline2\nline3"}, "python")
         total = await repo.get_total_code_lines()
         assert total == 3
 
@@ -384,7 +406,7 @@ class TestImplRepository:
     @pytest.mark.asyncio
     async def test_get_loc_per_impl(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        await repo.upsert("scatter-basic", "matplotlib", {"code": "line1\nline2"})
+        await repo.upsert("scatter-basic", "matplotlib", {"code": "line1\nline2"}, "python")
         loc = await repo.get_loc_per_impl()
         assert len(loc) == 1
         assert loc[0] == ("matplotlib", 2)
@@ -392,7 +414,7 @@ class TestImplRepository:
     @pytest.mark.asyncio
     async def test_get_by_library_with_code(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        await repo.upsert("scatter-basic", "matplotlib", {"code": "import matplotlib"})
+        await repo.upsert("scatter-basic", "matplotlib", {"code": "import matplotlib"}, "python")
         impls = await repo.get_by_library_with_code("matplotlib")
         assert len(impls) == 1
         assert impls[0].spec_id == "scatter-basic"
@@ -403,10 +425,10 @@ class TestImplRepository:
     @pytest.mark.asyncio
     async def test_get_ids_with_code(self, setup_data: AsyncSession) -> None:
         repo = ImplRepository(setup_data)
-        with_code = await repo.upsert("scatter-basic", "matplotlib", {"code": "import matplotlib"})
+        with_code = await repo.upsert("scatter-basic", "matplotlib", {"code": "import matplotlib"}, "python")
         setup_data.add(Spec(id="bar-basic", title="Basic Bar"))
         await setup_data.commit()
-        codeless = await repo.upsert("bar-basic", "matplotlib", {"code": None})
+        codeless = await repo.upsert("bar-basic", "matplotlib", {"code": None}, "python")
 
         ids = await repo.get_ids_with_code()
         assert with_code.id in ids

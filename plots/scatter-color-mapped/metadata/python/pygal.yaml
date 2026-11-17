@@ -12,109 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/pygal/plot-dark.html
-quality_score: 89
+quality_score: 66
 review:
   strengths:
-  - Perfect text legibility and theme adaptation in both light and dark renders
-  - All specifications met with clear, descriptive labels and proper data mapping
-  - Excellent data quality with realistic scientific context and full feature coverage
-  - Clean, reproducible code with proper random seeding
-  - Clever use of pygal's series system to achieve color-mapped effect
-  - Viridis palette provides scientifically-sound, colorblind-safe continuous color
-    scale
+  - Theme tokens threaded through pygal's Style; no dark-on-dark or light-on-light
+    text
+  - Neutral, plausible sensor-grid temperature scenario with a spatial pattern plus
+    noise, seeded
+  - Interactive HTML output with per-bin legend toggling
   weaknesses:
-  - Design Excellence could be elevated with visual refinement (spine removal, grid
-    refinement)
-  - Library Mastery shows standard idiomatic usage; could showcase more distinctive
-    pygal features
-  - Visual styling feels like well-configured defaults rather than intentional custom
-    design
+  - 'VQ-05 (both): canvas is 4800x2700, not a required size → 3200x1800 (−1600 × −900).
+    Likely cause: pygal.XY(width=4800, height=2700).'
+  - 'VQ-01 (both): title (28), tick labels (18) and legend text (16) read tiny on
+    the canvas, and the legend is nearly illegible → the library prompt''s sizes on
+    3200x1800 (title ~66, axis titles ~56, ticks ~44, legend ~44). Likely cause: Style
+    font sizes far below the native-pixel references.'
+  - 'VQ-07 (both): continuous temperature colored with viridis → imprint_seq ramp
+    #009E73 to #4467A3. Likely cause: the hard-coded viridis_colors tuple.'
+  - 'VQ-03 (dark): lowest-bin dots in #440154 nearly vanish on the #1A1A17 page, failing
+    C3 → both colormap ends visible, e.g. imprint_seq plus a thin page-colored dot
+    outline. Likely cause: the viridis dark end and no dot stroke.'
+  - 'SC-04 (both): title ''scatter-color-mapped · pygal · anyplot.ai'' lacks the language
+    segment → ''scatter-color-mapped · python · pygal · anyplot.ai''. Likely cause:
+    the title string.'
+  - 'SC-02 (both): the binned legend that stands in for the color bar shows only ''13–16°C''
+    … ranges and never names the mapped variable (C2) → name it, e.g. ''Temperature
+    13–16 °C''. Likely cause: the label f-string.'
+  - 'CQ-01 (code): no column-0 # Data / # Plot zone split and no column constants
+    for the x, y and color roles → column constants above a Data block that ends in
+    a tidy df. Likely cause: data arrays used directly in the plot code.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface
-      Chrome: Title "scatter-color-mapped · pygal · anyplot.ai" clearly visible at top in dark text. Axis labels "Grid X Position (meters)" and "Grid Y Position (meters)" readable. Tick labels are clear. Legend at bottom shows 8 temperature bins with descriptive ranges.
-      Data: Scatter points use viridis-inspired colormap (dark purple → yellow) representing temperature distribution across sensor grid. Points are well-defined and distinct. Full range of colors visible.
-      Legibility verdict: PASS - All text is readable against light background. No legibility issues.
+      Background: warm off-white #FAF8F1, but the canvas is 4800x2700.
+      Chrome: title 'scatter-color-mapped · pygal · anyplot.ai' at the top, axis titles 'Grid X Position (meters)' and 'Grid Y Position (meters)', dotted grid; title, tick labels and especially the three-column legend at the bottom ('13–16°C' … '32–35°C') are tiny relative to the canvas and hard to read.
+      Data: 100 dots in eight viridis bins, from dark purple #440154 to yellow #FDE725, warmer toward the center.
+      Legibility verdict: FAIL (text far too small on the oversized canvas; legend nearly illegible)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface
-      Chrome: Title, axis labels, and tick labels all visible in light text. No dark-on-dark failures. Grid lines are subtle but visible.
-      Data: Colors are identical to light render - dark purple in cool regions, green/yellow in warm regions. Confirms color consistency across themes with only chrome adaptation.
-      Legibility verdict: PASS - All text is light-colored and legible. Both renders meet theme-readability requirements.
+      Background: warm near-black #1A1A17.
+      Chrome: light text, no dark-on-dark text, but the same tiny title, tick labels and legend.
+      Data: the same viridis colors as the light render; the dark-purple lowest-bin dots nearly vanish against the dark page.
+      Legibility verdict: FAIL (tiny text; the low end of the colormap is near-invisible on dark)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 17
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 3
         max: 8
-        passed: true
-        comment: All font sizes explicitly set. Perfect readability in both themes.
+        passed: false
+        comment: Title 28, ticks 18 and legend 16 on a 4800-wide canvas read tiny
+          in both themes (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, no collisions.
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Scatter markers optimally sized for 100-point dataset.
+        passed: false
+        comment: 'Dark-purple #440154 lowest-bin dots nearly invisible on the dark
+          page; no outline (defect line)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis palette is perceptually uniform and CVD-safe.
+        comment: Viridis is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Landscape format with balanced margins. Plot fills 50-70% of canvas.
+        passed: false
+        comment: Canvas 4800x2700, not a required size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (meters).
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Viridis correct for continuous data. Backgrounds theme-correct. Data
-          colors identical across themes.
+        passed: false
+        comment: Viridis instead of imprint_seq for continuous data (defect line)
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Custom palette with thoughtful binning and theme support. Shows design
-          intent but feels like configured defaults.
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and good whitespace. Could be more polished.
+        comment: Grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Color-mapped temperature tells spatial narrative. Good visual hierarchy
-          through color.
+        comment: Data displayed, no hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -122,25 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY scatter with color mapping.
+        comment: XY scatter with color-mapped third variable
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec features present: three-variable mapping, legend/colorbar.'
+        passed: false
+        comment: 'C2 partly missed: legend shows °C ranges but never names the mapped
+          variable, temperature (defect line)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped. Color to temperature. All data visible.
+        comment: Points at their values; bins cover the full range
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct. Legend labels properly show ranges.
+        passed: false
+        comment: Title lacks the language segment 'python' (defect line)
     data_quality:
       score: 15
       max: 15
@@ -150,70 +162,73 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full temperature range displayed. Spatial variation evident.
+        comment: 100 points spanning the whole colormap with a spatial pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature sensor grid is realistic and neutral.
+        comment: Temperature across a sensor grid, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible values (10-35°C, 0-100m grid).
+        comment: 'Checked: 13–35 °C off the legend and a 0–100 m grid off the axes;
+          plausible'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear flow with no unnecessary abstractions.
+        passed: false
+        comment: No Data/Plot zone separation and no column constants (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures consistent output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Clever series binning.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format.
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Proper XY chart class and Style usage. Standard patterns.
+        passed: true
+        comment: 'pygal.XY with Style, one series per bin: standard pattern'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Clever multi-series color-mapping. Interactive HTML leverages pygal.
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies: []
   techniques:

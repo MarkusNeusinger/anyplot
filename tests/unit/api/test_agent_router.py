@@ -2004,6 +2004,16 @@ PLOT_PY = (
     "# Adapted by anyplot.ai from scatter-basic (matplotlib 3.10.0) for your data.csv;\n"
     "# run: ANYPLOT_THEME=light python plot.py\n\nimport pandas as pd\n"
 )
+PLOT_R = (
+    "# Adapted by anyplot.ai from scatter-basic (ggplot2 4.0.1) for your data.csv;\n"
+    "# run: ANYPLOT_THEME=light Rscript plot.R\n\nlibrary(ggplot2)\nggplot(df)\n"
+)
+PLOT_JS = (
+    "// Adapted by anyplot.ai from scatter-basic (chartjs 4.4.7) for your data.csv;\n"
+    "// run: open plot.html in a browser, which runs this code with the chart library, the light theme and your data\n"
+    "\nconst chart = new Chart(ctx, config);\n"
+)
+"""Exports of the other two header forms (agents/anyplot/code/export.py, `attribution`): R's `#`, JavaScript's `//`."""
 PROMPT_HASHES = {"root": "a" * 16, "reviewer": "b" * 16, "adapter_matplotlib": "c" * 16}
 
 
@@ -2761,10 +2771,23 @@ class TestOutcomeBeacon:
         assert upstream.requests == []
 
 
-def _seed(cases: FakeBucket, rows: FakeRows, *, include_data: bool = True, **row_overrides: Any) -> AgentFeedback:
+def _bundle_with_code(code: str, code_artifact: str) -> dict[str, Any]:
+    """The bundle `_seed` stores, with another language's exported code in its version."""
+    bundle = _feedback_bundle(3, data_csv="hours,score\n1.5,52\n")
+    return {**bundle, "versions": [{**bundle["versions"][0], "plot_py": code, "code_artifact": code_artifact}]}
+
+
+def _seed(
+    cases: FakeBucket,
+    rows: FakeRows,
+    *,
+    include_data: bool = True,
+    bundle: dict[str, Any] | None = None,
+    **row_overrides: Any,
+) -> AgentFeedback:
     """A stored case: its files in the fake bucket through the real `build_case`, its row in the fake table."""
     case = build_case(
-        json.dumps(_feedback_bundle(3, data_csv="hours,score\n1.5,52\n")).encode(),
+        json.dumps(bundle or _feedback_bundle(3, data_csv="hours,score\n1.5,52\n")).encode(),
         Submission(
             reaction="thumbs_down", message="the legend hides the points", include_data=include_data, result_version=3
         ),
@@ -2967,7 +2990,7 @@ class TestCases:
 
         body = client.get(self.PATH).json()
 
-        catalogue.get_code.assert_awaited_once_with("scatter-basic", "matplotlib")
+        catalogue.get_code.assert_awaited_once_with("scatter-basic", "matplotlib", "python")
         assert body["diff"] == (
             "--- catalogue/scatter-basic/matplotlib.py\n"
             "+++ case/plot.py\n"
@@ -2984,6 +3007,47 @@ class TestCases:
         catalogue.get_code.assert_not_awaited()
         assert body["diff"] is None
         assert body["code"] == PLOT_PY
+
+    def test_detail_reads_a_non_python_catalogue_under_its_language(self, client, cases, rows, catalogue) -> None:
+        """The row has no programming language; the registry gives ggplot2's, so its code is found and diffed."""
+        _seed(cases, rows, bundle=_bundle_with_code(PLOT_R, "plot.R"), library_id="ggplot2")
+        catalogue.get_code.return_value = _make_impl(
+            library_id="ggplot2", code="library(ggplot2)\n", library_version="4.0.1"
+        )
+
+        body = client.get(self.PATH).json()
+
+        catalogue.get_code.assert_awaited_once_with("scatter-basic", "ggplot2", "r")
+        assert body["catalogue_library_version"] == "4.0.1"
+        assert body["diff"] == (
+            "--- catalogue/scatter-basic/ggplot2.R\n+++ case/plot.R\n@@ -1 +1,2 @@\n library(ggplot2)\n+ggplot(df)\n"
+        )
+
+    def test_detail_diffs_a_javascript_case_without_its_script_header(self, client, cases, rows, catalogue) -> None:
+        """A JavaScript export's header is `//` comments: it names the case's library and stays out of the diff."""
+        _seed(cases, rows, bundle=_bundle_with_code(PLOT_JS, "plot.js"))
+        catalogue.get_code.return_value = _make_impl(
+            library_id="chartjs", code="const chart = new Chart(ctx, config);\nchart.update();\n"
+        )
+
+        body = client.get(self.PATH).json()
+
+        catalogue.get_code.assert_awaited_once_with("scatter-basic", "chartjs", "javascript")
+        assert body["diff"] == (
+            "--- catalogue/scatter-basic/chartjs.js\n"
+            "+++ case/plot.js\n"
+            "@@ -1,2 +1 @@\n"
+            " const chart = new Chart(ctx, config);\n"
+            "-chart.update();\n"
+        )
+
+    def test_detail_skips_the_catalogue_for_a_library_outside_the_registry(
+        self, client, cases, rows, catalogue
+    ) -> None:
+        _seed(cases, rows, library_id="no-such-lib")
+        body = client.get(self.PATH).json()
+        catalogue.get_code.assert_not_awaited()
+        assert (body["diff"], body["catalogue_library_version"]) == (None, None)
 
     def test_detail_lists_the_other_rows_of_the_same_version(self, client, cases, rows) -> None:
         seeded = _seed(cases, rows)

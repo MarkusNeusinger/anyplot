@@ -135,9 +135,12 @@ check with an unknown smoke run while the new source fails the static check.
 With `--readiness`, the verdict file of `readiness_record.py`, a merge also
 becomes keep with `readiness_regression` when that verdict is `regression`;
 every other status changes nothing. With `--render-mismatch` it keeps with
-`render_mismatch` before anything else is read: impl-review's render-hash
-check stopped the review, so there is no score, and the record's `adapt.review`
-reads `skipped`. `adapt-route` writes `adapt_route`, `adapt_why`,
+`render_mismatch` before anything else is read, and with `--render-unverified`
+with `render_unverified`: impl-review's render-hash check stopped the review
+(the renders were made from other code, the hash is missing or couldn't be
+read, or the implementation at the head couldn't be read), so there is no
+score, and the record's `adapt.review` reads `skipped`.
+`adapt-route` writes `adapt_route`, `adapt_why`,
 `adapt_prev`, and `adapt_new` before the review, and always exits 0. impl-review
 passes that result back to `decide` as `--adapt-route-held`. The record gains
 `adapt` (`AdaptAssessment.to_record`, checked by `validate_record`), with
@@ -217,14 +220,17 @@ leading lines, so a file always comes out with exactly one header.
 Ties the staged renders to the code that made them (stdlib, plus
 `regen_gate.py` and, for JavaScript, `impl_header.py` from its own directory).
 `write --language L` stages two hashes of the implementation as
-`render.sha256` (`impl-generate.yml`, `impl-repair.yml`, each from a copy at
-the workflow's ref): the file with its `Quality:` header line reset to
-`pending`, and the code without the header that impl-review's writer
-replaces, with the score reset the same way. `check` compares the file with the one at the PR head
-(`impl-review.yml`, "Check the render hash") and reports `match`, `mismatch`,
-`missing`, or `unreadable`, plus `stop=true` for a mismatch against a file
-that holds both hashes. The script itself never fails the review; the step
-"Stop on a render hash mismatch" acts on `stop`. See
+`render.sha256` (`impl-generate.yml`, `impl-repair.yml`, step "Stage the
+render hash", each from a copy at the workflow's ref): the file with its
+`Quality:` header line reset to `pending`, and the code without the header
+that impl-review's writer replaces, with the score reset the same way. That
+step is fatal: a run that can't stage the hash fails before its review.
+`check` compares the file with the one at the PR head (`impl-review.yml`,
+"Check the render hash") and reports `match`, `mismatch`, `missing`, or
+`unreadable`. Only a match lets the review run: every other result writes
+`stop=true` with its `cause`, the regen gate's `code`, and `retry=true` when
+the hash couldn't be downloaded. The script itself never fails the review; the
+step "Stop on the render hash" acts on those outputs. See
 [Renders tied to their code](../../docs/workflows/overview.md#renders-tied-to-their-code).
 
 ### `contract_check.py`
