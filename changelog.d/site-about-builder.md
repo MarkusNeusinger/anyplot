@@ -127,6 +127,7 @@
   keywords and structured data of the page shell say "colourblind-safe", as
   the palette sections of the about and landing pages already did, and the
   palette page's sort button reads "max ΔE under colour blindness". The
+  about page says "colour grammar" in its two sentences on it. The
   style guide follows in its sample copy and its own sentences, and its voice
   section adds the rule: British English on the site, while proper names,
   citations, code and library or API names keep their own spelling.

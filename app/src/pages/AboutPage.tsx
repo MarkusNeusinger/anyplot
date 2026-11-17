@@ -107,7 +107,7 @@ export function AboutPage() {
               javascript. plot ideas come in as GitHub issues; ai drafts the spec, generates code
               for every library, and reviews each implementation. I approve new specs and tune the
               rules when something repeatedly fails. every example uses the same colourblind-safe
-              palette, so switching libraries never breaks your color grammar.
+              palette, so switching libraries never breaks your colour grammar.
             </Box>
           </Box>
         </Box>
@@ -339,7 +339,7 @@ export function AboutPage() {
             <Box sx={{ ...textStyle, mt: 1 }}>
               a "gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or
               bokeh. the palette travels with you across libraries. switching tools doesn't mean
-              re-learning your color grammar.
+              re-learning your colour grammar.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               see the {proseLink(paths.palette, 'palette page')} for the full reference and usage

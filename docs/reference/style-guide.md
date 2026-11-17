@@ -276,7 +276,7 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 
 > Instead of: `🚀 Supercharge your data viz workflow with AI-powered plot generation! Unlock 1000+ beautifully crafted charts across multiple libraries. Ship faster, iterate smarter, and empower your team to create stunning visualizations!`
 >
-> Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. Every example uses the same colourblind-safe palette, so switching libraries never breaks your color grammar.`
+> Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. Every example uses the same colourblind-safe palette, so switching libraries never breaks your colour grammar.`
 
 The second version is shorter, says what's actually happening (ideas come in as GitHub issues; I approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
 
@@ -307,7 +307,7 @@ Narrative hooks for talking about anyplot — adapt to context, don't recite ver
 
 **The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of colour vision deficiency — most plotting libraries ignore this entirely. I make it the default.
 
-**The library-agnostic story:** A "Gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh. The palette travels with you across libraries. Switching tools doesn't mean re-learning your color grammar.
+**The library-agnostic story:** A "Gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh. The palette travels with you across libraries. Switching tools doesn't mean re-learning your colour grammar.
 
 **The catalogue story:** Thousands of examples across fifteen libraries in four languages, each reproducible and copy-pasteable. No ads. No affiliate links. No "suggested tutorials you might like." Just the plots and the code that made them.
 
