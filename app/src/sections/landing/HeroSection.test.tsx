@@ -107,6 +107,41 @@ describe('HeroSection', () => {
     expect(css).not.toMatch(new RegExp(`\\.${bylineClass}\\{[^}]*display:none;`));
   });
 
+  it('keeps the name on one line, cued at rest, padded on phones and ringed around the name', () => {
+    render(<HeroSection potd={null} />);
+
+    const link = emotionClass(screen.getByRole('link', { name: 'Markus Neusinger' }));
+    const css = styles();
+    // The name never splits across lines.
+    expect(css).toMatch(new RegExp(`\\.${link}\\{[^}]*white-space:nowrap;`));
+    // A dotted underline at rest in the text's own colour, a cue that does not depend on colour.
+    expect(css).toMatch(
+      new RegExp(`\\.${link}>span\\{[^}]*border-bottom:[^;]*dotted currentColor;`)
+    );
+    // Below sm (600 px) padding grows the touch target and an equal negative margin keeps the
+    // text in place; from sm up both are reset.
+    const phone = new RegExp(`@media \\(min-width: ?0px\\)\\{\\.${link}\\{([^}]*)\\}\\}`).exec(css);
+    if (!phone) throw new Error('the link has no padding below sm');
+    const padding = /(?:^|;)padding:([^;]+);/.exec(phone[1])?.[1];
+    expect(padding).toMatch(/^[1-9][\d.]*px$/);
+    expect(phone[1]).toContain(`margin:-${padding};`);
+    expect(css).toMatch(
+      new RegExp(
+        `@media \\(min-width: ?600px\\)\\{\\.${link}\\{padding:0(?:px)?;margin:0(?:px)?;\\}\\}`
+      )
+    );
+    // The keyboard gets the hero's own ring, drawn on the name rather than the padded box.
+    expect(css).toMatch(new RegExp(`\\.${link}:focus-visible\\{outline:none;\\}`));
+    const cta = emotionClass(screen.getByLabelText('Browse plots'));
+    const heroRing = new RegExp(`\\.${cta}:focus-visible\\{([^}]*)\\}`).exec(css)?.[1];
+    if (!heroRing) throw new Error('the browse link has no focus ring');
+    const nameRing = new RegExp(`\\.${link}:focus-visible>span\\{([^}]*)\\}`).exec(css)?.[1];
+    if (!nameRing) throw new Error('the name has no focus ring');
+    for (const declaration of heroRing.split(';').filter(Boolean)) {
+      expect(nameRing).toContain(`${declaration};`);
+    }
+  });
+
   it('reports a click on the name as nav_click from hero_about', async () => {
     const user = userEvent.setup();
     render(<HeroSection potd={null} />);
