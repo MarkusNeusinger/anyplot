@@ -123,17 +123,21 @@ with evidence — never let the user ask "still running?".
   move — it auto-closes the bad PR. Stale `ai-review-failed` PRs on
   old branches keep re-failing review (score=0) even on a strong
   model: regenerate fresh, don't re-review.
-- **A PR labelled `ai-render-mismatch` is parked on purpose**: its
+- **A PR labelled `ai-render-unverified` is parked on purpose**: its
   review stopped because the staged renders were made from other code
-  than the PR holds, the review run is red, and neither the watchdog
-  nor a re-review of the same staging moves it. The queue doesn't
+  than the PR holds, their `render.sha256` is missing or holds no hash,
+  or the file at the PR head could not be read. The review run is red,
+  and neither the watchdog nor a re-review of the same staging moves
+  it. (A hash that could not be downloaded is another case: that PR
+  gets `ai-review-failed`, and the watchdog starts its review again
+  once, unless it already rescued that PR.) The queue doesn't
   move it either: `run_queue.sh` skips a spec while one of its
   implementation PRs is open (`skip <spec>: generate run or PR still
   in flight (needs a look)`), and that includes a parked one, because
-  a mismatch is an anomaly someone should look at before it's
+  such a stop is an anomaly someone should look at before the pair is
   generated again. After that look, dispatch the pair yourself, outside
   the queue, the way the PR was made; the PR's comment gives the
-  command (`docs/workflows/overview.md`, "What a mismatch does"). That
+  command (`docs/workflows/overview.md`, "What a stop does"). That
   run closes the parked PR, and the next queue pass sees the spec
   again.
 - **Never run concurrent re-reviews on the same PR** (manual dispatch

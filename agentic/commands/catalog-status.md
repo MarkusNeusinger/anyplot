@@ -43,13 +43,15 @@ For the missing-lib detail of one spec, list the files and diff against the regi
 ```bash
 gh pr list --label "ai-review-failed" --json number,title,labels --jq '.[] | "\(.number) \(.title) [\([.labels[].name] | join(","))]"'
 gh pr list --search "is:open label:ai-rejected" --json number,title --jq '.[] | "\(.number) \(.title)"'
-gh pr list --search "is:open label:ai-render-mismatch" --json number,title --jq '.[] | "\(.number) \(.title)"'
+gh pr list --search "is:open label:ai-render-unverified" --json number,title --jq '.[] | "\(.number) \(.title)"'
 ```
 
-A PR labelled `ai-render-mismatch` is parked on purpose: its review stopped because the staged
-renders were made from other code, and no workflow picks it up again. Its comment gives the
-command that generates the pair again
-(`docs/workflows/overview.md`, "What a mismatch does").
+A PR labelled `ai-render-unverified` is parked on purpose: its review stopped because the staged
+renders were made from other code, their `render.sha256` is missing or holds no hash, or the
+implementation at the PR head could not be read, and no workflow picks it up again. Its comment
+gives the command that generates the pair again (`docs/workflows/overview.md`, "What a stop
+does"). A hash that could not be downloaded is not this label: that review ends as
+`ai-review-failed`.
 
 Impl-PR titles carry spec + library; map to issues via the `Fixes #N` in the PR body when
 needed. Remediation paths (re-review vs fresh regen) are in the babysit-pipeline skill and
