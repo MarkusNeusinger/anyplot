@@ -46,7 +46,7 @@
   content security policy, the analytics proxy, and the machine-read lines
   read. The filter is a workflow change with no local run: a unit test sends
   the path of each of these five files through its pattern, and only a pull
-  request on GitHub shows that the job starts.
+  request on GitHub shows that the job starts. (#13163)
 
 ### Fixed
 
@@ -58,10 +58,10 @@
   paragraph, the example pairs, the line on how the chat is built, and the
   terms of use word for word under their heading and in their order, which a
   test pins to `AgentIntro.tsx`. The machine-read log names the page `agent_page` instead
-  of a spec hub for a spec called `agent`.
+  of a spec hub for a spec called `agent`. (#13163)
 - **The back button asks before it leaves a chat for the explainer.** The
   chat's leave warning compared only the path, so going back from a chat with
   data or a plot to `/agent` without a plot, or to another chat, ended the
   session without asking. It now asks for any move away from the chat's
   catalogue plot, as a link off the page always did; a library switch inside
-  the chat still passes without a prompt.
+  the chat still passes without a prompt. (#13163)
