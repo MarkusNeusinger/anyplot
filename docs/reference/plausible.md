@@ -301,7 +301,7 @@ names, code or a dataset size. The events exist only in builds with
 
 | Event | What its properties say |
 |-------|-------------------------|
-| `agent_open` | The chat page opened for a visitor. `source` is `plot_page` when a plot page's `.use_my_data() →` led there, `spec_hub` when the spec hub's header entry did, `plot_of_the_day` when the landing page's plot of the day did, `landing` (a line that led there on 2026-11-02 only), and `direct` otherwise: a typed URL, a bookmark, a reload |
+| `agent_open` | The chat page opened for a visitor. `source` is `plot_page` when a plot page's `.use_my_data() →` led there, `spec_hub` when the spec hub's header entry did, `plot_of_the_day` when the landing page's plot of the day did, `agent_intro` when an example of `/agent` without a plot did (the explainer the landing page's `.use_my_data() →` leads to, since 2026-11-16), `landing` (a line that led there on 2026-11-02 only), and `direct` otherwise: a typed URL, a bookmark, a reload. It fires once per chat: a library switch inside the chat fires none, and a visitor who goes back to the explainer and picks another example fires it again (since 2026-11-16) |
 | `agent_plot_rendered` | A turn's `plot` event arrived. `status` is `ok`, `needs_attention`, `failed`, or `not_ready`; `repaired` is `yes` when the run needed its repair round, else `no`. A plot the server refuses before the run sends no `plot` event, so it fires none |
 
 `copy_code` on a result card carries `method: agent` and `page: agent_chat`
@@ -395,7 +395,7 @@ carry `spec` and `library`.
 | `source` | Element | Leads to |
 |----------|---------|----------|
 | `hero_cta_browse`, `hero_mcp`, `hero_github` | The hero's call to action and its two secondary links (`HeroSection.tsx`) | `/plots`, `/mcp`, GitHub |
-| `hero_use_my_data` | `# new: pick any plot, then .use_my_data() →` under the hero, shown while the agent chat's public lane is open | `/plots` |
+| `hero_use_my_data` | `.use_my_data() →` over `an ai agent adapts a catalogue plot to your data` below the hero's call to action, shown while the agent chat's public lane is open. Until 2026-11-16 it was the line `# new: pick any plot, then .use_my_data() →`, which led to `/plots` | `/agent`, the chat's explainer without a plot |
 | `potd_terminal_image`, `potd_terminal_filename`, `potd_terminal_github` | The plot of the day in its terminal frame (`PlotOfTheDayTerminal.tsx`), with `spec` and `library` | The plot's page, GitHub |
 | `featured_thumb` | A plot of the featured grid, with `spec` | The spec's hub |
 | `library_card` | A library card, with `library` | `/plots` filtered to the library |
@@ -802,7 +802,7 @@ Enterprise plan, so you change them in the dashboard.
 | `library` | A library id: `matplotlib`, `seaborn`, `plotly`, `bokeh`, `altair`, `plotnine`, `pygal`, `letsplot`, `ggplot2`, `makie`, `chartjs`, `d3`, `echarts`, `highcharts`, `muix` (`LIBRARIES_METADATA` in `core/constants.py`) | The same events as `spec` |
 | `method` | `card`, `image`, `tab`, `agent` | `copy_code` |
 | `page` | `home`, `plots`, `spec_overview`, `spec_detail`, `agent_chat`, `other` | Every pageview, `copy_code`, `download_image` |
-| `source` | For `nav_click` the element (see [Landing page clicks](#landing-page-clicks-nav_click)); for `agent_open` `plot_page`, `spec_hub`, `plot_of_the_day`, `landing`, `direct`; for `feedback_submitted` `widget_quick`, `widget_form`, `plot_vote` | `nav_click`, `agent_open`, `feedback_submitted` |
+| `source` | For `nav_click` the element (see [Landing page clicks](#landing-page-clicks-nav_click)); for `agent_open` `plot_page`, `spec_hub`, `plot_of_the_day`, `agent_intro`, `landing`, `direct`; for `feedback_submitted` `widget_quick`, `widget_form`, `plot_vote` | `nav_click`, `agent_open`, `feedback_submitted` |
 | `target` | A path of the site, or `github` and other labels of an outbound element | `nav_click` |
 | `query` | The search text: lowercase, single spaces, at most 40 characters | `search`, `search_no_results` |
 | `category` | `lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`, `prep`, `style` | `search` |

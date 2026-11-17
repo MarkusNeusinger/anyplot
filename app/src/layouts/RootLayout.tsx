@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
 import { FeedbackWidget } from 'src/components/FeedbackWidget';
+import { AGENT_CHAT_ENABLED } from 'src/global-config';
 import { useAnalytics } from 'src/hooks';
 import { setAnalyticsAmbientProps } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
@@ -13,7 +14,7 @@ import { useStay } from 'src/hooks/useStay';
 import { Footer } from 'src/layouts/Footer';
 import { MastheadRule } from 'src/layouts/MastheadRule';
 import { NavBar } from 'src/layouts/NavBar';
-import { isPlotsPath, paths } from 'src/routes/paths';
+import { isAgentChatAddress, isPlotsPath, paths } from 'src/routes/paths';
 
 const containerSx = {
   px: { xs: 2, sm: 4, md: 8, lg: 12 },
@@ -34,9 +35,16 @@ export function RootLayout() {
   const navigationType = useNavigationType();
   const { effective } = useTheme();
   const mastheadSticks = pathname !== paths.plots;
-  // The agent chat has a feedback row of its own on every result, and the chat's for a session
-  // without one; on a phone the site's button covered the composer's buttons and the replies.
-  const siteFeedback = pathname !== paths.agent;
+  // The agent chat offers feedback of its own once it has a conversation or a plot (`.feedback()`
+  // at its status line, a row on every result); on a phone the site's button covered the
+  // composer's buttons and the replies. The explainer at `/agent` without a pair has none, so the
+  // button stands there. The page picks chat or explainer by the same rule (`namesAgentChat`).
+  // The rule reads the address alone, so at a chat's address the button stays away also while
+  // the page waits for the lane. With the lane closed no chat is open there, and the page's closed
+  // notice shows the button itself, by this same rule (`LaneClosed` in `AgentChatPage`). A build
+  // without the chat answers a chat's address with the 404 page (`routes/index.tsx`), which has no
+  // feedback of its own either, so there the button stands.
+  const siteFeedback = !(AGENT_CHAT_ENABLED && isAgentChatAddress(pathname, search));
 
   // Set synchronously during render so the pageview below and a child page's
   // first event carry the theme prop.

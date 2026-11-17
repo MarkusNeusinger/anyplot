@@ -170,6 +170,8 @@ class TestTheClosedSets:
             ("/plots?lib=matplotlib", "plots"),
             ("/legal", "legal"),
             ("/mcp", "mcp_page"),
+            ("/agent", "agent_page"),
+            ("/agent?spec=box-basic&library=matplotlib", "agent_page"),
             ("/box-basic", "spec_hub"),
             ("/box-basic/", "spec_hub"),
             ("/box-basic/python", "spec_language"),
@@ -199,7 +201,14 @@ class TestTheClosedSets:
 
     @pytest.mark.parametrize(
         ("prerender_value", "route", "surface"),
-        [("1", "legal", "page"), ("0", "legal", "shell"), ("1", "robots", "machine_file"), ("0", "other", "other")],
+        [
+            ("1", "legal", "page"),
+            ("0", "legal", "shell"),
+            ("1", "agent_page", "page"),
+            ("0", "agent_page", "shell"),
+            ("1", "robots", "machine_file"),
+            ("0", "other", "other"),
+        ],
     )
     def test_a_prerender_path_crawler_is_never_called_a_shell_read(self, prerender_value, route, surface) -> None:
         assert evaluate("machine_surface", f"{prerender_value}:{route}") == surface

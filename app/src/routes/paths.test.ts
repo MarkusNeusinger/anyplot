@@ -2,13 +2,53 @@ import { describe, expect, it } from 'vitest';
 
 import {
   agentChatPath,
+  isAgentChatAddress,
   isPlotsPath,
   langFromPath,
+  namesAgentChat,
   paths,
   RESERVED_TOP_LEVEL,
   specIdFromPath,
   specPath,
 } from 'src/routes/paths';
+
+describe('namesAgentChat', () => {
+  const names = (query: string) => namesAgentChat(new URLSearchParams(query));
+
+  it('takes a well-formed spec id with a catalogue library as a chat', () => {
+    expect(names('spec=scatter-basic&library=matplotlib&language=python')).toBe(true);
+    // The language follows the library on the page, so the query needs none.
+    expect(names('spec=line-basic&library=d3')).toBe(true);
+  });
+
+  it('takes anything else as the explainer', () => {
+    expect(names('')).toBe(false);
+    expect(names('spec=scatter-basic')).toBe(false);
+    expect(names('library=matplotlib')).toBe(false);
+    expect(names('spec=scatter-basic&library=excel')).toBe(false);
+    expect(names('spec=Scatter_Basic&library=matplotlib')).toBe(false);
+    expect(names(`spec=${'a'.repeat(101)}&library=matplotlib`)).toBe(false);
+  });
+});
+
+describe('isAgentChatAddress', () => {
+  it('is the chat at /agent with a pair, at every path the router serves as the chat page', () => {
+    expect(isAgentChatAddress('/agent', '?spec=bar-basic&library=ggplot2')).toBe(true);
+    expect(isAgentChatAddress('/agent/', '?spec=bar-basic&library=ggplot2')).toBe(true);
+    // The router matches paths without regard to case, so this address renders the chat too.
+    expect(isAgentChatAddress('/Agent', '?spec=bar-basic&library=ggplot2')).toBe(true);
+    expect(isAgentChatAddress('/AGENT/', '?spec=bar-basic&library=ggplot2')).toBe(true);
+  });
+
+  it('is no chat without a pair, or on another path with the same query', () => {
+    expect(isAgentChatAddress('/agent', '')).toBe(false);
+    expect(isAgentChatAddress('/agent', '?spec=bar-basic')).toBe(false);
+    expect(isAgentChatAddress('/debug/agent', '?spec=bar-basic&library=ggplot2')).toBe(false);
+    expect(isAgentChatAddress('/plots', '?spec=bar-basic&library=ggplot2')).toBe(false);
+    expect(isAgentChatAddress('/agent/x', '?spec=bar-basic&library=ggplot2')).toBe(false);
+    expect(isAgentChatAddress('/agents', '?spec=bar-basic&library=ggplot2')).toBe(false);
+  });
+});
 
 describe('agentChatPath', () => {
   it('builds the one chat URL for a catalogue pair, for visitors and admins', () => {
