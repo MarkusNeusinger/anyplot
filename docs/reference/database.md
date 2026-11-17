@@ -610,7 +610,8 @@ A row deleted from the database therefore stays in these automated backups for a
 setting counts backups, not days, so a day without a successful backup adds a day. A manual backup
 or a snapshot taken by hand is not removed by this retention. The privacy section of the legal page
 (`app/src/pages/LegalPage.tsx`, "your rights") and its crawler copy in `api/routers/seo.py`
-(`_LEGAL_BOT_BODY`) name the period; if you change the retention, update both.
+(`_LEGAL_BOT_BODY`) say that the database's automatic backups keep a deleted entry for about 30
+days; if you change the retention, update both.
 
 ### Manual backups
 

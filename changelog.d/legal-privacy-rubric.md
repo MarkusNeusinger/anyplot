@@ -44,8 +44,8 @@
   and reaction can go to the AI assistant he codes with, Claude by Anthropic. The data
   assistant's feedback row adds that he reads the cases together with that assistant: the
   visitor's reaction and message, the conversation, the data sample or file, the plot and its
-  code. The crawler copy says the same, and names the operator, not admins, as the holder of
-  the Cloudflare Access login cookie.
+  code, and the run's details. The crawler copy says the same, and names the operator, not
+  admins, as the holder of the Cloudflare Access login cookie.
 - **The feedback widget speaks as the operator, and the copied prompt asks not to quote the
   visitor's message.** The widget's thank-you line now reads "I read every note.", as the
   site's feedback row says "I read them". The prompt that the admin page copies for the coding
@@ -57,16 +57,21 @@
 - **The privacy policy says how to find your entry, and what stays.** The rights paragraph
   on `/legal` now asks for what you sent and roughly when, or the contact you typed, so the
   operator can find the entry, and says that log lines cannot be deleted one by one: they
-  delete themselves after 30 days (server logs) or 180 days (machine reads, assistant
-  telemetry), the periods their own rows give, and that backups keep a deleted entry for up
-  to 30 days. The GitHub row adds that the operator removes a credited username from its spec
-  on request, while the public history keeps it. The crawler copy says the same.
+  expire after 30 days (server logs) or 180 days (machine reads, assistant telemetry), the
+  periods their own rows give, and that the database's automatic backups keep a deleted entry
+  for about 30 days. The GitHub row adds that the operator removes a credited username from
+  its spec on request, while the public history keeps it. The crawler copy says the same.
 
 ### Fixed
 
 - **The privacy policy names the session hash a feedback case keeps.** The data assistant's
   feedback row said that a case's triage row keeps a hash of your tab id; it also keeps a
   hash of the session id. The row and its crawler copy now name both.
+- **The privacy policy says that the gallery search's text reaches the analytics dashboard.**
+  The analytics row on `/legal` said that Plausible counts searches only in aggregate. The
+  gallery search also sends what a visitor typed, in lowercase and cut at 40 characters, and
+  the public dashboard lists it. The row now names that one exception, and the crawler copy
+  says the same.
 - **The database reference no longer contradicts the privacy policy.** The "Data privacy"
   list in `docs/reference/database.md` promised anonymous session ids, usage data deleted
   after 90 days and no personal data, and its first item broke off mid-sentence. It now
