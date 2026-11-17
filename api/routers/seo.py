@@ -1398,7 +1398,7 @@ AGENT_INTRO_DESCRIPTION = (
 )
 # The explainer's paragraph is the description between the opening sentence and
 # the two after it, the model's and the closing one.
-AGENT_INTRO_OPENING = "experimental, open to everyone since 2 november 2026."
+AGENT_INTRO_OPENING = "experimental, open to everyone since november 2026."
 # The provider and the location as the legal page states them; they hold where the
 # agents service is deployed (agents/cloudbuild.yaml) and configured (agents/anyplot/settings.py).
 AGENT_INTRO_MODEL = "the model is Claude by Anthropic, served through Google Cloud Vertex AI in the EU."
