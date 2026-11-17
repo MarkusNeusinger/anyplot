@@ -394,6 +394,7 @@ carry `spec` and `library`.
 
 | `source` | Element | Leads to |
 |----------|---------|----------|
+| `hero_about` | The builder's name in the eyebrow above the hero's headline, `by Markus Neusinger` (`HeroSection.tsx`) | `/about` |
 | `hero_cta_browse`, `hero_mcp`, `hero_github` | The hero's call to action and its two secondary links (`HeroSection.tsx`) | `/plots`, `/mcp`, GitHub |
 | `hero_use_my_data` | `# new: pick any plot, then .use_my_data() →` under the hero, shown while the agent chat's public lane is open | `/plots` |
 | `potd_terminal_image`, `potd_terminal_filename`, `potd_terminal_github` | The plot of the day in its terminal frame (`PlotOfTheDayTerminal.tsx`), with `spec` and `library` | The plot's page, GitHub |

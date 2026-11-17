@@ -518,7 +518,7 @@ The key rule: **mono is the default, italic-ss01 is the editorial accent.** Ever
 | Body paragraph         | mono upright      | 14–16px                    | 300–400| Default body text. Lowercase preferred.                         |
 | Intro / lede           | mono upright      | 18–19px                    | 300–500| Paragraph under H1. Subtitle (`one spec · every library…`) at 500. |
 | Tagline                | mono italic + ss01| 18–22px                    | 400    | Script variant, e.g. `steal like an artist.`                    |
-| Eyebrow / Kicker       | mono upright      | 11px                       | 400    | Lowercase, tracked `.08em`, preceded by a 18×1px green rule.    |
+| Eyebrow / Kicker       | mono upright      | 11px                       | 400    | Lowercase, tracked `.08em`, preceded by an 18×1px `--rule` line. |
 | UI labels & buttons    | mono upright      | 12–13px                    | 500    | Buttons lowercase, e.g. `browse plots →`.                       |
 | Navigation links       | mono upright      | 14px                       | 500    | Active state: green `•` prefix.                                 |
 | Code / logo            | mono upright      | context-dependent          | 700    | Logo: `any.plot()` with green dot and ghosted `()`.             |
@@ -531,7 +531,7 @@ The key rule: **mono is the default, italic-ss01 is the editorial accent.** Ever
 The hero is a split-column layout: editorial text on the left (paper-tier), terminal-framed plot-of-the-day on the right (catalog-tier). The full-width "terminal box" around everything was dropped; the plot panel alone carries the terminal metaphor now.
 
 ```
-— the open plot catalogue · by Markus Neusinger   ┌─ ~/anyplot ──────────────────┐
+— by Markus Neusinger                             ┌─ ~/anyplot ──────────────────┐
                                                   │ $ python plots/…/plotly.py  │
 any.plot()                                        │                             │
 — any library.                                    │  [plot rendered here]       │
@@ -557,7 +557,7 @@ steal like an artist._▌                           │                         
 - Size: `clamp(2.75rem, 4.5vw, 4.75rem)` on the H1 container, with `0.75em` on both spans.
 
 **Layer hierarchy (top to bottom, left column):**
-1. **Eyebrow** — `— the open plot catalogue · by Markus Neusinger`, lowercase except the name, 11px MonoLisa upright, `--imprint-green`, tracked `.08em`, preceded by 18×1px green rule. The name links to the about page (`paths.about`) in the eyebrow's own colour, with no underline at rest, the site's green on hover and the hero links' focus ring for the keyboard. Only the landing hero carries the name: the masthead rule, the OG image and the crawler `<h1>` keep `the open plot catalogue`.
+1. **Eyebrow** — from `md` (900 px) up one line, `— by Markus Neusinger`, since the masthead's centre shows `the open plot catalogue` at those widths (§6.4). Below `md`, where the masthead hides its centre, two lines set in the markup: `— the open plot catalogue`, then `by Markus Neusinger`, which starts under the "t" of "the". Lowercase except the name, 11px MonoLisa upright, `--ink-muted`, tracked `.08em`, line height 1.5, preceded by an 18×1px `--rule` line level with the first line. Only the name is a link, to the about page (`paths.about`), one copy at every width that never breaks: the eyebrow's own colour with a dotted underline at rest, the site's green on hover, and the hero links' focus ring around the name for the keyboard. Below 600 px, padding with an equal negative margin makes it a 44 px touch target without moving the text. A click counts as `nav_click` with `source: hero_about`. Only the landing hero carries the name: the masthead rule, the OG image and the crawler `<h1>` keep `the open plot catalogue`.
 2. **H1** — see above.
 3. **Subtitle** — `one spec · every library · always current.`, MonoLisa upright weight 500, 18px, `--ink`. Must fit on one line (`whiteSpace: nowrap` + stepped responsive size).
 4. **Intro prose** — 4–6 lines MonoLisa upright weight 300, `--ink-soft`, 18px. `<em>your</em>` renders as italic-ss01 script accent inline.
@@ -1047,7 +1047,7 @@ Hero box rises from 8px below with opacity transition:
 
 Staggered via `animation-delay`:
 
-- Eyebrow (`— the open plot catalogue · by Markus Neusinger`): 0s
+- Eyebrow (`— by Markus Neusinger`, below `md` with `the open plot catalogue` on the line above): 0s
 - H1 line 1 (`any.plot()`): 0.1s
 - H1 line 2 (`— any library.` script): 0.1s
 - Subtitle (`one spec · every library · always current.`): 0.15s

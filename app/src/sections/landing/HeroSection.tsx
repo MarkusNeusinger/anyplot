@@ -14,6 +14,34 @@ interface HeroSectionProps {
   potd?: PlotOfTheDayData | null;
 }
 
+/** The eyebrow's line height, set rather than inherited so the rule's offset can be derived. */
+const EYEBROW_LINE_HEIGHT = 1.5;
+
+/**
+ * The builder's name in the eyebrow, a link to the about page. The dotted underline and the
+ * focus ring sit on the inner span, so they hug the name; on phones the link's padding grows the
+ * touch target to 44 px, and the equal negative margin keeps the text where it is (the menu's
+ * links do the same).
+ */
+const builderLinkSx = {
+  display: 'inline-block',
+  whiteSpace: 'nowrap',
+  padding: { xs: '14px', sm: 0 },
+  margin: { xs: '-14px', sm: 0 },
+  color: 'inherit',
+  textDecoration: 'none',
+  transition: 'color 0.2s',
+  // A cue at rest that does not depend on colour, in the eyebrow's muted tone.
+  '& > span': { borderBottom: '1px dotted currentColor' },
+  '&:hover': { color: colors.primary },
+  '&:focus-visible': { outline: 'none' },
+  '&:focus-visible > span': {
+    outline: `2px solid ${colors.primary}`,
+    outlineOffset: 2,
+    borderRadius: '2px',
+  },
+} as const;
+
 /**
  * Full-width editorial hero. Text column left, terminal-framed plot of the
  * day right. Scales up to catalog tier so the plot becomes the visual anchor
@@ -40,39 +68,45 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
             fontFamily: typography.mono,
             fontSize: '11px',
             letterSpacing: '0.08em',
+            lineHeight: EYEBROW_LINE_HEIGHT,
             color: 'var(--ink-muted)',
             mb: 3,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             gap: 1.25,
             '&::before': {
               content: '""',
               display: 'inline-block',
+              flexShrink: 0,
               width: 18,
               height: '1px',
+              // Half the line box down, less half the rule's own height: level with the first
+              // line, whether the eyebrow shows one line or two.
+              mt: `calc(${EYEBROW_LINE_HEIGHT / 2}em - 0.5px)`,
               background: 'var(--rule)',
             },
           }}
         >
-          {/* One flex item, so the gap after the rule does not also split the name from its text. */}
+          {/* One flex item beside the rule holds both lines; each line is a block, so the second
+              starts under the first instead of beside it. */}
           <Box component="span">
-            the open plot catalogue · by{' '}
-            <Box
-              component={RouterLink}
-              to={paths.about}
-              sx={{
-                color: 'inherit',
-                textDecoration: 'none',
-                transition: 'color 0.2s',
-                '&:hover': { color: colors.primary },
-                '&:focus-visible': {
-                  outline: `2px solid ${colors.primary}`,
-                  outlineOffset: 2,
-                  borderRadius: '2px',
-                },
-              }}
-            >
-              Markus Neusinger
+            {/* From md the masthead's centre shows the phrase, so only phones and tablets
+                carry it here. */}
+            <Box component="span" sx={{ display: { xs: 'block', md: 'none' } }}>
+              the open plot catalogue
+            </Box>
+            <Box component="span" sx={{ display: 'block' }}>
+              by{' '}
+              <Box
+                component={RouterLink}
+                to={paths.about}
+                onClick={() =>
+                  trackEvent('nav_click', { source: 'hero_about', target: paths.about })
+                }
+                sx={builderLinkSx}
+              >
+                <Box component="span">Markus Neusinger</Box>
+              </Box>
             </Box>
           </Box>
         </Box>

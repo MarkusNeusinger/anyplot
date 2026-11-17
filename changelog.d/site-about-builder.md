@@ -40,11 +40,16 @@
   data, and that pasted data has had to work with notes, metadata or total
   rows around the table since then. `test_readme_claims.py` holds that rule
   to the agents' parser.
-- **The landing hero names its builder.** The eyebrow above the headline
-  reads "the open plot catalogue · by Markus Neusinger", the name a link to
-  the about page and the hero's first link for the keyboard, and the intro
-  adds "I approve new specs and set the rules." The masthead, the OG image
-  and the crawler copy keep "the open plot catalogue" alone.
+- **The landing hero names its builder.** From 900 px the eyebrow above the
+  headline reads "by Markus Neusinger", since the masthead shows "the open
+  plot catalogue" at those widths; on narrower screens, where the masthead
+  hides it, "the open plot catalogue" stands on a line of its own above the
+  name. Only the name is a link, to the about page: it never breaks across
+  lines, carries a dotted underline at rest, is the hero's first link for the
+  keyboard, has a 44 px touch target on phones, and counts its clicks as
+  `nav_click` with the source `hero_about`. The intro adds "I approve new
+  specs and set the rules." The masthead, the OG image and the crawler copy
+  keep "the open plot catalogue" alone.
 - **The about page's stack table lists the checks.** A "checks" row names
   tests and lint on every pull request that changes Python or frontend code
   outside the plot catalogue, the 80 % patch-coverage target of `codecov.yml`,
