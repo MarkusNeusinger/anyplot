@@ -81,7 +81,8 @@ class TestImplReviewRegenBranch:
         ctx = _step("impl-review.yml", "Regen context")["run"]
         assert "--omit-scores" in ctx
         # The predecessor source reaches the reviewer only through the sanitizer.
-        assert 'git show "origin/main:${IMPL_FILE}" > /tmp/anyplot-prev-impl-raw' in ctx
+        assert 'git show "origin/main:${IMPL_FILE}" > "$RAW"' in ctx
+        assert 'RAW="$RUNNER_TEMP/anyplot-prev-impl-raw"' in ctx  # never under /tmp, where the reviewer reads
         assert "sanitize-source" in ctx
         assert 'git show "origin/main:${IMPL_FILE}" > "/tmp/anyplot-prev-impl${EXT}"' not in ctx
 
