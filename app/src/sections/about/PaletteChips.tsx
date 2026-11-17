@@ -2,11 +2,19 @@ import Box from '@mui/material/Box';
 
 import { useTheme } from 'src/hooks';
 import { PALETTE } from 'src/pages/PalettePage.helpers';
+import { monoWidth } from 'src/sections/about/monoWidth';
 import { typography } from 'src/theme';
 
-// Eight chips in a row need eight columns as wide as "brand green" at 12px (84.5px in MonoLisa)
-// and seven 8px gaps: 732px. Narrower, they stand four by two, and a long name may break.
-const ROW_MIN_WIDTH = 732;
+const NAME_SIZE = 12;
+const GAP = 8;
+
+// Eight chips in a row need eight columns as wide as the longest name, "brand green" at 12px
+// (88px where advances are rounded to whole pixels, 84.5px where they are not), and seven 8px
+// gaps: 760px, the column's full width. Narrower, they stand four by two, and a long name may
+// break.
+const ROW_MIN_WIDTH =
+  PALETTE.length * Math.max(...PALETTE.map(({ name }) => monoWidth(name, NAME_SIZE))) +
+  (PALETTE.length - 1) * GAP;
 const row = `@container (min-width: ${ROW_MIN_WIDTH}px)` as const;
 
 /**
@@ -28,7 +36,7 @@ export function PaletteChips() {
           m: 0,
           display: 'grid',
           gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-          gap: '14px 8px',
+          gap: `14px ${GAP}px`,
           fontFamily: typography.mono,
           [row]: { gridTemplateColumns: 'repeat(8, minmax(0, 1fr))' },
         }}
@@ -51,7 +59,7 @@ export function PaletteChips() {
             <Box
               sx={{
                 mt: 0.75,
-                fontSize: '12px',
+                fontSize: `${NAME_SIZE}px`,
                 lineHeight: 1.35,
                 color: 'var(--ink-soft)',
                 [row]: { whiteSpace: 'nowrap' },

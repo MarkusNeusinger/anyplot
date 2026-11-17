@@ -1,4 +1,5 @@
 import { originDateLabel, type OriginEvent } from 'src/sections/about/figureData';
+import { monoWidth } from 'src/sections/about/monoWidth';
 
 /**
  * The narrowest width the drawn timeline takes. Labels are placed for this width and the points
@@ -7,9 +8,6 @@ import { originDateLabel, type OriginEvent } from 'src/sections/about/figureData
  */
 export const TIMELINE_MIN_WIDTH = 720;
 
-// MonoLisa's advance is 0.64em; the monospace faces it falls back to are narrower, so a label
-// never needs more room than this.
-const CHAR_EM = 0.64;
 export const DATE_SIZE = 11;
 export const WHAT_SIZE = 12;
 const LABEL_GAP = 12;
@@ -38,9 +36,13 @@ const dayOf = (when: string) => {
   return Date.UTC(year, month - 1, day);
 };
 
-/** The room a label takes at the widest monospace face the page may use. */
+/**
+ * The room a label takes: its wider line, as wide as a browser draws it with fractional advances
+ * or with advances rounded to whole pixels. The labels are placed from this width, not measured,
+ * so the layout is the same for every visitor and the tests can check it for any day.
+ */
 export function labelWidth(date: string, what: string): number {
-  return Math.ceil(Math.max(date.length * DATE_SIZE, what.length * WHAT_SIZE) * CHAR_EM);
+  return Math.max(monoWidth(date, DATE_SIZE), monoWidth(what, WHAT_SIZE));
 }
 
 /**

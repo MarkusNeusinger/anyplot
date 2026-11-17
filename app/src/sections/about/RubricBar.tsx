@@ -3,13 +3,19 @@ import { useId } from 'react';
 import Box from '@mui/material/Box';
 
 import { RUBRIC_CAPTION, RUBRIC_PARTS } from 'src/sections/about/figureData';
+import { monoWidth } from 'src/sections/about/monoWidth';
 import { visuallyHiddenSx } from 'src/sections/agent-chat/styles';
 import { typography } from 'src/theme';
 
+const NAME_SIZE = 12;
+const PAD_LEFT = 10;
+const PAD_RIGHT = 8;
+
 // Under the bar each name stands beneath its part. The narrowest, a 10-point part, has to hold
-// "quality" or "mastery" at 12px with its padding, 72px: 10 % of 720px. Narrower, the names
-// leave the bar for a list of two columns under it, each with its points.
-const UNDER_MIN_WIDTH = 720;
+// "quality" or "mastery" at 12px (56px where advances are rounded to whole pixels, 53.8px where
+// they are not) with its 18px of padding: 74px, which is 10 % of 740px. Narrower, the names leave
+// the bar for a list of two columns under it, each with its points.
+const UNDER_MIN_WIDTH = (monoWidth('mastery', NAME_SIZE) + PAD_LEFT + PAD_RIGHT) * 10;
 const under = `@container (min-width: ${UNDER_MIN_WIDTH}px)` as const;
 
 const SEGMENT_GAP = '2px solid var(--bg-page)';
@@ -73,15 +79,15 @@ export function RubricBar() {
             key={name}
             sx={{
               minWidth: 0,
-              fontSize: '12px',
+              fontSize: `${NAME_SIZE}px`,
               lineHeight: 1.35,
               color: 'var(--ink-soft)',
               [under]: {
                 flex: `0 0 ${points}%`,
                 boxSizing: 'border-box',
                 pt: 0.75,
-                pr: 1,
-                pl: i > 0 ? 1.25 : 0,
+                pr: `${PAD_RIGHT}px`,
+                pl: i > 0 ? `${PAD_LEFT}px` : 0,
               },
             }}
           >
