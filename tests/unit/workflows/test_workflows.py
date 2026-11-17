@@ -485,7 +485,8 @@ class TestCiTestsSpecSectionCheck:
         """test_app_origin_gate.py, test_csp_policy.py and test_machine_reads_nginx.py read app/nginx.conf and the files
         beside it, and test_analytics_event_proxy.py reads app/nginx.conf through test_machine_reads_nginx.py: a PR
         that changes only one of those files runs them. The paths are taken from the three tests' own source, so a file
-        under app/ that one of them starts reading fails here until the filter lists it."""
+        under app/ that one of them starts reading fails here until the filter lists it, as long as its path is written
+        as `ROOT / "app" / ...`; a path built another way escapes this scan."""
         pattern = self._config_changes_pattern()
         root = WORKFLOWS_DIR.parent.parent
         tests_dir = root / "tests" / "unit" / "api"
