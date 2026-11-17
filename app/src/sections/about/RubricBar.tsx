@@ -52,8 +52,10 @@ export function RubricBar() {
           </Box>
         ))}
       </Box>
+      {/* Safari drops a list's role when its markers are off; the role keeps it a list. */}
       <Box
         component="ul"
+        role="list"
         sx={{
           listStyle: 'none',
           p: 0,

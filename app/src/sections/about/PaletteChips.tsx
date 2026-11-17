@@ -18,8 +18,10 @@ export function PaletteChips() {
   const { isDark } = useTheme();
   return (
     <Box sx={{ containerType: 'inline-size', mt: 1, mb: 3.5 }}>
+      {/* Safari drops a list's role when its markers are off; the role keeps it a list. */}
       <Box
         component="ul"
+        role="list"
         sx={{
           listStyle: 'none',
           p: 0,

@@ -39,8 +39,10 @@ export function OriginTimeline({ now = new Date() }: OriginTimelineProps) {
 
   return (
     <Box sx={{ containerType: 'inline-size', mt: 3.5, mb: 1 }}>
+      {/* Safari drops a list's role when its markers are off; the role keeps it a list. */}
       <Box
         component="ol"
+        role="list"
         sx={{
           listStyle: 'none',
           m: 0,

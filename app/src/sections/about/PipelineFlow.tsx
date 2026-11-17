@@ -83,8 +83,10 @@ export function PipelineFlow() {
       >
         {'// pipeline'}
       </Box>
+      {/* Safari drops a list's role when its markers are off; the role keeps it a list. */}
       <Box
         component="ol"
+        role="list"
         sx={{
           listStyle: 'none',
           p: 0,

@@ -147,9 +147,9 @@ export function AboutPage() {
               {/* Decorative: the name stands beside it. Not lazy: it sits on the first screen.
                   Where the gutter holds it, it hangs there at 216px, its top at the name's line:
                   the photo gets room without taking any from the column, so name, links, bio and
-                  other projects keep its full width. Narrower, it stands beside the name (above
-                  it on a phone) at 110px, small enough that photo, name and links end on the
-                  first screen of a window 900px tall. */}
+                  other projects keep its full width. Narrower, it stands beside the name at
+                  110px, small enough that photo, name and links end on the first screen of a
+                  window 900px tall; on a phone it stands above the name at the same size. */}
               <Box
                 component="img"
                 src={AVATAR_URL}
