@@ -61,7 +61,8 @@ def clock(services: Services) -> Clock:
 
 
 def chatty(replies: int) -> dict[str, list[Any]]:
-    return {"root": [{"text": f"Answer {index}."} for index in range(replies)]}
+    # Told apart by a letter: a digit in a reply that no tool gave would be asked for again (`number_provenance`).
+    return {"root": [{"text": f"Answer {chr(ord('A') + index)}."} for index in range(replies)]}
 
 
 async def say(client: httpx.AsyncClient, sid: str, text: str, headers: dict[str, str] = HEADERS) -> list[Any]:

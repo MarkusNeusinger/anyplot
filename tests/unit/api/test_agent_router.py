@@ -1096,10 +1096,10 @@ class TestMessagesStream:
         events = _sse_events(self._post(client).text)
         assert events[0] == ("error", {"code": "internal", "ref": events[0][1]["ref"]})
 
-    @pytest.mark.parametrize("code", ["run_limit", "no_reply"])
+    @pytest.mark.parametrize("code", ["run_limit", "no_reply", "unverified_figure"])
     def test_the_codes_the_page_words_pass_through(self, client, upstream, code: str) -> None:
-        """The per-user cap on sandbox runs across sessions and a turn the assistant wrote no reply for have their
-        own codes, which the page words."""
+        """The per-user cap on sandbox runs across sessions, a turn the assistant wrote no reply for, and a reply
+        withheld for a figure no source held have their own codes, which the page words."""
         upstream.handler = lambda request: httpx.Response(
             200, content=f'event: error\ndata: {{"code": "{code}"}}\n\nevent: done\ndata: {{}}\n\n'.encode()
         )

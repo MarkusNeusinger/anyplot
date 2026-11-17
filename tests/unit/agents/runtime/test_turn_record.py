@@ -103,8 +103,8 @@ AGENTS = Path(__file__).resolve().parents[4] / "agents"
 MESSAGE_CANARY = "CANARY-MSG-b6c1"
 DERIVE = {"op": "derive", "name": "Score per Hour", "how": "ratio", "columns": ["Exam Score", "Study Hours"]}
 LONG_REPLY = " ".join(
-    f"Sentence {number} says a little more about how the scores rise with the hours studied in this table."
-    for number in range(40)
+    "Another sentence says a little more about how the scores rise with the hours studied in this table."
+    for _ in range(40)
 )
 SHORT_REPLY = "Scores rise with the hours studied."
 ENGLISH = (
@@ -1387,7 +1387,7 @@ class TestTurns:
     ) -> None:
         """The second ask starts from the request the filter cleaned, and holds neither refusal."""
         fake = swap_models(
-            "gemini", {"root": [{"text": refusal("out_of_scope", "en")}, {"text": "The slope is 0.07."}]}
+            "gemini", {"root": [{"text": refusal("out_of_scope", "en")}, {"text": "The line rises with the hours."}]}
         )
         sid = await open_session(client)
         judge.script = [JudgeVerdict(verdict="out_of_scope", lang="en")]
@@ -1399,7 +1399,10 @@ class TestTurns:
         record = await last(client, sid, lines)
         assert guards(record) == [IN_SCOPE, ("root_refusal", "reasked")]
         assert (record["kind"], record["refusal"]) == ("talk", None)
-        assert (await bundle_of(client, sid))["transcript"][-1] == {"role": "assistant", "text": "The slope is 0.07."}
+        assert (await bundle_of(client, sid))["transcript"][-1] == {
+            "role": "assistant",
+            "text": "The line rises with the hours.",
+        }
         first, second = fake.requests
         asked = [part.text for content in second.contents for part in content.parts or [] if part.text]
         assert asked == ["what is the slope of the line?", RETRY_LINE]
@@ -1421,7 +1424,7 @@ class TestTurns:
     async def test_a_rescued_paste_note(
         self, client: httpx.AsyncClient, swap_models, judge: FakeJudge, lines: pytest.LogCaptureFixture
     ) -> None:
-        swap_models("gemini", {"root": [{"text": "24 rows: hours and scores."}]})
+        swap_models("gemini", {"root": [{"text": "The table holds hours and scores."}]})
         sid = await open_session(client, with_data=False)
         pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": CANARY_DATA})
         assert pasted.status_code == 200, pasted.text
@@ -1481,7 +1484,15 @@ class TestTurns:
         await turn(client, sid, "beschreib die Daten")
 
         record = await last(client, sid, lines)
-        assert guards(record) == [IN_SCOPE, ("reply_language", "mismatch"), ("reply_language", "reasked")]
+        # The reply's counts stand in the session block: the figure check passes it before the language check, and
+        # passes the German reply again before it takes the first one's place.
+        assert guards(record) == [
+            IN_SCOPE,
+            ("number_provenance", "clean"),
+            ("reply_language", "mismatch"),
+            ("number_provenance", "clean"),
+            ("reply_language", "reasked"),
+        ]
 
     async def test_a_dropped_confirm_sentence(
         self, client: httpx.AsyncClient, swap_models, lines: pytest.LogCaptureFixture

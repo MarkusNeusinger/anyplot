@@ -1919,6 +1919,10 @@ export const STREAM_ERROR_CODES = [
   'guard_unavailable',
   // The assistant wrote no reply, also when the service asked it once more.
   'no_reply',
+  // The assistant's reply stated a figure that none of its sources held, also when the service asked it once more,
+  // and the service withheld the reply. Its sources are a tool result, the session's facts, the user's messages, the
+  // service's limits, the plot memory, and a plot's notes, code and drawn texts.
+  'unverified_figure',
   'upstream',
   'internal',
 ] as const;

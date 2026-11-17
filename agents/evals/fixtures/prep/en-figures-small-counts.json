@@ -1,0 +1,9 @@
+{
+  "dataset_text": "branch,district,loans,returns\nHarbor,East,1204,1150\nMill,North,987,940\nStation,West,1530,1488\n",
+  "message": "How many columns does my table have, and which one is the third?",
+  "expected_operations": [],
+  "figures": "clean",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["figures", "small_counts"]
+}

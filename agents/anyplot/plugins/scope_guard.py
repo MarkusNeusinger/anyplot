@@ -96,7 +96,8 @@ is asked once for a shorter reply instead, the way ReplyLanguage asks again
 (`reply_language.follow_up_request` and `ask_root`): its own request without tools, the
 long reply as its previous turn and `SHORTEN_LINE`. The shorter answer replaces the
 reply when it fits the cap and is whole (not cut at the output cap, not surely in
-another language than the session's, ShippedReply's check run on it); otherwise the
+another language than the session's, ShippedReply's check run on it, and no unsourced
+figure added where NumberProvenance enforces, `number_provenance.replacement_allowed`); otherwise the
 shorter of the two is stored and sent cut at the cap, as the sanitiser cuts it. At
 most one such ask per turn (`RequestLedger.reply_shortened`), booked like any call
 (`budget.book_response`). The stored event holds the reply at the length the user reads
@@ -106,7 +107,7 @@ judge's or the root's context whole. Each step writes a
 content-free `output_guard` attribution line: `reply_too_long` (the reply's length),
 then `shortened` (the new length) or `reply_cut` (the length cut, and the `reason` the
 shorter answer was not used: `asked`, `no_request`, `budget`, `error`, `cut_off`,
-`empty`, `language` or `too_long`). An internal failure lets the reply through to the
+`empty`, `language`, `figures` or `too_long`). An internal failure lets the reply through to the
 translator's sanitiser, which cuts it at the cap too.
 
 The plugin never raises: an internal failure of the input side is a
@@ -638,8 +639,10 @@ class ScopeGuardPlugin(BasePlugin):
         """The root's shorter answer for a too-long reply, asked once per turn; else None and why not.
 
         Its own request without tools, the long reply as its previous turn and `SHORTEN_LINE`, the way ReplyLanguage
-        asks again. The answer is no use when it was cut at the output cap, holds no text, or is surely in another
-        language than the session's; ShippedReply's check runs on it, since no plugin sees this direct call.
+        asks again. The answer is no use when it was cut at the output cap, holds no text, is surely in another
+        language than the session's, or adds a figure no source holds where NumberProvenance enforces
+        (`number_provenance.replacement_allowed`); ShippedReply's check runs on it, since no plugin sees this direct
+        call.
         """
         request = ledger.root_request
         if ledger.reply_shortened:
@@ -671,6 +674,11 @@ class ScopeGuardPlugin(BasePlugin):
         language = checked_language(invocation_context.session.state)
         if language is not None and mismatch(again, language) is not None:
             return None, "language"
+        # Imported late: `number_provenance` reads `reply_text` from `reply_language`, which this module imports too.
+        from .number_provenance import replacement_allowed
+
+        if not replacement_allowed(ledger, invocation_context.session.state, text, again, of="output_guard"):
+            return None, "figures"
         return again, ""
 
     async def before_run_callback(self, *, invocation_context: InvocationContext) -> types.Content | None:

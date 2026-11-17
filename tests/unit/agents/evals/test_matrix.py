@@ -1528,6 +1528,33 @@ def test_is_error_counts_the_services_errors_and_an_error_event_with_a_plot() ->
         assert not matrix.is_error(run), run
 
 
+@pytest.mark.parametrize("code", sorted(matrix.MODEL_ERRORS))
+def test_a_withheld_or_missing_reply_is_the_models_outcome_not_an_outage(code: str) -> None:
+    """A reply the service withheld for an unverified figure, or one the root never wrote, is a miss the rates count:
+    its own status without a plot, `reply_error` beside one, and never an error that stops the matrix."""
+    case = two_fixtures()[0]
+    alone, beside = matrix.base_record(case, 1), matrix.base_record(case, 1)
+    error = (0.2, "error", {"code": code, "ref": "r-1"})
+    plot = (0.1, "plot", {"status": "ok", "reason": None, "attempts": 1, "residual_defects": []})
+
+    matrix.book_turn(alone, matrix.Turn(200, None, [error, (0.3, "done", {})]))
+    matrix.book_turn(beside, matrix.Turn(200, None, [plot, error, (0.3, "done", {})]))
+
+    assert (alone["status"], alone["reply_error"], alone["error"]) == (code, code, None)
+    assert (beside["status"], beside["reply_error"], beside["error"]) == ("ok", code, None)
+    assert not matrix.is_error(alone) and not matrix.is_error(beside)
+    assert summarize([alone, beside])["reply_errors"] == {code: 2}
+
+
+def test_any_other_error_event_stays_an_error() -> None:
+    record = matrix.base_record(two_fixtures()[0], 1)
+
+    matrix.book_turn(record, matrix.Turn(200, None, [(0.2, "error", {"code": "capacity"}), (0.3, "done", {})]))
+
+    assert (record["status"], record["reason"], record["reply_error"]) == ("error", "capacity", None)
+    assert matrix.is_error(record)
+
+
 def runner_over(handler: Any, tmp_path: Path) -> matrix.CaseRunner:
     """A case runner whose requests `handler` answers; the attribution is not booked."""
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://evals")

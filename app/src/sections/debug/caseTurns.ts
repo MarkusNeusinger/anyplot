@@ -35,13 +35,21 @@ const QUIET_VERDICTS: Record<string, readonly string[]> = {
     'language_detected',
   ],
   reply_language: ['not_offered'],
+  // Every figure of the reply stood in a source.
+  number_provenance: ['clean'],
   plot_button: ['asked'],
   budget_exempt: ['exempt'],
   queue: ['started'],
 };
 
 /** A check that could not do its job, or a turn that lost its reply. */
-const BAD_VERDICTS = new Set(['guard_unavailable', 'no_reply', 'reask_failed', 'error']);
+const BAD_VERDICTS = new Set([
+  'guard_unavailable',
+  'no_reply',
+  'reask_failed',
+  'error',
+  'withheld',
+]);
 
 export function guardSeverity(guard: string, verdict: string): Severity {
   if (QUIET_VERDICTS[guard]?.includes(verdict)) return 'ok';
@@ -198,12 +206,21 @@ function folded(items: { label: string; severity: Severity }[]): TurnChip[] {
 }
 
 /**
+ * An end code a guard's verdict names under another word: the figure check
+ * ends a turn with `unverified_figure` and logs `withheld`.
+ */
+const END_VERDICTS: Record<string, string> = { unverified_figure: 'withheld' };
+
+/**
  * The row's chips: the turn's refusal or error unless a guard's chip already
- * names it (`scope_guard: out_of_scope`), the guards that fired, every tool call.
+ * names it (`scope_guard: out_of_scope`, `number_provenance: withheld`), the
+ * guards that fired, every tool call.
  */
 export function turnChips(turn: AgentCaseTurn): TurnChip[] {
   const end = turn.refusal ?? turn.error;
-  const named = turn.guards.some(line => line.verdict === end);
+  const named = turn.guards.some(
+    line => line.verdict === end || (end !== null && line.verdict === END_VERDICTS[end])
+  );
   return folded([
     ...(end && !named
       ? [{ label: `${turn.refusal ? 'refusal' : 'error'}: ${end}`, severity: endSeverity(turn) }]

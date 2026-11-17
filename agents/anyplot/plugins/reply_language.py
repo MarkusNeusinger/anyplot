@@ -25,7 +25,9 @@ saw an English summary in a German session (#12176). This plugin checks it in co
   re-ask that raises or answers nothing keeps the first reply too (verdict `error`).
   The extra call is booked like any other (`budget.book_response`).
   At most one re-ask per turn (`ledger.reply_reasked`). No plugin sees the re-ask's reply,
-  so a replacing one gets ShippedReply's check here (`shipped_reply.scrub_shipped_reply`).
+  so a replacing one gets NumberProvenance's check here (`number_provenance.replacement_allowed`: a
+  new reply that adds an unsourced figure on a turn that ran no tool or was asked for its figures is
+  not used, verdict `reask_failed`) and ShippedReply's (`shipped_reply.scrub_shipped_reply`).
 
 `REASK` switches the re-ask off, leaving only the attribution line (re-ask once is the
 owner's decision of 2026-10-14). The plugin never raises; a failure keeps
@@ -111,7 +113,8 @@ def follow_up_request(request: LlmRequest, turns: Sequence[types.Content], *, to
     """A copy of the root's request with `turns` after its contents; without tools unless `tools`.
 
     The one request builder of every direct re-ask of the root: this plugin's language re-ask, the output guard's
-    request for a shorter reply (`scope_guard`) and the empty reply's second ask (`empty_reply`).
+    request for a shorter reply (`scope_guard`), the empty reply's second ask (`empty_reply`), the root refusal's
+    (`root_refusal`) and the second ask for unsourced figures (`number_provenance`).
     """
     config = request.config.model_copy(deep=True) if request.config is not None else types.GenerateContentConfig()
     copy = LlmRequest(
@@ -216,10 +219,16 @@ class ReplyLanguagePlugin(BasePlugin):
         if again is None or finish_name(final.finish_reason) == "MAX_TOKENS" or detect(again) != expected:
             attribution("reply_language", ledger, verdict="reask_failed", expected=expected, found=found)
             return None
-        attribution("reply_language", ledger, verdict="reasked", expected=expected, found=found)
-        # The re-ask is a direct model call that no plugin sees, so ShippedReply's check runs on it here. Imported
-        # late: `shipped_reply` reads `reply_text` from this module.
+        # The re-ask is a direct model call that no plugin sees, so NumberProvenance's and ShippedReply's checks run on
+        # it here. Imported late: both modules read `reply_text` from this one.
+        from .number_provenance import replacement_allowed
         from .shipped_reply import scrub_shipped_reply
+
+        if not replacement_allowed(ledger, callback_context.session.state, reply, again, of="reply_language"):
+            # A figure the translation added that no source holds: the first reply stays, as for any failed re-ask.
+            attribution("reply_language", ledger, verdict="reask_failed", expected=expected, found=found)
+            return None
+        attribution("reply_language", ledger, verdict="reasked", expected=expected, found=found)
 
         scrub_shipped_reply(ledger, final)
         return final

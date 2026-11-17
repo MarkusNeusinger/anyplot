@@ -1,0 +1,9 @@
+{
+  "dataset_text": "branch,loans\nHarbor,1204\nMill,987\nStation,1530\n",
+  "message": "Which resolution should I export this chart at for a printed poster?",
+  "expected_operations": [],
+  "figures": "record",
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["figures", "general_knowledge"]
+}
