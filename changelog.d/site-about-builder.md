@@ -124,15 +124,15 @@
   steps say "I review and approve it" in place of "The maintainer".
 - **The site spells the colour-blindness words in British English.** The
   pages and their descriptions, the crawler copies, `llms.txt`, and the
-  keywords and structured data of the page shell say "colourblind-safe",
-  "colour blindness" and "colour vision", as the palette sections of the about
-  and landing pages already did; the palette page's sort button reads "max ΔE
-  under colour blindness". The style guide follows in its sample copy and its
-  own sentences, and its voice section adds the rule: British English on the
-  site, while proper names, citations, code and library or API names keep
-  their own spelling. `test_site_spelling.py` keeps the American forms of
-  these words out of those surfaces and out of the style guide's own text.
-  Other words are not swept yet.
+  keywords and structured data of the page shell say "colourblind-safe", as
+  the palette sections of the about and landing pages already did, and the
+  palette page's sort button reads "max ΔE under colour blindness". The
+  style guide follows in its sample copy and its own sentences, and its voice
+  section adds the rule: British English on the site, while proper names,
+  citations, code and library or API names keep their own spelling.
+  `test_site_spelling.py` keeps the American forms of these words out of
+  those surfaces and out of the style guide's own text. Other words are not
+  swept yet.
 
 ### Fixed
 
