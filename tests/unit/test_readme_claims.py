@@ -358,14 +358,16 @@ def test_about_page_and_its_bot_copy_state_the_rubric_bar_and_mcp_tools():
         # 5, not 3: seo.py splits "Six tools" over two string literals (`Six " "tools`).
         assert near(text, NUMBER_WORDS[mcp_tool_count()], "tools", window=5), f"{name}: {mcp_tool_count()} MCP tools"
     # The pipeline diagram writes both in digits, and so does the sentence on who set the rubric. On the page the
-    # diagram's words live in the figures' data module, each detail in one string with its action.
-    for name, diagram, text in (
-        ("AboutPage.tsx", read(ABOUT_FIGURES), read(ABOUT_PAGE)),
-        ("seo.py", about_bot_body(), about_bot_body()),
-    ):
-        diagram = collapse(diagram).lower()
-        assert f"ai scores ({len(CRITERIA)} criteria)" in diagram, f"{name}: the diagram's criteria"
-        assert f"ai repairs (up to {repairs} times)" in diagram, f"{name}: the diagram's repairs"
+    # diagram's words live in the figures' data module, each detail in one string with its action. The test reads
+    # the steps' own entries there, so a comment in that file that quotes a detail cannot stand in for the figure.
+    steps = {entry["step"]: entry.get("does") for entry in _figure_entries("PIPELINE_STEPS")}
+    criteria, repairs_done = f"ai scores ({len(CRITERIA)} criteria)", f"ai repairs (up to {repairs} times)"
+    assert steps.get("review") == criteria, f"figureData.ts: the review step reads {steps.get('review')!r}"
+    assert steps.get("fix") == repairs_done, f"figureData.ts: the fix step reads {steps.get('fix')!r}"
+    bot = collapse(about_bot_body()).lower()
+    assert criteria in bot, "seo.py: the diagram's criteria"
+    assert repairs_done in bot, "seo.py: the diagram's repairs"
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
         assert f"ai helped turn it into {len(CRITERIA)} criteria and their points." in collapse(text).lower(), (
             f"{name}: the rubric has {len(CRITERIA)} criteria"
         )
@@ -396,11 +398,16 @@ def test_about_page_rubric_bar_has_the_points_of_the_quality_criteria():
     )
 
 
+def _figure_entries(name: str) -> list[dict[str, str]]:
+    """The entries of the array `name` in figureData.ts, each written `{ key: '...', ... }`, as dicts."""
+    figures = collapse(read(ABOUT_FIGURES))
+    block = figures[figures.index(f"export const {name}") :].split("];", 1)[0]
+    return [dict(re.findall(r"(\w+): '([^']*)'", entry)) for entry in re.findall(r"\{([^{}]*)\}", block)]
+
+
 def _origin_events() -> list[dict[str, str]]:
     """The origin timeline's points as figureData.ts writes them: `{ when: '...', version: '...', what: '...' }`."""
-    figures = collapse(read(ABOUT_FIGURES))
-    block = figures[figures.index("export const ORIGIN_EVENTS") :].split("];", 1)[0]
-    return [dict(re.findall(r"(\w+): '([^']*)'", entry)) for entry in re.findall(r"\{([^{}]*)\}", block)]
+    return _figure_entries("ORIGIN_EVENTS")
 
 
 def test_about_page_timeline_dates_each_release_as_the_changelog_does():

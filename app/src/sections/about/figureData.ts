@@ -67,7 +67,10 @@ export function originDateLabel({ when, version }: OriginEvent): string {
   return version ? `${date} · ${version}` : date;
 }
 
-/** Splits "ai scores (24 criteria)" into the action and the detail in brackets under it. */
+/**
+ * Splits a step's detail, such as "ai writes (per library)", into the action and the part in
+ * brackets under it.
+ */
 export function splitDetail(does: string): [string, string | null] {
   const match = /^(.*?) (\(.+\))$/.exec(does);
   return match ? [match[1], match[2]] : [does, null];
