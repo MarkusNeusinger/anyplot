@@ -19,41 +19,51 @@ function spans(points: TimelinePoint[], width: number) {
   });
 }
 
-// "today" moves every day and squeezes the spring of 2026 together; the layout must hold for
-// years, at the narrowest axis the page draws and at the prose column's full 760px.
-const DAYS = ['2026-11-17', '2027-03-10', '2027-06-01', '2027-11-17', '2028-11-17', '2030-11-17'];
-
-describe('layoutTimeline', () => {
-  it.each(DAYS.flatMap(day => [TIMELINE_MIN_WIDTH, 760].map(width => [day, width] as const)))(
-    'keeps every label on the axis and clear of the others on %s at %ipx',
-    (day, width) => {
-      const placed = spans(layoutTimeline(ORIGIN_EVENTS, new Date(`${day}T12:00:00Z`)), width);
-      for (const p of placed) {
-        expect(p.a).toBeGreaterThanOrEqual(0);
-        expect(p.b).toBeLessThanOrEqual(width);
-        expect(p.level).toBeLessThanOrEqual(MAX_LEVEL);
+/** What is wrong with the drawn labels on `day` at an axis of `width` px; empty when nothing is. */
+function problems(day: Date, width: number): string[] {
+  const when = day.toISOString().slice(0, 10);
+  const placed = spans(layoutTimeline(ORIGIN_EVENTS, day), width);
+  const found: string[] = [];
+  for (const p of placed) {
+    if (p.a < 0 || p.b > width) found.push(`${when} ${width}px: ${p.what} leaves the axis`);
+    if (p.level > MAX_LEVEL) found.push(`${when} ${width}px: ${p.what} above row ${MAX_LEVEL}`);
+  }
+  for (const [i, p] of placed.entries()) {
+    for (const q of placed.slice(i + 1)) {
+      if (p.side === q.side && p.level === q.level && !(p.b <= q.a || q.b <= p.a)) {
+        found.push(`${when} ${width}px: ${p.what} overlaps ${q.what}`);
       }
-      for (const [i, p] of placed.entries()) {
-        for (const q of placed.slice(i + 1)) {
-          if (p.side === q.side && p.level === q.level) {
-            expect(p.b <= q.a || q.b <= p.a, `${p.what} and ${q.what} on ${day}`).toBe(true);
-          }
-          // A leader runs from the axis to its label, past the nearer rows of its side.
-          for (const [near, far] of [
-            [p, q],
-            [q, p],
-          ]) {
-            if (near.side === far.side && near.level < far.level) {
-              expect(
-                far.x < near.a || far.x > near.b,
-                `${far.what}'s leader crosses ${near.what} on ${day}`
-              ).toBe(true);
-            }
-          }
+      // A leader runs from the axis to its label, past the nearer rows of its side.
+      for (const [near, far] of [
+        [p, q],
+        [q, p],
+      ]) {
+        if (
+          near.side === far.side &&
+          near.level < far.level &&
+          far.x >= near.a &&
+          far.x <= near.b
+        ) {
+          found.push(`${when} ${width}px: ${far.what}'s leader crosses ${near.what}`);
         }
       }
     }
-  );
+  }
+  return found;
+}
+
+describe('layoutTimeline', () => {
+  // "today" moves every day and squeezes the spring of 2026 together, and a day whose search runs
+  // out falls back to labels that may overlap. So every day for four years, at the narrowest axis
+  // the page draws and at the prose column's full 760px.
+  it('keeps every label on the axis and clear of the others, every day to 2030-11-17', () => {
+    const found: string[] = [];
+    const last = Date.UTC(2030, 10, 17, 12);
+    for (let t = Date.UTC(2026, 10, 17, 12); t <= last; t += 86_400_000) {
+      for (const width of [TIMELINE_MIN_WIDTH, 760]) found.push(...problems(new Date(t), width));
+    }
+    expect(found).toEqual([]);
+  });
 
   it('runs from the first point at 0 to today at 100, in date order', () => {
     const points = layoutTimeline(ORIGIN_EVENTS, new Date('2026-11-17T12:00:00Z'));
