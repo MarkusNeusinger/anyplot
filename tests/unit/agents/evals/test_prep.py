@@ -19,6 +19,7 @@ from agents.anyplot.models import FakeJudge, JudgeVerdict
 from agents.anyplot.opening import instruction_like
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.services import Services
+from agents.anyplot.settings import get_settings
 from agents.evals import prep
 from agents.evals.host_data import HostDataBackend
 from agents.evals.prep import (
@@ -97,6 +98,14 @@ def case(case_id: str, message: str, expected: list[dict[str, Any]], locale: str
 
 def runtime() -> Runtime:
     return Runtime(queue=RunQueue(concurrency=1, per_minute=1_000, max_wait_s=600))
+
+
+@pytest.fixture
+def enforced(development_env: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The reply figure check under `enforce`. Its default, `log`, asks for nothing again and withholds nothing, so
+    a test of a second ask or a withheld reply has to switch it on."""
+    monkeypatch.setenv("AGENT_NUMBER_PROVENANCE", "enforce")
+    get_settings.cache_clear()
 
 
 class TestFixtures:
@@ -1454,8 +1463,8 @@ class TestRun:
         A turn without a call shows which of the operations the server makes itself; the root makes the others.
         """
         cases = [item for item in load_cases(DEFAULT_CASES) if item.scored_by_table]
-        # Replies without a figure: a row count no source of the case holds would be asked for again (number_provenance),
-        # which would take the next case's scripted answer.
+        # Replies without a figure: under `enforce`, a row count no source of the case holds would be asked for again
+        # (number_provenance), which would take the next case's scripted answer.
         swap_models("anthropic-vertex", script_for(*([{"text": "Done."}] for _ in cases)))
         silent = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
         root_turns = []
@@ -1985,7 +1994,7 @@ class TestRun:
         assert result.cause == "error: guard_unavailable"
 
     def test_a_withheld_reply_is_a_miss_of_its_own_and_every_figure_check_is_counted(
-        self, services: Services, swap_models
+        self, services: Services, swap_models, enforced: None
     ) -> None:
         """A reply the service withheld is the model's outcome, never an outage: the case is answered, scored and a
         miss with its own cause. The verdicts of the check come from the plugin's collector, split by the tool calls
@@ -2033,7 +2042,9 @@ class TestRun:
         }
         assert log.checks == {}  # every case's checks were taken
 
-    def test_a_withheld_reply_is_a_miss_in_a_case_that_scores_no_figures(self, services: Services, swap_models) -> None:
+    def test_a_withheld_reply_is_a_miss_in_a_case_that_scores_no_figures(
+        self, services: Services, swap_models, enforced: None
+    ) -> None:
         """Every case, not only one with `figures`: a turn whose reply was withheld answered nothing, so a case whose
         operations match (here none, as expected) is a miss all the same."""
         script = script_for([{"text": "The scores add up to 2,718.28."}, {"text": "About 2,718.28 in all."}])
@@ -2044,6 +2055,22 @@ class TestRun:
 
         assert (result.operations, result.ops_exact, result.figures_miss) == ([], True, False)
         assert (result.reply_error, result.match) == ("unverified_figure", False)
+
+    def test_under_the_checks_default_an_unsourced_figure_is_counted_and_the_reply_goes_out(
+        self, services: Services, swap_models
+    ) -> None:
+        """The same turn without the variable: `log` asks for nothing again, so the case is scored on its operations
+        and the check only counts the figure."""
+        script = script_for([{"text": "The scores add up to 2,718.28."}])
+        swap_models("anthropic-vertex", script)
+        cases = [case("w-001", "what do the scores add up to?", [], figures="not_withheld")]
+        log = prep.FigureLog(keep_figures=True)
+
+        (result,) = asyncio.run(run_cases(cases, runtime=runtime(), services=services, figures=log))
+
+        assert (result.reply_error, result.match, result.figures_miss) == (None, True, False)
+        assert result.figure_verdicts == ["unsourced_logged"]
+        assert log.unsourced == {"w-001": [{"verdict": "unsourced_logged", "tools": False, "unsourced": ["2,718.28"]}]}
 
 
 class TestScoreFigures:
