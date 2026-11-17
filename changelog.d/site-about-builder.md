@@ -46,10 +46,10 @@
   adds "I approve new specs and set the rules." The masthead, the OG image
   and the crawler copy keep "the open plot catalogue" alone.
 - **The about page's stack table lists the checks.** A "checks" row names
-  tests and lint on every pull request that changes code outside the plot
-  catalogue, the 80 % patch-coverage target of `codecov.yml`, CodeQL, every
-  migration run on a throwaway PostgreSQL, and the check of the live site
-  after a merge, which the merging agent runs by rule.
+  tests and lint on every pull request that changes Python or frontend code
+  outside the plot catalogue, the 80 % patch-coverage target of `codecov.yml`,
+  CodeQL, every migration run on a throwaway PostgreSQL, and the check of the
+  live site after a merge, which the merging agent runs by rule.
   `test_readme_claims.py` holds the target to `codecov.yml`.
 
 ### Changed
@@ -101,9 +101,11 @@
   human-shaped", "Humans curate; AI executes", "a catalogue that maintains
   itself") and the old diagram for the page's own sentences, and its voice
   section says that the site speaks as its single builder, in the first
-  person singular, while meta descriptions and crawler copies describe the
-  site in the third person. Its pipeline line, its example of a spec and its
-  positioning no longer speak of "humans" or "we".
+  person singular, that meta descriptions describe the site in the third
+  person, and that a crawler copy that mirrors a page keeps the page's voice.
+  Its pipeline line, its example of a spec and its positioning no longer speak
+  of "humans" or "we", and its positioning assumes you know how to run code
+  in your language, not Python alone.
 - **The README counts the releases and names the approvals.** "How I build
   anyplot" introduces a physicist and data analyst and adds that 16 releases
   have shipped, a count `test_readme_claims.py` holds to the version

@@ -42,6 +42,7 @@ README = ROOT / "README.md"
 WORKFLOW_PAGE = ROOT / "docs" / "concepts" / "ai-workflow.md"
 ABOUT_PAGE = ROOT / "app" / "src" / "pages" / "AboutPage.tsx"
 SEO = ROOT / "api" / "routers" / "seo.py"
+STYLE_GUIDE = ROOT / "docs" / "reference" / "style-guide.md"
 LINKED_DOCS = (README, WORKFLOW_PAGE)
 
 # Pull requests merged from the owner's account, and when that was counted:
@@ -670,6 +671,32 @@ def test_the_readme_counts_the_releases_of_the_changelog():
     assert claims, "README.md 'How I build anyplot' no longer says how many releases have shipped"
     for claim in claims:
         assert int(claim) == released, f"README.md says {claim} releases have shipped; CHANGELOG.md has {released}"
+
+
+def test_the_style_guide_keeps_a_crawler_copy_in_its_pages_voice():
+    """Section 3.4 of the style guide lets a crawler copy keep its page's voice: the About page's copy says "I"."""
+    voice = re.search(r"^### 3\.4 Voice & Tone\n(.*?)^#", read(STYLE_GUIDE), re.MULTILINE | re.DOTALL)
+    assert voice, "style-guide.md no longer has section 3.4, Voice & Tone"
+    rule = collapse(voice.group(1))
+    assert "a crawler copy that mirrors a page keeps the page's voice" in rule, (
+        "style-guide.md 3.4: a crawler copy keeps the voice of the page it mirrors"
+    )
+    assert "crawler copies describe the site in the third person" not in rule, (
+        "style-guide.md 3.4: the About page's crawler copy speaks as 'I', like the page"
+    )
+    for name, text in (("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        assert "; I decide, test and send back." in collapse(text), f"{name}: the builder speaks as 'I'"
+
+
+def test_the_style_guide_assumes_no_single_language_of_the_catalogue():
+    """Section 3.7's tutorial bullet names no one language while the library registry spans several."""
+    languages = {library["language_id"] for library in LIBRARIES_METADATA}
+    bullet = re.search(r"^- \*\*A tutorial platform\*\*\.(.*)$", read(STYLE_GUIDE), re.MULTILINE)
+    assert bullet, "style-guide.md 3.7 no longer has the 'A tutorial platform' bullet"
+    assert "you know how to run code in your language" in bullet.group(1), "style-guide.md 3.7: the tutorial bullet"
+    if len(languages) > 1:
+        named = sorted(lang for lang in languages if re.search(rf"\b{re.escape(lang)}\b", bullet.group(1), re.I))
+        assert not named, f"style-guide.md 3.7 names {named}; the catalogue spans {len(languages)} languages"
 
 
 def test_merged_pull_request_claims_are_sane_floors():

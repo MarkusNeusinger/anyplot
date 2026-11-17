@@ -188,7 +188,7 @@ Rotate alternatives as appropriate. The canonical hero block is always the first
 
 See §2.2 for the five tone attributes (precise, understated, curious, respectful, slightly playful) and what to avoid.
 
-The site speaks as its single builder, in the first person singular ("I"), not as "we" or "humans". Meta descriptions and crawler copies describe the site in the third person.
+The site speaks as its single builder, in the first person singular ("I"), not as "we" or "humans". Meta descriptions describe the site in the third person; a crawler copy that mirrors a page keeps the page's voice.
 
 ### 3.5 Capitalization & Punctuation
 
@@ -294,7 +294,7 @@ The second version is shorter, says what's actually happening (ideas come in as 
 - **A plotting library**. anyplot doesn't compete with matplotlib or plotly; it helps you use them better.
 - **An AI plot generator the user prompts.** Users browse a curated catalogue: its plots come from specs I approve, and the AI generates them offline. The experimental chat at `/agent` adapts a plot the user picked from that catalogue to their own data; it doesn't invent a plot from a prompt.
 - **A dashboard tool**. The catalogue shows static examples. Interactive dashboards are a different product category.
-- **A tutorial platform**. The examples assume you know how to run Python code; they don't teach from zero.
+- **A tutorial platform**. The examples assume you know how to run code in your language; they don't teach from zero.
 - **A community forum**. Everything happens on GitHub — issues, releases, discussions. There's no separate forum, no signup, no account.
 
 ### 3.8 Story Points
