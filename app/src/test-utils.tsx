@@ -28,27 +28,48 @@ function customRender(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>
  * The screen has a fine pointer: a block on any other feature (`pointer: coarse`) never applies.
  * Rules for a state the element is not in (`:hover`, `::placeholder`) do not match it. A sheet
  * stores a shorthand as its longhands, so they are copied into a fresh declaration, which reads
- * the shorthand (`flex`) back from them.
+ * the shorthand (`flex`) back from them. jsdom has no layout, so an `@container` block applies
+ * only when the call names the width of the element's query container (`containerWidth`), by the
+ * same width conditions; without it, none does. With `pseudoElement`, as with `getComputedStyle`,
+ * it reads that pseudo-element's declarations instead: a rule applies when one of its selectors
+ * ends with the pseudo-element and the element matches the rest, so a state on the element itself
+ * (`:empty::before`) is checked against the element as it is.
  */
-function styleAt(element: Element, width: number = window.innerWidth): CSSStyleDeclaration {
-  const fits = (media: string) =>
+function styleAt(
+  element: Element,
+  width: number = window.innerWidth,
+  containerWidth?: number,
+  pseudoElement?: '::before' | '::after'
+): CSSStyleDeclaration {
+  const fits = (media: string, size: number = width) =>
     (media.match(/\([^)]*\)/g) ?? []).every(condition => {
       const bound = /^\((min|max)-width:\s*([\d.]+)px\)$/.exec(condition);
       if (!bound) return false;
-      return bound[1] === 'min' ? width >= Number(bound[2]) : width <= Number(bound[2]);
+      return bound[1] === 'min' ? size >= Number(bound[2]) : size <= Number(bound[2]);
     });
-  const matches = (selector: string) => {
+  const elementMatches = (selector: string) => {
     try {
       return element.matches(selector);
     } catch {
       return false;
     }
   };
+  const matches = (selectorText: string) => {
+    if (!pseudoElement) return elementMatches(selectorText);
+    return selectorText
+      .split(',')
+      .map(selector => selector.trim())
+      .filter(selector => selector.endsWith(pseudoElement))
+      .some(selector => elementMatches(selector.slice(0, -pseudoElement.length) || '*'));
+  };
   const declared = document.createElement('div').style;
   const apply = (rules: CSSRuleList) => {
     for (const rule of Array.from(rules)) {
       if (rule instanceof CSSMediaRule) {
         if (fits(rule.media.mediaText)) apply(rule.cssRules);
+      } else if (rule instanceof CSSContainerRule) {
+        if (containerWidth !== undefined && fits(rule.conditionText, containerWidth))
+          apply(rule.cssRules);
       } else if (rule instanceof CSSStyleRule && matches(rule.selectorText)) {
         for (const name of Array.from(rule.style)) {
           declared.setProperty(name, rule.style.getPropertyValue(name));

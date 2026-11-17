@@ -139,7 +139,12 @@ export function LibrariesPage() {
           {visibleLibraries.map(name => {
             const meta = byId.get(name);
             return (
-              <Box key={name} sx={{ position: 'relative' }}>
+              // A flex column, so the card grows to the row's height and the version
+              // and docs row lines up with its neighbours'.
+              <Box
+                key={name}
+                sx={{ position: 'relative', display: 'flex', flexDirection: 'column' }}
+              >
                 <LibraryCard
                   name={name}
                   language={meta?.language}

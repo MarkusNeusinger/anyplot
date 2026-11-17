@@ -31,8 +31,10 @@ const FRAMEWORK_LABEL: Record<string, string> = {
 };
 
 // Short license note surfaced on the card. Only set where it's worth calling
-// out (e.g. MUI X ships community-MIT while Pro/Premium stay out of scope).
+// out: MUI X ships community-MIT while Pro/Premium stay out of scope, and
+// Highcharts is the one library not free for commercial use (/legal, "your code").
 const LICENSE_NOTE: Record<string, string> = {
+  highcharts: 'free for non-commercial use',
   muix: 'MIT · community',
 };
 
@@ -58,6 +60,9 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
       sx={{
         all: 'unset',
         boxSizing: 'border-box',
+        // Fills a column wrapper (LibrariesPage sets a version row under each card), so the
+        // cards of a grid row match in height; a plain grid item is stretched anyway.
+        flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
         gap: 2,
@@ -201,6 +206,10 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
         {DESCRIPTIONS[name] || ''}
       </Box>
 
+      {/* The licence note takes its own line above .explore(). Beside it, a note as long
+          as Highcharts' does not fit the narrower cards of each column count: it wraps,
+          touches .explore() and lifts it out of line with the row's other cards. Stacked,
+          the note fits on one line, and .explore() stays on the card's bottom line. */}
       <Box
         className="lib-card-cta"
         sx={{
@@ -209,12 +218,12 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
           color: 'var(--ink-muted)',
           mt: 'auto',
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 0.5,
           transition: 'color 0.2s',
         }}
       >
-        <span aria-hidden="true">.explore()</span>
         {licenseNote && (
           <Box
             component="span"
@@ -228,6 +237,7 @@ export function LibraryCard({ name, language, count, onClick }: LibraryCardProps
             {licenseNote}
           </Box>
         )}
+        <span aria-hidden="true">.explore()</span>
       </Box>
     </Box>
   );

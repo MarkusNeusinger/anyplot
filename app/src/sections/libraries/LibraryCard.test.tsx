@@ -34,6 +34,29 @@ describe('LibraryCard', () => {
     expect(screen.getByText('42 examples')).toBeInTheDocument();
   });
 
+  it.each([
+    ['highcharts', 'free for non-commercial use'],
+    ['muix', 'MIT · community'],
+  ])('notes the licence of %s on its card', (name, note) => {
+    render(<LibraryCard name={name} language="javascript" onClick={vi.fn()} />);
+    expect(screen.getByLabelText(`License: ${note}`)).toHaveTextContent(note);
+  });
+
+  it.each(['highcharts', 'muix'])('puts the licence note of %s before .explore()', name => {
+    // The note has its own line above .explore(), so .explore() stays on the card's
+    // bottom line in step with the cards beside it.
+    render(<LibraryCard name={name} language="javascript" onClick={vi.fn()} />);
+    const note = screen.getByLabelText(/^License: /);
+    const explore = screen.getByText('.explore()');
+    expect(note.parentElement).toBe(explore.parentElement);
+    expect(note.compareDocumentPosition(explore) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('shows no licence note for a library under an open licence', () => {
+    render(<LibraryCard name="echarts" language="javascript" onClick={vi.fn()} />);
+    expect(screen.queryByLabelText(/License:/)).not.toBeInTheDocument();
+  });
+
   it('fires onClick when the card is clicked', async () => {
     const onClick = vi.fn();
     const user = userEvent.setup();

@@ -63,7 +63,7 @@ vi.mock('src/hooks/useFeaturedSpecs', () => ({
 }));
 
 vi.mock('src/hooks/usePlotOfTheDay', () => ({
-  usePlotOfTheDay: () => null,
+  usePlotOfTheDay: () => ({ potd: null, status: 'loading', retry: () => {} }),
 }));
 
 vi.mock('src/hooks', async () => {
