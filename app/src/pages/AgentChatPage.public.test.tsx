@@ -540,6 +540,36 @@ describe('AgentChatPage on the public lane', () => {
     expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin · as visitor ▾$/);
   });
 
+  it('shows the closed notice with its terms when the lane closed after the page read it open', async () => {
+    // The page reads the lane once, at load; the operator paused it before the chat's open, so
+    // the open answers `not_enabled`.
+    answerWith('/agent/sessions', json(404, { detail: 'not_enabled', ref: 'r-off' }));
+    renderPage();
+    const terms = await screen.findByTestId('agent-intro-terms');
+    // The notice the other two closed cases show, word for word, and the terms below its last link.
+    expect(screen.getByText(/the assistant is closed right now/)).toHaveTextContent(
+      /^the assistant is closed right now\. please try again later; the catalogue stays open\./
+    );
+    const catalogue = screen.getByRole('link', { name: 'catalogue' });
+    expect(catalogue).toHaveAttribute('href', '/plots');
+    expect(
+      catalogue.compareDocumentPosition(terms) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      within(terms)
+        .getAllByRole('term')
+        .map(label => label.textContent)
+    ).toEqual(['your code', 'privacy', 'limits', 'status']);
+    // No error and no chat: neither the chat's frame nor the experimental notice above it.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Chat' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('experimental-notice')).not.toBeInTheDocument();
+    expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex, nofollow'
+    );
+  });
+
   it('says why a network cannot open one more session', async () => {
     vi.stubGlobal(
       'fetch',

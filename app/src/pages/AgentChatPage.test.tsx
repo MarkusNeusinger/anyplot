@@ -863,9 +863,14 @@ describe('AgentChatPage gating', () => {
     adminStatus = 404;
     stubFetch(404, { detail: 'not_enabled', ref: 'r-off' });
     renderAt(PAGE);
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('the assistant is closed right now. please try again later.');
-    expect(alert).not.toHaveTextContent('AGENT_ENABLED');
+    // The closed notice a visitor reads, with the terms below it, and no error of its own.
+    const notice = await screen.findByText(/the assistant is closed right now/);
+    expect(notice).toHaveTextContent(
+      /^the assistant is closed right now\. please try again later; the catalogue stays open\./
+    );
+    expect(within(notice).getByTestId('agent-intro-terms')).toBeInTheDocument();
+    expect(notice).not.toHaveTextContent('AGENT_ENABLED');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     // The check's answer stands for the chat's own: the switched-off status is asked once.
     const statusCalls = () =>
       agentCalls().filter(([input]) => pathOf(input) === '/debug/agent/status');

@@ -334,11 +334,14 @@ export const HIGHCHARTS_NOTE =
   'highcharts is free for non-commercial use; a commercial use needs a licence from Highsoft.';
 
 /**
- * The page while the public lane is closed (`GET /agent/lane` answered no, or the public lane
- * refused the session) and the page does not run on the admin lane. An admin's browser keeps the
- * admin menu below the text: "view as visitor" to switch back, or the line about an expired admin
- * session. The assistant's terms stand below the notice: `/agent` is where they live, so they
- * stand there also while the operator has paused the assistant.
+ * The page while the assistant is closed: the public lane's door (`GET /agent/lane`) answered no
+ * and the page does not run on the admin lane; or the public lane refused the session; or a
+ * session's open answered `not_enabled`, on either lane (the page reads the door once, at load,
+ * so a pause after that shows only here; on the admin lane it is the master switch). An admin's
+ * browser keeps the admin menu below the text: "view as visitor" to switch back, the line about
+ * an expired admin session, or the diagnostics line that names the switch. The assistant's terms
+ * stand below the notice: `/agent` is where they live, so they stand there also while the
+ * operator has paused the assistant.
  */
 function LaneClosed({ adminMenu = null }: { adminMenu?: React.ReactNode }) {
   const { pathname, search } = useLocation();
@@ -1324,6 +1327,12 @@ function AgentChat({
   if (state.phase === 'unauthorized') {
     return lane === 'public' ? <LaneClosed adminMenu={adminMenu} /> : <NoIndex />;
   }
+  // The open found the assistant closed: the public door shut after the page read it open, or on
+  // the admin lane the master switch off. Both lanes show the notice a door found shut at load
+  // shows; the admin menu's diagnostics name the switch.
+  if (state.phase === 'error' && state.failure?.code === 'not_enabled') {
+    return <LaneClosed adminMenu={adminMenu} />;
+  }
 
   const backHref = specPath(specId, language, state.library);
   // Above the frame: the page's heading and the experimental notice, which stands above the first
@@ -1430,10 +1439,7 @@ function AgentChat({
         <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
           {state.phase === 'ineligible'
             ? 'this plot cannot be adapted in this library yet; pick another library above.'
-            : state.failure?.code === 'not_enabled'
-              ? // The same words on both lanes; the admin menu names the switch.
-                'the assistant is closed right now. please try again later.'
-              : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
+            : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
           {state.phase === 'error' && <ReloadHint code={state.failure?.code} opening />}
         </Box>
       </Box>

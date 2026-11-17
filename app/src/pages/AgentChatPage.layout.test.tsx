@@ -44,7 +44,10 @@ const json = (status: number, body: unknown) =>
   });
 
 let laneOpen: boolean;
-/** The public lane's answer to a session's open: 200 opens it, 401 refuses it. */
+/**
+ * The public lane's answer to a session's open: 200 opens it, 401 refuses it, and 404 says the
+ * lane is closed (`not_enabled`), as it is when the operator paused it after the page read it open.
+ */
 let sessionStatus: number;
 
 beforeEach(() => {
@@ -69,7 +72,9 @@ beforeEach(() => {
               session_id: 'S1',
               eligibility: { eligible: true, status: 'clean', reasons: [] },
             })
-          : json(sessionStatus, { detail: 'unauthorized', ref: 'r-u' });
+          : sessionStatus === 404
+            ? json(404, { detail: 'not_enabled', ref: 'r-off' })
+            : json(sessionStatus, { detail: 'unauthorized', ref: 'r-u' });
       }
       if (url.pathname.endsWith('/agent/status')) {
         return json(200, { libraries: ['matplotlib'], enabled: true });
@@ -119,6 +124,16 @@ describe("the site's feedback button on /agent", () => {
     sessionStatus = 401;
     renderAt(CHAT);
     await screen.findByText(/the assistant is closed right now/);
+    expect(siteButtons()).toHaveLength(1);
+  });
+
+  it('stands once on the closed notice when the lane closed after the page read it open', async () => {
+    // The page reads the lane once, at load; the session's open then finds it closed.
+    sessionStatus = 404;
+    renderAt(CHAT);
+    // The closed notice with its terms, not an error in the chat's frame.
+    await screen.findByTestId('agent-intro-terms');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(siteButtons()).toHaveLength(1);
   });
 
