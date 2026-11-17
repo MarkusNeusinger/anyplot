@@ -5,7 +5,7 @@
  * straight into a working session.
  *
  * It carries three fields of a feedback entry only: the message, the page and
- * the reaction. The legal page's site feedback row (`src/pages/LegalPage.tsx`,
+ * the reaction. The legal page's site feedback row (`app/src/pages/LegalPage.tsx`,
  * with its crawler copy in `api/routers/seo.py`) states exactly these as what
  * can go to the coding assistant, so a new field changes that row too.
  *
