@@ -100,6 +100,60 @@ describe('useFilterState after Back', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('never saves a failed filter beside the plots before it, so a return fetches it again', async () => {
+    const { store, Wrapper } = createLayout();
+    const first = renderHook(() => useFilterState(options), { wrapper: Wrapper });
+    await waitFor(() => expect(store.ref.current.initialized).toBe(true));
+    expect(store.ref.current.activeFilters).toEqual([]);
+    expect(store.ref.current.allImages).toHaveLength(2);
+
+    // A filter change whose fetch fails: the gallery holds no plots and shows the error.
+    fetchMock.mockRejectedValue(new Error('offline'));
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    act(() => first.result.current.handleRandom());
+    await waitFor(() => expect(first.result.current.error).not.toBe(''), { timeout: 5000 });
+    expect(first.result.current.activeFilters).toEqual([{ category: 'lang', values: ['python'] }]);
+    expect(first.result.current.allImages).toEqual([]);
+    // The layout still holds the last pair that belongs together: no filter, and its plots.
+    expect(store.ref.current.activeFilters).toEqual([]);
+    expect(store.ref.current.allImages).toHaveLength(2);
+    first.unmount();
+    const callsBefore = fetchMock.mock.calls.length;
+
+    // Return: the failed filter is still in the address, so it is fetched, not restored.
+    fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(response) });
+    const back = renderHook(() => useFilterState(options), { wrapper: Wrapper });
+    expect(back.result.current.activeFilters).toEqual([{ category: 'lang', values: ['python'] }]);
+    expect(back.result.current.loading).toBe(true);
+    await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(callsBefore));
+    await waitFor(() => expect(back.result.current.loading).toBe(false));
+    await waitFor(() =>
+      expect(store.ref.current.activeFilters).toEqual([{ category: 'lang', values: ['python'] }])
+    );
+  });
+
+  it('saves a new filter only once its own plots have arrived', async () => {
+    const { store, Wrapper } = createLayout();
+    const { result } = renderHook(() => useFilterState(options), { wrapper: Wrapper });
+    await waitFor(() => expect(store.ref.current.initialized).toBe(true));
+
+    // The answer to the filter change is held back: the plots on hand are still the old ones.
+    let answer: (value: unknown) => void = () => {};
+    fetchMock.mockReturnValue(new Promise(resolve => (answer = resolve)));
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    act(() => result.current.handleRandom());
+    await waitFor(() =>
+      expect(result.current.activeFilters).toEqual([{ category: 'lang', values: ['python'] }])
+    );
+    await waitFor(() => expect(result.current.loading).toBe(true));
+    expect(store.ref.current.activeFilters).toEqual([]);
+
+    await act(async () => answer({ ok: true, json: () => Promise.resolve(response) }));
+    await waitFor(() =>
+      expect(store.ref.current.activeFilters).toEqual([{ category: 'lang', values: ['python'] }])
+    );
+  });
+
   it('reports every removed group once when all filters are cleared', async () => {
     window.history.replaceState({}, '', '/plots?lib=seaborn&plot=bar,line');
     const onTrackEvent = vi.fn();

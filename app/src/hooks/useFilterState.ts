@@ -116,6 +116,7 @@ export function useFilterState({
     hasMore,
     loading,
     error,
+    resultsKey,
     setDisplayedImages,
     setHasMore,
     setError,
@@ -173,6 +174,10 @@ export function useFilterState({
 
   useEffect(() => {
     if (allImages.length === 0 && displayedImages.length === 0) return;
+    // Plots are saved only under the filters they were fetched for. Right after a filter change
+    // the plots on hand are still the previous filter's; saved beside the new filter, they would
+    // come back as its result, without a fetch, if that fetch failed or the visitor left first.
+    if (resultsKey !== JSON.stringify(activeFilters)) return;
     if (syncKey === lastSyncedKeyRef.current) return;
     lastSyncedKeyRef.current = syncKey;
     setHomeState(prev => ({
@@ -197,6 +202,7 @@ export function useFilterState({
     orCounts,
     specTitles,
     hasMore,
+    resultsKey,
     setHomeState,
   ]);
 

@@ -44,4 +44,7 @@
   While it shows, the page shows no plots of an earlier filter and no longer
   claims that no plots match, and the search menu offers no counts of an
   earlier filter. The banner sits 16 px below the masthead's rule instead of
-  on it. (#13155)
+  on it. The page also saves a filter only together with the plots fetched
+  for it: a filter whose load failed, or that the visitor left while it
+  loaded, used to be saved beside the plots of the filter before it, and a
+  return to the page showed those as its result without loading. (#13155)

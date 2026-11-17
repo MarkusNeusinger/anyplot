@@ -30,6 +30,12 @@ interface UseFilterFetchOptions {
 }
 
 interface UseFilterFetchReturn extends FilterFetchState {
+  /**
+   * The filters the plots and counts on hand were fetched for, as `JSON.stringify(activeFilters)`;
+   * null when they belong to none: before the first answer, after a failed fetch, and while
+   * restored state of other filters stands in.
+   */
+  resultsKey: string | null;
   setDisplayedImages: React.Dispatch<React.SetStateAction<PlotImage[]>>;
   setHasMore: React.Dispatch<React.SetStateAction<boolean>>;
   setError: React.Dispatch<React.SetStateAction<string>>;
@@ -68,6 +74,10 @@ export function useFilterFetch({
   const [hasMore, setHasMore] = useState(initialState.hasMore ?? false);
   const [loading, setLoading] = useState(!skipInitialFetch);
   const [error, setError] = useState<string>('');
+  // Restored state counts as these filters' results only when the caller skips the fetch for it.
+  const [resultsKey, setResultsKey] = useState<string | null>(() =>
+    skipInitialFetch ? JSON.stringify(activeFilters) : null
+  );
   // Bumped by `retry` so the effect runs again for the same filters.
   const [reloadKey, setReloadKey] = useState(0);
   const retry = useCallback(() => setReloadKey(k => k + 1), []);
@@ -134,6 +144,7 @@ export function useFilterFetch({
         // Initial display count
         setDisplayedImages(shuffled.slice(0, BATCH_SIZE));
         setHasMore(shuffled.length > BATCH_SIZE);
+        setResultsKey(filtersKey);
       } catch {
         if (abortController.signal.aborted) return;
         // The plots of the previous filter would stand under the new chips as if they were
@@ -146,6 +157,7 @@ export function useFilterFetch({
         setHasMore(false);
         setFilterCounts(null);
         setOrCounts([]);
+        setResultsKey(null);
         setError(FILTER_FETCH_ERROR);
       } finally {
         if (!abortController.signal.aborted) {
@@ -169,6 +181,7 @@ export function useFilterFetch({
     hasMore,
     loading,
     error,
+    resultsKey,
     setDisplayedImages,
     setHasMore,
     setError,
