@@ -133,7 +133,9 @@
   screens.** A larger photo stands 216 px wide in the margin left of the
   760 px column wherever that margin holds it with its gap, so the bio keeps
   the column's full width; narrower, it stays 110 px wide beside the name,
-  above it on phones.
+  above it on phones. The picture comes in two files, 360 and 684 px wide,
+  and the browser takes the smaller one (41 kB against 93 kB) wherever the
+  small slot or a screen of normal density is enough.
 - **The about page's palette section drops the penguin example.** The two
   sentences after it, "the palette travels with you across libraries.
   switching tools doesn't mean re-learning your colour grammar.", carry the

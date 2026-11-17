@@ -97,6 +97,14 @@ describe('AboutPage', () => {
       'src',
       'https://storage.googleapis.com/anyplot-static/images/markusneusinger-684.webp'
     );
+    // Two files of the one picture: the 360px one covers the 110px slot at any pixel density, and
+    // a window too narrow for the gutter is told so, so a phone never loads the 684px file.
+    expect(photo).toHaveAttribute(
+      'srcset',
+      'https://storage.googleapis.com/anyplot-static/images/markusneusinger-360.webp 360w, ' +
+        'https://storage.googleapis.com/anyplot-static/images/markusneusinger-684.webp 684w'
+    );
+    expect(photo).toHaveAttribute('sizes', '(min-width: 1248px) 216px, 110px');
     expect(photo).toHaveAttribute('width', '684');
     expect(photo).toHaveAttribute('height', '1381');
     expect(photo).toHaveAttribute('alt', '');

@@ -25,9 +25,15 @@ import {
   typography,
 } from 'src/theme';
 
-const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger-684.webp';
+const AVATAR_BASE = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger';
+const AVATAR_URL = `${AVATAR_BASE}-684.webp`;
 const AVATAR_WIDTH = 684;
 const AVATAR_HEIGHT = 1381;
+// The same picture 360px wide, under half the bytes: enough for the 110px slot on every screen and
+// for the gutter's 216px on a screen of normal density.
+const AVATAR_SMALL_URL = `${AVATAR_BASE}-360.webp`;
+const AVATAR_SMALL_WIDTH = 360;
+const PORTRAIT_WIDTH = 110;
 
 // The portrait hangs in the gutter left of the 760px column where that gutter holds it with its
 // 28px gap: the section 1248px wide or more, (1248 - 760) / 2 = 244 = 216 + 28. Keyed to the
@@ -38,6 +44,11 @@ const PORTRAIT_GAP = 28;
 const PORTRAIT_TOP = 6;
 const PORTRAIT_SECTION_MIN = 760 + 2 * (PORTRAIT_GUTTER_WIDTH + PORTRAIT_GAP);
 const inGutter = `@container (min-width: ${PORTRAIT_SECTION_MIN}px)` as const;
+// How wide the portrait stands, for the browser's choice between the two files. `sizes` knows the
+// window only, not the section: a window narrower than the section's minimum can never hold the
+// gutter, so below it the slot is the small one for certain; from there up the hint names the
+// gutter's width, which at worst loads the larger file for the small slot, never the reverse.
+const PORTRAIT_SIZES = `(min-width: ${PORTRAIT_SECTION_MIN}px) ${PORTRAIT_GUTTER_WIDTH}px, ${PORTRAIT_WIDTH}px`;
 
 // For search results and link previews, the same as the crawler copy's (api/routers/seo.py): who
 // built the site and how, then the sections that say how the catalogue is written and reviewed,
@@ -158,12 +169,14 @@ export function AboutPage() {
               <Box
                 component="img"
                 src={AVATAR_URL}
+                srcSet={`${AVATAR_SMALL_URL} ${AVATAR_SMALL_WIDTH}w, ${AVATAR_URL} ${AVATAR_WIDTH}w`}
+                sizes={PORTRAIT_SIZES}
                 alt=""
                 aria-hidden="true"
                 width={AVATAR_WIDTH}
                 height={AVATAR_HEIGHT}
                 sx={{
-                  width: 110,
+                  width: PORTRAIT_WIDTH,
                   height: 'auto',
                   flexShrink: 0,
                   display: 'block',
