@@ -1279,7 +1279,7 @@ _LEGAL_BOT_BODY = (
     "(europe-west4): your reaction, message, hashes of your tab id and of the session id, and the "
     "run's details. The operator reads the cases together with the AI assistant he codes with (Claude "
     "by Anthropic): your reaction and message, the conversation, the data sample or file, the plot and "
-    "its code, and the run's details.</li>"
+    "its code, the run's details and the two hashes.</li>"
     "</ul>"
     "<h2>Transparency</h2>"
     "<p>The whole stack — specs, pipeline, API and frontend — is open source at "

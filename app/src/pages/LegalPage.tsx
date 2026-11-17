@@ -473,7 +473,8 @@ export function LegalPage() {
                     keeps your reaction, message, hashes of your tab id and of the session id, and
                     the run&apos;s details. I read the cases together with the ai assistant I code
                     with (Claude by Anthropic): your reaction and message, the conversation, the
-                    data sample or file, the plot and its code, and the run&apos;s details.
+                    data sample or file, the plot and its code, the run&apos;s details and the two
+                    hashes.
                     <Kept
                       items={[
                         ['case files', '180 days'],

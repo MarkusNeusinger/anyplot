@@ -1390,11 +1390,11 @@ class TestSeoProxyRouter:
             # Both hashes the row stores, the tab id's and the session id's (api/agent_cases.py
             # `build_case`, `session_hash`), then who reads a case, and what: the triage session with
             # the coding assistant (.claude/skills/triage-agent-cases/SKILL.md, "Read each case"), the
-            # run's details included.
+            # run's details and the two hashes included.
             "your reaction, message, hashes of your tab id and of the session id, and the run's details. "
             "The operator reads the cases together with the AI assistant he codes with (Claude by "
             "Anthropic): your reaction and message, the conversation, the data sample or file, the plot "
-            "and its code, and the run's details.</li>",
+            "and its code, the run's details and the two hashes.</li>",
             "it starts unticked, which leaves out that file only",
             "never your text, data, column or file names",
             # Every kind of field by its name: event types, plot type and library record what a

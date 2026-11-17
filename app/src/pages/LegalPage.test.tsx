@@ -387,10 +387,12 @@ describe('LegalPage', () => {
     // the tab id's and the session id's (api/agent_cases.py `build_case`, `session_hash`). The
     // cases are read in a session with the coding assistant (.claude/skills/triage-agent-cases,
     // "Read each case"), so the row names that recipient and what it reads, the run's details
-    // (the row's pipeline fields, the config, the session and the turn records) included.
+    // (the row's pipeline fields, the config, the session and the turn records) included, and the
+    // two hashes too: the listed rows and each case's manifest.json hold them
+    // (.claude/skills/triage-agent-cases/casedb.py, api/agent_cases.py `build_case`).
     const caseRow = screen.getAllByRole('row', { name: /^feedback\s/ })[1];
     expect(caseRow).toHaveTextContent(
-      /^feedback\s*only when you send feedback\. a private bucket then keeps the conversation, a profile of your data with its first 5 rows, and the plot.s code and images\. it keeps the whole data file only if you tick "# include data\.csv"; the box starts unticked, which leaves out that file only\. a triage row then keeps your reaction, message, hashes of your tab id and of the session id, and the run.s details\. I read the cases together with the ai assistant I code with \(Claude by Anthropic\): your reaction and message, the conversation, the data sample or file, the plot and its code, and the run.s details\./
+      /^feedback\s*only when you send feedback\. a private bucket then keeps the conversation, a profile of your data with its first 5 rows, and the plot.s code and images\. it keeps the whole data file only if you tick "# include data\.csv"; the box starts unticked, which leaves out that file only\. a triage row then keeps your reaction, message, hashes of your tab id and of the session id, and the run.s details\. I read the cases together with the ai assistant I code with \(Claude by Anthropic\): your reaction and message, the conversation, the data sample or file, the plot and its code, the run.s details and the two hashes\./
     );
     // "No cookies" holds for visitors; the one admin gets Cloudflare Access's login cookie.
     expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();

@@ -44,8 +44,8 @@
   and reaction can go to the AI assistant he codes with, Claude by Anthropic. The data
   assistant's feedback row adds that he reads the cases together with that assistant: the
   visitor's reaction and message, the conversation, the data sample or file, the plot and its
-  code, and the run's details. The crawler copy says the same, and names the operator, not
-  admins, as the holder of the Cloudflare Access login cookie.
+  code, the run's details and the two hashes. The crawler copy says the same, and names the
+  operator, not admins, as the holder of the Cloudflare Access login cookie.
 - **The feedback widget speaks as the operator, and the copied prompt asks not to quote the
   visitor's message.** The widget's thank-you line now reads "I read every note.", as the
   site's feedback row says "I read them". The prompt that the admin page copies for the coding
