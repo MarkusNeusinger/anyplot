@@ -406,6 +406,34 @@ class LinkShare(Base):
     )
 
 
+# The longest search text a row holds, in characters: the app cuts what a visitor typed at the same
+# length (`MAX_QUERY_LENGTH` in `app/src/hooks/useAnalytics.ts`), and the server cuts it again.
+SEARCH_MISS_QUERY_LENGTH = 40
+
+
+class SearchMiss(Base):
+    """A gallery search that found nothing in the whole catalogue: one counter per UTC day and text.
+
+    The site sends the finished text of such a search (`api/search_misses.py`), and the owner reads
+    the list on /debug to see what the catalogue lacks and which words the search does not know. It
+    is a private list: no public page shows it.
+
+    A row is the text, the day and a count, nothing else: no address, no user agent, no time of day,
+    no session, no hash, so it never says who searched. The text is what a visitor typed, so the rows
+    are kept for a limited time only (`RETENTION_DAYS` in `api/search_misses.py`).
+    """
+
+    __tablename__ = "search_misses"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    # Normalised by the server (lowercase, single spaces, cut at 40 characters), so equal searches of a
+    # day meet in one row.
+    query: Mapped[str] = mapped_column(String(SEARCH_MISS_QUERY_LENGTH), primary_key=True)
+    count: Mapped[int] = mapped_column(Integer, nullable=False)
+    # No index of its own: the writes, the retention delete and the owner's list go by day, and the
+    # primary key starts with `day`. Only the owner's delete of a text reads the whole table.
+
+
 # Seed data for libraries + languages (re-exported from core.constants).
 #
 # The constants carry presentation/discovery keys that are not DB columns (e.g.

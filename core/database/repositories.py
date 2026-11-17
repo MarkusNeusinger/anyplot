@@ -7,7 +7,7 @@ Provides abstraction layer between API and database models.
 from datetime import date, datetime, timezone
 from typing import Any, Generic, TypeVar
 
-from sqlalchemy import ColumnElement, String, and_, case, cast, func, or_, select, text, type_coerce, update
+from sqlalchemy import ColumnElement, String, and_, case, cast, delete, func, or_, select, text, type_coerce, update
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, selectinload, undefer
 
 from core.constants import LIBRARY_LANGUAGES
-from core.database.models import AgentFeedback, Feedback, Impl, Language, Library, LinkShare, Spec
+from core.database.models import AgentFeedback, Feedback, Impl, Language, Library, LinkShare, SearchMiss, Spec
 from core.plot_votes import PLOT_VOTE_REACTIONS, VOTE_SORTS, naive_utc
 
 
@@ -995,3 +995,74 @@ class LinkShareRepository:
             .limit(limit)
         )
         return [(name, int(total)) for name, total in result.all()]
+
+
+class SearchMissRepository:
+    """The search-miss counters: one upsert per miss, the owner's list and delete, and the retention purge.
+
+    No `BaseRepository`: a row has no id of its own, its day and text are the key.
+    """
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def count(self, *, day: date, query: str, max_new_per_day: int) -> bool:
+        """Add one search of *query* to its counter of *day*; whether it was counted. The caller commits.
+
+        A text that already has a row that day always counts. A new text gets a row only while the
+        day holds fewer than *max_new_per_day* texts, so a flood of junk can fill one day's list but
+        no more. The upsert is one `INSERT ... ON CONFLICT DO UPDATE` on the primary key, as
+        `LinkShareRepository.count` writes it, so two equal searches in the same instant both count.
+        The day's size is read in a statement before it: writes in flight at the moment the day
+        fills can each still add their text, so the bound may be passed by that handful.
+        """
+        texts = await self.session.scalar(select(func.count()).select_from(SearchMiss).where(SearchMiss.day == day))
+        if int(texts or 0) < max_new_per_day:
+            insert = postgresql_insert if self.session.get_bind().dialect.name == "postgresql" else sqlite_insert
+            statement = insert(SearchMiss).values(day=day, query=query, count=1)
+            await self.session.execute(
+                statement.on_conflict_do_update(
+                    index_elements=[SearchMiss.day, SearchMiss.query], set_={"count": SearchMiss.count + 1}
+                )
+            )
+            return True
+        known = await self.session.execute(
+            update(SearchMiss)
+            .where(SearchMiss.day == day, SearchMiss.query == query)
+            .values(count=SearchMiss.count + 1)
+        )
+        return known.rowcount == 1
+
+    async def delete_before(self, cutoff: date) -> int:
+        """Delete every row of a day before *cutoff*, in one statement; the number of rows. The caller commits."""
+        result = await self.session.execute(delete(SearchMiss).where(SearchMiss.day < cutoff))
+        return int(getattr(result, "rowcount", 0) or 0)
+
+    async def totals(self, since: date, *, limit: int) -> list[tuple[str, int, date, date]]:
+        """The texts of the days from *since* on, most searched first: (query, count, first day, last day).
+
+        Up to *limit* texts. A tie goes to the text searched more recently, then by the text, so the
+        order is stable.
+        """
+        total = func.sum(SearchMiss.count)
+        last_day = func.max(SearchMiss.day)
+        result = await self.session.execute(
+            select(SearchMiss.query, total, func.min(SearchMiss.day), last_day)
+            .where(SearchMiss.day >= since)
+            .group_by(SearchMiss.query)
+            .order_by(total.desc(), last_day.desc(), SearchMiss.query)
+            .limit(limit)
+        )
+        return [(query, int(count), first, last) for query, count, first, last in result.all()]
+
+    async def distinct_since(self, since: date) -> int:
+        """How many different texts the days from *since* on hold."""
+        texts = await self.session.scalar(
+            select(func.count(func.distinct(SearchMiss.query))).where(SearchMiss.day >= since)
+        )
+        return int(texts or 0)
+
+    async def delete_query(self, query: str) -> int:
+        """Delete every row of *query*, whatever its day; the number of rows. The caller commits."""
+        result = await self.session.execute(delete(SearchMiss).where(SearchMiss.query == query))
+        return int(getattr(result, "rowcount", 0) or 0)
