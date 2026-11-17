@@ -19,7 +19,7 @@ const EYEBROW_LINE_HEIGHT = 1.5;
 
 /**
  * The builder's name in the eyebrow, a link to the about page. At rest it reads as part of the
- * byline, like the masthead's links one row up: the dotted underline shows on hover only. The
+ * byline, like the masthead's links: the dotted underline shows on hover only. The
  * underline and the focus ring sit on the inner span, so they hug the name; on phones the link's
  * padding grows the touch target to 44 px, and the equal negative margin keeps the text where it
  * is (the menu's links do the same).
