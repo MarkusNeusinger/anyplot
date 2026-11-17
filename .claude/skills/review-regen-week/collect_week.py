@@ -84,6 +84,9 @@ BIG_DROP_OTHER_JUDGE = 13
 PENDING_HOURS = 3
 # Scores at or above the approval line should stay rare (owner, 2026-09-28).
 HIGH_SCORE = 90
+# The gate's keeps after impl-review stopped on the render hash, before any
+# review ran (automation/scripts/render_hash.py).
+RENDER_STOP_CODES = ("render_mismatch", "render_unverified")
 # At most this many renders get opened per week (owner, 2026-10-07): the
 # suspicious rows first, by tier, then a random fill.
 SAMPLE_CAP = 15
@@ -258,7 +261,9 @@ def row_flags(row: dict[str, Any], now: datetime) -> list[str]:
             flags.append("big_drop")
     if isinstance(row["new"], int) and row["new"] >= HIGH_SCORE:
         flags.append("high_score")
-    if row["verdict"] and not row["pair_artifacts"]:
+    # A render-hash stop keeps before any review ran: there is no pair to
+    # stage, so its missing artifact is the design and no pipeline miss.
+    if row["verdict"] and not row["pair_artifacts"] and row["code"] not in RENDER_STOP_CODES:
         flags.append("no_pair_artifact")
     return flags
 
