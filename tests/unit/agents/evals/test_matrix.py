@@ -454,7 +454,7 @@ def test_a_view_record_without_a_shipped_version_checks_nothing() -> None:
     from agents.anyplot.plot_view import PlotView, Top
 
     view = PlotView(top=Top(column="Score", descending=True, n=4))
-    drawn = {"number": 1, "texts": {"title": ["Score"]}, "view": {"top": {}}, "view_rows": None}
+    drawn = {"number": 1, "texts": {"title": {"count": 1, "texts": ["Score"]}}, "view": {"top": {}}, "view_rows": None}
 
     unshipped = matrix.view_record(ViewChecks(named=True), view, None, [])
     stored_none = matrix.view_record(ViewChecks(named=True), view, drawn, [])
@@ -471,7 +471,7 @@ def test_a_view_without_a_word_of_its_own_reads_as_unknown_never_as_named() -> N
     view = PlotView.model_validate({"selections": [[{"column": "Score", "test": "gt", "value": 50}]]})
     drawn = {
         "number": 1,
-        "texts": {"title": ["Score"]},
+        "texts": {"title": {"count": 1, "texts": ["Score"]}},
         "view": {"selections": []},
         "view_rows": {"rows": 3, "of_rows": 9, "view": "Score > 50"},
     }
@@ -480,6 +480,52 @@ def test_a_view_without_a_word_of_its_own_reads_as_unknown_never_as_named() -> N
 
     assert (record["named"], record["words_hold_view"], record["cleared"]["still_named"]) == (None, None, None)
     assert record["checks"] == {"drawn_rows": True}  # the counts still hold
+
+
+def test_view_record_reads_texts_and_both_ends_and_never_the_records_keys(services: Services) -> None:
+    from agents.anyplot.plot_view import PlotView
+    from agents.anyplot.schemas import PlotResult, PlotShows, ShownRole
+    from agents.anyplot.services import CodeVersion
+
+    view = PlotView.model_validate({"selections": [[{"column": "Site", "test": "eq", "value": "Nord"}]]})
+    rows = {"rows": 3, "of_rows": 9, "view": "Site = 'Nord'"}
+    for role in (
+        {"count": 1, "texts": ["Site Nord"]},
+        {"count": 25, "first": ["Site Nord"], "last": ["Other"]},
+        {"count": 25, "first": ["Other"], "last": ["Site Nord"]},
+    ):
+        drawn = {"number": 1, "texts": {"annotations": role}, "view": {"selections": []}, "view_rows": rows}
+        record = matrix.view_record(ViewChecks(named=True), view, drawn, [])
+        assert (record["named"], record["checks"]["named"]) == (True, True)
+
+    for key_word in ("count", "texts"):
+        key_view = PlotView.model_validate({"selections": [[{"column": "Site", "test": "eq", "value": key_word}]]})
+        drawn = {
+            "number": 1,
+            "texts": {"title": {"count": 1, "texts": ["Score"]}},
+            "view": {"selections": []},
+            "view_rows": {"rows": 3, "of_rows": 9, "view": f"Site = '{key_word}'"},
+        }
+        record = matrix.view_record(ViewChecks(named=True), key_view, drawn, [])
+        assert (record["named"], record["checks"]["named"]) == (False, False)
+
+    services.versions.add(
+        "s-facts",
+        CodeVersion(
+            number=1,
+            working="w",
+            run_form="r",
+            export="x = 1",
+            data_csv="a,b\n1,2\n",
+            render_id="r1",
+            result=PlotResult(
+                status="ok", attempts=1, shows=PlotShows(texts={"title": ShownRole(count=1, texts=["Score"])})
+            ),
+        ),
+    )
+    facts = matrix.version_facts("s-facts", 1)
+    assert facts is not None and facts["texts"] == {"title": {"count": 1, "texts": ["Score"]}}
+    assert type(facts["texts"]["title"]) is dict
 
 
 VIEW_FIXTURE_ROWS: dict[str, tuple[int, int, str]] = {
@@ -1273,7 +1319,11 @@ def test_book_attribution_counts_the_failed_probes_by_class() -> None:
 
 
 SHOWN = {
-    "texts": {"title": ["Durchschnittspunkte nach Fach und Jahrgangsstufe"], "y axis label": ["Punkte (Ø)"]},
+    "texts": {
+        "title": {"count": 1, "texts": ["Durchschnittspunkte nach Fach und Jahrgangsstufe"]},
+        "y axis label": {"count": 1, "texts": ["Punkte (Ø)"]},
+        "x tick labels": {"count": 30, "first": ["Januar"], "last": ["Dezember"]},
+    },
     "requested_not_found": ["6,5 Mio."],
 }
 
@@ -1283,10 +1333,12 @@ SHOWN = {
     [
         ("Titel: „Durchschnittspunkte nach Fach und Jahrgangsstufe“, die y-Achse heißt „Punkte (Ø)“.", 0),
         ('The title reads "durchschnittspunkte nach fach". The format "6,5 Mio." is not shown yet.', 0),
+        ('Ticks run from "Januar" to "Dezember".', 0),
+        ('The middle tick reads "Juli".', 1),
         ("Der Titel lautet „Punkte je Fach“, die Legende «Jahrgang».", 2),
         ("Press `.download('plot.py')` to get the code.", 0),
     ],
-    ids=["german quotes", "part and requested", "invented", "backticks"],
+    ids=["german quotes", "part and requested", "first and last", "unlisted middle", "invented", "backticks"],
 )
 def test_a_quote_in_the_reply_must_stand_in_a_drawn_or_requested_text(reply: str, count: int) -> None:
     """The root quotes a plot's texts only from `shows` (root.md); the matrix counts what no text holds."""
@@ -1307,7 +1359,7 @@ FIRST = {
     "code": "ax.yaxis.grid(True)\n",
     "language": "en",
     "theme": "light",
-    "texts": {"title": ["Active Users by Week"]},
+    "texts": {"title": {"count": 1, "texts": ["Active Users by Week"]}},
     "requested_not_found": [],
 }
 SECOND = {
@@ -1316,7 +1368,7 @@ SECOND = {
     "code": 'ax.yaxis.grid(True)\nax.set_yscale("log")\n',
     "language": "Deutsch",
     "theme": "dark",
-    "texts": {"title": ["Aktive Nutzer pro Woche"]},
+    "texts": {"title": {"count": 1, "texts": ["Aktive Nutzer pro Woche"]}},
 }
 
 
@@ -1329,6 +1381,7 @@ SECOND = {
         ({**SECOND, "language": "en"}, {"language", "code:2"}),
         ({**SECOND, "theme": "light"}, {"theme", "code:2"}),
         ({**SECOND, "texts": FIRST["texts"]}, {"texts:title", "code:2"}),  # not translated
+        ({**SECOND, "texts": {"y axis label": {"count": 1, "texts": ["Nutzer"]}}}, {"texts:title", "code:2"}),
         ({**SECOND, "texts": None}, {"texts:title", "code:2"}),  # no probe: nothing proves the change
         ({**SECOND, "requested_not_found": ["Nutzer"]}, {"requested_found", "code:2"}),
         (FIRST, {*LOG_CHECK_NAMES, "requested_found"}),  # the follow-up shipped no version of its own
@@ -1341,6 +1394,7 @@ SECOND = {
         "language",
         "theme",
         "title",
+        "role not drawn",
         "no texts",
         "requested",
         "no new version",

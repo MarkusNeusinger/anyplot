@@ -182,7 +182,11 @@ class TestSources:
         assert request_sources(root_request(relayed), {}).kind_of(one("31.5")) is None
 
     def test_a_plots_drawn_texts_count_as_drawn_text_and_its_requested_texts_as_none(self) -> None:
-        shown = {"texts": {"title": ["Loans 2024: 6,120"]}, "score": 87, "requested_not_found": ["Mean 4.75"]}
+        shown = {
+            "texts": {"title": {"count": 1, "texts": ["Loans 2024: 6,120"]}},
+            "score": 87,
+            "requested_not_found": ["Mean 4.75"],
+        }
         result = {
             "status": "ok",
             "attempts": 1,
@@ -193,6 +197,26 @@ class TestSources:
         assert sources.kind_of(one("6,120")) == "drawn_text"
         assert sources.kind_of(one("87")) == "tool_result"
         assert sources.kind_of(one("4.75")) is None
+
+    def test_a_roles_ends_count_as_drawn_text_and_its_count_is_no_source(self) -> None:
+        shown = {
+            "texts": {
+                "title": {"count": 12, "texts": ["Loans: 6,120"]},
+                "x tick labels": {"count": 30, "first": ["1995"], "last": ["2024"]},
+            },
+            "review": "passed",
+        }
+        result = {
+            "status": "ok",
+            "attempts": 1,
+            SHOWS_KEY: SHOWS_PREAMBLE + "\n" + fence("tool_notes", json.dumps(shown)),
+        }
+        sources = request_sources(root_request(response_of("plot_pipeline", result)), {})
+
+        for figure in ("6,120", "1995", "2024"):
+            assert sources.kind_of(one(figure)) == "drawn_text", figure
+        for count in ("12", "30"):
+            assert sources.kind_of(one(count)) is None, count
 
     def test_a_plots_notes_count_as_plot_notes(self) -> None:
         """The adapter's `changes` and the reviewer's `residual_defects` are model-written: a kind of their own, so the
