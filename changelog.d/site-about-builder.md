@@ -254,8 +254,8 @@
   "both renders exist and the canvas has its target size".
   `test_readme_claims.py` pins both sentences and the review's step that
   checks for both renders.
-- **The README and the about page no longer overstate the review and the
-  gate.** They said the reviewer scores "blind to any earlier score", but
+- **The README and the about page no longer overstate the review.** They
+  said the reviewer scores "blind to any earlier score", but
   only its working tree and its prompt are kept free of the stored score,
   while the branch history and the pull request stay reachable. The README's
   review step, the about page and its crawler copy now say "with the stored
@@ -263,8 +263,8 @@
   to the step that hides the stored review before the reviewer runs. A fix
   to a prompt, a spec or a rule reaches a plot when that plot is next
   regenerated, not at once, as the README's highlight, the about page, its
-  crawler copy and the style guide now say. The gate highlight said a new
-  version replaces the live one only on a visible fix; it now says a fix the
+  crawler copy and the style guide now say. The README's gate highlight said
+  a new version replaces the live one only on a visible fix; it now says a fix the
   review can verify and names the code conversion for the chat that passes
   on an unchanged render. The nightly regeneration names "the oldest
   implementations" in place of a count the schedule no longer uses.
