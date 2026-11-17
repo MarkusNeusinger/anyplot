@@ -195,5 +195,12 @@ def test_the_privacy_line_leads_where_the_pages_does():
     assert '<a href="https://anyplot.ai/legal#assistant">' in seo._AGENT_BOT_BODY
 
 
+def test_the_way_to_the_catalogue_is_the_pages():
+    """The closing action is a button on the page, not a paragraph, so the paragraph checks never see it."""
+    action = re.search(r'to=\{paths\.plots\}\s+aria-label="(?P<label>[^"]+)"', SOURCE)
+    assert action is not None, "AgentIntro.tsx has no action link to paths.plots with an aria-label"
+    assert f'<a href="https://anyplot.ai/plots">{html.escape(action["label"])}</a>' in seo._AGENT_BOT_BODY
+
+
 def test_the_examples_are_the_pages():
     assert tuple(example_pairs()) == seo.AGENT_INTRO_EXAMPLES
