@@ -54,8 +54,19 @@
 - **The legal notice links the About page.** Its disclaimer says the plot examples are
   generated and maintained by AI workflows and links the About page for how that works and
   the operator's part in it.
+- **The privacy policy says how to find your entry, and what stays.** The rights paragraph
+  on `/legal` now asks for what you sent and roughly when, or the contact you typed, so the
+  operator can find the entry, and says that log lines cannot be deleted one by one: they
+  delete themselves after 30 days (server logs) or 180 days (machine reads, assistant
+  telemetry), the periods their own rows give. The GitHub row adds that the operator removes
+  a credited username from its spec on request, while the public history keeps it. The
+  crawler copy says the same.
 
 ### Fixed
+
+- **The privacy policy names the session hash a feedback case keeps.** The data assistant's
+  feedback row said that a case's triage row keeps a hash of your tab id; it also keeps a
+  hash of the session id. The row and its crawler copy now name both.
 
 - **The database reference no longer contradicts the privacy policy.** The "Data privacy"
   list in `docs/reference/database.md` promised anonymous session ids, usage data deleted
