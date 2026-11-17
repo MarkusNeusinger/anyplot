@@ -66,12 +66,15 @@
   mastery 10. Eight chips show the palette's hues with their names and hex
   values, and under the origin a timeline runs from pyplots.ai in November
   2025 through the first GitHub release (1.0.0), anyplot.ai (2.0.0), R
-  (2.4.0), Julia and JavaScript (3.0.0) and the public chat to today. Each
-  figure is a list that a screen reader reads in order, and on a phone each
+  (2.4.0), Julia and JavaScript (3.0.0) and, its last point before today, the
+  4.0.0 release, whose notes open with the public "use with my data" page.
+  Each figure is a list that a screen reader reads in order, the chips and
+  the timeline named by the headings of their sections, and on a phone each
   one stacks. `test_readme_claims.py` holds the rubric's points to
-  `prompts/quality-criteria.md`, each release on the timeline to its
-  `CHANGELOG.md` heading and the chat's date to the agent design document; a
-  test holds the chips to the palette tokens.
+  `prompts/quality-criteria.md` and each release on the timeline to its
+  `CHANGELOG.md` heading, and checks that the 4.0.0 release follows the day
+  the page's chat section gives for the chat's opening, a day it holds to the
+  agent design document; a test holds the chips to the palette tokens.
 
 ### Changed
 
