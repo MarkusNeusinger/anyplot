@@ -76,3 +76,8 @@
   that a case keeps the conversation and up to 5 sample rows of the data even when the data
   file is left out, and it names the case bucket's region, the Netherlands (europe-west4), as
   the privacy section does.
+- **The database reference gives the real backup settings.** Its "Automated backups" list in
+  `docs/reference/database.md` said the backups start at 3:00 AM UTC and are kept for 7 days.
+  They start at 19:00 UTC, and the 30 most recent are kept, about 30 days, with
+  point-in-time recovery over 7 days of transaction logs, in the EU multi-region. The section
+  now says so and names the read-only command that shows the settings.

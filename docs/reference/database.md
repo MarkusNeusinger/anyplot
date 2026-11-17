@@ -594,10 +594,17 @@ engine = create_async_engine(
 
 ### Automated backups
 
-Cloud SQL automatic backups:
-- Daily backups at 3:00 AM UTC
-- Retained for 7 days
-- Point-in-time recovery enabled
+Cloud SQL automatic backups of `anyplot-db`:
+- Daily, started at 19:00 UTC
+- The 30 most recent backups are retained, about 30 days
+- Point-in-time recovery with 7 days of transaction logs
+- Stored in the EU multi-region
+
+To see the current settings, run this read-only command:
+
+```bash
+gcloud sql instances describe anyplot-db --format="yaml(settings.backupConfiguration)"
+```
 
 ### Manual backups
 
