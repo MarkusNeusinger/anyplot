@@ -305,13 +305,14 @@ export function AboutPage() {
               every implementation is scored before it ships. automated checks come first: the code
               runs, the canvas has its size. then an ai reviewer scores the render on a 100-point
               rubric of 24 criteria — visual quality, design, spec compliance, data quality, code
-              quality, and library mastery — blind to any earlier score. a first review needs 90;
-              below that, ai repairs the defects the review named and the plot is reviewed again, up
-              to four times, and the bar drops 10 points per repair, to 50 at the last review. what
-              counts as a good plot is my call; ai helped turn it into 24 criteria and their points.
-              the rubric isn&apos;t fixed: it has changed more than thirty times since November
-              2025, for example after a review passed a plot whose title was cut off. the{' '}
-              {proseLink(paths.stats, 'stats page')} shows the score distribution per library.
+              quality, and library mastery — with the stored score kept out of its working tree and
+              its prompt. a first review needs 90; below that, ai repairs the defects the review
+              named and the plot is reviewed again, up to four times, and the bar drops 10 points
+              per repair, to 50 at the last review. what counts as a good plot is my call; ai helped
+              turn it into 24 criteria and their points. the rubric isn&apos;t fixed: it has changed
+              more than thirty times since November 2025, for example after a review passed a plot
+              whose title was cut off. the {proseLink(paths.stats, 'stats page')} shows the score
+              distribution per library.
             </Box>
             <RubricBar />
           </Box>

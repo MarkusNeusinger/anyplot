@@ -46,7 +46,10 @@ ABOUT_PAGE = ROOT / "app" / "src" / "pages" / "AboutPage.tsx"
 ABOUT_FIGURES = ROOT / "app" / "src" / "sections" / "about" / "figureData.ts"
 SEO = ROOT / "api" / "routers" / "seo.py"
 STYLE_GUIDE = ROOT / "docs" / "reference" / "style-guide.md"
+AGENT_INTRO = ROOT / "app" / "src" / "sections" / "agent-chat" / "AgentIntro.tsx"
 LINKED_DOCS = (README, WORKFLOW_PAGE)
+CHAT_SECTION = "Use with my data (agent chat)"
+GATE = "automation/scripts/regen_gate.py"
 
 # Pull requests merged from the owner's account, and when that was counted:
 # `gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`.
@@ -192,6 +195,16 @@ def review_floor() -> int:
     return int(floor)
 
 
+def workflow_steps(name: str) -> list[dict[str, object]]:
+    """Every step of a workflow under .github/workflows/, job after job, in the order the file lists them."""
+    workflow = yaml.safe_load(read(ROOT / ".github" / "workflows" / name))
+    return [step for job in workflow["jobs"].values() for step in job.get("steps", [])]
+
+
+def step_names(name: str) -> list[object]:
+    return [step.get("name") for step in workflow_steps(name)]
+
+
 def model_display_name(model_id: str) -> str:
     """`claude-haiku-5-5` as the README names it: `Claude Haiku 5.5`."""
     words = model_id.split("-")
@@ -271,13 +284,14 @@ def test_highlights_state_the_rubric_and_the_bar():
     assert near(highlights, str(step), "points per repair"), f"the bar drops {step} points per repair"
 
 
-def test_highlights_state_the_pipeline_bounds():
-    highlights = section(read(README), "Engineering highlights")
+def test_the_chat_section_states_the_pipeline_bounds():
+    """The chat's run bounds stand in the README's section on the chat, in its first bullet."""
+    chat = section(read(README), CHAT_SECTION)
     attempts = field_default("agents/anyplot/settings.py", "AgentSettings", "max_attempts")
     reviews = module_constant("agents/anyplot/pipeline.py", "MAX_REVIEWS")
     assert isinstance(attempts, int) and isinstance(reviews, int)
-    assert near(highlights, NUMBER_WORDS[attempts - 1], "repair round"), f"{attempts - 1} repair round(s) by default"
-    assert near(highlights, NUMBER_WORDS[reviews], "reviews"), f"at most {reviews} reviews"
+    assert near(chat, NUMBER_WORDS[attempts - 1], "repair round"), f"{attempts - 1} repair round(s) by default"
+    assert near(chat, NUMBER_WORDS[reviews], "reviews"), f"at most {reviews} reviews"
 
 
 def test_highlights_state_the_session_idle_time():
@@ -291,12 +305,20 @@ def test_highlights_state_the_session_idle_time():
 
 def test_highlights_state_the_patch_rule_not_an_absolute():
     """ "No generated plot is patched by hand" does not hold: the palette swap of May 2026 edited the plots' code
-    catalogue-wide. The highlight states the rule a wrong plot follows instead."""
+    catalogue-wide. The highlight states the rule a wrong plot follows instead.
+
+    Nor does a fix to a prompt or a spec fix every plot it governs at once: it reaches a plot when that plot is next
+    regenerated, which for a pair far back in the nightly queue can be a long way off.
+    """
     highlights = collapse(section(read(README), "Engineering highlights"))
     assert "A wrong plot is fixed in its spec or in a rule and then regenerated, not patched by hand." in highlights, (
         "README.md: the review-loop highlight no longer states how a wrong plot is fixed"
     )
     assert "No generated plot is patched by hand" not in highlights, "README.md: the palette swap was a patch by hand"
+    assert "A fix to a prompt or a spec reaches every plot it governs at that plot's next regeneration." in (
+        highlights
+    ), "README.md: the review-loop highlight no longer says when a fix reaches a plot"
+    assert "fixes every plot it governs" not in highlights, "README.md: a fix reaches a plot at its next regeneration"
 
 
 def test_highlights_put_the_public_chats_session_id_in_a_header():
@@ -328,6 +350,147 @@ def test_highlights_put_the_public_chats_session_id_in_a_header():
     if annotated_kind(admin, "SessionId")[0] == "Path":
         assert "never appears in a URL" not in highlights, f"README.md: {admin} carries the session id in its path"
         assert "out of every URL" not in workflow, f"ai-workflow.md: {admin} carries the session id in its path"
+
+
+def test_the_decision_count_is_the_number_of_highlights():
+    """ "Six decisions I made" over the highlights and "Six of those decisions are below" count the highlights."""
+    highlights = section(read(README), "Engineering highlights")
+    bullets = len(re.findall(r"^- \*\*", highlights, re.MULTILINE))
+    word = NUMBER_WORDS[bullets].capitalize()
+    assert f"{word} decisions I made" in collapse(highlights), f"README.md: the highlights list {bullets} decisions"
+    how = collapse(section(read(README), "How I build anyplot"))
+    assert f"{word} of those decisions are [below](#engineering-highlights)" in how, (
+        f"README.md 'How I build anyplot': {bullets} decisions are below, as the highlights list them"
+    )
+
+
+def test_highlights_name_the_model_every_pipeline_review_runs_on():
+    """ "Pipeline reviews run on Opus": impl-review.yml's `review_model` input defaults to it, a review dispatched
+    without one (generation, repair, the nightly resume) falls back to it, and no other workflow passes a review
+    model. Only a manual dispatch can name another; the chat's own reviewer is no pipeline review."""
+    review = read(ROOT / ".github" / "workflows" / "impl-review.yml")
+    workflow = yaml.safe_load(review)
+    triggers = workflow.get("on", workflow.get(True))  # YAML 1.1 reads the key `on` as true
+    default = triggers["workflow_dispatch"]["inputs"]["review_model"]["default"]
+    fallback = re.search(r'REVIEW_MODEL_ALIAS="\$\{REVIEW_MODEL_INPUT:-\$\{REVIEW_MODEL_PAYLOAD:-(\w+)\}\}"', review)
+    assert fallback, "impl-review.yml no longer falls back to a review model when a dispatch names none"
+    assert fallback.group(1) == default, (
+        f"impl-review.yml: a review dispatched without a model runs on {fallback.group(1)}, the input's default is "
+        f"{default}"
+    )
+    passing = sorted(
+        path.name
+        for path in (ROOT / ".github" / "workflows").glob("*.yml")
+        if path.name != "impl-review.yml" and re.search(r"review_model\]?=", read(path))
+    )
+    assert not passing, (
+        f"{passing} dispatch impl-review.yml with a review model: not every pipeline review is {default}"
+    )
+    highlights = section(read(README), "Engineering highlights")
+    assert near(highlights, default.capitalize(), "reviews run on"), f"README.md: pipeline reviews run on {default}"
+
+
+def test_highlights_state_the_regen_gates_tolerance_and_adapt_route():
+    """The gate's "a score at most a point lower" is the tolerance of its below-tolerance keep, and the code
+    conversion that "passes on an unchanged render instead" is the adapt route, which merges under its own code
+    and to which the tolerance never applies."""
+    source = read(ROOT / GATE)
+    tolerances = set(re.findall(r"\bscore < prev_rescored - (\d+):", source))
+    assert len(tolerances) == 1, f"{GATE}: the below-tolerance keep compares against {sorted(tolerances)}"
+    points = int(tolerances.pop())
+    phrase = "a point" if points == 1 else f"{NUMBER_WORDS[points]} points"
+    highlights = collapse(section(read(README), "Engineering highlights"))
+    assert f"a score at most {phrase} lower" in highlights, (
+        f"README.md: the gate keeps a score more than {phrase} lower"
+    )
+    codes = module_constant(GATE, "REASON_CODES")
+    assert isinstance(codes, tuple) and "adapt_identity" in codes, (
+        f"{GATE} no longer merges a conversion on render identity: the README's adapt route has to go"
+    )
+    assert "a code conversion for the chat passes on an unchanged render instead" in highlights, (
+        "README.md: the gate highlight no longer names the adapt route, which merges without the tolerance"
+    )
+
+
+def test_highlights_state_the_render_hash_stop():
+    """Generation and repair stage the hash in a step of its own that fails the run; the review stops on the hash
+    before the reviewer runs; and a regeneration that stops keeps the live implementation under one of the gate's two
+    render codes, one for a hash that does not match and one for a hash that is missing or unreadable."""
+    for name in ("impl-generate.yml", "impl-repair.yml"):
+        staged = [step for step in workflow_steps(name) if step.get("name") == "Stage the render hash"]
+        assert len(staged) == 1, f"{name} no longer stages the render hash in a step of its own"
+        assert not staged[0].get("continue-on-error"), f"{name}: a failed hash write no longer fails the run"
+    names = step_names("impl-review.yml")
+    for name in ("Stop on the render hash", "Run AI Quality Review"):
+        assert name in names, f"impl-review.yml has no step '{name}'"
+    assert names.index("Stop on the render hash") < names.index("Run AI Quality Review"), (
+        "impl-review.yml: the render hash no longer stops the review before the reviewer runs"
+    )
+    codes = module_constant(GATE, "REASON_CODES")
+    source = read(ROOT / GATE)
+    for code in ("render_mismatch", "render_unverified"):
+        assert isinstance(codes, tuple) and code in codes, f"{GATE} has no reason code {code}"
+        assert re.search(rf'GateResult\(KEEP, "[^"]*", "{code}"\)', source), f"{GATE}: {code} no longer keeps"
+    highlights = collapse(section(read(README), "Engineering highlights"))
+    assert (
+        "a review whose hash is missing or doesn't match the code at the pull request's head stops before it scores; "
+        "a regeneration then keeps the live version"
+    ) in highlights, "README.md: the render-hash highlight no longer says what stops a review"
+
+
+def test_highlights_say_the_figure_check_counts_only_while_it_defaults_to_log():
+    """ "It ships counting only" holds while `number_provenance` defaults to `log`, which logs every reply and asks
+    for none again or withholds it; the day `enforce` becomes the default, the bullet fails here until it follows."""
+    default = field_default("agents/anyplot/settings.py", "AgentSettings", "number_provenance")
+    highlights = collapse(section(read(README), "Engineering highlights"))
+    assert ("It ships counting only" in highlights) == (default == "log"), (
+        f"README.md: the figure check defaults to {default!r}, and the highlight says it ships counting only or not"
+    )
+
+
+def test_highlights_say_every_release_runs_the_chats_evals():
+    """Step 6 of the release procedure always runs the chat's prep and scope evals before step 7 opens the release
+    pull request, and gives the regression that only a sibling pull request's eval caught as its reason."""
+    release = read(ROOT / "agentic" / "commands" / "release.md")
+    step = re.search(r"^6\. \*\*Run the agent evals\*\*(.*?)^7\. ", release, re.MULTILINE | re.DOTALL)
+    assert step, "release.md no longer runs the agent evals as step 6, before the release pull request"
+    text = collapse(step.group(1))
+    assert "**Always:**" in text, "release.md step 6 no longer names the evals that always run"
+    always = text.split("**Always:**", 1)[1].split("**When ", 1)[0]
+    for suite in ("agents.evals.prep", "agents.evals.scope"):
+        assert suite in always, f"release.md step 6 no longer always runs {suite}"
+    assert "only because a sibling PR ran its eval" in text, "release.md step 6 no longer gives its reason"
+    highlights = collapse(section(read(README), "Engineering highlights"))
+    assert "Every release runs the chat's evals first" in highlights, "README.md: every release runs the evals"
+    assert "only because another pull request happened to run them" in highlights, "README.md: the evals' reason"
+
+
+def test_the_review_keeps_the_stored_score_out_of_its_working_tree_and_its_prompt():
+    """The README's review step, the About page and its crawler copy say what keeps a reviewer from an earlier score:
+    impl-review.yml hides the stored review before the reviewer runs, and its prompt carries no stored score.
+
+    Not "blind to any earlier score": the branch history and the pull request stay reachable to a reviewer that goes
+    looking, and nothing mechanical closes those (docs/workflows/overview.md).
+    """
+    names = step_names("impl-review.yml")
+    for name in ("Hide the previous review", "Run AI Quality Review"):
+        assert name in names, f"impl-review.yml has no step '{name}'"
+    assert names.index("Hide the previous review") < names.index("Run AI Quality Review"), (
+        "impl-review.yml: the stored review is no longer hidden before the reviewer runs"
+    )
+    review = next(step for step in workflow_steps("impl-review.yml") if step.get("name") == "Run AI Quality Review")
+    inputs = review.get("with")
+    prompt = inputs.get("prompt") if isinstance(inputs, dict) else None
+    assert isinstance(prompt, str), "impl-review.yml: the review step no longer passes its prompt as `with: prompt`"
+    assert "PREVIOUS_SCORE" not in prompt and "prev_stored" not in prompt, "impl-review.yml: the prompt has a score"
+    step = re.search(r"^4\. \*\*Review\.\*\*(.*?)^5\. ", read(README), re.MULTILINE | re.DOTALL)
+    assert step, "README.md no longer has the pipeline's review step"
+    for name, text in (("README.md", step.group(1)), ("AboutPage.tsx", read(ABOUT_PAGE)), ("seo.py", about_bot_body())):
+        prose = collapse(text)
+        assert "with the stored score kept out of its working tree and its prompt" in prose, (
+            f"{name}: the review no longer says where the stored score is kept out"
+        )
+        assert "blind to any earlier score" not in prose, f"{name}: the review is not blind; see the docstring"
 
 
 def test_architecture_names_the_default_model():
@@ -466,7 +629,8 @@ def test_about_page_timeline_dates_the_start_and_the_chat_as_the_page_does():
 
 
 def test_about_page_and_its_bot_copy_state_the_chats_repair_bounds():
-    """The chat's second paragraph bounds a run as the README's highlight does: the agents' settings and pipeline."""
+    """The chat's second paragraph bounds a run as the README's chat section does: the agents' settings and
+    pipeline."""
     attempts = field_default("agents/anyplot/settings.py", "AgentSettings", "max_attempts")
     reviews = module_constant("agents/anyplot/pipeline.py", "MAX_REVIEWS")
     assert isinstance(attempts, int) and isinstance(reviews, int)
