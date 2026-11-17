@@ -366,7 +366,7 @@ describe('LegalPage', () => {
     // what it reads.
     const caseRow = screen.getAllByRole('row', { name: /^feedback\s/ })[1];
     expect(caseRow).toHaveTextContent(
-      /^feedback\s*only when you send feedback\. a private bucket then keeps the conversation, a profile of your data with its first 5 rows, and the plot.s code and images\. it keeps the whole data file only if you tick "# include data\.csv"; the box starts unticked, which leaves out that file only\. a triage row then keeps your reaction, message, a hash of your tab id and the run.s details\. I read the cases together with the ai assistant I code with \(Claude by Anthropic\): the conversation, the data sample or file, the plot and its code\./
+      /^feedback\s*only when you send feedback\. a private bucket then keeps the conversation, a profile of your data with its first 5 rows, and the plot.s code and images\. it keeps the whole data file only if you tick "# include data\.csv"; the box starts unticked, which leaves out that file only\. a triage row then keeps your reaction, message, a hash of your tab id and the run.s details\. I read the cases together with the ai assistant I code with \(Claude by Anthropic\): your reaction and message, the conversation, the data sample or file, the plot and its code\./
     );
     // "No cookies" holds for visitors; the one admin gets Cloudflare Access's login cookie.
     expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();
