@@ -107,6 +107,7 @@ Route = Literal[
     "palette",
     "map",
     "stats",
+    "agent_page",
     "spec_hub",
     "spec_language",
     "spec_detail",
@@ -283,6 +284,8 @@ PAGE_ROUTES: tuple[tuple[re.Pattern[str], Route], ...] = (
     (re.compile(r"^/palette/?$"), "palette"),
     (re.compile(r"^/map/?$"), "map"),
     (re.compile(r"^/stats/?$"), "stats"),
+    # The chat's explainer, before the spec shapes, which would write `agent` as a spec id.
+    (re.compile(r"^/agent/?$"), "agent_page"),
     (re.compile(rf"^/(?P<spec>{_SEG})/(?P<language>{_SEG})/(?P<library>{_SEG})/?$"), "spec_detail"),
     (re.compile(rf"^/(?P<spec>{_SEG})/(?P<language>{_SEG})/?$"), "spec_language"),
     (re.compile(rf"^/(?P<spec>{_SEG})/?$"), "spec_hub"),

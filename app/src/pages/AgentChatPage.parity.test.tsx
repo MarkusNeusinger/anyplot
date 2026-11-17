@@ -639,11 +639,13 @@ const STATES: Record<string, State> = {
       await screen.findByText('not eligible');
     },
   },
-  // The kill switch: the same words for both; the admin's diagnostics line is the menu's.
+  // The open answers `not_enabled` (the kill switch, or the public door shut after the page read
+  // it open): the closed door's page for both, its terms included; the admin's diagnostics line
+  // is the menu's.
   'switched off (not_enabled)': {
     open: 'not_enabled',
     reach: async () => {
-      await screen.findByText(/^error · not_enabled/);
+      await screen.findByTestId('agent-intro-terms');
     },
   },
   // The day budget spent: the tab rests until the reset, from the lane's own `/status`.
@@ -839,10 +841,12 @@ async function pageFor(who: Who, state: string): Promise<string> {
   renderPage();
   await STATES[state].reach();
   const dom = await settled();
+  // The closed door's page: the door was shut at load, or the session's open found it shut.
+  const closed = !door || open === 'not_enabled';
   // Exactly the admin menu's elements were left out, each once: its button and popover, and
   // its row on the closed door's page; a visitor's page has none.
   const expected =
-    who === 'visitor' ? [] : door ? ['admin-menu', 'admin-menu-panel'] : [...ADMIN_ONLY_IDS];
+    who === 'visitor' ? [] : closed ? [...ADMIN_ONLY_IDS] : ['admin-menu', 'admin-menu-panel'];
   expect(
     leftOut.every(id => (ADMIN_ONLY_IDS as readonly string[]).includes(id)),
     leftOut.join()
@@ -871,7 +875,7 @@ async function pageFor(who: Who, state: string): Promise<string> {
     }
     // The fan-out is off: the only other allowed difference does not apply here. The chip names
     // one library, the one the session switched to included, never `all`.
-    if (door) {
+    if (!closed) {
       expect(screen.getByTestId('library-chip')).toHaveTextContent(/^(matplotlib|seaborn) ▾$/);
     }
     expect(

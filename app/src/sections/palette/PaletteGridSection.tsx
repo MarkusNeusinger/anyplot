@@ -305,9 +305,9 @@ export function PaletteGridSection({
                     }}
                   >
                     <Box sx={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.2 }}>{s.name}</Box>
-                    <Box sx={{ fontSize: '11px', opacity: 0.85 }}>
-                      {copied ? 'copied ✓' : s.hex}
-                    </Box>
+                    {/* Full opacity: textOn picks the ink for its full contrast, and a
+                        faded hex line drops under 4.5:1 on five of the eight hues. */}
+                    <Box sx={{ fontSize: '11px' }}>{copied ? 'copied ✓' : s.hex}</Box>
                   </Box>
                 </Tooltip>
                 {/* Only the slot + role stay under the swatch; H/C, ΔE and

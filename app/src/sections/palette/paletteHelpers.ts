@@ -102,15 +102,34 @@ export function starPoints(cx: number, cy: number, rOuter: number, rInner: numbe
   return pts.join(' ');
 }
 
-/** Pick a readable text color (ink-dark or ink-light) for a hex bg via WCAG luminance. */
-export function textOn(hex: string): string {
+/** The two inks a swatch label can take: the light theme's --ink and the dark theme's. */
+export const INK_DARK = '#1A1A17';
+export const INK_LIGHT = '#F0EFE8';
+
+/** WCAG 2.x relative luminance (0..1) of a `#RRGGBB` or `RRGGBB` colour. */
+export function relativeLuminance(hex: string): number {
   const s = hex.replace('#', '');
   const r = parseInt(s.slice(0, 2), 16) / 255;
   const g = parseInt(s.slice(2, 4), 16) / 255;
   const b = parseInt(s.slice(4, 6), 16) / 255;
   const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
-  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-  return L > 0.5 ? '#1A1A17' : '#F0EFE8';
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+/** WCAG 2.x contrast ratio between two colours, from 1 (same) to 21 (black on white). */
+export function contrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/**
+ * The label ink for text set on the swatch `hex`: whichever of INK_DARK and INK_LIGHT has the
+ * higher WCAG contrast ratio against it, the dark ink on a tie. A fixed luminance cut-off picks
+ * the wrong ink for mid-tone hues such as cyan or lime, which read far better in dark ink.
+ */
+export function textOn(hex: string): string {
+  return contrastRatio(INK_DARK, hex) >= contrastRatio(INK_LIGHT, hex) ? INK_DARK : INK_LIGHT;
 }
 
 /** Background tint for a ΔE cell — low distance is the problem, so <5 is the

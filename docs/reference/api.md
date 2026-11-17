@@ -506,6 +506,14 @@ Used by nginx to serve correct meta tags to social media bots.
 
 ---
 
+### GET `/seo-proxy/agent`
+
+**Purpose**: Bot-optimized copy of the data assistant's explainer at `/agent`, with its terms of use, marked `noindex`
+
+The title, description, paragraph, example pairs, line on how the chat is built, and terms with their heading and order are the page's own (`app/src/sections/agent-chat/AgentIntro.tsx`); `tests/unit/test_agent_intro_crawler_copy.py` fails when the two differ.
+
+---
+
 ### GET `/seo-proxy/{spec_id}`
 
 **Purpose**: Bot-optimized spec overview page with collage og:image

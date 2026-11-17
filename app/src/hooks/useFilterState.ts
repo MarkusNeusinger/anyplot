@@ -64,6 +64,8 @@ interface UseFilterStateReturn {
   handleRemoveGroup: (groupIndex: number) => void;
   handleClearFilters: () => void;
   handleRandom: () => void;
+  /** Runs the gallery fetch for the current filters again, after a failure. */
+  retryFetch: () => void;
 
   // Animation state for random
   randomAnimation: { index: number; phase: 'out' | 'in'; oldLabel?: string } | null;
@@ -114,9 +116,11 @@ export function useFilterState({
     hasMore,
     loading,
     error,
+    resultsKey,
     setDisplayedImages,
     setHasMore,
     setError,
+    retry: retryFetch,
   } = useFilterFetch({
     activeFilters,
     initialState: homeStateRef.current.initialized
@@ -170,6 +174,10 @@ export function useFilterState({
 
   useEffect(() => {
     if (allImages.length === 0 && displayedImages.length === 0) return;
+    // Plots are saved only under the filters they were fetched for. Right after a filter change
+    // the plots on hand are still the previous filter's; saved beside the new filter, they would
+    // come back as its result, without a fetch, if that fetch failed or the visitor left first.
+    if (resultsKey !== JSON.stringify(activeFilters)) return;
     if (syncKey === lastSyncedKeyRef.current) return;
     lastSyncedKeyRef.current = syncKey;
     setHomeState(prev => ({
@@ -194,6 +202,7 @@ export function useFilterState({
     orCounts,
     specTitles,
     hasMore,
+    resultsKey,
     setHomeState,
   ]);
 
@@ -259,8 +268,9 @@ export function useFilterState({
   // Random filter - replaces last filter slot (or adds first one)
   const handleRandom = useCallback(() => {
     const currentFilters = activeFiltersRef.current;
-    // Use contextual counts if filters exist, otherwise global
-    const countsToUse = currentFilters.length > 0 ? filterCounts : globalCounts;
+    // Use contextual counts if filters exist, otherwise global. A failed fetch clears the
+    // contextual counts, and the global ones then keep the shortcut a way out of the error.
+    const countsToUse = currentFilters.length > 0 ? (filterCounts ?? globalCounts) : globalCounts;
     if (!countsToUse) return;
 
     const availableCategories = FILTER_CATEGORIES.filter(cat => {
@@ -329,6 +339,7 @@ export function useFilterState({
     handleRemoveGroup,
     handleClearFilters,
     handleRandom,
+    retryFetch,
 
     // Animation
     randomAnimation,

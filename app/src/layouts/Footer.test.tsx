@@ -17,11 +17,16 @@ function renderFooter() {
   return container.querySelector('footer')!;
 }
 
+// The declarations at a width and a default font size. The footer has no container query and no
+// pseudo-element to read, so those two arguments of the helper stay unset.
+const styleFor = (el: Element, width: number, fontSize: number) =>
+  styleAt(el, width, undefined, undefined, fontSize);
+
 // Whether an element shows at a width and default font size: no ancestor up to the footer is
 // display: none.
 function shown(el: Element, footer: Element, width: number, fontSize: number) {
   for (let node: Element | null = el; node; node = node.parentElement) {
-    if (styleAt(node, width, fontSize).display === 'none') return false;
+    if (styleFor(node, width, fontSize).display === 'none') return false;
     if (node === footer) return true;
   }
   return true;
@@ -41,7 +46,7 @@ function lines(footer: Element, width: number, fontSize = 16) {
   let current: string[] | null = null;
   for (const child of Array.from(footer.children)) {
     if (!shown(child, footer, width, fontSize)) continue;
-    if (styleAt(child, width, fontSize).flexBasis === '100%') {
+    if (styleFor(child, width, fontSize).flexBasis === '100%') {
       out.push(words(child));
       current = null;
     } else {
@@ -115,8 +120,8 @@ describe('Footer', () => {
       [899, 20],
       [1079, 24],
     ]) {
-      expect(styleAt(inRow, width, fontSize).display).toBe('none');
-      expect(styleAt(onOwnLine, width, fontSize).display).not.toBe('none');
+      expect(styleFor(inRow, width, fontSize).display).toBe('none');
+      expect(styleFor(onOwnLine, width, fontSize).display).not.toBe('none');
     }
     for (const [width, fontSize] of [
       [720, 16],
@@ -124,8 +129,8 @@ describe('Footer', () => {
       [1080, 24],
       [1440, 16],
     ]) {
-      expect(styleAt(inRow, width, fontSize).display).toBe('inline');
-      expect(styleAt(onOwnLine, width, fontSize).display).toBe('none');
+      expect(styleFor(inRow, width, fontSize).display).toBe('inline');
+      expect(styleFor(onOwnLine, width, fontSize).display).toBe('none');
     }
   });
 

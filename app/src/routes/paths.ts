@@ -1,3 +1,7 @@
+import { matchPath } from 'react-router-dom';
+
+import { LIBRARIES } from 'src/constants';
+
 /**
  * URL builder for spec/language/library pages.
  *
@@ -32,6 +36,33 @@ export function agentChatPath(
  * admin address `/debug/agent` keeps (`agentChatRedirect`).
  */
 export const AGENT_CHAT_PARAMS = ['spec', 'library', 'language', 'source'] as const;
+
+/** A spec id as the chat takes it from its query. */
+const AGENT_SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
+
+/**
+ * Whether an `/agent` query names a chat: a well-formed spec id and a library the catalogue has.
+ * With one the page is the chat on that pair, without one the explainer (`AgentChatPage`); either
+ * waits for the lane first. The layout reads the same rule, through `isAgentChatAddress`, for
+ * where the site's feedback button stands (`RootLayout`). `LIBRARIES` is read at the call, not at
+ * import.
+ */
+export function namesAgentChat(query: URLSearchParams): boolean {
+  return (
+    AGENT_SPEC_PATTERN.test(query.get('spec') ?? '') &&
+    LIBRARIES.includes(query.get('library') ?? '')
+  );
+}
+
+/**
+ * Whether an address is the agent chat: a path the router serves as the chat page, with a query
+ * that names a chat (`namesAgentChat`). The path is matched as the router matches it
+ * (`matchPath`), so a trailing slash or another case (`/Agent`), which the router also serves as
+ * the chat page, counts too.
+ */
+export function isAgentChatAddress(pathname: string, search: string): boolean {
+  return matchPath(paths.agent, pathname) !== null && namesAgentChat(new URLSearchParams(search));
+}
 
 /**
  * Reserved top-level paths that must never be assigned as spec ids.

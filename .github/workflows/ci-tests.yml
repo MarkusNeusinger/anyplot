@@ -114,8 +114,23 @@ jobs:
         # tests/unit/agents/test_image.py read the Cloud Build configs and the renderer's
         # deploy smoke script. A specification.md too: the role audit in
         # tests/unit/agents/data/test_computed.py reads every spec's Data bullets, and a
-        # spec PR that broke it used to leave the failure to the next Python PR.
-        CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml|\.python-version|CLAUDE\.md|AGENTS\.md|\.github/copilot-instructions\.md|\.claude/guardrails\.md|agentic/docs/(project-guide|agent-operations)\.md|([^/]+/)+cloudbuild\.yaml|agents/renderer/deploy_smoke\.sh|plots/[^/]+/specification\.md)$|^(\.github/workflows/|\.github/actions/|prompts/|\.claude/skills/|agentic/commands/)' || true)
+        # spec PR that broke it used to leave the failure to the next Python PR. And the
+        # chat explainer's AgentIntro.tsx: tests/unit/test_agent_intro_examples.py checks
+        # that its example pairs name implementations that exist, so a PR that changes
+        # only those pairs runs it. README.md and the legal page's LegalPage.tsx too:
+        # tests/unit/test_agent_intro_crawler_copy.py checks that the explainer's GitHub
+        # link lands on a README heading and that the explainer names the model the legal
+        # page names, so a PR that renames that heading or rewords the model's row runs
+        # it. tests/unit/test_readme_claims.py holds the claims of README.md,
+        # docs/concepts/ai-workflow.md and the About page's AboutPage.tsx against the
+        # code, checks the links of the first two, and counts the owner decisions
+        # docs/concepts/agent-network.md records, so a PR that only rewords one of those
+        # four runs it too. And the site's nginx setup: tests/unit/api/test_app_origin_gate.py,
+        # test_csp_policy.py, test_analytics_event_proxy.py and test_machine_reads_nginx.py
+        # read app/nginx.conf, test_app_origin_gate.py also app/origin-gate.conf.template
+        # and app/Dockerfile, and test_csp_policy.py also app/security-headers.conf and
+        # app/vite.config.ts, so a PR that changes only one of those files runs them.
+        CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml|\.python-version|CLAUDE\.md|AGENTS\.md|README\.md|\.github/copilot-instructions\.md|\.claude/guardrails\.md|agentic/docs/(project-guide|agent-operations)\.md|docs/concepts/(ai-workflow|agent-network)\.md|([^/]+/)+cloudbuild\.yaml|agents/renderer/deploy_smoke\.sh|app/src/sections/agent-chat/AgentIntro\.tsx|app/src/pages/AboutPage\.tsx|app/src/pages/LegalPage\.tsx|app/(nginx\.conf|origin-gate\.conf\.template|security-headers\.conf|Dockerfile|vite\.config\.ts)|plots/[^/]+/specification\.md)$|^(\.github/workflows/|\.github/actions/|prompts/|\.claude/skills/|agentic/commands/)' || true)
 
         # Force run on workflow_dispatch with force_run=true
         if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_run }}" == "true" ]]; then

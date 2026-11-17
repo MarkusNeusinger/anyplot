@@ -413,8 +413,11 @@ function LocationProbe() {
   return <output data-testid="location">{`${current.pathname}${current.search}`}</output>;
 }
 
-/** A data router, as in the app: the page's leave warning uses the router's blocker. */
-function renderAt(url: string) {
+/**
+ * A data router, as in the app: the page's leave warning uses the router's blocker. `before` are
+ * the history entries behind `url`, for the back button.
+ */
+function renderAt(url: string, before: string[] = []) {
   const router = createMemoryRouter(
     [
       {
@@ -428,13 +431,14 @@ function renderAt(url: string) {
       },
       { path: '*', element: <LocationProbe /> },
     ],
-    { initialEntries: [url] }
+    { initialEntries: [...before, url] }
   );
-  return render(
+  const view = render(
     <ThemeProvider theme={theme}>
       <RouterProvider router={router} />
     </ThemeProvider>
   );
+  return { ...view, router };
 }
 
 const PAGE = '/agent?spec=scatter-basic&library=matplotlib&language=python';
@@ -684,11 +688,12 @@ afterEach(() => {
 });
 
 describe('AgentChatPage gating', () => {
-  it('is the 404 page when the build has no agent chat', () => {
+  it.each([PAGE, '/agent'])('is the 404 page at %s when the build has no agent chat', path => {
     flags.agentChat = false;
     localStorage.setItem(ADMIN_HINT_KEY, '1');
-    renderAt(PAGE);
+    renderAt(path);
     expect(screen.getByLabelText('Page not found')).toBeInTheDocument();
+    expect(screen.queryByTestId('agent-intro')).not.toBeInTheDocument();
     expect(agentCalls()).toHaveLength(0);
   });
 
@@ -780,19 +785,40 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('admin-menu')).toBeInTheDocument();
   });
 
-  it('explains the missing parameters instead of opening a session', async () => {
+  it.each(['/agent', '/agent?spec=scatter-basic&library=excel'])(
+    'explains the chat at %s instead of opening a session',
+    async path => {
+      flags.isDev = true;
+      renderAt(path);
+      const intro = await screen.findByTestId('agent-intro');
+      expect(intro).toHaveTextContent(/an agent adapts that plot's code to your columns/);
+      expect(within(intro).getByRole('link', { name: 'pick any plot' })).toHaveAttribute(
+        'href',
+        '/plots'
+      );
+      expect(
+        within(intro).getByRole('link', { name: 'scatter-basic in matplotlib' })
+      ).toHaveAttribute(
+        'href',
+        '/agent?spec=scatter-basic&library=matplotlib&language=python&source=agent_intro'
+      );
+      await waitFor(() => expect(document.title).toBe('use with my data | anyplot.ai'));
+      // The admin check only: no session, no status read of the chat.
+      expect(agentCalls().map(([input]) => pathOf(input))).toEqual(['/debug/agent/status']);
+      // The admin's page is a visitor's: the explainer has no admin menu either.
+      expect(screen.queryByTestId('admin-menu')).not.toBeInTheDocument();
+    }
+  );
+
+  it("opens the chat from the explainer's example, and records nothing for an admin", async () => {
     flags.isDev = true;
-    renderAt('/agent?spec=scatter-basic&library=excel');
-    // The plot page's entry since 2026-11-02 is `.use_my_data()`.
-    expect(await screen.findByText(/open it from a plot/)).toHaveTextContent(
-      "open it from a plot's .use_my_data(), or start with scatter-basic in matplotlib."
-    );
-    expect(screen.getByRole('link', { name: 'scatter-basic in matplotlib' })).toHaveAttribute(
-      'href',
-      '/agent?spec=scatter-basic&library=matplotlib&language=python'
-    );
-    // The admin check only.
-    expect(agentCalls().map(([input]) => pathOf(input))).toEqual(['/debug/agent/status']);
+    renderAt('/agent');
+    fireEvent.click(await screen.findByRole('link', { name: 'scatter-basic in matplotlib' }));
+    expect(await screen.findByLabelText('Message')).toBeInTheDocument();
+    expect(agentCalls().map(([input]) => pathOf(input))).toContain('/debug/agent/sessions');
+    // The source goes from the address once read, as for every entry.
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(PAGE));
+    expect(analytics.trackEvent).not.toHaveBeenCalledWith('agent_open', expect.anything());
   });
 
   it('falls back to the visitor lane when the admin check is refused, and says the session expired', async () => {
@@ -837,9 +863,14 @@ describe('AgentChatPage gating', () => {
     adminStatus = 404;
     stubFetch(404, { detail: 'not_enabled', ref: 'r-off' });
     renderAt(PAGE);
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('the assistant is closed right now. please try again later.');
-    expect(alert).not.toHaveTextContent('AGENT_ENABLED');
+    // The closed notice a visitor reads, with the terms below it, and no error of its own.
+    const notice = await screen.findByText(/the assistant is closed right now/);
+    expect(notice).toHaveTextContent(
+      /^the assistant is closed right now\. please try again later; the catalogue stays open\./
+    );
+    expect(within(notice).getByTestId('agent-intro-terms')).toBeInTheDocument();
+    expect(notice).not.toHaveTextContent('AGENT_ENABLED');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     // The check's answer stands for the chat's own: the switched-off status is asked once.
     const statusCalls = () =>
       agentCalls().filter(([input]) => pathOf(input) === '/debug/agent/status');
@@ -2116,6 +2147,69 @@ describe('AgentChatPage leave warning', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/scatter-basic');
     await waitFor(() => expect(deletes()).toHaveLength(1));
     expect(unload()).toBe(false);
+  });
+
+  it('asks before the back button returns to the explainer on the same path', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const { router } = renderAt(PAGE, ['/agent']);
+    await parseAndSummarize();
+
+    // Declined: the address goes back to the chat, and the chat with its data and session stays.
+    act(() => void router.navigate(-1));
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(LEAVE_TEXT));
+    await waitFor(() => expect(router.state.location.search).toBe(PAGE.slice('/agent'.length)));
+    expect(screen.getByTestId('location')).toHaveTextContent(PAGE);
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('agent-intro')).not.toBeInTheDocument();
+    expect(deletes()).toHaveLength(0);
+
+    // Agreed on the next press: the blocker was reset, so it asks again, and the explainer comes.
+    confirm.mockReturnValue(true);
+    act(() => void router.navigate(-1));
+    expect(await screen.findByTestId('agent-intro')).toBeInTheDocument();
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(screen.getByTestId('location').textContent).toBe('/agent');
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    await waitFor(() => expect(deletes()).toHaveLength(1));
+  });
+
+  it('asks before the back button returns to another chat on the same path', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const { router } = renderAt(PAGE, ['/agent?spec=box-basic&library=matplotlib&language=python']);
+    await parseAndSummarize();
+
+    act(() => void router.navigate(-1));
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(LEAVE_TEXT));
+    await waitFor(() => expect(router.state.location.search).toContain('spec=scatter-basic'));
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(deletes()).toHaveLength(0);
+  });
+
+  it('asks before the back button returns to the same plot without a library', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    // The same spec with no library shows the explainer, so it ends the chat as another plot does.
+    const { router } = renderAt(PAGE, ['/agent?spec=scatter-basic']);
+    await parseAndSummarize();
+
+    act(() => void router.navigate(-1));
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(LEAVE_TEXT));
+    await waitFor(() => expect(router.state.location.search).toBe(PAGE.slice('/agent'.length)));
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(deletes()).toHaveLength(0);
+  });
+
+  it('asks nothing when the back button leaves a chat with nothing to lose', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const { router } = renderAt(PAGE, ['/agent']);
+    await screen.findByLabelText('Message');
+
+    act(() => void router.navigate(-1));
+    expect(await screen.findByTestId('agent-intro')).toBeInTheDocument();
+    expect(confirm).not.toHaveBeenCalled();
   });
 });
 

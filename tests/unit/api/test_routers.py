@@ -1356,6 +1356,62 @@ class TestSeoProxyRouter:
         assert "Transparency" not in legal
         assert "transparency" not in legal
 
+    def test_seo_agent_carries_the_explainer_and_its_terms(self, client: TestClient) -> None:
+        """llms.txt links /agent, where the assistant's terms live; a crawler there got the spec route's 404."""
+        response = client.get("/seo-proxy/agent")
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        # Never indexed, as the page is not (`AgentChatPage`).
+        assert '<meta name="robots" content="noindex" />' in response.text
+        assert "<title>use with my data | anyplot.ai</title>" in response.text
+        assert "an agent adapts that plot&#x27;s code to your columns" in response.text
+        # The choice is made on a plot's own page, as the explainer says.
+        assert (
+            '<a href="https://anyplot.ai/plots">pick any plot</a>, choose <code>.use_my_data()</code> on its page, '
+            "and paste your data."
+        ) in response.text
+        # The model, as the legal page names it.
+        assert "the model is Claude by Anthropic, served through Google Cloud Vertex AI in the EU." in response.text
+        # How the chat is built, with the README's section on it.
+        assert (
+            "<p>how it works: one agent talks to you, and the loop around it is plain code. the design and the code "
+            'are <a href="https://github.com/MarkusNeusinger/anyplot#use-with-my-data-agent-chat">on GitHub</a>.</p>'
+        ) in response.text
+        # The terms under their heading, in the explainer's order and word for word as it has them, with
+        # the way to the privacy facts second.
+        assert (
+            "<h2>ground rules</h2><dl>"
+            "<dt>your code</dt>"
+            "<dd>yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.</dd>"
+            "<dt>privacy</dt>"
+            '<dd><a href="https://anyplot.ai/legal#assistant">what is stored, where and for how long</a></dd>'
+            "<dt>limits</dt>"
+            "<dd>use it only with data you may share, never for unlawful content or automated requests. "
+            "daily limits apply per tab and per network; a misuse can pause you for the day.</dd>"
+            "<dt>status</dt>"
+            "<dd>experimental, without warranty: results can be wrong and nobody checks them by hand. "
+            "the operator may pause it at any time.</dd>"
+            "</dl>"
+        ) in response.text
+        # The three examples open the chat on their pair.
+        for spec, library, language in (
+            ("scatter-basic", "matplotlib", "python"),
+            ("bar-basic", "ggplot2", "r"),
+            ("line-basic", "d3", "javascript"),
+        ):
+            assert (
+                f'<a href="https://anyplot.ai/agent?spec={spec}&amp;library={library}&amp;language={language}">'
+                f"{spec} in {library}</a>"
+            ) in response.text
+
+    def test_seo_agent_is_not_taken_for_a_spec(self, db_client) -> None:
+        """Declared before `/seo-proxy/{spec_id}`, it answers without asking the catalogue."""
+        client, _ = db_client
+        with patch("api.routers.seo.SpecRepository") as spec_repo:
+            response = client.get("/seo-proxy/agent")
+        assert response.status_code == 200
+        spec_repo.assert_not_called()
+
     def test_seo_libraries_lists_the_registry(self, client: TestClient) -> None:
         """The /libraries bot page was a 29-word stub although its whole
         content sits in core/constants.py (AI-access audit 2026-08-19)."""
