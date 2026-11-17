@@ -12,112 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-sp
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/altair/plot-dark.html
-quality_score: 95
+quality_score: 61
 review:
   strengths:
-  - Perfect theme-adaptive design with correct token usage in both renders
-  - Sophisticated split violin implementation using Altair's density transform and
-    xOffset encoding
-  - 'Excellent data storytelling: color contrast (green/orange) and statistical markers
-    (IQR, median) guide comparison'
-  - 'All visual quality criteria met: text legibility, no overlap, element visibility,
-    palette compliance'
-  - 'Idiomatic Altair patterns: transform_density, layer composition, faceting, custom
-    legend configuration'
-  - 'High-quality synthetic data: realistic test score context with meaningful treatment
-    effects across departments'
-  weaknesses: []
+  - Split built natively with transform_density and a signed-density calculate
+  - Control/Treatment in Imprint positions 1-2 with alpha 0.75
+  weaknesses:
+  - 'VQ-01, VQ-07 (dark): facet headers Engineering/HR/Marketing/Sales render near-black
+    on #1A1A17 and cannot be read → light text from the INK token. Likely cause: alt.Header
+    without labelColor.'
+  - 'VQ-05 (both): saved canvas is 4896x1515 instead of 3200x1800 → landscape view
+    near 620x320 at scale_factor 4 and pad to 3200x1800. Likely cause: width=320 per
+    facet ×4 with spacing=50 at scale_factor=3.'
+  - 'SC-04 (both): title ''violin-split · altair · anyplot.ai'' lacks the language
+    segment → ''violin-split · python · altair · anyplot.ai''. Likely cause: the alt.Title
+    string.'
+  - 'SC-02, VQ-03 (both): Control IQR rule and median sit right of the center line
+    on the purple Treatment half in every facet; same-hue rules blend into their fill
+    → markers inside their own half, in a contrasting ink. Likely cause: xOffset around
+    view center with independent x scales; color=group scale.'
+  - 'SC-02 (both): halves trail as hairlines to 30 far beyond their data (e.g. Engineering/Sales
+    treatment) → end each half near its own range. Likely cause: transform_density
+    extent=[30, 100] for all groups.'
+  - 'VQ-02 (both): legend title ''Group'' and label ''Treatment'' touch the legend
+    frame → at least 6 px padding. Likely cause: alt.Legend without padding.'
+  - 'CQ-04 (code): quartiles via pandas groupby (lines 59-66) merged back and re-aggregated
+    with min()/max() (line 114) → transform_aggregate with q1/median/q3 ops. Likely
+    cause: hand-rolled quantile step.'
+  - 'Suggestion: drop the vertical grid lines of the hidden density axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), as specified
-      Chrome: Title "violin-split · altair · anyplot.ai" (28px, dark), axis labels "Score (%)" and department names (22px, dark), tick labels (18px, dark) — all clearly readable
-      Data: Green (#009E73) for Control on left, orange (#D55E00) for Treatment on right, meeting at center line; white diamond median markers with colored stroke outlines; subtle vertical IQR rules; alpha-blended violin shapes showing clear density distributions
-      Layout: 4 faceted panels (Engineering, HR, Marketing, Sales) with responsive scaling and 50px spacing
-      Legibility verdict: PASS — all elements readable, no overlap, excellent contrast
+      Background: warm off-white #FAF8F1; canvas 4896x1515 (wide strip).
+      Chrome: title 'violin-split · altair · anyplot.ai', facet headers, y-axis 'Score (%)' 30-100 in 5-point ticks, legend 'Group' at right with text touching the frame. All text readable.
+      Data: four split violins, Control #009E73 left, Treatment #C475FD right, meeting at center; IQR rules and white diamond medians, both groups' markers right of center on the purple half; hairline tails down to 30.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), as specified
-      Chrome: Title, axis labels, tick labels all rendered in light text (INK/INK_SOFT tokens) and clearly readable against dark surface; grid lines subtle with proper opacity
-      Data: Data colors identical to light render (green #009E73, orange #D55E00); only theme-adaptive chrome changed (background, text, grid); white median markers pop against dark background; IQR rules clearly visible
-      Layout: Same faceted structure, properly rendered for dark theme with elevated backgrounds for legend
-      Legibility verdict: PASS — no dark-on-dark failures, all text readable, data colors unchanged, theme adaptation complete
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis title and ticks light; facet headers Engineering/HR/Marketing/Sales are near-black on the dark background and nearly invisible.
+      Data: identical colors to the light render.
+      Legibility verdict: FAIL (facet headers dark-on-dark)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 13
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          fully readable in both themes
+        passed: false
+        comment: 'Facet headers render near-black on #1A1A17 in the dark render and
+          cannot be read (defect line)'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No overlapping text elements; all labels well-separated
+        passed: false
+        comment: Legend title and 'Treatment' touch the legend frame (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Violins, IQR rules, and median markers all clearly visible and well-sized
-          for data density
+        passed: false
+        comment: Control quartile markers sit on the Treatment half in every facet;
+          same-hue IQR rules blend into their fill (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with excellent contrast; colorblind-safe
+        comment: Green/purple pair CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Faceted layout perfectly proportioned; 50px spacing; legend well-positioned
+        passed: false
+        comment: Saved canvas 4896x1515 instead of 3200x1800 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled with units; title follows spec format
+        comment: '''Score (%)'' with unit'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Okabe-Ito positions 1-2 correct; backgrounds #FAF8F1/#1A1A17; theme-adaptive
-          chrome perfect in both renders'
+        passed: false
+        comment: 'Dark render chrome is wrong-theme: facet headers dark-on-dark (defect
+          line)'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional design with thoughtful color assignment and custom legend
-          styling; strong visual hierarchy
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid (opacity 0.12), refined facet headers, white-stroke median
-          markers, generous spacing
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Split design naturally enables comparison; color contrast guides
-          viewer; IQR/median provide statistical context
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -125,27 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct split violin plot; halves meet at center
+        comment: Correct split violin
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Distinct colors, halves centered, IQR rules, alpha transparency all
-          present
+        passed: false
+        comment: 'C4 missed: quartile markers on the wrong half; C5 missed: tails
+          trail to 30 via shared extent (defect lines)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis (Score %), X-axis (Department), split group (Control/Treatment)
-          all correctly mapped
+        comment: Correct mapping
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend labels match data
+        passed: false
+        comment: 'Title lacks the language segment: ''violin-split · altair · anyplot.ai''
+          (defect line)'
     data_quality:
       score: 15
       max: 15
@@ -155,23 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: split distributions, variation across departments,
-          statistical markers'
+        comment: All aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world plausible: test scores with treatment effects across
-          departments; neutral topic'
+        comment: Neutral test-score scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 30-100% realistic; treatment effects (5-15% improvement) plausible
+        comment: Plausible scores and effects
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -179,54 +185,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clear flow: imports → setup → data → chart → save; no unnecessary
-          abstractions'
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no cruft
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        passed: false
+        comment: Quartiles via pandas + merge + min() re-aggregation where q1/median/q3
+          aggregate ops exist (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html with scale_factor=3.0
+        comment: Saves plot-{THEME}.png and .html
     library_mastery:
-      score: 10
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Expert use of transform_density, transform_calculate, transform_aggregate,
-          layer composition, faceting, proper configuration
+        passed: false
+        comment: Standard density/layer/facet idioms
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 1
         max: 5
-        passed: true
-        comment: 'Uses Altair-specific strengths: density transform, xOffset for split,
-          signed_density calculation, sophisticated layering'
-    score_caps:
-      applied: false
-      note: No caps triggered
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-1bf36bc7d5
 impl_tags:
   dependencies: []
   techniques:

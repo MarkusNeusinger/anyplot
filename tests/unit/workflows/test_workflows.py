@@ -550,7 +550,7 @@ class TestReviewRetestWorkflow:
         deny = set(settings["permissions"]["deny"])
         assert {"Bash(gh *)", "Bash(git push *)", "Bash(git commit *)", "WebFetch"} <= deny
         allow = set(settings["permissions"]["allow"])
-        assert "Read(/tmp/*)" in allow  # predecessor files live in /tmp, as in production
+        assert "Read(//tmp/anyplot-*)" in allow  # predecessor files live in /tmp, as in production
         # Production's allow list minus what the retest denies — nothing else drifts.
         assert allow == set(production["permissions"]["allow"]) - deny
         assert settings.get("env") == production.get("env")

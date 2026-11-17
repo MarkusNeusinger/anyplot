@@ -796,6 +796,49 @@ class TestMaterialize:
         ).read_bytes()
         assert tmp.prev_dark.read_bytes() == (bundle / other / "plot-dark.png").read_bytes()
 
+    def test_the_stored_score_does_not_stay_beside_the_predecessors_files(self, bundles, workspace, tmp_path):
+        """The reviewer's Read tool covers these files, and the metadata copy holds the stored score."""
+        tmp = rt.TmpPaths(tmp_path / "tmp")
+        bundle = bundles["out"] / "r-bubble-basic-matplotlib-v1-v0"
+        assert "quality_score: 88" in (bundle / "prev" / "metadata.yaml").read_text(encoding="utf-8")
+        cell = _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward")
+        out = rt.materialize(bundle, workspace, cell, GATE_SCRIPT, tmp=tmp)
+        assert out["prev_stored"] == "88"  # the context was read before the copy went
+        # Exactly the files the reviewer is meant to get: neither the metadata copy nor the unsanitized source.
+        assert {path.name for path in tmp.base.iterdir()} == {
+            tmp.prev_light.name,
+            tmp.prev_dark.name,
+            tmp.prev_review.name,
+            tmp.prev_weaknesses.name,
+            tmp.prev_impl(".py").name,
+            tmp.regen_gate.name,
+        }
+        for path in tmp.base.iterdir():
+            if path.name in (tmp.regen_gate.name, tmp.prev_light.name, tmp.prev_dark.name):
+                continue  # the gate script names the fields it reads; the renders are images
+            body = path.read_text(encoding="utf-8")
+            assert "quality_score" not in body, path.name
+            assert not re.search(r"Quality: \d+/100", body), path.name
+            assert "88" not in body, path.name  # the stored score itself, in any form
+
+    def test_the_metadata_copy_goes_when_the_context_fails(self, bundles, workspace, tmp_path, monkeypatch):
+        tmp = rt.TmpPaths(tmp_path / "tmp")
+
+        def failing(*args, **kwargs):
+            assert tmp.prev_metadata.is_file()  # the gate script reads it from here
+            raise rt.HarnessError("context failed")
+
+        monkeypatch.setattr(rt, "_run_gate", failing)
+        with pytest.raises(rt.HarnessError, match="context failed"):
+            rt.materialize(
+                bundles["out"] / "r-bubble-basic-matplotlib-v1-v0",
+                workspace,
+                _cell("r-bubble-basic-matplotlib-v1-v0", "regen", "forward"),
+                GATE_SCRIPT,
+                tmp=tmp,
+            )
+        assert not tmp.prev_metadata.exists()
+
     def test_regen_cell_without_order_is_refused(self, bundles, workspace, tmp_path):
         with pytest.raises(rt.HarnessError, match="has no order"):
             rt.materialize(
@@ -1225,7 +1268,7 @@ class TestCollect:
 def _record(cell: str, item: str, run: int, score: int, **extra) -> dict[str, Any]:
     record = {
         "v": 1,
-        "harness_version": "1",
+        "harness_version": rt.HARNESS_VERSION,
         "set": "v1",
         "cell": cell,
         "item": item,
@@ -1286,7 +1329,7 @@ class TestReport:
         )
         snippet = (tmp_path / "report" / "snippet.md").read_text(encoding="utf-8")
         assert snippet.splitlines()[0] == "### Review retest — set v1 core (2 fresh × 2)"
-        assert "Fresh: claude-opus-5-5 · rules bbbbbbb · harness v1" in snippet
+        assert f"Fresh: claude-opus-5-5 · rules bbbbbbb · harness v{rt.HARNESS_VERSION}" in snippet
         assert "| Items with split verdict at 90 | 1/1 |" in snippet
         assert "| Named-defect miss rate | 1/2 |" in snippet  # D1 on f-bubble-basic-matplotlib, missed in run 2
         assert "| Sessions / API-equivalent cost | 3/4 / $5 |" in snippet

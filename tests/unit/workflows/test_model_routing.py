@@ -415,13 +415,15 @@ def _run_review(
     """Run impl-review's "Extract PR info" step against a fake `gh`."""
     pr = {"headRefName": f"implementation/spec-a/{library}", "headRefOid": "0" * 40, "body": body}
     path = _fake_gh(tmp_path, f"cat <<'EOF'\n{json.dumps(pr)}\nEOF\n")
-    # The step parks gh's output under /tmp; keep the test inside tmp_path.
-    script = _step("impl-review.yml", "Extract PR info")["run"].replace("/tmp/", f"{tmp_path}/")
+    # The step parks gh's output under $RUNNER_TEMP, never under /tmp, where the reviewer reads.
+    script = _step("impl-review.yml", "Extract PR info")["run"]
+    assert not any("/tmp/" in line for line in script.splitlines() if not line.lstrip().startswith("#"))
     return _exec(
         script,
         repo,
         tmp_path,
         PATH=path,
+        RUNNER_TEMP=str(tmp_path),
         GH_TOKEN="unused",
         PR_NUMBER="7",
         MODEL_INPUT=model_input,

@@ -1,0 +1,9 @@
+{
+  "dataset_text": "agence;montant\nPort;1 204,50\nMoulin;987,25\nGare;1 530,75\n",
+  "message": "Quel est le total des montants de toutes les agences ?",
+  "expected_operations": [],
+  "figures": "queried",
+  "locale": "fr",
+  "spec_id": "bar-basic",
+  "tags": ["figures", "decimal_comma", "data_question"]
+}
