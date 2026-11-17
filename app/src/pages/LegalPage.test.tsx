@@ -185,6 +185,12 @@ describe('LegalPage', () => {
     // to; github states neither a period nor a place.
     expect(document.querySelectorAll('[data-kept-line]')).toHaveLength(keptLines.length);
     expect(keptLineOf('github', 0)).toBeUndefined();
+    // Instead it says what can be undone: the username sits in the spec's `suggested` field, which
+    // a pull request empties, while the issue and the git history stay public. The whole row, so
+    // neither half can fall off.
+    expect(screen.getByRole('row', { name: /^github\s/ })).toHaveTextContent(
+      /^github\s*suggest a plot type there and your public username may be credited in its spec\. ask and I remove it; the public history keeps it\.$/
+    );
     // The separate period and place tables are gone, their figures moved into the rows.
     expect(screen.queryByText('how long it stays')).not.toBeInTheDocument();
     expect(screen.queryByText('where it runs')).not.toBeInTheDocument();

@@ -1337,7 +1337,10 @@ class TestSeoProxyRouter:
             "cleared by the next feedback after ten minutes, and its salt dies with the server instance",
             "uses your IP address to rate-limit, filter bots and absorb DDoS attacks",
             "no accounts, and no name or email unless you type one",
-            "may credit your public username",
+            # The GitHub credit, and that the operator removes it on request while the public history
+            # keeps it: the username sits in the spec's `suggested` field, which a pull request empties.
+            "Suggesting a plot type on GitHub may credit your public username in its spec. Ask and the "
+            "operator removes it; the public history keeps it.</li>",
             "<li>No AI training on what you send.</li>",
             "your plot votes, a release number",
             "and your consent to a feedback case: you give it when you send it and can withdraw it at any "

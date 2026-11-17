@@ -392,7 +392,10 @@ export function LegalPage() {
                 ],
                 [
                   'github',
-                  'suggest a plot type there and your public username may be credited in its spec.',
+                  // The username is the issue author's login, which spec-create writes into the
+                  // spec's `suggested` field; a pull request can empty that field, while the issue
+                  // and the git history stay public.
+                  'suggest a plot type there and your public username may be credited in its spec. ask and I remove it; the public history keeps it.',
                 ],
               ]}
             />
