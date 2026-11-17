@@ -1271,9 +1271,10 @@ _LEGAL_BOT_BODY = (
     '"# include data.csv" (it starts unticked, which leaves out that file only). The files go to a '
     "private bucket in Google Cloud Storage in the Netherlands (europe-west4) for 180 days. The "
     "triage row stays until you ask to delete it, in Google Cloud SQL in the Netherlands "
-    "(europe-west4): your reaction, message, a hash of your tab id and the run's details. The operator "
-    "reads the cases together with the AI assistant he codes with (Claude by Anthropic): your "
-    "reaction and message, the conversation, the data sample or file, the plot and its code.</li>"
+    "(europe-west4): your reaction, message, hashes of your tab id and of the session, and the run's "
+    "details. The operator reads the cases together with the AI assistant he codes with (Claude by "
+    "Anthropic): your reaction and message, the conversation, the data sample or file, the plot and its "
+    "code.</li>"
     "</ul>"
     "<h2>Transparency</h2>"
     "<p>The whole stack — specs, pipeline, API and frontend — is open source at "

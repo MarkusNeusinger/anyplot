@@ -1372,11 +1372,12 @@ class TestSeoProxyRouter:
             "so they are pseudonymous",
             "Admins: a keyed hash (HMAC)",
             "a profile of your data with its first 5 rows",
-            # Who reads a case, and what: the triage session with the coding assistant
-            # (.claude/skills/triage-agent-cases/SKILL.md, "Read each case").
-            "your reaction, message, a hash of your tab id and the run's details. The operator reads the "
-            "cases together with the AI assistant he codes with (Claude by Anthropic): your reaction and "
-            "message, the conversation, the data sample or file, the plot and its code.</li>",
+            # Both hashes the row stores, the tab id's and the session's (api/agent_cases.py
+            # `build_case`), then who reads a case, and what: the triage session with the coding
+            # assistant (.claude/skills/triage-agent-cases/SKILL.md, "Read each case").
+            "your reaction, message, hashes of your tab id and of the session, and the run's details. The "
+            "operator reads the cases together with the AI assistant he codes with (Claude by Anthropic): "
+            "your reaction and message, the conversation, the data sample or file, the plot and its code.</li>",
             "it starts unticked, which leaves out that file only",
             "never your text, data, column or file names",
             # Every kind of field by its name: event types, plot type and library record what a

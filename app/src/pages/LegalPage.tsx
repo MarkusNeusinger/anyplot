@@ -465,7 +465,8 @@ export function LegalPage() {
                       &quot;# include data.csv&quot;
                     </Box>
                     ; the box starts unticked, which leaves out that file only. a triage row then
-                    keeps your reaction, message, a hash of your tab id and the run&apos;s details.
+                    keeps your reaction, message, hashes of your tab id and of the session, and the
+                    run&apos;s details.
                     I read the cases together with the ai assistant I code with (Claude by
                     Anthropic): your reaction and message, the conversation, the data sample or
                     file, the plot and its code.
