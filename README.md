@@ -66,6 +66,7 @@ Six decisions I made and hold the agents to, each with its reason and the code t
   rendered, and a review whose hash is missing or doesn't match the code at the pull request's head stops before
   it scores; a regeneration then keeps the live version. It only warned at first: from 2026-11-10 to 2026-11-16,
   all 39 production reviews matched. ([`render_hash.py`](automation/scripts/render_hash.py),
+  [#13034](https://github.com/MarkusNeusinger/anyplot/pull/13034),
   [#13129](https://github.com/MarkusNeusinger/anyplot/pull/13129))
 - **Private by construction.** Chats and data live only in server memory, unless you send feedback, and are dropped
   after an hour idle; the public chat's session id travels in a header, not in a URL. My rule for usage telemetry:
