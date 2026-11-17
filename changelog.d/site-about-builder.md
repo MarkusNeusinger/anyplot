@@ -28,7 +28,8 @@
   the code changes and a reviewer scores the render, plain code runs the loop,
   a validator reads the code before anything runs, and a run makes one repair
   and two reviews at most; it names the builder's rules (open to everyone, no
-  login, hosted in the EU, nothing kept unless you send feedback) and links
+  login, hosted in the EU, what you paste or write kept only if you send
+  feedback) and links
   the agent design document, which records his decisions with their dates.
   The palette section says it took four rounds. `test_readme_claims.py` holds
   the 24 to the criteria registry, the repair and the reviews to the agents'
@@ -37,7 +38,7 @@
 - **The README shows a push-back case.** Under "I know when to push back", a
   nested case tells how real weather downloads broke the import of pasted
   data, and that pasted data has had to work with notes, metadata or total
-  rows around the table since #12166.
+  rows around the table since then.
 - **The landing hero names its builder.** The eyebrow above the headline
   reads "the open plot catalogue · by Markus Neusinger", the name a link to
   the about page and the hero's first link for the keyboard, and the intro

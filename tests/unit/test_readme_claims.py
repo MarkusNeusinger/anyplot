@@ -316,8 +316,14 @@ def test_highlights_put_the_public_chats_session_id_in_a_header():
     assert "the public chat's session id travels in a header, not in a URL" in highlights, (
         "README.md: the privacy highlight no longer says where the public chat's session id travels"
     )
+    # The AI workflow page tells the same change as an example of a question that mattered.
+    workflow = collapse(read(WORKFLOW_PAGE))
+    assert "moved the public chat's session id out of its URLs" in workflow, (
+        "ai-workflow.md: the security example no longer says that the public chat's session id left its URLs"
+    )
     if annotated_kind(admin, "SessionId")[0] == "Path":
         assert "never appears in a URL" not in highlights, f"README.md: {admin} carries the session id in its path"
+        assert "out of every URL" not in workflow, f"ai-workflow.md: {admin} carries the session id in its path"
 
 
 def test_architecture_names_the_default_model():
@@ -617,6 +623,25 @@ def test_the_workflow_page_times_the_blank_site_as_the_readme_does():
     assert page, "ai-workflow.md: the blank-site entry no longer says how long the site was blank"
     assert page.group(1) == readme.group(1), f"ai-workflow.md: {page.group(1)} minutes; README.md: {readme.group(1)}"
     assert "I noticed" not in entry.group(1), "ai-workflow.md: the entry states the outage, not when it was noticed"
+
+
+def test_the_guardrails_and_the_dependabot_command_time_the_blank_site_as_the_readme_does():
+    """The guardrails' incident and the Dependabot command give the blank site of 2026-10-22 the README's minutes.
+
+    Both state how long the site was blank, never when it was noticed.
+    """
+    readme = re.search(
+        r"left anyplot\.ai blank for (\d+) minutes", collapse(section(read(README), "Engineering highlights"))
+    )
+    assert readme, "README.md's highlights no longer say how long anyplot.ai was blank"
+    for path in (ROOT / ".claude" / "guardrails.md", ROOT / "agentic" / "commands" / "dependabot.md"):
+        text = collapse(read(path))
+        minutes = set(re.findall(r"blank for about (\d+) minutes", text))
+        assert minutes, f"{path.name} no longer says how long the site was blank"
+        assert minutes == {readme.group(1)}, f"{path.name}: {sorted(minutes)} minutes; README.md: {readme.group(1)}"
+        assert not re.search(r"\b(?:noticed about|unnoticed for about) \d+ minutes", text), (
+            f"{path.name}: the incident states the outage, not when it was noticed"
+        )
 
 
 def test_the_readme_counts_the_releases_of_the_changelog():
