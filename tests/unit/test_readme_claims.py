@@ -25,6 +25,7 @@ headings of `CHANGELOG.md`, so cutting a release fails this test until the same 
 from __future__ import annotations
 
 import ast
+import datetime
 import re
 import subprocess
 from functools import cache
@@ -408,16 +409,22 @@ def test_about_page_timeline_dates_each_release_as_the_changelog_does():
     headings = re.findall(r"^## \[([\d.]+)\] — (\d{4}-\d{2}-\d{2}) — (.+)$", read(ROOT / "CHANGELOG.md"), re.M)
     dated = {version: (date, title) for version, date, title in headings}
     releases = [event for event in _origin_events() if "version" in event]
-    assert len(releases) == 4, f"figureData.ts: the timeline has {len(releases)} releases, not 4"
+    assert len(releases) == 5, f"figureData.ts: the timeline has {len(releases)} releases, not 5"
 
     def squash(text: str) -> str:
         return re.sub(r"[^a-z0-9&/]", "", text.lower())
 
+    changelog = read(ROOT / "CHANGELOG.md")
     for event in releases:
         assert event["version"] in dated, f"figureData.ts: CHANGELOG.md has no release {event['version']}"
         date, title = dated[event["version"]]
         assert event["when"] == date, f"figureData.ts: {event['version']} came out on {date}, not {event['when']}"
-        if event["what"] != "first github release":
+        if event["what"] == "use with my data":
+            # The release is titled "Your data"; its notes open with the page the label names.
+            notes = changelog.split(f"## [{event['version']}]", 1)[1].split("\n## [", 1)[0]
+            first_entry = next(line for line in notes.splitlines() if line.startswith("- **"))
+            assert f'"{event["what"]}"' in first_entry, f"CHANGELOG.md: {event['version']} does not open with it"
+        elif event["what"] != "first github release":
             # "julia & javascript · 15 libraries" in "Julia & JavaScript, 15 libraries & the Imprint palette".
             for part in event["what"].split(" · "):
                 assert squash(part) in squash(title), f"figureData.ts: '{part}' is not in the heading '{title}'"
@@ -426,20 +433,25 @@ def test_about_page_timeline_dates_each_release_as_the_changelog_does():
 
 
 def test_about_page_timeline_dates_the_start_and_the_chat_as_the_page_does():
-    """The timeline's month of the start is the origin's own, and the chat's day is the agent design document's."""
+    """The timeline's month of the start is the origin's own, and the chat's release follows its opening day."""
     events = {event["what"]: event["when"] for event in _origin_events()}
     year, month = events["pyplots.ai"].split("-")
     page = collapse(read(ABOUT_PAGE))
     assert f"it started in {_MONTHS[int(month) - 1]} {year} as pyplots.ai" in page, (
         "AboutPage.tsx: the timeline starts in the origin's month"
     )
-    day = events["use with my data"]
-    assert f"Public since {day} as an experimental page" in read(ROOT / "docs" / "concepts" / "agent-network.md"), (
-        f"agent-network.md: the chat opened to everyone on {day}"
-    )
-    year, month, date = day.split("-")
-    assert f"open to everyone since {int(date)} {_MONTHS[int(month) - 1].lower()} {year}." in page, (
-        f"AboutPage.tsx: the chat section dates the opening to {day}"
+    # The page's chat section gives the day the chat opened; the timeline gives the release that
+    # carries it, which came out the day after. A release dated before the opening would be wrong.
+    opened = re.search(r"open to everyone since (\d{1,2}) ([a-z]+) (\d{4})\.", page)
+    assert opened is not None, "AboutPage.tsx: the chat section no longer dates its opening"
+    lower_months = [name.lower() for name in _MONTHS]
+    opening = datetime.date(int(opened[3]), lower_months.index(opened[2]) + 1, int(opened[1]))
+    assert f"Public since {opening.isoformat()} as an experimental page" in read(
+        ROOT / "docs" / "concepts" / "agent-network.md"
+    ), f"agent-network.md: the chat opened to everyone on {opening.isoformat()}"
+    release = datetime.date.fromisoformat(events["use with my data"])
+    assert datetime.timedelta(0) <= release - opening <= datetime.timedelta(days=7), (
+        f"figureData.ts: the release of {release} does not follow the opening of {opening}"
     )
 
 

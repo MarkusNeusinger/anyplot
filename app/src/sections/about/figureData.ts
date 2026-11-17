@@ -45,15 +45,17 @@ export interface OriginEvent {
 }
 
 // The origin's points in date order. test_readme_claims.py holds each release to its heading in
-// CHANGELOG.md (1.0.0 the oldest, so the first github release), the month to the origin's "it
-// started in November 2025" and the day of "use with my data" to the agent design document.
+// CHANGELOG.md (1.0.0 the oldest, so the first github release; 4.0.0 the release whose notes
+// open with the public "use with my data" page) and the month to the origin's "it started in
+// November 2025". Every dated point is a release, so each carries its version: the chat opened
+// the evening before 4.0.0 came out, and the timeline shows the release.
 export const ORIGIN_EVENTS: readonly OriginEvent[] = [
   { when: '2025-11', what: 'pyplots.ai' },
   { when: '2026-04-07', version: '1.0.0', what: 'first github release' },
   { when: '2026-04-23', version: '2.0.0', what: 'anyplot.ai' },
   { when: '2026-05-18', version: '2.4.0', what: 'r / ggplot2' },
   { when: '2026-06-10', version: '3.0.0', what: 'julia & javascript · 15 libraries' },
-  { when: '2026-11-02', what: 'use with my data' },
+  { when: '2026-11-03', version: '4.0.0', what: 'use with my data' },
 ];
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];

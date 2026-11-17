@@ -20,7 +20,7 @@ describe('OriginTimeline', () => {
       '2026-04-23 · 2.0.0 anyplot.ai',
       '2026-05-18 · 2.4.0 r / ggplot2',
       '2026-06-10 · 3.0.0 julia & javascript · 15 libraries',
-      '2026-11-02 use with my data',
+      '2026-11-03 · 4.0.0 use with my data',
       'today',
     ]);
   });
@@ -38,6 +38,6 @@ describe('OriginTimeline', () => {
 
     expect(
       Array.from(container.querySelectorAll('time')).map(time => time.getAttribute('datetime'))
-    ).toEqual(['2025-11', '2026-04-07', '2026-04-23', '2026-05-18', '2026-06-10', '2026-11-02']);
+    ).toEqual(['2025-11', '2026-04-07', '2026-04-23', '2026-05-18', '2026-06-10', '2026-11-03']);
   });
 });
