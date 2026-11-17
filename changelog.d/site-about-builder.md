@@ -57,6 +57,21 @@
   CodeQL, every migration run on a throwaway PostgreSQL, and the check of the
   live site after a merge, which the merging agent runs by rule.
   `test_readme_claims.py` holds the target to `codecov.yml`.
+- **The about page draws its pipeline, rubric, palette and origin.** The
+  pipeline's ASCII list becomes a flow of its five steps with what AI does in
+  each, and the builder's own steps, "I approve" and "I set and change them",
+  stand in the site's green text shade, a use the style guide now lists among
+  the places green may appear. Under the review text, one bar splits the
+  rubric's 100 points into its six parts, from visual quality 30 to library
+  mastery 10. Eight chips show the palette's hues with their names and hex
+  values, and under the origin a timeline runs from pyplots.ai in November
+  2025 through the first GitHub release (1.0.0), anyplot.ai (2.0.0), R
+  (2.4.0), Julia and JavaScript (3.0.0) and the public chat to today. Each
+  figure is a list that a screen reader reads in order, and on a phone each
+  one stacks. `test_readme_claims.py` holds the rubric's points to
+  `prompts/quality-criteria.md`, each release on the timeline to its
+  `CHANGELOG.md` heading and the chat's date to the agent design document; a
+  test holds the chips to the palette tokens.
 
 ### Changed
 
@@ -99,6 +114,15 @@
   in four languages, counted from the library registry. The "use with my data"
   section says, as the chat's explainer does, that `.use_my_data()` sits on a
   plot's page. The crawler copy follows each change.
+- **The builder's photo hangs beside the about page's text on wide
+  screens.** A larger photo stands 216 px wide in the margin left of the
+  760 px column wherever that margin holds it with its gap, so the bio keeps
+  the column's full width; narrower, it stays 110 px wide beside the name,
+  above it on phones.
+- **The about page's palette section drops the penguin example.** The two
+  sentences after it, "the palette travels with you across libraries.
+  switching tools doesn't mean re-learning your colour grammar.", carry the
+  point alone, in the style guide's library-agnostic story too.
 - **The landing page's description drops "human ideas, ai builds the
   rest."** and keeps the hero block, the library count, colorblind-safe and
   open source; a test now pins it.
