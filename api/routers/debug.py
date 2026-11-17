@@ -600,11 +600,12 @@ async def shared_links(db: AsyncSession = Depends(require_db)) -> SharedLinksDet
 
 @router.get("/search-misses", response_model=SearchMissesResponse, dependencies=[Depends(require_admin)])
 async def search_misses(db: AsyncSession = Depends(require_db)) -> SearchMissesResponse:
-    """The gallery searches that found nothing in the whole catalogue, over the retention window of 90 UTC days.
+    """The gallery searches that found nothing in the whole catalogue, over the retention window.
 
-    Per text the total count and the first and the last day, most searched first, up to 500 texts; `texts`
-    says how many the window holds (`api/search_misses.py`). No public route shows a text. `unavailable`
-    with an empty list when the query fails, which includes the table not being there yet.
+    Per text the total count and the first and the last day, most searched first, up to `LIST_LIMIT` texts;
+    `texts` says how many the window of `RETENTION_DAYS` UTC days holds (`api/search_misses.py`). No public
+    route shows a text. `unavailable` with an empty list when the query fails, which includes the table not
+    being there yet.
     """
     try:
         return await read_search_misses(SearchMissRepository(db))

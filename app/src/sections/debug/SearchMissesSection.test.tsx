@@ -72,6 +72,8 @@ describe('SearchMissesSection', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(String(fetchMock.mock.calls[0][0])).toMatch(/\/debug\/search-misses$/);
     expect(screen.getByTestId('search-misses-totals')).toHaveTextContent('3 texts');
+    // The retention period is the API's, never a number the page keeps.
+    expect(screen.getByText(/deleted after 90 days/)).toBeInTheDocument();
     const first = within(screen.getAllByTestId('search-miss-row')[0]);
     expect(first.getByText('spider')).toBeInTheDocument();
     expect(first.getByText('12')).toBeInTheDocument();

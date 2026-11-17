@@ -98,8 +98,10 @@ export function SearchMissesSection({ token, reloadCounter }: SearchMissesSectio
         <SectionHeader prompt="❯" title={<em>search misses</em>} />
       </Box>
       <Typography sx={{ ...listMutedSx, mb: 1.5 }}>
-        gallery searches that found nothing in the whole catalogue · private, on no public page ·
-        deleted after {answer && typeof answer === 'object' ? answer.retention_days : 90} days
+        gallery searches that found nothing in the whole catalogue · private, on no public page
+        {answer && typeof answer === 'object' && answer.retention_days > 0
+          ? ` · deleted after ${answer.retention_days} days`
+          : ''}
       </Typography>
 
       {answer === undefined ? (

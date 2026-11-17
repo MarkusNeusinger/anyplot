@@ -106,8 +106,8 @@ class TestNormalizeQuery:
         assert normalize_query(case["typed"]) == case["sent"]
 
     def test_the_bounds_are_the_apps(self) -> None:
-        assert MAX_QUERY_LENGTH == CASES["max_length"] == 40
-        assert MIN_QUERY_LENGTH == CASES["min_length"] == 2
+        assert MAX_QUERY_LENGTH == CASES["max_length"]
+        assert MIN_QUERY_LENGTH == CASES["min_length"]
 
     def test_a_normalised_text_stays_as_it_is(self) -> None:
         """The app sends a normalised text, and the server's second pass changes nothing in it."""
@@ -252,7 +252,6 @@ class TestCount:
         await search_misses._count(TODAY, "spider")
 
         repository.count.assert_awaited_once_with(day=TODAY, query="spider", max_new_per_day=MAX_NEW_QUERIES_PER_DAY)
-        assert MAX_NEW_QUERIES_PER_DAY == 1000
 
     async def test_purges_the_rows_past_the_retention_once_per_utc_day(self, repository: MagicMock) -> None:
         await search_misses._count(TODAY, "spider")
@@ -263,7 +262,6 @@ class TestCount:
             (TODAY - timedelta(days=RETENTION_DAYS),),
             (TODAY + timedelta(days=1) - timedelta(days=RETENTION_DAYS),),
         ]
-        assert RETENTION_DAYS == 90
 
     async def test_a_failed_purge_reaches_nobody_and_waits_for_the_next_day(self, repository: MagicMock) -> None:
         repository.delete_before.side_effect = ProgrammingError("DELETE", {}, Exception("timeout"))
@@ -403,12 +401,12 @@ class TestReadMisses:
         answer = await read_misses(repository, today=TODAY)
 
         since = retention_cutoff(TODAY)
-        assert since == TODAY - timedelta(days=90)
+        assert since == TODAY - timedelta(days=RETENTION_DAYS)
         repository.totals.assert_awaited_once_with(since, limit=LIST_LIMIT)
         repository.distinct_since.assert_awaited_once_with(since)
         assert answer.model_dump() == {
             "status": "ok",
-            "retention_days": 90,
+            "retention_days": RETENTION_DAYS,
             "texts": 612,
             "misses": [{"query": "spider", "count": 9, "first_day": "2026-10-18", "last_day": "2026-11-17"}],
         }
@@ -455,7 +453,7 @@ class TestDebugEndpoints:
 
         assert body == {
             "status": "ok",
-            "retention_days": 90,
+            "retention_days": RETENTION_DAYS,
             "texts": 1,
             "misses": [{"query": "spider", "count": 3, "first_day": "2026-11-01", "last_day": "2026-11-17"}],
         }
@@ -472,7 +470,7 @@ class TestDebugEndpoints:
             response = self._client(session).get("/debug/search-misses")
 
         assert response.status_code == 200
-        assert response.json() == {"status": "unavailable", "retention_days": 90, "texts": 0, "misses": []}
+        assert response.json() == {"status": "unavailable", "retention_days": RETENTION_DAYS, "texts": 0, "misses": []}
         session.rollback.assert_awaited_once()
 
     def test_deletes_every_row_of_a_text_named_in_the_body(self) -> None:

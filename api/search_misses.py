@@ -17,8 +17,8 @@ The text is what a visitor typed, so it is handled as little as possible:
   `normalizeQuery` by the shared cases in `app/src/hooks/searchQuery.cases.json`) and drops what
   is then shorter than two characters.
 - A row is the text, the day and a count. No address, no user agent, no time of day, no session.
-  The network's salted key (`hash_ip`) lives for one minute in this process's memory, for the
-  rate limit, and is never written anywhere.
+  The network's salted key (`hash_ip`) is held in this process's memory for the rate limit only,
+  until the first request of a later minute clears it, and is never written anywhere.
 - Rows older than `RETENTION_DAYS` are deleted.
 
 Only the production service counts (`settings.is_production`): a test or a local request counts
@@ -123,10 +123,10 @@ def retention_cutoff(today: date) -> date:
 
 
 class _RateLimit:
-    """The requests of each network in the current minute, in memory only, forgotten when the minute ends.
+    """The requests of each network in the current minute, in memory only.
 
-    A fixed window of whole minutes: the counts and the keys of a minute are dropped at once when the
-    next one begins, so no key outlives its minute.
+    A fixed window of whole minutes: the first request of a later minute drops every count and key of
+    the earlier one at once, so a key is held until that request at the latest, and never written.
     """
 
     def __init__(self) -> None:

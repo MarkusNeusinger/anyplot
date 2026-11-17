@@ -52,8 +52,9 @@ def hash_ip(ip: str) -> str:
     four billion IPv4 addresses, so a plain SHA-256 of one is undone by trying them all. The
     limits that use it need the key only within one process: the feedback route keeps it in
     its row until the longest of its windows has passed (`FeedbackRepository.clear_ip_hashes`),
-    and the search-miss limit keeps it in memory for one minute (`api/search_misses.py`). With
-    more than one instance, each counts its own requests: a limit then binds per instance."""
+    and the search-miss limit holds it in memory only until a later minute's first request clears
+    it (`api/search_misses.py`). With more than one instance, each counts its own requests: a
+    limit then binds per instance."""
     if not ip:
         return ""
     return IP_HASH_PREFIX + hmac.new(_IP_SALT, ip.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
