@@ -42,5 +42,5 @@ Please:
 2. Implement a fix or the requested change.
 3. Open a pull request with the proposed solution.
 
-Do not quote the message in a commit, a pull request or an issue; describe the problem in your own words.`;
+Do not quote the message in the repository, a commit, a pull request or an issue; describe the problem in your own words.`;
 }

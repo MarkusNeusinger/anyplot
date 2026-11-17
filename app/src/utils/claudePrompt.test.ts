@@ -71,7 +71,7 @@ describe('buildClaudePrompt', () => {
   it('asks to keep the quoted message out of commits, pull requests and issues', () => {
     const out = buildClaudePrompt('hi', '/p', 'bug');
     expect(out).toContain(
-      'Do not quote the message in a commit, a pull request or an issue; describe the problem in your own words.'
+      'Do not quote the message in the repository, a commit, a pull request or an issue; describe the problem in your own words.'
     );
   });
 });
