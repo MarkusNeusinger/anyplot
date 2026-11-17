@@ -73,10 +73,13 @@ the verdict of impl-review's "Readiness check" step (``--readiness``;
 sources. Only the status ``regression`` keeps. A missing, stale or malformed
 record never does, and without the flag the check is off.
 
-A *render mismatch* (rule step P2b, ``--render-mismatch``) keeps before
-anything else is read (``render_mismatch``): impl-review's render-hash check
-found that the staged renders were made from other code than the PR head
-holds (``render_hash.py``), so no review ran and there is no score to judge.
+A *render-hash stop* (rule step P2b) keeps before anything else is read:
+impl-review's render-hash check stopped the review (``render_hash.py``), so
+there is no score to judge. ``--render-mismatch`` says the staged renders
+were made from other code than the PR head holds (``render_mismatch``);
+``--render-unverified`` says nothing ties them to that code, because the
+hash is missing or could not be read, or the implementation at the head could
+not be read (``render_unverified``).
 
 Anything missing or malformed fails closed to ``keep``. The classification
 keys (``prev_checklist``, ``prev_weaknesses``, ``rule``, ``kind``) never
@@ -121,7 +124,7 @@ Subcommands::
     regen_gate.py decide --spec-id S --library B --score N --prev-stored N|n/a \
         --regen-json review_regen.json --weaknesses-json /tmp/anyplot-prev-weaknesses.json \
         --spec-file plots/S/specification.md --prev-renders available|missing \
-        [--render-mismatch] [--canvas-failed] [--change-request-present] [--context-failed] \
+        [--render-mismatch | --render-unverified] [--canvas-failed] [--change-request-present] [--context-failed] \
         [--summary-out FILE] [--pr N] [--model ID] [--criteria-version V] [--prompts-tree SHA] \
         [--prev-model ID] [--prev-criteria-version V] [--record-out FILE] \
         [--prev-impl /tmp/anyplot-prev-impl.EXT --new-impl plots/S/implementations/L/B.EXT]
@@ -176,6 +179,7 @@ KEEP = "keep"
 # is written by the workflow's fallback when this script cannot run at all.
 REASON_CODES = (
     "render_mismatch",
+    "render_unverified",
     "canvas_failed",
     "no_score",
     "score_zero",
@@ -1568,8 +1572,11 @@ class GateInput:
     # C ids of the spec's "Expected, not a defect" bullets (permission_refs()).
     permission_refs: frozenset[str] = frozenset()
     prev_renders: bool = True
-    # impl-review's render-hash check stopped the review (``--render-mismatch``).
+    # impl-review's render-hash check stopped the review: the renders were made
+    # from other code (``--render-mismatch``), or nothing ties them to this
+    # code (``--render-unverified``).
     render_mismatch: bool = False
+    render_unverified: bool = False
     canvas_failed: bool = False
     change_request_present: bool = False
     context_ok: bool = True
@@ -1800,7 +1807,7 @@ def decide(inp: GateInput) -> GateResult:
     (``readiness_regression``).
     """
     adapt = adapt_assess(inp, _adapt_review(inp))
-    if inp.render_mismatch:
+    if inp.render_mismatch or inp.render_unverified:
         # The review stopped before it ran, whatever the adapt flags say (the
         # step that would pass ``--review-skipped`` did not run either).
         adapt = replace(adapt, review=ADAPT_REVIEW_SKIPPED)
@@ -1826,10 +1833,12 @@ def decide(inp: GateInput) -> GateResult:
 
 
 def _decide(inp: GateInput, adapt: AdaptAssessment | None = None) -> GateResult:
-    # First: the renders are not of this code, so nothing below has anything
-    # to judge, and no review ran.
+    # First: the renders are not of this code, or nothing shows that they are,
+    # so nothing below has anything to judge, and no review ran.
     if inp.render_mismatch:
         return GateResult(KEEP, "the staged renders were not made from the code at the PR head", "render_mismatch")
+    if inp.render_unverified:
+        return GateResult(KEEP, "nothing ties the staged renders to the code at the PR head", "render_unverified")
     if inp.canvas_failed:
         return GateResult(KEEP, "canvas dimension gate failed", "canvas_failed")
     # No review ran (the owner's switch): the route is the only way to merge,
@@ -3331,6 +3340,7 @@ def cmd_decide(args: argparse.Namespace) -> int:
         permission_refs=permission_refs(characteristics),
         prev_renders=args.prev_renders == "available",
         render_mismatch=args.render_mismatch,
+        render_unverified=args.render_unverified,
         canvas_failed=args.canvas_failed,
         change_request_present=args.change_request_present,
         context_ok=not args.context_failed,
@@ -3571,7 +3581,12 @@ def build_parser() -> argparse.ArgumentParser:
     dec.add_argument(
         "--render-mismatch",
         action="store_true",
-        help="impl-review's render-hash check stopped the review: keep, whatever else is given",
+        help="impl-review's render-hash check stopped the review on a mismatch: keep, whatever else is given",
+    )
+    dec.add_argument(
+        "--render-unverified",
+        action="store_true",
+        help="the check stopped the review without a mismatch (the hash or the head is missing or unreadable): keep",
     )
     dec.add_argument("--canvas-failed", action="store_true")
     dec.add_argument("--change-request-present", action="store_true")

@@ -126,7 +126,10 @@ Ties break by PR number. A seeded random fill from the other decided
 rows tops the sample up to 15. The JSON's `sample` lists the PRs in
 that opening order. A row without a pair artifact (`no_record`,
 `no_pair_artifact`) has no renders to open and is never sampled;
-read its flags instead. When more than 15 rows are suspicious,
+read its flags instead. A render-hash keep (`render_mismatch`,
+`render_unverified`) has no pair artifact by design, because no review
+ran, so it doesn't get `no_pair_artifact`; count those keeps by their
+code and read the stopped PR's render-hash comment. When more than 15 rows are suspicious,
 the lowest-priority ones are printed as "Suspicious but not opened";
 list them by PR number in the report. A regression recorded as a
 defect has no flag: you find it while reading the sampled renders
