@@ -595,7 +595,7 @@ engine = create_async_engine(
 ### Automated backups
 
 Cloud SQL automatic backups of `anyplot-db`:
-- Daily, started at 19:00 UTC
+- Daily, in a window that starts at 19:00 UTC
 - The 30 most recent backups are retained, about 30 days
 - Point-in-time recovery with 7 days of transaction logs
 - Stored in the EU multi-region
@@ -606,9 +606,11 @@ To see the current settings, run this read-only command:
 gcloud sql instances describe anyplot-db --format="yaml(settings.backupConfiguration)"
 ```
 
-A row deleted from the database therefore stays in the backups for up to 30 days. The privacy
-section of the legal page (`app/src/pages/LegalPage.tsx`, "your rights") and its crawler copy in
-`api/routers/seo.py` (`_LEGAL_BOT_BODY`) say so; if you change the retention, update both.
+A row deleted from the database therefore stays in these automated backups for about 30 days. The
+setting counts backups, not days, so a day without a successful backup adds a day. A manual backup
+or a snapshot taken by hand is not removed by this retention. The privacy section of the legal page
+(`app/src/pages/LegalPage.tsx`, "your rights") and its crawler copy in `api/routers/seo.py`
+(`_LEGAL_BOT_BODY`) name the period; if you change the retention, update both.
 
 ### Manual backups
 
