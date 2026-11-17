@@ -17,9 +17,9 @@
   phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
   check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
   says the same, and now also names who is responsible.
-- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to about
-  860 words (counted at 390 px), and on a phone (390 px) from 6590 to 5124 px high; on a desktop
-  (1440 px), from 3659 to 2738 px. The data assistant's status, its limits and the terms for
+- **The privacy policy is shorter.** On `/legal`, the privacy section drops from 998 to
+  860 words (counted at 390 px), and on a phone (390 px) from 6590 to 5373 px high; on a desktop
+  (1440 px), from 3659 to 2881 px. The data assistant's status, its limits and the terms for
   your code now stand on its explainer page, `/agent`, which the assistant's first row
   links; what the limits count on, your tab id and your IP address, stays on the legal page.
   The machine readers and the shared links share one row, under both anchors the
