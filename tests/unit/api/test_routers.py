@@ -1323,11 +1323,16 @@ class TestSeoProxyRouter:
             # Cloudflare Access").
             "<li>No cookies for visitors (the operator: the Cloudflare Access login cookie), no accounts, "
             "and no name or email unless you type one.",
-            # The rights item whole, through the address and the early deletion of a feedback case.
+            # The rights item whole, through the address, the early deletion of a feedback case, what
+            # lets the operator find an entry, and why a log line cannot be deleted on request, with
+            # the periods of the server logs' item and of the machine-read and telemetry items.
             "Rights: you can ask what is stored about you and have it corrected, erased or restricted, "
             "object to the processing for a reason specific to your situation, and complain to a data "
             'protection authority. A few lines to <a href="mailto:admin@anyplot.ai">admin@anyplot.ai</a> '
-            "are enough, also to have a feedback case deleted early.</li>",
+            "are enough, also to have a feedback case deleted early. Tell the operator what you sent and "
+            "roughly when, or the contact you typed, so the entry can be found. Log lines cannot be picked "
+            "out one by one: they delete themselves after 30 days (server logs) or 180 days (machine reads, "
+            "assistant telemetry).</li>",
             "transfers outside Switzerland and the EU",
             "cleared by the next feedback after ten minutes, and its salt dies with the server instance",
             "uses your IP address to rate-limit, filter bots and absorb DDoS attacks",

@@ -1246,7 +1246,9 @@ _LEGAL_BOT_BODY = (
     "object to the processing for a reason specific to your situation, and complain to a data "
     "protection authority. A few lines to "
     '<a href="mailto:admin@anyplot.ai">admin@anyplot.ai</a> are enough, also to have a feedback case '
-    "deleted early.</li>"
+    "deleted early. Tell the operator what you sent and roughly when, or the contact you typed, so the "
+    "entry can be found. Log lines cannot be picked out one by one: they delete themselves after 30 "
+    "days (server logs) or 180 days (machine reads, assistant telemetry).</li>"
     "</ul>"
     '<h2 id="assistant">Data assistant (experimental)</h2>'
     "<ul>"

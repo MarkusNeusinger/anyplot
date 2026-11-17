@@ -466,10 +466,9 @@ export function LegalPage() {
                     </Box>
                     ; the box starts unticked, which leaves out that file only. a triage row then
                     keeps your reaction, message, hashes of your tab id and of the session, and the
-                    run&apos;s details.
-                    I read the cases together with the ai assistant I code with (Claude by
-                    Anthropic): your reaction and message, the conversation, the data sample or
-                    file, the plot and its code.
+                    run&apos;s details. I read the cases together with the ai assistant I code with
+                    (Claude by Anthropic): your reaction and message, the conversation, the data
+                    sample or file, the plot and its code.
                     <Kept
                       items={[
                         ['case files', '180 days'],
@@ -490,7 +489,10 @@ export function LegalPage() {
               <Link href="mailto:admin@anyplot.ai" sx={proseLinkStyle}>
                 admin@anyplot.ai
               </Link>{' '}
-              are enough, also to have a feedback case deleted early.
+              are enough, also to have a feedback case deleted early. tell me what you sent and
+              roughly when, or the contact you typed, so I can find it. log lines cannot be picked
+              out one by one: they delete themselves after 30 days (server logs) or 180 days
+              (machine reads, assistant telemetry).
             </Typography>
           </Box>
         </Box>

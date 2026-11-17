@@ -65,11 +65,13 @@ describe('LegalPage', () => {
     expect(screen.getByText(/a legitimate interest in protecting the site/)).toHaveTextContent(
       /^• a legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits\s*• your request: making the plot you ask the data assistant for\s*• your consent to a feedback case: you give it when you send it and can withdraw it at any time by asking$/
     );
-    // Every right, the objection with the condition that makes it one, the address to write to
-    // and that a feedback case can go early: the whole paragraph, so no clause can fall off its end.
+    // Every right, the objection with the condition that makes it one, the address to write to,
+    // that a feedback case can go early, what lets me find an entry, and why a log line cannot be
+    // deleted on request: the whole paragraph, so no clause can fall off its end. Its two periods
+    // are the ones the server logs' row and the machine readers' and telemetry rows give.
     const rights = screen.getByText(/you can ask what is stored about you/);
     expect(rights).toHaveTextContent(
-      /^you can ask what is stored about you and have it corrected, erased or restricted, object to the processing for a reason specific to your situation, and complain to a data protection authority\. a few lines to admin@anyplot\.ai are enough, also to have a feedback case deleted early\.$/
+      /^you can ask what is stored about you and have it corrected, erased or restricted, object to the processing for a reason specific to your situation, and complain to a data protection authority\. a few lines to admin@anyplot\.ai are enough, also to have a feedback case deleted early\. tell me what you sent and roughly when, or the contact you typed, so I can find it\. log lines cannot be picked out one by one: they delete themselves after 30 days \(server logs\) or 180 days \(machine reads, assistant telemetry\)\.$/
     );
     expect(within(rights).getByRole('link', { name: 'admin@anyplot.ai' })).toHaveAttribute(
       'href',
