@@ -94,7 +94,9 @@ from automation.scripts.regen_gate import (
 # another arm, and neither compares the dispatch commit.
 # "2": a regen cell's session reads the predecessor's files under /tmp with
 # the Read tool (in "1" that read was refused), and the predecessor's
-# metadata, which holds the stored score, no longer sits beside them.
+# metadata, which holds the stored score, no longer sits beside them. The
+# version is one number for the whole harness, so a fresh cell recorded on
+# "1" isn't reused either.
 HARNESS_VERSION = "2"
 MAX_SESSIONS = 240
 # First commit whose regen_gate.py has `context --omit-scores` (the blind

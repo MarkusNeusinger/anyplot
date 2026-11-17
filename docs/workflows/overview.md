@@ -498,7 +498,7 @@ The generation retry of `impl-generate.yml` and the post-score review retry run 
 
 A regeneration is an implementation PR for a (spec, library) pair that already has an implementation on main — for example every PR that `daily-regen.yml` produces. It gets one review and no repair loop, and the live implementation is replaced only when the new one is visibly better:
 
-1. `impl-review.yml` detects the regeneration from `origin/main` (the implementation file exists there), downloads the predecessor's production renders to `/tmp/anyplot-prev-plot-{light,dark}.png` (outside the working directory), and writes the previous review with stable weakness ids `W1`..`Wn` — without its stored scores — to `/tmp/anyplot-prev-review.md`. The reviewer's Read tool reaches the files directly under `/tmp` (see [Refused tool calls in a review](#refused-tool-calls-in-a-review)), so the files that hold the stored score stay under `$RUNNER_TEMP`. Each `W` is tagged by its format: `(defect)` for a line that names the criterion it violates (`VQ-02 (light): … → …. Likely cause: ….`), `(suggestion)` for a `Suggestion: …` line, and `(older review)` for a line from before the two formats.
+1. `impl-review.yml` detects the regeneration from `origin/main` (the implementation file exists there), downloads the predecessor's production renders to `/tmp/anyplot-prev-plot-{light,dark}.png` (outside the working directory), and writes the previous review with stable weakness ids `W1`..`Wn` — without its stored scores — to `/tmp/anyplot-prev-review.md`. The reviewer's Read tool reaches the files directly under `/tmp` (see [Refused tool calls in a review](#refused-tool-calls-in-a-review)), so the files that carry the stored score as such stay under `$RUNNER_TEMP`. Each `W` is tagged by its format: `(defect)` for a line that names the criterion it violates (`VQ-02 (light): … → …. Likely cause: ….`), `(suggestion)` for a `Suggestion: …` line, and `(older review)` for a line from before the two formats.
 2. The review scores the new render blind (the prompt never shows it the stored score, and `impl-generate.yml` resets the new file's `Quality: N/100` header, which a regeneration inherits from its predecessor, to `Quality: pending` before the PR opens), then re-scores the predecessor's renders against the same criteria and writes its before/after judgement to `review_regen.json` (step 8b of `prompts/workflow-prompts/ai-quality-review.md`). The re-score records its 24 item scores (`prev_checklist`), classifies every previous weakness as a defect, a suggestion, or obsolete (an `Expected, not a defect:` bullet covers it), and gives every predecessor defect it found (`P1`, `P2`, …) the criterion it violates.
 3. `automation/scripts/regen_gate.py` decides. Replace requires all of:
    - new score >= re-scored predecessor - 1 (the stored score is display-only);
@@ -1089,8 +1089,7 @@ implementation in all.
 
 A session that runs without a person refuses every tool call that would
 otherwise ask for approval. A read inside the working directory needs no
-rule. Any other call, including a read outside it, needs an allow rule. In
-`impl-review.yml`, the step "Name the denied tool calls" prints how many
+rule. A read outside it does, like most other calls. In `impl-review.yml`, the step "Name the denied tool calls" prints how many
 calls the review was refused, and one warning for each:
 
 ```text
@@ -1119,14 +1118,18 @@ way to them, and most do. One that treats them as missing writes no
 `regen_json_missing`.
 
 Every session that loads `.claude/settings.json` reads files directly under
-`/tmp` through this rule: generation, repair, spec creation, and local
-sessions too. So no step may leave a file there that its session isn't meant
-to open. On a regeneration, three files hold the stored score, and
-`impl-review.yml` keeps all three under `$RUNNER_TEMP`: the copy of main's
-metadata, the predecessor's source before its header is cleaned, and the PR's
-JSON, whose body records the previous quality. The rule isn't a security
-boundary. Both settings files allow Bash without a rule, and a session that
-looks for the stored score can still find it, for example in the PR body.
+`/tmp` through this rule: the Claude steps of `impl-generate`, `impl-repair`,
+`spec-create`, `daily-regen`, `util-claude`, and `report-validate`, and local
+sessions. So no step may leave a file there that its session isn't meant to
+open. On a regeneration, three files that sat under `/tmp` carried the stored
+score: the copy of main's metadata, the predecessor's source before its header
+is cleaned, and the PR's JSON, whose body records the previous quality.
+`impl-review.yml` keeps them under `$RUNNER_TEMP`. The previous review is
+handed over without its scores, but its own wording can still quote one.
+
+The rule isn't a security boundary. Both settings files allow Bash without a
+rule, and a session that looks for the stored score can still find it, for
+example in the PR body.
 
 ### When Claude stops a session
 

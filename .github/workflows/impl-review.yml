@@ -1382,11 +1382,12 @@ jobs:
       # find another way to them. One that treats them as missing writes no
       # review_regen.json, and the gate keeps the live implementation
       # (`regen_json_missing`). The action's own log gives the count alone.
-      # Nothing but a file tool's path is printed, cut to a fixed length and
-      # then to a fixed set of characters: a command, a URL or the argument
-      # of any other tool can hold anything. Python, not jq: jq refuses a
-      # whole file over one unpaired surrogate escape, and such a file would
-      # read as "nothing refused". Never fatal, and no later step reads it.
+      # Nothing but a file tool's path is printed, and only when it is a
+      # string, cut to a fixed length and then to a fixed set of characters:
+      # a command, a URL or the argument of any other tool can hold anything.
+      # Python, not jq: jq refuses a whole file over one unpaired surrogate
+      # escape, and the refused calls of such a session would go unnamed.
+      # Never fatal, and no later step reads it.
       - name: Name the denied tool calls
         if: ${{ !cancelled() && (steps.review.outcome == 'success' || steps.review.outcome == 'failure') }}
         continue-on-error: true
@@ -1409,11 +1410,12 @@ jobs:
 
           def cut(value, limit, allowed):
               """At most `limit` characters, each from `allowed`. Cut first: the cost never grows with the value."""
-              return re.sub(f"[^{allowed}]", "?", str(value)[:limit])
+              return re.sub(f"[^{allowed}]", "?", value[:limit])
 
 
-          def given(value):
-              return value is not None and value is not False
+          def text(value, default):
+              """A string with something in it, or the default: no other type is ever turned into text."""
+              return value if isinstance(value, str) and value else default
 
 
           def refused(path):
@@ -1421,7 +1423,7 @@ jobs:
               try:
                   with open(path, encoding="utf-8") as handle:
                       messages = json.load(handle)
-              except Exception:  # no file, not JSON, not UTF-8, too deep: each is "n/a"
+              except Exception:  # no file, not JSON, not UTF-8, deeper than the parser goes: each is "n/a"
                   return None
               if not isinstance(messages, list):
                   return None
@@ -1436,16 +1438,18 @@ jobs:
           calls = refused(env.get("EXECUTION_FILE") or "")
           line = f"claude_denials {where} count={'n/a' if calls is None else len(calls)}"
           print(f"::notice::{line}", flush=True)
-          if env.get("GITHUB_STEP_SUMMARY"):
-              with open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+          try:
+              with open(env.get("GITHUB_STEP_SUMMARY") or "", "a", encoding="utf-8") as summary:
                   summary.write(f"- `{line}`\n")
+          except OSError:
+              pass  # the notice is the record; without the summary line the calls below are still named
           for call in calls or []:
               call = call if isinstance(call, dict) else {}
-              tool = str(call["tool_name"]) if given(call.get("tool_name")) else "?"
+              tool = text(call.get("tool_name"), "?")
               args = call.get("tool_input")
               args = args if isinstance(args, dict) and tool in FILE_TOOLS else {}
-              path = next((args[key] for key in PATH_KEYS if given(args.get(key))), "-")
-              shown = cut(path, 200, "A-Za-z0-9_./@+=~-") or "-"
+              path = next((args[key] for key in PATH_KEYS if text(args.get(key), "")), "-")
+              shown = cut(path, 200, "A-Za-z0-9_./@+=~-")
               print(f"::warning::claude_denied {where} tool={cut(tool, 60, 'A-Za-z0-9_.-')} path={shown}", flush=True)
           PY
 

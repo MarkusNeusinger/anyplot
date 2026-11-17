@@ -15,7 +15,8 @@ Three things are pinned here:
 - both settings files (production and the retest) carry the absolute form;
 - every file the reviewer is pointed at is a direct child of /tmp, which is
   all the rule's `*` covers, and every /tmp file a step leaves there before
-  the review is on a list of files that hold no stored score;
+  the review is on an exact list, which has no file that carries the stored
+  score as a field (the PR's JSON, main's metadata, the unsanitized source);
 - "Name the denied tool calls" prints the count and one line per refused
   call, under `bash -e` and `bash -eo pipefail`, and never fails the job.
 """
@@ -47,8 +48,9 @@ SUMMARY = "Claude session summary"
 TMP_PATH = re.compile(r"/tmp/[A-Za-z0-9._${}/-]+")
 
 # Every file a step puts directly under /tmp before the review session starts, and why the session may read it.
-# None holds the stored score. A new name here is a decision, not a formality: what the rule reaches, the
-# reviewer can open.
+# None carries the stored score as a field. (The previous review's own wording can still quote a score, for
+# example "minor at 95/100": --omit-scores drops the numbers, not the prose.) A new name here is a decision,
+# not a formality: what the rule reaches, the reviewer can open.
 BEFORE_THE_REVIEW = {
     "/tmp/anyplot-prev-plot-light.png": "the predecessor's render, which the review re-scores",
     "/tmp/anyplot-prev-plot-dark.png": "the predecessor's render, which the review re-scores",
@@ -141,8 +143,21 @@ def test_every_tmp_file_before_the_review_is_one_the_reviewer_may_open():
     assert {p for p in _prompted_tmp_paths() if "anyplot-prev-" in p} <= set(BEFORE_THE_REVIEW)
 
 
-def test_no_file_with_the_stored_score_is_written_under_tmp():
-    """Three files hold it: main's metadata, the predecessor's raw source, and the PR's JSON with its body."""
+def test_no_step_before_the_review_builds_a_tmp_path_the_list_cannot_see():
+    """The exact list reads literal `/tmp/<name>` paths. A path made another way would pass it unseen."""
+    steps = _steps("impl-review.yml")
+    before = steps[: [s.get("name") for s in steps].index(REVIEW)]
+    hidden = re.compile(r"mktemp|TMPDIR|tempfile|/tmp(?![/A-Za-z0-9._-])|/tmp/[\"']|/tmp/\$")
+    for step in before:
+        values = [str(step.get("run", "")), *map(str, (step.get("env") or {}).values())]
+        values += [str(value) for value in (step.get("with") or {}).values()]
+        code = [line for value in values for line in value.splitlines() if not line.lstrip().startswith("#")]
+        found = [line.strip() for line in code if hidden.search(line)]
+        assert found == [], step.get("name")
+
+
+def test_the_files_that_carry_the_stored_score_stay_out_of_tmp():
+    """Three carry it as such: main's metadata, the predecessor's raw source, and the PR's JSON with its body."""
     text = WORKFLOW.read_text(encoding="utf-8")
     for name in ("anyplot-prev-metadata.yaml", "anyplot-prev-impl-raw", "pr.json", "pr.err"):
         assert f"/tmp/{name}" not in text, name
@@ -297,24 +312,49 @@ class TestNameTheDeniedToolCalls:
             _denied("Read"),
             _denied("Read", file_path=""),
             _denied("Read", file_path=None, path=False, notebook_path="/tmp/n.ipynb"),
+            # Only a string is a path or a name: nothing else is turned into text.
             _denied("Read", file_path=0),
-            _denied("Read", file_path={"a": 1}),
+            _denied("Read", file_path={"a": "hunter2"}),
+            _denied("Read", file_path=["/tmp/hunter2"]),
             _denied(False, file_path="/tmp/z"),
             _denied(404, file_path="/tmp/z"),
+            _denied("", file_path="/tmp/z"),
         ]
         result, _ = _run(tmp_path, shell, _result(denials))
         assert result.returncode == 0, result.stderr
         assert result.stdout.splitlines()[0] == f"::notice::claude_denials {WHERE} count={len(denials)}"
+        assert "hunter2" not in result.stdout
         assert _calls(result) == [
             *["tool=? path=-"] * 7,
             "tool=Read path=-",
             "tool=Read path=-",
             "tool=Read path=/tmp/n.ipynb",
-            "tool=Read path=0",
-            "tool=Read path=??a???1?",
-            "tool=? path=-",
-            "tool=404 path=-",
+            *["tool=Read path=-"] * 3,
+            *["tool=? path=-"] * 3,
         ]
+
+    def test_a_value_nested_past_any_depth_never_ends_the_step(self, tmp_path, shell):
+        """Whether the parser takes the file or not depends on the Python: either way every line is printed."""
+        deep = "[" * 60_000 + "]" * 60_000
+        raw = json.dumps(_result([_denied("Read", file_path="MARK"), READS[0]])).replace('"MARK"', deep)
+        result, _ = _run(tmp_path, shell, None, raw=raw)
+        assert result.returncode == 0, result.stderr
+        assert result.stderr == ""
+        lines = result.stdout.splitlines()
+        if lines[0].endswith("count=n/a"):
+            assert len(lines) == 1
+        else:
+            assert lines[0] == f"::notice::claude_denials {WHERE} count=2"
+            assert _calls(result) == ["tool=Read path=-", "tool=Read path=/tmp/anyplot-prev-plot-light.png"]
+
+    @pytest.mark.parametrize("summary", ["a-directory", "missing/folder/summary", ""])
+    def test_a_summary_that_cannot_be_written_drops_no_line(self, tmp_path, shell, summary):
+        (tmp_path / "a-directory").mkdir()
+        target = str(tmp_path / summary) if summary else ""
+        result, _ = _run(tmp_path, shell, _result(READS), GITHUB_STEP_SUMMARY=target)
+        assert result.returncode == 0, result.stderr
+        assert result.stdout.splitlines()[0] == f"::notice::claude_denials {WHERE} count=2"
+        assert len(_calls(result)) == 2
 
     def test_an_unpaired_surrogate_elsewhere_in_the_file_hides_nothing(self, tmp_path, shell):
         """`JSON.stringify` writes one as an escape, which jq refuses for the whole file."""

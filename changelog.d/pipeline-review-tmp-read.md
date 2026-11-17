@@ -11,17 +11,19 @@
   the files. One that treated them as missing wrote no before/after file, and
   the gate kept the live implementation with `regen_json_missing`: 4 of the
   58 gated regenerations from 2026-11-10 to 2026-11-17 (#13036 to #13159).
-  Every session that loads `.claude/settings.json` gets the rule: generation,
-  repair, spec creation, and local sessions now read files directly under
-  `/tmp` without asking.
-- **No file with the stored score sits where the reviewer reads.** With a
-  working rule, three files under `/tmp` would have put the stored score one
-  read away from a review that scores blind: the copy of main's metadata, the
+  Every session that loads `.claude/settings.json` gets the rule: the Claude
+  steps of `impl-generate`, `impl-repair`, `spec-create`, `daily-regen`,
+  `util-claude`, and `report-validate`, and local sessions, now read files
+  directly under `/tmp` without asking.
+- **The files that carry the stored score stay out of `/tmp`.** With a
+  working rule, three files there would have put the stored score one read
+  away from a review that scores blind: the copy of main's metadata, the
   predecessor's source before its header is cleaned (left behind when the
   cleaning fails), and the PR's JSON, whose body records the previous quality.
   All three now stay under `$RUNNER_TEMP`, and the retest removes its metadata
   copy once the context is built. This isn't a boundary: the session can
-  still run Bash and `gh`.
+  still run Bash and `gh`, and the previous review it's handed can quote a
+  score in its own wording.
 
 ### Added
 
@@ -34,5 +36,6 @@
 
 - **The retest's harness version is 2.** A regen cell's session now reads the
   predecessor's files with the Read tool and no longer finds the predecessor's
-  metadata beside them, so an arm recorded on version 1 counts as another arm.
-  Record the baseline again before you compare.
+  metadata beside them. A resume doesn't reuse a cell recorded on version 1,
+  and a comparison with a version 1 arm is flagged "harness changed": record
+  the baseline again before you compare.
