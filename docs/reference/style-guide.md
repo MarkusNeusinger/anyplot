@@ -307,7 +307,7 @@ Narrative hooks for talking about anyplot — adapt to context, don't recite ver
 
 **The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of colour vision deficiency — most plotting libraries ignore this entirely. I make it the default.
 
-**The library-agnostic story:** A "Gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh. The palette travels with you across libraries. Switching tools doesn't mean re-learning your colour grammar.
+**The library-agnostic story:** The palette travels with you across libraries. Switching tools doesn't mean re-learning your colour grammar.
 
 **The catalogue story:** Thousands of examples across fifteen libraries in four languages, each reproducible and copy-pasteable. No ads. No affiliate links. No "suggested tutorials you might like." Just the plots and the code that made them.
 

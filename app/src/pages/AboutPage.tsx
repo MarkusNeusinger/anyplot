@@ -337,8 +337,7 @@ export function AboutPage() {
               entirely. I make it the default.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
-              a "gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or
-              bokeh. the palette travels with you across libraries. switching tools doesn't mean
+              the palette travels with you across libraries. switching tools doesn&apos;t mean
               re-learning your colour grammar.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>

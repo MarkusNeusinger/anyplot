@@ -245,7 +245,13 @@ describe('AboutPage', () => {
   it('keeps the library-agnostic point under the palette', () => {
     render(<AboutPage />);
 
-    expect(screen.getByText(/a "gentoo penguin" is always blue/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /^the palette travels with you across libraries\. switching tools doesn.t mean re-learning your colour grammar\.$/
+      )
+    ).toBeInTheDocument();
+    // The two sentences carry the point alone; the penguin example before them is gone.
+    expect(document.body).not.toHaveTextContent(/penguin/i);
     // The stack and costs now sit on this page: no pointer to the legal page for them.
     expect(screen.queryByText(/curious about the stack/)).not.toBeInTheDocument();
   });
