@@ -122,6 +122,17 @@
   `approved` label from any other account, and `test_readme_claims.py` holds
   that to the merge job's condition in `spec-create.yml`. Its contribution
   steps say "I review and approve it" in place of "The maintainer".
+- **The site spells the colour-blindness words in British English.** The
+  pages and their descriptions, the crawler copies, `llms.txt`, and the
+  keywords and structured data of the page shell say "colourblind-safe",
+  "colour blindness" and "colour vision", as the palette sections of the about
+  and landing pages already did; the palette page's sort button reads "max ΔE
+  under colour blindness". The style guide follows in its sample copy and its
+  own sentences, and its voice section adds the rule: British English on the
+  site, while proper names, citations, code and library or API names keep
+  their own spelling. `test_site_spelling.py` keeps the American forms of
+  these words out of those surfaces and out of the style guide's own text.
+  Other words are not swept yet.
 
 ### Fixed
 
@@ -170,3 +181,11 @@
   left the old address one step back in the history, so Back landed on it and
   was sent forward again; the destination now takes over the old address's
   history entry, as the about page does for `/legal#transparency`.
+- **The README's pipeline puts each check where it runs.** Its review step
+  listed "the code parses and runs" and "the image exists" among the
+  automated checks of `impl-review.yml`, but the code runs in generation. The
+  generation step now says that `impl-generate.yml` runs the implementation
+  and stops without both theme renders, and the review step's checks read
+  "both renders exist and the canvas has its target size".
+  `test_readme_claims.py` pins both sentences and the review's step that
+  checks for both renders.
