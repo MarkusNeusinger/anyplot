@@ -52,7 +52,9 @@ const ONE_ROW = '@media (min-width: 720px) and (min-width: 45em)';
 // "·". On a phone the footer lift parks the buttons 13px above the footer's first line. From
 // 600px up, with a default from 16 to 24px, the links' line comes closest to the scroll-to-top
 // button at 600px: 11.1px with a 23px default, and 9.3px with a 22px default when a classic
-// 15px scrollbar narrows the layout.
+// 15px scrollbar narrows the layout. A default font size up to 24px, Chrome's largest preset, is
+// the supported range. With a hand-set default of 36px or more, between 600 and about 650px wide,
+// the builder's name touches the scroll-to-top button on /specs and /plots; that is accepted.
 const LINKS_ROW = '@media (min-width: 304px) and (min-width: 19em)';
 
 const pairSx = {
