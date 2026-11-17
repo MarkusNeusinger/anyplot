@@ -38,7 +38,8 @@
 - **The README shows a push-back case.** Under "I know when to push back", a
   nested case tells how real weather downloads broke the import of pasted
   data, and that pasted data has had to work with notes, metadata or total
-  rows around the table since then.
+  rows around the table since then. `test_readme_claims.py` holds that rule
+  to the agents' parser.
 - **The landing hero names its builder.** The eyebrow above the headline
   reads "the open plot catalogue · by Markus Neusinger", the name a link to
   the about page and the hero's first link for the keyboard, and the intro
