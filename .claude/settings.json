@@ -5,7 +5,7 @@
       "Edit",
       "Bash",
       "WebFetch",
-      "Read(//tmp/*)",
+      "Read(//tmp/anyplot-*)",
       "mcp__plugin_context7_context7__*",
       "mcp__plugin_playwright_playwright__*",
       "Bash(git commit *)",

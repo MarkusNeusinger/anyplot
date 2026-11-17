@@ -1098,7 +1098,7 @@ claude_denied step=impl-review spec=bar-basic lib=d3 pr=13127 tool=Read path=/tm
 claude_denied step=impl-review spec=bar-basic lib=d3 pr=13127 tool=Read path=/tmp/anyplot-prev-plot-dark.png
 ```
 
-A review that was refused nothing reads `count=0`. `count=n/a` means the
+A review with no refused call shows `count=0`. `count=n/a` means the
 session left no result, or no list of refused calls, to read. The step prints
 a path only for a file tool (`Read`, `Edit`, `Write`, `NotebookEdit`, `Glob`,
 `Grep`), cut to 200 characters from a fixed set. It never prints a command, a
@@ -1107,25 +1107,31 @@ run page shows at most 10 of these warnings as annotations, and the step's
 log has every line. The step never fails the job, and no later step reads it.
 
 The review reads the predecessor's files from `/tmp` through the rule
-`Read(//tmp/*)` in `.claude/settings.json`, and the retest through the same
-rule in `automation/retest/claude-settings.json`. The two slashes matter. A
-path with one leading slash is anchored at the settings source, not at the
-filesystem root: the project for `.claude/settings.json`, and the file's own
-directory for a file passed with `--settings`. So `Read(/tmp/*)` never reached
-`/tmp`. A regeneration review that is refused these files has to find another
-way to them, and most do. One that treats them as missing writes no
+`Read(//tmp/anyplot-*)` in `.claude/settings.json`, and the retest through the
+same rule in `automation/retest/claude-settings.json`. The rule covers a file
+directly under `/tmp` whose name starts with `anyplot-`, and nothing else
+there. The two slashes matter. A path with one leading slash is anchored at
+the settings source, not at the filesystem root: the project for
+`.claude/settings.json`, and the file's own directory for a file passed with
+`--settings`. So the earlier rule, `Read(/tmp/*)`, never reached `/tmp`. A
+regeneration review that is refused these files has to find another way to
+them, and most do. One that treats them as missing writes no
 `review_regen.json`, and the gate keeps the live implementation with
 `regen_json_missing`.
 
-Every session that loads `.claude/settings.json` reads files directly under
-`/tmp` through this rule: the Claude steps of `impl-generate`, `impl-repair`,
-`spec-create`, `daily-regen`, `util-claude`, and `report-validate`, and local
-sessions. So no step may leave a file there that its session isn't meant to
-open. On a regeneration, three files that sat under `/tmp` carried the stored
-score: the copy of main's metadata, the predecessor's source before its header
-is cleaned, and the PR's JSON, whose body records the previous quality.
-`impl-review.yml` keeps them under `$RUNNER_TEMP`. The previous review is
-handed over without its scores, but its own wording can still quote one.
+Every session that loads `.claude/settings.json` reads those files through
+this rule: the Claude steps of `impl-generate`, `impl-repair`, `spec-create`,
+`daily-regen`, `util-claude`, and `report-validate`, and local sessions. So a
+file that a session is meant to read with the Read tool gets a name that
+starts with `anyplot-`, and no step leaves a file of that name there that its
+session isn't meant to open. Two files that prompts name fall outside the
+rule, `/tmp/ai_feedback.md` for a repair and `/tmp/change-requests.json` for
+the similarity audit, and so do the folders under `/tmp`. On a regeneration,
+three files that sat under `/tmp` carried the stored score: the copy of main's
+metadata, the predecessor's source before its header is cleaned, and the PR's
+JSON, whose body records the previous quality. `impl-review.yml` keeps them
+under `$RUNNER_TEMP`. The previous review is handed over without its scores,
+but its own wording can still quote one.
 
 The rule isn't a security boundary. Both settings files allow Bash without a
 rule, and a session that looks for the stored score can still find it, for

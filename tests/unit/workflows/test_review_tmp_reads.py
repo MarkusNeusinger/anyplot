@@ -12,9 +12,11 @@ form the read was refused; a review that treated the files as missing wrote no
 
 Three things are pinned here:
 
-- both settings files (production and the retest) carry the absolute form;
-- every file the reviewer is pointed at is a direct child of /tmp, which is
-  all the rule's `*` covers, and every /tmp file a step leaves there before
+- both settings files (production and the retest) carry the absolute form,
+  narrowed to the pipeline's own file names (`anyplot-*`);
+- every file a prompt points a session at is one the rule covers, a direct
+  child of /tmp with such a name, or is on a short list of files that are
+  reached another way; and every /tmp file a step leaves there before
   the review is on an exact list, which has no file that carries the stored
   score as a field (the PR's JSON, main's metadata, the unsanitized source);
 - "Name the denied tool calls" prints the count and one line per refused
@@ -41,7 +43,8 @@ SETTINGS = [ROOT / ".claude" / "settings.json", ROOT / "automation" / "retest" /
 SETTINGS_IDS = ["production", "retest"]
 WORKFLOW = ROOT / ".github" / "workflows" / "impl-review.yml"
 PROMPT = ROOT / "prompts" / "workflow-prompts" / "ai-quality-review.md"
-RULE = "Read(//tmp/*)"
+RULE = "Read(//tmp/anyplot-*)"
+PROMPTS = ROOT / "prompts" / "workflow-prompts"
 REVIEW = "Run AI Quality Review"
 STEP = "Name the denied tool calls"
 SUMMARY = "Claude session summary"
@@ -50,7 +53,7 @@ TMP_PATH = re.compile(r"/tmp/[A-Za-z0-9._${}/-]+")
 # Every file a step puts directly under /tmp before the review session starts, and why the session may read it.
 # None carries the stored score as a field. (The previous review's own wording can still quote a score, for
 # example "minor at 95/100": --omit-scores drops the numbers, not the prose.) A new name here is a decision,
-# not a formality: what the rule reaches, the reviewer can open.
+# not a formality: a file here whose name starts with `anyplot-` is one the reviewer's Read tool opens.
 BEFORE_THE_REVIEW = {
     "/tmp/anyplot-prev-plot-light.png": "the predecessor's render, which the review re-scores",
     "/tmp/anyplot-prev-plot-dark.png": "the predecessor's render, which the review re-scores",
@@ -92,7 +95,7 @@ def test_no_rule_writes_tmp_with_one_leading_slash(path):
 
 def test_the_workflow_comment_gives_the_rule_as_the_settings_hold_it():
     text = WORKFLOW.read_text(encoding="utf-8")
-    assert "`Read(//tmp/*)`" in text
+    assert f"`{RULE}`" in text
     assert "`/tmp/*` only" not in text  # the wording that took the single-slash rule for the absolute one
 
 
@@ -114,7 +117,8 @@ def _tmp_paths_before_the_review() -> set[str]:
     found: set[str] = set()
     for step in before:
         text = "\n".join([str(step.get("run", "")), *(str(value) for value in (step.get("env") or {}).values())])
-        found |= {p.rstrip(".") for p in TMP_PATH.findall(text)}
+        code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))  # not the comments
+        found |= {p.rstrip(".") for p in TMP_PATH.findall(code)}
     return found
 
 
@@ -129,11 +133,47 @@ def test_the_reviewer_is_pointed_at_the_predecessors_files():
         assert expected in paths, expected
 
 
-def test_every_file_the_reviewer_is_pointed_at_is_a_direct_child_of_tmp():
-    """The rule's `*` matches one path segment: a file in a folder under /tmp would be refused again."""
-    assert _prompted_tmp_paths()  # the search finds them at all
-    nested = sorted(p for p in _prompted_tmp_paths() if "/" in p.removeprefix("/tmp/"))
-    assert nested == []
+def _covered(path: str) -> bool:
+    """What `Read(//tmp/anyplot-*)` allows: a direct child of /tmp whose name starts with `anyplot-`."""
+    name = path.removeprefix("/tmp/")
+    return path.startswith("/tmp/") and "/" not in name and name.startswith("anyplot-")
+
+
+# The /tmp paths a workflow prompt names that the rule does not cover, and what they are. The Read tool is
+# refused them, as it was before the rule had its absolute form.
+OUTSIDE_THE_RULE = {
+    "/tmp/ai_feedback.md": "the review a repair works from",
+    "/tmp/change-requests.json": "the similarity audit's own output, which it writes",
+    "/tmp/anyplot-prev-src/{LIBRARY}.py": "the predecessor's source for the generator's smoke run, read by a script",
+}
+
+
+def test_every_file_the_reviewer_is_pointed_at_is_one_the_rule_covers():
+    """The rule's `*` matches one path segment and the name is fixed: any other file would be refused again."""
+    assert len(_prompted_tmp_paths()) >= 6  # the search finds them at all
+    assert sorted(p for p in _prompted_tmp_paths() if not _covered(p)) == []
+
+
+def test_a_prompt_names_no_tmp_path_outside_the_rule_unnoticed():
+    """A new hand-over file with another name would be refused in silence; the list makes it a decision."""
+    named = {p.rstrip(".") for prompt in PROMPTS.glob("*.md") for p in TMP_PATH.findall(prompt.read_text("utf-8"))}
+    assert any(_covered(p) for p in named)
+    assert {p for p in named if not _covered(p)} == set(OUTSIDE_THE_RULE)
+
+
+@pytest.mark.parametrize(
+    ("path", "covered"),
+    [
+        ("/tmp/anyplot-prev-plot-light.png", True),
+        ("/tmp/anyplot-prev-impl${EXT}", True),
+        ("/tmp/anyplot-prev-src/matplotlib.py", False),
+        ("/tmp/pr.json", False),
+        ("/tmp/gsutil.err", False),
+        ("/home/runner/work/_temp/anyplot-prev-metadata.yaml", False),
+    ],
+)
+def test_the_reach_of_the_rule_as_these_tests_read_it(path, covered):
+    assert _covered(path) is covered
 
 
 def test_every_tmp_file_before_the_review_is_one_the_reviewer_may_open():

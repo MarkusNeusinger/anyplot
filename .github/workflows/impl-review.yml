@@ -136,9 +136,9 @@ jobs:
           # failure mode (5x in 24h on 2026-05-06). Three attempts with linear
           # backoff (5s, 10s); keep stderr separate from stdout so warnings
           # (rate-limit notices, etc.) don't corrupt the JSON jq parses below.
-          # Under $RUNNER_TEMP, outside the reviewer's /tmp/* reads: a
-          # regeneration's PR body records the stored score ("previous
-          # quality N").
+          # Under $RUNNER_TEMP, away from the files the reviewer reads under
+          # /tmp: a regeneration's PR body records the stored score
+          # ("previous quality N").
           PR_DATA=""
           for attempt in 1 2 3; do
             if gh pr view "$PR_NUMBER" --json headRefName,headRefOid,body > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
@@ -436,9 +436,9 @@ jobs:
           # Previous review from main's metadata (the PR branch's copy was
           # reset to quality_score: null by impl-generate). Missing metadata
           # yields no weakness ids and prev_stored=n/a. The copy holds the
-          # stored score, so it stays under $RUNNER_TEMP, outside the
-          # reviewer's /tmp/* reads; what the reviewer gets is the review
-          # without its scores, below.
+          # stored score, so it stays under $RUNNER_TEMP, outside what the
+          # reviewer's Read rule covers (/tmp/anyplot-*); what the reviewer
+          # gets is the review without its scores, below.
           PREV_META="$RUNNER_TEMP/anyplot-prev-metadata.yaml"
           if ! git show "origin/main:${META_FILE}" > "$PREV_META" 2>/dev/null; then
             echo "::warning::${META_FILE} not on main — previous review unavailable"
@@ -740,11 +740,12 @@ jobs:
       # new render blind. Kept out of the working directory so a directory
       # listing during the blind pass does not surface them, and as
       # top-level /tmp files because `.claude/settings.json` allows the Read
-      # tool on those only: `Read(//tmp/*)`. The two slashes are the absolute
-      # form; with one, the rule anchors where its settings file is (the
-      # project, or the directory of a file passed with --settings) and
-      # covers nothing under /tmp, and the read is denied like a $RUNNER_TEMP
-      # path is in the non-interactive action. Anything short of both files →
+      # tool on those only, by their name: `Read(//tmp/anyplot-*)`. The two
+      # slashes are the absolute form; with one, the rule anchors where its
+      # settings file is (the project, or the directory of a file passed with
+      # --settings) and covers nothing under /tmp, and the read is denied
+      # like a $RUNNER_TEMP path or a /tmp file of another name is in the
+      # non-interactive action. Anything short of both files →
       # prev_renders=missing, and the gate keeps the live implementation.
       - name: Download previous production renders (regen)
         id: prev_renders
