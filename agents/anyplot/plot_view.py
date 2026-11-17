@@ -57,7 +57,7 @@ from .data.prepare import (
 )
 from .data.store import StoredDataset, dataset_size
 from .language import DEFAULT_LANGUAGE
-from .schemas import MAX_ROWS, Binding, DatasetProfile
+from .schemas import MAX_CHANGE_CHARS, MAX_ROWS, Binding, DatasetProfile, DrawnRows
 from .session_state import PLOT_VIEW, PLOT_VIEW_BEFORE
 
 
@@ -252,6 +252,14 @@ class Viewed:
         values, so this goes to the page alone, never into a tool result the root reads."""
         parts = [_within(part, MAX_PART_CHARS) for part in view.parts(self._text_columns())]
         return {"rows": self.rows, "of_rows": self.of_rows, "parts": parts}
+
+    def drawn_rows(self, view: PlotView) -> DrawnRows:
+        """The view as the adapter and the reviewer get it (`schemas.DrawnRows`): the counts of `note`, and the view's
+        words, which give way within the limit of a change line as they do in `note`, so the request never fails on
+        a long view."""
+        return DrawnRows(
+            rows=self.rows, of_rows=self.of_rows, view=_within(view.words(self._text_columns()), MAX_CHANGE_CHARS)
+        )
 
     def _text_columns(self) -> list[str]:
         return [name for name, dtype in self.parsed.column_dtypes.items() if dtype == "text"]

@@ -3,8 +3,8 @@
 A live test of 2026-10-15 asked "Welches Land hatte 2023 den höchsten Pro-Kopf-Ausstoss?";
 the root answered it correctly, but by filtering the user's dataset to the five rows of 2023
 with `prepare_data`, which stores a new version, and then asked the user to `.undo()` it. A
-question must never change the data. `run_query` applies the same operations as
-`prepare_data` (`prepare.Operation`, the same closed vocabulary: no code, only a `compute`
+question must never change the data. `run_query` applies the operations of `prepare_data` and the
+two only a question takes (`prepare.QueryOperation`, one closed vocabulary: no code, only a `compute`
 expression the whitelist checks, no row the model writes) to the canonical CSV of the current
 version (or of the earlier version `from_version` names, since 2026-11-07: the pace per run after a weekly sum)
 and returns a small table: the
@@ -15,13 +15,18 @@ as they are.
 
 To keep only some rows, `drop_rows` drops the others (`ne 2023` keeps 2023); a top-N is a
 `sort` with `limit`; a share or a trend is a `derive`, the change from the row before a `diff`,
-another formula a `compute`, an aggregate an `aggregate`. The
+another formula a `compute`, an aggregate an `aggregate`. Two operations only a question takes
+(`prepare.QueryOperation`): an `aggregate` without `by` reduces every row to one (a grand total in
+one step), and `fit` gives the least-squares line of two number columns as one row of `slope`,
+`intercept`, `r_squared` and `n`, which a later `compute` uses, so the root has a server operation for
+a total or a fit and need not work one out itself. The
 operations raise `PrepareError` as in `prepare_data`; a column in `columns` that the result
 lacks is `unknown_column`. No ADK import.
 """
 
 import csv
 import io
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -29,7 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..language import DEFAULT_LANGUAGE
 from ..schemas import ColumnName, FromVersion
 from .parse import MAX_COMPUTED_BYTES, ParsedDataset, display_copy, parse_dataset
-from .prepare import MAX_OPERATIONS, Operation, Prepared, PrepareError, apply_operations, cut_note
+from .prepare import MAX_OPERATIONS, Operation, Prepared, PrepareError, QueryOperation, apply_operations, cut_note
 
 
 MAX_QUERY_ROWS = 25
@@ -44,7 +49,7 @@ class QueryArgs(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    operations: list[Operation] = Field(default_factory=list, max_length=MAX_OPERATIONS)
+    operations: list[QueryOperation] = Field(default_factory=list, max_length=MAX_OPERATIONS)
     columns: list[ColumnName] | None = Field(default=None, max_length=MAX_QUERY_COLUMNS)
     limit: int = Field(default=DEFAULT_QUERY_ROWS, ge=1, le=MAX_QUERY_ROWS)
     from_version: FromVersion = "current"
@@ -66,7 +71,7 @@ class QueryResult:
 
 def run_query(
     parsed: ParsedDataset,
-    operations: list[Operation],
+    operations: Sequence[Operation | QueryOperation],
     columns: list[str] | None = None,
     limit: int = DEFAULT_QUERY_ROWS,
     *,

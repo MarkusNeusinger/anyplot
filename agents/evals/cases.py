@@ -9,7 +9,12 @@ chip would; without it the session keeps its own default and detection. It may n
 operations, which the harness stores as the session's next data versions right after the
 paste, before the bindings and the confirmation, through the server's own code and with
 no model call (`matrix.store_data_steps`). The `n5000` cases of the specs that draw one
-value per key aggregate their raw records this way (`make_fixtures.py`). Two sources:
+value per key aggregate their raw records this way (`make_fixtures.py`). It may name
+`before_view`, one `prepare_data` call's operations that all land in the view of the plot
+(`plot_view.route`: selections and at most one top N), which the harness sets after the
+confirmation, so the plot draws only those rows (`matrix.store_view`), and `view_checks`,
+what such a case's runs must show (`ViewChecks`, measured by `matrix.view_record`). Two
+sources:
 
 * `agents/evals/fixtures/cases/`: committed, synthetic only (`origin="fixtures"`);
 * `agents/evals/.cases/`: promoted feedback cases, git-ignored because they hold users'
@@ -24,7 +29,8 @@ one generated matplotlib or seaborn case per spec, one plotnine and one altair c
 2026-10-29, one makie case and one each for chartjs, d3, echarts and highcharts since
 2026-10-30, one muix case and one each for plotly and bokeh since 2026-10-31, plus the
 hand-written `scatter-basic-matplotlib` and `bar-grouped-seaborn`: 25), `full` (every case
-except the stress cases: the 900 generated and the eleven hand-written ones, 911 since 2026-11-01, 907 since PB-2a;
+except the stress cases: the 900 generated and the fifteen hand-written ones, 915 since the four
+view cases of 2026-11-16, 911 since 2026-11-01, 907 since PB-2a;
 787 before plotly and bokeh, 727 before MUI X, 487 before the other JavaScript libraries, 427
 before makie, 367 before ggplot2, 247 before pygal and lets-plot, 127 before plotnine and
 altair), `stress` (the
@@ -92,6 +98,25 @@ MAX_CODE_PATTERNS = 5
 
 
 @dataclass(frozen=True)
+class ViewChecks:
+    """What the runs of a case under a view of the plot (`before_view`) must show (`view_checks` in `case.json`).
+
+    Every such case checks that the version it shipped drew the view's rows: fewer than the table's, under the view's
+    own words (`drawn_rows`). `named`: a drawn text that is no axis label and no tick label (the title, a subtitle,
+    the legend, an annotation, any other text) holds each part of the view in the view's own words, the N of a top N
+    or a value a selection keeps (`matrix.view_tokens`), for a plot that draws a figure over several rows. `clear`:
+    after the plot the harness clears the view with the page's `.show_all()` (`show_all_rows`), whose run must draw
+    every row, and no such drawn text may hold those words any more. `no_dq03`: no review of the case's turns raised
+    a DQ-03 line, for a control whose plot draws no figure over several rows. The results go to the run's `view`
+    record and the summary's `view_check_failures`; they do not decide a pass (`matrix.view_record`).
+    """
+
+    named: bool = False
+    clear: bool = False
+    no_dq03: bool = False
+
+
+@dataclass(frozen=True)
 class EvalCase:
     """One runnable case."""
 
@@ -115,6 +140,11 @@ class EvalCase:
     before_operations: tuple[tuple[dict[str, Any], ...], ...] = ()
     """The data steps before the plot, one `prepare_data` call's operations each, stored as a version of its own
     after the paste (`matrix.store_data_steps`); `bindings` name the columns the last one leaves."""
+    before_view: tuple[dict[str, Any], ...] = ()
+    """The view of the plot the harness sets after the confirmation (`matrix.store_view`): one `prepare_data` call's
+    operations that all land in the view; empty for a case whose plot draws every row."""
+    view_checks: ViewChecks | None = None
+    """What the runs under `before_view` must show; None checks the drawn rows alone (`ViewChecks`)."""
     snapshot_file: Path | None = field(default=None, repr=False)
 
     def snapshot(self) -> CatalogueSnapshot:
@@ -159,6 +189,18 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
     if checks is not None and change_request is None:
         raise CaseError(f"{directory}/case.json: checks need a change_request.txt, the follow-up they measure")
     before_operations = _before_operations(raw.get("before_operations"), directory)
+    before_view = _before_view(raw.get("before_view"), directory)
+    view_checks = _view_checks(raw.get("view_checks"), directory)
+    if view_checks is not None and not before_view:
+        raise CaseError(f"{directory}/case.json: view_checks need a before_view, the view they measure")
+    if view_checks is not None and (view_checks.named or view_checks.clear) and not _view_words(before_view):
+        raise CaseError(
+            f"{directory}/case.json: view_checks.named and clear need a part of the view a label repeats: a "
+            "selection with eq or contains, or a top N"
+        )
+    if view_checks is not None and view_checks.clear and change_request is not None:
+        # The clearing is the case's follow-up turn; a typed follow-up as well would leave open which one it clears.
+        raise CaseError(f"{directory}/case.json: view_checks.clear and a change_request.txt exclude each other")
     snapshot_file = directory / "snapshot.json"
     perturbation = raw.get("perturbation")
     return EvalCase(
@@ -178,6 +220,8 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
         language=language,
         checks=checks,
         before_operations=before_operations,
+        before_view=before_view,
+        view_checks=view_checks,
         snapshot_file=snapshot_file if snapshot_file.is_file() else None,
     )
 
@@ -206,6 +250,69 @@ def _before_operations(value: Any, directory: Path) -> tuple[tuple[dict[str, Any
             ) from exc
         steps.append(tuple(operations))
     return tuple(steps)
+
+
+def _before_view(value: Any, directory: Path) -> tuple[dict[str, Any], ...]:
+    """`before_view` of `case.json`: one valid `prepare_data` call whose every operation lands in the view of the plot
+    as the tool routes it (`plot_view.route`, `plot_view.merged`): `keep_rows` with `where`, and at most one top N, a
+    `sort` and then a `keep_rows` with `n`. Nothing for the table and no `reset_view` or `apply_view`, so the plot
+    draws the view's rows of the table the case pasted. Whether it fits that table shows only when the harness stores
+    it (`matrix.store_view`), which raises then: a fixture bug."""
+    from pydantic import ValidationError
+
+    from agents.anyplot.data.prepare import PrepareArgs
+    from agents.anyplot.plot_view import PlotView, ViewRefused, merged, route
+
+    if value is None:
+        return ()
+    where = f"{directory}/case.json: before_view"
+    if not isinstance(value, list) or not value:
+        raise CaseError(f"{where} must be a non-empty list of operations, one prepare_data call")
+    try:
+        args = PrepareArgs.model_validate({"operations": value})
+        routed = route(list(args.operations))
+        merged(PlotView(), routed)
+    except ValidationError as exc:
+        raise CaseError(f"{where}: an operation list that prepare_data refuses ({exc.error_count()} errors)") from exc
+    except ViewRefused as exc:
+        raise CaseError(f"{where}: a view that prepare_data refuses") from exc
+    if routed.table or routed.reset or not routed.view:
+        raise CaseError(
+            f"{where} must land in the view of the plot alone: keep_rows with where, and at most one sort followed by "
+            "keep_rows with n"
+        )
+    return tuple(value)
+
+
+def _view_words(operations: tuple[dict[str, Any], ...]) -> bool:
+    """Whether a valid `before_view` has a part a label names in the view's own words (`matrix.view_tokens`): a
+    view of order conditions alone (`gt`, `le`) has none, so a check of its drawn texts would read nothing."""
+    from pydantic import TypeAdapter
+
+    from agents.anyplot.data.prepare import Operation
+    from agents.anyplot.plot_view import PlotView, merged, route
+    from agents.evals.matrix import view_tokens
+
+    view = merged(PlotView(), route(TypeAdapter(list[Operation]).validate_python(list(operations))))
+    return bool(view_tokens(view))
+
+
+def _view_checks(value: Any, directory: Path) -> ViewChecks | None:
+    """`view_checks` of `case.json` as `ViewChecks`: an object of some of its fields, each true or false."""
+    if value is None:
+        return None
+    fields = {"named", "clear", "no_dq03"}
+    if (
+        not isinstance(value, dict)
+        or not value
+        or set(value) - fields
+        or not all(isinstance(flag, bool) for flag in value.values())
+    ):
+        raise CaseError(
+            f"{directory}/case.json: view_checks must be an object with some of {', '.join(sorted(fields))}, "
+            "each true or false"
+        )
+    return ViewChecks(**value)
 
 
 def _checks(value: Any, directory: Path) -> FollowUpChecks | None:

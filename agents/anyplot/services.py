@@ -35,6 +35,7 @@ from .schemas import (
     ArtifactName,
     Binding,
     CodeArtifact,
+    DrawnRows,
     PlotResult,
     Theme,
     artifact_names,
@@ -126,6 +127,10 @@ class CodeVersion:
     """The view of the plot the run drew its rows through (`PlotView.stamp`), None for every row of the table.
     `data_csv` holds the view's rows, so the downloaded code runs on the downloaded data as it ran here, and a later
     turn tells a plot of the same rows from one a changed view has made stale."""
+    view_rows: DrawnRows | None = None
+    """The counts and words of that view as the run drew it (`pipeline.Run.drawn_rows`), stored when the version ships,
+    so `get_current_code` can say which rows of which table the version drew after the view or the data has changed;
+    None for every row. Kept apart from `view`, whose equality tells two views apart."""
 
     @property
     def target(self) -> tuple[str, str]:

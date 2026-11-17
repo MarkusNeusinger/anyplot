@@ -364,3 +364,12 @@ def test_other_flex_errors_are_raised(gr, types, monkeypatch, tmp_path, repo):
 
     with pytest.raises(errors.ClientError):
         review(gr, monkeypatch, tmp_path, repo, [errors.ClientError(400, {"error": {}})])
+
+
+def test_the_default_model_and_its_fallback_are_priced(gr):
+    """A run reports no cost for a model without a price, so a new default needs its row."""
+    assert gr.DEFAULT_MODEL == "gemini-4-carbon"
+    for model in (gr.DEFAULT_MODEL, "gemini-4-argon"):
+        assert (model, "online") in gr.PRICES
+    # No Flex for the second-opinion models on Vertex: a flex header would only add a queue wait.
+    assert gr.FLEX_MODELS.isdisjoint({gr.DEFAULT_MODEL, "gemini-4-argon"})

@@ -97,8 +97,12 @@ WITHHELD_PREFIX = "[message withheld by scope policy"
 (`[message withheld by scope policy: needs_data]`, `agents/anyplot/plugins/scope_guard.withheld_text`)."""
 MAX_CHANGE_REQUEST_CHARS = 600
 """`agents/evals/cases.py`'s cap on `change_request.txt`; a longer request is left out with a note."""
-# The first line of an exported `plot.py` (`agents/anyplot/code/export.py`, `attribution`).
-_EXPORT_LIBRARY = re.compile(r"\A# Adapted by anyplot\.ai from [a-z0-9-]+ \(([a-z][a-z0-9]*)[ )]")
+# The first line of exported code (`agents/anyplot/code/export.py`, `attribution`), a `#` comment or, for
+# JavaScript, a `//` comment. A copy of `api.agent_cases._EXPORT_LIBRARY`, so that a case is replayed under
+# the library the API filed it under; the test of the copied constants holds the two together.
+_EXPORT_LIBRARY = re.compile(
+    r"\A(?P<marker>#|//) Adapted by anyplot\.ai from [a-z0-9-]+ \((?P<library>[a-z][a-z0-9]*)[ )]"
+)
 
 
 class ImportRefused(ValueError):
@@ -216,7 +220,7 @@ def read_case_dir(path: Path, number: int | None) -> Source:
 
 
 def library_of(source: Source) -> str | None:
-    """The manifest's `library_id`, else the version's own, else the one its `plot.py` names, else the session's."""
+    """The manifest's `library_id`, else the version's own, else the one its exported code names, else the session's."""
     if source.manifest and isinstance(source.manifest.get("library_id"), str):
         return str(source.manifest["library_id"])
     if isinstance(source.version.get("library"), str):
@@ -224,7 +228,7 @@ def library_of(source: Source) -> str | None:
     code = source.version.get("plot_py")
     match = _EXPORT_LIBRARY.match(code) if isinstance(code, str) else None
     if match:
-        return match.group(1)
+        return match.group("library")
     session = source.bundle.get("session")
     library = session.get("library") if isinstance(session, dict) else None
     return library if isinstance(library, str) else None

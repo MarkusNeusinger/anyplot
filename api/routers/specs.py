@@ -118,7 +118,7 @@ async def _build_spec_detail(db: AsyncSession, spec_id: str) -> SpecDetailRespon
     )
 
 
-async def _build_impl_code(db: AsyncSession, spec_id: str, library: str, language: str = "python") -> dict:
+async def _build_impl_code(db: AsyncSession, spec_id: str, library: str, language: str) -> dict:
     repo = ImplRepository(db)
     impl = await repo.get_code(spec_id, library, language)
 

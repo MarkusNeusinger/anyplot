@@ -10,19 +10,24 @@ over; switching back counts the decisions the older plot misses; the page lists 
 import asyncio
 import json
 import logging
-from collections.abc import AsyncIterator, Iterator
-from typing import Any
+from collections.abc import AsyncIterator, Iterator, Sequence
+from types import SimpleNamespace
+from typing import Any, cast
 
 import httpx
 import pytest
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
 
 from agents.anyplot import telemetry
+from agents.anyplot.grounding import DrawnTexts, drawn_texts
 from agents.anyplot.memory import (
     MAX_ENTRIES,
     MEMORY,
     MEMORY_SEQ,
     MemoryEntry,
     MemoryRefused,
+    Planned,
     decision_lines,
     expected_texts,
     forget,
@@ -31,16 +36,27 @@ from agents.anyplot.memory import (
     memory_written,
     newer_than,
     next_seq,
+    not_drawn,
     plan,
     read_memory,
     remember,
+    replace_drawn,
 )
 from agents.anyplot.opening import assess
-from agents.anyplot.pipeline import DECISIONS_HEADING, EARLIER_REQUESTS_HEADING, EXPECTED_HEADING
-from agents.anyplot.render.backends.fake import FakeBackend
-from agents.anyplot.schemas import PipelineArgs, PlotResult, RememberItem
+from agents.anyplot.pipeline import (
+    DECISIONS_HEADING,
+    EARLIER_REQUESTS_HEADING,
+    EXPECTED_HEADING,
+    Candidate,
+    Run,
+    memory_ids,
+    settle_memory,
+)
+from agents.anyplot.render import harness
+from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
+from agents.anyplot.schemas import AdaptPlan, PipelineArgs, PlotResult, RememberItem
 from agents.anyplot.services import CodeVersion, Services, get_services
-from agents.anyplot.session_state import PENDING_EXPECTED_TEXTS, PENDING_REMEMBER, PENDING_REQUEST
+from agents.anyplot.session_state import PENDING_EXPECTED_TEXTS, PENDING_REMEMBER, PENDING_REQUEST, PLOT_LANGUAGE
 from agents.anyplot.settings import get_settings
 from agents.anyplot.switch import CARRY, Carry, SourcePlot, Target, carry_for, read_carry, summary
 from agents.main import ActiveRun, Runtime, app, get_runtime
@@ -251,6 +267,434 @@ def test_stored_values_that_fail_their_checks_are_dropped() -> None:
         Target(spec_id="scatter-basic", library="excel")
     with pytest.raises(ValueError):
         RememberItem(kind="title", text=" \n ")  # nothing left once the whitespace is collapsed
+
+
+class TestPlotTargetSynonym:
+    """The target `plot` is the same as none, for every kind: a plot-wide entry has one replace key."""
+
+    TITLE = RememberItem(kind="title", text="title: 'Harbour arrivals'", expected_text="Harbour arrivals")
+
+    def test_a_title_filed_with_plot_replaces_one_filed_without(self) -> None:
+        moved = RememberItem(
+            kind="title", target="plot", text="title: 'Ferry traffic 2031'", expected_text="Ferry traffic 2031"
+        )
+
+        after = remember(entries(self.TITLE, LINE), moved, seq=3, turn=2)
+
+        assert [(entry.id, entry.kind, entry.target) for entry in after] == [
+            ("m2", "reference_line", None),
+            ("m3", "title", "plot"),
+        ]
+        assert [entry.id for entry in remember(after, self.TITLE, seq=4, turn=3)] == ["m2", "m4"]  # and back
+
+    def test_the_same_decision_under_the_synonym_is_no_new_one(self) -> None:
+        once = entries(self.TITLE)
+        filed = self.TITLE.model_copy(update={"target": "plot"})
+
+        assert remember(once, filed, seq=2, turn=2) == once
+        line = entries(LINE)
+        assert remember(line, LINE.model_copy(update={"target": "plot"}), seq=2, turn=2) == line
+
+    def test_a_legend_title_stays_apart_from_the_plot_title(self) -> None:
+        legend = RememberItem(kind="title", target="color", text="legend title: 'Vessel class'")
+
+        after = remember(entries(self.TITLE), legend, seq=2, turn=2)
+
+        assert [(entry.id, entry.target) for entry in after] == [("m1", None), ("m2", "color")]
+
+    def test_reading_keeps_the_newest_entry_per_key(self) -> None:
+        """A memory written before the synonym was folded holds both titles; the newer one stands."""
+        old = entries(self.TITLE)[0]
+        newer = MemoryEntry(id="m3", kind="title", target="plot", text="title: 'Pier 4'", expect="Pier 4", turn=2)
+        legend = MemoryEntry(id="m4", kind="title", target="color", text="legend title: 'Vessel class'", turn=2)
+        lines = [
+            MemoryEntry(id="m2", kind="reference_line", text=LINE.text, turn=1),
+            MemoryEntry(id="m5", kind="reference_line", target="plot", text="vertical line at x = 3", turn=2),
+        ]
+        stored = [old, lines[0], newer, legend, lines[1]]
+
+        held = read_memory(memory_delta(stored, 6))
+
+        assert [entry.id for entry in held] == ["m2", "m3", "m4", "m5"]  # several lines stand side by side
+
+
+def drawn(*labels: tuple[str, str], complete: bool = True) -> DrawnTexts:
+    probe: dict[str, Any] = {"labels": [{"kind": kind, "text": text} for kind, text in labels]}
+    if not complete:
+        probe["labels_truncated"] = True
+    texts = drawn_texts(probe)
+    assert texts is not None
+    return texts
+
+
+HARBOUR_TITLE = RememberItem(kind="title", text="bold title: 'Harbour arrivals'", expected_text="Harbour arrivals")
+ENERGY_LABEL = RememberItem(
+    kind="axis_label", target="y", text="y-axis label: 'Energy use per day'", expected_text="Energy use per day"
+)
+
+
+def standing(*items: RememberItem) -> Planned:
+    """A memory of `items` written in turn 1, as a run of turn 2 plans it before its own items (none here)."""
+    held = entries(*items)
+    return plan(held, [], seq=len(held) + 1, turn=2)
+
+
+class TestReplaceDrawn:
+    """After a shipped run, a standing title or axis label the render replaced with a text the user wrote is replaced
+    in the memory; nothing else changes, and nothing is ever created."""
+
+    def test_a_title_the_render_replaced_replaces_the_entry(self) -> None:
+        before = standing(HARBOUR_TITLE, LINE)
+
+        after = replace_drawn(
+            before, ["Ferry traffic 2031"], drawn(("title", "Ferry traffic 2031")), standing_below=3, turn=2
+        )
+
+        assert [(entry.id, entry.kind, entry.target, entry.expect, entry.turn) for entry in after.entries] == [
+            ("m2", "reference_line", None, None, 1),
+            ("m3", "title", None, "Ferry traffic 2031", 2),
+        ]
+        assert after.entries[-1].text == "bold title: 'Ferry traffic 2031'"  # the rest of the decision stands
+        assert (after.seq, after.refused) == (4, 0)
+
+    def test_an_instruction_without_its_text_once_takes_the_plain_form(self) -> None:
+        loose = RememberItem(kind="axis_label", target="x", text="label the x axis as asked", expected_text="Time")
+
+        after = replace_drawn(
+            standing(loose), ["Hour of day"], drawn(("x axis label", "Hour of day")), standing_below=2, turn=2
+        )
+
+        assert [(entry.text, entry.expect) for entry in after.entries] == [
+            ("x-axis label: 'Hour of day'", "Hour of day")
+        ]
+
+    def test_an_instruction_that_points_into_its_old_text_takes_the_plain_form(self) -> None:
+        """The rest of the instruction names a word of the old title, which the new title need not have."""
+        tide = RememberItem(
+            kind="title", text="title: 'Tide table 2030' with 2030 in bold", expected_text="Tide table 2030"
+        )
+
+        after = replace_drawn(
+            standing(tide), ["Moon phases 2031"], drawn(("title", "Moon phases 2031")), standing_below=2, turn=2
+        )
+
+        assert [(entry.text, entry.expect) for entry in after.entries] == [
+            ("title: 'Moon phases 2031'", "Moon phases 2031")
+        ]
+
+    def test_the_whole_text_is_compared_as_grounding_reads_it(self) -> None:
+        after = replace_drawn(
+            standing(ENERGY_LABEL),
+            ["Daily load “kWh”"],
+            drawn(("y axis label", "DAILY  LOAD kWh")),  # case, spacing and quotes aside
+            standing_below=2,
+            turn=2,
+        )
+
+        assert [entry.expect for entry in after.entries] == ["Daily load “kWh”"]
+
+    def test_a_unit_drawn_inside_a_longer_label_leaves_the_entry_alone(self) -> None:
+        """The user's `kWh` stands in the new label, which is no label the user wrote out whole."""
+        before = standing(ENERGY_LABEL)
+
+        after = replace_drawn(before, ["kWh"], drawn(("y axis label", "Daily load (kWh)")), standing_below=2, turn=2)
+
+        assert after == before
+
+    def test_a_number_format_is_never_a_whole_label(self) -> None:
+        before = standing(ENERGY_LABEL)
+
+        after = replace_drawn(before, ["12,5 %"], drawn(("y axis label", "12,5 %")), standing_below=2, turn=2)
+
+        assert after == before
+
+    def test_an_old_text_the_render_still_draws_as_its_part_stays(self) -> None:
+        """The old title is still the whole title: a text of the user's drawn elsewhere replaces nothing."""
+        before = standing(HARBOUR_TITLE)
+        render = drawn(("title", "Harbour arrivals"), ("annotation", "Ferry traffic 2031"))
+
+        assert replace_drawn(before, ["Ferry traffic 2031"], render, standing_below=2, turn=2) == before
+
+    def test_an_old_text_drawn_whole_outside_its_part_stays(self) -> None:
+        """The old title drawn whole as another text (a free text above the axes, a legend entry, an annotation) is
+        still drawn: the user's text that fills the title role then is another part, such as a subtitle."""
+        before = standing(HARBOUR_TITLE)
+
+        for kind in ("text", "legend text", "annotation"):
+            render = drawn((kind, "HARBOUR  arrivals"), ("title", "Evening runs"))  # case and spacing aside
+            assert replace_drawn(before, ["Evening runs"], render, standing_below=2, turn=2) == before
+
+    def test_a_title_the_user_lengthened_replaces_the_entry(self) -> None:
+        """The old text stands inside the new title, which is no longer the old title: the user's whole one replaces
+        it, so a later change never draws the shorter title again."""
+        before = standing(HARBOUR_TITLE)
+        render = drawn(("title", "Harbour arrivals 2031"))
+
+        after = replace_drawn(before, ["Harbour arrivals 2031"], render, standing_below=2, turn=2)
+
+        assert [(entry.id, entry.text, entry.expect) for entry in after.entries] == [
+            ("m2", "bold title: 'Harbour arrivals 2031'", "Harbour arrivals 2031")
+        ]
+        # A title the plot lengthened by itself is no text the user wrote: the entry stays.
+        assert replace_drawn(before, ["Ferry traffic 2031"], render, standing_below=2, turn=2) == before
+
+    def test_a_number_format_entry_is_never_replaced(self) -> None:
+        """A number-format example stands for tick labels, never for a part's whole text, so a label the user wrote
+        never takes its place, whether the render draws the format or another decimal mark."""
+        share = RememberItem(kind="axis_label", target="y", text="y-axis ticks as '12,5 %'", expected_text="12,5 %")
+        before = standing(share)
+
+        for tick in ("87,5 %", "87.5 %"):
+            render = drawn(("y axis label", "Share of trips"), ("y tick label", tick))
+            assert replace_drawn(before, ["Share of trips"], render, standing_below=2, turn=2) == before
+
+    def test_nothing_changes_without_a_complete_report(self) -> None:
+        before = standing(HARBOUR_TITLE)
+        texts = ["Ferry traffic 2031"]
+
+        assert replace_drawn(before, texts, None, standing_below=2, turn=2) == before
+        truncated = drawn(("title", "Ferry traffic 2031"), complete=False)
+        assert replace_drawn(before, texts, truncated, standing_below=2, turn=2) == before
+
+    def test_an_empty_memory_stays_empty(self) -> None:
+        empty = plan([], [], seq=1, turn=2)
+
+        after = replace_drawn(
+            empty, ["Ferry traffic 2031"], drawn(("title", "Ferry traffic 2031")), standing_below=1, turn=2
+        )
+
+        assert after == empty and not memory_written(memory_delta(after.entries, after.seq))
+
+    def test_only_entries_from_before_the_run_of_a_part_it_names(self) -> None:
+        legend = RememberItem(kind="title", target="color", text="legend title: 'Vessel class'", expected_text="Class")
+        own = plan(entries(legend), [HARBOUR_TITLE], seq=2, turn=2)  # the run's own item, m2, is no standing one
+
+        after = replace_drawn(
+            own, ["Ferry traffic 2031"], drawn(("title", "Ferry traffic 2031")), standing_below=2, turn=2
+        )
+
+        assert after == own
+
+    def test_a_replacement_past_the_cap_leaves_the_old_entry(self) -> None:
+        fill = [RememberItem(kind="other", text=f"{n:02d}" + "x" * 143) for n in range(20)]  # 2,900 characters
+        crowded = standing(HARBOUR_TITLE, *fill)
+        long_title = "Ferry traffic " + "y" * 100  # its entry would take the memory past 3,000 characters
+
+        after = replace_drawn(crowded, [long_title], drawn(("title", long_title)), standing_below=crowded.seq, turn=2)
+
+        assert after == crowded
+
+    def test_two_texts_that_fill_one_role_replace_nothing(self) -> None:
+        """matplotlib reports a figure title and an axes title both as `title`: which one is the entry's is unknown."""
+        before = standing(HARBOUR_TITLE)
+        render = drawn(("suptitle", "Ferry traffic 2031"), ("title", "Weekday crossings"))
+
+        both = replace_drawn(before, ["Weekday crossings", "Ferry traffic 2031"], render, standing_below=2, turn=2)
+        one = replace_drawn(before, ["Ferry traffic 2031"], render, standing_below=2, turn=2)
+
+        assert both == before
+        assert [entry.expect for entry in one.entries] == ["Ferry traffic 2031"]  # the figure title the user wrote
+
+    def test_a_role_of_several_texts_takes_only_the_figure_title(self) -> None:
+        """Of a role that holds several texts, only a figure title the user wrote stands for the plot's title: an axes
+        title under it, one of several panel titles or one of several axis labels may be any panel's or the subtitle."""
+        before = standing(HARBOUR_TITLE, ENERGY_LABEL)
+        # The plot language changed: the figure title is the old title translated, the axes title a subtitle the user
+        # wrote. That text fills the title role alone, yet it is no title.
+        translated = drawn(("suptitle", "Arrivées au port"), ("title", "Evening runs"))
+        panels = drawn(("title", "North quay"), ("title", "South quay"))
+        labels = drawn(("y axis label", "Load north"), ("y axis label", "Load south"))
+
+        assert replace_drawn(before, ["Evening runs"], translated, standing_below=3, turn=2) == before
+        assert replace_drawn(before, ["North quay"], panels, standing_below=3, turn=2) == before
+        assert replace_drawn(before, ["Load north"], labels, standing_below=3, turn=2) == before
+
+    @staticmethod
+    def probe_of(fig: Figure) -> DrawnTexts:
+        """The drawn texts matplotlib's own probe reports for `fig`."""
+        FigureCanvasAgg(fig)
+        render = drawn_texts(harness.probe(fig, 100))
+        assert render is not None and render.complete
+        return render
+
+    @classmethod
+    def probed(cls, *, figure_title: str, axes_title: str) -> DrawnTexts:
+        """The drawn texts matplotlib's own probe reports for a figure title above an axes title and two axis labels."""
+        fig = Figure(figsize=(16, 9))
+        ax = fig.subplots()
+        ax.plot([1, 2, 3], [4.0, 5.5, 5.0])
+        fig.suptitle(figure_title)
+        ax.set_title(axes_title)
+        ax.set_xlabel("Hour of day")
+        ax.set_ylabel("Daily load (kWh)")
+        return cls.probe_of(fig)
+
+    def test_a_real_matplotlib_probe_names_the_parts(self) -> None:
+        """The roles the replacement reads are the ones matplotlib's probe writes."""
+        render = self.probed(figure_title="Ferry traffic 2031", axes_title="Weekday crossings")
+        time = RememberItem(kind="axis_label", target="x", text="x-axis label: 'Time'", expected_text="Time")
+        before = standing(HARBOUR_TITLE, ENERGY_LABEL, time)
+
+        after = replace_drawn(before, ["Ferry traffic 2031", "kWh", "Hour of day"], render, standing_below=4, turn=2)
+
+        assert [(entry.kind, entry.target, entry.expect) for entry in after.entries] == [
+            ("axis_label", "y", "Energy use per day"),  # `kWh` stands inside the label, never as all of it
+            ("title", None, "Ferry traffic 2031"),
+            ("axis_label", "x", "Hour of day"),
+        ]
+
+    def test_a_real_matplotlib_axes_title_under_a_figure_title_never_replaces_the_title(self) -> None:
+        """matplotlib's probe reports the axes title as `title` too; the user's new subtitle drawn there, under the old
+        title translated into the figure title, leaves the title entry as it is."""
+        render = self.probed(figure_title="Arrivées au port", axes_title="Evening runs")
+        before = standing(HARBOUR_TITLE)
+
+        assert replace_drawn(before, ["Evening runs"], render, standing_below=2, turn=2) == before
+        lengthened = self.probed(figure_title="Harbour arrivals 2031", axes_title="Evening runs")
+        assert replace_drawn(before, ["Evening runs"], lengthened, standing_below=2, turn=2) == before
+
+    @pytest.mark.parametrize("free_text_on", ["figure", "axes"])
+    def test_a_real_matplotlib_title_drawn_as_a_free_text_stays_the_title(self, free_text_on: str) -> None:
+        """A title drawn with `fig.text` or `ax.text` is no title to matplotlib's probe, so the user's subtitle drawn as
+        the axes title fills the title role alone; the old title is still drawn whole, so it stays the title."""
+        fig = Figure(figsize=(16, 9))
+        ax = fig.subplots()
+        ax.plot([1, 2, 3], [4.0, 5.5, 5.0])
+        if free_text_on == "figure":
+            fig.text(0.05, 0.95, "Harbour arrivals", fontsize=20, weight="bold")
+        else:
+            ax.text(0.0, 1.08, "Harbour arrivals", transform=ax.transAxes, fontsize=20)
+        ax.set_title("Evening runs", loc="left")
+        render = self.probe_of(fig)
+        before = standing(HARBOUR_TITLE)
+
+        assert replace_drawn(before, ["Evening runs"], render, standing_below=2, turn=2) == before
+        # The run's own item files the subtitle: the memory holds it beside the title, never as the title too.
+        subtitle = RememberItem(kind="subtitle", text="subtitle: 'Evening runs'", expected_text="Evening runs")
+        own = plan(before.entries, [subtitle], seq=before.seq, turn=2)
+        after = replace_drawn(own, ["Evening runs"], render, standing_below=2, turn=2)
+        assert [(entry.id, entry.kind, entry.expect) for entry in after.entries] == [
+            ("m1", "title", "Harbour arrivals"),
+            ("m2", "subtitle", "Evening runs"),
+        ]
+
+    def test_a_real_matplotlib_figure_y_label_stays_beside_a_panel_label(self) -> None:
+        """A y label drawn as the figure's (`supylabel`) is still drawn when the label the user wrote names one panel."""
+        fig = Figure(figsize=(16, 9))
+        panels = fig.subplots(1, 2)
+        for ax in panels:
+            ax.plot([1, 2, 3], [4.0, 5.5, 5.0])
+        fig.supylabel("Energy use per day")
+        panels[0].set_ylabel("Load north")
+        before = standing(ENERGY_LABEL)
+
+        assert replace_drawn(before, ["Load north"], self.probe_of(fig), standing_below=2, turn=2) == before
+
+
+class TestNotDrawn:
+    """An entry from before the run whose verbatim text a complete report does not draw is listed, not dropped."""
+
+    def test_an_undrawn_text_is_listed_and_everything_else_is_kept(self) -> None:
+        held = entries(HARBOUR_TITLE, LINE, ENERGY_LABEL)
+        render = drawn(("title", "Harbour arrivals"), ("y axis label", "Load"))
+
+        assert not_drawn(held, render, standing_below=4, language="en", written_in={1: "en"}) == ["m3"]
+
+    def test_a_text_drawn_inside_a_longer_one_is_still_used(self) -> None:
+        """Unlike the replacement, which reads a part's whole text, an entry's text drawn anywhere counts as used."""
+        held = entries(HARBOUR_TITLE)
+        lengthened = drawn(("title", "Harbour arrivals 2031"))
+
+        assert not_drawn(held, lengthened, standing_below=2, language="en", written_in={1: "en"}) == []
+
+    def test_a_missing_or_incomplete_report_lists_nothing(self) -> None:
+        held = entries(HARBOUR_TITLE)
+
+        assert not_drawn(held, None, standing_below=2, language="en", written_in={1: "en"}) == []
+        truncated = drawn(("title", "Other"), complete=False)
+        assert not_drawn(held, truncated, standing_below=2, language="en", written_in={1: "en"}) == []
+
+    def test_an_entry_written_in_another_plot_language_or_an_unknown_one_counts_as_kept(self) -> None:
+        """A language change rewrites the title, so the verbatim text the entry holds is gone for a reason."""
+        held = entries(HARBOUR_TITLE)
+        translated = drawn(("title", "Arrivées au port"))
+
+        assert not_drawn(held, translated, standing_below=2, language="fr", written_in={1: "English"}) == []
+        assert not_drawn(held, translated, standing_below=2, language="fr", written_in={}) == []
+        assert not_drawn(held, translated, standing_below=2, language="en", written_in={1: "English"}) == ["m1"]
+
+    def test_an_entry_the_run_added_is_never_listed(self) -> None:
+        assert (
+            not_drawn(
+                entries(HARBOUR_TITLE), drawn(("title", "Other")), standing_below=1, language="en", written_in={1: "en"}
+            )
+            == []
+        )
+
+
+def shipped_run(library: str, planned: Planned, render: DrawnTexts | None, *, written: Sequence[str] = ()) -> Run:
+    """A run of turn 2 that shipped a render with `render`'s drawn texts, its memory planned before it ran."""
+    view = SimpleNamespace(library=library, target=("scatter-basic", library))
+    run = Run(view=cast(Any, view), dataset=cast(Any, None), language="en")
+    run.memory_plan, run.memory_seq, run.written_texts = planned, planned.seq, list(written)
+    run.best = Candidate(working="w", run_form="r", pngs={}, plan=AdaptPlan(), attempt=1, drawn=render)
+    return run
+
+
+class TestSettledMemoryIds:
+    """What the `plot` event names once the memory is settled with the version."""
+
+    def test_a_replaced_title_is_in_no_list_and_its_replacement_is_added(self) -> None:
+        state: dict[str, Any] = {}
+        run = shipped_run(
+            "matplotlib",
+            standing(HARBOUR_TITLE, LINE),
+            drawn(("title", "Ferry traffic 2031")),
+            written=["Ferry traffic 2031"],
+        )
+
+        settle_memory(state, run, True, turn=2)
+
+        assert [(entry.id, entry.expect) for entry in read_memory(state)] == [
+            ("m2", None),
+            ("m3", "Ferry traffic 2031"),
+        ]
+        assert state[MEMORY_SEQ] == 4
+        assert memory_ids(run, {1: "en"}) == {"kept": ["m2"], "added": ["m3"], "unused": []}
+
+    def test_a_title_the_render_does_not_draw_is_not_used(self) -> None:
+        state: dict[str, Any] = {}
+        run = shipped_run("matplotlib", standing(HARBOUR_TITLE, LINE), drawn(("title", "Pier 4 at night")))
+
+        settle_memory(state, run, True, turn=2)
+
+        assert state == {}  # nothing to store: the entry stays as it is
+        assert memory_ids(run, {1: "en"}) == {"kept": ["m2"], "added": [], "unused": ["m1"]}
+        assert memory_ids(run, {}) == {"kept": ["m1", "m2"], "added": [], "unused": []}  # written in no known language
+
+    def test_where_the_reviewer_checks_the_texts_every_entry_counts_as_kept(self) -> None:
+        """plotly's probe grounds the reply but never claims a text missing; a whole title it reports still replaces."""
+        idle = shipped_run("plotly", standing(HARBOUR_TITLE, LINE), drawn(("title", "Pier 4 at night")))
+        assert memory_ids(idle, {1: "en"}) == {"kept": ["m1", "m2"], "added": [], "unused": []}
+
+        state: dict[str, Any] = {}
+        renamed = shipped_run(
+            "plotly",
+            standing(HARBOUR_TITLE, LINE),
+            drawn(("title", "Ferry traffic 2031")),
+            written=["Ferry traffic 2031"],
+        )
+        settle_memory(state, renamed, True, turn=2)
+        assert memory_ids(renamed, {1: "en"}) == {"kept": ["m2"], "added": ["m3"], "unused": []}
+
+    def test_a_run_that_shipped_nothing_changes_nothing(self) -> None:
+        state: dict[str, Any] = {}
+        before = standing(HARBOUR_TITLE)
+        run = shipped_run("matplotlib", before, drawn(("title", "Ferry traffic 2031")), written=["Ferry traffic 2031"])
+
+        settle_memory(state, run, False, turn=2)
+
+        assert state == {} and run.memory_plan == before
 
 
 def test_the_owner_examples_become_decisions_and_texts() -> None:
@@ -788,6 +1232,116 @@ async def test_a_kept_first_plot_note_brings_its_decisions_to_the_memory(
     state = await _session_state(client, sid)
     assert [(entry.kind, entry.expect) for entry in read_memory(state)] == [("title", "Lernzeit")]
     assert state[PENDING_REMEMBER] is None
+
+
+FERRY_PROBE = {"texts": [], "labels": [{"kind": "title", "text": "Ferry traffic 2031"}]}
+
+
+async def test_a_title_kept_without_remember_replaces_the_remembered_one(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """A title the user wrote reached the plot through a kept note alone, with no `remember` item: the render draws
+    it as the title, so it replaces the remembered title, and the next change no longer hands the old one on."""
+    keep = {
+        "call": "keep_plot_request",
+        "args": {"change_request": "title: Ferry traffic 2031", "expected_texts": ["Ferry traffic 2031"]},
+    }
+    change = {"call": "plot_pipeline", "args": {"change_request": "larger markers", "base": "previous"}}
+    fake = swap_models(
+        "gemini",
+        {
+            "root": [
+                keep,
+                {"text": "Kept for the first plot."},
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "Here."},
+                change,
+                {"text": "Larger markers."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": KEEP_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+        },
+    )
+    backend.script = lambda job, theme: FakeOutcome(probe=FERRY_PROBE)
+    sid = await open_session(client)
+    await seed_memory(sid, entries(HARBOUR_TITLE, LINE))
+    await say(client, sid, {"text": "title: Ferry traffic 2031"})
+
+    events = await create_plot(client, sid)
+
+    assert "Harbour arrivals" in adapter_inputs(fake)[0]  # the run still had the old title as a decision
+    assert plot_of(events)["memory"] == {"kept": ["m2"], "added": ["m3"], "unused": []}
+    held = read_memory(await _session_state(client, sid))
+    assert [(entry.id, entry.kind, entry.expect) for entry in held] == [
+        ("m2", "reference_line", None),
+        ("m3", "title", "Ferry traffic 2031"),
+    ]
+
+    await say(client, sid, {"text": "larger markers"})
+
+    following = adapter_inputs(fake)[1]
+    assert "bold title: 'Ferry traffic 2031'" in following and "Harbour arrivals" not in following
+
+
+async def test_a_remembered_title_the_plot_does_not_draw_is_listed_as_not_used(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, runtime: Runtime
+) -> None:
+    """The entry stays in the memory, and the plot event lists it apart from the kept ones; once the plot language
+    changed, the entry's text may have been translated, so it counts as kept."""
+    change = {"call": "plot_pipeline", "args": {"change_request": "larger markers", "base": "previous"}}
+    swap_models(
+        "gemini",
+        {
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": "Here."}]
+            + [change, {"text": "Larger markers."}] * 2,
+            "adapter": [{"json": SCATTER_PLAN}, {"json": KEEP_PLAN}, {"json": KEEP_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}] * 3,
+        },
+    )
+    sid = await open_session(client)
+    await create_plot(client, sid)  # turn 1, in English
+    await seed_memory(sid, entries(HARBOUR_TITLE, LINE, turn=1))
+    backend.script = lambda job, theme: FakeOutcome(probe=FERRY_PROBE)
+
+    events = await say(client, sid, {"text": "larger markers"})
+
+    assert plot_of(events)["memory"] == {"kept": ["m2"], "added": [], "unused": ["m1"]}
+    assert [entry.id for entry in read_memory(await _session_state(client, sid))] == ["m1", "m2"]
+
+    await runtime.write_state(await runtime.session(USER, sid), {PLOT_LANGUAGE: "fr"})
+    translated = await say(client, sid, {"text": "larger markers"})
+
+    assert plot_of(translated)["memory"] == {"kept": ["m1", "m2"], "added": [], "unused": []}
+
+
+async def test_a_carried_text_never_replaces_a_remembered_one(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """A switch's carry run checks the memory's own texts, which the user did not write for that run: a render that
+    draws the remembered axis label as its whole title leaves the remembered title as it is."""
+    swap_models(
+        "gemini",
+        {
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": "Here."}] * 2,
+            # The render misses the remembered title, so the run repairs once before it ships.
+            "adapter": [{"json": SCATTER_PLAN}, {"json": seaborn_plan()}, {"json": KEEP_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}] * 3,
+        },
+    )
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    held = entries(HARBOUR_TITLE, ENERGY_LABEL, turn=1)
+    await seed_memory(sid, held)
+    assert (await switch(client, sid, "seaborn")).status_code == 200
+    title_only = {"texts": [], "labels": [{"kind": "title", "text": "Energy use per day"}]}
+    backend.script = lambda job, theme: FakeOutcome(probe=title_only)
+
+    events = await say(client, sid, {"action": "carry_plot"})
+
+    plot = plot_of(events)
+    assert plot["version"] == 2 and plot["memory"]["added"] == [], plot
+    state = await _session_state(client, sid)
+    assert read_memory(state) == held and state[MEMORY_SEQ] == 3
 
 
 async def test_the_bundle_names_each_versions_spec_and_library(client: httpx.AsyncClient, swap_models) -> None:
