@@ -65,7 +65,9 @@ describe('AboutPage', () => {
     }
     const transparency = document.getElementById('transparency')!;
     expect(transparency).toContainElement(screen.getByText('technology stack'));
-    expect(transparency).toContainElement(screen.getByText('monthly running costs (October 2026)'));
+    expect(transparency).toContainElement(
+      screen.getByText('monthly running costs (as of November 2026)')
+    );
   });
 
   it('names the builder with his photo and the links to his profiles', () => {
@@ -437,31 +439,50 @@ describe('AboutPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the running costs of one named month, with what they leave out', () => {
+  it('renders the running costs as of a named month, with what they leave out', () => {
     render(<AboutPage />);
 
-    expect(screen.getByText('monthly running costs (October 2026)')).toBeInTheDocument();
+    expect(screen.getByText('monthly running costs (as of November 2026)')).toBeInTheDocument();
     const costs: [string, string][] = [
-      ['hosting: Cloud Run \\(site, api, data assistant, renderer\\)', '~\\$10'],
-      ['database: Cloud SQL', '~\\$25'],
-      ['data assistant model: Claude Haiku via Vertex AI', '~\\$15'],
-      ['storage, logs and builds', '~\\$1'],
+      ['hosting: Cloud Run \\(site, api, data assistant, renderer\\)', '~\\$14'],
+      ['database: Cloud SQL', '~\\$35'],
+      ['data assistant model: Claude Haiku via Vertex AI', '~\\$12'],
+      ['storage, logs and builds', '~\\$6'],
       ['domain \\(\\.ai\\)', '~\\$8'],
-      ['total', '~\\$60/month'],
+      ['total', '~\\$75/month'],
     ];
     for (const [item, cost] of costs) {
       expect(
         screen.getByRole('row', { name: new RegExp(`^${item}\\s*${cost}$`) })
       ).toBeInTheDocument();
     }
-    // Paid after discounts, so the note says which ones, and that the model cost moves with use.
+    // The prices before credits, so the note says which prices, what pays most of it, which
+    // month each figure comes from, and that the model cost moves with use.
     expect(
-      screen.getByText(/after three-year commitments and promotional credits/)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/the assistant.s model cost\s+grows with use/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/development tools and subscriptions are not included/)
-    ).toBeInTheDocument();
+      screen.getByText(/^at three-year commitment prices, before credits; a monthly cloud credit/)
+    ).toHaveTextContent(
+      /^at three-year commitment prices, before credits; a monthly cloud credit from a Google developer subscription pays most of it\. infrastructure as billed for October 2026, the assistant.s model at November.s pace; it grows with use\. development \(test runs and reviews\) is not included\. all costs are covered privately\.$/
+    );
+    expect(screen.queryByText(/promotional credits/)).not.toBeInTheDocument();
+  });
+
+  // Each figure is rounded on its own, so the total is checked against the rows it sums.
+  it('totals the running costs from their rows', () => {
+    render(<AboutPage />);
+
+    const table = screen.getByText('monthly running costs (as of November 2026)')
+      .nextElementSibling as HTMLElement;
+    const amounts = within(table)
+      .getAllByRole('row')
+      .map(row => {
+        const [label, value] = Array.from(row.querySelectorAll('th, td'), cell => cell.textContent);
+        return [label, Number(/^~\$(\d+)/.exec(value ?? '')?.[1])] as const;
+      });
+    const total = amounts.find(([label]) => label === 'total')![1];
+    const parts = amounts.filter(([label]) => label !== 'total').map(([, amount]) => amount);
+    expect(parts).toHaveLength(5);
+    expect(parts.every(Number.isFinite)).toBe(true);
+    expect(parts.reduce((sum, amount) => sum + amount, 0)).toBe(total);
   });
 
   it('renders other projects links without noreferrer', () => {

@@ -97,7 +97,10 @@
 - **The stack and the running costs moved from the legal page to the about
   page.** The legal page keeps the legal notice and the privacy policy; a link
   to `/legal#transparency` leads to `/about#transparency`, which a fresh load
-  now scrolls to. The crawler bodies of both pages and `llms.txt` follow.
+  now scrolls to. The crawler bodies of both pages and `llms.txt` follow. The
+  cost table now shows the operation at three-year commitment prices, before
+  credits and without development use: about $75 a month, where it showed
+  about $60 after credits.
 - **The about page's description names its builder and what the page
   covers.** Search results and link previews read "About anyplot.ai: built by
   Markus Neusinger with AI agents he directs. How the catalogue is written

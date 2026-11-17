@@ -492,24 +492,27 @@ export function AboutPage() {
               Open Font License 1.1.
             </Typography>
 
-            <Typography sx={subheadingStyle}>monthly running costs (October 2026)</Typography>
+            <Typography sx={subheadingStyle}>
+              monthly running costs (as of November 2026)
+            </Typography>
             <FactTable
               labelWidth="75%"
               rows={[
-                ['hosting: Cloud Run (site, api, data assistant, renderer)', '~$10'],
-                ['database: Cloud SQL', '~$25'],
-                ['data assistant model: Claude Haiku via Vertex AI', '~$15'],
-                ['storage, logs and builds', '~$1'],
+                ['hosting: Cloud Run (site, api, data assistant, renderer)', '~$14'],
+                ['database: Cloud SQL', '~$35'],
+                ['data assistant model: Claude Haiku via Vertex AI', '~$12'],
+                ['storage, logs and builds', '~$6'],
                 ['domain (.ai)', '~$8'],
-                ['total', <strong key="total">~$60/month</strong>],
+                ['total', <strong key="total">~$75/month</strong>],
               ]}
             />
             <Typography
               sx={{ ...textStyle, fontSize: fontSize.sm, color: semanticColors.mutedText, mt: 1 }}
             >
-              after three-year commitments and promotional credits; the assistant&apos;s model cost
-              grows with use. development tools and subscriptions are not included. all costs are
-              covered privately.
+              at three-year commitment prices, before credits; a monthly cloud credit from a Google
+              developer subscription pays most of it. infrastructure as billed for October 2026, the
+              assistant&apos;s model at November&apos;s pace; it grows with use. development (test
+              runs and reviews) is not included. all costs are covered privately.
             </Typography>
           </Box>
         </Box>

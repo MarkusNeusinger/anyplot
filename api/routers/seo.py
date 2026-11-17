@@ -1411,7 +1411,7 @@ _ABOUT_BOT_BODY = (
     "from your own data.</p>"
     "<p>The whole stack — specs, pipeline, API and frontend — is open source under the MIT License at "
     '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>. '
-    "Running costs about $60 a month (October 2026).</p>"
+    "Running costs about $75 a month (as of November 2026).</p>"
     "<h2>Origin</h2>"
     "<p>It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples. It grew "
     "out of everyday work: showing colleagues a chart instead of explaining it at length. They, and "

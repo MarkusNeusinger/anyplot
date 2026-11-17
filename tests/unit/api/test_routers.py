@@ -1321,7 +1321,7 @@ class TestSeoProxyRouter:
             "Checks: tests and lint on every pull request that changes Python or frontend code outside the plot "
             "catalogue, an 80 % patch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, and "
             "by rule a check of the live site after a merge.",
-            "Running costs about $60 a month (October 2026).",
+            "Running costs about $75 a month (as of November 2026).",
             # The corrected pipeline and review claims (AboutPage.tsx says the same).
             "Every night a job regenerates the oldest implementations",
             "the bar drops 10 points per repair, to 50 at the last review",
