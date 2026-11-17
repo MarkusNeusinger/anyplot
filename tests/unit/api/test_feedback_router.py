@@ -16,7 +16,8 @@ from fastapi.testclient import TestClient
 from api import turnstile
 from api.cache import clear_cache
 from api.main import app, fastapi_app
-from api.routers.feedback import _client_ip, _hash_ip
+from api.request_context import hash_ip
+from api.routers.feedback import _client_ip
 from core.config import settings
 from core.database import get_db
 
@@ -151,11 +152,11 @@ class TestFeedbackRouter:
 
     def test_the_ip_hash_is_salted_per_process(self):
         """A plain SHA-256 of an IPv4 address is undone by trying all four billion; the salt never leaves memory."""
-        first, again, other = _hash_ip("198.51.100.7"), _hash_ip("198.51.100.7"), _hash_ip("198.51.100.8")
+        first, again, other = hash_ip("198.51.100.7"), hash_ip("198.51.100.7"), hash_ip("198.51.100.8")
 
         assert first == again != other
         assert first.removeprefix("hmac:") not in hashlib.sha256(b"198.51.100.7").hexdigest()
-        assert _hash_ip("") == ""
+        assert hash_ip("") == ""
 
     def test_a_failed_cleanup_never_fails_the_submission(self, client):
         instance = AsyncMock()

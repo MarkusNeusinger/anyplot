@@ -262,7 +262,7 @@ class Feedback(Base):
     user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
     viewport: Mapped[str | None] = mapped_column(String(20), nullable=True)
     session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    # "hmac:" + a per-process salted HMAC of the client IP (api/routers/feedback.py `_hash_ip`), only for the
+    # "hmac:" + a per-process salted HMAC of the client IP (api/request_context.py `hash_ip`), only for the
     # rate limit and the duplicate check, cleared once their 10-minute window has passed. The unsalted SHA-256
     # hashes of older rows were cleared once by hand on 2026-11-02 after a snapshot; no migration is needed.
     ip_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)

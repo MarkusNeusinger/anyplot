@@ -1,6 +1,19 @@
 """Request-scoped helpers shared across routers."""
 
+import hashlib
+import hmac
+import secrets
+
 from fastapi import Request
+
+
+IP_HASH_PREFIX = "hmac:"
+"""Marks a salted key (`hash_ip`). The feedback table keeps it in `ip_hash` for its windows; the unsalted
+SHA-256 hashes that rows written before it carried were cleared once by hand on 2026-11-02 after a snapshot,
+so no migration is needed."""
+_IP_SALT = secrets.token_bytes(32)
+"""This process's salt for `hash_ip`. Never logged and never configured, so it dies with the process, and
+with it every way to tell which address a key came from."""
 
 
 def client_ip(request: Request) -> str:
@@ -30,3 +43,17 @@ def client_ip(request: Request) -> str:
         if entry.strip():
             return entry.strip()
     return request.client.host if request.client else ""
+
+
+def hash_ip(ip: str) -> str:
+    """The client address as this process's rate-limit key: `hmac:` and 32 hex digits.
+
+    An HMAC-SHA256 under a random per-process salt, not a plain hash: there are only about
+    four billion IPv4 addresses, so a plain SHA-256 of one is undone by trying them all. The
+    limits that use it need the key only within one process: the feedback route keeps it in
+    its row until the longest of its windows has passed (`FeedbackRepository.clear_ip_hashes`),
+    and the search-miss limit keeps it in memory for one minute (`api/search_misses.py`). With
+    more than one instance, each counts its own requests: a limit then binds per instance."""
+    if not ip:
+        return ""
+    return IP_HASH_PREFIX + hmac.new(_IP_SALT, ip.encode("utf-8"), hashlib.sha256).hexdigest()[:32]

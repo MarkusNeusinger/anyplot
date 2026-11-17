@@ -449,8 +449,8 @@ class FeedbackRepository(BaseRepository[Feedback]):
     async def clear_ip_hashes(self, prefix: str, before: datetime) -> int:
         """Null the `ip_hash` of every row created before `before` whose hash starts with `prefix`; the count.
 
-        The feedback router stores a per-process salted hash (`api/routers/feedback.py`
-        `_hash_ip`) only for its rate-limit and duplicate windows and clears it here once
+        The feedback router stores a per-process salted hash (`api/request_context.py`
+        `hash_ip`) only for its rate-limit and duplicate windows and clears it here once
         they have passed. `prefix` keeps the statement to the hashes of that scheme; the
         unsalted hashes of older rows were cleared once by hand on 2026-11-02 after a
         snapshot, so no migration is needed.
