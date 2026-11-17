@@ -121,10 +121,11 @@ jobs:
         # tests/unit/test_agent_intro_crawler_copy.py checks that the explainer's GitHub
         # link lands on a README heading and that the explainer names the model the legal
         # page names, so a PR that renames that heading or rewords the model's row runs
-        # it. tests/unit/test_readme_claims.py holds the claims and links of README.md,
-        # docs/concepts/ai-workflow.md and the About page's AboutPage.tsx against the code
-        # and counts the owner decisions docs/concepts/agent-network.md records, so a PR
-        # that only rewords one of those four runs it too.
+        # it. tests/unit/test_readme_claims.py holds the claims of README.md,
+        # docs/concepts/ai-workflow.md and the About page's AboutPage.tsx against the
+        # code, checks the links of the first two, and counts the owner decisions
+        # docs/concepts/agent-network.md records, so a PR that only rewords one of those
+        # four runs it too.
         CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml|\.python-version|CLAUDE\.md|AGENTS\.md|README\.md|\.github/copilot-instructions\.md|\.claude/guardrails\.md|agentic/docs/(project-guide|agent-operations)\.md|docs/concepts/(ai-workflow|agent-network)\.md|([^/]+/)+cloudbuild\.yaml|agents/renderer/deploy_smoke\.sh|app/src/sections/agent-chat/AgentIntro\.tsx|app/src/pages/AboutPage\.tsx|app/src/pages/LegalPage\.tsx|plots/[^/]+/specification\.md)$|^(\.github/workflows/|\.github/actions/|prompts/|\.claude/skills/|agentic/commands/)' || true)
 
         # Force run on workflow_dispatch with force_run=true

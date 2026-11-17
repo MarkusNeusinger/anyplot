@@ -472,8 +472,10 @@ class TestCiTestsSpecSectionCheck:
         ):
             assert (root / path).is_file(), f"{path} is gone: update the filter and this list"
             assert pattern.search(path), f"a PR that changes only {path} skips the unit tests"
-        # Anchored at both ends: the page's own test file is no text the Python tests read.
-        assert not pattern.search("app/src/pages/AboutPage.test.tsx")
+        # Anchored at both ends: only the closing `$` keeps out a copy saved beside the page, and only the leading `^`
+        # keeps out a README in another directory.
+        assert not pattern.search("app/src/pages/AboutPage.tsx.bak")
+        assert not pattern.search("app/README.md")
 
     def test_step_needs_no_dependency_install(self) -> None:
         # The step runs on the pinned interpreter (regen_gate's `except A, B:` needs 3.14),
