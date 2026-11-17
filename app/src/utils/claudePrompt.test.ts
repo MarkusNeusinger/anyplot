@@ -58,7 +58,7 @@ describe('buildClaudePrompt', () => {
   // and the reaction as what can go to the coding assistant: a fourth parameter changes that row
   // too. Function.length does not count a parameter with a default value, so the copy test in
   // app/src/pages/DebugPage.test.tsx pins that the entry's other fields stay out at the call site.
-  it('takes the message, the page and the reaction of an entry, and no other field', () => {
+  it('takes three parameters: the message, the page and the reaction', () => {
     expect(buildClaudePrompt).toHaveLength(3);
 
     const out = buildClaudePrompt('The legend hides the last bar', '/plots/bar-basic', 'bug');

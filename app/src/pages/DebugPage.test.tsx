@@ -426,9 +426,9 @@ describe('DebugPage', () => {
     expect(copied).toContain('> Axis labels overlap on mobile');
     expect(copied).toContain('Open a pull request');
     // The legal page's site feedback row (app/src/pages/LegalPage.tsx) names only the message,
-    // the page and the reaction as what can go to the coding assistant. The admin page's entry
-    // carries no user-agent or random id, so its id, contact and window size are the fields
-    // that must stay out.
+    // the page and the reaction as what can go to the coding assistant. Of the other fields that
+    // row lists, the admin page's entry carries the contact and the window size; they and the
+    // entry's id stay out.
     expect(copied).not.toContain('fb-1');
     expect(copied).not.toContain('reader@example.com');
     expect(copied).not.toContain('375x812');
