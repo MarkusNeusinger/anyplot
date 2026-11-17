@@ -1,0 +1,66 @@
+{
+  "max_length": 40,
+  "min_length": 2,
+  "cases": [
+    { "rule": "lowercase", "typed": "Scatter", "sent": "scatter" },
+    { "rule": "white space at the ends", "typed": "  scatter  ", "sent": "scatter" },
+    { "rule": "a run of spaces is one", "typed": "SCATTER   Plot", "sent": "scatter plot" },
+    {
+      "rule": "tab and newline are spaces",
+      "typed": "box\tplot\nmatplotlib",
+      "sent": "box plot matplotlib"
+    },
+    { "rule": "nothing", "typed": "", "sent": "" },
+    { "rule": "spaces only", "typed": "   ", "sent": "" },
+    {
+      "rule": "cut at 40 characters",
+      "typed": "dear team, please find attached the quarterly numbers for the board",
+      "sent": "dear team, please find attached the quar"
+    },
+    {
+      "rule": "no space left at the cut",
+      "typed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bcd",
+      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    { "rule": "a German word", "typed": "Spinnennetz-Diagramm", "sent": "spinnennetz-diagramm" },
+    { "rule": "capital sharp s", "typed": "STRAẞE", "sent": "straße" },
+    { "rule": "Greek final sigma", "typed": "ΟΔΟΣ ΧΑΡΤΗΣ", "sent": "οδος χαρτης" },
+    {
+      "rule": "dotted capital I lowercases to two characters",
+      "typed": "İstanbul",
+      "sent": "i̇stanbul"
+    },
+    { "rule": "no-break space", "typed": "spider chart", "sent": "spider chart" },
+    {
+      "rule": "byte order mark is white space in JavaScript",
+      "typed": "﻿splom﻿",
+      "sent": "splom"
+    },
+    {
+      "rule": "line separator and ideographic space",
+      "typed": "x y　z",
+      "sent": "x y z"
+    },
+    {
+      "rule": "file separator is no white space in JavaScript",
+      "typed": "a\u001cb",
+      "sent": "a\u001cb"
+    },
+    {
+      "rule": "next line is no white space in JavaScript",
+      "typed": "a\u0085b",
+      "sent": "a\u0085b"
+    },
+    { "rule": "zero width space is kept", "typed": "x​y", "sent": "x​y" },
+    {
+      "rule": "a cut never splits a character outside the BMP",
+      "typed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀b",
+      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀"
+    },
+    {
+      "rule": "40 characters, not 40 UTF-16 units",
+      "typed": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "sent": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+    }
+  ]
+}

@@ -23,12 +23,20 @@ from api.cache import clear_cache, get_cache_stats
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
 from api.machine_reads_query import DETAIL_WINDOWS, MachineReadsDetail, read_detail
+from api.search_misses import SearchMissBody, SearchMissDeleted, SearchMissesResponse
+from api.search_misses import read_misses as read_search_misses
 from api.secret_compare import secret_matches
 from api.shared_links import SharedLinksDetail
 from api.shared_links import read_detail as read_shared_links
 from core.config import settings
 from core.constants import LIBRARY_NAMES, SUPPORTED_LIBRARIES
-from core.database import FEEDBACK_STATUSES, FeedbackRepository, LinkShareRepository, SpecRepository
+from core.database import (
+    FEEDBACK_STATUSES,
+    FeedbackRepository,
+    LinkShareRepository,
+    SearchMissRepository,
+    SpecRepository,
+)
 from core.plot_votes import VOTE_SORTS
 
 
@@ -588,6 +596,41 @@ async def shared_links(db: AsyncSession = Depends(require_db)) -> SharedLinksDet
         await db.rollback()
         logger.warning("shared links query failed: %s", type(exc).__name__)
         return SharedLinksDetail(status="unavailable")
+
+
+@router.get("/search-misses", response_model=SearchMissesResponse, dependencies=[Depends(require_admin)])
+async def search_misses(db: AsyncSession = Depends(require_db)) -> SearchMissesResponse:
+    """The gallery searches that found nothing in the whole catalogue, over the retention window of 90 UTC days.
+
+    Per text the total count and the first and the last day, most searched first, up to 500 texts; `texts`
+    says how many the window holds (`api/search_misses.py`). No public route shows a text. `unavailable`
+    with an empty list when the query fails, which includes the table not being there yet.
+    """
+    try:
+        return await read_search_misses(SearchMissRepository(db))
+    except SQLAlchemyError as exc:
+        # The class only: the statement's parameters stay out of the log.
+        await db.rollback()
+        logger.warning("search misses query failed: %s", type(exc).__name__)
+        return SearchMissesResponse(status="unavailable")
+
+
+@router.delete("/search-misses", response_model=SearchMissDeleted, dependencies=[Depends(require_admin)])
+async def delete_search_miss(payload: SearchMissBody, db: AsyncSession = Depends(require_db)) -> SearchMissDeleted:
+    """Remove every row of one text, whatever its day: `{"query": "<text>"}` in the body, as the list shows it.
+
+    The text travels in the body, never in the URL. `deleted` is the number of rows (days) removed, 0 for
+    a text the list no longer holds. `503` when the database does not answer.
+    """
+    try:
+        deleted = await SearchMissRepository(db).delete_query(payload.query)
+    except SQLAlchemyError as exc:
+        await db.rollback()
+        logger.warning("search miss delete failed: %s", type(exc).__name__)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="search misses unavailable"
+        ) from None
+    return SearchMissDeleted(deleted=deleted)
 
 
 class CacheInvalidateResponse(BaseModel):

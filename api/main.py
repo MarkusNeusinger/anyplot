@@ -48,6 +48,7 @@ from api.routers import (  # noqa: E402
     plots_router,
     preview_router,
     proxy_router,
+    search_router,
     seo_router,
     specs_router,
     stats_router,
@@ -380,6 +381,7 @@ app.include_router(debug_router)
 app.include_router(agent_router)
 app.include_router(agent_public_router)
 app.include_router(feedback_router)
+app.include_router(search_router)
 
 
 # ASGI middleware to handle /mcp without trailing slash
