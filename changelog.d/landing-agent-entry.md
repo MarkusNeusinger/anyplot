@@ -42,8 +42,8 @@
   `Dockerfile`, or `vite.config.ts`, which the tests of the origin gate, the
   content security policy, the analytics proxy, and the machine-read lines
   read. The filter is a workflow change with no local run: a unit test sends
-  each of these paths through its pattern, and only a pull request on GitHub
-  shows that the job starts.
+  the path of each of these five files through its pattern, and only a pull
+  request on GitHub shows that the job starts.
 
 ### Fixed
 
