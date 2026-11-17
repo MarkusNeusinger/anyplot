@@ -27,7 +27,10 @@
   feedback button stands on the explainer: the layout, which hid it on all of
   `/agent`, now hides it only where the query names a catalogue pair, by the
   rule the page uses to pick the chat, and the closed notice shows it there
-  itself, since no chat is open.
+  itself, since no chat is open. The page reads the lane only once, at load,
+  so a chat opened after the operator paused the assistant met the refusal
+  as an error in the chat's frame, without the terms or the button; it now
+  shows the same closed notice with both.
   In Plausible, `nav_click{source: hero_use_my_data}` now targets `/agent`,
   and `agent_open` gains the source `agent_intro` for the explainer's
   examples. Each chat opened there counts as one open, also after the visitor
