@@ -185,7 +185,7 @@ class TestExemptions:
         meets it."""
         monkeypatch.setenv("AGENT_USER_MESSAGES_PER_MINUTE", "1")
         get_settings.cache_clear()
-        swap_models("gemini", {"root": [{"text": f"Answer {index}."} for index in range(4)]})
+        swap_models("gemini", {"root": [{"text": f"Answer {letter}."} for letter in "ABCD"]})
         admin = await open_session(client)
         public = await open_session(client, user=OTHER)
 

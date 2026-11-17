@@ -614,15 +614,14 @@ class TestReviewFreeWiring:
     def test_the_metadata_step_carries_on_the_review_free_path(self):
         env = _step("impl-review.yml", METADATA)["env"]
         assert env["REVIEW_CARRIED"] == f"${{{{ {REVIEW_FREE} }}}}"
-        assert env["CARRY_FROM"] == "/tmp/anyplot-prev-metadata.yaml"
+        assert env["CARRY_FROM"] == "${{ runner.temp }}/anyplot-prev-metadata.yaml"
         assert (
             env["SCORE"]
             == f"${{{{ {REVIEW_FREE} && steps.regen_ctx.outputs.prev_stored || steps.score.outputs.score }}}}"
         )
-        assert (
-            'git show "origin/main:${META_FILE}" > /tmp/anyplot-prev-metadata.yaml'
-            in _step("impl-review.yml", "Regen context")["run"]
-        )
+        context = _step("impl-review.yml", "Regen context")["run"]
+        assert 'PREV_META="$RUNNER_TEMP/anyplot-prev-metadata.yaml"' in context
+        assert 'git show "origin/main:${META_FILE}" > "$PREV_META"' in context
 
 
 class TestReviewFreeRescue:

@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Filiale;Betrag\nHafen;1.204,50\nMühle;987,25\nBahnhof;1.530,75\n",
+  "message": "Wie viel ergeben die Beträge aller Filialen zusammen?",
+  "expected_operations": [],
+  "figures": "queried",
+  "locale": "de",
+  "spec_id": "bar-basic",
+  "tags": ["figures", "decimal_comma", "data_question"]
+}

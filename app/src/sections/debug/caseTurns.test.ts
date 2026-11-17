@@ -113,6 +113,16 @@ describe('guardSeverity', () => {
   it('passes a reply about the button the user asked for', () => {
     expect(guardSeverity('plot_button', 'asked')).toBe('ok');
   });
+
+  it('passes a reply whose figures stood in a source and fails one that was withheld', () => {
+    expect(guardSeverity('number_provenance', 'clean')).toBe('ok');
+    expect(guardSeverity('number_provenance', 'unsourced_logged')).toBe('warn');
+    expect(guardSeverity('number_provenance', 'reasked')).toBe('warn');
+    expect(guardSeverity('number_provenance', 'kept')).toBe('warn');
+    expect(guardSeverity('number_provenance', 'withheld')).toBe('bad');
+    // The check itself failed and the reply went out unchecked: shown as a failure, so it is seen.
+    expect(guardSeverity('number_provenance', 'error')).toBe('bad');
+  });
 });
 
 describe('turnChips', () => {
@@ -137,6 +147,15 @@ describe('turnChips', () => {
   it('names the turn end only when no guard chip does', () => {
     expect(labels(TURNS.records[3])).toEqual([['message_limit: rate_limited', 'warn', 1]]);
     expect(labels(TURNS.records[4])).toEqual([['error: cancelled', 'warn', 1]]);
+  });
+
+  it('shows one chip for a withheld reply, the figure check’s own', () => {
+    const withheld = turn({
+      kind: 'error',
+      error: 'unverified_figure',
+      guards: [{ guard: 'number_provenance', verdict: 'withheld' }],
+    });
+    expect(labels(withheld)).toEqual([['number_provenance: withheld', 'bad', 1]]);
   });
 });
 

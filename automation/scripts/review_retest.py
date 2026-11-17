@@ -92,7 +92,12 @@ from automation.scripts.regen_gate import (
 # Bump when a harness change alters what a session sees or what a record
 # measures: resume (split_resume) and compare_arms treat another version as
 # another arm, and neither compares the dispatch commit.
-HARNESS_VERSION = "1"
+# "2": a regen cell's session reads the predecessor's files under /tmp with
+# the Read tool (in "1" that read was refused), and the predecessor's
+# metadata, which holds the stored score, no longer sits beside them. The
+# version is one number for the whole harness, so a fresh cell recorded on
+# "1" isn't reused either.
+HARNESS_VERSION = "2"
 MAX_SESSIONS = 240
 # First commit whose regen_gate.py has `context --omit-scores` (the blind
 # re-score the harness reproduces); regen cells need rules at least this new.
@@ -993,27 +998,31 @@ def materialize(
     shutil.copyfile(bundle_dir / predecessor / "plot-light.png", tmp.prev_light)
     shutil.copyfile(bundle_dir / predecessor / "plot-dark.png", tmp.prev_dark)
     shutil.copyfile(bundle_dir / predecessor / "metadata.yaml", tmp.prev_metadata)
-    ctx = _run_gate(
-        gate_script,
-        [
-            "context",
-            "--metadata",
-            str(tmp.prev_metadata),
-            "--spec-id",
-            spec_id,
-            "--language",
-            lang,
-            "--library",
-            library,
-            "--spec-file",
-            str(plots / "specification.md"),
-            "--omit-scores",
-            "--out-md",
-            str(tmp.prev_review),
-            "--out-weaknesses",
-            str(tmp.prev_weaknesses),
-        ],
-    )
+    try:
+        ctx = _run_gate(
+            gate_script,
+            [
+                "context",
+                "--metadata",
+                str(tmp.prev_metadata),
+                "--spec-id",
+                spec_id,
+                "--language",
+                lang,
+                "--library",
+                library,
+                "--spec-file",
+                str(plots / "specification.md"),
+                "--omit-scores",
+                "--out-md",
+                str(tmp.prev_review),
+                "--out-weaknesses",
+                str(tmp.prev_weaknesses),
+            ],
+        )
+    finally:
+        # It holds the stored score, and the reviewer's Read tool covers /tmp.
+        tmp.prev_metadata.unlink(missing_ok=True)
     raw = tmp.base / "anyplot-prev-impl-raw"
     shutil.copyfile(bundle_dir / predecessor / f"{library}{ext}", raw)
     try:
