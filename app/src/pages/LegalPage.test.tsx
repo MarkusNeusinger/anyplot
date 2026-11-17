@@ -218,7 +218,7 @@ describe('LegalPage', () => {
     // cannot quietly drop one, least of all the two identifiers a reader would care about most.
     // Then who reads it: the admin page's "copy prompt for Claude Code" button hands the message,
     // the page and the reaction to the coding assistant (src/utils/claudePrompt.ts), so the row
-    // names that recipient and no longer says only the operator reads it.
+    // names that recipient, and #privacy must not claim a sole reader ("read only by").
     expect(screen.getAllByRole('row', { name: /^feedback\s/ })[0]).toHaveTextContent(
       /message, reaction, optional contact, page, your window size, user-agent and a random id that ties your own submissions together\. I read them, and when I work on one, its message, page and reaction can go to the ai assistant I code with \(Claude by Anthropic\)\. a salted IP hash limits spam\./
     );

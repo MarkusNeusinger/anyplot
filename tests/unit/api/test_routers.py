@@ -1345,7 +1345,7 @@ class TestSeoProxyRouter:
             "Google Cloud and Cloudflare apply their data processing terms",
         ):
             assert fact in response.text, fact
-        # Neither the old exclusive reader nor the old plural cookie holder survives in the copy.
+        # The feedback item must not claim a sole reader, and the cookie item names the operator as its holder.
         for gone in ("read only by the operator", "admins: the Cloudflare Access login cookie"):
             assert gone not in response.text, gone
 
