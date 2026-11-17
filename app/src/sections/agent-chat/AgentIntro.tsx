@@ -93,6 +93,7 @@ const privacyLinkSx = {
 const githubLinkSx = {
   ...proseLinkStyle,
   whiteSpace: 'nowrap',
+  // 13 + 18 + 13 = 44: the padding completes the link's 18 px of text to a 44 px target.
   py: { xs: '13px', sm: 0 },
 } as const;
 
