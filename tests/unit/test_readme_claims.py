@@ -459,6 +459,24 @@ def test_the_readme_introduces_the_owner_as_the_about_page_does():
         )
 
 
+def test_the_real_data_case_names_the_lines_the_parser_finds_a_table_among():
+    """The README's real-data case says pasted data works with notes, metadata or total rows around the table.
+
+    `table_block` in the agents' parser is that rule: it finds the table among such lines and leaves them out, and its
+    docstring names the three kinds. A parser that stops naming one fails here until the README follows.
+    """
+    intro = collapse(section(read(README), "How I build anyplot"))
+    assert "pasted data has to work with notes, metadata or total rows around the table" in intro, (
+        "README.md 'How I build anyplot' no longer states the rule its real-data case led to"
+    )
+    parser = "agents/anyplot/data/parse.py"
+    functions = {node.name: node for node in source_tree(parser).body if isinstance(node, ast.FunctionDef)}
+    assert "table_block" in functions, f"{parser} no longer defines table_block"
+    doc = collapse(ast.get_docstring(functions["table_block"]) or "")
+    for kind in ("metadata", "a note", "a total row"):
+        assert kind in doc, f"{parser}: table_block no longer names {kind} among the lines around a table"
+
+
 def test_about_page_and_its_bot_copy_date_the_platform_as_the_workflow_page_does():
     """The builder's platform built by hand, largely without AI, in the years the AI workflow page gives it.
 
