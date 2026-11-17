@@ -66,14 +66,15 @@ describe('LegalPage', () => {
       /^• a legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits\s*• your request: making the plot you ask the data assistant for\s*• your consent to a feedback case: you give it when you send it and can withdraw it at any time by asking$/
     );
     // Every right, the objection with the condition that makes it one, the address to write to,
-    // that a feedback case can go early, what lets me find an entry, why a log line cannot be
-    // deleted on request, and how long the database backups keep a deleted entry: the whole
-    // paragraph, so no clause can fall off its end. The log periods are the ones the server logs'
-    // row and the machine readers' and telemetry rows give; the backups' 30 days are the Cloud SQL
-    // retention in docs/reference/database.md ("Automated backups").
+    // that a feedback case can go early, what lets me find an entry, that a log line cannot be
+    // deleted one by one and when it expires, and how long the database's automatic backups keep
+    // a deleted entry: the whole paragraph, so no clause can fall off its end. The log periods are
+    // the ones the server logs' row and the machine readers' and telemetry rows give; the backups'
+    // "about 30 days" are the Cloud SQL retention of 30 daily backups in
+    // docs/reference/database.md ("Automated backups"), which counts backups, not days.
     const rights = screen.getByText(/you can ask what is stored about you/);
     expect(rights).toHaveTextContent(
-      /^you can ask what is stored about you and have it corrected, erased or restricted, object to the processing for a reason specific to your situation, and complain to a data protection authority\. a few lines to admin@anyplot\.ai are enough, also to have a feedback case deleted early\. tell me what you sent and roughly when, or the contact you typed, so I can find it\. log lines cannot be picked out one by one: they delete themselves after 30 days \(server logs\) or 180 days \(machine reads, assistant telemetry\)\. backups keep a deleted entry for up to 30 days\.$/
+      /^you can ask what is stored about you and have it corrected, erased or restricted, object to the processing for a reason specific to your situation, and complain to a data protection authority\. a few lines to admin@anyplot\.ai are enough, also to have a feedback case deleted early\. tell me what you sent and roughly when, or the contact you typed, so I can find it\. log lines cannot be deleted one by one: they expire after 30 days \(server logs\) or 180 days \(machine reads, assistant telemetry\)\. the database's automatic backups keep a deleted entry for about 30 days\.$/
     );
     expect(within(rights).getByRole('link', { name: 'admin@anyplot.ai' })).toHaveAttribute(
       'href',

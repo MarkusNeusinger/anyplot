@@ -493,9 +493,10 @@ export function LegalPage() {
                 admin@anyplot.ai
               </Link>{' '}
               are enough, also to have a feedback case deleted early. tell me what you sent and
-              roughly when, or the contact you typed, so I can find it. log lines cannot be picked
-              out one by one: they delete themselves after 30 days (server logs) or 180 days
-              (machine reads, assistant telemetry). backups keep a deleted entry for up to 30 days.
+              roughly when, or the contact you typed, so I can find it. log lines cannot be deleted
+              one by one: they expire after 30 days (server logs) or 180 days (machine reads,
+              assistant telemetry). the database&apos;s automatic backups keep a deleted entry for
+              about 30 days.
             </Typography>
           </Box>
         </Box>
