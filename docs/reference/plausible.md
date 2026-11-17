@@ -279,10 +279,10 @@ pasted into the box by mistake doesn't stand there in full.
 
 The analytics row of the legal page's privacy section
 (`app/src/pages/LegalPage.tsx`) and its crawler copy in `api/routers/seo.py`
-(`_LEGAL_BOT_BODY`) name this text as the one exception to what Plausible
-gets: sent in lowercase, cut at 40 characters, and shown on the dashboard. If
-you change `normalizeQuery()` or send typed text with another event, update
-both; `app/src/pages/LegalPage.test.tsx` holds the row to `MAX_QUERY_LENGTH`.
+(`_LEGAL_BOT_BODY`) say that the text of a gallery search is sent: in
+lowercase, cut at 40 characters, and shown on the dashboard. If you change
+`normalizeQuery()` or send typed text in another event property, update both;
+`app/src/pages/LegalPage.test.tsx` holds the row to `MAX_QUERY_LENGTH`.
 
 ### Feedback
 
