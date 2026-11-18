@@ -163,7 +163,11 @@ def annotated_kind(relative: str, name: str) -> tuple[str, dict[str, object]]:
     `module_constant` cannot read these: `Annotated[...]` is no literal.
     """
     for node in source_tree(relative).body:
-        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
+        # `NAME = Annotated[...]` and `NAME: TypeAlias = Annotated[...]` are the same constant.
+        targets = (
+            node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, ast.AnnAssign) else []
+        )
+        if any(isinstance(t, ast.Name) and t.id == name for t in targets):
             value = node.value
             if isinstance(value, ast.Subscript) and isinstance(value.slice, ast.Tuple):
                 marker = value.slice.elts[-1]
@@ -398,7 +402,8 @@ def test_highlights_name_the_model_every_pipeline_review_runs_on():
     passing = sorted(
         path.name
         for path in (ROOT / ".github" / "workflows").glob("*.yml")
-        if path.name != "impl-review.yml" and re.search(r"review_model\]?=", read(path))
+        # Every way to hand the input over: `-f review_model=`, `inputs[review_model]=`, a YAML or JSON mapping.
+        if path.name != "impl-review.yml" and re.search(r"review_model[\"'\]]?\s*[=:]", read(path))
     )
     assert not passing, (
         f"{passing} dispatch impl-review.yml with a review model: not every pipeline review is {default}"
