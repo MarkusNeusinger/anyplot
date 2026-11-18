@@ -1,7 +1,7 @@
 """ anyplot.ai
 dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 88/100 | Created: 2026-05-08
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-18
 """
 
 import os
@@ -21,27 +21,30 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+COLS = 10  # dots per grid row
+
+# Columns
+CATEGORY = "category"  # role: category
+COUNT = "count"  # role: count
+TOTAL = "total"  # role: total
 
 # Data — clinical trial side effect profile (n = 100 patients)
-categories = ["No Side Effects", "Mild Effects", "Moderate Effects", "Severe Effects"]
-counts = [72, 18, 7, 3]
-total = sum(counts)  # 100
-COLS = 10
-
-dot_labels = []
-for cat, cnt in zip(categories, counts, strict=True):
-    dot_labels.extend([cat] * cnt)
-
-legend_labels = [f"{cat}  (n={cnt})" for cat, cnt in zip(categories, counts, strict=True)]
-legend_map = dict(zip(categories, legend_labels, strict=True))
-
 df = pd.DataFrame(
-    {"col": [i % COLS for i in range(total)], "row": [-(i // COLS) for i in range(total)], "group": dot_labels}
+    {CATEGORY: ["No Side Effects", "Mild Effects", "Moderate Effects", "Severe Effects"], COUNT: [72, 18, 7, 3]}
 )
-df["legend"] = pd.Categorical(df["group"].map(legend_map), categories=legend_labels, ordered=True)
 
-# Plot
+# Plot: one dot per unit, filled left to right and top to bottom
+valid = df.dropna(subset=[COUNT])
+dots = valid.loc[valid.index.repeat(valid[COUNT].astype(int))].reset_index(drop=True)
+dots["label"] = dots[CATEGORY].astype(str) + "  (n=" + dots[COUNT].astype(int).astype(str) + ")"
+dots["label"] = pd.Categorical(dots["label"], categories=dots["label"].unique(), ordered=True)
+dots["x"] = dots.index % COLS
+dots["y"] = -(dots.index // COLS)
+
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -52,23 +55,23 @@ anyplot_theme = theme(
     axis_text=element_blank(),
     axis_line=element_blank(),
     axis_ticks=element_blank(),
-    plot_title=element_text(color=INK, size=24),
+    plot_title=element_text(color=INK, size=14),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_text=element_text(color=INK_SOFT, size=10),
     legend_title=element_blank(),
     legend_position="right",
 )
 
 plot = (
-    ggplot(df, aes(x="col", y="row", color="legend"))  # noqa: F405
-    + geom_point(size=8, alpha=0.95)  # noqa: F405
-    + scale_color_manual(values=IMPRINT)  # noqa: F405
-    + labs(title="dot-matrix-proportional · letsplot · anyplot.ai")  # noqa: F405
+    ggplot(dots, aes(x="x", y="y", color="label"))  # noqa: F405
+    + geom_point(size=7, alpha=0.95)  # noqa: F405
+    + scale_color_manual(values=IMPRINT[: df.shape[0]])  # noqa: F405
+    + labs(title="dot-matrix-proportional · python · letsplot · anyplot.ai")  # noqa: F405
     + theme_void()  # noqa: F405
-    + ggsize(1200, 1200)  # noqa: F405
+    + ggsize(600, 600)  # noqa: F405
     + anyplot_theme
 )
 
 # Save
-export_ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=3)
+export_ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
 export_ggsave(plot, filename=f"plot-{THEME}.html", path=".")

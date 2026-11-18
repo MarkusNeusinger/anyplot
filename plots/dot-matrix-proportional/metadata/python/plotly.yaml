@@ -2,42 +2,46 @@ library: plotly
 language: python
 specification_id: dot-matrix-proportional
 created: '2026-05-08T21:55:49Z'
-updated: '2026-05-08T22:17:39Z'
+updated: '2026-11-18T02:46:45Z'
 generated_by: claude-sonnet
-workflow_run: 25581288683
+workflow_run: 44224711053
 issue: 5241
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 88
 review:
   strengths:
-  - 'Perfect Visual Quality: explicitly sized fonts, correct dot sizing, no overlap,
-    full Okabe-Ito compliance in both themes'
-  - 'Excellent spec adherence: 10x10 grid, correct fill order, legend with counts
-    and percentages, appropriate scale context annotation'
-  - 'Strong data storytelling: the green insight annotation and visual dominance of
-    the top rows tell the story immediately'
-  - Clean, elegant code with proper theme-adaptive chrome throughout
+  - Square 2400x2400 canvas with scaleanchor/scaleratio keeps the 10x10 dot grid exactly
+    square and evenly spaced
+  - Legend entries carry label, count and share computed from the data, matching the
+    dots
+  - Subtitle derives the largest group and its share from the data and colors it in
+    that category's green
+  - 'Library-native interactivity: per-category hovertemplate with count and share,
+    fixedrange axes in the HTML'
+  - Theme tokens threaded through title, legend surface and footer; both renders read
+    cleanly
   weaknesses:
-  - DE-01 could reach 8/8 with further typographic refinement (e.g., weight variation
-    in legend vs. title) or a unique design flourish
-  - LM-02 could be higher if plotly interactive features were more prominently showcased
-    (e.g., click-to-filter via updatemenus)
+  - 'Suggestion: the gap between the title and the green subtitle (~150 px) is larger
+    than the gap between the subtitle and the grid; a smaller top margin or a higher
+    subtitle would tighten the header.'
+  - 'Suggestion: for inputs whose counts sum to less than the total, draw the leftover
+    slots as a neutral remainder (spec C5); the current data has none.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "City Commute Survey · dot-matrix-proportional · plotly · anyplot.ai" in dark ink, clearly readable. Green subtitle annotation readable. Footer annotation in muted ink readable. Legend text readable.
-      Data: 10x10 dot grid — green (#009E73) top 4+ rows (42 dots), orange (#D55E00) middle rows (31 dots), blue (#0072B2) near-bottom (15 dots), pink (#CC79A7) bottom (12 dots). First series is #009E73. Horizontal legend with dot icons, names, counts, and percentages.
+      Background: warm off-white #FAF8F1, 2400x2400
+      Chrome: title 'City Commute Survey · dot-matrix-proportional · python · plotly · anyplot.ai' in dark ink at top; green subtitle '42% · Public Transit is the largest group' above the grid; muted footer 'Each ● represents 1 respondent · n = 100' under the grid; boxed two-column legend on elevated surface with dot glyphs, labels, counts and percentages. All readable.
+      Data: 10x10 grid of equal dots, filled left-to-right top-to-bottom: 42 green #009E73, 31 purple #C475FD, 15 blue #4467A3, 12 ochre #BD8233. No axes or grid lines.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title text flips to light (#F0EFE8), clearly readable against dark background. Subtitle annotation remains in #009E73 (brand green), visible. Footer annotation uses muted light token, readable. Legend text uses secondary light ink. No dark-on-dark failures detected.
-      Data: Data colors identical to light render — same green, orange, blue, and pink dots in same positions. Okabe-Ito positions 1-4 unchanged between themes.
+      Background: warm near-black #1A1A17
+      Chrome: title in light ink, legend text in light soft ink on #242420 legend surface with light border, muted footer light grey; no dark-on-dark text.
+      Data: dot colors identical to the light render; all dots clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -49,75 +53,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, subtitle 18px, legend
-          18px, footer 16px; readable in both themes'
+        comment: Title 16, subtitle 11, legend 10, footer 9 on the 600 px canvas at
+          scale 4; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; dots sized so they do not overlap labels
+        comment: No text collisions; dots evenly spaced and never touching
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size=44 produces clearly distinct, well-sized dots for a 10x10
-          grid
+        comment: 22 px dots clearly visible for 100 units; legend glyphs match the
+          dots in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; CVD-safe; categories distinguishable by hue and
-          visual grouping
+        comment: Four Imprint hues separated by hue and lightness; no red-green pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3600x3600 px square format; dot grid fills 70-80% of canvas with
-          balanced margins
+        comment: 2400x2400 canvas (gate passed); square grid via scaleanchor centered;
+          title ~77% width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden (appropriate for dot matrix); title is descriptive; subtitle
-          and footer provide context
+        comment: 'N/A: axes hidden by design (dot position is layout); title and footer
+          explain the unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order throughout; backgrounds #FAF8F1/#1A1A17;
-          chrome theme-adaptive in both renders'
+        comment: 'Imprint positions 1-4 in canonical order, first #009E73; backgrounds
+          #FAF8F1/#1A1A17; chrome flips correctly'
     design_excellence:
-      score: 16
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Clearly above defaults: warm custom backgrounds, insight annotation
-          in brand green, horizontal legend with counts and percentages, clean visual
-          hierarchy'
+        passed: false
+        comment: 'Beyond baseline: bold data-derived percentage in the subtitle in
+          the leading category''s green, muted footer stating the unit, three-level
+          type hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: No grid, axes fully hidden, generous whitespace, legend with subtle
-          ELEVATED_BG fill and INK_SOFT border; very clean
+        passed: false
+        comment: Legend on an elevated surface in two balanced columns with count
+          and share; unit footer placed between grid and legend
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Annotation directly names the key insight; visual dominance of 4+
-          rows of green immediately directs the viewer; legend quantifies all categories
+        passed: false
+        comment: 'Focal point chosen by the implementation: subtitle computed from
+          the data names the largest group in its own color'
     spec_compliance:
       score: 15
       max: 15
@@ -127,29 +130,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct dot matrix: uniform dots, grid layout, color-coded by category,
-          left-to-right top-to-bottom fill'
+        comment: 'Correct dot-matrix chart: uniform dots, one per unit, colored by
+          category'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 10x10 grid for total=100; each dot = 1 unit; color-coded categories;
-          legend with counts and percentages
+        comment: 10x10 grid for 100, one dot per unit, left-to-right top-to-bottom
+          fill, legend with labels and counts, percentage annotations; C1-C4 met;
+          C5 not triggered (counts sum to total)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 100 dots present; fill order correct; scaleanchor ensures equal
-          aspect ratio
+        comment: All 100 dots present at their grid slots; runs of 42/31/15/12 match
+          the counts
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows format; legend labels include category name, count,
-          and percentage
+        comment: Title 'City Commute Survey · dot-matrix-proportional · python · plotly
+          · anyplot.ai' is correct; legend entries read as text with counts
     data_quality:
       score: 15
       max: 15
@@ -159,22 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 categories with varying proportions (42, 31, 15, 12) showcase the
-          full range of the chart type
+        comment: Four categories with distinct run lengths, runs ending mid-row; shows
+          all aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: City commute survey is a real, neutral, comprehensible scenario;
-          commute mode categories are plausible and non-controversial
+        comment: City commute survey, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Total=100 (clean grid); proportions plausible for a transit-heavy
-          urban area; work-from-home at 12% is realistic
+        comment: n=100, shares 42/31/15/12 plausible; legend counts and percentages
+          computed from the data and match the dots (checked 42,31,15,12)
     code_quality:
       score: 10
       max: 10
@@ -184,62 +187,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> positions -> plot -> save;
-          no functions or classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data; no random elements
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects imported, both used
+        comment: math, os, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; zip(strict=False) is deliberate; coordinate
-          calculation loop is clear
+        comment: Compact index arithmetic for slots; nothing to remove
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current API
+        comment: Saves plot-{THEME}.png and .html with current write_image/write_html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses go.Scatter with marker mode (correct plotly idiom for dot matrix);
-          scaleanchor/scaleratio for equal aspect ratio is sophisticated; comprehensive
-          layout update
+        passed: false
+        comment: go.Scatter traces per category, scaleanchor/scaleratio for equal
+          aspect, layout-level legend/annotations
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages plotly interactivity with custom hovertemplate, HTML export,
-          fixedrange and scaleanchor (plotly-specific layout features)
+        passed: false
+        comment: Plotly hovertemplate per category, fixedrange and scaleanchor; nothing
+          more distinctive
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-18T02:43:23Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
+  - data-generation
   - iteration-over-groups
-  - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
+  - publication-ready
