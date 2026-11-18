@@ -401,6 +401,44 @@ def test_idempotency_keys_repeat_for_the_same_line_only() -> None:
     assert first != telemetry.idempotency_key("s", 2, "run1", "pipeline_run")
 
 
+def test_an_idempotency_key_cannot_be_recomputed_from_what_the_logs_hold(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A telemetry line shows its session hash, turn and event, and the attribution lines show the request id that
+    `attempt` holds: a key that is a plain hash of the four joins a telemetry row to its debug lines."""
+    import hashlib
+
+    from agents.anyplot.plugins import ledger
+
+    fields = ("0123456789abcdef", 3, "turn:req-1", "chat_turn")
+    key = telemetry.idempotency_key(*fields)
+    assert re.fullmatch(r"[0-9a-f]{24}", key)
+    assert key != hashlib.sha256(b"0123456789abcdef|3|turn:req-1|chat_turn").hexdigest()[:24]
+    for domain in ("", "user", "network", "attribution", "telemetry", "case"):
+        assert key != ledger.salted("0123456789abcdef|3|turn:req-1|chat_turn", domain, 24), domain
+    monkeypatch.setattr(ledger, "SESSION_SALT", b"another process")
+    assert telemetry.idempotency_key(*fields) != key
+
+
+async def test_every_written_line_carries_the_salted_key_of_its_own_fields(
+    client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`emit` builds the key from the line's session hash, turn and event and the caller's `attempt`: the lines of
+    two refused pastes differ in `attempt` alone, and neither key is the plain hash of those values."""
+    import hashlib
+
+    caplog.set_level(logging.INFO)
+    sid = await open_session(client)
+    for text in ("a,b\n1,2\n3,4,5\n", "import numpy as np\nx = np.linspace(0, 10, 100)\ny = np.sin(x)\n"):
+        refused = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+        assert refused.status_code == 422
+    first, second = telemetry_lines(caplog)
+    assert (first["session"], first["turn"], first["event"]) == (second["session"], second["turn"], second["event"])
+    for index, line in enumerate((first, second), start=1):
+        fields = (line["session"], line["turn"], f"in{index}", "data_input")
+        assert line["idempotency_key"] == telemetry.idempotency_key(*fields)
+        plain = "|".join(str(part) for part in fields).encode()
+        assert line["idempotency_key"] != hashlib.sha256(plain).hexdigest()[:24]
+
+
 def test_a_rerun_node_keeps_its_run_index() -> None:
     telemetry.forget("sess-x")
     assert telemetry.run_index("sess-x", "inv-1") == 1

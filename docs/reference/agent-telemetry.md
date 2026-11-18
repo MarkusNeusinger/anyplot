@@ -52,7 +52,7 @@ Every line carries the same envelope:
 | `session` | An HMAC-SHA256 of the session id under a random per-process salt, 16 hex characters |
 | `spec_id`, `library` | The session's spec and library, set once per request from session state |
 | `turn` | The session's user turns so far; a `chat_turn` carries its own number |
-| `idempotency_key` | A hash of session, turn, attempt and event: a line Cloud Logging delivers twice, or a pipeline node that ADK runs again, keeps its key, and the base view keeps one row per key |
+| `idempotency_key` | An HMAC-SHA256 of session, turn, attempt and event under the per-process salt, 24 hex characters: a line Cloud Logging delivers twice, or a pipeline node that ADK runs again, keeps its key, and the base view keeps one row per key. See [Session hash](#session-hash) for why it is salted |
 
 ### Session hash
 
@@ -62,7 +62,12 @@ logs. Sessions live in memory and end with the instance (`max-instances=1`), so 
 lines together for exactly as long as the session exists. Since 2026-10-16 the attribution lines' `session`
 is salted with the same per-process salt under another domain (`agents/anyplot/plugins/ledger.py` `salted`),
 so it cannot be joined to the request log either, and the two hashes of one session differ: telemetry rows
-cannot be joined to the attribution lines, which carry the user id. A stored feedback case records a third
+cannot be joined to the attribution lines, which carry the user id. The `idempotency_key` is salted the same
+way under a domain of its own, because its attempt label often holds the request id, which the attribution
+lines carry as well: a plain hash of a line's session, turn, event and that id could be recomputed for every
+request id in the debug lines, and a match would join the two after all. A line written before the key was
+salted keeps its plain key, so that join stays possible for it until its debug lines leave the `_Default`
+bucket after 30 days. A stored feedback case records a third
 hash of its session under a domain of its own (`ledger.case_key`, the bundle's `session.case_key`), so a case's
 `session_hash` joins it to no telemetry row and no log line either. A case can still be matched to its session
 by time: by the second in the request log for 30 days, and by its second, reaction and version in the telemetry
