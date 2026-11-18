@@ -205,10 +205,10 @@ class TestTheMiddleware:
         assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/x"}
         assert answer.headers["cache-control"] == "private, no-store"
 
-    async def test_a_cut_after_the_answer_began_breaks_the_answer_instead_of_ending_it(self) -> None:
-        """An answer on its way cannot be replaced by a refusal. It must not be closed as if it
-        were whole either: the error that leaves here makes the server break the connection, so
-        the client can tell the short answer from a finished one."""
+    async def test_a_cut_after_the_answer_began_is_raised_and_the_rest_is_not_sent(self) -> None:
+        """An answer on its way cannot be replaced by a refusal. The rest of it is dropped, and
+        the failure leaves here as an error instead of passing in silence. What a client then
+        sees is up to the layers outside, which may end the short answer properly."""
 
         async def answers_then_reads(scope: Scope, receive: Receive, send: Send) -> None:
             await send({"type": "http.response.start", "status": 200, "headers": []})
@@ -241,8 +241,6 @@ class TestTheMiddleware:
             [b"-1"],
             [b"1_0"],
             [b""],
-            # More digits than a length has; Python itself refuses to read several thousand.
-            [b"9" * 5000],
             # Two that differ: a refusal that read only the first would let the second decide.
             [b"0", b"100000"],
             [b"100000", b"0"],
@@ -254,6 +252,34 @@ class TestTheMiddleware:
         assert wire.starts == [400]
         assert wire.taken == 0
         assert recorder.calls == 0
+
+    @pytest.mark.parametrize("length", [b"18446744073709551616", b"9" * 5000])
+    async def test_a_length_of_any_number_of_digits_is_still_a_length(self, bounded, recorder, length) -> None:
+        """A number too long to read is not a malformed one: it is above every cap, so it gets
+        the refusal for a body that is too large (Python itself stops at a few thousand digits)."""
+        wire = Wire(b"a")
+        await bounded(scope_of(headers=[(b"content-length", length)]), wire.receive, wire.send)
+        assert wire.starts == [413]
+        assert wire.taken == 0
+        assert recorder.calls == 0
+
+    async def test_leading_zeros_do_not_make_a_length_longer(self, bounded, recorder) -> None:
+        wire = Wire(b"abc")
+        await bounded(scope_of(headers=[(b"content-length", b"0" * 40 + b"3")]), wire.receive, wire.send)
+        assert wire.starts == [200]
+        assert recorder.read == 3
+
+    async def test_a_body_no_application_reads_is_never_taken(self) -> None:
+        """What is bounded is what the application takes. A route that answers without reading
+        gets nothing counted and nothing refused, because nothing is pulled from the connection."""
+
+        async def answers_unread(scope: Scope, receive: Receive, send: Send) -> None:
+            await JSONResponse({"ok": True})(scope, receive, send)
+
+        wire = Wire(*[b"a" * CAP] * 6)
+        await BodyLimitMiddleware(answers_unread, default=CAP)(scope_of(), wire.receive, wire.send)
+        assert wire.starts == [200]
+        assert wire.taken == 0
 
     async def test_the_same_length_stated_twice_is_one_length(self, bounded, recorder) -> None:
         wire = Wire(b"abc")

@@ -5,9 +5,13 @@ dependency or the route's own checks run, so a size check inside a route or a de
 after the bytes are already in memory. This middleware sits in front of the router instead:
 
 - A request that declares a `Content-Length` above the cap of its path is refused unread.
-- A request that declares none (a chunked body, some HTTP/2 and proxied ones) is counted as it
-  streams. When it passes the cap, the refusal is sent from here and the application is told
-  the client has gone, so it takes no more of the body.
+- A request that declares none (a chunked body, some HTTP/2 and proxied ones) is counted as the
+  application reads it. When it passes the cap, the refusal is sent from here and the
+  application is told the client has gone, so it takes no more of the body.
+
+What is bounded is what the application takes. A route that never reads its body is never
+handed it, whatever its size: nothing here reads a body ahead of the application, and the
+server in front keeps only its own small read buffer until the application asks.
 
 The refusal never depends on what the application behind does with an error: a route, the
 framework and an app mounted beside it (the MCP server) all meet the same end of the body, and
@@ -22,6 +26,7 @@ reads is never handed to the application.
 """
 
 import logging
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 
@@ -40,8 +45,9 @@ TOO_LARGE = "request body too large"
 
 _BODYLESS_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 _NO_STORE = {"Cache-Control": "private, no-store"}
-# No real length has more digits than this; Python refuses to read a number of several thousand.
-_MAX_LENGTH_DIGITS = 18
+# Python refuses to read a number of several thousand digits. A length of more digits than this
+# (leading zeros aside) is above every cap anyway and needs no reading.
+_MAX_INT_DIGITS = 18
 
 
 class ClientGoneFilter(logging.Filter):
@@ -59,9 +65,11 @@ class ClientGoneFilter(logging.Filter):
 class BodyCutMidAnswer(RuntimeError):
     """A body passed its bound after the application had begun to answer.
 
-    No refusal can replace an answer that is on its way, and ending it quietly would hand the
-    client a short answer that looks whole. Raised once the application returns, so the server
-    breaks the connection instead.
+    No refusal can replace an answer that is on its way. The rest of that answer is dropped, and
+    this is raised once the application returns, so the short answer is at least recorded as a
+    failure and the server hangs up after it. It is not a promise that the client can tell: a
+    layer outside may already have ended the answer properly on the wire. No route of this API
+    answers before it has read its body, so this is the second line for one that would.
     """
 
 
@@ -91,7 +99,8 @@ def _declared_length(scope: Scope) -> int | None:
 
     `-1` for a length nobody can go by: one that is not a plain number, and more than one header
     whose values differ. The server in front refuses those itself; this is the second line for a
-    server that does not.
+    server that does not. A number of more digits than Python reads is still a length, far above
+    any cap, and is answered as one.
     """
     declared = {value.strip() for name, value in scope["headers"] if name == b"content-length"}
     if not declared:
@@ -99,7 +108,10 @@ def _declared_length(scope: Scope) -> int | None:
     if len(declared) > 1:
         return -1
     value = declared.pop()
-    return int(value) if value.isdigit() and len(value) <= _MAX_LENGTH_DIGITS else -1
+    if not value.isdigit():
+        return -1
+    digits = value.lstrip(b"0")
+    return int(digits or b"0") if len(digits) <= _MAX_INT_DIGITS else sys.maxsize
 
 
 class BodyLimitMiddleware:

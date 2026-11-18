@@ -1746,7 +1746,7 @@ Errors that pass through the API's exception handlers (for example 400, 404 and 
 
 ### Request body size
 
-Every request body is bounded before the application takes it (`api/body_limit.py`). A request that declares a `Content-Length` above the cap of its path gets status 413 and the application is never handed its body; a body sent without a declared length is counted as it arrives, and once it passes the cap the same 413 goes out and the application is handed no more of it. The bound sends that answer itself, so it is the same on every route and on the mounted MCP server, whatever the code behind would answer for a body that ends early.
+Every request body is bounded before the application takes it (`api/body_limit.py`). A request that declares a `Content-Length` above the cap of its path gets status 413 and the application is never handed its body; a body sent without a declared length is counted as the application reads it, and once it passes the cap the same 413 goes out and the application is handed no more of it. What is bounded is what the application takes: a route that answers without reading its body is never handed it, whatever its size. The bound sends that answer itself, so it is the same on every route and on the mounted MCP server, whatever the code behind would answer for a body that ends early.
 
 | Path | Cap | The 413's body |
 |------|-----|----------------|
@@ -1757,7 +1757,7 @@ The cap is the outer bound. A route keeps its own narrower checks, such as the f
 
 The bound stands in front of the router, so its answer comes before a route's own gates: a request above the cap gets the 413 before the admin check of `/debug` and before the public lane's door, also on a path that is no route.
 
-The server in front of the application already refuses a `Content-Length` that can't be gone by (not a number, or two headers with different values). The bound checks it again as a second line and would answer status 400.
+The server in front of the application already refuses a `Content-Length` that can't be gone by (not a number, or two headers with different values). The bound checks it again as a second line and would answer status 400. A number of any length is a length: one too long to compare is above every cap and gets the 413.
 
 A new route that accepts a larger body needs its prefix added to the table in `api/main.py`; without it, the default applies.
 
