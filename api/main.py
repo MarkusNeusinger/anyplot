@@ -24,7 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
 from api import machine_reads  # noqa: E402
-from api.body_limit import BodyLimitMiddleware, BodyTooLarge, Bound, body_too_large_handler  # noqa: E402
+from api.body_limit import BodyLimitMiddleware, Bound  # noqa: E402
 from api.cache import cache_key, get_or_set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
@@ -211,9 +211,6 @@ app = FastAPI(
 # Register exception handlers
 app.add_exception_handler(AnyplotException, anyplot_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
-# More specific than the line above, so a body cut off while a route read it is
-# answered in the shape of its lane (api/body_limit.py).
-app.add_exception_handler(BodyTooLarge, body_too_large_handler)
 app.add_exception_handler(RequestValidationError, request_validation_exception_handler)
 # The agent BFF's own error shape, `{"detail": code, "ref": request id}`
 # (api/routers/agent.py, docs/reference/api.md § Agent chat).
@@ -232,14 +229,11 @@ app.add_exception_handler(Exception, generic_exception_handler)
 #
 # Three of those positions are load-bearing:
 #
-# * The body bound directly around the router, INSIDE every `@app.middleware`
-#   layer. Those hand a body on through a task group, which wraps an error
-#   raised while the body is read in an exception group, and FastAPI answers
-#   anything but its own `HTTPException` from a body read with a plain 400: a
-#   bound further out would cut a body off and be reported as a parse error.
-#   None of the layers outside it reads a body. It is also inside the origin
-#   gate, so a caller that bypasses the edge is refused before a length is
-#   even looked at, and inside CORS, so a browser can read the 413.
+# * The body bound inside the origin gate, so a caller that bypasses the edge
+#   is refused before a length is even looked at, and inside CORS, so a
+#   browser can read the 413. None of the layers outside it reads a body. It
+#   sends its refusal itself, so it does not depend on how a layer or an app
+#   inside it treats an error.
 # * The origin gate directly inside CORS, so a 403 from it still carries the
 #   headers a browser needs to read it as a 403 rather than as an opaque
 #   network error — and OUTSIDE the machine-read writer, so a refused request

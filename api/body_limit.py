@@ -6,22 +6,28 @@ after the bytes are already in memory. This middleware sits in front of the rout
 
 - A request that declares a `Content-Length` above the cap of its path is refused unread.
 - A request that declares none (a chunked body, some HTTP/2 and proxied ones) is counted as it
-  streams and cut off when it passes the cap.
+  streams. When it passes the cap, the refusal is sent from here and the application is told
+  the client has gone, so it takes no more of the body.
+
+The refusal never depends on what the application behind does with an error: a route, the
+framework and an app mounted beside it (the MCP server) all meet the same end of the body, and
+whatever they answer after the refusal went out is dropped.
 
 Every path has the same small cap unless a longer one is named for its prefix (`api/main.py`).
 A route keeps any narrower check of its own, such as the field lengths of the feedback form:
 this is the outer bound, not a replacement.
 
 `GET`, `HEAD` and `OPTIONS` pass untouched. No route reads a body on them, and a body nobody
-reads is never taken off the connection.
+reads is never handed to the application.
 """
 
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from fastapi import HTTPException, Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+from api.exceptions import public_path
 
 
 # The cap of a path no prefix names. Every body outside the agent chat is a small JSON object
@@ -32,6 +38,7 @@ TOO_LARGE = "request body too large"
 
 _BODYLESS_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 _NO_STORE = {"Cache-Control": "private, no-store"}
+_GONE: Message = {"type": "http.disconnect"}
 
 
 @dataclass(frozen=True)
@@ -50,43 +57,25 @@ class Bound:
         """The 413 of a body above this bound, never cached."""
         if self.detail is not None:
             return JSONResponse({"detail": self.detail}, status_code=413, headers=_NO_STORE)
-        return JSONResponse({"status": 413, "message": TOO_LARGE, "path": path}, status_code=413, headers=_NO_STORE)
-
-
-class BodyTooLarge(HTTPException):
-    """A streamed body passed its bound.
-
-    FastAPI's own `HTTPException`, not Starlette's base class: FastAPI turns every other error
-    of a body read into `400 There was an error parsing the body`, and passes only its own
-    kind on as what it is. `body_too_large_handler` then answers it.
-    """
-
-    def __init__(self, bound: Bound) -> None:
-        super().__init__(status_code=413, detail=bound.detail or TOO_LARGE)
-        self.bound = bound
-
-
-async def body_too_large_handler(request: Request, exc: BodyTooLarge) -> JSONResponse:
-    """Answer a body cut off while a route read it, in the same shape as one refused unread."""
-    return exc.bound.refusal(request.url.path)
+        return JSONResponse(
+            {"status": 413, "message": TOO_LARGE, "path": public_path(path)}, status_code=413, headers=_NO_STORE
+        )
 
 
 def _declared_length(scope: Scope) -> int | None:
     """The `Content-Length` a request declares, or `None` without one.
 
-    `-1` for a length nobody can go by: one that is no number or is negative, and more than one
-    header whose values differ. A refusal that read only the first of two would let the second
-    decide how much is sent.
+    `-1` for a length nobody can go by: one that is not a plain number, and more than one header
+    whose values differ. The server in front refuses those itself; this is the second line for a
+    server that does not.
     """
     declared = {value.strip() for name, value in scope["headers"] if name == b"content-length"}
     if not declared:
         return None
     if len(declared) > 1:
         return -1
-    try:
-        return max(int(declared.pop()), -1)
-    except ValueError:
-        return -1
+    value = declared.pop()
+    return int(value) if value.isdigit() else -1
 
 
 class BodyLimitMiddleware:
@@ -126,7 +115,9 @@ class BodyLimitMiddleware:
         declared = _declared_length(scope)
         if declared is not None and declared < 0:
             bad_length = JSONResponse(
-                {"status": 400, "message": "bad Content-Length", "path": path}, status_code=400, headers=_NO_STORE
+                {"status": 400, "message": "bad Content-Length", "path": public_path(path)},
+                status_code=400,
+                headers=_NO_STORE,
             )
             await bad_length(scope, receive, send)
             return
@@ -135,29 +126,39 @@ class BodyLimitMiddleware:
             return
 
         received = 0
-        answered = False
+        cut = False
+        answering = False
 
         async def counted_receive() -> Message:
-            nonlocal received
+            nonlocal received, cut
+            if cut:
+                return _GONE
             message = await receive()
-            if message["type"] == "http.request":
-                received += len(message.get("body", b""))
-                if received > bound.max_bytes:
-                    raise BodyTooLarge(bound)
-            return message
+            if message["type"] != "http.request":
+                return message
+            received += len(message.get("body", b""))
+            if received <= bound.max_bytes:
+                return message
+            cut = True
+            # An answer already on its way cannot be replaced; the body still ends here.
+            if not answering:
+                await bound.refusal(path)(scope, receive, send)
+            return _GONE
 
-        async def watched_send(message: Message) -> None:
-            nonlocal answered
+        async def guarded_send(message: Message) -> None:
+            nonlocal answering
+            if cut:
+                # The refusal is out (or the body ended mid-answer): what the application says
+                # about the body it lost goes nowhere.
+                return
             if message["type"] == "http.response.start":
-                answered = True
+                answering = True
             await send(message)
 
         try:
-            await self.app(scope, counted_receive, watched_send)
-        except BodyTooLarge:
-            # FastAPI answers it itself (`body_too_large_handler`). An app mounted beside it (the
-            # MCP server) may let it through; then the answer is given here, unless one is
-            # already on its way.
-            if answered:
+            await self.app(scope, counted_receive, guarded_send)
+        except Exception:
+            # After the cut the request is over. An application that fails on the body it lost
+            # has nothing more to report; anything raised before the cut is a real error.
+            if not cut:
                 raise
-            await bound.refusal(path)(scope, receive, send)
