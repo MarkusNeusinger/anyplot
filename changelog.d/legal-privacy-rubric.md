@@ -75,11 +75,6 @@
 - **The privacy policy names the session hash a feedback case keeps.** The data assistant's
   feedback row said that a case's triage row keeps a hash of your tab id; it also keeps a
   hash of the session id. The row and its crawler copy now name both.
-- **The privacy policy says that the gallery search's text reaches the analytics dashboard.**
-  The analytics row on `/legal` said that Plausible counts searches only in aggregate. The
-  gallery search also sends what a visitor typed, in lowercase and cut at 40 characters, and
-  the public dashboard lists it. The row now names that one exception, and the crawler copy
-  says the same.
 - **The database reference no longer contradicts the privacy policy.** The "Data privacy"
   list in `docs/reference/database.md` promised anonymous session ids, usage data deleted
   after 90 days and no personal data, and its first item broke off mid-sentence. It now

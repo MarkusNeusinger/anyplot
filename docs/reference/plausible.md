@@ -384,12 +384,16 @@ page shows it.
   such a day and deletes it whole), and a miss that is being written when an
   instance stops is lost.
 
-The analytics row of the legal page's privacy section
-(`app/src/pages/LegalPage.tsx`) and its crawler copy in `api/routers/seo.py`
-(`_LEGAL_BOT_BODY`) say that the text of a gallery search is sent: in
-lowercase, cut at 40 characters, and shown on the dashboard. If you change
-`normalizeQuery()` or send typed text in another event property, update both;
-`app/src/pages/LegalPage.test.tsx` holds the row to `MAX_QUERY_LENGTH`.
+The legal page's privacy section (`app/src/pages/LegalPage.tsx`) and its
+crawler copy in `api/routers/seo.py` (`_LEGAL_BOT_BODY`) describe this list
+in the row "searches without a hit" (`#search-misses`): the text in
+lowercase and cut at 40 characters, what the rule keeps out, and the 180
+days. Their analytics row says only that search texts sent up to and
+including November 2026 still show on the dashboard. If you change
+`normalizeQuery()`, the rule, or `RETENTION_DAYS`, or send typed text in an
+event property again, update both; `app/src/pages/LegalPage.test.tsx` holds
+the row to `MAX_QUERY_LENGTH`, and `tests/unit/api/test_search_misses.py`
+holds it to `RETENTION_DAYS`.
 
 ### Feedback
 
