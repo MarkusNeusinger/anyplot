@@ -150,15 +150,16 @@ function firstUseThisVisit(feature: UiFeature, now: number): boolean {
 export const MAX_QUERY_LENGTH = 40;
 
 /**
- * A typed search text in one form: lowercase, single spaces, cut at `MAX_QUERY_LENGTH`
- * characters. "Scatter", "scatter " and "SCATTER" are one text for the search's own bookkeeping
- * and one row of the private list of misses (`src/lib/searchMiss.ts`), and a long pasted text is
- * not kept in full. The cut counts characters, not UTF-16 units, so it never splits one in two.
- * The API applies the same rule again (`normalize_query` in `api/search_misses.py`); the cases
- * in `searchQuery.cases.json` hold the two to each other.
+ * A typed search text in one form: Unicode form NFC, lowercase, single spaces, cut at
+ * `MAX_QUERY_LENGTH` characters. "Scatter", "scatter " and "SCATTER" are one text for the
+ * search's own bookkeeping and one row of the private list of misses (`src/lib/searchMiss.ts`),
+ * and so is a word typed with a composed or a decomposed accent; a long pasted text is not kept
+ * in full. The cut counts characters, not UTF-16 units, so it never splits one in two. The API
+ * applies the same rule again (`normalize_query` in `api/search_misses.py`); the cases in
+ * `searchQuery.cases.json` hold the two to each other.
  */
 export function normalizeQuery(query: string): string {
-  const spaced = query.toLowerCase().trim().replace(/\s+/g, ' ');
+  const spaced = query.normalize('NFC').toLowerCase().trim().replace(/\s+/g, ' ');
   return Array.from(spaced).slice(0, MAX_QUERY_LENGTH).join('').trimEnd();
 }
 

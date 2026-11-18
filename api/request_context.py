@@ -2,9 +2,10 @@
 
 import hashlib
 import hmac
+import ipaddress
 import secrets
 
-from fastapi import Request
+from fastapi import HTTPException, Request
 
 
 IP_HASH_PREFIX = "hmac:"
@@ -43,6 +44,54 @@ def client_ip(request: Request) -> str:
         if entry.strip():
             return entry.strip()
     return request.client.host if request.client else ""
+
+
+def network_of(ip: str) -> str:
+    """The network an address stands for, as a limit counts it: an IPv4 address itself, an IPv6 address its /64.
+
+    One IPv6 subscriber holds a whole /64 and can take a new address for every request without
+    forging anything, so a limit keyed on the full address would bind nobody. An IPv4 address
+    written as IPv6 (`::ffff:203.0.113.7`) is the IPv4 address. A value that is no address is the
+    empty string, so all of them share one key.
+    """
+    try:
+        address = ipaddress.ip_address(ip.strip())
+    except ValueError:
+        return ""
+    if isinstance(address, ipaddress.IPv6Address):
+        if address.ipv4_mapped is not None:
+            return str(address.ipv4_mapped)
+        return str(ipaddress.IPv6Network((address, 64), strict=False))
+    return str(address)
+
+
+TOO_LARGE = "Request body too large"
+"""The fixed message of a body refused for its size: it says nothing about what the body held."""
+
+
+async def read_body_within(request: Request, limit: int) -> bytes:
+    """The request body, read by hand up to *limit* bytes; a fixed `413` for a body above it.
+
+    A route that declares a body model has its whole body read and parsed by the framework before
+    any of its own code runs, so a cap there comes too late. This one comes first: a declared
+    `Content-Length` above the limit is refused before anything is read, and a body without one
+    (chunked) is read only until it passes the limit. At most the limit and the one chunk the
+    server handed over are ever held.
+    """
+    declared = request.headers.get("content-length")
+    if declared is not None:
+        try:
+            size = int(declared)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Bad request") from None
+        if size > limit:
+            raise HTTPException(status_code=413, detail=TOO_LARGE)
+    body = bytearray()
+    async for chunk in request.stream():
+        body += chunk
+        if len(body) > limit:
+            raise HTTPException(status_code=413, detail=TOO_LARGE)
+    return bytes(body)
 
 
 def hash_ip(ip: str) -> str:

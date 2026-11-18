@@ -1144,6 +1144,52 @@ class TestSearchMissRepository:
         ]
         assert await repo.distinct_since(since) == 4
 
+    async def test_the_list_reads_most_recent_first_and_in_pages_that_neither_repeat_nor_skip(self, test_session):
+        repo = SearchMissRepository(test_session)
+        since = self.DAY - timedelta(days=10)
+        for day, query, times in [
+            (self.DAY - timedelta(days=5), "spider", 9),
+            (self.DAY, "splom", 1),
+            (self.DAY, "kreisdiagramm", 2),
+            (self.DAY - timedelta(days=1), "gapminder", 1),
+        ]:
+            for _ in range(times):
+                await repo.count(day=day, query=query, max_new_per_day=1000)
+        await test_session.commit()
+
+        recent = await repo.totals(since, limit=10, order="recent")
+        assert [query for query, *_ in recent] == ["kreisdiagramm", "splom", "gapminder", "spider"]
+        most = await repo.totals(since, limit=10)
+        assert [query for query, *_ in most] == ["spider", "kreisdiagramm", "splom", "gapminder"]
+        pages = [await repo.totals(since, limit=3, offset=offset, order="recent") for offset in (0, 3, 6)]
+        assert [len(page) for page in pages] == [3, 1, 0]
+        assert [row for page in pages for row in page] == recent
+
+    async def test_the_full_days_are_those_that_reached_the_cap(self, test_session):
+        repo = SearchMissRepository(test_session)
+        since = self.DAY - timedelta(days=10)
+        for number in range(3):
+            await repo.count(day=self.DAY, query=f"junk {number}", max_new_per_day=3)
+            await repo.count(day=self.DAY - timedelta(days=2), query=f"junk {number}", max_new_per_day=3)
+        await repo.count(day=self.DAY - timedelta(days=1), query="spider", max_new_per_day=3)
+        for number in range(3):
+            await repo.count(day=since - timedelta(days=1), query=f"old {number}", max_new_per_day=3)
+        await test_session.commit()
+
+        assert await repo.full_days(since, 3) == [self.DAY, self.DAY - timedelta(days=2)]
+
+    async def test_deleting_a_day_removes_every_text_of_it_and_nothing_else(self, test_session):
+        repo = SearchMissRepository(test_session)
+        for query in ("junk 1", "junk 2", "spider"):
+            await repo.count(day=self.DAY, query=query, max_new_per_day=1000)
+        await repo.count(day=self.DAY - timedelta(days=1), query="spider", max_new_per_day=1000)
+        await test_session.commit()
+
+        assert await repo.delete_day(self.DAY) == 3
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [(self.DAY - timedelta(days=1), "spider", 1)]
+
     async def test_deleting_a_text_removes_every_day_of_it_and_nothing_else(self, test_session):
         repo = SearchMissRepository(test_session)
         for day in (self.DAY - timedelta(days=3), self.DAY):

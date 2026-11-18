@@ -1038,22 +1038,43 @@ class SearchMissRepository:
         result = await self.session.execute(delete(SearchMiss).where(SearchMiss.day < cutoff))
         return int(getattr(result, "rowcount", 0) or 0)
 
-    async def totals(self, since: date, *, limit: int) -> list[tuple[str, int, date, date]]:
-        """The texts of the days from *since* on, most searched first: (query, count, first day, last day).
+    async def totals(
+        self, since: date, *, limit: int, offset: int = 0, order: str = "count"
+    ) -> list[tuple[str, int, date, date]]:
+        """The texts of the days from *since* on: (query, count, first day, last day).
 
-        Up to *limit* texts. A tie goes to the text searched more recently, then by the text, so the
-        order is stable.
+        `count` puts the most searched first, a tie to the text searched more recently; `recent` puts
+        the text searched most recently first, a tie to the more searched. Then by the text, so the
+        order is stable and the pages of *limit* texts from *offset* on neither repeat nor skip one.
         """
         total = func.sum(SearchMiss.count)
         last_day = func.max(SearchMiss.day)
+        keys = (last_day.desc(), total.desc()) if order == "recent" else (total.desc(), last_day.desc())
         result = await self.session.execute(
             select(SearchMiss.query, total, func.min(SearchMiss.day), last_day)
             .where(SearchMiss.day >= since)
             .group_by(SearchMiss.query)
-            .order_by(total.desc(), last_day.desc(), SearchMiss.query)
+            .order_by(*keys, SearchMiss.query)
+            .offset(offset)
             .limit(limit)
         )
         return [(query, int(count), first, last) for query, count, first, last in result.all()]
+
+    async def full_days(self, since: date, cap: int) -> list[date]:
+        """The days from *since* on that hold *cap* texts or more, newest first: on those a new text was dropped."""
+        result = await self.session.execute(
+            select(SearchMiss.day)
+            .where(SearchMiss.day >= since)
+            .group_by(SearchMiss.day)
+            .having(func.count() >= cap)
+            .order_by(SearchMiss.day.desc())
+        )
+        return list(result.scalars().all())
+
+    async def delete_day(self, day: date) -> int:
+        """Delete every row of *day*, whatever its text; the number of rows. The caller commits."""
+        result = await self.session.execute(delete(SearchMiss).where(SearchMiss.day == day))
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def distinct_since(self, since: date) -> int:
         """How many different texts the days from *since* on hold."""

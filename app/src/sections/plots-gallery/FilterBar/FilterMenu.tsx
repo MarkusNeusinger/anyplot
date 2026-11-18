@@ -131,6 +131,9 @@ export function FilterMenu({
               ? [
                   <MenuItem
                     key="back"
+                    // Keeps the focus in the search field: a blur there would send the text the
+                    // visitor is throwing away with this click.
+                    onMouseDown={event => event.preventDefault()}
                     onClick={onBack}
                     sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText }}
                   >

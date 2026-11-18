@@ -62,12 +62,17 @@ export function FilterSearch({
 
   // The finished text of a search that found nothing in the whole catalogue, waiting for the
   // pause after the last keystroke (see the effect below `hiddenMatchCount`). Read and cleared
-  // synchronously by every way out of the search, before that way clears the text.
+  // synchronously by every way out of the search, before that way clears the text: the pause,
+  // a blur and leaving the page send it (`flushMiss`); the clear cross, Escape and "← back" are
+  // how a visitor throws a text away, and drop it (`dropMiss`).
   const pendingMissRef = useRef<string | null>(null);
   const flushMiss = useCallback(() => {
     const query = pendingMissRef.current;
     pendingMissRef.current = null;
     if (query) sendSearchMiss(query);
+  }, []);
+  const dropMiss = useCallback(() => {
+    pendingMissRef.current = null;
   }, []);
 
   // Expand and open dropdown
@@ -89,7 +94,8 @@ export function FilterSearch({
     }, 200);
   }, [flushMiss, searchQuery, selectedCategory, dropdownAnchor, activeFilters.length]);
 
-  // Close dropdown and collapse if empty
+  // Close dropdown and collapse if empty. A click outside closes it too, and that is a loss of
+  // focus: a pending miss goes. Escape drops it first (see `handleKeyDown`).
   const handleDropdownClose = useCallback(() => {
     flushMiss();
     setDropdownAnchor(null);
@@ -134,10 +140,10 @@ export function FilterSearch({
 
   // Back from a selected category to the category list
   const handleBackToCategories = useCallback(() => {
-    flushMiss();
+    dropMiss();
     setSelectedCategory(null);
     setSearchQuery('');
-  }, [flushMiss]);
+  }, [dropMiss]);
 
   // Memoize search results to avoid recalculating on every render
   const searchResults = useMemo(
@@ -182,7 +188,7 @@ export function FilterSearch({
 
   // A miss goes to the private list only as a finished text: once no key was pressed for
   // MISS_PAUSE_MS, or when the field loses focus or the search closes before that (`flushMiss`).
-  // A fragment typed on the way to a longer text never goes: the next keystroke replaces it.
+  // A fragment typed on within MISS_PAUSE_MS never goes: the next keystroke replaces it.
   useEffect(() => {
     const query = normalizeQuery(searchQuery);
     if (!missesCatalogue || !query) {
@@ -279,6 +285,8 @@ export function FilterSearch({
           }
         }
       } else if (event.key === 'Escape') {
+        // Escape throws the text away: dropped before the close and the blur could send it.
+        dropMiss();
         handleDropdownClose();
         inputRef.current?.blur();
       }
@@ -290,6 +298,7 @@ export function FilterSearch({
       handleValueSelect,
       handleSearchAll,
       handleDropdownClose,
+      dropMiss,
       inputRef,
     ]
   );
@@ -363,6 +372,8 @@ export function FilterSearch({
             inputRef={inputRef}
             id="filter-search"
             name="filter-search"
+            // No fill from the browser or a password manager: what lands here may be sent.
+            autoComplete="off"
             inputProps={{
               'aria-label': selectedCategory
                 ? `Search ${FILTER_LABELS[selectedCategory]}`
@@ -408,9 +419,12 @@ export function FilterSearch({
           />
           {isSearchExpanded && (searchQuery || selectedCategory) && (
             <CloseIcon
+              // Keeps the focus in the field: a blur there would send the text this click throws
+              // away.
+              onMouseDown={e => e.preventDefault()}
               onClick={e => {
                 e.stopPropagation();
-                flushMiss();
+                dropMiss();
                 setSearchQuery('');
                 setSelectedCategory(null);
               }}

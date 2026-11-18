@@ -419,8 +419,11 @@ class SearchMiss(Base):
     is a private list: no public page shows it.
 
     A row is the text, the day and a count, nothing else: no address, no user agent, no time of day,
-    no session, no hash, so it never says who searched. The text is what a visitor typed, so the rows
-    are kept for a limited time only (`RETENTION_DAYS` in `api/search_misses.py`).
+    no session, no hash, so the row names nobody. It is pseudonymous, not anonymous: the platform's
+    request log keeps one line per `POST /search/miss` for 30 days, with its time and user agent, and
+    until then a text could be matched to such a line by its day. A visitor could type anything, so
+    the API keeps only a text that reads as a search for a plot (`is_countable` in
+    `api/search_misses.py`), and the rows are kept for a limited time only (`RETENTION_DAYS`).
     """
 
     __tablename__ = "search_misses"

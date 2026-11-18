@@ -4,11 +4,13 @@
  * (`POST /search/miss`, `api/search_misses.py`). The owner reads the list on /debug to see what
  * the catalogue lacks and which words the search does not know. Plausible never sees the text.
  *
+ * - Only a text that reads as a search for a plot leaves the browser (`isCountableMiss`, the
+ *   API's rule): an address, a phone number or a link does not.
  * - The text travels in the JSON body, never in the URL: request URLs stand in the server logs.
+ *   No cookie and no referrer go with it, whatever the API's address becomes.
  * - Only from the live site, and not while the admin's own use is muted: a local build, a
  *   preview and a test send nothing, the same rule as the analytics (`inProduction`).
- * - Once per distinct text and page load, and nothing shorter than `MIN_MISS_LENGTH`
- *   characters, which the API would drop anyway.
+ * - Once per distinct text and page load.
  * - Fire and forget: the app and the API deploy apart, so the route may answer 404 for a while.
  *   No retry, nothing in the console, no effect on the search.
  */
@@ -23,6 +25,28 @@ export const MISS_PAUSE_MS = 2000;
 /** The shortest text that is sent, in characters: one character is the start of a search. */
 export const MIN_MISS_LENGTH = 2;
 
+/** The most decimal digits a text may hold: enough for "ggplot2" or a year, too few for a phone. */
+export const MAX_MISS_DIGITS = 6;
+
+/** The signs a text may hold besides letters, combining marks, decimal digits and spaces. */
+export const MISS_MARKS = " -_.+#/&'()";
+
+// Letters and combining marks of any script, decimal digits, and the signs above; nothing else.
+const SEARCH_CHARACTERS = /^[\p{L}\p{M}\p{Nd} _.+#/&'()-]*$/u;
+const DIGIT = /\p{Nd}/gu;
+
+/**
+ * Whether a normalised text (`normalizeQuery`) reads as a search for a plot, in any script: two
+ * characters or more, each a letter, a combining mark, a decimal digit (at most `MAX_MISS_DIGITS`
+ * in all), a space or one of `MISS_MARKS`. No `@` and no `:`, so no address and no link, and no
+ * control, format or direction character. The API keeps only what passes the same rule
+ * (`is_countable` in `api/search_misses.py`), and `searchQuery.cases.json` holds the two together.
+ */
+export function isCountableMiss(query: string): boolean {
+  if (Array.from(query).length < MIN_MISS_LENGTH || !SEARCH_CHARACTERS.test(query)) return false;
+  return (query.match(DIGIT) ?? []).length <= MAX_MISS_DIGITS;
+}
+
 // The texts this page load already sent; a full reload starts over.
 const sent = new Set<string>();
 
@@ -32,17 +56,19 @@ export function forgetSentMisses(): void {
 }
 
 /**
- * Sends one normalised search text (`normalizeQuery`) that found nothing in the whole catalogue.
- * `keepalive` lets a miss sent as the visitor leaves outlive the page.
+ * Sends one normalised search text (`normalizeQuery`) that found nothing in the whole catalogue,
+ * when it is countable. `keepalive` lets a miss sent as the visitor leaves outlive the page.
  */
 export function sendSearchMiss(query: string): void {
   if (!inProduction() || analyticsMuted()) return;
-  if (Array.from(query).length < MIN_MISS_LENGTH || sent.has(query)) return;
+  if (!isCountableMiss(query) || sent.has(query)) return;
   sent.add(query);
   fetch(apiUrl(endpoints.searchMiss), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query }),
+    credentials: 'omit',
+    referrerPolicy: 'no-referrer',
     keepalive: true,
   }).catch(() => undefined);
 }

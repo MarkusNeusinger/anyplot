@@ -11,7 +11,7 @@ from functools import lru_cache
 from typing import Annotated, Literal
 
 import jwt as pyjwt
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -23,7 +23,15 @@ from api.cache import clear_cache, get_cache_stats
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
 from api.machine_reads_query import DETAIL_WINDOWS, MachineReadsDetail, read_detail
-from api.search_misses import SearchMissBody, SearchMissDeleted, SearchMissesResponse
+from api.search_misses import (
+    ListOrder,
+    SearchMissDelete,
+    SearchMissDeleted,
+    SearchMissesResponse,
+    json_body_doc,
+    purge_expired,
+    read_json_body,
+)
 from api.search_misses import read_misses as read_search_misses
 from api.secret_compare import secret_matches
 from api.shared_links import SharedLinksDetail
@@ -599,32 +607,55 @@ async def shared_links(db: AsyncSession = Depends(require_db)) -> SharedLinksDet
 
 
 @router.get("/search-misses", response_model=SearchMissesResponse, dependencies=[Depends(require_admin)])
-async def search_misses(db: AsyncSession = Depends(require_db)) -> SearchMissesResponse:
-    """The gallery searches that found nothing in the whole catalogue, over the retention window.
+async def search_misses(
+    response: Response,
+    order: Annotated[ListOrder, Query()] = "count",
+    offset: Annotated[int, Query(ge=0)] = 0,
+    db: AsyncSession = Depends(require_db),
+) -> SearchMissesResponse:
+    """One page of the gallery searches that found nothing in the whole catalogue, over the retention window.
 
-    Per text the total count and the first and the last day, most searched first, up to `LIST_LIMIT` texts;
-    `texts` says how many the window of `RETENTION_DAYS` UTC days holds (`api/search_misses.py`). No public
-    route shows a text. `unavailable` with an empty list when the query fails, which includes the table not
-    being there yet.
+    Per text the total count and the first and the last day, `LIST_LIMIT` texts from `offset` on, most
+    searched first (`order=count`) or most recently searched first (`order=recent`); `texts` says how many
+    the window of `RETENTION_DAYS` UTC days holds, and `capped_days` which of its days reached the day's
+    cap (`api/search_misses.py`). No public route shows a text, and no cache may keep the answer. A read
+    also runs the retention delete if it has not run today, so it does not wait for a miss. `unavailable`
+    with an empty list when the query fails, which includes the table not being there yet.
     """
+    response.headers["Cache-Control"] = "private, no-store"
+    await purge_expired()
     try:
-        return await read_search_misses(SearchMissRepository(db))
+        return await read_search_misses(SearchMissRepository(db), order=order, offset=offset)
     except SQLAlchemyError as exc:
         # The class only: the statement's parameters stay out of the log.
         await db.rollback()
         logger.warning("search misses query failed: %s", type(exc).__name__)
-        return SearchMissesResponse(status="unavailable")
+        return SearchMissesResponse(status="unavailable", order=order, offset=offset)
 
 
-@router.delete("/search-misses", response_model=SearchMissDeleted, dependencies=[Depends(require_admin)])
-async def delete_search_miss(payload: SearchMissBody, db: AsyncSession = Depends(require_db)) -> SearchMissDeleted:
-    """Remove every row of one text, whatever its day: `{"query": "<text>"}` in the body, as the list shows it.
+@router.delete(
+    "/search-misses",
+    response_model=SearchMissDeleted,
+    dependencies=[Depends(require_admin)],
+    openapi_extra=json_body_doc(SearchMissDelete),
+)
+async def delete_search_miss(request: Request, db: AsyncSession = Depends(require_db)) -> SearchMissDeleted:
+    """Remove every row of one text, or every row of one UTC day: `{"query": "<text>"}` or `{"day": "YYYY-MM-DD"}`.
 
-    The text travels in the body, never in the URL. `deleted` is the number of rows (days) removed, 0 for
-    a text the list no longer holds. `503` when the database does not answer.
+    The text travels in the body, never in the URL, and the body is read only after the admin gate and
+    within the same 1 KiB as the public route's (`read_json_body`). A day goes as a whole, which is how
+    a flooded day is cleaned up. `deleted` is the number of rows removed, 0 for a text or a day the list
+    no longer holds. The delete is committed before the answer, so a failed commit is the `503` too.
     """
+    payload = await read_json_body(request, SearchMissDelete)
+    repository = SearchMissRepository(db)
+    deleted = 0
     try:
-        deleted = await SearchMissRepository(db).delete_query(payload.query)
+        if payload.query is not None:
+            deleted = await repository.delete_query(payload.query)
+        elif payload.day is not None:
+            deleted = await repository.delete_day(payload.day)
+        await db.commit()
     except SQLAlchemyError as exc:
         await db.rollback()
         logger.warning("search miss delete failed: %s", type(exc).__name__)

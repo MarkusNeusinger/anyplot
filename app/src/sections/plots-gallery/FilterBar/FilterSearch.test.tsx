@@ -323,23 +323,52 @@ describe('FilterSearch misses for the private list', () => {
     expect(sendSearchMiss).toHaveBeenCalledTimes(1);
   });
 
-  it('sends a pending miss when Escape closes the search', () => {
+  it('drops a pending miss when Escape throws the text away', () => {
     render(<FilterSearch {...defaultProps} />);
     openSearch();
     type('zzqqxy');
     fireEvent.keyDown(getSearchInput(), { key: 'Escape' });
+    // Escape also blurs the field, which must not send what was thrown away.
+    fireEvent.blur(getSearchInput());
+    wait(MISS_PAUSE_MS);
 
-    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+    expect(sendSearchMiss).not.toHaveBeenCalled();
   });
 
-  it('sends a pending miss when the text is cleared', () => {
+  it('drops a pending miss when the clear cross throws the text away, and keeps the focus', () => {
     render(<FilterSearch {...defaultProps} />);
     openSearch();
     type('zzqqxy');
-    fireEvent.click(screen.getByTestId('CloseIcon'));
+    const cross = screen.getByTestId('CloseIcon');
+    // The press keeps the focus in the field (its default is prevented), so no blur sends the text
+    // before the click drops it.
+    expect(fireEvent.mouseDown(cross)).toBe(false);
+    fireEvent.click(cross);
+    wait(MISS_PAUSE_MS);
 
-    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+    expect(sendSearchMiss).not.toHaveBeenCalled();
     expect(getSearchInput()).toHaveValue('');
+  });
+
+  it('drops a pending miss when "← back" leaves the category, and keeps the focus', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    // The second category is the library.
+    fireEvent.keyDown(getSearchInput(), { key: 'ArrowDown' });
+    fireEvent.keyDown(getSearchInput(), { key: 'ArrowDown' });
+    fireEvent.keyDown(getSearchInput(), { key: 'Enter' });
+    fireEvent.change(screen.getByLabelText('Search library'), { target: { value: 'zzqqxy' } });
+    const back = screen.getByRole('menuitem', { name: '← library' });
+    expect(fireEvent.mouseDown(back)).toBe(false);
+    fireEvent.click(back);
+    wait(MISS_PAUSE_MS);
+
+    expect(sendSearchMiss).not.toHaveBeenCalled();
+  });
+
+  it('asks the browser and password managers not to fill the field', () => {
+    render(<FilterSearch {...defaultProps} />);
+    expect(getSearchInput()).toHaveAttribute('autocomplete', 'off');
   });
 
   it('sends a pending miss when the gallery goes away', () => {

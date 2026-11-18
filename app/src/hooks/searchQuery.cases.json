@@ -1,66 +1,186 @@
 {
   "max_length": 40,
   "min_length": 2,
+  "max_digits": 6,
+  "marks": " -_.+#/&'()",
   "cases": [
-    { "rule": "lowercase", "typed": "Scatter", "sent": "scatter" },
-    { "rule": "white space at the ends", "typed": "  scatter  ", "sent": "scatter" },
-    { "rule": "a run of spaces is one", "typed": "SCATTER   Plot", "sent": "scatter plot" },
+    { "rule": "lowercase", "typed": "Scatter", "sent": "scatter", "countable": true },
+    {
+      "rule": "white space at the ends",
+      "typed": "  scatter  ",
+      "sent": "scatter",
+      "countable": true
+    },
+    {
+      "rule": "a run of spaces is one",
+      "typed": "SCATTER   Plot",
+      "sent": "scatter plot",
+      "countable": true
+    },
     {
       "rule": "tab and newline are spaces",
       "typed": "box\tplot\nmatplotlib",
-      "sent": "box plot matplotlib"
+      "sent": "box plot matplotlib",
+      "countable": true
     },
-    { "rule": "nothing", "typed": "", "sent": "" },
-    { "rule": "spaces only", "typed": "   ", "sent": "" },
+    { "rule": "nothing", "typed": "", "sent": "", "countable": false },
+    { "rule": "spaces only", "typed": "   ", "sent": "", "countable": false },
+    { "rule": "one character", "typed": "X", "sent": "x", "countable": false },
     {
-      "rule": "cut at 40 characters",
+      "rule": "cut at 40 characters; a comma is no search",
       "typed": "dear team, please find attached the quarterly numbers for the board",
-      "sent": "dear team, please find attached the quar"
+      "sent": "dear team, please find attached the quar",
+      "countable": false
     },
     {
       "rule": "no space left at the cut",
       "typed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bcd",
-      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "countable": true
     },
-    { "rule": "a German word", "typed": "Spinnennetz-Diagramm", "sent": "spinnennetz-diagramm" },
-    { "rule": "capital sharp s", "typed": "STRAẞE", "sent": "straße" },
-    { "rule": "Greek final sigma", "typed": "ΟΔΟΣ ΧΑΡΤΗΣ", "sent": "οδος χαρτης" },
     {
-      "rule": "dotted capital I lowercases to two characters",
+      "rule": "a German word",
+      "typed": "Spinnennetz-Diagramm",
+      "sent": "spinnennetz-diagramm",
+      "countable": true
+    },
+    { "rule": "capital sharp s", "typed": "STRAẞE", "sent": "straße", "countable": true },
+    {
+      "rule": "Greek final sigma",
+      "typed": "ΟΔΟΣ ΧΑΡΤΗΣ",
+      "sent": "οδος χαρτης",
+      "countable": true
+    },
+    {
+      "rule": "dotted capital I lowercases to a letter and a combining mark",
       "typed": "İstanbul",
-      "sent": "i̇stanbul"
+      "sent": "i\u0307stanbul",
+      "countable": true
     },
-    { "rule": "no-break space", "typed": "spider chart", "sent": "spider chart" },
+    { "rule": "composed accent", "typed": "Café", "sent": "café", "countable": true },
     {
-      "rule": "byte order mark is white space in JavaScript",
-      "typed": "﻿splom﻿",
-      "sent": "splom"
+      "rule": "decomposed accent is composed to the same text",
+      "typed": "Cafe\u0301",
+      "sent": "café",
+      "countable": true
     },
     {
-      "rule": "line separator and ideographic space",
-      "typed": "x y　z",
-      "sent": "x y z"
+      "rule": "Cyrillic",
+      "typed": "Диаграмма Рассеяния",
+      "sent": "диаграмма рассеяния",
+      "countable": true
+    },
+    { "rule": "Japanese", "typed": "散布図", "sent": "散布図", "countable": true },
+    { "rule": "Arabic", "typed": "مخطط مبعثر", "sent": "مخطط مبعثر", "countable": true },
+    {
+      "rule": "Devanagari with combining marks",
+      "typed": "बॉक्स प्लॉट",
+      "sent": "बॉक्स प्लॉट",
+      "countable": true
+    },
+    {
+      "rule": "a library name with a digit and an underscore",
+      "typed": "ggplot2 geom_point",
+      "sent": "ggplot2 geom_point",
+      "countable": true
+    },
+    {
+      "rule": "the signs a search may hold",
+      "typed": "C++ & R (x/y) #1 'a' b.c",
+      "sent": "c++ & r (x/y) #1 'a' b.c",
+      "countable": true
+    },
+    { "rule": "six digits", "typed": "plot 123456", "sent": "plot 123456", "countable": true },
+    {
+      "rule": "seven digits are too many",
+      "typed": "plot 1234567",
+      "sent": "plot 1234567",
+      "countable": false
+    },
+    {
+      "rule": "an e-mail address",
+      "typed": "Jane.Doe@Example.org",
+      "sent": "jane.doe@example.org",
+      "countable": false
+    },
+    {
+      "rule": "a phone number",
+      "typed": "+41 79 123 45 67",
+      "sent": "+41 79 123 45 67",
+      "countable": false
+    },
+    {
+      "rule": "a link",
+      "typed": "https://example.org/plots",
+      "sent": "https://example.org/plots",
+      "countable": false
+    },
+    { "rule": "a colon", "typed": "a:b", "sent": "a:b", "countable": false },
+    {
+      "rule": "a zero-width text",
+      "typed": "\u200b\u200b",
+      "sent": "\u200b\u200b",
+      "countable": false
+    },
+    {
+      "rule": "a right-to-left override",
+      "typed": "\u202egnp.exe",
+      "sent": "\u202egnp.exe",
+      "countable": false
+    },
+    {
+      "rule": "a control character",
+      "typed": "a\u0007b",
+      "sent": "a\u0007b",
+      "countable": false
     },
     {
       "rule": "file separator is no white space in JavaScript",
       "typed": "a\u001cb",
-      "sent": "a\u001cb"
+      "sent": "a\u001cb",
+      "countable": false
     },
     {
       "rule": "next line is no white space in JavaScript",
       "typed": "a\u0085b",
-      "sent": "a\u0085b"
+      "sent": "a\u0085b",
+      "countable": false
     },
-    { "rule": "zero width space is kept", "typed": "x​y", "sent": "x​y" },
+    {
+      "rule": "zero width space is kept, and no search",
+      "typed": "x\u200by",
+      "sent": "x\u200by",
+      "countable": false
+    },
+    {
+      "rule": "every white space of JavaScript, part 1",
+      "typed": "a\tb\nc\u000bd\fe\rf g\u00a0h\u1680i\u2000j\u2001k\u2002l\u2003m",
+      "sent": "a b c d e f g h i j k l m",
+      "countable": true
+    },
+    {
+      "rule": "every white space of JavaScript, part 2",
+      "typed": "n\u2004o\u2005p\u2006q\u2007r\u2008s\u2009t\u200au\u2028v\u2029w\u202fx\u205fy\u3000z\ufeffa",
+      "sent": "n o p q r s t u v w x y z a",
+      "countable": true
+    },
+    {
+      "rule": "a byte order mark at the ends",
+      "typed": "\ufeffsplom\ufeff",
+      "sent": "splom",
+      "countable": true
+    },
     {
       "rule": "a cut never splits a character outside the BMP",
       "typed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀b",
-      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀"
+      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀",
+      "countable": false
     },
     {
       "rule": "40 characters, not 40 UTF-16 units",
       "typed": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
-      "sent": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+      "sent": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "countable": false
     }
   ]
 }
