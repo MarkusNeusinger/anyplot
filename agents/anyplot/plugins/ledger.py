@@ -1179,13 +1179,16 @@ SESSION_SALT = secrets.token_bytes(32)
 the usage telemetry's (`telemetry.session_key`) and a stored feedback case's (`case_key`). The session id travels in
 every `/v1` request URL Cloud Run logs, so a plain hash of it could be recomputed and joined to the request log;
 sessions live in memory and end with the instance, so a salt that ends with the process keeps a session's lines
-together for exactly as long as it exists. Never logged, never configured."""
+together for exactly as long as it exists. A telemetry line's idempotency key takes it too
+(`telemetry.idempotency_key`), because the request id in that key stands in the attribution lines. Never logged,
+never configured."""
 
 
 def salted(session_id: str, domain: str, length: int) -> str:
     """HMAC-SHA256 of the session id under `SESSION_SALT`, separated by `domain`, so the attribution hash and the
     telemetry hash of one session differ and the two kinds of lines cannot be joined by it. The anonymous caller's
-    ids go through it too (`anonymous_user`, `network_key`), each under a domain of its own."""
+    ids go through it too (`anonymous_user`, `network_key`), and so do the fields of a telemetry line's idempotency
+    key, joined into one value (`telemetry.idempotency_key`), each under a domain of its own."""
     if not session_id:
         return ""
     return hmac.new(SESSION_SALT, f"{domain}:{session_id}".encode(), hashlib.sha256).hexdigest()[:length]
