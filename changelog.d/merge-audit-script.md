@@ -8,4 +8,4 @@
   or a file without any conflict that still differs. `CLAUDE.md` and
   Copilot's guide now say to resolve a conflict inside its markers and
   to run the audit after a merge that had one; `/open-pr` carries the
-  step, and the guardrails hold the incident behind it.
+  step, and the guardrails hold the incident behind it. (#13176)
