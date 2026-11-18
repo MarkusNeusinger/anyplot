@@ -13,3 +13,4 @@
   by shop: 3 rows, 1 group without a value in units left empty, 3 rows
   without a value in units left out`. Until now only a figure over all rows
   counted the rows it skipped. Data versions already stored keep their 0.
+  (#13180)
