@@ -3,12 +3,17 @@
  * whole catalogue, the owner's private list (`GET /debug/search-misses`, `api/search_misses.py`).
  * It shows what the catalogue lacks and which words the search does not know.
  *
- * - One line: how many texts the retention window holds, and that no public page shows them.
- * - A table, most searched first: the text, how often it was searched, its first and last UTC
- *   day, and `.delete()`, which removes every row of the text (`DELETE /debug/search-misses`,
- *   the text in the body). A deleted text leaves the table at once; a failed delete says so in
- *   one line and keeps the row.
- * - Loading, no database, a failed request and an empty list are one line each.
+ * - One line: that no public page shows the list, and how long a text is kept.
+ * - The days that reached the day's cap, each with `.delete_day()`: on those a new text was
+ *   dropped, which is how a flood shows. A day's delete removes all of its rows
+ *   (`DELETE /debug/search-misses` with the day in the body) and fetches the list again.
+ * - The order: most searched first, or most recently searched first.
+ * - A table: the text, how often it was searched, its first and last UTC day, and `.delete()`,
+ *   which removes every row of the text (the text in the body). A deleted text leaves the table
+ *   at once. Beyond the first page, `.load_more()` fetches the next one, so a text searched once
+ *   is reachable too.
+ * - A failed delete or load says so in one line and changes nothing. Loading, no database, a
+ *   failed request and an empty list are one line each.
  */
 
 import { useCallback, useState } from 'react';
@@ -20,7 +25,11 @@ import { SectionHeader } from 'src/components/SectionHeader';
 import { DEBUG_API_URL } from 'src/constants';
 import { fetchWithAuth } from 'src/lib/api';
 import { visuallyHiddenSx } from 'src/sections/agent-chat/styles';
-import { readSearchMisses } from 'src/sections/debug/searchMisses';
+import {
+  readSearchMisses,
+  type SearchMiss,
+  type SearchMissOrder,
+} from 'src/sections/debug/searchMisses';
 import {
   debugControlSx,
   listMutedSx,
@@ -37,7 +46,14 @@ const EMPTY_TEXT = {
   unavailable: 'search misses unavailable (before the first deploy: the table is not there yet)',
 } as const;
 
+const ORDERS: { order: SearchMissOrder; label: string }[] = [
+  { order: 'count', label: 'most searched' },
+  { order: 'recent', label: 'most recent' },
+];
+
 const number = (value: number): string => value.toLocaleString('en-US');
+
+const buttonSx = { ...debugControlSx, py: 0.25, cursor: 'pointer' } as const;
 
 const textCellSx = {
   ...tableCellSx,
@@ -53,44 +69,83 @@ export interface SearchMissesSectionProps {
   reloadCounter: number;
 }
 
-export function SearchMissesSection({ token, reloadCounter }: SearchMissesSectionProps) {
-  const answer = useAnswer(SEARCH_MISSES_URL, token, reloadCounter, readSearchMisses);
-  // The texts deleted since the list was last fetched; a reload starts over with the server's list.
-  const [deleted, setDeleted] = useState<{ reload: number; texts: ReadonlySet<string> }>({
-    reload: reloadCounter,
-    texts: new Set(),
-  });
-  const [busy, setBusy] = useState<string | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
-  const deletedNow = deleted.reload === reloadCounter ? deleted.texts : new Set<string>();
+/** What the section did on top of the first page, for one list: one order, one fetch of it. */
+interface Additions {
+  view: string;
+  /** Texts of the pages loaded after the first. */
+  more: SearchMiss[];
+  /** Texts deleted since the list was fetched. */
+  deleted: ReadonlySet<string>;
+}
 
-  const remove = useCallback(
-    async (query: string) => {
-      setBusy(query);
-      setFailed(null);
-      try {
-        const response = await fetchWithAuth(SEARCH_MISSES_URL, token, {
-          method: 'DELETE',
-          body: JSON.stringify({ query }),
-        });
-        if (!response.ok) throw new Error(`delete answered ${response.status}`);
-        setDeleted(previous => ({
-          reload: reloadCounter,
-          texts: new Set([...(previous.reload === reloadCounter ? previous.texts : []), query]),
-        }));
-      } catch {
-        setFailed(query);
-      } finally {
-        setBusy(null);
-      }
+export function SearchMissesSection({ token, reloadCounter }: SearchMissesSectionProps) {
+  const [order, setOrder] = useState<SearchMissOrder>('count');
+  // A day's delete changes the sums of every text of that day, so the list is fetched again.
+  const [refreshes, setRefreshes] = useState(0);
+  const reloads = reloadCounter + refreshes;
+  const view = `${order}\n${reloads}`;
+  const answer = useAnswer(`${SEARCH_MISSES_URL}?order=${order}`, token, reloads, readSearchMisses);
+  const [stored, setAdditions] = useState<Additions>({ view, more: [], deleted: new Set() });
+  const additions: Additions =
+    stored.view === view ? stored : { view, more: [], deleted: new Set() };
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const page = answer && typeof answer === 'object' ? answer : null;
+  const loaded = page ? [...page.misses, ...additions.more] : [];
+  const misses = loaded.filter(miss => !additions.deleted.has(miss.query));
+  const texts = page ? page.texts - additions.deleted.size : 0;
+
+  const act = useCallback(async (action: () => Promise<void>, failure: string) => {
+    setBusy(true);
+    setNotice(null);
+    try {
+      await action();
+    } catch {
+      setNotice(failure);
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const send = useCallback(
+    async (body: { query: string } | { day: string }) => {
+      const response = await fetchWithAuth(SEARCH_MISSES_URL, token, {
+        method: 'DELETE',
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) throw new Error(`delete answered ${response.status}`);
     },
-    [token, reloadCounter]
+    [token]
   );
 
-  const misses =
-    answer && typeof answer === 'object'
-      ? answer.misses.filter(miss => !deletedNow.has(miss.query))
-      : [];
+  const removeText = (query: string) =>
+    act(async () => {
+      await send({ query });
+      setAdditions({ ...additions, deleted: new Set([...additions.deleted, query]) });
+    }, `the delete of “${query}” failed: the row stays`);
+
+  const removeDay = (day: string) =>
+    act(async () => {
+      await send({ day });
+      setRefreshes(value => value + 1);
+    }, `the delete of ${day} failed: its rows stay`);
+
+  // The next page starts after what the server still holds of the loaded texts.
+  const loadMore = () =>
+    act(async () => {
+      const offset = loaded.length - additions.deleted.size;
+      const response = await fetchWithAuth(
+        `${SEARCH_MISSES_URL}?order=${order}&offset=${offset}`,
+        token
+      );
+      const next = response.ok ? readSearchMisses(await response.json()) : null;
+      if (!next || typeof next !== 'object') throw new Error('no page');
+      // A miss counted since the first page can move a text across the page border: no text twice.
+      const shown = new Set(loaded.map(miss => miss.query));
+      const fresh = next.misses.filter(miss => !shown.has(miss.query));
+      setAdditions({ ...additions, more: [...additions.more, ...fresh] });
+    }, 'loading more texts failed');
 
   return (
     <Box component="section" aria-label="Search misses section" sx={{ mb: 4 }}>
@@ -99,91 +154,155 @@ export function SearchMissesSection({ token, reloadCounter }: SearchMissesSectio
       </Box>
       <Typography sx={{ ...listMutedSx, mb: 1.5 }}>
         gallery searches that found nothing in the whole catalogue · private, on no public page
-        {answer && typeof answer === 'object' && answer.retention_days > 0
-          ? ` · deleted after ${answer.retention_days} days`
-          : ''}
+        {page && page.retention_days > 0 ? ` · deleted after ${page.retention_days} days` : ''}
       </Typography>
 
       {answer === undefined ? (
         <Typography sx={{ ...listMutedSx, py: 1 }}>loading search misses…</Typography>
-      ) : answer === null || typeof answer === 'string' ? (
+      ) : !page ? (
         <Typography data-testid="search-misses-empty" sx={{ ...listMutedSx, py: 1 }}>
-          {EMPTY_TEXT[answer ?? 'unavailable']}
-        </Typography>
-      ) : misses.length === 0 ? (
-        <Typography data-testid="search-misses-empty" sx={{ ...listMutedSx, py: 1 }}>
-          no misses: every search found something
+          {EMPTY_TEXT[typeof answer === 'string' ? answer : 'unavailable']}
         </Typography>
       ) : (
         <>
-          <Typography data-testid="search-misses-totals" sx={listTextSx}>
-            {number(answer.texts - (answer.misses.length - misses.length))} texts
-            {answer.texts > answer.misses.length
-              ? ` · the ${number(answer.misses.length)} most searched shown`
-              : ''}
-          </Typography>
-          {failed !== null && (
-            <Typography role="alert" sx={{ ...listMutedSx, mt: 0.5 }}>
-              the delete of “{failed}” failed: the row stays
+          {page.capped_days.length > 0 && (
+            <Box
+              data-testid="search-misses-capped"
+              sx={{ ...listTextSx, display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}
+            >
+              <span>
+                days that reached the cap of {number(page.day_cap)} texts (new texts dropped):
+              </span>
+              {page.capped_days.map(day => (
+                <Box key={day} component="span" sx={{ display: 'inline-flex', gap: 0.5 }}>
+                  {day}
+                  <Box
+                    component="button"
+                    type="button"
+                    aria-label={`Delete every text of ${day}`}
+                    disabled={busy}
+                    onClick={() => {
+                      void removeDay(day);
+                    }}
+                    sx={buttonSx}
+                  >
+                    .delete_day()
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          )}
+          <Box
+            role="group"
+            aria-label="Order of the list"
+            sx={{ display: 'flex', gap: 0.5, alignItems: 'center', mb: 1 }}
+          >
+            <Typography component="span" sx={listMutedSx}>
+              order:
+            </Typography>
+            {ORDERS.map(entry => (
+              <Box
+                key={entry.order}
+                component="button"
+                type="button"
+                aria-pressed={order === entry.order}
+                onClick={() => setOrder(entry.order)}
+                sx={{
+                  ...buttonSx,
+                  borderColor: order === entry.order ? 'var(--ink-muted)' : 'var(--rule)',
+                }}
+              >
+                {entry.label}
+              </Box>
+            ))}
+          </Box>
+          {notice !== null && (
+            <Typography role="alert" sx={{ ...listMutedSx, mb: 0.5 }}>
+              {notice}
             </Typography>
           )}
-          <Box sx={{ overflowX: 'auto', mt: 1 }}>
-            <Box component="table" sx={{ borderCollapse: 'collapse', width: '100%' }}>
-              <thead>
-                <tr>
-                  <Box component="th" scope="col" sx={{ ...tableHeadSx, textAlign: 'left' }}>
-                    text
-                  </Box>
-                  <Box component="th" scope="col" sx={tableHeadSx}>
-                    searches
-                  </Box>
-                  <Box component="th" scope="col" sx={tableHeadSx}>
-                    first
-                  </Box>
-                  <Box component="th" scope="col" sx={tableHeadSx}>
-                    last
-                  </Box>
-                  <Box component="th" scope="col" sx={tableHeadSx}>
-                    <Box component="span" sx={visuallyHiddenSx}>
-                      delete
-                    </Box>
-                  </Box>
-                </tr>
-              </thead>
-              <tbody>
-                {misses.map(miss => (
-                  <tr key={miss.query} data-testid="search-miss-row">
-                    <Box component="th" scope="row" sx={{ ...textCellSx, fontWeight: 400 }}>
-                      {miss.query}
-                    </Box>
-                    <Box component="td" sx={tableCellSx}>
-                      {number(miss.count)}
-                    </Box>
-                    <Box component="td" sx={tableCellSx}>
-                      {miss.first_day}
-                    </Box>
-                    <Box component="td" sx={tableCellSx}>
-                      {miss.last_day}
-                    </Box>
-                    <Box component="td" sx={tableCellSx}>
-                      <Box
-                        component="button"
-                        type="button"
-                        aria-label={`Delete “${miss.query}” from the list`}
-                        disabled={busy !== null}
-                        onClick={() => {
-                          void remove(miss.query);
-                        }}
-                        sx={{ ...debugControlSx, py: 0.25, cursor: 'pointer' }}
-                      >
-                        .delete()
+          {misses.length === 0 ? (
+            <Typography data-testid="search-misses-empty" sx={{ ...listMutedSx, py: 1 }}>
+              no misses: every search found something
+            </Typography>
+          ) : (
+            <>
+              <Typography data-testid="search-misses-totals" sx={listTextSx}>
+                {number(texts)} texts
+                {texts > misses.length ? ` · ${number(misses.length)} shown` : ''}
+              </Typography>
+              <Box sx={{ overflowX: 'auto', mt: 1 }}>
+                <Box component="table" sx={{ borderCollapse: 'collapse', width: '100%' }}>
+                  <thead>
+                    <tr>
+                      <Box component="th" scope="col" sx={{ ...tableHeadSx, textAlign: 'left' }}>
+                        text
                       </Box>
-                    </Box>
-                  </tr>
-                ))}
-              </tbody>
-            </Box>
-          </Box>
+                      <Box component="th" scope="col" sx={tableHeadSx}>
+                        searches
+                      </Box>
+                      <Box component="th" scope="col" sx={tableHeadSx}>
+                        first
+                      </Box>
+                      <Box component="th" scope="col" sx={tableHeadSx}>
+                        last
+                      </Box>
+                      <Box component="th" scope="col" sx={tableHeadSx}>
+                        <Box component="span" sx={visuallyHiddenSx}>
+                          delete
+                        </Box>
+                      </Box>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {misses.map(miss => (
+                      <tr key={miss.query} data-testid="search-miss-row">
+                        <Box component="th" scope="row" sx={{ ...textCellSx, fontWeight: 400 }}>
+                          {miss.query}
+                        </Box>
+                        <Box component="td" sx={tableCellSx}>
+                          {number(miss.count)}
+                        </Box>
+                        <Box component="td" sx={tableCellSx}>
+                          {miss.first_day}
+                        </Box>
+                        <Box component="td" sx={tableCellSx}>
+                          {miss.last_day}
+                        </Box>
+                        <Box component="td" sx={tableCellSx}>
+                          <Box
+                            component="button"
+                            type="button"
+                            aria-label={`Delete “${miss.query}” from the list`}
+                            disabled={busy}
+                            onClick={() => {
+                              void removeText(miss.query);
+                            }}
+                            sx={buttonSx}
+                          >
+                            .delete()
+                          </Box>
+                        </Box>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Box>
+              </Box>
+              {texts > misses.length && (
+                <Box
+                  component="button"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    void loadMore();
+                  }}
+                  sx={{ ...buttonSx, mt: 1 }}
+                >
+                  .load_more()
+                </Box>
+              )}
+            </>
+          )}
         </>
       )}
     </Box>
