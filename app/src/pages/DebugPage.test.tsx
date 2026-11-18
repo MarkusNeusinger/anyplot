@@ -362,6 +362,32 @@ describe('DebugPage', () => {
     expect(replaceSpy).not.toHaveBeenCalled();
   });
 
+  // The status request can outlive the page. When it then fails, an admin who has moved on must
+  // not be thrown into a reload of the page they are on now, and nothing is set on the page that
+  // is gone (in a test run that late update is an unhandled error after the file's last test).
+  it('ignores a status answer that comes after the page is gone', async () => {
+    sessionStorage.clear();
+    const pending: Array<(reason: unknown) => void> = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise((_resolve, reject) => pending.push(reject)))
+    );
+    const replaceSpy = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, replace: replaceSpy, href: 'https://anyplot.ai/debug' },
+    });
+
+    const { unmount } = render(<DebugPage />);
+    expect(pending.length).toBeGreaterThan(0);
+    unmount();
+    for (const fail of pending) fail(new TypeError('Failed to fetch'));
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(replaceSpy).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem('anyplot.debugAuthReloaded')).toBeNull();
+  });
+
   // The debug feedback list ships a "copy Claude Code prompt" button next to
   // every message so admins can drop straight from triage into a Claude Code
   // session that already knows the URL, the reaction, and the user's text.
