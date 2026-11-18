@@ -203,7 +203,8 @@ CREATE TABLE agent_feedback
     case_uri        VARCHAR(255) NOT NULL,      -- gs://anyplot-agent-cases/cases/<id>/
     user_hash       VARCHAR(20) NOT NULL,       -- an admin's HMAC user id, or "pub_" + a per-process salted hash
                                                 -- of a public caller's tab id
-    session_hash    VARCHAR(16) NOT NULL,       -- first 16 hex digits of the session id's SHA-256
+    session_hash    VARCHAR(16) NOT NULL,       -- the agents service's per-process salted key of the session
+                                                -- (rows from before November 2026: the id's plain SHA-256)
     spec_id         VARCHAR(100),
     library_id      VARCHAR(50),
     locale          VARCHAR(16),                -- the session's UI locale ("de-CH")
@@ -357,7 +358,7 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
 **Key Fields**:
 - `id` - The bucket's case id: the UTC time in ISO 8601 basic format and eight random hex digits, so ids sort by time and link a row to its files under `cases/<id>/`
 - `reaction`, `message`, `include_data`, `result_version`, `replaces` - What the admin sent; `include_data` says whether the case holds `data.csv`. `result_version` 0 (since 2026-10-12) is feedback on the chat itself, from a session that made no plot: such a case has no image and no `plot.py`, no pipeline status, and cannot be promoted
-- `user_hash`, `session_hash` - Hashed ids; the table holds no email address and no session id
+- `user_hash`, `session_hash` - Hashed ids; the table holds no email address and no session id. `session_hash` groups the cases of one session, so that a corrected submission replaces the earlier one. It is made under a salt that lives only in the running agents service, so it cannot be made again from a session id in a request log. A row stored before this change holds the session id's plain SHA-256, which can be made again for as long as a log still holds that id, 30 days at most
 - `locale` - The session's UI locale, the manifest's `language`; unlike `feedback.language`, which holds a programming language
 - `model`, `model_version`, `judge_model`, `prompt_hash`, `pipeline_status`, `attempts`, `tokens`, `cost_estimate` - The run's metadata from the case manifest; `model_version`, `tokens` and `cost_estimate` are `null` until the agents service stamps them. `prompt_hash` is one hash over the bundle's per-instruction hashes; since 2026-10-30 they include the catalogue reviewer's (`reviewer_catalogue`), so every case's `prompt_hash` shifted once on that day without any prompt changing
 - `status` - The triage state, the same four values as `feedback.status`; `done` and `wont_solve` retire a case

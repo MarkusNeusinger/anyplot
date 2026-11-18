@@ -5,6 +5,7 @@ The routes' behaviour is in test_agent_router.py (`TestFeedback`, `TestCases`); 
 pieces they build on. No test reaches a bucket: the GCS client is a mock.
 """
 
+import hashlib
 import json
 import re
 from datetime import UTC, datetime
@@ -58,8 +59,45 @@ def test_case_ids_sort_by_time_and_differ() -> None:
     assert len(same_second) == 50
 
 
-def test_session_hash_is_the_first_16_hex_digits_of_sha256() -> None:
-    assert session_hash("abc") == "ba7816bf8f01cfea"
+def test_the_session_hash_is_the_key_the_agents_service_made() -> None:
+    assert session_hash("abc", "0123456789abcdef") == "0123456789abcdef"
+
+
+def test_without_a_key_the_session_hash_is_salted_here_and_never_the_plain_hash() -> None:
+    """A plain hash of the session id could be made again from a log that holds the id."""
+    plain = hashlib.sha256(b"abc").hexdigest()
+    own = session_hash("abc")
+    assert re.fullmatch(r"[0-9a-f]{16}", own)
+    assert own == session_hash("abc"), "one session, one value, so a correction finds the case it replaces"
+    assert own != session_hash("abd")
+    assert own not in (plain[:16], hashlib.sha256(b"case:abc").hexdigest()[:16])
+
+
+@pytest.mark.parametrize(
+    "unusable",
+    [None, "", 12, "0123456789ABCDEF", "0123456789abcde", "0123456789abcdef0", "g123456789abcdef", ["0" * 16]],
+)
+def test_a_key_of_another_form_is_not_stored(unusable: object) -> None:
+    """The column takes 16 characters and the value groups rows: only the form the agents service writes is kept."""
+    assert session_hash("abc", unusable) == session_hash("abc")
+
+
+def test_a_case_records_the_bundles_key_and_not_a_hash_of_the_session_id() -> None:
+    keyed = json.loads(json.dumps(BUNDLE))
+    keyed["session"]["case_key"] = "fedcba9876543210"
+    case = build_case(
+        json.dumps(keyed).encode(),
+        Submission(reaction="bug", message=None, include_data=False, result_version=3),
+        case_id="20261012T143005Z-1a2b3c4d",
+        created_at=datetime(2026, 10, 12, 14, 30, 5, tzinfo=UTC),
+        bucket="anyplot-agent-cases",
+        user_hash="adm_0123456789abcdef",
+        session_id="S1abcdefgh",
+    )
+    assert case.manifest["session_hash"] == "fedcba9876543210"
+    # A bundle from before the field: this process's salted hash, the same for every case of the session.
+    assert _case().manifest["session_hash"] == session_hash("S1abcdefgh")
+    assert _case().manifest["session_hash"] != hashlib.sha256(b"S1abcdefgh").hexdigest()[:16]
 
 
 def test_prompt_hash_is_stable_and_order_free() -> None:

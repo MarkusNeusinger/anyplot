@@ -1196,6 +1196,16 @@ def session_hash(session_id: str) -> str:
     return salted(session_id, "attribution", 12)
 
 
+def case_key(session_id: str) -> str:
+    """The key a stored feedback case records for its session (the bundle's `session.case_key`): 16 hex digits,
+    salted (`salted`), under a domain of its own, so it joins a case to no log line and no telemetry row.
+
+    A case keeps it for as long as the case is stored, and two cases of one session share it, which is what lets a
+    corrected submission replace the earlier one. Session and salt end with the same process, so every case of a
+    session gets the same key, and once the process is gone nobody can make the key again from a session id."""
+    return salted(session_id, "case", 16)
+
+
 ANONYMOUS_PREFIX = "pub_"
 NETWORK_PREFIX = "net_"
 

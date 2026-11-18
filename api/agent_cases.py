@@ -41,6 +41,7 @@ import binascii
 import difflib
 import functools
 import hashlib
+import hmac
 import json
 import math
 import re
@@ -200,9 +201,27 @@ def new_case_id(now: datetime) -> str:
     return f"{now:%Y%m%dT%H%M%SZ}-{secrets.token_hex(4)}"
 
 
-def session_hash(session_id: str) -> str:
-    """The first 16 hex digits of the session id's SHA-256: groups a session's cases without naming it."""
-    return hashlib.sha256(session_id.encode()).hexdigest()[:16]
+_SALT = secrets.token_bytes(32)
+"""This process's salt for `session_hash` where the bundle brings no key: never logged, never configured, gone with
+the process."""
+_CASE_KEY = re.compile(r"[0-9a-f]{16}")
+
+
+def session_hash(session_id: str, case_key: object = None) -> str:
+    """What a case records for its session, 16 hex digits: groups a session's cases without naming the session.
+
+    The agents service's request log holds the session id, so a plain hash of it could be made again from that log
+    and would tie a stored case to the session's requests. The value is therefore the key the agents service made
+    under its own per-process salt (`case_key`, the bundle's `session.case_key`): session and salt end with the
+    same process, so every case of a session gets the same key and nobody can make it again afterwards.
+
+    A bundle without a usable key (an agents service from before the field) gets a hash under this process's salt
+    instead. It cannot be made again either, but this process restarts while a session lives on, and a correction
+    sent after that carries another value than the case it names: both then stay in the list, unreplaced.
+    """
+    if isinstance(case_key, str) and _CASE_KEY.fullmatch(case_key):
+        return case_key
+    return hmac.new(_SALT, b"case:" + session_id.encode(), hashlib.sha256).hexdigest()[:16]
 
 
 def prompt_hash(prompt_hashes: Any) -> str | None:
@@ -359,7 +378,7 @@ def build_case(
         "created_at": created_at.isoformat(timespec="seconds").replace("+00:00", "Z"),
         "case_uri": f"gs://{bucket}/{CASE_PREFIX}/{case_id}/",
         "user_hash": user_hash,
-        "session_hash": session_hash(session_id),
+        "session_hash": session_hash(session_id, session.get("case_key")),
         "spec_id": _text(session.get("spec_id")),
         "library_id": version_library(version, session),
         "language": _text(session.get("locale")),

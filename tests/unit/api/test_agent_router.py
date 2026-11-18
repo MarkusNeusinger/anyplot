@@ -2118,6 +2118,10 @@ TURNS = {
 """The bundle's turn record: the page's plot action, whose reply lost its confirm sentence."""
 
 
+CASE_KEY = "0f1e2d3c4b5a6978"
+"""The key the agents service made for the session (`session.case_key`), which a case records as its `session_hash`."""
+
+
 def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "dark"), data_csv: str | None = None):
     """The agents service's bundle of one version, as `?version=<number>` answers it."""
     pngs = {"light": PNG_LIGHT, "dark": PNG_DARK}
@@ -2128,6 +2132,7 @@ def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "da
             "locale": "de-CH",
             "versions": number,
             "last_run": {"status": "needs_attention", "reason": None, "version": number, "turn": 2, "rounds": ROUNDS},
+            "case_key": CASE_KEY,
         },
         "snapshot": {"spec_id": "scatter-basic", "library_version": "3.10.0"},
         "transcript": [
@@ -2234,7 +2239,7 @@ class TestFeedback:
             "id": case_id,
             "case_uri": f"gs://anyplot-agent-cases/cases/{case_id}/",
             "user_hash": derive_user_id(KEY.encode(), ADMIN),
-            "session_hash": hashlib.sha256(self.SID.encode()).hexdigest()[:16],
+            "session_hash": CASE_KEY,
             "spec_id": "scatter-basic",
             "library_id": "matplotlib",
             "language": "de-CH",

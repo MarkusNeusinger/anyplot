@@ -366,6 +366,19 @@ def test_the_attribution_hash_is_salted_and_not_the_telemetry_hash() -> None:
     assert session_hash("") == ""
 
 
+def test_a_cases_key_is_salted_and_joins_no_log_line_and_no_telemetry_row() -> None:
+    import hashlib
+
+    from agents.anyplot.plugins.ledger import case_key, session_hash
+
+    plain = hashlib.sha256(b"abc").hexdigest()
+    key = case_key("abc")
+    assert re.fullmatch(r"[0-9a-f]{16}", key) and key == case_key("abc")
+    assert key != case_key("abd")
+    assert key not in (plain[:16], telemetry.session_key("abc"))
+    assert not key.startswith(session_hash("abc"))
+
+
 def test_idempotency_keys_repeat_for_the_same_line_only() -> None:
     first = telemetry.idempotency_key("s", 1, "run1", "pipeline_run")
     assert first == telemetry.idempotency_key("s", 1, "run1", "pipeline_run")

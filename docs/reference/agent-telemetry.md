@@ -62,7 +62,11 @@ logs. Sessions live in memory and end with the instance (`max-instances=1`), so 
 lines together for exactly as long as the session exists. Since 2026-10-16 the attribution lines' `session`
 is salted with the same per-process salt under another domain (`agents/anyplot/plugins/ledger.py` `salted`),
 so it cannot be joined to the request log either, and the two hashes of one session differ: telemetry rows
-cannot be joined to the attribution lines, which carry the user id.
+cannot be joined to the attribution lines, which carry the user id. A stored feedback case records a third
+hash of its session under a domain of its own (`ledger.case_key`, the bundle's `session.case_key`), so a case's
+`session_hash` joins it to no telemetry row and no log line either. A case can still be matched to its session
+by time: by the second in the request log for 30 days, and by its second, reaction and version in the telemetry
+for as long as that is kept.
 
 The hash does not prevent a join by time. Cloud Run's request logs (the session id in the URL, the client IP
 address) and the attribution lines (the HMAC user id) stay in the project's `_Default` log bucket for 30 days. For

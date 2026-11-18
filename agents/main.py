@@ -249,6 +249,7 @@ from agents.anyplot.plugins.ledger import (
     anonymous_user,
     attribution,
     budget_allows,
+    case_key,
     day_refusal,
     judge_budget_tokens,
     network_key,
@@ -3161,6 +3162,8 @@ async def bundle(
             # how many versions, and how the latest plot run ended (a plot the page missed, or a run that failed).
             "versions": held,
             "last_run": view.last_run.model_dump(mode="json") if view.last_run is not None else None,
+            # What a stored feedback case records for its session instead of the id (`ledger.case_key`).
+            "case_key": case_key(sid),
         },
         "snapshot": {"spec_id": view.snapshot.spec_id, "library_version": view.snapshot.library_version},
         "transcript": transcript,

@@ -13,6 +13,7 @@ at its production defaults with a fake clock.
 
 import asyncio
 import base64
+import hashlib
 import json
 import logging
 import re
@@ -52,6 +53,7 @@ from agents.anyplot.models import (
 from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING, assess
 from agents.anyplot.pipeline import LANGUAGE_REWRITE_REQUEST, REPLY_LANGUAGE_HEADING, SoftDeadline
 from agents.anyplot.plugins.empty_reply import RETRY_LINE
+from agents.anyplot.plugins.ledger import case_key
 from agents.anyplot.policy import refusal, scope_rubric
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_page
 from agents.anyplot.render.contract import PageFailed, PageJob, PageUnsupported, RendererUnavailable, RenderJob, Theme
@@ -1031,6 +1033,10 @@ async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap
 
     bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
     assert bundle["session"]["spec_id"] == "scatter-basic"
+    # What a feedback case records for the session: the salted key, and nowhere the id or a plain hash of it.
+    assert bundle["session"]["case_key"] == case_key(sid)
+    assert sid not in json.dumps(bundle["session"])
+    assert hashlib.sha256(sid.encode()).hexdigest()[:16] not in json.dumps(bundle)
     assert bundle["versions"][0]["result"]["status"] == "ok"
     assert set(bundle["versions"][0]["images"]) == {"light"}
     assert bundle["versions"][0]["theme"] == "light"
@@ -1043,6 +1049,8 @@ async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap
     # Version 0 is the chat's case: no version even after a plot, and the current data on its own.
     chat = (await client.get(f"/v1/sessions/{sid}/bundle?version=0&include_data=true", headers=HEADERS)).json()
     assert chat["versions"] == []
+    # Every case of one session carries the same key, so a corrected one finds the case it replaces.
+    assert chat["session"]["case_key"] == bundle["session"]["case_key"]
     assert chat["data_csv"].startswith("Student,")
     assert chat["transcript"] and chat["profile"] is not None
     assert "data_csv" not in (await client.get(f"/v1/sessions/{sid}/bundle?version=0", headers=HEADERS)).json()
