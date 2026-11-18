@@ -76,6 +76,7 @@ WarningCode = Literal[
     "thousands_separators",
     "utc_offsets_normalised",
     "sub_microsecond_text",
+    "offset_dates_text",
     "date_order_ambiguous",
     "months_read",
     "month_names_read",
@@ -216,6 +217,10 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
             "utc_offsets_normalised",
         ),
         (_COLUMN + r"kept as text: times with fractions below a microsecond .*$", "sub_microsecond_text"),
+        (
+            _COLUMN + r"kept as text: every cell is a date followed directly by a UTC offset, with no time .*$",
+            "offset_dates_text",
+        ),
         (_COLUMN + r"day and month order is ambiguous; read as (?:DD/MM/YYYY|MM/DD/YYYY)$", "date_order_ambiguous"),
         (_COLUMN + r"[0-9,]+ cells? read as months \(YYYY-MM, each as the first day of the month\)$", "months_read"),
         (

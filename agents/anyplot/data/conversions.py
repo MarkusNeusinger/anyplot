@@ -29,8 +29,11 @@ dates. The session block shows the root one line per candidate (`Candidate.line`
   in a later turn (after an undo, or a binding the user changed) is never made by itself.
 * `uncertain`: some cells would not read and would be missing, or the reading guesses the
   day and month order, the century of a two-digit year, the decimal mark or thousands
-  separators (`prepare.Conversion.guess`). The root proposes the conversion with the counts,
-  as its one question.
+  separators, or takes the days of dates with a UTC offset and no time as written
+  (`2026-03-01-05:00`, the offset dropped; `prepare.Conversion.guess`). The root proposes the
+  conversion with the counts, as its one question. A date followed by a sign and digits in
+  another form (`2026-03-01-03`, an hour label as much as an offset) makes no candidate, since
+  `set_type` refuses the column.
 
 Converted dates that run newest first stay in the order of the rows: a plot run draws a
 bound date column oldest first by itself (`plot_view.drawn_in_order`), so no conversion
