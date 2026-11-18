@@ -3,7 +3,7 @@
 - **A private list of the gallery searches that found nothing.** A search
   that finds nothing in the whole catalogue (not in the filtered plots, not
   in all of them, in no category) goes to the new `search_misses` table, and
-  the "search misses" section on `/debug` lists the texts of the last 90 days,
+  the "search misses" section on `/debug` lists the texts of the last 180 days,
   most searched or most recently searched first and in pages, with a
   `.delete()` per text; it names the days that reached the day's cap and
   deletes such a day whole. The gallery sends only the finished text: after
@@ -24,9 +24,12 @@
   text, and gives a validation error without the body; the API normalises it
   again with the app's rule, held to it by shared test cases. A network (an
   address, or its /64 for IPv6) may send 20 requests a minute, a day takes at
-  most 1,000 new texts, and rows are deleted after 90 days, also when no miss
-  comes in. It is a best-effort counter, and the list shows what the
-  catalogue lacks and which words the search doesn't know.
+  most 1,000 new texts, and rows are deleted after 180 days, every text alike,
+  also when no miss comes in. It is a best-effort counter, and the list shows
+  what the catalogue lacks and which words the search doesn't know. The
+  privacy policy names the list in a row of its own, with its 180 days, and
+  says that search texts sent to the public dashboard before the change still
+  show there.
 
 ### Changed
 
@@ -34,4 +37,8 @@
   `search_no_results` sent the search text as `query` to Plausible, whose
   dashboard is public. `search` now carries only the `category` of the pick
   and `search_no_results` no property at all; the texts that found nothing
-  are in the private list instead.
+  are in the private list instead. `search_no_results` also fires only for a
+  finished search that finds nothing in the whole catalogue, at the moment
+  and from the same decision as its report to the list, never for a fragment
+  or a thrown-away text, so its count is smaller from then on and not
+  comparable with earlier months.

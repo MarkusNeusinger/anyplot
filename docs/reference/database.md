@@ -43,7 +43,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 - One counter per day, platform, and page for the link previews that messengers and social networks fetch (`link_shares`): a count, with no address, no user agent, and no time of day
 
 **Search misses:**
-- One counter per day and text for the gallery searches that found nothing in the whole catalogue (`search_misses`): the text, the day, and a count, with no address, no user agent, no time of day, and no session; pseudonymous, read by the operator only, and deleted after 90 days
+- One counter per day and text for the gallery searches that found nothing in the whole catalogue (`search_misses`): the text, the day, and a count, with no address, no user agent, no time of day, and no session; pseudonymous, read by the operator only, and deleted after 180 days
 
 **Other:**
 - Library information (name, version, docs URL)
@@ -260,7 +260,7 @@ CREATE TABLE link_shares (
         CHECK (page IN ('home','plots','spec_overview','spec_detail'))
 );
 
--- Search misses: one counter per day and text, private, kept for 90 days
+-- Search misses: one counter per day and text, private, kept for 180 days
 CREATE TABLE search_misses (
     day DATE NOT NULL,                      -- The UTC day of the search
     query VARCHAR(40) NOT NULL,             -- The text, normalised: lowercase, single spaces
@@ -444,9 +444,11 @@ Every column but the triage state copies the field of the same name in the case'
 
 **What a text may hold**: a visitor could type anything into the search field, so the app sends and the API keeps a text only when it reads as a search for a plot and shows something: letters and combining marks of any script (a mark only on a letter or a mark), at most six decimal digits, spaces, `- _ . + # / & ' ( ) % ,`, the middle dots `·` and `・`, and the Hebrew geresh, gershayim, and maqaf, the Tibetan tsheg, and the Ethiopic wordspace, and at least one letter or digit. That keeps out an e-mail address (`@`), a link with its scheme (`:`), a phone number (the digits), and control, format, direction, and other ignorable characters (a Hangul filler, a variation selector), except a zero width non-joiner or joiner between two letters or marks. It doesn't keep out every personal text: a name, a name with a year, a host name, a link without its scheme (`www.example.org/reset/abcdef`, `bit.ly/3xyz9`), an e-mail address spelled with "at", a street address without its comma, a date of birth in six digits, a six-digit code, a licence plate, a password of letters and digits, or a token such as `sk-live-abcdefghijklmnop` passes, since none of them can be told from a search by its characters. The other way round, a script that marks its words with signs the rule doesn't know is undercounted: traditional Mongolian, for one, whose free variation selectors are refused as characters that show as nothing.
 
-**How it is written**: the day and the text are the primary key, and the counter is one `INSERT ... ON CONFLICT DO UPDATE SET count = count + 1`, so two equal searches of a day are one row. Once a day holds 1,000 different texts, a new text is dropped while a text already there still counts. The API deletes the rows more than 90 days old, once a day: after a count, at the API's start, and when the owner reads the list; a failed delete is tried again by the next of them. The owner's list shows the same window. It is a best-effort counter: a flood can fill a day, and a write in flight when an instance stops is lost.
+**How it is written**: the day and the text are the primary key, and the counter is one `INSERT ... ON CONFLICT DO UPDATE SET count = count + 1`, so two equal searches of a day are one row. Once a day holds 1,000 different texts, a new text is dropped while a text already there still counts. The API deletes the rows more than 180 days old, one period for every text, also one searched only once. It runs the delete once a day: after a count, at the API's start, and when the owner reads the list; a failed delete is tried again by the next of them. The owner's list shows the same window. It is a best-effort counter: a flood can fill a day, and a write in flight when an instance stops is lost.
 
 **What a row never holds**: an address, a user agent, a time of day, a session, a hash, or anything else of the request. The text travels in the request body only and is never logged. A row names nobody, but it is pseudonymous, not anonymous: the platform's request log keeps one line per `POST /search/miss` for 30 days, with its time and user agent, and until then a text could be matched to such a line by its day.
+
+**The database's own log**: the API binds the text as a statement parameter, never as part of the statement's text. The instance sets none of PostgreSQL's logging flags that would write parameters or statements (`log_statement`, `log_min_duration_statement`, `log_parameter_max_length`, `log_parameter_max_length_on_error`, or pgAudit), and Query Insights is off, so a search text doesn't reach the database's own log; this was checked on 2026-11-18. That is a property of the instance's settings, not of the code: setting any of these flags, or turning Query Insights on, can write the texts into the database's log, so read this section before you change them.
 
 ---
 
@@ -718,7 +720,7 @@ await session.execute(f"SELECT * FROM specs WHERE id = '{spec_id}'")
 ### Data privacy
 
 - No user data stored permanently, with one exception: the quick-feedback cases of the agent chat. When someone submits one, the case (the conversation, the code, the images, the message, a hashed user id, and `data.csv` when the box is ticked) is stored in the private bucket `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days. Its row in `agent_feedback` holds the message and the hashed ids, but no conversation, code, images or data, and stays
-- The gallery searches that found nothing (`search_misses`) hold the text a visitor typed, its day, and a count, and are deleted after 90 days. A visitor could type anything; the app and the API keep only a text that reads as a search for a plot (no `@`, no `:`, at most six digits), and the list is the operator's alone. A row is pseudonymous: only its day could match it to a line of the 30-day request log
+- The gallery searches that found nothing (`search_misses`) hold the text a visitor typed, its day, and a count, and are deleted after 180 days. A visitor could type anything; the app and the API keep only a text that reads as a search for a plot (no `@`, no `:`, at most six digits), and the list is the operator's alone. A row is pseudonymous: only its day could match it to a line of the 30-day request log
 - Anonymous session IDs only
 - Usage data auto-deleted after 90 days
 

@@ -235,7 +235,7 @@ were counted and shown nowhere.
 | `download_image` | `spec`, `library`, `page` | `SpecPage.tsx` | A visitor downloads a plot's PNG |
 | `interactive_open` | `spec`, `library` | `SpecOverview.tsx` | A visitor opens an implementation's interactive view from the spec hub. Until 2026-11-12 the event was named `open_interactive` |
 | `search` | `category` | `FilterBar/FilterSearch.tsx` | A visitor searches the gallery and picks a result |
-| `search_no_results` | None | `FilterBar/FilterSearch.tsx` | A search finds nothing inside the active filters. What was typed goes to a private list instead (see [Search](#search)) |
+| `search_no_results` | None | `FilterBar/FilterSearch.tsx` | A finished search finds nothing in the whole catalogue, counted when it is reported to the private list, which gets what was typed (see [Search](#search)); since 2026-11-18, not comparable with earlier months |
 | `feedback_submitted` | `source`, `spec`, `library` | `FeedbackWidget.tsx`, `useQuickReaction.ts` | A visitor sends feedback or votes on a plot |
 | `agent_open` | `spec`, `library`, `source` | `AgentChatPage.tsx` | A visitor opens the agent chat for a plot |
 | `agent_plot_rendered` | `spec`, `library`, `status`, `repaired` | `useAgentSession.ts` | The agent chat ends a plot run |
@@ -269,14 +269,26 @@ the gallery or after opening a plot, break `copy_code` down by `page`.
 
 `search` fires when a visitor picks a search result, with the `category` of
 the result (`lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`,
-`prep`, `style`). `search_no_results` fires when a query of at least two
-characters finds nothing inside the active filters, 200 ms after the last
-keystroke. Such a query also fires it when the dropdown offers `.search_all()`,
-because the same query finds matches without the filters.
+`prep`, `style`). `search_no_results` fires for a finished search that finds
+nothing in the whole catalogue, at the moment it is reported to the private
+list below and from the same decision (`reportSearchMiss()` in
+`app/src/lib/searchMiss.ts`): after two seconds without a keystroke, or when
+the search field loses focus or the gallery is left. It fires once per text
+and page load, and only for a text the private list keeps (the rule under
+"Only a search for a plot"). A fragment typed on within two seconds, a text
+thrown away with the clear cross, Escape, or "← back", and a text that only
+finds nothing inside the active filters (the dropdown then offers
+`.search_all()`) don't fire it.
+
+Since 2026-11-18 the event counts only such finished texts. Until then it
+fired 200 ms after any keystroke for a query of at least two characters that
+found nothing inside the active filters, fragments and thrown-away texts
+included, so the count is smaller from that day on and isn't comparable with
+earlier months.
 
 Neither event carries what the visitor typed. Until 2026-11-18 both sent it
 as the property `query`, and the public dashboard listed it. Because
-`search_no_results` fires 200 ms after a keystroke, a fragment typed on the
+`search_no_results` fired 200 ms after a keystroke, a fragment typed on the
 way to a longer text ("gapm", "gapmi") stood there as a search of its own.
 
 #### The private list of search misses
@@ -343,7 +355,7 @@ page shows it.
   operator's alone.
 - **Limits**: a network (an IPv4 address, or the /64 of an IPv6 address) may
   send 20 requests a minute, a body may hold 1 KiB, a UTC day takes at most
-  1,000 different texts, and a row is deleted when it is more than 90 days old
+  1,000 different texts, and a row is deleted when it is more than 180 days old
   (`RATE_LIMIT_MAX`, `MAX_BODY_BYTES`, `MAX_NEW_QUERIES_PER_DAY`, and
   `RETENTION_DAYS` in `api/search_misses.py`). The delete runs once a day
   after a count, at the API's start, and when the owner reads the list. The
@@ -856,7 +868,7 @@ Enterprise plan, so you change them in the dashboard.
 | `download_image` | Custom event | Image downloads |
 | `interactive_open` | Custom event | Interactive views opened from a spec hub |
 | `search` | Custom event | Searches that led to a result |
-| `search_no_results` | Custom event | Searches that found nothing inside the filters; the texts are in the private list on `/debug` |
+| `search_no_results` | Custom event | Finished searches that found nothing in the whole catalogue, from 2026-11-18; the texts are in the private list on `/debug` |
 | `feedback_submitted` | Custom event | Feedback entries and plot votes |
 | `agent_open` | Custom event | Opens of the agent chat, and where they came from |
 | `agent_plot_rendered` | Custom event | Agent chat plot runs, by outcome |
@@ -972,7 +984,7 @@ had no bounce rate draws the floor and is named "not counted".
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`, with `ENGAGED_SINCE` and `_engaged_visits()`
 - **Visitors tile**: `app/src/sections/stats/VisitorsTile.tsx`, its answer's check and sums in `app/src/sections/stats/visitors.ts`, and the hinted word in `app/src/sections/stats/HintTerm.tsx` (shared with the shared links tile)
 - **Shared links** (not in Plausible): `record_share()` in `api/shared_links.py`, called by `api/routers/og_images.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
-- **Search misses** (not in Plausible): the miss rule, the pause and what sends or drops a pending text in `app/src/sections/plots-gallery/FilterBar/FilterSearch.tsx`, the sender and `isCountableMiss()` in `app/src/lib/searchMiss.ts`, the shared cases of both rules in `app/src/hooks/searchQuery.cases.json`, `read_json_body()`, `is_countable()` and `record_miss()` in `api/search_misses.py` behind `POST /search/miss` (`api/routers/search.py`), and the owner's section `app/src/sections/debug/SearchMissesSection.tsx`
+- **Search misses** (the texts not in Plausible): the miss rule, the pause and what reports or drops a pending text in `app/src/sections/plots-gallery/FilterBar/FilterSearch.tsx`; the one decision (`claimSearchMiss()`), the report that counts `search_no_results` and sends the text (`reportSearchMiss()`), the sender and `isCountableMiss()` in `app/src/lib/searchMiss.ts`; the shared cases of both rules in `app/src/hooks/searchQuery.cases.json`, `read_json_body()`, `is_countable()` and `record_miss()` in `api/search_misses.py` behind `POST /search/miss` (`api/routers/search.py`), and the owner's section `app/src/sections/debug/SearchMissesSection.tsx`
 
 ## Add or change an event
 
