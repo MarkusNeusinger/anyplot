@@ -94,8 +94,8 @@ export function FilterSearch({
     }, 200);
   }, [flushMiss, searchQuery, selectedCategory, dropdownAnchor, activeFilters.length]);
 
-  // Close dropdown and collapse if empty. A click outside closes it too, and that is a loss of
-  // focus: a pending miss goes. Escape drops it first (see `handleKeyDown`).
+  // Close dropdown and collapse if empty. Escape drops a pending miss before it gets here (see
+  // `handleKeyDown`); every other way sends it.
   const handleDropdownClose = useCallback(() => {
     flushMiss();
     setDropdownAnchor(null);
@@ -104,6 +104,43 @@ export function FilterSearch({
     setHighlightedIndex(-1);
     setIsSearchManuallyExpanded(false);
   }, [flushMiss]);
+
+  // The clear cross: drops the pending text with what was typed, and leaves the menu open on
+  // the categories.
+  const crossRef = useRef<SVGSVGElement>(null);
+  const handleClear = useCallback(() => {
+    dropMiss();
+    setSearchQuery('');
+    setSelectedCategory(null);
+  }, [dropMiss]);
+
+  // While the menu is open its invisible backdrop covers the page, the field and the cross
+  // included, so a press on the cross arrives here as a press on the backdrop. The backdrop
+  // keeps the focus on its press (`FilterMenu`), so nothing has been sent yet: a press inside
+  // the cross's box is the clear cross, any other press is a loss of focus, which sends a
+  // pending miss and leaves the field as before.
+  const handleMenuClose = useCallback(
+    (event: object, reason: 'backdropClick' | 'escapeKeyDown' | 'tabKeyDown') => {
+      const box = crossRef.current?.getBoundingClientRect();
+      const press = event as { clientX?: number; clientY?: number };
+      const onCross =
+        reason === 'backdropClick' &&
+        box !== undefined &&
+        press.clientX !== undefined &&
+        press.clientY !== undefined &&
+        press.clientX >= box.left &&
+        press.clientX <= box.right &&
+        press.clientY >= box.top &&
+        press.clientY <= box.bottom;
+      if (onCross) {
+        handleClear();
+        return;
+      }
+      handleDropdownClose();
+      if (reason === 'backdropClick') inputRef.current?.blur();
+    },
+    [handleClear, handleDropdownClose, inputRef]
+  );
 
   // Select category from dropdown
   const handleCategorySelect = useCallback(
@@ -419,14 +456,14 @@ export function FilterSearch({
           />
           {isSearchExpanded && (searchQuery || selectedCategory) && (
             <CloseIcon
-              // Keeps the focus in the field: a blur there would send the text this click throws
-              // away.
+              ref={crossRef}
+              // While the menu is open a press here reaches the menu's backdrop instead
+              // (`handleMenuClose`); this covers a press the cross receives itself. Its default
+              // is kept from moving the focus: a blur would send the text this press throws away.
               onMouseDown={e => e.preventDefault()}
               onClick={e => {
                 e.stopPropagation();
-                dropMiss();
-                setSearchQuery('');
-                setSelectedCategory(null);
+                handleClear();
               }}
               sx={{
                 color: 'var(--ink-muted)',
@@ -452,7 +489,7 @@ export function FilterSearch({
         hiddenMatchCount={hiddenMatchCount}
         dropdownItems={dropdownItems}
         highlightedIndex={highlightedIndex}
-        onClose={handleDropdownClose}
+        onClose={handleMenuClose}
         onCategorySelect={handleCategorySelect}
         onValueSelect={handleValueSelect}
         onSearchAll={handleSearchAll}

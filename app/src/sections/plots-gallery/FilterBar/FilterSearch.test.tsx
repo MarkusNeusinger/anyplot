@@ -350,6 +350,45 @@ describe('FilterSearch misses for the private list', () => {
     expect(getSearchInput()).toHaveValue('');
   });
 
+  /**
+   * The open menu's invisible backdrop covers the page, so in a browser a press on the cross
+   * lands on the backdrop, not on the cross (checked with a real browser: the element at the
+   * cross's centre is the backdrop). The cross's box is given here, since jsdom lays nothing out.
+   */
+  function backdropWithCrossAt(left: number, top: number) {
+    const cross = screen.getByTestId('CloseIcon');
+    vi.spyOn(cross, 'getBoundingClientRect').mockReturnValue(new DOMRect(left, top, 18, 18));
+    const backdrop = document.querySelector('.MuiBackdrop-root');
+    expect(backdrop).not.toBeNull();
+    return backdrop as HTMLElement;
+  }
+
+  it('drops a pending miss when a press on the cross reaches the menu backdrop', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('zzqqxy');
+    const backdrop = backdropWithCrossAt(200, 10);
+    // The backdrop keeps the focus in the field, so no blur sends the text first.
+    expect(fireEvent.mouseDown(backdrop)).toBe(false);
+    fireEvent.click(backdrop, { clientX: 209, clientY: 19 });
+    wait(MISS_PAUSE_MS);
+
+    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(getSearchInput()).toHaveValue('');
+  });
+
+  it('sends a pending miss when a press elsewhere closes the menu', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('zzqqxy');
+    const backdrop = backdropWithCrossAt(200, 10);
+    fireEvent.mouseDown(backdrop);
+    fireEvent.click(backdrop, { clientX: 600, clientY: 400 });
+
+    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
+    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+  });
+
   it('drops a pending miss when "← back" leaves the category, and keeps the focus', () => {
     render(<FilterSearch {...defaultProps} />);
     openSearch();
