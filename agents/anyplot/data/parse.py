@@ -445,6 +445,28 @@ _ISO_STAMP = re.compile(
     r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:[.,]([0-9]{1,9}))?)?(Z|[+-][0-9]{2}(?::?[0-9]{2})?)?)?"
 )
 """An ISO date, or a timestamp with seconds, a fraction of up to nine digits and an offset (`_as_iso_stamps`)."""
+UTC_OFFSETS = (-12 * 60, 14 * 60)
+"""The UTC offsets in use, in minutes east of UTC: from −12:00 (Baker Island) to +14:00 (the Line Islands). A sign
+and digits past them after a time is the end of a range (`08:00-16:30`), never an offset (`utc_offset`)."""
+_OFFSET_SHAPE = re.compile(r"Z|([+-])([0-9]{2})(?::?([0-9]{2}))?")
+
+
+def utc_offset(text: str) -> int | None:
+    """The minutes east of UTC of an offset written `Z`, `±HH`, `±HHMM` or `±HH:MM` and within `UTC_OFFSETS`, else
+    None: the one definition of an offset for the paste, the conversions, the dates with an offset and the bounds."""
+    shape = _OFFSET_SHAPE.fullmatch(text)
+    if shape is None:
+        return None
+    if text == "Z":
+        return 0
+    sign, hours, minutes = shape.groups()
+    if int(minutes or 0) > 59:
+        return None
+    total = (int(hours) * 60 + int(minutes or 0)) * (-1 if sign == "-" else 1)
+    low, high = UTC_OFFSETS
+    return total if low <= total <= high else None
+
+
 DATE_OFFSET = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})(Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])")
 """An ISO date followed directly by a UTC offset and no time, in a form that is an offset only: `Z` or `±HH:MM`
 (`2026-03-01+01:00`, `2026-03-01-05:00`, `2026-03-01Z`); the date is group 1, the offset as written group 2. The
@@ -454,6 +476,15 @@ DATE_SIGN_DIGITS = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}[+-][0-9][0-9:]*")
 """An ISO date followed directly by a sign and digits, of any form. Unless it is a `DATE_OFFSET`, no reading takes it:
 `2026-03-01-03` and `2026-03-01+0100` are an hour label as much as an offset, and `2026-03-01-05:00:00` a time as much
 (pandas reads each of them as a time of day, and Python's `fromisoformat` takes any character for the `T`)."""
+
+
+def date_offset(text: str) -> re.Match[str] | None:
+    """A `DATE_OFFSET` cell whose offset is one in use (`utc_offset`), else None: `2026-03-01-17:00` is no date with an
+    offset but a date followed by a sign and digits (`DATE_SIGN_DIGITS`), which no reading takes."""
+    found = DATE_OFFSET.fullmatch(text)
+    return found if found is not None and utc_offset(found.group(2)) is not None else None
+
+
 OFFSET_DATES = (
     "kept as text: every cell is a date followed directly by a UTC offset, with no time "
     "(YYYY-MM-DD±HH:MM or YYYY-MM-DDZ)"
@@ -3665,7 +3696,8 @@ def _as_iso_stamps(column: _Column, present: list[str]) -> bool | None:
     None when a cell is no ISO date, so the other formats are tried. A fraction of up to nine
     digits stays (each cell padded to the column's longest fraction, which changes no value and
     lets `pd.read_csv(parse_dates=...)` read the column as one format), and so does an offset
-    (`Z`, `+01`, `+0100`, `+01:00`, written `+01:00`; `Z` as `+00:00`). A column that mixes
+    (`Z`, `+01`, `+0100`, `+01:00`, written `+01:00`; `Z` as `+00:00`) in use (`utc_offset`: −12:00
+    to +14:00; `08:00-16:30` is a range of times, so such a column stays text). A column that mixes
     cells with and without an offset is not a date column: no time is given a zone by guess.
     A column with several offsets (summer and winter time) is written in UTC (`+00:00`) with a
     note naming the offsets, because pandas reads one offset per column; the instants stay.
@@ -3688,11 +3720,10 @@ def _as_iso_stamps(column: _Column, present: list[str]) -> bool | None:
             return False
         minutes: int | None = None
         if offset is not None:
-            digits = offset[1:].replace(":", "") if offset != "Z" else "0000"
-            minutes = int(digits[:2]) * 60 + int(digits[2:4] or 0)
-            if minutes >= 24 * 60:
+            # An offset past those in use is the end of a range of times (`08:00-16:30`): the column stays text.
+            minutes = utc_offset(offset)
+            if minutes is None:
                 return False
-            minutes = -minutes if offset.startswith("-") else minutes
             stamp = stamp.replace(tzinfo=timezone(timedelta(minutes=minutes)))
         offsets[cell] = minutes
         stamps[cell] = (stamp, fraction)
@@ -3813,7 +3844,7 @@ def _offset_days(present: list[str]) -> bool:
     if not present:
         return False
     for cell in present:
-        match = DATE_OFFSET.fullmatch(cell)
+        match = date_offset(cell)
         if match is None:
             return False
         try:

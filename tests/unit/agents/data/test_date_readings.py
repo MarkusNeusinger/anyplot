@@ -19,7 +19,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from agents.anyplot.data import prepare as prepare_module
-from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.parse import parse_dataset, utc_offset
 from agents.anyplot.data.prepare import (
     Operation,
     PrepareError,
@@ -492,6 +492,74 @@ READINGS: dict[str, Reading] = {
         ["2026 10:00", "2027 11:30"], ["2026-01-01T10:00:00", "2027-01-01T11:30:00"], 0, True, None, ""
     ),
     "month_lone_hour": Reading(["2026-03T10", "2026-04T11"], ["2026-03-10", "2026-04-11"], 0, False, None, ""),
+    "one_digit_minutes": Reading(
+        ["2026-3-1 9:5", "2026-3-2 10:7"], ["2026-03-01T09:05:00", "2026-03-02T10:07:00"], 0, True, None, ""
+    ),
+    "program_timestamp": Reading(
+        ["Sun Mar 1 10:00:00 2026", "Mon Mar 2 11:30:00 2026"],
+        ["2026-03-01T10:00:00", "2026-03-02T11:30:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "program_timestamp_padded": Reading(
+        ["Sun Mar  1 10:00:00 2026", "Mon Mar  2 11:30:00 2026"],
+        ["2026-03-01T10:00:00", "2026-03-02T11:30:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "program_timestamp_zone": Reading(
+        ["Sun Mar 1 10:00:00 2026 +0100", "Mon Mar 2 11:30:00 2026 +0100"],
+        ["2026-03-01T10:00:00+01:00", "2026-03-02T11:30:00+01:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    # A time whose end has the shape of an offset in use: read as that offset, as before (the owner's decision).
+    "time_range_offset_end": Reading(
+        ["2026-03-01 10:00-12:00", "2026-03-02 10:00-12:00"],
+        ["2026-03-01T10:00:00-12:00", "2026-03-02T10:00:00-12:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "time_range_spaced_end": Reading(
+        ["2026-03-01 10:00 -12:00", "2026-03-02 10:00 -12:00"],
+        ["2026-03-01T10:00:00-12:00", "2026-03-02T10:00:00-12:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "time_range_compact_end": Reading(
+        ["2026-03-01 10:00-1200", "2026-03-02 10:00-1200"],
+        ["2026-03-01T10:00:00-12:00", "2026-03-02T10:00:00-12:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "time_range_late_end": Reading(
+        ["2026-03-01 08:00-16:30", "2026-03-02 08:00-16:30"],
+        ["2026-03-01T08:00:00-16:30", "2026-03-02T08:00:00-16:30"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "f4_offset_beyond_range": Reading(
+        ["2026-03-01-13:00", "2026-03-02-13:00"],
+        ["2026-03-01", "2026-03-02"],
+        0,
+        False,
+        "the days of 2 dates with a UTC offset as written, the offset dropped",
+        "",
+    ),
 }
 PASTED: dict[str, Pasted] = {
     "iso_date": Pasted("datetime", ["2026-03-01", "2026-03-02", "2026-12-31"], []),
@@ -669,7 +737,30 @@ PASTED: dict[str, Pasted] = {
     "month_name_with_clock": Pasted("text", None, []),
     "year_with_clock": Pasted("text", None, []),
     "month_lone_hour": Pasted("text", None, []),
+    "one_digit_minutes": Pasted("text", None, []),
+    "program_timestamp": Pasted("text", None, []),
+    "program_timestamp_padded": Pasted("text", None, []),
+    "program_timestamp_zone": Pasted("text", None, []),
+    "time_range_offset_end": Pasted("datetime", ["2026-03-01T10:00:00-12:00", "2026-03-02T10:00:00-12:00"], []),
+    "time_range_spaced_end": Pasted("text", None, []),
+    "time_range_compact_end": Pasted("datetime", ["2026-03-01T10:00:00-12:00", "2026-03-02T10:00:00-12:00"], []),
+    "time_range_late_end": Pasted("datetime", ["2026-03-01T08:00:00-16:30", "2026-03-02T08:00:00-16:30"], []),
+    "f4_offset_beyond_range": Pasted(
+        "text",
+        None,
+        [
+            "column 'd': kept as text: every cell is a date followed directly by a UTC offset, with no time "
+            "(YYYY-MM-DD±HH:MM or YYYY-MM-DDZ)"
+        ],
+    ),
 }
+PASTE_CHANGED: dict[str, Pasted] = {
+    # An offset past those in use (-12:00 to +14:00) is the end of a range, never an offset: the paste keeps the
+    # cells as text (it had typed `08:00-16:30` as 08:00 at -16:30), and `2026-03-01-13:00` gets no offset note.
+    "time_range_late_end": Pasted("text", None, []),
+    "f4_offset_beyond_range": Pasted("text", None, []),
+}
+"""The rows whose paste the strict date rule changes on purpose, with the paste they have now."""
 
 
 def _timed(name: str, values: list[str | None]) -> Reading:
@@ -709,6 +800,15 @@ CHANGED: dict[str, Reading] = {
     "month_name_with_clock": Reading(READINGS["month_name_with_clock"].cells, [None, None], 2),
     "year_with_clock": Reading(READINGS["year_with_clock"].cells, [None, None], 2),
     "month_lone_hour": Reading(READINGS["month_lone_hour"].cells, [None, None], 2),
+    # An offset past those in use is the end of a range of times, no zone: `08:00-16:30` is 8 to 16:30, and a date
+    # followed by `-13:00` is a date and a sign and digits, which F4 refuses as no offset.
+    "time_range_late_end": Reading(READINGS["time_range_late_end"].cells, [None, None], 2),
+    "f4_offset_beyond_range": Reading(
+        READINGS["f4_offset_beyond_range"].cells,
+        refused="column 'd' holds dates followed directly by a sign and digits in no UTC offset form (such as "
+        "YYYY-MM-DD-HH or YYYY-MM-DD±HHMM), which may be an hour as well as an offset, so the column stays as it is: an "
+        "offset reads in the form YYYY-MM-DD±HH:MM, a time in the form YYYY-MM-DDTHH:MM",
+    ),
 }
 """The rows whose reading the strict date rule changes on purpose, with the reading they have now."""
 
@@ -724,7 +824,7 @@ def test_a_conversion_reads_as_it_did(name: str) -> None:
 
 @pytest.mark.parametrize("name", list(PASTED))
 def test_the_paste_types_as_it_did(name: str) -> None:
-    assert pasted(READINGS[name].cells) == PASTED[name]
+    assert pasted(READINGS[name].cells) == PASTE_CHANGED.get(name, PASTED[name])
 
 
 FORMATTED: dict[str, tuple[str, bool, Reading]] = {
@@ -774,6 +874,11 @@ FORMATTED: dict[str, tuple[str, bool, Reading]] = {
         "MM/YYYY",
         False,
         Reading(["03/2026 10:00", "04/2026 11:30"], ["2026-03-01T10:00:00", "2026-04-01T11:30:00"], with_time=True),
+    ),
+    "fmt_iso_one_digit_minutes": (
+        "YYYY-MM-DD",
+        False,
+        Reading(["2026-03-01 9:5", "2026-03-02"], ["2026-03-01T09:05:00", "2026-03-02T00:00:00"], with_time=True),
     ),
     "fmt_month_dot_year_time": (
         "MM.YYYY",
@@ -874,6 +979,13 @@ UNREADABLE: dict[str, list[str | None]] = {
     "a spaced dash after a dot date": ["01.03.2026 - 05", "02.03.2026 - 06"],
     "a number after a space": ["2026-03-01 10", "2026-03-01 11"],
     "a number after a comma": ["2026-03-01, 10", "2026-03-02, 11"],
+    "a range of hours after T": ["2026-03-01T10-12", "2026-03-02T08-17"],
+    "a range of times past the offsets in use": ["2026-03-01 9:00-17:00", "2026-03-02 08:00-16:30"],
+    "a range of hours with am": ["2026-03-01 10am-12", "2026-03-02 10am-12"],
+    "a lone hour with a short offset": ["2026-03-01T10+01", "2026-03-02T10+01"],
+    "a midnight with AM after a month": ["2026-03 12 AM", "2026-04 12 AM"],
+    "a midnight with AM after a year": ["2026 12 AM", "2027 12 AM"],
+    "a midnight with am after a month name": ["March 2026 12am", "April 2026 12am"],
 }
 """Cells with more after their date than a time: pandas read a range as days with made-up offsets (2, 7 and 11
 March, beside a notice of offsets no cell holds), a sign and digits as 05:00, and an interval as its first day."""
@@ -925,6 +1037,88 @@ class TestStrictRule:
         cells: list[str | None] = ["2026-03-01 -05:00", "2026-03-02 -05:00", "2026-03-03"]
 
         assert converted(cells) == Reading(cells, [None, None, "2026-03-03"], 2)
+
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["2026-02-30+01:00", "2026-02-31+01:00"],  # an impossible day with an offset
+            ["2026-03-01T25", "2026-03-02T26"],  # an impossible hour after T
+            ["2026-03-01 10:60", "2026-03-02 11:75"],  # impossible minutes
+        ],
+    )
+    def test_an_impossible_day_or_time_is_no_reason(self, cells: list[str]) -> None:
+        """Those cells hold a day or a time no calendar has, not more after a date than a time: no reason is named."""
+        text = "d,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+        operation = {"op": "set_type", "column": "d", "type": "datetime", "name": "e"}
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+        assert caught.value.message == "column 'd': 2 of 2 cells cannot be read as dates"
+
+    @pytest.mark.parametrize(
+        ("cells", "more"),
+        [
+            (["2026-03-01 approved", "2026-03-02 approved"], 2),  # a word after the date: more, by any reading
+            (["2026-03-01T10-12", "2026-03-02T08-17"], 2),  # a range of hours: more than a time
+            (["2026-03 approved", "2026-04 approved"], 0),  # a month and a word: no day, so no reason
+        ],
+    )
+    def test_the_reason_counts_a_day_with_more_after_it(self, cells: list[str], more: int) -> None:
+        conversion = _date_conversion(pd.Series(cells, dtype="str", name="d"), None)
+
+        assert (conversion.failed, conversion.more) == (2, more)
+
+    def test_a_date_with_a_zone_and_no_time_fails_closed(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A leaked zone at midnight (`T00:00Z`) is caught by the zone, not the time of day: a gate that took such a
+        cell for a date alone still leaves it unread."""
+        monkeypatch.setattr(prepare_module, "_date_cell", lambda text: False)
+        cells: list[str | None] = ["2026-03-01T00:00Z", "2026-03-02T00:00Z"]
+
+        assert converted(cells) == Reading(cells, [None, None], 2)
+
+    def test_the_utc_notice_names_only_offsets_of_cells_read(self) -> None:
+        """A range among times with two offsets is unread: its made-up offset (-12:00) is in no cell read."""
+        cells: list[str | None] = [
+            f"2026-{month:02d}-01T10:00:00{'+01:00' if month < 4 else '+02:00'}" for month in range(1, 11)
+        ] + ["2026-03-01-2026-03-05"]
+
+        reading = converted(cells)
+
+        assert reading.failed == 1
+        assert reading.notice == (
+            "times with the UTC offsets +01:00, +02:00 converted to UTC (+00:00); the instants are the same"
+        )
+
+    @pytest.mark.parametrize(
+        ("offset", "minutes"),
+        [
+            ("Z", 0),
+            ("+01:00", 60),
+            ("-05:30", -330),
+            ("+0100", 60),
+            ("+01", 60),
+            ("+14:00", 840),
+            ("-12:00", -720),
+            ("+14:01", None),
+            ("-12:30", None),
+            ("-16:30", None),
+            ("+01:60", None),
+            ("01:00", None),
+        ],
+    )
+    def test_an_offset_is_one_in_use(self, offset: str, minutes: int | None) -> None:
+        """One definition for the paste, the conversions, the dates with an offset and the bounds."""
+        assert utc_offset(offset) == minutes
+
+    def test_a_bound_past_the_offsets_in_use_is_refused(self) -> None:
+        text = "t,v\n2026-03-01T10:00:00+01:00,1\n2026-03-02T10:00:00+01:00,2\n"
+        operation = {"op": "keep_rows", "where": [{"column": "t", "test": "ge", "value": "2026-03-01T09:00-17:00"}]}
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+        assert caught.value.message == "the value for column 't' is not an ISO date (YYYY-MM-DD, with an optional time)"
 
     def test_a_refusal_for_cells_of_no_date_keeps_its_words(self) -> None:
         text = "d,v\nunknown,1\nn.a.: none,2\n2026-03-01,3\n"
