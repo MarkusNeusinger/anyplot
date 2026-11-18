@@ -54,6 +54,10 @@ PRICES = "Hours,Price\n1,$5\n2,7\n3,$12\n"
 """`y` of `scatter-basic` open beside a text column of prices, which reads as numbers without a guess."""
 RANGES = "team;games;mean;min–max\nalpha;140;61.5;48–80\nbeta;146;67.2;52–77\ngamma;143;64.0;45–79\n"
 DAYS_WEST = "day,kWh\n2026-03-01-05:00,12\n2026-03-02-05:00,15\n2026-03-03-05:00,11\n"
+HOURS = "hour,kWh\n2026-03-01T00,1\n2026-03-01T01,2\n2026-03-01T02,3\n2026-03-01T03,4\n"
+"""Hour labels with a `T` and no minutes: ISO's hour of a day, which a conversion reads with its hour."""
+RANGES_OF_DAYS = "week,kWh\n2026-03-01-2026-03-05,12\n2026-03-06-2026-03-09,15\n2026-03-10-2026-03-12,11\n"
+"""Ranges of days, one per row: no date, and no reading may guess one."""
 """Days with a UTC offset west of UTC and no time, which pandas alone reads as 05:00 on each day."""
 MADE_HEADING = "- Conversions the server made for open roles before this turn:"
 
@@ -216,6 +220,42 @@ class TestMakeConversions:
         else:
             assert spec == "line-basic" and text.startswith("hour,")
             assert made.record.operations == [{"op": "row_number", "name": "index"}]
+
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["2026-03-01-2026-03-05", "2026-03-06-2026-03-09", "2026-03-10-2026-03-12"],
+            ["2026-03-01 -05:00", "2026-03-02 -05:00", "2026-03-03 -05:00"],
+            ["2026/03/01-05:00", "2026/03/02-05:00", "2026/03/03-05:00"],
+            ["13.03.2026-05:00", "14.03.2026-05:00", "15.03.2026-05:00"],
+            ["2026-03-01T-05:00", "2026-03-02T-05:00", "2026-03-03T-05:00"],
+            ["2026-03-01/05", "2026-03-06/09", "2026-03-10/12"],
+        ],
+    )
+    def test_more_after_a_date_than_a_time_is_never_read_as_dates_unasked(self, cells: list[str]) -> None:
+        """A range, an interval or a sign and digits after a date was read by guess (2, 7 and 11 March for three
+        ranges, 05:00 for `-05:00`) and rated certain; such cells are unreadable now, so nothing is made."""
+        text = "day,kWh\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+        store, view = pasted(text, "line-timeseries-rolling")
+
+        assert make_conversions(store, SID, view, view.snapshot) is None
+        assert len(store) == 1  # the paste alone
+
+    def test_lone_hours_are_converted_with_their_hours(self) -> None:
+        """`2026-03-01T00` to `T03` read as their hours, which a column of dates without a colon had dropped."""
+        store, view = pasted(HOURS, "line-timeseries-rolling")
+
+        made = make_conversions(store, SID, view, view.snapshot)
+
+        assert made is not None and made.outcome == "date"
+        stored = store.get(made.version.dataset_id, SID)
+        assert stored is not None
+        assert [row.split(",")[-1] for row in stored.csv.splitlines()[1:]] == [
+            "2026-03-01T00:00:00",
+            "2026-03-01T01:00:00",
+            "2026-03-01T02:00:00",
+            "2026-03-01T03:00:00",
+        ]
 
     def test_a_full_store_makes_nothing(self, monkeypatch: pytest.MonkeyPatch) -> None:
         store, view = pasted(PRICES, "scatter-basic")
@@ -459,6 +499,25 @@ async def test_the_summary_turn_of_days_with_an_offset_proposes_the_conversion(
     seen = call["system"][-1]["text"]
     assert MADE_HEADING not in seen and "- Conversions for open roles: 1" in seen
     assert "uncertain: the reading guesses the days of 3 dates with a UTC offset as written, the offset dropped" in seen
+
+
+async def test_the_summary_turn_of_ranges_of_days_makes_no_dates(client: httpx.AsyncClient, swap_models) -> None:
+    """The paste's first turn through the routes: the ranges had been read as 2, 7 and 11 March, with a notice of UTC
+    offsets no cell holds, and made unasked; they are unreadable now, so no version is made and the block lists no
+    conversion of them."""
+    script = default_script()
+    script["root"] = [{"text": "3 rows. The week column holds ranges of days, which I cannot read as dates."}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_spec(client, "line-timeseries-rolling")
+    await paste(client, sid, RANGES_OF_DAYS)
+
+    events = await say(client, sid, {"action": "summarize_data"})
+
+    assert events[-1][0] == "done" and "dataset" not in events[-1][1]
+    assert read_session(await _session_state(client, sid)).dataset_version == 1
+    [call] = fake.calls
+    seen = call["system"][-1]["text"]
+    assert MADE_HEADING not in seen and "column 'week'" not in seen.split("- Conversions for open roles")[-1]
 
 
 async def test_a_summary_action_on_summarized_data_makes_nothing(client: httpx.AsyncClient, swap_models) -> None:

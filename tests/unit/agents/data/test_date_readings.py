@@ -12,12 +12,22 @@ with their new reading.
 import csv
 import io
 from dataclasses import dataclass
+from typing import Any
 
 import pandas as pd
 import pytest
+from pydantic import TypeAdapter
 
 from agents.anyplot.data.parse import parse_dataset
-from agents.anyplot.data.prepare import PrepareError, _cell_text, _date_conversion
+from agents.anyplot.data.prepare import (
+    Operation,
+    PrepareError,
+    _cell_text,
+    _date_conversion,
+    apply_operations,
+    dry_run,
+    read_frame,
+)
 
 
 @dataclass(frozen=True)
@@ -25,7 +35,8 @@ class Reading:
     """What a conversion of `cells` gives: the cells as `data.csv` writes them (None for a missing one), the cells
     that failed, whether the column is written with a time, the guess and the notice; or the refusal."""
 
-    cells: list[str | None]
+    cells: list[Any]
+    """The cells as given: text, None for a missing one, or numbers for a conversion of a number column."""
     values: list[str | None] | None = None
     failed: int = 0
     with_time: bool = False
@@ -450,6 +461,36 @@ READINGS: dict[str, Reading] = {
     "lone_hour_slash_date": Reading(
         ["01/03/2026T10", "15/03/2026T11"], ["2026-03-01", "2026-03-15"], 0, False, None, ""
     ),
+    "space_number_name_year": Reading(
+        ["1 March 23", "15 March 23"], ["2023-03-01", "2023-03-15"], 0, False, "the century of two-digit years", ""
+    ),
+    "space_number_three_groups": Reading(
+        ["01 03 23", "15 03 23"], ["2023-03-01", "2023-03-15"], 0, False, "the century of two-digit years", ""
+    ),
+    "space_number_name_first": Reading(
+        ["Mar 1 23", "Mar 15 23"], ["2023-03-01", "2023-03-15"], 0, False, "the century of two-digit years", ""
+    ),
+    "space_number_after_month": Reading(["2026-03 10", "2026-04 11"], ["2026-03-10", "2026-04-11"], 0, False, None, ""),
+    "zone_cet": Reading(["2026-03-01 10:00 CET", "2026-03-02 11:30 CET"], [None, None], 2, True, None, ""),
+    "zone_est": Reading(["2026-03-01 10:00 EST", "2026-03-02 11:30 EST"], [None, None], 2, True, None, ""),
+    "zone_gmt": Reading(
+        ["2026-03-01 10:00 GMT", "2026-03-02 11:30 GMT"],
+        ["2026-03-01T10:00:00+00:00", "2026-03-02T11:30:00+00:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "month_with_clock": Reading(
+        ["2026-03 10:00", "2026-04 11:30"], ["2026-03-01T10:00:00", "2026-04-01T11:30:00"], 0, True, None, ""
+    ),
+    "month_name_with_clock": Reading(
+        ["Nov 2026 10:00", "Dec 2026 11:30"], ["2026-11-01T10:00:00", "2026-12-01T11:30:00"], 0, True, None, ""
+    ),
+    "year_with_clock": Reading(
+        ["2026 10:00", "2027 11:30"], ["2026-01-01T10:00:00", "2027-01-01T11:30:00"], 0, True, None, ""
+    ),
+    "month_lone_hour": Reading(["2026-03T10", "2026-04T11"], ["2026-03-10", "2026-04-11"], 0, False, None, ""),
 }
 PASTED: dict[str, Pasted] = {
     "iso_date": Pasted("datetime", ["2026-03-01", "2026-03-02", "2026-12-31"], []),
@@ -616,10 +657,57 @@ PASTED: dict[str, Pasted] = {
     "lone_hour_t_lower": Pasted("text", None, []),
     "lone_hour_dot_date": Pasted("text", None, []),
     "lone_hour_slash_date": Pasted("text", None, []),
+    "space_number_name_year": Pasted("text", None, []),
+    "space_number_three_groups": Pasted("text", None, []),
+    "space_number_name_first": Pasted("text", None, []),
+    "space_number_after_month": Pasted("text", None, []),
+    "zone_cet": Pasted("text", None, []),
+    "zone_est": Pasted("text", None, []),
+    "zone_gmt": Pasted("text", None, []),
+    "month_with_clock": Pasted("text", None, []),
+    "month_name_with_clock": Pasted("text", None, []),
+    "year_with_clock": Pasted("text", None, []),
+    "month_lone_hour": Pasted("text", None, []),
 }
 
 
-CHANGED: dict[str, Reading] = {}
+def _timed(name: str, values: list[str | None]) -> Reading:
+    """The row `name` read as before, now written with the times it holds."""
+    return Reading(READINGS[name].cells, values, READINGS[name].failed, True, READINGS[name].guess, "")
+
+
+CHANGED: dict[str, Reading] = {
+    # A time after the date is read by its shape, not by a colon: these cells were read with their time and
+    # written without it.
+    "lone_hour_t": _timed(
+        "lone_hour_t", ["2026-03-01T00:00:00", "2026-03-01T01:00:00", "2026-03-01T02:00:00", "2026-03-01T03:00:00"]
+    ),
+    "lone_hour_t_lower": _timed("lone_hour_t_lower", ["2026-03-01T05:00:00", "2026-03-01T06:00:00"]),
+    "lone_hour_space": _timed("lone_hour_space", ["2026-03-01T10:00:00", "2026-03-01T11:00:00"]),
+    "lone_hour_dot_date": _timed("lone_hour_dot_date", ["2026-03-01T10:00:00", "2026-03-15T11:00:00"]),
+    "lone_hour_slash_date": _timed("lone_hour_slash_date", ["2026-03-01T10:00:00", "2026-03-15T11:00:00"]),
+    "iso_hour_z": _timed("iso_hour_z", ["2026-03-01T10:00:00+00:00", "2026-03-02T11:00:00+00:00"]),
+    "am_pm_compact": _timed("am_pm_compact", ["2026-03-01T10:00:00", "2026-03-01T14:00:00"]),
+    "hour_am_no_minutes": _timed("hour_am_no_minutes", ["2026-01-03T10:00:00", "2026-03-15T14:00:00"]),
+    "iso_compact_time": _timed("iso_compact_time", ["2026-03-01T10:00:00", "2026-03-15T11:30:00"]),
+    "compact_date_time": _timed("compact_date_time", ["2026-01-03T10:00:00", "2026-03-15T11:30:00"]),
+    "compact_seconds": _timed("compact_seconds", ["2026-01-03T10:00:00", "2026-03-15T11:30:00"]),
+    # A colon in a cell that did not read no longer writes the others with a midnight nobody wrote.
+    "time_alone": Reading(["13:00", "2026-03-01"], [None, "2026-03-01"], 1),
+    "zone_cet": Reading(READINGS["zone_cet"].cells, [None, None], 2),
+    "zone_est": Reading(READINGS["zone_est"].cells, [None, None], 2),
+    "fmt_dot_unreadable_colon": Reading(
+        ["01.03.2026", "n.a.: none"], ["2026-03-01", None], 1, guess="the day and month order"
+    ),
+    # A time before the date is more after the date than a time: unreadable, where pandas read 3 January.
+    "time_first": Reading(READINGS["time_first"].cells, [None, None], 2),
+    # A time stands only after a date that names a day: after a month or a year it is no reading of the parser's,
+    # and pandas took a lone hour there for the day (`2026-03T10` as 10 March).
+    "month_with_clock": Reading(READINGS["month_with_clock"].cells, [None, None], 2),
+    "month_name_with_clock": Reading(READINGS["month_name_with_clock"].cells, [None, None], 2),
+    "year_with_clock": Reading(READINGS["year_with_clock"].cells, [None, None], 2),
+    "month_lone_hour": Reading(READINGS["month_lone_hour"].cells, [None, None], 2),
+}
 """The rows whose reading the strict date rule changes on purpose, with the reading they have now."""
 
 
@@ -635,3 +723,163 @@ def test_a_conversion_reads_as_it_did(name: str) -> None:
 @pytest.mark.parametrize("name", list(PASTED))
 def test_the_paste_types_as_it_did(name: str) -> None:
     assert pasted(READINGS[name].cells) == PASTED[name]
+
+
+FORMATTED: dict[str, tuple[str, bool, Reading]] = {
+    "fmt_dot": ("DD.MM.YYYY", False, Reading(["01.03.2026", "15.03.2026"], ["2026-03-01", "2026-03-15"])),
+    "fmt_dot_time": (
+        "DD.MM.YYYY",
+        False,
+        Reading(["01.03.2026 10:00", "15.03.2026"], ["2026-03-01T10:00:00", "2026-03-15T00:00:00"], with_time=True),
+    ),
+    "fmt_dot_unreadable_colon": (
+        "DD.MM.YYYY",
+        False,
+        Reading(["01.03.2026", "n.a.: none"], ["2026-03-01T00:00:00", None], 1, True, "the day and month order"),
+    ),
+    "fmt_iso_t_seconds": (
+        "YYYY-MM-DD",
+        False,
+        Reading(["2026-03-01T10:00:05", "2026-03-15"], ["2026-03-01T10:00:05", "2026-03-15T00:00:00"], with_time=True),
+    ),
+    "fmt_iso_offsets": (
+        "YYYY-MM-DD",
+        False,
+        Reading(
+            ["2026-03-01+01:00", "2026-03-02+01:00"],
+            ["2026-03-01", "2026-03-02"],
+            guess="the days of 2 dates with a UTC offset as written, the offset dropped",
+        ),
+    ),
+    "fmt_iso_lone_hour": ("YYYY-MM-DD", False, Reading(["2026-03-01T00", "2026-03-01T01"], [None, None], 2)),
+    "fmt_month_first": ("MM/DD/YYYY", False, Reading(["03/15/2026", "03/01/2026"], ["2026-03-15", "2026-03-01"])),
+    "fmt_compact": ("YYYYMMDD", False, Reading(["20260301", "20260315"], ["2026-03-01", "2026-03-15"])),
+    "fmt_year_month": ("YYYY-MM", False, Reading(["2026-03", "2026-04"], ["2026-03-01", "2026-04-01"])),
+    "fmt_month_year_slash": ("MM/YYYY", False, Reading(["03/2026", "04/2026"], ["2026-03-01", "2026-04-01"])),
+    "fmt_year": ("YYYY", False, Reading(["2026", "2027"], ["2026-01-01", "2027-01-01"])),
+    "fmt_month_year_numbers": ("MM.YYYY", True, Reading([3.202, 4.2026], ["2020-03-01", "2026-04-01"])),
+    "fmt_dot_range": (
+        "DD.MM.YYYY",
+        False,
+        Reading(["01.03.2026-05.03.2026", "06.03.2026"], [None, "2026-03-06"], 1, guess="the day and month order"),
+    ),
+}
+"""Conversions with a format, which read every cell in exactly that format and an optional time after it."""
+
+SET_TYPE: dict[str, tuple[str, dict[str, str], dict[str, object]]] = {
+    "set_type_integer_compact": (
+        "d,v\n20260301,1\n20260315,2\n",
+        {"op": "set_type", "column": "d", "type": "datetime", "name": "e"},
+        {
+            "csv": "d,v,e\n20260301,1,2026-01-03\n20260315,2,2026-03-15\n",
+            "changes": [
+                "new column e: 2 cells of d read as dates (format inferred, day before month); d stays as it is"
+            ],
+        },
+    ),
+    "set_type_text_dates": (
+        "d,v\n1 March 2026,1\n15 March 2026,2\n",
+        {"op": "set_type", "column": "d", "type": "datetime", "name": "e"},
+        {
+            "csv": "d,v,e\n1 March 2026,1,2026-03-01\n15 March 2026,2,2026-03-15\n",
+            "changes": [
+                "new column e: 2 cells of d read as dates (format inferred, day before month); d stays as it is"
+            ],
+        },
+    ),
+    "set_type_in_place": (
+        "d,v\n01.03.2026 10:00,1\nunknown,2\n",
+        {"op": "set_type", "column": "d", "type": "datetime"},
+        {"refused": "column 'd': 1 of 2 cells cannot be read as dates"},
+    ),
+    "set_type_numbers_years": (
+        "d,v\n2026,1\n2027,2\n",
+        {"op": "set_type", "column": "d", "type": "datetime", "date_format": "YYYY", "name": "e"},
+        {
+            "csv": "d,v,e\n2026,1,2026-01-01\n2027,2,2027-01-01\n",
+            "changes": ["new column e: 2 cells of d read as years (YYYY, each as 1 January); d stays as it is"],
+        },
+    ),
+}
+"""Whole `set_type` operations on a pasted column, the stored cells and the change line included."""
+OPERATIONS = TypeAdapter(list[Operation])
+
+
+def formatted(cells: list[Any], date_format: str, numbers: bool) -> Reading:
+    series = pd.Series(cells, dtype="float64" if numbers else "str", name="d")
+    try:
+        conversion = _date_conversion(series, date_format)
+    except PrepareError as error:
+        return Reading(cells, refused=error.message)
+    values = [_cell_text(value, conversion.with_time) for value in conversion.values]
+    return Reading(cells, values, conversion.failed, conversion.with_time, conversion.guess, conversion.notice)
+
+
+@pytest.mark.parametrize("name", list(FORMATTED))
+def test_a_conversion_with_a_format_reads_as_it_did(name: str) -> None:
+    date_format, numbers, reading = FORMATTED[name]
+
+    assert formatted(list(reading.cells), date_format, numbers) == CHANGED.get(name, reading)
+
+
+@pytest.mark.parametrize("name", list(SET_TYPE))
+def test_a_set_type_stores_as_it_did(name: str) -> None:
+    text, operation, expected = SET_TYPE[name]
+    try:
+        prepared = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+    except PrepareError as error:
+        assert {"refused": error.message} == expected
+        return
+    assert {"csv": prepared.csv, "changes": prepared.changes} == expected
+
+
+UNREADABLE: dict[str, list[str | None]] = {
+    "a range of days": ["2026-03-01-2026-03-05", "2026-03-06-2026-03-09", "2026-03-10-2026-03-12"],
+    "a sign and digits after a space": ["2026-03-01 -05:00", "2026-03-02 -05:00"],
+    "a sign and digits after a slash date": ["2026/03/01-05:00", "2026/03/02-05:00"],
+    "a sign and digits after a dot date": ["13.03.2026-05:00", "14.03.2026-05:00"],
+    "a sign and digits after the T": ["2026-03-01T-05:00", "2026-03-02T-05:00"],
+    "an interval of days": ["2026-03-01/05", "2026-03-06/09"],
+    "an offset after a space and no time": ["2026-03-01 +01:00", "2026-03-02 +01:00"],
+    "an interval ending at 00": ["2026-03-01/00", "2026-03-02/00"],
+    "a zero offset after a space": ["2026-03-01 -00:00", "2026-03-02 -00:00"],
+    "a zero offset after the T": ["2026-03-01T-00:00", "2026-03-02T-00:00"],
+}
+"""Cells with more after their date than a time: pandas read a range as days with made-up offsets (2, 7 and 11
+March, beside a notice of offsets no cell holds), a sign and digits as 05:00, and an interval as its first day."""
+
+
+class TestStrictRule:
+    """A cell converts only as a date alone or a date followed by a time; anything else after the date is unread."""
+
+    @pytest.mark.parametrize("cells", list(UNREADABLE.values()), ids=list(UNREADABLE))
+    def test_more_after_the_date_than_a_time_is_unreadable(self, cells: list[str | None]) -> None:
+        assert converted(cells) == Reading(cells, [None] * len(cells), len(cells), False, None, "")
+
+    @pytest.mark.parametrize(
+        "cells", [*UNREADABLE.values(), ["2026-03-01T00", "2026-03-01T01"]], ids=[*UNREADABLE, "lone hours"]
+    )
+    def test_the_paste_keeps_such_cells_as_text(self, cells: list[str | None]) -> None:
+        """The parser types none of these forms: the rule is the conversion's, after the paste."""
+        assert pasted(cells) == Pasted("text", None, [])
+
+    def test_a_lone_hour_is_read_as_that_hour_and_written_with_it(self) -> None:
+        cells: list[str | None] = ["2026-03-01T00", "2026-03-01T01", "2026-03-01T02", "2026-03-01T03"]
+
+        assert converted(cells) == Reading(
+            cells,
+            ["2026-03-01T00:00:00", "2026-03-01T01:00:00", "2026-03-01T02:00:00", "2026-03-01T03:00:00"],
+            0,
+            True,
+            None,
+            "",
+        )
+
+    def test_one_such_cell_among_dates_is_counted_and_makes_the_reading_uncertain(self) -> None:
+        cells: list[str | None] = [f"2026-03-{day:02d}" for day in range(1, 11)] + ["2026-03-11-2026-03-15"]
+
+        reading = converted(cells)
+
+        assert reading.failed == 1 and reading.values == [*cells[:10], None] and reading.notice == ""
+        dry = dry_run(read_frame(parse_dataset("d\n" + "\n".join(str(cell) for cell in cells) + "\n")), "d", "datetime")
+        assert dry is not None and (dry.read, dry.present, dry.certain) == (10, 11, False)

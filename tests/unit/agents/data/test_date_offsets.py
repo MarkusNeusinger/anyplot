@@ -278,7 +278,6 @@ class TestConversion:
             "2026-03-02T10",
             "2026-03-02T00",
             "02.03.2026 10:00",  # a time after a date of another shape, found once the cell is read
-            "2026-03-02/05",  # a time of day the reading finds, though no `T` or space stands before it
             "2026-03-02 10",
             "01.03.2026 00:00",  # a midnight written out is a time too
             "2026-03-02t10:00",  # RFC 3339 allows a lowercase t
@@ -297,6 +296,17 @@ class TestConversion:
             "column 'day' holds dates with a UTC offset and no time beside times; such a date names a day, not a "
             "moment, so the column stays as it is"
         )
+
+    def test_an_interval_of_days_beside_them_is_unreadable_not_a_time(self) -> None:
+        """`2026-03-12/15` is 12 to 15 March, more after a date than a time: pandas read it as 12 March at 15:00, and
+        no reading takes it now; it is counted missing beside the days, as any cell that reads as no date is."""
+        text = "day,kWh\n" + "".join(f"2026-03-{day:02d}+01:00,{day}\n" for day in range(1, 11)) + "2026-03-12/15,11\n"
+
+        prepared = prepare(text, to_dates())
+
+        assert column(prepared, "day (date)") == [f"2026-03-{day:02d}" for day in range(1, 11)] + [""]
+        line = prepared.changes[0]
+        assert ", 1 cell could not be read and is now missing; day stays as it is, 10 dates had the UTC " in line
 
     @pytest.mark.parametrize("day", ["Mar 1 2026", "01 03 2026"])
     def test_a_date_written_with_spaces_is_no_time(self, day: str) -> None:

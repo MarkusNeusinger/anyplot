@@ -39,7 +39,16 @@ The operations:
   and stored at microseconds, so any year from 1 to 9999 fits (a datetime64[ns] holds
   only 1677 to 2262; a date pandas still cannot hold is an `invalid_operation`, never a
   crash). Without `date_format`
-  a month name with a four-digit year (`Nov 2026`, `Okt. 2026`, `2026 Nov`, in the eleven
+  a cell is read only when it is a date alone or a date followed by a time (`_date_cell`, the
+  strict rule): a date of numbers, a month name or a quarter (`2026-03-01`, `01 03 2026`,
+  `1 March 2026`, `2026-03`, `2026-Q1`), and after a date that names a day a time behind `T`,
+  `t` or a space (`T10`, ` 10:00:05.25`, ` 2:30 PM`, `T1000`) with its zone (`Z`, `+01:00`,
+  ` UTC`). Anything else after the date (a second date such as `2026-03-01-2026-03-05`, more
+  numbers such as `2026-03-01/05`, a sign and digits after a space, a time after a month or
+  a year) makes the cell unreadable, counted like any other, before pandas could guess a
+  reading; the column is written with a time when a cell read holds one, never because some
+  cell holds a colon. A
+  month name with a four-digit year (`Nov 2026`, `Okt. 2026`, `2026 Nov`, in the eleven
   languages of `months.py`) is its month's first day, as the parser reads it, and pandas
   infers the format of every other cell, day before month when ambiguous, as the parser
   reads a slash date, except for a cell that starts with a year (`2024-06-01T13:00:00Z`
@@ -52,11 +61,10 @@ The operations:
   date followed directly by a UTC offset and no time (`2026-03-01+01:00`, `2026-03-01Z`,
   `parse.DATE_OFFSET`, which the parser keeps text) is read as the day written: the offset is
   dropped, and the change line counts the dates per offset ("3 dates had the UTC offset -05:00,
-  which was dropped; the days are as written"). Such dates beside times (a cell read as a date
-  with a time's shape after its date, `T10`, ` 10:00` or ` 12 AM`, or a time of day the reading
-  finds in it; a space inside a date such as `Mar 1 2026` is none) are a
-  `type_mismatch`, as a day is no moment; a cell that reads as no date is counted missing, colon or
-  not. So is a date followed by a sign and digits in any other form (`2026-03-01-03`,
+  which was dropped; the days are as written"). Such dates beside times (a cell that is a date
+  followed by a time, `_date_cell`: `T10`, ` 10:00` or ` 12 AM`; a space inside a date such as
+  `Mar 1 2026` is none) are a `type_mismatch`, as a day is no moment; a cell that reads as no
+  date is counted missing, colon or not. So is a date followed by a sign and digits in any other form (`2026-03-01-03`,
   `2026-03-01+0100`, `parse.DATE_SIGN_DIGITS`), which may be an hour label: pandas alone reads `-05:00`
   as 05:00 and `-03` as 03:00. Either way a cell that cannot be read becomes missing and the
   change line counts it; when more than 10 % of the non-missing cells fail, the
@@ -4415,21 +4423,26 @@ def _plain_number(body: str, decimal: str) -> str | None:
 
 def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, int, bool, str, Counter[str]]:
     """The cells as datetimes (NaT where a cell cannot be read), how many non-missing cells failed, whether
-    the column is written with a time (the parser's rule: any source cell holds a colon), the notice of
+    the column is written with a time (a cell read holds a time after its date, `_date_cell`), the notice of
     different UTC offsets converted to UTC, else "", and the UTC offsets dropped from dates read as the day
-    written (`_day_offsets`), counted per offset as written."""
+    written (`_day_offsets`), counted per offset as written.
+
+    Without a format, a cell is read only when it is a date alone or a date followed by a time (`_date_cell`):
+    anything else after the date (a second date, a sign and digits, more numbers) makes it unreadable, counted as
+    such, before pandas could guess a reading of it.
+    """
     texts = _texts(series)
     notice = ""
     if date_format == "MM.YYYY" and _kind(series) == "number":
         texts = _month_year_texts(series, texts)
     texts, offsets = _day_offsets(texts, series.name)
-    days = any(offset is not None for offset in offsets)
-    if days and any(
-        isinstance(text, str) and offset is None and _ISO_DAY_TIME.match(text)
+    if any(offset is not None for offset in offsets) and any(
+        isinstance(text, str) and offset is None and _date_cell(text) is True
         for text, offset in zip(texts, offsets, strict=True)
     ):
         # Before the reading: beside a time with an offset, pandas would refuse naive days and zoned times instead.
         raise _days_beside_times(series.name)
+    shapes = [_date_cell(text) if isinstance(text, str) else None for text in texts]
     if date_format:
         # Python's own reader, one cell at a time: any year from 1 to 9999, stored at the parser's microseconds
         # (a datetime64[ns] holds only 1677 to 2262, review of 2026-10-15).
@@ -4440,13 +4453,17 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
         # `months.py`, as the parser reads it; pandas knows English names only (live test of 2026-11-01).
         original = texts
         texts = pd.Series([_month_iso(text) or text for text in texts], index=series.index, dtype="str")
+        shapes = [_date_cell(text) if isinstance(text, str) else None for text in texts]
+        # pandas reads only the cells of a date alone or a date and a time: it would guess the rest, a range of days
+        # as days with made-up offsets and `-05:00` after a date as 05:00.
+        readable = texts.where(pd.Series([shape is not None for shape in shapes], index=series.index))
         # A year-first cell (`2024-06-01T13:00:00Z`) reads year, month, day: with `dayfirst` pandas would read it as
         # 6 January (review of 2026-10-15). Day before month is for the other shapes only, decided per cell, so one
         # cell of another shape never turns the year-first ones around (review of #12196).
         year_first = texts.map(lambda text: isinstance(text, str) and bool(_YEAR_FIRST.match(text))).astype(bool)
         (first, utc_first), (rest, utc_rest) = (
-            _inferred_dates(texts.where(year_first), False, series.name),
-            _inferred_dates(texts.where(~year_first), True, series.name),
+            _inferred_dates(readable.where(year_first), False, series.name),
+            _inferred_dates(readable.where(~year_first), True, series.name),
         )
         converted = utc_first or utc_rest
         read = [part for part in (first, rest) if part.notna().any()]  # an all-unreadable part has no zone
@@ -4464,39 +4481,91 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
         else:
             result = first.where(year_first, rest)
         if converted:
-            notice = f"times with the UTC offsets {', '.join(_offsets(texts))} converted to UTC (+00:00); "
+            notice = f"times with the UTC offsets {', '.join(_offsets(readable))} converted to UTC (+00:00); "
             notice += "the instants are the same"
         result = _without_filled_in(result, original)
+        # A date alone is a day: where pandas still finds a time or a zone in it (`2026-03-01 UTC`), it guessed.
+        alone = pd.Series([shape is False for shape in shapes], index=series.index)
+        guessed = result.notna() & ((result != result.dt.normalize()) | (result.dt.tz is not None))
+        result = result.mask(alone & guessed)
     failed = int((result.isna() & texts.notna()).sum())
-    with_time = any(":" in text for text in texts if isinstance(text, str))
-    if days:
-        if any(
-            offset is None and isinstance(value, pd.Timestamp) and _holds_time(text, value)
-            for text, offset, value in zip(texts, offsets, result, strict=True)
-        ):
-            raise _days_beside_times(series.name)
-        # Every cell read is a day: a colon is left only in a cell that did not read (`n.a.: none`), counted as such.
-        with_time = False
+    with_time = any(shape is True for shape, read in zip(shapes, result.notna(), strict=True) if read)
     dropped = Counter(offset for offset, read in zip(offsets, result.notna(), strict=True) if offset and read)
     return result, failed, with_time, notice, dropped
 
 
 _ISO_DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 """The start of an ISO date, `YYYY-MM-DD`; a time after it stands behind `T` or a space (`_moment`)."""
-_TIME_SHAPE = r"(?:[Tt ][0-9]{1,2}(?::[0-9]{2}|\s*[AaPp]\.?\s?[Mm]\.?|$)|[Tt][0-9]{4})"
-"""A time after a date: `T` or a space, then an hour alone at the end (`T10`), an hour with its minutes (`10:00`), or
-an hour with am or pm (`12 AM`), or a compact `T0000`. A space before other digits is part of a date (`Mar 1 2026`,
-`01 03 2026`), and one before an ordinal (`1st`) holds no time either."""
-_ISO_DAY_TIME = re.compile(r"\s*[0-9]{4}-[0-9]{2}-[0-9]{2}" + _TIME_SHAPE)
-"""An ISO date followed by a time (`_TIME_SHAPE`: `2026-03-01T10`, `2026-03-01 10:00`, `2026-03-01t10:00+01:00`)."""
-_DAY_THEN_TIME = re.compile(r"[0-9]" + _TIME_SHAPE)
-"""The end of a date of any shape and a time after it (`01.03.2026 00:00`, `03/01/2026 12 AM`)."""
+_HOUR = r"(?:[01]?[0-9]|2[0-3])"
+_CLOCK = rf"{_HOUR}:[0-5][0-9](?::[0-5][0-9](?:[.,][0-9]{{1,9}})?)?"
+_TIME_AFTER_DATE = re.compile(
+    rf"(?:[Tt](?:{_CLOCK}|{_HOUR}|[0-9]{{4}}(?:[0-9]{{2}})?)|,?\s+(?:{_CLOCK}|{_HOUR}))"
+    r"(?:\s*[AaPp]\.?\s?[Mm]\.?)?"
+    r"(?:\s?(?:Z|[+-][0-9]{2}(?::?[0-9]{2})?)|\s[^\W\d_]{1,5})?$"
+)
+"""A time at the end of a cell, after its date: `T` or `t` (RFC 3339 allows both), or a space or a comma and a
+space, then an hour with its minutes and seconds and a fraction (`10:00`, `10:00:05.25`), an hour alone (`T10`,
+` 10`), or after `T` a compact `HHMM` or `HHMMSS`; then am or pm (`10am`, `2:30 PM`), and a zone: `Z` or an offset
+(`+01:00`, `-0500`, `+01`), or after a space a word of up to five letters (`UTC`, which pandas reads or fails on).
+Letters right after an hour are no zone (`1st` is an ordinal). A time stands only after a date that names a day
+(`_date_cell`), so `2026-03 10` is 10 March and `1 March 23` the year 2023."""
+_DATE_PARTS = re.compile(r"[-./,\s]+")
+_NUMBER_PART = re.compile(r"([0-9]+)[^\W\d_]*")
+"""A number of a date, with the letters of an ordinal after it (`1st`, `15th`)."""
+_QUARTER_PART = re.compile(r"[Qq][1-4]")
+_WORD_PART = re.compile(r"[^\W\d_]+")
+DateShape = Literal["day", "month", "year", "quarter"]
 
 
-def _holds_time(text: str, value: pd.Timestamp) -> bool:
-    """Whether a cell read as a date holds a time: one written after its date (`_DAY_THEN_TIME`), or a time of day the
-    reading found in it, which a cell such as `2026-03-01/05` gets from pandas."""
-    return bool(_DAY_THEN_TIME.search(text)) or value != value.normalize()
+def _date_shape(text: str) -> DateShape | None:
+    """What a cell's date names when it is a date and nothing else, else None: its parts are numbers, at most one
+    month name (`months.month_number`), a quarter (`Q1`) and other words, which the reader takes or fails on
+    (`Sunday`, `at`), between `-`, `.`, `/`, commas and spaces.
+
+    A day takes three numbers (`2026-03-01`, `01.03.26`, `01 03 2026`), two beside a month name (`1 March 2026`) or
+    the eight digits of `YYYYMMDD`; a month two numbers, one of four digits (`2026-03`, `03/2026`), or a month name and
+    a year; a year four digits; a quarter `Q1` and a year. More numbers (`2026-03-01/05`, a range of days), a second
+    month name, or any other character (`:`, `+`) is no date: a time and a zone belong after it (`_TIME_AFTER_DATE`).
+    """
+    numbers: list[int] = []
+    months = quarters = 0
+    for part in _DATE_PARTS.split(text.strip()):
+        if not part:
+            continue
+        if _QUARTER_PART.fullmatch(part):
+            quarters += 1
+        elif (number := _NUMBER_PART.fullmatch(part)) is not None:
+            numbers.append(len(number.group(1)))
+        elif _WORD_PART.fullmatch(part):
+            months += month_number(part) is not None
+        else:
+            return None
+    if quarters:
+        return "quarter" if quarters == 1 and not months and numbers == [4] else None
+    if months > 1:
+        return None
+    if months:
+        return "day" if len(numbers) == 2 else "month" if numbers == [4] else None
+    if len(numbers) == 3 or numbers == [8]:
+        return "day"
+    if len(numbers) == 2 and 4 in numbers:
+        return "month"
+    return "year" if numbers == [4] else None
+
+
+def _date_cell(text: str) -> bool | None:
+    """True for a cell that is a date followed by a time, False for a date alone, None for any other cell.
+
+    The strict rule of every conversion without a format: a time (`_TIME_AFTER_DATE`) counts only after a date that
+    names a day, and the rest of the cell must then be that date alone (`_date_shape`). A cell with anything else
+    after its date, a second date (`2026-03-01-2026-03-05`), more numbers (`2026-03-01/05`) or a sign and digits
+    after a space (`2026-03-01 -05:00`), is no date: it is counted as unreadable, never guessed.
+    """
+    text = text.strip()
+    time = _TIME_AFTER_DATE.search(text)
+    if time is not None and _date_shape(text[: time.start()]) == "day":
+        return True
+    return False if _date_shape(text) is not None else None
 
 
 def _days_beside_times(column: object) -> PrepareError:
