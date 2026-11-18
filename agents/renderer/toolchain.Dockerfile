@@ -56,7 +56,7 @@ ARG NODE_RUNTIME_LIBS="libasound2t64 libatk-bridge2.0-0t64 libatk1.0-0t64 libats
     libxfixes3 libxkbcommon0 libxrandr2"
 
 
-FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8 AS base
+FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f AS base
 
 
 # The exec filter of the exec-mode rows (agents/renderer/execdeny/execdeny.c, step 2b):
