@@ -1,7 +1,7 @@
 """anyplot.ai
 dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-11-18
+Quality: pending | Updated: 2026-11-18
 """
 
 import math
