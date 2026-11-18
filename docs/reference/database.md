@@ -450,6 +450,8 @@ Every column but the triage state copies the field of the same name in the case'
 
 **The database's own log**: the API binds the text as a statement parameter, never as part of the statement's text. The instance sets none of PostgreSQL's logging flags that would write parameters or statements (`log_statement`, `log_min_duration_statement`, `log_parameter_max_length`, `log_parameter_max_length_on_error`, or pgAudit), and Query Insights is off, so a search text doesn't reach the database's own log; this was checked on 2026-11-18. That is a property of the instance's settings, not of the code: setting any of these flags, or turning Query Insights on, can write the texts into the database's log, so read this section before you change them.
 
+**Snapshots**: a `pg_dump` snapshot taken before a risky change is kept for good, so it leaves this table's rows out (`--exclude-table-data=search_misses`, the form the snapshot rule in `CLAUDE.md` gives). Otherwise a text would outlive its 180 days, and an entry deleted on request would stay in a file nobody deletes. The table's definition is still dumped. The list is a note on what the catalogue lacks; nothing depends on restoring it.
+
 ---
 
 ## Data access patterns
