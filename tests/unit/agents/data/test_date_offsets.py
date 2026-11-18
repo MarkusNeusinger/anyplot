@@ -362,7 +362,7 @@ class TestFilterBound:
         assert column(prepare(self.ZONED, keep("ge", value)), "v") == kept
 
     @pytest.mark.parametrize("value", ["2026-03-01+01:00", "2026-03-01Z", "2026-03-01-03", "2026-03-01-05:00:00"])
-    def test_a_column_of_period_labels_still_refuses_the_shapes(self, value: str) -> None:
+    def test_a_column_of_period_labels_still_refuses_the_shapes_of_a_date(self, value: str) -> None:
         """Month labels compare as text, as an `aggregate` writes them: a date-shaped bound is refused there."""
         labels = parse_dataset("month,v\n2026-02,1\n2026-03,2\n", text_columns=["month"])
 
@@ -374,3 +374,97 @@ class TestFilterBound:
             "column 'month' holds text labels YYYY-MM, such as 2024-03, which compare as text: give the value in that "
             "form, not as a date"
         )
+
+
+class TestTextColumn:
+    """The pasted column itself stays text, and text compares by its characters, not by days.
+
+    As text, `2026-03-02-05:00` sorts after `2026-03-02+01:00` (`-` after `+`) and after `2026-03-02` (it is longer),
+    so "until 2 March" left out rows of 2 March and "after 2 March" took them in, and `eq 2026-03-02` matched none.
+    """
+
+    DAYS = "day,v\n2026-03-01+01:00,1\n2026-03-02-05:00,2\n2026-03-02+01:00,3\n2026-03-03+01:00,4\n"
+    """Days with two offsets, two rows on 2 March: kept as text at the paste."""
+    REFUSAL = (
+        "column 'day' holds dates with a UTC offset and no time (YYYY-MM-DD±HH:MM or YYYY-MM-DDZ), which compare as "
+        "text, not as days: set_type it to datetime with a new column name, which reads the days as written, and put "
+        "the condition on that column"
+    )
+
+    def condition(self, test: str, value: str | None = None, values: list[str] | None = None) -> dict[str, Any]:
+        where: dict[str, Any] = {"column": "day", "test": test}
+        if value is not None:
+            where["value"] = value
+        if values is not None:
+            where["values"] = values
+        return where
+
+    @pytest.mark.parametrize(
+        ("test", "value"),
+        [
+            ("le", "2026-03-02+01:00"),  # the column's own shape: as text it left 2026-03-02-05:00 out
+            ("le", "2026-03-02"),  # as text it left both rows of 2 March out
+            ("gt", "2026-03-02"),  # as text it took both rows of 2 March in
+            ("ge", "2026-03-02T00:00"),
+            ("lt", "2026-03-03Z"),
+            ("le", "2026-03"),  # a month: as text it left every day of March out
+            ("ge", "2026"),
+            ("eq", "2026-03-02"),  # as text it matched no row: "nothing on 2 March"
+            ("ne", "2026-03-02T00:00:00"),
+            ("eq", "2026-03-02-03"),
+            ("eq", "2026-03"),
+        ],
+    )
+    @pytest.mark.parametrize("op", ["keep_rows", "drop_rows"])
+    def test_a_comparison_that_text_order_would_get_wrong_is_refused(self, op: str, test: str, value: str) -> None:
+        code, message = refusal(self.DAYS, {"op": op, "where": [self.condition(test, value)]})
+
+        assert (code, message) == ("invalid_operation", self.REFUSAL)
+
+    def test_an_any_of_list_is_held_to_the_same_rule(self) -> None:
+        operation = {"op": "keep_rows", "where": [self.condition("eq", values=["2026-03-02+01:00", "2026-03-03"])]}
+
+        assert refusal(self.DAYS, operation) == ("invalid_operation", self.REFUSAL)
+
+    @pytest.mark.parametrize(
+        ("condition", "kept"),
+        [
+            ({"test": "eq", "value": "2026-03-02+01:00"}, ["3"]),  # the cell as written
+            ({"test": "ne", "value": "2026-03-02-05:00"}, ["1", "3", "4"]),
+            ({"test": "eq", "values": ["2026-03-01+01:00", "2026-03-03+01:00"]}, ["1", "4"]),
+            ({"test": "contains", "value": "-05:00"}, ["2"]),
+            ({"test": "contains", "value": "2026-03-02"}, ["2", "3"]),
+            ({"test": "not_missing"}, ["1", "2", "3", "4"]),
+            ({"test": "ne", "value": "unknown"}, ["1", "2", "3", "4"]),  # no date shape: text as before
+        ],
+    )
+    def test_the_cells_as_written_still_take_equality_and_text_tests(
+        self, condition: dict[str, Any], kept: list[str]
+    ) -> None:
+        prepared = prepare(self.DAYS, {"op": "keep_rows", "where": [{"column": "day", **condition}]})
+
+        assert column(prepared, "v") == kept
+
+    def test_the_way_out_the_refusal_names_gives_the_right_rows(self) -> None:
+        prepared = prepare(self.DAYS, to_dates(), keep("le", "2026-03-02", "day (date)"))
+
+        assert column(prepared, "v") == ["1", "2", "3"]
+
+    def test_a_sort_by_the_text_is_in_day_order(self) -> None:
+        prepared = prepare(self.DAYS, {"op": "sort", "column": "day", "descending": True})
+
+        assert [cell[:10] for cell in column(prepared, "day")] == [
+            "2026-03-03",
+            "2026-03-02",
+            "2026-03-02",
+            "2026-03-01",
+        ]
+
+    @pytest.mark.parametrize(
+        ("test", "value", "kept"),
+        [("le", "2026-03-02", ["1", "2"]), ("gt", "2026-03-02", ["3"]), ("eq", "2026-03-02", ["2"])],
+    )
+    def test_a_column_of_plain_dates_compares_days_as_before(self, test: str, value: str, kept: list[str]) -> None:
+        dates = "day,v\n2026-03-01,1\n2026-03-02,2\n2026-03-03,3\n"
+
+        assert column(prepare(dates, {"op": "keep_rows", "where": [self.condition(test, value)]}), "v") == kept

@@ -305,7 +305,11 @@ and `gt`: "until the 31st" takes in that day's rows whatever their time and "aft
 followed directly by the UTC offset `Z` or `±HH:MM` (`2024-01-31+01:00`): on a column
 without an offset it is the day as written, as `set_type` reads such a cell, and on a
 column with one that day at its own offset. A date followed by a sign and digits in another
-form (`2024-01-31-03`) is refused there, since it may be an hour as well as an offset. A missing cell
+form (`2024-01-31-03`) is refused there, since it may be an hour as well as an offset. A text
+column whose every cell is such a date with an offset (the parser keeps it as written) compares
+by its characters, not by days, so an order test there with a value of a date or period shape,
+and `eq` or `ne` with one of another shape than the column's own, is an `invalid_operation` that
+names a `set_type` into a new column as the way out (`_check_offset_day_value`). A missing cell
 matches only `is_missing`, and `not_missing` holds for every other cell, so "the rows
 where X is missing" can be dropped or kept. `contains` searches the cell's canonical text,
 case-sensitively.
@@ -397,6 +401,7 @@ from .parse import (
     canonical_names,
     keeps_value,
     minus_note,
+    offset_days,
     pandas_dtypes,
     parse_dataset,
     rounded_note,
@@ -4059,6 +4064,7 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
         target = value.casefold() == "true"
     else:
         _check_label_value(series, value, column)
+        _check_offset_day_value(series, test, value, column)
         target = value
     if test == "eq":
         return _bools(series == target)
@@ -4092,6 +4098,34 @@ def _check_label_value(series: pd.Series, value: str, column: str) -> None:
         "invalid_operation",
         f"column '{column}' holds {_LABEL_FORMS[shape]}, which compare as text: give the value in that form, "
         f"not as {_VALUE_FORMS[given]}",
+    )
+
+
+def _check_offset_day_value(series: pd.Series, test: str, value: str, column: str) -> None:
+    """Refuse a date or period value that a text column of dates with a UTC offset and no time would compare wrongly.
+
+    The parser keeps such a column as written (`parse.offset_days`, `parse.OFFSET_DATES`), and text compares by its
+    characters, not by days: `2026-03-02-05:00` sorts after `2026-03-02+01:00` (`-` after `+`) and after `2026-03-02`
+    (it is longer), so an order test with a date or period value (`le 2026-03-02`, `le 2026-03`) would cut the rows of
+    one day in two, and `eq 2026-03-02` would match none. Refused are the order tests with a value of any date or
+    period shape (`_VALUE_FORMS`), and `eq` and `ne` with one of a shape other than the column's own; `eq` and `ne`
+    with a date and offset (`parse.DATE_OFFSET`) compare the cell as written, and `contains` and a value of no date
+    shape compare as text as before. The message names the way out, a `set_type` into a new column, which reads the
+    days as written. A column that mixes the shape with other cells is no column of this shape and is not covered.
+    """
+    text = value.strip()
+    if not any(shape.fullmatch(text) for shape in _VALUE_FORMS):
+        return
+    if test in ("eq", "ne") and DATE_OFFSET.fullmatch(text):
+        return
+    cells = list(series.dropna())
+    if not cells or not all(isinstance(cell, str) for cell in cells) or not offset_days(cells):
+        return
+    raise PrepareError(
+        "invalid_operation",
+        f"column '{column}' holds dates with a UTC offset and no time (YYYY-MM-DD±HH:MM or YYYY-MM-DDZ), which compare "
+        "as text, not as days: set_type it to datetime with a new column name, which reads the days as written, and "
+        "put the condition on that column",
     )
 
 
