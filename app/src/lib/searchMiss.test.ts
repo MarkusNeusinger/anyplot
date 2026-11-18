@@ -33,7 +33,38 @@ describe('isCountableMiss', () => {
 
   it('lets every listed sign through and no other', () => {
     for (const mark of MISS_MARKS) expect(isCountableMiss(`a${mark}b`)).toBe(true);
-    for (const sign of '@:,;!?*=%$~<>"|\\`^[]{}') expect(isCountableMiss(`a${sign}b`)).toBe(false);
+    for (const sign of '@:;!?*=$~<>"|\\`^[]{}') expect(isCountableMiss(`a${sign}b`)).toBe(false);
+  });
+
+  it("holds the API's ignorable ranges to Unicode's own property, over every code point", () => {
+    const property = /^\p{Default_Ignorable_Code_Point}$/u;
+    const ranges: [string, string][] = [];
+    let start = -1;
+    for (let code = 0; code <= 0x110000; code++) {
+      const hit =
+        code <= 0x10ffff &&
+        !(code >= 0xd800 && code <= 0xdfff) &&
+        property.test(String.fromCodePoint(code));
+      if (hit && start < 0) start = code;
+      if (!hit && start >= 0) {
+        ranges.push([
+          start.toString(16).padStart(4, '0'),
+          (code - 1).toString(16).padStart(4, '0'),
+        ]);
+        start = -1;
+      }
+    }
+    expect(ranges).toEqual(searchQueryCases.ignorable);
+  });
+
+  it('refuses every ignorable code point but a joiner between two letters', () => {
+    const kept: string[] = [];
+    for (const [low, high] of searchQueryCases.ignorable) {
+      for (let code = parseInt(low, 16); code <= parseInt(high, 16); code++) {
+        if (isCountableMiss(`ab${String.fromCodePoint(code)}cd`)) kept.push(code.toString(16));
+      }
+    }
+    expect(kept).toEqual(['200c', '200d']);
   });
 });
 

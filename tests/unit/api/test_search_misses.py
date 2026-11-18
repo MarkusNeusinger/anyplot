@@ -27,6 +27,7 @@ from api.main import app, fastapi_app
 from api.request_context import network_of
 from api.routers.debug import require_admin
 from api.search_misses import (
+    DEFAULT_IGNORABLE,
     JS_WHITESPACE,
     LIST_LIMIT,
     MAX_BODY_BYTES,
@@ -164,6 +165,15 @@ class TestIsCountable:
     def test_the_rules_bounds_are_the_apps(self) -> None:
         assert MAX_QUERY_DIGITS == CASES["max_digits"]
         assert QUERY_MARKS == frozenset(CASES["marks"])
+
+    def test_the_ignorable_code_points_are_the_ones_the_app_tests(self) -> None:
+        """The app tests Unicode's property itself; its own test holds the shared ranges to that property."""
+        assert DEFAULT_IGNORABLE == tuple((int(low, 16), int(high, 16)) for low, high in CASES["ignorable"])
+
+    def test_every_ignorable_code_point_is_refused_except_a_joiner_between_letters(self) -> None:
+        ignorable = [code for low, high in DEFAULT_IGNORABLE for code in range(low, high + 1)]
+        kept = [f"U+{code:04X}" for code in ignorable if is_countable("ab" + chr(code) + "cd")]
+        assert kept == ["U+200C", "U+200D"]
 
     @pytest.mark.parametrize(
         ("query", "countable"),
@@ -482,15 +492,20 @@ async def _post(
         return await client.post("/search/miss", json=body, headers=headers, params=params)
 
 
-async def _call_raw(method: str, path: str, headers: dict[str, str], chunks: list[bytes]) -> tuple[int, int]:
-    """Call the app with a body in *chunks*; the status, and how many chunks the app asked for."""
+async def _call_raw(
+    method: str, path: str, headers: dict[str, str], chunks: list[bytes], *, gone: bool = False
+) -> tuple[int, int]:
+    """Call the app with a body in *chunks*; the status, and how many chunks the app asked for.
+
+    With *gone*, the last chunk promises more and the client then goes away (`http.disconnect`)."""
     pulled = 0
 
     async def receive() -> dict[str, Any]:
         nonlocal pulled
         if pulled < len(chunks):
             pulled += 1
-            return {"type": "http.request", "body": chunks[pulled - 1], "more_body": pulled < len(chunks)}
+            more = gone or pulled < len(chunks)
+            return {"type": "http.request", "body": chunks[pulled - 1], "more_body": more}
         return {"type": "http.disconnect"}
 
     status = 0
@@ -547,11 +562,46 @@ class TestBodyCap:
         normalised.assert_not_called()
         counted.assert_not_called()
 
-    async def test_the_413_says_nothing_of_the_body(self, counted: AsyncMock, production) -> None:
+    async def test_the_413_says_nothing_of_the_body_and_is_never_cached(self, counted: AsyncMock, production) -> None:
         answer = await _post({"query": CANARY + "x" * 2000})
+        declared, _ = await _call_raw("POST", "/search/miss", {**self.JSON, "content-length": "5000"}, [b"{"])
 
         assert answer.status_code == 413
         assert answer.json() == {"status": 413, "message": "Request body too large", "path": "/search/miss"}
+        assert answer.headers["cache-control"] == "private, no-store"
+        assert declared == 413
+        counted.assert_not_called()
+
+    @pytest.mark.parametrize(
+        ("method", "path"), [("POST", "/search/miss"), ("DELETE", "/debug/search-misses")], ids=["public", "owner"]
+    )
+    async def test_a_client_that_goes_away_mid_body_ends_quietly(
+        self, counted: AsyncMock, production, caplog: pytest.LogCaptureFixture, method: str, path: str
+    ) -> None:
+        """No fault of the service: nothing counted, nothing logged, and no exception out of the app."""
+        caplog.set_level(logging.DEBUG)
+
+        async def session():
+            yield AsyncMock()
+
+        fastapi_app.dependency_overrides[require_admin] = lambda: None
+        fastapi_app.dependency_overrides[get_db] = session
+        try:
+            with patch("api.dependencies.is_db_configured", return_value=True):
+                status, pulled = await _call_raw(method, path, self.JSON, [b'{"query": "spider ch'], gone=True)
+        finally:
+            fastapi_app.dependency_overrides.clear()
+
+        assert (status, pulled) == (400, 1)
+        assert [record.getMessage() for record in caplog.records if record.levelno >= logging.WARNING] == []
+        assert "Unhandled exception" not in caplog.text
+        counted.assert_not_called()
+
+    @pytest.mark.parametrize("declared", ["-5", "five"])
+    async def test_a_declared_length_that_is_no_size_is_refused(self, counted: AsyncMock, production, declared) -> None:
+        status, pulled = await _call_raw("POST", "/search/miss", {**self.JSON, "content-length": declared}, [b"{}"])
+
+        assert (status, pulled) == (400, 0)
         counted.assert_not_called()
 
     async def test_a_body_within_the_cap_is_counted(self, counted: AsyncMock, production) -> None:

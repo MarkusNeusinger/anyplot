@@ -28,23 +28,64 @@ export const MIN_MISS_LENGTH = 2;
 /** The most decimal digits a text may hold: enough for "ggplot2" or a year, too few for a phone. */
 export const MAX_MISS_DIGITS = 6;
 
-/** The signs a text may hold besides letters, combining marks, decimal digits and spaces. */
-export const MISS_MARKS = " -_.+#/&'()";
+/**
+ * The signs a text may hold besides letters, combining marks, decimal digits and spaces: those a
+ * plot search uses, among them the middle dot (U+00B7) and the katakana middle dot (U+30FB).
+ */
+export const MISS_MARKS = " -_.+#/&'(),%" + String.fromCodePoint(0x00b7, 0x30fb);
 
-// Letters and combining marks of any script, decimal digits, and the signs above; nothing else.
-const SEARCH_CHARACTERS = /^[\p{L}\p{M}\p{Nd} _.+#/&'()-]*$/u;
-const DIGIT = /\p{Nd}/gu;
+// The zero width non-joiner and joiner: ignorable, but ordinary spelling between two letters or
+// marks in several scripts, and allowed there and nowhere else.
+const JOINERS = new Set([String.fromCodePoint(0x200c), String.fromCodePoint(0x200d)]);
+// The code points made to show as nothing: fillers, variation selectors, format characters and
+// their kind. The API holds the same set by range (`DEFAULT_IGNORABLE`).
+const IGNORABLE = /^\p{Default_Ignorable_Code_Point}$/u;
+const LETTER = /^\p{L}$/u;
+const MARK = /^\p{M}$/u;
+const DIGIT = /^\p{Nd}$/u;
+
+const isLetterOrMark = (char: string | undefined): boolean =>
+  char !== undefined && (LETTER.test(char) || MARK.test(char));
 
 /**
- * Whether a normalised text (`normalizeQuery`) reads as a search for a plot, in any script: two
- * characters or more, each a letter, a combining mark, a decimal digit (at most `MAX_MISS_DIGITS`
- * in all), a space or one of `MISS_MARKS`. No `@` and no `:`, so no address and no link, and no
- * control, format or direction character. The API keeps only what passes the same rule
- * (`is_countable` in `api/search_misses.py`), and `searchQuery.cases.json` holds the two together.
+ * Whether a normalised text (`normalizeQuery`) reads as a search for a plot that shows something,
+ * in any script: two characters or more, each a letter, a combining mark on a letter or a mark, a
+ * decimal digit (at most `MAX_MISS_DIGITS` in all), a space or one of `MISS_MARKS`, and at least
+ * one letter or digit. A zero width non-joiner or joiner counts only between two letters or marks.
+ * No `@` and no `:`, so no address and no link; no control, format, direction or other ignorable
+ * character, so no row looks empty, reads backwards or is the twin of another; no bare combining
+ * mark. The API keeps only what passes the same rule (`is_countable` in `api/search_misses.py`),
+ * and `searchQuery.cases.json` holds the two together.
  */
 export function isCountableMiss(query: string): boolean {
-  if (Array.from(query).length < MIN_MISS_LENGTH || !SEARCH_CHARACTERS.test(query)) return false;
-  return (query.match(DIGIT) ?? []).length <= MAX_MISS_DIGITS;
+  const chars = Array.from(query);
+  if (chars.length < MIN_MISS_LENGTH) return false;
+  let digits = 0;
+  let shows = false;
+  for (let index = 0; index < chars.length; index++) {
+    const char = chars[index];
+    if (JOINERS.has(char)) {
+      const between =
+        index > 0 &&
+        index < chars.length - 1 &&
+        isLetterOrMark(chars[index - 1]) &&
+        isLetterOrMark(chars[index + 1]);
+      if (!between) return false;
+      continue;
+    }
+    if (IGNORABLE.test(char)) return false;
+    if (DIGIT.test(char)) {
+      digits += 1;
+      shows = true;
+    } else if (LETTER.test(char)) {
+      shows = true;
+    } else if (MARK.test(char)) {
+      if (index === 0 || !isLetterOrMark(chars[index - 1])) return false;
+    } else if (!MISS_MARKS.includes(char)) {
+      return false;
+    }
+  }
+  return shows && digits <= MAX_MISS_DIGITS;
 }
 
 // The texts this page load already sent; a full reload starts over.

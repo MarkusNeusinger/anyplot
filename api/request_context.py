@@ -6,6 +6,7 @@ import ipaddress
 import secrets
 
 from fastapi import HTTPException, Request
+from starlette.requests import ClientDisconnect
 
 
 IP_HASH_PREFIX = "hmac:"
@@ -68,6 +69,9 @@ def network_of(ip: str) -> str:
 TOO_LARGE = "Request body too large"
 """The fixed message of a body refused for its size: it says nothing about what the body held."""
 
+# A refusal is never kept by a cache: the same request may well be fine with a smaller body.
+_NO_STORE = {"Cache-Control": "private, no-store"}
+
 
 async def read_body_within(request: Request, limit: int) -> bytes:
     """The request body, read by hand up to *limit* bytes; a fixed `413` for a body above it.
@@ -76,7 +80,9 @@ async def read_body_within(request: Request, limit: int) -> bytes:
     any of its own code runs, so a cap there comes too late. This one comes first: a declared
     `Content-Length` above the limit is refused before anything is read, and a body without one
     (chunked) is read only until it passes the limit. At most the limit and the one chunk the
-    server handed over are ever held.
+    server handed over are ever held. A client that goes away before its body ends is no fault of
+    the service: a plain `400` that nobody receives, with nothing logged, as the framework's own
+    read answers it.
     """
     declared = request.headers.get("content-length")
     if declared is not None:
@@ -84,13 +90,18 @@ async def read_body_within(request: Request, limit: int) -> bytes:
             size = int(declared)
         except ValueError:
             raise HTTPException(status_code=400, detail="Bad request") from None
+        if size < 0:
+            raise HTTPException(status_code=400, detail="Bad request")
         if size > limit:
-            raise HTTPException(status_code=413, detail=TOO_LARGE)
+            raise HTTPException(status_code=413, detail=TOO_LARGE, headers=_NO_STORE)
     body = bytearray()
-    async for chunk in request.stream():
-        body += chunk
-        if len(body) > limit:
-            raise HTTPException(status_code=413, detail=TOO_LARGE)
+    try:
+        async for chunk in request.stream():
+            body += chunk
+            if len(body) > limit:
+                raise HTTPException(status_code=413, detail=TOO_LARGE, headers=_NO_STORE)
+    except ClientDisconnect:
+        raise HTTPException(status_code=400, detail="Bad request") from None
     return bytes(body)
 
 

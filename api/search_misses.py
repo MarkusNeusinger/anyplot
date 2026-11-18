@@ -70,8 +70,41 @@ MIN_QUERY_LENGTH = 2
 # Bounds the digits in a countable text: enough for "ggplot2" or a year, too few for a phone number.
 MAX_QUERY_DIGITS = 6
 
-# The signs a countable text may hold besides letters, combining marks, decimal digits and spaces.
-QUERY_MARKS = frozenset(" -_.+#/&'()")
+# The signs a countable text may hold besides letters, combining marks, decimal digits and spaces:
+# those a plot search uses, among them the middle dot (U+00B7) and the katakana middle dot (U+30FB).
+QUERY_MARKS = frozenset(" -_.+#/&'(),%" + chr(0x00B7) + chr(0x30FB))
+
+# The code points made to show as nothing (Unicode's Default_Ignorable_Code_Point, by range): the
+# Hangul fillers, the variation selectors, the grapheme joiner, the format characters and their
+# kind. The app tests the same property (`\p{Default_Ignorable_Code_Point}`); the shared cases carry
+# these ranges, and the app's test holds them to its property.
+DEFAULT_IGNORABLE = (
+    (0x00AD, 0x00AD),
+    (0x034F, 0x034F),
+    (0x061C, 0x061C),
+    (0x115F, 0x1160),
+    (0x17B4, 0x17B5),
+    (0x180B, 0x180F),
+    (0x200B, 0x200F),
+    (0x202A, 0x202E),
+    (0x2060, 0x206F),
+    (0x3164, 0x3164),
+    (0xFE00, 0xFE0F),
+    (0xFEFF, 0xFEFF),
+    (0xFFA0, 0xFFA0),
+    (0xFFF0, 0xFFF8),
+    (0x1BCA0, 0x1BCA3),
+    (0x1D173, 0x1D17A),
+    (0xE0000, 0xE0FFF),
+)
+
+# The zero width non-joiner and joiner: ignorable, but ordinary spelling between two letters or marks
+# in several scripts, and allowed there and nowhere else.
+JOINERS = frozenset((chr(0x200C), chr(0x200D)))
+
+# The typographic marks a phone puts in for the plain ones: the curly apostrophes and the en and em
+# dash. A search with them is the same search.
+_TYPOGRAPHIC = str.maketrans({chr(0x2018): "'", chr(0x2019): "'", chr(0x2013): "-", chr(0x2014): "-"})
 
 # Bounds one network (an IPv4 address, or the /64 of an IPv6 address): requests beyond this many in
 # one minute are dropped unseen. Twenty finished searches a minute is more than a person types.
@@ -198,34 +231,63 @@ async def read_json_body(request: Request, model: type[Body]) -> Body:
 def normalize_query(text: str) -> str:
     """The app's `normalizeQuery` in Python: one Unicode form, lowercase, single spaces, at most 40 characters.
 
-    The same steps in the same order: composed to Unicode form NFC, lowercase, white space at the ends
-    dropped and every run of it made one space, cut after 40 characters (code points, never inside
-    one), and a space left at the cut dropped. So "Scatter", "scatter " and "SCATTER" are one row, and
-    so is a word typed with a composed or a decomposed accent.
+    The same steps in the same order: compatibility forms folded (Unicode form NFKC: a fullwidth
+    bracket becomes the plain one, `²` becomes `2`, a ligature its letters), lowercase, folded again
+    (a small letter can have a composed form its capital lacks), the curly apostrophes and the dashes
+    made the plain ones, white space at the ends dropped and every run of it made one space, cut after
+    40 characters (code points, never inside one), and a space left at the cut dropped. So "Scatter",
+    "scatter " and "SCATTER" are one row, and so is a word typed with a composed or a decomposed accent.
     """
-    composed = unicodedata.normalize("NFC", text)
-    return _WHITESPACE_RUN.sub(" ", composed.lower()).strip(" ")[:MAX_QUERY_LENGTH].rstrip(" ")
+    folded = unicodedata.normalize("NFKC", text).lower()
+    plain = unicodedata.normalize("NFKC", folded).translate(_TYPOGRAPHIC)
+    return _WHITESPACE_RUN.sub(" ", plain).strip(" ")[:MAX_QUERY_LENGTH].rstrip(" ")
+
+
+def _is_ignorable(char: str) -> bool:
+    code = ord(char)
+    return any(low <= code <= high for low, high in DEFAULT_IGNORABLE)
+
+
+def _is_letter_or_mark(char: str) -> bool:
+    return unicodedata.category(char)[0] in "LM"
 
 
 def is_countable(query: str) -> bool:
-    """Whether a normalised text is kept: a search for a plot, by what its characters are, in any script.
+    """Whether a normalised text is kept: a search for a plot that shows something, in any script.
 
-    Two characters or more, each a letter, a combining mark, a decimal digit (at most
-    `MAX_QUERY_DIGITS` in all), a space or one of `QUERY_MARKS`. Nothing else: no `@` and no `:`, so
-    no address and no link, and no control, format or direction character, so no row looks empty or
-    reads backwards. That also keeps out a NUL and half of a surrogate pair, which PostgreSQL cannot
-    store. The app applies the same rule (`isCountableMiss` in `app/src/lib/searchMiss.ts`).
+    Two characters or more, each a letter, a combining mark on a letter or a mark, a decimal digit
+    (at most `MAX_QUERY_DIGITS` in all), a space or one of `QUERY_MARKS`, and at least one letter or
+    digit. A zero width non-joiner or joiner counts only between two letters or marks. Nothing else:
+    no `@` and no `:`, so no address and no link; no control, format, direction or other ignorable
+    character, so no row looks empty, reads backwards or is the twin of another; no bare combining
+    mark. That also keeps out a NUL and half of a surrogate pair, which PostgreSQL cannot store. The
+    app applies the same rule (`isCountableMiss` in `app/src/lib/searchMiss.ts`).
     """
     if len(query) < MIN_QUERY_LENGTH:
         return False
     digits = 0
-    for char in query:
+    shows = False
+    last = len(query) - 1
+    for index, char in enumerate(query):
+        if char in JOINERS:
+            between = 0 < index < last and _is_letter_or_mark(query[index - 1]) and _is_letter_or_mark(query[index + 1])
+            if not between:
+                return False
+            continue
+        if _is_ignorable(char):
+            return False
         category = unicodedata.category(char)
         if category == "Nd":
             digits += 1
-        elif category[0] not in "LM" and char not in QUERY_MARKS:
+            shows = True
+        elif category[0] == "L":
+            shows = True
+        elif category[0] == "M":
+            if index == 0 or not _is_letter_or_mark(query[index - 1]):
+                return False
+        elif char not in QUERY_MARKS:
             return False
-    return digits <= MAX_QUERY_DIGITS
+    return shows and digits <= MAX_QUERY_DIGITS
 
 
 def retention_cutoff(today: date) -> date:

@@ -149,17 +149,34 @@ function firstUseThisVisit(feature: UiFeature, now: number): boolean {
  */
 export const MAX_QUERY_LENGTH = 40;
 
+// The typographic marks a phone puts in for the plain ones (the curly apostrophes, the en and em
+// dash), by code point: a search with them is the same search.
+const TYPOGRAPHIC: Record<string, string> = Object.fromEntries(
+  (
+    [
+      [0x2018, "'"],
+      [0x2019, "'"],
+      [0x2013, '-'],
+      [0x2014, '-'],
+    ] as const
+  ).map(([code, plain]) => [String.fromCodePoint(code), plain])
+);
+
 /**
- * A typed search text in one form: Unicode form NFC, lowercase, single spaces, cut at
- * `MAX_QUERY_LENGTH` characters. "Scatter", "scatter " and "SCATTER" are one text for the
- * search's own bookkeeping and one row of the private list of misses (`src/lib/searchMiss.ts`),
- * and so is a word typed with a composed or a decomposed accent; a long pasted text is not kept
- * in full. The cut counts characters, not UTF-16 units, so it never splits one in two. The API
- * applies the same rule again (`normalize_query` in `api/search_misses.py`); the cases in
- * `searchQuery.cases.json` hold the two to each other.
+ * A typed search text in one form: compatibility forms folded (Unicode form NFKC: a fullwidth
+ * bracket becomes the plain one, a superscript two a 2, a ligature its letters), lowercase, folded
+ * again (a small letter can have a composed form its capital lacks), the curly apostrophes and the
+ * dashes made the plain ones, single spaces, cut at `MAX_QUERY_LENGTH` characters. "Scatter",
+ * "scatter " and "SCATTER" are one text for the search's own bookkeeping and one row of the private
+ * list of misses (`src/lib/searchMiss.ts`), and so is a word typed with a composed or a decomposed
+ * accent; a long pasted text is not kept in full. The cut counts characters, not UTF-16 units, so
+ * it never splits one in two. The API applies the same rule again (`normalize_query` in
+ * `api/search_misses.py`); the cases in `searchQuery.cases.json` hold the two to each other.
  */
 export function normalizeQuery(query: string): string {
-  const spaced = query.normalize('NFC').toLowerCase().trim().replace(/\s+/g, ' ');
+  const folded = query.normalize('NFKC').toLowerCase().normalize('NFKC');
+  const plain = Array.from(folded, char => TYPOGRAPHIC[char] ?? char).join('');
+  const spaced = plain.trim().replace(/\s+/g, ' ');
   return Array.from(spaced).slice(0, MAX_QUERY_LENGTH).join('').trimEnd();
 }
 
