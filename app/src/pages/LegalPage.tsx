@@ -247,8 +247,8 @@ export function LegalPage() {
                     >
                       public dashboard
                     </Link>
-                    . its script is served through this domain: no cookies, no cross-site id, no IP
-                    address kept.
+                    . search texts sent before november 2026 still show there. its script is served
+                    through this domain: no cookies, no cross-site id, no IP address kept.
                   </>,
                 ],
                 [
@@ -273,6 +273,17 @@ export function LegalPage() {
                     day, nothing about who shared. unverified is no verdict on a share: WhatsApp and
                     Signal fetch the preview from the sender&apos;s own phone, which nobody can
                     verify. the counts are kept without a time limit.
+                  </Box>,
+                ],
+                [
+                  'searches without a hit',
+                  <Box component="span" id="search-misses" sx={ANCHOR_SX}>
+                    when a gallery search finds nothing, its text (lowercase, first 40 characters)
+                    is counted per day, so I see what the catalogue lacks. a row holds no address
+                    and no time of day; only timestamps could match one to the 30-day server logs,
+                    so it is pseudonymous. only I read the list, and I delete an entry on request.
+                    <br />
+                    kept: 180 days · where: Google Cloud SQL
                   </Box>,
                 ],
                 [
@@ -328,6 +339,7 @@ export function LegalPage() {
                   'shared links',
                   'no time limit: counts per day, platform and page, verified or not',
                 ],
+                ['searches without a hit', '180 days'],
                 ['feedback case files', '180 days'],
                 ['feedback entries, case rows', 'until you ask to delete them'],
               ]}

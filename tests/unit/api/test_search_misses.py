@@ -914,3 +914,12 @@ class TestDebugEndpoints:
         assert CANARY not in response.text
         assert CANARY not in _logged(caplog)
         session.rollback.assert_awaited_once()
+
+
+def test_the_legal_page_states_the_period_the_api_keeps() -> None:
+    """The privacy policy promises the period the purge applies: one period for every text."""
+    legal = (ROOT / "app" / "src" / "pages" / "LegalPage.tsx").read_text(encoding="utf-8")
+
+    assert f"['searches without a hit', '{RETENTION_DAYS} days']" in legal
+    assert f"kept: {RETENTION_DAYS} days" in legal
+    assert RETENTION_DAYS == 180
