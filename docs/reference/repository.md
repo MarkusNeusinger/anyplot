@@ -209,6 +209,7 @@ anyplot/
 │
 ├── docs/                              # Documentation
 │   ├── concepts/
+│   ├── decisions/                     # One file per decision of the owner
 │   ├── reference/
 │   ├── workflows/
 │   ├── contributing.md

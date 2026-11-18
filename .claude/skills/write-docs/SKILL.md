@@ -17,6 +17,7 @@ docs/
 ├── contributing.md   # user-facing: how to propose plots, improve specs
 ├── development.md    # local setup, testing, code quality
 ├── concepts/         # philosophy, design decisions, roadmaps (vision, library-expansion)
+├── decisions/        # one file per decision of the owner (format in its README; the files stay unindexed)
 ├── workflows/        # how the GitHub Actions automation works
 └── reference/        # technical lookup: api, database, mcp, repository, style-guide, tagging-system, plausible, seo, performance
 agentic/docs/         # agent-workflow internals (project-guide.md) — for AI agents, not end users
