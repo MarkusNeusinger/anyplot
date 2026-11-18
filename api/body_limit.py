@@ -31,6 +31,7 @@ place before any of it is read.
 reads is never handed to the application.
 """
 
+import asyncio
 import logging
 import re
 import sys
@@ -51,6 +52,7 @@ DEFAULT_MAX_BODY_BYTES = 64 * 1024
 TOO_LARGE = "request body too large"
 LENGTH_REQUIRED = "request body needs a Content-Length"
 BUSY = "too many large request bodies at once; try again"
+SLOW = "request body did not arrive in time"
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +76,7 @@ class ClientGoneFilter(logging.Filter):
 
 
 class BodyCutMidAnswer(RuntimeError):
-    """A body passed its bound after the application had begun to answer.
+    """A body was cut off, for its size or its time, after the application had begun to answer.
 
     No refusal can replace an answer that is on its way. The rest of that answer is dropped, and
     this is raised once the application returns, so the short answer is at least recorded as a
@@ -102,8 +104,8 @@ class Bound:
     has the API's standard error shape (`api/exceptions.py`).
 
     `large` marks routes whose bodies are taken a few at a time (`LargeBodies`). A request there
-    has to declare its length; `length_detail` and `busy_detail` are the codes of the two answers
-    that follow from it, for the same clients as `detail`.
+    has to declare its length; `length_detail`, `busy_detail` and `slow_detail` are the codes of
+    the three answers that follow from it, for the same clients as `detail`.
     """
 
     max_bytes: int
@@ -111,6 +113,7 @@ class Bound:
     large: bool = False
     length_detail: str | None = None
     busy_detail: str | None = None
+    slow_detail: str | None = None
 
     def refusal(self, path: str) -> JSONResponse:
         """The 413 of a body above this bound."""
@@ -124,6 +127,10 @@ class Bound:
         """The 503 of a large body that found no place free."""
         return _refusal(503, BUSY, self.busy_detail, path)
 
+    def slow(self, path: str) -> JSONResponse:
+        """The 408 of a large body that held a place and did not arrive in time."""
+        return _refusal(408, SLOW, self.slow_detail, path)
+
 
 class LargeBodies:
     """The places for large bodies in flight: at most `places` bodies above `above` bytes at once.
@@ -133,15 +140,25 @@ class LargeBodies:
     Bodies of a few kilobytes do not add up to anything; bodies of megabytes do, so those are
     counted here. A body at or below `above` never needs a place.
 
+    A place is taken on the length a request declares, before any of its body has arrived, so
+    that the body is never read without one. A request could then hold a place by declaring a
+    length and sending little or nothing. Two limits give the place back: `stall_s`, the longest
+    wait for the next part of the body, and `body_s`, the longest the whole body may take. Both
+    end with the body's last part; how long the route then works is the route's own matter.
+
     One process serves all requests on one event loop, so taking a place is a plain count with
     nothing awaited between the look and the step.
     """
 
-    def __init__(self, places: int, above: int = DEFAULT_MAX_BODY_BYTES) -> None:
+    def __init__(self, places: int, above: int = DEFAULT_MAX_BODY_BYTES, *, stall_s: float, body_s: float) -> None:
         if places < 1:
             raise ValueError("at least one place")
+        if stall_s <= 0 or body_s <= 0:
+            raise ValueError("a body's time limits are positive")
         self.places = places
         self.above = above
+        self.stall_s = stall_s
+        self.body_s = body_s
         self.taken = 0
 
     def take(self) -> bool:
@@ -256,36 +273,62 @@ class BodyLimitMiddleware:
                 # A body that needs no place is held to the size that needs none, whatever it sends.
                 limit = places.above
         try:
-            await self._bounded(scope, receive, send, bound, limit)
+            await self._bounded(scope, receive, send, bound, limit, places if holds_place else None)
         finally:
             if holds_place and places is not None:
                 places.release()
 
-    async def _bounded(self, scope: Scope, receive: Receive, send: Send, bound: Bound, limit: int) -> None:
-        """Hand the request to the application and count its body against `limit` as it is read."""
+    async def _bounded(
+        self, scope: Scope, receive: Receive, send: Send, bound: Bound, limit: int, held: LargeBodies | None
+    ) -> None:
+        """Hand the request to the application and count its body against `limit` as it is read.
+
+        `held` is set for a request that holds a place for a large body: its body then has to keep
+        arriving (`stall_s`) and be whole in time (`body_s`), or the request ends and the place is
+        free again.
+        """
         path = scope["path"]
         received = 0
         cut = False
         answering = False
         mid_answer = False
+        whole = False
+        clock = asyncio.get_running_loop().time
+        whole_by = clock() + held.body_s if held is not None else 0.0
 
-        async def counted_receive() -> Message:
-            nonlocal received, cut, mid_answer
-            if cut:
-                return {"type": "http.disconnect"}
-            message = await receive()
-            if message["type"] != "http.request":
-                return message
-            received += len(message.get("body", b""))
-            if received <= limit:
-                return message
+        async def end(refusal: JSONResponse) -> Message:
+            """End the body here: the refusal goes out, and the application is told the client has gone."""
+            nonlocal cut, mid_answer
             cut = True
             if answering:
                 # An answer already on its way cannot be replaced; the body still ends here.
                 mid_answer = True
             else:
-                await bound.refusal(path)(scope, receive, send)
+                await refusal(scope, receive, send)
             return {"type": "http.disconnect"}
+
+        async def counted_receive() -> Message:
+            nonlocal received, whole
+            if cut:
+                return {"type": "http.disconnect"}
+            if held is None or whole:
+                # No place is held, or the body is in: an application that listens on for the
+                # client to go away may wait as long as it likes.
+                message = await receive()
+            else:
+                try:
+                    async with asyncio.timeout(max(min(held.stall_s, whole_by - clock()), 0)):
+                        message = await receive()
+                except TimeoutError:
+                    logger.warning("a large request body did not arrive in time: its place is free again")
+                    return await end(bound.slow(path))
+            if message["type"] != "http.request":
+                return message
+            received += len(message.get("body", b""))
+            whole = not message.get("more_body", False)
+            if received <= limit:
+                return message
+            return await end(bound.refusal(path))
 
         async def guarded_send(message: Message) -> None:
             nonlocal answering
@@ -305,4 +348,4 @@ class BodyLimitMiddleware:
             if not cut:
                 raise
         if mid_answer:
-            raise BodyCutMidAnswer(f"the body of {scope['method']} {path} passed its bound after the answer began")
+            raise BodyCutMidAnswer(f"the body of {scope['method']} {path} was cut off after the answer began")

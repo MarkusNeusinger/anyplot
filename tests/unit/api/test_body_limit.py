@@ -32,6 +32,7 @@ from api.body_limit import (
     BUSY,
     DEFAULT_MAX_BODY_BYTES,
     LENGTH_REQUIRED,
+    SLOW,
     TOO_LARGE,
     BodyCutMidAnswer,
     BodyLimitMiddleware,
@@ -44,6 +45,8 @@ from api.origin_gate import ORIGIN_SECRET_HEADER
 from api.routers import agent, agent_public
 from api.routers.agent import (
     BODY_PREFIXES,
+    LARGE_BODY_STALL_S,
+    LARGE_BODY_TOTAL_S,
     MAX_CONVERT_BASE64_CHARS,
     MAX_CONVERT_BYTES,
     MAX_DATASET_BYTES,
@@ -447,10 +450,22 @@ class TestLargeBodies:
 
     PLACES = 2
     BIG = 5 * CAP
+    # The time limits of a test: long enough that nothing ordinary meets them, short enough to wait them out.
+    STALL_S = 0.2
+    BODY_S = 0.6
 
-    def counted(self, target) -> tuple[BodyLimitMiddleware, LargeBodies]:
-        places = LargeBodies(places=self.PLACES, above=CAP)
-        coded = Bound(10 * CAP, detail="own_code", large=True, length_detail="own_length", busy_detail="own_busy")
+    def counted(
+        self, target, stall_s: float = STALL_S, body_s: float = BODY_S
+    ) -> tuple[BodyLimitMiddleware, LargeBodies]:
+        places = LargeBodies(places=self.PLACES, above=CAP, stall_s=stall_s, body_s=body_s)
+        coded = Bound(
+            10 * CAP,
+            detail="own_code",
+            large=True,
+            length_detail="own_length",
+            busy_detail="own_busy",
+            slow_detail="own_slow",
+        )
         middleware = BodyLimitMiddleware(
             target,
             default=CAP,
@@ -466,7 +481,10 @@ class TestLargeBodies:
         with pytest.raises(ValueError, match="places"):
             BodyLimitMiddleware(recorder, rules=[(re.compile("/data"), Bound(10 * CAP, large=True))])
         with pytest.raises(ValueError, match="at least one"):
-            LargeBodies(places=0)
+            LargeBodies(places=0, stall_s=1, body_s=1)
+        for stall_s, body_s in ((0, 1), (1, 0), (-1, 1)):
+            with pytest.raises(ValueError, match="time limits"):
+                LargeBodies(places=1, stall_s=stall_s, body_s=body_s)
 
     async def test_a_body_without_a_length_is_refused_unread(self, recorder) -> None:
         """Its place has to be settled before any of it is read, and without a length there is
@@ -532,6 +550,29 @@ class TestLargeBodies:
                     await client.post("/data/s1", content=b"a" * self.BIG)
         assert places.taken == 0
 
+    async def test_a_place_is_given_back_when_the_request_is_cancelled(self) -> None:
+        """A client that goes away, or a server that shuts down, ends a request by cancelling it:
+        that is no `Exception`, and the place has to come back all the same."""
+        held = Held()
+        middleware, places = self.counted(held)
+        async with client_for(middleware) as client:
+            requests = [
+                asyncio.create_task(client.post("/data/s1", content=b"a" * self.BIG)) for _ in range(self.PLACES)
+            ]
+            await held.holds(self.PLACES)
+            assert places.taken == self.PLACES
+            for request in requests:
+                request.cancel()
+            assert all(
+                isinstance(end, asyncio.CancelledError)
+                for end in await asyncio.gather(*requests, return_exceptions=True)
+            )
+            assert places.taken == 0
+            held.go.set()
+            after = await client.post("/data/s1", content=b"a" * self.BIG)
+        assert (after.status_code, after.json()) == (200, {"read": self.BIG})
+        assert places.taken == 0
+
     async def test_a_body_above_its_cap_takes_no_place(self, recorder) -> None:
         middleware, places = self.counted(recorder)
         body = Pulls(chunks=1)
@@ -550,6 +591,107 @@ class TestLargeBodies:
         assert wire.starts == [413]
         assert wire.taken == 2
         assert places.taken == 0
+
+
+class Trickle:
+    """A request body that arrives in parts with a pause before each, or never: a declared length and no bytes."""
+
+    def __init__(self, parts: int, size: int, pause_s: float) -> None:
+        self.parts = parts
+        self.size = size
+        self.pause_s = pause_s
+        self.sent = 0
+
+    async def __aiter__(self) -> AsyncIterator[bytes]:
+        if not self.parts:
+            await asyncio.Event().wait()
+        for _ in range(self.parts):
+            await asyncio.sleep(self.pause_s)
+            self.sent += 1
+            yield b"a" * self.size
+
+
+class TestTheTimeOfALargeBody:
+    """A place is taken on a declared length, so the body has to come: it may not stall, and it may not take
+    for ever. Without that, a request that declares a length and sends nothing would keep its place."""
+
+    PLACES = TestLargeBodies.PLACES
+    BIG = TestLargeBodies.BIG
+    counted = TestLargeBodies.counted
+
+    async def test_a_body_that_never_comes_gives_its_place_back(self, recorder) -> None:
+        middleware, places = self.counted(recorder, stall_s=0.05, body_s=5)
+        declared = {"Content-Length": str(self.BIG)}
+        async with client_for(middleware) as client:
+            silent = [
+                asyncio.create_task(client.post("/data/s1", content=Trickle(0, 0, 0), headers=declared))
+                for _ in range(self.PLACES)
+            ]
+            first, second = await asyncio.wait_for(asyncio.gather(*silent), 5)
+            assert places.taken == 0
+            own = await asyncio.wait_for(client.post("/coded/x", content=Trickle(0, 0, 0), headers=declared), 5)
+            # The places are free again for a body that does come.
+            after = await asyncio.wait_for(client.post("/data/s1", content=b"a" * self.BIG), 5)
+        assert first.status_code == second.status_code == 408
+        assert first.json() == {"status": 408, "message": SLOW, "path": "/data/s1"}
+        assert first.headers["cache-control"] == "private, no-store"
+        assert (own.status_code, own.json()) == (408, {"detail": "own_slow"})
+        assert (after.status_code, after.json()) == (200, {"read": self.BIG})
+        # Each request reached the application once, and only the last one's body did.
+        assert (recorder.calls, recorder.read) == (self.PLACES + 2, self.BIG)
+
+    async def test_a_body_that_keeps_coming_but_takes_too_long_gives_its_place_back(self, recorder) -> None:
+        """Each part arrives well within the wait for the next one; the whole does not arrive in its time."""
+        middleware, places = self.counted(recorder, stall_s=0.5, body_s=0.2)
+        body = Trickle(parts=50, size=self.BIG // 50, pause_s=0.02)
+        async with client_for(middleware) as client:
+            answer = await asyncio.wait_for(
+                client.post("/data/s1", content=body, headers={"Content-Length": str(self.BIG)}), 5
+            )
+        assert answer.status_code == 408
+        assert 0 < body.sent < 50
+        assert places.taken == 0
+
+    async def test_a_slow_body_within_both_limits_is_taken_whole(self, recorder) -> None:
+        middleware, places = self.counted(recorder, stall_s=0.5, body_s=5)
+        body = Trickle(parts=10, size=self.BIG // 10, pause_s=0.02)
+        async with client_for(middleware) as client:
+            answer = await asyncio.wait_for(
+                client.post("/data/s1", content=body, headers={"Content-Length": str(self.BIG)}), 5
+            )
+        assert (answer.status_code, answer.json()) == (200, {"read": self.BIG})
+        assert places.taken == 0
+
+    async def test_a_route_that_works_long_on_a_whole_body_is_not_hurried(self) -> None:
+        """The limits are on the body's arrival. A route that then takes longer than both, and listens for the
+        client meanwhile as a streamed answer does, keeps its request and its place until it answers."""
+        listened: list[str] = []
+
+        async def slow_route(scope: Scope, receive: Receive, send: Send) -> None:
+            body = await Request(scope, receive).body()
+            try:
+                async with asyncio.timeout(0.3):
+                    listened.append((await receive())["type"])
+            except TimeoutError:
+                listened.append("nothing")
+            await JSONResponse({"read": len(body)})(scope, receive, send)
+
+        middleware, places = self.counted(slow_route, stall_s=0.05, body_s=0.1)
+        async with client_for(middleware) as client:
+            answer = await asyncio.wait_for(client.post("/data/s1", content=b"a" * self.BIG), 5)
+        assert (answer.status_code, answer.json()) == (200, {"read": self.BIG})
+        assert listened == ["nothing"]
+        assert places.taken == 0
+
+    async def test_a_small_body_is_not_timed(self, recorder) -> None:
+        """A body that needs no place holds nothing another request waits for."""
+        middleware, places = self.counted(recorder, stall_s=0.05, body_s=0.1)
+        body = Trickle(parts=4, size=CAP // 4, pause_s=0.08)
+        async with client_for(middleware) as client:
+            answer = await asyncio.wait_for(
+                client.post("/data/s1", content=body, headers={"Content-Length": str(CAP)}), 5
+            )
+        assert (answer.status_code, answer.json()) == (200, {"read": CAP})
 
 
 class TestTheApp:
@@ -634,9 +776,8 @@ class TestTheApp:
         assert (above.pulled, unsized.pulled) == (0, 0)
 
     async def test_one_large_body_more_than_the_places_is_answered_busy(self) -> None:
-        """Both lanes and both data routes share the places. A paste that waits for its bytes
-        holds one; the next large body, here a file, is answered at once, unread, in the page's
-        own shape."""
+        """Both lanes and both data routes share the places: with every place taken by pastes, a
+        file is answered at once, unread, in the page's own shape, and a small paste still passes."""
         size = 4 * DEFAULT_MAX_BODY_BYTES
         go = asyncio.Event()
         started = 0
@@ -652,20 +793,51 @@ class TestTheApp:
         one_more = Pulls(chunks=1)
         async with client_for(app) as client:
             held = [asyncio.create_task(client.post(path, content=waiting(), headers=declared)) for path in paths]
-            for _ in range(1000):
-                if started == MAX_LARGE_BODIES:
-                    break
-                await asyncio.sleep(0)
-            assert started == MAX_LARGE_BODIES
-            busy = await client.post(FILE_PATHS[0], content=one_more, headers=declared)
-            small = await client.post(PASTE_PATHS[0], content=b"a" * DEFAULT_MAX_BODY_BYTES, headers=JSON_BODY)
-            go.set()
-            answers = await asyncio.gather(*held)
-            after = await client.post(PASTE_PATHS[0], content=b"a" * size, headers=JSON_BODY)
+            try:
+                for _ in range(1000):
+                    if started == MAX_LARGE_BODIES:
+                        break
+                    await asyncio.sleep(0)
+                assert started == MAX_LARGE_BODIES
+                busy = await asyncio.wait_for(client.post(FILE_PATHS[0], content=one_more, headers=declared), 5)
+                small = await asyncio.wait_for(
+                    client.post(PASTE_PATHS[0], content=b"a" * DEFAULT_MAX_BODY_BYTES, headers=JSON_BODY), 5
+                )
+                go.set()
+                answers = await asyncio.wait_for(asyncio.gather(*held), 5)
+            finally:
+                # A failed assertion must not leave the app's places taken for the tests after this one.
+                for request in held:
+                    request.cancel()
+                await asyncio.gather(*held, return_exceptions=True)
+            after = await asyncio.wait_for(client.post(PASTE_PATHS[0], content=b"a" * size, headers=JSON_BODY), 5)
         assert (busy.status_code, busy.json()) == (503, {"detail": "capacity"})
         assert one_more.pulled == 0
         for answer in (small, after, *answers):
             assert not from_the_bound(answer)
+
+    @pytest.mark.parametrize("path", [PASTE_PATHS[0], FILE_PATHS[1]])
+    async def test_a_large_body_that_never_comes_is_ended_with_the_pages_own_shape(
+        self, path: str, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        places = TestTheTable.middleware().large
+        assert places is not None
+        monkeypatch.setattr(places, "stall_s", 0.05)
+
+        async def never() -> AsyncIterator[bytes]:
+            await asyncio.Event().wait()
+            yield b""
+
+        declared = {**JSON_BODY, "Content-Length": str(4 * DEFAULT_MAX_BODY_BYTES)}
+        async with client_for(app) as client:
+            answer = await asyncio.wait_for(client.post(path, content=never(), headers=declared), 5)
+        assert places.taken == 0
+        if path in PASTE_PATHS:
+            # The paste's body is read before its lane answers, so the wait for it ends here.
+            assert (answer.status_code, answer.json()) == (408, {"detail": "upload_timeout"})
+        else:
+            # The file route takes its body by hand, after its gates: a closed lane never waits for it.
+            assert not from_the_bound(answer) and answer.status_code != 408
 
     async def test_the_mcp_server_is_bounded_like_any_other_path(self) -> None:
         headers = {"Content-Type": "application/json", "Content-Length": str(2 * DEFAULT_MAX_BODY_BYTES)}
@@ -757,6 +929,9 @@ class TestTheTable:
         places = self.middleware().large
         assert places is not None
         assert (places.places, places.above) == (MAX_LARGE_BODIES, DEFAULT_MAX_BODY_BYTES)
+        assert (places.stall_s, places.body_s) == (LARGE_BODY_STALL_S, LARGE_BODY_TOTAL_S)
+        # The largest body, the file as it is sent, arrives in its time on a line of half a megabit a second.
+        assert MAX_REQUEST_BODY_BYTES * 8 / LARGE_BODY_TOTAL_S < 500_000
 
     def test_only_the_data_routes_of_the_two_lanes_take_more_than_the_default(self) -> None:
         """A new route that carries data, a rule that reaches a route it was not written for, or
@@ -780,6 +955,7 @@ class TestTheTable:
                 large=True,
                 length_detail="length_required",
                 busy_detail="capacity",
+                slow_detail="upload_timeout",
             )
 
     @pytest.mark.parametrize("doubled", ["\n", "\t", "\r", '"', "\\"])

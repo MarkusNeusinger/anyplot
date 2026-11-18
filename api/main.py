@@ -56,6 +56,8 @@ from api.routers import (  # noqa: E402
 from api.routers.agent import (  # noqa: E402
     BODY_PREFIXES,
     BODY_RULES,
+    LARGE_BODY_STALL_S,
+    LARGE_BODY_TOTAL_S,
     LOCAL_ORIGIN_REGEX,
     MAX_LARGE_BODIES,
     AgentHTTPError,
@@ -261,9 +263,12 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # code the chat page reads from their routes, and two routes of each lane carry
 # data, a paste and an uploaded file: those get the body each needs
 # (api/routers/agent.py BODY_RULES), and their large bodies are taken a few at
-# a time.
+# a time, each with a limit on how long it may take to arrive.
 app.add_middleware(
-    BodyLimitMiddleware, prefixes=BODY_PREFIXES, rules=BODY_RULES, large=LargeBodies(places=MAX_LARGE_BODIES)
+    BodyLimitMiddleware,
+    prefixes=BODY_PREFIXES,
+    rules=BODY_RULES,
+    large=LargeBodies(places=MAX_LARGE_BODIES, stall_s=LARGE_BODY_STALL_S, body_s=LARGE_BODY_TOTAL_S),
 )
 
 # Enable GZip compression for responses > 500 bytes

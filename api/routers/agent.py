@@ -108,19 +108,33 @@ CONVERT_PATH_SUFFIX = "/dataset/convert"
 MAX_SOURCE_CHARS = 1_024
 """The name of the file a paste was read from (`DatasetBody.source`)."""
 MAX_PASTE_BODY_BYTES = 2 * MAX_DATASET_BYTES + 6 * MAX_SOURCE_CHARS + 1024
-"""The largest body the paste route takes. JSON writes a line break, a tab, a quotation mark and a backslash as two
-bytes, so the 1 MB of text is at most 2 MB as sent, and a table full of nothing else is still a table. Beside it
-the file name, at the six bytes a character can take as sent, and the JSON around both. Text that would be longer
-still holds control characters, which the parser refuses anyway."""
+"""The largest body the paste route takes, as a browser writes it: UTF-8, with only the escapes JSON needs. JSON
+writes a line break, a tab, a quotation mark and a backslash as two bytes, so the 1 MB of text is at most 2 MB as
+sent, and a table full of nothing else is still a table. Beside it the file name, at the six bytes a character can
+take as sent, and the JSON around both. Text that would be longer still holds control characters, which the parser
+refuses anyway; a client that writes every non-ASCII character as an escape sends more and is refused."""
 MAX_LARGE_BODIES = 4
 """How many bodies above the small default the two data routes take at once, on both lanes together; one more is
 answered `503 capacity`, which the page words as busy. Every other body of the chat is a few kilobytes."""
+LARGE_BODY_STALL_S = 15.0
+"""The longest wait for the next part of a large body. A connection that sends nothing for this long has dropped,
+or was never going to send: a browser's upload arrives in a steady run of small parts."""
+LARGE_BODY_TOTAL_S = 120.0
+"""The longest a large body may take to arrive whole: the largest one, an uploaded file of 5 MB as it is sent, in
+this time is a line of about half a megabit a second."""
 _DATA_ROUTE = r"/(?:debug/agent/sessions/[^/]+|agent/session)/dataset"
 
 
 def _data_bound(max_bytes: int) -> Bound:
     """The bound of a route that carries data, answered with the codes the page reads from these routes."""
-    return Bound(max_bytes, detail="too_long", large=True, length_detail="length_required", busy_detail="capacity")
+    return Bound(
+        max_bytes,
+        detail="too_long",
+        large=True,
+        length_detail="length_required",
+        busy_detail="capacity",
+        slow_detail="upload_timeout",
+    )
 
 
 BODY_RULES: tuple[tuple[re.Pattern[str], Bound], ...] = (
@@ -487,7 +501,8 @@ def require_body_within_cap(request: Request) -> None:
     """Refuse a request body over `MAX_REQUEST_BODY_BYTES` by its declared `Content-Length`, before it is read.
 
     The second line: the bound in front of the router (`api/body_limit.py`, `BODY_RULES`) already holds every route
-    to the body it needs and refuses a data body without a length. This check stays for an app built without that
+    to the body it needs and refuses a data body without a length. This check stays, at the cap of the largest route,
+    for an app built without that
     middleware, such as a router mounted alone in a test.
 
     Placed before `require_utf8_body`, which reads the body. A route that declares a body
