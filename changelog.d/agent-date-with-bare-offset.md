@@ -12,7 +12,7 @@
   1 March out; such a bound now means the whole day. A filter by date on the
   pasted column itself, which would compare the text and cut the rows of one
   day in two, is refused with the way out: the converted column.
-- **Hour labels such as `2026-03-01-03` are no longer read as dates.** A date
+- **Hour labels written `YYYY-MM-DD-HH` are no longer read as dates.** A date
   followed by a sign and digits in no offset form is refused, with the form
   the column needs, when it is converted or used as a filter bound. Before,
   four hour labels became four equal dates, and the chat made that conversion

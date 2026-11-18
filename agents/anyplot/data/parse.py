@@ -3223,7 +3223,7 @@ def _type_column(column: _Column) -> None:
        with a four-digit year (`Nov 2026`, `Okt. 2026`), are the first day of each month,
        with a note (`_as_periods`). A column whose every cell is a date followed directly
        by a UTC offset and no time (`2026-03-01+01:00`, `2026-03-01Z`, `DATE_OFFSET`) stays
-       text as written, with the note `OFFSET_DATES` (`offset_days`): an offset belongs to a
+       text as written, with the note `OFFSET_DATES` (`_offset_days`): an offset belongs to a
        time, and `set_type` reads the days on request.
     2. **boolean**: `true` / `false` in any letter case, written `True` / `False`.
     3. **integer**: ASCII digits with an optional sign within int64; a minus written as
@@ -3758,7 +3758,7 @@ def _offset_text(minutes: int | None) -> str:
 
 
 def _as_dates(column: _Column, present: list[str]) -> bool:
-    if offset_days(present):
+    if _offset_days(present):
         column.notes.append(OFFSET_DATES)
         return False
     stamped = _as_iso_stamps(column, present)
@@ -3802,13 +3802,12 @@ def _as_dates(column: _Column, present: list[str]) -> bool:
     return True
 
 
-def offset_days(present: Sequence[str]) -> bool:
+def _offset_days(present: list[str]) -> bool:
     """Whether every cell is a calendar date followed directly by a UTC offset and no time (`DATE_OFFSET`).
 
     A date column holds a day without an offset or a moment with one: written as a date, the offset would be gone
     without a word, and written as midnight at that offset, a time nobody wrote would stand in it. A column that mixes
-    the shape with plain dates stays text by the rule that a date column has one shape, without this note. The
-    conditions on such a text column use the same test (`prepare._check_offset_day_value`).
+    the shape with plain dates stays text by the rule that a date column has one shape, without this note.
     """
     for cell in present:
         match = DATE_OFFSET.fullmatch(cell)
