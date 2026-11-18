@@ -72,14 +72,21 @@ async def body_too_large_handler(request: Request, exc: BodyTooLarge) -> JSONRes
 
 
 def _declared_length(scope: Scope) -> int | None:
-    """The `Content-Length` a request declares, `None` without one, `-1` for one that is no number."""
-    for name, value in scope["headers"]:
-        if name == b"content-length":
-            try:
-                return int(value)
-            except ValueError:
-                return -1
-    return None
+    """The `Content-Length` a request declares, or `None` without one.
+
+    `-1` for a length nobody can go by: one that is no number or is negative, and more than one
+    header whose values differ. A refusal that read only the first of two would let the second
+    decide how much is sent.
+    """
+    declared = {value.strip() for name, value in scope["headers"] if name == b"content-length"}
+    if not declared:
+        return None
+    if len(declared) > 1:
+        return -1
+    try:
+        return max(int(declared.pop()), -1)
+    except ValueError:
+        return -1
 
 
 class BodyLimitMiddleware:
@@ -95,7 +102,12 @@ class BodyLimitMiddleware:
         self.app = app
         self.default = Bound(default)
         # Longest prefix first, so `/debug/agent` is found before a bound that `/debug` might get.
-        self.prefixes = sorted((prefixes or {}).items(), key=lambda item: len(item[0]), reverse=True)
+        # A prefix is kept without a trailing slash: `bound_for` adds the one that ends a segment.
+        self.prefixes = sorted(
+            ((prefix.rstrip("/"), bound) for prefix, bound in (prefixes or {}).items()),
+            key=lambda item: len(item[0]),
+            reverse=True,
+        )
 
     def bound_for(self, path: str) -> Bound:
         """The bound of a path: that of the longest named prefix it lies under, else the default."""

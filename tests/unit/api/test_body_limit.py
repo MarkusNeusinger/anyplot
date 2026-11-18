@@ -101,8 +101,19 @@ class TestTheMiddleware:
         assert body.pulled <= CAP // CHUNK + 2
         assert recorder.read == 0
 
-    async def test_a_length_that_is_no_number_is_a_bad_request(self, bounded, recorder) -> None:
-        scope = {"type": "http", "method": "POST", "path": "/x", "headers": [(b"content-length", b"lots")]}
+    @pytest.mark.parametrize(
+        "lengths",
+        [
+            [b"lots"],
+            [b"-1"],
+            # Two that differ: a refusal that read only the first would let the second decide.
+            [b"0", b"100000"],
+            [b"100000", b"0"],
+        ],
+    )
+    async def test_a_length_nobody_can_go_by_is_a_bad_request(self, bounded, recorder, lengths) -> None:
+        headers = [(b"content-length", value) for value in lengths]
+        scope = {"type": "http", "method": "POST", "path": "/x", "headers": headers}
         sent: list[dict] = []
 
         async def receive() -> dict:
@@ -130,6 +141,31 @@ class TestTheMiddleware:
         # A prefix ends at a path segment: a longer first segment is another path.
         assert bounded.bound_for("/wider").max_bytes == CAP
         assert bounded.bound_for("/x/wide").max_bytes == CAP
+
+    def test_a_prefix_written_with_a_trailing_slash_means_the_same(self, recorder) -> None:
+        slashed = BodyLimitMiddleware(recorder, default=CAP, prefixes={"/wide/": Bound(10 * CAP)})
+        assert slashed.bound_for("/wide").max_bytes == 10 * CAP
+        assert slashed.bound_for("/wide/open").max_bytes == 10 * CAP
+
+    async def test_the_same_length_stated_twice_is_one_length(self, bounded, recorder) -> None:
+        scope = {
+            "type": "http",
+            "method": "POST",
+            "path": "/x",
+            "headers": [(b"content-length", b"3"), (b"content-length", b"3")],
+        }
+        messages = [{"type": "http.request", "body": b"abc", "more_body": False}]
+        sent: list[dict] = []
+
+        async def receive() -> dict:
+            return messages.pop(0)
+
+        async def send(message: dict) -> None:
+            sent.append(message)
+
+        await bounded(scope, receive, send)
+        assert sent[0]["status"] == 200
+        assert recorder.read == 3
 
     async def test_a_prefix_with_a_code_of_its_own_answers_in_that_shape(self, bounded, recorder) -> None:
         """Declared or cut off while it streams, a body above the cap gets the one answer its
@@ -193,6 +229,14 @@ class TestTheApp:
         assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/feedback"}
         assert body.pulled <= 6
         assert body.pulled < chunks
+
+    async def test_a_read_passes_whatever_length_it_declares(self) -> None:
+        """No route reads a body on a `GET`, so the bound has nothing to refuse there."""
+        async with client_for(app) as client:
+            answer = await client.request(
+                "GET", "/health", headers={"Content-Length": str(8 * DEFAULT_MAX_BODY_BYTES)}, content=Pulls(chunks=1)
+            )
+        assert answer.status_code == 200
 
     async def test_a_browser_can_read_the_refusal(self) -> None:
         headers = {

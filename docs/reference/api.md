@@ -1753,7 +1753,7 @@ Every request body is bounded before it is read (`api/body_limit.py`). A request
 | `/agent/...` and `/debug/agent/...` | The agent routes' own `MAX_REQUEST_BODY_BYTES` (`api/routers/agent.py`): an uploaded file of 5 MB, base64-encoded | `{"detail": "too_long"}`, the shape of [Agent error responses](#agent-error-responses) |
 | Every other path | 64 KiB (`DEFAULT_MAX_BODY_BYTES`) | The standard error format with the message `request body too large` |
 
-The cap is the outer bound. A route keeps its own narrower checks, such as the field lengths of `POST /feedback` and the 1 MB of text a dataset route accepts. `GET`, `HEAD` and `OPTIONS` requests aren't checked: no route reads a body on them.
+The cap is the outer bound. A route keeps its own narrower checks, such as the field lengths of `POST /feedback` and the 1 MB of text a dataset route accepts. `GET`, `HEAD` and `OPTIONS` requests aren't checked: no route reads a body on them. A `Content-Length` that can't be gone by (not a number, negative, or two headers with different values) gets status 400 in the standard error format.
 
 A new route that accepts a larger body needs its prefix added to the table in `api/main.py`; without it, the default applies.
 

@@ -6,8 +6,10 @@
   bytes were already in memory. A middleware directly around the router
   now refuses a request that declares more than the cap of its path
   without reading it, and counts a body that declares no length as it
-  arrives and cuts it off at the cap. Both answer `413` in the standard
-  error format. The agent lanes keep the cap their routes already declare;
-  every other path takes a default of 64 KiB, far above the largest body
-  those routes accept. Tests send through the real app and check that the
-  reading stops, not only that the status is right.
+  arrives and cuts it off at the cap. Both answer `413`: in the standard
+  error format, and on the agent lanes with the `too_long` code those
+  routes answer with themselves. The agent lanes keep the cap their routes
+  already declare; every other path takes a default of 64 KiB, far above
+  the largest body those routes accept. A `Content-Length` nobody can go
+  by, such as two that differ, is a `400`. Tests send through the real app
+  and check that the reading stops, not only that the status is right.
