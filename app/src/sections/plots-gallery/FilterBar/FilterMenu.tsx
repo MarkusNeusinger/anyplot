@@ -1,6 +1,6 @@
 import Divider from '@mui/material/Divider';
 import ListItemText from '@mui/material/ListItemText';
-import Menu from '@mui/material/Menu';
+import Menu, { type MenuProps } from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
@@ -31,7 +31,8 @@ export interface FilterMenuProps {
   hiddenMatchCount: number; // Hits the same search finds in all plots, when the filters leave none
   dropdownItems: DropdownItem[]; // Visible items, for keyboard-highlight mapping
   highlightedIndex: number;
-  onClose: () => void;
+  // The press on the backdrop, or the key, that asks the menu to close, and which of the two.
+  onClose: NonNullable<MenuProps['onClose']>;
   onCategorySelect: (category: FilterCategory) => void;
   onValueSelect: (category: FilterCategory, value: string) => void;
   onSearchAll: () => void; // Drop the filters, keep the query
@@ -81,6 +82,11 @@ export function FilterMenu({
           slotProps: {
             backdrop: {
               invisible: true,
+              // The backdrop covers the whole page, the search field and its clear cross
+              // included, so every press outside the menu lands here. Its default would move
+              // the focus and blur the field, which sends a pending search miss before
+              // `onClose` can tell a press on the cross (drop it) from one elsewhere (send it).
+              onMouseDown: (event: React.MouseEvent) => event.preventDefault(),
             },
           },
         },
@@ -131,6 +137,9 @@ export function FilterMenu({
               ? [
                   <MenuItem
                     key="back"
+                    // Keeps the focus in the search field: a blur there would send the text the
+                    // visitor is throwing away with this click.
+                    onMouseDown={event => event.preventDefault()}
                     onClick={onBack}
                     sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText }}
                   >

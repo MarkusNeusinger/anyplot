@@ -208,10 +208,11 @@ _HOME_JSONLD = {
                 "@type": "Person",
                 "name": "Markus Neusinger",
                 "url": "https://www.linkedin.com/in/markus-neusinger/",
+                "sameAs": ["https://neusinger.com"],
             },
             "keywords": [name.lower() for name in LANGUAGE_NAMES.values()]
             + [name.lower() for name in LIBRARY_NAMES.values()]
-            + ["plotting", "data visualization", "charts", "code examples", "colorblind-safe", "imprint palette"],
+            + ["plotting", "data visualization", "charts", "code examples", "colourblind-safe", "imprint palette"],
             "isAccessibleForFree": True,
         },
         {
@@ -483,7 +484,7 @@ def _build_home_body(spec_count: int | None) -> str:
         "library, reviews it, and publishes the result with full source code.</p>"
         f"<p>The catalog covers {_LIBRARY_COUNT} libraries across {_LANGUAGE_LIST}: "
         f"{_LIBRARY_LIST}. Every implementation ships with light and dark theme previews, "
-        "uses the colorblind-safe Imprint palette, and can be browsed, copied, and adapted freely.</p>"
+        "uses the colourblind-safe Imprint palette, and can be browsed, copied, and adapted freely.</p>"
         '<p>Browse the catalog on the <a href="https://anyplot.ai/plots">plots</a> page, jump to any '
         'chart type via the <a href="https://anyplot.ai/specs">spec index</a>, or connect an AI '
         'assistant through the <a href="https://anyplot.ai/mcp">Model Context Protocol (MCP) server</a>.</p>'
@@ -1208,7 +1209,8 @@ _LEGAL_BOT_BODY = (
     "<ul>"
     "<li>Swiss data protection law applies, and the GDPR for visitors from the EU.</li>"
     "<li>Analytics: Plausible Analytics (EU), through this domain; no cookies, no cross-site id, "
-    "no IP address stored.</li>"
+    "no IP address stored. Its counts stand on a public dashboard, where search texts sent up to and "
+    "including November 2026 still show.</li>"
     "<li>Hosting: Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands (europe-west4), "
     "Cloudflare at the edge, which uses your IP address to rate-limit, filter bots and absorb DDoS "
     "attacks. Server logs: kept 30 days in Google Cloud Logging in the Netherlands (europe-west4).</li>"
@@ -1216,6 +1218,13 @@ _LEGAL_BOT_BODY = (
     "content-free line (vendor and purpose, whether Cloudflare verified it, the page or file asked "
     "for, the status), without IP address or user-agent, kept up to 180 days in Google Cloud Logging "
     "and BigQuery in the Netherlands (europe-west4).</li>"
+    "<li>Searches without a hit: when a gallery search finds nothing, two seconds after you stop typing "
+    "or when you leave the field, its text (lowercase, first 40 "
+    "characters) is counted per day, so the operator sees what the catalogue lacks. An e-mail address "
+    "or a link with http:// is not kept; anything else you type may be, so please type no personal "
+    "data. A row holds no IP address and no time of day; only timestamps could match one to the 30-day "
+    "server logs, so it is pseudonymous. Only the operator reads the list, and he deletes an entry on "
+    "request. Kept 180 days in Google Cloud SQL in the Netherlands (europe-west4).</li>"
     "<li>Feedback: your message and reaction, the optional contact field, the page, window size, "
     "user-agent and a random id that ties your own submissions together; read only by the operator, "
     "kept until you ask to delete it. The salted IP hash against spam is cleared by the next "
@@ -1229,8 +1238,9 @@ _LEGAL_BOT_BODY = (
     "name or email unless you type one. Suggesting a plot type on GitHub may credit your public "
     "username in its spec.</li>"
     "<li>No AI training on what you send; browsing the catalogue never reaches a model.</li>"
-    "<li>Legal bases: legitimate interest (Art. 6(1)(f) GDPR) for the site and the assistant's "
-    "telemetry and limits; your request (Art. 6(1)(b) GDPR) for a plot; consent (Art. 6(1)(a) GDPR) "
+    "<li>Legal bases: legitimate interest (Art. 6(1)(f) GDPR) for the site, seeing what its catalogue "
+    "lacks, and the assistant's telemetry and limits; your request (Art. 6(1)(b) GDPR) for a plot; "
+    "consent (Art. 6(1)(a) GDPR) "
     "for a feedback case, withdrawable at any time.</li>"
     "<li>Google Cloud and Cloudflare apply their data processing terms, with safeguards for "
     "transfers outside Switzerland and the EU.</li>"
@@ -1252,20 +1262,16 @@ _LEGAL_BOT_BODY = (
     "<li>Its code is yours to use, as is; Highcharts is free for non-commercial use, and a commercial "
     "use needs a licence from Highsoft.</li>"
     "</ul>"
-    "<h2>Transparency</h2>"
-    "<p>The whole stack — specs, pipeline, API and frontend — is open source at "
-    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>; '
-    "the catalogue content is MIT-licensed. Running costs about $60 a month (October 2026).</p>"
 )
 
 
 @router.get("/seo-proxy/legal")
 async def seo_legal():
-    """Bot-optimized legal page: operator, privacy and transparency facts."""
+    """Bot-optimized legal page: operator and privacy facts."""
     return HTMLResponse(
         _render_bot_html(
             title="Legal | anyplot.ai",
-            description="Legal notice, privacy policy, and transparency information for anyplot.ai",
+            description="Legal notice and privacy policy for anyplot.ai",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/legal",
             body=_LEGAL_BOT_BODY,
@@ -1320,34 +1326,79 @@ async def seo_mcp():
     )
 
 
-# Mirrors app/src/pages/AboutPage.tsx — the pipeline story is the page's
-# content; counts derive from the registry so they cannot drift.
+# Mirrors app/src/pages/AboutPage.tsx — who built the site, how, the pipeline
+# story, the stack (the page's table, one sentence per row) and the origin;
+# counts derive from the registry so they cannot drift. The page's palette
+# section has no copy here. The review's "more than thirty" is a floor on the
+# changes to prompts/quality-criteria.md after its first commit (35 when the
+# sentence was written); CI clones shallow, so no test counts them.
 _ABOUT_BOT_BODY = (
     "<h1>About anyplot</h1>"
     f"<p>anyplot.ai is a catalogue of plotting examples across {_LIBRARY_COUNT} libraries "
-    f"in {_LANGUAGE_LIST}. Plot ideas come from humans; AI drafts the specification, "
-    "generates code for every library, and reviews each implementation. Humans approve "
-    "specs and tune the rules.</p>"
+    f"in {_LANGUAGE_LIST}. Plot ideas come in as GitHub issues; AI drafts the specification, "
+    "generates code for every library, and reviews each implementation. I approve new specs "
+    "and tune the rules when something repeatedly fails.</p>"
+    "<h2>Who built it</h2>"
+    "<p>Markus Neusinger "
+    '(<a href="https://www.linkedin.com/in/markus-neusinger/">LinkedIn</a>, '
+    '<a href="https://github.com/MarkusNeusinger">GitHub</a>, '
+    '<a href="https://neusinger.com">neusinger.com</a>). I\'m a chart nerd. Physicist by training, '
+    "senior data analyst by trade. Since 2013 I have built data pipelines, models and the tools "
+    "around them, lately with AI agents doing the legwork. I know the stack from building it by "
+    "hand: from 2022 to 2024 I built and ran a platform for blockchain market data, largely without "
+    "AI. On anyplot the agents write the code; I decide, test and send back. I have built it alone "
+    "and in my own time since November 2025, in Visp, a small town in the Swiss Alps. I wanted one "
+    "place to find the right plot for my data.</p>"
+    "<h2>How it is built</h2>"
+    "<p>AI models write anyplot's code: the site, the API, and the agents behind Use with my data. I "
+    "decide what gets built, cut the work into tasks and give each one to Claude Code, Claude in "
+    "GitHub Actions, Gemini or Copilot, depending on what it needs and what it costs. I test what "
+    "comes back and send it back until it's right. Outside the plot pipeline the agents merge "
+    "nothing without my OK, and what I correct becomes a rule they follow. More on GitHub: "
+    '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot">'
+    "How I build anyplot</a> and "
+    '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#engineering-highlights">'
+    "Engineering highlights</a> in the README, and the whole story in "
+    '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/ai-workflow.md">'
+    "How anyplot is built with AI agents</a>.</p>"
     "<h2>Pipeline</h2>"
-    "<p>idea → spec (AI-drafted, human-approved) → code (AI-generated per library) → "
-    "review (AI-evaluated). When a library ships a new release the pipeline re-runs; when a "
-    "better example pattern emerges the spec is updated and every library regenerates. "
-    "Generated code is never patched by hand.</p>"
+    "<p>The pipeline runs on its own schedule, by rules I set. Every night a job regenerates the "
+    "oldest implementations, and a new version replaces the live one only with no regression, a "
+    "score at most a point lower and a fix the review can verify; a code conversion for the chat "
+    "passes on an unchanged picture instead. When a better example pattern emerges, I update the "
+    "spec and regenerate its libraries. I don't fix a plot by editing its code: a patch fixes one "
+    "plot, a fix to the spec or a rule reaches every plot it governs when that plot is next "
+    "regenerated.</p>"
+    "<p>idea → a GitHub issue; spec → AI drafts, I approve; code → AI writes (per library); "
+    "review → AI scores (24 criteria); fix → AI repairs (up to 4 times); rules → I set and "
+    "change them.</p>"
     "<h2>Review</h2>"
     "<p>Every implementation is scored before it ships. Automated checks come first: the code "
-    "runs, the image isn't blank, the canvas has its size. Then an AI reviewer scores the render "
+    "runs, the canvas has its size. Then an AI reviewer scores the render "
     "on a 100-point rubric of 24 criteria (visual quality, design, spec compliance, data quality, "
-    "code quality, and library mastery), blind to any earlier score. A first review needs 90; "
-    "below that, AI repairs the defects the review named and the plot is reviewed again, up to "
-    'four times. The <a href="https://anyplot.ai/stats">stats page</a> shows the score '
-    "distribution per library.</p>"
+    "code quality, and library mastery), with the stored score kept out of its working tree and its "
+    "prompt. A first review needs 90; below that, AI repairs the defects the review named and the "
+    "plot is reviewed again, up to four times, and the bar drops 10 points per repair, "
+    "to 50 at the last review. What counts as a good plot is my call; AI helped turn it into 24 "
+    "criteria and their points. The rubric isn't fixed: it has changed more than thirty times since November 2025, for "
+    "example after a review passed a plot whose title was cut off. The "
+    '<a href="https://anyplot.ai/stats">stats page</a> shows the score distribution per library.</p>'
     "<h2>Use with my data</h2>"
-    "<p>Experimental, open to everyone since 2 November 2026. "
-    '<a href="https://anyplot.ai/plots">Pick any plot</a>, choose .use_my_data(), and paste your '
-    "data. An agent adapts that plot's code to your columns, renders it in a sandbox with no "
+    "<p>Experimental, open to everyone since November 2026. "
+    '<a href="https://anyplot.ai/plots">Pick any plot</a>, choose .use_my_data() on its page, and '
+    "paste your data. An agent adapts that plot's code to your columns, renders it in a sandbox with no "
     "network access, reviews the render against the catalogue's rubric, repairs it once if "
     "needed, and hands back the image and the code. Your chat and data live only in server "
     "memory and are deleted after an hour idle, unless you send feedback.</p>"
+    "<p>One agent talks to you, an adapter writes the code changes, and a reviewer scores the "
+    "render; the loop that calls them is plain code. A validator reads the code before anything "
+    "runs, and code decides from the reviewer's points whether a repair is due: one repair and two "
+    "reviews at most. What the review still finds comes back as notes with the plot. My rules: open "
+    "to everyone, no login, hosted in the EU, and I keep what you paste or write only if you send "
+    "feedback. By those rules I decided which model answers, where the code it writes runs, and "
+    "what the usage logs may hold; "
+    '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/agent-network.md">'
+    "the design document on GitHub</a> records these decisions with their dates.</p>"
     "<h2>MCP server</h2>"
     "<p>The same catalogue, served to AI coding assistants over the Model Context Protocol. Six "
     "tools search specs by tag, return a spec with its implementations, and fetch one library's "
@@ -1355,10 +1406,33 @@ _ABOUT_BOT_BODY = (
     'on the <a href="https://anyplot.ai/mcp">MCP page</a>; the '
     '<a href="https://anyplot.ai/stats">stats page</a> shows, per day, how many assistants and '
     "crawlers read the catalogue and how many came on behalf of a person.</p>"
+    '<h2 id="transparency">Transparency</h2>'
+    "<p>The site runs on React 19, Vite, MUI 9 with MUI X and TypeScript. The API runs on Python 3.14, "
+    "FastAPI, SQLAlchemy and PostgreSQL 18. The catalogue pipeline runs on GitHub Actions with Claude "
+    "Code. The data assistant runs on Google ADK and Claude Haiku 5.5 via Vertex AI (EU), and renders "
+    "plots in Cloud Run sandboxes (gVisor). On Google Cloud: Cloud Run, Cloud SQL, Cloud Storage, Cloud "
+    "Logging, BigQuery, Cloud Build and Artifact Registry in the Netherlands (europe-west4), plus Secret "
+    "Manager and Cloud Monitoring. At the edge and for analytics: Cloudflare, and Plausible with no "
+    "cookies and a public dashboard. For reviews: Gemini via Vertex AI for second opinions and GitHub "
+    "Copilot for pull requests. Checks: tests and lint on every pull request that changes Python or "
+    "frontend code outside the plot catalogue, an 80 % patch-coverage target, CodeQL, every migration "
+    "run on a throwaway PostgreSQL, and by rule a check of the live site after a merge. Editor and "
+    "typography: JetBrains PyCharm, MonoLisa by Marcus Sterz, and "
+    "JetBrains Mono 2.304 (SIL Open Font License 1.1) for the attribution strip under plots created "
+    "from your own data.</p>"
+    "<p>The whole stack — specs, pipeline, API and frontend — is open source under the MIT License at "
+    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>. '
+    "Running costs about $75 a month (as of November 2026).</p>"
+    "<h2>Origin</h2>"
+    "<p>It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples. It grew "
+    "out of everyday work: showing colleagues a chart instead of explaining it at length. They, and "
+    "later people who found it online, wanted two things from it: ideas for which plot fits their "
+    "data, and to get to know libraries they hadn't used yet, since each has its own strengths. "
+    "After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai. "
+    "Today it covers fifteen libraries in four languages, and one colourblind-safe palette travels "
+    "across all of them.</p>"
     "<h2>Open</h2>"
-    "<p>Source, specs and pipeline live at "
-    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a> '
-    '(MIT). Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
+    '<p>Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
     "propose a new plot type via a "
     '<a href="https://github.com/MarkusNeusinger/anyplot/issues/new?labels=spec-request">spec request</a>.</p>'
 )
@@ -1370,7 +1444,10 @@ async def seo_about():
     return HTMLResponse(
         _render_bot_html(
             title="About | anyplot.ai",
-            description="About anyplot.ai — library-agnostic, AI-powered plotting.",
+            description=(
+                "About anyplot.ai: built by Markus Neusinger with AI agents he directs. How the "
+                "catalogue is written and reviewed, the stack, and what it costs to run."
+            ),
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/about",
             body=_ABOUT_BOT_BODY,
@@ -1398,7 +1475,7 @@ AGENT_INTRO_DESCRIPTION = (
 )
 # The explainer's paragraph is the description between the opening sentence and
 # the two after it, the model's and the closing one.
-AGENT_INTRO_OPENING = "experimental, open to everyone since november 2026."
+AGENT_INTRO_OPENING = "experimental, open to everyone since November 2026."
 # The provider and the location as the legal page states them; they hold where the
 # agents service is deployed (agents/cloudbuild.yaml) and configured (agents/anyplot/settings.py).
 AGENT_INTRO_MODEL = "the model is Claude by Anthropic, served through Google Cloud Vertex AI in the EU."
@@ -1486,7 +1563,7 @@ async def seo_agent():
 _PALETTE_SLOT_NAMES = ("green", "lavender", "blue", "ochre", "red", "cyan", "rose", "lime")
 _PALETTE_BOT_BODY = (
     "<h1>imprint — the anyplot palette</h1>"
-    "<p>A colorblind-safe categorical palette of 8 hues plus 3 semantic anchors, tuned for "
+    "<p>A colourblind-safe categorical palette of 8 hues plus 3 semantic anchors, tuned for "
     "warm-paper rendering and validated against deuteranopia, protanopia and tritanopia. "
     "Every plot in the catalogue uses it.</p>"
     "<h2>Categorical hues (slot order)</h2>"
@@ -1515,7 +1592,7 @@ async def seo_palette():
     return HTMLResponse(
         _render_bot_html(
             title="imprint palette | anyplot.ai",
-            description="Imprint — a colorblind-safe categorical palette of 8 hues plus 3 semantic anchors (amber, neutral, muted). Tuned for warm-paper rendering, validated against deuteranopia / protanopia / tritanopia. The palette every plot on anyplot.ai uses.",
+            description="Imprint — a colourblind-safe categorical palette of 8 hues plus 3 semantic anchors (amber, neutral, muted). Tuned for warm-paper rendering, validated against deuteranopia / protanopia / tritanopia. The palette every plot on anyplot.ai uses.",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/palette",
             body=_PALETTE_BOT_BODY,

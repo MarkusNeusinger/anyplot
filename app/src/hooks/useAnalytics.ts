@@ -143,16 +143,64 @@ function firstUseThisVisit(feature: UiFeature, now: number): boolean {
   return !featuresThisVisit.has(feature);
 }
 
-/** How long a search query may be when it is sent: catalogue words fit, a pasted text does not. */
+/**
+ * How long a search text may be, in characters, when the gallery compares it or sends a miss to
+ * the private list: catalogue words fit, a text pasted by mistake does not.
+ */
 export const MAX_QUERY_LENGTH = 40;
 
+// The typographic marks that stand for the plain ones (the curly apostrophes; the hyphen, the
+// non-breaking hyphen, the minus sign, the en and the em dash), and the soft hyphen, which shows as
+// nothing and comes with a word copied from a page: it is dropped rather than refusing the word.
+// By code point; a search with any of them is the same search.
+const TYPOGRAPHIC: Record<string, string> = Object.fromEntries(
+  (
+    [
+      [0x2018, "'"],
+      [0x2019, "'"],
+      [0x2010, '-'],
+      [0x2011, '-'],
+      [0x2212, '-'],
+      [0x2013, '-'],
+      [0x2014, '-'],
+      [0x00ad, ''],
+    ] as const
+  ).map(([code, plain]) => [String.fromCodePoint(code), plain])
+);
+
 /**
- * A typed search query as it is sent: lowercase, single spaces, cut at `MAX_QUERY_LENGTH`. The
- * public dashboard lists these, so "Scatter", "scatter " and "SCATTER" are one entry, and a
- * long text a visitor pasted by mistake does not stand there in full.
+ * A typed search text in one form, not yet cut: compatibility forms folded (Unicode form NFKC: a
+ * fullwidth bracket becomes the plain one, a superscript two a 2, a ligature its letters),
+ * lowercase, the curly apostrophes, the hyphens, the minus sign and the dashes made the plain ones
+ * and a soft hyphen dropped, folded again (a small letter can have a composed form its capital
+ * lacks, and a letter and its mark that a soft hyphen kept apart join), single spaces. The map
+ * comes before the second fold, so folding a folded text changes nothing. "Scatter", "scatter "
+ * and "SCATTER" are one text, and so is a word typed with a composed or a decomposed accent. The
+ * API folds the same way (`fold_query` in `api/search_misses.py`); the cases in
+ * `searchQuery.cases.json` hold the two to each other.
+ */
+export function foldQuery(query: string): string {
+  const lowered = query.normalize('NFKC').toLowerCase();
+  const plain = Array.from(lowered, char => TYPOGRAPHIC[char] ?? char).join('');
+  return plain.normalize('NFKC').trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * A folded text cut at `MAX_QUERY_LENGTH` characters, a space at the cut dropped: a long pasted
+ * text is not kept in full. The cut counts characters, not UTF-16 units, so it never splits one
+ * in two (`cut_query` in the API).
+ */
+export function cutQuery(folded: string): string {
+  return Array.from(folded).slice(0, MAX_QUERY_LENGTH).join('').trimEnd();
+}
+
+/**
+ * A typed search text in the one form the search's own bookkeeping and the private list of misses
+ * use: folded and cut (`normalize_query` in the API). Which text a row keeps is decided on the
+ * whole folded text first (`keptMissText` in `src/lib/searchMiss.ts`).
  */
 export function normalizeQuery(query: string): string {
-  return query.toLowerCase().trim().replace(/\s+/g, ' ').slice(0, MAX_QUERY_LENGTH).trimEnd();
+  return cutQuery(foldQuery(query));
 }
 
 /** The kinds of page a pageview is recorded as, in its `page` property. */
@@ -255,8 +303,11 @@ export function buildPlausibleUrl(): string {
     : `${ORIGIN}${pathPrefix || '/'}`;
 }
 
-/** Whether this is the live site: a preview, a local build and a test send nothing. */
-function inProduction(): boolean {
+/**
+ * Whether this is the live site: a preview, a local build and a test send nothing, to Plausible
+ * or to the private list of search misses.
+ */
+export function inProduction(): boolean {
   return typeof window !== 'undefined' && window.location.hostname === 'anyplot.ai';
 }
 

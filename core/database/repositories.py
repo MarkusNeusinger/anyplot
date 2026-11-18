@@ -7,7 +7,7 @@ Provides abstraction layer between API and database models.
 from datetime import date, datetime, timezone
 from typing import Any, Generic, TypeVar
 
-from sqlalchemy import ColumnElement, String, and_, case, cast, func, or_, select, text, type_coerce, update
+from sqlalchemy import ColumnElement, String, and_, case, cast, delete, func, or_, select, text, type_coerce, update
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, selectinload, undefer
 
 from core.constants import LIBRARY_LANGUAGES
-from core.database.models import AgentFeedback, Feedback, Impl, Language, Library, LinkShare, Spec
+from core.database.models import AgentFeedback, Feedback, Impl, Language, Library, LinkShare, SearchMiss, Spec
 from core.plot_votes import PLOT_VOTE_REACTIONS, VOTE_SORTS, naive_utc
 
 
@@ -449,8 +449,8 @@ class FeedbackRepository(BaseRepository[Feedback]):
     async def clear_ip_hashes(self, prefix: str, before: datetime) -> int:
         """Null the `ip_hash` of every row created before `before` whose hash starts with `prefix`; the count.
 
-        The feedback router stores a per-process salted hash (`api/routers/feedback.py`
-        `_hash_ip`) only for its rate-limit and duplicate windows and clears it here once
+        The feedback router stores a per-process salted hash (`api/request_context.py`
+        `hash_ip`) only for its rate-limit and duplicate windows and clears it here once
         they have passed. `prefix` keeps the statement to the hashes of that scheme; the
         unsalted hashes of older rows were cleared once by hand on 2026-11-02 after a
         snapshot, so no migration is needed.
@@ -995,3 +995,98 @@ class LinkShareRepository:
             .limit(limit)
         )
         return [(name, int(total)) for name, total in result.all()]
+
+
+class SearchMissRepository:
+    """The search-miss counters: one upsert per miss, the owner's list and delete, and the retention purge.
+
+    No `BaseRepository`: a row has no id of its own, its day and text are the key.
+    """
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def count(self, *, day: date, query: str, max_new_per_day: int) -> bool:
+        """Add one search of *query* to its counter of *day*; whether it was counted. The caller commits.
+
+        A text that already has a row that day always counts. A new text gets a row only while the
+        day holds fewer than *max_new_per_day* texts, so a flood of junk can fill one day's list but
+        no more. The upsert is one `INSERT ... ON CONFLICT DO UPDATE` on the primary key, as
+        `LinkShareRepository.count` writes it, so two equal searches in the same instant both count.
+        The day's size is read in a statement before it, so the bound is not exact: the writes that
+        sit between the two statements at the moment the day fills each still add their text. The
+        API lets two writes run at once per instance (`WRITE_CONNECTIONS` in `api/search_misses.py`),
+        so a day ends at most one text over per instance. The cap bounds how far a flood can grow
+        the table; it is not a count anything else relies on.
+        """
+        texts = await self.session.scalar(select(func.count()).select_from(SearchMiss).where(SearchMiss.day == day))
+        if int(texts or 0) < max_new_per_day:
+            insert = postgresql_insert if self.session.get_bind().dialect.name == "postgresql" else sqlite_insert
+            statement = insert(SearchMiss).values(day=day, query=query, count=1)
+            await self.session.execute(
+                statement.on_conflict_do_update(
+                    index_elements=[SearchMiss.day, SearchMiss.query], set_={"count": SearchMiss.count + 1}
+                )
+            )
+            return True
+        known = await self.session.execute(
+            update(SearchMiss)
+            .where(SearchMiss.day == day, SearchMiss.query == query)
+            .values(count=SearchMiss.count + 1)
+        )
+        return known.rowcount == 1
+
+    async def delete_before(self, cutoff: date) -> int:
+        """Delete every row of a day before *cutoff*, in one statement; the number of rows. The caller commits."""
+        result = await self.session.execute(delete(SearchMiss).where(SearchMiss.day < cutoff))
+        return int(getattr(result, "rowcount", 0) or 0)
+
+    async def totals(
+        self, since: date, *, limit: int, offset: int = 0, order: str = "count"
+    ) -> list[tuple[str, int, date, date]]:
+        """The texts of the days from *since* on: (query, count, first day, last day).
+
+        `count` puts the most searched first, a tie to the text searched more recently; `recent` puts
+        the text searched most recently first, a tie to the more searched. Then by the text, so the
+        order is stable and the pages of *limit* texts from *offset* on neither repeat nor skip one.
+        """
+        total = func.sum(SearchMiss.count)
+        last_day = func.max(SearchMiss.day)
+        keys = (last_day.desc(), total.desc()) if order == "recent" else (total.desc(), last_day.desc())
+        result = await self.session.execute(
+            select(SearchMiss.query, total, func.min(SearchMiss.day), last_day)
+            .where(SearchMiss.day >= since)
+            .group_by(SearchMiss.query)
+            .order_by(*keys, SearchMiss.query)
+            .offset(offset)
+            .limit(limit)
+        )
+        return [(query, int(count), first, last) for query, count, first, last in result.all()]
+
+    async def full_days(self, since: date, cap: int) -> list[date]:
+        """The days from *since* on that hold *cap* texts or more, newest first: on those a new text was dropped."""
+        result = await self.session.execute(
+            select(SearchMiss.day)
+            .where(SearchMiss.day >= since)
+            .group_by(SearchMiss.day)
+            .having(func.count() >= cap)
+            .order_by(SearchMiss.day.desc())
+        )
+        return list(result.scalars().all())
+
+    async def delete_day(self, day: date) -> int:
+        """Delete every row of *day*, whatever its text; the number of rows. The caller commits."""
+        result = await self.session.execute(delete(SearchMiss).where(SearchMiss.day == day))
+        return int(getattr(result, "rowcount", 0) or 0)
+
+    async def distinct_since(self, since: date) -> int:
+        """How many different texts the days from *since* on hold."""
+        texts = await self.session.scalar(
+            select(func.count(func.distinct(SearchMiss.query))).where(SearchMiss.day >= since)
+        )
+        return int(texts or 0)
+
+    async def delete_query(self, query: str) -> int:
+        """Delete every row of *query*, whatever its day; the number of rows. The caller commits."""
+        result = await self.session.execute(delete(SearchMiss).where(SearchMiss.query == query))
+        return int(getattr(result, "rowcount", 0) or 0)

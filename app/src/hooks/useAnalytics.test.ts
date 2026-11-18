@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setAnalyticsMuted } from 'src/analytics/mute';
 import { noteStayInput, setStayActive, STAY_MS } from 'src/analytics/stay';
+import searchQueryCases from 'src/hooks/searchQuery.cases.json';
 import {
   buildPlausibleUrl,
   forgetLastPageview,
@@ -376,24 +377,18 @@ describe('useAnalytics', () => {
   });
 
   describe('normalizeQuery', () => {
-    it.each([
-      ['Scatter', 'scatter'],
-      ['  scatter  ', 'scatter'],
-      ['SCATTER   Plot', 'scatter plot'],
-      ['box\tplot\nmatplotlib', 'box plot matplotlib'],
-      ['', ''],
-      ['   ', ''],
-    ])('sends %j as %j', (typed, sent) => {
-      expect(normalizeQuery(typed)).toBe(sent);
-    });
+    // The API's `normalize_query` reads the same cases (tests/unit/api/test_search_misses.py).
+    it.each(searchQueryCases.cases.map(item => [item.rule, item] as const))(
+      'keeps the rule: %s',
+      (_rule, item) => {
+        expect(normalizeQuery(item.typed)).toBe(item.sent);
+      }
+    );
 
-    it('cuts a long text at 40 characters and leaves no space at the cut', () => {
-      const pasted = 'dear team, please find attached the quarterly numbers for the board';
-      const sent = normalizeQuery(pasted);
-      expect(MAX_QUERY_LENGTH).toBe(40);
-      expect(sent).toBe('dear team, please find attached the quar');
-      expect(sent.length).toBeLessThanOrEqual(MAX_QUERY_LENGTH);
-      expect(normalizeQuery(`${'a'.repeat(39)} bcd`)).toBe('a'.repeat(39));
+    it('cuts at the length the API keeps, counted in characters', () => {
+      expect(MAX_QUERY_LENGTH).toBe(searchQueryCases.max_length);
+      // Forty whole characters: a cut in UTF-16 units would keep twenty and a half.
+      expect(normalizeQuery('😀'.repeat(45))).toBe('😀'.repeat(MAX_QUERY_LENGTH));
     });
   });
 

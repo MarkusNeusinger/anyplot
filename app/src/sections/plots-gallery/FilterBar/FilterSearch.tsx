@@ -7,6 +7,7 @@ import InputBase from '@mui/material/InputBase';
 import Tooltip from '@mui/material/Tooltip';
 
 import { normalizeQuery, type TrackEvent } from 'src/hooks/useAnalytics';
+import { MISS_PAUSE_MS, reportSearchMiss } from 'src/lib/searchMiss';
 import { type DropdownItem, FilterMenu } from 'src/sections/plots-gallery/FilterBar/FilterMenu';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
@@ -59,6 +60,30 @@ export function FilterSearch({
   // Dropdown keyboard navigation
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
+  // The finished text of a search that found nothing in the whole catalogue, waiting for the
+  // pause after the last keystroke (see the effect below `hiddenMatchCount`). Read and cleared
+  // synchronously by every way out of the search, before that way clears the text: the pause and
+  // a blur report it (`flushMiss`); the clear cross, Escape and "← back" are how a visitor throws
+  // a text away, and drop it (`dropMiss`), and so does a gallery that goes away with the text
+  // still pending, which is a visitor leaving mid-typing. Reporting is the one moment a miss
+  // is both counted at Plausible (`search_no_results`, without the text) and sent to the private
+  // list (`reportSearchMiss`): a fragment or a thrown-away text is neither.
+  const pendingMissRef = useRef<string | null>(null);
+  // The sender of the events, read when a miss is reported: `flushMiss` stays the same function,
+  // so the effects that hold it do not run again when the parent passes a new sender.
+  const trackEventRef = useRef(onTrackEvent);
+  useEffect(() => {
+    trackEventRef.current = onTrackEvent;
+  }, [onTrackEvent]);
+  const flushMiss = useCallback(() => {
+    const query = pendingMissRef.current;
+    pendingMissRef.current = null;
+    if (query) reportSearchMiss(query, () => trackEventRef.current('search_no_results'));
+  }, []);
+  const dropMiss = useCallback(() => {
+    pendingMissRef.current = null;
+  }, []);
+
   // Expand and open dropdown
   const handleSearchExpand = useCallback(() => {
     setIsSearchManuallyExpanded(true);
@@ -68,22 +93,63 @@ export function FilterSearch({
 
   // Collapse when empty and loses focus (only if there are filters)
   const handleSearchBlur = useCallback(() => {
+    // A visitor who leaves the field is done typing: a pending miss goes now.
+    flushMiss();
     // Delay to allow click events on dropdown to fire first
     setTimeout(() => {
       if (!searchQuery && !selectedCategory && !dropdownAnchor && activeFilters.length > 0) {
         setIsSearchManuallyExpanded(false);
       }
     }, 200);
-  }, [searchQuery, selectedCategory, dropdownAnchor, activeFilters.length]);
+  }, [flushMiss, searchQuery, selectedCategory, dropdownAnchor, activeFilters.length]);
 
-  // Close dropdown and collapse if empty
+  // Close dropdown and collapse if empty. Escape drops a pending miss before it gets here (see
+  // `handleKeyDown`); every other way sends it.
   const handleDropdownClose = useCallback(() => {
+    flushMiss();
     setDropdownAnchor(null);
     setSelectedCategory(null);
     setSearchQuery('');
     setHighlightedIndex(-1);
     setIsSearchManuallyExpanded(false);
-  }, []);
+  }, [flushMiss]);
+
+  // The clear cross: drops the pending text with what was typed, and leaves the menu open on
+  // the categories.
+  const crossRef = useRef<SVGSVGElement>(null);
+  const handleClear = useCallback(() => {
+    dropMiss();
+    setSearchQuery('');
+    setSelectedCategory(null);
+  }, [dropMiss]);
+
+  // While the menu is open its invisible backdrop covers the page, the field and the cross
+  // included, so a press on the cross arrives here as a press on the backdrop. The backdrop
+  // keeps the focus on its press (`FilterMenu`), so nothing has been sent yet: a press inside
+  // the cross's box is the clear cross, any other press is a loss of focus, which sends a
+  // pending miss and leaves the field as before.
+  const handleMenuClose = useCallback(
+    (event: object, reason: 'backdropClick' | 'escapeKeyDown' | 'tabKeyDown') => {
+      const box = crossRef.current?.getBoundingClientRect();
+      const press = event as { clientX?: number; clientY?: number };
+      const onCross =
+        reason === 'backdropClick' &&
+        box !== undefined &&
+        press.clientX !== undefined &&
+        press.clientY !== undefined &&
+        press.clientX >= box.left &&
+        press.clientX <= box.right &&
+        press.clientY >= box.top &&
+        press.clientY <= box.bottom;
+      if (onCross) {
+        handleClear();
+        return;
+      }
+      handleDropdownClose();
+      if (reason === 'backdropClick') inputRef.current?.blur();
+    },
+    [handleClear, handleDropdownClose, inputRef]
+  );
 
   // Select category from dropdown
   const handleCategorySelect = useCallback(
@@ -100,10 +166,10 @@ export function FilterSearch({
   const handleValueSelect = useCallback(
     (category: FilterCategory, value: string) => {
       onAddFilter(category, value);
-      // Track search if query was used (filter changes tracked via pageview)
-      const query = normalizeQuery(searchQuery);
-      if (query) {
-        onTrackEvent('search', { query, category });
+      // A pick from a typed search, by its category (filter changes are tracked via pageview).
+      // What was typed never goes to the public dashboard.
+      if (normalizeQuery(searchQuery)) {
+        onTrackEvent('search', { category });
       }
       setSelectedCategory(null);
       setSearchQuery('');
@@ -120,9 +186,10 @@ export function FilterSearch({
 
   // Back from a selected category to the category list
   const handleBackToCategories = useCallback(() => {
+    dropMiss();
     setSelectedCategory(null);
     setSearchQuery('');
-  }, []);
+  }, [dropMiss]);
 
   // Memoize search results to avoid recalculating on every render
   const searchResults = useMemo(
@@ -156,26 +223,38 @@ export function FilterSearch({
     }, 50);
   }, [onClearFilters, inputRef]);
 
-  // Track searches with no results (debounced, to discover missing specs)
-  const lastTrackedQueryRef = useRef<string>('');
-  useEffect(() => {
-    const query = normalizeQuery(searchQuery);
-    // Only track if: query >= 2 chars, no results, not already tracked this query
-    if (query.length >= 2 && searchResults.length === 0 && query !== lastTrackedQueryRef.current) {
-      const timer = setTimeout(() => {
-        onTrackEvent('search_no_results', { query });
-        lastTrackedQueryRef.current = query;
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [searchQuery, searchResults.length, onTrackEvent]);
+  // Whether the text finds nothing anywhere in the catalogue: not in the filtered plots, not in
+  // all of them, and in no category, the selected one or another. Only such a text is a miss for
+  // the private list. Unknown, and so no miss, until the global counts have loaded.
+  const missesCatalogue = useMemo(() => {
+    if (searchResults.length > 0 || hiddenMatchCount > 0 || !globalCounts) return false;
+    const folded = normalizeQuery(searchQuery);
+    if (!folded) return false;
+    // What would be sent is the folded text (a fullwidth word becomes the plain one), so it has
+    // to find nothing either: the list must never name a word the catalogue has.
+    return [searchQuery, folded].every(
+      text => getSearchResults(globalCounts, [], text, null, specTitles).length === 0
+    );
+  }, [searchResults.length, hiddenMatchCount, globalCounts, searchQuery, specTitles]);
 
-  // Reset tracked query when dropdown closes
+  // A miss goes to the private list only as a finished text: once no key was pressed for
+  // MISS_PAUSE_MS, or when the field loses focus or the search closes before that (`flushMiss`).
+  // A fragment typed on within MISS_PAUSE_MS never goes: the next keystroke replaces it.
+  // The typed text waits, not its first 40 characters: the report judges the whole of it before it
+  // is cut (`keptMissText`).
   useEffect(() => {
-    if (!dropdownAnchor) {
-      lastTrackedQueryRef.current = '';
+    if (!missesCatalogue || !normalizeQuery(searchQuery)) {
+      pendingMissRef.current = null;
+      return;
     }
-  }, [dropdownAnchor]);
+    pendingMissRef.current = searchQuery;
+    const timer = setTimeout(flushMiss, MISS_PAUSE_MS);
+    return () => clearTimeout(timer);
+  }, [searchQuery, missesCatalogue, flushMiss]);
+
+  // A text still pending when the gallery goes away was neither paused on nor left by a blur: the
+  // visitor went back or on within the pause, so it may be a fragment, and it is dropped.
+  useEffect(() => dropMiss, [dropMiss]);
 
   // Only open if anchor is valid and in document
   const isDropdownOpen = Boolean(dropdownAnchor) && document.body.contains(dropdownAnchor);
@@ -237,6 +316,8 @@ export function FilterSearch({
           }
         }
       } else if (event.key === 'Escape') {
+        // Escape throws the text away: dropped before the close and the blur could send it.
+        dropMiss();
         handleDropdownClose();
         inputRef.current?.blur();
       }
@@ -248,6 +329,7 @@ export function FilterSearch({
       handleValueSelect,
       handleSearchAll,
       handleDropdownClose,
+      dropMiss,
       inputRef,
     ]
   );
@@ -321,6 +403,8 @@ export function FilterSearch({
             inputRef={inputRef}
             id="filter-search"
             name="filter-search"
+            // No fill from the browser or a password manager: what lands here may be sent.
+            autoComplete="off"
             inputProps={{
               'aria-label': selectedCategory
                 ? `Search ${FILTER_LABELS[selectedCategory]}`
@@ -366,10 +450,14 @@ export function FilterSearch({
           />
           {isSearchExpanded && (searchQuery || selectedCategory) && (
             <CloseIcon
+              ref={crossRef}
+              // While the menu is open a press here reaches the menu's backdrop instead
+              // (`handleMenuClose`); this covers a press the cross receives itself. Its default
+              // is kept from moving the focus: a blur would send the text this press throws away.
+              onMouseDown={e => e.preventDefault()}
               onClick={e => {
                 e.stopPropagation();
-                setSearchQuery('');
-                setSelectedCategory(null);
+                handleClear();
               }}
               sx={{
                 color: 'var(--ink-muted)',
@@ -395,7 +483,7 @@ export function FilterSearch({
         hiddenMatchCount={hiddenMatchCount}
         dropdownItems={dropdownItems}
         highlightedIndex={highlightedIndex}
-        onClose={handleDropdownClose}
+        onClose={handleMenuClose}
         onCategorySelect={handleCategorySelect}
         onValueSelect={handleValueSelect}
         onSearchAll={handleSearchAll}

@@ -30,11 +30,11 @@ describe('PaletteGridSection', () => {
       'true'
     );
     expect(
-      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colorblindness)' })
+      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colour blindness)' })
     ).toHaveAttribute('aria-pressed', 'false');
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colorblindness)' })
+      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colour blindness)' })
     );
     expect(setSort).toHaveBeenCalledWith('cvd');
 
@@ -53,7 +53,7 @@ describe('PaletteGridSection', () => {
 
     expect(screen.getByText(/why use CVD-optimal sort\?/i)).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colorblindness)' })
+      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colour blindness)' })
     ).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'imprint (default)' })).toHaveAttribute(
       'aria-pressed',

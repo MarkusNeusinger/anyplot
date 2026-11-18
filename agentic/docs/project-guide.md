@@ -865,7 +865,7 @@ uv run python -m automation.scripts.label_manager list
 - **Failure**: < 50 after 4 repairs -> close PR and regenerate
 - **Nothing to repair**: a review below its threshold with a score >= 80, no defect line and every technical criterion (VQ, SC, DQ, CQ) at its maximum -> ai-approved as it stands
 - **During a review** the stored score and review are out of the working tree (the header reads `Quality: pending`, the metadata file is moved aside); the branch history and the pull request still hold them (see `docs/workflows/overview.md`, "Quality workflow")
-- **Regenerations** skip the cascade: one review, and the regen gate (`automation/scripts/regen_gate.py`) replaces the live implementation only when the new score >= the predecessor re-scored in the same review - 1, at least one improvement is visible, and nothing regressed. `regen_gate=false` on `impl-generate.yml` / `bulk-generate.yml` forces the old path (`regen:forced`), and so does adopt mode (`source_ref`).
+- **Regenerations** skip the cascade: one review, and the regen gate (`automation/scripts/regen_gate.py`) replaces the live implementation only when nothing regressed, the new score is at most a point below the predecessor re-scored in the same review, and a visible improvement fixes a defect (or the regeneration fixes a code defect the previous review named). A Python conversion to the adaptable-code convention passes on an unchanged render instead. The full conditions are in `docs/workflows/overview.md`, "Regen gate (regenerations)". `regen_gate=false` on `impl-generate.yml` / `bulk-generate.yml` forces the old path (`regen:forced`), and so does adopt mode (`source_ref`).
 
 ### Quality Score Labels
 
