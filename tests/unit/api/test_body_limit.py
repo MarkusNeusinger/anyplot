@@ -594,18 +594,22 @@ class TestLargeBodies:
 
 
 class Trickle:
-    """A request body that arrives in parts with a pause before each, or never: a declared length and no bytes."""
+    """A request body that arrives in parts with a pause before each, or never: a declared length and no bytes.
+    With `stops_after`, that many parts arrive and then nothing more does."""
 
-    def __init__(self, parts: int, size: int, pause_s: float) -> None:
+    def __init__(self, parts: int, size: int, pause_s: float, stops_after: int | None = None) -> None:
         self.parts = parts
         self.size = size
         self.pause_s = pause_s
+        self.stops_after = stops_after
         self.sent = 0
 
     async def __aiter__(self) -> AsyncIterator[bytes]:
         if not self.parts:
             await asyncio.Event().wait()
         for _ in range(self.parts):
+            if self.sent == self.stops_after:
+                await asyncio.Event().wait()
             await asyncio.sleep(self.pause_s)
             self.sent += 1
             yield b"a" * self.size
@@ -620,7 +624,8 @@ class TestTheTimeOfALargeBody:
     counted = TestLargeBodies.counted
 
     async def test_a_body_that_never_comes_gives_its_place_back(self, recorder) -> None:
-        middleware, places = self.counted(recorder, stall_s=0.05, body_s=5)
+        # The whole-body limit lies far beyond the test's own waits: only the wait for a part can end these.
+        middleware, places = self.counted(recorder, stall_s=0.05, body_s=60)
         declared = {"Content-Length": str(self.BIG)}
         async with client_for(middleware) as client:
             silent = [
@@ -635,6 +640,8 @@ class TestTheTimeOfALargeBody:
         assert first.status_code == second.status_code == 408
         assert first.json() == {"status": 408, "message": SLOW, "path": "/data/s1"}
         assert first.headers["cache-control"] == "private, no-store"
+        # The rest of the body may still come: the connection is closed with the answer, never read on.
+        assert first.headers["connection"] == "close"
         assert (own.status_code, own.json()) == (408, {"detail": "own_slow"})
         assert (after.status_code, after.json()) == (200, {"read": self.BIG})
         # Each request reached the application once, and only the last one's body did.
@@ -652,14 +659,86 @@ class TestTheTimeOfALargeBody:
         assert 0 < body.sent < 50
         assert places.taken == 0
 
-    async def test_a_slow_body_within_both_limits_is_taken_whole(self, recorder) -> None:
-        middleware, places = self.counted(recorder, stall_s=0.5, body_s=5)
-        body = Trickle(parts=10, size=self.BIG // 10, pause_s=0.02)
+    async def test_a_body_that_sends_one_part_and_stops_gives_its_place_back(self, recorder) -> None:
+        """The wait for a part goes on after the first one: a body that starts and then stops is ended by it, long
+        before the limit on the whole body would."""
+        middleware, places = self.counted(recorder, stall_s=0.05, body_s=60)
+        body = Trickle(parts=10, size=self.BIG // 10, pause_s=0, stops_after=1)
         async with client_for(middleware) as client:
             answer = await asyncio.wait_for(
                 client.post("/data/s1", content=body, headers={"Content-Length": str(self.BIG)}), 5
             )
+        assert answer.status_code == 408
+        assert body.sent == 1
+        assert places.taken == 0
+
+    async def test_a_slow_body_within_both_limits_is_taken_whole(self, recorder) -> None:
+        """The wait for a part starts anew with every part: this body takes longer in all than that wait allows
+        for one part, and every pause in it is shorter."""
+        middleware, places = self.counted(recorder, stall_s=0.3, body_s=30)
+        body = Trickle(parts=10, size=self.BIG // 10, pause_s=0.05)
+        started = asyncio.get_running_loop().time()
+        async with client_for(middleware) as client:
+            answer = await asyncio.wait_for(
+                client.post("/data/s1", content=body, headers={"Content-Length": str(self.BIG)}), 10
+            )
+        assert asyncio.get_running_loop().time() - started > 0.3
         assert (answer.status_code, answer.json()) == (200, {"read": self.BIG})
+        assert places.taken == 0
+
+    async def test_a_part_after_the_end_does_not_start_the_clock_again(self) -> None:
+        """A whole body stays whole: a server that hands over one more part after the last one must not put a
+        route that is already working back under the body's limits."""
+        parts = [
+            {"type": "http.request", "body": b"a" * self.BIG, "more_body": False},
+            {"type": "http.request", "body": b"", "more_body": True},
+        ]
+        never = asyncio.Event()
+
+        async def receive() -> dict:
+            if parts:
+                return parts.pop(0)
+            await never.wait()
+            raise AssertionError("unreachable")
+
+        sent: list[dict] = []
+
+        async def send(message: dict) -> None:
+            sent.append(message)
+
+        async def working_route(scope: Scope, receive: Receive, send: Send) -> None:
+            await receive()
+            await receive()
+            try:
+                async with asyncio.timeout(0.2):  # longer than both limits below
+                    await receive()
+            except TimeoutError:
+                pass
+            await JSONResponse({"worked": True})(scope, receive, send)
+
+        middleware, places = self.counted(working_route, stall_s=0.05, body_s=0.1)
+        scope = scope_of("/data/s1", headers=[(b"content-length", str(self.BIG).encode())])
+        await asyncio.wait_for(middleware(scope, receive, send), 5)
+        assert [message["status"] for message in sent if message["type"] == "http.response.start"] == [200]
+        assert places.taken == 0
+
+    async def test_a_timeout_of_the_servers_own_is_not_answered_as_a_slow_body(self, recorder) -> None:
+        """Only the limit's own wait running out is a slow body. Any other timeout is the server's fault, and it
+        must show as one."""
+
+        async def receive() -> dict:
+            raise TimeoutError("the server's own")
+
+        sent: list[dict] = []
+
+        async def send(message: dict) -> None:
+            sent.append(message)
+
+        middleware, places = self.counted(recorder)
+        scope = scope_of("/data/s1", headers=[(b"content-length", str(self.BIG).encode())])
+        with pytest.raises(TimeoutError, match="the server's own"):
+            await middleware(scope, receive, send)
+        assert sent == []
         assert places.taken == 0
 
     async def test_a_route_that_works_long_on_a_whole_body_is_not_hurried(self) -> None:

@@ -25,7 +25,7 @@ bound, not a replacement.
 A bound can also be marked `large`, for the few routes whose bodies are megabytes. Such bodies
 are taken a few at a time (`LargeBodies`), so that the memory they hold together stays small
 beside what the instance has. A request there has to declare its length, which settles its
-place before any of it is read.
+place before any of it is read, and a body that holds a place has to arrive in time.
 
 `GET`, `HEAD` and `OPTIONS` pass untouched. No route reads a body on them, and a body nobody
 reads is never handed to the application.
@@ -128,8 +128,11 @@ class Bound:
         return _refusal(503, BUSY, self.busy_detail, path)
 
     def slow(self, path: str) -> JSONResponse:
-        """The 408 of a large body that held a place and did not arrive in time."""
-        return _refusal(408, SLOW, self.slow_detail, path)
+        """The 408 of a large body that held a place and did not arrive in time. It asks for the connection to be
+        closed, as a 408 should: what is left of the body would otherwise be read as the next request."""
+        answer = _refusal(408, SLOW, self.slow_detail, path)
+        answer.headers["Connection"] = "close"
+        return answer
 
 
 class LargeBodies:
@@ -143,8 +146,9 @@ class LargeBodies:
     A place is taken on the length a request declares, before any of its body has arrived, so
     that the body is never read without one. A request could then hold a place by declaring a
     length and sending little or nothing. Two limits give the place back: `stall_s`, the longest
-    wait for the next part of the body, and `body_s`, the longest the whole body may take. Both
-    end with the body's last part; how long the route then works is the route's own matter.
+    wait for the next part of the body, counted anew after every part, and `body_s`, the longest
+    the whole body may take, counted from the moment the place is taken. Both end with the
+    body's last part; how long the route then works is the route's own matter.
 
     One process serves all requests on one event loop, so taking a place is a plain count with
     nothing awaited between the look and the step.
@@ -317,15 +321,18 @@ class BodyLimitMiddleware:
                 message = await receive()
             else:
                 try:
-                    async with asyncio.timeout(max(min(held.stall_s, whole_by - clock()), 0)):
+                    async with asyncio.timeout(max(min(held.stall_s, whole_by - clock()), 0)) as wait:
                         message = await receive()
                 except TimeoutError:
-                    logger.warning("a large request body did not arrive in time: its place is free again")
+                    if not wait.expired():
+                        raise  # the server's own, not this limit: never answered as a slow body
+                    logger.warning("a large request body did not arrive in time: its request is ended")
                     return await end(bound.slow(path))
             if message["type"] != "http.request":
                 return message
             received += len(message.get("body", b""))
-            whole = not message.get("more_body", False)
+            # Once whole, always whole: a stray part after the end never starts the clock again.
+            whole = whole or not message.get("more_body", False)
             if received <= limit:
                 return message
             return await end(bound.refusal(path))

@@ -1769,7 +1769,7 @@ The paste and the file conversion are the only routes whose bodies can be megaby
 
 - A request must declare a `Content-Length`. Without one it gets status 411 with `{"detail": "length_required"}`, unread.
 - Bodies above 64 KiB are taken a few at a time, across both routes and both lanes (`MAX_LARGE_BODIES` in `api/routers/agent.py`). While the places are taken, one more gets status 503 with `{"detail": "capacity"}` at once, unread, and can be sent again.
-- A body above 64 KiB has to arrive in time: no longer than `LARGE_BODY_STALL_S` without a part, and no longer than `LARGE_BODY_TOTAL_S` in all. Otherwise the request ends with status 408 and `{"detail": "upload_timeout"}`. The limits end with the body's last part; how long the route then works is its own matter.
+- A body above 64 KiB has to arrive in time: no longer than `LARGE_BODY_STALL_S` without a part, counted anew after every part, and no longer than `LARGE_BODY_TOTAL_S` in all, counted from the moment the request takes its place. Otherwise the request ends with status 408, `{"detail": "upload_timeout"}` and `Connection: close`. The limits end with the body's last part; how long the route then works is its own matter.
 
 A body of 64 KiB or less never needs a place and is not timed.
 
