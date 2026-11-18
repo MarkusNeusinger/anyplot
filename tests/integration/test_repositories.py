@@ -11,13 +11,14 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from core.database.models import LinkShare
+from core.database.models import LinkShare, SearchMiss
 from core.database.repositories import (
     AgentFeedbackRepository,
     FeedbackRepository,
     ImplRepository,
     LibraryRepository,
     LinkShareRepository,
+    SearchMissRepository,
     SpecRepository,
 )
 
@@ -1050,4 +1051,173 @@ class TestLinkShareRepository:
         assert await repo.top_libraries(since, until, without_platform="other", limit=2) == [
             ("matplotlib", 6),
             ("bokeh", 4),
+        ]
+
+
+class TestSearchMissRepository:
+    """The search-miss counters against a real engine: the upsert counts, the day's cap, the purge and the list."""
+
+    DAY = date(2026, 11, 17)
+
+    async def _rows(self, session) -> list[tuple]:
+        result = await session.execute(
+            select(SearchMiss.day, SearchMiss.query, SearchMiss.count).order_by(SearchMiss.day, SearchMiss.query)
+        )
+        return [tuple(row) for row in result.all()]
+
+    async def test_the_same_text_on_the_same_day_is_one_row_that_counts(self, test_session):
+        repo = SearchMissRepository(test_session)
+        for _ in range(3):
+            assert await repo.count(day=self.DAY, query="spider", max_new_per_day=1000)
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [(self.DAY, "spider", 3)]
+
+    async def test_two_texts_on_one_day_and_one_text_on_two_days_are_rows_of_their_own(self, test_session):
+        repo = SearchMissRepository(test_session)
+        await repo.count(day=self.DAY, query="spider", max_new_per_day=1000)
+        await repo.count(day=self.DAY, query="splom", max_new_per_day=1000)
+        await repo.count(day=self.DAY - timedelta(days=1), query="spider", max_new_per_day=1000)
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [
+            (self.DAY - timedelta(days=1), "spider", 1),
+            (self.DAY, "spider", 1),
+            (self.DAY, "splom", 1),
+        ]
+
+    async def test_a_full_day_drops_a_new_text_and_still_counts_a_known_one(self, test_session):
+        repo = SearchMissRepository(test_session)
+        assert await repo.count(day=self.DAY, query="spider", max_new_per_day=2)
+        assert await repo.count(day=self.DAY, query="splom", max_new_per_day=2)
+
+        assert not await repo.count(day=self.DAY, query="kreisdiagramm", max_new_per_day=2)
+        assert await repo.count(day=self.DAY, query="spider", max_new_per_day=2)
+        # The next day has room again.
+        assert await repo.count(day=self.DAY + timedelta(days=1), query="kreisdiagramm", max_new_per_day=2)
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [
+            (self.DAY, "spider", 2),
+            (self.DAY, "splom", 1),
+            (self.DAY + timedelta(days=1), "kreisdiagramm", 1),
+        ]
+
+    async def test_the_purge_deletes_the_days_before_the_cutoff_only(self, test_session):
+        repo = SearchMissRepository(test_session)
+        cutoff = self.DAY - timedelta(days=90)
+        for day in (cutoff - timedelta(days=5), cutoff - timedelta(days=1), cutoff, self.DAY):
+            await repo.count(day=day, query="spider", max_new_per_day=1000)
+        await test_session.commit()
+
+        assert await repo.delete_before(cutoff) == 2
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [(cutoff, "spider", 1), (self.DAY, "spider", 1)]
+
+    async def test_the_list_sums_a_text_over_its_days_most_searched_first(self, test_session):
+        repo = SearchMissRepository(test_session)
+        since = self.DAY - timedelta(days=10)
+
+        async def add(day: date, query: str, times: int = 1) -> None:
+            for _ in range(times):
+                await repo.count(day=day, query=query, max_new_per_day=1000)
+
+        await add(self.DAY, "spider", 2)
+        await add(since, "spider", 3)
+        await add(self.DAY - timedelta(days=2), "splom", 5)
+        await add(self.DAY, "kreisdiagramm", 5)  # a tie with splom: searched more recently, so first
+        await add(self.DAY, "gapminder")
+        await add(since - timedelta(days=1), "spider", 50)  # the day before the window
+        await add(since - timedelta(days=1), "old text", 50)
+        await test_session.commit()
+
+        assert await repo.totals(since, limit=10) == [
+            ("kreisdiagramm", 5, self.DAY, self.DAY),
+            ("spider", 5, since, self.DAY),
+            ("splom", 5, self.DAY - timedelta(days=2), self.DAY - timedelta(days=2)),
+            ("gapminder", 1, self.DAY, self.DAY),
+        ]
+        assert await repo.totals(since, limit=2) == [
+            ("kreisdiagramm", 5, self.DAY, self.DAY),
+            ("spider", 5, since, self.DAY),
+        ]
+        assert await repo.distinct_since(since) == 4
+
+    async def test_the_list_reads_most_recent_first_and_in_pages_that_neither_repeat_nor_skip(self, test_session):
+        repo = SearchMissRepository(test_session)
+        since = self.DAY - timedelta(days=10)
+        for day, query, times in [
+            (self.DAY - timedelta(days=5), "spider", 9),
+            (self.DAY, "splom", 1),
+            (self.DAY, "kreisdiagramm", 2),
+            (self.DAY - timedelta(days=1), "gapminder", 1),
+        ]:
+            for _ in range(times):
+                await repo.count(day=day, query=query, max_new_per_day=1000)
+        await test_session.commit()
+
+        recent = await repo.totals(since, limit=10, order="recent")
+        assert [query for query, *_ in recent] == ["kreisdiagramm", "splom", "gapminder", "spider"]
+        most = await repo.totals(since, limit=10)
+        assert [query for query, *_ in most] == ["spider", "kreisdiagramm", "splom", "gapminder"]
+        pages = [await repo.totals(since, limit=3, offset=offset, order="recent") for offset in (0, 3, 6)]
+        assert [len(page) for page in pages] == [3, 1, 0]
+        assert [row for page in pages for row in page] == recent
+
+    async def test_the_full_days_are_those_that_reached_the_cap(self, test_session):
+        repo = SearchMissRepository(test_session)
+        since = self.DAY - timedelta(days=10)
+        for number in range(3):
+            await repo.count(day=self.DAY, query=f"junk {number}", max_new_per_day=3)
+            await repo.count(day=self.DAY - timedelta(days=2), query=f"junk {number}", max_new_per_day=3)
+        await repo.count(day=self.DAY - timedelta(days=1), query="spider", max_new_per_day=3)
+        for number in range(3):
+            await repo.count(day=since - timedelta(days=1), query=f"old {number}", max_new_per_day=3)
+        await test_session.commit()
+
+        assert await repo.full_days(since, 3) == [self.DAY, self.DAY - timedelta(days=2)]
+
+    async def test_deleting_a_day_removes_every_text_of_it_and_nothing_else(self, test_session):
+        repo = SearchMissRepository(test_session)
+        for query in ("junk 1", "junk 2", "spider"):
+            await repo.count(day=self.DAY, query=query, max_new_per_day=1000)
+        await repo.count(day=self.DAY - timedelta(days=1), query="spider", max_new_per_day=1000)
+        await test_session.commit()
+
+        assert await repo.delete_day(self.DAY) == 3
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [(self.DAY - timedelta(days=1), "spider", 1)]
+
+    async def test_deleting_a_text_removes_every_day_of_it_and_nothing_else(self, test_session):
+        repo = SearchMissRepository(test_session)
+        for day in (self.DAY - timedelta(days=3), self.DAY):
+            await repo.count(day=day, query="spider", max_new_per_day=1000)
+        await repo.count(day=self.DAY, query="splom", max_new_per_day=1000)
+        await test_session.commit()
+
+        assert await repo.delete_query("spider") == 2
+        assert await repo.delete_query("spider") == 0
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [(self.DAY, "splom", 1)]
+
+    async def test_a_text_with_a_quote_a_percent_or_an_underscore_is_matched_as_written(self, test_session):
+        """The rule keeps `'`, `%` and `_`. None of them is a quote's end or a pattern here: a delete of `100%`
+        removes that text and not everything that starts with `100`."""
+        repo = SearchMissRepository(test_session)
+        for query in ("100%", "100 stacked", "it's", "a_b", "axb"):
+            assert await repo.count(day=self.DAY, query=query, max_new_per_day=1000)
+        assert await repo.count(day=self.DAY, query="it's", max_new_per_day=1000)
+        await test_session.commit()
+
+        assert await repo.delete_query("100%") == 1
+        assert await repo.delete_query("a_b") == 1
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [
+            (self.DAY, "100 stacked", 1),
+            (self.DAY, "axb", 1),
+            (self.DAY, "it's", 2),
         ]

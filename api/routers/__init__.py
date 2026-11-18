@@ -13,6 +13,7 @@ from api.routers.og_images import router as og_images_router
 from api.routers.plots import router as plots_router
 from api.routers.preview import router as preview_router
 from api.routers.proxy import router as proxy_router
+from api.routers.search import router as search_router
 from api.routers.seo import router as seo_router
 from api.routers.specs import router as specs_router
 from api.routers.stats import router as stats_router
@@ -32,6 +33,7 @@ __all__ = [
     "plots_router",
     "preview_router",
     "proxy_router",
+    "search_router",
     "seo_router",
     "specs_router",
     "stats_router",

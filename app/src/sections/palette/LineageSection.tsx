@@ -27,7 +27,7 @@ const HISTORY: HistoryEntry[] = [
     title: 'v0 — Okabe-Ito',
     hexes: ['#009E73', '#D55E00', '#0072B2', '#CC79A7', '#E69F00', '#56B4E9', '#F0E442'],
     summary:
-      'The original colorblind-safe categorical palette (Wong 2011, Nature Methods). 7 hues + adaptive neutral, brand green at slot 0 — inherited unchanged by every version since. Its limits on warm paper: orange and vermillion sit only ~30° apart on the hue wheel, and the yellow washes out on cream — both fixed by the later variants.',
+      'The original colourblind-safe categorical palette (Wong 2011, Nature Methods). 7 hues + adaptive neutral, brand green at slot 0 — inherited unchanged by every version since. Its limits on warm paper: orange and vermillion sit only ~30° apart on the hue wheel, and the yellow washes out on cream — both fixed by the later variants.',
     href: 'https://jfly.uni-koeln.de/color/',
     hrefLabel: 'jfly.uni-koeln.de',
   },

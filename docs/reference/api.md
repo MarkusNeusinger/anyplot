@@ -622,6 +622,54 @@ Returns the plots with the most votes, one entry per implementation:
 
 ---
 
+## Search endpoints
+
+The private list of gallery searches that found nothing in the whole catalogue (`api/search_misses.py`, [The private list of search misses](plausible.md#the-private-list-of-search-misses)). A search text is what a visitor typed, so it travels in a request body on every route here, never in a URL or a header, and the API logs no part of it. Each route reads its body by hand, only after the content type says JSON, and refuses it with a fixed `413` (`{"status": 413, "message": "Request body too large", ...}`, with `Cache-Control: private, no-store`) above 1 KiB: a declared `Content-Length` above that before anything is read, and a body without one once it passes 1 KiB. A `Content-Length` that is no size, and a client that goes away before its body ends, get a plain `400`, with nothing logged.
+
+### POST `/search/miss`
+
+**Purpose**: Count one gallery search that found nothing, for the owner's private list (`api/routers/search.py`)
+
+The body is `{"query": "<text>"}` with `Content-Type: application/json`. The API drops a text longer than 200 characters unread, since the app never sends one and the rule must judge a whole text. Any other it folds again with the app's rule (compatibility forms folded with Unicode form NFKC, lowercase, typographic apostrophes, hyphens, and dashes made plain, a soft hyphen dropped, single spaces), judges the whole folded text, and keeps it only when it reads as a search for a plot and shows something (letters and combining marks of any script, at most six decimal digits, spaces, `- _ . + # / & ' ( ) % ,`, the middle dots `·` and `・`, and the Hebrew geresh, gershayim, and maqaf, the Tibetan tsheg, and the Ethiopic wordspace, at least one letter or digit, and no ignorable character but a zero width non-joiner or joiner between two letters or marks; see [Plausible analytics tracking](plausible.md#the-private-list-of-search-misses)). Only then does it cut the text at 40 characters, judge the cut text once more, and count it in the row of the UTC day and text (`search_misses`, [Database](database.md#search_misses)). Only the production service counts. The query string and the headers are never read for the text.
+
+The answer is always `204` with no body: for a text that was counted, one the rule drops, one past a limit, and any request outside production, so a caller learns nothing from it. The limits drop silently: 20 requests a minute per network (an IPv4 address, or the /64 of an IPv6 address; a value that is no address shares one key), and once a UTC day holds 1,000 different texts, a text without a row that day. Rows more than 180 days old are deleted. A body that isn't JSON, or isn't a JSON object with a string `query`, gets the framework's `422` (see [Request validation errors](#request-validation-errors)) with entries of `type`, `loc`, and `msg` only, so the answer never repeats the body; a body with another content type is refused before it is read (`json_required`), so a page on another site can't post one without the browser asking CORS first. A body above 1 KiB gets the `413`. The counter is best effort: a write in flight when an instance stops is lost.
+
+### GET `/debug/search-misses`
+
+**Purpose**: The private list for the "search misses" section on `/debug`, behind the admin gate
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `order` | string | `count` | `count`: most searched first, a tie to the text searched more recently. `recent`: most recently searched first, a tie to the more searched |
+| `offset` | int | 0 | Where the page starts in the whole list (0 or more) |
+
+Returns one page of up to 500 texts of the last 180 UTC days, and the days that reached the day's cap:
+
+```json
+{
+  "status": "ok",
+  "retention_days": 180,
+  "day_cap": 1000,
+  "order": "count",
+  "offset": 0,
+  "texts": 612,
+  "misses": [
+    {"query": "spider", "count": 12, "first_day": "2026-10-02", "last_day": "2026-11-17"}
+  ],
+  "capped_days": ["2026-11-16"]
+}
+```
+
+`texts` is how many different texts the window holds, and `misses` lists up to 500 of them from `offset` on, each with its total `count` and its first and last UTC day; ties go on by the text, so the pages neither repeat nor skip a text. `capped_days` are the days of the window, newest first, that hold `day_cap` texts: on those a new text was dropped, which is how a flood shows. The answer carries `Cache-Control: private, no-store`. A read also runs the retention delete if it hasn't run that day, so the delete doesn't wait for a miss. `status` is `unavailable` with an empty list when the query fails, which includes the table not being there yet. An unknown `order` or a negative `offset` is a `422`.
+
+### DELETE `/debug/search-misses`
+
+**Purpose**: Remove one text, or one whole day, from the private list, behind the admin gate
+
+The body is `{"query": "<text>"}`, the text as the list shows it, or `{"day": "YYYY-MM-DD"}`, never both. Every row of that text, whatever its day, or every row of that day, whatever its text, is deleted, and the answer is `{"deleted": <rows>}`: `0` for a text or a day the list no longer holds. The body is read after the admin gate and within the same 1 KiB. The delete is committed before the answer, so a failed commit is a `503` like a database that doesn't answer, never a `200`.
+
+---
+
 ## Agent chat
 
 > **Status (2026-11-06):** the admin routes under `/debug/agent` are live, and
@@ -1787,6 +1835,8 @@ A request whose body or parameters fail schema validation returns status 422 wit
 ```
 
 The body is always ASCII: any non-ASCII character in the echoed `input` is JSON-escaped, so text that cannot be encoded as UTF-8, such as a lone surrogate (the JSON string `"\ud800"`), still gets a 422 rather than a 500. `POST /feedback` rejects such text in any field this way.
+
+`POST /search/miss` and `DELETE /debug/search-misses` are the exception to the echo: their body is a text a visitor typed, so they read it by hand and their entries carry `type`, `loc`, and `msg` only (`read_json_body` in `api/search_misses.py`). A body there with a content type other than JSON gets one entry of type `json_required`.
 
 ### HTTP status codes
 

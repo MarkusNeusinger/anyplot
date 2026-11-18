@@ -76,7 +76,7 @@ export function PaletteGridSection({
               >
                 {s === 'imprint'
                   ? 'imprint (default)'
-                  : 'CVD-optimal (max ΔE under colorblindness)'}
+                  : 'CVD-optimal (max ΔE under colour blindness)'}
               </Box>
             ))}
           </Box>

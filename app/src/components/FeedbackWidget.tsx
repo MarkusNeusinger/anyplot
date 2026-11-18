@@ -374,7 +374,7 @@ export function FeedbackWidget() {
           <Box sx={{ py: 3, textAlign: 'center' }} role="status" aria-live="polite">
             <Box sx={{ fontSize: 28, mb: 1 }}>🙏</Box>
             <Box sx={{ fontWeight: 600 }}>Thanks!</Box>
-            <Box sx={{ fontSize: 13, color: 'var(--ink-muted)', mt: 0.5 }}>We read every note.</Box>
+            <Box sx={{ fontSize: 13, color: 'var(--ink-muted)', mt: 0.5 }}>I read every note.</Box>
           </Box>
         ) : (
           <Box component="form" onSubmit={handleSubmit} noValidate>

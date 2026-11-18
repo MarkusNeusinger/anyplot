@@ -1,6 +1,6 @@
 /**
  * The texts the chat shows every user about the assistant and what it keeps, on both lanes:
- * the admin's chat is the visitors' (owner, 2026-11-06), so nothing deep in the tree knows
+ * the admin's chat is the visitors', so nothing deep in the tree knows
  * which lane the page runs on. The lane only picks the API (`AgentChatPage`), and every admin
  * extra sits in the admin menu (`AdminMenu`).
  */
@@ -8,9 +8,10 @@
 /**
  * The notice above the first input (`ExperimentalNotice`): one line, always in view, and the
  * lines its ⓘ button opens, above the link to the legal page. Each detail states what the legal
- * page's assistant section says ("memory", "feedback", "the model", "limits"): the hour is the
- * agents service's idle sweep (`AGENT_SESSION_IDLE_S`, 3600 s). The owner reads every
- * user-facing text: keep them in the PR's "Texts to read".
+ * page's assistant section says ("memory", "feedback", "the model"), except 'daily limits apply',
+ * which is the `limits` line of the assistant's own page (`AgentIntro`). The hour is the agents
+ * service's idle sweep (`AGENT_SESSION_IDLE_S`, 3600 s). The owner reads every user-facing text:
+ * keep them in the PR's "Texts to read".
  */
 export const EXPERIMENTAL_LINE = 'experimental AI · answers can be wrong';
 export const EXPERIMENTAL_DETAILS = [
@@ -26,4 +27,4 @@ export const EXPERIMENTAL_DETAILS = [
  * The owner reads every user-facing text: keep it in the PR's "Texts to read".
  */
 export const FEEDBACK_CONSENT =
-  'sending stores this chat, its plots and a 5-row sample of your data for 180 days, for the operator to read; tick the box to add the whole data file.';
+  'sending stores this chat, its plots and a 5-row sample of your data for 180 days, and your message and reaction until you ask to delete them. the operator reads it to fix what went wrong, also with ai coding assistants and in tests with other ai models; tick the box to add the whole data file.';

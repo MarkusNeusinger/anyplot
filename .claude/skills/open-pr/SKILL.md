@@ -88,6 +88,15 @@ is the bold title, so only a new title is an added bullet — and a
 fragment never ships the bare `(#NNNNN)` placeholder. Locally:
 `uv run python -m tools.changelog check --base origin/main`.
 
+**Merge audit:** a branch that took `main` in with a conflict gets
+`python3 .claude/skills/open-pr/scripts/merge_audit.py origin/main`,
+run from its worktree, before the PR opens and again after every later
+merge that had a conflict. The script redoes each merge commit
+mechanically and reports what one side added and the committed merge no
+longer has. Exit code 1 is something to read, not a red gate: say in the
+PR what it reported and why each item is right (rule in CLAUDE.md,
+incident and reading guide in `.claude/guardrails.md`).
+
 **Gemini Flash check (owner, 2026-10-28 and 2026-10-29):** before a code PR
 opens, run `/zweitmeinung` in its routine mode, Gemini 3.8 Flash alone on the
 branch diff (`--diff-base origin/main`), and fix what it finds that is real.
@@ -329,7 +338,9 @@ transient and has a symptom worth knowing: GitHub starts no CI at
 all, so the PR shows no red check, just none (#11212 and
 kurrentschrift#524, 2026-09-04, both read as "checks pending" for a
 while). Report it and merge `origin/main` into the branch instead of
-waiting it out.
+waiting it out. Resolve each conflict inside its markers, never with
+`git checkout --ours <file>` or `--theirs <file>`, and run the merge
+audit (§1) before you push.
 
 Poll all of this from ONE script rather than by hand, and kill a
 stale wait loop with the bracket trick (`pkill -f "x[.]y"`), or
@@ -340,7 +351,9 @@ repository root: `watch-checks.sh <num>` (§3a),
 reviews, 2 only when a high finding was fixed and another round
 was requested, then prints the latest
 summary, every inline comment and the unresolved thread ids) and
-`watch-deploys.sh <merge-sha>` (§4).
+`watch-deploys.sh <merge-sha>` (§4). `merge_audit.py <base-ref>` (§1)
+is the one script that is not a wait loop: it runs from the branch's
+worktree and reads only git objects.
 
 ## 4 · After merge (when it happens): watch the deploy
 
@@ -504,6 +517,12 @@ report.
   low and medium findings ends the loop: push the fixes, resolve the
   threads, never chase nits into another round; surface a stalemate
   to the user instead.
+- **`git checkout --ours <file>` takes the whole file, not the
+  conflict.** The other side's cleanly merged hunks in that file go
+  with it, and nothing fails afterwards: #13163 lost three passages
+  of a doc that way, restored by #13164. Resolve inside the markers
+  and run `merge_audit.py` (§1). On a path without a conflict the
+  flag does nothing at all.
 - **Stacked PRs die when their base squash-merges.** Don't stack; if
   work depends on an unmerged PR, wait for its merge (or do the work
   and rebase before opening).

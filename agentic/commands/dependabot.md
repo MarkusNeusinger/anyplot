@@ -25,8 +25,8 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
   squash-merged within a minute have duplicated package blocks in `uv.lock`. After an `app/` PR
   merges, wait for its `deploy-app` build and run the site smoke (`/open-pr` skill §4,
   `scripts/site-smoke.mjs`) before the next `app/` PR gets auto-merge. On 2026-10-22 vite 8.1.6
-  (#12225) passed every check, blanked every page, and stayed unnoticed for about 45 minutes
-  inside a batch. Comment `@dependabot rebase` on the next PR of a chain before you enable its
+  (#12225), merged inside a batch, passed every check and left every page blank for about 45
+  minutes. Comment `@dependabot rebase` on the next PR of a chain before you enable its
   auto-merge, and expect Dependabot to close and regroup a PR now and then ("updatable in another
   way"); list the PRs again when it does.
 - Per the changelog contract, individual Dependabot bumps get NO `CHANGELOG.md` entries —

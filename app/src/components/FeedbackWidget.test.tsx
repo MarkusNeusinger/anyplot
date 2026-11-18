@@ -104,6 +104,8 @@ describe('FeedbackWidget', () => {
     expect(body.website).toBe(''); // honeypot must be empty for real users
 
     expect(await screen.findByText(/thanks/i)).toBeInTheDocument();
+    // The site speaks as its one operator, as the legal page does ("I read them").
+    expect(screen.getByText('I read every note.')).toBeInTheDocument();
   });
 
   it('shows an error and keeps the full-form populated on failure', async () => {

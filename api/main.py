@@ -23,7 +23,7 @@ from fastapi.exceptions import RequestValidationError  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
-from api import machine_reads  # noqa: E402
+from api import machine_reads, search_misses  # noqa: E402
 from api.body_limit import BodyLimitMiddleware, Bound, ClientGoneFilter  # noqa: E402
 from api.cache import cache_key, get_or_set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
@@ -49,6 +49,7 @@ from api.routers import (  # noqa: E402
     plots_router,
     preview_router,
     proxy_router,
+    search_router,
     seo_router,
     specs_router,
     stats_router,
@@ -178,6 +179,9 @@ async def lifespan(app: FastAPI):
             # `init_db()` stays awaited above — a request must never arrive
             # before the engine exists. See `_prewarm_cache` for the numbers.
             _start_prewarm()
+            # The search misses' retention delete, once at start and in the
+            # background, so it does not wait for a miss (production only).
+            search_misses.start_purge()
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
 
@@ -397,6 +401,7 @@ app.include_router(debug_router)
 app.include_router(agent_router)
 app.include_router(agent_public_router)
 app.include_router(feedback_router)
+app.include_router(search_router)
 
 
 # ASGI middleware to handle /mcp without trailing slash

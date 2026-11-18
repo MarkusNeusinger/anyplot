@@ -17,8 +17,17 @@ const NAV_LINKS: { label: string; to: string; short?: string }[] = [
   { label: 'libraries', to: '/libraries', short: 'libs' },
   { label: 'stats', to: '/stats' },
   { label: 'palette', to: '/palette', short: 'pal' },
-  { label: 'mcp', to: '/mcp' },
+  { label: 'about', to: '/about' },
 ];
+
+// Logo, seven short labels and the search share one row from 716px up with MonoLisa. Below that a
+// single row wraps the logo onto two lines, and below about 624px it also pushes the search past
+// the screen's edge. So the two-row masthead of phones runs up to 719px.
+const ONE_ROW = '@media (min-width: 720px)';
+
+// Below 353px the row's gaps are narrower than the box of the "•" glyph plus 3px, so the marker
+// there is a drawn 4px dot that ends 2px before its label: its box is its ink.
+const NARROW_PHONE = '@media (max-width: 359.95px)';
 
 const linkSx = {
   color: 'var(--ink-soft)',
@@ -67,6 +76,15 @@ const activeLinkSx = {
     fontSize: '18px',
     lineHeight: 1,
     top: { xs: '13px', sm: '3px' },
+    [NARROW_PHONE]: {
+      content: '""',
+      width: '4px',
+      height: '4px',
+      borderRadius: '50%',
+      backgroundColor: colors.primary,
+      left: '2px',
+      top: 'calc(50% - 2px)',
+    },
   },
 } as const;
 
@@ -109,16 +127,19 @@ export function NavBar() {
       component="nav"
       sx={{
         display: 'grid',
-        // On xs: two rows (logo+search top, nav-links spanning wide below).
-        // On sm+: single row: logo | nav-links | search.
-        gridTemplateColumns: { xs: '1fr auto', sm: 'auto 1fr auto' },
-        gridTemplateAreas: {
-          xs: `"logo search" "nav nav"`,
-          sm: `"logo nav search"`,
-        },
+        // Below 720px: two rows (logo+search top, nav-links spanning wide below).
+        // From 720px: single row: logo | nav-links | search.
+        gridTemplateColumns: '1fr auto',
+        gridTemplateAreas: `"logo search" "nav nav"`,
         alignItems: 'center',
-        rowGap: { xs: 1.25, sm: 0 },
-        columnGap: { xs: 1.5, sm: 4 },
+        rowGap: 1.25,
+        columnGap: 1.5,
+        [ONE_ROW]: {
+          gridTemplateColumns: 'auto 1fr auto',
+          gridTemplateAreas: `"logo nav search"`,
+          rowGap: 0,
+          columnGap: 4,
+        },
         py: { xs: 1.25, sm: 2 },
         borderBottom: '1px solid var(--rule)',
       }}
@@ -157,19 +178,23 @@ export function NavBar() {
         </Box>
       </Box>
 
-      {/* Nav links — full row on xs (shorthand labels), inline on sm+ */}
+      {/* Nav links — full row below 720px (shorthand labels below md), inline from 720px */}
       <Box
         component="ul"
         sx={{
           gridArea: 'nav',
           display: 'flex',
-          gap: { xs: 2, sm: 2.25, md: 3.5 },
+          // The gap is the least space between two labels; in the full-width row space-between
+          // spreads them wider. 8px lets seven labels fit a 320px phone. From 900 to 1199px the
+          // full labels at 13px leave the logo room for one line only with 20px gaps.
+          gap: { xs: 1, sm: 2.25, md: 2.5, lg: 3.5 },
           listStyle: 'none',
           m: 0,
           p: 0,
           fontFamily: typography.mono,
           fontSize: { xs: '12px', sm: '12px', md: '13px' },
-          justifyContent: { xs: 'space-between', sm: 'flex-start' },
+          justifyContent: 'space-between',
+          [ONE_ROW]: { justifyContent: 'flex-start' },
           flexWrap: 'nowrap',
         }}
       >

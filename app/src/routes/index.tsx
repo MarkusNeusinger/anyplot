@@ -8,7 +8,11 @@ import { RouteErrorBoundary } from 'src/components/RouteErrorBoundary';
 import { AppDataProvider } from 'src/layouts/Layout';
 import { RootLayout } from 'src/layouts/RootLayout';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
-import { agentChatRedirect, specLanguageRedirect } from 'src/routes/redirects';
+import {
+  agentChatRedirect,
+  legalMovedSectionRedirect,
+  specLanguageRedirect,
+} from 'src/routes/redirects';
 
 const LazyFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -68,6 +72,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'legal',
+            loader: legalMovedSectionRedirect,
             lazy: () => import('src/pages/LegalPage').then(m => ({ Component: m.LegalPage })),
           },
           {

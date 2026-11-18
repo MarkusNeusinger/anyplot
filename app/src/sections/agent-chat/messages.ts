@@ -686,9 +686,12 @@ export function chainStopText(stop: ChainStop, action: string): string {
 /** The message box's placeholder while an attachment waits: the typed text goes with it as its note. */
 export const ATTACHMENT_PLACEHOLDER = 'add a note for this table, or press Enter';
 
-/** Under a pasted table or a file too large for the dataset route (`overCap`). */
+/**
+ * Under a pasted table or a file too large for the dataset route (`overCap`). A converted file's
+ * table goes through the same check, so the larger cap of the binary formats is no way around it.
+ */
 export const ATTACHMENT_OVER_CAP_TEXT =
-  'at most 20,000 rows and 1 MB: filter first, or .open() an Excel or Parquet file (5 MB)';
+  'at most 20,000 rows and 1 MB of text: filter or sample first. an Excel or Parquet file may be 5 MB, but the table in it has the same limit.';
 
 /** The drop hint over the composer while a file is dragged over the chat, and why a drop would wait. */
 export const DROP_HINT_TEXT = {

@@ -52,17 +52,21 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
    live `/stats` and stops when MonoLisa or a pick's preview is missing; look at the image before
    committing it. Then count the merged pull requests from the owner's account
    (`gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`) and
-   update three places in one commit:
+   update these places in one commit:
    - `MERGED_PRS_SNAPSHOT` in `tests/unit/test_readme_claims.py`: the count and today's date.
    - The floor in `README.md` and in `docs/concepts/ai-workflow.md` ("more than N pull requests from
      my account have merged"): the last multiple of 50 below the count (869 merged gave "more than
      850").
+   - The release count in `README.md` ("N releases have shipped"): the number of version headings in
+     `CHANGELOG.md` after step 2, the new release included. Unlike the floor it is exact, and
+     `test_readme_claims.py` fails until it matches the changelog.
 
-   It stays a floor, never an exact number. The test refuses an exact count, a floor that isn't a
-   multiple of 50, a floor at or above the snapshot, and one more than 50 below it. Commit the image,
-   the snapshot and the wording on the release branch.
+   The pull-request count stays a floor, never an exact number. The test refuses an exact count, a
+   floor that isn't a multiple of 50, a floor at or above the snapshot, and one more than 50 below
+   it. Commit the image, the snapshot and the wording on the release branch.
 5. **Read the diff.** It touches `CHANGELOG.md`, `pyproject.toml`, `uv.lock`, `app/package.json`,
-   the deleted fragments and step 4's showcase image, pull-request snapshot and floor — nothing else. Run
+   the deleted fragments and step 4's showcase image, pull-request snapshot and floor, and release
+   count — nothing else. Run
    `uv lock` if the lock needs more than its own version line.
 6. **Run the agent evals** on `origin/main`. The release branch changes no agent code, so main is
    what the release ships. No CI job runs these suites: they call the real models and cost real
