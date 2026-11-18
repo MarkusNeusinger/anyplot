@@ -6,6 +6,6 @@
   of 2026-10-10 went through them.
 - Decided: personal data is allowed in data, plots and chat, and the contact filter is removed; the
   pull request refuses advertisements, calls to action and messages to other people by intent
-  instead. Refusals come in every supported language. The design names the reason: users plot their own tax returns,
-  contact lists and customer tables.
+  instead. Refusals come in every supported language. The design names the reason: users plot their
+  own tax returns, contact lists and customer tables.
 - Where: #12126, `docs/concepts/agent-network.md` ("ScopeGuard")

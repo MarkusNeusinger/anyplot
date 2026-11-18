@@ -1,4 +1,4 @@
-# A plot type's field conventions are researched, with sources, before its spec says what good looks like
+# The agents researched each plot type's field conventions, with sources, before writing what good looks like
 
 - Date: 2026-10-01
 - Proposed: every spec was to get a section "What a good version looks like", which the review
