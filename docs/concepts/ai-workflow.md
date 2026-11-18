@@ -51,8 +51,8 @@ when the structure starts to turn into a mess. It shows in four ways:
 - **Knowing what has to hold.** Security is a good example: I know what has to hold, private data and no
   way to abuse the service, and asking the right question is often enough for a model to find what still
   needs hardening. Before the chat went public, the question of what the request logs keep moved the
-  session id out of every URL, because Cloud Run keeps a request's URL together with the client's address
-  for 30 days ([`agent_public.py`](../../api/routers/agent_public.py)).
+  public chat's session id out of its URLs, because Cloud Run keeps a request's URL together with the
+  client's address for 30 days ([`agent_public.py`](../../api/routers/agent_public.py)).
 
 ## The path of a change
 
@@ -89,7 +89,7 @@ for every line; the stories live in the guardrails file. Three examples:
   the pull request was green. Since then an agent fixes a small build or test blocker on the spot, even
   when it's outside its task.
 - **2026-10-22, a blank site.** A dependency bump passed every check and deployed, and every page of
-  anyplot.ai rendered blank. I noticed about 45 minutes later. Since then the agent checks the live site
+  anyplot.ai rendered blank for about 45 minutes. Since then the agent checks the live site
   after every merge, and CI runs the same check on the built image.
 - **2026-10-30, a stall nobody reported.** A build agent stopped at midday while waiting for its own
   tests. A context summary called it "still working", and in the evening I was the one who asked

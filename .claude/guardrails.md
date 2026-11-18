@@ -304,8 +304,8 @@ runtime helper into the app's `theme` chunk, which imports `mui`, while
 bundle threw `TypeError: t is not a function` at module load, and every page
 on anyplot.ai rendered blank. Every PR check passed, including "Build app
 image and smoke the origin gate", which proves nginx serves the shell but
-never runs the JavaScript. The deploy was green too. The owner noticed about
-45 minutes later; a cloud session found the cause and shipped vite 8.3.5
+never runs the JavaScript. The deploy was green too. The site stayed blank for
+about 45 minutes; a cloud session found the cause and shipped vite 8.3.5
 (#12235), which emits the helper as its own `rolldown-runtime` chunk.
 
 **The check.** `scripts/site-smoke.mjs` loads `/`, `/plots` and

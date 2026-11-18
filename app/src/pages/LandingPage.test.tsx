@@ -119,6 +119,15 @@ describe('LandingPage', () => {
     expect(copied.closest('[data-hue]')).toHaveAttribute('data-hue', 'blue');
   });
 
+  it('describes itself by the hero block, the libraries and the palette', () => {
+    render(<LandingPage />);
+
+    expect(document.head.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'any library. get inspired. grab the code. make it yours. 15 plotting libraries across python, r, julia & javascript, colourblind-safe, open source.'
+    );
+  });
+
   it('tracks library card clicks and navigates', async () => {
     const user = userEvent.setup();
     render(<LandingPage />);

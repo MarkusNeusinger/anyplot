@@ -10,6 +10,8 @@ interface SectionHeaderBaseProps {
   /** Prefix symbol — e.g. `§`, `❯`, `$`. Rendered at the same size as the title. */
   prompt?: string;
   title: React.ReactNode;
+  /** The heading's id, so a list or figure in the section can take the title as its name. */
+  id?: string;
 }
 
 /**
@@ -27,7 +29,7 @@ type SectionHeaderProps = SectionHeaderBaseProps & SectionHeaderLinkProps;
 const titleFontSize = { xs: '1.5rem', sm: '1.875rem', md: 'clamp(1.875rem, 3.5vw, 2.5rem)' };
 
 export function SectionHeader(props: SectionHeaderProps) {
-  const { prompt, title, linkText, linkTo, linkHref } = props;
+  const { prompt, title, id, linkText, linkTo, linkHref } = props;
   const { trackEvent } = useAnalytics();
   // `nav_click` says which element of the landing page a visitor went on from. The same header
   // on another page (the tiles on /stats) is no such element.
@@ -74,6 +76,7 @@ export function SectionHeader(props: SectionHeaderProps) {
       )}
       <Box
         component="h2"
+        id={id}
         sx={{
           fontFamily: typography.serif,
           fontWeight: 400,

@@ -77,12 +77,12 @@ export function PalettePage() {
         <title>imprint palette | anyplot.ai</title>
         <meta
           name="description"
-          content="imprint — anyplot's categorical palette: 8 colorblind-safe hues plus 3 semantic anchors (amber, neutral, muted), tuned for warm-paper rendering and validated against deuteranopia / protanopia / tritanopia."
+          content="imprint — anyplot's categorical palette: 8 colourblind-safe hues plus 3 semantic anchors (amber, neutral, muted), tuned for warm-paper rendering and validated against deuteranopia / protanopia / tritanopia."
         />
         <meta property="og:title" content="imprint palette | anyplot.ai" />
         <meta
           property="og:description"
-          content="imprint — anyplot's colorblind-safe categorical palette: 8 hues plus 3 semantic anchors."
+          content="imprint — anyplot's colourblind-safe categorical palette: 8 hues plus 3 semantic anchors."
         />
         <link rel="canonical" href="https://anyplot.ai/palette" />
       </>

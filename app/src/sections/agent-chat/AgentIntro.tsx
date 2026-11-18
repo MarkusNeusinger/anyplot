@@ -211,7 +211,7 @@ export function AgentIntro() {
       <meta property="og:description" content={AGENT_INTRO_DESCRIPTION} />
       <SectionHeader prompt="❯" title={<em>use with my data</em>} />
       <Box component="p" sx={{ ...bodyTextSx, m: 0 }}>
-        experimental, open to everyone since november 2026.{' '}
+        experimental, open to everyone since November 2026.{' '}
         <Box component={RouterLink} to={paths.plots} sx={proseLinkStyle}>
           pick any plot
         </Box>

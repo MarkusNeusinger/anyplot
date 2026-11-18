@@ -28,7 +28,7 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 
 **Color discipline:** `#009E73` (brand green) appears only in small, deliberate moments — logo dot, italic accents, hover states, active navigation, terminal cursor. Everything else is warm grayscale, so when a chart appears its colors land with full impact.
 
-**Pipeline transparency:** AI is part of the story, not a hidden production detail. Humans submit ideas (plot requests as GitHub issues); AI drafts the spec from the idea; humans approve the spec before any code runs; AI generates the implementations and reviews them; on rejection AI retries and humans tune the rules or refine the spec. Communicated openly in copy and methodology pages.
+**Pipeline transparency:** AI is part of the story, not a hidden production detail. Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. Below the review's bar, AI repairs the defects the review named and the plot is reviewed again; when a better example pattern emerges, I update the spec and regenerate its libraries. Communicated openly in copy and methodology pages.
 
 ---
 
@@ -92,7 +92,7 @@ Alternative casual forms:
 - "anyplot" (when domain isn't needed)
 - "ap" (in code: `import anyplot as ap`)
 
-**Relationship to pyplots.ai:** `pyplots.ai` is the predecessor. The rebrand is communicated as evolution, not replacement: "anyplot.ai is the next chapter of pyplots.ai — broader in scope (beyond Python), broader in language (beyond English), and anchored in a colorblind-safe palette that travels across every library."
+**Relationship to pyplots.ai:** `pyplots.ai` is the predecessor. The rebrand is communicated as evolution, not replacement: "anyplot.ai is the next chapter of pyplots.ai — broader in scope (beyond Python), broader in language (beyond English), and anchored in a colourblind-safe palette that travels across every library."
 
 ### 3.2 Logo
 
@@ -172,8 +172,8 @@ The first line (`any.plot() — any library.`) is the wordmark + product proposi
 
 - **"a catalogue of scientific plotting"** — editorial framing, when contextualizing the project in academic writing
 - **"from anyplot import *"** — code-playful, good for dev-audience posts
-- **"plots that everyone can see"** — accessibility-focused, good for technical articles about colorblind safety
-- **"human ideas. ai builds the rest."** — methodology framing, for about/methodology pages
+- **"plots that everyone can see"** — accessibility-focused, good for technical articles about colourblind safety
+- **"the pipeline runs on its own schedule, by rules I set."** — methodology framing, for about/methodology pages
 
 Rotate alternatives as appropriate. The canonical hero block is always the first choice.
 
@@ -187,6 +187,10 @@ Rotate alternatives as appropriate. The canonical hero block is always the first
 ### 3.4 Voice & Tone
 
 See §2.2 for the five tone attributes (precise, understated, curious, respectful, slightly playful) and what to avoid.
+
+The site speaks as its single builder, in the first person singular ("I"), not as "we" or "humans". Meta descriptions describe the site in the third person; a crawler copy that mirrors a page keeps the page's voice.
+
+Spelling: British English on the site (colour, catalogue, centre, licence as a noun). Proper names, citations, code and library or API names keep their own spelling (the MIT License, `color=`).
 
 ### 3.5 Capitalization & Punctuation
 
@@ -254,16 +258,17 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 > Do:
 > ```
 > // pipeline
-> idea    → human-submitted        (github issue)
-> spec    → ai-drafted, human-approved
-> code    → ai-generated           (per library)
-> review  → ai-evaluated
-> fix     → ai-retries; humans tune rules
+> idea    → a github issue
+> spec    → ai drafts, I approve
+> code    → ai writes     (per library)
+> review  → ai scores     (24 criteria)
+> fix     → ai repairs    (up to 4 times)
+> rules   → I set and change them
 > ```
 >
 > Don't: `Powered by cutting-edge AI to bring you the best plotting examples!`
 >
-> Don't: `Specs hand-crafted by experts.` — they aren't; they're AI-drafted from a human one-liner, then human-approved.
+> Don't: `Specs hand-crafted by experts.` — they aren't: plot ideas come in as GitHub issues, AI drafts the spec, and I approve it.
 
 **The pattern:** state the mechanism, name what does what, no breathless framing. When in doubt, format as code — pipelines as arrows, results as `+`/`~`/`-`/`✗`.
 
@@ -271,9 +276,9 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 
 > Instead of: `🚀 Supercharge your data viz workflow with AI-powered plot generation! Unlock 1000+ beautifully crafted charts across multiple libraries. Ship faster, iterate smarter, and empower your team to create stunning visualizations!`
 >
-> Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come from humans; AI drafts the spec, generates code for every library, and reviews each implementation. Humans approve specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
+> Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. Every example uses the same colourblind-safe palette, so switching libraries never breaks your colour grammar.`
 
-The second version is shorter, says what's actually happening (humans submit ideas + approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
+The second version is shorter, says what's actually happening (ideas come in as GitHub issues; I approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
 
 ### 3.7 Positioning
 
@@ -281,32 +286,32 @@ The second version is shorter, says what's actually happening (humans submit ide
 
 - A **reference catalogue**, like a cookbook or an atlas. You come for specific examples.
 - **Library-agnostic**, showing the same chart types across matplotlib, seaborn, plotly, and others.
-- **Colorblind-safe by default**. Every example uses the imprint palette. This isn't a feature, it's a baseline.
+- **Colourblind-safe by default**. Every example uses the imprint palette. This isn't a feature, it's a baseline.
 - **Copyable**. Every example is self-contained, with the full code visible and executable.
-- **Curated**. We don't aggregate every plot on the internet — we maintain a considered collection.
-- **AI-built, human-shaped.** Plot ideas come from humans (GitHub issues). Everything else — drafting the spec, generating code per library, reviewing it — runs on AI. Humans approve specs before any code is generated, and when something repeatedly fails review we either refine the spec or tune the AI rules. We never patch generated code by hand. The pipeline is documented and visible.
+- **Curated**. I don't aggregate every plot on the internet — I maintain a considered collection.
+- **The pipeline runs on its own schedule, by rules I set.** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs when that plot is next regenerated. The pipeline is documented and visible.
 
 **What anyplot is not:**
 
-- **A plotting library**. We don't compete with matplotlib or plotly. We help you use them better.
-- **An AI plot generator the user prompts.** Users browse a curated catalogue: its plots come from specs humans approve, and the AI generates them offline. The experimental chat at `/agent` adapts a plot the user picked from that catalogue to their own data; it doesn't invent a plot from a prompt.
-- **A dashboard tool**. We show static examples. Interactive dashboards are a different product category.
-- **A tutorial platform**. We assume you know how to run Python code. We don't teach from zero.
-- **A community forum**. We accept contributions through GitHub but we're not building a social layer.
+- **A plotting library**. anyplot doesn't compete with matplotlib or plotly; it helps you use them better.
+- **An AI plot generator the user prompts.** Users browse a curated catalogue: its plots come from specs I approve, and the AI generates them offline. The experimental chat at `/agent` adapts a plot the user picked from that catalogue to their own data; it doesn't invent a plot from a prompt.
+- **A dashboard tool**. The catalogue shows static examples. Interactive dashboards are a different product category.
+- **A tutorial platform**. The examples assume you know how to run code in your language; they don't teach from zero.
+- **A community forum**. Everything happens on GitHub — issues, releases, discussions. There's no separate forum, no signup, no account.
 
 ### 3.8 Story Points
 
 Narrative hooks for talking about anyplot — adapt to context, don't recite verbatim:
 
-**The pipeline story:** Humans submit plot ideas as GitHub issues. AI drafts the spec from each idea; humans approve it before any code is generated. AI then generates implementations across every supported library from the same spec — Python for most, plus R, Julia, and JavaScript — and reviews each one for visual quality and spec compliance. When something doesn't pass review, AI retries — and when it keeps failing, we refine the spec or tune the AI rules. We never patch the code by hand. That makes anyplot a catalogue that maintains itself: when matplotlib ships a new release, we re-run the pipeline; when a better example pattern emerges, we update the spec and every library regenerates. Humans curate; AI executes.
+**The pipeline story:** Plot ideas come in as GitHub issues; AI drafts the spec, generates code for every library, and reviews each implementation. I approve new specs and tune the rules when something repeatedly fails. The pipeline runs on its own schedule, by rules I set. Every night a job regenerates the oldest implementations, and a new version replaces the live one only with no regression, a score at most a point lower and a fix the review can verify; a code conversion for the chat passes on an unchanged picture instead. When a better example pattern emerges, I update the spec and regenerate its libraries. I don't fix a plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it governs when that plot is next regenerated.
 
-**The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of color vision deficiency — most plotting libraries ignore this entirely. We make it the default.
+**The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of colour vision deficiency — most plotting libraries ignore this entirely. I make it the default.
 
-**The library-agnostic story:** A "Gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh. The palette travels with you across libraries. Switching tools doesn't mean re-learning your color grammar.
+**The library-agnostic story:** The palette travels with you across libraries. Switching tools doesn't mean re-learning your colour grammar.
 
 **The catalogue story:** Thousands of examples across fifteen libraries in four languages, each reproducible and copy-pasteable. No ads. No affiliate links. No "suggested tutorials you might like." Just the plots and the code that made them.
 
-**The origin story:** It started as pyplots.ai, a small Python-only catalogue I built in a weekend. It grew when I realized people wanted the same examples across different libraries, and the same safe palette everywhere. anyplot is the grown-up version.
+**The origin story:** It started in November 2025 as pyplots.ai, a Python-only catalogue of plotting examples. It grew when I realized people wanted the same examples across different libraries, and the same safe palette everywhere. After a few months on pyplots.ai, I decided to go bigger, and in April 2026 it became anyplot.ai. anyplot is the grown-up version.
 
 **The personal touch:** Built in Visp, a small town in the Swiss Alps. By a data analyst who spent too many hours trying to figure out why the same chart looked different in seaborn than in plotly.
 
@@ -444,6 +449,7 @@ There is one brand green, `#009E73`, in both themes. `#007A59` (`colors.primaryD
 7. Palette strip and any deliberate palette display
 8. Small status indicators (pulsing dot in plot-card header)
 9. Terminal prompt glyphs: `$` and `>>>` in the plot-of-the-day terminal, and `>>>` in the agent chat window's status line (§7.9). They always stand beside words, which carry the meaning.
+10. The builder's own steps in the pipeline figure of the about page (`I approve`, `I set and change them`), as text in the helper shade `--code-comment` (`#007A59` on cream, `#009E73` on dark), since `#009E73` reads only 3.08:1 as text on cream. They are labels in a figure, not emphasis in running text, and the "I" says whose step it is; the green repeats it.
 
 It does **not** appear in:
 
@@ -515,7 +521,7 @@ The key rule: **mono is the default, italic-ss01 is the editorial accent.** Ever
 | Body paragraph         | mono upright      | 14–16px                    | 300–400| Default body text. Lowercase preferred.                         |
 | Intro / lede           | mono upright      | 18–19px                    | 300–500| Paragraph under H1. Subtitle (`one spec · every library…`) at 500. |
 | Tagline                | mono italic + ss01| 18–22px                    | 400    | Script variant, e.g. `steal like an artist.`                    |
-| Eyebrow / Kicker       | mono upright      | 11px                       | 400    | Lowercase, tracked `.08em`, preceded by a 18×1px green rule.    |
+| Eyebrow / Kicker       | mono upright      | 11px                       | 400    | Lowercase, tracked `.08em`, preceded by an 18×1px `--rule` line. |
 | UI labels & buttons    | mono upright      | 12–13px                    | 500    | Buttons lowercase, e.g. `browse plots →`.                       |
 | Navigation links       | mono upright      | 14px                       | 500    | Active state: green `•` prefix.                                 |
 | Code / logo            | mono upright      | context-dependent          | 700    | Logo: `any.plot()` with green dot and ghosted `()`.             |
@@ -528,24 +534,24 @@ The key rule: **mono is the default, italic-ss01 is the editorial accent.** Ever
 The hero is a split-column layout: editorial text on the left (paper-tier), terminal-framed plot-of-the-day on the right (catalog-tier). The full-width "terminal box" around everything was dropped; the plot panel alone carries the terminal metaphor now.
 
 ```
-— the open plot catalogue           ┌─ ~/anyplot ──────────────────┐
-                                    │ $ python plots/…/plotly.py  │
-any.plot()                          │                             │
-— any library.                      │  [plot rendered here]       │
-                                    │                             │
-one spec · every library ·          │                             │
-always current.                     │                             │
-                                    │                             │
-every plot begins as a              │                             │
-library-agnostic spec…              │                             │
-                                    │                             │
-steal like an artist._▌             │                             │
-                                    │                             │
-[plots.browse() →] | mcp.connect()  └─────────────────────────────┘
+— by Markus Neusinger                             ┌─ ~/anyplot ──────────────────┐
+                                                  │ $ python plots/…/plotly.py  │
+any.plot()                                        │                             │
+— any library.                                    │  [plot rendered here]       │
+                                                  │                             │
+one spec · every library ·                        │                             │
+always current.                                   │                             │
+                                                  │                             │
+every plot begins as a                            │                             │
+library-agnostic spec…                            │                             │
+                                                  │                             │
+steal like an artist._▌                           │                             │
+                                                  │                             │
+[plots.browse() →] | mcp.connect()                └─────────────────────────────┘
                      github.clone()
 .use_my_data() →
 an ai agent adapts a catalogue plot to your data
-────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────────
  1            9          310           2,677         441k
  languages    libraries  specifications implementations lines of code
 ```
@@ -556,7 +562,7 @@ an ai agent adapts a catalogue plot to your data
 - Size: `clamp(2.75rem, 4.5vw, 4.75rem)` on the H1 container, with `0.75em` on both spans.
 
 **Layer hierarchy (top to bottom, left column):**
-1. **Eyebrow** — `— the open plot catalogue`, lowercase, 11px MonoLisa upright, `--imprint-green`, tracked `.08em`, preceded by 18×1px green rule.
+1. **Eyebrow** — from `md` (900 px) up one line, `— by Markus Neusinger`, since the masthead's centre shows `the open plot catalogue` at those widths (§6.4). Below `md`, where the masthead hides its centre, two lines set in the markup: `— the open plot catalogue`, then `by Markus Neusinger`, which starts under the "t" of "the". Lowercase except the name, 11px MonoLisa upright, `--ink-muted`, tracked `.08em`, line height 1.5, preceded by an 18×1px `--rule` line level with the first line. Only the name is a link, to the about page (`paths.about`), one copy at every width that never breaks: the eyebrow's own colour and no underline at rest, the site's green with a dotted underline on hover, the way the masthead's links behave, and the hero links' focus ring around the name for the keyboard. Below 600 px, padding with an equal negative margin makes it a 44 px touch target without moving the text. A click counts as `nav_click` with `source: hero_about`. Only the landing hero carries the name: the masthead rule, the OG image and the crawler `<h1>` keep `the open plot catalogue`.
 2. **H1** — see above.
 3. **Subtitle** — `one spec · every library · always current.`, MonoLisa upright weight 500, 18px, `--ink`. Must fit on one line (`whiteSpace: nowrap` + stepped responsive size).
 4. **Intro prose** — 4–6 lines MonoLisa upright weight 300, `--ink-soft`, 18px. `<em>your</em>` renders as italic-ss01 script accent inline.
@@ -950,19 +956,22 @@ Horizontal text links, no icons, no boxes. On hover, a 1px green underline anima
 
 The `cubic-bezier(0.4, 0, 0.2, 1)` is the standard material-motion "ease-in-out" curve — smooth but with enough snap to feel crisp.
 
-**Mobile NavBar (xs < 600px).** The nav collapses into a two-row grid so nothing drops off:
+**Mobile NavBar (below 720px).** The nav collapses into a two-row grid so nothing drops off:
 
 ```
-┌───────────────────────────────────┐
-│ any.plot()          plots.search()│  row 1: logo + search link
-├───────────────────────────────────┤
-│ specs plots map libs stats pal mcp│  row 2: seven items · space-between
-└───────────────────────────────────┘
+┌─────────────────────────────────────┐
+│ any.plot()            plots.search()│  row 1: logo + search link
+├─────────────────────────────────────┤
+│ specs plots map libs stats pal about│  row 2: seven items · space-between
+└─────────────────────────────────────┘
 ```
 
-- Row 1: `any.plot()` wordmark (17px), `plots.search()` method-call link (11px) right-aligned.
-- Row 2: all seven nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels kick in on `xs` where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `mcp` as-is.
-- Font size ramps 12px xs → 12px sm → 13px md. Gap ramps 2 → 2.25 → 3.5.
+- Row 1: `any.plot()` wordmark (18px xs, 22px sm), `plots.search()` method-call link (11px xs, 12px sm) right-aligned.
+- Row 2: all seven nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels show below md, in both the two-row and the single-row layout: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `about` as-is. The single row needs them at 720px, where it has 5.6px to spare.
+- The single row starts at 720px, not at sm: with MonoLisa the logo, the seven short labels and the search need 716px. Below that a single row wraps the logo onto two lines, and below about 624px it also pushes the search past the screen's edge.
+- Active marker below 360px: a drawn 4px green dot, 2px before the label, instead of the `•` glyph. At 320px the gap before a label is 9.6px, narrower than the glyph's 11.5px box plus 3px.
+- Font size ramps 12px xs → 12px sm → 13px md. Gap (the least space between two labels) ramps 1 (8px) xs → 2.25 sm → 2.5 md → 3.5 lg: 8px lets seven labels fit a 320px phone, and from 900px to 1199px the full labels at 13px leave the logo room for one line only with 20px gaps.
+- `/mcp` has no slot in the bar; the footer, the about page and the landing page link it.
 - The NavBar is static (flows with the page). On `/plots` the masthead *also* flows so the FilterBar is the only sticky surface; on every other page the masthead stays sticky while the NavBar scrolls away naturally.
 
 **Masthead on mobile.** `ThemeToggle` collapses to the glyph only (`◐` / `☀`) — label hidden via `display: { xs: 'none', sm: 'inline' }` — so the breadcrumb (`~/anyplot.ai · main · v1.1.0`) has room to stay visible even on narrow viewports. Grid columns on xs are `1fr auto auto` (left breadcrumb takes all remaining width, toggle hugs the right edge); on sm+ it's `1fr auto 1fr` with the block-comment tagline in the middle.
@@ -1050,7 +1059,7 @@ Hero box rises from 8px below with opacity transition:
 
 Staggered via `animation-delay`:
 
-- Eyebrow (`— the open plot catalogue`): 0s
+- Eyebrow (`— by Markus Neusinger`, below `md` with `the open plot catalogue` on the line above): 0s
 - H1 line 1 (`any.plot()`): 0.1s
 - H1 line 2 (`— any library.` script): 0.1s
 - Subtitle (`one spec · every library · always current.`): 0.15s

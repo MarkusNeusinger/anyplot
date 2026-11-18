@@ -8,6 +8,7 @@ import html
 import json
 import re
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from api.routers.seo import (
@@ -663,6 +664,15 @@ class TestHomePage:
         assert action["target"]["urlTemplate"] == "https://anyplot.ai/plots?spec={search_term_string}"
         assert types["Organization"]["url"] == "https://anyplot.ai"
         assert types["WebSite"]["url"] == "https://anyplot.ai"
+
+    def test_author_is_the_same_person_for_crawlers_and_the_spa(self) -> None:
+        """The author node names his own site, and app/index.html carries the same node."""
+        author = next(n for n in _HOME_JSONLD["@graph"] if n["@type"] == "WebApplication")["author"]
+        assert author["sameAs"] == ["https://neusinger.com"]
+        index = (Path(__file__).resolve().parents[3] / "app" / "index.html").read_text(encoding="utf-8")
+        scripts = re.findall(r'<script type="application/ld\+json">(.*?)</script>', index, re.S)
+        spa = next(n for n in map(json.loads, scripts) if n.get("@type") == "WebApplication")
+        assert spa["author"] == author
 
 
 class TestDisplayNameMaps:

@@ -16,13 +16,25 @@ code.
 
 ## How I build anyplot
 
-I'm [Markus Neusinger](https://linkedin.com/in/markus-neusinger/), a physicist working in data and AI: since 2013 I've built data pipelines, analyses and machine learning, and the apps people use them through. Models write anyplot's code; I lead them, with that experience across data, backends, frontends and hosting.
+I'm [Markus Neusinger](https://linkedin.com/in/markus-neusinger/), a physicist and data analyst: since 2013 I've built data pipelines, analyses and machine learning, and the apps people use them through. On anyplot, models write the code. I decide what gets built and what counts as good, and I check what comes back; the design documents and pull requests record many of those decisions with their dates.
 
-- **I set the course.** The vision, the decisions, and the structure that keeps a codebase written by agents from turning into a mess. Seven of those decisions are [below](#engineering-highlights).
-- **I know when to push back.** The models know a lot. The job is knowing which question to ask, when to make a model research a point properly, and when a confident answer is wrong. Security is a good example: I know what has to hold, private data and no way to abuse the service, and asking the right question is often enough for a model to find what still needs hardening.
+- **I set the course.** The vision, the decisions, and the structure that keeps a codebase written by agents from turning into a mess. Six of those decisions are [below](#engineering-highlights).
+- **I know when to push back.** The models know a lot. The job is knowing which question to ask, when to make a model research a point properly, and when a confident answer is wrong.
+  - *Real data.* A model compared plot quality on invented datasets that fitted the plots too
+    neatly, so I had it fetch real weather downloads. A raw file with two metadata lines above the
+    table broke the import at once. Since then pasted data has to work with notes, metadata or total
+    rows around the table ([#12166](https://github.com/MarkusNeusinger/anyplot/pull/12166)).
+  - *No real parties.* For a parliament chart, one library's implementation used the real European
+    Parliament groups and the AI reviewer scored that 5 of 5 as "authentic political data"; three
+    others dodged the topic with a faculty senate, a board or sports conferences. I ruled for
+    invented parties and seats, and the rubric no longer marks a fictional chamber down
+    ([#12050](https://github.com/MarkusNeusinger/anyplot/pull/12050)).
+  - *Exact data.* An audit of the chat's data path found values rounded or dropped without a word,
+    such as digits past a float's precision. My rule: what you paste is what the data holds, or a
+    line says what changed and how often ([#12196](https://github.com/MarkusNeusinger/anyplot/pull/12196)).
 - **I split, assign, test, and send back.** Work goes to Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs. I test what comes back and return it until it's right.
 
-This isn't one prompt and a wait. Since November 2025, more than 950 pull requests from my account have merged, and what I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
+This isn't one prompt and a wait. Since November 2025, more than 950 pull requests from my account have merged and 16 releases have shipped. A new spec needs my approval, and outside the plot pipeline the agents merge nothing without my OK. What I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
 
 [![A grid of catalogue plots, one spec in each library, with the catalogue's spec, library, and language counts](docs/assets/readme-showcase.png)](https://anyplot.ai/plots)
 
@@ -33,45 +45,44 @@ This isn't one prompt and a wait. Since November 2025, more than 950 pull reques
 
 ## Engineering highlights
 
-Seven decisions I made and hold the agents to, each with its reason and the code that carries it out:
+Six decisions I made and hold the agents to, each with its reason and the code that carries it out:
 
-- **A review loop instead of hand-edits.** No generated plot is patched by hand. An AI reviewer scores every
-  render on a 24-criterion rubric, blind to any earlier score, and a repair loop fixes the defects it names,
-  against a bar that starts at 90 of 100 and drops 10 points per repair. A fix to a prompt or a spec fixes
-  every plot it governs. ([rubric](prompts/quality-criteria.md), [review workflow](.github/workflows/impl-review.yml))
-- **A gate against silent regressions.** Every night the oldest implementations are regenerated, and a new
-  version replaces the live one only when a pairwise review of both finds a visible fix and the new score
-  drops by no more than a point. A newer model can't quietly make the catalogue worse.
-  ([`regen_gate.py`](automation/scripts/regen_gate.py), [`daily-regen.yml`](.github/workflows/daily-regen.yml))
-- **One agent talks, code decides.** In "Use with my data", one Google ADK agent talks to the user. The
-  per-library adapters and the reviewer run inside a pipeline whose loop is plain code: at most one repair
-  round, at most two reviews, and the spec, library, and data come from server state, so neither the model
-  nor an injected prompt can redirect a run. ([`pipeline.py`](agents/anyplot/pipeline.py),
-  [design](docs/concepts/agent-network.md))
-- **Model-written code runs where it can't do harm.** No generated code runs in the agent service. A
-  validator (Python's `ast`, tree-sitter for R, Julia, and JavaScript) refuses disallowed imports and calls
-  first; a separate renderer then runs the code in Cloud Run sandboxes (gVisor) with no network egress, no
-  metadata server, and a read-only root filesystem, under a service account that holds no IAM role.
-  ([renderer](agents/renderer/main.py), [validator](agents/anyplot/code/validate.py))
-- **Models choose, the server acts.** The assistant never hands the server data rows: it picks from a closed
-  set of typed operations, which the server applies with pandas and reports with counts, and example data
-  comes from formulas or a sandboxed snippet whose written-out values the validator caps. Guardrail plugins check
-  every turn: a scope judge that fails closed, token and run budgets per request, user, network, and day,
-  and a tool allowlist per agent. ([operations](agents/anyplot/data/prepare.py),
-  [plugins](agents/anyplot/plugins/))
-- **Private by construction.** Chats and data live only in server memory and are dropped after an hour
-  idle, and the session id never appears in a URL. Usage telemetry holds only enums, buckets, and counts,
-  keyed by hashes under a per-process random salt, and a canary test fails if any message or data value
-  reaches a log line. ([telemetry](agents/anyplot/telemetry.py),
-  [canary test](tests/unit/agents/runtime/test_canary.py))
-- **Rules that turn a repeated mistake into a check.** A mistake that comes back becomes a test or a written
-  rule, with the incident beside it. One test keeps the assistant's prompt in step with the buttons the chat
-  page renders; another asserts that no agent has a code executor or a search tool. After a green deploy
-  left anyplot.ai blank for 45 minutes, every merge ends with a smoke test of the live site, and CI runs the
-  same check on the built image. Around them: a changelog fragment per pull request checked in CI, every
-  migration run against a throwaway PostgreSQL, CodeQL, and Dependabot.
-  ([prompt-control test](tests/unit/agents/test_prompt_controls.py),
-  [site smoke test](scripts/site-smoke.mjs), [guardrails](.claude/guardrails.md))
+- **A review loop instead of hand-edits.** A wrong plot is fixed in its spec or in a rule and then regenerated,
+  not patched by hand. A fix to a prompt or a spec reaches every plot it governs at that plot's next regeneration.
+  An AI reviewer scores every render on a 24-criterion rubric, and a repair loop fixes the defects it names,
+  against a bar that starts at 90 of 100 and drops 10 points per repair. Pipeline reviews run on Opus because it
+  is the stricter and the steadier reviewer: on the same plots it scored about 8 points below Sonnet, and across
+  repeated runs the gap it measured between a new version and the old one spread 1.3 points, against 4.6.
+  ([rubric](prompts/quality-criteria.md), [#11968](https://github.com/MarkusNeusinger/anyplot/pull/11968))
+- **A gate against silent regressions.** In an experiment on one spec, 39 of 75 regenerations failed their first
+  review and merged after repairs at the lowered bar, some replacing a better version (93 → 88). Now one review
+  scores the new version and scores the live one again under today's rules, because a stored score from an older
+  rubric or another reviewer can't be compared with a new one. The new version replaces the live one only with no
+  regression, a score at most a point lower, and a fix the review can verify; a code conversion for the chat
+  passes on an unchanged render instead. My rule: a regeneration never makes an implementation worse.
+  ([`regen_gate.py`](automation/scripts/regen_gate.py), [#11945](https://github.com/MarkusNeusinger/anyplot/pull/11945))
+- **A score belongs to the code that drew it.** An audit of the live catalogue in November 2026 traced 50 findings
+  to renders that didn't come from the merged code. Generation and repair now stage a hash of the code they
+  rendered, and a review whose hash is missing or doesn't match the code at the pull request's head stops before
+  it scores; a regeneration then keeps the live version. It only warned at first: from 2026-11-10 to 2026-11-16,
+  all 39 production reviews matched. ([`render_hash.py`](automation/scripts/render_hash.py),
+  [#13034](https://github.com/MarkusNeusinger/anyplot/pull/13034),
+  [#13129](https://github.com/MarkusNeusinger/anyplot/pull/13129))
+- **Private by construction.** Chats and data live only in server memory, unless you send feedback, and are dropped
+  after an hour idle; the public chat's session id travels in a header, not in a URL. My rule for usage telemetry:
+  enums, buckets, and counts only, keyed by hashes under a per-process salt, never a message, a data value, or a
+  column name; a canary test fails if a message or a data value reaches the agent service's logs.
+  ([telemetry](agents/anyplot/telemetry.py), [canary test](tests/unit/agents/runtime/test_canary.py))
+- **A check counts before it blocks.** A check compares the figures a chat reply writes in digits with what the
+  model was given. It ships counting only, because no eval with a real model reached the path where it would
+  withhold a reply; I decide from the counts of real use when it starts blocking. Every release runs the chat's
+  evals first, since a regression once surfaced only because another pull request happened to run them.
+  ([#13145](https://github.com/MarkusNeusinger/anyplot/pull/13145), [evals](agents/evals/))
+- **An incident becomes a check.** After a green pull request and a green deploy left anyplot.ai blank for 45
+  minutes, I made a browser check of the live site a step after every merge; CI runs it on the built image too when
+  the image's inputs change. This README is held the same way: a test reads its numbers from the code and fails
+  when a bound moves and the text doesn't. ([site smoke test](scripts/site-smoke.mjs),
+  [claim tests](tests/unit/test_readme_claims.py), [guardrails](.claude/guardrails.md))
 
 ## Architecture
 
@@ -142,11 +153,12 @@ plot.
 
 1. **Request.** Someone opens an issue, from GitHub or from a link on anyplot.ai.
 2. **Specification.** `spec-create.yml` checks for duplicates, assigns a spec ID and tags, and opens a pull request with
-   the spec. The maintainer approves it on the issue.
-3. **Generation.** `impl-generate.yml` writes one implementation per library and renders it in both themes.
-4. **Review.** `impl-review.yml` first runs automated checks: the code parses and runs, the image exists and isn't
-   blank, and the canvas has its target size. An AI reviewer then scores the render, blind to any earlier score, on a
-   100-point rubric of 24 criteria ([`prompts/quality-criteria.md`](prompts/quality-criteria.md)): visual quality 30,
+   the spec. I approve it on the issue; since September 2026 the merge job ignores the label from any other account.
+3. **Generation.** `impl-generate.yml` writes one implementation per library, runs it, and renders it in both
+   themes; without both renders it stops.
+4. **Review.** `impl-review.yml` first runs automated checks: both renders exist and the canvas has its target
+   size. An AI reviewer then scores the render, with the stored score kept out of its working tree and its prompt,
+   on a 100-point rubric of 24 criteria ([`prompts/quality-criteria.md`](prompts/quality-criteria.md)): visual quality 30,
    design 20, spec compliance 15, data quality 15, code quality 10, and library mastery 10.
 5. **Repair.** Below the bar, `impl-repair.yml` fixes the defects the review named, and the plot is reviewed again.
 6. **Merge.** `impl-merge.yml` merges the pull request, promotes the images from staging to production in Cloud
@@ -167,9 +179,9 @@ plot.
 ### Nightly regeneration
 
 `daily-regen.yml` regenerates the oldest part of the catalogue every night: by default the oldest spec in every
-library, and since 2026-10-31 the two oldest single implementations instead. A regeneration replaces the live
-implementation only when its review, which scores both versions, finds a fixed defect and no regression (the regen
-gate).
+library, and since 2026-10-31 the oldest single implementations instead. A regeneration replaces the live
+implementation only with no regression, a score at most a point lower, and a fix its review can verify; a code
+conversion for the chat passes on an unchanged render instead (the regen gate).
 
 For the labels, retries, and every workflow, see [Workflows](docs/workflows/overview.md).
 
@@ -181,6 +193,13 @@ On a plot page, choose **use with my data** and paste your own data. An agent ad
 sandbox, reviews the render against the catalogue's rubric, repairs it once if needed, and returns the image and the
 code.
 
+- **One agent talks, code decides.** One Google ADK agent talks to the user. The per-library adapters and the
+  reviewer run inside a pipeline whose loop is plain code: at most one repair round, at most two reviews, and the
+  spec, library, and data come from server state, so neither the model nor an injected prompt can redirect a run.
+  ([`pipeline.py`](agents/anyplot/pipeline.py), [design](docs/concepts/agent-network.md))
+- **Models choose, the server acts.** The assistant never hands the server data rows: it picks from a closed set
+  of typed operations, which the server applies with pandas and reports with counts.
+  ([operations](agents/anyplot/data/prepare.py))
 - **Agents.** A [Google ADK](https://adk.dev) service on Cloud Run. The model is Claude Haiku 5.5 through Vertex AI in
   the EU; Gemini 3.8 Flash is a configurable second arm. Runtimes exist for all 15 libraries.
 - **Sandboxed rendering.** No model-written code runs in the agent service. A separate renderer runs it in Cloud Run
@@ -297,7 +316,7 @@ You contribute ideas, not code: the pipeline writes every implementation.
 
 1. Open an issue, on GitHub or through a link on anyplot.ai.
 2. The AI validates and processes it.
-3. The maintainer reviews and approves it.
+3. I review and approve it.
 4. The pipeline generates or fixes the code, and the review gates it.
 
 Don't open pull requests with plot code. A plot with quality problems usually needs a better spec, not hand-edited code.
