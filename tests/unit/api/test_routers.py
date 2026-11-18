@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from api import search_misses
 from api.cache import clear_cache, get_cache, get_cache_stats
 from api.main import app, fastapi_app
 from api.routers.plots import (
@@ -1314,6 +1315,17 @@ class TestSeoProxyRouter:
         # The machine-read line, mirrored from the human page's "machine readers" row.
         assert "Machine readers: each request by a crawler, an AI assistant or an MCP client" in response.text
         assert "without IP address or user-agent, kept up to 180 days" in response.text
+        # The list of searches without a hit, mirrored from the human page's row: what is kept, what the
+        # shared rule refuses, why a row is pseudonymous, and the period the API's purge keeps.
+        assert (
+            "Searches without a hit: when a gallery search finds nothing, its text (lowercase, first 40"
+            in response.text
+        )
+        assert "An e-mail address or a link with http:// is not kept; anything else you type may be" in response.text
+        assert "A row holds no IP address and no time of day" in response.text
+        assert f"Kept {search_misses.RETENTION_DAYS} days in Google Cloud SQL" in response.text
+        # What the dashboard still shows is a fact about today, not a note on older entries.
+        assert "search texts sent up to and including November 2026 still show" in response.text
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text

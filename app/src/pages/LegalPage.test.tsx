@@ -113,7 +113,13 @@ describe('LegalPage', () => {
     expect(misses).toHaveTextContent(/when a gallery search finds nothing/);
     expect(misses).toHaveTextContent(/its text \(lowercase, first 40 characters\)/);
     expect(misses).toHaveTextContent(/is counted per day, so I see what the catalogue lacks/);
-    expect(misses).toHaveTextContent(/a row holds no address\s+and no time of day/);
+    // What the shared rule refuses is an `@` and a `:`, so an e-mail address and a link with its
+    // scheme; a host name or a street address stays, and the row says so and asks.
+    expect(misses).toHaveTextContent(
+      /an e-mail address or a link with http:\/\/ is not kept; anything else you type may be, so please type no personal data\./
+    );
+    // "no IP address", as the other rows say it: a typed text can itself be a street address.
+    expect(misses).toHaveTextContent(/a row holds no IP address and no time of day/);
     expect(misses).toHaveTextContent(/only timestamps could match one to the 30-day server logs/);
     expect(misses).toHaveTextContent(/so it is pseudonymous/);
     expect(misses).toHaveTextContent(/only I read the list, and I delete an entry on request/);
@@ -121,9 +127,10 @@ describe('LegalPage', () => {
     // The rule keeps out an e-mail address and a link with its scheme, not every address or link:
     // the row claims neither.
     expect(misses).not.toHaveTextContent(/nothing that looks like an address or a link/);
-    // The search texts the app sent before the change still stand on the public dashboard.
+    // The search texts the app sent before the change still stand on the public dashboard. The
+    // change shipped within November 2026, so the month is included.
     expect(
-      screen.getByText(/search texts sent before november 2026 still show there/)
+      screen.getByText(/search texts sent up to and including november 2026 still show there/)
     ).toBeInTheDocument();
   });
 
