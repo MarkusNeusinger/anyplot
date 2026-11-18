@@ -76,6 +76,7 @@ from agents.anyplot.plugins.tool_safety import (
 from agents.anyplot.policy import DATA_PREAMBLE
 from agents.anyplot.render import harness
 from agents.anyplot.schemas import (
+    AXIS_DATE_PATTERN,
     MAX_ATTEMPTS,
     MAX_AXES,
     MAX_AXIS_DATE_CHARS,
@@ -854,6 +855,9 @@ class TestPlotAxes:
             ShownAxis.model_validate(bad_axis)
         with pytest.raises(ValueError):
             ShownAxes.model_validate({})
+        assert re.fullmatch(AXIS_DATE_PATTERN, "2024-01-01") is not None
+        assert re.fullmatch(AXIS_DATE_PATTERN, "٢٠٢٤-٠١-٠١") is None
+        assert re.fullmatch(AXIS_DATE_PATTERN, "２０２４-０１-０１") is None
 
     def test_the_root_reads_the_rounds_without_their_case_fields(self) -> None:
         """Gate ids and sandbox classes explain a feedback case; the reply has nothing to say about them."""
@@ -1398,6 +1402,8 @@ class TestHarnessAxes:
             assert "labels" in report
             drawn_fig = chart.draw()
             assert harness.drawn_axes(drawn_fig) == []
+            drawn_fig.set_layout_engine(None)
+            assert "axes" not in harness.probe(drawn_fig, 200) and harness.drawn_axes(drawn_fig) == []
 
         # Importing and saving plotnine figures leaves matplotlib's own `axes` probe intact in the same worker.
         mpl_fig = Figure(figsize=(16, 9))

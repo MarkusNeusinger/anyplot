@@ -1704,13 +1704,20 @@ def _is_category_axis(axis):
 
 
 def _is_plotnine_figure(figure):
-    """Whether `figure` was built by plotnine (`PlotnineLayoutEngine`), whose scales map data to plain numbers before
-    matplotlib sees them."""
+    """Whether `figure` was built by plotnine (`PlotnineLayoutEngine` or `p9GridSpec`), whose scales map data to plain
+    numbers before matplotlib sees them."""
     if type(figure).__module__.startswith("plotnine"):
         return True
     get_engine = getattr(figure, "get_layout_engine", None)
     engine = get_engine() if callable(get_engine) else getattr(figure, "_layout_engine", None)
-    return engine is not None and type(engine).__module__.startswith("plotnine")
+    if engine is not None and type(engine).__module__.startswith("plotnine"):
+        return True
+    for ax in figure.get_axes():
+        get_gridspec = getattr(ax, "get_gridspec", None)
+        gridspec = get_gridspec() if callable(get_gridspec) else None
+        if gridspec is not None and type(gridspec).__module__.startswith("plotnine"):
+            return True
+    return False
 
 
 def _axis_scale(axis):
