@@ -176,13 +176,16 @@
   exception, and the blank site of 2026-10-22 became a browser check after
   every merge. The chat's architecture leaves the list; its sentence on one
   repair round and two reviews now opens the README's "Use with my data"
-  section. "How I build anyplot" opens with the decisions the builder makes
-  and the records that keep them, and counts six of them below.
+  section, and the next bullet there says that the assistant never hands
+  the server data rows but picks from a closed set of typed operations.
+  "How I build anyplot" opens with the decisions the builder makes and the
+  records that keep them, and counts six of them below.
   `test_readme_claims.py` holds each new claim to its source: the review
   model's default and fallback in `impl-review.yml`, the gate's one-point
-  tolerance and adapt route, the render-hash steps and keep codes, the
-  figure check's `log` default, the release procedure's eval step, and the
-  count of decisions to the highlights' bullets.
+  tolerance and adapt route in every text that states the gate, the
+  render-hash steps and keep codes, the figure check's `log` default, the
+  release procedure's eval step, the data layer's union of typed operations,
+  and the count of decisions to the highlights' bullets.
 - **The month the chat opened keeps its capital.** `/agent`, the about page
   and the crawler copy of each say "open to everyone since November 2026",
   as a month is a name in the site's lowercase voice too; the timeline's
@@ -256,8 +259,8 @@
   "both renders exist and the canvas has its target size".
   `test_readme_claims.py` pins both sentences and the review's step that
   checks for both renders.
-- **The README and the about page no longer overstate the review.** They
-  said the reviewer scores "blind to any earlier score", but
+- **The README and the about page no longer overstate the review and the
+  gate.** They said the reviewer scores "blind to any earlier score", but
   only its working tree and its prompt are kept free of the stored score,
   while the branch history and the pull request stay reachable. The README's
   review step, the about page and its crawler copy now say "with the stored
@@ -265,11 +268,15 @@
   to the step that hides the stored review before the reviewer runs. A fix
   to a prompt, a spec or a rule reaches a plot when that plot is next
   regenerated, not at once, as the README's highlight, the about page, its
-  crawler copy and the style guide now say. The README's gate highlight said
-  a new version replaces the live one only on a visible fix; it now says a fix the
-  review can verify and names the code conversion for the chat that passes
-  on an unchanged render. The nightly regeneration names "the oldest
-  implementations" in place of a count the schedule no longer uses.
+  crawler copy and the style guide now say. The gate was said to replace the
+  live version only on a visible fix (the README's highlight) or only when
+  a review finds a fixed defect and no regression (the README's nightly
+  section, the about page, its crawler copy and the style guide). All five
+  now say the same: only with no regression, a score at most a point lower
+  and a fix the review can verify, while a code conversion for the chat
+  passes on an unchanged render instead. The nightly regeneration names
+  "the oldest single implementations" in place of a count the schedule no
+  longer uses.
 - **The debug page ignores a status answer that comes after it is gone.**
   Its first request set the page's state whenever it settled, also after
   the admin had moved on: a request that then failed forced a reload of the
