@@ -21,8 +21,12 @@ BASE_DOC = "\n".join(["title: draft", *[f"line {n}" for n in range(1, 13)], "clo
 CLOSING = "main adds a closing paragraph"
 
 
+# A developer's own signing key or hooks must not decide whether the throwaway commits succeed.
+_GIT_SETTINGS = ["user.name=t", "user.email=t@example.com", "commit.gpgsign=false", "core.hooksPath=/dev/null"]
+
+
 def _git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    command = ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@example.com", *args]
+    command = ["git", "-C", str(repo), *[part for setting in _GIT_SETTINGS for part in ("-c", setting)], *args]
     return subprocess.run(command, check=check, capture_output=True, text=True)
 
 
@@ -110,6 +114,42 @@ def test_a_cleanly_merged_file_changed_during_the_merge_is_reported(repo: Path) 
     assert done.returncode == 1, done.stdout + done.stderr
     assert "CHANGED BY HAND OR A SIDE TAKEN (a mechanical merge has no conflict here): other.txt" in done.stdout
     assert "= the branch's version, whole" in done.stdout
+
+
+def test_a_path_with_a_space_and_an_umlaut_is_reported_under_its_own_name(repo: Path) -> None:
+    """git quotes such a path by default; a quoted name would not be found again in the trees."""
+    name = "über uns.md"
+    _git(repo, "checkout", "-q", "main")
+    _commit(repo, "a page on main", {name: "eins\n"})
+    _git(repo, "checkout", "-q", "feature")
+    _merge_main_with_conflict(repo)
+    resolved = BASE_DOC.replace("title: draft", "title: feature") + CLOSING + "\n"
+    (repo / "doc.md").write_text(resolved, encoding="utf-8")
+    (repo / name).write_text("zwei\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "--no-edit")
+
+    done = _audit(repo, "start")
+
+    assert done.returncode == 1, done.stdout + done.stderr
+    assert f"(a mechanical merge has no conflict here): {name}" in done.stdout
+
+
+def test_a_change_against_a_deletion_is_named_as_a_conflict_without_markers(repo: Path) -> None:
+    """Such a conflict leaves no markers in the file, so the audit says it cannot tell the hunks apart."""
+    _git(repo, "checkout", "-q", "-b", "removes", "start")
+    _git(repo, "rm", "-q", "other.txt")
+    _git(repo, "commit", "-q", "-m", "remove the second file")
+    merged = _git(repo, "merge", "--no-edit", "main", check=False)
+    assert merged.returncode != 0, "main changed the file this branch deleted"
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "--no-edit")
+
+    done = _audit(repo, "start")
+
+    assert done.returncode == 1, done.stdout + done.stderr
+    assert "CONFLICT WITHOUT MARKERS (a deletion, a rename or a binary file), compare by hand: other.txt" in done.stdout
+    assert "DROPPED OUTSIDE A CONFLICT" not in done.stdout
 
 
 def test_a_merge_without_a_conflict_has_nothing_lost(repo: Path) -> None:

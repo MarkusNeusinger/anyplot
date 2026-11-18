@@ -421,6 +421,8 @@ The recipe:
      still differs from the mechanical merge.
    - `resolved against …` lists lines of the conflict itself, the
      resolution's own choice.
+   - `CONFLICT WITHOUT MARKERS` is a change against a deletion, a rename or a
+     binary file: the audit names it and leaves the comparison to you.
 
    Exit code 1 means there is something to look at, not that the merge is
    wrong: a test adapted to the other side's new function signature shows up

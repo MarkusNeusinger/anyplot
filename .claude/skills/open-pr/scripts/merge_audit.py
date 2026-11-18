@@ -12,6 +12,8 @@ given refs reach and the base does not, the merge is redone mechanically
   `git checkout --ours <file>` or `--theirs <file>`, which takes the whole file.
 - Lines inside a conflict that M does not have are listed too, as the resolution's own choice: one
   side of a real conflict always loses lines.
+- A conflict without markers (a change against a deletion, a rename, a binary file) is named and
+  left to a comparison by hand.
 
 Lines are compared as a set per file, so a dropped line that also stands elsewhere in the file (a
 lone brace, a repeated heading) is not seen. A finding is a place to look at, not a verdict: a
@@ -39,19 +41,27 @@ class GitError(RuntimeError):
     """A git command this audit cannot go on without failed."""
 
 
+def run_git(*args: str) -> subprocess.CompletedProcess[str]:
+    # Paths come back as they are, not C-quoted: a quoted name is not found again by `git show`.
+    command = ["git", "-c", "core.quotePath=false", *args]
+    return subprocess.run(command, capture_output=True, text=True, errors="replace", check=False)
+
+
 def git(*args: str, check: bool = True) -> str:
-    done = subprocess.run(["git", *args], capture_output=True, text=True, errors="replace", check=False)
+    done = run_git(*args)
     if check and done.returncode != 0:
         raise GitError(f"git {' '.join(args)} failed: {done.stderr.strip()[:300]}")
     return done.stdout
 
 
 def blob(tree: str, path: str) -> str | None:
-    """The file's text in a tree or commit, or None when it is not there."""
-    done = subprocess.run(
-        ["git", "show", f"{tree}:{path}"], capture_output=True, text=True, errors="replace", check=False
-    )
+    """The file's text in a tree or commit, or None when no file is there."""
+    done = run_git("show", f"{tree}:{path}")
     return done.stdout if done.returncode == 0 else None
+
+
+def is_submodule(tree: str, path: str) -> bool:
+    return run_git("ls-tree", tree, "--", path).stdout.startswith("160000 ")
 
 
 def added_lines(old: str, new: str, path: str) -> list[str]:
@@ -59,28 +69,23 @@ def added_lines(old: str, new: str, path: str) -> list[str]:
     return [line[1:] for line in out.splitlines() if line.startswith("+") and not line.startswith("+++")]
 
 
-def outside_conflicts(merged: str) -> set[str]:
-    """The lines of a mechanically merged file that stand outside its conflict markers."""
+def outside_conflicts(merged: str) -> set[str] | None:
+    """The lines of a mechanically merged file outside its conflict markers; None when it has no markers."""
     lines: set[str] = set()
-    inside = False
+    inside = marked = False
     for line in merged.splitlines():
         if line.startswith(CONFLICT_START):
-            inside = True
+            inside = marked = True
         elif line.startswith(CONFLICT_END):
             inside = False
         elif not inside:
             lines.add(line)
-    return lines
+    return lines if marked else None
 
 
 def mechanical_merge(ours: str, theirs: str) -> tuple[str, list[str]]:
     """The tree a merge without a human gives, and the files it could not resolve."""
-    done = subprocess.run(
-        ["git", "merge-tree", "--write-tree", "--name-only", "--no-messages", ours, theirs],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    done = run_git("merge-tree", "--write-tree", "--name-only", "--no-messages", ours, theirs)
     if done.returncode not in (0, 1) or not done.stdout.strip():
         raise GitError(f"git merge-tree failed for {ours[:9]} and {theirs[:9]}: {done.stderr.strip()[:300]}")
     lines = done.stdout.splitlines()
@@ -108,11 +113,22 @@ def audit(merge: str, ours: str, theirs: str) -> tuple[list[str], bool, list[str
     for path in conflicted:
         result = blob(merge, path)
         if result is None:
+            if is_submodule(merge, path):
+                report.append(f"  a submodule pointer conflicted, not audited: {path}")
+                continue
             to_look_at = True
             report.append(f"  CONFLICTED AND GONE from the result: {path}")
             continue
         have = set(result.splitlines())
         clean = outside_conflicts(blob(tree, path) or "")
+        if clean is None:
+            # A change against a deletion, a rename or a binary file conflicts without markers, so
+            # nothing tells its hunks apart from the conflict.
+            to_look_at = True
+            report.append(
+                f"  CONFLICT WITHOUT MARKERS (a deletion, a rename or a binary file), compare by hand: {path}"
+            )
+            continue
         for label, side in (("merged-in side", theirs), ("branch", ours)):
             lost = [line for line in added_lines(merge_base, side, path) if line.strip() and line not in have]
             dropped = [line for line in lost if line in clean]
