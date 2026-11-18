@@ -54,7 +54,7 @@ PRICES = "Hours,Price\n1,$5\n2,7\n3,$12\n"
 """`y` of `scatter-basic` open beside a text column of prices, which reads as numbers without a guess."""
 RANGES = "team;games;mean;min–max\nalpha;140;61.5;48–80\nbeta;146;67.2;52–77\ngamma;143;64.0;45–79\n"
 DAYS_WEST = "day,kWh\n2026-03-01-05:00,12\n2026-03-02-05:00,15\n2026-03-03-05:00,11\n"
-"""Days with a UTC offset west of UTC and no time: the table of owner decision F4."""
+"""Days with a UTC offset west of UTC and no time, which pandas alone reads as 05:00 on each day."""
 MADE_HEADING = "- Conversions the server made for open roles before this turn:"
 
 
@@ -204,9 +204,9 @@ class TestMakeConversions:
         ],
     )
     def test_days_with_a_utc_offset_are_never_read_as_dates_unasked(self, spec: str, text: str) -> None:
-        """The cells stay as written, and only a request reads their days: pandas read `-05:00` as 05:00 and the hour
-        labels `-00` to `-03` as one date four times, which rated the conversion certain. On `line-basic` the hour
-        labels, which no reading takes, leave `x` to the row numbers, as any text column does."""
+        """The cells stay as written, and only a request reads their days: pandas alone reads `-05:00` as 05:00 and the
+        hour labels `-00` to `-03` as one date four times, a reading that would rate the conversion certain. On
+        `line-basic` the hour labels, which no reading takes, leave `x` to the row numbers, as any text column does."""
         store, view = pasted(text, spec)
 
         made = make_conversions(store, SID, view, view.snapshot)

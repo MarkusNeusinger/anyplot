@@ -1,11 +1,11 @@
 """A date followed directly by a UTC offset and no time (`2026-03-01+01:00`, `2026-03-01-05:00`, `2026-03-01Z`).
 
-Owner decision F4 (option a): the parser keeps such a column as written, as text with a note that names its shape;
-`set_type` reads the written day into a new column on request and counts the dropped offsets in its change line; a
-filter bound of that shape is the whole day, as a date without a time is; and a sign with digits in any other form
-after a date (`-03`, `+0100`, `-05:00:00`) is refused, since `2026-03-01-03` may as well be an hour label. Before the
-fix the parser left such cells text without a word, pandas read `-05:00` as the time 05:00 and `-03` as 03:00 (four
-hour labels became four equal dates, rated certain), and `datetime.fromisoformat` read a bound's `+01:00` as 01:00.
+The parser keeps such a column as written, as text with a note that names its shape; `set_type` reads the written day
+into a new column on request and counts the dropped offsets in its change line; a filter bound of that shape is the
+whole day, as a date without a time is; and a sign with digits in any other form after a date (`-03`, `+0100`,
+`-05:00:00`) is refused, since `2026-03-01-03` may as well be an hour label. The readers below would get each of them
+wrong if the cells reached them: pandas reads `-05:00` as the time 05:00 and `-03` as 03:00 (four hour labels become
+four equal dates), and `datetime.fromisoformat` reads a bound's `+01:00` as 01:00.
 """
 
 import csv

@@ -453,7 +453,7 @@ counts the offsets it drops (`prepare._day_offsets`), and a condition takes it a
 DATE_SIGN_DIGITS = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}[+-][0-9][0-9:]*")
 """An ISO date followed directly by a sign and digits, of any form. Unless it is a `DATE_OFFSET`, no reading takes it:
 `2026-03-01-03` and `2026-03-01+0100` are an hour label as much as an offset, and `2026-03-01-05:00:00` a time as much
-(pandas read each of them as a time of day, and Python's `fromisoformat` takes any character for the `T`)."""
+(pandas reads each of them as a time of day, and Python's `fromisoformat` takes any character for the `T`)."""
 OFFSET_DATES = (
     "kept as text: every cell is a date followed directly by a UTC offset, with no time "
     "(YYYY-MM-DD±HH:MM or YYYY-MM-DDZ)"

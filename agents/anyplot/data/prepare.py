@@ -54,8 +54,8 @@ The operations:
   dropped, and the change line counts the dates per offset ("3 dates had the UTC offset -05:00,
   which was dropped; the days are as written"). Such dates beside times are a `type_mismatch`, as a
   day is no moment, and so is a date followed by a sign and digits in any other form (`2026-03-01-03`,
-  `2026-03-01+0100`, `parse.DATE_SIGN_DIGITS`), which may be an hour label: pandas read `-05:00` as
-  05:00 and `-03` as 03:00. Either way a cell that cannot be read becomes missing and the
+  `2026-03-01+0100`, `parse.DATE_SIGN_DIGITS`), which may be an hour label: pandas alone reads `-05:00`
+  as 05:00 and `-03` as 03:00. Either way a cell that cannot be read becomes missing and the
   change line counts it; when more than 10 % of the non-missing cells fail, the
   operation is a `type_mismatch` instead. To number, a minus written as the minus sign
   `−` before the number is a sign, as the parser reads it, and the change line counts
