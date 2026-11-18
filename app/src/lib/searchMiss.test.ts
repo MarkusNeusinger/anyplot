@@ -40,10 +40,14 @@ describe('isCountableMiss', () => {
       ...[0x00ad, 0x00a0, 0x2010, 0x2011, 0x2212, 0x2013, 0x2019, 0x3000, 0xfeff, 0x2028],
       ...[0xff41, 0xff21, 0xfb01, 0x00b2, 0x3392, 0xff08, 0x200c, 0x200d],
     ].map(char => (typeof char === 'number' ? String.fromCodePoint(char) : char));
+    // mulberry32: 32-bit arithmetic throughout (`Math.imul`), so no product outgrows a double's
+    // 53 bits and the low bits stay random.
     let seed = 20261118;
     const next = (bound: number) => {
-      seed = (seed * 1103515245 + 12345) % 2147483648;
-      return seed % bound;
+      seed = (seed + 0x6d2b79f5) | 0;
+      let mixed = Math.imul(seed ^ (seed >>> 15), seed | 1);
+      mixed ^= mixed + Math.imul(mixed ^ (mixed >>> 7), mixed | 61);
+      return ((mixed ^ (mixed >>> 14)) >>> 0) % bound;
     };
     const unstable: string[] = [];
     for (let round = 0; round < 3000; round++) {

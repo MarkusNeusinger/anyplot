@@ -128,8 +128,9 @@ export function forgetSentMisses(): void {
  * keep of it (`keptMissText`), when there is one and it was not reported yet in this page load.
  * Claims and returns that text, so it is never reported twice, or returns `null`. Both reports of
  * a miss follow from this one decision in the browser (`reportSearchMiss`). Afterwards they can
- * still part: the API's limits, the day's cap or a failed write can leave a counted miss without a
- * row, and a browser that blocks the analytics script can leave a row without a count.
+ * still part: the API's limits, the day's cap, a failed write, or a letter newer than the server's
+ * Unicode tables (which the server refuses as unassigned) can leave a counted miss without a row,
+ * and a browser that blocks the analytics script can leave a row without a count.
  */
 export function claimSearchMiss(typed: string): string | null {
   const query = keptMissText(typed);

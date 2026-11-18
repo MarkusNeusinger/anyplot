@@ -18,8 +18,8 @@
   some scripts spell words with, no character that shows as nothing); only a
   text that passed is cut to 40 characters. So an e-mail address, a phone
   number or a link with its scheme never leaves the browser, also when it
-  stands past the 40th character. A row is the text, the UTC day and a count, with
-  no address, no user agent, no time of day and no session; it is
+  stands past the 40th character. A row is the text, the UTC day and a
+  count, with no address, no user agent, no time of day and no session; it is
   pseudonymous, since the 30-day request log could match it by its day. The
   text travels in the body of `POST /search/miss`, which reads at most 1 KiB
   before it parses anything, answers `204` whatever happened, never logs the

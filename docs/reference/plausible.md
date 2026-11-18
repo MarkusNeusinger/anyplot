@@ -283,9 +283,10 @@ finds nothing inside the active filters (the dropdown then offers
 
 The event and the row follow from one decision in the browser, but the two
 counts can still differ: the API's limit of 20 requests a minute per network,
-the day's cap of 1,000 new texts, or a failed write leave a counted miss
-without a row, and a browser that blocks the analytics script leaves a row
-without a count. Read the event's count beside the list as two estimates of
+the day's cap of 1,000 new texts, a failed write, or a letter newer than the
+server's Unicode tables (the browser knows it as a letter, the server
+refuses it as unassigned) leave a counted miss without a row, and a browser
+that blocks the analytics script leaves a row without a count. Read the event's count beside the list as two estimates of
 one thing, not as numbers that add up.
 
 Since 2026-11-18 the event counts only such finished texts. Until then it
