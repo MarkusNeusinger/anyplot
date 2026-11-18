@@ -7,5 +7,5 @@
   direction, standards and push-back, which no diff shows. A rule in
   `CLAUDE.md` has every agent add the file in the pull request that carries
   a decision out, and one file per decision keeps open pull requests from
-  editing the same lines. It starts with eight decisions of 2026-11-17 and
-  2026-11-18.
+  editing the same lines. It starts with nine decisions of 2026-11-17 and
+  2026-11-18. (#13186)
