@@ -18,7 +18,7 @@
   platform's years to the AI workflow page. One person builds the site, so
   the whole page and its crawler copy speak in the first person singular, "I"
   and never "we" or "humans". The author in the structured data names
-  neusinger.com too.
+  neusinger.com too. (#13177)
 - **The about page says who sets the rubric and how the chat's agents
   work.** The review section adds that what counts as a good plot is the
   builder's call, that AI helped turn it into 24 criteria and their points,
@@ -34,7 +34,7 @@
   `test_readme_claims.py` holds the 24 to the criteria registry, the repair
   and the reviews to the agents' settings, and the four rounds to
   `docs/reference/palette-variants/`. The crawler copy follows, except for
-  the palette, which it has no section for.
+  the palette, which it has no section for. (#13177)
 - **The README shows three push-back cases.** Under "I know when to push
   back", nested cases tell how real weather downloads broke the import of
   pasted data, and that pasted data has had to work with notes, metadata or
@@ -45,7 +45,7 @@
   found pasted values rounded or dropped without a word, which led to the
   rule that what you paste is what the data holds, or a line says what
   changed and how often. They replace the abstract sentence on security.
-  `test_readme_claims.py` holds the first rule to the agents' parser.
+  `test_readme_claims.py` holds the first rule to the agents' parser. (#13177)
 - **The landing hero names its builder.** From 900 px the eyebrow above the
   headline reads "by Markus Neusinger", since the masthead shows "the open
   plot catalogue" at those widths; on narrower screens, where the masthead
@@ -56,13 +56,13 @@
   touch target on phones, and counts its clicks as `nav_click` with the
   source `hero_about`. The intro adds "I approve new specs and set the
   rules." The masthead, the OG image and the crawler copy
-  keep "the open plot catalogue" alone.
+  keep "the open plot catalogue" alone. (#13177)
 - **The about page's stack table lists the checks.** A "checks" row names
   tests and lint on every pull request that changes Python or frontend code
   outside the plot catalogue, the 80 % patch-coverage target of `codecov.yml`,
   CodeQL, every migration run on a throwaway PostgreSQL, and the check of the
   live site after a merge, which the merging agent runs by rule.
-  `test_readme_claims.py` holds the target to `codecov.yml`.
+  `test_readme_claims.py` holds the target to `codecov.yml`. (#13177)
 - **The about page draws its pipeline, rubric, palette and origin.** The
   pipeline's ASCII list becomes a flow of its five steps with what AI does in
   each, and the builder's own steps, "I approve" and "I set and change them",
@@ -83,7 +83,7 @@
   its `CHANGELOG.md` heading by its exact date; it holds the chat section's
   month, on the page and in the crawler copy, to the opening day of the agent
   design document, and checks that the 4.0.0 release follows that day. A test
-  holds the chips to the palette tokens.
+  holds the chips to the palette tokens. (#13177)
 
 ### Changed
 
@@ -99,14 +99,14 @@
   and mcp over about and legal, so no line ends on a separator. Keyboard and
   screen readers follow the order each layout shows, and with a browser font
   size up to 24 px every line keeps at least 8 px from the feedback and
-  scroll-to-top buttons.
+  scroll-to-top buttons. (#13177)
 - **The stack and the running costs moved from the legal page to the about
   page.** The legal page keeps the legal notice and the privacy policy; a link
   to `/legal#transparency` leads to `/about#transparency`, which a fresh load
   now scrolls to. The crawler bodies of both pages and `llms.txt` follow. The
   cost table now shows the operation at three-year commitment prices, before
   credits and without development use: about $75 a month, where it showed
-  about $60 after credits.
+  about $60 after credits. (#13177)
 - **The about page's description names its builder and what the page
   covers.** Search results and link previews read "About anyplot.ai: built by
   Markus Neusinger with AI agents he directs. How the catalogue is written
@@ -114,7 +114,7 @@
   link preview and in its crawler copy, in place of three different
   descriptions, one of them an "AI-powered" slogan the style guide rules out.
   The crawler copy now lists the stack too, one sentence per row of the
-  page's table, so each part of the description has its section there.
+  page's table, so each part of the description has its section there. (#13177)
 - **The about page tells the pipeline in the first person.** The lede says
   that plot ideas come in as GitHub issues and that the builder approves new
   specs. The pipeline paragraph opens with "the pipeline runs on its own
@@ -128,21 +128,21 @@
   found it online wanted from it, and what it covers today, fifteen libraries
   in four languages, counted from the library registry. The "use with my data"
   section says, as the chat's explainer does, that `.use_my_data()` sits on a
-  plot's page. The crawler copy follows each change.
+  plot's page. The crawler copy follows each change. (#13177)
 - **The builder's photo hangs beside the about page's text on wide
   screens.** A larger photo stands 216 px wide in the margin left of the
   760 px column wherever that margin holds it with its gap, so the bio keeps
   the column's full width; narrower, it stays 110 px wide beside the name,
   above it on phones. The picture comes in two files, 360 and 684 px wide,
   and the browser takes the smaller one (41 kB against 93 kB) wherever the
-  small slot or a screen of normal density is enough.
+  small slot or a screen of normal density is enough. (#13177)
 - **The about page's palette section drops the penguin example.** The two
   sentences after it, "the palette travels with you across libraries.
   switching tools doesn't mean re-learning your colour grammar.", carry the
-  point alone, in the style guide's library-agnostic story too.
+  point alone, in the style guide's library-agnostic story too. (#13177)
 - **The landing page's description drops "human ideas, ai builds the
   rest."** and keeps the hero block, the library count, colorblind-safe and
-  open source; a test now pins it.
+  open source; a test now pins it. (#13177)
 - **The style guide follows the about page.** It drops the slogans the page
   no longer carries ("human ideas. ai builds the rest.", "AI-built,
   human-shaped", "Humans curate; AI executes", "a catalogue that maintains
@@ -152,7 +152,7 @@
   person, and that a crawler copy that mirrors a page keeps the page's voice.
   Its pipeline line, its example of a spec and its positioning no longer speak
   of "humans" or "we", and its positioning assumes you know how to run code
-  in your language, not Python alone.
+  in your language, not Python alone. (#13177)
 - **The README counts the releases and names the approvals.** "How I build
   anyplot" introduces a physicist and data analyst and adds that 16 releases
   have shipped, a count `test_readme_claims.py` holds to the version
@@ -162,7 +162,7 @@
   pipeline's step 2 says that since September 2026 the merge job ignores an
   `approved` label from any other account, and `test_readme_claims.py` holds
   that to the merge job's condition in `spec-create.yml`. Its contribution
-  steps say "I review and approve it" in place of "The maintainer".
+  steps say "I review and approve it" in place of "The maintainer". (#13177)
 - **The README's engineering highlights are six decisions, each with its
   reason.** The review loop says why pipeline reviews run on Opus: on the
   same plots it scored about 8 points below Sonnet, and its before-and-after
@@ -185,12 +185,12 @@
   tolerance and adapt route in every text that states the gate, the
   render-hash steps and keep codes, the figure check's `log` default, the
   release procedure's eval step, the data layer's union of typed operations,
-  and the count of decisions to the highlights' bullets.
+  and the count of decisions to the highlights' bullets. (#13177)
 - **The month the chat opened keeps its capital.** `/agent`, the about page
   and the crawler copy of each say "open to everyone since November 2026",
   as a month is a name in the site's lowercase voice too; the timeline's
   labels stay lowercase. `test_readme_claims.py` holds the month with its
-  case on all three, against the opening day in the agent design document.
+  case on all three, against the opening day in the agent design document. (#13177)
 - **The site spells the colour-blindness words in British English.** The
   pages and their descriptions, the crawler copies, `llms.txt`, and the
   keywords and structured data of the page shell say "colourblind-safe", as
@@ -202,7 +202,7 @@
   citations, code and library or API names keep their own spelling.
   `test_site_spelling.py` keeps the American forms of these words out of
   those surfaces and out of the style guide's own text. Other words are not
-  swept yet.
+  swept yet. (#13177)
 
 ### Fixed
 
@@ -213,7 +213,7 @@
   `CHANGELOG.md` show. The crawler copy now tells the origin too, after
   transparency, as on the page. On the page and in its crawler copy,
   `test_readme_claims.py` holds the month of the rename to that release and
-  the start month to the README's "Since November 2025".
+  the start month to the README's "Since November 2025". (#13177)
 - **The masthead fits at every width.** With MonoLisa the last menu entry ran
   into the right margin on phones narrower than about 344 px, and the screen
   cut it off below about 327 px. From 600 to about 700 px and from 900 to
@@ -222,7 +222,7 @@
   screen's edge. The single row now starts at 720 px, the labels on a phone
   keep at least 8 px apart, phones narrower than 360 px mark the active page
   with a small dot that stays clear of the label before it, and from 900 to
-  1199 px the labels keep 20 px apart.
+  1199 px the labels keep 20 px apart. (#13177)
 - **The about page no longer overstates the review and the upkeep of the
   catalogue.** It says that the bar drops 10 points per repair, to 50 at the
   last review, and that a nightly job regenerates the oldest implementations,
@@ -231,7 +231,7 @@
   the ones a workflow runs, so the blank-image check is gone, from the
   README's pipeline step too. The crawler body says the same, and
   `test_readme_claims.py` pins the floor, the step, the nightly schedule and
-  the checks, and keeps the blank-image check out of the README's step.
+  the checks, and keeps the blank-image check out of the README's step. (#13177)
 - **Four sentences no longer say more than holds.** The about page and the
   README said that no generated plot is ever patched by hand, though the
   palette swap of May 2026 edited the plots' code catalogue-wide; they now
@@ -245,12 +245,12 @@
   README do, instead of when it was noticed. `test_readme_claims.py` holds
   the header to the public chat's routes and the minutes to the README's,
   and fails if one of the old sentences returns to the README, the workflow
-  page, the guardrails or the Dependabot command.
+  page, the guardrails or the Dependabot command. (#13177)
 - **Back leaves a redirected address in one step.** A fresh load of the old
   chat address `/debug/agent` or of a language address `/{spec}/{language}`
   left the old address one step back in the history, so Back landed on it and
   was sent forward again; the destination now takes over the old address's
-  history entry, as the about page does for `/legal#transparency`.
+  history entry, as the about page does for `/legal#transparency`. (#13177)
 - **The README's pipeline puts each check where it runs.** Its review step
   listed "the code parses and runs" and "the image exists" among the
   automated checks of `impl-review.yml`, but the code runs in generation. The
@@ -258,7 +258,7 @@
   and stops without both theme renders, and the review step's checks read
   "both renders exist and the canvas has its target size".
   `test_readme_claims.py` pins both sentences and the review's step that
-  checks for both renders.
+  checks for both renders. (#13177)
 - **The README and the about page no longer overstate the review and the
   gate.** They said the reviewer scores "blind to any earlier score", but
   only its working tree and its prompt are kept free of the stored score,
@@ -276,4 +276,4 @@
   and a fix the review can verify, while a code conversion for the chat
   passes on an unchanged render instead. The nightly regeneration names
   "the oldest single implementations" in place of a count the schedule no
-  longer uses.
+  longer uses. (#13177)
