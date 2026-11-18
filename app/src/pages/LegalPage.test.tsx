@@ -6,6 +6,7 @@ import { ThemeProvider } from '@mui/material/styles';
 
 import { MAX_QUERY_LENGTH, normalizeQuery } from 'src/hooks/useAnalytics';
 import { LegalPage } from 'src/pages/LegalPage';
+import { FEEDBACK_CONSENT } from 'src/sections/agent-chat/lane';
 import { UNVERIFIED_HINT } from 'src/sections/stats/sharedLinks';
 import { render, screen, within } from 'src/test-utils';
 import { theme } from 'src/theme';
@@ -505,6 +506,27 @@ describe('LegalPage', () => {
     expect(screen.getByRole('row', { name: /^server logs\s/ })).toHaveTextContent(
       /IP address, URL and user-agent of each request, for security and debugging\./
     );
+  });
+
+  // The consent line under the chat's feedback form is where a visitor agrees, so it is pinned
+  // whole, and it names the readers, the purpose and the period this page's row names: a change to
+  // one without the other fails here.
+  it("says in the chat's consent line what the data assistant's feedback row says", () => {
+    render(<LegalPage />);
+
+    expect(FEEDBACK_CONSENT).toBe(
+      'sending stores this chat, its plots and a 5-row sample of your data for 180 days. the operator reads it to fix what went wrong, also with ai coding assistants and in tests with other ai models; tick the box to add the whole data file.'
+    );
+    const caseRow = screen.getAllByRole('row', { name: /^feedback\s/ })[1];
+    for (const shared of [
+      'to fix what went wrong',
+      'ai coding assistants',
+      'other ai models',
+      '180 days',
+    ]) {
+      expect(FEEDBACK_CONSENT).toContain(shared);
+      expect(caseRow).toHaveTextContent(shared);
+    }
   });
 
   // The chat links #assistant, the two tiles on /stats link #machine-readers and #shared-links.
