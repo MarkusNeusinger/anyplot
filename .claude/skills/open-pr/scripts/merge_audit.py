@@ -12,8 +12,8 @@ given refs reach and the base does not, the merge is redone mechanically
   `git checkout --ours <file>` or `--theirs <file>`, which takes the whole file.
 - Lines inside a conflict that M does not have are listed too, as the resolution's own choice: one
   side of a real conflict always loses lines.
-- A conflict without markers (a change against a deletion, a rename, a binary file) is named and
-  left to a comparison by hand.
+- A conflict without markers (a change against a deletion, a rename, a binary file) and a
+  conflicted submodule pointer are named and left to a comparison by hand.
 
 Lines are compared as a set per file, so a dropped line that also stands elsewhere in the file (a
 lone brace, a repeated heading) is not seen. A finding is a place to look at, not a verdict: a
@@ -113,11 +113,12 @@ def audit(merge: str, ours: str, theirs: str) -> tuple[list[str], bool, list[str
     for path in conflicted:
         result = blob(merge, path)
         if result is None:
-            if is_submodule(merge, path):
-                report.append(f"  a submodule pointer conflicted, not audited: {path}")
-                continue
+            # Either way the audit compared nothing here, so neither may read as clean.
             to_look_at = True
-            report.append(f"  CONFLICTED AND GONE from the result: {path}")
+            if is_submodule(merge, path):
+                report.append(f"  CONFLICTED SUBMODULE POINTER, not audited, compare by hand: {path}")
+            else:
+                report.append(f"  CONFLICTED AND GONE from the result: {path}")
             continue
         have = set(result.splitlines())
         clean = outside_conflicts(blob(tree, path) or "")

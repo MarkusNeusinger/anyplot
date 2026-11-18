@@ -152,6 +152,33 @@ def test_a_change_against_a_deletion_is_named_as_a_conflict_without_markers(repo
     assert "DROPPED OUTSIDE A CONFLICT" not in done.stdout
 
 
+def test_a_conflicted_submodule_pointer_is_something_to_look_at(repo: Path) -> None:
+    """The audit cannot compare a pointer into another repository, and what it did not compare is not clean."""
+
+    def point_at(digit: str) -> None:
+        _git(repo, "update-index", "--add", "--cacheinfo", f"160000,{digit * 40},sub")
+
+    _git(repo, "checkout", "-q", "-b", "pointer", "start")
+    point_at("1")
+    _git(repo, "commit", "-q", "-m", "a submodule pointer")
+    _git(repo, "branch", "theirs")
+    point_at("2")
+    _git(repo, "commit", "-q", "-m", "the branch moves the pointer")
+    _git(repo, "checkout", "-q", "theirs")
+    point_at("3")
+    _git(repo, "commit", "-q", "-m", "the other side moves it elsewhere")
+    _git(repo, "checkout", "-q", "pointer")
+    merged = _git(repo, "merge", "--no-edit", "theirs", check=False)
+    assert merged.returncode != 0, "two pointers to commits git cannot see must conflict"
+    point_at("2")
+    _git(repo, "commit", "-q", "--no-edit")
+
+    done = _audit(repo, "start")
+
+    assert done.returncode == 1, done.stdout + done.stderr
+    assert "CONFLICTED SUBMODULE POINTER, not audited, compare by hand: sub" in done.stdout
+
+
 def test_a_merge_without_a_conflict_has_nothing_lost(repo: Path) -> None:
     _git(repo, "checkout", "-q", "-b", "quiet", "start")
     _commit(repo, "a file of its own", {"own.txt": "own\n"})
