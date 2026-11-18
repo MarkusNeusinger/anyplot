@@ -18,6 +18,36 @@ interface HeroSectionProps {
   onRetryPotd?: () => void;
 }
 
+/** The eyebrow's line height, set rather than inherited so the rule's offset can be derived. */
+const EYEBROW_LINE_HEIGHT = 1.5;
+
+/**
+ * The builder's name in the eyebrow, a link to the about page. At rest it reads as part of the
+ * byline, like the masthead's links: the dotted underline shows on hover only. The
+ * underline and the focus ring sit on the inner span, so they hug the name; on phones the link's
+ * padding grows the touch target to 44 px, and the equal negative margin keeps the text where it
+ * is (the menu's links do the same).
+ */
+const builderLinkSx = {
+  display: 'inline-block',
+  whiteSpace: 'nowrap',
+  padding: { xs: '14px', sm: 0 },
+  margin: { xs: '-14px', sm: 0 },
+  color: 'inherit',
+  textDecoration: 'none',
+  transition: 'color 0.2s',
+  // Transparent at rest rather than absent, so the line does not move when the underline shows.
+  '& > span': { borderBottom: '1px dotted transparent', transition: 'border-color 0.2s' },
+  '&:hover': { color: colors.primary },
+  '&:hover > span': { borderBottomColor: 'currentColor' },
+  '&:focus-visible': { outline: 'none' },
+  '&:focus-visible > span': {
+    outline: `2px solid ${colors.primary}`,
+    outlineOffset: 2,
+    borderRadius: '2px',
+  },
+} as const;
+
 /**
  * Full-width editorial hero. Text column left, terminal-framed plot of the
  * day right. Scales up to catalog tier so the plot becomes the visual anchor
@@ -48,21 +78,47 @@ export function HeroSection({
             fontFamily: typography.mono,
             fontSize: '11px',
             letterSpacing: '0.08em',
+            lineHeight: EYEBROW_LINE_HEIGHT,
             color: 'var(--ink-muted)',
             mb: 3,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             gap: 1.25,
             '&::before': {
               content: '""',
               display: 'inline-block',
+              flexShrink: 0,
               width: 18,
               height: '1px',
+              // Half the line box down, less half the rule's own height: level with the first
+              // line, whether the eyebrow shows one line or two.
+              mt: `calc(${EYEBROW_LINE_HEIGHT / 2}em - 0.5px)`,
               background: 'var(--rule)',
             },
           }}
         >
-          the open plot catalogue
+          {/* One flex item beside the rule holds both lines; each line is a block, so the second
+              starts under the first instead of beside it. */}
+          <Box component="span">
+            {/* From md the masthead's centre shows the phrase, so only phones and tablets
+                carry it here. */}
+            <Box component="span" sx={{ display: { xs: 'block', md: 'none' } }}>
+              the open plot catalogue
+            </Box>
+            <Box component="span" sx={{ display: 'block' }}>
+              by{' '}
+              <Box
+                component={RouterLink}
+                to={paths.about}
+                onClick={() =>
+                  trackEvent('nav_click', { source: 'hero_about', target: paths.about })
+                }
+                sx={builderLinkSx}
+              >
+                <Box component="span">Markus Neusinger</Box>
+              </Box>
+            </Box>
+          </Box>
         </Box>
 
         <Box
@@ -151,8 +207,9 @@ export function HeroSection({
           }}
         >
           every plot begins as a library-agnostic spec. ai drafts implementations across every
-          supported library, validates them against quality criteria, and keeps them current. you
-          discover, copy, and adapt — plug in <em>your</em> data. that&apos;s it.
+          supported library, validates them against quality criteria, and keeps them current. I
+          approve new specs and set the rules. you discover, copy, and adapt — plug in <em>your</em>{' '}
+          data. that&apos;s it.
         </Box>
 
         <TypewriterText

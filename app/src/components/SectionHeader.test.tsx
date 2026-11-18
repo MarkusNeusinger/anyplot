@@ -25,6 +25,19 @@ describe('SectionHeader', () => {
     expect(screen.getByText('libraries')).toBeInTheDocument();
   });
 
+  // A list or figure in the section can take the heading as its name through the id.
+  it('gives its heading the id it is passed, and none without one', () => {
+    const { unmount } = render(<SectionHeader prompt="❯" title="palette" id="palette-heading" />);
+    expect(screen.getByRole('heading', { name: 'palette' })).toHaveAttribute(
+      'id',
+      'palette-heading'
+    );
+    unmount();
+
+    render(<SectionHeader prompt="❯" title="palette" />);
+    expect(screen.getByRole('heading', { name: 'palette' })).not.toHaveAttribute('id');
+  });
+
   it('tracks nav_click when the action link is clicked on the landing page', async () => {
     const user = userEvent.setup();
     render(<SectionHeader prompt="❯" title="specs" linkText="specs.all()" linkTo="/specs" />);

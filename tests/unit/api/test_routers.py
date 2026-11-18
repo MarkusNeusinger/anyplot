@@ -4,6 +4,7 @@ Tests for api/routers/ endpoints.
 Tests the modular router endpoints.
 """
 
+import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -1209,13 +1210,39 @@ class TestSeoProxyRouter:
         assert "text/html" in response.headers["content-type"]
         assert "og:title" in response.text
         assert "https://anyplot.ai/about" in response.text
+        # The same description as AboutPage.tsx, in the meta tags search engines and link previews read.
+        description = (
+            "About anyplot.ai: built by Markus Neusinger with AI agents he directs. How the catalogue "
+            "is written and reviewed, the stack, and what it costs to run."
+        )
+        assert len(description) <= 155
+        assert f'<meta name="description" content="{description}" />' in response.text
+        assert f'<meta property="og:description" content="{description}" />' in response.text
         # registry-derived count + the pipeline sequence
         assert "15 libraries" in response.text
-        assert "AI-drafted, human-approved" in response.text
-        assert "never patched by hand" in response.text
+        # The lede as AboutPage.tsx has it: ideas arrive as issues, the builder approves the specs.
+        assert (
+            "Plot ideas come in as GitHub issues; AI drafts the specification, generates code for every "
+            "library, and reviews each implementation. I approve new specs and tune the rules when "
+            "something repeatedly fails."
+        ) in response.text
+        assert (
+            "idea → a GitHub issue; spec → AI drafts, I approve; code → AI writes (per library); "
+            "review → AI scores (24 criteria); fix → AI repairs (up to 4 times); rules → I set and change them."
+        ) in response.text
+        assert "human-approved" not in response.text
+        # In the first person, as AboutPage.tsx says it, and as a rule rather than an absolute.
+        assert "The pipeline runs on its own schedule, by rules I set." in response.text
+        assert (
+            "I update the spec and regenerate its libraries. I don't fix a plot by editing its code: a patch "
+            "fixes one plot, a fix to the spec or a rule reaches every plot it governs when that plot is next "
+            "regenerated."
+        ) in response.text
+        assert "never patch" not in response.text
         # bot parity with the page's review, chat and MCP sections (AboutPage.tsx)
         for heading in ("<h2>Review</h2>", "<h2>Use with my data</h2>", "<h2>MCP server</h2>"):
             assert heading in response.text
+        assert "choose .use_my_data() on its page, and paste your data." in response.text
         assert "rubric of 24 criteria" in response.text
         # The MCP section's pointer at the machine readers on the stats page, as AboutPage.tsx has it.
         assert "how many assistants and crawlers read the catalogue and how many came on behalf of a person" in (
@@ -1223,6 +1250,112 @@ class TestSeoProxyRouter:
         )
         for link in ("https://anyplot.ai/stats", "https://anyplot.ai/plots", "https://anyplot.ai/mcp"):
             assert f'href="{link}"' in response.text
+        # The chat's second paragraph, as AboutPage.tsx has it, with its link to the design document.
+        for sentence in (
+            "One agent talks to you, an adapter writes the code changes, and a reviewer scores the render; the "
+            "loop that calls them is plain code.",
+            "A validator reads the code before anything runs, and code decides from the reviewer's points whether "
+            "a repair is due: one repair and two reviews at most.",
+            "What the review still finds comes back as notes with the plot.",
+            "My rules: open to everyone, no login, hosted in the EU, and I keep what you paste or write only if "
+            "you send feedback.",
+            "By those rules I decided which model answers, where the code it writes runs, and what the usage logs "
+            "may hold; ",
+            "the design document on GitHub</a> records these decisions with their dates.",
+        ):
+            assert sentence in response.text, sentence
+        assert (
+            '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/agent-network.md">'
+            "the design document on GitHub</a>"
+        ) in response.text
+
+    def test_seo_about_tells_the_origin_and_speaks_as_its_builder(self, client: TestClient) -> None:
+        """The crawler copy carries the page's origin where the page has it, and says I, never we, as the page does."""
+        response = client.get("/seo-proxy/about")
+        assert response.status_code == 200
+        text = response.text
+        # The page's order: transparency, then the origin, then the ways in.
+        assert (
+            text.index('<h2 id="transparency">Transparency</h2>')
+            < text.index("<h2>Origin</h2>")
+            < text.index("<h2>Open</h2>")
+        )
+        for sentence in (
+            "It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples.",
+            "It grew out of everyday work: showing colleagues a chart instead of explaining it at length.",
+            "They, and later people who found it online, wanted two things from it: ideas for which plot fits "
+            "their data, and to get to know libraries they hadn't used yet, since each has its own strengths.",
+            "After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai.",
+            "Today it covers fifteen libraries in four languages, and one colourblind-safe palette travels "
+            "across all of them.",
+        ):
+            assert sentence in text, sentence
+        assert "weekend" not in text
+        # One person builds the site; AboutPage.test.tsx holds the page to the same.
+        body = text.split("<h1>About anyplot</h1>", 1)[1].split("<nav>", 1)[0]
+        prose = re.sub(r"<[^>]+>", " ", body)
+        assert not re.search(r"\b(we|our|ours|us)\b", prose, re.IGNORECASE)
+
+    def test_seo_about_names_the_builder_and_carries_the_stack_and_costs(self, client: TestClient) -> None:
+        """Who built the site and how, and the transparency facts that moved here from the legal page."""
+        response = client.get("/seo-proxy/about")
+        assert response.status_code == 200
+        for heading in ("<h2>Who built it</h2>", "<h2>How it is built</h2>", '<h2 id="transparency">Transparency</h2>'):
+            assert heading in response.text
+        for fact in (
+            "Markus Neusinger",
+            "I'm a chart nerd. Physicist by training, senior data analyst by trade.",
+            "Since 2013 I have built data pipelines, models and the tools around them, lately with AI agents "
+            "doing the legwork.",
+            "I know the stack from building it by hand: from 2022 to 2024 I built and ran a platform for "
+            "blockchain market data, largely without AI.",
+            "On anyplot the agents write the code; I decide, test and send back.",
+            "I have built it alone and in my own time since November 2025, in Visp, a small town in the Swiss Alps.",
+            "I wanted one place to find the right plot for my data.",
+            "AI models write anyplot's code: the site, the API, and the agents behind Use with my data.",
+            # The spec approval stands in the lede, the month in "Who built it" and the origin.
+            "Outside the plot pipeline the agents merge nothing without my OK, and what I correct becomes a rule "
+            "they follow.",
+            # The stack the description names, from the page's table.
+            "The site runs on React 19, Vite, MUI 9 with MUI X and TypeScript.",
+            "The API runs on Python 3.14, FastAPI, SQLAlchemy and PostgreSQL 18.",
+            "Checks: tests and lint on every pull request that changes Python or frontend code outside the plot "
+            "catalogue, an 80 % patch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, and "
+            "by rule a check of the live site after a merge.",
+            "Running costs about $75 a month (as of November 2026).",
+            # The corrected pipeline and review claims (AboutPage.tsx says the same).
+            "Every night a job regenerates the oldest implementations",
+            "the bar drops 10 points per repair, to 50 at the last review",
+            "What counts as a good plot is my call; AI helped turn it into 24 criteria and their points. The "
+            "rubric isn't fixed: it has changed more than thirty times since November 2025, for example after a "
+            "review passed a plot whose title was cut off.",
+        ):
+            assert fact in response.text, fact
+        assert "A new spec needs my approval" not in response.text
+        assert "ships a new release" not in response.text
+        # The checks before the review are the ones a workflow runs; none looks for a blank image.
+        assert "Automated checks come first: the code runs, the canvas has its size." in response.text
+        assert "blank" not in response.text
+        # The source and its licence are stated once, under Transparency: the licence covers the
+        # whole stack, as LICENSE and AboutPage.tsx say, not only the catalogue content.
+        assert response.text.count('<a href="https://github.com/MarkusNeusinger/anyplot">') == 1
+        assert "is open source under the MIT License at" in response.text
+        assert response.text.count("MIT License") == 1
+        assert "MIT-licensed" not in response.text
+        for link in (
+            "https://www.linkedin.com/in/markus-neusinger/",
+            "https://github.com/MarkusNeusinger",
+            "https://neusinger.com",
+            "https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot",
+            "https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#engineering-highlights",
+            "https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/ai-workflow.md",
+        ):
+            assert f'href="{link}"' in response.text, link
+        # The legal page keeps only the legal notice and the privacy policy.
+        legal = client.get("/seo-proxy/legal").text
+        assert "Running costs" not in legal
+        assert "Transparency" not in legal
+        assert "transparency" not in legal
 
     def test_seo_agent_carries_the_explainer_and_its_terms(self, client: TestClient) -> None:
         """llms.txt links /agent, where the assistant's terms live; a crawler there got the spec route's 404."""
@@ -1319,7 +1452,6 @@ class TestSeoProxyRouter:
         assert "unsalted" not in response.text
         # The site-wide facts the human page states once each, the stored feedback fields included.
         for fact in (
-            "Running costs about $60 a month (October 2026).",
             "a random id that ties your own submissions together",
             "the optional contact field",
             "legitimate interest (Art. 6(1)(f) GDPR)",

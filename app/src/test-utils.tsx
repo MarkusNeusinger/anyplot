@@ -25,6 +25,8 @@ function customRender(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>
  * `getComputedStyle` substitutes the token (which the test document does not define) and resolves
  * the number to pixels. jsdom evaluates `@media` against its fixed 1024 px window, and the sx
  * breakpoints (`xs` too) all compile into one, so the helper applies their width conditions itself.
+ * A width in `em` counts in the browser's default font size, `fontSize`, as a media query does
+ * (16 px unless the visitor changed it), not in any font size the page sets.
  * The screen has a fine pointer: a block on any other feature (`pointer: coarse`) never applies.
  * Rules for a state the element is not in (`:hover`, `::placeholder`) do not match it. A sheet
  * stores a shorthand as its longhands, so they are copied into a fresh declaration, which reads
@@ -39,13 +41,15 @@ function styleAt(
   element: Element,
   width: number = window.innerWidth,
   containerWidth?: number,
-  pseudoElement?: '::before' | '::after'
+  pseudoElement?: '::before' | '::after',
+  fontSize: number = 16
 ): CSSStyleDeclaration {
   const fits = (media: string, size: number = width) =>
     (media.match(/\([^)]*\)/g) ?? []).every(condition => {
-      const bound = /^\((min|max)-width:\s*([\d.]+)px\)$/.exec(condition);
+      const bound = /^\((min|max)-width:\s*([\d.]+)(px|em)\)$/.exec(condition);
       if (!bound) return false;
-      return bound[1] === 'min' ? size >= Number(bound[2]) : size <= Number(bound[2]);
+      const limit = Number(bound[2]) * (bound[3] === 'em' ? fontSize : 1);
+      return bound[1] === 'min' ? size >= limit : size <= limit;
     });
   const elementMatches = (selector: string) => {
     try {
