@@ -19,17 +19,18 @@ in no particular order.
 
 ## Add a decision
 
-Add a file only for a decision that matters. It matters when at least one of these holds:
+One question decides: would someone who asks how this project was shaped look for this decision?
+If yes, it gets a file.
 
-- It changed what the product is or does: a feature built, dropped or turned around.
-- It set or moved a standard that work is measured by: the quality bar, a review rule, a gate.
-- It is a public promise or a stance on privacy, security or cost.
-- It changed how the agents work, as a rule that binds every one of them.
+The kind of thing does not decide it. These are decisions of that sort, small as they look: how
+many pastes a visitor may send in a day, that the chat's replies are short, that a plot's texts
+stay English until the visitor picks another language. These are not: the fix of one sentence, a
+pick between two near-equal variants, a value tuned inside a range that was already agreed, and
+anything that only follows from a decision already in the log. Fold such things into the entry
+they belong to.
 
-Small things don't get a file: a wording, a number picked from a range, a layout, a choice between
-near-equal variants, or anything that only follows from an earlier decision. Fold those into the
-entry they belong to, or leave them to the pull request. When in doubt, leave it out: a few entries
-a month is the expected pace, and a folder of trivia buries the decisions that tell the story.
+The log is the pool, not the showcase. The README and the about page pick their highlights from
+it, so an entry need not be a highlight; it only must not be noise.
 
 1. Name the file `YYYY-MM-DD-<short-slug>.md`, with the date of the decision.
 2. Write it in this form:
@@ -43,9 +44,15 @@ a month is the expected pace, and a folder of trivia buries the decisions that t
    - Where: #12345
    ```
 
-3. Add it in the pull request that carries the decision out, so "Where" can name that pull request.
-   A decision that leads to no change gets a file in the next pull request that touches the topic,
-   and "Where" names the place the question came up.
+3. Add it in the pull request that carries the decision out, and name that pull request under
+   "Where". A decision that changes nothing else still arrives through a pull request, and "Where"
+   names that one. For a decision that a document of this repository already records, "Where" may
+   name the file instead, in backticks: `docs/concepts/agent-network.md`.
+
+The form is fixed and "Where" is the source, because an entry without one is a story nobody can
+check. `tests/unit/test_decision_log.py` fails for a file whose name has no date, that lacks one of
+the four lines or has them twice or out of order, whose date differs from its name, or whose
+"Where" names neither a pull request nor an existing file of this repository.
 
 Keep to what happened. "Decided" gives the owner's reason when he gave one, and says so when the
 reason is the agent's reading. The rules for public text apply: no private detail, nothing a visitor
