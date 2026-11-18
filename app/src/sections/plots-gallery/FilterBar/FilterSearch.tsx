@@ -219,8 +219,13 @@ export function FilterSearch({
   // the private list. Unknown, and so no miss, until the global counts have loaded.
   const missesCatalogue = useMemo(() => {
     if (searchResults.length > 0 || hiddenMatchCount > 0 || !globalCounts) return false;
-    if (!normalizeQuery(searchQuery)) return false;
-    return getSearchResults(globalCounts, [], searchQuery, null, specTitles).length === 0;
+    const folded = normalizeQuery(searchQuery);
+    if (!folded) return false;
+    // What would be sent is the folded text (a fullwidth word becomes the plain one), so it has
+    // to find nothing either: the list must never name a word the catalogue has.
+    return [searchQuery, folded].every(
+      text => getSearchResults(globalCounts, [], text, null, specTitles).length === 0
+    );
   }, [searchResults.length, hiddenMatchCount, globalCounts, searchQuery, specTitles]);
 
   // A miss goes to the private list only as a finished text: once no key was pressed for

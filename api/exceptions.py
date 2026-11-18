@@ -136,8 +136,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     """Handle FastAPI HTTPException with standardized format.
 
     The exception's own headers go along, as the framework's default handler sends them: a refusal
-    may say how it is to be cached (the search-miss route's `413` says `no-store`), and the
-    framework's `405` names the allowed methods in `Allow`.
+    may say how it is to be cached (the search-miss route's `413` says `no-store`).
     """
     return JSONResponse(
         status_code=exc.status_code,

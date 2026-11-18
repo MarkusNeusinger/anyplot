@@ -336,6 +336,18 @@
       "countable": true
     },
     {
+      "rule": "a mark right after a joiner between a letter and the mark",
+      "typed": "র\u200d\u09cdযাব",
+      "sent": "র\u200d\u09cdযাব",
+      "countable": true
+    },
+    {
+      "rule": "a joiner before a mark at the start",
+      "typed": "\u200d\u09cdযাব",
+      "sent": "\u200d\u09cdযাব",
+      "countable": false
+    },
+    {
       "rule": "a non-joiner at the start",
       "typed": "\u200cabc",
       "sent": "\u200cabc",

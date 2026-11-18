@@ -283,7 +283,11 @@ def is_countable(query: str) -> bool:
         elif category[0] == "L":
             shows = True
         elif category[0] == "M":
-            if index == 0 or not _is_letter_or_mark(query[index - 1]):
+            # A mark sits on the letter or mark before it; a joiner in between belongs to the spelling.
+            base = index - 1
+            while base >= 0 and query[base] in JOINERS:
+                base -= 1
+            if base < 0 or not _is_letter_or_mark(query[base]):
                 return False
         elif char not in QUERY_MARKS:
             return False

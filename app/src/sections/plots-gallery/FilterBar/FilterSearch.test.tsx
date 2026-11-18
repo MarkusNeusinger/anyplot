@@ -459,6 +459,18 @@ describe('FilterSearch misses for the private list', () => {
     expect(sendSearchMiss).not.toHaveBeenCalled();
   });
 
+  it('sends nothing for a text whose folded form finds something', () => {
+    // A fullwidth "scatter": the gallery's search does not fold it and finds nothing, but the
+    // text that would be sent, folded, is "scatter", a word the catalogue has.
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type(String.fromCodePoint(0xff53, 0xff43, 0xff41, 0xff54, 0xff54, 0xff45, 0xff52));
+    wait(MISS_PAUSE_MS);
+    fireEvent.blur(getSearchInput());
+
+    expect(sendSearchMiss).not.toHaveBeenCalled();
+  });
+
   it('sends nothing for a text that finds something', () => {
     render(<FilterSearch {...defaultProps} />);
     openSearch();

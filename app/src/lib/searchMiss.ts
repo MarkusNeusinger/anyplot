@@ -80,7 +80,10 @@ export function isCountableMiss(query: string): boolean {
     } else if (LETTER.test(char)) {
       shows = true;
     } else if (MARK.test(char)) {
-      if (index === 0 || !isLetterOrMark(chars[index - 1])) return false;
+      // A mark sits on the letter or mark before it; a joiner in between belongs to the spelling.
+      let base = index - 1;
+      while (base >= 0 && JOINERS.has(chars[base])) base -= 1;
+      if (base < 0 || !isLetterOrMark(chars[base])) return false;
     } else if (!MISS_MARKS.includes(char)) {
       return false;
     }
