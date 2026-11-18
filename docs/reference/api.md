@@ -1191,9 +1191,11 @@ top-level keys are `session`, `snapshot`, `transcript`, `turns`, `versions`,
 `profile`, `bindings` and `config`, plus `refusals` when the agents service runs
 with `AGENT_KEEP_REFUSALS`. `session` names the spec, the library, the browser's
 locale and the session language (`plot_language`, `plot_language_source`), and
-each version carries the `language` its text was written in. `session` holds
+each version carries the `language` its text was written in. With
+`with_case_key=true`, which only the feedback route sends, `session` holds
 `case_key`, the salted key a stored feedback case records for the session in
-place of its id (see [Feedback case](#feedback-case)). `session` also
+place of its id (see [Feedback case](#feedback-case)); a session saved with
+`.save()` never carries it. `session` also
 holds two content-free facts, in every form of the bundle: `versions`, the
 number of versions the session holds, and `last_run`, how its latest plot run
 ended (`status`, `reason`, the stored `version` or `null`, the user `turn` and
@@ -1299,7 +1301,8 @@ agents service sees), `session_hash` (the bundle's `session.case_key`: 16 hex
 digits the agents service makes from the session id under its per-process
 salt, so the value groups a session's cases and cannot be made again from a
 logged session id once that process has ended; a bundle without the key gets
-a hash under the API's own per-process salt), `spec_id`, `library_id` (the version's library), `language` (the
+a hash under the API's own per-process salt; the key itself is not kept in
+the manifest's `bundle`), `spec_id`, `library_id` (the version's library), `language` (the
 session's locale), `reaction`, `message`, `include_data`, `status` (`new`),
 `result_version`, `replaces` (as the page sent it, or `null`), `model`,
 `model_version`, `judge_model`, `prompt_hash` (one

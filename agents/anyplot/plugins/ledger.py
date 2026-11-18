@@ -1175,11 +1175,11 @@ def argument_hash(arguments: Any) -> str:
 
 
 SESSION_SALT = secrets.token_bytes(32)
-"""The per-process salt of every session hash a log line carries: the attribution lines' `session` and the usage
-telemetry's (`telemetry.session_key`). The session id travels in every `/v1` request URL Cloud Run logs, so a plain
-hash of it could be recomputed and joined to the request log; sessions live in memory and end with the instance,
-so a salt that ends with the process keeps a session's lines together for exactly as long as it exists. Never
-logged, never configured."""
+"""The per-process salt of every hash of a session id that leaves this process: the attribution lines' `session`,
+the usage telemetry's (`telemetry.session_key`) and a stored feedback case's (`case_key`). The session id travels in
+every `/v1` request URL Cloud Run logs, so a plain hash of it could be recomputed and joined to the request log;
+sessions live in memory and end with the instance, so a salt that ends with the process keeps a session's lines
+together for exactly as long as it exists. Never logged, never configured."""
 
 
 def salted(session_id: str, domain: str, length: int) -> str:
@@ -1201,8 +1201,8 @@ def case_key(session_id: str) -> str:
     salted (`salted`), under a domain of its own, so it joins a case to no log line and no telemetry row.
 
     A case keeps it for as long as the case is stored, and two cases of one session share it, which is what lets a
-    corrected submission replace the earlier one. Session and salt end with the same process, so every case of a
-    session gets the same key, and once the process is gone nobody can make the key again from a session id."""
+    corrected submission replace the earlier one. A session never outlives its process's salt, so every case of a
+    session gets the same key, and once the process is gone the key cannot be made again from a session id."""
     return salted(session_id, "case", 16)
 
 

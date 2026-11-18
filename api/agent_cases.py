@@ -215,8 +215,9 @@ def session_hash(session_id: str, case_key: object = None) -> str:
 
     The agents service's request log holds the session id, so a plain hash of it could be made again from that log
     and would tie a stored case to the session's requests. The value is therefore the key the agents service made
-    under its own per-process salt (`case_key`, the bundle's `session.case_key`): session and salt end with the
-    same process, so every case of a session gets the same key and nobody can make it again afterwards.
+    under its own per-process salt (`case_key`, the bundle's `session.case_key`, sent when the feedback route asks
+    for it): a session never outlives that salt, so every case of a session gets the same key, and once that
+    process is gone the key cannot be made again from a session id.
 
     A bundle without a usable key (an agents service from before the field) gets a hash under this process's salt
     instead. It cannot be made again either, but this process restarts while a session lives on, and a correction
@@ -225,7 +226,8 @@ def session_hash(session_id: str, case_key: object = None) -> str:
     """
     if isinstance(case_key, str) and _CASE_KEY.fullmatch(case_key):
         return case_key
-    logger.warning("a session bundle carried no usable case key; the case is keyed under this process's salt")
+    found = "no case key" if case_key is None else "a case key of another form"
+    logger.warning("a session bundle carried %s; the case is keyed under this process's salt", found)
     return hmac.new(_SALT, b"case:" + session_id.encode(), hashlib.sha256).hexdigest()[:16]
 
 
@@ -365,7 +367,9 @@ def build_case(
             raise BundleError(f"{what} no data.csv although the data was asked for")
         files.append(CaseFile("data.csv", _utf8(data_csv, "data.csv")))
 
-    # The bundle as the manifest keeps it: without the PNGs and the data, which are files of their own.
+    # The bundle as the manifest keeps it: without the PNGs and the data, which are files of their own, and without
+    # the session's case key, which the manifest holds once, checked, as `session_hash`.
+    session = _dict(bundle.get("session"))
     kept = {
         **{key: value for key, value in bundle.items() if key != "data_csv"},
         "versions": [
@@ -373,8 +377,9 @@ def build_case(
             for item in versions
         ],
     }
+    if isinstance(bundle.get("session"), dict):
+        kept["session"] = {key: value for key, value in session.items() if key != "case_key"}
 
-    session = _dict(bundle.get("session"))
     config = _dict(bundle.get("config"))
     result = _dict(version.get("result"))
     manifest = {

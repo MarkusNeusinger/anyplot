@@ -379,6 +379,21 @@ def test_a_cases_key_is_salted_and_joins_no_log_line_and_no_telemetry_row() -> N
     assert not key.startswith(session_hash("abc"))
 
 
+def test_a_cases_key_depends_on_the_salt_and_has_a_domain_of_its_own(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A hash that kept its value under another salt would be one that a log's session id reproduces, whatever
+    prefix it mixes in; and a key in another hash's domain would join a case to that hash's lines."""
+    import hashlib
+
+    from agents.anyplot.plugins import ledger
+
+    key = ledger.case_key("abc")
+    for domain in ("", "user", "network", "attribution", "telemetry"):
+        assert key != ledger.salted("abc", domain, 16), domain
+    assert key not in (hashlib.sha256(b"case:abc").hexdigest()[:16], hashlib.sha256(b"abc").hexdigest()[:16])
+    monkeypatch.setattr(ledger, "SESSION_SALT", b"another process")
+    assert ledger.case_key("abc") != key
+
+
 def test_idempotency_keys_repeat_for_the_same_line_only() -> None:
     first = telemetry.idempotency_key("s", 1, "run1", "pipeline_run")
     assert first == telemetry.idempotency_key("s", 1, "run1", "pipeline_run")

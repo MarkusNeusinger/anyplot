@@ -80,24 +80,35 @@ def test_a_bundle_without_a_key_is_logged_without_the_session_id(caplog: pytest.
         session_hash("S1abcdefgh", "0123456789abcdef")
         assert caplog.records == []
         own = session_hash("S1abcdefgh")
-    (record,) = caplog.records
-    assert "no usable case key" in record.getMessage()
-    assert "S1abcdefgh" not in record.getMessage() and own not in record.getMessage()
+        session_hash("S1abcdefgh", "not-a-key")
+    missing, malformed = (record.getMessage() for record in caplog.records)
+    assert "no case key" in missing and "a case key of another form" in malformed
+    for line in (missing, malformed):
+        assert "S1abcdefgh" not in line and own not in line and "not-a-key" not in line
+
+
+def test_the_fallback_is_made_under_this_process_s_salt(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Another salt, another value: a constant, an empty or a configured key would leave it the same, and a value
+    that stays the same across processes is one that can be made again."""
+    before = session_hash("abc")
+    monkeypatch.setattr(agent_cases, "_SALT", b"another process")
+    assert session_hash("abc") != before
+    assert len(agent_cases._SALT) and session_hash("abc") == session_hash("abc")
 
 
 @pytest.mark.parametrize(
     "unusable",
     [None, "", 12, "0123456789ABCDEF", "0123456789abcde", "0123456789abcdef0", "g123456789abcdef", ["0" * 16]],
 )
-def test_a_key_of_another_form_is_not_stored(unusable: object) -> None:
-    """The column takes 16 characters and the value groups rows: only the form the agents service writes is kept."""
+def test_a_key_of_another_form_is_not_taken_as_the_session_hash(unusable: object) -> None:
+    """The column takes 16 characters and the value groups rows: only the form the agents service writes is taken."""
     assert session_hash("abc", unusable) == session_hash("abc")
 
 
-def test_a_case_records_the_bundles_key_and_not_a_hash_of_the_session_id() -> None:
+def _keyed_case(case_key: object) -> FeedbackCase:
     keyed = json.loads(json.dumps(BUNDLE))
-    keyed["session"]["case_key"] = "fedcba9876543210"
-    case = build_case(
+    keyed["session"]["case_key"] = case_key
+    return build_case(
         json.dumps(keyed).encode(),
         Submission(reaction="bug", message=None, include_data=False, result_version=3),
         case_id="20261012T143005Z-1a2b3c4d",
@@ -106,10 +117,27 @@ def test_a_case_records_the_bundles_key_and_not_a_hash_of_the_session_id() -> No
         user_hash="adm_0123456789abcdef",
         session_id="S1abcdefgh",
     )
+
+
+def test_a_case_records_the_bundles_key_and_not_a_hash_of_the_session_id() -> None:
+    case = _keyed_case("fedcba9876543210")
     assert case.manifest["session_hash"] == "fedcba9876543210"
+    # The manifest holds the key once, as its session hash, and not a second time inside the bundle it keeps.
+    assert "case_key" not in case.manifest["bundle"]["session"]
+    assert case.manifest["bundle"]["session"] == BUNDLE["session"]
     # A bundle from before the field: this process's salted hash, the same for every case of the session.
     assert _case().manifest["session_hash"] == session_hash("S1abcdefgh")
     assert _case().manifest["session_hash"] != hashlib.sha256(b"S1abcdefgh").hexdigest()[:16]
+
+
+@pytest.mark.parametrize("malformed", ["0123456789ABCDEF", "0" * 17, "g" * 16, 16, None])
+def test_a_case_never_stores_a_key_of_another_form(malformed: object) -> None:
+    """Neither as the session hash, which the table's column would cut or refuse, nor inside the kept bundle."""
+    case = _keyed_case(malformed)
+    assert case.manifest["session_hash"] == session_hash("S1abcdefgh")
+    assert "case_key" not in case.manifest["bundle"]["session"]
+    if isinstance(malformed, str):
+        assert malformed not in json.dumps(case.manifest)
 
 
 def test_prompt_hash_is_stable_and_order_free() -> None:

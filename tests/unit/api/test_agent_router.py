@@ -2210,7 +2210,8 @@ class TestFeedback:
         assert response.headers["X-Request-Id"] == upstream.requests[0].headers["X-Request-Id"]
         sent = upstream.requests[0]
         assert (sent.method, sent.url.path) == ("GET", f"/v1/sessions/{self.SID}/bundle")
-        assert dict(sent.url.params) == {"include_data": "true", "version": "3"}
+        # Only the feedback route asks for the session's case key; a saved session never carries it (`TestBundle`).
+        assert dict(sent.url.params) == {"include_data": "true", "version": "3", "with_case_key": "true"}
         assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
         assert [name for name, _, _ in cases.uploads] == [f"cases/{case_id}/{name}" for name in stored]
         assert [content_type for _, _, content_type in cases.uploads] == [
@@ -2262,6 +2263,8 @@ class TestFeedback:
         expected = _feedback_bundle(3)
         for version in expected["versions"]:
             del version["images"], version["data_csv"]
+        # The case key stands once in the manifest, as its `session_hash`, and not again in the kept bundle.
+        del expected["session"]["case_key"]
         assert bundle == expected
         # The session id itself is nowhere in the case.
         assert self.SID not in cases.get("manifest.json").decode()
@@ -2274,7 +2277,11 @@ class TestFeedback:
         response = self.post(client, result_version=0)
 
         assert response.status_code == 201, response.text
-        assert dict(upstream.requests[0].url.params) == {"include_data": "true", "version": "0"}
+        assert dict(upstream.requests[0].url.params) == {
+            "include_data": "true",
+            "version": "0",
+            "with_case_key": "true",
+        }
         assert response.json()["stored"] == ["data.csv", "manifest.json"]
         manifest = json.loads(cases.get("manifest.json"))
         assert (manifest["result_version"], manifest["pipeline_status"], manifest["files"]) == (
@@ -2302,7 +2309,11 @@ class TestFeedback:
         response = self.post(client, include_data=False)
 
         assert response.status_code == 201
-        assert dict(upstream.requests[0].url.params) == {"include_data": "false", "version": "3"}
+        assert dict(upstream.requests[0].url.params) == {
+            "include_data": "false",
+            "version": "3",
+            "with_case_key": "true",
+        }
         assert response.json()["stored"] == ["plot-light.png", "plot-dark.png", "plot.py", "manifest.json"]
         assert "data.csv" not in cases.names
         manifest = json.loads(cases.get("manifest.json"))
