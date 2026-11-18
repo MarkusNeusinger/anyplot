@@ -137,10 +137,15 @@ async def anyplot_exception_handler(request: Request, exc: AnyplotException) -> 
 
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    """Handle FastAPI HTTPException with standardized format."""
+    """Handle FastAPI HTTPException with standardized format.
+
+    The exception's own headers go along, as the framework's default handler sends them: a refusal
+    may say how it is to be cached (the search-miss route's `413` says `no-store`).
+    """
     return JSONResponse(
         status_code=exc.status_code,
         content={"status": exc.status_code, "message": exc.detail, "path": _public_path(request)},
+        headers=exc.headers,
     )
 
 

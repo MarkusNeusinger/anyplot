@@ -8,7 +8,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi import Request
+from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -176,10 +176,7 @@ class TestExceptionHandlers:
         request = MagicMock(spec=Request)
         request.url.path = "/test/path"
 
-        # Create mock HTTPException
-        exc = MagicMock()
-        exc.status_code = 404
-        exc.detail = "Not found"
+        exc = HTTPException(status_code=404, detail="Not found")
 
         response = await http_exception_handler(request, exc)
 
@@ -188,6 +185,21 @@ class TestExceptionHandlers:
         content = response.body.decode()
         assert "Not found" in content
         assert "/test/path" in content
+
+    @pytest.mark.asyncio
+    async def test_http_exception_handler_keeps_the_exceptions_headers(self) -> None:
+        """A refusal may say how it is cached; the framework's own handler sends the headers too."""
+        request = MagicMock(spec=Request)
+        request.url.path = "/search/miss"
+
+        exc = HTTPException(
+            status_code=413, detail="Request body too large", headers={"Cache-Control": "private, no-store"}
+        )
+
+        response = await http_exception_handler(request, exc)
+
+        assert response.status_code == 413
+        assert response.headers["cache-control"] == "private, no-store"
 
     @pytest.mark.asyncio
     async def test_request_validation_exception_handler_keeps_fastapis_422_shape(self) -> None:

@@ -19,6 +19,7 @@ import { LibraryCoverage, type LibraryStats } from 'src/sections/debug/LibraryCo
 import { MachineReadersSection } from 'src/sections/debug/MachineReadersSection';
 import { ProblemAreas, type ProblemSpec } from 'src/sections/debug/ProblemAreas';
 import { RecentActivity, type RecentActivityData } from 'src/sections/debug/RecentActivity';
+import { SearchMissesSection } from 'src/sections/debug/SearchMissesSection';
 import { SharedLinksSection } from 'src/sections/debug/SharedLinksSection';
 import type { SortDir } from 'src/sections/debug/SortableHeader';
 import { SpecMatrix, SpecStatus } from 'src/sections/debug/SpecMatrix';
@@ -495,6 +496,9 @@ export function DebugPage() {
 
       {/* Shared links: the share counters of the last 28 days, with the fetches /stats leaves out */}
       <SharedLinksSection token={adminToken} reloadCounter={reloadCounter} />
+
+      {/* Search misses: the gallery searches that found nothing, a private list with a delete per text */}
+      <SearchMissesSection token={adminToken} reloadCounter={reloadCounter} />
 
       {/* Agent cases: the triage of the agent chat's quick feedback */}
       <AgentCasesSection token={adminToken} reloadCounter={reloadCounter} />

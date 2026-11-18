@@ -138,7 +138,8 @@ export function LegalPage() {
                     >
                       public dashboard
                     </Link>
-                    . its script is served through this domain: no cookies, no cross-site id, no IP
+                    . search texts sent up to and including november 2026 still show there. its
+                    script is served through this domain: no cookies, no cross-site id, no IP
                     address kept.
                   </>,
                 ],
@@ -164,6 +165,20 @@ export function LegalPage() {
                     day, nothing about who shared. unverified is no verdict on a share: WhatsApp and
                     Signal fetch the preview from the sender&apos;s own phone, which nobody can
                     verify. the counts are kept without a time limit.
+                  </Box>,
+                ],
+                [
+                  'searches without a hit',
+                  <Box component="span" id="search-misses" sx={ANCHOR_SX}>
+                    when a gallery search finds nothing, two seconds after you stop typing or when
+                    you leave the field, its text (lowercase, first 40 characters) is counted per
+                    day, so I see what the catalogue lacks. an e-mail address or a link with http://
+                    is not kept; anything else you type may be, so please type no personal data. a
+                    row holds no IP address and no time of day; only timestamps could match one to
+                    the 30-day server logs, so it is pseudonymous. only I read the list, and I
+                    delete an entry on request.
+                    <br />
+                    kept: 180 days · where: Google Cloud SQL
                   </Box>,
                 ],
                 [
@@ -219,6 +234,7 @@ export function LegalPage() {
                   'shared links',
                   'no time limit: counts per day, platform and page, verified or not',
                 ],
+                ['searches without a hit', '180 days'],
                 ['feedback case files', '180 days'],
                 ['feedback entries, case rows', 'until you ask to delete them'],
               ]}
@@ -229,7 +245,7 @@ export function LegalPage() {
               rows={[
                 [
                   'Art. 6(1)(f)',
-                  "legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits",
+                  "legitimate interest in protecting the site, counting its readers, seeing what its catalogue lacks, and the assistant's telemetry and limits",
                 ],
                 ['Art. 6(1)(b)', 'your request: making the plot you ask the data assistant for'],
                 [

@@ -234,8 +234,8 @@ were counted and shown nowhere.
 | `copy_code` | `spec`, `library`, `method`, `page` | `ImageCard.tsx`, `SpecPage.tsx`, `SpecTabs/CodeTab.tsx`, `agent-chat/ResultCard.tsx` | A visitor copies an implementation's code: the primary conversion |
 | `download_image` | `spec`, `library`, `page` | `SpecPage.tsx` | A visitor downloads a plot's PNG |
 | `interactive_open` | `spec`, `library` | `SpecOverview.tsx` | A visitor opens an implementation's interactive view from the spec hub. Until 2026-11-12 the event was named `open_interactive` |
-| `search` | `query`, `category` | `FilterBar/FilterSearch.tsx` | A visitor searches the gallery and picks a result |
-| `search_no_results` | `query` | `FilterBar/FilterSearch.tsx` | A search finds nothing: what the catalogue lacks |
+| `search` | `category` | `FilterBar/FilterSearch.tsx` | A visitor searches the gallery and picks a result |
+| `search_no_results` | None | `FilterBar/FilterSearch.tsx` | A finished search finds nothing in the whole catalogue, counted when it is reported to the private list, which gets what was typed (see [Search](#search)); since 2026-11-18, not comparable with earlier months |
 | `feedback_submitted` | `source`, `spec`, `library` | `FeedbackWidget.tsx`, `useQuickReaction.ts` | A visitor sends feedback or votes on a plot |
 | `agent_open` | `spec`, `library`, `source` | `AgentChatPage.tsx` | A visitor opens the agent chat for a plot |
 | `agent_plot_rendered` | `spec`, `library`, `status`, `repaired` | `useAgentSession.ts` | The agent chat ends a plot run |
@@ -244,10 +244,13 @@ were counted and shown nowhere.
 | `nav_click` | `source`, `target`, `spec`, `library` | The landing page, see [Landing page clicks](#landing-page-clicks-nav_click) | A visitor goes on from an element of the landing page |
 | `stayed_10s` | `input` | The tracker itself (`useAnalytics.ts`, `analytics/stay.ts`) | The site was in front of the visitor for ten seconds of a visit, once per visit |
 
-Every property holds a value from a closed list or a catalogue id, with one
-exception: `query` is what a visitor typed (see [Search](#search)). Every
-pageview and event also carries the ambient `theme` (`dark` or `light`), the
-theme in effect, which `RootLayout` sets through `setAnalyticsAmbientProps`.
+Every event property holds a value from a closed list or a catalogue id, so no
+event property carries anything a visitor typed. Until 2026-11-18 one did:
+`search` and `search_no_results` sent the search text as `query` (see
+[Search](#search)).
+Every pageview and event also carries the ambient `theme` (`dark` or `light`),
+the theme in effect, which `RootLayout` sets through
+`setAnalyticsAmbientProps`.
 
 ### Conversions
 
@@ -266,16 +269,120 @@ the gallery or after opening a plot, break `copy_code` down by `page`.
 
 `search` fires when a visitor picks a search result, with the `category` of
 the result (`lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`,
-`prep`, `style`). `search_no_results` fires when a query of at least two
-characters finds nothing inside the active filters, 200 ms after the last
-keystroke. Such a query also fires it when the dropdown offers `.search_all()`,
-because the same query finds matches without the filters.
+`prep`, `style`). `search_no_results` fires for a finished search that finds
+nothing in the whole catalogue, at the moment it is reported to the private
+list below and from the same decision (`reportSearchMiss()` in
+`app/src/lib/searchMiss.ts`): after two seconds without a keystroke, or when
+the search field loses focus. It fires once per text
+and page load, and only for a text the private list keeps (the rule under
+"Only a search for a plot"). A fragment typed on within two seconds, a text
+thrown away with the clear cross, Escape, or "← back", a text still pending
+when the visitor leaves the gallery, and a text that only
+finds nothing inside the active filters (the dropdown then offers
+`.search_all()`) don't fire it.
 
-`query` is the one property a visitor writes, and the public dashboard lists
-it. `normalizeQuery()` therefore sends it in lowercase, with single spaces,
-and cut at 40 characters (`MAX_QUERY_LENGTH`): "Scatter", "scatter " and
-"SCATTER" are one entry, catalogue words and spec names fit, and a long text
-pasted into the box by mistake doesn't stand there in full.
+The event and the row follow from one decision in the browser, but the two
+counts can still differ: the API's limit of 20 requests a minute per network,
+the day's cap of 1,000 new texts, a failed write, or a letter newer than the
+server's Unicode tables (the browser knows it as a letter, the server
+refuses it as unassigned) leave a counted miss without a row, and a browser
+that blocks the analytics script leaves a row without a count. Read the event's count beside the list as two estimates of
+one thing, not as numbers that add up.
+
+Since 2026-11-18 the event counts only such finished texts. Until then it
+fired 200 ms after any keystroke for a query of at least two characters that
+found nothing inside the active filters, fragments and thrown-away texts
+included, so the count is smaller from that day on and isn't comparable with
+earlier months.
+
+Neither event carries what the visitor typed. Until 2026-11-18 both sent it
+as the property `query`, and the public dashboard listed it. Because
+`search_no_results` fired 200 ms after a keystroke, a fragment typed on the
+way to a longer text ("gapm", "gapmi") stood there as a search of its own.
+
+#### The private list of search misses
+
+A search that finds nothing in the whole catalogue goes to a private list in
+the project's database instead (`search_misses`, see
+[Database](database.md#search_misses)). The owner reads it in the "search
+misses" section of `/debug` to see what the catalogue lacks and which words
+the search doesn't know, and deletes a text or a whole day there. No public
+page shows it.
+
+- **What counts as a miss**: the text finds nothing inside the active
+  filters, nothing without them, and nothing in any category. A text that
+  `.search_all()` would find is no miss, nor is one typed before the counts of
+  all plots have loaded, nor one whose folded form (see "One form of the text"
+  below) finds plots, such as a fullwidth spelling of a catalogue word.
+- **Only the finished text**: the gallery sends it once no key was pressed for
+  two seconds (`MISS_PAUSE_MS`), or earlier when the search field loses focus
+  (a click outside the search included). A fragment
+  typed on within two seconds is never sent; one left for two seconds or by a
+  loss of focus is, even if the visitor comes back and types on. The clear
+  cross, Escape, and "← back" throw a pending text away: it isn't sent. Nor
+  is a text still pending when the gallery goes away, for example by the
+  browser's back within the two seconds: it may be a fragment. Each
+  text is sent once per page load, and only from the live site
+  (`app/src/lib/searchMiss.ts`). The field asks the browser and password
+  managers not to fill it (`autocomplete="off"`).
+- **One form of the text**: `foldQuery()` folds compatibility forms (Unicode
+  form NFKC: a fullwidth bracket becomes the plain one, a superscript two a 2,
+  a ligature its letters), makes the text lowercase, makes the curly
+  apostrophes the plain `'` and the hyphen, the non-breaking hyphen, the minus
+  sign, and the en and em dashes the plain `-`, drops a soft hyphen (it shows
+  as nothing and comes with a word copied from a page), folds it again, and
+  leaves single spaces. The map comes before the second fold, so folding a
+  folded text changes nothing. So "Scatter", "scatter " and "SCATTER" are one
+  entry, and so is a word typed with a composed or a decomposed accent or a
+  phone's typographic apostrophe. The API folds the same way.
+  `app/src/hooks/searchQuery.cases.json` holds the app's rule and the API's to
+  each other.
+- **Judged whole, then cut**: the rule below runs over the whole folded text,
+  so an `@`, a `:`, or a seventh digit past the 40th character refuses the
+  text as it would within them, and a long address or number is never kept in
+  part. Only a text that passed is cut at 40 characters (`MAX_QUERY_LENGTH`),
+  so a long text pasted into the box by mistake isn't kept in full, and the
+  cut text is judged once more, since a cut can end on a joiner. This is
+  `keptMissText()` in the app and `kept_query()` in the API. The API drops a
+  raw text longer than 200 characters (`MAX_RAW_QUERY_LENGTH`) unread, so it
+  never keeps a part of a text it didn't read; the app never sends one.
+- **Only a search for a plot**: a visitor could type anything, so both the app
+  and the API keep a text only when it reads as a search and shows something,
+  by what its characters are and in any script: at least two characters, each
+  a letter, a combining mark on a letter or a mark, a decimal digit (at most
+  six in all), a space, or one of `- _ . + # / & ' ( ) % ,`, the middle dots
+  `·` and `・`, and the signs some scripts spell words with: the Hebrew geresh,
+  gershayim and maqaf, the Tibetan tsheg, and the Ethiopic wordspace. It also
+  needs at least one letter or digit. A text with `@` or `:`, with more
+  digits, or with a control, format, direction, or other ignorable character
+  (a Hangul filler, a variation selector) isn't sent and isn't kept, so an
+  e-mail address, a phone number, a link, or a row that looks empty doesn't
+  reach the list. The zero width non-joiner and joiner count only between two
+  letters or marks, where they are ordinary spelling in several scripts; in a
+  script where a joiner changes nothing that is seen, a word with one is a row
+  that looks like the word without it, its own entry, which the owner can
+  delete. A search with other punctuation isn't kept, so the list undercounts
+  those. The rule is `isCountableMiss()`
+  in the app and `is_countable()` in the API.
+- **What a row holds**: the text, the UTC day, and a count. No address, no
+  user agent, no time of day, and no session. The text travels in the body of
+  `POST /search/miss` (see [API reference](api.md#post-searchmiss)), never in
+  a URL, without cookies or a referrer, and the API logs no part of it. A row
+  is pseudonymous, not anonymous: the platform's request log keeps one line
+  per `POST /search/miss` for 30 days, with its time and user agent, and until
+  then a text could be matched to such a line by its day. The list is the
+  operator's alone.
+- **Limits**: a network (an IPv4 address, or the /64 of an IPv6 address) may
+  send 20 requests a minute, a body may hold 1 KiB, a UTC day takes at most
+  1,000 different texts, and a row is deleted when it is more than 180 days old
+  (`RATE_LIMIT_MAX`, `MAX_BODY_BYTES`, `MAX_NEW_QUERIES_PER_DAY`, and
+  `RETENTION_DAYS` in `api/search_misses.py`). The delete runs once a day
+  after a count, at the API's start, and when the owner reads the list. The
+  API counts and deletes only in production.
+- **Best effort**: the counts are hints, not measurements. A flood can fill a
+  day, after which the day's cap drops new texts (the owner's section names
+  such a day and deletes it whole), and a miss that is being written when an
+  instance stops is lost.
 
 ### Feedback
 
@@ -781,7 +888,7 @@ Enterprise plan, so you change them in the dashboard.
 | `download_image` | Custom event | Image downloads |
 | `interactive_open` | Custom event | Interactive views opened from a spec hub |
 | `search` | Custom event | Searches that led to a result |
-| `search_no_results` | Custom event | Searches that found nothing: content gaps |
+| `search_no_results` | Custom event | Finished searches that found nothing in the whole catalogue, from 2026-11-18; the texts are in the private list on `/debug` |
 | `feedback_submitted` | Custom event | Feedback entries and plot votes |
 | `agent_open` | Custom event | Opens of the agent chat, and where they came from |
 | `agent_plot_rendered` | Custom event | Agent chat plot runs, by outcome |
@@ -805,7 +912,6 @@ Enterprise plan, so you change them in the dashboard.
 | `page` | `home`, `plots`, `spec_overview`, `spec_detail`, `agent_chat`, `other` | Every pageview, `copy_code`, `download_image` |
 | `source` | For `nav_click` the element (see [Landing page clicks](#landing-page-clicks-nav_click)); for `agent_open` `plot_page`, `spec_hub`, `plot_of_the_day`, `agent_intro`, `landing`, `direct`; for `feedback_submitted` `widget_quick`, `widget_form`, `plot_vote` | `nav_click`, `agent_open`, `feedback_submitted` |
 | `target` | A path of the site, or `github` and other labels of an outbound element | `nav_click` |
-| `query` | The search text: lowercase, single spaces, at most 40 characters | `search`, `search_no_results` |
 | `category` | `lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`, `prep`, `style` | `search` |
 | `status` | `ok`, `needs_attention`, `failed`, `not_ready` | `agent_plot_rendered` |
 | `repaired` | `yes`, `no` | `agent_plot_rendered` |
@@ -824,8 +930,9 @@ The questions the dashboard answers, and where:
   `library`.
 - **Do visitors copy from the gallery or after opening a plot?** `copy_code`
   by `page`.
-- **What is searched, and what is missing?** `search` and `search_no_results`
-  by `query`.
+- **How often does a search lead to a result?** `search` by `category`, beside
+  `search_no_results`. What was searched and not found is in the private list
+  on `/debug`, not here (see [Search](#search)).
 - **Which features are used at all?** `ui_feature` by `feature`.
 - **Where does the landing page send visitors?** `nav_click` by `source`.
 - **How many visits get from a kind of page to a copy?** A funnel of pageview
@@ -897,6 +1004,7 @@ had no bounce rate draws the floor and is named "not counted".
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`, with `ENGAGED_SINCE` and `_engaged_visits()`
 - **Visitors tile**: `app/src/sections/stats/VisitorsTile.tsx`, its answer's check and sums in `app/src/sections/stats/visitors.ts`, and the hinted word in `app/src/sections/stats/HintTerm.tsx` (shared with the shared links tile)
 - **Shared links** (not in Plausible): `record_share()` in `api/shared_links.py`, called by `api/routers/og_images.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
+- **Search misses** (the texts not in Plausible): the miss rule, the pause and what reports or drops a pending text in `app/src/sections/plots-gallery/FilterBar/FilterSearch.tsx`; the one decision (`claimSearchMiss()`), the report that counts `search_no_results` and sends the text (`reportSearchMiss()`), the sender and `isCountableMiss()` in `app/src/lib/searchMiss.ts`; the shared cases of both rules in `app/src/hooks/searchQuery.cases.json`, `read_json_body()`, `is_countable()` and `record_miss()` in `api/search_misses.py` behind `POST /search/miss` (`api/routers/search.py`), and the owner's section `app/src/sections/debug/SearchMissesSection.tsx`
 
 ## Add or change an event
 
@@ -905,8 +1013,9 @@ had no bounce rate draws the floor and is named "not counted".
    is a value of `ui_feature`: add it to `UI_FEATURES`.
 2. For a new event, add its name to `AnalyticsEvent` in
    `app/src/hooks/useAnalytics.ts`. The compiler then accepts it everywhere.
-3. Send only values from a closed list or catalogue ids. Reuse a registered
-   property before you add one.
+3. Send only values from a closed list or catalogue ids, never anything a
+   visitor typed: the dashboard is public. Reuse a registered property before
+   you add one.
 4. Describe the event here, and add the goal and any new property to
    [Plausible dashboard configuration](#plausible-dashboard-configuration).
 5. After the deploy, register the goal and the property in Plausible, and
@@ -966,8 +1075,16 @@ event.
     not confirmed
 - [ ] After `stayed_10s` is deployed (2026-11-14): add the goal `stayed_10s`
   (custom event) and the property `input`
+- [ ] After the app's deploy that stops sending `query` (the private list of
+  search misses): the texts sent until then stay, as the owner decided, and
+  are not deleted. Look whether the property `query` can be hidden from the
+  dashboard. Once it is hidden, the texts are still held by Plausible and no
+  longer shown, so in the same step change the privacy page's clause ("search
+  texts sent up to and including november 2026 still show there",
+  `app/src/pages/LegalPage.tsx`) and its crawler copy (`api/routers/seo.py`)
+  to say that they are still held by Plausible and no longer shown
 
 ---
 
-**Last Updated**: 2026-11-14
-**Status**: Twelve custom events. Eleven are dashboard goals; `stayed_10s` is sent and measured, doesn't change the bounce rate yet, and its goal and its property `input` still have to be added in the dashboard. Pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here
+**Last Updated**: 2026-11-18
+**Status**: Twelve custom events. Eleven are dashboard goals; `stayed_10s` is sent and measured, doesn't change the bounce rate yet, and its goal and its property `input` still have to be added in the dashboard. No event carries what a visitor typed: the gallery's searches that found nothing are in a private list in the database; the texts sent before stay, and whether the property `query` can be hidden in the dashboard is still to be looked at. Pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here

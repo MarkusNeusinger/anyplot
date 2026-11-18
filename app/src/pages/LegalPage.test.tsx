@@ -114,6 +114,7 @@ describe('LegalPage', () => {
       ['assistant telemetry', 'up to 180 days'],
       ['machine readers', 'up to 180 days'],
       ['shared links', 'no time limit: counts per day, platform and page, verified or not'],
+      ['searches without a hit', '180 days'],
       ['feedback case files', '180 days'],
       ['feedback entries, case rows', 'until you ask to delete them'],
     ];
@@ -133,6 +134,41 @@ describe('LegalPage', () => {
     // The page states the current state only: no notes on what older entries still carry.
     expect(screen.queryByText(/before the move/)).not.toBeInTheDocument();
     expect(screen.queryByText(/unsalted/)).not.toBeInTheDocument();
+  });
+
+  // The private list of searches without a hit, each clause where the code bears it: the text is
+  // normalised and cut (`normalizeQuery`, `normalize_query`), a row is a day, a text and a count
+  // (`search_misses`), the list is the admin's (`/debug/search-misses`, with its delete), and the
+  // period is `RETENTION_DAYS` (tests/unit/api/test_search_misses.py holds the page to it).
+  it('describes the list of searches without a hit by what the code does', () => {
+    render(<LegalPage />);
+
+    const misses = document.getElementById('search-misses');
+    // When a text is taken: no key sends it. The pause is `MISS_PAUSE_MS` (pinned to the two
+    // seconds in searchMiss.test.ts), the other moment is the field's blur.
+    expect(misses).toHaveTextContent(
+      /when a gallery search finds nothing, two seconds after you stop typing or when you leave the field, its text \(lowercase, first 40 characters\)/
+    );
+    expect(misses).toHaveTextContent(/is counted per day, so I see what the catalogue lacks/);
+    // What the shared rule refuses is an `@` and a `:`, so an e-mail address and a link with its
+    // scheme; a host name or a street address stays, and the row says so and asks.
+    expect(misses).toHaveTextContent(
+      /an e-mail address or a link with http:\/\/ is not kept; anything else you type may be, so please type no personal data\./
+    );
+    // "no IP address", as the other rows say it: a typed text can itself be a street address.
+    expect(misses).toHaveTextContent(/a row holds no IP address and no time of day/);
+    expect(misses).toHaveTextContent(/only timestamps could match one to the 30-day server logs/);
+    expect(misses).toHaveTextContent(/so it is pseudonymous/);
+    expect(misses).toHaveTextContent(/only I read the list, and I delete an entry on request/);
+    expect(misses).toHaveTextContent(/kept: 180 days · where: Google Cloud SQL/);
+    // The rule keeps out an e-mail address and a link with its scheme, not every address or link:
+    // the row claims neither.
+    expect(misses).not.toHaveTextContent(/nothing that looks like an address or a link/);
+    // The search texts the app sent before the change still stand on the public dashboard. The
+    // change shipped within November 2026, so the month is included.
+    expect(
+      screen.getByText(/search texts sent up to and including november 2026 still show there/)
+    ).toBeInTheDocument();
   });
 
   it('does not claim more privacy than the code delivers', () => {
@@ -239,6 +275,10 @@ describe('LegalPage', () => {
     expect(
       screen.getByRole('row', { name: /^Art\. 6\(1\)\(f\)\s*legitimate interest/ })
     ).toBeInTheDocument();
+    // The search list's purpose has its basis: interest in seeing what the catalogue lacks.
+    expect(screen.getByRole('row', { name: /^Art\. 6\(1\)\(f\)/ })).toHaveTextContent(
+      "legitimate interest in protecting the site, counting its readers, seeing what its catalogue lacks, and the assistant's telemetry and limits"
+    );
     expect(
       screen.getByRole('row', { name: /^Art\. 6\(1\)\(b\)\s*your request: making the plot/ })
     ).toBeInTheDocument();

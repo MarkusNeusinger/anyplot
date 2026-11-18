@@ -7,11 +7,8 @@ field, hard length caps, reaction allow-list, a Cloudflare Turnstile token
 (`X-Turnstile-Token`, `api/turnstile.py`, #7249), and per-IP rate limit.
 """
 
-import hashlib
-import hmac
 import logging
 import re
-import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
@@ -22,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api import turnstile
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
+from api.request_context import IP_HASH_PREFIX, hash_ip
 from api.request_context import client_ip as _client_ip
 from api.schemas import FeedbackRequest, FeedbackResponse
 from core.database import FEEDBACK_REACTIONS, FeedbackRepository
@@ -48,27 +46,6 @@ REACTION_RATE_LIMIT_MAX = 30
 _URL_RE = re.compile(r"https?://", re.IGNORECASE)
 MAX_URLS_IN_MESSAGE = 1  # 2+ links treated as link-stuffing SEO spam
 DUPLICATE_LOOKBACK = timedelta(minutes=10)
-
-
-IP_HASH_PREFIX = "hmac:"
-"""Marks a salted `ip_hash` (`_hash_ip`). The unsalted SHA-256 hashes that rows written before it
-carried were cleared once by hand on 2026-11-02 after a snapshot; no migration is needed."""
-_IP_SALT = secrets.token_bytes(32)
-"""This process's salt for `_hash_ip`. Never logged and never configured, so it dies with the
-process, and with it every way to tell which address a stored hash came from."""
-
-
-def _hash_ip(ip: str) -> str:
-    """The client address as this process's rate-limit key: `hmac:` and 32 hex digits.
-
-    An HMAC-SHA256 under a random per-process salt, not a plain hash: there are only about
-    four billion IPv4 addresses, so a plain SHA-256 of one is undone by trying them all. The
-    windows below need the key only within one process, and the row keeps it only until the
-    longest of them has passed (`FeedbackRepository.clear_ip_hashes`). With more than one
-    instance, each counts its own requests: a limit then binds per instance."""
-    if not ip:
-        return ""
-    return IP_HASH_PREFIX + hmac.new(_IP_SALT, ip.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
 
 
 def _is_link_stuffed(message: str | None) -> bool:
@@ -122,7 +99,7 @@ async def submit_feedback(
     if refused is not None:
         raise HTTPException(status_code=refused[0], detail=refused[1])
 
-    ip_hash = _hash_ip(_client_ip(request))
+    ip_hash = hash_ip(_client_ip(request))
     repo = FeedbackRepository(db)
 
     # `feedback.created_at` is TIMESTAMP WITHOUT TIME ZONE (UTC) in Postgres,
