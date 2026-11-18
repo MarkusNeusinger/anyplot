@@ -262,7 +262,7 @@ class Feedback(Base):
     user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
     viewport: Mapped[str | None] = mapped_column(String(20), nullable=True)
     session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    # "hmac:" + a per-process salted HMAC of the client IP (api/routers/feedback.py `_hash_ip`), only for the
+    # "hmac:" + a per-process salted HMAC of the client IP (api/request_context.py `hash_ip`), only for the
     # rate limit and the duplicate check, cleared once their 10-minute window has passed. The unsalted SHA-256
     # hashes of older rows were cleared once by hand on 2026-11-02 after a snapshot; no migration is needed.
     ip_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -404,6 +404,38 @@ class LinkShare(Base):
         # No index of its own: every read is a window of days, and the primary key starts with `day`.
         CheckConstraint("page IN ('home','plots','spec_overview','spec_detail')", name="ck_link_shares_page_valid"),
     )
+
+
+# The longest search text a row holds, in characters: the app cuts what a visitor typed at the same
+# length (`MAX_QUERY_LENGTH` in `app/src/hooks/useAnalytics.ts`), and the server cuts it again.
+SEARCH_MISS_QUERY_LENGTH = 40
+
+
+class SearchMiss(Base):
+    """A gallery search that found nothing in the whole catalogue: one counter per UTC day and text.
+
+    The site sends the finished text of such a search (`api/search_misses.py`), and the owner reads
+    the list on /debug to see what the catalogue lacks and which words the search does not know. It
+    is a private list: no public page shows it.
+
+    A row is the text, the day and a count, nothing else: no address, no user agent, no time of day,
+    no session, no hash, so the row names nobody. It is pseudonymous, not anonymous: the platform's
+    request log keeps one line per `POST /search/miss` for 30 days, with its time and user agent, and
+    until then a text could be matched to such a line by its day. A visitor could type anything, so
+    the API keeps only a text that reads as a search for a plot, judged whole before it is cut
+    (`kept_query` in `api/search_misses.py`), and the rows are kept for a limited time only
+    (`RETENTION_DAYS`).
+    """
+
+    __tablename__ = "search_misses"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    # Normalised by the server (lowercase, single spaces, cut at 40 characters), so equal searches of a
+    # day meet in one row.
+    query: Mapped[str] = mapped_column(String(SEARCH_MISS_QUERY_LENGTH), primary_key=True)
+    count: Mapped[int] = mapped_column(Integer, nullable=False)
+    # No index of its own: the writes, the retention delete and the owner's list go by day, and the
+    # primary key starts with `day`. Only the owner's delete of a text reads the whole table.
 
 
 # Seed data for libraries + languages (re-exported from core.constants).

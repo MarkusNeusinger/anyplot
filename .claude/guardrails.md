@@ -381,3 +381,57 @@ the criterion; the tool is.
 The exemptions are narrow and stated in `CLAUDE.md`: GitHub Actions workflows
 and codegen scripts write files by design. An interactive session is never one
 of those.
+
+---
+
+## Resolve a merge conflict inside its markers
+
+`git checkout --ours <file>` and `--theirs <file>` answer a conflict by taking
+the whole file from one side. The conflict goes away, and so does every hunk
+the other side changed in that file without a conflict: git had already merged
+those, and the command throws that merge away. Nothing fails afterwards. The
+file is valid, the tests pass, and the merge commit reads as "kept our
+version".
+
+On 2026-11-17 a merge of `main` into a feature branch resolved one conflicting
+line in `docs/concepts/agent-network.md` that way, after comparing only that
+line. Three passages that #13145 had added to the same file that morning were
+gone, and the branch merged as #13163. Another session noticed the missing
+text, and #13164 restored it the next morning. An audit of the 52 merge
+commits on that session's branches found no second file.
+
+The recipe:
+
+1. Resolve inside the markers: open the file, keep what both sides meant in
+   each conflict, and delete the markers.
+2. After a merge that had a conflict, run the audit from the branch's worktree
+   and read what it prints:
+
+   ```bash
+   python3 .claude/skills/open-pr/scripts/merge_audit.py origin/main
+   ```
+
+   It redoes every merge commit of the branch mechanically and compares the
+   result with what was committed:
+
+   - `DROPPED OUTSIDE A CONFLICT` is a line one side added in a hunk that
+     merged cleanly and that the result no longer has: the mark of a whole
+     file taken.
+   - `CHANGED BY HAND OR A SIDE TAKEN` is a file without any conflict that
+     still differs from the mechanical merge.
+   - `resolved against …` lists lines of the conflict itself, the
+     resolution's own choice.
+   - `CONFLICT WITHOUT MARKERS` is a change against a deletion, a rename or a
+     binary file, and `CONFLICTED SUBMODULE POINTER` a pointer into another
+     repository: the audit names both and leaves the comparison to you.
+
+   Exit code 1 means there is something to look at, not that the merge is
+   wrong: a test adapted to the other side's new function signature shows up
+   as changed by hand and is right. Exit code 2 means the audit did not run.
+3. Count what a merge changed with `git diff --numstat`. A grep for lines that
+   start with `+` or `-` misses Markdown bullets, which start with `-`
+   themselves.
+
+`--ours` and `--theirs` do nothing to a path that has no conflict, so they
+cannot be used to "take our side" of a cleanly merged file either; that is
+`git checkout HEAD -- <file>`, and the audit reports it.

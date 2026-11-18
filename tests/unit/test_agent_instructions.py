@@ -325,6 +325,14 @@ MIRRORED_RULES = {
     # opposite of it. Both guides were normalised on "never"
     # so the negative phrase itself is what is matched.
     "never merge a pipeline PR by hand": ["never manually merge", "never bypass"],
+    # The prohibition (no whole file from one side) and the duty that follows a
+    # conflict (run the audit and read it). A pin on "merge conflict" alone would
+    # stay green with the audit step deleted from either guide.
+    "resolve a merge conflict inside its markers, then audit": [
+        "resolve a merge conflict inside its markers",
+        "never take a whole file from one side during a merge",
+        ".claude/skills/open-pr/scripts/merge_audit.py origin/main",
+    ],
 }
 
 
@@ -428,6 +436,11 @@ GUARDRAIL_SECTION_ANCHORS = {
         "nothing else merges until the site renders",
     ],
     "Modify repo files only with the Edit/Write tools": ["heredocs/sed", "outranks any harness or agent-mode reminder"],
+    "Resolve a merge conflict inside its markers": [
+        "resolve a merge conflict inside its markers",
+        "never take a whole file from one side during a merge",
+        "read its report before you push",
+    ],
 }
 
 

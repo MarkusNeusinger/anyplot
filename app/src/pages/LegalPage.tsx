@@ -209,9 +209,8 @@ export function LegalPage() {
                     >
                       public dashboard
                     </Link>
-                    : no cookies, no cross-site id, no IP address kept. one exception: the text of a
-                    gallery search (lowercase, first 40 characters) is sent too and shows on the
-                    dashboard.
+                    : no cookies, no cross-site id, no IP address kept. search texts sent up to and
+                    including november 2026 still show there.
                     <Kept items={[['where', 'Plausible Analytics (EU, proxied)']]} />
                   </>,
                 ],
@@ -250,6 +249,24 @@ export function LegalPage() {
                         ]}
                       />
                     </Box>
+                  </Box>,
+                ],
+                [
+                  'searches without a hit',
+                  <Box component="span" id="search-misses" sx={ANCHOR_SX}>
+                    when a gallery search finds nothing, two seconds after you stop typing or when
+                    you leave the field, its text (lowercase, first 40 characters) is counted per
+                    day, so I see what the catalogue lacks. an e-mail address or a link with http://
+                    is not kept; anything else you type may be, so please type no personal data. a
+                    row holds no IP address and no time of day; only timestamps could match one to
+                    the 30-day server logs, so it is pseudonymous. only I read the list, and I
+                    delete an entry on request.
+                    <Kept
+                      items={[
+                        ['kept', '180 days'],
+                        ['where', <GoogleCloud services="SQL" />],
+                      ]}
+                    />
                   </Box>,
                 ],
                 [
@@ -303,8 +320,8 @@ export function LegalPage() {
 
             <Typography sx={subheadingStyle}>why this is allowed</Typography>
             <Typography sx={textStyle}>
-              • a legitimate interest in protecting the site, counting its readers, and the
-              assistant&apos;s telemetry and limits
+              • a legitimate interest in protecting the site, counting its readers, seeing what its
+              catalogue lacks, and the assistant&apos;s telemetry and limits
               <br />
               • your request: making the plot you ask the data assistant for
               <br />• your consent to a feedback case: you give it when you send it and can withdraw

@@ -1,0 +1,489 @@
+{
+  "max_length": 40,
+  "min_length": 2,
+  "max_digits": 6,
+  "marks": " -_.+#/&'(),%\u00b7\u30fb\u05f3\u05f4\u05be\u0f0b\u1361",
+  "ignorable": [
+    ["00ad", "00ad"],
+    ["034f", "034f"],
+    ["061c", "061c"],
+    ["115f", "1160"],
+    ["17b4", "17b5"],
+    ["180b", "180f"],
+    ["200b", "200f"],
+    ["202a", "202e"],
+    ["2060", "206f"],
+    ["3164", "3164"],
+    ["fe00", "fe0f"],
+    ["feff", "feff"],
+    ["ffa0", "ffa0"],
+    ["fff0", "fff8"],
+    ["1bca0", "1bca3"],
+    ["1d173", "1d17a"],
+    ["e0000", "e0fff"]
+  ],
+  "cases": [
+    { "rule": "lowercase", "typed": "Scatter", "sent": "scatter", "countable": true },
+    {
+      "rule": "white space at the ends",
+      "typed": "  scatter  ",
+      "sent": "scatter",
+      "countable": true
+    },
+    {
+      "rule": "a run of spaces is one",
+      "typed": "SCATTER   Plot",
+      "sent": "scatter plot",
+      "countable": true
+    },
+    {
+      "rule": "tab and newline are spaces",
+      "typed": "box\tplot\nmatplotlib",
+      "sent": "box plot matplotlib",
+      "countable": true
+    },
+    { "rule": "nothing", "typed": "", "sent": "", "countable": false },
+    { "rule": "spaces only", "typed": "   ", "sent": "", "countable": false },
+    { "rule": "one character", "typed": "X", "sent": "x", "countable": false },
+    {
+      "rule": "cut at 40 characters",
+      "typed": "dear team, please find attached the quarterly numbers for the board",
+      "sent": "dear team, please find attached the quar",
+      "countable": true
+    },
+    {
+      "rule": "no space left at the cut",
+      "typed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bcd",
+      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "countable": true
+    },
+    {
+      "rule": "a German word",
+      "typed": "Spinnennetz-Diagramm",
+      "sent": "spinnennetz-diagramm",
+      "countable": true
+    },
+    { "rule": "capital sharp s", "typed": "STRAẞE", "sent": "straße", "countable": true },
+    {
+      "rule": "Greek final sigma",
+      "typed": "ΟΔΟΣ ΧΑΡΤΗΣ",
+      "sent": "οδος χαρτης",
+      "countable": true
+    },
+    {
+      "rule": "dotted capital I lowercases to a letter and a combining mark",
+      "typed": "İstanbul",
+      "sent": "i\u0307stanbul",
+      "countable": true
+    },
+    { "rule": "composed accent", "typed": "Café", "sent": "café", "countable": true },
+    {
+      "rule": "decomposed accent is composed to the same text",
+      "typed": "Cafe\u0301",
+      "sent": "café",
+      "countable": true
+    },
+    {
+      "rule": "Cyrillic",
+      "typed": "Диаграмма Рассеяния",
+      "sent": "диаграмма рассеяния",
+      "countable": true
+    },
+    { "rule": "Japanese", "typed": "散布図", "sent": "散布図", "countable": true },
+    { "rule": "Arabic", "typed": "مخطط مبعثر", "sent": "مخطط مبعثر", "countable": true },
+    {
+      "rule": "Devanagari with combining marks",
+      "typed": "बॉक्स प्लॉट",
+      "sent": "बॉक्स प्लॉट",
+      "countable": true
+    },
+    {
+      "rule": "a library name with a digit and an underscore",
+      "typed": "ggplot2 geom_point",
+      "sent": "ggplot2 geom_point",
+      "countable": true
+    },
+    {
+      "rule": "the signs a search may hold",
+      "typed": "C++ & R (x/y) #1 'a' b.c",
+      "sent": "c++ & r (x/y) #1 'a' b.c",
+      "countable": true
+    },
+    { "rule": "six digits", "typed": "plot 123456", "sent": "plot 123456", "countable": true },
+    {
+      "rule": "seven digits are too many",
+      "typed": "plot 1234567",
+      "sent": "plot 1234567",
+      "countable": false
+    },
+    {
+      "rule": "an e-mail address",
+      "typed": "Jane.Doe@Example.org",
+      "sent": "jane.doe@example.org",
+      "countable": false
+    },
+    {
+      "rule": "a phone number",
+      "typed": "+41 79 123 45 67",
+      "sent": "+41 79 123 45 67",
+      "countable": false
+    },
+    {
+      "rule": "a link",
+      "typed": "https://example.org/plots",
+      "sent": "https://example.org/plots",
+      "countable": false
+    },
+    { "rule": "a colon", "typed": "a:b", "sent": "a:b", "countable": false },
+    {
+      "rule": "a zero-width text",
+      "typed": "\u200b\u200b",
+      "sent": "\u200b\u200b",
+      "countable": false
+    },
+    {
+      "rule": "a right-to-left override",
+      "typed": "\u202egnp.exe",
+      "sent": "\u202egnp.exe",
+      "countable": false
+    },
+    {
+      "rule": "a control character",
+      "typed": "a\u0007b",
+      "sent": "a\u0007b",
+      "countable": false
+    },
+    {
+      "rule": "file separator is no white space in JavaScript",
+      "typed": "a\u001cb",
+      "sent": "a\u001cb",
+      "countable": false
+    },
+    {
+      "rule": "next line is no white space in JavaScript",
+      "typed": "a\u0085b",
+      "sent": "a\u0085b",
+      "countable": false
+    },
+    {
+      "rule": "zero width space is kept, and no search",
+      "typed": "x\u200by",
+      "sent": "x\u200by",
+      "countable": false
+    },
+    {
+      "rule": "every white space of JavaScript, part 1",
+      "typed": "a\tb\nc\u000bd\fe\rf g\u00a0h\u1680i\u2000j\u2001k\u2002l\u2003m",
+      "sent": "a b c d e f g h i j k l m",
+      "countable": true
+    },
+    {
+      "rule": "every white space of JavaScript, part 2",
+      "typed": "n\u2004o\u2005p\u2006q\u2007r\u2008s\u2009t\u200au\u2028v\u2029w\u202fx\u205fy\u3000z\ufeffa",
+      "sent": "n o p q r s t u v w x y z a",
+      "countable": true
+    },
+    {
+      "rule": "a byte order mark at the ends",
+      "typed": "\ufeffsplom\ufeff",
+      "sent": "splom",
+      "countable": true
+    },
+    {
+      "rule": "a cut never splits a character outside the BMP",
+      "typed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀b",
+      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀",
+      "countable": false
+    },
+    {
+      "rule": "40 characters, not 40 UTF-16 units",
+      "typed": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "sent": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+      "countable": false
+    },
+    {
+      "rule": "fullwidth forms fold to the plain ones",
+      "typed": "\uff08\uff33\uff23\uff21\uff34\uff34\uff25\uff32\uff09",
+      "sent": "(scatter)",
+      "countable": true
+    },
+    {
+      "rule": "a superscript folds to its digit",
+      "typed": "R\u00b2 Plot",
+      "sent": "r2 plot",
+      "countable": true
+    },
+    {
+      "rule": "a ligature folds to its letters",
+      "typed": "\ufb01t Line",
+      "sent": "fit line",
+      "countable": true
+    },
+    {
+      "rule": "a fold longer than its original is cut at 40",
+      "typed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u3392",
+      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamh",
+      "countable": true
+    },
+    {
+      "rule": "a capital without a composed form is composed after the lowercase",
+      "typed": "J\u030c Plot",
+      "sent": "\u01f0 plot",
+      "countable": true
+    },
+    {
+      "rule": "curly apostrophes are the plain one",
+      "typed": "Kernel\u2019s \u2018Density\u2019",
+      "sent": "kernel's 'density'",
+      "countable": true
+    },
+    {
+      "rule": "en and em dashes are the plain one",
+      "typed": "Box \u2013 Whisker\u2014Plot",
+      "sent": "box - whisker-plot",
+      "countable": true
+    },
+    {
+      "rule": "a percent sign",
+      "typed": "100% Stacked Bar",
+      "sent": "100% stacked bar",
+      "countable": true
+    },
+    { "rule": "a comma", "typed": "Bar, Stacked", "sent": "bar, stacked", "countable": true },
+    {
+      "rule": "a middle dot",
+      "typed": "Coordenades Paral\u00b7leles",
+      "sent": "coordenades paral\u00b7leles",
+      "countable": true
+    },
+    {
+      "rule": "a katakana middle dot",
+      "typed": "パレート\u30fbチャート",
+      "sent": "パレート\u30fbチャート",
+      "countable": true
+    },
+    {
+      "rule": "a Hangul filler shows as nothing",
+      "typed": "\u3164\u3164",
+      "sent": "\u1160\u1160",
+      "countable": false
+    },
+    {
+      "rule": "the choseong and jungseong fillers show as nothing",
+      "typed": "\u115f\u1160",
+      "sent": "\u115f\u1160",
+      "countable": false
+    },
+    {
+      "rule": "the halfwidth Hangul filler shows as nothing",
+      "typed": "\uffa0\uffa0",
+      "sent": "\u1160\u1160",
+      "countable": false
+    },
+    {
+      "rule": "variation selectors show as nothing",
+      "typed": "\ufe0f\ufe0f",
+      "sent": "\ufe0f\ufe0f",
+      "countable": false
+    },
+    {
+      "rule": "grapheme joiners show as nothing",
+      "typed": "\u034f\u034f",
+      "sent": "\u034f\u034f",
+      "countable": false
+    },
+    {
+      "rule": "a Mongolian free variation selector shows as nothing",
+      "typed": "\u1820\u180b",
+      "sent": "\u1820\u180b",
+      "countable": false
+    },
+    {
+      "rule": "a twin of a word with a Hangul filler",
+      "typed": "scatter\u3164",
+      "sent": "scatter\u1160",
+      "countable": false
+    },
+    {
+      "rule": "a twin of a word with a variation selector",
+      "typed": "scatter\ufe0f",
+      "sent": "scatter\ufe0f",
+      "countable": false
+    },
+    {
+      "rule": "bare combining marks",
+      "typed": "\u0301\u0301",
+      "sent": "\u0301\u0301",
+      "countable": false
+    },
+    {
+      "rule": "a combining mark after a space",
+      "typed": "a \u0301b",
+      "sent": "a \u0301b",
+      "countable": false
+    },
+    { "rule": "no letter and no digit", "typed": "-_- ()", "sent": "-_- ()", "countable": false },
+    {
+      "rule": "a word spelled with a zero width non-joiner",
+      "typed": "نمودار میله\u200cای",
+      "sent": "نمودار میله\u200cای",
+      "countable": true
+    },
+    {
+      "rule": "a conjunct spelled with a zero width joiner",
+      "typed": "क्\u200dष",
+      "sent": "क्\u200dष",
+      "countable": true
+    },
+    {
+      "rule": "a mark right after a joiner between a letter and the mark",
+      "typed": "র\u200d\u09cdযাব",
+      "sent": "র\u200d\u09cdযাব",
+      "countable": true
+    },
+    {
+      "rule": "a joiner before a mark at the start",
+      "typed": "\u200d\u09cdযাব",
+      "sent": "\u200d\u09cdযাব",
+      "countable": false
+    },
+    {
+      "rule": "a Hebrew acronym with gershayim",
+      "typed": "דו\u05f4ח",
+      "sent": "דו\u05f4ח",
+      "countable": true
+    },
+    {
+      "rule": "the plain double quote stays out",
+      "typed": "דו\u0022ח",
+      "sent": "דו\u0022ח",
+      "countable": false
+    },
+    {
+      "rule": "a Hebrew word with geresh",
+      "typed": "צ\u05f3ארט",
+      "sent": "צ\u05f3ארט",
+      "countable": true
+    },
+    {
+      "rule": "a Hebrew compound with maqaf",
+      "typed": "דו\u05beממדי",
+      "sent": "דו\u05beממדי",
+      "countable": true
+    },
+    {
+      "rule": "a Tibetan word with tsheg",
+      "typed": "བོད\u0f0bཡིག",
+      "sent": "བོད\u0f0bཡིག",
+      "countable": true
+    },
+    {
+      "rule": "Ethiopic words with the wordspace",
+      "typed": "ኢትዮጵያ\u1361ካርታ",
+      "sent": "ኢትዮጵያ\u1361ካርታ",
+      "countable": true
+    },
+    {
+      "rule": "the hyphen is the plain one",
+      "typed": "Box\u2010Plot",
+      "sent": "box-plot",
+      "countable": true
+    },
+    {
+      "rule": "the non-breaking hyphen is the plain one",
+      "typed": "Box\u2011Plot",
+      "sent": "box-plot",
+      "countable": true
+    },
+    {
+      "rule": "the minus sign is the plain hyphen",
+      "typed": "Box\u2212Plot",
+      "sent": "box-plot",
+      "countable": true
+    },
+    {
+      "rule": "a soft hyphen is dropped and the word kept",
+      "typed": "Scat\u00adter",
+      "sent": "scatter",
+      "countable": true
+    },
+    {
+      "rule": "soft hyphens alone leave nothing",
+      "typed": "\u00ad\u00ad",
+      "sent": "",
+      "countable": false
+    },
+    {
+      "rule": "an address whose name part alone fills the 40 characters",
+      "typed": "Firstname.Middlename.Lastname.Department@Example.org",
+      "sent": "firstname.middlename.lastname.department",
+      "countable": false
+    },
+    {
+      "rule": "a sentence that ends in an address",
+      "typed": "Please send the quarterly numbers to jane.doe@example.org",
+      "sent": "please send the quarterly numbers to jan",
+      "countable": false
+    },
+    {
+      "rule": "a sentence that ends in a phone number",
+      "typed": "Call me about the bar chart on +41 79 123 45 67",
+      "sent": "call me about the bar chart on +41 79 12",
+      "countable": false
+    },
+    {
+      "rule": "a sentence that ends in a link",
+      "typed": "see this stacked bar chart example https://example.org/plots",
+      "sent": "see this stacked bar chart example https",
+      "countable": false
+    },
+    {
+      "rule": "a seventh digit past the cut",
+      "typed": "quarterly sales by region and product line 2023 2024",
+      "sent": "quarterly sales by region and product li",
+      "countable": false
+    },
+    {
+      "rule": "a long text that is fine is kept cut",
+      "typed": "Grouped bar chart with error bars and a logarithmic y axis",
+      "sent": "grouped bar chart with error bars and a",
+      "countable": true
+    },
+    {
+      "rule": "a cut that ends on a joiner",
+      "typed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u200cb",
+      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u200c",
+      "countable": false
+    },
+    {
+      "rule": "a soft hyphen between a letter and its mark is dropped before the second fold",
+      "typed": "Plot a\u00ad\u0301b",
+      "sent": "plot \u00e1b",
+      "countable": true
+    },
+    {
+      "rule": "a fullwidth letter, a soft hyphen and a mark become one letter",
+      "typed": "\uff41\u00ad\u0301",
+      "sent": "\u00e1",
+      "countable": false
+    },
+    {
+      "rule": "a non-joiner at the start",
+      "typed": "\u200cabc",
+      "sent": "\u200cabc",
+      "countable": false
+    },
+    {
+      "rule": "a non-joiner at the end",
+      "typed": "abc\u200c",
+      "sent": "abc\u200c",
+      "countable": false
+    },
+    {
+      "rule": "a doubled non-joiner",
+      "typed": "ab\u200c\u200ccd",
+      "sent": "ab\u200c\u200ccd",
+      "countable": false
+    }
+  ]
+}

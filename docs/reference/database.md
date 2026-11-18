@@ -42,6 +42,9 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 **Shared links:**
 - One counter per day, platform, and page for the link previews that messengers and social networks fetch (`link_shares`): a count, with no address, no user agent, and no time of day
 
+**Search misses:**
+- One counter per day and text for the gallery searches that found nothing in the whole catalogue (`search_misses`): the text, the day, and a count, with no address, no user agent, no time of day, and no session; pseudonymous, read by the operator only, and deleted after 180 days
+
 **Other:**
 - Library information (name, version, docs URL)
 
@@ -256,6 +259,14 @@ CREATE TABLE link_shares (
     CONSTRAINT ck_link_shares_page_valid
         CHECK (page IN ('home','plots','spec_overview','spec_detail'))
 );
+
+-- Search misses: one counter per day and text, private, kept for 180 days
+CREATE TABLE search_misses (
+    day DATE NOT NULL,                      -- The UTC day of the search
+    query VARCHAR(40) NOT NULL,             -- The text, normalised: lowercase, single spaces
+    count INTEGER NOT NULL,
+    PRIMARY KEY (day, query)
+);
 ```
 
 **Note**: Tags are stored as JSONB in the `specs` table (not a separate table).
@@ -419,6 +430,27 @@ Every column but the triage state copies the field of the same name in the case'
 **Why the key columns are never NULL**: the seven of them are the primary key, and the counter is one `INSERT ... ON CONFLICT DO UPDATE SET fetches = fetches + 1`. A NULL in a key conflicts with nothing, so every fetch would add a row and the count would stay at one.
 
 **What a row never holds**: an address, a user agent, or anything else of the request. The rows are kept without a time limit.
+
+---
+
+### `search_misses`
+
+**Purpose**: Keep a private list of the gallery searches that found nothing in the whole catalogue, so the owner sees what the catalogue lacks and which words the search doesn't know. The gallery sends the finished text of such a search to `POST /search/miss`, and the API adds one to the row of that day and text (`api/search_misses.py`). The section "search misses" on `/debug` reads the list, names the days that reached the cap, and deletes a text or a whole day. No public page shows it, and the list is the operator's alone. The full description is in [Plausible analytics tracking](plausible.md#the-private-list-of-search-misses).
+
+**Key Fields**:
+- `day` - The UTC day of the search. No time of day is stored
+- `query` - The text, normalised by the API with the app's rule: compatibility forms folded (Unicode form NFKC), lowercase, typographic apostrophes, hyphens, and dashes made plain, a soft hyphen dropped, single spaces, at most 40 characters, and at least 2
+- `count` - How often the text was searched that day
+
+**What a text may hold**: a visitor could type anything into the search field, so the app sends and the API keeps a text only when it reads as a search for a plot and shows something: letters and combining marks of any script (a mark only on a letter or a mark), at most six decimal digits, spaces, `- _ . + # / & ' ( ) % ,`, the middle dots `·` and `・`, and the Hebrew geresh, gershayim, and maqaf, the Tibetan tsheg, and the Ethiopic wordspace, and at least one letter or digit. The rule judges the whole folded text before anything is cut: only a text that passed is cut to 40 characters, and the cut text is judged once more, since a cut can end on a joiner. So the refusals hold for what was typed, also past the 40th character, and a long address or number is never kept in part. The API drops a raw text longer than 200 characters unread, so it never keeps a part of a text it didn't read; the app never sends one. That keeps out an e-mail address (`@`), a link with its scheme (`:`), a phone number (the digits), and control, format, direction, and other ignorable characters (a Hangul filler, a variation selector), except a zero width non-joiner or joiner between two letters or marks. It doesn't keep out every personal text: a name, a name with a year, a host name, a link without its scheme (`www.example.org/reset/abcdef`, `bit.ly/3xyz9`), an e-mail address spelled with "at", a street address, with or without its comma, a date of birth in six digits, a six-digit code, a licence plate, a password of letters and digits, or a token such as `sk-live-abcdefghijklmnop` passes, since none of them can be told from a search by its characters. The other way round, a script that marks its words with signs the rule doesn't know is undercounted: traditional Mongolian, for one, whose free variation selectors are refused as characters that show as nothing.
+
+**How it is written**: the day and the text are the primary key, and the counter is one `INSERT ... ON CONFLICT DO UPDATE SET count = count + 1`, so two equal searches of a day are one row. Once a day holds 1,000 different texts, a new text is dropped while a text already there still counts. The day's size is read in a statement before the insert, and the API runs at most two writes at once per instance, so a day can end one text over per instance: the cap bounds how far a flood can grow the table and isn't an exact count. The API deletes the rows more than 180 days old, one period for every text, also one searched only once. It runs the delete once a day: after a count, at the API's start, and when the owner reads the list; a failed delete is tried again by the next of them. The owner's list shows the same window. It is a best-effort counter: a flood can fill a day, and a write in flight when an instance stops is lost.
+
+**What a row never holds**: an address, a user agent, a time of day, a session, a hash, or anything else of the request. The text travels in the request body only and is never logged. A row names nobody, but it is pseudonymous, not anonymous: the platform's request log keeps one line per `POST /search/miss` for 30 days, with its time and user agent, and until then a text could be matched to such a line by its day.
+
+**The database's own log**: the API binds the text as a statement parameter, never as part of the statement's text. The instance sets none of PostgreSQL's logging flags that would write parameters or statements (`log_statement`, `log_min_duration_statement`, `log_parameter_max_length`, `log_parameter_max_length_on_error`, or pgAudit), and Query Insights is off, so a search text doesn't reach the database's own log; this was checked on 2026-11-18. That is a property of the instance's settings, not of the code: setting any of these flags, or turning Query Insights on, can write the texts into the database's log, so read this section before you change them.
+
+**Snapshots**: a `pg_dump` snapshot taken before a risky change is kept for good, so it leaves this table's rows out (`--exclude-table-data=search_misses`, the form the snapshot rule in `CLAUDE.md` gives). Otherwise a text would outlive its 180 days, and an entry deleted on request would stay in a file nobody deletes. The table's definition is still dumped. The list is a note on what the catalogue lacks; nothing depends on restoring it. That covers `pg_dump` only: Cloud SQL's own backups copy every table. The automated ones expire by themselves, while a manual one (`gcloud sql backups create`, under [Manual backups](#manual-backups)) holds the texts until someone deletes it, so delete it once the change it guarded is done.
 
 ---
 
@@ -710,6 +742,7 @@ What visitors leave in the database, the case bucket, and the logs:
 - `feedback` holds each entry of the site's feedback widget and each plot vote: the message, the reaction, the optional contact field, the page, the window size, the user agent, and a session id that the browser draws with Web Crypto (from the time, on a browser without it) and keeps for its own entries (`core/database/models.py` `Feedback`, `app/src/utils/feedback.ts` `newFeedbackSessionId`, `app/src/components/FeedbackWidget.tsx`).
 - Its `ip_hash` is a salted HMAC of the client IP address, used only for the rate limit and the duplicate check. The salt is drawn per process and never logged or configured, so it dies with the process, and each submission that reaches the database first clears the hashes older than 10 minutes (`api/routers/feedback.py` `_hash_ip`, `_clear_expired_ip_hashes`).
 - `link_shares` counts the link previews that messengers and social networks fetch, per day, platform, page, and whether Cloudflare verified the fetcher, with no address, no user agent, and no time of day (`core/database/models.py` `LinkShare`).
+- `search_misses` holds the gallery searches that found nothing: the text a visitor typed, its UTC day, and a count, with no address, no user agent, and no time of day, deleted after 180 days. A visitor could type anything; the app and the API keep only a text that reads as a search for a plot (no `@`, no `:`, at most six digits), and the list is the operator's alone. A row is pseudonymous: only its day could match it to a line of the 30-day request log (`core/database/models.py` `SearchMiss`, `api/search_misses.py` `RETENTION_DAYS`, [`search_misses`](#search_misses)).
 - `agent_feedback` holds one row per feedback case of the agent chat: the reaction, the message, hashed user and session ids, and the run's metadata, never the conversation, code, images, or data (`core/database/models.py` `AgentFeedback`).
 - The case's files are in the private bucket `gs://anyplot-agent-cases`: `manifest.json` with the conversation and the dataset profile, which holds up to 5 sample rows whether or not the box is ticked, for a case about a plot also the PNG of each rendered theme and `plot.py`, and `data.csv` only when the sender ticked `# include data.csv`, which starts unticked ([Feedback capture](../concepts/agent-network.md#feedback-capture), `api/agent_cases.py`, `agents/anyplot/schemas.py` `MAX_SAMPLE_ROWS`, `app/src/sections/agent-chat/ResultFeedback.tsx`).
 - An agent chat session (its data, chat, and plots) lives only in the agents service's memory. The service drops it once it has been idle for `AGENT_SESSION_IDLE_S` (3600 seconds by default, `agents/anyplot/settings.py` `session_idle_s`), and at the latest when the instance ends; it never reaches the database ([Session hash](agent-telemetry.md#session-hash)).

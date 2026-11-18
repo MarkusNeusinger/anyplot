@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from api import search_misses
 from api.cache import clear_cache, get_cache, get_cache_stats
 from api.main import app, fastapi_app
 from api.routers.plots import (
@@ -1487,9 +1488,19 @@ class TestSeoProxyRouter:
             "data protection law",
         ):
             assert term not in response.text, term
+        # The list of searches without a hit, mirrored from the human page's row: what is kept, what the
+        # shared rule refuses, why a row is pseudonymous, and the period the API's purge keeps.
+        assert (
+            "Searches without a hit: when a gallery search finds nothing, two seconds after you stop typing or "
+            "when you leave the field, its text (lowercase, first 40 characters) is counted per day" in response.text
+        )
+        assert "An e-mail address or a link with http:// is not kept; anything else you type may be" in response.text
+        assert "A row holds no IP address and no time of day" in response.text
+        assert f"Kept {search_misses.RETENTION_DAYS} days in Google Cloud SQL" in response.text
         # "No time of day" was true of the shares only; it went with their other fields rather than
-        # being stretched over the machine-read lines, which carry a timestamp.
-        assert "time of day" not in response.text
+        # being stretched over the machine-read lines, which carry a timestamp. It stands once, for
+        # the search list, whose row holds a day and no time.
+        assert response.text.count("time of day") == 1
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
@@ -1497,11 +1508,10 @@ class TestSeoProxyRouter:
         for fact in (
             # Who is responsible, under the page's own heading, not only as the legal notice's operator.
             "<li>Who is responsible: Markus Neusinger (see above).</li>",
-            # The one event property a visitor writes, as on the human page: the gallery search's
-            # text, lowercase and cut at 40 characters (app/src/hooks/useAnalytics.ts
-            # `normalizeQuery`; docs/reference/plausible.md, "Search"), through the item's end.
-            "no IP address stored. One exception: the text of a gallery search (lowercase, first 40 "
-            "characters) is sent too and shows on the dashboard.</li>",
+            # No event carries what a visitor typed any more (docs/reference/plausible.md, "Search");
+            # what the dashboard still shows is a fact about today, not a note on older entries,
+            # through the item's end, as on the human page.
+            "no IP address stored. Search texts sent up to and including November 2026 still show there.</li>",
             # Every field the feedback record holds, each by its name, then who reads it: the operator,
             # and the coding assistant the admin page's "copy prompt for Claude Code" button hands the
             # message, page and reaction to (app/src/utils/claudePrompt.ts).
@@ -1512,8 +1522,9 @@ class TestSeoProxyRouter:
             "assistant (such as Claude Code by Anthropic), which processes it under its provider's own "
             "terms, outside the EU hosting named above, with training on what he sends switched off. The "
             "salted IP hash against spam",
+            # The search list's purpose has its basis, in the same place of the list as on the page.
             "Why this is allowed: a legitimate interest in protecting the site, counting its readers, "
-            "and the assistant's telemetry and limits",
+            "seeing what its catalogue lacks, and the assistant's telemetry and limits",
             # The login cookie is the operator's own, as the human page says ("I sign in through
             # Cloudflare Access").
             "<li>No cookies for visitors (the operator: the Cloudflare Access login cookie), no accounts, "

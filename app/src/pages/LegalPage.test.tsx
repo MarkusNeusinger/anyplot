@@ -95,10 +95,11 @@ describe('LegalPage', () => {
     expect(screen.getByText('who is responsible')).toBeInTheDocument();
     expect(screen.getByText('Markus Neusinger (see above).')).toBeInTheDocument();
     // Each basis named in words with what it covers, one point each; consent given at the send
-    // and withdrawable. Anchored, so no point and no qualifier can fall off.
+    // and withdrawable. Anchored, so no point and no qualifier can fall off. The search list's
+    // purpose has its basis there: the interest in seeing what the catalogue lacks.
     expect(screen.getByText('why this is allowed')).toBeInTheDocument();
     expect(screen.getByText(/a legitimate interest in protecting the site/)).toHaveTextContent(
-      /^• a legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits\s*• your request: making the plot you ask the data assistant for\s*• your consent to a feedback case: you give it when you send it and can withdraw it at any time by asking$/
+      /^• a legitimate interest in protecting the site, counting its readers, seeing what its catalogue lacks, and the assistant's telemetry and limits\s*• your request: making the plot you ask the data assistant for\s*• your consent to a feedback case: you give it when you send it and can withdraw it at any time by asking$/
     );
     // Every right, the objection with the condition that makes it one, the address to write to,
     // that a feedback case can go early, what lets me find an entry, that a log line cannot be
@@ -208,6 +209,13 @@ describe('LegalPage', () => {
         1,
         'case files: 180 days · case rows: until you ask to delete them · where: Google Cloud (Storage, SQL) in the Netherlands (europe-west4)',
       ],
+      // The search list's period is `RETENTION_DAYS` in api/search_misses.py, which a Python test
+      // reads off this page.
+      [
+        'searches without a hit',
+        0,
+        'kept: 180 days · where: Google Cloud (SQL) in the Netherlands (europe-west4)',
+      ],
     ];
     const keptLineOf = (label: string, nth: number) =>
       (
@@ -250,6 +258,48 @@ describe('LegalPage', () => {
     expect(screen.queryByText(/unsalted/)).not.toBeInTheDocument();
   });
 
+  // The private list of searches without a hit, each clause where the code bears it: the text is
+  // normalised and cut (`normalizeQuery`, `normalize_query`), a row is a day, a text and a count
+  // (`search_misses`), the list is the admin's (`/debug/search-misses`, with its delete), and the
+  // period is `RETENTION_DAYS` (tests/unit/api/test_search_misses.py holds the page to it).
+  it('describes the list of searches without a hit by what the code does', () => {
+    render(<LegalPage />);
+
+    const misses = document.getElementById('search-misses');
+    // When a text is taken: no key sends it. The pause is `MISS_PAUSE_MS` (pinned to the two
+    // seconds in searchMiss.test.ts), the other moment is the field's blur.
+    expect(misses).toHaveTextContent(
+      /when a gallery search finds nothing, two seconds after you stop typing or when you leave the field, its text \(lowercase, first 40 characters\)/
+    );
+    // Its case and cut held to the function that applies them before the text is sent.
+    expect(misses).toHaveTextContent(`(lowercase, first ${MAX_QUERY_LENGTH} characters)`);
+    expect(normalizeQuery('Scatter Plot')).toBe('scatter plot');
+    expect(misses).toHaveTextContent(/is counted per day, so I see what the catalogue lacks/);
+    // What the shared rule refuses is an `@` and a `:`, so an e-mail address and a link with its
+    // scheme; a host name or a street address stays, and the row says so and asks.
+    expect(misses).toHaveTextContent(
+      /an e-mail address or a link with http:\/\/ is not kept; anything else you type may be, so please type no personal data\./
+    );
+    // "no IP address", as the other rows say it: a typed text can itself be a street address.
+    expect(misses).toHaveTextContent(/a row holds no IP address and no time of day/);
+    expect(misses).toHaveTextContent(/only timestamps could match one to the 30-day server logs/);
+    expect(misses).toHaveTextContent(/so it is pseudonymous/);
+    expect(misses).toHaveTextContent(/only I read the list, and I delete an entry on request/);
+    // Its period and place stand on the row's own line, as on every other row (the kept-line
+    // test pins the whole line).
+    expect(misses?.querySelector('[data-kept-line]')).toHaveTextContent(
+      /^kept: 180 days\s·\swhere: Google Cloud \(SQL\) in the Netherlands \(europe-west4\)$/
+    );
+    // The rule keeps out an e-mail address and a link with its scheme, not every address or link:
+    // the row claims neither.
+    expect(misses).not.toHaveTextContent(/nothing that looks like an address or a link/);
+    // The search texts the app sent before the change still stand on the public dashboard. The
+    // change shipped within November 2026, so the month is included.
+    expect(
+      screen.getByText(/search texts sent up to and including november 2026 still show there/)
+    ).toBeInTheDocument();
+  });
+
   it('does not claim more privacy than the code delivers', () => {
     render(<LegalPage />);
 
@@ -276,16 +326,15 @@ describe('LegalPage', () => {
     expect(
       screen.getByText(/no cookies, no cross-site id, no IP address kept/)
     ).toBeInTheDocument();
-    // One thing a visitor typed does reach Plausible: the gallery search's text, which
-    // FilterSearch sends with `search` and `search_no_results` (docs/reference/plausible.md,
-    // "Search"). The whole row, so the exception cannot fall off its end, and its case and cut
-    // held to the function that applies them before the text is sent.
+    // No event carries what a visitor typed any more (docs/reference/plausible.md, "Search"): the
+    // gallery search's text goes to the private list instead. The search texts sent before the
+    // change still stand on the public dashboard, so the row says that, and no longer that a
+    // text is sent. The whole row, so neither can fall off its end.
     const analytics = screen.getByRole('row', { name: /^analytics\s/ });
     expect(analytics).toHaveTextContent(
-      /^analytics\s*Plausible counts page views, searches, clicks, copies and downloads, only in aggregate, on a public dashboard: no cookies, no cross-site id, no IP address kept\. one exception: the text of a gallery search \(lowercase, first 40 characters\) is sent too and shows on the dashboard\.\s*where: Plausible Analytics \(EU, proxied\)$/
+      /^analytics\s*Plausible counts page views, searches, clicks, copies and downloads, only in aggregate, on a public dashboard: no cookies, no cross-site id, no IP address kept\. search texts sent up to and including november 2026 still show there\.\s*where: Plausible Analytics \(EU, proxied\)$/
     );
-    expect(analytics).toHaveTextContent(`(lowercase, first ${MAX_QUERY_LENGTH} characters)`);
-    expect(normalizeQuery('Scatter Plot')).toBe('scatter plot');
+    expect(analytics).not.toHaveTextContent(/is sent too/);
     // The browser's storage is named, not hidden behind "no cookies".
     expect(screen.getByText(/your plot\s+votes, a release number/)).toBeInTheDocument();
     // Cloudflare's two uses stay apart: the cdn's use of your IP address, and the check that runs

@@ -27,6 +27,7 @@ from core.database.models import (
     Language,
     Library,
     LinkShare,
+    SearchMiss,
     Spec,
 )
 from core.database.repositories import (
@@ -37,6 +38,7 @@ from core.database.repositories import (
     LanguageRepository,
     LibraryRepository,
     LinkShareRepository,
+    SearchMissRepository,
     SpecRepository,
 )
 
@@ -63,6 +65,7 @@ __all__ = [
     "AGENT_CASE_EXPECTED",
     "CASE_ID_LENGTH",
     "LinkShare",
+    "SearchMiss",
     "LIBRARIES_SEED",
     "LANGUAGES_SEED",
     # Repositories
@@ -74,4 +77,5 @@ __all__ = [
     "FeedbackRepository",
     "AgentFeedbackRepository",
     "LinkShareRepository",
+    "SearchMissRepository",
 ]
