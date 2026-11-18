@@ -5,8 +5,10 @@ description: Hand a credential-free coding task worth an hour or more, up to a l
 
 # Gemini tasks
 
-The owner runs Gemini 4 Argon interactively in the Antigravity CLI (`agy`) in
-this repository. That is the ordinary, intended use of his account. He decides
+The owner runs Gemini 4 Carbon interactively in the Antigravity CLI (`agy`) in
+this repository. He picks the model there with `/model`, and the choice stays
+across sessions. Gemini 4 Argon ran the lane's tasks before #13175, the first
+on Carbon. That is the ordinary, intended use of his account. He decides
 how much Gemini may run without asking; for a long task he lets it run the
 tests and builds unattended (owner, 2026-10-22: he trusts it to keep to the
 rules as he trusts Claude). Work flows in three steps:
@@ -587,8 +589,9 @@ This section is for the Gemini agent in the owner's agy session.
 5. **Ship.** Run the open-pr gates, add the PR number to the changelog
    fragment, and add one Summary bullet to the PR body, which Gemini wrote in
    the repository's format (section 2, step 8): the change was implemented by
-   Gemini 4 Argon in the owner's interactive agy session and reviewed by
-   Claude, with the defects the review found and the commits that fixed them.
+   the Gemini model of the owner's interactive agy session (name the one that
+   ran, Gemini 4 Carbon unless he says otherwise) and reviewed by Claude, with
+   the defects the review found and the commits that fixed them.
    This is provenance for the reviewer, not a "Generated with" footer. Then
    `gh pr ready <pr>` starts the Copilot review; follow the
    PR through as `/open-pr` describes. Merge only on the owner's explicit OK in
