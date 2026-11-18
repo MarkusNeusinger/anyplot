@@ -1475,4 +1475,5 @@ class TestSessionBindings:
         assert "never say they will be chosen later" in root
         assert "never claim the better one is already bound" in root
         assert "Describe the plot from `shows`" in root
+        assert "state an axis's range only from it, never from tick labels" in root
         assert "Never state a value, a format, a binding or a text of the plot or the data" in root
