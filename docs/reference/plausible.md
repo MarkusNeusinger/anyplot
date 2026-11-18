@@ -290,8 +290,9 @@ page shows it.
 
 - **What counts as a miss**: the text finds nothing inside the active
   filters, nothing without them, and nothing in any category. A text that
-  `.search_all()` would find is no miss, and nor is one typed before the
-  counts of all plots have loaded.
+  `.search_all()` would find is no miss, nor is one typed before the counts of
+  all plots have loaded, nor one whose folded form (see "One form of the text"
+  below) finds plots, such as a fullwidth spelling of a catalogue word.
 - **Only the finished text**: the gallery sends it once no key was pressed for
   two seconds (`MISS_PAUSE_MS`), or earlier when the search field loses focus
   (a click outside the search included) or the gallery is left. A fragment
