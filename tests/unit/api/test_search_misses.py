@@ -385,6 +385,31 @@ class TestCount:
             (TODAY + timedelta(days=1) - timedelta(days=RETENTION_DAYS),),
         ]
 
+    async def test_no_more_writes_than_the_slots_sit_between_the_caps_check_and_its_insert(
+        self, repository: MagicMock
+    ) -> None:
+        """The day's size is read in a statement before the insert, so a day can end over its cap by the writes
+        that were between the two when it filled. That is at most `WRITE_CONNECTIONS` per instance, whatever
+        the load: one of them is the last text the cap allows, the others are over."""
+        running = most = 0
+
+        async def count(**_: object) -> bool:
+            nonlocal running, most
+            running += 1
+            most = max(most, running)
+            await asyncio.sleep(0)
+            await asyncio.sleep(0)
+            running -= 1
+            return True
+
+        repository.count = AsyncMock(side_effect=count)
+        # A semaphore of this test's own event loop: the module's is shared by every test.
+        with patch.object(search_misses, "_WRITE_SLOTS", asyncio.Semaphore(search_misses.WRITE_CONNECTIONS)):
+            await asyncio.gather(*(search_misses._count(TODAY, f"text {n}") for n in range(12)))
+
+        assert repository.count.await_count == 12
+        assert most == search_misses.WRITE_CONNECTIONS == 2
+
     async def test_a_failed_purge_reaches_nobody_and_the_next_caller_tries_again(self, repository: MagicMock) -> None:
         repository.delete_before.side_effect = [_database_error(), 0]
         await search_misses._count(TODAY, "spider")

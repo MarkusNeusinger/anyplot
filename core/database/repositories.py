@@ -1013,8 +1013,11 @@ class SearchMissRepository:
         day holds fewer than *max_new_per_day* texts, so a flood of junk can fill one day's list but
         no more. The upsert is one `INSERT ... ON CONFLICT DO UPDATE` on the primary key, as
         `LinkShareRepository.count` writes it, so two equal searches in the same instant both count.
-        The day's size is read in a statement before it: writes in flight at the moment the day
-        fills can each still add their text, so the bound may be passed by that handful.
+        The day's size is read in a statement before it, so the bound is not exact: the writes that
+        sit between the two statements at the moment the day fills each still add their text. The
+        API lets two writes run at once per instance (`WRITE_CONNECTIONS` in `api/search_misses.py`),
+        so a day ends at most one text over per instance. The cap bounds how far a flood can grow
+        the table; it is not a count anything else relies on.
         """
         texts = await self.session.scalar(select(func.count()).select_from(SearchMiss).where(SearchMiss.day == day))
         if int(texts or 0) < max_new_per_day:
