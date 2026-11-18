@@ -605,16 +605,18 @@ async function readDataJson(file) {
   return text.replace(SCRIPT_BREAKING, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`);
 }
 
-function buildHtml({ tokens, bundleSource, snippetSource, css, sandbox = null, dataJson = null }) {
+function buildHtml({ tokens, bundleSource, snippetSource, css, library = null, sandbox = null, dataJson = null }) {
   // The bundle + snippet are inlined so the written .html is fully self-contained
   // (no CDN, no network) — the same page is screenshotted and shipped as the
   // interactive deliverable. JSON.stringify keeps the token/theme injection
   // injection-safe.
   //
   // Sandbox mode (`sandbox`: the code file's and the bundle's names) adds the
-  // content security policy, error locations for the final error line and a
-  // `//# sourceURL` per script, so a stack names the snippet's frames
-  // (`plot.js:6:12`) apart from the bundle's. `dataJson` (readDataJson) becomes
+  // content security policy, error locations for the final error line, a
+  // `//# sourceURL` per script so a stack names the snippet's frames
+  // (`plot.js:6:12`) apart from the bundle's, and for Chart.js the 2D canvas
+  // text recorder (`CANVAS_TEXT_RECORDER`) right after the library bundle and
+  // before the snippet. `dataJson` (readDataJson) becomes
   // window.ANYPLOT_DATA: one object per row in column order, the shape
   // d3.csvParse returns (with `.columns`), each value already typed. Without
   // either, the page is the pipeline's, byte for byte.
@@ -641,6 +643,7 @@ function buildHtml({ tokens, bundleSource, snippetSource, css, sandbox = null, d
   });`
     : "";
   const bundleName = sandbox ? `\n//# sourceURL=${sandbox.bundleName}` : "";
+  const canvasTexts = sandbox && library === "chartjs" ? `\n<script>\n${CANVAS_TEXT_RECORDER}\n</script>` : "";
   const snippetName = sandbox ? `\n//# sourceURL=${sandbox.snippetName}` : "";
   return `<!doctype html>
 <html lang="en">
@@ -677,7 +680,7 @@ ${dataElement}<script>
 </script>
 <script>
 ${bundleSource.replace(/<\/script/gi, "<\\/script")}${bundleName}
-</script>
+</script>${canvasTexts}
 <script>${SNIPPET_HEAD}${snippetSource.replace(/<\/script/gi, "<\\/script")}
 } catch (err) {
   window.__anyplotError = String(err && err.stack ? err.stack : err);
@@ -961,12 +964,17 @@ async function readPageRecords(page, bounded) {
 // (Highcharts, plotly, MUI X; D3's axis ticks by their axis's text-anchor). A
 // text no class names is the title when it is the largest in the top fifth of
 // the plot, in a library that names none; else another text. Chart.js and bokeh
-// draw on a canvas, so their texts come from the chart's own model: Chart.js's
-// titles, scale titles, the ticks it kept and the legend; bokeh's titles,
-// labels, axis labels, the tick labels its axes compute and the legends. A text
-// a plugin draws itself is not in the model, so those probes report themselves
-// incomplete. ECharts' scene graph (zrender's display list) holds every text it
-// draws, each named by the component or series that owns it.
+// draw on a canvas, so their named roles come from the chart's own model:
+// Chart.js's titles, scale titles, the ticks it kept and the legend; bokeh's
+// titles, labels, axis labels, the tick labels its axes compute and the
+// legends. For Chart.js in sandbox mode, `recordChartjsCanvasTexts` also wraps
+// `CanvasRenderingContext2D.prototype.fillText` and `strokeText` before the
+// plot's code runs, keeps only the last complete draw of each chart, subtracts
+// the model's texts by count, and adds what remains as `annotation`; both
+// probes stay incomplete because a text drawn as a path or an image (and for
+// bokeh a plugin's own drawing or a widget's shadow root) is in no record.
+// ECharts' scene graph (zrender's display list) holds every text it draws, each
+// named by the component or series that owns it.
 // -----------------------------------------------------------------------------
 const TEXT_PROBE_TIMEOUT_MS = 2000; // the catalogue's bar-grouped pages answer in tens of milliseconds
 const LABEL_LIMIT = 400; // harness.LABEL_LIMIT
@@ -974,6 +982,128 @@ const LABEL_CHARS = 200; // harness.LABEL_CHARS
 const LABEL_TOTAL_CHARS = 20000; // harness.LABEL_TOTAL_CHARS
 const TICK_LABELS_PER_AXIS = 100; // harness.TICK_LABELS_PER_AXIS, per kind here
 const PAGE_TEXTS_LIMIT = 2000; // texts the page hands back at most
+const CANVAS_TEXT_LIMIT = PAGE_TEXTS_LIMIT * 2; // recorded canvas texts per draw: model ticks plus annotations
+
+// Runs in the page, in sandbox mode and for Chart.js only, right after the
+// Chart.js bundle and before the plot's code: records what `fillText` and
+// `strokeText` draw per canvas, keeping only the last complete `Chart.draw()`
+// pass of each chart so resize and animation redraws never double an entry.
+function recordChartjsCanvasTexts(limit) {
+  if (typeof CanvasRenderingContext2D === "undefined" || !CanvasRenderingContext2D.prototype) return;
+  var proto = CanvasRenderingContext2D.prototype;
+  var committed = new WeakMap();
+  var loose = new WeakMap();
+  var stack = [];
+  function targetFor(canvas) {
+    for (var i = stack.length - 1; i >= 0; i -= 1) {
+      if (stack[i].canvas === canvas) return stack[i];
+    }
+    var entry = loose.get(canvas);
+    if (!entry) {
+      entry = { texts: [], last: null };
+      loose.set(canvas, entry);
+    }
+    return entry;
+  }
+  function pointOf(ctx, x, y) {
+    var px = Number(x);
+    var py = Number(y);
+    if (typeof ctx.getTransform === "function") {
+      var m = ctx.getTransform();
+      if (m) return [m.a * px + m.c * py + m.e, m.b * px + m.d * py + m.f];
+    }
+    return [px, py];
+  }
+  function wrap(method) {
+    var original = proto[method];
+    if (typeof original !== "function") return;
+    proto[method] = function (value, x, y) {
+      try {
+        if (arguments.length >= 3 && value !== null && value !== undefined && this && this.canvas) {
+          var text = String(value).slice(0, 10000).replace(/\s+/g, " ").trim();
+          if (text) {
+            var target = targetFor(this.canvas);
+            var pt = pointOf(this, x, y);
+            var last = target.last;
+            // An outlined label calls strokeText and fillText at one position: count the pair once.
+            if (last && last.method !== method && last.text === text && Object.is(last.x, pt[0]) && Object.is(last.y, pt[1])) {
+              target.last = null;
+            } else {
+              target.last = { method: method, text: text, x: pt[0], y: pt[1] };
+              if (target.texts.length < limit) target.texts.push(text);
+            }
+          }
+        }
+      } catch (e) {}
+      return original.apply(this, arguments);
+    };
+  }
+  wrap("fillText");
+  wrap("strokeText");
+  if (window.Chart && window.Chart.prototype) {
+    var chartProto = window.Chart.prototype;
+    var clear = chartProto.clear;
+    var notify = chartProto.notifyPlugins;
+    var draw = chartProto.draw;
+    if (typeof clear === "function") {
+      chartProto.clear = function () {
+        try {
+          if (stack.length > 0 && stack[stack.length - 1].chart === this) {
+            stack[stack.length - 1].texts = [];
+            stack[stack.length - 1].last = null;
+          }
+        } catch (e) {}
+        return clear.apply(this, arguments);
+      };
+    }
+    if (typeof notify === "function") {
+      chartProto.notifyPlugins = function (hook) {
+        try {
+          if (hook === "afterDraw" && stack.length > 0 && stack[stack.length - 1].chart === this) {
+            stack[stack.length - 1].completed = true;
+          }
+        } catch (e) {}
+        return notify.apply(this, arguments);
+      };
+    }
+    if (typeof draw === "function") {
+      chartProto.draw = function () {
+        var frame = null;
+        try {
+          if (this && this.canvas) {
+            frame = { chart: this, canvas: this.canvas, texts: [], last: null, completed: typeof notify !== "function" };
+            stack.push(frame);
+          }
+        } catch (e) {
+          frame = null;
+        }
+        try {
+          var result = draw.apply(this, arguments);
+          try {
+            if (frame && frame.completed) {
+              committed.set(frame.canvas, frame.texts);
+              loose.delete(frame.canvas);
+            }
+          } catch (e) {}
+          return result;
+        } finally {
+          try {
+            if (frame && stack[stack.length - 1] === frame) stack.pop();
+          } catch (e) {}
+        }
+      };
+    }
+  }
+  Object.defineProperty(window, "__anyplotCanvasTexts", {
+    value: function (canvas) {
+      if (!canvas) return [];
+      var drawn = committed.get(canvas) || [];
+      var extra = loose.get(canvas);
+      return extra ? drawn.concat(extra.texts) : drawn.slice();
+    },
+  });
+}
+const CANVAS_TEXT_RECORDER = `(${recordChartjsCanvasTexts.toString()})(${CANVAS_TEXT_LIMIT});`;
 
 // Runs in the page: `{entries: [[kind, text], ...], complete}`. The snippet
 // shares the page and can change what this reads, so Node checks every value.
@@ -1109,27 +1239,54 @@ function pageTexts([library, limit]) {
   }
 
   if (library === "chartjs" && window.Chart) {
-    complete = false; // a plugin's own drawing is in no model
+    complete = false; // a text drawn as a path or an image is in no record
+    const canvasTexts = typeof window.__anyplotCanvasTexts === "function" ? window.__anyplotCanvasTexts : null;
+    const chartCanvases = new Set();
     for (const chart of Object.values(window.Chart.instances || {})) {
+      const modelCounts = new Map();
+      const addModel = (kind, value) => {
+        [].concat(value).forEach((item) => {
+          if (item === null || item === undefined) return;
+          const text = String(item).slice(0, 10000).replace(/\s+/g, " ").trim();
+          if (!text) return;
+          modelCounts.set(text, (modelCounts.get(text) || 0) + 1);
+          add(kind, text);
+        });
+      };
       const plugins = chart.options.plugins || {};
-      if (plugins.title && plugins.title.display) addAll("title", plugins.title.text);
-      if (plugins.subtitle && plugins.subtitle.display) addAll("subtitle", plugins.subtitle.text);
+      if (plugins.title && plugins.title.display) addModel("title", plugins.title.text);
+      if (plugins.subtitle && plugins.subtitle.display) addModel("subtitle", plugins.subtitle.text);
       for (const scale of Object.values(chart.scales || {})) {
         const options = scale.options || {};
         if (options.display === false) continue;
         const axis = scale.axis === "x" || scale.axis === "y" ? scale.axis : null;
-        if (options.title && options.title.display) addAll(axis ? `${axis} axis label` : "other axis label", options.title.text);
+        if (options.title && options.title.display) addModel(axis ? `${axis} axis label` : "other axis label", options.title.text);
         if (!options.ticks || options.ticks.display !== false) {
-          for (const tick of scale.ticks || []) addAll(axis ? `${axis} tick label` : "text", tick.label);
+          for (const tick of scale.ticks || []) addModel(axis ? `${axis} tick label` : "text", tick.label);
         }
         if (Array.isArray(scale._pointLabels) && !(options.pointLabels && options.pointLabels.display === false)) {
-          for (const label of scale._pointLabels) addAll("text", label);
+          for (const label of scale._pointLabels) addModel("text", label);
         }
       }
       const legend = chart.legend;
       if (legend && legend.options && legend.options.display) {
-        if (legend.options.title && legend.options.title.display) addAll("legend text", legend.options.title.text);
-        for (const item of legend.legendItems || []) addAll("legend text", item.text);
+        if (legend.options.title && legend.options.title.display) addModel("legend text", legend.options.title.text);
+        for (const item of legend.legendItems || []) addModel("legend text", item.text);
+      }
+      if (canvasTexts && chart.canvas && container.contains(chart.canvas)) {
+        chartCanvases.add(chart.canvas);
+        for (const drawnText of canvasTexts(chart.canvas)) {
+          const remaining = modelCounts.get(drawnText) || 0;
+          if (remaining > 0) modelCounts.set(drawnText, remaining - 1);
+          else add("annotation", drawnText);
+        }
+      }
+    }
+    if (canvasTexts) {
+      for (const canvas of container.querySelectorAll("canvas")) {
+        if (!chartCanvases.has(canvas)) {
+          for (const drawnText of canvasTexts(canvas)) add("annotation", drawnText);
+        }
       }
     }
   } else if (library === "echarts" && window.echarts) {
@@ -1946,14 +2103,14 @@ async function main() {
   if (bundleInfo.framework === "react") {
     const { code, map } = await bundleReactSnippet(filePath);
     CONTEXT.map = map;
-    html = buildHtml({ tokens, bundleSource: code, snippetSource: "", css, sandbox, dataJson });
+    html = buildHtml({ tokens, bundleSource: code, snippetSource: "", css, library, sandbox, dataJson });
   } else {
     const bundlePath = path.join(NODE_MODULES, bundleInfo.dist);
     if (!existsSync(bundlePath)) {
       usage(`render: bundle missing: ${bundlePath}\nRun \`npm ci\` at the repo root first.`);
     }
     const bundleSource = await readFile(bundlePath, "utf-8");
-    html = buildHtml({ tokens, bundleSource, snippetSource, css, sandbox, dataJson });
+    html = buildHtml({ tokens, bundleSource, snippetSource, css, library, sandbox, dataJson });
   }
 
   // Write the self-contained interactive page first — it is a deliverable in its
@@ -2097,12 +2254,17 @@ function failSandboxed(err) {
   console.error(finalErrorLine(err, CONTEXT));
   process.exit(1);
 }
-if (SANDBOX) process.on("uncaughtException", failSandboxed);
+const IS_MAIN =
+  Boolean(process.argv[1]) && realpath(fileURLToPath(import.meta.url)) === realpath(path.resolve(process.argv[1]));
+if (IS_MAIN) {
+  if (SANDBOX) process.on("uncaughtException", failSandboxed);
+  main().catch((err) => {
+    if (!SANDBOX) {
+      console.error(err);
+      process.exit(1);
+    }
+    failSandboxed(err);
+  });
+}
 
-main().catch((err) => {
-  if (!SANDBOX) {
-    console.error(err);
-    process.exit(1);
-  }
-  failSandboxed(err);
-});
+export { buildHtml, pageTexts, textLabels };
