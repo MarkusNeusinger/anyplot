@@ -24,7 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
 from api import machine_reads  # noqa: E402
-from api.body_limit import BodyLimitMiddleware, Bound  # noqa: E402
+from api.body_limit import BodyLimitMiddleware, Bound, ClientGoneFilter  # noqa: E402
 from api.cache import cache_key, get_or_set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
@@ -81,6 +81,10 @@ logger = logging.getLogger(__name__)
 # affinity, a session's second request could land elsewhere and fail with
 # "Missing session ID" (verified live).
 mcp_http_app = mcp_server.http_app(path="/", stateless_http=True)
+# The MCP transport logs a client that goes away mid-body as an error of its
+# own, with a traceback. The body bound ends a body it cuts off the same way,
+# so without this every refusal on /mcp would be written as a fault of the service.
+logging.getLogger("mcp.server.streamable_http").addFilter(ClientGoneFilter())
 
 
 # Strong reference to the running prewarm task. asyncio keeps only a weak

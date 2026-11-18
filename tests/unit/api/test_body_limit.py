@@ -11,18 +11,26 @@ taking bytes off the connection after the refusal is its own matter and not meas
 
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterator
 
 import httpx
 import pytest
 from fastapi.routing import APIRoute
 from starlette.applications import Starlette
-from starlette.requests import Request
+from starlette.requests import ClientDisconnect, Request
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
 from starlette.types import Receive, Scope, Send
 
-from api.body_limit import DEFAULT_MAX_BODY_BYTES, TOO_LARGE, BodyLimitMiddleware, Bound
+from api.body_limit import (
+    DEFAULT_MAX_BODY_BYTES,
+    TOO_LARGE,
+    BodyCutMidAnswer,
+    BodyLimitMiddleware,
+    Bound,
+    ClientGoneFilter,
+)
 from api.main import app, fastapi_app
 from api.origin_gate import ORIGIN_SECRET_HEADER
 from api.routers.agent import MAX_REQUEST_BODY_BYTES
@@ -197,15 +205,26 @@ class TestTheMiddleware:
         assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/x"}
         assert answer.headers["cache-control"] == "private, no-store"
 
-    async def test_a_cut_after_the_answer_began_ends_the_body_without_a_second_answer(self) -> None:
-        async def answers_first(scope: Scope, receive: Receive, send: Send) -> None:
+    async def test_a_cut_after_the_answer_began_breaks_the_answer_instead_of_ending_it(self) -> None:
+        """An answer on its way cannot be replaced by a refusal. It must not be closed as if it
+        were whole either: the error that leaves here makes the server break the connection, so
+        the client can tell the short answer from a finished one."""
+
+        async def answers_then_reads(scope: Scope, receive: Receive, send: Send) -> None:
             await send({"type": "http.response.start", "status": 200, "headers": []})
-            await Request(scope, receive).body()
+            await send({"type": "http.response.body", "body": b"first half", "more_body": True})
+            while (await receive())["type"] == "http.request":
+                pass
+            await send({"type": "http.response.body", "body": b"second half", "more_body": False})
 
         wire = Wire(b"a" * CAP, b"a" * CAP, b"a" * CAP)
-        await BodyLimitMiddleware(answers_first, default=CAP)(scope_of(), wire.receive, wire.send)
+        with pytest.raises(BodyCutMidAnswer):
+            await BodyLimitMiddleware(answers_then_reads, default=CAP)(scope_of(), wire.receive, wire.send)
         assert wire.starts == [200]
         assert wire.taken == 2
+        # The half that went out stays the last word: the rest is not sent, and nothing ends it.
+        assert [message.get("body") for message in wire.sent[1:]] == [b"first half"]
+        assert wire.sent[-1]["more_body"] is True
 
     async def test_an_error_before_the_cut_is_still_an_error(self) -> None:
         async def broken(scope: Scope, receive: Receive, send: Send) -> None:
@@ -221,6 +240,9 @@ class TestTheMiddleware:
             [b"lots"],
             [b"-1"],
             [b"1_0"],
+            [b""],
+            # More digits than a length has; Python itself refuses to read several thousand.
+            [b"9" * 5000],
             # Two that differ: a refusal that read only the first would let the second decide.
             [b"0", b"100000"],
             [b"100000", b"0"],
@@ -374,6 +396,40 @@ class TestTheApp:
             )
         assert direct.status_code == 403
         assert through_the_edge.status_code == 413
+
+
+class TestTheLog:
+    """A body the bound ended is not a fault of the service."""
+
+    def test_a_client_that_went_away_is_no_error_record(self) -> None:
+        logger = logging.getLogger("test.body_limit.filter")
+        logger.addFilter(ClientGoneFilter())
+        kept: list[logging.LogRecord] = []
+
+        class Keep(logging.Handler):
+            def emit(self, record: logging.LogRecord) -> None:
+                kept.append(record)
+
+        handler = Keep()
+        logger.addHandler(handler)
+        try:
+            for fault in (ClientDisconnect(), ValueError("a real fault")):
+                try:
+                    raise fault
+                except Exception:
+                    logger.exception("Error handling POST request")
+            logger.error("an error without an exception")
+        finally:
+            logger.removeHandler(handler)
+        assert [record.getMessage() for record in kept] == [
+            "Error handling POST request",
+            "an error without an exception",
+        ]
+        assert isinstance(kept[0].exc_info[1], ValueError)
+
+    def test_the_mcp_transport_has_the_filter(self) -> None:
+        filters = logging.getLogger("mcp.server.streamable_http").filters
+        assert any(isinstance(entry, ClientGoneFilter) for entry in filters)
 
 
 class TestTheTable:

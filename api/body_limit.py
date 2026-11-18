@@ -21,9 +21,11 @@ this is the outer bound, not a replacement.
 reads is never handed to the application.
 """
 
+import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from starlette.requests import ClientDisconnect
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
@@ -38,7 +40,29 @@ TOO_LARGE = "request body too large"
 
 _BODYLESS_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 _NO_STORE = {"Cache-Control": "private, no-store"}
-_GONE: Message = {"type": "http.disconnect"}
+# No real length has more digits than this; Python refuses to read a number of several thousand.
+_MAX_LENGTH_DIGITS = 18
+
+
+class ClientGoneFilter(logging.Filter):
+    """Keep a client that went away mid-body out of a logger's error records.
+
+    The bound ends a body it cuts off the way a client that hangs up does. A library that logs
+    that as its own error (the MCP server does, with a traceback) would count every refusal as
+    a fault of the service. A client going away is neither.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return not (record.exc_info and isinstance(record.exc_info[1], ClientDisconnect))
+
+
+class BodyCutMidAnswer(RuntimeError):
+    """A body passed its bound after the application had begun to answer.
+
+    No refusal can replace an answer that is on its way, and ending it quietly would hand the
+    client a short answer that looks whole. Raised once the application returns, so the server
+    breaks the connection instead.
+    """
 
 
 @dataclass(frozen=True)
@@ -75,7 +99,7 @@ def _declared_length(scope: Scope) -> int | None:
     if len(declared) > 1:
         return -1
     value = declared.pop()
-    return int(value) if value.isdigit() else -1
+    return int(value) if value.isdigit() and len(value) <= _MAX_LENGTH_DIGITS else -1
 
 
 class BodyLimitMiddleware:
@@ -128,11 +152,12 @@ class BodyLimitMiddleware:
         received = 0
         cut = False
         answering = False
+        mid_answer = False
 
         async def counted_receive() -> Message:
-            nonlocal received, cut
+            nonlocal received, cut, mid_answer
             if cut:
-                return _GONE
+                return {"type": "http.disconnect"}
             message = await receive()
             if message["type"] != "http.request":
                 return message
@@ -140,10 +165,12 @@ class BodyLimitMiddleware:
             if received <= bound.max_bytes:
                 return message
             cut = True
-            # An answer already on its way cannot be replaced; the body still ends here.
-            if not answering:
+            if answering:
+                # An answer already on its way cannot be replaced; the body still ends here.
+                mid_answer = True
+            else:
                 await bound.refusal(path)(scope, receive, send)
-            return _GONE
+            return {"type": "http.disconnect"}
 
         async def guarded_send(message: Message) -> None:
             nonlocal answering
@@ -158,7 +185,9 @@ class BodyLimitMiddleware:
         try:
             await self.app(scope, counted_receive, guarded_send)
         except Exception:
-            # After the cut the request is over. An application that fails on the body it lost
-            # has nothing more to report; anything raised before the cut is a real error.
+            # After the refusal the request is over. An application that fails on the body it
+            # lost has nothing more to report; anything raised before the cut is a real error.
             if not cut:
                 raise
+        if mid_answer:
+            raise BodyCutMidAnswer(f"the body of {scope['method']} {path} passed its bound after the answer began")
