@@ -844,6 +844,8 @@ UNREADABLE: dict[str, list[str | None]] = {
     "an interval ending at 00": ["2026-03-01/00", "2026-03-02/00"],
     "a zero offset after a space": ["2026-03-01 -00:00", "2026-03-02 -00:00"],
     "a zero offset after the T": ["2026-03-01T-00:00", "2026-03-02T-00:00"],
+    "an hour with am after a month": ["2026-03 10am", "2026-04 11am"],
+    "an hour with AM after a year": ["2026 10 AM", "2027 11 AM"],
 }
 """Cells with more after their date than a time: pandas read a range as days with made-up offsets (2, 7 and 11
 March, beside a notice of offsets no cell holds), a sign and digits as 05:00, and an interval as its first day."""

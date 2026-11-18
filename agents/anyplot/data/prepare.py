@@ -4484,10 +4484,6 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
             notice = f"times with the UTC offsets {', '.join(_offsets(readable))} converted to UTC (+00:00); "
             notice += "the instants are the same"
         result = _without_filled_in(result, original)
-        # A date alone is a day: where pandas still finds a time or a zone in it (`2026-03-01 UTC`), it guessed.
-        alone = pd.Series([shape is False for shape in shapes], index=series.index)
-        guessed = result.notna() & ((result != result.dt.normalize()) | (result.dt.tz is not None))
-        result = result.mask(alone & guessed)
     failed = int((result.isna() & texts.notna()).sum())
     with_time = any(shape is True for shape, read in zip(shapes, result.notna(), strict=True) if read)
     dropped = Counter(offset for offset, read in zip(offsets, result.notna(), strict=True) if offset and read)
@@ -4514,6 +4510,8 @@ _NUMBER_PART = re.compile(r"([0-9]+)[^\W\d_]*")
 """A number of a date, with the letters of an ordinal after it (`1st`, `15th`)."""
 _QUARTER_PART = re.compile(r"[Qq][1-4]")
 _WORD_PART = re.compile(r"[^\W\d_]+")
+_MERIDIEM_AFTER_NUMBER = re.compile(r"[0-9]\s*[AaPp]\.?\s?[Mm](?:\.|(?![^\W\d_]))")
+"""An hour with am or pm (`10am`, `10 AM`, `10 a.m.`), which the letters of a number (`1st`) never are."""
 DateShape = Literal["day", "month", "year", "quarter"]
 
 
@@ -4527,6 +4525,8 @@ def _date_shape(text: str) -> DateShape | None:
     a year; a year four digits; a quarter `Q1` and a year. More numbers (`2026-03-01/05`, a range of days), a second
     month name, or any other character (`:`, `+`) is no date: a time and a zone belong after it (`_TIME_AFTER_DATE`).
     """
+    if _MERIDIEM_AFTER_NUMBER.search(text):
+        return None  # `10am`, `10 AM`: a time's, which belongs after a date that names a day
     numbers: list[int] = []
     months = quarters = 0
     for part in _DATE_PARTS.split(text.strip()):
