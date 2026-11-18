@@ -35,6 +35,7 @@
   carries it too. A hand-made database snapshot leaves the table's rows out
   (`pg_dump --exclude-table-data=search_misses`, now part of the snapshot
   rule), so a text cannot outlive its period in a file that is never deleted.
+  (#13181)
 
 ### Changed
 
@@ -46,4 +47,4 @@
   finished search that finds nothing in the whole catalogue, at the moment
   and from the same decision as its report to the list, never for a fragment
   or a thrown-away text, so its count is smaller from then on and not
-  comparable with earlier months.
+  comparable with earlier months. (#13181)
