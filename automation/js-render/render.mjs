@@ -614,10 +614,10 @@ function buildHtml({ tokens, bundleSource, snippetSource, css, library = null, s
   // Sandbox mode (`sandbox`: the code file's and the bundle's names) adds the
   // content security policy, error locations for the final error line, a
   // `//# sourceURL` per script so a stack names the snippet's frames
-  // (`plot.js:6:12`) apart from the bundle's, and for Chart.js the 2D canvas
-  // text recorder (`CANVAS_TEXT_RECORDER`) right after the library bundle and
-  // before the snippet. `dataJson` (readDataJson) becomes
-  // window.ANYPLOT_DATA: one object per row in column order, the shape
+  // (`plot.js:6:12`) apart from the bundle's, and on a Chart.js render run
+  // (`!PAGE_ONLY`) the 2D canvas text recorder (`CANVAS_TEXT_RECORDER`) right
+  // after the library bundle and before the snippet. `dataJson` (readDataJson)
+  // becomes window.ANYPLOT_DATA: one object per row in column order, the shape
   // d3.csvParse returns (with `.columns`), each value already typed. Without
   // either, the page is the pipeline's, byte for byte.
   const csp = sandbox ? `\n<meta http-equiv="Content-Security-Policy" content="${CONTENT_SECURITY_POLICY}" />` : "";
@@ -643,7 +643,7 @@ function buildHtml({ tokens, bundleSource, snippetSource, css, library = null, s
   });`
     : "";
   const bundleName = sandbox ? `\n//# sourceURL=${sandbox.bundleName}` : "";
-  const canvasTexts = sandbox && library === "chartjs" ? `\n<script>\n${CANVAS_TEXT_RECORDER}\n</script>` : "";
+  const canvasTexts = sandbox && !PAGE_ONLY && library === "chartjs" ? `\n<script>\n${CANVAS_TEXT_RECORDER}\n</script>` : "";
   const snippetName = sandbox ? `\n//# sourceURL=${sandbox.snippetName}` : "";
   return `<!doctype html>
 <html lang="en">
@@ -967,12 +967,13 @@ async function readPageRecords(page, bounded) {
 // draw on a canvas, so their named roles come from the chart's own model:
 // Chart.js's titles, scale titles, the ticks it kept and the legend; bokeh's
 // titles, labels, axis labels, the tick labels its axes compute and the
-// legends. For Chart.js in sandbox mode, `recordChartjsCanvasTexts` also wraps
-// `CanvasRenderingContext2D.prototype.fillText` and `strokeText` before the
-// plot's code runs, keeps only the last complete draw of each chart, subtracts
-// the model's texts by count, and adds what remains as `annotation`; both
-// probes stay incomplete because a text drawn as a path or an image (and for
-// bokeh a plugin's own drawing or a widget's shadow root) is in no record.
+// legends. For Chart.js render runs in sandbox mode, `recordChartjsCanvasTexts`
+// also wraps `CanvasRenderingContext2D.prototype.fillText` and `strokeText`
+// before the plot's code runs, keeps only visible on-canvas texts from the last
+// complete draw of each chart, subtracts the model's texts by count, and adds
+// what remains as `annotation` ranked after tick labels; both probes stay
+// incomplete because a text drawn as a path or an image (and for bokeh a
+// plugin's own drawing or a widget's shadow root) is in no record.
 // ECharts' scene graph (zrender's display list) holds every text it draws, each
 // named by the component or series that owns it.
 // -----------------------------------------------------------------------------
@@ -984,10 +985,11 @@ const TICK_LABELS_PER_AXIS = 100; // harness.TICK_LABELS_PER_AXIS, per kind here
 const PAGE_TEXTS_LIMIT = 2000; // texts the page hands back at most
 const CANVAS_TEXT_LIMIT = PAGE_TEXTS_LIMIT * 2; // recorded canvas texts per draw: model ticks plus annotations
 
-// Runs in the page, in sandbox mode and for Chart.js only, right after the
-// Chart.js bundle and before the plot's code: records what `fillText` and
-// `strokeText` draw per canvas, keeping only the last complete `Chart.draw()`
-// pass of each chart so resize and animation redraws never double an entry.
+// Runs in the page, on a sandbox-mode render run and for Chart.js only, right
+// after the Chart.js bundle and before the plot's code: records what `fillText`
+// and `strokeText` draw visibly inside each canvas, keeping only the last
+// complete `Chart.draw()` pass of each chart so resize and animation redraws
+// never double an entry.
 function recordChartjsCanvasTexts(limit) {
   if (typeof CanvasRenderingContext2D === "undefined" || !CanvasRenderingContext2D.prototype) return;
   var proto = CanvasRenderingContext2D.prototype;
@@ -1006,31 +1008,42 @@ function recordChartjsCanvasTexts(limit) {
     return entry;
   }
   function pointOf(ctx, x, y) {
-    var px = Number(x);
-    var py = Number(y);
     if (typeof ctx.getTransform === "function") {
       var m = ctx.getTransform();
-      if (m) return [m.a * px + m.c * py + m.e, m.b * px + m.d * py + m.f];
+      if (m) return [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
     }
-    return [px, py];
+    return [x, y];
   }
   function wrap(method) {
     var original = proto[method];
     if (typeof original !== "function") return;
     proto[method] = function (value, x, y) {
       try {
-        var nx = Number(x);
-        var ny = Number(y);
         var maxWidth = arguments.length >= 4 ? arguments[3] : undefined;
-        var validWidth = maxWidth === undefined || (Number.isFinite(Number(maxWidth)) && Number(maxWidth) > 0);
-        if (arguments.length >= 3 && value !== null && value !== undefined && this && this.canvas && Number.isFinite(nx) && Number.isFinite(ny) && validWidth) {
-          var text = String(value).slice(0, 10000).replace(/\s+/g, " ").trim();
-          var pt = text ? pointOf(this, nx, ny) : null;
-          if (pt && Number.isFinite(pt[0]) && Number.isFinite(pt[1])) {
+        var validWidth = maxWidth === undefined || (typeof maxWidth === "number" && Number.isFinite(maxWidth) && maxWidth > 0);
+        if (
+          arguments.length >= 3 &&
+          (typeof value === "string" || typeof value === "number") &&
+          typeof x === "number" &&
+          typeof y === "number" &&
+          Number.isFinite(x) &&
+          Number.isFinite(y) &&
+          validWidth &&
+          this &&
+          this.canvas &&
+          typeof this.globalAlpha === "number" &&
+          this.globalAlpha > 0
+        ) {
+          var cw = this.canvas.width;
+          var ch = this.canvas.height;
+          var raw = typeof value === "string" ? value : `${value}`;
+          var text = raw.slice(0, 10000).replace(/\s+/g, " ").trim();
+          var pt = text && typeof cw === "number" && typeof ch === "number" && cw > 0 && ch > 0 ? pointOf(this, x, y) : null;
+          if (pt && Number.isFinite(pt[0]) && Number.isFinite(pt[1]) && pt[0] >= 0 && pt[0] <= cw && pt[1] >= 0 && pt[1] <= ch) {
             var target = targetFor(this.canvas);
             var last = target.last;
             // An outlined label calls strokeText and fillText at one position: count the pair once.
-            if (last && last.method !== method && last.text === text && Object.is(last.x, pt[0]) && Object.is(last.y, pt[1])) {
+            if (last && last.method !== method && last.text === text && last.x === pt[0] && last.y === pt[1]) {
               target.last = null;
             } else {
               target.last = { method: method, text: text, x: pt[0], y: pt[1] };
@@ -1268,6 +1281,7 @@ function pageTexts([library, limit]) {
     complete = false; // a text drawn as a path or an image is in no record
     const canvasTexts = typeof window.__anyplotCanvasTexts === "function" ? window.__anyplotCanvasTexts : null;
     const chartCanvases = new Set();
+    const canvasAnnotations = [];
     for (const chart of Object.values(window.Chart.instances || {})) {
       const modelCounts = new Map();
       const addModel = (kind, value) => {
@@ -1304,14 +1318,15 @@ function pageTexts([library, limit]) {
         for (const drawnText of canvasTexts(chart.canvas)) {
           const remaining = modelCounts.get(drawnText) || 0;
           if (remaining > 0) modelCounts.set(drawnText, remaining - 1);
-          else add("annotation", drawnText);
+          else canvasAnnotations.push(drawnText);
         }
       }
     }
+    for (const drawnText of canvasAnnotations) add("canvas annotation", drawnText);
     if (canvasTexts) {
       for (const canvas of container.querySelectorAll("canvas")) {
         if (!chartCanvases.has(canvas)) {
-          for (const drawnText of canvasTexts(canvas)) add("annotation", drawnText);
+          for (const drawnText of canvasTexts(canvas)) add("canvas annotation", drawnText);
         }
       }
     }
@@ -1406,8 +1421,8 @@ function pageTexts([library, limit]) {
 }
 
 // `labels` and `labels_truncated` from the page's answer: every entry checked, titles, axis labels, legend texts and
-// annotations first, then at most TICK_LABELS_PER_AXIS tick labels of each kind, then other texts; under LABEL_LIMIT,
-// LABEL_CHARS and LABEL_TOTAL_CHARS, as harness.text_labels.
+// named annotations first, then at most TICK_LABELS_PER_AXIS tick labels of each kind, then canvas-recorded annotations,
+// then other texts; under LABEL_LIMIT, LABEL_CHARS and LABEL_TOTAL_CHARS, as harness.text_labels.
 function textLabels(found) {
   const valid = (entry) =>
     Array.isArray(entry) && entry.length === 2 && typeof entry[0] === "string" && entry[0].length <= 40 && typeof entry[1] === "string";
@@ -1425,7 +1440,8 @@ function textLabels(found) {
         continue;
       }
     }
-    ranked.push({ rank: kind.endsWith("tick label") ? 1 : kind === "text" ? 2 : 0, kind, text });
+    const rank = kind.endsWith("tick label") ? 1 : kind === "canvas annotation" ? 2 : kind === "text" ? 3 : 0;
+    ranked.push({ rank, kind: kind === "canvas annotation" ? "annotation" : kind, text });
   }
   ranked.sort((a, b) => a.rank - b.rank); // stable: draw order within a rank
   const labels = [];
