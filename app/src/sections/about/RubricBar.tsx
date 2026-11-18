@@ -19,6 +19,16 @@ const UNDER_MIN_WIDTH = (monoWidth('mastery', NAME_SIZE) + PAD_LEFT + PAD_RIGHT)
 const under = `@container (min-width: ${UNDER_MIN_WIDTH}px)` as const;
 
 const SEGMENT_GAP = '2px solid var(--bg-page)';
+const SEGMENT_GAP_WIDTH = 2;
+const POINTS_SIZE = 14;
+const SEGMENT_PAD = 8;
+const SEGMENT_PAD_TIGHT = 4;
+
+// In the bar the narrowest part, 10 points, holds its "10" (18px) with the full padding only from
+// this width on (360px). Narrower, which is every phone up to 390px wide, the padding gives way
+// first, so the number stays inside its part down to a bar of 280px.
+const ROOMY_MIN_WIDTH = (monoWidth('10', POINTS_SIZE) + 2 * SEGMENT_PAD + SEGMENT_GAP_WIDTH) * 10;
+const roomy = `@container (min-width: ${ROOMY_MIN_WIDTH}px)` as const;
 
 /**
  * The review rubric as one bar of its 100 points, split into its six parts in their order. The
@@ -45,10 +55,11 @@ export function RubricBar() {
               flex: `0 0 ${points}%`,
               boxSizing: 'border-box',
               minWidth: 0,
-              px: 1,
+              px: `${SEGMENT_PAD_TIGHT}px`,
+              [roomy]: { px: `${SEGMENT_PAD}px` },
               bgcolor: 'var(--ink-muted)',
               color: 'var(--bg-page)',
-              fontSize: '14px',
+              fontSize: `${POINTS_SIZE}px`,
               fontWeight: 600,
               lineHeight: '38px',
               borderLeft: i > 0 ? SEGMENT_GAP : 0,
