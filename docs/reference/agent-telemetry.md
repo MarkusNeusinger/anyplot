@@ -62,21 +62,27 @@ logs. Sessions live in memory and end with the instance (`max-instances=1`), so 
 lines together for exactly as long as the session exists. Since 2026-10-16 the attribution lines' `session`
 is salted with the same per-process salt under another domain (`agents/anyplot/plugins/ledger.py` `salted`),
 so it cannot be joined to the request log either, and the two hashes of one session differ: telemetry rows
-cannot be joined to the attribution lines, which carry the user id. The `idempotency_key` is salted the same
-way under a domain of its own, because its attempt label often holds the request id, which the attribution
-lines carry as well: a plain hash of a line's session, turn, event and that id could be recomputed for every
-request id in the debug lines, and a match would join the two after all. A line written before the key was
-salted keeps its plain key, so that join stays possible for it until its debug lines leave the `_Default`
-bucket after 30 days. A stored feedback case records a third
+cannot be joined by a hash to the attribution lines, which carry the user id. A stored feedback case records a third
 hash of its session under a domain of its own (`ledger.case_key`, the bundle's `session.case_key`), so a case's
 `session_hash` joins it to no telemetry row and no log line either. A case can still be matched to its session
 by time: by the second in the request log for 30 days, and by its second, reaction and version in the telemetry
 for as long as that is kept.
 
-The hash does not prevent a join by time. Cloud Run's request logs (the session id in the URL, the client IP
-address) and the attribution lines (the HMAC user id) stay in the project's `_Default` log bucket for 30 days. For
-those 30 days, someone with read access to both buckets can match a telemetry line to a request or an attribution
-line by its timestamp and its kind of request (a paste, a turn, a beacon). After 30 days only the telemetry lines are left, and the join is gone. This
+The `idempotency_key` is no session hash, but it is salted the same way under a domain of its own. Its attempt
+label often holds the request id, which the attribution lines carry as well: a plain hash of a line's session,
+turn, event and that id could be recomputed for every request id in the debug lines, and a match would join
+the two logs by the key. A line written before the key was salted keeps its plain key. For such a line, and
+through its session hash for the other lines of its session, that join stays possible while someone holds the
+request id: the debug lines hold it for 30 days, and the page shows it beside a server error, so an id that a
+visitor quoted in a report can match an old row for as long as both are kept.
+
+The hashes prevent neither a join by time nor one by token counts. Cloud Run's request logs (the session id in
+the URL, the client IP address) and the attribution lines (the HMAC user id) stay in the project's `_Default` log
+bucket for 30 days. For those 30 days, someone with read access to both buckets can match a telemetry line to a
+request or an attribution line by its timestamp and its kind of request (a paste, a turn, a beacon). A
+`chat_turn`, `pipeline_run` or `data_input` line that counts model tokens matches its request's attribution
+lines without a timestamp as well: its tokens per step are the sums of that request's `model` lines. After 30
+days only the telemetry lines are left, and both joins are gone. This
 is why the lines stay pseudonymous rather than anonymous, and it holds for every field, not only the ones added
 later.
 

@@ -40,9 +40,9 @@ die with the instance (`max-instances=1`), so a salt that dies with the process 
 session's lines together and still unlinkable to the request log. The attribution lines'
 `session` uses the same salt under another domain (`ledger.salted`), so telemetry rows
 and debug lines cannot be joined by it either. The idempotency key takes the same salt
-under a third domain: its `attempt` often holds the request id, which the attribution
+under a domain of its own: its `attempt` often holds the request id, which the attribution
 lines carry too, so a plain hash of a line's own fields and that id could be recomputed
-from the two logs and would join them after all.
+from the two logs and would join them by the key.
 """
 
 from __future__ import annotations
