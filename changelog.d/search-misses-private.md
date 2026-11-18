@@ -29,7 +29,11 @@
   what the catalogue lacks and which words the search doesn't know. The
   privacy policy names the list in a row of its own, with its 180 days, and
   says that search texts sent to the public dashboard before the change still
-  show there.
+  show there. The row says what the rule keeps out, that anything else typed
+  may be kept, and asks for no personal data; the crawler copy of the page
+  carries it too. A hand-made database snapshot leaves the table's rows out
+  (`pg_dump --exclude-table-data=search_misses`, now part of the snapshot
+  rule), so a text cannot outlive its period in a file that is never deleted.
 
 ### Changed
 
