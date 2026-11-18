@@ -455,6 +455,13 @@ describe('LegalPage', () => {
     expect(screen.getByRole('row', { name: /^logs\s/ })).toHaveTextContent(
       /telemetry holds event types, formats, sizes, plot type, library, language code \(rare ones as "other"\), attempts, defect ids, statuses, latencies and token counts\./
     );
+    // A telemetry line holds no id of the request, yet for the 30 days the request's own log
+    // lines are kept it can be matched to them: by its time, and exactly by its token counts,
+    // which are the sums of that request's lines (docs/reference/agent-telemetry.md). The row
+    // says so rather than leaving the match to the ids row's "only timestamps".
+    expect(screen.getByRole('row', { name: /^logs\s/ })).toHaveTextContent(
+      /for 30 days, the time or the token counts of a telemetry line could match it to the request that wrote it\./
+    );
     // A public user's id is a salted random tab id that dies with the instance; only admins get the HMAC.
     expect(
       screen.getByText(

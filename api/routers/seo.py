@@ -1274,7 +1274,9 @@ _LEGAL_BOT_BODY = (
     "service keeps its last 16 results in memory.</li>"
     "<li>Logs and telemetry hold no content: never your text, data, column or file names. Telemetry "
     "holds event types, formats, sizes, plot type, library, language code (rare ones as "
-    '"other"), attempts, defect ids, statuses, latencies and token counts. Telemetry: up to 180 '
+    '"other"), attempts, defect ids, statuses, latencies and token counts. For 30 days, the time or '
+    "the token counts of a telemetry line could match it to the request that wrote it. "
+    "Telemetry: up to 180 "
     "days in Google Cloud Logging and BigQuery in the Netherlands (europe-west4).</li>"
     "<li>Ids: a random tab id stands in for you. The per-tab limits and a pause after misuse go by that "
     "id, the per-network limits by your IP address. Both ids are salted with a value that "

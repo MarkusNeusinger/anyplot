@@ -359,6 +359,8 @@ export function LegalPage() {
                     no content: never your text, data, column or file names. telemetry holds event
                     types, formats, sizes, plot type, library, language code (rare ones as
                     &quot;other&quot;), attempts, defect ids, statuses, latencies and token counts.
+                    for 30 days, the time or the token counts of a telemetry line could match it to
+                    the request that wrote it.
                     <Kept
                       items={[
                         ['telemetry', 'up to 180 days'],

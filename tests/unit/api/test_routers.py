@@ -1604,6 +1604,9 @@ class TestSeoProxyRouter:
             # visitor did and chose, so no category of "technical details" covers them.
             "Telemetry holds event types, formats, sizes, plot type, library, language code (rare ones as "
             '"other"), attempts, defect ids, statuses, latencies and token counts.',
+            # The match the telemetry reference documents: by time, and exactly by token counts.
+            "For 30 days, the time or the token counts of a telemetry line could match it to the request "
+            "that wrote it.",
             "your request: making the plot you ask the data assistant for",
             "your consent to a feedback case",
             # The page's periods and places for the assistant's data, each beside its data.
