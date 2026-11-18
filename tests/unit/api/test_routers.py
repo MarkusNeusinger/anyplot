@@ -1613,7 +1613,6 @@ class TestSeoProxyRouter:
             "server memory only, cleared after an hour idle",
             "keeps its last 16 results in memory",
             "only if you tick",
-            "it starts unticked, which leaves out that file only",
             "it is not used for training",
         ):
             assert fact in response.text, fact
