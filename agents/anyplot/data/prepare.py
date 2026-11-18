@@ -68,7 +68,8 @@ The operations:
   `2026-03-01+0100`, `parse.DATE_SIGN_DIGITS`), which may be an hour label: pandas alone reads `-05:00`
   as 05:00 and `-03` as 03:00. Either way a cell that cannot be read becomes missing and the
   change line counts it; when more than 10 % of the non-missing cells fail, the
-  operation is a `type_mismatch` instead. To number, a minus written as the minus sign
+  operation is a `type_mismatch` instead, which counts the cells that are a date with more
+  after it than a time as its reason (`_date_then_more`). To number, a minus written as the minus sign
   `−` before the number is a sign, as the parser reads it, and the change line counts
   those cells; an en dash is none (`10–20`). With `name`, a conversion to number or datetime
   writes a new column of that name, appended last, and keeps the source column as it
@@ -1632,7 +1633,7 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         if kind == "datetime":
             return _reread_dates(frame, op, present, carried)
         conversion = _date_conversion(series, op.date_format)
-    _check_failed(op.column, conversion.failed, present, "numbers" if op.type == "number" else "dates")
+    _check_failed(op.column, conversion.failed, present, "numbers" if op.type == "number" else "dates", conversion.more)
     # A conversion into a new column keeps the source as it is: what the cells said stays beside what was read.
     target = op.name or op.column
     result[target] = conversion.values
@@ -1711,6 +1712,9 @@ class Conversion:
     unit: str | None = None
     used: str | None = None
     """The decimal mark a number reading used: the requested one, or the other when the cells read better with it."""
+    more: int = 0
+    """The cells left unread that are a date with more after it than a time (`_date_then_more`: a second date, more
+    numbers, a sign and digits), the reason a refusal names."""
     dropped: Counter[str] = field(default_factory=Counter)
     """Per UTC offset as written, the dates read whose cell had it and no time (`parse.DATE_OFFSET`), read as the day
     written without it (`_day_offsets`); `_set_type` counts them in its change line (`_dropped_note`)."""
@@ -1830,7 +1834,12 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
         if named:
             how += f"; {_count(named_cells, 'cell')} with a month name and a year as the first day of the month"
         reading = f"read as dates ({how})"
-    return Conversion(converted, failed, reading, notice, with_time, order, guess, dropped=dropped)
+    more = sum(
+        1
+        for text, ok in zip(originals, read, strict=True)
+        if isinstance(text, str) and not ok and _date_then_more(text.strip())
+    )
+    return Conversion(converted, failed, reading, notice, with_time, order, guess, more=more, dropped=dropped)
 
 
 DRY_RUN_SAMPLE = 20
@@ -4561,6 +4570,18 @@ def _date_shape(text: str) -> DateShape | None:
     return "year" if numbers == [4] else None
 
 
+_CUTS = re.compile(r"[-./,\s+:Tt]")
+"""Where a date can end inside a cell: at a separator, a sign, a colon or a `T`."""
+
+
+def _date_then_more(text: str) -> bool:
+    """Whether a cell no reading takes begins with a date that names a day and holds more after it than a time
+    (`2026-03-01-2026-03-05`, `13.03.2026-05:00`, `2026-03-01/05`): the shape a refusal names as its reason."""
+    if _date_cell(text) is not None:
+        return False
+    return any(_date_shape(text[: cut.start()]) == "day" for cut in _CUTS.finditer(text) if cut.start())
+
+
 def _date_cell(text: str) -> bool | None:
     """True for a cell that is a date followed by a time, False for a date alone, None for any other cell.
 
@@ -4784,9 +4805,18 @@ def _month_year_texts(series: pd.Series, texts: pd.Series) -> pd.Series:
     return pd.Series(padded, index=series.index, dtype="str")
 
 
-def _check_failed(column: str, failed: int, present: int, what: str) -> None:
+def _check_failed(column: str, failed: int, present: int, what: str, more: int = 0) -> None:
+    """Refuse a reading that leaves more than `MAX_FAILED_SHARE` of the cells unread; `more` of them are a date with
+    more after it than a time (`Conversion.more`), which the refusal names as the reason."""
     if present and failed / present > MAX_FAILED_SHARE:
-        raise PrepareError("type_mismatch", f"column '{column}': {failed} of {present} cells cannot be read as {what}")
+        message = f"column '{column}': {failed} of {present} cells cannot be read as {what}"
+        if more:
+            holds = "1 of them holds more after its date" if more == 1 else f"{more} of them hold more after their date"
+            message += (
+                f"; {holds} than a time (such as a second date, more numbers or a sign and digits), which no reading "
+                "guesses"
+            )
+        raise PrepareError("type_mismatch", message)
 
 
 _PERIOD_WORDS = {

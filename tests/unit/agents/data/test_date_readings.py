@@ -889,6 +889,40 @@ class TestStrictRule:
         """The parser types none of these forms: the rule is the conversion's, after the paste."""
         assert pasted(cells) == Pasted("text", None, [])
 
+    @pytest.mark.parametrize(
+        ("cells", "reason"),
+        [
+            (
+                ["2026-03-01-2026-03-05", "2026-03-06-2026-03-09", "2026-03-10-2026-03-12"],
+                "3 of them hold more after their date than a time",
+            ),
+            (["13.03.2026-05:00", "unknown", "14.03.2026"], "1 of them holds more after its date than a time"),
+        ],
+    )
+    def test_the_refusal_says_why_the_cells_are_no_dates(self, cells: list[str], reason: str) -> None:
+        """The cells that hold a date and more are named by that shape, beside the count of the refusal, so the reply
+        can say why: a refusal without a reason was the first defect of the dates with an offset."""
+        text = "d,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+        operation = {"op": "set_type", "column": "d", "type": "datetime", "name": "e"}
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+        failed = sum(cell != "14.03.2026" for cell in cells)
+        assert caught.value.message == (
+            f"column 'd': {failed} of 3 cells cannot be read as dates; {reason} (such as a second date, more numbers "
+            "or a sign and digits), which no reading guesses"
+        )
+
+    def test_a_refusal_for_cells_of_no_date_keeps_its_words(self) -> None:
+        text = "d,v\nunknown,1\nn.a.: none,2\n2026-03-01,3\n"
+        operation = {"op": "set_type", "column": "d", "type": "datetime", "name": "e"}
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+        assert caught.value.message == "column 'd': 2 of 3 cells cannot be read as dates"
+
     def test_a_lone_hour_is_read_as_that_hour_and_written_with_it(self) -> None:
         cells: list[str | None] = ["2026-03-01T00", "2026-03-01T01", "2026-03-01T02", "2026-03-01T03"]
 
