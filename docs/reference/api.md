@@ -1744,6 +1744,19 @@ three variables on every build.
 
 Errors that pass through the API's exception handlers (for example 400, 404 and 503) use this shape. Two responses use a `detail` body instead: request validation errors (next section) and the 403 that the origin gate returns to a caller that bypasses `https://api.anyplot.ai`. The agent chat routes use their own `detail` shape; see [Agent error responses](#agent-error-responses).
 
+### Request body size
+
+Every request body is bounded before it is read (`api/body_limit.py`). A request that declares a `Content-Length` above the cap of its path gets status 413 without its body being read; a body sent without a declared length is counted as it arrives and cut off at the cap with the same 413.
+
+| Path | Cap | The 413's body |
+|------|-----|----------------|
+| `/agent/...` and `/debug/agent/...` | The agent routes' own `MAX_REQUEST_BODY_BYTES` (`api/routers/agent.py`): an uploaded file of 5 MB, base64-encoded | `{"detail": "too_long"}`, the shape of [Agent error responses](#agent-error-responses) |
+| Every other path | 64 KiB (`DEFAULT_MAX_BODY_BYTES`) | The standard error format with the message `request body too large` |
+
+The cap is the outer bound. A route keeps its own narrower checks, such as the field lengths of `POST /feedback` and the 1 MB of text a dataset route accepts. `GET`, `HEAD` and `OPTIONS` requests aren't checked: no route reads a body on them.
+
+A new route that accepts a larger body needs its prefix added to the table in `api/main.py`; without it, the default applies.
+
 ### Request validation errors
 
 A request whose body or parameters fail schema validation returns status 422 with FastAPI's standard `detail` list instead, one entry per problem:

@@ -24,6 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
 from api import machine_reads  # noqa: E402
+from api.body_limit import BodyLimitMiddleware, BodyTooLarge, Bound, body_too_large_handler  # noqa: E402
 from api.cache import cache_key, get_or_set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
@@ -52,7 +53,7 @@ from api.routers import (  # noqa: E402
     specs_router,
     stats_router,
 )
-from api.routers.agent import LOCAL_ORIGIN_REGEX, AgentHTTPError, agent_http_error_handler  # noqa: E402
+from api.routers.agent import LOCAL_ORIGIN_REGEX, MAX_REQUEST_BODY_BYTES, AgentHTTPError, agent_http_error_handler  # noqa: E402
 from api.routers.languages import _refresh_languages  # noqa: E402
 from api.routers.libraries import _refresh_libraries  # noqa: E402
 from api.routers.plots import _refresh_filter_all  # noqa: E402
@@ -210,6 +211,9 @@ app = FastAPI(
 # Register exception handlers
 app.add_exception_handler(AnyplotException, anyplot_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
+# More specific than the line above, so a body cut off while a route read it is
+# answered in the shape of its lane (api/body_limit.py).
+app.add_exception_handler(BodyTooLarge, body_too_large_handler)
 app.add_exception_handler(RequestValidationError, request_validation_exception_handler)
 # The agent BFF's own error shape, `{"detail": code, "ref": request id}`
 # (api/routers/agent.py, docs/reference/api.md § Agent chat).
@@ -220,14 +224,22 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # `@app.middleware` both wrap what is already there — so reading this file from
 # here down gives the order a request actually travels, in reverse:
 #
-#   security headers → cache headers → CORS → origin gate → machine reads → gzip → router
+#   security headers → cache headers → CORS → origin gate → machine reads → gzip → body bound → router
 #
 # (`HeadAsGetMiddleware`, `MCPTrailingSlashMiddleware` and
 # `ForwardedProtoMiddleware` wrap the whole app further out still; all three
 # only rewrite the scope.)
 #
-# Two of those positions are load-bearing:
+# Three of those positions are load-bearing:
 #
+# * The body bound directly around the router, INSIDE every `@app.middleware`
+#   layer. Those hand a body on through a task group, which wraps an error
+#   raised while the body is read in an exception group, and FastAPI answers
+#   anything but its own `HTTPException` from a body read with a plain 400: a
+#   bound further out would cut a body off and be reported as a parse error.
+#   None of the layers outside it reads a body. It is also inside the origin
+#   gate, so a caller that bypasses the edge is refused before a length is
+#   even looked at, and inside CORS, so a browser can read the 413.
 # * The origin gate directly inside CORS, so a 403 from it still carries the
 #   headers a browser needs to read it as a 403 rather than as an opaque
 #   network error — and OUTSIDE the machine-read writer, so a refused request
@@ -238,6 +250,13 @@ app.add_exception_handler(Exception, generic_exception_handler)
 #   for the /og/ cards is what keeps CORSMiddleware's own header when the
 #   request came from an allowlisted origin — it has to run after CORS on the
 #   way out.
+
+# Bound every request body before anything reads it (api/body_limit.py). The
+# two agent lanes carry pasted data and an uploaded file, so they keep the cap
+# their own routes already declare, answered with the code the chat page reads
+# from those routes; every other path takes the small default.
+_AGENT_BODY_BOUND = Bound(MAX_REQUEST_BODY_BYTES, detail="too_long")
+app.add_middleware(BodyLimitMiddleware, prefixes={"/agent": _AGENT_BODY_BOUND, "/debug/agent": _AGENT_BODY_BOUND})
 
 # Enable GZip compression for responses > 500 bytes
 # This significantly reduces payload size for JSON API responses
