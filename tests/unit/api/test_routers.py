@@ -1443,11 +1443,51 @@ class TestSeoProxyRouter:
         assert "kept until you ask to delete it" in response.text
         # The server logs sit in the EU (the `_Default` sink's europe-west4 bucket).
         assert "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4)" in response.text
-        # The hosting sentence names what LegalPage.tsx's hosting row names, BigQuery included.
-        assert "Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands" in response.text
-        # The machine-read line, mirrored from the human page's "machine readers" row.
-        assert "Machine readers: each request by a crawler, an AI assistant or an MCP client" in response.text
-        assert "without IP address or user-agent, kept up to 180 days" in response.text
+        # The hosting sentence names what LegalPage.tsx's hosting sentence names, BigQuery included;
+        # Cloudflare's roles and place stand in its own item, once.
+        assert "Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands (europe-west4).</li>" in (
+            response.text
+        )
+        assert "CDN / DDoS / bot check" not in response.text
+        assert response.text.count("EU data centers for EU visitors") == 1
+        # The machine-read lines and the share counters, mirrored from the human page's shared row:
+        # what each counts, each period tied to its own store, the place once, and the negative both
+        # share after them. The fields beyond that hold nothing about a person and stand in the docs.
+        assert "Machine readers and shared links: each request by a crawler, an AI assistant or an MCP" in (
+            response.text
+        )
+        for fact in (
+            "Server logs: IP address, URL and user-agent of each request, for security and debugging; kept 30 days",
+            "client is one line, kept up to 180 days in Google Cloud Logging and BigQuery.",
+            "Shared links: counts of the link previews that messengers and social networks fetch, kept "
+            "without a time limit in Google Cloud SQL.",
+            "Both in the Netherlands (europe-west4). Neither holds an IP address or a user-agent.</li>",
+            # Cloudflare's place at its first mention, then the edge and the check, which runs only on
+            # the three actions, apart.
+            "Cloudflare (global, EU data centers for EU visitors): as the CDN, it uses your IP address to "
+            "rate-limit, filter bots and absorb DDoS attacks.",
+            "Its Turnstile runs when you send feedback, rate a plot or open the data assistant, and checks "
+            "that a browser, not a script, is asking. For that it reads your IP address, user-agent and TLS "
+            "fingerprint",
+            "kept until you ask to delete it, in Google Cloud SQL in the Netherlands (europe-west4)",
+        ):
+            assert fact in response.text, fact
+        # The right to object carries the condition that makes it one, as on the human page.
+        assert "object to the processing for a reason specific to your situation" in response.text
+        assert "object to the processing, and" not in response.text
+        assert "restriction, objection, and" not in response.text
+        # Plain words, as on the human page: no article numbers, no wording of legal texts, and no
+        # law named.
+        for term in (
+            "Art. 6",
+            "Legal bases",
+            "controller",
+            "supervisory",
+            "particular situation",
+            "GDPR",
+            "data protection law",
+        ):
+            assert term not in response.text, term
         # The list of searches without a hit, mirrored from the human page's row: what is kept, what the
         # shared rule refuses, why a row is pseudonymous, and the period the API's purge keeps.
         assert (
@@ -1457,32 +1497,73 @@ class TestSeoProxyRouter:
         assert "An e-mail address or a link with http:// is not kept; anything else you type may be" in response.text
         assert "A row holds no IP address and no time of day" in response.text
         assert f"Kept {search_misses.RETENTION_DAYS} days in Google Cloud SQL" in response.text
-        # What the dashboard still shows is a fact about today, not a note on older entries.
-        assert "search texts sent up to and including November 2026 still show" in response.text
+        # "No time of day" was true of the shares only; it went with their other fields rather than
+        # being stretched over the machine-read lines, which carry a timestamp. It stands once, for
+        # the search list, whose row holds a day and no time.
+        assert response.text.count("time of day") == 1
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
         # The site-wide facts the human page states once each, the stored feedback fields included.
         for fact in (
-            "a random id that ties your own submissions together",
-            "the optional contact field",
-            "legitimate interest (Art. 6(1)(f) GDPR)",
-            "for the site, seeing what its catalogue lacks, and the assistant's telemetry and limits",
-            "the Cloudflare Access login cookie",
-            "a complaint to a supervisory authority",
+            # Who is responsible, under the page's own heading, not only as the legal notice's operator.
+            "<li>Who is responsible: Markus Neusinger (see above).</li>",
+            # No event carries what a visitor typed any more (docs/reference/plausible.md, "Search");
+            # what the dashboard still shows is a fact about today, not a note on older entries,
+            # through the item's end, as on the human page.
+            "no IP address stored. Search texts sent up to and including November 2026 still show there.</li>",
+            # Every field the feedback record holds, each by its name, then who reads it: the operator,
+            # and the coding assistant the admin page's "copy prompt for Claude Code" button hands the
+            # message, page and reaction to (app/src/utils/claudePrompt.ts).
+            "Feedback: your message and reaction, the optional contact field, the page, window size, "
+            "user-agent and a random id that ties your own submissions together; kept until you ask to "
+            "delete it, in Google Cloud SQL in the Netherlands (europe-west4). The operator reads the "
+            "entries, and when he works on one, its message, page and reaction can go to an AI coding "
+            "assistant (such as Claude Code by Anthropic), which processes it under its provider's own "
+            "terms, outside the EU hosting named above, with training on what he sends switched off. The "
+            "salted IP hash against spam",
+            # The search list's purpose has its basis, in the same place of the list as on the page.
+            "Why this is allowed: a legitimate interest in protecting the site, counting its readers, "
+            "seeing what its catalogue lacks, and the assistant's telemetry and limits",
+            # The login cookie is the operator's own, as the human page says ("I sign in through
+            # Cloudflare Access").
+            "<li>No cookies for visitors (the operator: the Cloudflare Access login cookie), no accounts, "
+            "and no name or email unless you type one.",
+            # The rights item whole, through the address, the early deletion of a feedback case, what
+            # lets the operator find an entry, that a log line cannot be deleted one by one and when it
+            # expires, with the periods of the server logs' item and of the machine-read and telemetry
+            # items, and the about 30 days the database's automatic backups keep a deleted entry (30
+            # daily backups, docs/reference/database.md, "Automated backups").
+            "Rights: you can ask what is stored about you and have it corrected, erased or restricted, "
+            "object to the processing for a reason specific to your situation, and complain to a data "
+            'protection authority. A few lines to <a href="mailto:admin@anyplot.ai">admin@anyplot.ai</a> '
+            "are enough, also to have a feedback case deleted early. Tell the operator what you sent and "
+            "roughly when, or the contact you typed, so the entry can be found. Log lines cannot be deleted "
+            "one by one: they expire after 30 days (server logs) or 180 days (machine reads, assistant "
+            "telemetry). The database's automatic backups keep a deleted entry for about 30 days.</li>",
             "transfers outside Switzerland and the EU",
             "cleared by the next feedback after ten minutes, and its salt dies with the server instance",
             "uses your IP address to rate-limit, filter bots and absorb DDoS attacks",
-            "no name or email unless you type one",
-            "may credit your public username",
-            "browsing the catalogue never reaches a model",
-            # The bot check, as LegalPage.tsx's "bot check" row states it.
-            "Cloudflare Turnstile checks that a browser, not a script, is asking",
+            "no accounts, and no name or email unless you type one",
+            # The GitHub credit, and that the operator removes it on request while the public history
+            # keeps it: the username sits in the spec's `suggested` field, which a pull request empties.
+            "Suggesting a plot type on GitHub may credit your public username in its spec. Ask and the "
+            "operator removes it; the public history keeps it.</li>",
+            "<li>No AI training on what you send.</li>",
+            "your plot votes, a release number",
+            "and your consent to a feedback case: you give it when you send it and can withdraw it at any "
+            "time by asking.</li>",
+            # The bot check, as LegalPage.tsx's "cloudflare" row states it.
+            "checks that a browser, not a script, is asking",
             "user-agent and TLS fingerprint",
-            "with no cookie",
-            "as its own controller, to improve the check",
+            "keeps an item in your browser's storage, with no cookie; anyplot learns only whether the check passed",
+            "Cloudflare also uses these signals on its own behalf, to improve the check",
+            "Google Cloud and Cloudflare apply their data processing terms",
         ):
             assert fact in response.text, fact
+        # The feedback item must not claim a sole reader, and the cookie item names the operator as its holder.
+        for gone in ("read only by the operator", "admins: the Cloudflare Access login cookie"):
+            assert gone not in response.text, gone
 
     def test_seo_legal_mirrors_the_data_assistant_section(self, client: TestClient) -> None:
         """The crawler body carries the assistant's facts the human page states (LegalPage.tsx `#assistant`)."""
@@ -1490,21 +1571,66 @@ class TestSeoProxyRouter:
         assert response.status_code == 200
         for fact in (
             'id="assistant"',
-            "experimental feature, and the operator may pause it",
-            "Google Cloud Vertex AI in the EU",
-            "nobody checks them by hand",
-            "salted with a value that lives as long as the server instance",
-            "it starts unticked",
-            "180 days",
-            "a licence from Highsoft",
-            "consent (Art. 6(1)(a) GDPR)",
-            "your request (Art. 6(1)(b) GDPR)",
-            "Telemetry: up to 180 days",
-            "cleared after an hour idle",
+            # What it is, and where its terms of use stand: its own page, as on the human page.
+            "Only if you use it. It adapts a catalogue plot to your data. Status, limits and your code: see "
+            '<a href="https://anyplot.ai/agent">the data assistant\'s page</a>.</li>',
+            "Google Cloud Vertex AI in the EU, under Google Cloud's data processing terms",
+            "Don't paste personal data you are not allowed to share",
+            # The ids keep what the limits count on, the salted tab id and the salted IP address,
+            # both personal data; the sentences that state the limits stand on the assistant's page.
+            "<li>Ids: a random tab id stands in for you. The per-tab limits and a pause after misuse go by "
+            "that id, the per-network limits by your IP address. Both ids are salted with a value",
+            "salted with a value that lives only as long as the server instance",
+            # Why they are pseudonymous and not anonymous, and what a feedback case holds, as the
+            # page's own test pins them.
+            "in memory, never written down",
+            "Nothing durable: only timestamps could match them to the 30-day server logs",
+            "so they are pseudonymous",
+            "Admins: a keyed hash (HMAC)",
+            "a profile of your data with its first 5 rows",
+            # Both hashes the row stores, the tab id's and the session id's (api/agent_cases.py
+            # `build_case`, `session_hash`), then who reads a case, and what: the triage session with
+            # the coding assistant (.claude/skills/triage-agent-cases/SKILL.md, "Read each case"), the
+            # run's details and the two hashes included.
+            "your reaction, message, hashes of your tab id and of the session id, and the run's details. "
+            "The operator reads the cases to fix what went wrong, also with AI coding assistants (such "
+            "as Claude Code by Anthropic) and in test runs on other AI models: your reaction and message, "
+            "the conversation, the data sample or file, the plot and its code, the run's details and the "
+            "two hashes. Those tools process a case under their providers' own terms, outside the EU "
+            "route named above, with training on what he sends switched off.</li>",
+            "it starts unticked, which leaves out that file only",
+            "never your text, data, column or file names",
+            # Every kind of field by its name: event types, plot type and library record what a
+            # visitor did and chose, so no category of "technical details" covers them.
+            "Telemetry holds event types, formats, sizes, plot type, library, language code (rare ones as "
+            '"other"), attempts, defect ids, statuses, latencies and token counts.',
+            "your request: making the plot you ask the data assistant for",
+            "your consent to a feedback case",
+            # The page's periods and places for the assistant's data, each beside its data.
+            "Telemetry: up to 180 days in Google Cloud Logging and BigQuery in the Netherlands (europe-west4)",
+            "private bucket in Google Cloud Storage in the Netherlands (europe-west4) for 180 days",
+            "The triage row stays until you ask to delete it, in Google Cloud SQL in the Netherlands",
+            "server memory only, cleared after an hour idle",
+            "keeps its last 16 results in memory",
+            "only if you tick",
             "it is not used for training",
-            "The triage row stays until you ask to delete it",
         ):
             assert fact in response.text, fact
+        # The assistant's terms of use stand on its own page now, not in the privacy policy.
+        for moved in (
+            "without warranty",
+            "results can be wrong and nobody checks them by hand",
+            "may pause it at any time",
+            "use it only with data you may share",
+            "unlawful content",
+            "automated requests",
+            "Daily limits apply per tab and per network",
+            "a misuse can pause you for the day",
+            "yours to use, as is",
+            "Highcharts",
+            "<li>Limits:",
+        ):
+            assert moved not in response.text, moved
 
     def test_seo_mcp_tells_agents_how_to_connect(self, client: TestClient) -> None:
         """The /mcp page's audience is AI agents — the bot body must carry the

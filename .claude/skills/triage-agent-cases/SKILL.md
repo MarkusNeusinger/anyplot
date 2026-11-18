@@ -93,6 +93,11 @@ read them.
 | `bundle.session`, `bundle.snapshot` | Spec, library, locale, plot language and its source; the catalogue library version the session adapted. |
 | `data.csv`, `plot-*.png`, `plot.py` | Open the PNGs and read the data yourself; judge the plot as the user saw it. |
 
+The legal page's data-assistant feedback row (`app/src/pages/LegalPage.tsx`
+under `#assistant`, with its crawler copy in `api/routers/seo.py`) names what
+a triage session reads, so a change to this table changes that row in the same
+pull request.
+
 Then decide whether `origin/main` already fixes the cause:
 
 1. Search for the case id first. Fixes often cite it:

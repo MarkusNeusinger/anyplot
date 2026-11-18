@@ -428,7 +428,7 @@ describe('DebugPage', () => {
                   id: 'fb-1',
                   message: 'Axis labels overlap on mobile',
                   reaction: 'bug',
-                  contact: null,
+                  contact: 'reader@example.com',
                   path: '/plots/scatter-basic',
                   spec_id: 'scatter-basic',
                   viewport: '375x812',
@@ -456,6 +456,13 @@ describe('DebugPage', () => {
     expect(copied).toContain('bug report');
     expect(copied).toContain('> Axis labels overlap on mobile');
     expect(copied).toContain('Open a pull request');
+    // The legal page's site feedback row (app/src/pages/LegalPage.tsx) names only the message,
+    // the page and the reaction as what can go to the coding assistant. Of the other fields that
+    // row lists, the admin page's entry carries the contact and the window size; they and the
+    // entry's id stay out.
+    expect(copied).not.toContain('fb-1');
+    expect(copied).not.toContain('reader@example.com');
+    expect(copied).not.toContain('375x812');
   });
 });
 

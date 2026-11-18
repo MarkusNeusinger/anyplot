@@ -52,7 +52,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 
 - Preview images (PNG, thumbnails)
 - Interactive HTML plots (plotly, bokeh, altair, etc.)
-- The files of each agent chat feedback case, in the private EU bucket `gs://anyplot-agent-cases` under `cases/<case_id>/` (the PNGs, `plot.py`, `data.csv` only when the admin ticked the box, and `manifest.json`); a lifecycle rule deletes them after 180 days
+- The files of each agent chat feedback case, in the private bucket `gs://anyplot-agent-cases` in the Netherlands (`europe-west4`, a single region) under `cases/<case_id>/` (the PNGs, `plot.py`, `data.csv` only when the sender ticked the box, and `manifest.json`); a lifecycle rule deletes them after 180 days
 
 ### Stored in GitHub
 
@@ -62,7 +62,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 
 ### Not stored anywhere permanently
 
-- User uploaded data (processed in-memory only). The one exception is a quick-feedback case of the agent chat: when an admin submits one with the data box ticked, the case's `data.csv` stays in `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days
+- User uploaded data (processed in-memory only). The one exception is a quick-feedback case of the agent chat, which anyone who uses the chat can send: its `manifest.json` keeps the conversation and the dataset profile with up to 5 sample rows whether or not the data box is ticked, and its `data.csv` holds the whole data only when the sender ticked the box. Both stay in `gs://anyplot-agent-cases` until the lifecycle rule deletes them after 180 days (`api/agent_cases.py`)
 
 ---
 
@@ -367,7 +367,7 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
 
 **Key Fields**:
 - `id` - The bucket's case id: the UTC time in ISO 8601 basic format and eight random hex digits, so ids sort by time and link a row to its files under `cases/<id>/`
-- `reaction`, `message`, `include_data`, `result_version`, `replaces` - What the admin sent; `include_data` says whether the case holds `data.csv`. `result_version` 0 (since 2026-10-12) is feedback on the chat itself, from a session that made no plot: such a case has no image and no `plot.py`, no pipeline status, and cannot be promoted
+- `reaction`, `message`, `include_data`, `result_version`, `replaces` - What the sender submitted; `include_data` says whether the case holds `data.csv`. `result_version` 0 (since 2026-10-12) is feedback on the chat itself, from a session that made no plot: such a case has no image and no `plot.py`, no pipeline status, and cannot be promoted
 - `user_hash`, `session_hash` - Hashed ids; the table holds no email address and no session id
 - `locale` - The session's UI locale, the manifest's `language`; unlike `feedback.language`, which holds a programming language
 - `model`, `model_version`, `judge_model`, `prompt_hash`, `pipeline_status`, `attempts`, `tokens`, `cost_estimate` - The run's metadata from the case manifest; `model_version`, `tokens` and `cost_estimate` are `null` until the agents service stamps them. `prompt_hash` is one hash over the bundle's per-instruction hashes; since 2026-10-30 they include the catalogue reviewer's (`reviewer_catalogue`), so every case's `prompt_hash` shifted once on that day without any prompt changing
@@ -626,10 +626,24 @@ engine = create_async_engine(
 
 ### Automated backups
 
-Cloud SQL automatic backups:
-- Daily backups at 3:00 AM UTC
-- Retained for 7 days
-- Point-in-time recovery enabled
+Cloud SQL automatic backups of `anyplot-db`:
+- Daily, in a window that starts at 19:00 UTC
+- The 30 most recent backups are retained, about 30 days
+- Point-in-time recovery with 7 days of transaction logs
+- Stored in the EU multi-region
+
+To see the current settings, run this read-only command:
+
+```bash
+gcloud sql instances describe anyplot-db --format="yaml(settings.backupConfiguration)"
+```
+
+A row deleted from the database therefore stays in these automated backups for about 30 days. The
+setting counts backups, not days, so a day without a successful backup adds a day. A manual backup
+or a snapshot taken by hand is not removed by this retention. The privacy section of the legal page
+(`app/src/pages/LegalPage.tsx`, "your rights") and its crawler copy in `api/routers/seo.py`
+(`_LEGAL_BOT_BODY`) say that the database's automatic backups keep a deleted entry for about 30
+days; if you change the retention, update both.
 
 ### Manual backups
 
@@ -721,10 +735,18 @@ await session.execute(f"SELECT * FROM specs WHERE id = '{spec_id}'")
 
 ### Data privacy
 
-- No user data stored permanently, with one exception: the quick-feedback cases of the agent chat. When someone submits one, the case (the conversation, the code, the images, the message, a hashed user id, and `data.csv` when the box is ticked) is stored in the private bucket `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days. Its row in `agent_feedback` holds the message and the hashed ids, but no conversation, code, images or data, and stays
-- The gallery searches that found nothing (`search_misses`) hold the text a visitor typed, its day, and a count, and are deleted after 180 days. A visitor could type anything; the app and the API keep only a text that reads as a search for a plot (no `@`, no `:`, at most six digits), and the list is the operator's alone. A row is pseudonymous: only its day could match it to a line of the 30-day request log
-- Anonymous session IDs only
-- Usage data auto-deleted after 90 days
+The privacy section of the legal page ([anyplot.ai/legal#privacy](https://anyplot.ai/legal#privacy), `app/src/pages/LegalPage.tsx`) states how long each kind of data is kept and where it runs. If you change what a store below holds, update that section and its crawler copy in `api/routers/seo.py` (`_LEGAL_BOT_BODY`) too.
+
+What visitors leave in the database, the case bucket, and the logs:
+
+- `feedback` holds each entry of the site's feedback widget and each plot vote: the message, the reaction, the optional contact field, the page, the window size, the user agent, and a session id that the browser draws with Web Crypto (from the time, on a browser without it) and keeps for its own entries (`core/database/models.py` `Feedback`, `app/src/utils/feedback.ts` `newFeedbackSessionId`, `app/src/components/FeedbackWidget.tsx`).
+- Its `ip_hash` is a salted HMAC of the client IP address, used only for the rate limit and the duplicate check. The salt is drawn per process and never logged or configured, so it dies with the process, and each submission that reaches the database first clears the hashes older than 10 minutes (`api/routers/feedback.py` `_hash_ip`, `_clear_expired_ip_hashes`).
+- `link_shares` counts the link previews that messengers and social networks fetch, per day, platform, page, and whether Cloudflare verified the fetcher, with no address, no user agent, and no time of day (`core/database/models.py` `LinkShare`).
+- `search_misses` holds the gallery searches that found nothing: the text a visitor typed, its UTC day, and a count, with no address, no user agent, and no time of day, deleted after 180 days. A visitor could type anything; the app and the API keep only a text that reads as a search for a plot (no `@`, no `:`, at most six digits), and the list is the operator's alone. A row is pseudonymous: only its day could match it to a line of the 30-day request log (`core/database/models.py` `SearchMiss`, `api/search_misses.py` `RETENTION_DAYS`, [`search_misses`](#search_misses)).
+- `agent_feedback` holds one row per feedback case of the agent chat: the reaction, the message, hashed user and session ids, and the run's metadata, never the conversation, code, images, or data (`core/database/models.py` `AgentFeedback`).
+- The case's files are in the private bucket `gs://anyplot-agent-cases`: `manifest.json` with the conversation and the dataset profile, which holds up to 5 sample rows whether or not the box is ticked, for a case about a plot also the PNG of each rendered theme and `plot.py`, and `data.csv` only when the sender ticked `# include data.csv`, which starts unticked ([Feedback capture](../concepts/agent-network.md#feedback-capture), `api/agent_cases.py`, `agents/anyplot/schemas.py` `MAX_SAMPLE_ROWS`, `app/src/sections/agent-chat/ResultFeedback.tsx`).
+- An agent chat session (its data, chat, and plots) lives only in the agents service's memory. The service drops it once it has been idle for `AGENT_SESSION_IDLE_S` (3600 seconds by default, `agents/anyplot/settings.py` `session_idle_s`), and at the latest when the instance ends; it never reaches the database ([Session hash](agent-telemetry.md#session-hash)).
+- The agent chat's usage telemetry holds no content and goes to a log bucket, not to the database. Its lines are pseudonymous rather than anonymous: a line can be matched by its timestamp to Cloud Run's request logs, which hold the client IP address ([Agent usage telemetry](agent-telemetry.md#what-is-recorded-and-what-never-is), [Session hash](agent-telemetry.md#session-hash)).
 
 ---
 

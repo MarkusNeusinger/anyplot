@@ -981,9 +981,15 @@ class TestDebugEndpoints:
 
 
 def test_the_legal_page_states_the_period_the_api_keeps() -> None:
-    """The privacy policy promises the period the purge applies: one period for every text."""
-    legal = (ROOT / "app" / "src" / "pages" / "LegalPage.tsx").read_text(encoding="utf-8")
+    """The privacy policy promises the period the purge applies: one period for every text.
 
-    assert f"['searches without a hit', '{RETENTION_DAYS} days']" in legal
-    assert f"kept: {RETENTION_DAYS} days" in legal
+    The page states each row's period on the row's own line, so the period is read from the
+    search list's row, from its label to the row that follows it.
+    """
+    legal = (ROOT / "app" / "src" / "pages" / "LegalPage.tsx").read_text(encoding="utf-8")
+    start = legal.index("'searches without a hit',")
+    row = legal[start : legal.index("'cloudflare',", start)]
+
+    assert 'id="search-misses"' in row
+    assert f"['kept', '{RETENTION_DAYS} days']" in row
     assert RETENTION_DAYS == 180
