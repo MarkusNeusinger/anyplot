@@ -73,6 +73,18 @@ def test_without_a_key_the_session_hash_is_salted_here_and_never_the_plain_hash(
     assert own not in (plain[:16], hashlib.sha256(b"case:abc").hexdigest()[:16])
 
 
+def test_a_bundle_without_a_key_is_logged_without_the_session_id(caplog: pytest.LogCaptureFixture) -> None:
+    """Once both services send the key, a bundle without one means the field got lost: that must show in the log,
+    and the line must not hold the id the salt keeps out of the stored case."""
+    with caplog.at_level("WARNING", logger="api.agent_cases"):
+        session_hash("S1abcdefgh", "0123456789abcdef")
+        assert caplog.records == []
+        own = session_hash("S1abcdefgh")
+    (record,) = caplog.records
+    assert "no usable case key" in record.getMessage()
+    assert "S1abcdefgh" not in record.getMessage() and own not in record.getMessage()
+
+
 @pytest.mark.parametrize(
     "unusable",
     [None, "", 12, "0123456789ABCDEF", "0123456789abcde", "0123456789abcdef0", "g123456789abcdef", ["0" * 16]],

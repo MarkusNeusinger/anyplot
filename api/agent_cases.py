@@ -43,6 +43,7 @@ import functools
 import hashlib
 import hmac
 import json
+import logging
 import math
 import re
 import secrets
@@ -56,6 +57,8 @@ from core.agent_cases import CASE_ID_PATTERN as CASE_ID_PATTERN
 from core.agent_cases import CASE_PREFIX, CODE_FILE_NAMES, MANIFEST_NAME, MANIFEST_SCHEMA, case_object
 from core.constants import library_file_extension
 
+
+logger = logging.getLogger(__name__)
 
 CASE_STATUS_NEW = "new"
 """The status of a fresh case; the triage moves it to `in_progress`, `done` or `wont_solve`."""
@@ -217,10 +220,12 @@ def session_hash(session_id: str, case_key: object = None) -> str:
 
     A bundle without a usable key (an agents service from before the field) gets a hash under this process's salt
     instead. It cannot be made again either, but this process restarts while a session lives on, and a correction
-    sent after that carries another value than the case it names: both then stay in the list, unreplaced.
+    sent after that carries another value than the case it names: both then stay in the list, unreplaced. That
+    path is logged, without the session id, because once both services run the field it means the bundle lost it.
     """
     if isinstance(case_key, str) and _CASE_KEY.fullmatch(case_key):
         return case_key
+    logger.warning("a session bundle carried no usable case key; the case is keyed under this process's salt")
     return hmac.new(_SALT, b"case:" + session_id.encode(), hashlib.sha256).hexdigest()[:16]
 
 

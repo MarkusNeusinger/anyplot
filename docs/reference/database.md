@@ -204,7 +204,7 @@ CREATE TABLE agent_feedback
     user_hash       VARCHAR(20) NOT NULL,       -- an admin's HMAC user id, or "pub_" + a per-process salted hash
                                                 -- of a public caller's tab id
     session_hash    VARCHAR(16) NOT NULL,       -- the agents service's per-process salted key of the session
-                                                -- (rows from before November 2026: the id's plain SHA-256)
+                                                -- (rows from before that change: the id's plain SHA-256)
     spec_id         VARCHAR(100),
     library_id      VARCHAR(50),
     locale          VARCHAR(16),                -- the session's UI locale ("de-CH")
