@@ -20,4 +20,4 @@
   Once, at the deploy, a correction does not replace its case: a case
   stored before it has the old value, so a correction sent after it stays
   beside it in the list. A case can still be matched to its session by
-  time, which the telemetry reference now says.
+  time, which the telemetry reference now says. (#13179)
