@@ -12,10 +12,11 @@ The text is what a visitor typed, so it is handled as little as possible:
   refused beyond `MAX_BODY_BYTES` before it is parsed (`read_json_body`).
 - Nothing logs it. A failed write logs the exception's class and its SQLSTATE, never its message,
   which would carry the statement's parameters; a validation error never repeats the body.
-- The server normalises it again with the app's rule (`normalize_query`, held to the app's
-  `normalizeQuery` by the shared cases in `app/src/hooks/searchQuery.cases.json`) and keeps only
-  a text that reads as a search for a plot (`is_countable`): letters and marks of any script,
-  a few digits, spaces and a handful of signs. An address, a phone number or a link fails it.
+- The server applies the app's rule again (`kept_query`, held to the app's `keptMissText` by the
+  shared cases in `app/src/hooks/searchQuery.cases.json`): it folds the whole text, keeps it only
+  when the whole reads as a search for a plot (`is_countable`: letters and marks of any script, a
+  few digits, spaces and a handful of signs), and only then cuts it to 40 characters. An e-mail
+  address, a phone number or a link with its scheme fails it, also past the 40th character.
 - A row is the text, the day and a count. No address, no user agent, no time of day, no session.
   The network's salted key (`hash_ip`) is held in this process's memory for the rate limit only,
   until the first request of a later minute clears it, and is never written anywhere. A row is
@@ -57,8 +58,9 @@ logger = logging.getLogger(__name__)
 # times over, and a larger body is refused before it is parsed.
 MAX_BODY_BYTES = 1024
 
-# Bounds the work on one text: the raw text is cut to this many characters before it is
-# normalised. The app never sends more than `MAX_QUERY_LENGTH`.
+# Bounds the work on one text, and what the rule judges: a raw text longer than this is dropped
+# unread, so the rule always judges a whole text and nothing the API did not read is ever kept.
+# The app never sends more than `MAX_QUERY_LENGTH`.
 MAX_RAW_QUERY_LENGTH = 200
 
 # The longest text that is kept, in characters: the app's `MAX_QUERY_LENGTH` and the column's length.
@@ -240,20 +242,30 @@ async def read_json_body(request: Request, model: type[Body]) -> Body:
 # =============================================================================
 
 
-def normalize_query(text: str) -> str:
-    """The app's `normalizeQuery` in Python: one Unicode form, lowercase, single spaces, at most 40 characters.
+def fold_query(text: str) -> str:
+    """The app's `foldQuery` in Python: one Unicode form, lowercase, single spaces, not yet cut.
 
     The same steps in the same order: compatibility forms folded (Unicode form NFKC: a fullwidth
-    bracket becomes the plain one, `²` becomes `2`, a ligature its letters), lowercase, folded again
-    (a small letter can have a composed form its capital lacks), the curly apostrophes, the hyphens,
-    the minus sign and the dashes made the plain ones and a soft hyphen dropped, white space at the
-    ends dropped and every run of it made one space, cut after
-    40 characters (code points, never inside one), and a space left at the cut dropped. So "Scatter",
-    "scatter " and "SCATTER" are one row, and so is a word typed with a composed or a decomposed accent.
+    bracket becomes the plain one, `²` becomes `2`, a ligature its letters), lowercase, the curly
+    apostrophes, the hyphens, the minus sign and the dashes made the plain ones and a soft hyphen
+    dropped, folded again (a small letter can have a composed form its capital lacks, and a letter
+    and its mark that a soft hyphen kept apart join), white space at the ends dropped and every run
+    of it made one space. The map comes before the second fold, so folding a folded text changes
+    nothing. So "Scatter", "scatter " and "SCATTER" are one row, and so is a word typed with a
+    composed or a decomposed accent.
     """
-    folded = unicodedata.normalize("NFKC", text).lower()
-    plain = unicodedata.normalize("NFKC", folded).translate(_TYPOGRAPHIC)
-    return _WHITESPACE_RUN.sub(" ", plain).strip(" ")[:MAX_QUERY_LENGTH].rstrip(" ")
+    plain = unicodedata.normalize("NFKC", text).lower().translate(_TYPOGRAPHIC)
+    return _WHITESPACE_RUN.sub(" ", unicodedata.normalize("NFKC", plain)).strip(" ")
+
+
+def cut_query(folded: str) -> str:
+    """A folded text cut after 40 characters (code points, never inside one), a space at the cut dropped."""
+    return folded[:MAX_QUERY_LENGTH].rstrip(" ")
+
+
+def normalize_query(text: str) -> str:
+    """The app's `normalizeQuery` in Python: the text folded and cut to at most 40 characters."""
+    return cut_query(fold_query(text))
 
 
 def _is_ignorable(char: str) -> bool:
@@ -307,6 +319,21 @@ def is_countable(query: str) -> bool:
         elif char not in QUERY_MARKS:
             return False
     return shows and digits <= MAX_QUERY_DIGITS
+
+
+def kept_query(text: str) -> str | None:
+    """The text a row keeps of what was typed, or `None` when nothing of it is kept; the app's `keptMissText`.
+
+    Judged whole, then cut, then judged again: the rule runs over the whole folded text first, so an
+    `@`, a `:` or a seventh digit past the 40th character refuses the text as it would within them,
+    and a long address or number is never kept in part. Only a text that passed is cut to 40
+    characters, and the cut text is judged once more, since a cut can end on a joiner.
+    """
+    folded = fold_query(text)
+    if not is_countable(folded):
+        return None
+    query = cut_query(folded)
+    return query if is_countable(query) else None
 
 
 def retention_cutoff(today: date) -> date:
@@ -434,16 +461,18 @@ async def _count(day: date, query: str) -> None:
 def record_miss(request: Request, text: str) -> None:
     """Count a gallery search that found nothing, in the background; silent whatever happens.
 
-    Each request of a network counts against its limit, whether its text is then counted or not. The
-    text is cut to `MAX_RAW_QUERY_LENGTH`, normalised here, whatever the app did, and written only when
-    it is countable.
+    Each request of a network counts against its limit, whether its text is then counted or not. A text
+    longer than `MAX_RAW_QUERY_LENGTH` is dropped unread: the app never sends one, and the rule must
+    judge a whole text. Any other is judged and cut here (`kept_query`), whatever the app did.
     """
     if not settings.is_production:
         return
     if not _RATE_LIMIT.allows(hash_ip(network_of(client_ip(request))), time.monotonic()):
         return
-    query = normalize_query(text[:MAX_RAW_QUERY_LENGTH])
-    if not is_countable(query) or len(_WRITES) >= MAX_PENDING_WRITES:
+    if len(text) > MAX_RAW_QUERY_LENGTH:
+        return
+    query = kept_query(text)
+    if query is None or len(_WRITES) >= MAX_PENDING_WRITES:
         return
     write = asyncio.create_task(_count(datetime.now(UTC).date(), query))
     _WRITES.add(write)

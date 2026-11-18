@@ -5,9 +5,11 @@
  * `api/search_misses.py`). The owner reads the list on /debug to see what the catalogue lacks and
  * which words the search does not know. Plausible never sees the text.
  *
- * - One decision (`claimSearchMiss`) makes a text a reported miss, and both reports follow from it.
- * - Only a text that reads as a search for a plot leaves the browser (`isCountableMiss`, the
- *   API's rule): an e-mail address, a phone number or a link with its scheme does not.
+ * - One decision in the browser (`claimSearchMiss`) makes a text a reported miss, and both reports
+ *   follow from it.
+ * - Only a text that reads as a search for a plot as a whole leaves the browser, cut to 40
+ *   characters after it passed (`keptMissText`, the API's rule): an e-mail address, a phone
+ *   number or a link with its scheme does not, also when it stands past the 40th character.
  * - The text travels in the JSON body, never in the URL: request URLs stand in the server logs.
  *   No cookie and no referrer go with it, whatever the API's address becomes.
  * - Only from the live site, and not while the admin's own use is muted: a local build, a
@@ -18,7 +20,7 @@
  */
 
 import { analyticsMuted } from 'src/analytics/mute';
-import { inProduction } from 'src/hooks/useAnalytics';
+import { cutQuery, foldQuery, inProduction } from 'src/hooks/useAnalytics';
 import { apiUrl, endpoints } from 'src/lib/api';
 
 /** How long the search box waits after the last keystroke before a text counts as finished. */
@@ -53,8 +55,8 @@ const isLetterOrMark = (char: string | undefined): boolean =>
   char !== undefined && (LETTER.test(char) || MARK.test(char));
 
 /**
- * Whether a normalised text (`normalizeQuery`) reads as a search for a plot that shows something,
- * in any script: two characters or more, each a letter, a combining mark on a letter or a mark, a
+ * Whether a folded text (`foldQuery`, or that text cut) reads as a search for a plot that shows
+ * something, in any script: two characters or more, each a letter, a combining mark on a letter or a mark, a
  * decimal digit (at most `MAX_MISS_DIGITS` in all), a space or one of `MISS_MARKS`, and at least
  * one letter or digit. A zero width non-joiner or joiner counts only between two letters or marks.
  * No `@` and no `:`, so no address and no link; no control, format, direction or other ignorable
@@ -98,6 +100,21 @@ export function isCountableMiss(query: string): boolean {
   return shows && digits <= MAX_MISS_DIGITS;
 }
 
+/**
+ * The text a row would keep of what was typed, or `null` when nothing of it is kept. Judged whole,
+ * then cut, then judged again: the rule runs over the whole folded text first (`foldQuery`), so an
+ * `@`, a `:` or a seventh digit past the 40th character refuses the text as it would within them,
+ * and a long address or number is never kept in part. Only a text that passed is cut to 40
+ * characters (`cutQuery`), and the cut text is judged once more, since a cut can end on a joiner.
+ * The API decides the same way (`kept_query` in `api/search_misses.py`).
+ */
+export function keptMissText(typed: string): string | null {
+  const folded = foldQuery(typed);
+  if (!isCountableMiss(folded)) return null;
+  const query = cutQuery(folded);
+  return isCountableMiss(query) ? query : null;
+}
+
 // The texts this page load already reported; a full reload starts over.
 const reported = new Set<string>();
 
@@ -107,25 +124,29 @@ export function forgetSentMisses(): void {
 }
 
 /**
- * The one decision that a finished search text is a miss worth reporting: countable by the rule
- * (`isCountableMiss`), and not reported yet in this page load. `true` claims the text, so it is
- * never reported twice. Both reports of a miss follow from this one decision
- * (`reportSearchMiss`), so the count at Plausible and the private list cannot drift apart.
+ * The one decision that a finished search text is a miss worth reporting: the text a row would
+ * keep of it (`keptMissText`), when there is one and it was not reported yet in this page load.
+ * Claims and returns that text, so it is never reported twice, or returns `null`. Both reports of
+ * a miss follow from this one decision in the browser (`reportSearchMiss`). Afterwards they can
+ * still part: the API's limits, the day's cap or a failed write can leave a counted miss without a
+ * row, and a browser that blocks the analytics script can leave a row without a count.
  */
-export function claimSearchMiss(query: string): boolean {
-  if (!isCountableMiss(query) || reported.has(query)) return false;
+export function claimSearchMiss(typed: string): string | null {
+  const query = keptMissText(typed);
+  if (query === null || reported.has(query)) return null;
   reported.add(query);
-  return true;
+  return query;
 }
 
 /**
- * Reports one normalised, finished search text (`normalizeQuery`) that found nothing in the whole
- * catalogue, when `claimSearchMiss` claims it: `count` counts it at Plausible without the text
- * (the `search_no_results` event), and the text goes to the private list (`sendSearchMiss`).
- * Each keeps its own gate for the live site and the admin's mute.
+ * Reports one finished search text, as typed, that found nothing in the whole catalogue, when
+ * `claimSearchMiss` claims it: `count` counts it at Plausible without the text (the
+ * `search_no_results` event), and the text a row keeps goes to the private list
+ * (`sendSearchMiss`). Each keeps its own gate for the live site and the admin's mute.
  */
-export function reportSearchMiss(query: string, count: () => void): void {
-  if (!claimSearchMiss(query)) return;
+export function reportSearchMiss(typed: string, count: () => void): void {
+  const query = claimSearchMiss(typed);
+  if (query === null) return;
   count();
   sendSearchMiss(query);
 }

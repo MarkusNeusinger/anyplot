@@ -295,13 +295,16 @@ describe('FilterSearch misses for the private list', () => {
     expect(reported).toHaveBeenCalledTimes(1);
   });
 
-  it('sends the normalised text', () => {
+  it('hands the report the whole typed text, which it judges before it is cut', () => {
+    // The report decides the text's form (`keptMissText`): what waits here is what was typed, so
+    // an address past the 40th character still refuses it.
+    const long = 'Zzqq chart for the quarterly numbers and the yearly totals';
     render(<FilterSearch {...defaultProps} />);
     openSearch();
-    type('  ZZQQ   Chart ');
+    type(long);
     wait(MISS_PAUSE_MS);
 
-    expect(reported).toHaveBeenCalledWith('zzqq chart');
+    expect(reported).toHaveBeenCalledWith(long);
   });
 
   it('sends a pending miss at once when the field loses focus, and not again after the pause', () => {

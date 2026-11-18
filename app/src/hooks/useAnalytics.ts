@@ -169,22 +169,38 @@ const TYPOGRAPHIC: Record<string, string> = Object.fromEntries(
 );
 
 /**
- * A typed search text in one form: compatibility forms folded (Unicode form NFKC: a fullwidth
- * bracket becomes the plain one, a superscript two a 2, a ligature its letters), lowercase, folded
- * again (a small letter can have a composed form its capital lacks), the curly apostrophes, the
- * hyphens, the minus sign and the dashes made the plain ones and a soft hyphen dropped, single
- * spaces, cut at `MAX_QUERY_LENGTH` characters. "Scatter",
- * "scatter " and "SCATTER" are one text for the search's own bookkeeping and one row of the private
- * list of misses (`src/lib/searchMiss.ts`), and so is a word typed with a composed or a decomposed
- * accent; a long pasted text is not kept in full. The cut counts characters, not UTF-16 units, so
- * it never splits one in two. The API applies the same rule again (`normalize_query` in
- * `api/search_misses.py`); the cases in `searchQuery.cases.json` hold the two to each other.
+ * A typed search text in one form, not yet cut: compatibility forms folded (Unicode form NFKC: a
+ * fullwidth bracket becomes the plain one, a superscript two a 2, a ligature its letters),
+ * lowercase, the curly apostrophes, the hyphens, the minus sign and the dashes made the plain ones
+ * and a soft hyphen dropped, folded again (a small letter can have a composed form its capital
+ * lacks, and a letter and its mark that a soft hyphen kept apart join), single spaces. The map
+ * comes before the second fold, so folding a folded text changes nothing. "Scatter", "scatter "
+ * and "SCATTER" are one text, and so is a word typed with a composed or a decomposed accent. The
+ * API folds the same way (`fold_query` in `api/search_misses.py`); the cases in
+ * `searchQuery.cases.json` hold the two to each other.
+ */
+export function foldQuery(query: string): string {
+  const lowered = query.normalize('NFKC').toLowerCase();
+  const plain = Array.from(lowered, char => TYPOGRAPHIC[char] ?? char).join('');
+  return plain.normalize('NFKC').trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * A folded text cut at `MAX_QUERY_LENGTH` characters, a space at the cut dropped: a long pasted
+ * text is not kept in full. The cut counts characters, not UTF-16 units, so it never splits one
+ * in two (`cut_query` in the API).
+ */
+export function cutQuery(folded: string): string {
+  return Array.from(folded).slice(0, MAX_QUERY_LENGTH).join('').trimEnd();
+}
+
+/**
+ * A typed search text in the one form the search's own bookkeeping and the private list of misses
+ * use: folded and cut (`normalize_query` in the API). Which text a row keeps is decided on the
+ * whole folded text first (`keptMissText` in `src/lib/searchMiss.ts`).
  */
 export function normalizeQuery(query: string): string {
-  const folded = query.normalize('NFKC').toLowerCase().normalize('NFKC');
-  const plain = Array.from(folded, char => TYPOGRAPHIC[char] ?? char).join('');
-  const spaced = plain.trim().replace(/\s+/g, ' ');
-  return Array.from(spaced).slice(0, MAX_QUERY_LENGTH).join('').trimEnd();
+  return cutQuery(foldQuery(query));
 }
 
 /** The kinds of page a pageview is recorded as, in its `page` property. */

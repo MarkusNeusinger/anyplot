@@ -2,10 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setAnalyticsMuted } from 'src/analytics/mute';
 import searchQueryCases from 'src/hooks/searchQuery.cases.json';
+import { normalizeQuery } from 'src/hooks/useAnalytics';
 import {
   claimSearchMiss,
   forgetSentMisses,
   isCountableMiss,
+  keptMissText,
   MAX_MISS_DIGITS,
   MIN_MISS_LENGTH,
   MISS_MARKS,
@@ -20,13 +22,40 @@ it('keeps the pause that makes a text finished at the two seconds the docs state
 });
 
 describe('isCountableMiss', () => {
-  // The API's `is_countable` reads the same cases (tests/unit/api/test_search_misses.py).
+  // The API's `kept_query` reads the same cases (tests/unit/api/test_search_misses.py): the
+  // verdict is on the whole typed text, and a kept text is its first 40 characters.
   it.each(searchQueryCases.cases.map(item => [item.rule, item] as const))(
-    'keeps the rule: %s',
+    'keeps the rule, judged whole before the cut: %s',
     (_rule, item) => {
-      expect(isCountableMiss(item.sent)).toBe(item.countable);
+      expect(keptMissText(item.typed)).toBe(item.countable ? item.sent : null);
     }
   );
+
+  it('folds the same text again to itself, over thousands of texts', () => {
+    // The pool holds what folds or is dropped beside letters and the marks they carry, so a mark
+    // that a dropped character kept apart is among them; a seeded generator keeps the run fixed.
+    const pool = [
+      ..."aAzZ09 .-,'",
+      ...[0x00e9, 0x0301, 0x0308, 0x030c, 0x0130, 0x1e9e, 0x03a3, 0x0915, 0x094d],
+      ...[0x00ad, 0x00a0, 0x2010, 0x2011, 0x2212, 0x2013, 0x2019, 0x3000, 0xfeff, 0x2028],
+      ...[0xff41, 0xff21, 0xfb01, 0x00b2, 0x3392, 0xff08, 0x200c, 0x200d],
+    ].map(char => (typeof char === 'number' ? String.fromCodePoint(char) : char));
+    let seed = 20261118;
+    const next = (bound: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % bound;
+    };
+    const unstable: string[] = [];
+    for (let round = 0; round < 3000; round++) {
+      const length = 1 + next(60);
+      const text = Array.from({ length }, () => pool[next(pool.length)]).join('');
+      const once = normalizeQuery(text);
+      if (normalizeQuery(once) !== once) unstable.push(text);
+      const kept = keptMissText(text);
+      if (kept !== null && keptMissText(kept) !== kept) unstable.push(text);
+    }
+    expect(unstable).toEqual([]);
+  });
 
   it('has the bounds the API has', () => {
     expect(MIN_MISS_LENGTH).toBe(searchQueryCases.min_length);
@@ -165,7 +194,7 @@ describe('sendSearchMiss', () => {
     text => {
       const count = vi.fn();
       reportSearchMiss(text, count);
-      expect(claimSearchMiss(text)).toBe(false);
+      expect(claimSearchMiss(text)).toBeNull();
       expect(count).not.toHaveBeenCalled();
       expect(fetchMock).not.toHaveBeenCalled();
     }

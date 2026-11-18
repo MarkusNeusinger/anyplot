@@ -414,6 +414,60 @@
       "countable": false
     },
     {
+      "rule": "an address whose name part alone fills the 40 characters",
+      "typed": "Firstname.Middlename.Lastname.Department@Example.org",
+      "sent": "firstname.middlename.lastname.department",
+      "countable": false
+    },
+    {
+      "rule": "a sentence that ends in an address",
+      "typed": "Please send the quarterly numbers to jane.doe@example.org",
+      "sent": "please send the quarterly numbers to jan",
+      "countable": false
+    },
+    {
+      "rule": "a sentence that ends in a phone number",
+      "typed": "Call me about the bar chart on +41 79 123 45 67",
+      "sent": "call me about the bar chart on +41 79 12",
+      "countable": false
+    },
+    {
+      "rule": "a sentence that ends in a link",
+      "typed": "see this stacked bar chart example https://example.org/plots",
+      "sent": "see this stacked bar chart example https",
+      "countable": false
+    },
+    {
+      "rule": "a seventh digit past the cut",
+      "typed": "quarterly sales by region and product line 2023 2024",
+      "sent": "quarterly sales by region and product li",
+      "countable": false
+    },
+    {
+      "rule": "a long text that is fine is kept cut",
+      "typed": "Grouped bar chart with error bars and a logarithmic y axis",
+      "sent": "grouped bar chart with error bars and a",
+      "countable": true
+    },
+    {
+      "rule": "a cut that ends on a joiner",
+      "typed": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u200cb",
+      "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\u200c",
+      "countable": false
+    },
+    {
+      "rule": "a soft hyphen between a letter and its mark is dropped before the second fold",
+      "typed": "Plot a\u00ad\u0301b",
+      "sent": "plot \u00e1b",
+      "countable": true
+    },
+    {
+      "rule": "a fullwidth letter, a soft hyphen and a mark become one letter",
+      "typed": "\uff41\u00ad\u0301",
+      "sent": "\u00e1",
+      "countable": false
+    },
+    {
       "rule": "a non-joiner at the start",
       "typed": "\u200cabc",
       "sent": "\u200cabc",

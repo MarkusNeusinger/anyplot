@@ -240,13 +240,14 @@ export function FilterSearch({
   // A miss goes to the private list only as a finished text: once no key was pressed for
   // MISS_PAUSE_MS, or when the field loses focus or the search closes before that (`flushMiss`).
   // A fragment typed on within MISS_PAUSE_MS never goes: the next keystroke replaces it.
+  // The typed text waits, not its first 40 characters: the report judges the whole of it before it
+  // is cut (`keptMissText`).
   useEffect(() => {
-    const query = normalizeQuery(searchQuery);
-    if (!missesCatalogue || !query) {
+    if (!missesCatalogue || !normalizeQuery(searchQuery)) {
       pendingMissRef.current = null;
       return;
     }
-    pendingMissRef.current = query;
+    pendingMissRef.current = searchQuery;
     const timer = setTimeout(flushMiss, MISS_PAUSE_MS);
     return () => clearTimeout(timer);
   }, [searchQuery, missesCatalogue, flushMiss]);

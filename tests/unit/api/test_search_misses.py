@@ -10,6 +10,7 @@ a URL or a header.
 import asyncio
 import json
 import logging
+import random
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
@@ -42,6 +43,7 @@ from api.search_misses import (
     RETENTION_DAYS,
     SearchMissesResponse,
     is_countable,
+    kept_query,
     normalize_query,
     read_misses,
     record_miss,
@@ -154,6 +156,32 @@ class TestNormalizeQuery:
         for case in CASES["cases"]:
             assert normalize_query(case["sent"]) == case["sent"]
 
+    def test_a_second_pass_changes_no_text(self) -> None:
+        """Folding is stable: a second pass over thousands of texts from the rule's edge characters changes none.
+
+        The pool holds what folds or is dropped (fullwidth and ligature forms, a soft hyphen, the
+        typographic marks, white space of every kind) beside letters and the marks they carry, so a
+        mark that a dropped character kept apart is among them. A seeded generator keeps it the same
+        run to run.
+        """
+        pool = [
+            *"aAzZ09 .-,'",
+            *map(chr, (0x00E9, 0x0301, 0x0308, 0x030C, 0x0130, 0x1E9E, 0x03A3, 0x0915, 0x094D)),
+            *map(chr, (0x00AD, 0x00A0, 0x2010, 0x2011, 0x2212, 0x2013, 0x2019, 0x3000, 0xFEFF, 0x2028)),
+            *map(chr, (0xFF41, 0xFF21, 0xFB01, 0x00B2, 0x3392, 0xFF08, 0x200C, 0x200D)),
+        ]
+        generator = random.Random(20261118)
+        unstable = []
+        for _ in range(3000):
+            text = "".join(generator.choice(pool) for _ in range(generator.randint(1, 60)))
+            once = normalize_query(text)
+            if normalize_query(once) != once:
+                unstable.append(text)
+            kept = kept_query(text)
+            if kept is not None and kept_query(kept) != kept:
+                unstable.append(text)
+        assert unstable == []
+
     def test_the_cases_hold_every_white_space_of_the_rule(self) -> None:
         """Each of these is invisible in a diff; a case with each one is what notices a lost one."""
         typed = "".join(case["typed"] for case in CASES["cases"])
@@ -165,8 +193,9 @@ class TestIsCountable:
     """What is kept is a search for a plot: the rule is the app's, by character class, in any script."""
 
     @pytest.mark.parametrize("case", CASES["cases"], ids=[case["rule"] for case in CASES["cases"]])
-    def test_keeps_what_the_app_sends(self, case: dict[str, Any]) -> None:
-        assert is_countable(case["sent"]) is case["countable"]
+    def test_keeps_what_the_app_keeps_judged_whole_before_the_cut(self, case: dict[str, Any]) -> None:
+        """The verdict is on the whole typed text; a kept text is its first 40 characters."""
+        assert kept_query(case["typed"]) == (case["sent"] if case["countable"] else None)
 
     def test_the_rules_bounds_are_the_apps(self) -> None:
         assert MAX_QUERY_DIGITS == CASES["max_digits"]
@@ -271,19 +300,24 @@ class TestRecordMiss:
 
         counted.assert_not_called()
 
-    async def test_cuts_the_raw_text_before_normalising(self, counted: AsyncMock, production) -> None:
-        """No later change to the rule can make it run over more than a few hundred characters."""
-        seen: list[int] = []
-
-        def normalize(text: str) -> str:
-            seen.append(len(text))
-            return "spider"
-
-        with patch.object(search_misses, "normalize_query", side_effect=normalize):
-            record_miss(_request(), "x" * 900)
+    async def test_drops_a_raw_text_longer_than_the_api_reads_unread(self, counted: AsyncMock, production) -> None:
+        """The rule must judge a whole text, and no rule runs over more than a few hundred characters."""
+        with patch.object(search_misses, "kept_query", wraps=search_misses.kept_query) as judged:
+            record_miss(_request(), "x" * (MAX_RAW_QUERY_LENGTH + 1))
             await _settle()
 
-        assert seen == [MAX_RAW_QUERY_LENGTH]
+        judged.assert_not_called()
+        counted.assert_not_called()
+
+    async def test_judges_a_raw_text_up_to_the_limit_whole(self, counted: AsyncMock, production) -> None:
+        """An address past the 40th character refuses the text, as it would within them."""
+        record_miss(_request("203.0.113.7"), ("bar chart " * 19) + "jane@x.org")  # 200 characters
+        record_miss(_request("203.0.113.8"), "bar chart " * 20)  # 200 characters, fine
+        await _settle()
+
+        assert len(("bar chart " * 19) + "jane@x.org") == MAX_RAW_QUERY_LENGTH
+        counted.assert_awaited_once()
+        assert counted.await_args.args[1] == ("bar chart " * 4).rstrip()
 
     async def test_an_address_beyond_its_limit_is_not_counted_and_another_still_is(
         self, counted: AsyncMock, production

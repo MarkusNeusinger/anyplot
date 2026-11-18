@@ -422,8 +422,9 @@ class SearchMiss(Base):
     no session, no hash, so the row names nobody. It is pseudonymous, not anonymous: the platform's
     request log keeps one line per `POST /search/miss` for 30 days, with its time and user agent, and
     until then a text could be matched to such a line by its day. A visitor could type anything, so
-    the API keeps only a text that reads as a search for a plot (`is_countable` in
-    `api/search_misses.py`), and the rows are kept for a limited time only (`RETENTION_DAYS`).
+    the API keeps only a text that reads as a search for a plot, judged whole before it is cut
+    (`kept_query` in `api/search_misses.py`), and the rows are kept for a limited time only
+    (`RETENTION_DAYS`).
     """
 
     __tablename__ = "search_misses"
