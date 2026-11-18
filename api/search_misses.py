@@ -71,8 +71,10 @@ MIN_QUERY_LENGTH = 2
 MAX_QUERY_DIGITS = 6
 
 # The signs a countable text may hold besides letters, combining marks, decimal digits and spaces:
-# those a plot search uses, among them the middle dot (U+00B7) and the katakana middle dot (U+30FB).
-QUERY_MARKS = frozenset(" -_.+#/&'(),%" + chr(0x00B7) + chr(0x30FB))
+# those a plot search uses, and those some scripts spell their words with. By code point: the middle
+# dot (U+00B7), the katakana middle dot (U+30FB), the Hebrew geresh (U+05F3), gershayim (U+05F4) and
+# maqaf (U+05BE), the Tibetan tsheg (U+0F0B) and the Ethiopic wordspace (U+1361).
+QUERY_MARKS = frozenset(" -_.+#/&'(),%" + "".join(map(chr, (0x00B7, 0x30FB, 0x05F3, 0x05F4, 0x05BE, 0x0F0B, 0x1361))))
 
 # The code points made to show as nothing (Unicode's Default_Ignorable_Code_Point, by range): the
 # Hangul fillers, the variation selectors, the grapheme joiner, the format characters and their
@@ -102,9 +104,17 @@ DEFAULT_IGNORABLE = (
 # in several scripts, and allowed there and nowhere else.
 JOINERS = frozenset((chr(0x200C), chr(0x200D)))
 
-# The typographic marks a phone puts in for the plain ones: the curly apostrophes and the en and em
-# dash. A search with them is the same search.
-_TYPOGRAPHIC = str.maketrans({chr(0x2018): "'", chr(0x2019): "'", chr(0x2013): "-", chr(0x2014): "-"})
+# The typographic marks that stand for the plain ones (the curly apostrophes; the hyphen, the
+# non-breaking hyphen, the minus sign, the en and the em dash), and the soft hyphen, which shows as
+# nothing and comes with a word copied from a page: it is dropped rather than refusing the word. A
+# search with any of them is the same search.
+_TYPOGRAPHIC = str.maketrans(
+    {
+        **dict.fromkeys(map(chr, (0x2018, 0x2019)), "'"),
+        **dict.fromkeys(map(chr, (0x2010, 0x2011, 0x2212, 0x2013, 0x2014)), "-"),
+        chr(0x00AD): None,
+    }
+)
 
 # Bounds one network (an IPv4 address, or the /64 of an IPv6 address): requests beyond this many in
 # one minute are dropped unseen. Twenty finished searches a minute is more than a person types.
@@ -233,8 +243,9 @@ def normalize_query(text: str) -> str:
 
     The same steps in the same order: compatibility forms folded (Unicode form NFKC: a fullwidth
     bracket becomes the plain one, `²` becomes `2`, a ligature its letters), lowercase, folded again
-    (a small letter can have a composed form its capital lacks), the curly apostrophes and the dashes
-    made the plain ones, white space at the ends dropped and every run of it made one space, cut after
+    (a small letter can have a composed form its capital lacks), the curly apostrophes, the hyphens,
+    the minus sign and the dashes made the plain ones and a soft hyphen dropped, white space at the
+    ends dropped and every run of it made one space, cut after
     40 characters (code points, never inside one), and a space left at the cut dropped. So "Scatter",
     "scatter " and "SCATTER" are one row, and so is a word typed with a composed or a decomposed accent.
     """
@@ -259,8 +270,10 @@ def is_countable(query: str) -> bool:
     (at most `MAX_QUERY_DIGITS` in all), a space or one of `QUERY_MARKS`, and at least one letter or
     digit. A zero width non-joiner or joiner counts only between two letters or marks. Nothing else:
     no `@` and no `:`, so no address and no link; no control, format, direction or other ignorable
-    character, so no row looks empty, reads backwards or is the twin of another; no bare combining
-    mark. That also keeps out a NUL and half of a surrogate pair, which PostgreSQL cannot store. The
+    character, so no row looks empty or reads backwards; no bare combining mark. A text has to show
+    something, but a joiner inside a word can still make a row that looks like another in a script
+    where it changes nothing that is seen; each such row is its own entry, which the owner can
+    delete. That also keeps out a NUL and half of a surrogate pair, which PostgreSQL cannot store. The
     app applies the same rule (`isCountableMiss` in `app/src/lib/searchMiss.ts`).
     """
     if len(query) < MIN_QUERY_LENGTH:

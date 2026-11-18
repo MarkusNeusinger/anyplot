@@ -149,15 +149,21 @@ function firstUseThisVisit(feature: UiFeature, now: number): boolean {
  */
 export const MAX_QUERY_LENGTH = 40;
 
-// The typographic marks a phone puts in for the plain ones (the curly apostrophes, the en and em
-// dash), by code point: a search with them is the same search.
+// The typographic marks that stand for the plain ones (the curly apostrophes; the hyphen, the
+// non-breaking hyphen, the minus sign, the en and the em dash), and the soft hyphen, which shows as
+// nothing and comes with a word copied from a page: it is dropped rather than refusing the word.
+// By code point; a search with any of them is the same search.
 const TYPOGRAPHIC: Record<string, string> = Object.fromEntries(
   (
     [
       [0x2018, "'"],
       [0x2019, "'"],
+      [0x2010, '-'],
+      [0x2011, '-'],
+      [0x2212, '-'],
       [0x2013, '-'],
       [0x2014, '-'],
+      [0x00ad, ''],
     ] as const
   ).map(([code, plain]) => [String.fromCodePoint(code), plain])
 );
@@ -165,8 +171,9 @@ const TYPOGRAPHIC: Record<string, string> = Object.fromEntries(
 /**
  * A typed search text in one form: compatibility forms folded (Unicode form NFKC: a fullwidth
  * bracket becomes the plain one, a superscript two a 2, a ligature its letters), lowercase, folded
- * again (a small letter can have a composed form its capital lacks), the curly apostrophes and the
- * dashes made the plain ones, single spaces, cut at `MAX_QUERY_LENGTH` characters. "Scatter",
+ * again (a small letter can have a composed form its capital lacks), the curly apostrophes, the
+ * hyphens, the minus sign and the dashes made the plain ones and a soft hyphen dropped, single
+ * spaces, cut at `MAX_QUERY_LENGTH` characters. "Scatter",
  * "scatter " and "SCATTER" are one text for the search's own bookkeeping and one row of the private
  * list of misses (`src/lib/searchMiss.ts`), and so is a word typed with a composed or a decomposed
  * accent; a long pasted text is not kept in full. The cut counts characters, not UTF-16 units, so

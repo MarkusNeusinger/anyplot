@@ -305,10 +305,13 @@ page shows it.
 - **One form of the text**: `normalizeQuery()` folds compatibility forms
   (Unicode form NFKC: a fullwidth bracket becomes the plain one, a superscript
   two a 2, a ligature its letters), makes the text lowercase and folds it
-  again, makes the curly apostrophes and the en and em dashes the plain `'` and
-  `-`, leaves single spaces, and cuts it at 40 characters (`MAX_QUERY_LENGTH`).
-  So "Scatter", "scatter " and "SCATTER" are one entry, and so is a word typed
-  with a composed or a decomposed accent or a phone's typographic apostrophe.
+  again, makes the curly apostrophes the plain `'` and the hyphen, the
+  non-breaking hyphen, the minus sign, and the en and em dashes the plain `-`,
+  drops a soft hyphen (it shows as nothing and comes with a word copied from a
+  page), leaves single spaces, and cuts it at 40 characters
+  (`MAX_QUERY_LENGTH`). So "Scatter", "scatter " and "SCATTER" are one entry,
+  and so is a word typed with a composed or a decomposed accent or a phone's
+  typographic apostrophe.
   A long text pasted into the box by mistake isn't kept in full. The API
   applies the same rule again. `app/src/hooks/searchQuery.cases.json` holds the
   app's rule and the API's to each other.
@@ -316,15 +319,19 @@ page shows it.
   and the API keep a text only when it reads as a search and shows something,
   by what its characters are and in any script: at least two characters, each
   a letter, a combining mark on a letter or a mark, a decimal digit (at most
-  six in all), a space, or one of `- _ . + # / & ' ( ) % ,` and the middle
-  dots `·` and `・`, with at least one letter or digit. A text with `@` or `:`,
-  with more digits, or with a control, format, direction, or other ignorable
-  character (a Hangul filler, a variation selector) isn't sent and isn't
-  kept, so an e-mail address, a phone number, a link, or a row that looks
-  empty or is the twin of another doesn't reach the list. The zero width
-  non-joiner and joiner count only between two letters or marks, where they
-  are ordinary spelling in several scripts. A search with other punctuation
-  isn't kept, so the list undercounts those. The rule is `isCountableMiss()`
+  six in all), a space, or one of `- _ . + # / & ' ( ) % ,`, the middle dots
+  `·` and `・`, and the signs some scripts spell words with: the Hebrew geresh,
+  gershayim and maqaf, the Tibetan tsheg, and the Ethiopic wordspace. It also
+  needs at least one letter or digit. A text with `@` or `:`, with more
+  digits, or with a control, format, direction, or other ignorable character
+  (a Hangul filler, a variation selector) isn't sent and isn't kept, so an
+  e-mail address, a phone number, a link, or a row that looks empty doesn't
+  reach the list. The zero width non-joiner and joiner count only between two
+  letters or marks, where they are ordinary spelling in several scripts; in a
+  script where a joiner changes nothing that is seen, a word with one is a row
+  that looks like the word without it, its own entry, which the owner can
+  delete. A search with other punctuation isn't kept, so the list undercounts
+  those. The rule is `isCountableMiss()`
   in the app and `is_countable()` in the API.
 - **What a row holds**: the text, the UTC day, and a count. No address, no
   user agent, no time of day, and no session. The text travels in the body of

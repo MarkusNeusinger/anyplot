@@ -2,7 +2,7 @@
   "max_length": 40,
   "min_length": 2,
   "max_digits": 6,
-  "marks": " -_.+#/&'(),%\u00b7\u30fb",
+  "marks": " -_.+#/&'(),%\u00b7\u30fb\u05f3\u05f4\u05be\u0f0b\u1361",
   "ignorable": [
     ["00ad", "00ad"],
     ["034f", "034f"],
@@ -345,6 +345,72 @@
       "rule": "a joiner before a mark at the start",
       "typed": "\u200d\u09cdযাব",
       "sent": "\u200d\u09cdযাব",
+      "countable": false
+    },
+    {
+      "rule": "a Hebrew acronym with gershayim",
+      "typed": "דו\u05f4ח",
+      "sent": "דו\u05f4ח",
+      "countable": true
+    },
+    {
+      "rule": "the plain double quote stays out",
+      "typed": "דו\u0022ח",
+      "sent": "דו\u0022ח",
+      "countable": false
+    },
+    {
+      "rule": "a Hebrew word with geresh",
+      "typed": "צ\u05f3ארט",
+      "sent": "צ\u05f3ארט",
+      "countable": true
+    },
+    {
+      "rule": "a Hebrew compound with maqaf",
+      "typed": "דו\u05beממדי",
+      "sent": "דו\u05beממדי",
+      "countable": true
+    },
+    {
+      "rule": "a Tibetan word with tsheg",
+      "typed": "བོད\u0f0bཡིག",
+      "sent": "བོད\u0f0bཡིག",
+      "countable": true
+    },
+    {
+      "rule": "Ethiopic words with the wordspace",
+      "typed": "ኢትዮጵያ\u1361ካርታ",
+      "sent": "ኢትዮጵያ\u1361ካርታ",
+      "countable": true
+    },
+    {
+      "rule": "the hyphen is the plain one",
+      "typed": "Box\u2010Plot",
+      "sent": "box-plot",
+      "countable": true
+    },
+    {
+      "rule": "the non-breaking hyphen is the plain one",
+      "typed": "Box\u2011Plot",
+      "sent": "box-plot",
+      "countable": true
+    },
+    {
+      "rule": "the minus sign is the plain hyphen",
+      "typed": "Box\u2212Plot",
+      "sent": "box-plot",
+      "countable": true
+    },
+    {
+      "rule": "a soft hyphen is dropped and the word kept",
+      "typed": "Scat\u00adter",
+      "sent": "scatter",
+      "countable": true
+    },
+    {
+      "rule": "soft hyphens alone leave nothing",
+      "typed": "\u00ad\u00ad",
+      "sent": "",
       "countable": false
     },
     {

@@ -11,10 +11,11 @@
   is left, once per text and page load, so a fragment typed on within two
   seconds is never kept; the clear cross, Escape and "← back" throw a pending
   text away. Both the app and the API fold the text (compatibility forms,
-  typographic apostrophes and dashes) and keep it only when it reads as a
-  search for a plot and shows something (letters and marks of any script, at
-  most six digits, spaces and a few signs, no character that shows as
-  nothing), so an e-mail address, a phone number or a link with its scheme
+  typographic apostrophes, hyphens and dashes, soft hyphens) and keep it only
+  when it reads as a search for a plot and shows something (letters and marks
+  of any script, at most six digits, spaces and a few signs, among them those
+  some scripts spell words with, no character that shows as nothing), so an
+  e-mail address, a phone number or a link with its scheme
   never leaves the browser. A row is the text, the UTC day and a count, with
   no address, no user agent, no time of day and no session; it is
   pseudonymous, since the 30-day request log could match it by its day. The

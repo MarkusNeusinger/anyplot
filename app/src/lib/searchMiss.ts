@@ -30,9 +30,12 @@ export const MAX_MISS_DIGITS = 6;
 
 /**
  * The signs a text may hold besides letters, combining marks, decimal digits and spaces: those a
- * plot search uses, among them the middle dot (U+00B7) and the katakana middle dot (U+30FB).
+ * plot search uses, and those some scripts spell their words with. By code point: the middle dot
+ * (U+00B7), the katakana middle dot (U+30FB), the Hebrew geresh (U+05F3), gershayim (U+05F4) and
+ * maqaf (U+05BE), the Tibetan tsheg (U+0F0B) and the Ethiopic wordspace (U+1361).
  */
-export const MISS_MARKS = " -_.+#/&'(),%" + String.fromCodePoint(0x00b7, 0x30fb);
+export const MISS_MARKS =
+  " -_.+#/&'(),%" + String.fromCodePoint(0x00b7, 0x30fb, 0x05f3, 0x05f4, 0x05be, 0x0f0b, 0x1361);
 
 // The zero width non-joiner and joiner: ignorable, but ordinary spelling between two letters or
 // marks in several scripts, and allowed there and nowhere else.
@@ -53,9 +56,11 @@ const isLetterOrMark = (char: string | undefined): boolean =>
  * decimal digit (at most `MAX_MISS_DIGITS` in all), a space or one of `MISS_MARKS`, and at least
  * one letter or digit. A zero width non-joiner or joiner counts only between two letters or marks.
  * No `@` and no `:`, so no address and no link; no control, format, direction or other ignorable
- * character, so no row looks empty, reads backwards or is the twin of another; no bare combining
- * mark. The API keeps only what passes the same rule (`is_countable` in `api/search_misses.py`),
- * and `searchQuery.cases.json` holds the two together.
+ * character, so no row looks empty or reads backwards; no bare combining mark. A text has to show
+ * something, but a joiner inside a word can still make a row that looks like another in a script
+ * where it changes nothing that is seen; each such row is its own entry, which the owner can
+ * delete. The API keeps only what passes the same rule (`is_countable` in
+ * `api/search_misses.py`), and `searchQuery.cases.json` holds the two together.
  */
 export function isCountableMiss(query: string): boolean {
   const chars = Array.from(query);
