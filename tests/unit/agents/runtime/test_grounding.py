@@ -9,12 +9,16 @@ The fixtures generalise the live tests of 2026-10-14/15:
   saw only the columns.
 """
 
+import datetime
 import json
 import re
 import sys
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
+import matplotlib.dates as mdates
+import pandas as pd
 import pytest
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
@@ -777,6 +781,227 @@ class TestHarnessLabels:
         report = harness.probe(fig, 200)
 
         assert "labels" not in report and drawn_texts(report) is None
+
+
+class TestHarnessAxes:
+    def test_linear_x_and_y_report_their_limits_at_full_precision(self) -> None:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.plot([0.125, 10.875], [3.25, 105.32541])
+        ax.set_xlim(-1.12500001234567, 12.87500009876543)
+        ax.set_ylim(2.50000004567891, 105.3254100987654)
+
+        report = harness.probe(fig, 200)
+
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+        assert report["axes"] == [
+            {"x": {"scale": "linear", "min": x_min, "max": x_max}, "y": {"scale": "linear", "min": y_min, "max": y_max}}
+        ]
+
+    def test_a_log_axis_reports_log_scale_and_its_real_limits(self) -> None:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.plot([1.0, 10.0, 100.0], [2.0, 50.0, 2500.0])
+        ax.set_xscale("symlog")
+        ax.set_yscale("log")
+        ax.set_xlim(0.5, 150.0)
+        ax.set_ylim(1.5, 3000.0)
+
+        report = harness.probe(fig, 200)
+
+        assert report["axes"] == [
+            {"x": {"scale": "other", "min": 0.5, "max": 150.0}, "y": {"scale": "log", "min": 1.5, "max": 3000.0}}
+        ]
+
+    def test_a_date_axis_reports_date_scale_and_iso_strings(self) -> None:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        left, right = fig.subplots(1, 2)
+        dates = [datetime.datetime(2024, 1, 15, 8, 30), datetime.datetime(2024, 6, 20, 17, 45)]
+        left.plot(dates, [10.0, 20.0])
+        cast(Any, left).set_xlim(datetime.datetime(2024, 1, 1), datetime.datetime(2024, 7, 1))
+        left.set_ylim(5.0, 25.0)
+        right.plot(mdates.date2num(dates), [1.0, 2.0])
+        right.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+        right.set_xlim(
+            float(mdates.date2num(datetime.datetime(2024, 2, 1))), float(mdates.date2num(datetime.datetime(2024, 8, 1)))
+        )
+        right.set_ylim(0.0, 3.0)
+
+        report = harness.probe(fig, 200)
+
+        assert report["axes"] == [
+            {
+                "x": {"scale": "date", "min": "2024-01-01T00:00:00", "max": "2024-07-01T00:00:00"},
+                "y": {"scale": "linear", "min": 5.0, "max": 25.0},
+            },
+            {
+                "x": {"scale": "date", "min": "2024-02-01T00:00:00", "max": "2024-08-01T00:00:00"},
+                "y": {"scale": "linear", "min": 0.0, "max": 3.0},
+            },
+        ]
+
+    def test_a_categorical_x_axis_is_left_out_while_numeric_y_stays(self) -> None:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.bar(["Bern", "Zürich", "Genf"], [12.5, 48.0, 31.25])
+        ax.set_ylim(0.0, 55.0)
+
+        report = harness.probe(fig, 200)
+
+        assert report["axes"] == [{"y": {"scale": "linear", "min": 0.0, "max": 55.0}}]
+
+        both_categories = Figure(figsize=(16, 9))
+        FigureCanvasAgg(both_categories)
+        both_categories.subplots().scatter(["Bern", "Zürich"], ["Nord", "Süd"])
+        assert harness.probe(both_categories, 200)["axes"] == []
+
+    def test_an_inverted_axis_reports_min_below_max(self) -> None:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.plot([0.0, 10.0], [5.0, 95.0])
+        ax.set_xlim(10.0, 0.0)
+        ax.set_ylim(100.0, -5.0)
+
+        report = harness.probe(fig, 200)
+
+        assert report["axes"] == [
+            {"x": {"scale": "linear", "min": 0.0, "max": 10.0}, "y": {"scale": "linear", "min": -5.0, "max": 100.0}}
+        ]
+
+    def test_twin_y_axes_and_five_subplots_each_report_two_entries(self) -> None:
+        twin_fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(twin_fig)
+        primary = twin_fig.subplots()
+        primary.plot([0.0, 4.0], [10.0, 40.0])
+        primary.set_xlim(0.0, 4.0)
+        primary.set_ylim(0.0, 50.0)
+        secondary = primary.twinx()
+        secondary.plot([0.0, 4.0], [120.0, 480.0])
+        secondary.set_ylim(100.0, 500.0)
+
+        twin_report = harness.probe(twin_fig, 200)
+        assert twin_report["axes"] == [
+            {"x": {"scale": "linear", "min": 0.0, "max": 4.0}, "y": {"scale": "linear", "min": 0.0, "max": 50.0}},
+            {"x": {"scale": "linear", "min": 0.0, "max": 4.0}, "y": {"scale": "linear", "min": 100.0, "max": 500.0}},
+        ]
+
+        many_fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(many_fig)
+        subplots = many_fig.subplots(1, 5)
+        for index, subplot in enumerate(subplots, start=1):
+            subplot.plot([0.0, 1.0], [0.0, float(index * 10)])
+            subplot.set_xlim(0.0, 1.0)
+            subplot.set_ylim(0.0, float(index * 10))
+
+        many_report = harness.probe(many_fig, 200)
+        assert many_report["axes"] == [
+            {"x": {"scale": "linear", "min": 0.0, "max": 1.0}, "y": {"scale": "linear", "min": 0.0, "max": 10.0}},
+            {"x": {"scale": "linear", "min": 0.0, "max": 1.0}, "y": {"scale": "linear", "min": 0.0, "max": 20.0}},
+        ]
+
+    def test_colorbar_and_invisible_axes_are_skipped(self) -> None:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        hidden = fig.add_axes((0.0, 0.0, 0.1, 0.1))
+        hidden.set_visible(False)
+        first = fig.add_axes((0.1, 0.1, 0.35, 0.8))
+        mappable = first.scatter([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], c=[0.25, 0.5, 0.75])
+        first.set_xlim(0.0, 4.0)
+        first.set_ylim(3.0, 7.0)
+        fig.colorbar(mappable, ax=first)
+        second = fig.add_axes((0.6, 0.1, 0.35, 0.8))
+        second.plot([10.0, 20.0], [30.0, 40.0])
+        second.set_xlim(10.0, 20.0)
+        second.set_ylim(30.0, 40.0)
+
+        report = harness.probe(fig, 200)
+
+        assert report["axes"] == [
+            {"x": {"scale": "linear", "min": 0.0, "max": 4.0}, "y": {"scale": "linear", "min": 3.0, "max": 7.0}},
+            {"x": {"scale": "linear", "min": 10.0, "max": 20.0}, "y": {"scale": "linear", "min": 30.0, "max": 40.0}},
+        ]
+
+    def test_a_3d_axes_reports_z(self) -> None:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.add_subplot(projection="3d")
+        ax.plot([0.0, 2.0], [1.0, 4.0], [3.5, 10.5])
+        ax.set_xlim(0.0, 2.0)
+        ax.set_ylim(1.0, 4.0)
+        cast(Any, ax).set_zlim(3.5, 10.5)
+
+        report = harness.probe(fig, 200)
+
+        assert report["axes"] == [
+            {
+                "x": {"scale": "linear", "min": 0.0, "max": 2.0},
+                "y": {"scale": "linear", "min": 1.0, "max": 4.0},
+                "z": {"scale": "linear", "min": 3.5, "max": 10.5},
+            }
+        ]
+
+    def test_a_non_finite_limit_is_left_out_and_a_broken_axes_probe_leaves_the_key_out(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.plot([0.0, 1.0], [2.0, 5.0])
+        ax.set_ylim(2.0, 5.0)
+        monkeypatch.setattr(ax, "get_xlim", lambda: (0.0, float("inf")))
+
+        assert harness.probe(fig, 200)["axes"] == [{"y": {"scale": "linear", "min": 2.0, "max": 5.0}}]
+
+        def broken(*args: object) -> None:
+            raise RuntimeError("boom")
+
+        monkeypatch.setattr(harness, "drawn_axes", broken)
+        assert "axes" not in harness.probe(fig, 200)
+
+    def test_seaborn_reports_its_ranges_through_the_harness_probe(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sns = pytest.importorskip("seaborn")
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(Figure, "savefig", Figure.savefig)
+        harness.install_probe("light")
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        frame = pd.DataFrame({"x": [1.0, 2.0, 4.0], "y": [10.0, 25.0, 40.0]})
+        sns.scatterplot(data=frame, x="x", y="y", ax=ax)
+        fig.savefig(tmp_path / "plot-light.png", dpi=200)
+
+        report = json.loads((tmp_path / "probe-light.json").read_text(encoding="utf-8"))
+        assert len(report["axes"]) == 1
+        assert report["axes"][0]["x"]["scale"] == "linear" and report["axes"][0]["x"]["min"] <= 1.0
+        assert report["axes"][0]["x"]["max"] >= 4.0
+        assert report["axes"][0]["y"]["scale"] == "linear" and report["axes"][0]["y"]["min"] <= 10.0
+        assert report["axes"][0]["y"]["max"] >= 40.0
+
+    def test_plotnine_reports_its_ranges_through_the_harness_probe(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        p9 = pytest.importorskip("plotnine")
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(Figure, "savefig", Figure.savefig)
+        harness.install_probe("light")
+        frame = pd.DataFrame({"x": [1.0, 2.0, 4.0], "y": [10.0, 25.0, 40.0]})
+        chart = p9.ggplot(frame, p9.aes("x", "y")) + p9.geom_point()
+        chart.save(str(tmp_path / "plot-light.png"), dpi=200, verbose=False)
+
+        report = json.loads((tmp_path / "probe-light.json").read_text(encoding="utf-8"))
+        assert len(report["axes"]) == 1
+        assert report["axes"][0]["x"]["scale"] == "linear" and report["axes"][0]["x"]["min"] <= 1.0
+        assert report["axes"][0]["x"]["max"] >= 4.0
+        assert report["axes"][0]["y"]["scale"] == "linear" and report["axes"][0]["y"]["min"] <= 10.0
+        assert report["axes"][0]["y"]["max"] >= 40.0
 
 
 PYGAL_SVG = """<svg xmlns="http://www.w3.org/2000/svg" class="pygal-chart">

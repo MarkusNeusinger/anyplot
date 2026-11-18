@@ -38,8 +38,10 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    than `TEXT_OVERLAP_TOLERANCE_PX` (`text_overlaps`, the deepest pairs by role, and
    `text_overlaps_total`), annotations outside their axes, the
    number of drawn point marks (scatter offsets) and the number of vertices of the
-   visible `plot()` lines (`line_points`), and the content of the drawn texts by role
-   (`labels`, `drawn_labels`: what the root's closing reply is grounded in). Only rendered text counts: matplotlib keeps tick
+   visible `plot()` lines (`line_points`), the content of the drawn texts by role
+   (`labels`, `drawn_labels`: what the root's closing reply is grounded in), and the
+   measured axis ranges of the first `AXES_LIMIT` visible axes that are not a colorbar's
+   (`axes`, `drawn_axes`). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
    (`axis("off")`, a twin's), which report themselves visible but are never drawn,
    and an edge label one tick step past the view sat beyond the canvas in every
@@ -166,6 +168,7 @@ stdout, so the host reads them as hints (a retry decision, a memory figure), nev
 as a verdict.
 """
 
+import datetime
 import errno
 import functools
 import io
@@ -241,6 +244,7 @@ default forms of shared Han characters; JP is the TTC's first face, and the form
 POLAR_BIN_DEG = 5  # width of one angle bin of the plotted points in the probe's `polar` field
 POLAR_RINGS = 10  # radius bins: tenths of the visible radius range, centre to edge
 POLAR_AXES_LIMIT = 4  # polar axes the probe describes per figure
+AXES_LIMIT = 2  # visible non-colorbar axes whose ranges the probe's `axes` field reports
 DENSITY_AXES_LIMIT = 8  # axes the probe's `density` field describes per figure
 DENSITY_LABEL_LIMIT = 500  # data-anchored texts per axes matched against the marks
 DENSITY_MARK_LIMIT = 2_000  # bar ends and points per axes a text is matched against
@@ -1687,6 +1691,111 @@ def drawn_labels(figure, drawn, extents=None, canvas=None):
     return labels, truncated or len(entries) > LABEL_LIMIT
 
 
+def _converter(axis):
+    get_converter = getattr(axis, "get_converter", None)
+    return get_converter() if callable(get_converter) else getattr(axis, "converter", None)
+
+
+def _is_category_axis(axis):
+    """Whether an axis maps string categories to positions (`matplotlib.category.StrCategoryConverter`)."""
+    converter = _converter(axis)
+    return converter is not None and "category" in type(converter).__module__
+
+
+def _axis_scale(axis):
+    """One of `linear`, `log`, `date` or `other` for a non-categorical axis."""
+    converter = _converter(axis)
+    if converter is not None:
+        module = type(converter).__module__
+        if "dates" in module or type(converter).__name__ == "DatetimeConverter":
+            return "date"
+        return "other"
+    if "dates" in type(axis.get_major_formatter()).__module__ or "dates" in type(axis.get_major_locator()).__module__:
+        return "date"
+    scale = axis.get_scale()
+    return scale if scale in ("linear", "log") else "other"
+
+
+def _iso_date(axis, value):
+    """A matplotlib date number as an ISO 8601 string of at most 32 characters, or None when out of range."""
+    from matplotlib import dates as mdates
+
+    unit = getattr(axis, "units", None)
+    tz = unit if isinstance(unit, datetime.tzinfo) else None
+    if tz is None:
+        fmt_tz = getattr(axis.get_major_formatter(), "tz", None)
+        if isinstance(fmt_tz, datetime.tzinfo) and fmt_tz.utcoffset(
+            datetime.datetime(2020, 1, 1)
+        ) != datetime.timedelta(0):
+            tz = fmt_tz
+    try:
+        moment = mdates.num2date(value, tz=tz)
+    except ValueError, OverflowError:
+        return None
+    if tz is None:
+        moment = moment.replace(tzinfo=None)
+    text = moment.isoformat()
+    if len(text) > 32 and moment.tzinfo is not None:
+        text = moment.astimezone(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+    return text if 10 <= len(text) <= 32 and text[4:5] == "-" else None
+
+
+def _axis_range(axis, get_limits):
+    """One axis's `{"scale", "min", "max"}`, or None for a category axis or a limit that is not finite."""
+    if axis is None or _is_category_axis(axis):
+        return None
+    raw_low, raw_high = get_limits()
+    low, high = float(raw_low), float(raw_high)
+    if not (math.isfinite(low) and math.isfinite(high)):
+        return None
+    if low > high:
+        low, high = high, low
+    scale = _axis_scale(axis)
+    if scale == "date":
+        start, end = _iso_date(axis, low), _iso_date(axis, high)
+        if start is None or end is None:
+            return None
+        return {"scale": scale, "min": start, "max": end}
+    return {"scale": scale, "min": low, "max": high}
+
+
+def drawn_axes(figure):
+    """The measured axis ranges of the first `AXES_LIMIT` visible non-colorbar axes, in `figure.get_axes()` order.
+
+    Each entry holds `x`, `y` and, on a 3D axes, `z`, each with `scale` (`linear`, `log`,
+    `date`, `other`) and sorted `min` and `max` at full precision or as ISO 8601 strings.
+    A categorical axis (string category converter) or one with a non-finite limit is left
+    out of its entry, and an entry with no axis left is left out.
+    """
+    report = []
+    seen = 0
+    for axes in figure.get_axes():
+        try:
+            if not axes.get_visible() or getattr(axes, "_colorbar", None) is not None:
+                continue
+        except Exception:
+            continue
+        seen += 1
+        entry = {}
+        pairs = [("x", axes.xaxis, axes.get_xlim), ("y", axes.yaxis, axes.get_ylim)]
+        zaxis = getattr(axes, "zaxis", None)
+        get_zlim = getattr(axes, "get_zlim", None)
+        if zaxis is not None and callable(get_zlim):
+            pairs.append(("z", zaxis, get_zlim))
+        for name, axis, get_limits in pairs:
+            try:
+                measured = _axis_range(axis, get_limits)
+            except Exception:
+                continue
+            if measured is not None:
+                entry[name] = measured
+        if entry:
+            report.append(entry)
+        if seen >= AXES_LIMIT:
+            break
+    return report
+
+
 def _outside(box, width, height):
     """Whether a text box lies wholly outside the `width` x `height` canvas."""
     return box[2] <= 0 or box[3] <= 0 or box[0] >= width or box[1] >= height
@@ -1803,8 +1912,13 @@ def probe(figure, dpi):
         texts_part = {"labels": labels, "labels_truncated": truncated}
     except Exception:  # the texts are for the reply's grounding; they never break the probe
         texts_part = {}
+    try:
+        axes_part = {"axes": drawn_axes(figure)}
+    except Exception:  # the axis ranges are for the reply's grounding too; they never break the probe
+        axes_part = {}
     return {
         **texts_part,
+        **axes_part,
         "figsize": [float(width_in), float(height_in)],
         "dpi": float(dpi or figure.dpi),
         "canvas": [

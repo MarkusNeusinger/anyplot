@@ -136,6 +136,21 @@ class TestCleanProbe:
 
         assert wire.clean_probe(raw) == {"missing_glyphs": {"count": 3, "math": 1, "sample": [38144, 57344]}}
 
+    def test_an_axes_list_passes_clean_probe(self) -> None:
+        """The harness's `axes` ranges cross the wire unchanged."""
+        axes = {
+            "axes": [
+                {
+                    "x": {"scale": "date", "min": "2024-01-01T00:00:00", "max": "2024-12-31T23:59:59"},
+                    "y": {"scale": "log", "min": 0.125, "max": 1000.5},
+                    "z": {"scale": "linear", "min": -5.0, "max": 5.0},
+                }
+            ]
+        }
+        raw = b'{"axes": [{"x": {"scale": "date", "min": "2024-01-01T00:00:00", "max": "2024-12-31T23:59:59"}, "y": {"scale": "log", "min": 0.125, "max": 1000.5}, "z": {"scale": "linear", "min": -5.0, "max": 5.0}}]}'
+
+        assert wire.clean_probe(raw) == axes
+
     def test_the_depth_limit_counts_the_object_itself(self) -> None:
         nested = b'{"a": ' + b"[" * 15 + b"]" * 15 + b"}"
 
