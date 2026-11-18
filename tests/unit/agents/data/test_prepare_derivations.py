@@ -632,7 +632,8 @@ class TestAggregateSeveral:
             "2024-03,1400.7,401.1",
         ]
         assert prepared.changes == [
-            "took the last value (by time) of Bezug and Einspeisung by Datum (month, as text labels YYYY-MM): 3 rows"
+            "took the last value (by time) of Bezug and Einspeisung by Datum (month, as text labels YYYY-MM): 3 rows, "
+            "1 row without a value in Einspeisung left out"
         ]
 
     def test_two_date_keys_order_by_the_first_then_the_second_and_keep_ties_in_row_order(self) -> None:
