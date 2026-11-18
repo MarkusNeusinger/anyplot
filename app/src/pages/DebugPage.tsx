@@ -142,13 +142,20 @@ export function DebugPage() {
   }
 
   useEffect(() => {
+    // The answer can come after the page is gone or after a newer request replaced this one.
+    // Nothing is set from it then, and a failed request no longer reloads the page the admin
+    // has moved on to.
+    let cancelled = false;
     fetchWithAuth(`${DEBUG_API_URL}/debug/status`, adminToken)
       .then(async r => {
         // Reaching here means the fetch promise resolved (the response may
         // still be 401/403/503 — those are handled below). Clear the one-shot
         // reload guard so a future cross-origin CF Access redirect can
-        // re-trigger the bootstrap.
+        // re-trigger the bootstrap. Also for an answer nobody waits for any
+        // more: that a request got through is a fact about the access, not
+        // about this page.
         clearAccessReloadGuard();
+        if (cancelled) return null;
         // 403 is the Cloudflare Access JWT path's denial: a signed-in Google
         // account that isn't on the admin_allowed_emails allow-list. Surface
         // it on the auth-required screen with the server's message so the
@@ -169,8 +176,11 @@ export function DebugPage() {
         setAuthRequired(false);
         return r.json();
       })
-      .then(setData)
+      .then(status => {
+        if (!cancelled) setData(status);
+      })
       .catch(e => {
+        if (cancelled) return;
         // SPA-routed entry to /debug bypasses the Cloudflare Access page-
         // level intercept. The first API fetch then 302s cross-origin to
         // *.cloudflareaccess.com, which fetch can't follow without CORS,
@@ -182,7 +192,12 @@ export function DebugPage() {
         if (e instanceof TypeError && reloadOnceForAccess()) return;
         setError(e.message || 'failed to load');
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [adminToken, reloadCounter]);
 
   useEffect(() => {
