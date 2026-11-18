@@ -53,6 +53,8 @@ YEARS = "Year,Emissions\n2018,4.1\n2019,4.3\n2020,3.9\n2021,4.2\n2022,4.4\n"
 PRICES = "Hours,Price\n1,$5\n2,7\n3,$12\n"
 """`y` of `scatter-basic` open beside a text column of prices, which reads as numbers without a guess."""
 RANGES = "team;games;mean;min–max\nalpha;140;61.5;48–80\nbeta;146;67.2;52–77\ngamma;143;64.0;45–79\n"
+DAYS_WEST = "day,kWh\n2026-03-01-05:00,12\n2026-03-02-05:00,15\n2026-03-03-05:00,11\n"
+"""Days with a UTC offset west of UTC and no time: the table of owner decision F4."""
 MADE_HEADING = "- Conversions the server made for open roles before this turn:"
 
 
@@ -190,6 +192,30 @@ class TestMakeConversions:
 
         assert make_conversions(store, SID, view, view.snapshot) is None
         assert len(store) == 1  # the paste alone
+
+    @pytest.mark.parametrize("spec", ["line-timeseries-rolling", "line-basic"])
+    @pytest.mark.parametrize(
+        "text",
+        [
+            DAYS_WEST,
+            DAYS_WEST.replace("-05:00", "+01:00"),
+            DAYS_WEST.replace("-05:00", "Z"),
+            "hour,kWh\n2026-03-01-00,1\n2026-03-01-01,2\n2026-03-01-02,3\n2026-03-01-03,4\n",
+        ],
+    )
+    def test_days_with_a_utc_offset_are_never_read_as_dates_unasked(self, spec: str, text: str) -> None:
+        """The cells stay as written, and only a request reads their days: pandas read `-05:00` as 05:00 and the hour
+        labels `-00` to `-03` as one date four times, which rated the conversion certain. On `line-basic` the hour
+        labels, which no reading takes, leave `x` to the row numbers, as any text column does."""
+        store, view = pasted(text, spec)
+
+        made = make_conversions(store, SID, view, view.snapshot)
+
+        if made is None:
+            assert len(store) == 1  # the paste alone
+        else:
+            assert spec == "line-basic" and text.startswith("hour,")
+            assert made.record.operations == [{"op": "row_number", "name": "index"}]
 
     def test_a_full_store_makes_nothing(self, monkeypatch: pytest.MonkeyPatch) -> None:
         store, view = pasted(PRICES, "scatter-basic")
@@ -412,6 +438,27 @@ async def test_a_later_turn_never_makes_a_line_by_itself(client: httpx.AsyncClie
     assert read_session(await _session_state(client, sid)).dataset_version == 1
     seen = fake.calls[-1]["system"][-1]["text"]
     assert MADE_HEADING not in seen and "- Conversions for open roles: 1" in seen
+
+
+async def test_the_summary_turn_of_days_with_an_offset_proposes_the_conversion(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """The paste's first turn through the routes: no version is made, and the root sees the conversion as a question
+    with the dropped offsets named, not as made."""
+    script = default_script()
+    script["root"] = [{"text": "3 rows. Read the days of day as dates, without their UTC offset -05:00?"}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_spec(client, "line-timeseries-rolling")
+    await paste(client, sid, DAYS_WEST)
+
+    events = await say(client, sid, {"action": "summarize_data"})
+
+    assert events[-1][0] == "done" and "dataset" not in events[-1][1]
+    assert read_session(await _session_state(client, sid)).dataset_version == 1
+    [call] = fake.calls
+    seen = call["system"][-1]["text"]
+    assert MADE_HEADING not in seen and "- Conversions for open roles: 1" in seen
+    assert "uncertain: the reading guesses the days of 3 dates with a UTC offset as written, the offset dropped" in seen
 
 
 async def test_a_summary_action_on_summarized_data_makes_nothing(client: httpx.AsyncClient, swap_models) -> None:

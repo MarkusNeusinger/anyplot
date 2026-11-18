@@ -106,7 +106,8 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    of 2026-10-15).
 5. **Type each column**, see `_type_column`: dates (months too: `2025-01` and, since
    2026-11-01, `Nov 2026` in the eleven languages of `months.py`, each the first day of
-   its month), then booleans, integers, numbers (a minus written `−` or `–` before the
+   its month; a column of dates each followed directly by a UTC offset and no time,
+   `2026-03-01+01:00`, stays text as written with a note that names that shape), then booleans, integers, numbers (a minus written `−` or `–` before the
    number is a sign, counted in a note; also with unambiguous thousands groups:
    `7.184.003`, `1'234'567`, `1 234,5`, `1,234,567`, see `_as_grouped_numbers`; a column of `1,234` shapes reads
    as comma thousands beside a comma-grouped column, or in a currency column of a file
@@ -163,7 +164,7 @@ import unicodedata
 from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from itertools import pairwise, product
 from typing import Any, Literal
@@ -444,6 +445,21 @@ _ISO_STAMP = re.compile(
     r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:[.,]([0-9]{1,9}))?)?(Z|[+-][0-9]{2}(?::?[0-9]{2})?)?)?"
 )
 """An ISO date, or a timestamp with seconds, a fraction of up to nine digits and an offset (`_as_iso_stamps`)."""
+DATE_OFFSET = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})(Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])")
+"""An ISO date followed directly by a UTC offset and no time, in a form that is an offset only: `Z` or `±HH:MM`
+(`2026-03-01+01:00`, `2026-03-01-05:00`, `2026-03-01Z`); the date is group 1, the offset as written group 2. The
+parser keeps such a column as written, text with `OFFSET_DATES` (`_as_dates`); `set_type` reads each written day and
+counts the offsets it drops (`prepare._day_offsets`), and a condition takes it as the whole day (`prepare._moment`)."""
+DATE_SIGN_DIGITS = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}[+-][0-9][0-9:]*")
+"""An ISO date followed directly by a sign and digits, of any form. Unless it is a `DATE_OFFSET`, no reading takes it:
+`2026-03-01-03` and `2026-03-01+0100` are an hour label as much as an offset, and `2026-03-01-05:00:00` a time as much
+(pandas read each of them as a time of day, and Python's `fromisoformat` takes any character for the `T`)."""
+OFFSET_DATES = (
+    "kept as text: every cell is a date followed directly by a UTC offset, with no time "
+    "(YYYY-MM-DD±HH:MM or YYYY-MM-DDZ)"
+)
+"""The note of a column of `DATE_OFFSET` cells: no date column holds a day with an offset, so its cells stay as
+written, and only a request reads their days, since reading them drops the offsets."""
 
 YEAR_MONTH = re.compile(r"([0-9]{4})-([0-9]{2})")
 """A month as ISO 8601 writes it (`2025-01`), read as its first day (`_as_periods`)."""
@@ -3205,7 +3221,10 @@ def _type_column(column: _Column) -> None:
        warning when neither does. Written as `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM:SS`
        for the whole column when any cell has a time. Months, `YYYY-MM` or a month name
        with a four-digit year (`Nov 2026`, `Okt. 2026`), are the first day of each month,
-       with a note (`_as_periods`).
+       with a note (`_as_periods`). A column whose every cell is a date followed directly
+       by a UTC offset and no time (`2026-03-01+01:00`, `2026-03-01Z`, `DATE_OFFSET`) stays
+       text as written, with the note `OFFSET_DATES` (`_offset_days`): an offset belongs to a
+       time, and `set_type` reads the days on request.
     2. **boolean**: `true` / `false` in any letter case, written `True` / `False`.
     3. **integer**: ASCII digits with an optional sign within int64; a minus written as
        the minus sign `−` before the number is a sign too, with a note that counts the
@@ -3739,6 +3758,9 @@ def _offset_text(minutes: int | None) -> str:
 
 
 def _as_dates(column: _Column, present: list[str]) -> bool:
+    if _offset_days(present):
+        column.notes.append(OFFSET_DATES)
+        return False
     stamped = _as_iso_stamps(column, present)
     if stamped is not None:
         return stamped
@@ -3777,6 +3799,24 @@ def _as_dates(column: _Column, present: list[str]) -> bool:
     column.with_time = any(":" in cell for cell in present)
     column.dates = [parsed[cell] for cell in column.source if cell]
     column.cells = [_iso(parsed[cell], column.with_time) if cell else "" for cell in column.source]
+    return True
+
+
+def _offset_days(present: list[str]) -> bool:
+    """Whether every cell is a calendar date followed directly by a UTC offset and no time (`DATE_OFFSET`).
+
+    A date column holds a day without an offset or a moment with one: written as a date, the offset would be gone
+    without a word, and written as midnight at that offset, a time nobody wrote would stand in it. A column that mixes
+    the shape with plain dates stays text by the rule that a date column has one shape, without this note.
+    """
+    for cell in present:
+        match = DATE_OFFSET.fullmatch(cell)
+        if match is None:
+            return False
+        try:
+            date.fromisoformat(match.group(1))
+        except ValueError:
+            return False
     return True
 
 
