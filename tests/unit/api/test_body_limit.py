@@ -1,0 +1,497 @@
+"""The bound on request bodies: refused before they are read, or cut off while they stream.
+
+Two halves. The first holds `BodyLimitMiddleware` against small apps that record what reaches
+them, because "refused" is only worth something if the application never took the bytes. The
+second sends through the real `api.main` app, where the position in the middleware stack and the
+framework's own handling of a body that ends early decide what a client sees.
+
+What these tests can see is what the application is handed. Whether the server in front goes on
+taking bytes off the connection after the refusal is its own matter and not measured here.
+"""
+
+from __future__ import annotations
+
+import logging
+from collections.abc import AsyncIterator
+
+import httpx
+import pytest
+from fastapi.routing import APIRoute
+from starlette.applications import Starlette
+from starlette.requests import ClientDisconnect, Request
+from starlette.responses import JSONResponse, PlainTextResponse
+from starlette.routing import Route
+from starlette.types import Receive, Scope, Send
+
+from api.body_limit import (
+    DEFAULT_MAX_BODY_BYTES,
+    TOO_LARGE,
+    BodyCutMidAnswer,
+    BodyLimitMiddleware,
+    Bound,
+    ClientGoneFilter,
+)
+from api.main import app, fastapi_app
+from api.origin_gate import ORIGIN_SECRET_HEADER
+from api.routers.agent import MAX_REQUEST_BODY_BYTES
+from core.config import settings
+
+
+CAP = 100
+CHUNK = 16
+AGENT_PREFIXES = ("/agent", "/debug/agent")
+
+
+class Recorder:
+    """An app that reads the whole body and says how much it got."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+        self.read = 0
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        self.calls += 1
+        body = await Request(scope, receive).body()
+        self.read = len(body)
+        await JSONResponse({"read": len(body)})(scope, receive, send)
+
+
+class Pulls:
+    """A body that counts the chunks pulled from it, sent without a declared length."""
+
+    def __init__(self, chunks: int, size: int = CHUNK) -> None:
+        self.chunks = chunks
+        self.size = size
+        self.pulled = 0
+
+    async def __aiter__(self) -> AsyncIterator[bytes]:
+        for _ in range(self.chunks):
+            self.pulled += 1
+            yield b"a" * self.size
+
+
+class Wire:
+    """The two ends of one request, driven by hand: the messages a server would hand over, and
+    everything the application side sent back."""
+
+    def __init__(self, *bodies: bytes) -> None:
+        self.incoming = [
+            {"type": "http.request", "body": body, "more_body": index < len(bodies) - 1}
+            for index, body in enumerate(bodies)
+        ]
+        self.taken = 0
+        self.sent: list[dict] = []
+
+    async def receive(self) -> dict:
+        self.taken += 1
+        return self.incoming.pop(0)
+
+    async def send(self, message: dict) -> None:
+        self.sent.append(message)
+
+    @property
+    def starts(self) -> list[int]:
+        return [message["status"] for message in self.sent if message["type"] == "http.response.start"]
+
+
+def scope_of(path: str = "/x", headers: list[tuple[bytes, bytes]] | None = None) -> dict:
+    return {"type": "http", "method": "POST", "path": path, "headers": headers or []}
+
+
+def api_routes(routes) -> list[APIRoute]:
+    """Every route of the app, the ones of its included routers too.
+
+    The framework keeps an included router as one entry that holds the router; its routes carry
+    the router's own prefix in their path.
+    """
+    found: list[APIRoute] = []
+    for route in routes:
+        included = getattr(route, "original_router", None)
+        if included is not None:
+            found += api_routes(included.routes)
+        elif isinstance(route, APIRoute):
+            found.append(route)
+    return found
+
+
+def client_for(target) -> httpx.AsyncClient:
+    return httpx.AsyncClient(transport=httpx.ASGITransport(app=target), base_url="https://api.anyplot.ai")
+
+
+@pytest.fixture
+def recorder() -> Recorder:
+    return Recorder()
+
+
+@pytest.fixture
+def bounded(recorder: Recorder) -> BodyLimitMiddleware:
+    return BodyLimitMiddleware(
+        recorder,
+        default=CAP,
+        prefixes={"/wide": Bound(10 * CAP), "/wide/narrow": Bound(CAP // 2), "/coded": Bound(CAP, detail="own_code")},
+    )
+
+
+class TestTheMiddleware:
+    async def test_a_body_within_the_cap_reaches_the_app_whole(self, bounded, recorder) -> None:
+        async with client_for(bounded) as client:
+            answer = await client.post("/x", content=b"a" * CAP)
+        assert answer.status_code == 200
+        assert answer.json() == {"read": CAP}
+
+    async def test_a_declared_length_above_the_cap_is_refused_unread(self, bounded, recorder) -> None:
+        body = Pulls(chunks=50)
+        async with client_for(bounded) as client:
+            answer = await client.post("/x", content=body, headers={"Content-Length": str(50 * CHUNK)})
+        assert answer.status_code == 413
+        assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/x"}
+        assert answer.headers["cache-control"] == "private, no-store"
+        # Neither the app nor the body was touched.
+        assert recorder.calls == 0
+        assert body.pulled == 0
+
+    async def test_a_body_without_a_length_is_cut_off_at_the_cap(self, bounded, recorder) -> None:
+        body = Pulls(chunks=500)
+        async with client_for(bounded) as client:
+            answer = await client.post("/x", content=body)
+        assert answer.status_code == 413
+        assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/x"}
+        assert answer.headers["cache-control"] == "private, no-store"
+        # The application was handed what arrived up to the cap, not the body's end.
+        assert body.pulled <= CAP // CHUNK + 2
+        assert recorder.read == 0
+
+    async def test_the_refusal_is_the_one_answer_whatever_the_application_says_next(self) -> None:
+        """An application that answers for itself when its body ends early (a framework's parse
+        error, a mounted app's own error page) must not be heard: the refusal is already out."""
+
+        async def answers_anyway(scope: Scope, receive: Receive, send: Send) -> None:
+            while (await receive())["type"] == "http.request":
+                pass
+            await PlainTextResponse("my own error", status_code=400)(scope, receive, send)
+
+        wire = Wire(b"a" * CAP, b"a" * CAP, b"a" * CAP)
+        await BodyLimitMiddleware(answers_anyway, default=CAP)(scope_of(), wire.receive, wire.send)
+        assert wire.starts == [413]
+        # The second chunk passed the cap; the third was never taken.
+        assert wire.taken == 2
+
+    async def test_an_application_that_keeps_asking_gets_no_more_of_the_body(self) -> None:
+        """After the cut every further read is answered here: nothing more is taken for an
+        application that ignores the end it was told of."""
+        seen: list[str] = []
+
+        async def keeps_asking(scope: Scope, receive: Receive, send: Send) -> None:
+            for _ in range(6):
+                seen.append((await receive())["type"])
+
+        wire = Wire(*[b"a" * CAP] * 6)
+        await BodyLimitMiddleware(keeps_asking, default=CAP)(scope_of(), wire.receive, wire.send)
+        assert seen == ["http.request"] + ["http.disconnect"] * 5
+        assert wire.taken == 2
+        assert wire.starts == [413]
+
+    async def test_an_app_with_error_handling_of_its_own_gets_the_same_refusal(self) -> None:
+        """A whole app behind the bound, as the MCP server is mounted: its own handlers answer an
+        early end of the body in their own shape, and the client still gets this one."""
+
+        async def reads(request: Request) -> JSONResponse:
+            return JSONResponse({"read": len(await request.body())})
+
+        inner = Starlette(routes=[Route("/x", reads, methods=["POST"])])
+        async with client_for(BodyLimitMiddleware(inner, default=CAP)) as client:
+            answer = await client.post("/x", content=Pulls(chunks=500))
+        assert answer.status_code == 413
+        assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/x"}
+        assert answer.headers["cache-control"] == "private, no-store"
+
+    async def test_a_cut_after_the_answer_began_is_raised_and_the_rest_is_not_sent(self) -> None:
+        """An answer on its way cannot be replaced by a refusal. The rest of it is dropped, and
+        the failure leaves here as an error instead of passing in silence. What a client then
+        sees is up to the layers outside, which may end the short answer properly."""
+
+        async def answers_then_reads(scope: Scope, receive: Receive, send: Send) -> None:
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await send({"type": "http.response.body", "body": b"first half", "more_body": True})
+            while (await receive())["type"] == "http.request":
+                pass
+            await send({"type": "http.response.body", "body": b"second half", "more_body": False})
+
+        wire = Wire(b"a" * CAP, b"a" * CAP, b"a" * CAP)
+        with pytest.raises(BodyCutMidAnswer):
+            await BodyLimitMiddleware(answers_then_reads, default=CAP)(scope_of(), wire.receive, wire.send)
+        assert wire.starts == [200]
+        assert wire.taken == 2
+        # The half that went out stays the last word: the rest is not sent, and nothing ends it.
+        assert [message.get("body") for message in wire.sent[1:]] == [b"first half"]
+        assert wire.sent[-1]["more_body"] is True
+
+    async def test_an_error_before_the_cut_is_still_an_error(self) -> None:
+        async def broken(scope: Scope, receive: Receive, send: Send) -> None:
+            raise RuntimeError("a real fault")
+
+        wire = Wire(b"a")
+        with pytest.raises(RuntimeError, match="a real fault"):
+            await BodyLimitMiddleware(broken, default=CAP)(scope_of(), wire.receive, wire.send)
+
+    @pytest.mark.parametrize(
+        "lengths",
+        [
+            [b"lots"],
+            [b"-1"],
+            [b"1_0"],
+            [b""],
+            # Two that differ: a refusal that read only the first would let the second decide.
+            [b"0", b"100000"],
+            [b"100000", b"0"],
+        ],
+    )
+    async def test_a_length_nobody_can_go_by_is_a_bad_request(self, bounded, recorder, lengths) -> None:
+        wire = Wire(b"a")
+        await bounded(scope_of(headers=[(b"content-length", value) for value in lengths]), wire.receive, wire.send)
+        assert wire.starts == [400]
+        assert wire.taken == 0
+        assert recorder.calls == 0
+
+    @pytest.mark.parametrize("length", [b"18446744073709551616", b"9" * 5000])
+    async def test_a_length_of_any_number_of_digits_is_still_a_length(self, bounded, recorder, length) -> None:
+        """A number too long to read is not a malformed one: it is above every cap, so it gets
+        the refusal for a body that is too large (Python itself stops at a few thousand digits)."""
+        wire = Wire(b"a")
+        await bounded(scope_of(headers=[(b"content-length", length)]), wire.receive, wire.send)
+        assert wire.starts == [413]
+        assert wire.taken == 0
+        assert recorder.calls == 0
+
+    async def test_leading_zeros_do_not_make_a_length_longer(self, bounded, recorder) -> None:
+        wire = Wire(b"abc")
+        await bounded(scope_of(headers=[(b"content-length", b"0" * 40 + b"3")]), wire.receive, wire.send)
+        assert wire.starts == [200]
+        assert recorder.read == 3
+
+    async def test_a_body_no_application_reads_is_never_taken(self) -> None:
+        """What is bounded is what the application takes. A route that answers without reading
+        gets nothing counted and nothing refused, because nothing is pulled from the connection."""
+
+        async def answers_unread(scope: Scope, receive: Receive, send: Send) -> None:
+            await JSONResponse({"ok": True})(scope, receive, send)
+
+        wire = Wire(*[b"a" * CAP] * 6)
+        await BodyLimitMiddleware(answers_unread, default=CAP)(scope_of(), wire.receive, wire.send)
+        assert wire.starts == [200]
+        assert wire.taken == 0
+
+    async def test_the_same_length_stated_twice_is_one_length(self, bounded, recorder) -> None:
+        wire = Wire(b"abc")
+        headers = [(b"content-length", b"3"), (b"content-length", b"3")]
+        await bounded(scope_of(headers=headers), wire.receive, wire.send)
+        assert wire.starts == [200]
+        assert recorder.read == 3
+
+    @pytest.mark.parametrize("method", ["GET", "HEAD", "OPTIONS"])
+    async def test_a_method_no_route_reads_a_body_on_passes_untouched(self, bounded, recorder, method) -> None:
+        async with client_for(bounded) as client:
+            answer = await client.request(method, "/x", headers={"Content-Length": "0"})
+        assert answer.status_code == 200
+        assert recorder.calls == 1
+
+    def test_the_cap_of_a_path_is_that_of_its_longest_prefix(self, bounded) -> None:
+        assert bounded.bound_for("/x").max_bytes == CAP
+        assert bounded.bound_for("/wide").max_bytes == 10 * CAP
+        assert bounded.bound_for("/wide/open").max_bytes == 10 * CAP
+        assert bounded.bound_for("/wide/narrow/deep").max_bytes == CAP // 2
+        # A prefix ends at a path segment: a longer first segment is another path.
+        assert bounded.bound_for("/wider").max_bytes == CAP
+        assert bounded.bound_for("/x/wide").max_bytes == CAP
+
+    def test_a_prefix_written_with_a_trailing_slash_means_the_same(self, recorder) -> None:
+        slashed = BodyLimitMiddleware(recorder, default=CAP, prefixes={"/wide/": Bound(10 * CAP)})
+        assert slashed.bound_for("/wide").max_bytes == 10 * CAP
+        assert slashed.bound_for("/wide/open").max_bytes == 10 * CAP
+
+    async def test_a_prefix_takes_what_the_default_refuses(self, bounded, recorder) -> None:
+        async with client_for(bounded) as client:
+            narrow = await client.post("/x", content=b"a" * (CAP + 1))
+            wide = await client.post("/wide/open", content=b"a" * (CAP + 1))
+        assert narrow.status_code == 413
+        assert wide.status_code == 200
+
+    async def test_a_prefix_with_a_code_of_its_own_answers_in_that_shape(self, bounded, recorder) -> None:
+        """Declared or cut off while it streams, a body above the cap gets the one answer its
+        routes give themselves, so a client that reads their codes needs no second case."""
+        async with client_for(bounded) as client:
+            declared = await client.post(
+                "/coded/x", content=Pulls(chunks=50), headers={"Content-Length": str(50 * CHUNK)}
+            )
+            streamed = await client.post("/coded/x", content=Pulls(chunks=500))
+        for answer in (declared, streamed):
+            assert answer.status_code == 413
+            assert answer.json() == {"detail": "own_code"}
+            assert answer.headers["cache-control"] == "private, no-store"
+
+    async def test_the_refusal_names_the_path_as_the_client_knows_it(self, bounded) -> None:
+        """A crawler's request arrives under an internal prefix that no answer gives back."""
+        async with client_for(bounded) as client:
+            answer = await client.post(
+                "/seo-proxy/scatter-basic", content=Pulls(chunks=50), headers={"Content-Length": str(50 * CHUNK)}
+            )
+        assert answer.json()["path"] == "/scatter-basic"
+
+
+class TestTheApp:
+    """Through `api.main`: every body-taking path is bounded where the bytes arrive."""
+
+    async def test_a_public_form_is_refused_unread_above_the_default(self) -> None:
+        body = Pulls(chunks=8, size=DEFAULT_MAX_BODY_BYTES)
+        headers = {"Content-Type": "application/json", "Content-Length": str(8 * DEFAULT_MAX_BODY_BYTES)}
+        async with client_for(app) as client:
+            answer = await client.post("/feedback", content=body, headers=headers)
+        assert answer.status_code == 413
+        assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/feedback"}
+        assert body.pulled == 0
+
+    async def test_a_body_without_a_length_gets_the_413_and_is_not_taken_to_its_end(self) -> None:
+        """A route with a body model has its body read by the framework, which answers a body
+        that ends early with its own 400. The client has to get the 413, and the read has to stop."""
+        chunks = 64
+        body = Pulls(chunks=chunks, size=DEFAULT_MAX_BODY_BYTES // 4)
+        async with client_for(app) as client:
+            answer = await client.post("/feedback", content=body, headers={"Content-Type": "application/json"})
+        assert answer.status_code == 413
+        assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/feedback"}
+        assert answer.headers["cache-control"] == "private, no-store"
+        assert body.pulled <= 6
+        assert body.pulled < chunks
+
+    async def test_a_read_passes_whatever_length_it_declares(self) -> None:
+        """No route reads a body on a `GET`, so the bound has nothing to refuse there."""
+        async with client_for(app) as client:
+            answer = await client.request(
+                "GET", "/health", headers={"Content-Length": str(8 * DEFAULT_MAX_BODY_BYTES)}, content=Pulls(chunks=1)
+            )
+        assert answer.status_code == 200
+
+    async def test_a_browser_can_read_the_refusal(self) -> None:
+        headers = {"Content-Type": "application/json", "Origin": "https://anyplot.ai"}
+        declared = {**headers, "Content-Length": str(2 * DEFAULT_MAX_BODY_BYTES)}
+        async with client_for(app) as client:
+            unread = await client.post("/feedback", content=Pulls(chunks=1), headers=declared)
+            cut = await client.post("/feedback", content=Pulls(chunks=64, size=4096), headers=headers)
+        for answer in (unread, cut):
+            assert answer.status_code == 413
+            assert answer.headers["access-control-allow-origin"] == "https://anyplot.ai"
+
+    @pytest.mark.parametrize("path", ["/agent/session/dataset", "/debug/agent/sessions"])
+    async def test_the_agent_lanes_keep_their_cap_and_their_own_answer(self, path: str) -> None:
+        """Nothing a lane accepts today is refused, and a body above its cap is answered with the
+        code the chat page reads from those routes, whether it declares its length or not."""
+        json_body = {"Content-Type": "application/json"}
+        chunk = 256 * 1024
+        streamed_body = Pulls(chunks=4 * (MAX_REQUEST_BODY_BYTES // chunk), size=chunk)
+        async with client_for(app) as client:
+            # What the default would refuse still reaches the lane, which answers for itself.
+            within = await client.post(path, content=b"a" * (2 * DEFAULT_MAX_BODY_BYTES), headers=json_body)
+            declared = await client.post(
+                path, content=Pulls(chunks=1), headers={**json_body, "Content-Length": str(MAX_REQUEST_BODY_BYTES + 1)}
+            )
+            streamed = await client.post(path, content=streamed_body, headers=json_body)
+        assert within.status_code != 413
+        for above in (declared, streamed):
+            assert above.status_code == 413
+            assert above.json() == {"detail": "too_long"}
+        assert streamed_body.pulled <= MAX_REQUEST_BODY_BYTES // chunk + 2
+
+    async def test_the_mcp_server_is_bounded_like_any_other_path(self) -> None:
+        headers = {"Content-Type": "application/json", "Content-Length": str(2 * DEFAULT_MAX_BODY_BYTES)}
+        body = Pulls(chunks=1)
+        async with client_for(app) as client:
+            answer = await client.post("/mcp/", content=body, headers=headers)
+        assert answer.status_code == 413
+        assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/mcp/"}
+        assert body.pulled == 0
+
+    async def test_a_caller_past_the_edge_is_refused_before_a_length_is_looked_at(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(settings, "origin_secret", "the-edge-secret")
+        headers = {"Content-Type": "application/json", "Content-Length": str(2 * DEFAULT_MAX_BODY_BYTES)}
+        async with client_for(app) as client:
+            direct = await client.post("/feedback", content=Pulls(chunks=1), headers=headers)
+            through_the_edge = await client.post(
+                "/feedback", content=Pulls(chunks=1), headers={**headers, ORIGIN_SECRET_HEADER: "the-edge-secret"}
+            )
+        assert direct.status_code == 403
+        assert through_the_edge.status_code == 413
+
+
+class TestTheLog:
+    """A body the bound ended is not a fault of the service."""
+
+    def test_a_client_that_went_away_is_no_error_record(self) -> None:
+        logger = logging.getLogger("test.body_limit.filter")
+        logger.addFilter(ClientGoneFilter())
+        kept: list[logging.LogRecord] = []
+
+        class Keep(logging.Handler):
+            def emit(self, record: logging.LogRecord) -> None:
+                kept.append(record)
+
+        handler = Keep()
+        logger.addHandler(handler)
+        try:
+            for fault in (ClientDisconnect(), ValueError("a real fault")):
+                try:
+                    raise fault
+                except Exception:
+                    logger.exception("Error handling POST request")
+            logger.error("an error without an exception")
+        finally:
+            logger.removeHandler(handler)
+        assert [record.getMessage() for record in kept] == [
+            "Error handling POST request",
+            "an error without an exception",
+        ]
+        assert isinstance(kept[0].exc_info[1], ValueError)
+
+    def test_the_mcp_transport_has_the_filter(self) -> None:
+        filters = logging.getLogger("mcp.server.streamable_http").filters
+        assert any(isinstance(entry, ClientGoneFilter) for entry in filters)
+
+
+class TestTheTable:
+    """Which paths get which cap, held against the app's own routes."""
+
+    @staticmethod
+    def middleware() -> BodyLimitMiddleware:
+        (entry,) = [m for m in fastapi_app.user_middleware if m.cls is BodyLimitMiddleware]
+        return BodyLimitMiddleware(lambda scope, receive, send: None, *entry.args, **entry.kwargs)
+
+    def test_only_the_two_agent_lanes_have_a_cap_of_their_own(self) -> None:
+        table = dict(self.middleware().prefixes)
+        assert set(table) == set(AGENT_PREFIXES)
+        for bound in table.values():
+            assert (bound.max_bytes, bound.detail) == (MAX_REQUEST_BODY_BYTES, "too_long")
+        assert self.middleware().default == Bound(DEFAULT_MAX_BODY_BYTES)
+
+    def test_every_route_that_takes_a_body_has_the_cap_of_its_lane_or_the_default(self) -> None:
+        """A new router mounted under a wide prefix, or a wide prefix added for one route, would
+        change a line here: the large cap is for the agent lanes and nothing else."""
+        middleware = self.middleware()
+        with_a_body = [route for route in api_routes(fastapi_app.routes) if route.body_field]
+        assert with_a_body, "the app has routes with a body model"
+        wide = {
+            route.path for route in with_a_body if middleware.bound_for(route.path).max_bytes > DEFAULT_MAX_BODY_BYTES
+        }
+        in_a_lane = {
+            route.path for route in with_a_body if route.path.startswith(tuple(p + "/" for p in AGENT_PREFIXES))
+        }
+        assert wide == in_a_lane
+        assert any(path.startswith("/feedback") for path in {route.path for route in with_a_body} - wide)
+
+    def test_every_other_body_is_far_below_the_default(self) -> None:
+        """The default has to hold the largest body a route outside the agent lanes accepts: the
+        feedback form's fields at four bytes a character, with room for the JSON around them."""
+        from api.routers import feedback
+
+        largest = 4 * (feedback.MAX_MESSAGE_LENGTH + feedback.MAX_CONTACT_LENGTH) + 4096
+        assert largest < DEFAULT_MAX_BODY_BYTES
