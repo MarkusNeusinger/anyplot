@@ -1,5 +1,7 @@
 """Shared fixtures: a hermetic development environment, fake services and scripted agent models."""
 
+import inspect
+import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
@@ -17,6 +19,23 @@ from .fakes import FakeAnthropic, ScriptedLlm
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 CASES = REPO_ROOT / "agents" / "evals" / "fixtures" / "cases"
+
+_FRAME_HELPERS = (inspect.currentframe, logging.currentframe)
+"""The two standard-library helpers as they are when the tests are collected, before any test ran."""
+
+
+@pytest.fixture(autouse=True)
+def stdlib_frame_helpers() -> Iterator[None]:
+    """Put `inspect.currentframe` and `logging.currentframe` back after every test.
+
+    A harness step that runs in this process (`main_data`, `main_convert`, a plot run) replaces both with helpers
+    that answer None, and has no way back: in the sandbox the process ends with the step. In a test worker the
+    next test would inherit them, and a library that walks frames fails there: plotnine looks for the plot's
+    namespace that way and raises "call-stack is not that deep!". Which test meets it depends on the order the
+    workers happen to take, so it shows as a failure that comes and goes.
+    """
+    yield
+    inspect.currentframe, logging.currentframe = _FRAME_HELPERS
 
 
 @pytest.fixture(autouse=True)
