@@ -1,5 +1,5 @@
 import { fireEvent, render as rtlRender } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material/styles';
@@ -17,6 +17,12 @@ vi.mock('src/hooks', () => ({
   }),
 }));
 
+/** The about page's stand-in: the address the redirect lands on. */
+function Where() {
+  const { pathname, hash } = useLocation();
+  return <output data-testid="where">{`${pathname}${hash}`}</output>;
+}
+
 describe('LegalPage', () => {
   it('renders all section headings', () => {
     render(<LegalPage />);
@@ -26,7 +32,35 @@ describe('LegalPage', () => {
 
     expect(headingTexts).toContain('legal notice');
     expect(headingTexts).toContain('privacy policy');
-    expect(headingTexts).toContain('transparency');
+    // The stack, the source and the running costs moved to the about page (AboutPage.test.tsx).
+    expect(headingTexts).not.toContain('transparency');
+    expect(document.getElementById('transparency')).toBeNull();
+  });
+
+  it('keeps the legal notice to operator, contact and disclaimer', () => {
+    render(<LegalPage />);
+
+    // The photo and the other projects moved to the about page's "who built it".
+    expect(document.querySelector('img')).toBeNull();
+    expect(screen.queryByText('other projects')).not.toBeInTheDocument();
+    expect(screen.getByText('operator')).toBeInTheDocument();
+    expect(screen.getByText('contact')).toBeInTheDocument();
+    expect(screen.getByText('disclaimer')).toBeInTheDocument();
+  });
+
+  it('leads an in-app link to /legal#transparency on to the about page', async () => {
+    rtlRender(
+      <ThemeProvider theme={theme}>
+        <MemoryRouter initialEntries={['/legal#transparency']}>
+          <Routes>
+            <Route path="/legal" element={<LegalPage />} />
+            <Route path="/about" element={<Where />} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>
+    );
+
+    expect(await screen.findByTestId('where')).toHaveTextContent(/^\/about#transparency$/);
   });
 
   it('renders operator information', () => {
@@ -424,41 +458,6 @@ describe('LegalPage', () => {
     );
   });
 
-  it('renders the technology stack', () => {
-    render(<LegalPage />);
-
-    expect(screen.getByRole('link', { name: 'React' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /FastAPI/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /PostgreSQL/ })).toBeInTheDocument();
-    // Eight grouped rows, each label a row header.
-    for (const group of [
-      'site',
-      'api',
-      'catalogue pipeline',
-      'data assistant',
-      'google cloud',
-      'edge & analytics',
-      'reviews',
-      'editor, typography',
-    ]) {
-      expect(screen.getAllByRole('rowheader', { name: group }).length).toBeGreaterThan(0);
-    }
-    expect(
-      screen.getByRole('row', {
-        name: /^data assistant\s*Google ADK, Claude Haiku 5\.5 via Vertex AI \(EU\)/,
-      })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/15\s+plotting libraries in Python, R, Julia and JavaScript/)
-    ).toBeInTheDocument();
-    // Only the services the repository pins to europe-west4 carry the region.
-    expect(
-      screen.getByText(
-        /Cloud Build and Artifact Registry in the\s+Netherlands \(europe-west4\), plus Secret Manager and Cloud Monitoring/
-      )
-    ).toBeInTheDocument();
-  });
-
   // The chat links #assistant, the two tiles on /stats link #machine-readers and #shared-links.
   it.each(['assistant', 'machine-readers', 'shared-links'])(
     'opens a fresh load of /legal#%s at its place',
@@ -484,82 +483,13 @@ describe('LegalPage', () => {
     }
   );
 
-  // The repository vendors JetBrains Mono (agents/anyplot/render/fonts/) under
-  // the SIL OFL 1.1, so the MIT claim needs its qualifier and the font its own
-  // line — dropping either makes the page claim a licence the fonts do not have.
-  it('names JetBrains Mono and its own licence beside the MIT code', () => {
-    render(<LegalPage />);
-
-    expect(screen.getByRole('link', { name: 'JetBrains Mono' })).toHaveAttribute(
-      'href',
-      'https://github.com/JetBrains/JetBrainsMono'
-    );
-    expect(screen.getByRole('link', { name: 'SIL Open Font License 1.1' })).toHaveAttribute(
-      'href',
-      'https://openfontlicense.org'
-    );
-    expect(
-      screen.getByText(/the attribution strip under plots created from your own data/)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/bundled third-party fonts keep their own licences/)
-    ).toBeInTheDocument();
-  });
-
-  it('renders the running costs of one named month, with what they leave out', () => {
-    render(<LegalPage />);
-
-    expect(screen.getByText('monthly running costs (October 2026)')).toBeInTheDocument();
-    const costs: [string, string][] = [
-      ['hosting: Cloud Run \\(site, api, data assistant, renderer\\)', '~\\$10'],
-      ['database: Cloud SQL', '~\\$25'],
-      ['data assistant model: Claude Haiku via Vertex AI', '~\\$15'],
-      ['storage, logs and builds', '~\\$1'],
-      ['domain \\(\\.ai\\)', '~\\$8'],
-      ['total', '~\\$60/month'],
-    ];
-    for (const [item, cost] of costs) {
-      expect(
-        screen.getByRole('row', { name: new RegExp(`^${item}\\s*${cost}$`) })
-      ).toBeInTheDocument();
-    }
-    // Paid after discounts, so the note says which ones, and that the model cost moves with use.
-    expect(
-      screen.getByText(/after three-year commitments and promotional credits/)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/the assistant.s model cost\s+grows with use/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/development tools and subscriptions are not included/)
-    ).toBeInTheDocument();
-  });
-
-  it('renders other projects links without noreferrer', () => {
-    render(<LegalPage />);
-
-    const kurrentLink = screen.getByRole('link', { name: 'kurrentschrift.ink' });
-    expect(kurrentLink).toHaveAttribute('href', 'https://kurrentschrift.ink');
-    expect(kurrentLink).toHaveAttribute('target', '_blank');
-    expect(kurrentLink).toHaveAttribute('rel', 'noopener');
-
-    const citadelLink = screen.getByRole('link', { name: 'cite-citadel' });
-    expect(citadelLink).toHaveAttribute('href', 'https://github.com/MarkusNeusinger/cite-citadel');
-    expect(citadelLink).toHaveAttribute('target', '_blank');
-    expect(citadelLink).toHaveAttribute('rel', 'noopener');
-  });
-
   it('sends no event for an outbound link: the tracker script counts those itself', () => {
     const plausible = vi.fn();
     vi.stubGlobal('plausible', plausible);
     try {
       render(<LegalPage />);
 
-      for (const name of [
-        'kurrentschrift.ink',
-        'cite-citadel',
-        'markus-neusinger',
-        '@MarkusNeusinger',
-        'MarkusNeusinger',
-      ]) {
+      for (const name of ['markus-neusinger', '@MarkusNeusinger', 'MarkusNeusinger']) {
         const link = screen.getByRole('link', { name });
         expect(link).toHaveAttribute('href', expect.stringMatching(/^https:\/\//));
         fireEvent.click(link);

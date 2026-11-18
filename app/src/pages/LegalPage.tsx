@@ -1,75 +1,17 @@
-import { type ReactNode, useEffect } from 'react';
+import type { ReactNode } from 'react';
 
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Navigate, Link as RouterLink, useLocation } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 
+import { FactTable } from 'src/components/FactTable';
 import { SectionHeader } from 'src/components/SectionHeader';
-import { GITHUB_URL } from 'src/constants';
+import { ANCHOR_SX, useHashScroll } from 'src/hooks/useHashScroll';
 import { paths } from 'src/routes/paths';
-import {
-  fontSize,
-  proseLinkStyle,
-  semanticColors,
-  subheadingStyle,
-  tableStyle,
-  textStyle,
-} from 'src/theme';
-
-const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp';
-
-/** Where a linked section lands: below the sticky masthead (42 to 44 px), with a little air. */
-const ANCHOR_SX = { scrollMarginTop: '56px' } as const;
-
-/** An external link in the page's prose style, opened in a new tab. */
-function Ext({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Link href={href} target="_blank" rel="noopener" sx={proseLinkStyle}>
-      {children}
-    </Link>
-  );
-}
-
-/** A two-column fact table: a short label as the row header, then the fact. */
-function FactTable({
-  rows,
-  labelWidth = '25%',
-}: {
-  rows: [string, ReactNode][];
-  labelWidth?: string;
-}) {
-  return (
-    <Table
-      sx={{
-        ...tableStyle,
-        '& .MuiTableCell-body': { verticalAlign: 'top' },
-        // :first-child, not :first-of-type: the label is a <th>, so the value <td> is a first of its type too.
-        '& .MuiTableCell-root:first-child': {
-          fontWeight: 500,
-          color: 'var(--ink-soft)',
-          width: labelWidth,
-        },
-      }}
-    >
-      <TableBody>
-        {rows.map(([label, fact]) => (
-          <TableRow key={label}>
-            <TableCell component="th" scope="row">
-              {label}
-            </TableCell>
-            <TableCell>{fact}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
+import { MOVED_TO_ABOUT } from 'src/routes/redirects';
+import { fontSize, proseLinkStyle, semanticColors, subheadingStyle, textStyle } from 'src/theme';
 
 /** 13 px, the smallest size this page allows at phone width: `fontSize.sm` (12.8 px) is under it. */
 const KEPT_FONT_SIZE = '0.8125rem';
@@ -129,13 +71,13 @@ function GoogleCloud({ services }: { services?: string }) {
 export function LegalPage() {
   const { hash } = useLocation();
 
-  // The route loads lazily, after the browser has looked for the fragment and not found it, so a
-  // fresh load of /legal#assistant (the chat's notice opens one in a new tab) would stay at the top.
-  // Scroll to it once the page is there; ANCHOR_SX keeps it clear of the sticky masthead.
-  useEffect(() => {
-    if (!hash) return;
-    document.getElementById(hash.slice(1))?.scrollIntoView?.();
-  }, [hash]);
+  // A fresh load of /legal#assistant (the chat's notice opens one in a new tab) lands on its section.
+  useHashScroll();
+
+  // The route's loader sends a fresh load of /legal#transparency on; an in-app link lands here.
+  if (hash === MOVED_TO_ABOUT) {
+    return <Navigate to={`${paths.about}${MOVED_TO_ABOUT}`} replace />;
+  }
 
   const operatorContactBlock = (
     <>
@@ -186,29 +128,6 @@ export function LegalPage() {
     </>
   );
 
-  const otherProjectsBlock = (
-    <>
-      <Typography sx={subheadingStyle}>other projects</Typography>
-      <Typography sx={textStyle}>
-        {/* no noreferrer — own sites, keep the referrer for their analytics */}
-        <Link href="https://kurrentschrift.ink" target="_blank" rel="noopener" sx={proseLinkStyle}>
-          kurrentschrift.ink
-        </Link>{' '}
-        — read and write old german cursive
-        <br />
-        <Link
-          href="https://github.com/MarkusNeusinger/cite-citadel"
-          target="_blank"
-          rel="noopener"
-          sx={proseLinkStyle}
-        >
-          cite-citadel
-        </Link>{' '}
-        — llm-maintained, fully-cited personal wiki
-      </Typography>
-    </>
-  );
-
   const disclaimerBlock = (
     <>
       <Typography sx={subheadingStyle}>disclaimer</Typography>
@@ -228,15 +147,9 @@ export function LegalPage() {
     <>
       <>
         <title>legal | anyplot.ai</title>
-        <meta
-          name="description"
-          content="legal notice, privacy policy, and transparency information for anyplot.ai"
-        />
+        <meta name="description" content="legal notice and privacy policy for anyplot.ai" />
         <meta property="og:title" content="legal | anyplot.ai" />
-        <meta
-          property="og:description"
-          content="legal notice, privacy policy, and transparency information"
-        />
+        <meta property="og:description" content="legal notice and privacy policy" />
         <link rel="canonical" href="https://anyplot.ai/legal" />
       </>
 
@@ -246,29 +159,8 @@ export function LegalPage() {
           <SectionHeader prompt="❯" title={<em>legal notice</em>} />
 
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 6,
-                alignItems: 'center',
-                flexDirection: { xs: 'column', sm: 'row' },
-                mb: 2,
-              }}
-            >
-              <Box
-                component="img"
-                src={AVATAR_URL}
-                alt=""
-                aria-hidden="true"
-                width={240}
-                height={518}
-                loading="lazy"
-                sx={{ width: 120, height: 'auto', flexShrink: 0, display: 'block' }}
-              />
-              <Box sx={{ flex: 1, minWidth: 0 }}>{operatorContactBlock}</Box>
-            </Box>
+            {operatorContactBlock}
             {disclaimerBlock}
-            {otherProjectsBlock}
           </Box>
         </Box>
 
@@ -504,123 +396,6 @@ export function LegalPage() {
               one by one: they expire after 30 days (server logs) or 180 days (machine reads,
               assistant telemetry). the database&apos;s automatic backups keep a deleted entry for
               about 30 days.
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Transparency */}
-        <Box component="section" id="transparency" sx={{ py: { xs: 2, md: 3 }, ...ANCHOR_SX }}>
-          <SectionHeader prompt="❯" title={<em>transparency</em>} />
-
-          <Box sx={{ maxWidth: 760, mx: 'auto' }}>
-            <Typography sx={textStyle}>open source, down to what it costs to run.</Typography>
-
-            <Typography sx={subheadingStyle}>technology stack</Typography>
-            <FactTable
-              rows={[
-                [
-                  'site',
-                  <>
-                    <Ext href="https://react.dev">React</Ext> 19,{' '}
-                    <Ext href="https://vite.dev">Vite</Ext>, <Ext href="https://mui.com">MUI</Ext> 9
-                    with <Ext href="https://mui.com/x/">MUI X</Ext>,{' '}
-                    <Ext href="https://typescriptlang.org">TypeScript</Ext>
-                  </>,
-                ],
-                [
-                  'api',
-                  <>
-                    <Ext href="https://python.org">Python</Ext> 3.14,{' '}
-                    <Ext href="https://fastapi.tiangolo.com">FastAPI</Ext>,{' '}
-                    <Ext href="https://sqlalchemy.org">SQLAlchemy</Ext>,{' '}
-                    <Ext href="https://postgresql.org">PostgreSQL</Ext> 18
-                  </>,
-                ],
-                [
-                  'catalogue pipeline',
-                  <>
-                    <Ext href="https://github.com/features/actions">GitHub Actions</Ext> with Claude
-                    (<Ext href="https://www.anthropic.com/claude-code">Claude Code</Ext>); 15
-                    plotting libraries in Python, R, Julia and JavaScript
-                  </>,
-                ],
-                [
-                  'data assistant',
-                  <>
-                    <Ext href="https://google.github.io/adk-docs/">Google ADK</Ext>,{' '}
-                    <Ext href="https://www.anthropic.com/claude/haiku">Claude Haiku 5.5</Ext> via{' '}
-                    <Ext href="https://cloud.google.com/vertex-ai">Vertex AI</Ext> (EU), plots
-                    rendered in Cloud Run sandboxes (<Ext href="https://gvisor.dev">gVisor</Ext>)
-                  </>,
-                ],
-                [
-                  'google cloud',
-                  <>
-                    <Ext href="https://cloud.google.com/run">Cloud Run</Ext>, Cloud SQL, Cloud
-                    Storage, Cloud Logging, BigQuery, Cloud Build and Artifact Registry in the
-                    Netherlands (europe-west4), plus Secret Manager and Cloud Monitoring
-                  </>,
-                ],
-                [
-                  'edge & analytics',
-                  <>
-                    <Ext href="https://cloudflare.com">Cloudflare</Ext>,{' '}
-                    <Ext href="https://plausible.io">Plausible</Ext> (no cookies,{' '}
-                    <Ext href="https://plausible.io/anyplot.ai">public dashboard</Ext>)
-                  </>,
-                ],
-                [
-                  'reviews',
-                  <>
-                    <Ext href="https://deepmind.google/technologies/gemini/">Gemini</Ext> via Vertex
-                    AI for second opinions,{' '}
-                    <Ext href="https://github.com/features/copilot">GitHub Copilot</Ext> for pull
-                    requests
-                  </>,
-                ],
-                [
-                  'editor, typography',
-                  <>
-                    <Ext href="https://www.jetbrains.com/pycharm/">JetBrains PyCharm</Ext>;{' '}
-                    <Ext href="https://www.monolisa.dev/">MonoLisa</Ext> by Marcus Sterz;{' '}
-                    <Ext href="https://github.com/JetBrains/JetBrainsMono">JetBrains Mono</Ext>{' '}
-                    2.304 (<Ext href="https://openfontlicense.org">SIL Open Font License 1.1</Ext>)
-                    for the attribution strip under plots created from your own data
-                  </>,
-                ],
-              ]}
-            />
-
-            <Typography sx={subheadingStyle}>source code</Typography>
-            <Typography sx={textStyle}>
-              the entire codebase is publicly available under the MIT License:
-              <br />
-              <Link href={GITHUB_URL} target="_blank" rel="noopener" sx={proseLinkStyle}>
-                github.com/MarkusNeusinger/anyplot
-              </Link>
-              <br />
-              bundled third-party fonts keep their own licences — JetBrains Mono is under the SIL
-              Open Font License 1.1.
-            </Typography>
-
-            <Typography sx={subheadingStyle}>monthly running costs (October 2026)</Typography>
-            <FactTable
-              labelWidth="75%"
-              rows={[
-                ['hosting: Cloud Run (site, api, data assistant, renderer)', '~$10'],
-                ['database: Cloud SQL', '~$25'],
-                ['data assistant model: Claude Haiku via Vertex AI', '~$15'],
-                ['storage, logs and builds', '~$1'],
-                ['domain (.ai)', '~$8'],
-                ['total', <strong key="total">~$60/month</strong>],
-              ]}
-            />
-            <Typography
-              sx={{ ...textStyle, fontSize: fontSize.sm, color: semanticColors.mutedText, mt: 1 }}
-            >
-              after three-year commitments and promotional credits; the assistant&apos;s model cost
-              grows with use. development tools and subscriptions are not included. all costs are
-              covered privately.
             </Typography>
           </Box>
         </Box>

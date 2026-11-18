@@ -203,8 +203,8 @@ counts as a boundary because OR-filtered gallery views record
 | `/specs` | Specs page (alphabetical spec list) |
 | `/libraries` | Libraries listing |
 | `/palette` | Color palette reference |
-| `/about` | About page |
-| `/legal` | Legal notice, privacy policy, transparency |
+| `/about` | About page: what anyplot is, who built it and how, the pipeline, and the stack and running costs (`#transparency`) |
+| `/legal` | Legal notice and privacy policy. A fresh load of `/legal#transparency`, where the stack and costs used to be, redirects in the route's loader to `/about#transparency` and records only the `/about` pageview |
 | `/mcp` | MCP server documentation (AI assistant integration) |
 | `/stats` | Platform statistics (library scores, coverage, tags, top implementations) |
 | `/map` | Network map of specs clustered by visual similarity |
@@ -401,6 +401,7 @@ carry `spec` and `library`.
 
 | `source` | Element | Leads to |
 |----------|---------|----------|
+| `hero_about` | The builder's name in the eyebrow above the hero's headline, `by Markus Neusinger` (`HeroSection.tsx`) | `/about` |
 | `hero_cta_browse`, `hero_mcp`, `hero_github` | The hero's call to action and its two secondary links (`HeroSection.tsx`) | `/plots`, `/mcp`, GitHub |
 | `hero_use_my_data` | `.use_my_data() →` over `an ai agent adapts a catalogue plot to your data` below the hero's call to action, shown while the agent chat's public lane is open. Until 2026-11-16 it was the line `# new: pick any plot, then .use_my_data() →`, which led to `/plots` | `/agent`, the chat's explainer without a plot |
 | `potd_terminal_image`, `potd_terminal_filename`, `potd_terminal_github` | The plot of the day in its terminal frame (`PlotOfTheDayTerminal.tsx`), with `spec` and `library` | The plot's page, GitHub |
