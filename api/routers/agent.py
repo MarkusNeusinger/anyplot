@@ -1055,7 +1055,13 @@ async def _read_capped(response: httpx.Response, max_bytes: int) -> bytes | None
 
 
 async def _fetch_bundle(
-    client: httpx.AsyncClient, ctx: AgentContext, sid: str, *, version: int | None, include_data: bool
+    client: httpx.AsyncClient,
+    ctx: AgentContext,
+    sid: str,
+    *,
+    version: int | None,
+    include_data: bool,
+    with_case_key: bool = False,
 ) -> bytes:
     """The agents service's bundle of the session (`GET /v1/sessions/{sid}/bundle`), read whole.
 
@@ -1063,12 +1069,15 @@ async def _fetch_bundle(
     route: an upstream error keeps its status and code (`404 session_expired` for
     another user's session, `404 not_found` for a version the session lacks),
     `502 upstream` when the service cannot be reached, and `502 too_large` above
-    `MAX_BUNDLE_BYTES`.
+    `MAX_BUNDLE_BYTES`. `with_case_key` asks for `session.case_key`, which only a stored
+    feedback case needs: a saved session never carries it.
     """
     path = f"/sessions/{sid}/bundle"
     params: dict[str, str | int] = {"include_data": "true" if include_data else "false"}
     if version is not None:
         params["version"] = version
+    if with_case_key:
+        params["with_case_key"] = "true"
     try:
         response = await _open_stream(client, ctx, "GET", path, params=params)
         try:
@@ -1800,7 +1809,9 @@ async def submit_feedback(
     shape is `502 upstream`, and a failed upload is `502 storage`, which leaves no
     manifest: files without one are an aborted case, never a case.
     """
-    content = await _fetch_bundle(client, ctx, sid, version=body.result_version, include_data=body.include_data)
+    content = await _fetch_bundle(
+        client, ctx, sid, version=body.result_version, include_data=body.include_data, with_case_key=True
+    )
     created_at = datetime.now(UTC)
     submission = Submission(
         reaction=body.reaction,

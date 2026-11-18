@@ -31,7 +31,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=&theme=` | | the file; `plot.html` (a JavaScript version only) is the self-contained interactive page in `theme` (default: the version's), built on demand and answered as an attachment | `404`; for `plot.html` also `409 run_active`, `503 capacity`, `503 page_unavailable` (a renderer without `POST /page`), `500 page_failed` |
-| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); `session.versions` (how many versions the session holds) and `session.last_run` (`schemas.LastRun`: how the latest plot run ended, content-free) in every form, and `turns` (`{records, dropped}`: the record of each of the session's latest turns, its root tool calls and guard verdicts as closed codes, `anyplot/turn_record.py`) in every form too; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
+| `GET /v1/sessions/{sid}/bundle?version=&include_data=&with_case_key=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); with `with_case_key`, `session.case_key`, the salted key a stored feedback case records for the session, which a saved session never carries; `session.versions` (how many versions the session holds) and `session.last_run` (`schemas.LastRun`: how the latest plot run ended, content-free) in every form, and `turns` (`{records, dropped}`: the record of each of the session's latest turns, its root tool calls and guard verdicts as closed codes, `anyplot/turn_record.py`) in every form too; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
 
 Every `/v1` route needs `X-Anyplot-User` (the BFF's opaque user id); sessions are
@@ -249,6 +249,7 @@ from agents.anyplot.plugins.ledger import (
     anonymous_user,
     attribution,
     budget_allows,
+    case_key,
     day_refusal,
     judge_budget_tokens,
     network_key,
@@ -3080,8 +3081,14 @@ async def bundle(
     runtime: RuntimeDep,
     version: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
     include_data: bool = False,
+    with_case_key: bool = False,
 ) -> JSONResponse:
     """The feedback case: transcript, code versions, plans, results, profile, bindings, PNGs, config.
+
+    `with_case_key` adds `session.case_key`, what a stored feedback case records for the session instead of its id
+    (`ledger.case_key`). Only the feedback route asks for it. Left out by default, the key stays out of a session a
+    user saves to a file, and out of the case an API from before the field would store: that API keeps the bundle's
+    `session` whole beside its own plain hash of the session id, which would tie the two together.
 
     Without `version` every version; with a number above 0 that version only (`404 not_found`
     when the session lacks it); with `version=0` the conversation alone, the feedback on a chat
@@ -3179,6 +3186,8 @@ async def bundle(
             "prompt_hashes": _prompt_hashes(),
         },
     }
+    if with_case_key:
+        payload["session"]["case_key"] = case_key(sid)
     copied_from = session.state.get(DATASET_COPIED_FROM)
     if isinstance(copied_from, int):
         # A fan-out session's data is a copy of the page session's version of this number (`/dataset/copy`).

@@ -2118,6 +2118,10 @@ TURNS = {
 """The bundle's turn record: the page's plot action, whose reply lost its confirm sentence."""
 
 
+CASE_KEY = "0f1e2d3c4b5a6978"
+"""The key the agents service made for the session (`session.case_key`), which a case records as its `session_hash`."""
+
+
 def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "dark"), data_csv: str | None = None):
     """The agents service's bundle of one version, as `?version=<number>` answers it."""
     pngs = {"light": PNG_LIGHT, "dark": PNG_DARK}
@@ -2128,6 +2132,7 @@ def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "da
             "locale": "de-CH",
             "versions": number,
             "last_run": {"status": "needs_attention", "reason": None, "version": number, "turn": 2, "rounds": ROUNDS},
+            "case_key": CASE_KEY,
         },
         "snapshot": {"spec_id": "scatter-basic", "library_version": "3.10.0"},
         "transcript": [
@@ -2205,7 +2210,8 @@ class TestFeedback:
         assert response.headers["X-Request-Id"] == upstream.requests[0].headers["X-Request-Id"]
         sent = upstream.requests[0]
         assert (sent.method, sent.url.path) == ("GET", f"/v1/sessions/{self.SID}/bundle")
-        assert dict(sent.url.params) == {"include_data": "true", "version": "3"}
+        # Only the feedback route asks for the session's case key; a saved session never carries it (`TestBundle`).
+        assert dict(sent.url.params) == {"include_data": "true", "version": "3", "with_case_key": "true"}
         assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
         assert [name for name, _, _ in cases.uploads] == [f"cases/{case_id}/{name}" for name in stored]
         assert [content_type for _, _, content_type in cases.uploads] == [
@@ -2234,7 +2240,7 @@ class TestFeedback:
             "id": case_id,
             "case_uri": f"gs://anyplot-agent-cases/cases/{case_id}/",
             "user_hash": derive_user_id(KEY.encode(), ADMIN),
-            "session_hash": hashlib.sha256(self.SID.encode()).hexdigest()[:16],
+            "session_hash": CASE_KEY,
             "spec_id": "scatter-basic",
             "library_id": "matplotlib",
             "language": "de-CH",
@@ -2257,6 +2263,8 @@ class TestFeedback:
         expected = _feedback_bundle(3)
         for version in expected["versions"]:
             del version["images"], version["data_csv"]
+        # The case key stands once in the manifest, as its `session_hash`, and not again in the kept bundle.
+        del expected["session"]["case_key"]
         assert bundle == expected
         # The session id itself is nowhere in the case.
         assert self.SID not in cases.get("manifest.json").decode()
@@ -2269,7 +2277,11 @@ class TestFeedback:
         response = self.post(client, result_version=0)
 
         assert response.status_code == 201, response.text
-        assert dict(upstream.requests[0].url.params) == {"include_data": "true", "version": "0"}
+        assert dict(upstream.requests[0].url.params) == {
+            "include_data": "true",
+            "version": "0",
+            "with_case_key": "true",
+        }
         assert response.json()["stored"] == ["data.csv", "manifest.json"]
         manifest = json.loads(cases.get("manifest.json"))
         assert (manifest["result_version"], manifest["pipeline_status"], manifest["files"]) == (
@@ -2297,7 +2309,11 @@ class TestFeedback:
         response = self.post(client, include_data=False)
 
         assert response.status_code == 201
-        assert dict(upstream.requests[0].url.params) == {"include_data": "false", "version": "3"}
+        assert dict(upstream.requests[0].url.params) == {
+            "include_data": "false",
+            "version": "3",
+            "with_case_key": "true",
+        }
         assert response.json()["stored"] == ["plot-light.png", "plot-dark.png", "plot.py", "manifest.json"]
         assert "data.csv" not in cases.names
         manifest = json.loads(cases.get("manifest.json"))
