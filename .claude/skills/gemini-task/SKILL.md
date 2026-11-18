@@ -7,8 +7,8 @@ description: Hand a credential-free coding task worth an hour or more, up to a l
 
 The owner runs Gemini 4 Carbon interactively in the Antigravity CLI (`agy`) in
 this repository. He picks the model there with `/model`, and the choice stays
-across sessions; it was Gemini 4 Argon until 2026-11-18. That is the ordinary,
-intended use of his account. He decides
+across sessions. Gemini 4 Argon ran the lane's tasks before #13175, the first
+on Carbon. That is the ordinary, intended use of his account. He decides
 how much Gemini may run without asking; for a long task he lets it run the
 tests and builds unattended (owner, 2026-10-22: he trusts it to keep to the
 rules as he trusts Claude). Work flows in three steps:
