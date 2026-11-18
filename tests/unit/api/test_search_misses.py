@@ -23,6 +23,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.exc import ProgrammingError
 
 from api import search_misses
+from api.body_limit import TOO_LARGE
 from api.main import app, fastapi_app
 from api.request_context import network_of
 from api.routers.debug import require_admin
@@ -567,7 +568,8 @@ class TestBodyCap:
         declared, _ = await _call_raw("POST", "/search/miss", {**self.JSON, "content-length": "5000"}, [b"{"])
 
         assert answer.status_code == 413
-        assert answer.json() == {"status": 413, "message": "Request body too large", "path": "/search/miss"}
+        # The same words as the general bound in front of the router: one refusal, whoever sends it.
+        assert answer.json() == {"status": 413, "message": TOO_LARGE, "path": "/search/miss"}
         assert answer.headers["cache-control"] == "private, no-store"
         assert declared == 413
         counted.assert_not_called()

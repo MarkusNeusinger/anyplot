@@ -8,6 +8,10 @@ import secrets
 from fastapi import HTTPException, Request
 from starlette.requests import ClientDisconnect
 
+# One wording for a body refused for its size, whichever bound refuses it: the general one in
+# front of the router or a route's own narrower one. It says nothing about what the body held.
+from api.body_limit import TOO_LARGE
+
 
 IP_HASH_PREFIX = "hmac:"
 """Marks a salted key (`hash_ip`). The feedback table keeps it in `ip_hash` for its windows; the unsalted
@@ -65,9 +69,6 @@ def network_of(ip: str) -> str:
         return str(ipaddress.IPv6Network((address, 64), strict=False))
     return str(address)
 
-
-TOO_LARGE = "Request body too large"
-"""The fixed message of a body refused for its size: it says nothing about what the body held."""
 
 # A refusal is never kept by a cache: the same request may well be fine with a smaller body.
 _NO_STORE = {"Cache-Control": "private, no-store"}
