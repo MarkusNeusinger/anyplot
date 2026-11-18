@@ -14,7 +14,8 @@ ls docs/decisions/
 grep -ril "retention" docs/decisions/
 ```
 
-File names start with the date, so the listing is in order of time.
+File names start with the date, so the listing is in order of date; decisions of the same day stand
+in no particular order.
 
 ## Add a decision
 
