@@ -294,6 +294,23 @@ def test_the_chat_section_states_the_pipeline_bounds():
     assert near(chat, NUMBER_WORDS[reviews], "reviews"), f"at most {reviews} reviews"
 
 
+def test_the_chat_section_says_the_assistant_picks_typed_operations():
+    """ "It picks from a closed set of typed operations, which the server applies with pandas": the data layer's
+    `Operation` is a union of models told apart by their `op` literal, so a call names one of them or fails
+    validation, and the module that applies them works in pandas."""
+    prepare = "agents/anyplot/data/prepare.py"
+    kind, keywords = annotated_kind(prepare, "Operation")
+    assert (kind, keywords.get("discriminator")) == ("Field", "op"), (
+        f"{prepare}: Operation is no longer a union told apart by `op`"
+    )
+    assert re.search(r"^import pandas as pd$", read(ROOT / prepare), re.MULTILINE), f"{prepare} no longer uses pandas"
+    chat = collapse(section(read(README), CHAT_SECTION))
+    assert (
+        "The assistant never hands the server data rows: it picks from a closed set of typed operations, which the "
+        "server applies with pandas and reports with counts."
+    ) in chat, "README.md: the chat section no longer says how the assistant changes data"
+
+
 def test_highlights_state_the_session_idle_time():
     highlights = section(read(README), "Engineering highlights")
     idle = field_default("agents/anyplot/settings.py", "AgentSettings", "session_idle_s")
@@ -390,26 +407,40 @@ def test_highlights_name_the_model_every_pipeline_review_runs_on():
     assert near(highlights, default.capitalize(), "reviews run on"), f"README.md: pipeline reviews run on {default}"
 
 
-def test_highlights_state_the_regen_gates_tolerance_and_adapt_route():
-    """The gate's "a score at most a point lower" is the tolerance of its below-tolerance keep, and the code
-    conversion that "passes on an unchanged render instead" is the adapt route, which merges under its own code
-    and to which the tolerance never applies."""
+def test_every_copy_of_the_gate_states_its_tolerance_and_adapt_route():
+    """Every text that states the regen gate states it the same way: "a score at most a point lower" is the
+    tolerance of its below-tolerance keep, and the code conversion that passes "on an unchanged render" (the site's
+    "picture") is the adapt route, which merges under its own code and to which the tolerance never applies.
+
+    The README's highlight and its nightly section, the About page, its crawler copy and the style guide's pipeline
+    story; none of them may go back to "only when a review finds a fixed defect", which knew neither.
+    """
     source = read(ROOT / GATE)
     tolerances = set(re.findall(r"\bscore < prev_rescored - (\d+):", source))
     assert len(tolerances) == 1, f"{GATE}: the below-tolerance keep compares against {sorted(tolerances)}"
     points = int(tolerances.pop())
     phrase = "a point" if points == 1 else f"{NUMBER_WORDS[points]} points"
-    highlights = collapse(section(read(README), "Engineering highlights"))
-    assert f"a score at most {phrase} lower" in highlights, (
-        f"README.md: the gate keeps a score more than {phrase} lower"
-    )
     codes = module_constant(GATE, "REASON_CODES")
     assert isinstance(codes, tuple) and "adapt_identity" in codes, (
-        f"{GATE} no longer merges a conversion on render identity: the README's adapt route has to go"
+        f"{GATE} no longer merges a conversion on render identity: the texts' adapt route has to go"
     )
-    assert "a code conversion for the chat passes on an unchanged render instead" in highlights, (
-        "README.md: the gate highlight no longer names the adapt route, which merges without the tolerance"
+    readme = read(README)
+    nightly = readme.split("\n### Nightly regeneration\n", 1)
+    assert len(nightly) == 2, "README.md no longer has the section 'Nightly regeneration'"
+    copies = (
+        ("README.md highlights", section(readme, "Engineering highlights"), "render"),
+        ("README.md nightly regeneration", nightly[1].split("\n## ", 1)[0], "render"),
+        ("AboutPage.tsx", read(ABOUT_PAGE), "picture"),
+        ("seo.py", about_bot_body(), "picture"),
+        ("style-guide.md", read(STYLE_GUIDE), "picture"),
     )
+    for name, text, image in copies:
+        prose = collapse(text)
+        assert f"a score at most {phrase} lower" in prose, f"{name}: the gate keeps a score more than {phrase} lower"
+        assert f"a code conversion for the chat passes on an unchanged {image} instead" in prose, (
+            f"{name}: the gate no longer names the adapt route, which merges without the tolerance"
+        )
+        assert "finds a fixed defect and no regression" not in prose, f"{name}: the gate's old, narrower wording"
 
 
 def test_highlights_state_the_render_hash_stop():

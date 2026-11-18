@@ -296,11 +296,12 @@ export function AboutPage() {
           <Box sx={proseColumnSx}>
             <Box sx={textStyle}>
               the pipeline runs on its own schedule, by rules I set. every night a job regenerates
-              the oldest implementations, and a new version replaces the live one only when a review
-              of both finds a fixed defect and no regression; when a better example pattern emerges,
-              I update the spec and regenerate its libraries. I don&apos;t fix a plot by editing its
-              code: a patch fixes one plot, a fix to the spec or a rule reaches every plot it
-              governs when that plot is next regenerated.
+              the oldest implementations, and a new version replaces the live one only with no
+              regression, a score at most a point lower and a fix the review can verify; a code
+              conversion for the chat passes on an unchanged picture instead. when a better example
+              pattern emerges, I update the spec and regenerate its libraries. I don&apos;t fix a
+              plot by editing its code: a patch fixes one plot, a fix to the spec or a rule reaches
+              every plot it governs when that plot is next regenerated.
             </Box>
             <PipelineFlow />
           </Box>

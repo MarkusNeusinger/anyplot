@@ -179,9 +179,9 @@ plot.
 ### Nightly regeneration
 
 `daily-regen.yml` regenerates the oldest part of the catalogue every night: by default the oldest spec in every
-library, and since 2026-10-31 the oldest implementations instead. A regeneration replaces the live
-implementation only when its review, which scores both versions, finds a fixed defect and no regression (the regen
-gate).
+library, and since 2026-10-31 the oldest single implementations instead. A regeneration replaces the live
+implementation only with no regression, a score at most a point lower, and a fix its review can verify; a code
+conversion for the chat passes on an unchanged render instead (the regen gate).
 
 For the labels, retries, and every workflow, see [Workflows](docs/workflows/overview.md).
 
@@ -197,6 +197,9 @@ code.
   reviewer run inside a pipeline whose loop is plain code: at most one repair round, at most two reviews, and the
   spec, library, and data come from server state, so neither the model nor an injected prompt can redirect a run.
   ([`pipeline.py`](agents/anyplot/pipeline.py), [design](docs/concepts/agent-network.md))
+- **Models choose, the server acts.** The assistant never hands the server data rows: it picks from a closed set
+  of typed operations, which the server applies with pandas and reports with counts.
+  ([operations](agents/anyplot/data/prepare.py))
 - **Agents.** A [Google ADK](https://adk.dev) service on Cloud Run. The model is Claude Haiku 5.5 through Vertex AI in
   the EU; Gemini 3.8 Flash is a configurable second arm. Runtimes exist for all 15 libraries.
 - **Sandboxed rendering.** No model-written code runs in the agent service. A separate renderer runs it in Cloud Run
