@@ -41,11 +41,19 @@
   read as shorter sentences.
 - **The privacy policy says who reads feedback.** The site's feedback row no longer says that
   only the operator reads an entry: he reads them, and when he works on one, its message, page
-  and reaction can go to the AI assistant he codes with, Claude by Anthropic. The data
-  assistant's feedback row adds that he reads the cases together with that assistant: the
-  visitor's reaction and message, the conversation, the data sample or file, the plot and its
-  code, the run's details and the two hashes. The crawler copy says the same, and names the
-  operator, not admins, as the holder of the Cloudflare Access login cookie.
+  and reaction can go to an AI coding assistant such as Claude Code by Anthropic. The data
+  assistant's feedback row adds that he reads the cases to fix what went wrong, also with AI
+  coding assistants and in test runs on other AI models: the visitor's reaction and message,
+  the conversation, the data sample or file, the plot and its code, the run's details and the
+  two hashes. Both rows name the terms: those tools process the data under their providers'
+  own terms, outside the EU hosting and the EU route the page names, with training on what the
+  operator sends switched off. The consent line under the chat's feedback form says who reads
+  a case in the same words. The crawler copy says the same, and names the operator, not
+  admins, as the holder of the Cloudflare Access login cookie.
+- **The chat's hint for a table that is too large no longer points at a way that ends in the
+  same refusal.** It recommended opening an Excel or Parquet file, which may be 5 MB, but the
+  table inside such a file has to fit the same 20,000 rows and 1 MB of text. The hint now
+  says so.
 - **The feedback widget speaks as the operator, and the copied prompt asks not to quote the
   visitor's message.** The widget's thank-you line now reads "I read every note.", as the
   site's feedback row says "I read them". The prompt that the admin page copies for the coding

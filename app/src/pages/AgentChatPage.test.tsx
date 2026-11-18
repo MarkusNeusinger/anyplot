@@ -3844,7 +3844,7 @@ describe('AgentChatPage attachment', () => {
     pasteText(`x,y\n${'1,2\n'.repeat(20_100)}`);
     expect(chip()).toHaveAttribute('data-status', 'over_cap');
     expect(screen.getByTestId('attachment-error')).toHaveTextContent(
-      'at most 20,000 rows and 1 MB: filter first, or .open() an Excel or Parquet file (5 MB)'
+      'at most 20,000 rows and 1 MB of text: filter or sample first. an Excel or Parquet file may be 5 MB, but the table in it has the same limit.'
     );
     expect(screen.getByTestId('send-return')).toHaveAttribute('aria-disabled', 'true');
     fireEvent.keyDown(message(), { key: 'Enter' });

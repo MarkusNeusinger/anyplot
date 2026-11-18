@@ -1376,8 +1376,10 @@ class TestSeoProxyRouter:
             "Feedback: your message and reaction, the optional contact field, the page, window size, "
             "user-agent and a random id that ties your own submissions together; kept until you ask to "
             "delete it, in Google Cloud SQL in the Netherlands (europe-west4). The operator reads the "
-            "entries, and when he works on one, its message, page and reaction can go to the AI assistant "
-            "he codes with (Claude by Anthropic). The salted IP hash against spam",
+            "entries, and when he works on one, its message, page and reaction can go to an AI coding "
+            "assistant (such as Claude Code by Anthropic), which processes it under its provider's own "
+            "terms, outside the EU hosting named above, with training on what he sends switched off. The "
+            "salted IP hash against spam",
             "Why this is allowed: a legitimate interest in protecting the site, counting its readers, "
             "and the assistant's telemetry and limits",
             # The login cookie is the operator's own, as the human page says ("I sign in through
@@ -1448,9 +1450,11 @@ class TestSeoProxyRouter:
             # the coding assistant (.claude/skills/triage-agent-cases/SKILL.md, "Read each case"), the
             # run's details and the two hashes included.
             "your reaction, message, hashes of your tab id and of the session id, and the run's details. "
-            "The operator reads the cases together with the AI assistant he codes with (Claude by "
-            "Anthropic): your reaction and message, the conversation, the data sample or file, the plot "
-            "and its code, the run's details and the two hashes.</li>",
+            "The operator reads the cases to fix what went wrong, also with AI coding assistants (such "
+            "as Claude Code by Anthropic) and in test runs on other AI models: your reaction and message, "
+            "the conversation, the data sample or file, the plot and its code, the run's details and the "
+            "two hashes. Those tools process a case under their providers' own terms, outside the EU "
+            "route named above, with training on what he sends switched off.</li>",
             "it starts unticked, which leaves out that file only",
             "never your text, data, column or file names",
             # Every kind of field by its name: event types, plot type and library record what a

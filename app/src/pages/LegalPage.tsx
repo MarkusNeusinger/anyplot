@@ -378,8 +378,10 @@ export function LegalPage() {
                   <>
                     message, reaction, optional contact, page, your window size, user-agent and a
                     random id that ties your own submissions together. I read them, and when I work
-                    on one, its message, page and reaction can go to the ai assistant I code with
-                    (Claude by Anthropic). a salted IP hash limits spam.
+                    on one, its message, page and reaction can go to an ai coding assistant (such as
+                    Claude Code by Anthropic), which processes it under its provider&apos;s own
+                    terms, outside the EU hosting named above, with training on what I send switched
+                    off. a salted IP hash limits spam.
                     <Kept
                       items={[
                         ['entries', 'until you ask to delete them'],
@@ -471,10 +473,12 @@ export function LegalPage() {
                     </Box>
                     ; the box starts unticked, which leaves out that file only. a triage row then
                     keeps your reaction, message, hashes of your tab id and of the session id, and
-                    the run&apos;s details. I read the cases together with the ai assistant I code
-                    with (Claude by Anthropic): your reaction and message, the conversation, the
-                    data sample or file, the plot and its code, the run&apos;s details and the two
-                    hashes.
+                    the run&apos;s details. I read the cases to fix what went wrong, also with ai
+                    coding assistants (such as Claude Code by Anthropic) and in test runs on other
+                    ai models: your reaction and message, the conversation, the data sample or file,
+                    the plot and its code, the run&apos;s details and the two hashes. those tools
+                    process a case under their providers&apos; own terms, outside the EU route named
+                    above, with training on what I send switched off.
                     <Kept
                       items={[
                         ['case files', '180 days'],

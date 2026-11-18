@@ -232,7 +232,7 @@ describe('LegalPage', () => {
     // the page and the reaction to the coding assistant (src/utils/claudePrompt.ts), so the row
     // names that recipient, and #privacy must not claim a sole reader ("read only by").
     expect(screen.getAllByRole('row', { name: /^feedback\s/ })[0]).toHaveTextContent(
-      /message, reaction, optional contact, page, your window size, user-agent and a random id that ties your own submissions together\. I read them, and when I work on one, its message, page and reaction can go to the ai assistant I code with \(Claude by Anthropic\)\. a salted IP hash limits spam\./
+      /message, reaction, optional contact, page, your window size, user-agent and a random id that ties your own submissions together\. I read them, and when I work on one, its message, page and reaction can go to an ai coding assistant \(such as Claude Code by Anthropic\), which processes it under its provider.s own terms, outside the EU hosting named above, with training on what I send switched off\. a salted IP hash limits spam\./
     );
     expect(document.getElementById('privacy')?.textContent).not.toMatch(/read only by/);
     // The feedback's IP hash is salted; when it goes stands on the feedback row's second line.
@@ -392,7 +392,7 @@ describe('LegalPage', () => {
     // (.claude/skills/triage-agent-cases/casedb.py, api/agent_cases.py `build_case`).
     const caseRow = screen.getAllByRole('row', { name: /^feedback\s/ })[1];
     expect(caseRow).toHaveTextContent(
-      /^feedback\s*only when you send feedback\. a private bucket then keeps the conversation, a profile of your data with its first 5 rows, and the plot.s code and images\. it keeps the whole data file only if you tick "# include data\.csv"; the box starts unticked, which leaves out that file only\. a triage row then keeps your reaction, message, hashes of your tab id and of the session id, and the run.s details\. I read the cases together with the ai assistant I code with \(Claude by Anthropic\): your reaction and message, the conversation, the data sample or file, the plot and its code, the run.s details and the two hashes\./
+      /^feedback\s*only when you send feedback\. a private bucket then keeps the conversation, a profile of your data with its first 5 rows, and the plot.s code and images\. it keeps the whole data file only if you tick "# include data\.csv"; the box starts unticked, which leaves out that file only\. a triage row then keeps your reaction, message, hashes of your tab id and of the session id, and the run.s details\. I read the cases to fix what went wrong, also with ai coding assistants \(such as Claude Code by Anthropic\) and in test runs on other ai models: your reaction and message, the conversation, the data sample or file, the plot and its code, the run.s details and the two hashes\. those tools process a case under their providers. own terms, outside the EU route named above, with training on what I send switched off\./
     );
     // "No cookies" holds for visitors; the one admin gets Cloudflare Access's login cookie.
     expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();
