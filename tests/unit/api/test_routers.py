@@ -1335,6 +1335,7 @@ class TestSeoProxyRouter:
             "a random id that ties your own submissions together",
             "the optional contact field",
             "legitimate interest (Art. 6(1)(f) GDPR)",
+            "for the site, seeing what its catalogue lacks, and the assistant's telemetry and limits",
             "the Cloudflare Access login cookie",
             "a complaint to a supervisory authority",
             "transfers outside Switzerland and the EU",

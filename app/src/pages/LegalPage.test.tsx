@@ -238,6 +238,10 @@ describe('LegalPage', () => {
     expect(
       screen.getByRole('row', { name: /^Art\. 6\(1\)\(f\)\s*legitimate interest/ })
     ).toBeInTheDocument();
+    // The search list's purpose has its basis: interest in seeing what the catalogue lacks.
+    expect(screen.getByRole('row', { name: /^Art\. 6\(1\)\(f\)/ })).toHaveTextContent(
+      "legitimate interest in protecting the site, counting its readers, seeing what its catalogue lacks, and the assistant's telemetry and limits"
+    );
     expect(
       screen.getByRole('row', { name: /^Art\. 6\(1\)\(b\)\s*your request: making the plot/ })
     ).toBeInTheDocument();

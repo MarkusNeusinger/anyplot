@@ -353,7 +353,7 @@ export function LegalPage() {
               rows={[
                 [
                   'Art. 6(1)(f)',
-                  "legitimate interest in protecting the site, counting its readers, and the assistant's telemetry and limits",
+                  "legitimate interest in protecting the site, counting its readers, seeing what its catalogue lacks, and the assistant's telemetry and limits",
                 ],
                 ['Art. 6(1)(b)', 'your request: making the plot you ask the data assistant for'],
                 [
