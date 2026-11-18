@@ -39,9 +39,10 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    `text_overlaps_total`), annotations outside their axes, the
    number of drawn point marks (scatter offsets) and the number of vertices of the
    visible `plot()` lines (`line_points`), the content of the drawn texts by role
-   (`labels`, `drawn_labels`: what the root's closing reply is grounded in), and the
-   measured axis ranges of the first `AXES_LIMIT` visible axes that are not a colorbar's
-   (`axes`, `drawn_axes`). Only rendered text counts: matplotlib keeps tick
+   (`labels`, `drawn_labels`: what the root's closing reply is grounded in), and, for
+   matplotlib and seaborn, the measured axis ranges of the first `AXES_LIMIT` non-empty
+   rectilinear axes that draw ticks and are not a colorbar's (`axes`, `drawn_axes`; plotnine
+   maps its scales before matplotlib and reports none). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
    (`axis("off")`, a twin's), which report themselves visible but are never drawn,
    and an edge label one tick step past the view sat beyond the canvas in every
@@ -244,7 +245,7 @@ default forms of shared Han characters; JP is the TTC's first face, and the form
 POLAR_BIN_DEG = 5  # width of one angle bin of the plotted points in the probe's `polar` field
 POLAR_RINGS = 10  # radius bins: tenths of the visible radius range, centre to edge
 POLAR_AXES_LIMIT = 4  # polar axes the probe describes per figure
-AXES_LIMIT = 2  # visible non-colorbar axes whose ranges the probe's `axes` field reports
+AXES_LIMIT = 2  # non-empty rectilinear non-colorbar axes whose ranges the probe's `axes` field reports
 DENSITY_AXES_LIMIT = 8  # axes the probe's `density` field describes per figure
 DENSITY_LABEL_LIMIT = 500  # data-anchored texts per axes matched against the marks
 DENSITY_MARK_LIMIT = 2_000  # bar ends and points per axes a text is matched against
@@ -1702,18 +1703,28 @@ def _is_category_axis(axis):
     return converter is not None and "category" in type(converter).__module__
 
 
+def _is_plotnine_figure(figure):
+    """Whether `figure` was built by plotnine (`PlotnineLayoutEngine`), whose scales map data to plain numbers before
+    matplotlib sees them."""
+    if type(figure).__module__.startswith("plotnine"):
+        return True
+    get_engine = getattr(figure, "get_layout_engine", None)
+    engine = get_engine() if callable(get_engine) else getattr(figure, "_layout_engine", None)
+    return engine is not None and type(engine).__module__.startswith("plotnine")
+
+
 def _axis_scale(axis):
-    """One of `linear`, `log`, `date` or `other` for a non-categorical axis."""
+    """One of `linear`, `log` or `date` for a non-categorical axis, or None for any other scale or converter."""
     converter = _converter(axis)
     if converter is not None:
         module = type(converter).__module__
         if "dates" in module or type(converter).__name__ == "DatetimeConverter":
             return "date"
-        return "other"
+        return None
     if "dates" in type(axis.get_major_formatter()).__module__ or "dates" in type(axis.get_major_locator()).__module__:
         return "date"
     scale = axis.get_scale()
-    return scale if scale in ("linear", "log") else "other"
+    return scale if scale in ("linear", "log") else None
 
 
 def _iso_date(axis, value):
@@ -1742,8 +1753,11 @@ def _iso_date(axis, value):
 
 
 def _axis_range(axis, get_limits):
-    """One axis's `{"scale", "min", "max"}`, or None for a category axis or a limit that is not finite."""
-    if axis is None or _is_category_axis(axis):
+    """One axis's `{"scale", "min", "max"}`, or None when hidden, tickless, categorical, non-finite or another scale."""
+    if axis is None or not axis.get_visible() or not len(axis.get_ticklocs()) or _is_category_axis(axis):
+        return None
+    scale = _axis_scale(axis)
+    if scale is None:
         return None
     raw_low, raw_high = get_limits()
     low, high = float(raw_low), float(raw_high)
@@ -1751,7 +1765,6 @@ def _axis_range(axis, get_limits):
         return None
     if low > high:
         low, high = high, low
-    scale = _axis_scale(axis)
     if scale == "date":
         start, end = _iso_date(axis, low), _iso_date(axis, high)
         if start is None or end is None:
@@ -1761,22 +1774,32 @@ def _axis_range(axis, get_limits):
 
 
 def drawn_axes(figure):
-    """The measured axis ranges of the first `AXES_LIMIT` visible non-colorbar axes, in `figure.get_axes()` order.
+    """The measured axis ranges of the first `AXES_LIMIT` non-empty rectilinear axes, in `figure.get_axes()` order.
 
-    Each entry holds `x`, `y` and, on a 3D axes, `z`, each with `scale` (`linear`, `log`,
-    `date`, `other`) and sorted `min` and `max` at full precision or as ISO 8601 strings.
-    A categorical axis (string category converter) or one with a non-finite limit is left
-    out of its entry, and an entry with no axis left is left out.
+    plotnine maps its scales before matplotlib sees them, so a plotnine figure reports none.
+    Colorbars, invisible axes, axes with `axison` false (or `_axis3don` false on 3D axes) and
+    non-rectilinear projections (`polar`, map projections) are skipped. Each entry holds `x`,
+    `y` and, on a 3D axes, `z`, each with `scale` (`linear`, `log`, `date`) and sorted `min`
+    and `max` at full precision or as ISO 8601 strings; a hidden, tickless, categorical,
+    non-finite or `other`-scaled axis is left out of its entry, and an entry with no axis left
+    is skipped without counting towards `AXES_LIMIT`.
     """
+    if _is_plotnine_figure(figure):
+        return []
     report = []
-    seen = 0
     for axes in figure.get_axes():
         try:
-            if not axes.get_visible() or getattr(axes, "_colorbar", None) is not None:
+            projection = getattr(axes, "name", "rectilinear")
+            axis_on = getattr(axes, "_axis3don", True) if projection == "3d" else getattr(axes, "axison", True)
+            if (
+                not axes.get_visible()
+                or not axis_on
+                or projection not in ("rectilinear", "3d")
+                or getattr(axes, "_colorbar", None) is not None
+            ):
                 continue
         except Exception:
             continue
-        seen += 1
         entry = {}
         pairs = [("x", axes.xaxis, axes.get_xlim), ("y", axes.yaxis, axes.get_ylim)]
         zaxis = getattr(axes, "zaxis", None)
@@ -1792,8 +1815,8 @@ def drawn_axes(figure):
                 entry[name] = measured
         if entry:
             report.append(entry)
-        if seen >= AXES_LIMIT:
-            break
+            if len(report) >= AXES_LIMIT:
+                break
     return report
 
 
@@ -1914,7 +1937,7 @@ def probe(figure, dpi):
     except Exception:  # the texts are for the reply's grounding; they never break the probe
         texts_part = {}
     try:
-        axes_part = {"axes": drawn_axes(figure)}
+        axes_part = {} if _is_plotnine_figure(figure) else {"axes": drawn_axes(figure)}
     except Exception:  # the axis ranges are for the reply's grounding too; they never break the probe
         axes_part = {}
     return {

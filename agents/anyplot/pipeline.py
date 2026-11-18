@@ -163,6 +163,7 @@ from .grounding import (
     plot_texts,
     probe_error,
     reviewed_misses,
+    texts_complete,
 )
 from .language import DEFAULT_LANGUAGE, same_language
 from .memory import (
@@ -494,9 +495,12 @@ class Candidate:
     texts: dict[ShownGroup, ShownRole] | None = None
     """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels, which
     the root never sees (`tool_safety.fence_pipeline_notes`)."""
+    texts_complete: bool | None = None
+    """`PlotShows.texts_complete` (`grounding.texts_complete`): False when the probe stopped before every drawn text;
+    None falls back to `drawn`."""
     axes: list[ShownAxes] | None = None
-    """This render's measured axis ranges (`grounding.plot_axes`), for `PlotShows`; None when the render reported
-    none, which `tool_safety.fence_pipeline_notes` drops too."""
+    """This render's measured axis ranges (`grounding.plot_axes`), for `PlotShows` on matplotlib and seaborn; None
+    or empty when the render reported none, both dropped by `tool_safety.fence_pipeline_notes`."""
     drawn: DrawnTexts | None = None
     """Every drawn text this render's probe reported, unclipped (`grounding.drawn_texts`), which the plot memory is
     checked against once it ships (`settle_memory`, `memory_ids`); None without probe labels."""
@@ -1820,6 +1824,9 @@ def finish(run: Run) -> PlotResult:
         ],
         shows=PlotShows(
             texts=shipped.texts,
+            texts_complete=(
+                texts_complete(shipped.drawn) if shipped.texts_complete is None else shipped.texts_complete
+            ),
             axes=shipped.axes,
             review=_review_state(shipped, meets_bar),
             score=shipped.review_score,
@@ -2729,11 +2736,11 @@ async def _attempts(
             _end_attempt(run, "render", feedback)
             continue
         output = rendered.outputs.get(run.theme)
-        # `shows` gets the clipped summary of every drawn text and the measured axis ranges the probe reports.
+        # `shows` gets the clipped summary of every drawn text and, on matplotlib and seaborn, the measured axis ranges.
         probe = output.probe if output is not None else None
         drawn = drawn_texts(probe)
         texts = plot_texts(drawn)
-        axes = plot_axes(probe)
+        axes = plot_axes(probe) if view.library in ("matplotlib", "seaborn") else None
         checking = settings.expect_check != "off" and bool(run.expected_texts)
         # The requested texts are checked against matplotlib's drawn texts; where the runtime's reviewer checks them
         # (`review_texts`: every library without matplotlib), its probe's texts ground the reply alone.
@@ -2758,6 +2765,7 @@ async def _attempts(
             advisory_gates=[gate for gate in report.failed_gates if gate.startswith("G")],
             changes=list(run.changes),
             texts=texts,
+            texts_complete=texts_complete(drawn),
             axes=axes,
             drawn=drawn,
             expect_lines=expect_lines,

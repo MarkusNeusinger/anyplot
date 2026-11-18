@@ -39,6 +39,7 @@ from pydantic import (
     ConfigDict,
     Field,
     NonNegativeInt,
+    StrictBool,
     StrictFloat,
     StrictInt,
     StrictStr,
@@ -846,9 +847,12 @@ ShownGroup = Literal[
 ]
 """The roles `PlotShows.texts` groups the drawn texts by (`grounding.plot_texts`)."""
 ShownText = Annotated[str, Field(min_length=1, max_length=MAX_SHOWN_TEXT_CHARS)]
-AxisScale = Literal["linear", "log", "date", "other"]
+AxisScale = Literal["linear", "log", "date"]
 AXIS_SCALES: frozenset[str] = frozenset(get_args(AxisScale))
-AXIS_DATE_PATTERN = r"^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?(?:Z|[+-]\d{2}:\d{2})?)?$"
+AXIS_DATE_PATTERN = (
+    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}"
+    r"(?:[T ][0-9]{2}:[0-9]{2}(?::[0-9]{2}(?:\.[0-9]{1,6})?)?(?:Z|[+-][0-9]{2}:[0-9]{2})?)?$"
+)
 _AXIS_DATE = re.compile(AXIS_DATE_PATTERN)
 ReviewState = Literal["passed", "findings", "not_reviewed"]
 
@@ -953,9 +957,12 @@ class PlotShows(_ServerContract):
 
     `texts` are the drawn texts by role (`ShownRole`), read from the render's probe
     (`grounding.plot_texts`); None when the renderer reported none (a renderer older than the
-    `labels` probe field). `axes` are the measured axis ranges (`ShownAxes`,
-    `grounding.plot_axes`) of the first `MAX_AXES` visible non-colorbar axes for the libraries
-    that draw with matplotlib; None when the render reported none.
+    `labels` probe field). `texts_complete` is False whenever the probe stopped before every
+    drawn text or cut one (`grounding.texts_complete`), and omitted from the fenced result when
+    True so the common case costs no bytes. `axes` are the measured axis ranges (`ShownAxes`,
+    `grounding.plot_axes`) of the first `MAX_AXES` non-empty rectilinear non-colorbar axes for
+    matplotlib and seaborn (plotnine maps its scales before matplotlib and reports none); None
+    or empty when the render reported none, both omitted from the fenced result.
     `review` is the verdict on exactly this render (`passed`: it met the ship bar), `score`
     the catalogue review's score, `requested_not_found` the `expected_texts` the drawn
     texts do not show (`grounding.expected_misses`). The texts are written by the code under
@@ -963,6 +970,7 @@ class PlotShows(_ServerContract):
     """
 
     texts: dict[ShownGroup, ShownRole] | None = None
+    texts_complete: StrictBool = True
     axes: list[ShownAxes] | None = Field(default=None, max_length=MAX_AXES)
     review: ReviewState = "not_reviewed"
     score: int | None = Field(default=None, ge=0, le=100)

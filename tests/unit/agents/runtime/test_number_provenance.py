@@ -221,7 +221,7 @@ class TestSources:
         for count in ("12", "30"):
             assert sources.kind_of(one(count)) is None, count
 
-    def test_an_axis_limit_stated_with_fewer_decimals_counts_as_tool_result(self) -> None:
+    def test_an_axis_limit_stated_with_fewer_decimals_counts_as_drawn_text(self) -> None:
         shown = {
             "texts": {"title": {"count": 1, "texts": ["Loans: 6,120"]}},
             "axes": [
@@ -239,8 +239,9 @@ class TestSources:
         }
         sources = request_sources(root_request(response_of("plot_pipeline", result)), {})
 
-        assert sources.kind_of(one("105.3")) == "tool_result"
-        assert sources.kind_of(one("105.32541")) == "tool_result"
+        assert sources.kind_of(one("105.3")) == "drawn_text"
+        assert sources.kind_of(one("105.32541")) == "drawn_text"
+        assert sources.kind_of(one("12.50")) is None  # sandbox view limits keep the strict decimal rule
 
     def test_a_plots_notes_count_as_plot_notes(self) -> None:
         """The adapter's `changes` and the reviewer's `residual_defects` are model-written: a kind of their own, so the
