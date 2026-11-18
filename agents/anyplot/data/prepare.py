@@ -53,7 +53,8 @@ The operations:
   `parse.DATE_OFFSET`, which the parser keeps text) is read as the day written: the offset is
   dropped, and the change line counts the dates per offset ("3 dates had the UTC offset -05:00,
   which was dropped; the days are as written"). Such dates beside times (a cell read as a date
-  with `T` or a space and a digit after its date, or a time of day the reading finds in it) are a
+  with a time's shape after its date, `T10`, ` 10:00` or ` 12 AM`, or a time of day the reading
+  finds in it; a space inside a date such as `Mar 1 2026` is none) are a
   `type_mismatch`, as a day is no moment; a cell that reads as no date is counted missing, colon or
   not. So is a date followed by a sign and digits in any other form (`2026-03-01-03`,
   `2026-03-01+0100`, `parse.DATE_SIGN_DIGITS`), which may be an hour label: pandas alone reads `-05:00`
@@ -308,7 +309,7 @@ followed directly by the UTC offset `Z` or `±HH:MM` (`2024-01-31+01:00`): on a 
 without an offset it is the day as written, as `set_type` reads such a cell, and on a
 column with one that day at its own offset. A date followed by a sign and digits in another
 form (`2024-01-31-03`) is refused there, since it may be an hour as well as an offset, and so
-is a time after another character than `T` or a space (`2024-01-31−05:00`), which Python's
+is a time after another character than `T`, `t` or a space (`2024-01-31−05:00`), which Python's
 `fromisoformat` would read as a time of day. A text column whose every cell with a value has the
 shape of such a date with an offset (the parser keeps it as written) compares by its characters,
 not by days, so every order test there, and `eq` or `ne` with a value of another date or period
@@ -4239,7 +4240,7 @@ def _moment(value: str, column: str, zone: tzinfo | None = None) -> pd.Timestamp
     a cell; on a column with one it is that day at its own offset, converted. Its midnight is the
     moment, and `le` and `gt` take the whole day, as for a date alone (`_names_a_day`). A date followed
     by a sign and digits in another form (`2024-01-01-03`, `parse.DATE_SIGN_DIGITS`) is refused, and so
-    is a time after any other character than `T` or a space (`2024-01-01−05:00`, `2024-01-01x05:00`):
+    is a time after any other character than `T`, `t` or a space (`2024-01-01−05:00`, `2024-01-01x05:00`):
     `fromisoformat` takes any character for the `T` and would read `+01:00`, `-03` or `−05:00` as a time
     of day.
     """
@@ -4262,8 +4263,9 @@ def _moment(value: str, column: str, zone: tzinfo | None = None) -> pd.Timestamp
         offset = timezone(timedelta(minutes=_offset_minutes(day.group(2))))
         return pd.Timestamp(midnight.replace(tzinfo=offset)).tz_convert(zone)
     start = _ISO_DAY.match(text)
-    if start is not None and text[start.end() : start.end() + 1] not in ("", "T", " "):
-        # `fromisoformat` takes any character after the date for the `T`: `2024-01-01−05:00` would read as 05:00.
+    if start is not None and text[start.end() : start.end() + 1] not in ("", "T", "t", " "):
+        # `fromisoformat` takes any character after the date for the `T` (RFC 3339 allows `t` and a space too):
+        # `2024-01-01−05:00` would read as 05:00.
         raise _not_an_iso_date(column)
     try:
         moment = datetime.fromisoformat(text)
@@ -4481,10 +4483,14 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
 
 _ISO_DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 """The start of an ISO date, `YYYY-MM-DD`; a time after it stands behind `T` or a space (`_moment`)."""
-_ISO_DAY_TIME = re.compile(r"\s*[0-9]{4}-[0-9]{2}-[0-9]{2}[T ][0-9]")
-"""An ISO date followed by `T` or a space and a digit: a time after the date (`2026-03-01T10`, `2026-03-01 10:00`)."""
-_DAY_THEN_TIME = re.compile(r"[0-9][T ][0-9]")
-"""A digit, `T` or a space, and a digit: where a date of any shape ends and a time starts (`01.03.2026 10:00`)."""
+_TIME_SHAPE = r"(?:[Tt ][0-9]{1,2}(?::[0-9]{2}|\s*[AaPp]\.?\s?[Mm]\.?|$)|[Tt][0-9]{4})"
+"""A time after a date: `T` or a space, then an hour alone at the end (`T10`), an hour with its minutes (`10:00`), or
+an hour with am or pm (`12 AM`), or a compact `T0000`. A space before other digits is part of a date (`Mar 1 2026`,
+`01 03 2026`), and one before an ordinal (`1st`) holds no time either."""
+_ISO_DAY_TIME = re.compile(r"\s*[0-9]{4}-[0-9]{2}-[0-9]{2}" + _TIME_SHAPE)
+"""An ISO date followed by a time (`_TIME_SHAPE`: `2026-03-01T10`, `2026-03-01 10:00`, `2026-03-01t10:00+01:00`)."""
+_DAY_THEN_TIME = re.compile(r"[0-9]" + _TIME_SHAPE)
+"""The end of a date of any shape and a time after it (`01.03.2026 00:00`, `03/01/2026 12 AM`)."""
 
 
 def _holds_time(text: str, value: pd.Timestamp) -> bool:

@@ -279,6 +279,12 @@ class TestConversion:
             "2026-03-02T00",
             "02.03.2026 10:00",  # a time after a date of another shape, found once the cell is read
             "2026-03-02/05",  # a time of day the reading finds, though no `T` or space stands before it
+            "2026-03-02 10",
+            "01.03.2026 00:00",  # a midnight written out is a time too
+            "2026-03-02t10:00",  # RFC 3339 allows a lowercase t
+            "2026-03-02t10:00+01:00",
+            "2026-03-02T0000",  # a compact midnight, which the reading finds no hour in
+            "03/02/2026 12 AM",
         ],
     )
     def test_beside_times_the_column_stays_as_it_is(self, timed: str) -> None:
@@ -292,7 +298,19 @@ class TestConversion:
             "moment, so the column stays as it is"
         )
 
-    @pytest.mark.parametrize("odd", ["n.a.: none", "2026-03-11\N{MINUS SIGN}05:00"])
+    @pytest.mark.parametrize("day", ["Mar 1 2026", "01 03 2026"])
+    def test_a_date_written_with_spaces_is_no_time(self, day: str) -> None:
+        """A space between the parts of a date is no time: only a time's shape after it (`10`, `10:00`) is one."""
+        text = f"day,kWh\n{day},1\n" + "".join(f"2026-03-{day:02d}+01:00,{day}\n" for day in range(2, 12))
+
+        prepared = prepare(text, to_dates())
+
+        assert column(prepared, "day (date)") == [f"2026-03-{day:02d}" for day in range(1, 12)]
+        assert prepared.changes[0].endswith(
+            "10 dates had the UTC offset +01:00, which was dropped; the days are as written"
+        )
+
+    @pytest.mark.parametrize("odd", ["n.a.: none", "2026-03-11\N{MINUS SIGN}05:00", "2026-03-11 1st"])
     def test_a_cell_that_is_no_date_is_unreadable_not_a_time(self, odd: str) -> None:
         """A colon is no time: a cell that reads as no date is counted missing, and the days stay days."""
         text = "day,kWh\n" + "".join(f"2026-03-{day:02d}+01:00,{day}\n" for day in range(1, 11)) + f"{odd},11\n"
@@ -438,7 +456,7 @@ class TestFilterBound:
 
         assert column(prepared, "kWh") == ["12", "15", "11"]
 
-    @pytest.mark.parametrize("separator", ["\N{MINUS SIGN}", "\N{EN DASH}", "x", "_", "/", ".", "t"])
+    @pytest.mark.parametrize("separator", ["\N{MINUS SIGN}", "\N{EN DASH}", "x", "_", "/", "."])
     def test_a_time_after_another_character_than_t_or_a_space_is_refused(self, separator: str) -> None:
         """`fromisoformat` takes any character after the date for the `T`: `2026-03-01−05:00` read as 05:00."""
         code, message = refusal(self.NAIVE, keep("ge", f"2026-03-01{separator}05:00"))
@@ -453,8 +471,10 @@ class TestFilterBound:
         [
             (False, "2026-03-01T10:00", ["3", "4"]),
             (False, "2026-03-01 10:00", ["3", "4"]),
+            (False, "2026-03-01t10:00", ["3", "4"]),  # RFC 3339 allows a lowercase t
             (True, "2026-03-01T10:00+01:00", ["3", "4"]),
             (True, "2026-03-01 10:00+01:00", ["3", "4"]),
+            (True, "2026-03-01t10:00+01:00", ["3", "4"]),
         ],
     )
     def test_a_time_after_t_or_a_space_reads_as_before(self, zoned: bool, value: str, kept: list[str]) -> None:
