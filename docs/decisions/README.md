@@ -51,8 +51,9 @@ it, so an entry need not be a highlight; it only must not be noise.
 
 The form is fixed and "Where" is the source, because an entry without one is a story nobody can
 check. `tests/unit/test_decision_log.py` fails for a file whose name has no date, that lacks one of
-the four lines or has them twice or out of order, whose date differs from its name, or whose
-"Where" names neither a pull request nor an existing file of this repository.
+the four lines or has them twice or out of order, that holds any other text below the title, whose
+date differs from its name, or whose "Where" names neither a pull request nor an existing file of
+this repository.
 
 Keep to what happened. "Decided" gives the owner's reason when he gave one, and says so when the
 reason is the agent's reading. The rules for public text apply: no private detail, nothing a visitor
