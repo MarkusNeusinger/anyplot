@@ -15,7 +15,7 @@ from agents.anyplot.grounding import UNVERIFIED_LINE
 from agents.anyplot.pipeline import EARLIER_REQUESTS_HEADING, REVIEW_EXPECTED_HEADING, SELF_REVIEW_LINE
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.runtimes import PythonRuntime
-from agents.anyplot.schemas import ShownRole
+from agents.anyplot.schemas import ShownAxes, ShownAxis, ShownRole
 from agents.anyplot.scoring import DE_DEFAULTS, SCORED
 from agents.anyplot.services import get_services
 from agents.anyplot.settings import get_settings
@@ -748,7 +748,12 @@ async def test_a_text_probe_grounds_the_reply_and_the_review_checks_the_requeste
     script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
     ask_for(script, TEMPERATURE)
     script["reviewer"] = [{"json": score()}]
-    probe = {"labels": [{"kind": "title", "text": "Prüfungen"}, {"kind": "y axis label", "text": "Punkte"}]}
+    probe = {
+        "labels": [{"kind": "title", "text": "Prüfungen"}, {"kind": "y axis label", "text": "Punkte"}],
+        "axes": [
+            {"x": {"scale": "linear", "min": 0.0, "max": 10.0}, "y": {"scale": "linear", "min": 15.5, "max": 98.5}}
+        ],
+    }
     backend.script = lambda job, theme: FakeOutcome(probe=probe)
     fake = swap_models("gemini", script)
     sid = await open_session(client)
@@ -765,6 +770,9 @@ async def test_a_text_probe_grounds_the_reply_and_the_review_checks_the_requeste
         "title": ShownRole(count=1, texts=["Prüfungen"]),
         "y axis label": ShownRole(count=1, texts=["Punkte"]),
     }
+    assert shipped.result.shows.axes == [
+        ShownAxes(x=ShownAxis(scale="linear", min=0.0, max=10.0), y=ShownAxis(scale="linear", min=15.5, max=98.5))
+    ]
     assert "Prüfungen" in root_inputs(fake)[-1]
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert (result["texts"], result["texts_expected"]) == (["title", "y axis label"], True)  # roles, never texts

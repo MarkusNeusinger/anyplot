@@ -258,6 +258,15 @@ class TestExpectedMisses:
         assert line.startswith('SC-02 (light): the plot does not show the requested number format "6,5 Mio."')
         assert '"5.5 M", "6.0 M", "6.5 M"' in line and "Likely cause:" in line
 
+    def test_a_long_tick_run_still_quotes_the_observed_ticks_on_a_format_miss(self) -> None:
+        long_ticks = labels(*(("y tick label", f"{index}.5 M") for index in range(1, 31)))
+
+        (miss,) = expected_misses(["6,5 Mio."], drawn_texts(long_ticks))
+        line = miss.line("light")
+
+        assert '"1.5 M", "2.5 M", "3.5 M"' in line
+        assert "no tick labels" not in line
+
     @pytest.mark.parametrize(
         ("ticks", "missed"),
         [
@@ -982,11 +991,7 @@ class TestHarnessAxes:
         london_ax.set_ylim(0.0, 3.0)
         assert harness.probe(london_fig, 200)["axes"] == [
             {
-                "x": {
-                    "scale": "date",
-                    "min": "2024-01-15T00:00:00+00:00",
-                    "max": "2024-07-15T01:00:00+01:00",
-                },
+                "x": {"scale": "date", "min": "2024-01-15T00:00:00+00:00", "max": "2024-07-15T01:00:00+01:00"},
                 "y": {"scale": "linear", "min": 0.0, "max": 3.0},
             }
         ]

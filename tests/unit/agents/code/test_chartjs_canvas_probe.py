@@ -1136,8 +1136,53 @@ new Chart(kept, {
         run = run_node_probe(tmp_path, source)
 
         assert ("annotation", "Valid width") in run.labels
-        for ghost in ("Draft note", "Draft title", "OldX", "OldSeries", "NaN x", "Inf y", "Zero maxWidth", "Neg maxWidth"):
+        for ghost in (
+            "Draft note",
+            "Draft title",
+            "OldX",
+            "OldSeries",
+            "NaN x",
+            "Inf y",
+            "Zero maxWidth",
+            "Neg maxWidth",
+        ):
             assert not any(text == ghost for _, text in run.labels), (ghost, run.labels)
+
+    def test_translated_canvas_positions_tell_an_outlined_pair_from_two_separate_labels(self, tmp_path: Path) -> None:
+        source = (
+            CANVAS
+            + """
+new Chart(canvas, {
+  type: "bar",
+  plugins: [{
+    id: "p",
+    afterDraw(c) {
+      const ctx = c.ctx;
+      ctx.save();
+      ctx.translate(40, 50);
+      ctx.strokeText("Outlined", 0, 0);
+      ctx.fillText("Outlined", 0, 0);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(40, 120);
+      ctx.strokeText("62%", 0, 0);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(180, 120);
+      ctx.fillText("62%", 0, 0);
+      ctx.restore();
+    },
+  }],
+  data: { labels: ["A", "B"], datasets: [{ label: "Share", data: [1, 2] }] },
+  options: { animation: false },
+});
+"""
+        )
+        run = run_node_probe(tmp_path, source)
+
+        assert run.labels.count(("annotation", "Outlined")) == 1
+        assert run.labels.count(("annotation", "62%")) == 2
 
 
 # --- Full Playwright + Chromium harness tests (run where Playwright's browser is installed) -----
