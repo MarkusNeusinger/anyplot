@@ -4442,12 +4442,14 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
     ):
         # Before the reading: beside a time with an offset, pandas would refuse naive days and zoned times instead.
         raise _days_beside_times(series.name)
-    shapes = [_date_cell(text) if isinstance(text, str) else None for text in texts]
     if date_format:
         # Python's own reader, one cell at a time: any year from 1 to 9999, stored at the parser's microseconds
         # (a datetime64[ns] holds only 1677 to 2262, review of 2026-10-15).
         values = [_read_date(text, date_format) if isinstance(text, str) else None for text in texts]
         result = pd.Series(values, index=series.index, dtype="datetime64[us]")
+        # The format read the date, so a cell it read holds a time when one stands at its end (`2026-03 10:00`
+        # with `YYYY-MM`): the format, not the date's shape, says what the date is.
+        shapes = [bool(_TIME_AFTER_DATE.search(text.strip())) if isinstance(text, str) else None for text in texts]
     else:
         # A month name with a year (`Nov 2026`, `Okt. 2026`) is its month's first day, in the eleven languages of
         # `months.py`, as the parser reads it; pandas knows English names only (live test of 2026-11-01).
@@ -4510,6 +4512,8 @@ _NUMBER_PART = re.compile(r"([0-9]+)[^\W\d_]*")
 """A number of a date, with the letters of an ordinal after it (`1st`, `15th`)."""
 _QUARTER_PART = re.compile(r"[Qq][1-4]")
 _WORD_PART = re.compile(r"[^\W\d_]+")
+_JOINERS = ("-", "/", ",")
+"""The separators that join a date's parts, or a date to more: a date that ends in one is unfinished."""
 _MERIDIEM_AFTER_NUMBER = re.compile(r"[0-9]\s*[AaPp]\.?\s?[Mm](?:\.|(?![^\W\d_]))")
 """An hour with am or pm (`10am`, `10 AM`, `10 a.m.`), which the letters of a number (`1st`) never are."""
 DateShape = Literal["day", "month", "year", "quarter"]
@@ -4524,9 +4528,13 @@ def _date_shape(text: str) -> DateShape | None:
     the eight digits of `YYYYMMDD`; a month two numbers, one of four digits (`2026-03`, `03/2026`), or a month name and
     a year; a year four digits; a quarter `Q1` and a year. More numbers (`2026-03-01/05`, a range of days), a second
     month name, or any other character (`:`, `+`) is no date: a time and a zone belong after it (`_TIME_AFTER_DATE`).
+    Neither is an hour with am or pm (`2026-03 10am`, a time), nor a text that ends in a dash, a slash or a comma,
+    which joins the date to more (`2026-03-01 - 05`, 1 to 5 March).
     """
     if _MERIDIEM_AFTER_NUMBER.search(text):
         return None  # `10am`, `10 AM`: a time's, which belongs after a date that names a day
+    if text.rstrip().endswith(_JOINERS):
+        return None  # `2026-03-01 -` before ` 05`: a part that joins to more (1 to 5 March), never a time
     numbers: list[int] = []
     months = quarters = 0
     for part in _DATE_PARTS.split(text.strip()):

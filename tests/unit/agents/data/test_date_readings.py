@@ -758,6 +758,26 @@ FORMATTED: dict[str, tuple[str, bool, Reading]] = {
     "fmt_month_year_slash": ("MM/YYYY", False, Reading(["03/2026", "04/2026"], ["2026-03-01", "2026-04-01"])),
     "fmt_year": ("YYYY", False, Reading(["2026", "2027"], ["2026-01-01", "2027-01-01"])),
     "fmt_month_year_numbers": ("MM.YYYY", True, Reading([3.202, 4.2026], ["2020-03-01", "2026-04-01"])),
+    "fmt_year_month_time": (
+        "YYYY-MM",
+        False,
+        Reading(["2026-03 10:00", "2026-04 11:30"], ["2026-03-01T10:00:00", "2026-04-01T11:30:00"], with_time=True),
+    ),
+    "fmt_year_month_t_time": (
+        "YYYY-MM",
+        False,
+        Reading(["2026-03T10:00", "2026-04T11:30"], ["2026-03-01T10:00:00", "2026-04-01T11:30:00"], with_time=True),
+    ),
+    "fmt_month_slash_year_time": (
+        "MM/YYYY",
+        False,
+        Reading(["03/2026 10:00", "04/2026 11:30"], ["2026-03-01T10:00:00", "2026-04-01T11:30:00"], with_time=True),
+    ),
+    "fmt_month_dot_year_time": (
+        "MM.YYYY",
+        False,
+        Reading(["03.2026 10:00", "04.2026 11:30"], ["2026-03-01T10:00:00", "2026-04-01T11:30:00"], with_time=True),
+    ),
     "fmt_dot_range": (
         "DD.MM.YYYY",
         False,
@@ -846,6 +866,10 @@ UNREADABLE: dict[str, list[str | None]] = {
     "a zero offset after the T": ["2026-03-01T-00:00", "2026-03-02T-00:00"],
     "an hour with am after a month": ["2026-03 10am", "2026-04 11am"],
     "an hour with AM after a year": ["2026 10 AM", "2027 11 AM"],
+    "a spaced dash and a number": ["2026-03-01 - 05", "2026-03-02 - 06"],
+    "a spaced slash and a number": ["2026-03-01 / 05", "2026-03-06 / 09"],
+    "a spaced dash and an hour": ["2026-03-01 - 05:00", "2026-03-02 - 05:00"],
+    "a spaced dash after a dot date": ["01.03.2026 - 05", "02.03.2026 - 06"],
 }
 """Cells with more after their date than a time: pandas read a range as days with made-up offsets (2, 7 and 11
 March, beside a notice of offsets no cell holds), a sign and digits as 05:00, and an interval as its first day."""
