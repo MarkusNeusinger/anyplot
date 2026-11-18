@@ -3807,8 +3807,11 @@ def _offset_days(present: list[str]) -> bool:
 
     A date column holds a day without an offset or a moment with one: written as a date, the offset would be gone
     without a word, and written as midnight at that offset, a time nobody wrote would stand in it. A column that mixes
-    the shape with plain dates stays text by the rule that a date column has one shape, without this note.
+    the shape with plain dates stays text by the rule that a date column has one shape, without this note. No cell is
+    no such column: an empty list says nothing about a shape.
     """
+    if not present:
+        return False
     for cell in present:
         match = DATE_OFFSET.fullmatch(cell)
         if match is None:

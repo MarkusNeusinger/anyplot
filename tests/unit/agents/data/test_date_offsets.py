@@ -17,7 +17,7 @@ from pydantic import TypeAdapter
 
 from agents.anyplot.data.bindings import default_bindings
 from agents.anyplot.data.conversions import Candidate, candidates
-from agents.anyplot.data.parse import MAX_COMPUTED_BYTES, ParsedDataset, parse_dataset
+from agents.anyplot.data.parse import MAX_COMPUTED_BYTES, ParsedDataset, _offset_days, parse_dataset
 from agents.anyplot.data.prepare import (
     OFFSET_DAYS_READING,
     Operation,
@@ -127,6 +127,11 @@ class TestPaste:
 
         assert parsed.column_dtypes["day"] == "text"
         assert not any("offset" in warning for warning in parsed.warnings)
+
+    def test_no_cell_is_no_column_of_dates_with_an_offset(self) -> None:
+        """A column without a value says nothing about its shape: the check of the note is false for it."""
+        assert _offset_days([]) is False
+        assert _offset_days(["2026-03-01+01:00"]) is True
 
     def test_an_impossible_day_gets_no_note(self) -> None:
         parsed = parse_dataset("day,kWh\n2026-02-30+01:00,12\n2026-03-02+01:00,15\n")
@@ -413,10 +418,12 @@ class TestFilterBound:
         ("test", "value", "kept"),
         [
             ("ge", "2026-03-01+01:00", ["2", "3", "4"]),
+            ("lt", "2026-03-01+01:00", ["1"]),
             ("le", "2026-03-01+01:00", ["1", "2", "3"]),
             ("gt", "2026-03-01+01:00", ["4"]),
             # 1 March at -05:00 runs from 06:00 to 06:00 the next day at +01:00.
             ("ge", "2026-03-01-05:00", ["3", "4"]),
+            ("lt", "2026-03-01-05:00", ["1", "2"]),
             ("le", "2026-03-01-05:00", ["1", "2", "3", "4"]),
         ],
     )
