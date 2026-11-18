@@ -2,48 +2,54 @@ library: plotnine
 language: python
 specification_id: dot-matrix-proportional
 created: '2026-05-08T21:59:37Z'
-updated: '2026-05-08T22:14:36Z'
+updated: '2026-11-18T02:39:16Z'
 generated_by: claude-sonnet
-workflow_run: 25581289342
+workflow_run: 44223974558
 issue: 5241
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: 10×10 grid, correct fill order, counts in legend, all
-    required features present'
-  - 'Proper Okabe-Ito palette with first series #009E73; both theme renders pass legibility
-    check'
-  - coord_fixed correctly ensures equal-aspect-ratio dot spacing — critical for dot
-    matrix accuracy
-  - Deterministic, clean, idiomatic plotnine code with explicit font sizes
-  - Legend labels include counts, adding an interpretation layer without cluttering
-    the plot
+  - Exact 10×10 grid of 100 equal dots filled left to right, top to bottom, each category
+    one contiguous run whose length equals its count (24/41/35)
+  - coord_fixed() keeps spacing identical in both directions and theme_void() removes
+    axes and grid, matching the spec's 'position is layout, not data'
+  - 'Legend built natively from scale_color_manual(labels=...) carries each category''s
+    label with its count; guide_legend(override_aes={''size'': 8}) keeps the swatches
+    as visible dots in both themes'
+  - Neutral remainder handled in the grid via INK_SOFT 'Other' run when counts do
+    not reach the total, and the data block is adaptable (category order kept via
+    pd.Categorical)
+  - Correct 3200×1800 canvas, mandated title with language segment, theme tokens thread
+    through title, subtitle and legend in both renders
   weaknesses:
-  - Upper-right canvas area above the legend is visually empty (~35% of canvas unused)
-    — could reduce figure dimensions or adjust legend position to improve canvas utilization
-  - 'Design Excellence limited: no visual focal point or hierarchy to emphasize the
-    dominant category (Partially Solar-Powered with 41 dots); all categories are visually
-    equal weight'
-  - 'LM-02 limited: coord_fixed and scale_color_manual are useful but not highly distinctive
-    to plotnine; the implementation does not leverage uniquely plotnine-specific features'
+  - 'VQ-02 (both): the legend''s longest entry ''Partially Solar-Powered  (41)'' runs
+    into the legend frame — its closing parenthesis touches the right border line
+    → at least ~6 px of inner padding on the right. Likely cause: legend_text margin
+    r=14 is applied but the legend box width is computed without it, so the frame
+    hugs the text; reduce the margin or add legend_box_margin / legend_margin.'
+  - 'Suggestion: the empty legend title (color="") still reserves a blank row at the
+    top of the legend box; dropping the title via theme(legend_title=element_blank())
+    would balance the box.'
+  - 'Suggestion: percentage annotations beside the counts (24 %, 41 %, 35 %) are allowed
+    by the Notes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — cream/ivory tone, not pure white
-      Chrome: Title "dot-matrix-proportional · plotnine · anyplot.ai" in bold dark ink, large (24pt); subtitle in softer gray tone (18pt); legend text in muted dark gray (16pt); all clearly readable
-      Data: First series (Fully Solar-Powered) in #009E73 teal-green; second (Partially Solar-Powered) in #D55E00 vermillion-orange; third (No Solar Panels) in #0072B2 blue; 10x10 uniform dot grid filled left-right top-bottom; legend to the right with counts in parentheses
-      Legibility verdict: PASS — all text dark on light, no contrast failures
+      Background: warm off-white #FAF8F1, 3200×1800 landscape
+      Chrome: bold near-black title "dot-matrix-proportional · python · plotnine · anyplot.ai" left-aligned with the grid (~80 % width), soft-gray subtitle "Household solar status · n = 100 homes"; no axes or grid lines; legend at right in a #FFFDF6 box with an INK_SOFT frame, entries "Fully Solar-Powered (24)", "Partially Solar-Powered (41)", "No Solar Panels (35)" — all readable. The ")" of "(41)" touches the right legend frame.
+      Data: 10×10 grid of large equal dots; first 24 in #009E73, next 41 in #C475FD, last 35 in #4467A3, filled left to right, top to bottom; runs break mid-row as expected.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — dark charcoal tone, not pure black
-      Chrome: Title and subtitle switch to off-white/light-gray tones; legend text is light-colored; no dark-on-dark failures detected; legend box background is elevated dark #242420 with subtle border
-      Data: Data colors identical to light render — same #009E73 green, #D55E00 orange, #0072B2 blue; dots are equally visible against the dark surface
-      Legibility verdict: PASS — all text light on dark, no dark-on-dark failures
+      Background: warm near-black #1A1A17
+      Chrome: title in off-white #F0EFE8, subtitle and legend text in #B8B7B0, legend box #242420 with light-gray frame; no dark-on-dark text; same "(41)" touching the frame.
+      Data: identical dot colors #009E73 / #C475FD / #4467A3 and identical layout; all dots clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -54,73 +60,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt bold, subtitle 18pt, legend 16pt — all explicitly set
-          and legible in both themes
+        comment: Title 15 pt bold, subtitle 11 pt, legend 9 pt, all explicit and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Uniform dot grid with no collisions; legend entries well-separated
+        comment: Legend entry '(41)' touches the legend frame (defect line); dots
+          do not collide
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: size=9 dots render prominently; coord_fixed ensures circular shape;
-          three colors clearly distinct
+        comment: Large dots (size 10) sized for 100 units; legend swatches visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; strong contrast on both backgrounds; CVD-safe
+        comment: Green/purple/blue distinct, CVD-safe, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good composition but notable empty area in upper-right above legend
-          (~65% canvas utilization)
+        comment: 3200×1800, grid fills the height, title block aligned to grid, legend
+          balances the right side
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed; subtitle provides domain context with sample
-          size
+        comment: N/A for axes (layout positions); subtitle names the measure and n
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; Okabe-Ito order followed; backgrounds
-          #FAF8F1/#1A1A17; data colors identical across themes'
+        comment: 'First series #009E73, Imprint order, #FAF8F1/#1A1A17 backgrounds,
+          data colors identical across themes'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: 'Well-configured: correct palette, bold title hierarchy, warm background
-          tokens. Polished library default level.'
+        comment: Bold title over soft-gray subtitle as a left-aligned header block,
+          a typographic hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: theme_void removes all chrome; legend has elevated background with
-          INK_SOFT border; plot_margin adds breathing room
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Legend includes counts; subtitle states sample size. Slightly above
-          default but no distinct visual hierarchy or focal-point emphasis.
+        comment: Dot size tuned so the gaps read as an even lattice; title block left-aligned
+          to the grid's edge
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct dot matrix: uniform dots in 10x10 grid, filled left-to-right
-          top-to-bottom by category'
+        comment: Dot matrix, one dot per unit, no extra encodings
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid matches total (10x10=100); each dot=one unit; color-coded; fill
-          order correct; legend with counts
+        comment: C1 10×10 for 100, C2 uniform dots/spacing, C3 runs in order, C4 legend
+          with counts, C5 remainder handled in code (none in this data)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=i%cols, y=-(i//cols) correctly maps dots; coord_fixed ensures equal
-          spacing
+        comment: Each run length equals its count; grid layout correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels include counts in parentheses
+        comment: Mandated title format with python segment; legend labels with counts
     data_quality:
       score: 15
       max: 15
@@ -161,21 +164,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three distinct categories with varying proportions (24/41/35) covering
-          all solar adoption states
+        comment: Three categories of different size, runs ending mid-row
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Household Solar Panel Adoption Survey, n=100 homes — real-world,
-          neutral, technology domain
+        comment: Household solar adoption survey, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 24+41+35=100 exactly; proportions plausible for solar adoption statistics
+        comment: 24+41+35 = 100 checked against the grid and legend
     code_quality:
       score: 10
       max: 10
@@ -185,56 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Tokens → Data → Plot → Save; no functions or classes
+        comment: Linear tokens → data → plot → save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; hardcoded counts, no random elements
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used; sys/os for path and theme env var
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; zip(strict=True) is a clean guard; loop-based label expansion
-          is clear
+        comment: Vectorised np.repeat / arange layout; nothing a shorter call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ggsave; current API
+        comment: ggsave to plot-{THEME}.png, current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic plotnine grammar: ggplot+geom_point+scale_color_manual+coord_fixed+labs+theme;
-          theme_void is right base'
+        comment: 'Grammar idioms: pd.Categorical ordering drives the scale, scale_color_manual(labels=)
+          builds the count legend'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: coord_fixed for equal-aspect spacing; scale_color_manual with labels=
-          for combined color+label control; plotnine layered theme() system
+        passed: false
+        comment: guide_legend(override_aes=...) to size legend keys independently
+          of the marks; coord_fixed
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-18T02:36:10Z'
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
-  - matrix-construction
+  - data-generation
   dataprep: []
   styling:
   - minimal-chrome
+  - publication-ready
