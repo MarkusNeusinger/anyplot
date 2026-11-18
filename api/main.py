@@ -24,6 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
 from api import machine_reads, search_misses  # noqa: E402
+from api.body_limit import BodyLimitMiddleware, Bound, ClientGoneFilter  # noqa: E402
 from api.cache import cache_key, get_or_set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
@@ -53,7 +54,7 @@ from api.routers import (  # noqa: E402
     specs_router,
     stats_router,
 )
-from api.routers.agent import LOCAL_ORIGIN_REGEX, AgentHTTPError, agent_http_error_handler  # noqa: E402
+from api.routers.agent import LOCAL_ORIGIN_REGEX, MAX_REQUEST_BODY_BYTES, AgentHTTPError, agent_http_error_handler  # noqa: E402
 from api.routers.languages import _refresh_languages  # noqa: E402
 from api.routers.libraries import _refresh_libraries  # noqa: E402
 from api.routers.plots import _refresh_filter_all  # noqa: E402
@@ -81,6 +82,10 @@ logger = logging.getLogger(__name__)
 # affinity, a session's second request could land elsewhere and fail with
 # "Missing session ID" (verified live).
 mcp_http_app = mcp_server.http_app(path="/", stateless_http=True)
+# The MCP transport logs a client that goes away mid-body as an error of its
+# own, with a traceback. The body bound ends a body it cuts off the same way,
+# so without this every refusal on /mcp would be written as a fault of the service.
+logging.getLogger("mcp.server.streamable_http").addFilter(ClientGoneFilter())
 
 
 # Strong reference to the running prewarm task. asyncio keeps only a weak
@@ -224,14 +229,19 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # `@app.middleware` both wrap what is already there — so reading this file from
 # here down gives the order a request actually travels, in reverse:
 #
-#   security headers → cache headers → CORS → origin gate → machine reads → gzip → router
+#   security headers → cache headers → CORS → origin gate → machine reads → gzip → body bound → router
 #
 # (`HeadAsGetMiddleware`, `MCPTrailingSlashMiddleware` and
 # `ForwardedProtoMiddleware` wrap the whole app further out still; all three
 # only rewrite the scope.)
 #
-# Two of those positions are load-bearing:
+# Three of those positions are load-bearing:
 #
+# * The body bound inside the origin gate, so a caller that bypasses the edge
+#   is refused before a length is even looked at, and inside CORS, so a
+#   browser can read the 413. None of the layers outside it reads a body. It
+#   sends its refusal itself, so it does not depend on how a layer or an app
+#   inside it treats an error.
 # * The origin gate directly inside CORS, so a 403 from it still carries the
 #   headers a browser needs to read it as a 403 rather than as an opaque
 #   network error — and OUTSIDE the machine-read writer, so a refused request
@@ -242,6 +252,13 @@ app.add_exception_handler(Exception, generic_exception_handler)
 #   for the /og/ cards is what keeps CORSMiddleware's own header when the
 #   request came from an allowlisted origin — it has to run after CORS on the
 #   way out.
+
+# Bound every request body before anything reads it (api/body_limit.py). The
+# two agent lanes carry pasted data and an uploaded file, so they keep the cap
+# their own routes already declare, answered with the code the chat page reads
+# from those routes; every other path takes the small default.
+_AGENT_BODY_BOUND = Bound(MAX_REQUEST_BODY_BYTES, detail="too_long")
+app.add_middleware(BodyLimitMiddleware, prefixes={"/agent": _AGENT_BODY_BOUND, "/debug/agent": _AGENT_BODY_BOUND})
 
 # Enable GZip compression for responses > 500 bytes
 # This significantly reduces payload size for JSON API responses

@@ -103,7 +103,7 @@ class DatabaseQueryError(AnyplotException):
 # ===== Exception Handlers =====
 
 
-def _public_path(request: Request) -> str:
+def public_path(path: str) -> str:
     """The path as the client knows it — never this API's internal routing.
 
     nginx serves crawlers by prepending /seo-proxy to the request URI, so an
@@ -112,10 +112,14 @@ def _public_path(request: Request) -> str:
     Logs keep the full internal path; only the reflected JSON is
     translated.
     """
-    path = request.url.path
     if path.startswith("/seo-proxy"):
         return path.removeprefix("/seo-proxy") or "/"
     return path
+
+
+def _public_path(request: Request) -> str:
+    """`public_path` of a request, for the handlers below."""
+    return public_path(request.url.path)
 
 
 async def anyplot_exception_handler(request: Request, exc: AnyplotException) -> JSONResponse:
