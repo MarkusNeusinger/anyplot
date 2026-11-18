@@ -8,7 +8,7 @@
   are gone; the row that holds for the whole site, the hosting on Google Cloud, stays as a
   sentence under the first table. The crawler copy of the page (`/seo-proxy/legal`) now
   says what the page says, row by row: it gains the shared links it lacked, and the right
-  to object gets back its condition.
+  to object gets back its condition. (#13182)
 - **The privacy policy speaks in plain words, without article numbers.** On `/legal`, the
   table of GDPR article numbers is gone: three points under "why this is allowed" name each
   legal basis in words beside what it covers, a legitimate interest, your request and your
@@ -16,7 +16,7 @@
   replaces "controller", the right to object keeps its condition without the statute's
   phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
   check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
-  says the same, and now also names who is responsible.
+  says the same, and now also names who is responsible. (#13182)
 - **The privacy policy is set more compactly.** On `/legal`, the privacy section is 6859 px
   high on a phone (390 px) where it was 7328, and 3421 px on a desktop (1440 px) where it was
   4009. Its word count stays about the same (1128 to 1120, counted at 390 px), because the
@@ -40,7 +40,7 @@
   browser's storage keeps and the operator's own Cloudflare Access sign-in in a paragraph
   below them. Long sentences are split without adding or dropping a claim: the legal bases
   are three points, and the bot check, the ids row and the assistant's feedback row each
-  read as shorter sentences.
+  read as shorter sentences. (#13182)
 - **The privacy policy says who reads feedback.** The site's feedback row no longer says that
   only the operator reads an entry: he reads them, and when he works on one, its message, page
   and reaction can go to an AI coding assistant such as Claude Code by Anthropic. The data
@@ -51,19 +51,19 @@
   own terms, outside the EU hosting and the EU route the page names, with training on what the
   operator sends switched off. The consent line under the chat's feedback form says who reads
   a case in the same words. The crawler copy says the same, and names the operator, not
-  admins, as the holder of the Cloudflare Access login cookie.
+  admins, as the holder of the Cloudflare Access login cookie. (#13182)
 - **The chat's hint for a table that is too large no longer points at a way that ends in the
   same refusal.** It recommended opening an Excel or Parquet file, which may be 5 MB, but the
   table inside such a file has to fit the same 20,000 rows and 1 MB of text. The hint now
-  says so.
+  says so. (#13182)
 - **The feedback widget speaks as the operator, and the copied prompt asks not to quote the
   visitor's message.** The widget's thank-you line now reads "I read every note.", as the
   site's feedback row says "I read them". The prompt that the admin page copies for the coding
   assistant asks it not to quote the visitor's message in a commit, a pull request or an
-  issue, because the repository is public.
+  issue, because the repository is public. (#13182)
 - **The legal notice links the About page.** Its disclaimer says the plot examples are
   generated and maintained by AI workflows and links the About page for how that works and
-  the operator's part in it.
+  the operator's part in it. (#13182)
 - **The privacy policy says how to find your entry, and what stays.** The rights paragraph
   on `/legal` now asks for what you sent and roughly when, or the contact you typed, so the
   operator can find the entry, and says that log lines cannot be deleted one by one: they
@@ -71,12 +71,13 @@
   periods their own rows give, and that the database's automatic backups keep a deleted entry
   for about 30 days. The GitHub row adds that the operator removes a credited username from
   its spec on request, while the public history keeps it. The crawler copy says the same.
+  (#13182)
 
 ### Fixed
 
 - **The privacy policy names the session hash a feedback case keeps.** The data assistant's
   feedback row said that a case's triage row keeps a hash of your tab id; it also keeps a
-  hash of the session id. The row and its crawler copy now name both.
+  hash of the session id. The row and its crawler copy now name both. (#13182)
 - **The database reference no longer contradicts the privacy policy.** The "Data privacy"
   list in `docs/reference/database.md` promised anonymous session ids, usage data deleted
   after 90 days and no personal data, and its first item broke off mid-sentence. It now
@@ -85,9 +86,9 @@
   overview no longer has only an admin send a feedback case of the agent chat, and it says
   that a case keeps the conversation and up to 5 sample rows of the data even when the data
   file is left out, and it names the case bucket's region, the Netherlands (europe-west4), as
-  the privacy section does.
+  the privacy section does. (#13182)
 - **The database reference gives the real backup settings.** Its "Automated backups" list in
   `docs/reference/database.md` said the backups start at 3:00 AM UTC and are kept for 7 days.
   They start at 19:00 UTC, and the 30 most recent are kept, about 30 days, with
   point-in-time recovery over 7 days of transaction logs, in the EU multi-region. The section
-  now says so and names the read-only command that shows the settings.
+  now says so and names the read-only command that shows the settings. (#13182)
