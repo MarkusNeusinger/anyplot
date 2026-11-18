@@ -271,9 +271,10 @@ def get_feedback_limiter() -> FeedbackLimiter:
 router = APIRouter(
     prefix="/agent",
     tags=["agent-public"],
-    # The door first, so a closed lane answers 404 to everything; then the CSRF guard and the body checks the admin
-    # lane runs too (`api/routers/agent.py`). The identity is each route's own (`public_context`): `GET /lane` needs
-    # none.
+    # The door first, so a closed lane answers 404 to everything that reaches this router; then the CSRF guard and the
+    # body checks the admin lane runs too (`api/routers/agent.py`). The bound on request bodies stands in front of
+    # the router (`api/body_limit.py`) and answers before the door for what it refuses. The identity is each
+    # route's own (`public_context`): `GET /lane` needs none.
     dependencies=[
         Depends(require_public_enabled),
         Depends(require_same_site_client),
