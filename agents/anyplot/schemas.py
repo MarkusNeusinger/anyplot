@@ -924,7 +924,7 @@ class ShownAxes(_ServerContract):
 class ShownRole(_ServerContract):
     """The drawn texts of one role in `PlotShows.texts`: their distinct count, and either all of them or both ends."""
 
-    count: int = Field(ge=1)
+    count: Annotated[StrictInt, Field(ge=1)]
     texts: list[ShownText] | None = Field(default=None, min_length=1)
     first: list[ShownText] | None = Field(default=None, min_length=1)
     last: list[ShownText] | None = Field(default=None, min_length=1)
@@ -935,6 +935,10 @@ class ShownRole(_ServerContract):
         has_ends = self.first is not None and self.last is not None
         if has_texts == has_ends or (self.first is None) != (self.last is None):
             raise ValueError("a role holds either texts or both first and last")
+        if self.texts is not None and self.count != len(self.texts):
+            raise ValueError("count must equal len(texts) when texts is present")
+        if self.first is not None and self.last is not None and self.count <= len(self.first) + len(self.last):
+            raise ValueError("count must exceed len(first) + len(last) when ends are listed")
         return self
 
     @model_serializer

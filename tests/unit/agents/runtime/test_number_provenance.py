@@ -201,7 +201,10 @@ class TestSources:
     def test_a_roles_ends_count_as_drawn_text_and_its_count_is_no_source(self) -> None:
         shown = {
             "texts": {
-                "title": {"count": 12, "texts": ["Loans: 6,120"]},
+                "y tick labels": {
+                    "count": 12,
+                    "texts": ["Loans: 6,120", *(f"Category {chr(65 + idx)}" for idx in range(11))],
+                },
                 "x tick labels": {"count": 30, "first": ["1995"], "last": ["2024"]},
             },
             "review": "passed",

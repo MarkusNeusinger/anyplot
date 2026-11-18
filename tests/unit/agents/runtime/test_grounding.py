@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
+from zoneinfo import ZoneInfo
 
 import matplotlib.dates as mdates
 import pandas as pd
@@ -199,14 +200,17 @@ class TestPlotTexts:
         "payload",
         [
             {"count": 0, "texts": ["a"]},
+            {"count": True, "texts": ["a"]},
             {"count": 1},
             {"count": 1, "texts": []},
+            {"count": 2, "texts": ["a"]},
             {"count": 2, "first": ["a"]},
             {"count": 2, "last": ["b"]},
+            {"count": 2, "first": ["a"], "last": ["b"]},
             {"count": 2, "texts": ["a"], "first": ["a"]},
             {"count": 2, "texts": ["a"], "last": ["b"]},
             {"count": 2, "texts": ["a"], "first": ["a"], "last": ["b"]},
-            {"count": 2, "first": [], "last": ["b"]},
+            {"count": 3, "first": [], "last": ["b"]},
             {"count": 1, "texts": ["a"], "extra": 1},
         ],
     )
@@ -963,6 +967,28 @@ class TestHarnessAxes:
                 "x": {"scale": "date", "min": "2024-02-01T00:00:00", "max": "2024-08-01T00:00:00"},
                 "y": {"scale": "linear", "min": 0.0, "max": 3.0},
             },
+        ]
+
+        london_fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(london_fig)
+        london_ax = london_fig.subplots()
+        london_zone = ZoneInfo("Europe/London")
+        london_ax.plot(mdates.date2num(dates), [1.0, 2.0])
+        london_ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d %H:%M", tz=london_zone))
+        london_ax.set_xlim(
+            float(mdates.date2num(datetime.datetime(2024, 1, 15, tzinfo=datetime.UTC))),
+            float(mdates.date2num(datetime.datetime(2024, 7, 15, tzinfo=datetime.UTC))),
+        )
+        london_ax.set_ylim(0.0, 3.0)
+        assert harness.probe(london_fig, 200)["axes"] == [
+            {
+                "x": {
+                    "scale": "date",
+                    "min": "2024-01-15T00:00:00+00:00",
+                    "max": "2024-07-15T01:00:00+01:00",
+                },
+                "y": {"scale": "linear", "min": 0.0, "max": 3.0},
+            }
         ]
 
     def test_a_categorical_x_axis_is_left_out_while_numeric_y_stays(self) -> None:

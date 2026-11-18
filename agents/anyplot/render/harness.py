@@ -1724,9 +1724,10 @@ def _iso_date(axis, value):
     tz = unit if isinstance(unit, datetime.tzinfo) else None
     if tz is None:
         fmt_tz = getattr(axis.get_major_formatter(), "tz", None)
-        if isinstance(fmt_tz, datetime.tzinfo) and fmt_tz.utcoffset(
-            datetime.datetime(2020, 1, 1)
-        ) != datetime.timedelta(0):
+        if isinstance(fmt_tz, datetime.tzinfo) and (
+            fmt_tz.utcoffset(datetime.datetime(2020, 1, 1)) != datetime.timedelta(0)
+            or fmt_tz.utcoffset(datetime.datetime(2020, 7, 1)) != datetime.timedelta(0)
+        ):
             tz = fmt_tz
     try:
         moment = mdates.num2date(value, tz=tz)
