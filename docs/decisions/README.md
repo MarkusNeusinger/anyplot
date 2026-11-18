@@ -19,9 +19,17 @@ in no particular order.
 
 ## Add a decision
 
-Add a file when the owner rejects a proposal, redirects it, or picks between options in a way that
-changes what gets built or what the site says. Routine choices that a reviewer would not ask about
-don't need one.
+Add a file only for a decision that matters. It matters when at least one of these holds:
+
+- It changed what the product is or does: a feature built, dropped or turned around.
+- It set or moved a standard that work is measured by: the quality bar, a review rule, a gate.
+- It is a public promise or a stance on privacy, security or cost.
+- It changed how the agents work, as a rule that binds every one of them.
+
+Small things don't get a file: a wording, a number picked from a range, a layout, a choice between
+near-equal variants, or anything that only follows from an earlier decision. Fold those into the
+entry they belong to, or leave them to the pull request. When in doubt, leave it out: a few entries
+a month is the expected pace, and a folder of trivia buries the decisions that tell the story.
 
 1. Name the file `YYYY-MM-DD-<short-slug>.md`, with the date of the decision.
 2. Write it in this form:

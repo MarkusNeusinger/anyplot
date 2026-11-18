@@ -6,5 +6,6 @@
   other kept the promise, on the condition that training is switched off wherever a case is read.
 - Decided: the promise stays. The owner wants to read cases with AI coding assistants and to test
   them on other models, and the page says so; he checked that the training setting of the account he
-  reads cases with is off.
+  reads cases with is off. The line under the chat's feedback form, where a visitor agrees, names
+  the same readers and both retention periods.
 - Where: #13182
