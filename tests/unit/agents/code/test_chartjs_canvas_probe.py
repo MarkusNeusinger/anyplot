@@ -1101,6 +1101,44 @@ firstChart.draw();
         assert run.labels.count(("annotation", "Second badge")) == 1
         assert ("annotation", "Offscreen scratch") not in run.labels
 
+    def test_destroyed_chart_and_skipped_canvas_calls_leave_no_stale_annotations(self, tmp_path: Path) -> None:
+        source = """
+const container = document.getElementById("container");
+const wiped = document.createElement("canvas");
+const kept = document.createElement("canvas");
+container.appendChild(wiped);
+container.appendChild(kept);
+
+const draft = new Chart(wiped, {
+  type: "bar",
+  plugins: [{ id: "p0", afterDraw(c) { c.ctx.fillText("Draft note", 20, 20); } }],
+  data: { labels: ["OldX"], datasets: [{ label: "OldSeries", data: [9] }] },
+  options: { animation: false, plugins: { title: { display: true, text: "Draft title" } } },
+});
+draft.destroy();
+
+new Chart(kept, {
+  type: "bar",
+  plugins: [{
+    id: "p1",
+    afterDraw(c) {
+      c.ctx.fillText("NaN x", NaN, 20);
+      c.ctx.fillText("Inf y", 20, Infinity);
+      c.ctx.fillText("Zero maxWidth", 20, 20, 0);
+      c.ctx.fillText("Neg maxWidth", 20, 20, -5);
+      c.ctx.fillText("Valid width", 20, 40, 120);
+    },
+  }],
+  data: { labels: ["KeptX"], datasets: [{ label: "KeptSeries", data: [4] }] },
+  options: { animation: false },
+});
+"""
+        run = run_node_probe(tmp_path, source)
+
+        assert ("annotation", "Valid width") in run.labels
+        for ghost in ("Draft note", "Draft title", "OldX", "OldSeries", "NaN x", "Inf y", "Zero maxWidth", "Neg maxWidth"):
+            assert not any(text == ghost for _, text in run.labels), (ghost, run.labels)
+
 
 # --- Full Playwright + Chromium harness tests (run where Playwright's browser is installed) -----
 

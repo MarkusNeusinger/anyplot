@@ -1019,11 +1019,15 @@ function recordChartjsCanvasTexts(limit) {
     if (typeof original !== "function") return;
     proto[method] = function (value, x, y) {
       try {
-        if (arguments.length >= 3 && value !== null && value !== undefined && this && this.canvas) {
+        var nx = Number(x);
+        var ny = Number(y);
+        var maxWidth = arguments.length >= 4 ? arguments[3] : undefined;
+        var validWidth = maxWidth === undefined || (Number.isFinite(Number(maxWidth)) && Number(maxWidth) > 0);
+        if (arguments.length >= 3 && value !== null && value !== undefined && this && this.canvas && Number.isFinite(nx) && Number.isFinite(ny) && validWidth) {
           var text = String(value).slice(0, 10000).replace(/\s+/g, " ").trim();
-          if (text) {
+          var pt = text ? pointOf(this, nx, ny) : null;
+          if (pt && Number.isFinite(pt[0]) && Number.isFinite(pt[1])) {
             var target = targetFor(this.canvas);
-            var pt = pointOf(this, x, y);
             var last = target.last;
             // An outlined label calls strokeText and fillText at one position: count the pair once.
             if (last && last.method !== method && last.text === text && Object.is(last.x, pt[0]) && Object.is(last.y, pt[1])) {
@@ -1043,6 +1047,7 @@ function recordChartjsCanvasTexts(limit) {
   if (window.Chart && window.Chart.prototype) {
     var chartProto = window.Chart.prototype;
     var clear = chartProto.clear;
+    var destroy = chartProto.destroy;
     var notify = chartProto.notifyPlugins;
     var draw = chartProto.draw;
     if (typeof clear === "function") {
@@ -1051,9 +1056,30 @@ function recordChartjsCanvasTexts(limit) {
           if (stack.length > 0 && stack[stack.length - 1].chart === this) {
             stack[stack.length - 1].texts = [];
             stack[stack.length - 1].last = null;
+          } else if (this && this.canvas) {
+            committed.delete(this.canvas);
+            loose.delete(this.canvas);
           }
         } catch (e) {}
         return clear.apply(this, arguments);
+      };
+    }
+    if (typeof destroy === "function") {
+      chartProto.destroy = function () {
+        var canvas = null;
+        try {
+          canvas = this && this.canvas;
+        } catch (e) {}
+        try {
+          return destroy.apply(this, arguments);
+        } finally {
+          try {
+            if (canvas) {
+              committed.delete(canvas);
+              loose.delete(canvas);
+            }
+          } catch (e) {}
+        }
       };
     }
     if (typeof notify === "function") {
