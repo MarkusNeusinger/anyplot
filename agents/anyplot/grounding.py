@@ -9,8 +9,9 @@ Three measurements, all code:
 
 * `drawn_texts` reads the drawn texts the render's probe reports (the `labels` field) by
   role, every one of them; `plot_texts` builds `PlotShows.texts` from them, each role's
-  distinct count with all of its texts or both ends, which the root reads fenced next to the
-  result. Every library's render reports them since 2026-11-01:
+  distinct count with all of its texts or both ends, and `texts_complete` carries
+  `DrawnTexts.complete` into `PlotShows.texts_complete` (omitted when True), which the root
+  reads fenced next to the result. Every library's render reports them since 2026-11-01:
   matplotlib, seaborn and plotnine through `harness.drawn_labels`, pygal, altair and
   lets-plot through `harness.install_text_probes`, the JavaScript libraries, plotly and bokeh
   through the browser harness (`render.mjs`, `writeTextProbe`), ggplot2 and Makie through the
@@ -20,10 +21,11 @@ Three measurements, all code:
   sees (`plugins/tool_safety.fence_pipeline_notes` drops it), and a run with requested texts
   then carries `UNVERIFIED_LINE` instead of a silent pass.
 * `plot_axes` reads the measured axis ranges the render's probe reports (`axes`,
-  `harness.drawn_axes`: matplotlib, seaborn and plotnine) into `PlotShows.axes`, at most
-  `MAX_AXES` entries of `x`, `y` and `z`, each with a closed `scale` and sorted finite
-  numbers or ISO 8601 strings; a probe without `axes` yields None, which
-  `fence_pipeline_notes` drops too.
+  `harness.drawn_axes`: matplotlib and seaborn; plotnine maps its scales before matplotlib
+  and reports none) into `PlotShows.axes`, at most `MAX_AXES` non-empty entries of `x`, `y`
+  and `z`, each with a closed `scale` (`linear`, `log`, `date`) and sorted finite numbers or
+  ISO 8601 strings; a probe without `axes` yields None, and `fence_pipeline_notes` drops both
+  None and an empty list.
 * `expected_misses` checks each of the run's `expected_texts` (the texts and number formats
   the user asked to see, verbatim) against all drawn texts, never the `PlotShows.texts`
   record. A
@@ -280,6 +282,11 @@ def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, ShownRole] | None:
             tail = bound // 2
             roles[group] = ShownRole(count=count, first=distinct[:head], last=distinct[count - tail :])
     return roles
+
+
+def texts_complete(drawn: DrawnTexts | None) -> bool:
+    """`PlotShows.texts_complete`: False when the probe left a drawn text out or cut it (`DrawnTexts.complete`)."""
+    return drawn is None or drawn.complete
 
 
 AXIS_NAMES = ("x", "y", "z")

@@ -12,9 +12,9 @@ Myanmar. A figure spelled out in words or written in other digits is not read, a
 * `after_model_callback` reads the root's final text reply (no tool call, not partial, not a fixed refusal) and
   checks each of its figures against the sources of the request the root answered (`ledger.root_request`, which
   ReplyLanguage keeps), each under its closed kind (`figures.SOURCE_KINDS`, most trusted first): every tool result
-  still in it (`tool_result`; of a plot result, the adapter's and the reviewer's notes as `plot_notes` and the drawn
-  texts of each role as `drawn_text`, each role's `count` and its `requested_not_found`, the root's own expected
-  texts, left out; the code `get_current_code` returns as `plot_code`), the session part of the system instruction (`session`, its plot memory
+  still in it (`tool_result`; of a plot result, the adapter's and the reviewer's notes as `plot_notes`, the drawn
+  texts of each role and the measured `axes` ranges as `drawn_text`, and each role's `count` and its
+  `requested_not_found`, the root's own expected texts, left out; the code `get_current_code` returns as `plot_code`), the session part of the system instruction (`session`, its plot memory
   as `memory`), the user's own messages (`user`), and the service's limits that the root's instructions state as
   facts (`service`, `service_limits`, built from the server's own constants, never from the prompt text). Never the
   static prompt, the root's own earlier replies or its tool arguments, and never another agent's relayed messages.
@@ -220,9 +220,9 @@ def _fenced(text: str) -> Any:
 
 
 def _add_shows(sources: Sources, text: str) -> None:
-    """A plot result's `shows` block: the drawn texts of each role (`texts`, `first` and `last`) as `drawn_text`,
-    the review's verdict and score (server-built) as a tool result, each role's `count` and the root's own expected
-    texts not at all."""
+    """A plot result's `shows` block: the drawn texts of each role (`texts`, `first` and `last`) and the measured
+    `axes` ranges as `drawn_text`, the review's verdict and score (server-built) as a tool result, each role's `count`
+    and the root's own expected texts not at all."""
     shown = _fenced(text)
     if not isinstance(shown, dict):
         sources.add_text(text, "drawn_text")
@@ -235,6 +235,8 @@ def _add_shows(sources: Sources, text: str) -> None:
                         for part in ("texts", "first", "last"):
                             if part in role:
                                 sources.add_json(role[part], "drawn_text")
+        elif key == "axes":
+            sources.add_json(value, "drawn_text")
         elif key != REQUESTED_KEY:
             sources.add_json(value, "tool_result")
 
@@ -267,8 +269,8 @@ def _add_response(sources: Sources, name: str | None, response: Any) -> None:
 
 def request_sources(request: LlmRequest, state: Any) -> Sources:
     """The numbers the root had from a source when it wrote the reply to `request`, each under its kind: the tool
-    results, with a plot result's notes and drawn texts and the plot's code apart, the session block with its plot
-    memory apart, the user's messages and the service's limits."""
+    results, with a plot result's notes, drawn texts and axis ranges and the plot's code apart, the session block with
+    its plot memory apart, the user's messages and the service's limits."""
     sources = Sources()
     for content in request.contents:
         parts = content.parts or []
