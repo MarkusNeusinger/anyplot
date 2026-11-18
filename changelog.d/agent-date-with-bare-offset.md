@@ -11,9 +11,9 @@
   reason, and as a filter bound `2026-03-01+01:00` meant 01:00 and left rows of
   1 March out; such a bound now means the whole day. A filter by date on the
   pasted column itself, which would compare the text and cut the rows of one
-  day in two, is refused with the way out: the converted column.
+  day in two, is refused with the way out: the converted column. (#13184)
 - **Hour labels written `YYYY-MM-DD-HH` are no longer read as dates.** A date
   followed by a sign and digits in no offset form is refused, with the form
   the column needs, when it is converted or used as a filter bound. Before,
   four hour labels became four equal dates, and the chat made that conversion
-  without asking.
+  without asking. (#13184)
