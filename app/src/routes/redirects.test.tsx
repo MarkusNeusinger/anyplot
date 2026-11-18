@@ -96,7 +96,9 @@ describe('legalMovedSectionRedirect', () => {
     renderAt('/legal#transparency');
     expect(await screen.findByTestId('location')).toHaveTextContent(/^\/about#transparency$/);
     // The layout records a pageview for every page it renders (`RootLayout`): /legal is none.
-    expect(rendered).toEqual(['/about#transparency']);
+    // The stand-in records in an effect, which can run after the text is already in the document,
+    // so the list is waited for; once it holds the page, it must hold nothing else.
+    await waitFor(() => expect(rendered).toEqual(['/about#transparency']));
   });
 
   it('leaves the legal page itself, and its other sections, where they are', async () => {
