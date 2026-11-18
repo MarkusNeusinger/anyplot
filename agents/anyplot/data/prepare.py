@@ -84,7 +84,10 @@ The operations:
   is cut at its own midnight, one the parser wrote in UTC (several offsets) at UTC midnight,
   and the change line names that offset. The result holds the key columns and the
   value columns named like their sources, or `count`; every other column is dropped, rows
-  with a missing key form their own group, and the rows are sorted by the keys.
+  with a missing key form their own group, and the rows are sorted by the keys. Every
+  figure reads only the cells that hold a value: a group with none has no figure, a total
+  included (its `count` is 0), and the change line counts, per value column, the rows left
+  out and the groups left empty.
 * `pivot_longer`: 2 to 20 columns become a `names_to`/`values_to` pair (long format,
   one row per source row and column, missing values kept; columns of unlike kinds melt
   into their canonical texts, a datetime with its time). `pivot_wider`: the distinct
@@ -1978,8 +1981,10 @@ def _decimal_total(values: pd.Series) -> ExactDecimal:
 
 
 def _group_sum(values: pd.Series) -> float:
-    """A float group's total (`_decimal_total`); a group with no value totals 0, as in pandas."""
-    return float(_decimal_total(values))
+    """A float group's total (`_decimal_total`); a group with no value has none, as it has no mean. pandas would
+    total it 0, and a 0 that no cell held would then stand in answers, in stored data and in a chart beside the
+    zeros that were written; a row sum of no values stays empty for the same reason (`derive`)."""
+    return float(_decimal_total(values)) if values.count() else math.nan
 
 
 def _group_mean(values: pd.Series) -> float:
@@ -2064,28 +2069,39 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     if other:
         change += f", {_count(other, 'other column')} dropped"
     notice = cast_note(cast, f"in {_listed(values)}") if cast else whole_rounded(rounded) if rounded else ""
-    if not keys:
-        # Without a key the line names the rows the figures are over, so it counts the rows each figure leaves out
-        # too, in the room the other notice and the shortest start of the line leave (", " before each notice).
-        room = MAX_NOTE_CHARS - min(len(change), NOTE_HEAD_CHARS) - 2 - (len(notice) + 2 if notice else 0)
-        notice = _joined(_left_out_note(frame, values, room), notice)
+    # The line counts the rows each figure leaves out, and for a keyed aggregate the groups that had no value at
+    # all, in the room the other notice and the shortest start of the line leave (", " before each notice). A
+    # count of such a group is a true 0; every other figure of it is empty.
+    empty = {name: int((grouped[name].count() == 0).sum()) for name in values} if keys and op.how != "count" else {}
+    room = MAX_NOTE_CHARS - min(len(change), NOTE_HEAD_CHARS) - 2 - (len(notice) + 2 if notice else 0)
+    notice = _joined(_left_out_note(frame, values, room, empty), notice)
     return result, _with_notice(change, notice)
 
 
-def _left_out_note(frame: pd.DataFrame, columns: list[str], room: int) -> str:
-    """The rows without a value in each value column of an `aggregate` without a key: a sum, a mean, a count, a
-    minimum or a first value reads only the cells that hold one. One count per column, since the columns can miss
-    different rows. Past `room` characters the names give way to the total of the empty cells: `room` is what the
-    line's other notice and the shortest start it keeps (`NOTE_HEAD_CHARS`) leave, so `_with_notice` shortens the
-    start of the line and never a count."""
+def _left_out_note(frame: pd.DataFrame, columns: list[str], room: int, empty: dict[str, int]) -> str:
+    """What an `aggregate` left out of its figures, per value column: a sum, a mean, a count, a minimum or a first
+    value reads only the cells that hold one, so the rows without a value are counted, and so are the groups with no
+    value at all (`empty`, a keyed aggregate's), whose figure is empty and no 0. One count of each per column, since
+    the columns can miss different rows. Past `room` characters the names give way to the totals: `room` is what
+    the line's other notice and the shortest start it keeps (`NOTE_HEAD_CHARS`) leave, so `_with_notice` shortens
+    the start of the line and never a count."""
     missing = {name: int(frame[name].isna().sum()) for name in columns}
     notes = _joined(
-        *(f"{_count(count, 'row')} without a value in {name} left out" for name, count in missing.items() if count)
+        *(
+            note
+            for name in columns
+            for note in (
+                f"{_count(empty[name], 'group')} without a value in {name} left empty" if empty.get(name) else "",
+                f"{_count(missing[name], 'row')} without a value in {name} left out" if missing[name] else "",
+            )
+        )
     )
     if not notes or len(notes) <= room:
         return notes
     cells, hit = sum(missing.values()), sum(1 for count in missing.values() if count)
-    return f"{_count(cells, 'empty cell')} in {hit} of the {len(columns)} value columns left out"
+    groups = sum(empty.values())
+    short = f"{_count(cells, 'empty cell')} in {hit} of the {len(columns)} value columns left out"
+    return _joined(f"{_count(groups, 'group figure')} left empty" if groups else "", short)
 
 
 def _reduce(grouped: Any, values: pd.Series, how: str) -> tuple[pd.Series, int, int]:
@@ -2095,7 +2111,9 @@ def _reduce(grouped: Any, values: pd.Series, how: str) -> tuple[pd.Series, int, 
         case "sum" if is_integer_dtype(values.dtype):
             # In Python integers: pandas' Int64 sum wraps around silently past 2**63 (review of 2026-10-15).
             # Summed outside pandas, which would infer a dtype for the totals; the groups come in the order of `size`.
-            totals = [sum(int(value) for value in cells.dropna()) for _, cells in grouped]
+            # A group with no value has no total (`_group_sum`): Python's sum of nothing would be 0.
+            held = [cells.dropna() for _, cells in grouped]
+            totals = [sum(int(value) for value in cells) if len(cells) else None for cells in held]
             aggregated, rounded = _whole_numbers(totals, grouped.size().index)
             return aggregated, rounded, 0
         case "sum":

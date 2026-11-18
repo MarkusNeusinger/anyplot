@@ -1410,17 +1410,70 @@ class TestAggregate:
 
         assert rows(prepare("k,v\na,19.99\na,5.01\na,0.1\na,0.2\n", operation)) == ["k,v", f"a,{result}"]
 
-    @pytest.mark.parametrize(("how", "cell"), [("sum", "0"), ("mean", "")])
-    def test_a_group_without_a_value_totals_zero_and_has_no_mean(self, how: str, cell: str) -> None:
+    @pytest.mark.parametrize("how", ["sum", "mean", "min", "max", "first", "last"])
+    @pytest.mark.parametrize("held", ["1.5", "7"])
+    def test_a_group_without_a_value_has_no_figure_and_the_line_counts_it(self, how: str, held: str) -> None:
+        """A total of nothing is not a 0 anyone wrote: decimals and whole numbers alike, the group's cell stays
+        empty, as its mean always did, and the line says that a group had no value."""
         operation = {"op": "aggregate", "by": ["k"], "column": "v", "how": how}
+        prepared = prepare(f"k,v\na,{held}\nb,\nb,\n", operation)
 
-        assert rows(prepare("k,v\na,1.5\nb,\n", operation)) == ["k,v", "a,1.5", f"b,{cell}"]
+        assert rows(prepared) == ["k,v", f"a,{held}", "b,"]
+        (line,) = prepared.changes
+        assert line.endswith(": 2 rows, 1 group without a value in v left empty, 2 rows without a value in v left out")
+
+    @pytest.mark.parametrize("cells", [("0", "0"), ("0.25", "-0.25")])
+    def test_a_total_of_zero_from_cells_that_hold_values_stays_a_zero(self, cells: tuple[str, str]) -> None:
+        """The two must stay apart in the result: the group whose values add up to nothing, and the group nobody
+        recorded a value for."""
+        operation = {"op": "aggregate", "by": ["k"], "column": "v", "how": "sum"}
+        prepared = prepare(f"k,v\na,{cells[0]}\na,{cells[1]}\na,\nb,\n", operation)
+
+        header, total, empty = rows(prepared)
+        assert (header, empty) == ("k,v", "b,")
+        assert total.startswith("a,") and float(total.removeprefix("a,")) == 0
+        assert prepared.changes == [
+            "summed v by k: 2 rows, 1 group without a value in v left empty, 2 rows without a value in v left out"
+        ]
+
+    def test_a_group_with_some_values_sums_them_and_the_line_counts_the_rows_left_out(self) -> None:
+        operation = {"op": "aggregate", "by": ["k"], "column": "v", "how": "sum"}
+        prepared = prepare("k,v\na,3\na,\na,4\nb,5\n", operation)
+
+        assert rows(prepared) == ["k,v", "a,7", "b,5"]
+        assert prepared.changes == ["summed v by k: 2 rows, 1 row without a value in v left out"]
+
+    def test_a_table_without_empty_cells_gets_no_such_count(self) -> None:
+        operation = {"op": "aggregate", "by": ["k"], "column": "v", "how": "sum"}
+
+        assert prepare("k,v\na,3\na,4\nb,5\n", operation).changes == ["summed v by k: 2 rows"]
+
+    def test_the_count_of_a_group_without_a_value_is_a_true_zero(self) -> None:
+        """Nothing counted is 0, and that is what the cell says; only the rows left out are named."""
+        operation = {"op": "aggregate", "by": ["k"], "column": "v", "how": "count"}
+        prepared = prepare("k,v\na,1.5\nb,\n", operation)
+
+        assert rows(prepared) == ["k,count", "a,1", "b,0"]
+        assert prepared.changes == ["counted v by k: 2 rows, 1 row without a value in v left out"]
+
+    def test_each_value_column_gets_its_own_counts(self) -> None:
+        operation = {"op": "aggregate", "by": ["k"], "columns": ["v", "w"], "how": "sum"}
+        prepared = prepare("k,v,w\na,1,\na,2,\nb,,5\n", operation)
+
+        assert rows(prepared) == ["k,v,w", "a,3,", "b,,5"]
+        assert prepared.changes == [
+            "summed v and w by k: 2 rows, 1 group without a value in v left empty, 1 row without a value in v left out, "
+            "1 group without a value in w left empty, 2 rows without a value in w left out"
+        ]
 
     def test_count_names_its_column_count(self) -> None:
         prepared = prepare(SALES, {"op": "aggregate", "by": ["Tier"], "column": "Anteil", "how": "count"})
 
         assert rows(prepared) == ["Tier,count", "Gesamt,1", "Hund,3", "Katze,1"]
-        assert prepared.changes == ["counted Anteil by Tier: 3 rows, 2 other columns dropped"]
+        # A count reads only the cells that hold a value, and the line says how many rows that leaves out.
+        assert prepared.changes == [
+            "counted Anteil by Tier: 3 rows, 2 other columns dropped, 1 row without a value in Anteil left out"
+        ]
         assert dtypes(prepared)["count"] == "integer"
 
     def test_mean_by_two_keys_per_quarter(self) -> None:
@@ -1893,7 +1946,7 @@ class TestSequences:
             "renamed 'Tier' to 'Segment'",
             "dropped 1 row where Segment = 'Gesamt'",
             "Anteil: 4 cells read as numbers, unit '%' removed",
-            "averaged Anteil by Segment: 2 rows, 2 other columns dropped",
+            "averaged Anteil by Segment: 2 rows, 2 other columns dropped, 1 row without a value in Anteil left out",
             "sorted by Anteil, descending",
         ]
 
