@@ -52,7 +52,7 @@
   for `get_dataset_profile`, whose 16 KB of profile sit next to the pasted notes); a result outside them becomes an error. The `plot_pipeline` result
   reaches the root with its model-written `changes` and `residual_defects` fenced as
   `<tool_notes>` under `notes`, and what the shipped render shows (`PlotShows`) fenced
-  the same way under `shows`, without `texts` when the render reported none.
+  the same way under `shows`, without `texts` or `axes` when the render reported none.
 * `on_tool_error_callback`: any exception becomes `{"status": "error", "code": ...}`
   with a fixed code; the exception text never reaches the model.
 * The turn's record of the root's calls (`RequestLedger.tool_calls`): `before_tool_callback` notes each call with its
@@ -208,9 +208,9 @@ RESULT_LIMITS: dict[str, int] = {
     DATA_CODE_TOOL: 16 * 1024,
     # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200, 50 bindings of 32-character roles and
     # 64-character columns) with its `shows` (96 drawn texts of 80 characters across the 12 roles at their
-    # `first`/`last` form, five requested texts of 120) is 27,035 bytes in one-byte, 49,415 bytes in two-byte (`ä`)
-    # and 71,795 bytes in three-byte UTF-8 against the 53,248-byte cap. Above the cap `shows` gives way
-    # (`shrunk_shows`) before the result is refused.
+    # `first`/`last` form, two 3D `axes` entries at 32-character ISO date limits, five requested texts of 120) is
+    # 27,795 bytes in one-byte, 50,175 bytes in two-byte (`ä`) and 72,555 bytes in three-byte UTF-8 against the
+    # 53,248-byte cap. Above the cap `shows` gives way (`shrunk_shows`) before the result is refused.
     PIPELINE_TOOL: 52 * 1024,
 }
 TEXT_LITERAL_KEYS = ("separator", "prefix", "suffix", "old", "new")
@@ -614,6 +614,16 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
                         for group, role in shown["texts"].items()
                     },
                 }
+            if shown.get("axes") is None:
+                shown = {key: value for key, value in shown.items() if key != "axes"}
+            elif isinstance(shown.get("axes"), list):
+                shown = {
+                    **shown,
+                    "axes": [
+                        {k: v for k, v in entry.items() if v is not None} if isinstance(entry, dict) else entry
+                        for entry in shown["axes"]
+                    ],
+                }
         fenced[SHOWS_KEY] = SHOWS_PREAMBLE + "\n" + fence("tool_notes", json.dumps(shown, ensure_ascii=False))
     return fenced
 
@@ -624,7 +634,8 @@ SHOWS_KEPT_GROUPS = ("title", "subtitle", "x axis label", "y axis label", "z axi
 
 def shrunk_shows(result: dict[str, Any]) -> list[dict[str, Any]]:
     """Smaller versions of a `plot_pipeline` result, in order: `shows.texts` without tick labels and other texts,
-    then without any texts (`null`, which `fence_pipeline_notes` leaves out, so the root quotes no plot text)."""
+    then without any texts (`null`, which `fence_pipeline_notes` leaves out, so the root quotes no plot text);
+    `shows.axes` stays in both."""
     shows = result.get(SHOWS_KEY)
     if not isinstance(shows, dict) or not isinstance(shows.get("texts"), dict):
         return []

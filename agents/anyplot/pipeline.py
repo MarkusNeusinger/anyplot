@@ -159,6 +159,7 @@ from .grounding import (
     DrawnTexts,
     drawn_texts,
     expected_misses,
+    plot_axes,
     plot_texts,
     probe_error,
     reviewed_misses,
@@ -219,6 +220,7 @@ from .schemas import (
     RoundOutcome,
     RoundStep,
     SandboxFailure,
+    ShownAxes,
     ShownGroup,
     ShownRole,
     Verdict,
@@ -492,6 +494,9 @@ class Candidate:
     texts: dict[ShownGroup, ShownRole] | None = None
     """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels, which
     the root never sees (`tool_safety.fence_pipeline_notes`)."""
+    axes: list[ShownAxes] | None = None
+    """This render's measured axis ranges (`grounding.plot_axes`), for `PlotShows`; None when the render reported
+    none, which `tool_safety.fence_pipeline_notes` drops too."""
     drawn: DrawnTexts | None = None
     """Every drawn text this render's probe reported, unclipped (`grounding.drawn_texts`), which the plot memory is
     checked against once it ships (`settle_memory`, `memory_ids`); None without probe labels."""
@@ -1815,6 +1820,7 @@ def finish(run: Run) -> PlotResult:
         ],
         shows=PlotShows(
             texts=shipped.texts,
+            axes=shipped.axes,
             review=_review_state(shipped, meets_bar),
             score=shipped.review_score,
             requested_not_found=shipped.expect_misses,
@@ -2723,9 +2729,11 @@ async def _attempts(
             _end_attempt(run, "render", feedback)
             continue
         output = rendered.outputs.get(run.theme)
-        # `shows` gets the clipped summary of every drawn text the probe reports.
-        drawn = drawn_texts(output.probe if output is not None else None)
+        # `shows` gets the clipped summary of every drawn text and the measured axis ranges the probe reports.
+        probe = output.probe if output is not None else None
+        drawn = drawn_texts(probe)
         texts = plot_texts(drawn)
+        axes = plot_axes(probe)
         checking = settings.expect_check != "off" and bool(run.expected_texts)
         # The requested texts are checked against matplotlib's drawn texts; where the runtime's reviewer checks them
         # (`review_texts`: every library without matplotlib), its probe's texts ground the reply alone.
@@ -2750,6 +2758,7 @@ async def _attempts(
             advisory_gates=[gate for gate in report.failed_gates if gate.startswith("G")],
             changes=list(run.changes),
             texts=texts,
+            axes=axes,
             drawn=drawn,
             expect_lines=expect_lines,
             expect_misses=[miss.expected for miss in misses],

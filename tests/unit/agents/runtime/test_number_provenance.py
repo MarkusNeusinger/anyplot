@@ -218,6 +218,27 @@ class TestSources:
         for count in ("12", "30"):
             assert sources.kind_of(one(count)) is None, count
 
+    def test_an_axis_limit_stated_with_fewer_decimals_counts_as_tool_result(self) -> None:
+        shown = {
+            "texts": {"title": {"count": 1, "texts": ["Loans: 6,120"]}},
+            "axes": [
+                {
+                    "x": {"scale": "linear", "min": 0.0, "max": 12.5},
+                    "y": {"scale": "linear", "min": 2.5, "max": 105.32541},
+                }
+            ],
+            "review": "passed",
+        }
+        result = {
+            "status": "ok",
+            "attempts": 1,
+            SHOWS_KEY: SHOWS_PREAMBLE + "\n" + fence("tool_notes", json.dumps(shown)),
+        }
+        sources = request_sources(root_request(response_of("plot_pipeline", result)), {})
+
+        assert sources.kind_of(one("105.3")) == "tool_result"
+        assert sources.kind_of(one("105.32541")) == "tool_result"
+
     def test_a_plots_notes_count_as_plot_notes(self) -> None:
         """The adapter's `changes` and the reviewer's `residual_defects` are model-written: a kind of their own, so the
         measurement tells them from a server's result."""

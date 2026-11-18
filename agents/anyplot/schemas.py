@@ -26,9 +26,11 @@ verdict that rejects without a usable defect stays unread.
 """
 
 import json
+import math
 import re
 import unicodedata
 from collections.abc import Iterable
+from datetime import datetime
 from typing import Annotated, Any, Literal, Self, get_args
 
 from pydantic import (
@@ -37,6 +39,9 @@ from pydantic import (
     ConfigDict,
     Field,
     NonNegativeInt,
+    StrictFloat,
+    StrictInt,
+    StrictStr,
     TypeAdapter,
     ValidationInfo,
     field_validator,
@@ -210,6 +215,10 @@ MAX_FILE_NAME_CHARS = 80
 """A dropped file's name as the session keeps it (`opening.source_name` cuts it to this)."""
 MAX_SHOWN_TEXT_CHARS = 80
 """One drawn text in `PlotShows.texts`."""
+MAX_AXES = 2
+"""Axes entries `PlotShows.axes` carries (`harness.AXES_LIMIT`)."""
+MAX_AXIS_DATE_CHARS = 32
+"""One ISO 8601 date limit in `PlotShows.axes` (`2024-01-01T00:00:00.000000+00:00`)."""
 
 ColumnDtype = Literal["integer", "number", "datetime", "boolean", "text"]
 SourceFormat = Literal[
@@ -837,7 +846,79 @@ ShownGroup = Literal[
 ]
 """The roles `PlotShows.texts` groups the drawn texts by (`grounding.plot_texts`)."""
 ShownText = Annotated[str, Field(min_length=1, max_length=MAX_SHOWN_TEXT_CHARS)]
+AxisScale = Literal["linear", "log", "date", "other"]
+AXIS_SCALES: frozenset[str] = frozenset(get_args(AxisScale))
+AXIS_DATE_PATTERN = r"^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?(?:Z|[+-]\d{2}:\d{2})?)?$"
+_AXIS_DATE = re.compile(AXIS_DATE_PATTERN)
 ReviewState = Literal["passed", "findings", "not_reviewed"]
+
+
+def parse_axis_number(value: Any) -> float:
+    """A finite axis limit as a float; booleans, strings and values outside float range fail."""
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise ValueError("a numeric axis limit must be a number")
+    try:
+        number = float(value)
+    except OverflowError:
+        raise ValueError("a numeric axis limit must fit in float") from None
+    if not math.isfinite(number):
+        raise ValueError("a numeric axis limit must be finite")
+    return number
+
+
+def parse_axis_date(value: Any) -> tuple[str, datetime]:
+    """A strict ISO 8601 date limit of at most `MAX_AXIS_DATE_CHARS` characters, with its parsed datetime."""
+    if not isinstance(value, str) or len(value) > MAX_AXIS_DATE_CHARS or _AXIS_DATE.fullmatch(value) is None:
+        raise ValueError("a date axis limit must be an ISO 8601 string within the character cap")
+    return value, datetime.fromisoformat(value)
+
+
+class ShownAxis(_ServerContract):
+    """The measured range of one axis (`x`, `y` or `z`) of an axes in `PlotShows.axes`."""
+
+    scale: AxisScale
+    min: StrictFloat | StrictInt | StrictStr
+    max: StrictFloat | StrictInt | StrictStr
+
+    @model_validator(mode="after")
+    def _limits_match_scale(self) -> Self:
+        if self.scale == "date":
+            low_text, low_dt = parse_axis_date(self.min)
+            high_text, high_dt = parse_axis_date(self.max)
+            if (low_dt.tzinfo is None) != (high_dt.tzinfo is None) or low_dt > high_dt:
+                raise ValueError("date axis limits must share timezone awareness and satisfy min <= max")
+            object.__setattr__(self, "min", low_text)
+            object.__setattr__(self, "max", high_text)
+            return self
+        low = parse_axis_number(self.min)
+        high = parse_axis_number(self.max)
+        if low > high:
+            raise ValueError("numeric axis limits must satisfy min <= max")
+        object.__setattr__(self, "min", low)
+        object.__setattr__(self, "max", high)
+        return self
+
+
+class ShownAxes(_ServerContract):
+    """The measured axis ranges of one visible axes in `PlotShows.axes`."""
+
+    x: ShownAxis | None = None
+    y: ShownAxis | None = None
+    z: ShownAxis | None = None
+
+    @model_validator(mode="after")
+    def _at_least_one_axis(self) -> Self:
+        if self.x is None and self.y is None and self.z is None:
+            raise ValueError("an axes entry holds at least one of x, y and z")
+        return self
+
+    @model_serializer
+    def _without_none(self) -> dict[str, dict[str, Any]]:
+        return {
+            name: {"scale": axis.scale, "min": axis.min, "max": axis.max}
+            for name, axis in (("x", self.x), ("y", self.y), ("z", self.z))
+            if axis is not None
+        }
 
 
 class ShownRole(_ServerContract):
@@ -868,7 +949,9 @@ class PlotShows(_ServerContract):
 
     `texts` are the drawn texts by role (`ShownRole`), read from the render's probe
     (`grounding.plot_texts`); None when the renderer reported none (a renderer older than the
-    `labels` probe field).
+    `labels` probe field). `axes` are the measured axis ranges (`ShownAxes`,
+    `grounding.plot_axes`) of the first `MAX_AXES` visible non-colorbar axes for the libraries
+    that draw with matplotlib; None when the render reported none.
     `review` is the verdict on exactly this render (`passed`: it met the ship bar), `score`
     the catalogue review's score, `requested_not_found` the `expected_texts` the drawn
     texts do not show (`grounding.expected_misses`). The texts are written by the code under
@@ -876,6 +959,7 @@ class PlotShows(_ServerContract):
     """
 
     texts: dict[ShownGroup, ShownRole] | None = None
+    axes: list[ShownAxes] | None = Field(default=None, max_length=MAX_AXES)
     review: ReviewState = "not_reviewed"
     score: int | None = Field(default=None, ge=0, le=100)
     requested_not_found: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)

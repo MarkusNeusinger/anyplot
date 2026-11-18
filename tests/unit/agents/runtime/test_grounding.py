@@ -45,6 +45,7 @@ from agents.anyplot.grounding import (
     drawn_texts,
     expected_misses,
     format_unit,
+    plot_axes,
     plot_texts,
     reviewed_misses,
 )
@@ -65,11 +66,14 @@ from agents.anyplot.plugins.tool_safety import (
     fence_pipeline_notes,
     result_limit,
     result_size,
+    shrunk_shows,
 )
 from agents.anyplot.policy import DATA_PREAMBLE
 from agents.anyplot.render import harness
 from agents.anyplot.schemas import (
     MAX_ATTEMPTS,
+    MAX_AXES,
+    MAX_AXIS_DATE_CHARS,
     MAX_CHANGE_CHARS,
     MAX_CHANGES,
     MAX_COLUMN_NAME_CHARS,
@@ -87,6 +91,8 @@ from agents.anyplot.schemas import (
     PlotShows,
     ReviewRequest,
     Round,
+    ShownAxes,
+    ShownAxis,
     ShownRole,
 )
 from agents.anyplot.services import Services
@@ -415,6 +421,8 @@ def run_shipping(**candidate: Any) -> Run:
 
 def largest_result(char: str) -> PlotResult:
     """A shipped result with every list at its maximum length and every text at its cap, written in `char`."""
+    axis = ShownAxis(scale="date", min="2024-01-01T00:00:00.000000+00:00", max="2024-12-31T23:59:59.999999+00:00")
+    assert len(str(axis.min)) == MAX_AXIS_DATE_CHARS and len(str(axis.max)) == MAX_AXIS_DATE_CHARS
     return PlotResult(
         status="needs_attention",
         attempts=MAX_ATTEMPTS,
@@ -432,6 +440,7 @@ def largest_result(char: str) -> PlotResult:
                 )
                 for group, limit in GROUP_LIMITS.items()
             },
+            axes=[ShownAxes(x=axis, y=axis, z=axis)] * MAX_AXES,
             review="findings",
             score=100,
             requested_not_found=[char * MAX_EXPECTED_TEXT_CHARS] * MAX_EXPECTED_TEXTS,
@@ -512,8 +521,12 @@ class TestShows:
             char: result_size(fence_pipeline_notes(largest_result(char).model_dump(mode="json")))
             for char in ("x", "ä", "中")
         }
+        full = largest_result("ä")
+        assert full.shows is not None
+        without_axes = full.model_copy(update={"shows": full.shows.model_copy(update={"axes": None})})
 
-        assert sizes == {"x": 27_035, "ä": 49_415, "中": 71_795}
+        assert sizes == {"x": 27_795, "ä": 50_175, "中": 72_555}
+        assert sizes["ä"] - result_size(fence_pipeline_notes(without_axes.model_dump(mode="json"))) == 760
         assert sizes["ä"] <= 50_700
 
     async def test_over_the_cap_shows_gives_way_before_the_result_is_refused(self) -> None:
@@ -595,6 +608,114 @@ class TestShows:
         inner = json.loads(match[1])
         assert ("texts" in inner) is (texts is not None) and inner["review"] == "passed"
         assert '"texts": null' not in fenced["shows"]
+
+    def test_a_result_without_axes_holds_no_axes_key_and_is_byte_identical(self) -> None:
+        """A library that does not draw with matplotlib leaves `axes` None, and its fenced result is unchanged."""
+        snapshot = snapshot_from_repo("bar-basic", "pygal")
+        store = DatasetStore()
+        dataset = store.get(store.put("s", parse_dataset("a,b\n1,2\n3,4\n")), "s")
+        assert dataset is not None
+        view = SessionView("bar-basic", "pygal", "en", snapshot, "code", [], None)
+        run = Run(view=view, dataset=dataset, attempts=1)
+        run.best = Candidate(
+            working="w", run_form="r", pngs={}, plan=AdaptPlan(), attempt=1, texts=shown(MILLIONS_EN), reviewed_ok=True
+        )
+        result = finish(run)
+        assert result.shows is not None and result.shows.axes is None
+
+        dumped = result.model_dump(mode="json")
+        pre_package_2 = {**dumped, "shows": {k: v for k, v in dumped["shows"].items() if k != "axes"}}
+        fenced = fence_pipeline_notes(dumped)
+
+        assert json.dumps(fenced, ensure_ascii=False) == json.dumps(
+            fence_pipeline_notes(pre_package_2), ensure_ascii=False
+        )
+        match = re.search(r"<tool_notes>\n(.*)\n</tool_notes>", fenced["shows"], re.DOTALL)
+        assert match is not None
+        inner = json.loads(match[1])
+        assert "axes" not in inner and '"axes"' not in fenced["shows"]
+
+    def test_shrunk_shows_keeps_axes_in_both_smaller_versions(self) -> None:
+        axes = [
+            ShownAxes(x=ShownAxis(scale="linear", min=0.0, max=10.0), y=ShownAxis(scale="log", min=1.0, max=1000.0))
+        ]
+        result = finish(run_shipping(texts=shown(MILLIONS_EN), axes=axes, reviewed_ok=True))
+        dumped = result.model_dump(mode="json")
+        expected_axes = [
+            {"x": {"scale": "linear", "min": 0.0, "max": 10.0}, "y": {"scale": "log", "min": 1.0, "max": 1000.0}}
+        ]
+
+        first, second = shrunk_shows(dumped)
+
+        assert first["shows"]["axes"] == expected_axes and second["shows"]["axes"] == expected_axes
+        for smaller, has_texts in ((first, True), (second, False)):
+            fenced = fence_pipeline_notes(smaller)
+            match = re.search(r"<tool_notes>\n(.*)\n</tool_notes>", fenced["shows"], re.DOTALL)
+            assert match is not None
+            inner = json.loads(match[1])
+            assert inner["axes"] == expected_axes and ("texts" in inner) is has_texts
+
+
+class TestPlotAxes:
+    def test_plot_axes_reads_untrusted_probe_and_drops_invalid_values_without_raising(self) -> None:
+        assert plot_axes(None) is None
+        assert plot_axes({}) is None
+        assert plot_axes({"axes": "not a list"}) is None
+        assert plot_axes({"axes": []}) == []
+
+        tampered = {
+            "axes": [
+                "not a dict",
+                {"theta": {"scale": "linear", "min": 0.0, "max": 6.0}},  # unknown entry key only: empty entry dropped
+                {
+                    "x": {"scale": "linear", "min": 0.0, "max": float("nan")},  # non-finite number
+                    "y": {"scale": "linear", "min": "0.0", "max": 10.0},  # string where number belongs
+                    "z": {"scale": "log", "min": 1.0, "max": 100.0},
+                    "theta": {"scale": "linear", "min": 0.0, "max": 360.0},  # unknown entry key dropped
+                },
+                {
+                    "x": {"scale": "polar", "min": 0.0, "max": 1.0},  # unknown scale
+                    "y": {"scale": "linear", "min": 0.0, "max": 1.0, "extra": 2},  # unknown key on axis
+                    "z": {"scale": "date", "min": "2024-01-01T00:00:00", "max": "2024-12-31T23:59:59"},
+                },
+                {
+                    "x": {"scale": "linear", "min": 0.0, "max": 5.0}  # third valid entry: dropped past MAX_AXES
+                },
+            ]
+        }
+
+        axes = plot_axes(tampered)
+
+        assert axes == [
+            ShownAxes(z=ShownAxis(scale="log", min=1.0, max=100.0)),
+            ShownAxes(z=ShownAxis(scale="date", min="2024-01-01T00:00:00", max="2024-12-31T23:59:59")),
+        ]
+
+    @pytest.mark.parametrize(
+        "bad_axis",
+        [
+            {"scale": "linear", "min": float("inf"), "max": 1.0},
+            {"scale": "linear", "min": 0.0, "max": float("-inf")},
+            {"scale": "linear", "min": 0, "max": 10**400},
+            {"scale": "linear", "min": False, "max": True},
+            {"scale": "linear", "min": 10.0, "max": 5.0},
+            {"scale": "date", "min": 19723, "max": "2024-01-01"},
+            {"scale": "date", "min": "2024-02-30", "max": "2024-03-01"},
+            {"scale": "date", "min": "2024-W01-1", "max": "2024-W02-1"},
+            {"scale": "date", "min": "2024-01-01T00:00:00.0000000+00:00", "max": "2024-01-02T00:00:00.0000000+00:00"},
+            {"scale": "date", "min": "2024-01-01T00:00:00", "max": "2024-01-02T00:00:00+00:00"},
+            {"scale": "date", "min": "2024-02-01", "max": "2024-01-01"},
+            {"scale": "linear", "min": 0.0},
+        ],
+    )
+    def test_every_malformed_axis_is_dropped_by_the_reader_and_refused_by_the_schema(
+        self, bad_axis: dict[str, Any]
+    ) -> None:
+        assert plot_axes({"axes": [{"x": bad_axis}]}) == []
+        with pytest.raises(ValueError):
+            ShownAxis.model_validate(bad_axis)
+        with pytest.raises(ValueError):
+            ShownAxes.model_validate({})
 
     def test_the_root_reads_the_rounds_without_their_case_fields(self) -> None:
         """Gate ids and sandbox classes explain a feedback case; the reply has nothing to say about them."""
