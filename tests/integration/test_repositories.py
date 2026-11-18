@@ -1202,3 +1202,22 @@ class TestSearchMissRepository:
         await test_session.commit()
 
         assert await self._rows(test_session) == [(self.DAY, "splom", 1)]
+
+    async def test_a_text_with_a_quote_a_percent_or_an_underscore_is_matched_as_written(self, test_session):
+        """The rule keeps `'`, `%` and `_`. None of them is a quote's end or a pattern here: a delete of `100%`
+        removes that text and not everything that starts with `100`."""
+        repo = SearchMissRepository(test_session)
+        for query in ("100%", "100 stacked", "it's", "a_b", "axb"):
+            assert await repo.count(day=self.DAY, query=query, max_new_per_day=1000)
+        assert await repo.count(day=self.DAY, query="it's", max_new_per_day=1000)
+        await test_session.commit()
+
+        assert await repo.delete_query("100%") == 1
+        assert await repo.delete_query("a_b") == 1
+        await test_session.commit()
+
+        assert await self._rows(test_session) == [
+            (self.DAY, "100 stacked", 1),
+            (self.DAY, "axb", 1),
+            (self.DAY, "it's", 2),
+        ]

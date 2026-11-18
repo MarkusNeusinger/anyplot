@@ -7,10 +7,11 @@
   most searched or most recently searched first and in pages, with a
   `.delete()` per text; it names the days that reached the day's cap and
   deletes such a day whole. The gallery sends only the finished text: after
-  two seconds without a keystroke, or when the search loses focus or the page
-  is left, once per text and page load, so a fragment typed on within two
-  seconds is never kept; the clear cross, Escape and "← back" throw a pending
-  text away. Both the app and the API fold the text (compatibility forms,
+  two seconds without a keystroke, or when the search loses focus, once per
+  text and page load, so a fragment typed on within two seconds is never
+  kept; the clear cross, Escape and "← back" throw a pending text away, and
+  leaving the gallery within the two seconds drops it too. Both the app and
+  the API fold the text (compatibility forms,
   typographic apostrophes, hyphens and dashes, soft hyphens) and keep it only
   when it reads as a search for a plot and shows something (letters and marks
   of any script, at most six digits, spaces and a few signs, among them those

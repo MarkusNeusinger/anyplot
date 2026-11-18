@@ -62,9 +62,10 @@ export function FilterSearch({
 
   // The finished text of a search that found nothing in the whole catalogue, waiting for the
   // pause after the last keystroke (see the effect below `hiddenMatchCount`). Read and cleared
-  // synchronously by every way out of the search, before that way clears the text: the pause,
-  // a blur and leaving the page report it (`flushMiss`); the clear cross, Escape and "← back" are
-  // how a visitor throws a text away, and drop it (`dropMiss`). Reporting is the one moment a miss
+  // synchronously by every way out of the search, before that way clears the text: the pause and
+  // a blur report it (`flushMiss`); the clear cross, Escape and "← back" are how a visitor throws
+  // a text away, and drop it (`dropMiss`), and so does a gallery that goes away with the text
+  // still pending, which is a visitor leaving mid-typing. Reporting is the one moment a miss
   // is both counted at Plausible (`search_no_results`, without the text) and sent to the private
   // list (`reportSearchMiss`): a fragment or a thrown-away text is neither.
   const pendingMissRef = useRef<string | null>(null);
@@ -250,8 +251,9 @@ export function FilterSearch({
     return () => clearTimeout(timer);
   }, [searchQuery, missesCatalogue, flushMiss]);
 
-  // A miss still pending when the gallery goes away is finished too.
-  useEffect(() => flushMiss, [flushMiss]);
+  // A text still pending when the gallery goes away was neither paused on nor left by a blur: the
+  // visitor went back or on within the pause, so it may be a fragment, and it is dropped.
+  useEffect(() => dropMiss, [dropMiss]);
 
   // Only open if anchor is valid and in document
   const isDropdownOpen = Boolean(dropdownAnchor) && document.body.contains(dropdownAnchor);

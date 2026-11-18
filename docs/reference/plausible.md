@@ -273,10 +273,11 @@ the result (`lib`, `spec`, `plot`, `data`, `dom`, `feat`, `dep`, `tech`, `pat`,
 nothing in the whole catalogue, at the moment it is reported to the private
 list below and from the same decision (`reportSearchMiss()` in
 `app/src/lib/searchMiss.ts`): after two seconds without a keystroke, or when
-the search field loses focus or the gallery is left. It fires once per text
+the search field loses focus. It fires once per text
 and page load, and only for a text the private list keeps (the rule under
 "Only a search for a plot"). A fragment typed on within two seconds, a text
-thrown away with the clear cross, Escape, or "← back", and a text that only
+thrown away with the clear cross, Escape, or "← back", a text still pending
+when the visitor leaves the gallery, and a text that only
 finds nothing inside the active filters (the dropdown then offers
 `.search_all()`) don't fire it.
 
@@ -307,10 +308,12 @@ page shows it.
   below) finds plots, such as a fullwidth spelling of a catalogue word.
 - **Only the finished text**: the gallery sends it once no key was pressed for
   two seconds (`MISS_PAUSE_MS`), or earlier when the search field loses focus
-  (a click outside the search included) or the gallery is left. A fragment
+  (a click outside the search included). A fragment
   typed on within two seconds is never sent; one left for two seconds or by a
   loss of focus is, even if the visitor comes back and types on. The clear
-  cross, Escape, and "← back" throw a pending text away: it isn't sent. Each
+  cross, Escape, and "← back" throw a pending text away: it isn't sent. Nor
+  is a text still pending when the gallery goes away, for example by the
+  browser's back within the two seconds: it may be a fragment. Each
   text is sent once per page load, and only from the live site
   (`app/src/lib/searchMiss.ts`). The field asks the browser and password
   managers not to fill it (`autocomplete="off"`).

@@ -14,7 +14,8 @@ import {
   sendSearchMiss,
 } from 'src/lib/searchMiss';
 
-it('counts a text as finished after two seconds without a keystroke', () => {
+// The docs and the privacy page say "two seconds"; the timer itself is tested in FilterSearch.test.tsx.
+it('keeps the pause that makes a text finished at the two seconds the docs state', () => {
   expect(MISS_PAUSE_MS).toBe(2000);
 });
 

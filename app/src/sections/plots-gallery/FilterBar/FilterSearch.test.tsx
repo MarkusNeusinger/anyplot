@@ -404,13 +404,21 @@ describe('FilterSearch misses for the private list', () => {
     expect(getSearchInput()).toHaveAttribute('autocomplete', 'off');
   });
 
-  it('sends a pending miss when the gallery goes away', () => {
-    const view = render(<FilterSearch {...defaultProps} />);
-    openSearch();
-    type('zzqqxy');
-    view.unmount();
+  // Leaving within the pause, by the browser's back for one, is no finished search: the text
+  // may be a fragment, and nothing says the visitor meant it.
+  it('drops a text still pending when the gallery goes away, and no timer reports it later', () => {
+    vi.useFakeTimers();
+    try {
+      const view = render(<FilterSearch {...defaultProps} />);
+      openSearch();
+      type('zzqqxy');
+      view.unmount();
+      vi.advanceTimersByTime(5_000);
 
-    expect(reported).toHaveBeenCalledWith('zzqqxy');
+      expect(reported).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('sends nothing for a text that finds plots outside the active filters', () => {

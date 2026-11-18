@@ -67,8 +67,13 @@ def _request(address: str = "203.0.113.7") -> MagicMock:
 
 @pytest.fixture(autouse=True)
 def _fresh_state() -> Iterator[None]:
-    """Every test starts with an empty rate limit, a purge that has not run today and no failure line yet."""
-    with patch.object(search_misses, "_RATE_LIMIT", search_misses._RateLimit()):
+    """Every test starts with an empty rate limit, no write still pending from another test, a purge that has not
+    run today and no failure line yet."""
+    with (
+        patch.object(search_misses, "_RATE_LIMIT", search_misses._RateLimit()),
+        # A write a test left pending would count against `MAX_PENDING_WRITES` for every test after it.
+        patch.object(search_misses, "_WRITES", set()),
+    ):
         search_misses._Purge.day = None
         search_misses._FailureLog.last = None
         search_misses._FailureLog.held_back = 0
