@@ -5,5 +5,8 @@
   `/agent`.
 - Decided: one page for visitors and admins, with the admin's extras behind one menu, so that he
   never misses what a visitor meets. A test renders the page for a visitor, for an admin and for an
-  admin viewing as a visitor, and compares them outside an explicit list.
-- Where: #12589, `app/src/pages/AgentChatPage.parity.test.tsx`
+  admin viewing as a visitor, and compares them outside an explicit list. The fan-out that plots one
+  table in every library at once, built on his request for his tests, stays the admin's, also after
+  the public launch (his decision of 2026-11-01).
+- Where: #12589, #12417, #12507, `app/src/pages/AgentChatPage.parity.test.tsx`,
+  `docs/concepts/agent-network.md`

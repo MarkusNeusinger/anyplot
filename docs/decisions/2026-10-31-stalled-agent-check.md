@@ -1,4 +1,4 @@
-# About 30 minutes without a commit or a message counts as a stalled agent
+# About 30 minutes without a commit or a message counts as a suspected stall
 
 - Date: 2026-10-31
 - Proposed: on 2026-10-30 a build agent stopped at midday while waiting for its own tests. A

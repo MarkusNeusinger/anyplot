@@ -1,4 +1,4 @@
-# Political plots use invented parties and seats
+# The parliament chart uses invented parties and seats
 
 - Date: 2026-10-04
 - Proposed: the parliament chart's implementations mixed real and real-sounding parties. One drew

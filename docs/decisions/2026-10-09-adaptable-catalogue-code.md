@@ -1,4 +1,4 @@
-# Catalogue code is written so the chat can adapt it, in every library, without a rubric change
+# Catalogue code is written so the chat can adapt it, in every library, score-neutral at first
 
 - Date: 2026-10-09
 - Proposed: catalogue implementations typed their data by hand. The design's example repeats the
@@ -9,4 +9,7 @@
   after a second opinion found that the plan's score tolerance could not protect a good chart, he set
   the conversion: it merges on render identity, through a capped pass over matplotlib and seaborn,
   under stop rules, and he looks at five pair artifacts a week; two vetoes in a week halt the pass.
-- Where: #12108, #12261, `docs/concepts/adaptable-code.md`
+  On 2026-10-29 he set that the chat need not wait for conversions: in every language a file without
+  the `# Data` marker is `coupled`, never `blocked`, and the adapter rewrites its data creation.
+- Where: #12108, #12261, #12443, `docs/concepts/adaptable-code.md`,
+  `agentic/specs/261024-agent-all-libraries.md`
