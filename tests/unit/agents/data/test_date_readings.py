@@ -18,6 +18,7 @@ import pandas as pd
 import pytest
 from pydantic import TypeAdapter
 
+from agents.anyplot.data import prepare as prepare_module
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import (
     Operation,
@@ -683,8 +684,9 @@ CHANGED: dict[str, Reading] = {
         "lone_hour_t", ["2026-03-01T00:00:00", "2026-03-01T01:00:00", "2026-03-01T02:00:00", "2026-03-01T03:00:00"]
     ),
     "lone_hour_t_lower": _timed("lone_hour_t_lower", ["2026-03-01T05:00:00", "2026-03-01T06:00:00"]),
-    "lone_hour_space": _timed("lone_hour_space", ["2026-03-01T10:00:00", "2026-03-01T11:00:00"]),
-    "lone_hour_dot_date": _timed("lone_hour_dot_date", ["2026-03-01T10:00:00", "2026-03-15T11:00:00"]),
+    # A number alone after a space is no hour (it may be a count or a label), where pandas read it as one: unread.
+    "lone_hour_space": Reading(READINGS["lone_hour_space"].cells, [None, None], 2),
+    "lone_hour_dot_date": Reading(READINGS["lone_hour_dot_date"].cells, [None, None], 2),
     "lone_hour_slash_date": _timed("lone_hour_slash_date", ["2026-03-01T10:00:00", "2026-03-15T11:00:00"]),
     "iso_hour_z": _timed("iso_hour_z", ["2026-03-01T10:00:00+00:00", "2026-03-02T11:00:00+00:00"]),
     "am_pm_compact": _timed("am_pm_compact", ["2026-03-01T10:00:00", "2026-03-01T14:00:00"]),
@@ -870,6 +872,8 @@ UNREADABLE: dict[str, list[str | None]] = {
     "a spaced slash and a number": ["2026-03-01 / 05", "2026-03-06 / 09"],
     "a spaced dash and an hour": ["2026-03-01 - 05:00", "2026-03-02 - 05:00"],
     "a spaced dash after a dot date": ["01.03.2026 - 05", "02.03.2026 - 06"],
+    "a number after a space": ["2026-03-01 10", "2026-03-01 11"],
+    "a number after a comma": ["2026-03-01, 10", "2026-03-02, 11"],
 }
 """Cells with more after their date than a time: pandas read a range as days with made-up offsets (2, 7 and 11
 March, beside a notice of offsets no cell holds), a sign and digits as 05:00, and an interval as its first day."""
@@ -913,6 +917,14 @@ class TestStrictRule:
             f"column 'd': {failed} of 3 cells cannot be read as dates; {reason} (such as a second date, more numbers "
             "or a sign and digits), which no reading guesses"
         )
+
+    def test_a_cell_the_gate_passes_as_a_date_alone_still_holds_no_time(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Fail closed: should the gate take a cell with more after its date for a date alone, the time pandas finds
+        in it makes it unreadable, never a date with that time dropped. Reached by breaking the gate here."""
+        monkeypatch.setattr(prepare_module, "_date_cell", lambda text: False)
+        cells: list[str | None] = ["2026-03-01 -05:00", "2026-03-02 -05:00", "2026-03-03"]
+
+        assert converted(cells) == Reading(cells, [None, None, "2026-03-03"], 2)
 
     def test_a_refusal_for_cells_of_no_date_keeps_its_words(self) -> None:
         text = "d,v\nunknown,1\nn.a.: none,2\n2026-03-01,3\n"

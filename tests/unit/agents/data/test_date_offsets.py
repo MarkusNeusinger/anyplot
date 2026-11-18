@@ -278,7 +278,6 @@ class TestConversion:
             "2026-03-02T10",
             "2026-03-02T00",
             "02.03.2026 10:00",  # a time after a date of another shape, found once the cell is read
-            "2026-03-02 10",
             "01.03.2026 00:00",  # a midnight written out is a time too
             "2026-03-02t10:00",  # RFC 3339 allows a lowercase t
             "2026-03-02t10:00+01:00",
@@ -297,10 +296,12 @@ class TestConversion:
             "moment, so the column stays as it is"
         )
 
-    def test_an_interval_of_days_beside_them_is_unreadable_not_a_time(self) -> None:
-        """`2026-03-12/15` is 12 to 15 March, more after a date than a time: pandas read it as 12 March at 15:00, and
-        no reading takes it now; it is counted missing beside the days, as any cell that reads as no date is."""
-        text = "day,kWh\n" + "".join(f"2026-03-{day:02d}+01:00,{day}\n" for day in range(1, 11)) + "2026-03-12/15,11\n"
+    @pytest.mark.parametrize("odd", ["2026-03-12/15", "2026-03-12 15"])
+    def test_more_after_a_date_beside_them_is_unreadable_not_a_time(self, odd: str) -> None:
+        """`2026-03-12/15` is 12 to 15 March, and `2026-03-12 15` a date and a number that need not be an hour: more
+        after a date than a time. pandas read both as 12 March at 15:00; no reading takes them now, and each is
+        counted missing beside the days, as any cell that reads as no date is."""
+        text = "day,kWh\n" + "".join(f"2026-03-{day:02d}+01:00,{day}\n" for day in range(1, 11)) + f"{odd},11\n"
 
         prepared = prepare(text, to_dates())
 

@@ -4495,6 +4495,11 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
             notice = f"times with the UTC offsets {', '.join(_offsets(readable))} converted to UTC (+00:00); "
             notice += "the instants are the same"
         result = _without_filled_in(result, original)
+        # Fail closed: a cell the gate passed as a date alone holds no time of day and no zone. Where pandas still
+        # finds one, the gate let through more than a date (as `2026-03 10am` once passed), and the cell is unread.
+        alone = pd.Series([shape is False for shape in shapes], index=series.index)
+        guessed = result.notna() & ((result != result.dt.normalize()) | (result.dt.tz is not None))
+        result = result.mask(alone & guessed)
     failed = int((result.isna() & texts.notna()).sum())
     with_time = any(shape is True for shape, read in zip(shapes, result.notna(), strict=True) if read)
     dropped = Counter(offset for offset, read in zip(offsets, result.notna(), strict=True) if offset and read)
@@ -4506,16 +4511,17 @@ _ISO_DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 _HOUR = r"(?:[01]?[0-9]|2[0-3])"
 _CLOCK = rf"{_HOUR}:[0-5][0-9](?::[0-5][0-9](?:[.,][0-9]{{1,9}})?)?"
 _TIME_AFTER_DATE = re.compile(
-    rf"(?:[Tt](?:{_CLOCK}|{_HOUR}|[0-9]{{4}}(?:[0-9]{{2}})?)|,?\s+(?:{_CLOCK}|{_HOUR}))"
+    rf"(?:[Tt](?:{_CLOCK}|{_HOUR}|[0-9]{{4}}(?:[0-9]{{2}})?)|,?\s+(?:{_CLOCK}|{_HOUR}(?=\s*[AaPp]\.?\s?[Mm])))"
     r"(?:\s*[AaPp]\.?\s?[Mm]\.?)?"
     r"(?:\s?(?:Z|[+-][0-9]{2}(?::?[0-9]{2})?)|\s[^\W\d_]{1,5})?$"
 )
 """A time at the end of a cell, after its date: `T` or `t` (RFC 3339 allows both), or a space or a comma and a
-space, then an hour with its minutes and seconds and a fraction (`10:00`, `10:00:05.25`), an hour alone (`T10`,
-` 10`), or after `T` a compact `HHMM` or `HHMMSS`; then am or pm (`10am`, `2:30 PM`), and a zone: `Z` or an offset
-(`+01:00`, `-0500`, `+01`), or after a space a word of up to five letters (`UTC`, which pandas reads or fails on).
-Letters right after an hour are no zone (`1st` is an ordinal). A time stands only after a date that names a day
-(`_date_cell`), so `2026-03 10` is 10 March and `1 March 23` the year 2023."""
+space, then an hour with its minutes and seconds and a fraction (`10:00`, `10:00:05.25`), or after `T` an hour alone
+(`T10`, ISO's hour of a day) or a compact `HHMM` or `HHMMSS`; then am or pm (`10am`, `2:30 PM`, also after a space:
+` 10 AM`), and a zone: `Z` or an offset (`+01:00`, `-0500`, `+01`), or after a space a word of up to five letters
+(`UTC`, which pandas reads or fails on). A number alone after a space is no hour (`2026-03-01 10` may be a count or a
+label as much as 10:00), and letters right after an hour are no zone (`1st` is an ordinal). A time stands only after
+a date that names a day (`_date_cell`), so `2026-03 10` is 10 March and `1 March 23` the year 2023."""
 _DATE_PARTS = re.compile(r"[-./,\s]+")
 _NUMBER_PART = re.compile(r"([0-9]+)[^\W\d_]*")
 """A number of a date, with the letters of an ordinal after it (`1st`, `15th`)."""
