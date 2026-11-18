@@ -365,7 +365,12 @@ describe('DebugPage', () => {
   // The status request can outlive the page. When it then fails, an admin who has moved on must
   // not be thrown into a reload of the page they are on now, and nothing is set on the page that
   // is gone (in a test run that late update is an unhandled error after the file's last test).
-  it('ignores a status answer that comes after the page is gone', async () => {
+  it('ignores a status answer that comes after the page is gone', async ({ onTestFinished }) => {
+    const location = Object.getOwnPropertyDescriptor(window, 'location')!;
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+      Object.defineProperty(window, 'location', location);
+    });
     sessionStorage.clear();
     const pending: Array<(reason: unknown) => void> = [];
     vi.stubGlobal(

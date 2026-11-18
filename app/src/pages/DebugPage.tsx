@@ -151,7 +151,9 @@ export function DebugPage() {
         // Reaching here means the fetch promise resolved (the response may
         // still be 401/403/503 — those are handled below). Clear the one-shot
         // reload guard so a future cross-origin CF Access redirect can
-        // re-trigger the bootstrap.
+        // re-trigger the bootstrap. Also for an answer nobody waits for any
+        // more: that a request got through is a fact about the access, not
+        // about this page.
         clearAccessReloadGuard();
         if (cancelled) return null;
         // 403 is the Cloudflare Access JWT path's denial: a signed-in Google
