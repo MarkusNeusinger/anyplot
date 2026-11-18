@@ -392,8 +392,8 @@ class AgentHTTPError(Exception):
     """An agent-route error, answered as `{"detail": code}` plus `"ref"` when known.
 
     Not an `HTTPException` on purpose: the API-wide handler reshapes those into
-    `{"status", "message", "path"}` and drops their headers, while the chat
-    page needs a stable code and the request id to quote. `errors` carries the
+    `{"status", "message", "path"}`, while the chat page needs a stable code
+    and the request id to quote. `errors` carries the
     binding check lines of a `422 invalid`; `case_id` the stored case of a
     `502 row_missing`, so the page can chain its next edit to it; `cause` the
     agents service's sentence naming what a refused paste fails on (`_cause`).
