@@ -9,4 +9,4 @@
   before the change keep their plain keys, so for them, and through the session hash for the other lines of
   their sessions, the join stays possible while someone holds the request id; the debug lines hold it for 30
   days. `docs/reference/agent-telemetry.md` now also names the join by token counts, which this change does
-  not close.
+  not close. (#13183)
