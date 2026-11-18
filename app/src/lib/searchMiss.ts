@@ -1,11 +1,13 @@
 /**
  * The gallery's private list of searches that found nothing: the search box hands a finished
- * text that matched no plot in the whole catalogue to `sendSearchMiss`, which posts it to the API
- * (`POST /search/miss`, `api/search_misses.py`). The owner reads the list on /debug to see what
- * the catalogue lacks and which words the search does not know. Plausible never sees the text.
+ * text that matched no plot in the whole catalogue to `reportSearchMiss`, which counts it at
+ * Plausible without the text and posts the text to the API (`POST /search/miss`,
+ * `api/search_misses.py`). The owner reads the list on /debug to see what the catalogue lacks and
+ * which words the search does not know. Plausible never sees the text.
  *
+ * - One decision (`claimSearchMiss`) makes a text a reported miss, and both reports follow from it.
  * - Only a text that reads as a search for a plot leaves the browser (`isCountableMiss`, the
- *   API's rule): an address, a phone number or a link does not.
+ *   API's rule): an e-mail address, a phone number or a link with its scheme does not.
  * - The text travels in the JSON body, never in the URL: request URLs stand in the server logs.
  *   No cookie and no referrer go with it, whatever the API's address becomes.
  * - Only from the live site, and not while the admin's own use is muted: a local build, a
@@ -96,22 +98,46 @@ export function isCountableMiss(query: string): boolean {
   return shows && digits <= MAX_MISS_DIGITS;
 }
 
-// The texts this page load already sent; a full reload starts over.
-const sent = new Set<string>();
+// The texts this page load already reported; a full reload starts over.
+const reported = new Set<string>();
 
-/** Forgets the texts already sent. For tests: the set is the module's and outlives one. */
+/** Forgets the texts already reported. For tests: the set is the module's and outlives one. */
 export function forgetSentMisses(): void {
-  sent.clear();
+  reported.clear();
 }
 
 /**
- * Sends one normalised search text (`normalizeQuery`) that found nothing in the whole catalogue,
- * when it is countable. `keepalive` lets a miss sent as the visitor leaves outlive the page.
+ * The one decision that a finished search text is a miss worth reporting: countable by the rule
+ * (`isCountableMiss`), and not reported yet in this page load. `true` claims the text, so it is
+ * never reported twice. Both reports of a miss follow from this one decision
+ * (`reportSearchMiss`), so the count at Plausible and the private list cannot drift apart.
+ */
+export function claimSearchMiss(query: string): boolean {
+  if (!isCountableMiss(query) || reported.has(query)) return false;
+  reported.add(query);
+  return true;
+}
+
+/**
+ * Reports one normalised, finished search text (`normalizeQuery`) that found nothing in the whole
+ * catalogue, when `claimSearchMiss` claims it: `count` counts it at Plausible without the text
+ * (the `search_no_results` event), and the text goes to the private list (`sendSearchMiss`).
+ * Each keeps its own gate for the live site and the admin's mute.
+ */
+export function reportSearchMiss(query: string, count: () => void): void {
+  if (!claimSearchMiss(query)) return;
+  count();
+  sendSearchMiss(query);
+}
+
+/**
+ * Sends one search text to the private list. Only `reportSearchMiss` calls it, after the claim;
+ * the rule is checked once more here, so no other caller can send a text the API would refuse.
+ * `keepalive` lets a miss sent as the visitor leaves outlive the page.
  */
 export function sendSearchMiss(query: string): void {
   if (!inProduction() || analyticsMuted()) return;
-  if (!isCountableMiss(query) || sent.has(query)) return;
-  sent.add(query);
+  if (!isCountableMiss(query)) return;
   fetch(apiUrl(endpoints.searchMiss), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

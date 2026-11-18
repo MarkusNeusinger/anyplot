@@ -3,16 +3,21 @@ import { useState } from 'react';
 import { act, fireEvent } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { MISS_PAUSE_MS, sendSearchMiss } from 'src/lib/searchMiss';
+import { MISS_PAUSE_MS } from 'src/lib/searchMiss';
 import { FilterSearch } from 'src/sections/plots-gallery/FilterBar/FilterSearch';
 import { render, screen, waitFor } from 'src/test-utils';
 import type { ActiveFilters, FilterCounts } from 'src/types';
 
-// The private list's sender, replaced: what it is called with is what would be sent. The pause
-// stays the real one.
+// The one report of a miss, replaced: `reported` records the text it is handed, and the count at
+// Plausible runs as the real one runs it, so a test sees both reports. The claim's own rule and
+// once-per-page-load are `searchMiss.test.ts`'s. The pause stays the real one.
+const { reported } = vi.hoisted(() => ({ reported: vi.fn() }));
 vi.mock('src/lib/searchMiss', async importOriginal => ({
   ...(await importOriginal<typeof import('src/lib/searchMiss')>()),
-  sendSearchMiss: vi.fn(),
+  reportSearchMiss: (query: string, count: () => void) => {
+    reported(query);
+    count();
+  },
 }));
 
 // Uses the real src/utils (fuse.js included) so keyboard navigation walks real results.
@@ -245,17 +250,6 @@ describe('FilterSearch', () => {
 
     expect(defaultProps.onAddFilter).toHaveBeenCalledWith('plot', 'bar');
   });
-
-  it('tracks search_no_results for queries without matches (debounced), without the text', async () => {
-    render(<FilterSearch {...defaultProps} />);
-    const input = getSearchInput();
-    fireEvent.focus(input);
-    fireEvent.change(input, { target: { value: 'zzzzzz' } });
-
-    await waitFor(() => {
-      expect(defaultProps.onTrackEvent).toHaveBeenCalledWith('search_no_results');
-    });
-  });
 });
 
 describe('FilterSearch misses for the private list', () => {
@@ -292,13 +286,13 @@ describe('FilterSearch misses for the private list', () => {
     wait(MISS_PAUSE_MS - 500);
     type('zzqqxy');
     wait(MISS_PAUSE_MS - 1);
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
 
     wait(1);
-    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
-    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+    expect(reported).toHaveBeenCalledTimes(1);
+    expect(reported).toHaveBeenCalledWith('zzqqxy');
     wait(MISS_PAUSE_MS * 2);
-    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
+    expect(reported).toHaveBeenCalledTimes(1);
   });
 
   it('sends the normalised text', () => {
@@ -307,7 +301,7 @@ describe('FilterSearch misses for the private list', () => {
     type('  ZZQQ   Chart ');
     wait(MISS_PAUSE_MS);
 
-    expect(sendSearchMiss).toHaveBeenCalledWith('zzqq chart');
+    expect(reported).toHaveBeenCalledWith('zzqq chart');
   });
 
   it('sends a pending miss at once when the field loses focus, and not again after the pause', () => {
@@ -317,10 +311,10 @@ describe('FilterSearch misses for the private list', () => {
     wait(300);
     fireEvent.blur(getSearchInput());
 
-    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
-    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+    expect(reported).toHaveBeenCalledTimes(1);
+    expect(reported).toHaveBeenCalledWith('zzqqxy');
     wait(MISS_PAUSE_MS);
-    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
+    expect(reported).toHaveBeenCalledTimes(1);
   });
 
   it('drops a pending miss when Escape throws the text away', () => {
@@ -332,7 +326,7 @@ describe('FilterSearch misses for the private list', () => {
     fireEvent.blur(getSearchInput());
     wait(MISS_PAUSE_MS);
 
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
   });
 
   it('drops a pending miss when the clear cross throws the text away, and keeps the focus', () => {
@@ -346,7 +340,7 @@ describe('FilterSearch misses for the private list', () => {
     fireEvent.click(cross);
     wait(MISS_PAUSE_MS);
 
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
     expect(getSearchInput()).toHaveValue('');
   });
 
@@ -373,7 +367,7 @@ describe('FilterSearch misses for the private list', () => {
     fireEvent.click(backdrop, { clientX: 209, clientY: 19 });
     wait(MISS_PAUSE_MS);
 
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
     expect(getSearchInput()).toHaveValue('');
   });
 
@@ -385,8 +379,8 @@ describe('FilterSearch misses for the private list', () => {
     fireEvent.mouseDown(backdrop);
     fireEvent.click(backdrop, { clientX: 600, clientY: 400 });
 
-    expect(sendSearchMiss).toHaveBeenCalledTimes(1);
-    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+    expect(reported).toHaveBeenCalledTimes(1);
+    expect(reported).toHaveBeenCalledWith('zzqqxy');
   });
 
   it('drops a pending miss when "← back" leaves the category, and keeps the focus', () => {
@@ -402,7 +396,7 @@ describe('FilterSearch misses for the private list', () => {
     fireEvent.click(back);
     wait(MISS_PAUSE_MS);
 
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
   });
 
   it('asks the browser and password managers not to fill the field', () => {
@@ -416,7 +410,7 @@ describe('FilterSearch misses for the private list', () => {
     type('zzqqxy');
     view.unmount();
 
-    expect(sendSearchMiss).toHaveBeenCalledWith('zzqqxy');
+    expect(reported).toHaveBeenCalledWith('zzqqxy');
   });
 
   it('sends nothing for a text that finds plots outside the active filters', () => {
@@ -430,7 +424,7 @@ describe('FilterSearch misses for the private list', () => {
     wait(MISS_PAUSE_MS);
     fireEvent.blur(getSearchInput());
 
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
   });
 
   it('sends nothing for a text another category knows', () => {
@@ -446,7 +440,7 @@ describe('FilterSearch misses for the private list', () => {
     wait(MISS_PAUSE_MS);
     fireEvent.blur(screen.getByLabelText('Search library'));
 
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
   });
 
   it('sends nothing while the counts of all plots are unknown', () => {
@@ -456,7 +450,7 @@ describe('FilterSearch misses for the private list', () => {
     wait(MISS_PAUSE_MS);
     fireEvent.blur(getSearchInput());
 
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
   });
 
   it('sends nothing for a text whose folded form finds something', () => {
@@ -468,7 +462,7 @@ describe('FilterSearch misses for the private list', () => {
     wait(MISS_PAUSE_MS);
     fireEvent.blur(getSearchInput());
 
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
   });
 
   it('sends nothing for a text that finds something', () => {
@@ -478,7 +472,78 @@ describe('FilterSearch misses for the private list', () => {
     wait(MISS_PAUSE_MS);
     fireEvent.blur(getSearchInput());
 
-    expect(sendSearchMiss).not.toHaveBeenCalled();
+    expect(reported).not.toHaveBeenCalled();
+  });
+
+  /** How often the search was counted at Plausible as one that found nothing. */
+  function countedWithoutHit() {
+    return vi
+      .mocked(defaultProps.onTrackEvent)
+      .mock.calls.filter(([name]) => name === 'search_no_results').length;
+  }
+
+  it('counts a search without a hit at Plausible only when it is reported, after the pause', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('zzqq');
+    wait(300); // the old count came 200 ms after a keystroke, fragments included
+    expect(countedWithoutHit()).toBe(0);
+    type('zzqqxy');
+    wait(MISS_PAUSE_MS - 1);
+    expect(countedWithoutHit()).toBe(0);
+    expect(reported).not.toHaveBeenCalled();
+
+    wait(1);
+    expect(countedWithoutHit()).toBe(1);
+    expect(reported).toHaveBeenCalledTimes(1);
+    wait(MISS_PAUSE_MS * 2);
+    expect(countedWithoutHit()).toBe(1);
+  });
+
+  it('counts a search without a hit at Plausible when the field loses focus, with the report', () => {
+    render(<FilterSearch {...defaultProps} />);
+    openSearch();
+    type('zzqqxy');
+    wait(300);
+    fireEvent.blur(getSearchInput());
+
+    expect(countedWithoutHit()).toBe(1);
+    expect(reported).toHaveBeenCalledWith('zzqqxy');
+  });
+
+  it.each(['Escape', 'the clear cross'])(
+    'counts nothing at Plausible for a text thrown away with %s',
+    way => {
+      render(<FilterSearch {...defaultProps} />);
+      openSearch();
+      type('zzqqxy');
+      if (way === 'Escape') {
+        fireEvent.keyDown(getSearchInput(), { key: 'Escape' });
+        fireEvent.blur(getSearchInput());
+      } else {
+        const cross = screen.getByTestId('CloseIcon');
+        fireEvent.mouseDown(cross);
+        fireEvent.click(cross);
+      }
+      wait(MISS_PAUSE_MS);
+
+      expect(countedWithoutHit()).toBe(0);
+      expect(reported).not.toHaveBeenCalled();
+    }
+  );
+
+  it('counts nothing at Plausible for a text the plots outside the filters match', () => {
+    render(
+      <FilterSearch {...defaultProps} activeFilters={seabornFilters} filterCounts={seabornCounts} />
+    );
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Open filter search' }), {
+      key: 'Enter',
+    });
+    type('bar');
+    wait(MISS_PAUSE_MS);
+    fireEvent.blur(getSearchInput());
+
+    expect(countedWithoutHit()).toBe(0);
   });
 
   it('gives the public events no word of what was typed', () => {

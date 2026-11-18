@@ -3,12 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAnalyticsMuted } from 'src/analytics/mute';
 import searchQueryCases from 'src/hooks/searchQuery.cases.json';
 import {
+  claimSearchMiss,
   forgetSentMisses,
   isCountableMiss,
   MAX_MISS_DIGITS,
   MIN_MISS_LENGTH,
   MISS_MARKS,
   MISS_PAUSE_MS,
+  reportSearchMiss,
   sendSearchMiss,
 } from 'src/lib/searchMiss';
 
@@ -143,15 +145,38 @@ describe('sendSearchMiss', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('sends a text once per page load', () => {
-    sendSearchMiss('spider');
-    sendSearchMiss('spider');
-    sendSearchMiss('splom');
+  it('reports a text once per page load: one count at Plausible and one send, together', () => {
+    const count = vi.fn();
+    reportSearchMiss('spider', count);
+    reportSearchMiss('spider', count);
+    reportSearchMiss('splom', count);
+    expect(count).toHaveBeenCalledTimes(2);
     expect(fetchMock).toHaveBeenCalledTimes(2);
 
     forgetSentMisses(); // a new page load
-    sendSearchMiss('spider');
+    reportSearchMiss('spider', count);
+    expect(count).toHaveBeenCalledTimes(3);
     expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it.each(['s', 'jane.doe@example.org', 'https://example.org/plots'])(
+    'reports %j neither at Plausible nor to the list: the claim refuses it',
+    text => {
+      const count = vi.fn();
+      reportSearchMiss(text, count);
+      expect(claimSearchMiss(text)).toBe(false);
+      expect(count).not.toHaveBeenCalled();
+      expect(fetchMock).not.toHaveBeenCalled();
+    }
+  );
+
+  it('counts off the live site, where only the send keeps its own gate', () => {
+    // The count's own gate is the analytics' (`trackEvent` sends nothing off the live site).
+    at('localhost');
+    const count = vi.fn();
+    reportSearchMiss('spider', count);
+    expect(count).toHaveBeenCalledTimes(1);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('sends nothing shorter than two characters, counted as characters', () => {
@@ -170,15 +195,15 @@ describe('sendSearchMiss', () => {
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     fetchMock.mockResolvedValueOnce({ ok: false, status: 404 });
 
-    expect(() => sendSearchMiss('spider')).not.toThrow();
-    expect(() => sendSearchMiss('splom')).not.toThrow();
+    expect(() => reportSearchMiss('spider', () => undefined)).not.toThrow();
+    expect(() => reportSearchMiss('splom', () => undefined)).not.toThrow();
     await settle();
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(consoleError).not.toHaveBeenCalled();
     expect(consoleWarn).not.toHaveBeenCalled();
-    // No retry: a failed text counts as sent for this page load.
-    sendSearchMiss('spider');
+    // No retry: a failed text counts as reported for this page load.
+    reportSearchMiss('spider', () => undefined);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

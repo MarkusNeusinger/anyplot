@@ -13,7 +13,7 @@ const SPINNE = { query: 'spinne', count: 1, first_day: '2026-11-02', last_day: '
 
 const LIST = {
   status: 'ok',
-  retention_days: 90,
+  retention_days: 180,
   day_cap: 1000,
   order: 'count',
   offset: 0,
@@ -57,7 +57,7 @@ afterEach(() => {
 
 describe('readSearchMisses', () => {
   it('reads an ok answer', () => {
-    expect(readSearchMisses(LIST)).toMatchObject({ texts: 3, retention_days: 90, day_cap: 1000 });
+    expect(readSearchMisses(LIST)).toMatchObject({ texts: 3, retention_days: 180, day_cap: 1000 });
   });
 
   it('keeps the status of an answer without a list, so the section can say which it is', () => {
@@ -81,7 +81,7 @@ describe('readSearchMisses', () => {
   });
 
   it('reads an answer of an older API as the first page, most searched first, with no capped day', () => {
-    const older = { status: 'ok', retention_days: 90, texts: 3, misses: LIST.misses };
+    const older = { status: 'ok', retention_days: 180, texts: 3, misses: LIST.misses };
     expect(readSearchMisses(older)).toMatchObject({ order: 'count', offset: 0, capped_days: [] });
   });
 });
@@ -99,7 +99,7 @@ describe('SearchMissesSection', () => {
     expect(first.url.searchParams.get('order')).toBe('count');
     expect(screen.getByTestId('search-misses-totals')).toHaveTextContent('3 texts');
     // The retention period is the API's, never a number the page keeps.
-    expect(screen.getByText(/deleted after 90 days/)).toBeInTheDocument();
+    expect(screen.getByText(/deleted after 180 days/)).toBeInTheDocument();
     const top = within(rows()[0]);
     expect(top.getByText('spider')).toBeInTheDocument();
     expect(top.getByText('12')).toBeInTheDocument();

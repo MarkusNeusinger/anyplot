@@ -129,8 +129,10 @@ MAX_TRACKED_NETWORKS = 10_000
 # that day is dropped. A text that already has one still counts.
 MAX_NEW_QUERIES_PER_DAY = 1000
 
-# Bounds how long a text is kept: the rows of a day more than this many days ago are deleted.
-RETENTION_DAYS = 90
+# Bounds how long a text is kept: the rows of a day more than this many days ago are deleted. One
+# period for every text, also one searched only once; the same as the machine reads and the chat's
+# telemetry keep.
+RETENTION_DAYS = 180
 
 # Bounds one page of the owner's list.
 LIST_LIMIT = 500

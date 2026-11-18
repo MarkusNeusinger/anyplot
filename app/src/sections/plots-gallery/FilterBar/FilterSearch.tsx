@@ -7,7 +7,7 @@ import InputBase from '@mui/material/InputBase';
 import Tooltip from '@mui/material/Tooltip';
 
 import { normalizeQuery, type TrackEvent } from 'src/hooks/useAnalytics';
-import { MISS_PAUSE_MS, sendSearchMiss } from 'src/lib/searchMiss';
+import { MISS_PAUSE_MS, reportSearchMiss } from 'src/lib/searchMiss';
 import { type DropdownItem, FilterMenu } from 'src/sections/plots-gallery/FilterBar/FilterMenu';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import type { ActiveFilters, FilterCategory, FilterCounts } from 'src/types';
@@ -63,13 +63,21 @@ export function FilterSearch({
   // The finished text of a search that found nothing in the whole catalogue, waiting for the
   // pause after the last keystroke (see the effect below `hiddenMatchCount`). Read and cleared
   // synchronously by every way out of the search, before that way clears the text: the pause,
-  // a blur and leaving the page send it (`flushMiss`); the clear cross, Escape and "← back" are
-  // how a visitor throws a text away, and drop it (`dropMiss`).
+  // a blur and leaving the page report it (`flushMiss`); the clear cross, Escape and "← back" are
+  // how a visitor throws a text away, and drop it (`dropMiss`). Reporting is the one moment a miss
+  // is both counted at Plausible (`search_no_results`, without the text) and sent to the private
+  // list (`reportSearchMiss`): a fragment or a thrown-away text is neither.
   const pendingMissRef = useRef<string | null>(null);
+  // The sender of the events, read when a miss is reported: `flushMiss` stays the same function,
+  // so the effects that hold it do not run again when the parent passes a new sender.
+  const trackEventRef = useRef(onTrackEvent);
+  useEffect(() => {
+    trackEventRef.current = onTrackEvent;
+  }, [onTrackEvent]);
   const flushMiss = useCallback(() => {
     const query = pendingMissRef.current;
     pendingMissRef.current = null;
-    if (query) sendSearchMiss(query);
+    if (query) reportSearchMiss(query, () => trackEventRef.current('search_no_results'));
   }, []);
   const dropMiss = useCallback(() => {
     pendingMissRef.current = null;
@@ -244,28 +252,6 @@ export function FilterSearch({
 
   // A miss still pending when the gallery goes away is finished too.
   useEffect(() => flushMiss, [flushMiss]);
-
-  // Count searches with no results inside the active filters (debounced). The event carries no
-  // property: what was typed never goes to the public dashboard.
-  const lastTrackedQueryRef = useRef<string>('');
-  useEffect(() => {
-    const query = normalizeQuery(searchQuery);
-    // Only track if: query >= 2 chars, no results, not already tracked this query
-    if (query.length >= 2 && searchResults.length === 0 && query !== lastTrackedQueryRef.current) {
-      const timer = setTimeout(() => {
-        onTrackEvent('search_no_results');
-        lastTrackedQueryRef.current = query;
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [searchQuery, searchResults.length, onTrackEvent]);
-
-  // Reset tracked query when dropdown closes
-  useEffect(() => {
-    if (!dropdownAnchor) {
-      lastTrackedQueryRef.current = '';
-    }
-  }, [dropdownAnchor]);
 
   // Only open if anchor is valid and in document
   const isDropdownOpen = Boolean(dropdownAnchor) && document.body.contains(dropdownAnchor);
