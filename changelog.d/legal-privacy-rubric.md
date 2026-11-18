@@ -15,8 +15,10 @@
   consent. The other terms of legal texts give way to everyday words: "who is responsible"
   replaces "controller", the right to object keeps its condition without the statute's
   phrase, and a complaint goes to a data protection authority. Cloudflare uses the bot
-  check's signals "on its own behalf"; its legal role is no longer named. The crawler copy
-  says the same, and now also names who is responsible. (#13182)
+  check's signals "on its own behalf"; its legal role is no longer named. The three points
+  that were headed "what we do not do" stand under "in short": each starts with "no", and a
+  heading that negates as well read as the opposite. The crawler copy says the same, and now
+  also names who is responsible. (#13182)
 - **The privacy policy is set more compactly.** On `/legal`, the privacy section is 6859 px
   high on a phone (390 px) where it was 7328, and 3421 px on a desktop (1440 px) where it was
   4009. Its word count stays about the same (1128 to 1120, counted at 390 px), because the
@@ -50,7 +52,9 @@
   two hashes. Both rows name the terms: those tools process the data under their providers'
   own terms, outside the EU hosting and the EU route the page names, with training on what the
   operator sends switched off. The consent line under the chat's feedback form says who reads
-  a case in the same words. The crawler copy says the same, and names the operator, not
+  a case in the same words, and names both periods: 180 days for the chat, its plots and the
+  data sample, and the message and the reaction until their deletion is asked. The crawler
+  copy says the same as the page, and names the operator, not
   admins, as the holder of the Cloudflare Access login cookie. (#13182)
 - **The chat's hint for a table that is too large no longer points at a way that ends in the
   same refusal.** It recommended opening an Excel or Parquet file, which may be 5 MB, but the

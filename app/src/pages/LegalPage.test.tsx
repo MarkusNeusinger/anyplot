@@ -134,13 +134,15 @@ describe('LegalPage', () => {
     }
   });
 
-  it('says what I do not do right after who is responsible, then what the browser keeps', () => {
+  it('says in short what the site does not do right after who is responsible, then what the browser keeps', () => {
     render(<LegalPage />);
 
     // The block stands directly under "who is responsible", before the first row of what is
-    // processed.
+    // processed. Its heading is neutral because every point under it starts with "no": a heading
+    // that negates too would read as the opposite.
     const who = screen.getByText('who is responsible');
-    const notDone = screen.getByText('what I do not do');
+    expect(screen.queryByText('what I do not do')).toBeNull();
+    const notDone = screen.getByText('in short');
     expect(who.nextElementSibling?.nextElementSibling).toBe(notDone);
     // Three short points and nothing else in them.
     const points = notDone.nextElementSibling as HTMLElement;
@@ -498,7 +500,7 @@ describe('LegalPage', () => {
     expect(screen.getByText(/transfers outside Switzerland and the EU/)).toBeInTheDocument();
     // Nothing sent trains a model. One person runs the site, so the list speaks in the first
     // person singular.
-    expect(screen.getByText('what I do not do')).toBeInTheDocument();
+    expect(screen.getByText('in short')).toBeInTheDocument();
     expect(screen.queryByText(/what we do not do/)).not.toBeInTheDocument();
     expect(screen.getByText('no ai training')).toBeInTheDocument();
     expect(screen.getByText(/on what you send/)).toBeInTheDocument();
@@ -515,10 +517,12 @@ describe('LegalPage', () => {
     render(<LegalPage />);
 
     expect(FEEDBACK_CONSENT).toBe(
-      'sending stores this chat, its plots and a 5-row sample of your data for 180 days. the operator reads it to fix what went wrong, also with ai coding assistants and in tests with other ai models; tick the box to add the whole data file.'
+      'sending stores this chat, its plots and a 5-row sample of your data for 180 days, and your message and reaction until you ask to delete them. the operator reads it to fix what went wrong, also with ai coding assistants and in tests with other ai models; tick the box to add the whole data file.'
     );
     const caseRow = screen.getAllByRole('row', { name: /^feedback\s/ })[1];
     for (const shared of [
+      // Both periods: the case's files, and the triage row with the message and the reaction.
+      'until you ask to delete them',
       'to fix what went wrong',
       'ai coding assistants',
       'other ai models',

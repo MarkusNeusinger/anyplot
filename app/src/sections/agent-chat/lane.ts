@@ -27,4 +27,4 @@ export const EXPERIMENTAL_DETAILS = [
  * The owner reads every user-facing text: keep it in the PR's "Texts to read".
  */
 export const FEEDBACK_CONSENT =
-  'sending stores this chat, its plots and a 5-row sample of your data for 180 days. the operator reads it to fix what went wrong, also with ai coding assistants and in tests with other ai models; tick the box to add the whole data file.';
+  'sending stores this chat, its plots and a 5-row sample of your data for 180 days, and your message and reaction until you ask to delete them. the operator reads it to fix what went wrong, also with ai coding assistants and in tests with other ai models; tick the box to add the whole data file.';

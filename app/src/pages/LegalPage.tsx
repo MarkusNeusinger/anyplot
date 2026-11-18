@@ -172,7 +172,7 @@ export function LegalPage() {
             <Typography sx={subheadingStyle}>who is responsible</Typography>
             <Typography sx={textStyle}>Markus Neusinger (see above).</Typography>
 
-            <Typography sx={subheadingStyle}>what I do not do</Typography>
+            <Typography sx={subheadingStyle}>in short</Typography>
             <Typography sx={textStyle}>
               • no cookies for visitors
               <br />
