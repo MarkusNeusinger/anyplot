@@ -43,7 +43,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 - One counter per day, platform, and page for the link previews that messengers and social networks fetch (`link_shares`): a count, with no address, no user agent, and no time of day
 
 **Search misses:**
-- One counter per day and text for the gallery searches that found nothing in the whole catalogue (`search_misses`): the text, the day, and a count, with no address, no user agent, no time of day, and no session; deleted after 90 days
+- One counter per day and text for the gallery searches that found nothing in the whole catalogue (`search_misses`): the text, the day, and a count, with no address, no user agent, no time of day, and no session; pseudonymous, read by the operator only, and deleted after 90 days
 
 **Other:**
 - Library information (name, version, docs URL)
@@ -435,16 +435,18 @@ Every column but the triage state copies the field of the same name in the case'
 
 ### `search_misses`
 
-**Purpose**: Keep a private list of the gallery searches that found nothing in the whole catalogue, so the owner sees what the catalogue lacks and which words the search doesn't know. The gallery sends the finished text of such a search to `POST /search/miss`, and the API adds one to the row of that day and text (`api/search_misses.py`). The section "search misses" on `/debug` reads the list and deletes a text. No public page shows it. The full description is in [Plausible analytics tracking](plausible.md#the-private-list-of-search-misses).
+**Purpose**: Keep a private list of the gallery searches that found nothing in the whole catalogue, so the owner sees what the catalogue lacks and which words the search doesn't know. The gallery sends the finished text of such a search to `POST /search/miss`, and the API adds one to the row of that day and text (`api/search_misses.py`). The section "search misses" on `/debug` reads the list, names the days that reached the cap, and deletes a text or a whole day. No public page shows it, and the list is the operator's alone. The full description is in [Plausible analytics tracking](plausible.md#the-private-list-of-search-misses).
 
 **Key Fields**:
 - `day` - The UTC day of the search. No time of day is stored
-- `query` - The text, normalised by the API with the app's rule: lowercase, single spaces, at most 40 characters, and at least 2
+- `query` - The text, normalised by the API with the app's rule: Unicode form NFC, lowercase, single spaces, at most 40 characters, and at least 2
 - `count` - How often the text was searched that day
 
-**How it is written**: the day and the text are the primary key, and the counter is one `INSERT ... ON CONFLICT DO UPDATE SET count = count + 1`, so two equal searches of a day are one row. Once a day holds 1,000 different texts, a new text is dropped while a text already there still counts. The API deletes the rows more than 90 days old, at most once per process and day; the owner's list shows the same window.
+**What a text may hold**: a visitor could type anything into the search field, so the app sends and the API keeps a text only when it reads as a search for a plot: letters and combining marks of any script, at most six decimal digits, spaces, and `- _ . + # / & ' ( )`. That keeps out an e-mail address (`@`), a link (`:`), a phone number (the digits), and control, format, and direction characters. It doesn't keep out every personal word: a name typed as a search passes.
 
-**What a row never holds**: an address, a user agent, a time of day, a session, a hash, or anything else of the request. The text travels in the request body only and is never logged.
+**How it is written**: the day and the text are the primary key, and the counter is one `INSERT ... ON CONFLICT DO UPDATE SET count = count + 1`, so two equal searches of a day are one row. Once a day holds 1,000 different texts, a new text is dropped while a text already there still counts. The API deletes the rows more than 90 days old, once a day: after a count, at the API's start, and when the owner reads the list; a failed delete is tried again by the next of them. The owner's list shows the same window. It is a best-effort counter: a flood can fill a day, and a write in flight when an instance stops is lost.
+
+**What a row never holds**: an address, a user agent, a time of day, a session, a hash, or anything else of the request. The text travels in the request body only and is never logged. A row names nobody, but it is pseudonymous, not anonymous: the platform's request log keeps one line per `POST /search/miss` for 30 days, with its time and user agent, and until then a text could be matched to such a line by its day.
 
 ---
 
@@ -716,10 +718,9 @@ await session.execute(f"SELECT * FROM specs WHERE id = '{spec_id}'")
 ### Data privacy
 
 - No user data stored permanently, with one exception: the quick-feedback cases of the agent chat. When someone submits one, the case (the conversation, the code, the images, the message, a hashed user id, and `data.csv` when the box is ticked) is stored in the private bucket `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days. Its row in `agent_feedback` holds the message and the hashed ids, but no conversation, code, images or data, and stays
-- The gallery searches that found nothing (`search_misses`) hold the text a visitor typed, its day, and a count, with nothing that names the visitor, and are deleted after 90 days
+- The gallery searches that found nothing (`search_misses`) hold the text a visitor typed, its day, and a count, and are deleted after 90 days. A visitor could type anything; the app and the API keep only a text that reads as a search for a plot (no `@`, no `:`, at most six digits), and the list is the operator's alone. A row is pseudonymous: only its day could match it to a line of the 30-day request log
 - Anonymous session IDs only
 - Usage data auto-deleted after 90 days
-- GDPR-compliant (no personal data)
 
 ---
 

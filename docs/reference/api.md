@@ -624,40 +624,49 @@ Returns the plots with the most votes, one entry per implementation:
 
 ## Search endpoints
 
-The private list of gallery searches that found nothing in the whole catalogue (`api/search_misses.py`, [The private list of search misses](plausible.md#the-private-list-of-search-misses)). A search text is what a visitor typed, so it travels in a request body on every route here, never in a URL or a header, and the API logs no part of it.
+The private list of gallery searches that found nothing in the whole catalogue (`api/search_misses.py`, [The private list of search misses](plausible.md#the-private-list-of-search-misses)). A search text is what a visitor typed, so it travels in a request body on every route here, never in a URL or a header, and the API logs no part of it. Each route reads its body by hand, only after the content type says JSON, and refuses it with a fixed `413` (`{"status": 413, "message": "Request body too large", ...}`) above 1 KiB: a declared `Content-Length` above that before anything is read, and a body without one once it passes 1 KiB.
 
 ### POST `/search/miss`
 
 **Purpose**: Count one gallery search that found nothing, for the owner's private list (`api/routers/search.py`)
 
-The body is `{"query": "<text>"}`. The API normalises the text again with the app's rule (lowercase, single spaces, cut at 40 characters) and counts it in the row of the UTC day and text (`search_misses`, [Database](database.md#search_misses)). Only the production service counts. The query string and the headers are never read for the text.
+The body is `{"query": "<text>"}` with `Content-Type: application/json`. The API cuts the text to 200 characters, normalises it again with the app's rule (Unicode form NFC, lowercase, single spaces, cut at 40 characters), keeps it only when it reads as a search for a plot (letters and combining marks of any script, at most six decimal digits, spaces, and `- _ . + # / & ' ( )`), and counts it in the row of the UTC day and text (`search_misses`, [Database](database.md#search_misses)). Only the production service counts. The query string and the headers are never read for the text.
 
-The answer is always `204` with no body: for a text that was counted, one shorter than two characters after the normalisation, one past a limit, and any request outside production, so a caller learns nothing from it. The limits drop silently: 20 requests a minute per network, and once a UTC day holds 1,000 different texts, a text without a row that day. Rows more than 90 days old are deleted. A body that isn't a JSON object with a string `query` gets the framework's `422` (see [Request validation errors](#request-validation-errors)), whose entries keep `type`, `loc`, and `msg` and leave out `input` and `ctx`, so the answer never repeats the body.
+The answer is always `204` with no body: for a text that was counted, one the rule drops, one past a limit, and any request outside production, so a caller learns nothing from it. The limits drop silently: 20 requests a minute per network (an IPv4 address, or the /64 of an IPv6 address; a value that is no address shares one key), and once a UTC day holds 1,000 different texts, a text without a row that day. Rows more than 90 days old are deleted. A body that isn't JSON, or isn't a JSON object with a string `query`, gets the framework's `422` (see [Request validation errors](#request-validation-errors)) with entries of `type`, `loc`, and `msg` only, so the answer never repeats the body; a body with another content type is refused before it is read (`json_required`), so a page on another site can't post one without the browser asking CORS first. A body above 1 KiB gets the `413`. The counter is best effort: a write in flight when an instance stops is lost.
 
 ### GET `/debug/search-misses`
 
 **Purpose**: The private list for the "search misses" section on `/debug`, behind the admin gate
 
-Returns the texts of the last 90 UTC days, most searched first, up to 500 of them:
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `order` | string | `count` | `count`: most searched first, a tie to the text searched more recently. `recent`: most recently searched first, a tie to the more searched |
+| `offset` | int | 0 | Where the page starts in the whole list (0 or more) |
+
+Returns one page of up to 500 texts of the last 90 UTC days, and the days that reached the day's cap:
 
 ```json
 {
   "status": "ok",
   "retention_days": 90,
+  "day_cap": 1000,
+  "order": "count",
+  "offset": 0,
   "texts": 612,
   "misses": [
     {"query": "spider", "count": 12, "first_day": "2026-10-02", "last_day": "2026-11-17"}
-  ]
+  ],
+  "capped_days": ["2026-11-16"]
 }
 ```
 
-`texts` is how many different texts the window holds, and `misses` lists up to 500 of them with their total `count` and their first and last UTC day. A tie goes to the text searched more recently. `status` is `unavailable` with an empty list when the query fails, which includes the table not being there yet.
+`texts` is how many different texts the window holds, and `misses` lists up to 500 of them from `offset` on, each with its total `count` and its first and last UTC day; ties go on by the text, so the pages neither repeat nor skip a text. `capped_days` are the days of the window, newest first, that hold `day_cap` texts: on those a new text was dropped, which is how a flood shows. The answer carries `Cache-Control: private, no-store`. A read also runs the retention delete if it hasn't run that day, so the delete doesn't wait for a miss. `status` is `unavailable` with an empty list when the query fails, which includes the table not being there yet. An unknown `order` or a negative `offset` is a `422`.
 
 ### DELETE `/debug/search-misses`
 
-**Purpose**: Remove one text from the private list, behind the admin gate
+**Purpose**: Remove one text, or one whole day, from the private list, behind the admin gate
 
-The body is `{"query": "<text>"}`, the text as the list shows it. Every row of that text is deleted, whatever its day, and the answer is `{"deleted": <rows>}`: `0` for a text the list no longer holds. `503` when the database doesn't answer.
+The body is `{"query": "<text>"}`, the text as the list shows it, or `{"day": "YYYY-MM-DD"}`, never both. Every row of that text, whatever its day, or every row of that day, whatever its text, is deleted, and the answer is `{"deleted": <rows>}`: `0` for a text or a day the list no longer holds. The body is read after the admin gate and within the same 1 KiB. The delete is committed before the answer, so a failed commit is a `503` like a database that doesn't answer, never a `200`.
 
 ---
 
@@ -1802,7 +1811,7 @@ A request whose body or parameters fail schema validation returns status 422 wit
 
 The body is always ASCII: any non-ASCII character in the echoed `input` is JSON-escaped, so text that cannot be encoded as UTF-8, such as a lone surrogate (the JSON string `"\ud800"`), still gets a 422 rather than a 500. `POST /feedback` rejects such text in any field this way.
 
-`POST /search/miss` is the exception to the echo: its body is what a visitor typed, so its entries keep `type`, `loc`, and `msg` only (`QuietBodyRoute` in `api/routers/search.py`).
+`POST /search/miss` and `DELETE /debug/search-misses` are the exception to the echo: their body is a text a visitor typed, so they read it by hand and their entries carry `type`, `loc`, and `msg` only (`read_json_body` in `api/search_misses.py`). A body there with a content type other than JSON gets one entry of type `json_required`.
 
 ### HTTP status codes
 

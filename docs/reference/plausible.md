@@ -244,9 +244,10 @@ were counted and shown nowhere.
 | `nav_click` | `source`, `target`, `spec`, `library` | The landing page, see [Landing page clicks](#landing-page-clicks-nav_click) | A visitor goes on from an element of the landing page |
 | `stayed_10s` | `input` | The tracker itself (`useAnalytics.ts`, `analytics/stay.ts`) | The site was in front of the visitor for ten seconds of a visit, once per visit |
 
-Every property holds a value from a closed list or a catalogue id, so no event
-carries anything a visitor typed. Until 2026-11-18 one did: `search` and
-`search_no_results` sent the search text as `query` (see [Search](#search)).
+Every event property holds a value from a closed list or a catalogue id, so no
+event property carries anything a visitor typed. Until 2026-11-18 one did:
+`search` and `search_no_results` sent the search text as `query` (see
+[Search](#search)).
 Every pageview and event also carries the ambient `theme` (`dark` or `light`),
 the theme in effect, which `RootLayout` sets through
 `setAnalyticsAmbientProps`.
@@ -284,32 +285,56 @@ A search that finds nothing in the whole catalogue goes to a private list in
 the project's database instead (`search_misses`, see
 [Database](database.md#search_misses)). The owner reads it in the "search
 misses" section of `/debug` to see what the catalogue lacks and which words
-the search doesn't know, and deletes an entry there. No public page shows it.
+the search doesn't know, and deletes a text or a whole day there. No public
+page shows it.
 
 - **What counts as a miss**: the text finds nothing inside the active
   filters, nothing without them, and nothing in any category. A text that
   `.search_all()` would find is no miss, and nor is one typed before the
   counts of all plots have loaded.
 - **Only the finished text**: the gallery sends it once no key was pressed for
-  two seconds (`MISS_PAUSE_MS`), or earlier when the search field loses focus,
-  the search closes, the text is cleared, or the gallery is left. A fragment
-  followed by more typing is never sent. Each text is sent once per page load,
-  and only from the live site (`app/src/lib/searchMiss.ts`).
-- **One form of the text**: `normalizeQuery()` makes it lowercase, with single
-  spaces, and cuts it at 40 characters (`MAX_QUERY_LENGTH`), so "Scatter",
-  "scatter " and "SCATTER" are one entry, catalogue words and spec names fit,
-  and a long text pasted into the box by mistake isn't kept in full. The API
-  applies the same rule again and drops what is then shorter than two
-  characters. `app/src/hooks/searchQuery.cases.json` holds the app's rule and
+  two seconds (`MISS_PAUSE_MS`), or earlier when the search field loses focus
+  (a click outside the search included) or the gallery is left. A fragment
+  typed on within two seconds is never sent; one left for two seconds or by a
+  loss of focus is, even if the visitor comes back and types on. The clear
+  cross, Escape, and "← back" throw a pending text away: it isn't sent. Each
+  text is sent once per page load, and only from the live site
+  (`app/src/lib/searchMiss.ts`). The field asks the browser and password
+  managers not to fill it (`autocomplete="off"`).
+- **One form of the text**: `normalizeQuery()` composes it to Unicode form NFC,
+  makes it lowercase, with single spaces, and cuts it at 40 characters
+  (`MAX_QUERY_LENGTH`), so "Scatter", "scatter " and "SCATTER" are one entry,
+  and so is a word typed with a composed or a decomposed accent. A long text
+  pasted into the box by mistake isn't kept in full. The API applies the same
+  rule again. `app/src/hooks/searchQuery.cases.json` holds the app's rule and
   the API's to each other.
+- **Only a search for a plot**: a visitor could type anything, so both the app
+  and the API keep a text only when it reads as a search, by what its
+  characters are and in any script: at least two characters, each a letter, a
+  combining mark, a decimal digit (at most six in all), a space, or one of
+  `- _ . + # / & ' ( )`. A text with `@` or `:`, with more digits, or with a
+  control, format, or direction character isn't sent and isn't kept, so an
+  e-mail address, a phone number, or a link doesn't reach the list. The rule
+  is `isCountableMiss()` in the app and `is_countable()` in the API.
 - **What a row holds**: the text, the UTC day, and a count. No address, no
   user agent, no time of day, and no session. The text travels in the body of
   `POST /search/miss` (see [API reference](api.md#post-searchmiss)), never in
-  a URL, and the API logs no part of it.
-- **Limits**: a network may send 20 requests a minute, a UTC day takes at most
+  a URL, without cookies or a referrer, and the API logs no part of it. A row
+  is pseudonymous, not anonymous: the platform's request log keeps one line
+  per `POST /search/miss` for 30 days, with its time and user agent, and until
+  then a text could be matched to such a line by its day. The list is the
+  operator's alone.
+- **Limits**: a network (an IPv4 address, or the /64 of an IPv6 address) may
+  send 20 requests a minute, a body may hold 1 KiB, a UTC day takes at most
   1,000 different texts, and a row is deleted when it is more than 90 days old
-  (`RATE_LIMIT_MAX`, `MAX_NEW_QUERIES_PER_DAY`, and `RETENTION_DAYS` in
-  `api/search_misses.py`). The API counts only in production.
+  (`RATE_LIMIT_MAX`, `MAX_BODY_BYTES`, `MAX_NEW_QUERIES_PER_DAY`, and
+  `RETENTION_DAYS` in `api/search_misses.py`). The delete runs once a day
+  after a count, at the API's start, and when the owner reads the list. The
+  API counts and deletes only in production.
+- **Best effort**: the counts are hints, not measurements. A flood can fill a
+  day, after which the day's cap drops new texts (the owner's section names
+  such a day and deletes it whole), and a miss that is being written when an
+  instance stops is lost.
 
 ### Feedback
 
@@ -930,7 +955,7 @@ had no bounce rate draws the floor and is named "not counted".
 - **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`, with `ENGAGED_SINCE` and `_engaged_visits()`
 - **Visitors tile**: `app/src/sections/stats/VisitorsTile.tsx`, its answer's check and sums in `app/src/sections/stats/visitors.ts`, and the hinted word in `app/src/sections/stats/HintTerm.tsx` (shared with the shared links tile)
 - **Shared links** (not in Plausible): `record_share()` in `api/shared_links.py`, called by `api/routers/og_images.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
-- **Search misses** (not in Plausible): the miss rule and the pause in `app/src/sections/plots-gallery/FilterBar/FilterSearch.tsx`, the sender in `app/src/lib/searchMiss.ts`, the shared normalisation cases in `app/src/hooks/searchQuery.cases.json`, `record_miss()` in `api/search_misses.py` behind `POST /search/miss` (`api/routers/search.py`), and the owner's section `app/src/sections/debug/SearchMissesSection.tsx`
+- **Search misses** (not in Plausible): the miss rule, the pause and what sends or drops a pending text in `app/src/sections/plots-gallery/FilterBar/FilterSearch.tsx`, the sender and `isCountableMiss()` in `app/src/lib/searchMiss.ts`, the shared cases of both rules in `app/src/hooks/searchQuery.cases.json`, `read_json_body()`, `is_countable()` and `record_miss()` in `api/search_misses.py` behind `POST /search/miss` (`api/routers/search.py`), and the owner's section `app/src/sections/debug/SearchMissesSection.tsx`
 
 ## Add or change an event
 
