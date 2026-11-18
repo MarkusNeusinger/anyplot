@@ -8,7 +8,7 @@
  * AgentChatPage.parity.test.tsx compares the two lanes' DOM.
  */
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -18,6 +18,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { analyticsMuted } from 'src/analytics/mute';
 import { resetAgentLaneProbe } from 'src/hooks/useAgentLaneOpen';
 import { AgentChatPage, HIGHCHARTS_NOTE } from 'src/pages/AgentChatPage';
+import { AGENT_INTRO_DESCRIPTION, AGENT_INTRO_TITLE } from 'src/sections/agent-chat/AgentIntro';
 import { EXPERIMENTAL_DETAILS, EXPERIMENTAL_LINE } from 'src/sections/agent-chat/lane';
 import { theme } from 'src/theme';
 import { ADMIN_HINT_KEY, VIEW_AS_VISITOR_KEY } from 'src/utils/adminAuth';
@@ -69,15 +70,20 @@ function stubFetch() {
   );
 }
 
-function renderPage(library = 'matplotlib', language = 'python', extra = '') {
+function renderPath(path: string) {
   const router = createMemoryRouter([{ path: '/agent', element: <AgentChatPage /> }], {
-    initialEntries: [`/agent?spec=scatter-basic&library=${library}&language=${language}${extra}`],
+    initialEntries: [path],
   });
-  return render(
+  const view = render(
     <ThemeProvider theme={theme}>
       <RouterProvider router={router} />
     </ThemeProvider>
   );
+  return { ...view, router };
+}
+
+function renderPage(library = 'matplotlib', language = 'python', extra = '') {
+  return renderPath(`/agent?spec=scatter-basic&library=${library}&language=${language}${extra}`);
 }
 
 /** One route's answer in place of the stub's, every other route as before. */
@@ -136,7 +142,7 @@ describe('AgentChatPage on the public lane', () => {
     });
   });
 
-  it.each(['spec_hub', 'plot_page', 'plot_of_the_day'])(
+  it.each(['spec_hub', 'plot_page', 'plot_of_the_day', 'agent_intro'])(
     "records a visitor's open from %s, then drops the source",
     async source => {
       renderPage('matplotlib', 'python', `&source=${source}`);
@@ -308,6 +314,197 @@ describe('AgentChatPage on the public lane', () => {
     expect(await screen.findByTestId('highcharts-licence')).toHaveTextContent(HIGHCHARTS_NOTE);
   });
 
+  it("explains the chat to a visitor at /agent without a plot, and asks nothing but the lane's door", async () => {
+    renderPath('/agent');
+    const intro = await screen.findByTestId('agent-intro');
+    await waitFor(() => expect(document.title).toBe('use with my data | anyplot.ai'));
+    expect(document.querySelector('meta[name="description"]')).toHaveAttribute(
+      'content',
+      expect.stringContaining("an agent adapts that plot's code to your columns")
+    );
+    // The page's own Open Graph pair replaces the home page's shell defaults in the head.
+    expect(AGENT_INTRO_TITLE).toBe('use with my data | anyplot.ai');
+    const og = (property: string) =>
+      Array.from(document.querySelectorAll(`meta[property="${property}"]`)).map(meta =>
+        meta.getAttribute('content')
+      );
+    expect(og('og:title')).toEqual([AGENT_INTRO_TITLE]);
+    expect(og('og:description')).toEqual([AGENT_INTRO_DESCRIPTION]);
+    // Never indexed, so no canonical either.
+    expect(document.querySelector('link[rel="canonical"]')).toBeNull();
+    // A tool page, never one to index, also as the explainer.
+    expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex, nofollow'
+    );
+    expect(within(intro).getByRole('link', { name: 'pick any plot' })).toHaveAttribute(
+      'href',
+      '/plots'
+    );
+    expect(within(intro).getByRole('link', { name: 'Browse plots' })).toHaveAttribute(
+      'href',
+      '/plots'
+    );
+    // One example per language, each opening the chat on its pair with the explainer's source.
+    const examples = within(
+      within(intro).getByRole('list', { name: 'or start with' })
+    ).getAllByRole('listitem');
+    expect(examples).toHaveLength(3);
+    [
+      ['scatter-basic', 'matplotlib', 'python'],
+      ['bar-basic', 'ggplot2', 'r'],
+      ['line-basic', 'd3', 'javascript'],
+    ].forEach(([spec, library, language], index) => {
+      const item = examples[index];
+      expect(within(item).getByRole('link', { name: `${spec} in ${library}` })).toHaveAttribute(
+        'href',
+        `/agent?spec=${spec}&library=${library}&language=${language}&source=agent_intro`
+      );
+      expect(within(item).getByText(language)).toBeInTheDocument();
+    });
+    // Text and links only: no session, no status read, no debug call, no `agent_open`.
+    expect(calls.map(call => call.url.pathname)).toEqual(['/agent/lane']);
+    expect(analytics.trackEvent).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('experimental-notice')).not.toBeInTheDocument();
+  });
+
+  it('records one open per chat picked on the explainer, also after going back to it', async () => {
+    const user = userEvent.setup();
+    const { router } = renderPath('/agent');
+    const opens = () =>
+      analytics.trackEvent.mock.calls.filter(([name]) => name === 'agent_open').map(([, p]) => p);
+
+    await user.click(await screen.findByRole('link', { name: 'scatter-basic in matplotlib' }));
+    await screen.findByLabelText('Message');
+    await waitFor(() => expect(router.state.location.search).not.toContain('source='));
+    expect(opens()).toEqual([
+      { library: 'matplotlib', source: 'agent_intro', spec: 'scatter-basic' },
+    ]);
+
+    await act(() => router.navigate(-1));
+    await user.click(await screen.findByRole('link', { name: 'line-basic in d3' }));
+    await waitFor(() => expect(opens()).toHaveLength(2));
+    expect(opens()[1]).toEqual({ library: 'd3', source: 'agent_intro', spec: 'line-basic' });
+    // The source leaves the address again, so a reload of it counts as a direct open.
+    await waitFor(() =>
+      expect(router.state.location.search).toBe('?spec=line-basic&library=d3&language=javascript')
+    );
+  });
+
+  it('records a chat reached straight from another chat by a history jump as an open of its own', async () => {
+    const user = userEvent.setup();
+    const { router } = renderPath('/agent');
+    const opens = () =>
+      analytics.trackEvent.mock.calls.filter(([name]) => name === 'agent_open').map(([, p]) => p);
+    const sessions = () =>
+      calls.filter(
+        call => call.url.pathname.endsWith('/agent/sessions') && call.init.method === 'POST'
+      );
+
+    await user.click(await screen.findByRole('link', { name: 'scatter-basic in matplotlib' }));
+    await screen.findByLabelText('Message');
+    await waitFor(() => expect(router.state.location.search).not.toContain('source='));
+    await act(() => router.navigate('/agent'));
+    await user.click(await screen.findByRole('link', { name: 'line-basic in d3' }));
+    await waitFor(() => expect(opens()).toHaveLength(2));
+    await waitFor(() => expect(router.state.location.search).not.toContain('source='));
+
+    // From chat B straight back to chat A, a pair in the address the whole way: a new chat.
+    await act(() => router.navigate(-2));
+    expect(router.state.location.search).toBe(
+      '?spec=scatter-basic&library=matplotlib&language=python'
+    );
+    await waitFor(() => expect(sessions()).toHaveLength(3));
+    await waitFor(() => expect(opens()).toHaveLength(3));
+    expect(opens()).toEqual([
+      { library: 'matplotlib', source: 'agent_intro', spec: 'scatter-basic' },
+      { library: 'd3', source: 'agent_intro', spec: 'line-basic' },
+      { library: 'matplotlib', source: 'direct', spec: 'scatter-basic' },
+    ]);
+  });
+
+  it('records no second open for a library switch inside the chat', async () => {
+    const user = userEvent.setup();
+    answerWith(
+      '/specs/scatter-basic',
+      json(200, {
+        title: 'Basic Scatter Plot',
+        implementations: ['matplotlib', 'seaborn', 'highcharts'].map(library_id => ({
+          library_id,
+        })),
+      })
+    );
+    answerWith(
+      '/agent/session/library',
+      json(200, { session_id: 'S1', eligibility: { eligible: true, status: 'clean', reasons: [] } })
+    );
+    const { router } = renderPage();
+    await screen.findByLabelText('Message');
+    await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
+
+    await user.click(screen.getByRole('button', { name: /^Library: matplotlib/ }));
+    const option = await within(await screen.findByRole('dialog')).findByRole('button', {
+      name: 'seaborn',
+    });
+    await waitFor(() => expect(option).toBeEnabled());
+    await user.click(option);
+    await waitFor(() => expect(router.state.location.search).toContain('library=seaborn'));
+    expect(
+      analytics.trackEvent.mock.calls.filter(([name]) => name === 'agent_open').map(([, p]) => p)
+    ).toEqual([{ library: 'matplotlib', source: 'direct', spec: 'scatter-basic' }]);
+  });
+
+  it('says the assistant is closed at /agent without a plot while the lane is, with no explainer', async () => {
+    laneOpen = false;
+    renderPath('/agent');
+    expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
+    expect(screen.queryByTestId('agent-intro')).not.toBeInTheDocument();
+    expect(calls.every(call => call.url.pathname.endsWith('/agent/lane'))).toBe(true);
+  });
+
+  it.each([
+    ['/agent', 'without a plot'],
+    ['/agent?spec=scatter-basic&library=matplotlib&language=python', 'at a chat address'],
+  ])(
+    'keeps the terms of use under the closed notice at %s (%s), and asks nothing but the lane',
+    async path => {
+      // `/agent` is where the terms live, so they stand there also while the assistant is paused.
+      laneOpen = false;
+      renderPath(path);
+      await screen.findByText(/the assistant is closed right now/);
+      const terms = screen.getByTestId('agent-intro-terms');
+      // Below the notice's sentence, whose last link is the way on to the catalogue.
+      const catalogue = screen.getByRole('link', { name: 'catalogue' });
+      expect(
+        catalogue.compareDocumentPosition(terms) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+      // Under the same heading and in the same order as on the explainer.
+      expect(terms.previousElementSibling).toBe(
+        screen.getByRole('heading', { level: 3, name: 'ground rules' })
+      );
+      expect(
+        within(terms)
+          .getAllByRole('term')
+          .map(label => label.textContent)
+      ).toEqual(['your code', 'privacy', 'limits', 'status']);
+      expect(
+        within(terms)
+          .getAllByRole('definition')
+          .map(text => text.textContent)
+      ).toEqual([
+        'yours to use, as is. Highcharts needs a licence from Highsoft for commercial use.',
+        'what is stored, where and for how long',
+        'use it only with data you may share, never for unlawful content or automated requests. daily limits apply per tab and per network; a misuse can pause you for the day.',
+        'experimental, without warranty: results can be wrong and nobody checks them by hand. the operator may pause it at any time.',
+      ]);
+      expect(
+        within(terms).getByRole('link', { name: 'what is stored, where and for how long' })
+      ).toHaveAttribute('href', '/legal#assistant');
+      // Text and links only: no session, no status read, while the door is closed.
+      expect(calls.map(call => call.url.pathname)).toEqual(['/agent/lane']);
+    }
+  );
+
   it('says the assistant is closed while the lane is, and opens nothing', async () => {
     laneOpen = false;
     renderPage();
@@ -341,6 +538,36 @@ describe('AgentChatPage on the public lane', () => {
     // and the admin menu keeps the way back.
     expect(localStorage.getItem(ADMIN_HINT_KEY)).toBe('1');
     expect(screen.getByTestId('admin-menu')).toHaveTextContent(/^admin · as visitor ▾$/);
+  });
+
+  it('shows the closed notice with its terms when the lane closed after the page read it open', async () => {
+    // The page reads the lane once, at load; the operator paused it before the chat's open, so
+    // the open answers `not_enabled`.
+    answerWith('/agent/sessions', json(404, { detail: 'not_enabled', ref: 'r-off' }));
+    renderPage();
+    const terms = await screen.findByTestId('agent-intro-terms');
+    // The notice the other two closed cases show, word for word, and the terms below its last link.
+    expect(screen.getByText(/the assistant is closed right now/)).toHaveTextContent(
+      /^the assistant is closed right now\. please try again later; the catalogue stays open\./
+    );
+    const catalogue = screen.getByRole('link', { name: 'catalogue' });
+    expect(catalogue).toHaveAttribute('href', '/plots');
+    expect(
+      catalogue.compareDocumentPosition(terms) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(
+      within(terms)
+        .getAllByRole('term')
+        .map(label => label.textContent)
+    ).toEqual(['your code', 'privacy', 'limits', 'status']);
+    // No error and no chat: neither the chat's frame nor the experimental notice above it.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Chat' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('experimental-notice')).not.toBeInTheDocument();
+    expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex, nofollow'
+    );
   });
 
   it('says why a network cannot open one more session', async () => {

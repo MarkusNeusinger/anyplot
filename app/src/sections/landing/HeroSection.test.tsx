@@ -23,7 +23,12 @@ vi.mock('src/sections/landing/TypewriterText', () => ({
 const lane = vi.hoisted(() => ({ open: false as boolean | null }));
 vi.mock('src/hooks/useAgentLaneOpen', () => ({ useAgentLaneOpen: () => lane.open }));
 
-import { AGENT_LANE_LABEL, AGENT_LANE_LINE, HeroSection } from 'src/sections/landing/HeroSection';
+import {
+  AGENT_ENTRY_LABEL,
+  AGENT_ENTRY_NAME,
+  AGENT_ENTRY_TEXT,
+  HeroSection,
+} from 'src/sections/landing/HeroSection';
 
 describe('HeroSection', () => {
   beforeEach(() => {
@@ -31,30 +36,75 @@ describe('HeroSection', () => {
     lane.open = false;
   });
 
-  it('announces .use_my_data() only while the public lane is open, leading to the catalogue', async () => {
+  it('names the agent in plain words only while the public lane is open, leading to /agent', async () => {
     const user = userEvent.setup();
     const { rerender } = render(<HeroSection potd={null} />);
-    expect(screen.queryByRole('link', { name: AGENT_LANE_LABEL })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: AGENT_ENTRY_LABEL })).not.toBeInTheDocument();
+    expect(screen.queryByText(AGENT_ENTRY_TEXT)).not.toBeInTheDocument();
 
     lane.open = true;
     rerender(<HeroSection potd={null} />);
-    const link = screen.getByRole('link', { name: AGENT_LANE_LABEL });
-    expect(link).toHaveTextContent(`# ${AGENT_LANE_LINE} →`);
-    expect(link).toHaveTextContent('# new: pick any plot, then .use_my_data() →');
+    const link = screen.getByRole('link', { name: AGENT_ENTRY_LABEL });
+    // The idiom and the plain words, both inside the one link.
+    expect(link).toHaveTextContent(`${AGENT_ENTRY_NAME} →`);
+    expect(link).toHaveTextContent(AGENT_ENTRY_TEXT);
+    // The accessible name keeps the words on screen (WCAG 2.5.3).
+    expect(AGENT_ENTRY_LABEL.toLowerCase()).toContain(AGENT_ENTRY_TEXT);
+    // A decision of the launch: the chat's notice says "experimental", the hero does not.
     expect(link).not.toHaveTextContent(/experimental/i);
-    expect(link).toHaveAttribute('href', '/plots');
+    expect(link).toHaveAttribute('href', '/agent');
 
     await user.click(link);
     expect(trackEvent).toHaveBeenCalledWith('nav_click', {
       source: 'hero_use_my_data',
-      target: '/plots',
+      target: '/agent',
     });
   });
 
-  it('keeps the line hidden while the lane probe is pending', () => {
+  it("keeps the entry's box while the lane probe is pending: invisible, unreachable, untracked", async () => {
+    const user = userEvent.setup();
     lane.open = null;
-    render(<HeroSection potd={null} />);
-    expect(screen.queryByRole('link', { name: AGENT_LANE_LABEL })).not.toBeInTheDocument();
+    const { rerender } = render(<HeroSection potd={null} />);
+    // The box holds the same two lines as the link, so the link takes its place without a move.
+    const box = screen.getByTestId('hero-agent-entry');
+    expect(box).toHaveTextContent(`${AGENT_ENTRY_NAME} →`);
+    expect(box).toHaveTextContent(AGENT_ENTRY_TEXT);
+    expect(box).toHaveStyle({ visibility: 'hidden' });
+    expect(box).toHaveAttribute('aria-hidden', 'true');
+    // No link: nothing to follow, focus or name.
+    expect(box.tagName).toBe('SPAN');
+    expect(box).not.toHaveAttribute('href');
+    expect(box).not.toHaveAttribute('tabindex');
+    expect(screen.queryByRole('link', { name: AGENT_ENTRY_LABEL })).not.toBeInTheDocument();
+    expect(screen.queryByText(AGENT_ENTRY_TEXT)?.closest('a')).toBeNull();
+    // Tabbing through the hero never stops on it.
+    const stops: (Element | null)[] = [];
+    for (let i = 0; i < 6; i += 1) {
+      await user.tab();
+      stops.push(document.activeElement);
+    }
+    expect(stops.some(el => el !== null && box.contains(el))).toBe(false);
+    await user.click(box);
+    expect(trackEvent).not.toHaveBeenCalled();
+
+    // The lane answers open: the link stands in the box's place.
+    lane.open = true;
+    rerender(<HeroSection potd={null} />);
+    const link = screen.getByRole('link', { name: AGENT_ENTRY_LABEL });
+    expect(link).toHaveAttribute('data-testid', 'hero-agent-entry');
+    expect(link).toHaveStyle({ visibility: 'visible' });
+    expect(link).not.toHaveAttribute('aria-hidden');
+  });
+
+  it('removes the box when the lane answers closed', () => {
+    lane.open = null;
+    const { rerender } = render(<HeroSection potd={null} />);
+    expect(screen.getByTestId('hero-agent-entry')).toBeInTheDocument();
+
+    lane.open = false;
+    rerender(<HeroSection potd={null} />);
+    expect(screen.queryByTestId('hero-agent-entry')).not.toBeInTheDocument();
+    expect(screen.queryByText(AGENT_ENTRY_TEXT)).not.toBeInTheDocument();
   });
 
   it('tracks the primary browse CTA, mcp link and github link', async () => {
@@ -67,7 +117,9 @@ describe('HeroSection', () => {
       target: '/plots',
     });
 
-    await user.click(screen.getByLabelText('Connect via MCP'));
+    const mcp = screen.getByRole('link', { name: 'Connect via MCP' });
+    expect(mcp).toHaveAttribute('href', '/mcp');
+    await user.click(mcp);
     expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'hero_mcp', target: '/mcp' });
 
     await user.click(screen.getByLabelText('Clone on GitHub'));

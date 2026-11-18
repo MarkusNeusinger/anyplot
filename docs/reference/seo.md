@@ -397,6 +397,7 @@ Backend endpoints that serve HTML with correct meta tags for bots.
 | `GET /seo-proxy/plots` | Plots page | Default |
 | `GET /seo-proxy/specs` | Specs page | Default |
 | `GET /seo-proxy/legal` | Legal page | Default |
+| `GET /seo-proxy/agent` | The data assistant's explainer at `/agent`: what the chat does and which model it runs on, three example pairs, the line on how the chat is built, and the terms of use under their heading, word for word and in the order `AgentIntro.tsx` has them. It answers a chat's address (`/agent?spec=…`) too, because nginx passes the query on. `noindex`, as the page is. Declared before `{spec_id}`, which would otherwise answer 404 for an unknown spec `agent`. | Default |
 | `GET /seo-proxy/{spec_id}` | Spec overview (cross-language hub) | Collage (2x3 grid) |
 | `GET /seo-proxy/{spec_id}/{language}` | **301** → `/seo-proxy/{spec_id}` (consolidated) | — |
 | `GET /seo-proxy/{spec_id}/{language}/{library}` | Implementation | Single branded |

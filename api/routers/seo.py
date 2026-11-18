@@ -1407,6 +1407,109 @@ async def seo_about():
     )
 
 
+# The crawler copy of `/agent` without a plot, the explainer
+# (app/src/sections/agent-chat/AgentIntro.tsx). llms.txt links the address,
+# and it is where the assistant's terms of use live; without a
+# route of its own a recognised crawler or AI assistant that followed the link
+# fell into the spec route below as an unknown spec and read a 404. nginx
+# passes the query on, so a chat's address (`/agent?spec=…`) gets this copy
+# too: the chat itself is a tool that only runs in a browser.
+#
+# The strings are the page's own. tests/unit/test_agent_intro_crawler_copy.py
+# reads AgentIntro.tsx and fails when the title, the description, the intro's
+# sentences around it, the example pairs, the line on how the chat is built or
+# the terms (their heading, order and sentences) here differ from it.
+AGENT_INTRO_TITLE = "use with my data | anyplot.ai"
+AGENT_INTRO_DESCRIPTION = (
+    "pick any plot, choose .use_my_data() on its page, and paste your data. an agent adapts that plot's code "
+    "to your columns, renders it in a sandbox with no network access, reviews the render against the "
+    "catalogue's rubric, repairs it once if needed, and hands back the image and the code."
+)
+# The explainer's paragraph is the description between the opening sentence and
+# the two after it, the model's and the closing one.
+AGENT_INTRO_OPENING = "experimental, open to everyone since november 2026."
+# The provider and the location as the legal page states them; they hold where the
+# agents service is deployed (agents/cloudbuild.yaml) and configured (agents/anyplot/settings.py).
+AGENT_INTRO_MODEL = "the model is Claude by Anthropic, served through Google Cloud Vertex AI in the EU."
+AGENT_INTRO_CLOSING = (
+    "your chat and data live only in server memory and are deleted after an hour idle, unless you send feedback."
+)
+AGENT_INTRO_EXAMPLES = (("scatter-basic", "matplotlib"), ("bar-basic", "ggplot2"), ("line-basic", "d3"))
+# The line between the way on and the terms; its last words link the README's section on the chat.
+AGENT_INTRO_HOW = (
+    "how it works: one agent talks to you, and the loop around it is plain code. the design and the code are on GitHub."
+)
+AGENT_DESIGN_URL = "https://github.com/MarkusNeusinger/anyplot#use-with-my-data-agent-chat"
+AGENT_TERMS_HEADING = "ground rules"
+# The terms' labels in the page's order; every line but `privacy`, a link, is a sentence of AGENT_TERMS.
+AGENT_TERM_LABELS = ("your code", "privacy", "limits", "status")
+AGENT_TERMS = (
+    ("your code", "yours to use, as is. Highcharts needs a licence from Highsoft for commercial use."),
+    (
+        "limits",
+        "use it only with data you may share, never for unlawful content or automated requests. "
+        "daily limits apply per tab and per network; a misuse can pause you for the day.",
+    ),
+    (
+        "status",
+        "experimental, without warranty: results can be wrong and nobody checks them by hand. "
+        "the operator may pause it at any time.",
+    ),
+)
+AGENT_PRIVACY_LINK = "what is stored, where and for how long"
+
+
+def _build_agent_body() -> str:
+    """The explainer as the page shows it: the paragraph, the examples, the way on, the line on how
+    the chat is built, the terms."""
+    paragraph = html.escape(AGENT_INTRO_DESCRIPTION, quote=False)
+    paragraph = paragraph.replace("pick any plot", '<a href="https://anyplot.ai/plots">pick any plot</a>', 1)
+    paragraph = paragraph.replace(".use_my_data()", "<code>.use_my_data()</code>", 1)
+    how = html.escape(AGENT_INTRO_HOW, quote=False).replace(
+        "on GitHub", f'<a href="{AGENT_DESIGN_URL}">on GitHub</a>', 1
+    )
+    examples = "".join(
+        f'<li><a href="https://anyplot.ai/agent?spec={spec}&amp;library={library}'
+        f'&amp;language={LIBRARY_LANGUAGES[library]}">{spec} in {library}</a> · {LIBRARY_LANGUAGES[library]}</li>'
+        for spec, library in AGENT_INTRO_EXAMPLES
+    )
+    lines = {term: html.escape(text, quote=False) for term, text in AGENT_TERMS}
+    lines["privacy"] = f'<a href="https://anyplot.ai/legal#assistant">{AGENT_PRIVACY_LINK}</a>'
+    terms = "".join(f"<dt>{html.escape(term, quote=False)}</dt><dd>{lines[term]}</dd>" for term in AGENT_TERM_LABELS)
+    return (
+        "<h1>use with my data</h1>"
+        f"<p>{html.escape(AGENT_INTRO_OPENING, quote=False)} {paragraph} "
+        f"{html.escape(AGENT_INTRO_MODEL, quote=False)} {html.escape(AGENT_INTRO_CLOSING, quote=False)}</p>"
+        f"<h2>or start with</h2><ul>{examples}</ul>"
+        '<p><a href="https://anyplot.ai/plots">Browse plots</a></p>'
+        f"<p>{how}</p>"
+        f"<h2>{html.escape(AGENT_TERMS_HEADING, quote=False)}</h2><dl>{terms}</dl>"
+    )
+
+
+_AGENT_BOT_BODY = _build_agent_body()
+
+
+@router.get("/seo-proxy/agent")
+async def seo_agent():
+    """Bot-optimized `/agent` explainer: what the chat does, three example pairs, the terms of use.
+
+    noindex, as the page is (`AgentChatPage`): the chat is a tool on one
+    catalogue pair, never a page to index. Declared before `/seo-proxy/{spec_id}`,
+    which would otherwise take `agent` for an unknown spec.
+    """
+    return HTMLResponse(
+        _render_bot_html(
+            title=html.escape(AGENT_INTRO_TITLE),
+            description=html.escape(AGENT_INTRO_DESCRIPTION),
+            image=DEFAULT_HOME_IMAGE,
+            url="https://anyplot.ai/agent",
+            body=_AGENT_BOT_BODY,
+            noindex=True,
+        )
+    )
+
+
 # Hex values come straight from core/palette.py — the single source of truth —
 # so the bot page can never disagree with what the plots actually use.
 _PALETTE_SLOT_NAMES = ("green", "lavender", "blue", "ochre", "red", "cyan", "rose", "lime")

@@ -125,7 +125,9 @@
  * data, a plot or work in flight, a reload, a closed tab or a link off the page
  * asks first (`useLeaveWarning`: the browser's `beforeunload` dialog, and for a
  * link inside the site or the back button the router's blocker with a
- * `confirm`). The page's own query edits pass, and so do the reload links
+ * `confirm`). Off the page means off the chat's spec too (`leavesChat`): the back
+ * button from a chat to the explainer, or to another chat, stays on `/agent` and
+ * asks all the same. The page's own query edits pass, and so do the reload links
  * after an expired session or no answer (`ReloadHint`), which the user clicked
  * on purpose.
  *
@@ -135,10 +137,11 @@
  * 2. The lane. A browser without the admin hint (`src/utils/adminAuth.ts`) or local
  *    development is a visitor's: it sends no request to the debug API, and runs on the
  *    public lane while the API's `GET /agent/lane` is open (`useAgentLaneOpen`); closed,
- *    the page says so. A browser with the hint asks the admin lane's `GET /status` first
- *    (`useAgentAdmin`), and the page waits for the answer, which picks the lane: the admin
- *    lane, also while the public door is closed; or, after a refusal or no answer (an
- *    expired Cloudflare Access session), the public lane, while the admin menu says the
+ *    the page says so, with the assistant's terms below the notice and, at a chat's address,
+ *    the site's feedback button (`LaneClosed`). A browser with the hint asks the admin lane's
+ *    `GET /status` first (`useAgentAdmin`), and the page waits for the answer, which picks the
+ *    lane: the admin lane, also while the public door is closed; or, after a refusal or no
+ *    answer (an expired Cloudflare Access session), the public lane, while the admin menu says the
  *    admin session expired and links to `/debug`. A refusal later in the session does the
  *    same. "View as visitor" in the admin menu runs the public lane for this tab, exactly
  *    as a visitor's. The BFF's admin gate is the real check; the page only picks the API.
@@ -148,20 +151,29 @@
  * 3. Analytics: while the page serves an admin (either lane), it sends no pageview and no
  *    event (`src/analytics/mute.ts`), so the admin's own use never counts as a visitor's.
  *
+ * Past the gates, a query without a catalogue pair (no spec, or a library the catalogue does not
+ * have; `namesAgentChat`) is the explainer (`AgentIntro`, the landing page's `.use_my_data()`
+ * leads there): what the chat does, a few example pairs, the way to the catalogue and the
+ * assistant's terms. It opens no session; the only requests before it are the gates' own, the
+ * lane's door and, in an admin's browser, the admin check. The site's feedback button, which the
+ * layout hides wherever the query names a pair, stands on it: the explainer has no feedback of
+ * its own.
+ *
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
 
 import { setAnalyticsMuted } from 'src/analytics/mute';
+import { FeedbackWidget } from 'src/components/FeedbackWidget';
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import { SectionHeader } from 'src/components/SectionHeader';
-import { LIB_TO_LANG, LIBRARIES } from 'src/constants';
+import { LIB_TO_LANG } from 'src/constants';
 import { CONFIG } from 'src/global-config';
 import { useAgentAdmin } from 'src/hooks/useAgentAdmin';
 import { useAgentLaneOpen } from 'src/hooks/useAgentLaneOpen';
@@ -178,7 +190,7 @@ import {
 import { loadMood, useAgentStatus } from 'src/hooks/useAgentStatus';
 import { useAnalytics } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
+import { type LeavesPage, leavesPath, useLeaveWarning } from 'src/hooks/useLeaveWarning';
 import {
   agentApi,
   type AgentLane,
@@ -191,13 +203,14 @@ import {
 } from 'src/lib/agent';
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
-import { paths, specPath } from 'src/routes/paths';
+import { isAgentChatAddress, namesAgentChat, paths, specPath } from 'src/routes/paths';
 import {
   AdminMenu,
   AdminMeters,
   type AdminMode,
   AdminSection,
 } from 'src/sections/agent-chat/AdminMenu';
+import { AGENT_INTRO_SOURCE, AgentIntro, AgentTerms } from 'src/sections/agent-chat/AgentIntro';
 import { attachmentSummary } from 'src/sections/agent-chat/attachmentText';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatFrame, FrameRule, StatusLine } from 'src/sections/agent-chat/ChatFrame';
@@ -254,9 +267,31 @@ import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminToken, readViewAsVisitor, setViewAsVisitor } from 'src/utils/adminAuth';
 import type { ThemedPreviewSource } from 'src/utils/themedPreview';
 
-const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
-/** Where `agent_open` says the visitor came from: the plot page, the landing page, the spec hub. */
-const OPEN_SOURCES = new Set(['plot_page', 'landing', 'spec_hub', 'plot_of_the_day']);
+/**
+ * A chat is its spec, shown for a library the page knows: another spec, none, or an address
+ * without a known library (all three show the explainer or another chat) on the same path `/agent`
+ * unmounts the chat and deletes its session as surely as another path does, so the leave warning
+ * asks for each. The page's own query edits keep the spec and name a known library (a library
+ * switch with its language, the dropped `source`) and pass.
+ */
+const leavesChat: LeavesPage = (current, next) => {
+  if (leavesPath(current, next)) return true;
+  const there = new URLSearchParams(next.search);
+  return (
+    new URLSearchParams(current.search).get('spec') !== there.get('spec') || !namesAgentChat(there)
+  );
+};
+/**
+ * Where `agent_open` says the visitor came from: the plot page, the landing page, the spec hub,
+ * the plot of the day, or an example of this page's explainer (`AgentIntro`).
+ */
+const OPEN_SOURCES = new Set([
+  'plot_page',
+  'landing',
+  'spec_hub',
+  'plot_of_the_day',
+  AGENT_INTRO_SOURCE,
+]);
 /**
  * The chat column's width: it grows with the window up to this (960 until 2026-11-02; owner:
  * use the room of a wide screen), so the data card with its grid, the plot cards and the code
@@ -291,30 +326,46 @@ function Notice({ title, children }: { title: string; children: React.ReactNode 
   );
 }
 
-/** The chat's Highcharts note, shown while the session plots in Highcharts (the legal page says the same). */
+/**
+ * The chat's Highcharts note, shown while the session plots in Highcharts (the explainer's
+ * `your code` line says the same).
+ */
 export const HIGHCHARTS_NOTE =
   'highcharts is free for non-commercial use; a commercial use needs a licence from Highsoft.';
 
 /**
- * The page while the public lane is closed (`GET /agent/lane` answered no) and the page does not
- * run on the admin lane. An admin's browser keeps the admin menu below the text: "view as visitor"
- * to switch back, or the line about an expired admin session.
+ * The page while the assistant is closed: the public lane's door (`GET /agent/lane`) answered no
+ * and the page does not run on the admin lane; or the public lane refused the session; or a
+ * session's open answered `not_enabled`, on either lane (the page reads the door once, at load,
+ * so a pause after that shows only here; on the admin lane it is the master switch). An admin's
+ * browser keeps the admin menu below the text: "view as visitor" to switch back, the line about
+ * an expired admin session, or the diagnostics line that names the switch. The assistant's terms
+ * stand below the notice: `/agent` is where they live, so they stand there also while the
+ * operator has paused the assistant.
  */
 function LaneClosed({ adminMenu = null }: { adminMenu?: React.ReactNode }) {
+  const { pathname, search } = useLocation();
   return (
-    <Notice title="use with my data · experimental">
-      the assistant is closed right now. please try again later; the{' '}
-      <Box component={RouterLink} to={paths.plots} sx={proseLinkStyle}>
-        catalogue
-      </Box>{' '}
-      stays open.
-      {/* Its row is the admin menu's too (`admin-menu…`), so the parity test leaves it out. */}
-      {adminMenu && (
-        <Box data-testid="admin-menu-row" sx={{ display: 'flex', mt: 2 }}>
-          {adminMenu}
-        </Box>
-      )}
-    </Notice>
+    <>
+      <Notice title="use with my data · experimental">
+        the assistant is closed right now. please try again later; the{' '}
+        <Box component={RouterLink} to={paths.plots} sx={proseLinkStyle}>
+          catalogue
+        </Box>{' '}
+        stays open.
+        {/* Its row is the admin menu's too (`admin-menu…`), so the parity test leaves it out. */}
+        {adminMenu && (
+          <Box data-testid="admin-menu-row" sx={{ display: 'flex', mt: 2 }}>
+            {adminMenu}
+          </Box>
+        )}
+        <AgentTerms />
+      </Notice>
+      {/* The layout leaves the site's feedback button out wherever the address names a chat
+          (`RootLayout`), but no chat is open here to offer feedback of its own, so the page
+          brings the button back by the layout's own rule: exactly where the layout left it out. */}
+      {isAgentChatAddress(pathname, search) && <FeedbackWidget />}
+    </>
   );
 }
 
@@ -365,7 +416,10 @@ export function AgentChatPage() {
   // `?library=matplotlib&language=javascript` would otherwise pick the wrong
   // highlighter and a back link to a page that does not exist.
   const language = LIB_TO_LANG[library] ?? 'python';
-  const valid = SPEC_PATTERN.test(spec) && (LIBRARIES as readonly string[]).includes(library);
+  // A catalogue pair in the query: the chat, else the explainer. The layout reads the same rule
+  // for the site's feedback button, which it hides wherever the query names a pair (`RootLayout`);
+  // the closed notice brings it back there, since it shows no chat (`LaneClosed`).
+  const valid = namesAgentChat(params);
 
   // A layout effect: the layout records this page's pageview in its own layout effect, which
   // runs after this one, so the switch is on before anything is recorded; and its cleanup runs
@@ -403,18 +457,30 @@ export function AgentChatPage() {
 
   // `source` only says where the visitor came from; it is read once for
   // `agent_open` and dropped, so a reload counts as a direct open. An admin's
-  // open is no visitor's: the page records nothing for it (`muted`).
-  const openTracked = useRef(false);
+  // open is no visitor's: the page records nothing for it (`muted`). One open
+  // per chat, and a chat is the spec in the address: `AgentChat` remounts, with a
+  // new session, when the spec changes (its key; the token part changes only in
+  // an admin's browser, which records nothing), and a library switch keeps it.
+  // The page itself stays mounted across these, through a return to the
+  // explainer (no pair) as through a history jump from one chat straight to
+  // another, so the guard holds the spec it counted, not a flag.
+  const openTracked = useRef<string | null>(null);
   useEffect(() => {
-    if (!allowed || !valid || openTracked.current) return;
-    openTracked.current = true;
+    if (!valid) {
+      openTracked.current = null;
+      return;
+    }
+    if (!allowed) return;
     const source = params.get('source');
-    if (!muted) {
-      trackEvent('agent_open', {
-        library,
-        source: source && OPEN_SOURCES.has(source) ? source : 'direct',
-        spec,
-      });
+    if (openTracked.current !== spec) {
+      openTracked.current = spec;
+      if (!muted) {
+        trackEvent('agent_open', {
+          library,
+          source: source && OPEN_SOURCES.has(source) ? source : 'direct',
+          spec,
+        });
+      }
     }
     if (source) {
       const next = new URLSearchParams(params);
@@ -445,17 +511,10 @@ export function AgentChatPage() {
   }
   if (!valid) {
     return (
-      <Notice title="use with my data">
-        open it from a plot&apos;s <code>.use_my_data()</code>, or start with{' '}
-        <Box
-          component={RouterLink}
-          to={paths.agentChat('scatter-basic', 'matplotlib', 'python')}
-          sx={proseLinkStyle}
-        >
-          scatter-basic in matplotlib
-        </Box>
-        .
-      </Notice>
+      <>
+        <NoIndex />
+        <AgentIntro />
+      </>
     );
   }
   const token = adminLane ? readAdminToken() : PUBLIC_LANE;
@@ -697,7 +756,8 @@ function AgentChat({
   // The fan-out's panel opens only on this session's confirmed data, so its sessions are covered.
   useLeaveWarning(
     sessionHoldsWork(state) || draft.trim() !== '' || attachment !== null,
-    LEAVE_TEXT
+    LEAVE_TEXT,
+    leavesChat
   );
   // The session could not open for this pair: other libraries are links instead.
   const reopen = state.phase === 'ineligible' || state.phase === 'error';
@@ -1267,6 +1327,12 @@ function AgentChat({
   if (state.phase === 'unauthorized') {
     return lane === 'public' ? <LaneClosed adminMenu={adminMenu} /> : <NoIndex />;
   }
+  // The open found the assistant closed: the public door shut after the page read it open, or on
+  // the admin lane the master switch off. Both lanes show the notice a door found shut at load
+  // shows; the admin menu's diagnostics name the switch.
+  if (state.phase === 'error' && state.failure?.code === 'not_enabled') {
+    return <LaneClosed adminMenu={adminMenu} />;
+  }
 
   const backHref = specPath(specId, language, state.library);
   // Above the frame: the page's heading and the experimental notice, which stands above the first
@@ -1373,10 +1439,7 @@ function AgentChat({
         <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
           {state.phase === 'ineligible'
             ? 'this plot cannot be adapted in this library yet; pick another library above.'
-            : state.failure?.code === 'not_enabled'
-              ? // The same words on both lanes; the admin menu names the switch.
-                'the assistant is closed right now. please try again later.'
-              : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
+            : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
           {state.phase === 'error' && <ReloadHint code={state.failure?.code} opening />}
         </Box>
       </Box>

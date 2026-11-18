@@ -6,6 +6,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const { setAmbient } = vi.hoisted(() => ({ setAmbient: vi.fn() }));
+const flags = vi.hoisted(() => ({ agentChat: true }));
+
+// The chat's build flag is pinned here, so the tests never depend on the environment's.
+vi.mock('src/global-config', async importOriginal => {
+  const actual = await importOriginal<typeof import('src/global-config')>();
+  return {
+    ...actual,
+    get AGENT_CHAT_ENABLED() {
+      return flags.agentChat;
+    },
+  };
+});
 
 vi.mock('src/hooks/useAnalytics', async () => {
   const actual =
@@ -80,6 +92,7 @@ describe('RootLayout', () => {
   let scrollSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    flags.agentChat = true;
     setAmbient.mockClear();
     scrollSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   });
@@ -113,14 +126,89 @@ describe('RootLayout', () => {
     expect(scrollSpy).not.toHaveBeenCalledWith(0, 0);
   });
 
+  const siteFeedback = () => document.querySelector('[data-testid="feedback-widget"]') !== null;
+
   it("shows the site's feedback button everywhere but in the agent chat", () => {
     // The chat has feedback rows of its own; on a phone the button covered `.send()`.
-    // One chat page for visitors and admins since 2026-11-06; `/debug/agent` only redirects there.
+    // One chat page for visitors and admins; `/debug/agent` only redirects there in its loader.
     const { unmount } = renderAt('/');
-    expect(document.querySelector('[data-testid="feedback-widget"]')).not.toBeNull();
+    expect(siteFeedback()).toBe(true);
     unmount();
-    const view = renderAt('/agent');
+    const view = renderAt('/agent?spec=scatter-basic&library=matplotlib&language=python');
     expect(view.getByText('agent-page')).toBeInTheDocument();
-    expect(document.querySelector('[data-testid="feedback-widget"]')).toBeNull();
+    expect(siteFeedback()).toBe(false);
+  });
+
+  it('hides it in a chat also with a trailing slash, another case or without the language', () => {
+    for (const address of [
+      '/agent/?spec=scatter-basic&library=matplotlib&language=python',
+      '/agent?spec=line-basic&library=d3',
+      '/agent?library=ggplot2&spec=bar-basic&source=agent_intro',
+      // The router serves this as the chat page too: it matches paths without regard to case.
+      '/Agent?spec=bar-basic&library=ggplot2',
+    ]) {
+      const { unmount } = renderAt(address);
+      expect(siteFeedback(), address).toBe(false);
+      unmount();
+    }
+  });
+
+  it("shows it on the explainer, wherever the query names no catalogue pair, as the page's rule", () => {
+    // The page shows the explainer for each of these (`namesAgentChat`), and the explainer has
+    // no feedback of its own.
+    for (const address of [
+      '/agent',
+      '/agent/',
+      '/agent?spec=scatter-basic',
+      '/agent?spec=scatter-basic&library=excel',
+      '/agent?spec=Scatter_Basic&library=matplotlib',
+      '/agent?library=matplotlib',
+    ]) {
+      const { unmount } = renderAt(address);
+      expect(siteFeedback(), address).toBe(true);
+      unmount();
+    }
+  });
+
+  it('shows it at a chat address in a build without the chat, which answers there with the 404 page', () => {
+    flags.agentChat = false;
+    for (const address of [
+      '/agent?spec=scatter-basic&library=matplotlib&language=python',
+      '/agent?spec=line-basic&library=d3',
+    ]) {
+      const { unmount } = renderAt(address);
+      expect(siteFeedback(), address).toBe(true);
+      unmount();
+    }
+  });
+
+  it('takes the button away as an example opens the chat, and brings it back on the way back', async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <ThemeProvider theme={theme}>
+        <MemoryRouter initialEntries={['/agent']}>
+          <Routes>
+            <Route element={<RootLayout />}>
+              <Route
+                path="/agent"
+                element={
+                  <div>
+                    <Link to="/agent?spec=scatter-basic&library=matplotlib&language=python">
+                      open-chat
+                    </Link>
+                    <Link to="/agent">open-explainer</Link>
+                  </div>
+                }
+              />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>
+    );
+    expect(siteFeedback()).toBe(true);
+    await user.click(view.getByText('open-chat'));
+    expect(siteFeedback()).toBe(false);
+    await user.click(view.getByText('open-explainer'));
+    expect(siteFeedback()).toBe(true);
   });
 });
