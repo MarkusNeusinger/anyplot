@@ -11,13 +11,14 @@
   text and page load, so a fragment typed on within two seconds is never
   kept; the clear cross, Escape and "← back" throw a pending text away, and
   leaving the gallery within the two seconds drops it too. Both the app and
-  the API fold the text (compatibility forms,
-  typographic apostrophes, hyphens and dashes, soft hyphens) and keep it only
+  the API fold the text (compatibility forms, typographic apostrophes,
+  hyphens and dashes, soft hyphens), judge the whole of it, and keep it only
   when it reads as a search for a plot and shows something (letters and marks
   of any script, at most six digits, spaces and a few signs, among them those
-  some scripts spell words with, no character that shows as nothing), so an
-  e-mail address, a phone number or a link with its scheme
-  never leaves the browser. A row is the text, the UTC day and a count, with
+  some scripts spell words with, no character that shows as nothing); only a
+  text that passed is cut to 40 characters. So an e-mail address, a phone
+  number or a link with its scheme never leaves the browser, also when it
+  stands past the 40th character. A row is the text, the UTC day and a count, with
   no address, no user agent, no time of day and no session; it is
   pseudonymous, since the 30-day request log could match it by its day. The
   text travels in the body of `POST /search/miss`, which reads at most 1 KiB

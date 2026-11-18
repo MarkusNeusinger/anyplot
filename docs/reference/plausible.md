@@ -281,6 +281,13 @@ when the visitor leaves the gallery, and a text that only
 finds nothing inside the active filters (the dropdown then offers
 `.search_all()`) don't fire it.
 
+The event and the row follow from one decision in the browser, but the two
+counts can still differ: the API's limit of 20 requests a minute per network,
+the day's cap of 1,000 new texts, or a failed write leave a counted miss
+without a row, and a browser that blocks the analytics script leaves a row
+without a count. Read the event's count beside the list as two estimates of
+one thing, not as numbers that add up.
+
 Since 2026-11-18 the event counts only such finished texts. Until then it
 fired 200 ms after any keystroke for a query of at least two characters that
 found nothing inside the active filters, fragments and thrown-away texts
@@ -317,19 +324,27 @@ page shows it.
   text is sent once per page load, and only from the live site
   (`app/src/lib/searchMiss.ts`). The field asks the browser and password
   managers not to fill it (`autocomplete="off"`).
-- **One form of the text**: `normalizeQuery()` folds compatibility forms
-  (Unicode form NFKC: a fullwidth bracket becomes the plain one, a superscript
-  two a 2, a ligature its letters), makes the text lowercase and folds it
-  again, makes the curly apostrophes the plain `'` and the hyphen, the
-  non-breaking hyphen, the minus sign, and the en and em dashes the plain `-`,
-  drops a soft hyphen (it shows as nothing and comes with a word copied from a
-  page), leaves single spaces, and cuts it at 40 characters
-  (`MAX_QUERY_LENGTH`). So "Scatter", "scatter " and "SCATTER" are one entry,
-  and so is a word typed with a composed or a decomposed accent or a phone's
-  typographic apostrophe.
-  A long text pasted into the box by mistake isn't kept in full. The API
-  applies the same rule again. `app/src/hooks/searchQuery.cases.json` holds the
-  app's rule and the API's to each other.
+- **One form of the text**: `foldQuery()` folds compatibility forms (Unicode
+  form NFKC: a fullwidth bracket becomes the plain one, a superscript two a 2,
+  a ligature its letters), makes the text lowercase, makes the curly
+  apostrophes the plain `'` and the hyphen, the non-breaking hyphen, the minus
+  sign, and the en and em dashes the plain `-`, drops a soft hyphen (it shows
+  as nothing and comes with a word copied from a page), folds it again, and
+  leaves single spaces. The map comes before the second fold, so folding a
+  folded text changes nothing. So "Scatter", "scatter " and "SCATTER" are one
+  entry, and so is a word typed with a composed or a decomposed accent or a
+  phone's typographic apostrophe. The API folds the same way.
+  `app/src/hooks/searchQuery.cases.json` holds the app's rule and the API's to
+  each other.
+- **Judged whole, then cut**: the rule below runs over the whole folded text,
+  so an `@`, a `:`, or a seventh digit past the 40th character refuses the
+  text as it would within them, and a long address or number is never kept in
+  part. Only a text that passed is cut at 40 characters (`MAX_QUERY_LENGTH`),
+  so a long text pasted into the box by mistake isn't kept in full, and the
+  cut text is judged once more, since a cut can end on a joiner. This is
+  `keptMissText()` in the app and `kept_query()` in the API. The API drops a
+  raw text longer than 200 characters (`MAX_RAW_QUERY_LENGTH`) unread, so it
+  never keeps a part of a text it didn't read; the app never sends one.
 - **Only a search for a plot**: a visitor could type anything, so both the app
   and the API keep a text only when it reads as a search and shows something,
   by what its characters are and in any script: at least two characters, each
@@ -1059,10 +1074,15 @@ event.
 - [ ] After `stayed_10s` is deployed (2026-11-14): add the goal `stayed_10s`
   (custom event) and the property `input`
 - [ ] After the app's deploy that stops sending `query` (the private list of
-  search misses): delete the property `query`. The texts sent until then stay
-  in Plausible's data
+  search misses): the texts sent until then stay, as the owner decided, and
+  are not deleted. Look whether the property `query` can be hidden from the
+  dashboard. Once it is hidden, the texts are still held by Plausible and no
+  longer shown, so in the same step change the privacy page's clause ("search
+  texts sent up to and including november 2026 still show there",
+  `app/src/pages/LegalPage.tsx`) and its crawler copy (`api/routers/seo.py`)
+  to say that they are still held by Plausible and no longer shown
 
 ---
 
 **Last Updated**: 2026-11-18
-**Status**: Twelve custom events. Eleven are dashboard goals; `stayed_10s` is sent and measured, doesn't change the bounce rate yet, and its goal and its property `input` still have to be added in the dashboard. No event carries what a visitor typed: the gallery's searches that found nothing are in a private list in the database, and the property `query` still has to be deleted in the dashboard. Pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here
+**Status**: Twelve custom events. Eleven are dashboard goals; `stayed_10s` is sent and measured, doesn't change the bounce rate yet, and its goal and its property `input` still have to be added in the dashboard. No event carries what a visitor typed: the gallery's searches that found nothing are in a private list in the database; the texts sent before stay, and whether the property `query` can be hidden in the dashboard is still to be looked at. Pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here
