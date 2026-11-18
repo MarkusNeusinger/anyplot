@@ -170,12 +170,13 @@ export function LegalPage() {
                 [
                   'searches without a hit',
                   <Box component="span" id="search-misses" sx={ANCHOR_SX}>
-                    when a gallery search finds nothing, its text (lowercase, first 40 characters)
-                    is counted per day, so I see what the catalogue lacks. an e-mail address or a
-                    link with http:// is not kept; anything else you type may be, so please type no
-                    personal data. a row holds no IP address and no time of day; only timestamps
-                    could match one to the 30-day server logs, so it is pseudonymous. only I read
-                    the list, and I delete an entry on request.
+                    when a gallery search finds nothing, two seconds after you stop typing or when
+                    you leave the field, its text (lowercase, first 40 characters) is counted per
+                    day, so I see what the catalogue lacks. an e-mail address or a link with http://
+                    is not kept; anything else you type may be, so please type no personal data. a
+                    row holds no IP address and no time of day; only timestamps could match one to
+                    the 30-day server logs, so it is pseudonymous. only I read the list, and I
+                    delete an entry on request.
                     <br />
                     kept: 180 days · where: Google Cloud SQL
                   </Box>,

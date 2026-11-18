@@ -1451,8 +1451,8 @@ class TestSeoProxyRouter:
         # The list of searches without a hit, mirrored from the human page's row: what is kept, what the
         # shared rule refuses, why a row is pseudonymous, and the period the API's purge keeps.
         assert (
-            "Searches without a hit: when a gallery search finds nothing, its text (lowercase, first 40"
-            in response.text
+            "Searches without a hit: when a gallery search finds nothing, two seconds after you stop typing or "
+            "when you leave the field, its text (lowercase, first 40 characters) is counted per day" in response.text
         )
         assert "An e-mail address or a link with http:// is not kept; anything else you type may be" in response.text
         assert "A row holds no IP address and no time of day" in response.text

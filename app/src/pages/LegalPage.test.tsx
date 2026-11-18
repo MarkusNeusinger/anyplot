@@ -144,8 +144,11 @@ describe('LegalPage', () => {
     render(<LegalPage />);
 
     const misses = document.getElementById('search-misses');
-    expect(misses).toHaveTextContent(/when a gallery search finds nothing/);
-    expect(misses).toHaveTextContent(/its text \(lowercase, first 40 characters\)/);
+    // When a text is taken: no key sends it. The pause is `MISS_PAUSE_MS` (pinned to the two
+    // seconds in searchMiss.test.ts), the other moment is the field's blur.
+    expect(misses).toHaveTextContent(
+      /when a gallery search finds nothing, two seconds after you stop typing or when you leave the field, its text \(lowercase, first 40 characters\)/
+    );
     expect(misses).toHaveTextContent(/is counted per day, so I see what the catalogue lacks/);
     // What the shared rule refuses is an `@` and a `:`, so an e-mail address and a link with its
     // scheme; a host name or a street address stays, and the row says so and asks.
