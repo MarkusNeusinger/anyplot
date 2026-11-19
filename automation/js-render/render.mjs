@@ -50,12 +50,13 @@
 //                              typed_json.py), injected as window.ANYPLOT_DATA
 //   ANYPLOT_IMPORT_ALLOWLIST   the allowlist file (default: import-allowlist.json
 //                              next to this harness, where the image puts it)
-//   ANYPLOT_PAGE_ONLY=1        with ANYPLOT_SANDBOX=1 only: build the page as a
-//                              render would (the policy, the data, MUI X through
-//                              the closed import plugin), write plot-<theme>.html
-//                              whatever ANYPLOT_NO_HTML says, and exit without
-//                              starting Chromium: the agents' downloadable
-//                              plot.html (JS-4b)
+//   ANYPLOT_PAGE_ONLY=1        with ANYPLOT_SANDBOX=1 only: build the written
+//                              plot-<theme>.html page of a sandbox render (the
+//                              policy, the data, MUI X through the closed import
+//                              plugin, never the in-memory Chart.js canvas text
+//                              recorder), write plot-<theme>.html whatever
+//                              ANYPLOT_NO_HTML says, and exit without starting
+//                              Chromium: the agents' downloadable plot.html (JS-4b)
 //
 // The final error line (sandbox mode): on any failure the LAST line on stderr is
 //   render: error: <kind> <Class> <file>:<line>: <message>
@@ -605,11 +606,10 @@ async function readDataJson(file) {
   return text.replace(SCRIPT_BREAKING, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`);
 }
 
-function buildHtml({ tokens, bundleSource, snippetSource, css, sandbox = null, dataJson = null }) {
-  // The bundle + snippet are inlined so the written .html is fully self-contained
-  // (no CDN, no network) — the same page is screenshotted and shipped as the
-  // interactive deliverable. JSON.stringify keeps the token/theme injection
-  // injection-safe.
+function buildHtml({ tokens, bundleSource, snippetSource, css, library = null, sandbox = null, dataJson = null, recordTexts = false }) {
+  // The bundle + snippet are inlined so the written plot-<theme>.html is fully
+  // self-contained (no CDN, no network). JSON.stringify keeps the token/theme
+  // injection safe.
   //
   // Sandbox mode (`sandbox`: the code file's and the bundle's names) adds the
   // content security policy, error locations for the final error line and a
@@ -617,7 +617,13 @@ function buildHtml({ tokens, bundleSource, snippetSource, css, sandbox = null, d
   // (`plot.js:6:12`) apart from the bundle's. `dataJson` (readDataJson) becomes
   // window.ANYPLOT_DATA: one object per row in column order, the shape
   // d3.csvParse returns (with `.columns`), each value already typed. Without
-  // either, the page is the pipeline's, byte for byte.
+  // `sandbox` or `dataJson`, the page is the pipeline's, byte for byte.
+  //
+  // Every written plot-<theme>.html (on a render run and under ANYPLOT_PAGE_ONLY=1)
+  // leaves `recordTexts` false, so no file on disk ever carries the recorder; a
+  // Chart.js sandbox render passes `recordTexts: true` only for the in-memory page
+  // handed to `page.setContent`, inserting `CANVAS_TEXT_RECORDER` in its own
+  // <script> right after the library bundle and before the snippet.
   const csp = sandbox ? `\n<meta http-equiv="Content-Security-Policy" content="${CONTENT_SECURITY_POLICY}" />` : "";
   const dataElement = dataJson === null ? "" : `<script type="application/json" id="anyplot-data">${dataJson}</script>\n`;
   const dataGlobal =
@@ -641,6 +647,7 @@ function buildHtml({ tokens, bundleSource, snippetSource, css, sandbox = null, d
   });`
     : "";
   const bundleName = sandbox ? `\n//# sourceURL=${sandbox.bundleName}` : "";
+  const canvasTexts = recordTexts && sandbox && library === "chartjs" ? `\n<script>\n${CANVAS_TEXT_RECORDER}\n</script>` : "";
   const snippetName = sandbox ? `\n//# sourceURL=${sandbox.snippetName}` : "";
   return `<!doctype html>
 <html lang="en">
@@ -677,7 +684,7 @@ ${dataElement}<script>
 </script>
 <script>
 ${bundleSource.replace(/<\/script/gi, "<\\/script")}${bundleName}
-</script>
+</script>${canvasTexts}
 <script>${SNIPPET_HEAD}${snippetSource.replace(/<\/script/gi, "<\\/script")}
 } catch (err) {
   window.__anyplotError = String(err && err.stack ? err.stack : err);
@@ -798,8 +805,8 @@ function finalErrorLine(err, context) {
     // document.write, so the window's error event names the document
     // (about:blank) with the line inside the script, and the message carries
     // document.write's prefix (measured with Playwright 1.64). Only the
-    // snippet's script can fail to parse: the context script is the harness's,
-    // the bundle the library's.
+    // snippet's script can fail to parse: the context and recorder scripts are
+    // the harness's, the bundle the library's.
     const page = context.pageError;
     const text = page ? null : String(context.inPageError ?? "");
     const named = text === null ? null : /^([A-Za-z_$][\w$]*): ?(.*)/.exec(text.split("\n", 1)[0]);
@@ -961,12 +968,18 @@ async function readPageRecords(page, bounded) {
 // (Highcharts, plotly, MUI X; D3's axis ticks by their axis's text-anchor). A
 // text no class names is the title when it is the largest in the top fifth of
 // the plot, in a library that names none; else another text. Chart.js and bokeh
-// draw on a canvas, so their texts come from the chart's own model: Chart.js's
-// titles, scale titles, the ticks it kept and the legend; bokeh's titles,
-// labels, axis labels, the tick labels its axes compute and the legends. A text
-// a plugin draws itself is not in the model, so those probes report themselves
-// incomplete. ECharts' scene graph (zrender's display list) holds every text it
-// draws, each named by the component or series that owns it.
+// draw on a canvas, so their named roles come from the chart's own model:
+// Chart.js's titles, scale titles, the ticks it kept and the legend; bokeh's
+// titles, labels, axis labels, the tick labels its axes compute and the
+// legends. For Chart.js render runs in sandbox mode, `recordChartjsCanvasTexts`
+// also wraps `CanvasRenderingContext2D.prototype.fillText` and `strokeText`
+// before the plot's code runs, keeps only visible on-canvas texts from the last
+// complete draw of each chart, subtracts the model's texts by count, and adds
+// what remains as `annotation` ranked after tick labels; both probes stay
+// incomplete because a text drawn as a path or an image (and for bokeh a
+// plugin's own drawing or a widget's shadow root) is in no record.
+// ECharts' scene graph (zrender's display list) holds every text it draws, each
+// named by the component or series that owns it.
 // -----------------------------------------------------------------------------
 const TEXT_PROBE_TIMEOUT_MS = 2000; // the catalogue's bar-grouped pages answer in tens of milliseconds
 const LABEL_LIMIT = 400; // harness.LABEL_LIMIT
@@ -974,6 +987,237 @@ const LABEL_CHARS = 200; // harness.LABEL_CHARS
 const LABEL_TOTAL_CHARS = 20000; // harness.LABEL_TOTAL_CHARS
 const TICK_LABELS_PER_AXIS = 100; // harness.TICK_LABELS_PER_AXIS, per kind here
 const PAGE_TEXTS_LIMIT = 2000; // texts the page hands back at most
+const CANVAS_TEXT_LIMIT = PAGE_TEXTS_LIMIT * 2; // recorded canvas texts per draw: model ticks plus annotations
+
+// Runs in the in-memory render page (`page.setContent`), in sandbox mode and for
+// Chart.js only, right after the Chart.js bundle and before the plot's code:
+// records what `fillText` and `strokeText` draw visibly inside each canvas,
+// skipping zero-alpha styles, zero font sizes and off-canvas points, and keeping
+// only the last complete `Chart.draw()` pass of each chart so resize and
+// animation redraws never double an entry.
+function recordChartjsCanvasTexts(limit) {
+  if (typeof CanvasRenderingContext2D === "undefined" || !CanvasRenderingContext2D.prototype) return;
+  var proto = CanvasRenderingContext2D.prototype;
+  var committed = new WeakMap();
+  var loose = new WeakMap();
+  var stack = [];
+  var FONT_PRE_KEYWORDS = /^(?:normal|italic|oblique|small-caps|bold|bolder|lighter|(?:ultra-|extra-|semi-)?(?:condensed|expanded))$/;
+  var FONT_SIZE_KEYWORDS = /^(?:xx-small|x-small|small|medium|large|x-large|xx-large|xxx-large|smaller|larger|math)$/;
+  var FONT_ANGLE = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?(?:deg|grad|rad|turn)$/;
+  var FONT_LENGTH_PCT =
+    /^([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)(%|px|pt|pc|in|cm|mm|q|em|rem|ex|ch|cap|ic|lh|rlh|(?:s|l|d)?v(?:w|h|i|b|min|max)|cq(?:w|h|i|b|min|max))$/;
+  var FONT_NUMBER = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/;
+  function isZeroAlphaValue(raw, allowNone) {
+    var token = raw.trim();
+    if (!token) return false;
+    if (allowNone && token === "none") return true;
+    if (token.endsWith("%")) token = token.slice(0, -1).trim();
+    if (!FONT_NUMBER.test(token)) return false;
+    return Number(token) <= 0;
+  }
+  function isTransparentStyle(style) {
+    if (typeof style !== "string") return false;
+    var s = style.trim().toLowerCase();
+    if (!s) return false;
+    if (s === "transparent") return true;
+    if (s.charCodeAt(0) === 35) {
+      return /^#[\da-f]{3}0$/.test(s) || /^#[\da-f]{6}00$/.test(s);
+    }
+    var open = s.indexOf("(");
+    if (open <= 0 || !s.endsWith(")")) return false;
+    var fn = s.slice(0, open);
+    var inner = s.slice(open + 1, -1);
+    var depth = 0;
+    var slashAt = -1;
+    var commas = [];
+    for (var i = 0; i < inner.length; i += 1) {
+      var ch = inner.charAt(i);
+      if (ch === "(") depth += 1;
+      else if (ch === ")") depth = Math.max(0, depth - 1);
+      else if (depth === 0 && ch === "/") slashAt = i;
+      else if (depth === 0 && ch === ",") commas.push(i);
+    }
+    if (slashAt >= 0 && commas.length === 0 && /^(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)$/.test(fn)) {
+      return isZeroAlphaValue(inner.slice(slashAt + 1), true);
+    }
+    if (commas.length === 3 && slashAt < 0 && /^(?:rgba?|hsla?)$/.test(fn)) {
+      return isZeroAlphaValue(inner.slice(commas[2] + 1), false);
+    }
+    return false;
+  }
+  function isZeroFontSize(font) {
+    if (typeof font !== "string") return false;
+    var s = font.trim().toLowerCase();
+    if (!s) return false;
+    var parts = s.split(/\s+/);
+    for (var i = 0; i < parts.length; i += 1) {
+      var token = parts[i];
+      var slash = token.indexOf("/");
+      if (slash === 0) return false;
+      var head = slash > 0 ? token.slice(0, slash) : token;
+      if (slash < 0 && (FONT_PRE_KEYWORDS.test(head) || FONT_ANGLE.test(head))) continue;
+      if (FONT_SIZE_KEYWORDS.test(head)) return false;
+      var sized = FONT_LENGTH_PCT.exec(head);
+      if (sized) return Number(sized[1]) <= 0;
+      if (FONT_NUMBER.test(head)) {
+        var n = Number(head);
+        if (slash < 0 && n >= 1 && n <= 1000) continue;
+        return n <= 0;
+      }
+      return false;
+    }
+    return false;
+  }
+  function targetFor(canvas) {
+    for (var i = stack.length - 1; i >= 0; i -= 1) {
+      if (stack[i].canvas === canvas) return stack[i];
+    }
+    var entry = loose.get(canvas);
+    if (!entry) {
+      entry = { texts: [], last: null };
+      loose.set(canvas, entry);
+    }
+    return entry;
+  }
+  function pointOf(ctx, x, y) {
+    if (typeof ctx.getTransform === "function") {
+      var m = ctx.getTransform();
+      if (m) return [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+    }
+    return [x, y];
+  }
+  function wrap(method) {
+    var styleProp = method === "strokeText" ? "strokeStyle" : "fillStyle";
+    var original = proto[method];
+    if (typeof original !== "function") return;
+    proto[method] = function (value, x, y) {
+      try {
+        var maxWidth = arguments.length >= 4 ? arguments[3] : undefined;
+        var validWidth = maxWidth === undefined || (typeof maxWidth === "number" && Number.isFinite(maxWidth) && maxWidth > 0);
+        if (
+          arguments.length >= 3 &&
+          (typeof value === "string" || typeof value === "number") &&
+          typeof x === "number" &&
+          typeof y === "number" &&
+          Number.isFinite(x) &&
+          Number.isFinite(y) &&
+          validWidth &&
+          this &&
+          this.canvas &&
+          typeof this.globalAlpha === "number" &&
+          this.globalAlpha > 0 &&
+          !isTransparentStyle(this[styleProp]) &&
+          !isZeroFontSize(this.font)
+        ) {
+          var cw = this.canvas.width;
+          var ch = this.canvas.height;
+          var raw = typeof value === "string" ? value : `${value}`;
+          var text = raw.slice(0, 10000).replace(/\s+/g, " ").trim();
+          var pt = text && typeof cw === "number" && typeof ch === "number" && cw > 0 && ch > 0 ? pointOf(this, x, y) : null;
+          if (pt && Number.isFinite(pt[0]) && Number.isFinite(pt[1]) && pt[0] >= 0 && pt[0] <= cw && pt[1] >= 0 && pt[1] <= ch) {
+            var target = targetFor(this.canvas);
+            var last = target.last;
+            // An outlined label calls strokeText and fillText at one position: count the pair once.
+            if (last && last.method !== method && last.text === text && last.x === pt[0] && last.y === pt[1]) {
+              target.last = null;
+            } else {
+              target.last = { method: method, text: text, x: pt[0], y: pt[1] };
+              if (target.texts.length < limit) target.texts.push(text);
+            }
+          }
+        }
+      } catch (e) {}
+      return original.apply(this, arguments);
+    };
+  }
+  wrap("fillText");
+  wrap("strokeText");
+  if (window.Chart && window.Chart.prototype) {
+    var chartProto = window.Chart.prototype;
+    var clear = chartProto.clear;
+    var destroy = chartProto.destroy;
+    var notify = chartProto.notifyPlugins;
+    var draw = chartProto.draw;
+    if (typeof clear === "function") {
+      chartProto.clear = function () {
+        try {
+          if (stack.length > 0 && stack[stack.length - 1].chart === this) {
+            stack[stack.length - 1].texts = [];
+            stack[stack.length - 1].last = null;
+          } else if (this && this.canvas) {
+            committed.delete(this.canvas);
+            loose.delete(this.canvas);
+          }
+        } catch (e) {}
+        return clear.apply(this, arguments);
+      };
+    }
+    if (typeof destroy === "function") {
+      chartProto.destroy = function () {
+        var canvas = null;
+        try {
+          canvas = this && this.canvas;
+        } catch (e) {}
+        try {
+          return destroy.apply(this, arguments);
+        } finally {
+          try {
+            if (canvas) {
+              committed.delete(canvas);
+              loose.delete(canvas);
+            }
+          } catch (e) {}
+        }
+      };
+    }
+    if (typeof notify === "function") {
+      chartProto.notifyPlugins = function (hook) {
+        try {
+          if (hook === "afterDraw" && stack.length > 0 && stack[stack.length - 1].chart === this) {
+            stack[stack.length - 1].completed = true;
+          }
+        } catch (e) {}
+        return notify.apply(this, arguments);
+      };
+    }
+    if (typeof draw === "function") {
+      chartProto.draw = function () {
+        var frame = null;
+        try {
+          if (this && this.canvas) {
+            frame = { chart: this, canvas: this.canvas, texts: [], last: null, completed: typeof notify !== "function" };
+            stack.push(frame);
+          }
+        } catch (e) {
+          frame = null;
+        }
+        try {
+          var result = draw.apply(this, arguments);
+          try {
+            if (frame && frame.completed) {
+              committed.set(frame.canvas, frame.texts);
+              loose.delete(frame.canvas);
+            }
+          } catch (e) {}
+          return result;
+        } finally {
+          try {
+            if (frame && stack[stack.length - 1] === frame) stack.pop();
+          } catch (e) {}
+        }
+      };
+    }
+  }
+  Object.defineProperty(window, "__anyplotCanvasTexts", {
+    value: function (canvas) {
+      if (!canvas) return [];
+      var drawn = committed.get(canvas) || [];
+      var extra = loose.get(canvas);
+      return extra ? drawn.concat(extra.texts) : drawn.slice();
+    },
+  });
+}
+const CANVAS_TEXT_RECORDER = `(${recordChartjsCanvasTexts.toString()})(${CANVAS_TEXT_LIMIT});`;
 
 // Runs in the page: `{entries: [[kind, text], ...], complete}`. The snippet
 // shares the page and can change what this reads, so Node checks every value.
@@ -1109,27 +1353,56 @@ function pageTexts([library, limit]) {
   }
 
   if (library === "chartjs" && window.Chart) {
-    complete = false; // a plugin's own drawing is in no model
+    complete = false; // a text drawn as a path or an image is in no record
+    const canvasTexts = typeof window.__anyplotCanvasTexts === "function" ? window.__anyplotCanvasTexts : null;
+    const chartCanvases = new Set();
+    const canvasAnnotations = [];
     for (const chart of Object.values(window.Chart.instances || {})) {
+      const modelCounts = new Map();
+      const addModel = (kind, value) => {
+        [].concat(value).forEach((item) => {
+          if (item === null || item === undefined) return;
+          const text = String(item).slice(0, 10000).replace(/\s+/g, " ").trim();
+          if (!text) return;
+          modelCounts.set(text, (modelCounts.get(text) || 0) + 1);
+          add(kind, text);
+        });
+      };
       const plugins = chart.options.plugins || {};
-      if (plugins.title && plugins.title.display) addAll("title", plugins.title.text);
-      if (plugins.subtitle && plugins.subtitle.display) addAll("subtitle", plugins.subtitle.text);
+      if (plugins.title && plugins.title.display) addModel("title", plugins.title.text);
+      if (plugins.subtitle && plugins.subtitle.display) addModel("subtitle", plugins.subtitle.text);
       for (const scale of Object.values(chart.scales || {})) {
         const options = scale.options || {};
         if (options.display === false) continue;
         const axis = scale.axis === "x" || scale.axis === "y" ? scale.axis : null;
-        if (options.title && options.title.display) addAll(axis ? `${axis} axis label` : "other axis label", options.title.text);
+        if (options.title && options.title.display) addModel(axis ? `${axis} axis label` : "other axis label", options.title.text);
         if (!options.ticks || options.ticks.display !== false) {
-          for (const tick of scale.ticks || []) addAll(axis ? `${axis} tick label` : "text", tick.label);
+          for (const tick of scale.ticks || []) addModel(axis ? `${axis} tick label` : "text", tick.label);
         }
         if (Array.isArray(scale._pointLabels) && !(options.pointLabels && options.pointLabels.display === false)) {
-          for (const label of scale._pointLabels) addAll("text", label);
+          for (const label of scale._pointLabels) addModel("text", label);
         }
       }
       const legend = chart.legend;
       if (legend && legend.options && legend.options.display) {
-        if (legend.options.title && legend.options.title.display) addAll("legend text", legend.options.title.text);
-        for (const item of legend.legendItems || []) addAll("legend text", item.text);
+        if (legend.options.title && legend.options.title.display) addModel("legend text", legend.options.title.text);
+        for (const item of legend.legendItems || []) addModel("legend text", item.text);
+      }
+      if (canvasTexts && chart.canvas && container.contains(chart.canvas)) {
+        chartCanvases.add(chart.canvas);
+        for (const drawnText of canvasTexts(chart.canvas)) {
+          const remaining = modelCounts.get(drawnText) || 0;
+          if (remaining > 0) modelCounts.set(drawnText, remaining - 1);
+          else canvasAnnotations.push(drawnText);
+        }
+      }
+    }
+    for (const drawnText of canvasAnnotations) add("canvas annotation", drawnText);
+    if (canvasTexts) {
+      for (const canvas of container.querySelectorAll("canvas")) {
+        if (!chartCanvases.has(canvas)) {
+          for (const drawnText of canvasTexts(canvas)) add("canvas annotation", drawnText);
+        }
       }
     }
   } else if (library === "echarts" && window.echarts) {
@@ -1223,8 +1496,8 @@ function pageTexts([library, limit]) {
 }
 
 // `labels` and `labels_truncated` from the page's answer: every entry checked, titles, axis labels, legend texts and
-// annotations first, then at most TICK_LABELS_PER_AXIS tick labels of each kind, then other texts; under LABEL_LIMIT,
-// LABEL_CHARS and LABEL_TOTAL_CHARS, as harness.text_labels.
+// named annotations first, then at most TICK_LABELS_PER_AXIS tick labels of each kind, then canvas-recorded annotations,
+// then other texts; under LABEL_LIMIT, LABEL_CHARS and LABEL_TOTAL_CHARS, as harness.text_labels.
 function textLabels(found) {
   const valid = (entry) =>
     Array.isArray(entry) && entry.length === 2 && typeof entry[0] === "string" && entry[0].length <= 40 && typeof entry[1] === "string";
@@ -1242,7 +1515,8 @@ function textLabels(found) {
         continue;
       }
     }
-    ranked.push({ rank: kind.endsWith("tick label") ? 1 : kind === "text" ? 2 : 0, kind, text });
+    const rank = kind.endsWith("tick label") ? 1 : kind === "canvas annotation" ? 2 : kind === "text" ? 3 : 0;
+    ranked.push({ rank, kind: kind === "canvas annotation" ? "annotation" : kind, text });
   }
   ranked.sort((a, b) => a.rank - b.rank); // stable: draw order within a rank
   const labels = [];
@@ -1942,19 +2216,20 @@ async function main() {
   // that IIFE as the page's only library script (snippetSource left empty), so
   // the rest of the pipeline — self-contained HTML, draw check, screenshot — is
   // identical to the framework=none path.
-  let html;
+  let pageInputs;
   if (bundleInfo.framework === "react") {
     const { code, map } = await bundleReactSnippet(filePath);
     CONTEXT.map = map;
-    html = buildHtml({ tokens, bundleSource: code, snippetSource: "", css, sandbox, dataJson });
+    pageInputs = { tokens, bundleSource: code, snippetSource: "", css, library, sandbox, dataJson };
   } else {
     const bundlePath = path.join(NODE_MODULES, bundleInfo.dist);
     if (!existsSync(bundlePath)) {
       usage(`render: bundle missing: ${bundlePath}\nRun \`npm ci\` at the repo root first.`);
     }
     const bundleSource = await readFile(bundlePath, "utf-8");
-    html = buildHtml({ tokens, bundleSource, snippetSource, css, sandbox, dataJson });
+    pageInputs = { tokens, bundleSource, snippetSource, css, library, sandbox, dataJson };
   }
+  const html = buildHtml(pageInputs);
 
   // Write the self-contained interactive page first — it is a deliverable in its
   // own right and useful for debugging even if the screenshot step later fails.
@@ -2010,8 +2285,9 @@ async function main() {
     // (SETTLE_TIMEOUT_MS), loading the page included: a snippet whose inline
     // script never returns, or a page that never settles, fails as `timeout`.
     const bounded = SANDBOX ? boundedBy(Date.now() + SETTLE_TIMEOUT_MS) : (promise) => promise;
+    const renderHtml = SANDBOX && library === "chartjs" ? buildHtml({ ...pageInputs, recordTexts: true }) : html;
 
-    await bounded(page.setContent(html, { waitUntil: "load" }));
+    await bounded(page.setContent(renderHtml, { waitUntil: "load" }));
 
     // Wait for a render-complete signal. A snippet MAY set window.__anyplotReady
     // (e.g. ECharts `chart.on('finished', ...)`) for precise timing; otherwise we
@@ -2097,12 +2373,17 @@ function failSandboxed(err) {
   console.error(finalErrorLine(err, CONTEXT));
   process.exit(1);
 }
-if (SANDBOX) process.on("uncaughtException", failSandboxed);
+const IS_MAIN =
+  Boolean(process.argv[1]) && realpath(fileURLToPath(import.meta.url)) === realpath(path.resolve(process.argv[1]));
+if (IS_MAIN) {
+  if (SANDBOX) process.on("uncaughtException", failSandboxed);
+  main().catch((err) => {
+    if (!SANDBOX) {
+      console.error(err);
+      process.exit(1);
+    }
+    failSandboxed(err);
+  });
+}
 
-main().catch((err) => {
-  if (!SANDBOX) {
-    console.error(err);
-    process.exit(1);
-  }
-  failSandboxed(err);
-});
+export { buildHtml, pageTexts, textLabels };

@@ -9,6 +9,16 @@
       "otherwise": "Klasse 2"
     }
   ],
+  "also_accepted": [
+    [
+      {
+        "op": "classify",
+        "name": "Klasse",
+        "rules": [{"where": [{"column": "y", "test": "gt", "value": "0"}], "label": "1"}],
+        "otherwise": "2"
+      }
+    ]
+  ],
   "locale": "de",
   "tags": ["classify", "derived_category"]
 }

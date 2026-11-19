@@ -1,6 +1,6 @@
 ---
 name: verify-api
-description: Run and exercise the anyplot FastAPI backend — start the server, sweep the read endpoints with curl, check payload shapes against the live DB, and respect the shared-production-database discipline. Use when asked to run, start, test, or verify the API, a router, an endpoint, or a backend change.
+description: Run and exercise the anyplot FastAPI backend — start the server, sweep the read endpoints with curl, check payload shapes against the live DB, and respect the shared-production-database discipline; also how to check the deployed agent chat through the admin lane after a deploy. Use when asked to run, start, test, or verify the API, a router, an endpoint, or a backend change, or to test the chat on production.
 ---
 
 # Verify the API against the live server
@@ -97,6 +97,71 @@ when unset. Lint gate before commit, both halves:
 uv run --extra dev ruff check . && uv run --extra dev ruff format --check .
 uv run --extra typecheck --extra agents mypy api core agents --pretty
 ```
+
+## 5 · Check the deployed agent chat (admin lane)
+
+For a check of a chat change on production after its deploy. Run it only
+when the owner asks for it by name: it costs model calls and can store a
+feedback case. Use invented tables only.
+
+A script cannot use the page's own path. `https://anyplot.ai/api/debug/*`
+sits behind Cloudflare Access and answers a script with a redirect to the
+login. Call the API host directly, with the admin token:
+
+1. **Host and prefix:** `https://api.anyplot.ai/debug/agent/...`.
+2. **Token:** production's `ADMIN_TOKEN` from Secret Manager. The value in
+   `.env` belongs to the local server, and production answers it with
+   `401 Invalid admin token`. Reading the secret is Secret Manager access:
+   ask the owner first and name the secret. Read it inside the script's own
+   process, fail when `gcloud` fails, and strip the trailing newline:
+
+   ```python
+   read = subprocess.run(
+       ["gcloud", "secrets", "versions", "access", "latest", "--secret=ADMIN_TOKEN", "--project=anyplot"],
+       capture_output=True, text=True, check=True,
+   )
+   token = read.stdout.rstrip("\n")
+   ```
+
+   Never print it, write it to a file, or put it on a command line.
+3. **Headers on every request:** `X-Admin-Token`, and
+   `X-Anyplot-Client: agent-chat/1`. Without the second one every `POST`,
+   `PUT`, and `DELETE` answers `403 client_header_required`
+   (`docs/reference/api.md`, "Access, kill switch, and CSRF guard"). Send
+   bodies as JSON, and set a `User-Agent` of your own, so that you can
+   filter the request log for the check afterwards.
+4. **The calls, in the order the page makes them:**
+   - `POST /sessions` with `{"spec_id", "library", "locale"}` returns
+     `session_id`.
+   - `POST /sessions/{sid}/dataset` with `{"text": "<the table>"}`.
+   - The page then sends its automatic first turn by itself,
+     `POST /sessions/{sid}/messages` with `{"action": "summarize_data"}`:
+     the assistant's summary of the data. Send it when the check is meant
+     to reproduce the page, and count its model calls. A check of one data
+     step can leave it out; say so in the report.
+   - `POST /sessions/{sid}/messages` with `{"text": "..."}` answers as a
+     server-sent event stream: `ready`, `status`, `plot`, `message`,
+     `done`. The `done` event carries `dataset`, with its `changes` lines,
+     only when that turn changed the data; after any other turn it holds
+     the sync fields alone, which is no failure.
+   - Before the first plot: `POST /sessions/{sid}/dataset/confirm`, then
+     `POST /sessions/{sid}/messages` with `{"action": "create_plot"}`.
+     Without the confirmation the `plot` event says `not_ready` with the
+     reason `data_unconfirmed`.
+   - `POST /sessions/{sid}/feedback` takes `result_version`: the `version`
+     of a `plot` event, or `0` for the chat itself. The dataset in `done`
+     has a `version` of its own, which is a different number; a result
+     version that does not exist answers `404`.
+5. **Read the evidence, not only the status codes:** the request log by
+   your `User-Agent`
+   (`gcloud logging read 'httpRequest.userAgent="<yours>"' --project=anyplot`),
+   the agents service's lines for the same minutes, and for a feedback case
+   its row in a read-only transaction
+   (`.claude/skills/triage-agent-cases/casedb.py`, `read_only`).
+6. **Report what the check left behind:** the sessions, the number of model
+   calls, and every feedback case with its id. Write "post-deploy check,
+   invented data" into a case's message, because the case shows in the
+   triage queue until a round retires it.
 
 ## Gotchas
 

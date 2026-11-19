@@ -26,9 +26,11 @@ verdict that rejects without a usable defect stays unread.
 """
 
 import json
+import math
 import re
 import unicodedata
 from collections.abc import Iterable
+from datetime import datetime
 from typing import Annotated, Any, Literal, Self, get_args
 
 from pydantic import (
@@ -37,9 +39,14 @@ from pydantic import (
     ConfigDict,
     Field,
     NonNegativeInt,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    StrictStr,
     TypeAdapter,
     ValidationInfo,
     field_validator,
+    model_serializer,
     model_validator,
 )
 
@@ -209,6 +216,10 @@ MAX_FILE_NAME_CHARS = 80
 """A dropped file's name as the session keeps it (`opening.source_name` cuts it to this)."""
 MAX_SHOWN_TEXT_CHARS = 80
 """One drawn text in `PlotShows.texts`."""
+MAX_AXES = 2
+"""Axes entries `PlotShows.axes` carries (`harness.AXES_LIMIT`)."""
+MAX_AXIS_DATE_CHARS = 32
+"""One ISO 8601 date limit in `PlotShows.axes` (`2024-01-01T00:00:00.000000+00:00`)."""
 
 ColumnDtype = Literal["integer", "number", "datetime", "boolean", "text"]
 SourceFormat = Literal[
@@ -836,21 +847,136 @@ ShownGroup = Literal[
 ]
 """The roles `PlotShows.texts` groups the drawn texts by (`grounding.plot_texts`)."""
 ShownText = Annotated[str, Field(min_length=1, max_length=MAX_SHOWN_TEXT_CHARS)]
+AxisScale = Literal["linear", "log", "date"]
+AXIS_SCALES: frozenset[str] = frozenset(get_args(AxisScale))
+AXIS_DATE_PATTERN = (
+    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}"
+    r"(?:[T ][0-9]{2}:[0-9]{2}(?::[0-9]{2}(?:\.[0-9]{1,6})?)?(?:Z|[+-][0-9]{2}:[0-9]{2})?)?$"
+)
+_AXIS_DATE = re.compile(AXIS_DATE_PATTERN)
 ReviewState = Literal["passed", "findings", "not_reviewed"]
+
+
+def parse_axis_number(value: Any) -> float:
+    """A finite axis limit as a float; booleans, strings and values outside float range fail."""
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise ValueError("a numeric axis limit must be a number")
+    try:
+        number = float(value)
+    except OverflowError:
+        raise ValueError("a numeric axis limit must fit in float") from None
+    if not math.isfinite(number):
+        raise ValueError("a numeric axis limit must be finite")
+    return number
+
+
+def parse_axis_date(value: Any) -> tuple[str, datetime]:
+    """A strict ISO 8601 date limit of at most `MAX_AXIS_DATE_CHARS` characters, with its parsed datetime."""
+    if not isinstance(value, str) or len(value) > MAX_AXIS_DATE_CHARS or _AXIS_DATE.fullmatch(value) is None:
+        raise ValueError("a date axis limit must be an ISO 8601 string within the character cap")
+    return value, datetime.fromisoformat(value)
+
+
+class ShownAxis(_ServerContract):
+    """The measured range of one axis (`x`, `y` or `z`) of an axes in `PlotShows.axes`."""
+
+    scale: AxisScale
+    min: StrictFloat | StrictInt | StrictStr
+    max: StrictFloat | StrictInt | StrictStr
+
+    @model_validator(mode="after")
+    def _limits_match_scale(self) -> Self:
+        if self.scale == "date":
+            low_text, low_dt = parse_axis_date(self.min)
+            high_text, high_dt = parse_axis_date(self.max)
+            if (low_dt.tzinfo is None) != (high_dt.tzinfo is None) or low_dt > high_dt:
+                raise ValueError("date axis limits must share timezone awareness and satisfy min <= max")
+            object.__setattr__(self, "min", low_text)
+            object.__setattr__(self, "max", high_text)
+            return self
+        low = parse_axis_number(self.min)
+        high = parse_axis_number(self.max)
+        if low > high:
+            raise ValueError("numeric axis limits must satisfy min <= max")
+        object.__setattr__(self, "min", low)
+        object.__setattr__(self, "max", high)
+        return self
+
+
+class ShownAxes(_ServerContract):
+    """The measured axis ranges of one visible axes in `PlotShows.axes`."""
+
+    x: ShownAxis | None = None
+    y: ShownAxis | None = None
+    z: ShownAxis | None = None
+
+    @model_validator(mode="after")
+    def _at_least_one_axis(self) -> Self:
+        if self.x is None and self.y is None and self.z is None:
+            raise ValueError("an axes entry holds at least one of x, y and z")
+        return self
+
+    @model_serializer
+    def _without_none(self) -> dict[str, dict[str, Any]]:
+        return {
+            name: {"scale": axis.scale, "min": axis.min, "max": axis.max}
+            for name, axis in (("x", self.x), ("y", self.y), ("z", self.z))
+            if axis is not None
+        }
+
+
+class ShownRole(_ServerContract):
+    """The drawn texts of one role in `PlotShows.texts`: their distinct count, and either all of them or both ends."""
+
+    count: Annotated[StrictInt, Field(ge=1)]
+    texts: list[ShownText] | None = Field(default=None, min_length=1)
+    first: list[ShownText] | None = Field(default=None, min_length=1)
+    last: list[ShownText] | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def _whole_or_ends(self) -> Self:
+        has_texts = self.texts is not None
+        has_ends = self.first is not None and self.last is not None
+        if has_texts == has_ends or (self.first is None) != (self.last is None):
+            raise ValueError("a role holds either texts or both first and last")
+        if self.texts is not None and self.count != len(self.texts):
+            raise ValueError("count must equal len(texts) when texts is present")
+        if self.first is not None and self.last is not None and self.count <= len(self.first) + len(self.last):
+            raise ValueError("count must exceed len(first) + len(last) when ends are listed")
+        return self
+
+    @model_serializer
+    def _without_none(self) -> dict[str, Any]:
+        if self.texts is not None:
+            return {"count": self.count, "texts": list(self.texts)}
+        return {"count": self.count, "first": list(self.first or []), "last": list(self.last or [])}
 
 
 class PlotShows(_ServerContract):
     """What the shipped render shows, built by the server: the root's closing reply is grounded in it.
 
-    `texts` are the drawn texts by role, read from the render's probe (`grounding.plot_texts`);
-    None when the renderer reported none (a renderer older than the `labels` probe field).
+    `texts` are the drawn texts by role (`ShownRole`), read from the render's probe
+    (`grounding.plot_texts`); None when the renderer reported none (a renderer older than the
+    `labels` probe field, or a failed probe), or `{}` when it reported zero drawn texts, both
+    omitted from the fenced result (`tool_safety.fence_pipeline_notes`). `texts_complete` records
+    whether the probe reported every drawn text without truncation (`grounding.texts_complete`):
+    preserved on the model and across smaller `shrunk_shows` versions that still carry `texts`, and
+    omitted from the fenced result when True (so the common case costs no bytes) or whenever `texts`
+    itself is omitted (`None` or `{}`), since it qualifies `texts`. `axes` are the measured axis
+    ranges (`ShownAxes`, `grounding.plot_axes`) of the first `MAX_AXES` non-empty rectilinear
+    non-colorbar axes for matplotlib and seaborn (leaving out hidden axes, axes with no visible tick
+    label, categorical converters/formatters/locators, hand-set tick labels, non-finite limits, and
+    other scales; plotnine maps its scales before matplotlib and reports none); None or empty when
+    the render reported none, both omitted from the fenced result.
     `review` is the verdict on exactly this render (`passed`: it met the ship bar), `score`
     the catalogue review's score, `requested_not_found` the `expected_texts` the drawn
     texts do not show (`grounding.expected_misses`). The texts are written by the code under
     test, so the root reads them fenced, as data.
     """
 
-    texts: dict[ShownGroup, list[ShownText]] | None = None
+    texts: dict[ShownGroup, ShownRole] | None = None
+    texts_complete: StrictBool = True
+    axes: list[ShownAxes] | None = Field(default=None, max_length=MAX_AXES)
     review: ReviewState = "not_reviewed"
     score: int | None = Field(default=None, ge=0, le=100)
     requested_not_found: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)

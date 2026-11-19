@@ -3318,3 +3318,45 @@ class TestTextChains:
         apply_operations(parsed, OPERATIONS.validate_python([split("min–max", "–", "min", "max")]))
 
         assert parsed.csv == before
+
+
+TIMES = "Zeit,Wert\n2026-01-01,3\n2026-01-02,5\n2026-01-04,8\n"
+LOTS = "Charge,Wert\n2026-01-01/A,3\n2026-01-02/B,5\n2026-01-04/C,8\n"
+"""A text column whose cells start like dates; the paste keeps it text."""
+
+
+class TestDateNumbersRecord:
+    """`Prepared.date_numbers`: the number columns made from a column that is a date when the operation runs, which
+    the guard on an emptied role holds (`data/emptied.py`). Read from the frame at that moment, never from the tables
+    at the two ends of the call."""
+
+    def test_a_date_number_is_recorded_and_follows_a_rename(self) -> None:
+        days = date_number("days", "Zeit", name="Tag")
+
+        assert prepare(TIMES, days).date_numbers == ["Tag"]
+        assert prepare(TIMES, days, {"op": "rename", "column": "Tag", "name": "Tage"}).date_numbers == ["Tage"]
+
+    def test_it_stays_when_its_source_goes_and_goes_with_its_own_column(self) -> None:
+        days = date_number("days", "Zeit", name="Tag")
+
+        assert prepare(TIMES, days, {"op": "drop_columns", "columns": ["Zeit"]}).date_numbers == ["Tag"]
+        assert prepare(TIMES, days, {"op": "drop_columns", "columns": ["Tag"]}).date_numbers == []
+
+    def test_a_column_read_as_dates_and_numbered_in_one_call_counts(self) -> None:
+        """Text at the start of the call and gone at its end: only the moment of the operation knows it was a date."""
+        as_text = {"op": "set_type", "column": "Zeit", "type": "text"}
+        as_dates = {"op": "set_type", "column": "Zeit", "type": "datetime"}
+        days = date_number("days", "Zeit", name="Tag")
+
+        prepared = prepare(TIMES, as_text, as_dates, days, {"op": "drop_columns", "columns": ["Zeit"]})
+
+        assert prepared.date_numbers == ["Tag"]
+
+    def test_the_digits_of_a_date_count_and_those_of_text_that_looks_like_one_do_not(self) -> None:
+        digits = {"op": "extract", "keep": "digits", "name": "Ziffern"}
+
+        assert prepare(TIMES, {**digits, "column": "Zeit"}).date_numbers == ["Ziffern"]
+        assert prepare(LOTS, {**digits, "column": "Charge"}).date_numbers == []
+        # Read as text first, the date column is text when the digits are taken.
+        as_text = {"op": "set_type", "column": "Zeit", "type": "text"}
+        assert prepare(TIMES, as_text, {**digits, "column": "Zeit"}).date_numbers == []

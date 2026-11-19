@@ -1,7 +1,7 @@
 """The downloadable `plot.html` of a JavaScript plot: the harness's page inside a sandboxed frame (JS-4b).
 
-The renderer builds the page a render screenshots (`POST /page`, the browser harness in
-page-only mode): the library bundle, the theme's tokens, the typed table and the plot code
+The renderer builds the page a render writes (`plot-<theme>.html`; `POST /page`, the browser
+harness in page-only mode): the library bundle, the theme's tokens, the typed table and the plot code
 inlined, under the harness's content security policy (`CONTENT_SECURITY_POLICY` in
 `automation/js-render/render.mjs`: nothing but the inlined page, no request, no `eval`, no
 form, no `<base>`). A policy stops a request, but not the page's own top-level navigation, so

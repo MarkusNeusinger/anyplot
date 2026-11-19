@@ -699,6 +699,11 @@ class Prepared:
     row_numbers: list[str] = field(default_factory=list)
     """The columns a `row_number` made or reused: the caller binds one to the axis or label role that stayed open
     (`bindings.carry_bindings`), as the fallback for that role was made."""
+    date_numbers: list[str] = field(default_factory=list)
+    """The number columns made from a column that was a date when the operation ran: every `date_number`, and a text
+    operation (`extract` with `digits`) on a date column. Read from the frame at that moment, never from the tables at
+    the ends of the call, so a column read as dates and turned into numbers in one call counts too: the guard on a
+    taken role holds them (`data/emptied.py`)."""
     splits: list[list[str]] = field(default_factory=list)
     """The new columns of each `split`, in the order of its parts: two neighbouring parts may fill a lower and upper
     bound pair left open (`bindings.carry_bindings`), and no other two columns of one source may."""
@@ -742,6 +747,7 @@ class _Carried:
     with_time: dict[str, bool] = field(default_factory=dict)
     converted: dict[str, str] = field(default_factory=dict)  # columns a conversion made or re-typed, and their sources
     row_numbers: set[str] = field(default_factory=set)  # the columns of a `row_number`
+    date_numbers: set[str] = field(default_factory=set)  # number columns made from a date column (`Prepared`)
     splits: list[list[str]] = field(default_factory=list)  # the new columns of each `split`, in the parts' order
     language: str = DEFAULT_LANGUAGE
     pasted_cells: dict[str, list[str]] = field(default_factory=dict)  # `ParsedDataset.pasted_cells`, renamed along
@@ -784,6 +790,9 @@ class _Carried:
         if old in self.row_numbers:
             self.row_numbers.remove(old)
             self.row_numbers.add(new)
+        if old in self.date_numbers:
+            self.date_numbers.remove(old)
+            self.date_numbers.add(new)
         self.splits = [[new if name == old else name for name in parts] for parts in self.splits]
 
     def forget(self, names: Iterable[str]) -> None:
@@ -794,6 +803,7 @@ class _Carried:
             self.with_time.pop(name, None)
             self.converted.pop(name, None)
             self.row_numbers.discard(name)
+            self.date_numbers.discard(name)
             # A later column of the same name (a rename, a derived one) is no column as pasted.
             self.pasted_cells.pop(name, None)
         # A dropped part leaves a gap: the parts on either side of it are no neighbours any more.
@@ -808,6 +818,7 @@ class _Carried:
             *self.with_time,
             *self.converted,
             *self.row_numbers,
+            *self.date_numbers,
             *split,
             *self.pasted_cells,
         }
@@ -1379,6 +1390,7 @@ def apply_operations(
     renamed = dict(zip(names, canonical, strict=True))
     converted = {renamed[name]: renamed.get(source, source) for name, source in carried.converted.items()}
     row_numbers = [canon for name, canon in zip(names, canonical, strict=True) if name in carried.row_numbers]
+    date_numbers = [canon for name, canon in zip(names, canonical, strict=True) if name in carried.date_numbers]
     # A part no longer in the data stays a gap (""), so the parts beside it are never taken for neighbours.
     splits = [[renamed.get(name, "") for name in parts] for parts in carried.splits]
     return Prepared(
@@ -1388,6 +1400,7 @@ def apply_operations(
         date_notes=date_notes,
         converted=converted,
         row_numbers=row_numbers,
+        date_numbers=date_numbers,
         splits=[parts for parts in splits if any(parts)],
         sorted_by=renamed.get(carried.sorted_by) if carried.sorted_by is not None else None,
     )
@@ -3662,6 +3675,7 @@ def _date_number(frame: pd.DataFrame, op: DateNumber, carried: _Carried) -> tupl
     result[name] = values.set_axis(frame.index)
     carried.forget([name])
     carried.converted[name] = op.column  # an open required role that takes numbers takes it (`carry_bindings`)
+    carried.date_numbers.add(name)
     change = f"new column {name}: {_count(len(present), 'date')} of {op.column} {reading}"
     empty = len(moments) - len(present)
     if empty:
@@ -3849,6 +3863,8 @@ def _place(frame: pd.DataFrame, carried: _Carried, source: str, name: str, typed
         carried.text_columns.add(name)  # kept text through the re-parse, as the change line says
         return
     carried.converted[name] = source  # an open required role takes it, as it takes a `set_type` with `name`
+    if typed.kind != "datetime" and source in frame.columns and _kind(frame[source]) == "datetime":
+        carried.date_numbers.add(name)  # the digits of a date are a date turned into numbers (`Prepared.date_numbers`)
     if typed.kind == "datetime":
         carried.with_time[name] = typed.with_time
         if typed.order is not None:

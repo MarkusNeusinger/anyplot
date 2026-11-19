@@ -20,7 +20,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 
 from agents.anyplot import telemetry
-from agents.anyplot.grounding import DrawnTexts, drawn_texts
+from agents.anyplot.grounding import DrawnTexts, drawn_texts, texts_complete
 from agents.anyplot.memory import (
     MAX_ENTRIES,
     MEMORY,
@@ -637,7 +637,15 @@ def shipped_run(library: str, planned: Planned, render: DrawnTexts | None, *, wr
     view = SimpleNamespace(library=library, target=("scatter-basic", library))
     run = Run(view=cast(Any, view), dataset=cast(Any, None), language="en")
     run.memory_plan, run.memory_seq, run.written_texts = planned, planned.seq, list(written)
-    run.best = Candidate(working="w", run_form="r", pngs={}, plan=AdaptPlan(), attempt=1, drawn=render)
+    run.best = Candidate(
+        working="w",
+        run_form="r",
+        pngs={},
+        plan=AdaptPlan(),
+        attempt=1,
+        texts_complete=texts_complete(render),
+        drawn=render,
+    )
     return run
 
 

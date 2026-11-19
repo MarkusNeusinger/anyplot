@@ -15,7 +15,8 @@
   field that was wrong); no link (a scheme such as
   `https://` or `data:image`, or `www.`) or file path in any string argument, as link
   hygiene; then the turn's caps (`TURN_CAPS`, counted from the turn's allowed calls, so a refused
-  call never counts): one `plot_pipeline` call per turn (the "one repair round" bound),
+  call never counts, nor one the guard on a taken role refused, `RequestLedger.guard_held`): one `plot_pipeline`
+  call per turn (the "one repair round" bound),
   two `prepare_data`, two `generate_data`, three `query_data` and `MAX_DATA_CODE_CALLS` (2)
   `run_data_code` calls, each refusal with a fixed `message` (`CAP_MESSAGE`). `run_data_code`'s `code`
   (at most `MAX_DATA_CODE_CHARS`, a `source_language` of a fixed set) is exempt from the
@@ -52,7 +53,8 @@
   for `get_dataset_profile`, whose 16 KB of profile sit next to the pasted notes); a result outside them becomes an error. The `plot_pipeline` result
   reaches the root with its model-written `changes` and `residual_defects` fenced as
   `<tool_notes>` under `notes`, and what the shipped render shows (`PlotShows`) fenced
-  the same way under `shows`, without `texts` when the render reported none.
+  the same way under `shows`, without `texts` when the render reported none or an empty dict,
+  `texts_complete` when it is true or `texts` is omitted, or `axes` when it reported none or an empty list.
 * `on_tool_error_callback`: any exception becomes `{"status": "error", "code": ...}`
   with a fixed code; the exception text never reaches the model.
 * The turn's record of the root's calls (`RequestLedger.tool_calls`): `before_tool_callback` notes each call with its
@@ -206,11 +208,12 @@ RESULT_LIMITS: dict[str, int] = {
     GENERATE_TOOL: 16 * 1024,
     # The new profile, trimmed like get_dataset_profile's, plus one change line, or up to ten validator findings.
     DATA_CODE_TOOL: 16 * 1024,
-    # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200) with its `shows` (62 drawn texts of
-    # 80 characters, five requested texts of 120) is about 18 KB in one-byte and 35 KB in two-byte UTF-8 (German
-    # umlauts throughout). Above the cap `shows` gives way (`shrunk_shows`) before the result is refused. The
-    # `bindings` the run drew with add at most 50 roles of 32 characters and columns of 64, about 12 KB fenced in
-    # three-byte UTF-8, so they never push a shipped plot over.
+    # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200, 50 bindings of 32-character roles and
+    # 64-character columns) with its `shows` (96 drawn texts of 80 characters across the 12 roles at their
+    # `first`/`last` form, two 3D `axes` entries at 32-character ISO date limits, five requested texts of 120) is
+    # 27,795 bytes in one-byte, 50,175 bytes in two-byte (`ä`; 50,202 with `texts_complete: false`) and 72,555 bytes
+    # in three-byte UTF-8 against the 53,248-byte cap. Above the cap `shows` gives way (`shrunk_shows`: titles, axis
+    # labels and legend first, then title and subtitle at 49,559 bytes, then no texts) before the result is refused.
     PIPELINE_TOOL: 52 * 1024,
 }
 TEXT_LITERAL_KEYS = ("separator", "prefix", "suffix", "old", "new")
@@ -310,8 +313,9 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     # `data`: what the version's downloaded data holds, counts and fixed file names only (`session.version_data`).
     "get_current_code": frozenset({"status", "code", "version", "data"}),
+    # `message` with the refusal of the guard on a taken role (`data/emptied.py`), fixed server text.
     "set_bindings": frozenset(
-        {"status", "reason", "code", "complete", "missing_roles", "data_confirmed", "errors", "warnings"}
+        {"status", "reason", "code", "message", "complete", "missing_roles", "data_confirmed", "errors", "warnings"}
     ),
     # No value: the root knows what it passed, and a result that echoed free text would need a fence.
     "set_language": frozenset({"status", "code", "source", "changed", "plot_outdated"}),
@@ -601,26 +605,43 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
         fenced[NOTES_KEY] = DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(notes, ensure_ascii=False))
     if result.get(SHOWS_KEY):
         shown = result[SHOWS_KEY]
-        if isinstance(shown, dict) and shown.get("texts") is None:
-            # No drawn texts (a probe that reported none, or `shrunk_shows`): the root gets no `texts` at all, so it
-            # has nothing to quote and no null to narrate (user test of 2026-11-01: "I couldn't read the title back").
-            shown = {key: value for key, value in shown.items() if key != "texts"}
+        if isinstance(shown, dict):
+            # No drawn texts (a probe that reported none, an empty dict, or `shrunk_shows` with nothing left): the root
+            # gets no `texts` at all, so it has nothing to quote and no null or `{}` to narrate (handed a null, the root
+            # told the user it could not read the title back). `texts_complete` qualifies `texts` and stays out when
+            # True or without `texts`; an empty `axes` list goes like None.
+            drop = {
+                *(("texts", "texts_complete") if not shown.get("texts") else ()),
+                *(("texts_complete",) if shown.get("texts_complete") is not False else ()),
+                *(("axes",) if not shown.get("axes") else ()),
+            }
+            if drop:
+                shown = {key: value for key, value in shown.items() if key not in drop}
         fenced[SHOWS_KEY] = SHOWS_PREAMBLE + "\n" + fence("tool_notes", json.dumps(shown, ensure_ascii=False))
     return fenced
 
 
 SHOWS_KEPT_GROUPS = ("title", "subtitle", "x axis label", "y axis label", "z axis label", "legend")
-"""The `shows` texts a result over its cap keeps: what a reply quotes most; tick labels and the rest go first."""
+"""The `shows` texts the first smaller version keeps: what a reply quotes most; tick labels and the rest go first."""
+SHOWS_HEADING_GROUPS = ("title", "subtitle")
+"""The `shows` texts the second smaller version keeps when axis labels and legend still cross the cap."""
 
 
 def shrunk_shows(result: dict[str, Any]) -> list[dict[str, Any]]:
     """Smaller versions of a `plot_pipeline` result, in order: `shows.texts` without tick labels and other texts,
-    then without any texts (`null`, which `fence_pipeline_notes` leaves out, so the root quotes no plot text)."""
+    then with the title and subtitle alone, then without any texts (`null`; `fence_pipeline_notes` leaves out both
+    `null` and `{}` together with `texts_complete`, so the root quotes no plot text); `shows.axes` stays in all three,
+    and `shows.texts_complete` keeps its value while `texts` is non-empty."""
     shows = result.get(SHOWS_KEY)
     if not isinstance(shows, dict) or not isinstance(shows.get("texts"), dict):
         return []
     kept = {group: texts for group, texts in shows["texts"].items() if group in SHOWS_KEPT_GROUPS}
-    return [{**result, SHOWS_KEY: {**shows, "texts": kept}}, {**result, SHOWS_KEY: {**shows, "texts": None}}]
+    headings = {group: texts for group, texts in shows["texts"].items() if group in SHOWS_HEADING_GROUPS}
+    return [
+        {**result, SHOWS_KEY: {**shows, "texts": kept}},
+        {**result, SHOWS_KEY: {**shows, "texts": headings}},
+        {**result, SHOWS_KEY: {**shows, "texts": None}},
+    ]
 
 
 def _strings(value: Any, skip: frozenset[str] = frozenset()) -> list[str]:
