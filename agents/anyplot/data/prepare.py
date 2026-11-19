@@ -1659,7 +1659,10 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
     # The cells left missing are a loss of the step itself: kept whole, whatever the notices beside them take.
     missing = ""
     if conversion.failed:
-        missing = f", {_count(conversion.failed, 'cell')} could not be read and {_be(conversion.failed)} now missing"
+        # Without a format the count says itself what the cells were not read as: it stays when the forms give way.
+        what = (" as a date" if conversion.failed == 1 else " as dates") if conversion.forms else ""
+        count = _count(conversion.failed, "cell")
+        missing = f", {count} could not be read{what} and {_be(conversion.failed)} now missing"
     kept = missing + (f"; {op.column} stays as it is" if op.name is not None else "")
     notice = conversion.notice
     if op.type == "number" and op.decimal is None and _mark_open(_texts(series), conversion):

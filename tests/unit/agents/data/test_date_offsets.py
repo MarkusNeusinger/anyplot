@@ -221,8 +221,9 @@ class TestConversion:
         [line] = prepare(text, operation).changes
 
         assert len(line) <= MAX_NOTE_CHARS
-        # The impossible day is no date read, so its offset is not among those dropped.
-        assert f", 1 cell could not be read and is now missing; {LONG} stays as it is, 20 dates had the UTC " in line
+        # The impossible day is no date read, so its offset is not among those dropped; the offsets are listed or,
+        # past the room the line has, summed up.
+        assert f", 1 cell could not be read as a date and is now missing; {LONG} stays as it is, 20 dates had " in line
 
     def test_the_count_of_unreadable_cells_is_never_cut_beside_many_offsets(self) -> None:
         text = "day,kWh\n" + "".join(f"2026-03-{1 + index % 28:02d}{offset},{index}\n" for index, offset in MANY)
@@ -231,7 +232,7 @@ class TestConversion:
 
         assert line.startswith("new column day (date): 32 cells of day read as dates (format inferred, year first)")
         assert line.endswith(
-            ", 1 cell could not be read and is now missing; day stays as it is, 32 dates had 16 different UTC "
+            ", 1 cell could not be read as a date and is now missing; day stays as it is, 32 dates had 16 different UTC "
             "offsets, from -04:30 to +04:30, which were dropped; the days are as written"
         )
 
@@ -246,7 +247,7 @@ class TestConversion:
 
         assert len(line) <= MAX_NOTE_CHARS
         assert line.startswith("new column day (date): 12 cells of day read as dates (format inferred, year first)")
-        assert ", 1 cell could not be read and is now missing; day stays as it is, 12 dates had " in line
+        assert ", 1 cell could not be read as a date and is now missing; day stays as it is, 12 dates had " in line
 
     def test_the_count_of_unreadable_cells_is_never_cut_beside_times_read_in_utc(self) -> None:
         """The older notice of times with several offsets, converted to UTC, leaves the count whole too."""
@@ -260,7 +261,10 @@ class TestConversion:
         [line] = apply_operations(parsed, OPERATIONS.validate_python([operation])).changes
 
         assert len(line) <= MAX_NOTE_CHARS
-        assert f", 1 cell could not be read and is now missing; {LONG} stays as it is, times with the UTC " in line
+        assert (
+            f", 1 cell could not be read as a date and is now missing; {LONG} stays as it is, times with the UTC "
+            in line
+        )
 
     def test_a_column_that_mixes_the_shape_with_plain_dates_reads_every_day(self) -> None:
         prepared = prepare("day,kWh\n2026-03-01,12\n2026-03-02+01:00,15\n", to_dates())
@@ -325,13 +329,14 @@ class TestConversion:
 
     @pytest.mark.parametrize("day", ["Mar 1 2026", "01 03 2026"])
     def test_a_date_written_with_spaces_is_unreadable_not_a_time(self, day: str) -> None:
-        """A space between the parts of a date makes no time, and no form of the list either: the cell is missing."""
+        """A space between the parts of a date makes no time: beside the days the cell is of another shape
+        (`Mar 1 2026`, a day with a month name) or of no form of the list (`01 03 2026`), and is missing."""
         text = f"day,kWh\n{day},1\n" + "".join(f"2026-03-{day:02d}+01:00,{day}\n" for day in range(2, 12))
 
         prepared = prepare(text, to_dates())
 
         assert column(prepared, "day (date)") == [""] + [f"2026-03-{day:02d}" for day in range(2, 12)]
-        assert ", 1 cell could not be read and is now missing" in prepared.changes[0]
+        assert ", 1 cell could not be read as a date and is now missing" in prepared.changes[0]
         assert prepared.changes[0].endswith(
             "10 dates had the UTC offset +01:00, which was dropped; the days are as written"
         )
@@ -347,8 +352,8 @@ class TestConversion:
         assert column(prepared, "day (date)") == [f"2026-03-{day:02d}" for day in range(1, 11)] + [""]
         assert line == (
             "new column day (date): 10 cells of day read as dates (format inferred, year first), 1 cell could not be "
-            "read and is now missing; day stays as it is, 10 dates had the UTC offset +01:00, which was dropped; the "
-            "days are as written"
+            "read as a date and is now missing; day stays as it is, 10 dates had the UTC offset +01:00, which was "
+            "dropped; the days are as written"
         )
 
     @pytest.mark.parametrize("offset", ["-03", "+01", "-0500", "+0100", "-05:00:00"])

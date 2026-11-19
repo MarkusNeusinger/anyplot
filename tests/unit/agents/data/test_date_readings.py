@@ -248,6 +248,7 @@ ADDED: dict[str, Row] = {
     "day_month_de_time": Row(
         ["1. März 2026 10:00", "2. März 2026 11:30"], ["2026-03-01T10:00:00", "2026-03-02T11:30:00"], True
     ),
+    "month_day_without_comma": Row(["Mar 1 2026", "Mar 15 2026"], ["2026-03-01", "2026-03-15"]),
     "month_day_time": Row(
         ["March 1, 2026 10:00", "March 2, 2026 11:30"], ["2026-03-01T10:00:00", "2026-03-02T11:30:00"], True
     ),
@@ -320,7 +321,6 @@ UNLISTED: dict[str, tuple[list[str], str]] = {
     "day_dashes_month_name": (["01-Mar-2026", "15-Mar-2026"], "text"),
     "ordinal_day": (["1st March 2026", "2nd March 2026"], "text"),
     "weekday": (["Sunday, March 1, 2026", "Monday, March 2, 2026"], "text"),
-    "month_day_without_comma": (["Mar 1 2026", "Mar 2 2026"], "text"),
     "compact": (["20260301", "20260315"], "integer"),
     "program_timestamp": (["Sun Mar 1 10:00:00 2026", "Mon Mar 2 11:00:00 2026"], "text"),
     "hour_without_minutes": (["2026-03-01T10", "2026-03-02T11"], "text"),
@@ -455,6 +455,21 @@ class TestMonthsOfASpanColumn:
         assert prepared.changes == ["Season: 3 cells read as dates (format inferred, year first)"]
 
 
+def test_times_with_and_without_an_offset_stay_text_at_the_paste_and_are_refused_on_request() -> None:
+    """No time is given a zone by guess. The paste keeps such a column as text; a request is refused with the reason.
+    The other places the two differ are pinned beside their rule: `TestMonthsOfASpanColumn`, the days with a UTC offset
+    in `test_date_offsets.py`, and a fraction's written form in `LISTED` (`iso_fraction`)."""
+    cells = ["2026-03-01T10:00+01:00", "2026-03-02T10:00", "2026-03-03T10:00+01:00"]
+
+    assert pasted(cells)[0] == "text"
+    with pytest.raises(PrepareError) as caught:
+        converted(cells)
+    assert caught.value.message == (
+        "column 'd' holds times with a UTC offset and times without one; no time is given a zone by guess, so the "
+        "column stays as it is"
+    )
+
+
 class TestOffsetsInUse:
     """A UTC offset counts from −12:00 to +14:00: past them, the sign and digits after a time end a range."""
 
@@ -550,8 +565,38 @@ class TestMessages:
 
         assert line == (
             "new column day (date): 10 cells of day read as dates (format inferred, year first), 1 cell could not be "
-            f"read and is now missing; {FORMS}; day stays as it is"
+            f"read as a date and is now missing; {FORMS}; day stays as it is"
         )
+
+    @pytest.mark.parametrize("unread", [1, 3])
+    def test_a_crowded_line_keeps_the_count_and_says_as_dates(self, unread: int) -> None:
+        """Where the forms do not fit beside a long name and many offsets, the count of the cells left missing is
+        whole, and it says what they were not read as; a format's line is as it was."""
+        name = "Ablesedatum des Stromzaehlers im Hauptgebaeude laut Monatsbe"  # 60 characters, the cap
+        offsets = [f"{sign}{hours:02d}:30" for sign in "+-" for hours in range(1, 9)] * 2
+        cells = [f"2026-03-{1 + index % 28:02d}{offset}" for index, offset in enumerate(offsets)]
+        cells += [f"2026/03/{20 + index}" for index in range(unread)]  # no form of the list
+        text = f"{name},kWh\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+        operation = {"op": "set_type", "column": name, "type": "datetime", "name": name[:50] + " (Datum)"}
+
+        [line] = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation])).changes
+
+        words = "1 cell could not be read as a date and is now" if unread == 1 else "3 cells could not be read as dates"
+        assert len(line) <= 300 and f", {words}" in line
+        assert FORMS not in line  # the forms gave way, the count did not
+        assert line.endswith("which were dropped; the days are as written")
+
+    def test_a_refusal_always_names_the_forms_beside_a_long_name(self) -> None:
+        name = "Ablesedatum des Stromzaehlers im Hauptgebaeude laut Monatsbe"
+        text = f"{name},kWh\n" + "".join(f"2026/03/{day:02d}+01:00,{day}\n" for day in range(1, 13))
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(
+                parse_dataset(text),
+                OPERATIONS.validate_python([{"op": "set_type", "column": name, "type": "datetime"}]),
+            )
+
+        assert caught.value.message == f"column '{name}': 12 of 12 cells cannot be read as dates; {FORMS}"
 
     def test_a_slash_column_that_settles_both_orders_is_refused_with_the_forms(self) -> None:
         """No order fits the column, as at the paste: no majority of cells decides it."""

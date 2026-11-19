@@ -21,7 +21,7 @@
   first, and the chat made such conversions without asking.
 
 - **A pasted column of days with a month name is a date column.** `8 Nov 2026`,
-  `1. März 2026` or `March 1, 2026`, in the eleven languages of the chat's
+  `1. März 2026` or `March 1, 2026` (also `Mar 1 2026`), in the eleven languages of the chat's
   month names, and an ISO time after a lowercase `t` (`2026-03-01t10:00`) are
   typed as dates at the paste. Before, such a column stayed text, and for an
   open date role the chat made a conversion into a new column first.

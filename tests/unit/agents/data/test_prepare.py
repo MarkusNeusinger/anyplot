@@ -2654,8 +2654,8 @@ class TestFidelity:
         expected = [f"2024-06-0{n}T13:00:00+00:00" for n in range(1, 10)]
         assert cells(prepared, 1) == [*expected[:4], "", *expected[4:]]
         assert prepared.changes == [
-            "t: 9 cells read as dates (format inferred, year first), 1 cell could not be read and is now missing; "
-            f"{DATE_FORMS}"
+            "t: 9 cells read as dates (format inferred, year first), 1 cell could not be read as a date and is now "
+            f"missing; {DATE_FORMS}"
         ]
 
     def test_conditions_on_a_column_with_an_offset_compare_moments(self) -> None:

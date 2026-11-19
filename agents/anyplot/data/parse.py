@@ -443,8 +443,9 @@ _SLASH_DATE = re.compile(r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})" + _LOCAL_TIME)
 _MONTH_WORD = r"([^\W\d_]+\.?)"
 _DAY_MONTH_DATE = re.compile(r"([0-9]{1,2})\.? " + _MONTH_WORD + r" ([0-9]{4})" + _LOCAL_TIME)
 """A day, a month name and a year (`8 Nov 2026`, `1 March 2026`, `1. März 2026`), with an optional time."""
-_MONTH_DAY_DATE = re.compile(_MONTH_WORD + r" ([0-9]{1,2}), ([0-9]{4})" + _LOCAL_TIME)
-"""A month name, a day and a year (`March 1, 2026`, `Nov. 8, 2026`), with an optional time."""
+_MONTH_DAY_DATE = re.compile(_MONTH_WORD + r" ([0-9]{1,2}),? ([0-9]{4})" + _LOCAL_TIME)
+"""A month name, a day and a year (`March 1, 2026`, `Mar 1 2026`, `Nov. 8, 2026`), with an optional time: the comma is
+as optional as the dot after the day of `1. März 2026`."""
 
 _ISO_STAMP = re.compile(
     r"([0-9]{4})-([0-9]{2})-([0-9]{2})"
