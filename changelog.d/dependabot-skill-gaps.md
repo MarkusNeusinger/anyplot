@@ -6,4 +6,4 @@
   plus lint and build for `app/`); a PR red only in the non-required renderer image check is
   never armed; a `claude-code-action` bump also moves `ACTION_SHA` in `review-retest.yml`; exact
   ADK and tree-sitter pins in `python-minor` go to the owner; and the run ends with `main`'s CI on
-  the last merge, since each merge cancels the runs before it.
+  the last merge, since each merge cancels the runs before it. (#13194)
