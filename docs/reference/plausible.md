@@ -391,8 +391,8 @@ The legal page's privacy section (`app/src/pages/LegalPage.tsx`) and its
 crawler copy in `api/routers/seo.py` (`_LEGAL_BOT_BODY`) describe this list
 in the row "searches without a hit" (`#search-misses`): the text in
 lowercase and cut at 40 characters, what the rule keeps out, and the 180
-days. Their analytics row says only that search texts sent up to and
-including November 2026 still show on the dashboard. If you change
+days. Their analytics row says only that search texts sent until November
+2026 are still stored by Plausible and no longer shown. If you change
 `normalizeQuery()`, the rule, or `RETENTION_DAYS`, or send typed text in an
 event property again, update both; `app/src/pages/LegalPage.test.tsx` holds
 the row to `MAX_QUERY_LENGTH`, and `tests/unit/api/test_search_misses.py`
