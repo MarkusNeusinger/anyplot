@@ -729,6 +729,21 @@ class TestRowNumbersNeverReplace:
         assert MADE_BEFORE_LINE.format(name="Nr") in refused
 
 
+class TestARenameTakesNoRole:
+    async def test_after_a_rename_of_ys_column_the_days_are_made_and_take_nothing(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The turn's start follows the rename: y still holds its column, under the new name, so nothing is taken and
+        the days are stored, on no role, since none is open."""
+        rename = {"op": "rename", "column": "Feuchte", "name": "Humidity"}
+        _, sid = await turn_of(client, runtime, swap_models, [prepare_call(rename), prepare_call(DAYS)])
+
+        assert await outcome(runtime, sid) == (
+            {"x": "Temperatur", "y": "Humidity"},
+            ["Zeitpunkt", "Sensor", "Temperatur", "Humidity", "Tag"],
+        )
+
+
 class TestWhatIsNoHeldColumn:
     async def test_a_reformatted_copy_of_a_date_is_stored(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
