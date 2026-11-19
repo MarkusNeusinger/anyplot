@@ -35,7 +35,7 @@
   `--keep-attempts` kept, also for a case that has left `.cases/` since, pins
   the promoted runs of an older report, and reads only the cases its admitted
   runs name. A test in the API's tree holds the two lane forms to the routes
-  that write them.
+  that write them. (#13200)
 - **No test reads the promoted cases any more.** Four eval tests (two static
   runs of `matrix.main`, its no-match exit and a preflight's smoke pick)
   called `load_cases()` with its default, which was bound at import to the
@@ -49,4 +49,4 @@
   (relative, with `..`, a string, a symbolic link, a path inside it), in any
   process that has imported pytest or that a test started
   (`PYTEST_CURRENT_TEST`), before anything reads it. The four walks read the
-  tracked files from `git ls-files` instead.
+  tracked files from `git ls-files` instead. (#13200)
