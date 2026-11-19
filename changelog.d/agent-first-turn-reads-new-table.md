@@ -11,4 +11,4 @@
   only a call of the tool showed it the table, and the call was sometimes
   skipped: with a second table whose `day` column held text where the first
   had dates, the assistant answered a note from its summary of the first
-  table and said the column already read as dates.
+  table and said the column already read as dates. (#13207)
