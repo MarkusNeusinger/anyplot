@@ -13,7 +13,9 @@
   the columns fenced), whether
   the user pasted notes with the data (a fixed line, never the notes), on a paste's summary
   turn the data's profile as `get_dataset_profile` returns it (`profile_block`, its texts in
-  the tool's own fences) and, after a paste that replaced data, a fixed sentence that says so, plot
+  the tool's own fences, or a fixed line when it is too large to stand there), so that turn
+  describes the table in force also when the root does not call the tool, and, after a paste
+  that replaced data, a fixed sentence that says so, plot
   versions and the latest version's theme, so a change keeps it, and the plot memory's
   entries with their ids, inside a `<tool_notes>` fence). The root's
   `before_model_callback` (`add_session_context`) appends it to the system
@@ -77,14 +79,14 @@ from .plugins.reply_language import ReplyLanguagePlugin
 from .plugins.root_refusal import RootRefusalPlugin
 from .plugins.scope_guard import ScopeGuardPlugin, withheld_messages, without_refused_turns
 from .plugins.shipped_reply import ShippedReplyPlugin
-from .plugins.tool_safety import ToolSafetyPlugin
+from .plugins.tool_safety import ToolSafetyPlugin, result_size
 from .policy import fence, root_instruction
 from .services import get_services
 from .session_state import plot_language, read_conversions_made, read_session, user_bound
 from .settings import get_settings
 from .sub_agents.adapter import ADAPTERS
 from .sub_agents.reviewer import reviewer
-from .tools.session import SESSION_TOOLS, plot_pipeline, profile_result
+from .tools.session import PROFILE_RESULT_BYTES, SESSION_TOOLS, plot_pipeline, profile_result
 
 
 logger = logging.getLogger(__name__)
@@ -201,11 +203,21 @@ Production, 2026-11-19, two runs of two: a second table with a column `day` of t
 dates, and the root answered the note sent with it from its own summary of the first table ("already reads as dates"),
 with no tool call. The fact is the server's numbering of the paste, never a reading of the conversation."""
 PROFILE_HEADING = (
-    "Profile of the data in force now: what get_dataset_profile returns for it, each field under the tool's own name "
-    "(see 'Step 1: the data')"
+    "Profile of the data in force now: what get_dataset_profile returns for it, each field under the tool's own name"
 )
-"""The session block's heading over the current data's profile on a paste's summary turn (`profile_block`): the
-summary is written from it in one model call, and the turn's own change of the data shows in it on the next call."""
+"""The session block's heading over the current data's profile on a paste's summary turn (`profile_block`).
+
+The root still calls `get_dataset_profile` for the summary, which leaves the table's description in the conversation
+for the turns after it; the block puts the table in force in front of the root also when it skips the call, and a
+change of the data in the turn shows in it on the next model call. A plain statement of what follows: it neither
+tells the root to skip the tool nor points to a rule that would."""
+PROFILE_TOO_LARGE_LINE = (
+    "- Profile of the data in force now: too large to stand in this block; get_dataset_profile reads it"
+)
+"""The session block's line in place of the profile when the tool's result, after the tool's own trim, is larger than
+`tools.session.PROFILE_RESULT_BYTES`: the bindings text is never trimmed, so in a table of 50 columns named with 64
+four-byte characters ten bound columns already pass it and fifty reach 28 KB, and the block, which has no size check
+behind it as the tool's result has, stays within the profile's cap."""
 PROFILE_FIELDS = ("rows", "bindings", "to_long", "profile", "truncated")
 """The fields of `tools.session.profile_result` the session block lists, in the tool's order: a count, a flag and the
 texts the tool fences as data under its preamble. A field outside this list stays out of the block, which has
@@ -280,7 +292,12 @@ def profile_block(result: Mapping[str, Any]) -> str:
     """What `get_dataset_profile` returns (`tools.session.profile_result`) as the session block lists it: the heading,
     then one `name: value` line per field of `PROFILE_FIELDS` the result holds. A text field is the tool's own text,
     the preamble and the fence that hold the user's column names and cells, as is, so its line breaks stay real; a
-    count or a flag is written as JSON writes it."""
+    count or a flag is written as JSON writes it.
+
+    A result larger than `PROFILE_RESULT_BYTES`, measured as the tool measures it, gives `PROFILE_TOO_LARGE_LINE`
+    alone, no field of it."""
+    if result_size(dict(result)) > PROFILE_RESULT_BYTES:
+        return PROFILE_TOO_LARGE_LINE
     lines = [f"- {PROFILE_HEADING}"]
     for name in PROFILE_FIELDS:
         if name in result:
@@ -307,7 +324,8 @@ async def session_context(context: ReadonlyContext) -> str:
     On every call of a paste's summary turn the current data's profile follows the line
     that says it was pasted, as `get_dataset_profile` returns it (`profile_block`): the
     column names, cells and bindings inside the tool's own `<user_data>` fences under its
-    data preamble, only the heading, the field names and the counts outside them.
+    data preamble, only the heading, the field names and the counts outside them, or
+    `PROFILE_TOO_LARGE_LINE` alone when the result is larger than the profile's cap.
     """
     view = read_session(context.state)
     if view is None:
@@ -436,8 +454,9 @@ async def session_context(context: ReadonlyContext) -> str:
                 # The view of the data this paste replaced, which would fit the new table too: named, never applied.
                 lines.append(VIEW_BEFORE_LINE)
                 lines.append(fence("tool_notes", before))
-            # The table that arrived, as the tool returns it, so the summary needs no call to read it. Read from the
-            # version in force at each call: the server's conversions before the first, the root's own change after.
+            # The table in force, as the tool returns it, so the turn describes this table also when the root does not
+            # call the tool, which it still does for the summary. Read from the version in force at each call: the
+            # server's conversions before the first, the root's own change after.
             lines.append(profile_block(profile_result(view, dataset)))
         if ledger is not None and ledger.paste_context:
             # The note's turn: the paste's notes and file name, fenced with their preambles, for every call of the

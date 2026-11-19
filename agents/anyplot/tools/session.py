@@ -12,7 +12,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   judge, those notes as `user_notes`, fenced as `<user_notes>` after their own preamble
   (`policy.user_notes_block`), so the root can read them again in a later turn. The
   session block of a paste's summary turn carries the same result without the notes and the
-  file's name (`profile_result`, `agent.profile_block`), so the summary needs no call.
+  file's name (`profile_result`, `agent.profile_block`), so that turn describes the table in
+  force also when the root does not call the tool.
 * `get_spec_brief`: title, description, data roles and notes of the spec, fenced as
   `<spec_text>` (spec text starts as a public issue).
 * `get_current_code(version)`: the exported `plot.py` of a version (0 is the latest),

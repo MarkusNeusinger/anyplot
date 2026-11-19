@@ -2,10 +2,12 @@
 
 Production, 2026-11-19, two runs of two: a session held a table with a column `day` of dates and its summary; the
 user pasted a replacement whose `day` held text and typed "Convert the column day to dates." with it. The root made
-no tool call and answered from its own earlier summary ("already reads as dates"). The server now hands the root the
-new table on every model call of the summary turn (`agent.profile_block`, built by `tools.session.profile_result`),
-and says when the paste replaced data the session held (`agent.REPLACED_DATA_LINE`). The block has instruction
-priority, so every header and cell stands inside the tool's own fence.
+no tool call and answered from its own earlier summary ("already reads as dates"). The server now puts the new table
+in front of the root on every model call of the summary turn (`agent.profile_block`, built by
+`tools.session.profile_result`), so the turn describes this table also when the root skips the call it still makes
+for the summary, and says when the paste replaced data the session held (`agent.REPLACED_DATA_LINE`). The block has
+instruction priority, so every header and cell stands inside the tool's own fence, and it stays within the profile's
+cap (`agent.PROFILE_TOO_LARGE_LINE`).
 """
 
 import re
@@ -16,21 +18,31 @@ from typing import Any, cast
 import httpx
 import pytest
 
-from agents.anyplot import agent as agent_module
 from agents.anyplot.agent import (
     PASTED_LINE,
     PROFILE_FIELDS,
     PROFILE_HEADING,
+    PROFILE_TOO_LARGE_LINE,
     REPLACED_DATA_LINE,
     profile_block,
     session_context,
 )
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.dev_fixture import snapshot_from_repo
-from agents.anyplot.policy import DATA_PREAMBLE, FENCE_TAGS, root_instruction
+from agents.anyplot.plugins.tool_safety import RESULT_KEYS, result_size
+from agents.anyplot.policy import DATA_PREAMBLE, FENCE_TAGS
 from agents.anyplot.services import Services
-from agents.anyplot.session_state import BINDINGS, DATASET_ID, SUMMARY_PENDING, initial_state, read_session
-from agents.anyplot.tools.session import get_dataset_profile, profile_result
+from agents.anyplot.session_state import (
+    BINDINGS,
+    DATASET_ID,
+    DATASET_ORIGINAL,
+    DATASET_TOP,
+    DATASET_VERSION,
+    SUMMARY_PENDING,
+    initial_state,
+    read_session,
+)
+from agents.anyplot.tools.session import PROFILE_RESULT_BYTES, get_dataset_profile, profile_result
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import default_script
@@ -170,8 +182,8 @@ async def test_the_turn_after_the_summary_reads_the_table_with_the_tool(client: 
 async def test_a_summary_action_on_summarized_data_carries_no_profile(
     client: httpx.AsyncClient, swap_models, runtime: Runtime
 ) -> None:
-    """The page sends the action right after a paste; one on data already summarized gets no profile, and root.md has
-    the root call the tool when the block carries none."""
+    """The page sends the action right after a paste; one on data already summarized is no summary turn, and its block
+    carries no profile."""
     fake = swap_models("anthropic-vertex", default_script())
     root_says(fake, {"text": "4 rows."})
     sid = await open_spec(client, "scatter-basic")
@@ -182,7 +194,6 @@ async def test_a_summary_action_on_summarized_data_carries_no_profile(
 
     [seen] = blocks(fake)
     assert PROFILE_HEADING not in seen and PASTED_LINE not in seen
-    assert "or when the block carries no such profile" in root_instruction()
 
 
 async def test_after_the_roots_own_change_the_block_shows_the_new_version(
@@ -293,8 +304,6 @@ class TestFence:
 class TestSharedResult:
     def test_the_block_lists_every_field_the_tool_can_return_but_the_two_it_carries_elsewhere(self) -> None:
         """A field the tool gains must be listed here or kept out of the block on purpose."""
-        from agents.anyplot.plugins.tool_safety import RESULT_KEYS
-
         listed = {"status", *PROFILE_FIELDS}
         elsewhere = {"user_notes", "file_name"}  # the action's message and the note's paste context carry them
         refusals = {"reason", "code"}  # `not_ready` and `error` answers, never built by `profile_result`
@@ -313,7 +322,66 @@ class TestSharedResult:
 
         assert list(result) == ["status", "rows", "profile"] and result["rows"] == 4
 
-    def test_the_prompt_names_the_heading_the_block_writes(self) -> None:
-        assert PROFILE_HEADING.startswith("Profile of the data in force now")
-        assert '"Profile of the data in force now"' in root_instruction()
-        assert agent_module.PROFILE_HEADING == PROFILE_HEADING
+
+class TestSize:
+    """The block keeps the cap of the tool's profile: the bindings text is never trimmed, so 50 bound columns with
+    names of 64 four-byte characters make a result of about 28 KB, past the profile's 16 KiB."""
+
+    NAMES = tuple(("\U0001f600" * 60) + f"{index:04d}" for index in range(50))
+    TABLE = (
+        ",".join(NAMES) + "\n" + "".join(",".join(str(row * 50 + col) for col in range(50)) + "\n" for row in range(30))
+    )
+
+    async def summary_block(self, services: Services, bound: int, *, number: int = 1) -> str:
+        """The block of the summary turn of `TABLE` on `line-multi` with its first `bound` columns bound (x, then y1,
+        y2, ...), stored under the session's number `number`."""
+        state = initial_state(
+            spec_id="line-multi",
+            library="matplotlib",
+            locale="en",
+            snapshot=snapshot_from_repo("line-multi", "matplotlib"),
+            normalised="x = 1",
+            readiness={},
+        )
+        dataset_id = services.datasets.put("s1", parse_dataset(self.TABLE), number=number)
+        roles = ["x", *(f"y{index}" for index in range(1, bound))]
+        state.update(
+            {
+                DATASET_ID: dataset_id,
+                DATASET_ORIGINAL: dataset_id,
+                DATASET_VERSION: number,
+                DATASET_TOP: number,
+                SUMMARY_PENDING: dataset_id,
+                BINDINGS: [{"role": role, "column": name} for role, name in zip(roles, self.NAMES, strict=False)],
+            }
+        )
+        context = SimpleNamespace(state=state, session=SimpleNamespace(id="s1", events=[]), invocation_id="i1")
+        return await session_context(cast(Any, context))
+
+    def result_of(self, bound: int) -> dict[str, Any]:
+        roles = ["x", *(f"y{index}" for index in range(1, bound))]
+        view = SimpleNamespace(
+            bindings=[SimpleNamespace(role=role, column=name) for role, name in zip(roles, self.NAMES, strict=False)],
+            snapshot=snapshot_from_repo("line-multi", "matplotlib"),
+            language="en",
+        )
+        return profile_result(cast(Any, view), cast(Any, SimpleNamespace(profile=parse_dataset(self.TABLE).profile)))
+
+    def test_the_measured_cases_lie_on_both_sides_of_the_cap(self) -> None:
+        assert result_size(self.result_of(2)) <= PROFILE_RESULT_BYTES < result_size(self.result_of(50))
+
+    async def test_a_profile_within_the_cap_stands_in_the_block_trimmed(self, services: Services) -> None:
+        block = await self.summary_block(services, 2)
+
+        assert HEADING_LINE in block.splitlines() and PROFILE_TOO_LARGE_LINE not in block
+        assert "truncated: true" in block.splitlines() and self.NAMES[49] in field(block, "profile")
+
+    async def test_a_profile_past_the_cap_leaves_only_the_fixed_line(self, services: Services) -> None:
+        block = await self.summary_block(services, 50, number=2)
+
+        lines = block.splitlines()
+        assert PROFILE_TOO_LARGE_LINE in lines and HEADING_LINE not in lines
+        assert not [line for line in lines if re.match(rf"^({'|'.join(PROFILE_FIELDS)}): ", line)]
+        assert self.NAMES[49] not in block  # neither in a profile field nor in the bindings
+        # The replaced-data sentence still stands.
+        assert f"{PASTED_LINE}{REPLACED_DATA_LINE}" in lines
