@@ -609,7 +609,7 @@ async function readDataJson(file) {
 function buildHtml({ tokens, bundleSource, snippetSource, css, library = null, sandbox = null, dataJson = null, recordTexts = false }) {
   // The bundle + snippet are inlined so the written plot-<theme>.html is fully
   // self-contained (no CDN, no network). JSON.stringify keeps the token/theme
-  // injection injection-safe.
+  // injection safe.
   //
   // Sandbox mode (`sandbox`: the code file's and the bundle's names) adds the
   // content security policy, error locations for the final error line and a
