@@ -58,11 +58,28 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
 - **Exact pins in `python-minor` are the owner's call.** `google-adk`, `tree-sitter`, and
   `tree-sitter-language-pack` are pinned exactly in the `agents` extra, and their pin tests
   (`tests/unit/agents/test_adk_pin.py`, `tests/unit/agents/code/test_treesitter.py`) fail by
-  design when the group moves them. Don't move the test constants to get a green run: the last
-  ADK bump (#12426) needed production fixes in `VertexClaude`. Ask the owner whether to hold the
-  PR for a deliberate upgrade (a Todoist task) or to upgrade now: read the ADK changelog, then
-  move `ADK_VERSION`, `TREE_SITTER_VERSION`, and the version in
-  `docs/concepts/agent-network.md`. On 2026-11-18 the owner held #13137.
+  design when the group moves them. Don't move the test constants to get a green run: the
+  2.12-to-2.13 bump (#12426) needed production fixes in `VertexClaude`. Ask the owner whether to
+  hold the PR for a deliberate upgrade (a Todoist task) or to upgrade now. An upgrade (#13137,
+  2.13 to 2.14.1) checks the source, because the release notes don't name what breaks here:
+  1. Read the breaking and behavior changes of every release in the range against the agents
+     code (`git grep` the APIs they name).
+  2. Diff the files `agents/anyplot/models.py` builds on between the two tags (`gh api
+     repos/google/adk-python/contents/<path>?ref=<tag>`): `src/google/adk/models/anthropic_llm.py`
+     (`_build_anthropic_kwargs`, `generate_content_async`, `_apply_cache_breakpoints`,
+     `_OutputSchemaTool`, the usage fields the ledger reads) and
+     `src/google/adk/flows/llm_flows/basic.py`, which decides when a request carries
+     `response_schema`. In 2.14 that also depends on transfer targets: the adapter and the
+     reviewer keep the schema only as `single_turn` agents without a parent.
+  3. Check the invariant in `agents/main.py` that `InMemorySessionService.get_session` and
+     `append_event` contain no yielding `await`, and name the version in that comment.
+  4. Run `test_create_plot_streams_to_an_ok_plot_result` (it drives the real ADK flow with a
+     fake Anthropic client) and the full suite. A pack bump needs its grammars first: `uv run
+     python -m tools.tree_sitter_grammars`, since the cache directory is per pack version.
+  5. Move `ADK_VERSION`, `TREE_SITTER_VERSION`, and the version in
+     `docs/concepts/agent-network.md`, put the findings at the top of the PR body, and offer the
+     owner a real-model check (`agents.evals.prep` and `agents.evals.scope`, about $0.30), since
+     the suites use fakes and the site smoke never touches the chat.
 - **Other majors:** read the breaking changes in the PR body against how the repository uses the
   package (`git grep` the import), then run what uses it on the merged tree: the matching tests,
   or a short `yarn dev` for a dev-only Vite plugin (vite-plugin-checker 1.0, #13135, changed its
