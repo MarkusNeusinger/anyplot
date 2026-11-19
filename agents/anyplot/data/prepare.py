@@ -2050,35 +2050,43 @@ def range_run(frame: pd.DataFrame, column: str, decimal: str = ".") -> RangeRun 
 
 @dataclass(frozen=True)
 class UnreadDates:
-    """A text column that looks like dates the date list leaves unread (`unread_dates`): the column, and why its dates
-    would not read, in the words of a refused conversion to dates (`_unread_words`)."""
+    """A text column that looks like dates no conversion to dates without a format takes (`unread_dates`): the
+    column, and why its dates would not read, in the words of that conversion's refusal."""
 
     column: str
     why: str
 
 
-_NUMBERED_START = re.compile(r"([0-9]{1,4})([/.-])([0-9]{1,2})\2([0-9]{1,4})(?![0-9])")
-"""Three numbers joined by one separator at the start of a cell, the first and the last of one to four digits and the
-middle of one or two (`2026/03/01`, `01.03.26`, `3/13/26`, `2026-03-01 10:00:00 UTC`): the shape of a date, whatever
-follows it, also where the date list reads no form."""
+_YEAR_FIRST = re.compile(r"[0-9]{4}([/.-])[0-9]{1,2}\1[0-9]{1,2}(?![0-9])")
+"""A date with its year first at the start of a cell: four digits, then two numbers of one or two digits, joined by one
+and the same separator, and no further digit (`2026/03/01`). Whatever follows is allowed: a time in a form the list
+does not read (`2026-03-01 10:00:00 UTC`) or an hour label (`2026-03-01-00`)."""
+_YEAR_LAST = re.compile(r"[0-9]{1,2}([/.-])[0-9]{1,2}\1(?:[0-9]{4}|[0-9]{2})(?=\Z|[ T])")
+"""A date with its year last at the start of a cell: two numbers of one or two digits, then a year of two or four
+digits, joined by one and the same separator, and after it the end of the cell, a space or `T` (`01.03.26`, `3/13/26`,
+`3/1/2026 10:00:00 AM`). The end keeps out what has more numbers or fewer digits: a version (`1.2.3`), an address
+(`10.0.0.1`, `12.10.24.3`), a formation (`4-4-2`), a record (`2-1-0`) or an id (`123-45-6789`)."""
 _LETTERS = re.compile(r"[^\W\d_]+")
 """A run of letters, as the date list takes a month written as a word (`parse._MONTH_WORD`): a month written with its
 number and a marker (`3月`) is no such word, so `2026年3月1日` holds no month name, as the list reads no day in it."""
+_YEAR = re.compile(r"(?<![0-9])[0-9]{4}(?![0-9])")
+"""Four digits on their own, the year beside a month name (`1st March 2026`): without one, a word that is also a month
+abbreviation (`Set 1`, `Gen 2`, `Out 3`) and a day without a year (`Mar 1`) look like no date."""
 
 
 def unread_dates(frame: pd.DataFrame, column: str) -> UnreadDates | None:
-    """The text column `column` of `frame` when it looks like dates that the date list (`parse.read_dates`) leaves
-    unread, with why; else None.
+    """The text column `column` of `frame` when it looks like dates that a conversion to dates without a format would
+    not take, with why; else None.
 
-    A cell looks like a date when the list reads it, or leaves it unread as a day that does not exist or as a slash
-    date of no single order, or, in no form of the list, when it starts with three numbers joined by one separator
-    (`_NUMBERED_START`) or holds a number and a month name the list knows (`months.month_number`: `1st March 2026`).
-    The column does when at most `MAX_FAILED_SHARE` of its non-empty cells do not, the share past which `set_type`
-    refuses, and when the list leaves a cell unread: a column whose every cell reads although no conversion takes it
-    (times with and without an offset) has no unread dates to name. A column of `YYYY-NN` cells alone is none, as
+    A cell looks like a date when the date list (`parse.read_dates`) reads it, or leaves it unread as a day that does
+    not exist or as a slash date of no single order, or, in no form of the list, when it starts with a date of the
+    year first (`_YEAR_FIRST`) or the year last (`_YEAR_LAST`), or holds a year and a month name the list knows
+    (`_YEAR`, `months.month_number`: `1st March 2026`). The column does when at most `MAX_FAILED_SHARE` of its
+    non-empty cells do not, the share past which `set_type` refuses, and when the conversion would not take it: the
+    list leaves a cell unread (`_unread_words` says why), or the cells read hold times with and without a UTC offset,
+    which `set_type` refuses as a whole (`_naive_and_zoned` says why). A column of `YYYY-NN` cells alone is none, as
     for `dry_run`: the parser reads months of that shape itself, so one it kept text is a span of years (`2012-13`
-    beside `2009-10`) or holds ids. The reasons are counted per cell, as a refused conversion counts them
-    (`_date_conversion`).
+    beside `2009-10`) or holds ids. Cells are counted with their repeats, as the refusal counts them.
     """
     series = frame[column]
     if _kind(series) != "text":
@@ -2087,23 +2095,25 @@ def unread_dates(frame: pd.DataFrame, column: str) -> UnreadDates | None:
     if all(YEAR_MONTH.fullmatch(cell) for cell in cells):
         return None
     listed = read_dates(cells)
-    if not listed.unread:
+    moments = [listed.moments[cell] for cell in cells if cell in listed.moments]
+    zoned = sum(moment.tzinfo is not None for moment in moments)
+    if zoned and zoned < len(moments):
+        why = _naive_and_zoned(column, zoned, len(moments) - zoned).message
+    elif listed.unread:
+        why = _unread_words(Counter(listed.unread[cell] for cell in cells if cell in listed.unread))
+    else:
         return None
     unlike = sum(not _date_like(cell, listed) for cell in cells)
-    if unlike > MAX_FAILED_SHARE * len(cells):
-        return None
-    return UnreadDates(column, _unread_words(Counter(listed.unread[cell] for cell in cells if cell in listed.unread)))
+    return UnreadDates(column, why) if unlike <= MAX_FAILED_SHARE * len(cells) else None
 
 
 def _date_like(cell: str, listed: DateCells) -> bool:
     """Whether a cell of a column the date list read (`unread_dates`) looks like a date."""
     if listed.unread.get(cell) != "no_form":
         return True  # read, a day that does not exist, or a slash date of no single order
-    if _NUMBERED_START.match(cell):
+    if _YEAR_FIRST.match(cell) or _YEAR_LAST.match(cell):
         return True
-    return any("0" <= char <= "9" for char in cell) and any(
-        month_number(word) is not None for word in _LETTERS.findall(cell)
-    )
+    return _YEAR.search(cell) is not None and any(month_number(word) is not None for word in _LETTERS.findall(cell))
 
 
 def _numbers_of(cells: list[str], decimal: str) -> Conversion | None:

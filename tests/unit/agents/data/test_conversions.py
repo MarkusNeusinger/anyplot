@@ -21,6 +21,7 @@ from agents.anyplot.data.prepare import (
     SLASH_ORDER,
     DryRun,
     Operation,
+    PrepareError,
     RangeRun,
     UnreadDates,
     apply_operations,
@@ -336,9 +337,14 @@ def day_column(cells: list[str], name: str = "day") -> str:
 
 SLASHES = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"]
 NO_SUCH_DAY = "1 cell names a day that does not exist, such as 31 November"
+MIXED_ZONES = ["2026-03-01T10:00Z", "2026-03-02T10:00", "2026-03-03T10:00Z", "2026-03-04T10:00"]
+NAIVE_AND_ZONED = (
+    "column 'day' holds 2 cells with a UTC offset and 2 cells without one; no cell is given a zone by guess, so the "
+    "column stays as it is"
+)
 UNREAD = {
-    # The row numbers took the date axis unasked beside these: a form outside the date list, or dates the list
-    # leaves unread for a reason of its own.
+    # The row numbers took the date axis unasked beside these: a form outside the date list, dates the list leaves
+    # unread for a reason of its own, or dates it reads that a conversion refuses as a whole.
     "a slashes year first": (SLASHES, DATE_FORMS),
     "b ordinal day": (["1st March 2026", "2nd March 2026", "3rd March 2026", "4th March 2026"], DATE_FORMS),
     "c one 31.02. in four": (["28.02.2026", "31.02.2026", "01.03.2026", "02.03.2026"], NO_SUCH_DAY),
@@ -350,6 +356,8 @@ UNREAD = {
     "k a range of times after the date": ([f"2026-03-0{day} 08:00-16:30" for day in range(1, 5)], DATE_FORMS),
     "l two-digit year with dots": ([f"0{day}.03.26" for day in range(1, 5)], DATE_FORMS),
     "m two-digit year with slashes": ([f"3/{day}/26" for day in range(13, 17)], DATE_FORMS),
+    "an hour label after the date": ([f"2026-03-01-0{hour}" for hour in range(4)], DATE_FORMS),
+    "times with and without a UTC offset": (MIXED_ZONES, NAIVE_AND_ZONED),
 }
 CERTAIN_ROW_NUMBERS = {
     # Never read, and no date look the rule takes either: these keep their row numbers unasked.
@@ -371,17 +379,34 @@ CERTAIN_ROW_NUMBERS = {
     ),
     "a name that says ids": (day_column(SLASHES, "Order ID"), LINE, ()),
     "spans of years": (day_column(["2009-10", "2010-11", "2011-12", "2012-13"], "period"), LINE, ()),
-    "times with and without an offset, every cell read": (
-        day_column(["2026-03-01T10:00Z", "2026-03-02T10:00", "2026-03-03T10:00Z", "2026-03-04T10:00"]),
+    # A word that is also a month abbreviation, or a month without a year: no year beside the name.
+    "sets": (day_column(["Set 1", "Set 2", "Set 3", "Set 4"], "label"), LINE, ()),
+    "generations": (day_column(["Gen 1", "Gen 2", "Gen 3", "Gen 4"], "label"), LINE, ()),
+    "outs": (day_column(["Out 1", "Out 2", "Out 3", "Out 4"], "label"), LINE, ()),
+    "a month and a day without a year": (day_column(["Mar 1", "Mar 2", "Mar 3", "Mar 4"], "label"), LINE, ()),
+    # Numbers joined by dots or dashes in no shape of a date: more numbers, fewer digits or a three-digit part.
+    "addresses 10.0.0.x": (day_column(["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4"], "host"), LINE, ()),
+    "addresses 10.10.10.x": (day_column(["10.10.10.1", "10.10.10.2", "10.10.10.3", "10.10.10.4"], "host"), LINE, ()),
+    "addresses 192.168.1.x": (
+        day_column(["192.168.1.1", "192.168.1.2", "192.168.1.3", "192.168.1.4"], "host"),
         LINE,
         (),
     ),
+    "formations": (day_column(["4-4-2", "4-3-3", "3-5-2", "4-2-3-1"], "formation"), LINE, ()),
+    "records": (day_column(["2-1-0", "3-0-1", "1-1-2", "0-2-2"], "record"), LINE, ()),
+    "ids of three groups": (
+        day_column(["123-45-6789", "234-56-7890", "345-67-8901", "456-78-9012"], "number"),
+        LINE,
+        (),
+    ),
+    "versions": (day_column(["1.2.3", "1.2.4", "1.2.5", "1.3.0"], "label"), LINE, ()),
+    "four numbers with dots": (day_column(["12.10.24.3", "12.10.24.4", "12.10.24.5", "12.10.24.6"], "label"), LINE, ()),
 }
 
 
 class TestRowNumbersBesideUnreadDates:
-    """A text column that looks like dates the date list leaves unread: the row numbers wait for a yes on an axis
-    that takes dates, since the user may mean those dates, and the line says why they would not read."""
+    """A text column that looks like dates no conversion takes: the row numbers wait for a yes on an axis that takes
+    dates, since the user may mean those dates, and the line says why they would not read."""
 
     @pytest.mark.parametrize(("cells", "why"), list(UNREAD.values()), ids=list(UNREAD))
     def test_the_row_numbers_are_a_question(self, cells: list[str], why: str) -> None:
@@ -403,6 +428,16 @@ class TestRowNumbersBesideUnreadDates:
             "would not read: the chat reads 2026-03-01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a time, "
             'and months such as 2026-03 or Mar 2026; operations: [{"op": "row_number", "name": "index"}]'
         )
+
+    def test_times_with_and_without_an_offset_say_what_the_refused_conversion_says(self) -> None:
+        text = day_column(MIXED_ZONES)
+        conversion = OPERATIONS.validate_python([{"op": "set_type", "column": "day", "type": "datetime"}])
+
+        [candidate] = found(text, roles=parse_roles(LINE))
+
+        with pytest.raises(PrepareError) as refused:
+            apply_operations(parse_dataset(text), conversion)
+        assert isinstance(candidate, RowNumbers) and candidate.unread == UnreadDates("day", refused.value.message)
 
     @pytest.mark.parametrize(
         ("text", "line_roles", "keep_text"), list(CERTAIN_ROW_NUMBERS.values()), ids=list(CERTAIN_ROW_NUMBERS)

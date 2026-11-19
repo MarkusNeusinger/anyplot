@@ -7,6 +7,6 @@
   plot, made without a question and without a word about the dates. Now the
   chat asks first: it names the column, says why its dates do not read, and
   lists the forms it reads. The same holds for a column with a day that does
-  not exist or with slash dates whose order of day and month is not settled.
-  A list of values without such a column still gets its row numbers as
-  before.
+  not exist, with slash dates whose order of day and month is not settled, or
+  with times with and without a UTC offset in one column. A list of values
+  without such a column still gets its row numbers as before.

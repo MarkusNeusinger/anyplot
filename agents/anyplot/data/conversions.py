@@ -66,13 +66,14 @@ Last comes the row number, when no column and no conversion can fill the open ro
 (`RowNumbers`, `bindings.row_slot`, the owner's live test of 2026-11-02: `1,3,5,4,6,2` on a
 line plot). On a required axis it counts as `certain`: the column `index` holds 1 to n, the axis
 takes it, and a number column that sat there moves to the open measure, with one line in
-the reply. On an axis that takes dates, a free text column that looks like dates the date list
-leaves unread (`prepare.unread_dates`: `2026/03/01`, `1st March 2026`, `2026-03-01 10:00:00 UTC`, a
-day that does not exist, slash dates of no single order) makes it `uncertain` instead: the user
-may mean those dates, so the root asks, and the line names the column and says why its dates
-would not read in the words of a refused conversion (`prepare._unread_words`), the forms the chat
-reads among them. On a role that names each row (a bar chart without labels) it is `uncertain`: the
-root offers it as its one question. A row-number column the paste already has is reused, and
+the reply. On an axis that takes dates, a free text column that looks like dates no conversion
+takes (`prepare.unread_dates`: `2026/03/01`, `1st March 2026`, `2026-03-01 10:00:00 UTC`, a day
+that does not exist, slash dates of no single order, times with and without a UTC offset in one
+column) makes it `uncertain` instead: the user may mean those dates, so the root asks, and the
+line names the column and says why its dates would not read in the words of the refused
+conversion, the forms the chat reads among them. On a role that names each row (a bar chart
+without labels) it is `uncertain`: the root offers it as its one question. A row-number column
+the paste already has is reused, and
 nothing here runs for `/dataset/copy`, which copies confirmed data byte for byte.
 
 A date column is never a number candidate, but a required role that takes numbers only (`bindings.is_measure`),
@@ -273,7 +274,7 @@ class RowNumbers:
     name: str
     rows: int
     unread: UnreadDates | None = None
-    """A free text column that looks like dates the date list leaves unread, for an axis that takes dates
+    """A free text column that looks like dates no conversion takes, for an axis that takes dates
     (`prepare.unread_dates`): the user may mean those dates, so the row numbers wait for a yes."""
 
     @property
@@ -382,8 +383,8 @@ def candidates(
     it takes only a column no binding holds and gives each column to one role: a column on
     several roles is the user's choice only (`bindings.check_bindings`). `keep_text` names the
     columns kept text on request, `cache` holds the dry runs by column and type
-    (`StoredDataset.dry_runs`; `range` for the ranges, `unread` for dates the list leaves
-    unread); `parsed` is read into a frame only when a dry run is due. With no conversion at all,
+    (`StoredDataset.dry_runs`; `range` for the ranges, `unread` for dates no conversion
+    takes); `parsed` is read into a frame only when a dry run is due. With no conversion at all,
     the row numbers (`RowNumbers`), `uncertain` on an axis that takes dates while a free column
     looks like dates that would not read. Last, an offer of a free date column for each open role
     that takes numbers only and that none of these fills (`DateNumbers`).
@@ -522,9 +523,9 @@ def _row_numbers(
 ) -> list[Candidate | RangeSplit | RowNumbers]:
     """The row numbers as the one candidate, when `bindings.row_slot` finds them a role.
 
-    On an axis that takes dates, the first of the `free` text columns that looks like dates the date list leaves
-    unread (`unread`) makes them `uncertain`: numbering the rows unasked would draw them in place of what the user
-    may mean as dates, so the root asks, and the line says why the dates would not read.
+    On an axis that takes dates, the first of the `free` text columns that looks like dates no conversion takes
+    (`unread`) makes them `uncertain`: numbering the rows unasked would draw them in place of what the user may mean
+    as dates, so the root asks, and the line says why the dates would not read.
     """
     slot = row_slot(bindings, roles, profile)
     if slot is None:
