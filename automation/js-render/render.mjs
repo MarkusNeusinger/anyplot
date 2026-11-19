@@ -50,12 +50,13 @@
 //                              typed_json.py), injected as window.ANYPLOT_DATA
 //   ANYPLOT_IMPORT_ALLOWLIST   the allowlist file (default: import-allowlist.json
 //                              next to this harness, where the image puts it)
-//   ANYPLOT_PAGE_ONLY=1        with ANYPLOT_SANDBOX=1 only: build the page as a
-//                              render would (the policy, the data, MUI X through
-//                              the closed import plugin), write plot-<theme>.html
-//                              whatever ANYPLOT_NO_HTML says, and exit without
-//                              starting Chromium: the agents' downloadable
-//                              plot.html (JS-4b)
+//   ANYPLOT_PAGE_ONLY=1        with ANYPLOT_SANDBOX=1 only: build the written
+//                              plot-<theme>.html page of a sandbox render (the
+//                              policy, the data, MUI X through the closed import
+//                              plugin, never the in-memory Chart.js canvas text
+//                              recorder), write plot-<theme>.html whatever
+//                              ANYPLOT_NO_HTML says, and exit without starting
+//                              Chromium: the agents' downloadable plot.html (JS-4b)
 //
 // The final error line (sandbox mode): on any failure the LAST line on stderr is
 //   render: error: <kind> <Class> <file>:<line>: <message>
@@ -605,21 +606,24 @@ async function readDataJson(file) {
   return text.replace(SCRIPT_BREAKING, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`);
 }
 
-function buildHtml({ tokens, bundleSource, snippetSource, css, library = null, sandbox = null, dataJson = null }) {
-  // The bundle + snippet are inlined so the written .html is fully self-contained
-  // (no CDN, no network) — the same page is screenshotted and shipped as the
-  // interactive deliverable. JSON.stringify keeps the token/theme injection
-  // injection-safe.
+function buildHtml({ tokens, bundleSource, snippetSource, css, library = null, sandbox = null, dataJson = null, recordTexts = false }) {
+  // The bundle + snippet are inlined so the written plot-<theme>.html is fully
+  // self-contained (no CDN, no network). JSON.stringify keeps the token/theme
+  // injection injection-safe.
   //
   // Sandbox mode (`sandbox`: the code file's and the bundle's names) adds the
-  // content security policy, error locations for the final error line, a
-  // `//# sourceURL` per script so a stack names the snippet's frames
-  // (`plot.js:6:12`) apart from the bundle's, and on a Chart.js render run
-  // (`!PAGE_ONLY`) the 2D canvas text recorder (`CANVAS_TEXT_RECORDER`) right
-  // after the library bundle and before the snippet. `dataJson` (readDataJson)
-  // becomes window.ANYPLOT_DATA: one object per row in column order, the shape
+  // content security policy, error locations for the final error line and a
+  // `//# sourceURL` per script, so a stack names the snippet's frames
+  // (`plot.js:6:12`) apart from the bundle's. `dataJson` (readDataJson) becomes
+  // window.ANYPLOT_DATA: one object per row in column order, the shape
   // d3.csvParse returns (with `.columns`), each value already typed. Without
-  // either, the page is the pipeline's, byte for byte.
+  // `sandbox` or `dataJson`, the page is the pipeline's, byte for byte.
+  //
+  // Every written plot-<theme>.html (on a render run and under ANYPLOT_PAGE_ONLY=1)
+  // leaves `recordTexts` false, so no file on disk ever carries the recorder; a
+  // Chart.js sandbox render passes `recordTexts: true` only for the in-memory page
+  // handed to `page.setContent`, inserting `CANVAS_TEXT_RECORDER` in its own
+  // <script> right after the library bundle and before the snippet.
   const csp = sandbox ? `\n<meta http-equiv="Content-Security-Policy" content="${CONTENT_SECURITY_POLICY}" />` : "";
   const dataElement = dataJson === null ? "" : `<script type="application/json" id="anyplot-data">${dataJson}</script>\n`;
   const dataGlobal =
@@ -643,7 +647,7 @@ function buildHtml({ tokens, bundleSource, snippetSource, css, library = null, s
   });`
     : "";
   const bundleName = sandbox ? `\n//# sourceURL=${sandbox.bundleName}` : "";
-  const canvasTexts = sandbox && !PAGE_ONLY && library === "chartjs" ? `\n<script>\n${CANVAS_TEXT_RECORDER}\n</script>` : "";
+  const canvasTexts = recordTexts && sandbox && library === "chartjs" ? `\n<script>\n${CANVAS_TEXT_RECORDER}\n</script>` : "";
   const snippetName = sandbox ? `\n//# sourceURL=${sandbox.snippetName}` : "";
   return `<!doctype html>
 <html lang="en">
@@ -801,8 +805,8 @@ function finalErrorLine(err, context) {
     // document.write, so the window's error event names the document
     // (about:blank) with the line inside the script, and the message carries
     // document.write's prefix (measured with Playwright 1.64). Only the
-    // snippet's script can fail to parse: the context script is the harness's,
-    // the bundle the library's.
+    // snippet's script can fail to parse: the context and recorder scripts are
+    // the harness's, the bundle the library's.
     const page = context.pageError;
     const text = page ? null : String(context.inPageError ?? "");
     const named = text === null ? null : /^([A-Za-z_$][\w$]*): ?(.*)/.exec(text.split("\n", 1)[0]);
@@ -985,17 +989,85 @@ const TICK_LABELS_PER_AXIS = 100; // harness.TICK_LABELS_PER_AXIS, per kind here
 const PAGE_TEXTS_LIMIT = 2000; // texts the page hands back at most
 const CANVAS_TEXT_LIMIT = PAGE_TEXTS_LIMIT * 2; // recorded canvas texts per draw: model ticks plus annotations
 
-// Runs in the page, on a sandbox-mode render run and for Chart.js only, right
-// after the Chart.js bundle and before the plot's code: records what `fillText`
-// and `strokeText` draw visibly inside each canvas, keeping only the last
-// complete `Chart.draw()` pass of each chart so resize and animation redraws
-// never double an entry.
+// Runs in the in-memory render page (`page.setContent`), in sandbox mode and for
+// Chart.js only, right after the Chart.js bundle and before the plot's code:
+// records what `fillText` and `strokeText` draw visibly inside each canvas,
+// skipping zero-alpha styles, zero font sizes and off-canvas points, and keeping
+// only the last complete `Chart.draw()` pass of each chart so resize and
+// animation redraws never double an entry.
 function recordChartjsCanvasTexts(limit) {
   if (typeof CanvasRenderingContext2D === "undefined" || !CanvasRenderingContext2D.prototype) return;
   var proto = CanvasRenderingContext2D.prototype;
   var committed = new WeakMap();
   var loose = new WeakMap();
   var stack = [];
+  var FONT_PRE_KEYWORDS = /^(?:normal|italic|oblique|small-caps|bold|bolder|lighter|(?:ultra-|extra-|semi-)?(?:condensed|expanded))$/;
+  var FONT_SIZE_KEYWORDS = /^(?:xx-small|x-small|small|medium|large|x-large|xx-large|xxx-large|smaller|larger|math)$/;
+  var FONT_ANGLE = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?(?:deg|grad|rad|turn)$/;
+  var FONT_LENGTH_PCT =
+    /^([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)(%|px|pt|pc|in|cm|mm|q|em|rem|ex|ch|cap|ic|lh|rlh|(?:s|l|d)?v(?:w|h|i|b|min|max)|cq(?:w|h|i|b|min|max))$/;
+  var FONT_NUMBER = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/;
+  function isZeroAlphaValue(raw, allowNone) {
+    var token = raw.trim();
+    if (!token) return false;
+    if (allowNone && token === "none") return true;
+    if (token.endsWith("%")) token = token.slice(0, -1).trim();
+    if (!FONT_NUMBER.test(token)) return false;
+    return Number(token) <= 0;
+  }
+  function isTransparentStyle(style) {
+    if (typeof style !== "string") return false;
+    var s = style.trim().toLowerCase();
+    if (!s) return false;
+    if (s === "transparent") return true;
+    if (s.charCodeAt(0) === 35) {
+      return /^#[\da-f]{3}0$/.test(s) || /^#[\da-f]{6}00$/.test(s);
+    }
+    var open = s.indexOf("(");
+    if (open <= 0 || !s.endsWith(")")) return false;
+    var fn = s.slice(0, open);
+    var inner = s.slice(open + 1, -1);
+    var depth = 0;
+    var slashAt = -1;
+    var commas = [];
+    for (var i = 0; i < inner.length; i += 1) {
+      var ch = inner.charAt(i);
+      if (ch === "(") depth += 1;
+      else if (ch === ")") depth = Math.max(0, depth - 1);
+      else if (depth === 0 && ch === "/") slashAt = i;
+      else if (depth === 0 && ch === ",") commas.push(i);
+    }
+    if (slashAt >= 0 && commas.length === 0 && /^(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)$/.test(fn)) {
+      return isZeroAlphaValue(inner.slice(slashAt + 1), true);
+    }
+    if (commas.length === 3 && slashAt < 0 && /^(?:rgba?|hsla?)$/.test(fn)) {
+      return isZeroAlphaValue(inner.slice(commas[2] + 1), false);
+    }
+    return false;
+  }
+  function isZeroFontSize(font) {
+    if (typeof font !== "string") return false;
+    var s = font.trim().toLowerCase();
+    if (!s) return false;
+    var parts = s.split(/\s+/);
+    for (var i = 0; i < parts.length; i += 1) {
+      var token = parts[i];
+      var slash = token.indexOf("/");
+      if (slash === 0) return false;
+      var head = slash > 0 ? token.slice(0, slash) : token;
+      if (slash < 0 && (FONT_PRE_KEYWORDS.test(head) || FONT_ANGLE.test(head))) continue;
+      if (FONT_SIZE_KEYWORDS.test(head)) return false;
+      var sized = FONT_LENGTH_PCT.exec(head);
+      if (sized) return Number(sized[1]) <= 0;
+      if (FONT_NUMBER.test(head)) {
+        var n = Number(head);
+        if (slash < 0 && n >= 1 && n <= 1000) continue;
+        return n <= 0;
+      }
+      return false;
+    }
+    return false;
+  }
   function targetFor(canvas) {
     for (var i = stack.length - 1; i >= 0; i -= 1) {
       if (stack[i].canvas === canvas) return stack[i];
@@ -1015,6 +1087,7 @@ function recordChartjsCanvasTexts(limit) {
     return [x, y];
   }
   function wrap(method) {
+    var styleProp = method === "strokeText" ? "strokeStyle" : "fillStyle";
     var original = proto[method];
     if (typeof original !== "function") return;
     proto[method] = function (value, x, y) {
@@ -1032,7 +1105,9 @@ function recordChartjsCanvasTexts(limit) {
           this &&
           this.canvas &&
           typeof this.globalAlpha === "number" &&
-          this.globalAlpha > 0
+          this.globalAlpha > 0 &&
+          !isTransparentStyle(this[styleProp]) &&
+          !isZeroFontSize(this.font)
         ) {
           var cw = this.canvas.width;
           var ch = this.canvas.height;
@@ -2141,19 +2216,20 @@ async function main() {
   // that IIFE as the page's only library script (snippetSource left empty), so
   // the rest of the pipeline — self-contained HTML, draw check, screenshot — is
   // identical to the framework=none path.
-  let html;
+  let pageInputs;
   if (bundleInfo.framework === "react") {
     const { code, map } = await bundleReactSnippet(filePath);
     CONTEXT.map = map;
-    html = buildHtml({ tokens, bundleSource: code, snippetSource: "", css, library, sandbox, dataJson });
+    pageInputs = { tokens, bundleSource: code, snippetSource: "", css, library, sandbox, dataJson };
   } else {
     const bundlePath = path.join(NODE_MODULES, bundleInfo.dist);
     if (!existsSync(bundlePath)) {
       usage(`render: bundle missing: ${bundlePath}\nRun \`npm ci\` at the repo root first.`);
     }
     const bundleSource = await readFile(bundlePath, "utf-8");
-    html = buildHtml({ tokens, bundleSource, snippetSource, css, library, sandbox, dataJson });
+    pageInputs = { tokens, bundleSource, snippetSource, css, library, sandbox, dataJson };
   }
+  const html = buildHtml(pageInputs);
 
   // Write the self-contained interactive page first — it is a deliverable in its
   // own right and useful for debugging even if the screenshot step later fails.
@@ -2209,8 +2285,9 @@ async function main() {
     // (SETTLE_TIMEOUT_MS), loading the page included: a snippet whose inline
     // script never returns, or a page that never settles, fails as `timeout`.
     const bounded = SANDBOX ? boundedBy(Date.now() + SETTLE_TIMEOUT_MS) : (promise) => promise;
+    const renderHtml = SANDBOX && library === "chartjs" ? buildHtml({ ...pageInputs, recordTexts: true }) : html;
 
-    await bounded(page.setContent(html, { waitUntil: "load" }));
+    await bounded(page.setContent(renderHtml, { waitUntil: "load" }));
 
     // Wait for a render-complete signal. A snippet MAY set window.__anyplotReady
     // (e.g. ECharts `chart.on('finished', ...)`) for precise timing; otherwise we

@@ -2,18 +2,17 @@
 
 Two layers exercise the same acceptance figures against `automation/js-render/render.mjs`:
 
-1. `TestInNode` runs the real `automation/js-render/render.mjs` CLI to build `plot-light.html` (both with
-   `ANYPLOT_SANDBOX=1` and without it), executes the page's `<script>` blocks against the pinned library bundles in
-   `node_modules/` (`chart.js`, `echarts`, `highcharts`) inside a `node:vm` page context with a 2D canvas and DOM
-   shim, and evaluates `pageTexts` and `textLabels` imported directly from `automation/js-render/render.mjs`. It needs
-   only `node` and `node_modules/`, so every acceptance case and mutation check runs without a browser binary.
+1. `TestInNode` runs the real `automation/js-render/render.mjs` CLI end to end (with a `node:vm` Playwright stub on
+   render runs and `NO_BROWSER` on `ANYPLOT_PAGE_ONLY=1`), checking both the `plot-light.html` page written to disk,
+   the in-memory page handed to `page.setContent(...)`, and the `probe-light.json` report written by `writeTextProbe`
+   against the pinned library bundles in `node_modules/` (`chart.js`, `echarts`, `highcharts`). It needs only `node`
+   and `node_modules/`, so every acceptance case and mutation check runs without a browser binary.
 2. `TestInChromium` runs the full Playwright Chromium render (`plot-light.png` + `probe-light.json`) wherever
    Playwright's browser is installed (as in CI) and skips cleanly with the harness's skip message otherwise.
 """
 
 from __future__ import annotations
 
-import hashlib
 import importlib.util
 import json
 import os
@@ -32,18 +31,10 @@ ALLOWLIST_BUILDER = REPO_ROOT / "agents" / "renderer" / "toolchain" / "import_al
 CANVAS = 'const canvas = document.createElement("canvas");\ndocument.getElementById("container").appendChild(canvas);\n'
 NO_BROWSER = {"PLAYWRIGHT_BROWSERS_PATH": "/nonexistent/anyplot-no-browsers"}
 
-# Runs in Node: imports `pageTexts` and `textLabels` from the checkout's `render.mjs`, loads the HTML page that
-# `render.mjs` itself wrote, executes every non-JSON `<script>` block in order inside a `node:vm` page realm with a
-# minimal DOM + 2D canvas implementation, and prints `{fillTextWrapped, strokeTextWrapped, probe, pageError}`.
-NODE_PAGE_RUNNER = r"""
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { pathToFileURL } from "node:url";
+# Minimal DOM + 2D canvas realm in `node:vm` so `render.mjs`'s inline scripts and `page.evaluate(...)` calls execute
+# against the real `chart.js`, `echarts`, and `highcharts` UMD bundles without a Chromium binary.
+MAKE_DOM_MJS = r"""
 import vm from "node:vm";
-
-const [harnessPath, htmlPath, library] = process.argv.slice(2);
-const { pageTexts, textLabels } = await import(pathToFileURL(path.resolve(harnessPath)).href);
-const html = readFileSync(htmlPath, "utf-8");
 
 function makeDom() {
   const Node = { ELEMENT_NODE: 1, TEXT_NODE: 3, DOCUMENT_NODE: 9 };
@@ -667,38 +658,156 @@ function makeDom() {
   return { windowObj, CanvasRenderingContext2D };
 }
 
-const { windowObj, CanvasRenderingContext2D } = makeDom();
-const originalFillText = CanvasRenderingContext2D.prototype.fillText;
-const originalStrokeText = CanvasRenderingContext2D.prototype.strokeText;
-const context = vm.createContext(windowObj);
+export function runHtmlInVm(html) {
+  const { windowObj, CanvasRenderingContext2D } = makeDom();
+  const originalFillText = CanvasRenderingContext2D.prototype.fillText;
+  const originalStrokeText = CanvasRenderingContext2D.prototype.strokeText;
+  const context = vm.createContext(windowObj);
 
-// Populate `<script type="application/json">` elements (such as `anyplot-data`) before running code scripts.
-for (const match of html.matchAll(/<script\s+type="application\/json"\s+id="([^"]+)">([\s\S]*?)<\/script>/gi)) {
-  const scriptEl = windowObj.document.createElement("script");
-  scriptEl.setAttribute("type", "application/json");
-  scriptEl.id = match[1];
-  scriptEl.textContent = match[2];
-  windowObj.document.body.appendChild(scriptEl);
+  // Populate `<script type="application/json">` elements (such as `anyplot-data`) before running code scripts.
+  for (const match of html.matchAll(/<script\s+type="application\/json"\s+id="([^"]+)">([\s\S]*?)<\/script>/gi)) {
+    const scriptEl = windowObj.document.createElement("script");
+    scriptEl.setAttribute("type", "application/json");
+    scriptEl.id = match[1];
+    scriptEl.textContent = match[2];
+    windowObj.document.body.appendChild(scriptEl);
+  }
+
+  let thrownError = null;
+  for (const match of html.matchAll(/<script(?:\s+[^>]*)?>([\s\S]*?)<\/script>/gi)) {
+    if (/type="application\/json"/i.test(match[0])) continue;
+    try {
+      vm.runInContext(match[1], context);
+    } catch (err) {
+      if (thrownError === null) thrownError = err;
+    }
+  }
+
+  return {
+    context,
+    CanvasRenderingContext2D,
+    originalFillText,
+    originalStrokeText,
+    thrownError,
+    fillTextWrapped: CanvasRenderingContext2D.prototype.fillText !== originalFillText,
+    strokeTextWrapped: CanvasRenderingContext2D.prototype.strokeText !== originalStrokeText,
+    hasCanvasTextsHook: typeof context.__anyplotCanvasTexts === "function",
+    pageError: context.__anyplotError ?? null,
+    probeResult: context.__testResult ?? null,
+  };
 }
+"""
 
-for (const match of html.matchAll(/<script(?:\s+[^>]*)?>([\s\S]*?)<\/script>/gi)) {
-  if (/type="application\/json"/i.test(match[0])) continue;
-  vm.runInContext(match[1], context);
-}
+# Preloaded with `node --import=...` on render runs in `TestInNode`: intercepts `chromium.launch` so `render.mjs`'s
+# `main()` runs end to end, capturing the exact HTML passed to `page.setContent(...)` while letting `render.mjs` write
+# both `plot-light.html` and `probe-light.json` itself.
+PLAYWRIGHT_VM_PRELOAD = r"""
+import { writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
+import vm from "node:vm";
+import { runHtmlInVm } from "./make_dom.mjs";
 
-const fillTextWrapped = CanvasRenderingContext2D.prototype.fillText !== originalFillText;
-const strokeTextWrapped = CanvasRenderingContext2D.prototype.strokeText !== originalStrokeText;
-const hasCanvasTextsHook = typeof context.__anyplotCanvasTexts === "function";
-const raw = vm.runInContext(`(${pageTexts.toString()})(${JSON.stringify([library, 2000])})`, context);
+const MIN_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIAAAUAAeImBZsAAAAASUVORK5CYII=",
+  "base64",
+);
+const requireFromHarness = createRequire(path.resolve(process.argv[1]));
+const { chromium } = requireFromHarness("playwright");
+
+chromium.launch = async function () {
+  let loadedHtml = null;
+  let current = null;
+  const listeners = new Map();
+  const pageContext = {
+    async route() {},
+    async routeWebSocket() {},
+    async addInitScript() {},
+  };
+  const page = {
+    context() {
+      return pageContext;
+    },
+    on(event, fn) {
+      if (!listeners.has(event)) listeners.set(event, []);
+      listeners.get(event).push(fn);
+    },
+    async emulateMedia() {},
+    async setContent(html) {
+      loadedHtml = html;
+      current = runHtmlInVm(html);
+      if (current.thrownError) {
+        for (const fn of listeners.get("pageerror") || []) fn(current.thrownError);
+      }
+    },
+    async waitForFunction(fn, arg) {
+      const expr =
+        typeof fn === "function"
+          ? arg === undefined
+            ? `(${fn.toString()})()`
+            : `(${fn.toString()})(${JSON.stringify(arg)})`
+          : String(fn);
+      if (!vm.runInContext(expr, current.context)) throw new Error("waitForFunction timed out");
+    },
+    async evaluate(fn, arg) {
+      const expr = arg === undefined ? `(${fn.toString()})()` : `(${fn.toString()})(${JSON.stringify(arg)})`;
+      return await vm.runInContext(expr, current.context);
+    },
+    locator() {
+      return {
+        async screenshot(opts) {
+          if (opts && opts.path) writeFileSync(opts.path, MIN_PNG);
+          return MIN_PNG;
+        },
+      };
+    },
+  };
+  return {
+    async newPage() {
+      return page;
+    },
+    async close() {
+      writeFileSync(
+        path.resolve(process.cwd(), "vm-state.json"),
+        JSON.stringify({
+          launched: true,
+          loadedHtml,
+          fillTextWrapped: current ? current.fillTextWrapped : false,
+          strokeTextWrapped: current ? current.strokeTextWrapped : false,
+          hasCanvasTextsHook: current ? current.hasCanvasTextsHook : false,
+          pageError: current ? current.pageError : null,
+          probeResult: current ? current.probeResult : null,
+        }),
+        "utf-8",
+      );
+    },
+  };
+};
+"""
+
+# Evaluates a written `plot-light.html` file directly in `node:vm` to verify what opening the saved file in a browser
+# does (for example, that neither `ANYPLOT_PAGE_ONLY=1` nor a render run's written `plot-light.html` wraps `fillText`).
+EVALUATE_HTML_MJS = r"""
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import vm from "node:vm";
+import { runHtmlInVm } from "./make_dom.mjs";
+
+const [harnessPath, htmlPath, library] = process.argv.slice(2);
+const { pageTexts, textLabels } = await import(pathToFileURL(path.resolve(harnessPath)).href);
+const html = readFileSync(htmlPath, "utf-8");
+const current = runHtmlInVm(html);
+const raw = vm.runInContext(`(${pageTexts.toString()})(${JSON.stringify([library, 2000])})`, current.context);
 const probe = textLabels(raw);
 
 process.stdout.write(
   JSON.stringify({
-    fillTextWrapped,
-    strokeTextWrapped,
-    hasCanvasTextsHook,
-    pageError: context.__anyplotError ?? null,
-    probeResult: context.__testResult ?? null,
+    fillTextWrapped: current.fillTextWrapped,
+    strokeTextWrapped: current.strokeTextWrapped,
+    hasCanvasTextsHook: current.hasCanvasTextsHook,
+    pageError: current.pageError,
+    probeResult: current.probeResult,
     probe,
   }),
 );
@@ -720,6 +829,7 @@ def _node_modules() -> Path | None:
 @dataclass
 class NodeProbeRun:
     returncode: int
+    browser_launched: bool
     fill_text_wrapped: bool
     stroke_text_wrapped: bool
     has_canvas_texts_hook: bool
@@ -727,7 +837,36 @@ class NodeProbeRun:
     probe_result: object
     labels: list[tuple[str, str]]
     labels_truncated: bool
-    html: str
+    written_html: str
+    loaded_html: str | None
+
+
+def evaluate_written_html(tmp_path: Path, html_file: Path, *, library: str = "chartjs") -> dict[str, object]:
+    """Execute a written `plot-*.html` file in a fresh `node:vm` page context and return its wrapper/probe state."""
+    node = shutil.which("node")
+    modules = _node_modules()
+    if node is None or modules is None:
+        pytest.skip("needs node on PATH and the lock's node_modules")
+    eval_dir = tmp_path / "html-eval"
+    eval_dir.mkdir(parents=True, exist_ok=True)
+    (eval_dir / "make_dom.mjs").write_text(MAKE_DOM_MJS, encoding="utf-8")
+    runner = eval_dir / "evaluate_html.mjs"
+    runner.write_text(EVALUATE_HTML_MJS, encoding="utf-8")
+    env = {key: value for key, value in os.environ.items() if not key.startswith("ANYPLOT_")}
+    env["ANYPLOT_NODE_MODULES"] = str(modules)
+    evaluated = subprocess.run(
+        [node, str(runner), str(HARNESS), str(html_file), library],
+        cwd=eval_dir,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert evaluated.returncode == 0, evaluated.stderr
+    payload: dict[str, object] = json.loads(evaluated.stdout)
+    assert payload["pageError"] is None, payload["pageError"]
+    return payload
 
 
 def run_node_probe(
@@ -739,7 +878,7 @@ def run_node_probe(
     page_only: bool = False,
     data_json: str | None = None,
 ) -> NodeProbeRun:
-    """Build `plot-light.html` with `render.mjs`, execute its scripts in Node, and read `pageTexts` + `textLabels`."""
+    """Run `render.mjs` in Node (`--import` VM browser stub for render runs, `NO_BROWSER` for `page_only`)."""
     node = shutil.which("node")
     modules = _node_modules()
     if node is None or modules is None:
@@ -761,24 +900,49 @@ def run_node_probe(
         (work / "data.json").write_text(data_json, encoding="utf-8")
         env["ANYPLOT_DATA_JSON"] = "data.json"
 
-    built = subprocess.run(
-        [node, str(HARNESS), f"--library={library}", "plot.js"],
-        cwd=work,
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=60,
-        check=False,
-    )
     html_file = work / "plot-light.html"
-    if page_only:
-        assert built.returncode == 0, built.stderr
-    assert html_file.is_file(), built.stderr
+    probe_file = work / "probe-light.json"
 
-    runner = tmp_path / "node_page_runner.mjs"
-    runner.write_text(NODE_PAGE_RUNNER, encoding="utf-8")
-    evaluated = subprocess.run(
-        [node, str(runner), str(HARNESS), str(html_file), library],
+    if page_only:
+        built = subprocess.run(
+            [node, str(HARNESS), f"--library={library}", "plot.js"],
+            cwd=work,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        assert built.returncode == 0, built.stderr
+        assert html_file.is_file(), built.stderr
+        assert not probe_file.exists()
+        payload = evaluate_written_html(tmp_path, html_file, library=library)
+        probe = payload["probe"]
+        assert isinstance(probe, dict)
+        raw_labels = probe["labels"]
+        assert isinstance(raw_labels, list)
+        return NodeProbeRun(
+            returncode=built.returncode,
+            browser_launched=False,
+            fill_text_wrapped=bool(payload["fillTextWrapped"]),
+            stroke_text_wrapped=bool(payload["strokeTextWrapped"]),
+            has_canvas_texts_hook=bool(payload["hasCanvasTextsHook"]),
+            page_error=None,
+            probe_result=payload["probeResult"],
+            labels=[(str(item["kind"]), str(item["text"])) for item in raw_labels],
+            labels_truncated=bool(probe["labels_truncated"]),
+            written_html=html_file.read_text(encoding="utf-8"),
+            loaded_html=None,
+        )
+
+    preload_dir = tmp_path / "preload"
+    preload_dir.mkdir(parents=True, exist_ok=True)
+    (preload_dir / "make_dom.mjs").write_text(MAKE_DOM_MJS, encoding="utf-8")
+    preload = preload_dir / "playwright_vm_preload.mjs"
+    preload.write_text(PLAYWRIGHT_VM_PRELOAD, encoding="utf-8")
+
+    built = subprocess.run(
+        [node, f"--import={preload.as_uri()}", str(HARNESS), f"--library={library}", "plot.js"],
         cwd=work,
         env=env,
         capture_output=True,
@@ -786,74 +950,34 @@ def run_node_probe(
         timeout=60,
         check=False,
     )
-    assert evaluated.returncode == 0, evaluated.stderr
-    payload = json.loads(evaluated.stdout)
-    assert payload["pageError"] is None, payload["pageError"]
-    probe = payload["probe"]
-    labels = [(item["kind"], item["text"]) for item in probe["labels"]]
+    assert built.returncode == 0, built.stderr
+    assert html_file.is_file(), built.stderr
+    vm_state = json.loads((work / "vm-state.json").read_text(encoding="utf-8"))
+    assert vm_state["pageError"] is None, vm_state["pageError"]
+
+    if sandbox:
+        assert probe_file.is_file(), built.stderr
+        probe_data = json.loads(probe_file.read_text(encoding="utf-8"))
+        labels = [(str(item["kind"]), str(item["text"])) for item in probe_data["labels"]]
+        labels_truncated = bool(probe_data["labels_truncated"])
+    else:
+        assert not probe_file.exists()
+        labels = []
+        labels_truncated = False
+
     return NodeProbeRun(
         returncode=built.returncode,
-        fill_text_wrapped=payload["fillTextWrapped"],
-        stroke_text_wrapped=payload["strokeTextWrapped"],
-        has_canvas_texts_hook=payload["hasCanvasTextsHook"],
-        page_error=payload["pageError"],
-        probe_result=payload["probeResult"],
+        browser_launched=bool(vm_state["launched"]),
+        fill_text_wrapped=bool(vm_state["fillTextWrapped"]),
+        stroke_text_wrapped=bool(vm_state["strokeTextWrapped"]),
+        has_canvas_texts_hook=bool(vm_state["hasCanvasTextsHook"]),
+        page_error=vm_state["pageError"],
+        probe_result=vm_state["probeResult"],
         labels=labels,
-        labels_truncated=probe["labels_truncated"],
-        html=html_file.read_text(encoding="utf-8"),
+        labels_truncated=labels_truncated,
+        written_html=html_file.read_text(encoding="utf-8"),
+        loaded_html=vm_state["loadedHtml"],
     )
-
-
-def _origin_main_html(
-    tmp_path: Path, source: str, *, sandbox: bool, page_only: bool, data_json: str | None = None
-) -> bytes | None:
-    """Build `plot-light.html` with `origin/main`'s `render.mjs` when `origin/main` is available in git."""
-    git = shutil.which("git")
-    node = shutil.which("node")
-    modules = _node_modules()
-    if git is None or node is None or modules is None:
-        return None
-    shown = subprocess.run(
-        [git, "-C", str(REPO_ROOT), "show", "origin/main:automation/js-render/render.mjs"],
-        capture_output=True,
-        check=False,
-    )
-    if shown.returncode != 0:
-        return None
-    harness_root = tmp_path / "main-harness"
-    harness_dir = harness_root / "automation" / "js-render"
-    harness_dir.mkdir(parents=True, exist_ok=True)
-    (harness_root / "node_modules").symlink_to(modules.resolve(), target_is_directory=True)
-    main_harness = harness_dir / "render.mjs"
-    main_harness.write_bytes(shown.stdout)
-    work = tmp_path / "main-work"
-    work.mkdir(parents=True, exist_ok=True)
-    (work / "plot.js").write_text(source, encoding="utf-8")
-    env = {key: value for key, value in os.environ.items() if not key.startswith("ANYPLOT_")}
-    env["ANYPLOT_THEME"] = "light"
-    env["ANYPLOT_NODE_MODULES"] = str(modules)
-    env |= NO_BROWSER
-    if sandbox:
-        env["ANYPLOT_SANDBOX"] = "1"
-    if page_only:
-        env["ANYPLOT_PAGE_ONLY"] = "1"
-    if data_json is not None:
-        (work / "data.json").write_text(data_json, encoding="utf-8")
-        env["ANYPLOT_DATA_JSON"] = "data.json"
-    built = subprocess.run(
-        [node, str(main_harness), "--library=chartjs", "plot.js"],
-        cwd=work,
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=60,
-        check=False,
-    )
-    if page_only:
-        assert built.returncode == 0, built.stderr
-    html_file = work / "plot-light.html"
-    assert html_file.is_file(), built.stderr
-    return html_file.read_bytes()
 
 
 # --- Shared Chart.js, ECharts, and Highcharts figures for both test layers ----------------------
@@ -993,6 +1117,200 @@ new Chart(canvas, {
     plugins: { title: { display: true, text: "Many Notes" }, legend: { display: false } },
     scales: { y: { min: 0, max: 2, ticks: { stepSize: 1 }, title: { display: true, text: "Count" } } },
   },
+});
+"""
+)
+
+NON_CHART_CANVAS_OVER_LIMIT = (
+    CANVAS
+    + """
+const extra = document.createElement("canvas");
+extra.width = 400;
+extra.height = 300;
+document.getElementById("container").appendChild(extra);
+const extraCtx = extra.getContext("2d");
+for (let i = 0; i < 450; i += 1) {
+  extraCtx.fillText(`Extra ${i}`, 20, 20 + (i % 200));
+}
+new Chart(canvas, {
+  type: "bar",
+  data: { labels: ["A"], datasets: [{ label: "Series", data: [1] }] },
+  options: {
+    animation: false,
+    plugins: { title: { display: true, text: "Main Chart" }, legend: { display: false } },
+    scales: { y: { min: 0, max: 2, ticks: { stepSize: 1 }, title: { display: true, text: "Count" } } },
+  },
+});
+"""
+)
+
+TRANSPARENT_STYLES_CHART = (
+    CANVAS
+    + """
+new Chart(canvas, {
+  type: "bar",
+  plugins: [{
+    id: "transparentStyles",
+    afterDraw(chart) {
+      const ctx = chart.ctx;
+      const zeroColors = [
+        ["rgba(0,0,0,0)", "rgba zero"],
+        ["rgba(255, 100, 50, 0.0)", "rgba float zero"],
+        ["rgba(10, 20, 30, 0%)", "rgba pct zero"],
+        ["rgb(0, 0, 0, 0)", "rgb comma zero"],
+        ["transparent", "transparent keyword"],
+        ["TRANSPARENT", "transparent upper"],
+        ["#0000", "hex4 zero"],
+        ["#fff0", "hex4 white zero"],
+        ["#00000000", "hex8 zero"],
+        ["#12345600", "hex8 color zero"],
+        ["hsla(120, 50%, 50%, 0)", "hsla zero"],
+        ["hsla(120, 50%, 50%, 0%)", "hsla pct zero"],
+        ["hsl(120, 50%, 50%, 0)", "hsl comma zero"],
+        ["rgb(10 20 30 / 0)", "rgb slash zero"],
+        ["rgb(10 20 30 / 0%)", "rgb slash pct zero"],
+        ["hsl(120 50% 50% / 0)", "hsl slash zero"],
+        ["hwb(120 10% 20% / 0)", "hwb slash zero"],
+        ["lab(50% 0 0 / 0)", "lab slash zero"],
+        ["lch(50% 20 180 / 0%)", "lch slash zero"],
+        ["oklab(0.5 0 0 / 0)", "oklab slash zero"],
+        ["oklch(0.6 0.1 180 / 0)", "oklch slash zero"],
+        ["color(srgb 1 0 0 / 0)", "color srgb zero"],
+        ["color(display-p3 1 0 0 / 0%)", "color p3 zero"],
+        ["rgb(10 20 30 / none)", "rgb slash none"],
+      ];
+      let y = 10;
+      for (const [color, name] of zeroColors) {
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.fillText(`Fill ${name}`, 20, y);
+        ctx.strokeStyle = color;
+        ctx.strokeText(`Stroke ${name}`, 80, y);
+        ctx.restore();
+        y = (y % 120) + 5;
+      }
+
+      // `fillText` checks `fillStyle` while `strokeText` checks `strokeStyle` independently.
+      ctx.save();
+      ctx.fillStyle = "transparent";
+      ctx.strokeStyle = "#111";
+      ctx.fillText("Hidden fill only", 30, 30);
+      ctx.strokeText("Visible stroke only", 30, 40);
+      ctx.restore();
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(0, 0, 0, 0)";
+      ctx.fillStyle = "#111";
+      ctx.strokeText("Hidden stroke only", 30, 50);
+      ctx.fillText("Visible fill only", 30, 60);
+      ctx.restore();
+
+      // A skipped transparent stroke must not arm `target.last` and swallow a visible fill at the same position.
+      ctx.save();
+      ctx.strokeStyle = "rgba(0, 0, 0, 0)";
+      ctx.fillStyle = "#222";
+      ctx.strokeText("Survived pair", 50, 70);
+      ctx.fillText("Survived pair", 50, 70);
+      ctx.restore();
+
+      // Opaque, low-alpha, gradient, and pattern styles remain visible and must be recorded without throwing.
+      ctx.save();
+      ctx.fillStyle = "#ff0000";
+      ctx.fillText("Hex6 red", 30, 80);
+      ctx.fillStyle = "#0001";
+      ctx.fillText("Hex4 nonzero", 30, 85);
+      ctx.fillStyle = "#00000001";
+      ctx.fillText("Hex8 nonzero", 30, 90);
+      ctx.fillStyle = "rgb(0, 0, 0)";
+      ctx.fillText("Rgb3 black", 30, 95);
+      ctx.fillStyle = "hsl(120, 50%, 0%)";
+      ctx.fillText("Hsl3 black", 30, 100);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillText("Low alpha", 30, 105);
+      const grad = ctx.createLinearGradient(0, 0, 100, 0);
+      grad.addColorStop(0, "#000");
+      grad.addColorStop(1, "#fff");
+      ctx.fillStyle = grad;
+      ctx.fillText("Gradient fill", 30, 110);
+      ctx.strokeStyle = grad;
+      ctx.strokeText("Gradient stroke", 30, 115);
+      const pat = ctx.createPattern(canvas, "repeat");
+      if (pat) {
+        ctx.fillStyle = pat;
+        ctx.fillText("Pattern fill", 30, 120);
+      }
+      ctx.restore();
+    },
+  }],
+  data: { labels: ["A"], datasets: [{ label: "S", data: [1] }] },
+  options: { animation: false },
+});
+"""
+)
+
+ZERO_FONT_SIZE_CHART = (
+    CANVAS
+    + """
+new Chart(canvas, {
+  type: "bar",
+  plugins: [{
+    id: "zeroFontSizes",
+    afterDraw(chart) {
+      const ctx = chart.ctx;
+      const zeroFonts = [
+        ["0px sans-serif", "0px"],
+        ["bold 0px Arial", "bold 0px"],
+        ["0pt serif", "0pt"],
+        ["0rem sans-serif", "0rem"],
+        ["0em monospace", "0em"],
+        ["0px/1.2 sans-serif", "0px line"],
+        ["0px / 1.4 sans-serif", "0px spaced line"],
+        ["0% sans-serif", "0pct"],
+        ["0.0px Arial", "0.0px"],
+        [".0px Arial", "dot0px"],
+        ["400 0px Inter", "weight 400 0px"],
+        ["oblique 0deg 0px sans-serif", "oblique 0deg 0px"],
+        ["0 sans-serif", "unitless 0"],
+      ];
+      for (const [fontSpec, label] of zeroFonts) {
+        ctx.save();
+        ctx.font = fontSpec;
+        ctx.fillText(`Zero ${label}`, 25, 25);
+        ctx.strokeText(`Zero stroke ${label}`, 25, 35);
+        ctx.restore();
+      }
+
+      // A skipped 0px stroke at one point must not suppress a visible fill at the same point.
+      ctx.save();
+      ctx.font = "0px sans-serif";
+      ctx.strokeText("Pair after 0px", 40, 45);
+      ctx.font = "12px sans-serif";
+      ctx.fillText("Pair after 0px", 40, 45);
+      ctx.restore();
+
+      const visibleFonts = [
+        ["10px sans-serif", "Size 10px"],
+        ["20px Arial", "Size 20px"],
+        ["10.5px sans-serif", "Size 10.5px"],
+        ["0.5px sans-serif", "Size 0.5px"],
+        ["400 12px Inter", "Weight 400"],
+        ["12px Font0", "Family Font0"],
+        ['12px "0px Family", sans-serif', "Quoted 0px family"],
+        ["12px/0px sans-serif", "Line-height 0px"],
+        ["oblique 0deg 12px sans-serif", "Oblique 0deg 12px"],
+      ];
+      let y = 55;
+      for (const [fontSpec, label] of visibleFonts) {
+        ctx.save();
+        ctx.font = fontSpec;
+        ctx.fillText(label, 25, y);
+        ctx.restore();
+        y += 8;
+      }
+    },
+  }],
+  data: { labels: ["A"], datasets: [{ label: "S", data: [1] }] },
+  options: { animation: false },
 });
 """
 )
@@ -1197,10 +1515,12 @@ class TestInNode:
         smoke = (REPO_ROOT / "agents" / "renderer" / "toolchain" / "smoke.js").read_text(encoding="utf-8")
         run = run_node_probe(tmp_path, smoke, sandbox=False)
 
+        assert run.browser_launched is True
         assert run.fill_text_wrapped is False and run.stroke_text_wrapped is False
         assert run.has_canvas_texts_hook is False
-        assert "recordChartjsCanvasTexts" not in run.html
-        assert "__anyplotCanvasTexts" not in run.html
+        assert "recordChartjsCanvasTexts" not in run.written_html
+        assert "__anyplotCanvasTexts" not in run.written_html
+        assert run.loaded_html == run.written_html
         modules = _node_modules()
         assert modules is not None
         bundle = (modules / "chart.js" / "dist" / "chart.umd.js").read_text(encoding="utf-8")
@@ -1210,46 +1530,60 @@ class TestInNode:
         expected = template.replace("{{SNIPPET}}", smoke).replace(
             "{{BUNDLE}}", re.sub("</script", lambda _: "<\\/script", bundle, flags=re.IGNORECASE)
         )
-        assert run.html.encode("utf-8") == expected.encode("utf-8")
-        main_bytes = _origin_main_html(tmp_path / "main-nosandbox", smoke, sandbox=False, page_only=False)
-        if main_bytes is not None:
-            head_bytes = run.html.encode("utf-8")
-            assert hashlib.sha256(head_bytes).hexdigest() == hashlib.sha256(main_bytes).hexdigest()
-            assert head_bytes == main_bytes
+        assert run.written_html.encode("utf-8") == expected.encode("utf-8")
 
-    def test_page_only_mode_omits_the_recorder_and_matches_main_html(self, tmp_path: Path) -> None:
+    def test_written_render_page_and_page_only_omit_the_recorder_while_loaded_page_records(
+        self, tmp_path: Path
+    ) -> None:
         smoke = (REPO_ROOT / "agents" / "renderer" / "toolchain" / "smoke.js").read_text(encoding="utf-8")
         table = '{"columns":["label","value"],"data":[["a",3],["b",1]]}'
         page_run = run_node_probe(tmp_path / "page", smoke, sandbox=True, page_only=True)
         page_data_run = run_node_probe(tmp_path / "page-data", smoke, sandbox=True, page_only=True, data_json=table)
         render_run = run_node_probe(tmp_path / "render", smoke, sandbox=True, page_only=False)
+        render_data_run = run_node_probe(
+            tmp_path / "render-data", smoke, sandbox=True, page_only=False, data_json=table
+        )
 
         assert page_run.returncode == 0 and page_data_run.returncode == 0
-        assert "recordChartjsCanvasTexts" not in page_run.html
-        assert "recordChartjsCanvasTexts" not in page_data_run.html
-        assert "__anyplotCanvasTexts" not in page_run.html
-        assert page_run.html.count("<script") == 3
-        assert page_data_run.html.count("<script") == 4  # `<script type="application/json">` + 3 code scripts
+        assert render_run.returncode == 0 and render_data_run.returncode == 0
+        assert page_run.browser_launched is False and page_data_run.browser_launched is False
+        assert render_run.browser_launched is True and render_data_run.browser_launched is True
+
+        for html in (
+            page_run.written_html,
+            page_data_run.written_html,
+            render_run.written_html,
+            render_data_run.written_html,
+        ):
+            assert "recordChartjsCanvasTexts" not in html
+            assert "__anyplotCanvasTexts" not in html
+
+        assert render_run.written_html.encode("utf-8") == page_run.written_html.encode("utf-8")
+        assert render_data_run.written_html.encode("utf-8") == page_data_run.written_html.encode("utf-8")
+        assert page_run.written_html.count("<script") == 3
+        assert render_run.written_html.count("<script") == 3
+        assert page_data_run.written_html.count("<script") == 4  # `<script type="application/json">` + 3 code scripts
+        assert render_data_run.written_html.count("<script") == 4
         assert page_run.fill_text_wrapped is False and page_run.stroke_text_wrapped is False
         assert page_run.has_canvas_texts_hook is False
 
-        assert "recordChartjsCanvasTexts" in render_run.html
-        assert render_run.html.count("<script") == 4
+        written_eval = evaluate_written_html(
+            tmp_path / "eval-render-written", tmp_path / "render" / "work" / "plot-light.html"
+        )
+        assert written_eval["fillTextWrapped"] is False and written_eval["strokeTextWrapped"] is False
+        assert written_eval["hasCanvasTextsHook"] is False
+
+        assert render_run.loaded_html is not None and render_data_run.loaded_html is not None
+        assert "recordChartjsCanvasTexts" in render_run.loaded_html
+        assert "__anyplotCanvasTexts" in render_run.loaded_html
+        assert "recordChartjsCanvasTexts" in render_data_run.loaded_html
+        assert render_run.loaded_html.count("<script") == 4
+        assert render_data_run.loaded_html.count("<script") == 5
+        # The recorder sits in its own `<script>` before the snippet's `<script>`, so `SNIPPET_HEAD` (`\ntry {\n`)
+        # and `SNIPPET_LINE_OFFSET` inside the snippet `<script>` are unchanged.
+        assert f"</script>\n<script>\ntry {{\n{smoke}" in render_run.loaded_html
         assert render_run.fill_text_wrapped is True and render_run.stroke_text_wrapped is True
         assert render_run.has_canvas_texts_hook is True
-
-        main_page_bytes = _origin_main_html(tmp_path / "main-page", smoke, sandbox=True, page_only=True)
-        main_data_bytes = _origin_main_html(
-            tmp_path / "main-page-data", smoke, sandbox=True, page_only=True, data_json=table
-        )
-        if main_page_bytes is not None:
-            page_bytes = page_run.html.encode("utf-8")
-            assert hashlib.sha256(page_bytes).hexdigest() == hashlib.sha256(main_page_bytes).hexdigest()
-            assert page_bytes == main_page_bytes
-        if main_data_bytes is not None:
-            page_data_bytes = page_data_run.html.encode("utf-8")
-            assert hashlib.sha256(page_data_bytes).hexdigest() == hashlib.sha256(main_data_bytes).hexdigest()
-            assert page_data_bytes == main_data_bytes
 
     def test_more_recorded_texts_than_label_limit_keep_tick_labels_and_set_truncated(self, tmp_path: Path) -> None:
         run = run_node_probe(tmp_path, OVER_LABEL_LIMIT_CHART)
@@ -1266,6 +1600,68 @@ class TestInNode:
         assert run.labels[6] == ("annotation", "L" * 200)
         assert run.labels[7] == ("annotation", "Note 0")
         assert run.labels_truncated is True
+
+    def test_non_chart_canvas_texts_rank_after_tick_labels_and_set_truncated(self, tmp_path: Path) -> None:
+        run = run_node_probe(tmp_path, NON_CHART_CANVAS_OVER_LIMIT)
+
+        assert len(run.labels) == 400
+        assert run.labels[:6] == [
+            ("title", "Main Chart"),
+            ("y axis label", "Count"),
+            ("y tick label", "0"),
+            ("y tick label", "1"),
+            ("y tick label", "2"),
+            ("x tick label", "A"),
+        ]
+        assert run.labels[6] == ("annotation", "Extra 0")
+        assert run.labels[7] == ("annotation", "Extra 1")
+        assert run.labels_truncated is True
+
+    def test_transparent_fill_and_stroke_styles_are_skipped_without_corrupting_outlined_pairs(
+        self, tmp_path: Path
+    ) -> None:
+        run = run_node_probe(tmp_path, TRANSPARENT_STYLES_CHART)
+
+        texts = [text for _, text in run.labels]
+        for visible in (
+            "Visible stroke only",
+            "Visible fill only",
+            "Hex6 red",
+            "Hex4 nonzero",
+            "Hex8 nonzero",
+            "Rgb3 black",
+            "Hsl3 black",
+            "Low alpha",
+            "Gradient fill",
+            "Gradient stroke",
+            "Pattern fill",
+        ):
+            assert ("annotation", visible) in run.labels, (visible, run.labels)
+        assert run.labels.count(("annotation", "Survived pair")) == 1
+        assert "Hidden fill only" not in texts
+        assert "Hidden stroke only" not in texts
+        for text in texts:
+            assert not text.startswith("Fill ") and not text.startswith("Stroke "), (text, run.labels)
+
+    def test_zero_font_sizes_are_skipped_while_nonzero_and_weight_or_family_zeros_stay(self, tmp_path: Path) -> None:
+        run = run_node_probe(tmp_path, ZERO_FONT_SIZE_CHART)
+
+        texts = [text for _, text in run.labels]
+        for visible in (
+            "Size 10px",
+            "Size 20px",
+            "Size 10.5px",
+            "Size 0.5px",
+            "Weight 400",
+            "Family Font0",
+            "Quoted 0px family",
+            "Line-height 0px",
+            "Oblique 0deg 12px",
+        ):
+            assert ("annotation", visible) in run.labels, (visible, run.labels)
+        assert run.labels.count(("annotation", "Pair after 0px")) == 1
+        for text in texts:
+            assert not text.startswith("Zero "), (text, run.labels)
 
     def test_echarts_and_highcharts_probes_are_unchanged_and_do_not_wrap_filltext(self, tmp_path: Path) -> None:
         for renderer in ("canvas", "svg"):
@@ -1562,7 +1958,14 @@ class BrowserHarness:
     allowlist: Path
 
     def render(
-        self, tmp_path: Path, source: str, *, library: str = "chartjs", sandbox: bool = True, page_only: bool = False
+        self,
+        tmp_path: Path,
+        source: str,
+        *,
+        library: str = "chartjs",
+        sandbox: bool = True,
+        page_only: bool = False,
+        env: dict[str, str] | None = None,
     ) -> BrowserRun:
         work = tmp_path / "work"
         work.mkdir(parents=True, exist_ok=True)
@@ -1578,6 +1981,7 @@ class BrowserHarness:
             }
         if page_only:
             environment["ANYPLOT_PAGE_ONLY"] = "1"
+        environment |= env or {}
         done = subprocess.run(
             [self.node, str(self.root / "automation" / "js-render" / "render.mjs"), f"--library={library}", "plot.js"],
             cwd=work,
@@ -1654,11 +2058,19 @@ class TestInChromium:
         assert run.returncode == 0, run.stderr
         assert not (run.work / "probe-light.json").exists()
 
-    def test_page_only_omits_the_recorder(self, browser_harness: BrowserHarness, tmp_path: Path) -> None:
-        run = browser_harness.render(tmp_path, EXISTING_MODEL_ONLY_CHART, page_only=True)
-        assert run.returncode == 0, run.stderr
-        html = (run.work / "plot-light.html").read_text(encoding="utf-8")
+    def test_page_only_and_written_render_page_omit_the_recorder(
+        self, browser_harness: BrowserHarness, tmp_path: Path
+    ) -> None:
+        page_run = browser_harness.render(tmp_path / "page", BAR_WITH_FOUR_POINT_ZERO, page_only=True)
+        render_run = browser_harness.render(tmp_path / "render", BAR_WITH_FOUR_POINT_ZERO, env={"ANYPLOT_NO_HTML": "0"})
+        assert page_run.returncode == 0 and render_run.returncode == 0, (page_run.stderr, render_run.stderr)
+        page_bytes = (page_run.work / "plot-light.html").read_bytes()
+        render_bytes = (render_run.work / "plot-light.html").read_bytes()
+        assert page_bytes == render_bytes
+        html = render_bytes.decode("utf-8")
         assert "recordChartjsCanvasTexts" not in html and "__anyplotCanvasTexts" not in html
+        labels, _ = render_run.probe()
+        assert labels.count(("annotation", "4.0")) == 1
 
     def test_invisible_and_off_canvas_texts_are_skipped(self, browser_harness: BrowserHarness, tmp_path: Path) -> None:
         run = browser_harness.render(tmp_path, INVISIBLE_AND_OFF_CANVAS_CHART)
@@ -1676,6 +2088,34 @@ class TestInChromium:
             "Translated off",
         ):
             assert not any(text == skipped for _, text in labels), (skipped, labels)
+
+    def test_transparent_styles_and_zero_font_sizes_are_skipped(
+        self, browser_harness: BrowserHarness, tmp_path: Path
+    ) -> None:
+        transparent = browser_harness.render(tmp_path / "transparent", TRANSPARENT_STYLES_CHART)
+        zero_font = browser_harness.render(tmp_path / "zero-font", ZERO_FONT_SIZE_CHART)
+        assert transparent.returncode == 0 and zero_font.returncode == 0, transparent.stderr + zero_font.stderr
+
+        t_labels, _ = transparent.probe()
+        t_texts = [text for _, text in t_labels]
+        for visible in (
+            "Visible stroke only",
+            "Visible fill only",
+            "Gradient fill",
+            "Gradient stroke",
+            "Survived pair",
+        ):
+            assert ("annotation", visible) in t_labels, (visible, t_labels)
+        assert "Hidden fill only" not in t_texts and "Hidden stroke only" not in t_texts
+        for text in t_texts:
+            assert not text.startswith("Fill ") and not text.startswith("Stroke "), (text, t_labels)
+
+        f_labels, _ = zero_font.probe()
+        f_texts = [text for _, text in f_labels]
+        for visible in ("Size 10px", "Size 20px", "Size 0.5px", "Weight 400", "Family Font0", "Pair after 0px"):
+            assert ("annotation", visible) in f_labels, (visible, f_labels)
+        for text in f_texts:
+            assert not text.startswith("Zero "), (text, f_labels)
 
     def test_object_arguments_are_not_converted_by_the_recorder(
         self, browser_harness: BrowserHarness, tmp_path: Path
@@ -1701,6 +2141,23 @@ class TestInChromium:
             ("x tick label", "A"),
         ]
         assert labels[6] == ("annotation", "L" * 200) and labels[7] == ("annotation", "Note 0")
+
+    def test_non_chart_canvas_texts_rank_after_tick_labels(
+        self, browser_harness: BrowserHarness, tmp_path: Path
+    ) -> None:
+        run = browser_harness.render(tmp_path, NON_CHART_CANVAS_OVER_LIMIT)
+        assert run.returncode == 0, run.stderr
+        labels, truncated = run.probe()
+        assert len(labels) == 400 and truncated is True
+        assert labels[:6] == [
+            ("title", "Main Chart"),
+            ("y axis label", "Count"),
+            ("y tick label", "0"),
+            ("y tick label", "1"),
+            ("y tick label", "2"),
+            ("x tick label", "A"),
+        ]
+        assert labels[6] == ("annotation", "Extra 0")
 
     def test_echarts_and_highcharts_probes_unchanged(self, browser_harness: BrowserHarness, tmp_path: Path) -> None:
         ec = browser_harness.render(tmp_path / "ec", ECHARTS_FIGURE, library="echarts")
