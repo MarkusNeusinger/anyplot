@@ -25,6 +25,7 @@ from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.plot_view import (
     CALENDAR_ORDER_LINE,
     CLEARED_LINE,
+    IDLE_SELECTION_LINE,
     OLDEST_FIRST_LINE,
     PLOT_VIEW,
     PlotView,
@@ -862,6 +863,220 @@ class TestApplyView:
         assert "there is no view of the plot to apply" in without["errors"]
         assert "leave from_version out" in earlier["errors"]
         assert context.state[DATASET_ID] == table and context.state[PLOT_VIEW] is not None
+
+
+class TestASelectionThatHidesNoRow:
+    """A change of the table that leaves only rows a selection keeps: the selection hides nothing any more and is
+    cleared, whatever words the change used. The prep eval's `fr-appliquer-la-vue-au-tableau` kept the rows with a
+    `keep_rows` of the table instead of `apply_view`, and the old selection stayed in force on the plot."""
+
+    async def test_the_same_condition_on_the_table_clears_it(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-1")
+        await prepare_data([only("Points", "ge", 40)], context)
+
+        answer = await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+
+        assert (answer["status"], answer["landed"], answer["version"], answer["rows"]) == ("ok", "table", 2, 12)
+        assert context.state[PLOT_VIEW] is None
+        assert fenced(answer["view"], "tool_notes") == [
+            IDLE_SELECTION_LINE.format(words="Points ≥ 40"),
+            "the plot draws all 12 rows of data v2",
+        ]
+
+    async def test_the_same_rows_in_other_words_clear_it(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        """Dropping the rows below 40 leaves exactly the rows `Points ≥ 40` showed: the rows decide, not the words."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-2")
+        await prepare_data([only("Points", "ge", 40)], context)
+        below = {"op": "drop_rows", "where": [{"column": "Points", "test": "lt", "value": "40"}]}
+
+        answer = await prepare_data([below], context)
+
+        assert (answer["status"], answer["rows"]) == ("ok", 12) and context.state[PLOT_VIEW] is None
+        assert fenced(answer["view"], "tool_notes")[0] == IDLE_SELECTION_LINE.format(words="Points ≥ 40")
+
+    async def test_a_selection_the_call_names_itself_stays(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        """The call drops the rows below 40 and sets `Points ≥ 40` on the plot: the user's word of this call stays,
+        though it hides no row of the table the call leaves."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-5")
+        below = {"op": "drop_rows", "where": [{"column": "Points", "test": "lt", "value": "40"}]}
+
+        answer = await prepare_data([below, only("Points", "ge", 40)], context)
+
+        assert (answer["status"], answer["landed"], answer["rows"]) == ("ok", "table_and_view", 12)
+        assert context.state[PLOT_VIEW] == POINTS_40
+
+    async def test_a_selection_that_still_hides_rows_stays(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-3")
+        await prepare_data([only("Points", "ge", 40)], context)
+        held = context.state[PLOT_VIEW]
+        below = {"op": "drop_rows", "where": [{"column": "Points", "test": "lt", "value": "20"}]}
+
+        answer = await prepare_data([below], context)
+
+        assert answer["status"] == "ok" and answer["rows"] > 12
+        assert context.state[PLOT_VIEW] == held and "view" not in answer
+
+    async def test_only_the_selection_goes_and_a_top_n_stays(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        """A top N orders the rows it draws even when it keeps them all, so it is no selection that hides nothing."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-4")
+        top = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 3}]
+        await prepare_data([only("Points", "ge", 40), *top], context)
+
+        answer = await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+
+        assert context.state[PLOT_VIEW] == {"selections": [], "top": {"column": "Points", "descending": True, "n": 3}}
+        lines = fenced(answer["view"], "tool_notes")
+        assert lines[0] == IDLE_SELECTION_LINE.format(words="Points ≥ 40")
+        assert lines[-1] == "the plot draws 3 of 12 rows of data v2" and answer["landed"] == "table"
+
+
+POINTS_40 = {"selections": [[{"column": "Points", "test": "ge", "value": "40"}]]}
+SHOWN_40 = {"rows": 12, "of_rows": 24, "parts": ["Points ≥ 40"]}
+
+
+async def undo(client: httpx.AsyncClient, sid: str) -> dict[str, Any]:
+    """The page's `.undo()`, its answer."""
+    response = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert response.status_code == 200, response.text
+    answer: dict[str, Any] = response.json()
+    return answer
+
+
+async def view_now(runtime: Runtime, sid: str) -> Any:
+    return (await runtime.session(USER, sid)).state.get(PLOT_VIEW)
+
+
+class TestTheUndoTakesBackTheView:
+    """An undo takes back what the undone step did to the view of the plot too (`StoredDataset.view_change`): the view
+    from before the step comes back while the view in force is still the one the step left. The undo's answer carries
+    the view the page then draws."""
+
+    async def test_a_selection_the_step_cleared_comes_back(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-1")
+        await prepare_data([only("Points", "ge", 40)], context)
+        await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+        await write_back(runtime, sid, context)
+        assert await view_now(runtime, sid) is None
+
+        answer = await undo(client, sid)
+
+        assert (answer["version"], answer["view"]) == (1, SHOWN_40)
+        assert await view_now(runtime, sid) == POINTS_40
+
+    async def test_the_view_an_apply_view_moved_into_the_table_comes_back(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-2")
+        await prepare_data([only("Points", "ge", 40)], context)
+        await prepare_data([{"op": "apply_view"}], context)
+        await write_back(runtime, sid, context)
+
+        answer = await undo(client, sid)
+
+        assert (answer["version"], answer["view"]) == (1, SHOWN_40)
+        assert await view_now(runtime, sid) == POINTS_40
+
+    async def test_a_view_the_user_changed_after_the_step_stays(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """The later view is the user's later word: the undo leaves it, and the answer draws it on the old table."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-3")
+        await prepare_data([only("Points", "ge", 40)], context)
+        await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+        await prepare_data([only("Goals", "ge", 10)], context)
+        await write_back(runtime, sid, context)
+        later = await view_now(runtime, sid)
+
+        answer = await undo(client, sid)
+
+        assert later == {"selections": [[{"column": "Goals", "test": "ge", "value": "10"}]]}
+        assert await view_now(runtime, sid) == later
+        assert answer["view"] == {"rows": 17, "of_rows": 24, "parts": ["Goals ≥ 10"]}
+
+    async def test_two_undos_take_back_two_steps_each_with_its_own_view(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """The second step changed no view: its undo leaves the view as it is, the first one's brings it back."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-4")
+        await prepare_data([only("Points", "ge", 40)], context)
+        await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+        await prepare_data([{"op": "rename", "column": "Goals", "name": "Tore"}], context)
+        await write_back(runtime, sid, context)
+
+        first = await undo(client, sid)
+        first_view = await view_now(runtime, sid)
+        second = await undo(client, sid)
+
+        assert (first["version"], first["view"], first_view) == (2, None, None)
+        assert (second["version"], second["view"]) == (1, SHOWN_40)
+        assert await view_now(runtime, sid) == POINTS_40
+
+    async def test_a_top_n_beside_the_cleared_selection_comes_back_with_it(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """The step cleared the idle selection and kept the top N; the undo puts the whole view of before back."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-6")
+        top = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 3}]
+        await prepare_data([only("Points", "ge", 40), *top], context)
+        await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+        await write_back(runtime, sid, context)
+        kept = await view_now(runtime, sid)
+
+        answer = await undo(client, sid)
+
+        assert kept == {"selections": [], "top": {"column": "Points", "descending": True, "n": 3}}
+        assert await view_now(runtime, sid) == {**POINTS_40, "top": {"column": "Points", "descending": True, "n": 3}}
+        assert answer["view"] == {"rows": 3, "of_rows": 24, "parts": ["Points ≥ 40", "top 3 by Points"]}
+
+    async def test_a_view_set_with_a_change_of_the_table_goes_with_its_undo(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """The side effect of the same rule: a call that renamed a column and set a view on it is undone whole, so the
+        view from before it (none) is in force again, not one that names a column the old table does not have."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-5")
+        await prepare_data([{"op": "rename", "column": "Points", "name": "Punkte"}, only("Punkte", "ge", 40)], context)
+        await write_back(runtime, sid, context)
+        assert await view_now(runtime, sid) == {"selections": [[{"column": "Punkte", "test": "ge", "value": "40"}]]}
+
+        answer = await undo(client, sid)
+
+        assert (answer["version"], answer["view"]) == (1, None)
+        assert await view_now(runtime, sid) is None
+
+    async def test_known_limit_a_view_set_and_cleared_after_the_step_does_not_keep_the_undo_from_restoring(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """A limit, not a promise: the undo compares the view in force with the one the step left, never what came
+        between. A later turn sets a view and the next one clears it again, so the view in force is the step's again,
+        and the undo brings the step's old view back over that later clear."""
+        sid = await pasted_session(client, TEAMS)
+        steps = [
+            [only("Points", "ge", 40)],
+            [{**only("Points", "ge", 40), "target": "table"}],
+            [only("Goals", "ge", 10)],
+            [{"op": "reset_view"}],
+        ]
+        for number, operations in enumerate(steps):
+            context = await context_for(client, sid, f"inv-u-7-{number}")
+            await prepare_data(operations, context)
+            await write_back(runtime, sid, context)
+        assert await view_now(runtime, sid) is None
+
+        answer = await undo(client, sid)
+
+        assert (answer["version"], answer["view"]) == (1, SHOWN_40)
+        assert await view_now(runtime, sid) == POINTS_40
 
 
 class TestQuestionsUnderAView:

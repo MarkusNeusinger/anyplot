@@ -41,8 +41,10 @@ same values in another order differ in the last digit. Rows are compared in thei
 bar chart keeps and a sort is about; a case with `row_order: "any"`, a request that leaves the order open, compares
 both tables after a canonical sort of their rows. So a `drop_columns` of a notes column before an `aggregate` that
 keeps only its keys and its values, and the `aggregate` alone, are the same answer (guard 2a of #12599, where
-`de-hard-kette-gesamtzeile` read such a run as a miss). A named gap (`unsupported`) changes no table, so the gaps the
-turn named must be the expected ones as well. Every `prepare_data`, `generate_data` and `run_data_code` call of the
+`de-hard-kette-gesamtzeile` read such a run as a miss). A request with two fair readings lists the operations of the
+second under `also_accepted`, and the turn's table may be the one of either. A named gap (`unsupported`) changes no
+table, so the gaps the turn named must be the expected ones as well. Every `prepare_data`, `generate_data` and
+`run_data_code` call of the
 turn must have succeeded all the same: a list the data refuses (a column named before its rename, a type its cells
 cannot take) is a miss however the turn ends, and so is a formula the server cannot compute (`failed_calls`). An
 `unsupported_operation` answer is no failure: the root named a change no operation can make (`{"op": "unsupported",
@@ -147,7 +149,8 @@ is the list price of every call the attribution log booked (`pricing.call_cost`,
 It writes `<out>/<date>-prep-<model>.json` (the stamp, the gates, the summary, every
 case's canonical expected and found operations, `ops_exact`, what its table missed in
 words that name columns at most (`table_miss`), its tool calls, refusal, cost and
-latency; never a dataset, a cell or a message, which stay in the fixtures) and prints a table.
+latency, and, never scored, the bindings the turn ended with and the guard's log lines on a taken role
+(`bindings`, `guard`); never a dataset, a cell or a message, which stay in the fixtures) and prints a table.
 The exit code is 0 when the gate holds, 1 when it does not, 2 for a setup error (a
 fixture that does not load or whose expected operations fail the `Operation` or
 `Generate` models, an unpriced model) and 4 for an outage.
@@ -269,6 +272,11 @@ CONDITION_OPERATIONS = frozenset({"drop_rows", "blank", "keep_rows"})
 """The operations whose `where` is one list of conditions that must all hold."""
 MAX_REPLY_NAMES = 6
 """The texts one case may ask its reply to contain (`PrepCase.reply_names`)."""
+GUARD_FIELDS = ("tool", "outcome", "roles", "role", "kinds", "kind")
+"""The fields of an `emptied_role` log line the report keeps (`CaseResult.guard`): the line without its envelope."""
+MAX_OTHER_READINGS = 1
+"""The other readings one case may accept beside its expected operations (`PrepCase.also_accepted`): a request with
+two fair readings has one more, and a request with more is no clear test of the root's choice."""
 FiguresExpectation = Literal["queried", "clean", "not_withheld", "record"]
 FIGURES_EXPECTATIONS: dict[str, str] = {
     "queried": "a query_data call, and every check of the turn's replies clean",
@@ -338,6 +346,11 @@ class PrepCase(BaseModel):
     action: Literal["summarize_data"] | None = None
     """The page's step-1 summary action, sent instead of a message; a case has exactly one of the two."""
     expected_operations: list[dict[str, Any]]
+    also_accepted: list[list[dict[str, Any]]] = Field(default_factory=list, max_length=MAX_OTHER_READINGS)
+    """The operations of another reading of the message that is as fair as the expected one, such as the labels `1`
+    and `2` for "y positiv ist Klasse 1, sonst Klasse 2" in a new column named `Klasse`: the case matches when the
+    turn's table is the one of either (`score_turn`). Only for a case scored by its table, and checked as
+    `expected_operations` are (`check_cases`); the report names the expected ones."""
     locale: str = Field(pattern=r"^[a-z]{2}$")
     spec_id: str = Field(default="scatter-basic", pattern=r"^[a-z0-9-]{1,100}$")
     library: str = Field(default="matplotlib", pattern=r"^[a-z0-9]{1,32}$")
@@ -416,6 +429,8 @@ class PrepCase(BaseModel):
             raise ValueError("an earlier view comes before a message on summarized data")
         if self.row_order == "any" and not self.scored_by_table:
             raise ValueError("row_order is for a case scored by its table")
+        if self.also_accepted and not self.scored_by_table:
+            raise ValueError("also_accepted is for a case scored by its table")
         if self.row_order == "any" and self.plot_request:
             # The order of the rows is how such a case sees a table that was sorted for the plot's order.
             raise ValueError("a plot_request case compares the rows in their order")
@@ -1055,6 +1070,12 @@ class CaseResult:
     reply_error: str | None = None
     """The turn ended with the service's `error` for a withheld or missing reply (`matrix.MODEL_ERRORS`): the model's
     outcome, so the case is answered and a miss with this cause, never `unavailable`."""
+    bindings: dict[str, str] | None = None
+    """The bindings the session holds after the turn, role: column, for the report only, never scored: on which role a
+    column ended. The columns are the fixture's own, as in `expected` and `found`."""
+    guard: list[dict[str, Any]] = field(default_factory=list)
+    """The turn's log lines of the guard on a taken role (hook `emptied_role`: tool, outcome, and the role names and
+    operation names), for the report only, never scored: content-free by the line's own rule."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -1071,10 +1092,13 @@ def _detail(response: httpx.Response) -> str:
 
 
 def _book(result: CaseResult, lines: list[dict[str, Any]], settings: AgentSettings) -> None:
-    """Add one request's attribution lines to the result: model calls at list price, the judges too."""
+    """Add one request's attribution lines to the result: model calls at list price, the judges too, and the guard's
+    lines on a taken role (`CaseResult.guard`) without their envelope."""
     for line in lines:
         hook = line.get("hook")
-        if hook == "model":
+        if hook == "emptied_role":
+            result.guard.append({key: line[key] for key in GUARD_FIELDS if key in line})
+        elif hook == "model":
             result.llm_calls += 1
             result.cost_usd += call_cost(settings.model, settings.location, line)
         elif hook in ("data_judge", "notes_judge", "scope_guard"):
@@ -1188,7 +1212,11 @@ class CaseRunner:
             texts = await self._read_calls(result, user, sid, decimal)
             found, language = await self._current_table(user, sid)
             expected, unscorable = self._expected_table(case, start, language)
-            score_turn(result, case, found, expected, unscorable=unscorable)
+            others = [
+                (canonical_operations(operations, decimal), *self._expected_table(case, start, language, operations))
+                for operations in case.also_accepted
+            ]
+            score_turn(result, case, found, expected, unscorable=unscorable, others=others)
             score_conversions(result, owed, decimal)
             # A message case on summarized data gets no server conversion: the turn starts after the earlier changes.
             score_from_version(result, case.expected_from_version, current=1 + len(case.before_operations))
@@ -1272,9 +1300,10 @@ class CaseRunner:
 
     @staticmethod
     def _expected_table(
-        case: PrepCase, start: ParsedDataset | None, language: str
+        case: PrepCase, start: ParsedDataset | None, language: str, operations: Sequence[dict[str, Any]] | None = None
     ) -> tuple[ResultTable | None, str | None]:
-        """The table the case's expected operations make from `start`, or why there is none to score against.
+        """The table the case's expected operations make from `start` (or `operations`, another reading the case
+        accepts), or why there is none to score against.
 
         `check_cases` applied them to the case's own data before the run, so a refusal here means the stored start
         differs from that parse: the case is a miss that says so, and the run goes on with the other cases.
@@ -1285,8 +1314,9 @@ class CaseRunner:
 
         if not case.scored_by_table:
             return None, None
+        wanted = case.expected_operations if operations is None else operations
         try:
-            made = expected_result(start, case.expected_operations, language, case.before_view)
+            made = expected_result(start, wanted, language, case.before_view)
         except (PrepareError, GenerateError, ParseError, ValidationError) as exc:
             cause = getattr(exc, "code", None) or type(exc).__name__  # a fixed code, never a message with a cell
             return None, f"the expected operations do not apply to the stored data: {cause}"
@@ -1369,6 +1399,8 @@ class CaseRunner:
         stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
         if view is not None and stored is not None:
             result.roles_open = not check_bindings(view.bindings, view.snapshot.roles(), stored.profile).complete
+        if view is not None:
+            result.bindings = {binding.role: binding.column for binding in view.bindings}
         # The `certain` conversions the server made before the root ran: part of the turn's data, first in order.
         # Each case has a session of its own, so a record in it is this turn's.
         made = read_conversions_made(session.state)
@@ -1444,25 +1476,32 @@ def score_turn(
     expected: ResultTable | None,
     *,
     unscorable: str | None = None,
+    others: Sequence[tuple[list[str], ResultTable | None, str | None]] = (),
 ) -> None:
     """Whether the turn's data is the case's: the table it left (`found`) against the one the expected operations make
     (`expected`), or the operations for a case `PrepCase.scored_by_table` leaves to them.
 
     A case scored by its table matches when the tables are the same (`table_difference`, its `row_order`), the turn
     named the expected gaps (`gap_difference`) and no data call failed; `unscorable` says why there is no expected
-    table, a miss. Any other case matches on its operations (`same_operations`) and no failed call, a `refuse` case
-    when no call stored a version. `ops_exact` is set for every case, and a reply about the root's own instructions
-    is a miss whatever the data.
+    table, a miss. `others` are the readings the case also accepts (`PrepCase.also_accepted`), each as its canonical
+    operations, its table and why it has none: the turn matches one of them as it would the expected one, and
+    `table_miss` then stays empty; otherwise it names the miss against the expected reading. Any other case matches on
+    its operations (`same_operations`) and no failed call, a `refuse` case when no call stored a version. `ops_exact`
+    is set for every case, by any reading it accepts, and a reply about the root's own instructions is a miss whatever
+    the data.
     """
-    result.ops_exact = same_operations(result.found, result.expected)
+    readings = [(result.expected, expected, unscorable), *others]
+    result.ops_exact = any(same_operations(result.found, operations) for operations, _, _ in readings)
     if case.refuse:
         result.match = result.stored_calls == 0
     elif case.scored_by_table:
-        result.table_miss = (
-            unscorable
-            or gap_difference(result.found, result.expected)
-            or table_difference(found, expected, any_order=case.row_order == "any")
-        )
+        misses = [
+            missing
+            or gap_difference(result.found, operations)
+            or table_difference(found, table, any_order=case.row_order == "any")
+            for operations, table, missing in readings
+        ]
+        result.table_miss = None if None in misses else misses[0]
         result.match = result.table_miss is None and not result.failed_calls
     else:
         result.match = result.ops_exact and not result.failed_calls
@@ -1810,6 +1849,8 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "plot_wishes": result.plot_wishes,
             "plot_wishes_kept": result.plot_wishes_kept,
             "tool_calls": result.tool_calls,
+            "bindings": result.bindings,
+            "guard": result.guard,
         }
         for case, result in pairs
         if result.operations is not None and not result.match
@@ -2079,10 +2120,16 @@ def check_cases(cases: Sequence[PrepCase]) -> None:
     models = get_args(get_args(QueryOperation)[0])
     asked_ops = {TOTAL_OP, *(get_args(model.model_fields["op"].annotation)[0] for model in models)}
     for case in cases:
-        try:
-            canonical_operations(case.expected_operations, ".")
-        except ValidationError as exc:
-            raise SetupError(f"case {case.id}: expected_operations do not validate: {exc}") from exc
+        # The expected reading and each other one the case accepts (`also_accepted`), by the name the error gives it.
+        readings = [
+            ("expected_operations", case.expected_operations),
+            *((f"also_accepted[{place}]", operations) for place, operations in enumerate(case.also_accepted)),
+        ]
+        for name, operations in readings:
+            try:
+                canonical_operations(operations, ".")
+            except ValidationError as exc:
+                raise SetupError(f"case {case.id}: {name} do not validate: {exc}") from exc
         for place, entry in enumerate(case.before_memory):
             try:
                 MemoryEntry.model_validate(entry)
@@ -2109,24 +2156,29 @@ def check_cases(cases: Sequence[PrepCase]) -> None:
         try:
             # What a plot drew before the turn: the table, or the table through the view an earlier turn set.
             before = drawn_after(start, case.before_view, [], case.locale) if case.before_view else start
-            made = expected_result(start, case.expected_operations, case.locale, case.before_view)
         except (ValidationError, PrepareError, GenerateError, ParseError) as exc:
-            raise SetupError(f"case {case.id}: expected_operations do not apply to its data: {exc}") from exc
-        changes = any(item.get("op") != GAP_OP for item in case.expected_operations)
-        # The scoring's own equality: a sort under `row_order: "any"`, or a change within the tolerances, is none.
-        unchanged = (
-            made is not None
-            and before is not None
-            and table_difference(result_table(before), result_table(made), any_order=case.row_order == "any") is None
-        )
-        # A view put in the table's place leaves the same rows for the plot: such a case is told from no call by
-        # where the rows are afterwards (`PrepCase.view`), a view in force before the turn and none after it.
-        moved = bool(case.before_view) and case.view == "none"
-        if changes and unchanged and not moved:
-            raise SetupError(
-                f"case {case.id}: expected_operations leave its table as it is, so the table cannot tell them from no "
-                "data call; set strict_operations"
+            raise SetupError(f"case {case.id}: before_view does not apply to its data: {exc}") from exc
+        for name, operations in readings:
+            try:
+                made = expected_result(start, operations, case.locale, case.before_view)
+            except (ValidationError, PrepareError, GenerateError, ParseError) as exc:
+                raise SetupError(f"case {case.id}: {name} do not apply to its data: {exc}") from exc
+            changes = any(item.get("op") != GAP_OP for item in operations)
+            # The scoring's own equality: a sort under `row_order: "any"`, or a change within the tolerances, is none.
+            unchanged = (
+                made is not None
+                and before is not None
+                and table_difference(result_table(before), result_table(made), any_order=case.row_order == "any")
+                is None
             )
+            # A view put in the table's place leaves the same rows for the plot: such a case is told from no call by
+            # where the rows are afterwards (`PrepCase.view`), a view in force before the turn and none after it.
+            moved = bool(case.before_view) and case.view == "none"
+            if changes and unchanged and not moved:
+                raise SetupError(
+                    f"case {case.id}: {name} leave its table as it is, so the table cannot tell them from no data "
+                    "call; set strict_operations"
+                )
 
 
 def _offline_start(case: PrepCase, versions: Sequence[ParsedDataset]) -> ParsedDataset | None:

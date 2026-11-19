@@ -392,6 +392,26 @@ class RequestLedger:
     rebuilt_from: list[int] = field(default_factory=list)
     """The numbers of the earlier versions this turn's `prepare_data` calls started from (`from_version`): a rebuild
     changed the data also without an operation, which `prep_ops` would not show."""
+    turn_start: dict[str, list[str]] | None = None
+    """The bindings in force when the turn's first `prepare_data` or `set_bindings` call came, per required spec role
+    with the columns it held (`emptied.start_columns`: a family's members together), each column under its current
+    name as the turn's renames move it (`data/emptied.py`): the start of the turn the guard on a taken role judges
+    every step against. None until that call."""
+    taken_roles: dict[str, list[str]] = field(default_factory=dict)
+    """The required spec roles none of whose columns of the turn's start is left after a stored call of this turn,
+    each with those columns (`emptied.taken`): from then on the turn makes no held column, and the session block lists
+    the ones still open. Role names and the user's column names, never sent anywhere but that block."""
+    made_columns: dict[str, str | None] = field(default_factory=dict)
+    """The held columns this turn's `prepare_data` calls made that the current table still has, under their current
+    names, each with the column its date was read from or None for the row numbers (`emptied.held_columns`)."""
+    added_columns: dict[str, str] = field(default_factory=dict)
+    """The new columns this turn's `prepare_data` operations added beside the others that the current table still has,
+    each with the operation's name (`emptied.added_columns`): the guard's log line names the operation, never the
+    column."""
+    guard_held: list[str] = field(default_factory=list)
+    """The names of the tool calls the guard on a taken role refused before they stored anything
+    (`data/emptied.py`): they count against none of the turn's caps (`calls_of`), so the root can still make the
+    change the user asked for in its two calls."""
     capability_gaps: list[str] = field(default_factory=list)
     """The families of the `unsupported` operations the root named in this turn: a data change no operation can make
     (closed: `telemetry.CAPABILITY_GAPS`), never a word of what the user asked."""
@@ -460,8 +480,9 @@ class RequestLedger:
             step.input += tokens  # no split reported: the plain total counts as input
 
     def calls_of(self, tool: str) -> int:
-        """How many calls of `tool` ToolSafety allowed in this turn (`tools`): what every per-turn cap counts."""
-        return self.tools.count(tool)
+        """How many calls of `tool` ToolSafety allowed in this turn (`tools`), less the ones the guard on an emptied
+        role refused (`guard_held`): what every per-turn cap counts."""
+        return self.tools.count(tool) - self.guard_held.count(tool)
 
     def open_call(
         self, key: str, tool: str, verdict: str, *, refused: CallOutcome = "refused", shape: "CallShape | None" = None

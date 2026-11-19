@@ -15,7 +15,8 @@
   field that was wrong); no link (a scheme such as
   `https://` or `data:image`, or `www.`) or file path in any string argument, as link
   hygiene; then the turn's caps (`TURN_CAPS`, counted from the turn's allowed calls, so a refused
-  call never counts): one `plot_pipeline` call per turn (the "one repair round" bound),
+  call never counts, nor one the guard on a taken role refused, `RequestLedger.guard_held`): one `plot_pipeline`
+  call per turn (the "one repair round" bound),
   two `prepare_data`, two `generate_data`, three `query_data` and `MAX_DATA_CODE_CALLS` (2)
   `run_data_code` calls, each refusal with a fixed `message` (`CAP_MESSAGE`). `run_data_code`'s `code`
   (at most `MAX_DATA_CODE_CHARS`, a `source_language` of a fixed set) is exempt from the
@@ -312,8 +313,9 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     # `data`: what the version's downloaded data holds, counts and fixed file names only (`session.version_data`).
     "get_current_code": frozenset({"status", "code", "version", "data"}),
+    # `message` with the refusal of the guard on a taken role (`data/emptied.py`), fixed server text.
     "set_bindings": frozenset(
-        {"status", "reason", "code", "complete", "missing_roles", "data_confirmed", "errors", "warnings"}
+        {"status", "reason", "code", "message", "complete", "missing_roles", "data_confirmed", "errors", "warnings"}
     ),
     # No value: the root knows what it passed, and a result that echoed free text would need a fence.
     "set_language": frozenset({"status", "code", "source", "changed", "plot_outdated"}),

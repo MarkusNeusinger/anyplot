@@ -22,7 +22,8 @@ The view belongs to the data it was set on (`session_state.PLOT_VIEW`). New data
 computed table writes it out of the session, since it would hide rows of a table the user never looked at through
 it. A change of the same data keeps it, and it is checked against the table when it is set and again whenever it
 is read (`current`): after a rename or an undo it may no longer fit, and then it counts as cleared, with a line
-that says so, never applied in part. No ADK import.
+that says so, never applied in part. A change of the table that leaves only rows a selection keeps clears that
+selection, with a line (`idle_selections`): it hides no row any more. No ADK import.
 """
 
 import csv
@@ -279,6 +280,37 @@ def view_of(parsed: ParsedDataset, view: PlotView, language: str = DEFAULT_LANGU
     return _seen(parsed, view.operations(), language)
 
 
+def idle_selections(
+    view: PlotView, held: PlotView, parsed: ParsedDataset, language: str = DEFAULT_LANGUAGE
+) -> list[list[Condition]]:
+    """The selections of `view` that `held`, the view before a change of the table, had too, and that keep every row
+    of `parsed`, the table the change left: they hide no row any more.
+
+    Decided by the rows, never by the words: after "keep only these rows in the table", whether the change was written
+    as the selection's own condition, as `drop_rows` of the others or as anything else, a selection that keeps every
+    row stands for nothing, and left in force it would still be named on the plot and in the session block. Each
+    selection is checked alone against the whole table: one that keeps every row of it keeps every row the others
+    leave too, so leaving it out changes no row the plot draws. A selection the change itself named is the user's
+    word of this turn and stays, and so does a top N, which orders the rows it draws even when it keeps them all."""
+    idle: list[list[Condition]] = []
+    for where in view.selections:
+        if where not in held.selections:
+            continue
+        try:
+            kept = view_of(parsed, PlotView(selections=[list(where)]), language)
+        except PrepareError:
+            continue  # a selection that no longer applies is the whole view's case (`current`), never this one's
+        if kept.rows == parsed.profile.rows:
+            idle.append(list(where))
+    return idle
+
+
+def without_selections(view: PlotView, gone: list[list[Condition]]) -> PlotView:
+    """`view` without the selections `gone`; its top N and how its rows combine stay."""
+    selections = [list(where) for where in view.selections if where not in gone]
+    return PlotView(selections=selections, top=view.top, combine=view.combine)
+
+
 def _seen(parsed: ParsedDataset, operations: list[Operation], language: str) -> Viewed:
     """`parsed` after `operations` that only choose or order its rows, read back with its text columns kept text."""
     prepared = apply_operations(parsed, operations, language=language)
@@ -467,6 +499,9 @@ class Current:
     cleared: str | None = None
 
 
+IDLE_SELECTION_LINE = "the view's selection {words} hides no row of this table any more, so it was cleared"
+"""What a change of the table says of a selection held from before that keeps every row the change left
+(`idle_selections`): the words of the selection, each its own line."""
 CLEARED_LINE = "the view of the plot no longer fits this table and was cleared: the plot draws every row again"
 """What a run or a data change says when the stored view cannot be applied to the table any more (a column it
 names is gone or changed its kind, or no row would be left)."""

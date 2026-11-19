@@ -514,6 +514,24 @@ class TestFixtures:
             check_cases([case("no-006", "back", top, before_operations=[top], expected_from_version=3)])
         check_cases([case("no-007", "back", [RENAME], before_operations=[top], expected_from_version=2)])
 
+    def test_another_reading_is_checked_as_the_expected_one(self) -> None:
+        """`also_accepted` is for a case scored by its table, and each of its lists has to validate, apply and change
+        the table as the expected operations do."""
+        nothing = [{"op": "drop_rows", "where": [{"column": "Study Hours", "test": "gt", "value": 100}]}]
+        renamed = [{"op": "rename", "column": "Study Hours", "name": "Stunden"}]
+
+        check_cases([case("al-001", "rename it", [RENAME], also_accepted=[renamed])])
+        with pytest.raises(SetupError, match=r"al-002: also_accepted\[0\] do not validate"):
+            check_cases([case("al-002", "rename it", [RENAME], also_accepted=[[{"op": "explode"}]])])
+        with pytest.raises(SetupError, match=r"al-003: also_accepted\[0\] do not apply to its data"):
+            check_cases([case("al-003", "rename it", [RENAME], also_accepted=[[GHOST]])])
+        with pytest.raises(SetupError, match=r"al-004: also_accepted\[0\] leave its table as it is"):
+            check_cases([case("al-004", "rename it", [RENAME], also_accepted=[nothing])])
+        with pytest.raises(ValidationError, match="also_accepted is for a case scored by its table"):
+            case("al-005", "rename it", [RENAME], strict_operations=True, also_accepted=[renamed])
+        with pytest.raises(ValidationError):  # two fair readings at most: the expected one and one more
+            case("al-006", "rename it", [RENAME], also_accepted=[renamed, renamed])
+
     def test_which_cases_are_scored_by_their_table(self) -> None:
         """Every case but one that expects no data call, a `run_data_code` call, a `refuse` case and a strict one."""
         assert case("s-001", "rename it", [RENAME]).scored_by_table
@@ -1274,6 +1292,62 @@ def script_for(*answers: list[dict[str, Any]]) -> dict[str, list[Any]]:
 
 
 class TestRun:
+    def test_the_report_holds_the_bindings_after_the_turn_and_the_guards_lines(
+        self, services: Services, swap_models
+    ) -> None:
+        """Report-only fields, never scored: on which role a column ended, and the guard's content-free lines on an
+        emptied role. Here the drop empties y and the root binds Study Hours to it as well: a refill, which counts."""
+        drop = {"op": "drop_columns", "columns": ["Exam Score"]}
+        cases = [case("g-001", "drop the exam score", [drop])]
+        both = [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Study Hours"}]
+        root_turns = [
+            [
+                {"call": "prepare_data", "args": {"operations": [drop]}},
+                {"call": "set_bindings", "args": {"bindings": both}},
+                {"text": "Exam Score dropped; Study Hours on both axes."},
+            ]
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+        judge: FakeJudge = services.judge  # type: ignore[assignment]
+        judge.script.extend([JudgeVerdict(verdict="in_scope", lang="en")])
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        result = results[0]
+        assert result.match and result.bindings == {"x": "Study Hours", "y": "Study Hours"}
+        assert result.guard == [{"tool": "set_bindings", "outcome": "refilled", "role": "y"}]
+        written = dataclasses.asdict(result)  # as the report file holds every result
+        assert (written["bindings"], written["guard"]) == (result.bindings, result.guard)
+
+    def test_a_case_with_two_fair_readings_matches_either(self, services: Services, swap_models) -> None:
+        """`de-klasse-aus-vorzeichen`: "y positiv ist Klasse 1, sonst Klasse 2" in a new column named Klasse reads as
+        the labels `Klasse 1` and `Klasse 2`, or as `1` and `2`. Either table matches; a third does not, and its miss
+        names the expected reading."""
+
+        def labels(first: str, second: str) -> list[dict[str, Any]]:
+            rule = {"where": [{"column": "Exam Score", "test": "gt", "value": "60"}], "label": first}
+            return [{"op": "classify", "name": "Klasse", "rules": [rule], "otherwise": second}]
+
+        wanted = labels("Klasse 1", "Klasse 2")
+        cases = [
+            case(f"k-00{number}", "Klasse 1 above 60, else Klasse 2", wanted, also_accepted=[labels("1", "2")])
+            for number in (1, 2, 3)
+        ]
+        root_turns = [
+            [{"call": "prepare_data", "args": {"operations": answer}}, {"text": "Added Klasse to 4 rows."}]
+            for answer in (wanted, labels("1", "2"), labels("A", "B"))
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+        judge: FakeJudge = services.judge  # type: ignore[assignment]
+        judge.script.extend([JudgeVerdict(verdict="in_scope", lang="en")] * 3)
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.match for result in results] == [True, True, False]
+        assert [result.ops_exact for result in results] == [True, True, False]
+        assert results[0].table_miss is None and results[1].table_miss is None
+        assert results[2].table_miss == "values differ: 'Klasse' in 4 rows"
+
     def test_a_scripted_run_reads_the_tool_calls_from_the_session(self, services: Services, swap_models) -> None:
         cases = [
             case("r-001", "rename the hours", [RENAME]),

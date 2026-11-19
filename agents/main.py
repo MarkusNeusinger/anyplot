@@ -21,7 +21,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language, via?}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`; `via`: `header`, the chip and the default, or `offer`, the button on an offer line) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), and the plot's; source `chosen` from the chip, which ends every offer, `offer` from an offer while the user picked none, with the content-free `language_offer` telemetry line (`via`, the language as a closed code); `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern, or another `via`) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
-| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version, view}` (`view`: the view of the plot in force on the restored version as the page shows it, `{rows, of_rows, parts}`, or null for every row): the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, under its own number (`version`: the session numbers every stored version once, so paste, change, undo, change is 1, 2, 1, 3), its bindings carried over (`dataset_versions.py`); `can_undo` whether another undo has a version to restore, `original_version` the number of the current data's first version; unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
+| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, can_undo, original_version, view}` (`view`: the view of the plot in force on the restored version as the page shows it, `{rows, of_rows, parts}`, or null for every row): the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, under its own number (`version`: the session numbers every stored version once, so paste, change, undo, change is 1, 2, 1, 3), its bindings carried over (`dataset_versions.py`); `can_undo` whether another undo has a version to restore, `original_version` the number of the current data's first version; unconfirmed, like any version the user has not confirmed; the view of the plot the undone step changed comes back while the view in force is still the one the step left | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (the target's first version, numbered 1) plus `confirmed: true`, `complete`, `missing_roles`, `copied_from` (the source's version number) and `carry` (the switch answer's shape: the plot memory and a carry of the source's latest plot come along, so the fan-out sends `carry_plot` on `offer`): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
@@ -2104,6 +2104,11 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
     is unconfirmed, because the user confirms every version they see. `422
     nothing_to_undo` for a paste that was never prepared (or whose history is spent),
     and for data that `generate_data` made in a session without data (its first version).
+
+    An undo takes back what the undone step did to the view of the plot too: when the step changed the view
+    (`StoredDataset.view_change`: a selection it cleared, an `apply_view`, a view set or cleared with the table) and the
+    view in force is still the one the step left, the view from before the step is put back. A view changed since is
+    the user's later word and stays. The answer's `view` is read after that, so the page draws the view in force.
     """
     services = get_services()
     session = await runtime.session(user, sid)
@@ -2111,10 +2116,16 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
+    # Read before the undo, which takes the undone version out of the store.
+    undone = services.datasets.get(view.dataset_id, sid) if view.dataset_id else None
     restored = undo_version(services.datasets, sid, view, view.snapshot)
     if restored is None:
         raise AgentsError(422, "nothing_to_undo")
-    await runtime.write_state(session, restored.delta)
+    delta = dict(restored.delta)
+    change = undone.view_change if undone is not None else None
+    if change is not None and read_view(session.state).stamp() == change[1]:
+        delta.update(view_delta(PlotView.model_validate(change[0]) if change[0] is not None else PlotView()))
+    await runtime.write_state(session, delta)
     telemetry.marks(sid).undo = True  # the next `chat_turn` line's `undo`
     after = await runtime.session(user, sid)
     return JSONResponse(

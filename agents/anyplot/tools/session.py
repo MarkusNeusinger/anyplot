@@ -21,7 +21,10 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 * `set_bindings(bindings)`: `apply_bindings` plus a state write; refused while the
   pipeline runs. Its result says whether the data is still `data_confirmed`: bindings that
   only leave out confirmed number series (`y2`) keep the confirmation (`narrowed_confirmation`,
-  `AGENT_NARROWED_BINDINGS=keep`, since 2026-10-15), any other change drops it.
+  `AGENT_NARROWED_BINDINGS=keep`, since 2026-10-15), any other change drops it. A binding that puts a column of
+  the turn holding a date turned into numbers or the row numbers on a member of a required role none of whose
+  columns of the turn's start the turn left is refused, the whole call, with `invalid_bindings` and a fixed
+  `message` (`data/emptied.py`).
 * `set_language(language, applies_to)`: the reply language (the session language,
   `session_state.LANGUAGE`, with the source `chosen`), the plot's text
   (`session_state.PLOT_LANGUAGE`) or both (the default), validated like the language
@@ -82,7 +85,14 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   so the table and the confirmation stand and the plot may run in the same turn. The result then names
   `landed` (`view`, `table`, `table_and_view`), the view's lines fenced as `<tool_notes>` and, for a view
   alone, `plot_outdated`; `reset_view` clears the view, and a view that does not fit the table the call
-  leaves refuses the whole call.
+  leaves refuses the whole call. A selection held from before that keeps every row of the table the call
+  leaves is cleared with a line of its own (`plot_view.idle_selections`). In a turn that took every column a
+  required role held at the turn's start (a family of roles counts as one), a call that turns a date into numbers
+  or makes the row numbers is refused before anything is stored, with `invalid_operation` and a fixed `message`,
+  and counts against none of the turn's caps, unless the date is one of the taken role's own columns (a
+  replacement); a call whose carry alone would put such a column of an
+  earlier call on a taken role is stored with that column kept off every role (`data/emptied.py`,
+  `_turn_columns`).
 * `query_data(operations, columns, limit, from_version)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, or of the two only a
   question takes (`prepare.QueryOperation`: an `aggregate` without `by`, a `fit`), then
@@ -110,23 +120,36 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 import json
 import math
 import secrets
-from collections.abc import Sequence
-from dataclasses import replace
+from collections.abc import Collection, Iterable, Mapping, Sequence
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from google.adk import Workflow
 from google.adk.tools.tool_context import ToolContext
 from pydantic import ValidationError
 
+from core.spec_roles import DataRole
+
 from .. import telemetry
 from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.bindings import carry_bindings
+from ..data.emptied import (
+    added_columns,
+    family_name,
+    held_columns,
+    renamed,
+    replaces,
+    start_columns,
+    taken,
+    wrong_bindings,
+)
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import (
     MAX_OPERATIONS,
     ApplyView,
+    DropColumns,
     KeepRows,
     Operation,
     PrepareArgs,
@@ -165,6 +188,7 @@ from ..pipeline import (
 )
 from ..plot_view import (
     CLEARED_LINE,
+    IDLE_SELECTION_LINE,
     Current,
     PlotView,
     Routed,
@@ -172,19 +196,23 @@ from ..plot_view import (
     ViewRefused,
     breaks_bindings,
     current,
+    idle_selections,
     merged,
+    read_view,
     route,
     settled_delta,
     table_only,
     view_delta,
     view_of,
+    without_selections,
 )
-from ..plugins.ledger import attribution, ledger_for
+from ..plugins.ledger import RequestLedger, attribution, ledger_for
 from ..plugins.tool_safety import (
     DATA_CODE_TOOL,
     MAX_DATA_CODE_CHARS,
     MAX_FILE_NAME_RESULT_BYTES,
     MAX_NOTES_RESULT_BYTES,
+    PREPARE_TOOL,
     QUERY_TOOL,
     changed_data,
     result_limit,
@@ -354,7 +382,8 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
-    if ledger_for(tool_context.invocation_id).pipeline_active:
+    ledger = ledger_for(tool_context.invocation_id)
+    if ledger.pipeline_active:
         return _error("run_active")
     profile = _profile(view, tool_context)
     if profile is None:
@@ -364,11 +393,22 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
     except ValueError:
         return _error("invalid_bindings")
     roles = view.snapshot.roles()
+    _start_turn(ledger, view.bindings, roles)
+    wrong = wrong_bindings(parsed, ledger.made_columns, ledger.taken_roles, roles)
+    if wrong:
+        # A held column of the turn on a taken role it does not replace, bound by the root (`data/emptied.py`).
+        ledger.guard_held.append("set_bindings")
+        columns = [binding.column for binding in wrong]
+        _note_held(ledger, "set_bindings", ledger.taken_roles, [ledger.added_columns.get(name, "") for name in columns])
+        filled = {family_name(binding.role, roles) for binding in view.bindings}
+        message = COLUMN_HELD_MESSAGE if set(ledger.taken_roles) - filled else COLUMN_HELD_FILLED_MESSAGE
+        return _column_held(ledger.taken_roles, {}, [], columns, "invalid_bindings", message=message)
     check, delta = apply_bindings(parsed, roles, profile)
     if not delta:
         # The errors quote column names from the user's dataset.
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
         return {"status": "error", "code": "invalid_bindings", "errors": errors}
+    _note_taken(ledger, "set_bindings", view.bindings, parsed, ledger.taken_roles, ledger.added_columns, roles)
     # Other bindings than the user confirmed leave the confirmation's fingerprint behind and the panel asks again,
     # unless they only leave out confirmed number series (`narrowed_confirmation`, `AGENT_NARROWED_BINDINGS`).
     if get_settings().narrowed_bindings == "keep":
@@ -563,6 +603,225 @@ def _version_refusal(code: VersionRefusal) -> dict[str, Any]:
     return {"status": "error", "code": code, "message": VERSION_MESSAGES[code]}
 
 
+COLUMN_HELD_MESSAGE = (
+    "Nothing changed. A change of this turn takes the column of {roles}, and in such a turn no row numbers are made "
+    "and a date is turned into numbers only from that role's own column, to take its place. Make the rest of the "
+    "change without the column held here. In the reply, name the role whose column the change takes and say that the "
+    "next turn lists what the server can compute for it, if anything; if the user asked for the column held here, say "
+    "it can be made in the next turn."
+)
+"""The refusal of the guard on a taken role (`data/emptied.py`) while a taken role would be left without a column:
+server text, the role names the spec's own; the columns stand fenced beside it under `errors`. It names no operation
+the root could try instead, since a derived column on the taken axis would pass the guard (the known gap its log line
+counts), and it never says a role lost its column, since the call it refuses may be the one that would have taken it:
+the `errors` lines tell the two apart. It comes with the code the tool answers a call it cannot make with
+(`invalid_operation`, `invalid_bindings`), as the refusal of a view that would break the bindings does."""
+COLUMN_HELD_FILLED_MESSAGE = (
+    "Nothing changed. A change of this turn takes the column of {roles}, and in such a turn no row numbers are made "
+    "and a date is turned into numbers only from that role's own column, to take its place. Make the rest of the "
+    "change without the column held here; if the user asked for it, say in the reply that it can be made in the next "
+    "turn."
+)
+"""The same refusal once every taken role holds a column (one that was there, bound to it by the root): nothing about
+a role that waits or about what the next turn lists for it."""
+ROWS_REPLACE_MESSAGE = (
+    "Nothing changed. Row numbers do not take the place of a column that the same change removes: in this turn they "
+    "can be made and bound while that column stays in the table, and the column can be removed in the next turn."
+)
+"""The refusal of a call that removes the column of a required role with `drop_columns` and makes row numbers, in a
+turn that had taken no role before: what works instead, as a fact. Made alone, the row numbers are stored and may take the role
+while its column stays; in the next turn the role holds them, so removing the old column takes no role then."""
+LOST_LINE = "{role} lost its column '{column}' in an earlier change of this turn"
+LOSING_LINE = "{role} would lose its column '{column}' with this call"
+MADE_NOW_LINE = "'{name}' holds a date turned into numbers or the row numbers, and this call would make it"
+MADE_BEFORE_LINE = "'{name}' holds a date turned into numbers or the row numbers, made earlier in this turn"
+"""The `errors` lines of the guard's refusal, fenced since they name the user's columns: a role an earlier call of the
+turn took, a role this call would take, a column this call would make, a column an earlier call made."""
+
+
+def _column_held(
+    lost: Mapping[str, Sequence[str]],
+    losing: Mapping[str, Sequence[str]],
+    made_now: Sequence[str],
+    made_before: Sequence[str],
+    code: str,
+    *,
+    message: str,
+) -> dict[str, Any]:
+    """The refusal with `code` of a call that would make or bind a held column in a turn that took the roles of
+    `lost`, or of `losing` with this very call (each spec role: the columns it held at the start of the turn, one line
+    per column): `message`, one of the fixed sentences above with the roles filled in, and the lines that name the
+    columns, fenced."""
+    lines = [
+        *(LOST_LINE.format(role=role, column=column) for role, columns in lost.items() for column in columns),
+        *(
+            LOSING_LINE.format(role=role, column=column)
+            for role, columns in losing.items()
+            if role not in lost
+            for column in columns
+        ),
+        *(MADE_NOW_LINE.format(name=name) for name in dict.fromkeys(made_now)),
+        *(MADE_BEFORE_LINE.format(name=name) for name in dict.fromkeys(made_before) if name not in made_now),
+    ]
+    text = message.format(roles=", ".join(dict.fromkeys([*lost, *losing])))
+    return {"status": "error", "code": code, "message": text, "errors": _fenced_lines(lines)}
+
+
+def _note_held(
+    ledger: RequestLedger, tool: str, roles: Iterable[str], kinds: Iterable[str], *, outcome: str = "refused"
+) -> None:
+    """The guard's log line (hook `emptied_role`) for a call it held a column from: the tool, the outcome (`refused`,
+    or `kept_off` for a change stored with an earlier call's fill kept off every role), the roles the turn's change
+    takes the column of, and the names of the operations that made the held columns. Content-free: the spec's role
+    names and closed operation names, never a column or a cell."""
+    attribution(
+        "emptied_role",
+        ledger,
+        tool=tool,
+        outcome=outcome,
+        roles=sorted(set(roles)),
+        kinds=sorted({kind for kind in kinds if kind}),
+    )
+
+
+def _note_taken(
+    ledger: RequestLedger,
+    tool: str,
+    before: Collection[Binding],
+    after: Sequence[Binding],
+    taken: Collection[str],
+    added: Mapping[str, str],
+    roles: list[DataRole],
+) -> None:
+    """The guard's log line for each new binding of `after` on a member of a spec role of `taken`, the roles whose
+    columns of the turn's start the turn took. Both outcomes count and neither judges: the line is written whether the
+    user asked for the binding or not, and it names the spec role, never the column.
+
+    * `bound`: a column an operation of the turn added (`added`, with the operation's name): the known gap, a derived
+      column or a text conversion the guard lets through, and a date number that replaces the role's own column.
+    * `refilled`: a column that was there before the turn, put on the role by `set_bindings` or by a carry, such as a
+      column read as numbers in place that the carry puts on the open role."""
+    for binding in after:
+        role = family_name(binding.role, roles)
+        if binding in before or role not in taken:
+            continue
+        if binding.column in added:
+            attribution("emptied_role", ledger, tool=tool, outcome="bound", role=role, kind=added[binding.column])
+        else:
+            attribution("emptied_role", ledger, tool=tool, outcome="refilled", role=role)
+
+
+def _start_turn(ledger: RequestLedger, bindings: Sequence[Binding], roles: list[DataRole]) -> None:
+    """Keep the bindings in force at the turn's first data or binding call, per required spec role
+    (`emptied.start_columns`), as the start the guard judges against."""
+    if ledger.turn_start is None:
+        ledger.turn_start = start_columns(bindings, roles)
+
+
+@dataclass(frozen=True)
+class _TurnColumns:
+    """What one stored `prepare_data` call does to the guard on a taken role: the turn's first bindings per required
+    spec role under the call's renames (`start`), the roles taken by now (`taken`), the turn's held columns with their
+    sources (`held`) and the columns its operations added with their names (`added`), its refusal, and `kept_off`, the
+    held columns its carry gives no role."""
+
+    start: dict[str, list[str]]
+    taken: dict[str, list[str]]
+    held: dict[str, str | None]
+    added: dict[str, str]
+    refusal: dict[str, Any] | None = None
+    kept_off: list[str] = field(default_factory=list)
+
+
+def _turn_columns(
+    ledger: RequestLedger,
+    bindings: list[Binding],
+    roles: list[DataRole],
+    current: DatasetProfile,
+    start: DatasetProfile,
+    parsed: ParsedDataset,
+    prepared: Prepared | None,
+    operations: Sequence[Operation],
+) -> _TurnColumns:
+    """The guard on a taken role for one `prepare_data` call that stores a version (`data/emptied.py`).
+
+    `bindings` are the ones in force on `current`, the current version; `start` is the version the call's operations
+    start from (another one for a rebuild); `parsed` is the table they leave. A required spec role is taken when none of
+    the columns it held at the start of the turn is in `parsed`, or it was taken by an earlier call. With a taken role:
+
+    1. the call is refused when it makes a held column that replaces no taken role's own column;
+    2. its real carry (`push_version` computes the same) is judged: a held column on a taken role it does not replace
+       is kept off every role (`kept_off`, the held columns no role holds), so the change the user asked for is stored
+       and the role waits; when the carry without them still puts one there, the root bound it before the call, and
+       the call is refused.
+
+    The refusal's sentence: `ROWS_REPLACE_MESSAGE` when row numbers are at issue (made by the call, or held by the role)
+    and the call removes the taken role's column with `drop_columns`, in a turn that had taken none before; else
+    `COLUMN_HELD_MESSAGE` when the call takes a role or a role taken before holds no column; else
+    `COLUMN_HELD_FILLED_MESSAGE`.
+    """
+    names = {column.name for column in parsed.profile.columns}
+    converted = prepared.converted if prepared is not None else {}
+    row_numbers = prepared.row_numbers if prepared is not None else []
+    splits = prepared.splits if prepared is not None else []
+    date_numbers = prepared.date_numbers if prepared is not None else []
+    before = {column.name for column in start.columns}
+    first = {
+        role: [renamed(column, operations) for column in columns] for role, columns in (ledger.turn_start or {}).items()
+    }
+    made = held_columns(date_numbers, row_numbers, converted, before)
+    earlier = {
+        renamed(name, operations): source and renamed(source, operations)
+        for name, source in ledger.made_columns.items()
+    }
+    held = {name: source for name, source in {**earlier, **made}.items() if name in names}
+    new = {name: source for name, source in made.items() if name in names}
+    earlier_added = {renamed(name, operations): kind for name, kind in ledger.added_columns.items()}
+    added = {
+        name: kind
+        for name, kind in {**earlier_added, **added_columns(operations, before, names, new)}.items()
+        if name in names
+    }
+    now = {role: columns for role, columns in taken(first, names).items() if role not in ledger.taken_roles}
+    all_taken = {**ledger.taken_roles, **now}
+    if not all_taken:
+        return _TurnColumns(first, all_taken, held, added)
+    carried = carry_bindings(bindings, roles, parsed.profile, current, converted, row_numbers, splits)
+    replacing = {name for name in held if any(replaces(name, role, held, all_taken, roles) for role in all_taken)}
+    alien = [name for name in new if name not in replacing]
+    wrong = wrong_bindings(carried, held, all_taken, roles)
+    if not alien and not wrong:
+        return _TurnColumns(first, all_taken, held, added)
+    kinds = [added.get(name, "") for name in [*alien, *(binding.column for binding in wrong)]]
+    if not alien:
+        # The carry would put an earlier call's held column on a taken role: the change is the user's and is stored,
+        # every held column no role holds and none replaces stays off every role, and the role waits. A held column
+        # the root bound before stays bound, so the carry still puts it on the taken role and the call is refused.
+        bound = {binding.column for binding in bindings}
+        kept_off = [name for name in held if name not in bound and name not in replacing]
+        offered = parsed.profile.model_copy(
+            update={"columns": [column for column in parsed.profile.columns if column.name not in kept_off]}
+        )
+        if not wrong_bindings(
+            carry_bindings(bindings, roles, offered, current, converted, row_numbers, splits), held, all_taken, roles
+        ):
+            _note_held(ledger, PREPARE_TOOL, all_taken, kinds, outcome="kept_off")
+            return _TurnColumns(first, all_taken, held, added, kept_off=kept_off)
+    _note_held(ledger, PREPARE_TOOL, all_taken, kinds)
+    dropped = {name for operation in operations if isinstance(operation, DropColumns) for name in operation.columns}
+    rows = any(held[name] is None for name in [*alien, *(binding.column for binding in wrong)])
+    if not ledger.taken_roles and rows and {column for columns in now.values() for column in columns} & dropped:
+        message = ROWS_REPLACE_MESSAGE
+    else:
+        # A role this call takes waits for the user once the call is made without the held column; one taken before
+        # waits while the bindings in force leave it without a column.
+        filled = {family_name(binding.role, roles) for binding in bindings}
+        message = COLUMN_HELD_MESSAGE if now or set(ledger.taken_roles) - filled else COLUMN_HELD_FILLED_MESSAGE
+    made_before = [binding.column for binding in wrong if binding.column not in new]
+    refusal = _column_held(ledger.taken_roles, now, alien, made_before, "invalid_operation", message=message)
+    return _TurnColumns(first, all_taken, held, added, refusal)
+
+
 async def prepare_data(
     operations: list[dict[str, Any]], tool_context: ToolContext, from_version: str = CURRENT_VERSION
 ) -> dict[str, Any]:
@@ -630,6 +889,7 @@ async def prepare_data(
     stored = services.datasets.get(view.dataset_id, session_id) if view.dataset_id else None
     if stored is None:
         return _not_ready("no_dataset")
+    _start_turn(ledger, view.bindings, view.snapshot.roles())
     try:
         if not isinstance(operations, list) or len(operations) > MAX_OPERATIONS:
             raise ValueError(f"operations is a list of 1 to {MAX_OPERATIONS} operations")
@@ -681,6 +941,15 @@ async def prepare_data(
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
     except ParseError:  # the operations keep every parser cap (rows, columns, size), so a refusal here is a bug
         return _error("internal")
+    turn: _TurnColumns | None = None
+    if stores:
+        # Checked on the table and the bindings the call would leave, before anything is stored (`data/emptied.py`).
+        turn = _turn_columns(
+            ledger, view.bindings, roles, stored.profile, start.stored.profile, parsed, prepared, routed.table
+        )
+        if turn.refusal is not None:
+            ledger.guard_held.append(PREPARE_TOOL)
+            return turn.refusal
     # The view is checked on the table the call leaves, before anything is stored: a view of this call that does not
     # fit refuses the whole call, a view held from before is cleared with a line.
     seen: Viewed | None = None
@@ -697,10 +966,13 @@ async def prepare_data(
         # (`push_version` computes them the same way), so a call that changes the table is checked like any other.
         bound = view.bindings
         if stores:
+            kept_off = set(turn.kept_off) if turn is not None else set()
             bound = carry_bindings(
                 view.bindings,
                 roles,
-                parsed.profile,
+                parsed.profile.model_copy(
+                    update={"columns": [column for column in parsed.profile.columns if column.name not in kept_off]}
+                ),
                 start.stored.profile,
                 prepared.converted if prepared is not None else None,
                 prepared.row_numbers if prepared is not None else (),
@@ -711,9 +983,27 @@ async def prepare_data(
                 message = _fenced_lines([VIEW_BREAKS_BINDINGS])
                 return {"status": "error", "code": "invalid_operation", "message": message}
             shown, seen, cleared = PlotView(), None, True
+    idle: list[str] = []
+    if stores and seen is not None:
+        # A selection held from before that keeps every row the new table has: the change of the table did what it
+        # did, so it is cleared with a line (`plot_view.idle_selections`). One the call named itself is its own word.
+        before = (
+            PlotView()
+            if routed.reset
+            else PlotView(selections=[w for w in held.selections if w not in routed.selections])
+        )
+        gone = idle_selections(shown, before, parsed, view.language)
+        if gone:
+            text = [name for name, dtype in parsed.column_dtypes.items() if dtype == "text"]
+            idle = [IDLE_SELECTION_LINE.format(words=PlotView(selections=[where]).words(text)) for where in gone]
+            shown = without_selections(shown, gone)
+            seen = None if shown.empty else view_of(parsed, shown, view.language)
     if not stores:
         return _view_result(tool_context, view, start.stored, shown, seen, routed)
     changes = rebuilt_changes(start, [*moved, *(prepared.changes if prepared is not None else [])])
+    # The view as stored before the call (also one that had stopped fitting) and the view the call leaves: kept with
+    # the version, so its undo takes back what the step did to the view as well (`StoredDataset.view_change`).
+    view_before, view_after = read_view(tool_context.state).stamp(), shown.stamp()
     try:
         # From an earlier version too, the result goes on top: the history is never rewritten, and `.undo()` steps
         # back to the version the turn began with.
@@ -728,6 +1018,8 @@ async def prepare_data(
             splits=prepared.splits if prepared is not None else (),
             changes=changes,
             made_from=None if start.current else start.stored,
+            kept_off=turn.kept_off if turn is not None else (),
+            view_change=(view_before, view_after) if view_before != view_after else None,
         )
     except StoreFull:
         return _error("capacity")
@@ -741,6 +1033,10 @@ async def prepare_data(
     ledger.prep_ops.extend([*(["apply_view"] if routed.apply else []), *(op.op for op in routed.table)])
     if not start.current:
         ledger.rebuilt_from.append(start.number)
+    if turn is not None:
+        ledger.turn_start, ledger.taken_roles = turn.start, turn.taken
+        ledger.made_columns, ledger.added_columns = turn.held, turn.added
+        _note_taken(ledger, PREPARE_TOOL, view.bindings, version.bindings, turn.taken, turn.added, roles)
     base = {
         "status": "ok",
         "rows": parsed.profile.rows,
@@ -748,9 +1044,10 @@ async def prepare_data(
         "version": version.version,
         "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(changes, ensure_ascii=False)),
     }
-    if routed.view or cleared:
-        # The view of this call, or one held from before that the new table no longer fits: stored with the version.
-        # Only a view the call itself named settles what a paste had set aside (`settled_delta`).
+    if routed.view or cleared or idle:
+        # The view of this call, or one held from before that the new table no longer fits or no longer needs all of:
+        # stored with the version. Only a view the call itself named settles what a paste had set aside
+        # (`settled_delta`).
         for key, value in (settled_delta(shown) if routed.view else view_delta(shown)).items():
             tool_context.state[key] = value
         ledger.view_ops.extend(view_op_names(routed))
@@ -758,7 +1055,7 @@ async def prepare_data(
         both = routed.view and not (routed.apply and shown.empty)
         base["landed"] = "table_and_view" if both else "table"
         base["view"] = _view_lines(
-            shown, seen, version.version, parsed.profile.rows, cleared=cleared, applied=routed.apply
+            shown, seen, version.version, parsed.profile.rows, cleared=cleared, applied=routed.apply, idle=idle
         )
     elif any(isinstance(operation, KeepRows) for operation in routed.table):
         base["landed"] = "table"  # a `keep_rows` the call's order or its `target` sent to the table
@@ -789,15 +1086,24 @@ def view_op_names(routed: Routed) -> list[str]:
 
 
 def _view_lines(
-    shown: PlotView, seen: Viewed | None, data_version: int, table_rows: int, *, cleared: bool, applied: bool = False
+    shown: PlotView,
+    seen: Viewed | None,
+    data_version: int,
+    table_rows: int,
+    *,
+    cleared: bool,
+    applied: bool = False,
+    idle: Sequence[str] = (),
 ) -> str:
     """The view as a tool result carries it, fenced: each step's line with its counts and the server's summary, or the
-    one line of a view that is no more: applied to the table, cleared by the call, or no longer fitting."""
+    one line of a view that is no more: applied to the table, cleared by the call, or no longer fitting. `idle` are
+    the lines of the selections the call's change of the table cleared (`plot_view.idle_selections`), which say why
+    on their own."""
     if seen is not None and not shown.empty:
-        lines = [*([VIEW_APPLIED] if applied else []), *seen.changes, seen.summary(data_version)]
+        lines = [*([VIEW_APPLIED] if applied else []), *idle, *seen.changes, seen.summary(data_version)]
     else:
-        gone = VIEW_APPLIED if applied else CLEARED_LINE if cleared else VIEW_CLEARED
-        lines = [gone, f"the plot draws all {table_rows} rows of data v{data_version}"]
+        gone = [VIEW_APPLIED] if applied else [CLEARED_LINE] if cleared else [] if idle else [VIEW_CLEARED]
+        lines = [*gone, *idle, f"the plot draws all {table_rows} rows of data v{data_version}"]
     return DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(lines, ensure_ascii=False))
 
 
