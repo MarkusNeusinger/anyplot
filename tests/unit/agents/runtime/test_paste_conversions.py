@@ -7,6 +7,7 @@ date column, or made it and dropped it again. The unit tests drive `make_convers
 store; the flow tests drive whole turns through the `/v1` routes with scripted models.
 """
 
+import calendar
 from collections.abc import AsyncIterator, Iterator
 from types import SimpleNamespace
 from typing import Any
@@ -240,6 +241,7 @@ class TestMakeConversions:
             ["2026-03-01 10:00 Sun", "2026-03-02 11:30 Mon", "2026-03-03 12:00 Tue"],
             ["2026-03 10:00 / 05", "2026-04 11:00 / 06", "2026-05 12:00 / 07"],
             ["Nov 2026 10:00 / 05", "Dec 2026 11:00 / 06", "Jan 2027 12:00 / 07"],
+            [f"2026-{number:02d} {name}" for number, name in enumerate(calendar.month_name[1:], start=1)],
         ],
     )
     def test_more_after_a_date_than_a_time_is_never_read_as_dates_unasked(self, cells: list[str]) -> None:

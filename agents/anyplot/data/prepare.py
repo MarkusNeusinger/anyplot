@@ -49,7 +49,8 @@ The operations:
   moment as programs write it, a day without its year, the clock and the year, a zone before or
   after the year (`Sun Mar 1 10:00:00 2026`, `Sun Mar 1 10:00:00 UTC 2026`). A clock inside a
   cell in any other shape (`2026-03 10:00 / 05`, which pandas read as 5 March, `01.03 10:00
-  2026`) makes it unreadable, and so does anything else after the
+  2026`) makes it unreadable, so does a month name beside a month in numbers (`2026-02
+  February`, which names the month twice and no day: pandas read 2 February), and so does anything else after the
   date (a second date such as `2026-03-01-2026-03-05`, more numbers such as `2026-03-01/05`, a
   number alone after a space, a sign and digits after a space, a range of times such as
   `2026-03-01 9:00-17:00` or `T10-12`, a time after a month or a year, a word after the date's
@@ -4661,6 +4662,10 @@ _QUARTER_PART = re.compile(r"[Qq][1-4]")
 _WORD_PART = re.compile(r"[^\W\d_]+")
 _JOINERS = ("-", "/", ",")
 """The separators that join a date's parts, or a date to more: a date that ends in one is unfinished."""
+_NUMERIC_MONTH = re.compile(r"(?:^|[\s,])(?:[0-9]{4}[-/.][0-9]{1,2}|[0-9]{1,2}[-/.][0-9]{4})(?=$|[\s,])")
+"""A month in numbers standing as a part of its own: a year of four digits and the month's one or two joined by `-`,
+`/` or `.`, in either order (`2026-02`, `02/2026`, `2026.02`). Beside a month name it names the month twice; a number
+joined to the name instead (`Mar-01-2026`, `1-Mar-2026`) is the day."""
 _MERIDIEM_AFTER_NUMBER = re.compile(r"[0-9]\s*[AaPp]\.?\s?[Mm](?:\.|(?![^\W\d_]))")
 """An hour with am or pm (`10am`, `10 AM`, `10 a.m.`), which the letters of a number (`1st`) never are."""
 DateShape = Literal["day", "month", "year", "quarter"]
@@ -4713,6 +4718,8 @@ def _date_shape(text: str, *, word_at_end: bool = False) -> DateShape | None:
     if months > 1:
         return None
     if months:
+        if _NUMERIC_MONTH.search(text):
+            return None  # `2026-02 February`: the month twice and no day, which pandas takes from the month's number
         return "day" if len(numbers) == 2 else "month" if numbers == [4] else None
     if len(numbers) == 3 or numbers == [8]:
         return "day"

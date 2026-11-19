@@ -12,9 +12,11 @@
   `13.03.2026-05:00` as that day at 05:00, `2026-03-01/05` as 1 March,
   `2026-03-01 of` and `2026 of` as that day and that year and
   `2026-03-01 10:00 of` as 10:00, the word skipped, `2026-03 10:00 / 05` as
-  5 March, a day put together around the time, and a range of times such as
-  `2026-03-01 9:00-17:00` as 09:00 at an offset of -17:00, which no place
-  has; each was rated certain and made without asking. A word before
+  5 March, a day put together around the time, a month label such as
+  `2026-02 February` as 2 February, the month's number taken for the day,
+  and a range of times such as `2026-03-01 9:00-17:00` as 09:00 at an
+  offset of -17:00, which no place has; each was rated certain and made
+  without asking. A word before
   the date, as in `Sunday, 1 March 2026`, still reads, and so does a moment
   as programs write it (`Sun Mar 1 10:00:00 2026`); a word after a time
   counts as its zone only when it is read as one, as `UTC` is. (#13187)

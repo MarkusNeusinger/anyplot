@@ -11,6 +11,7 @@ with their new reading.
 
 import csv
 import io
+import time
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -800,6 +801,27 @@ READINGS: dict[str, Reading] = {
         None,
         "",
     ),
+    # A month label that also names its month (`2026-02 February`): pandas took the month's number for the day.
+    "month_label_name": Reading(
+        ["2026-02 February", "2026-03 March", "2026-12 Dec"],
+        ["2026-02-02", "2026-03-03", "2026-12-12"],
+        0,
+        False,
+        None,
+        "",
+    ),
+    "month_label_slash": Reading(
+        ["02/2026 February", "03/2026 March"], ["2026-02-02", "2026-03-03"], 0, False, None, ""
+    ),
+    "month_label_other_name": Reading(["2026-05 Mar", "2026-06 Apr"], ["2026-03-05", "2026-04-06"], 0, False, None, ""),
+    "month_label_name_first": Reading(
+        ["February 2026-02", "March 2026-03"], ["2026-02-02", "2026-03-03"], 0, False, None, ""
+    ),
+    "month_label_dot": Reading(["2026.02 Feb", "03.2026 Mar"], ["2026-02-01", None], 1, False, None, ""),
+    # A month name joined to the day and the year by dashes names the month once: a day, as before.
+    "name_dashes_month_first": Reading(
+        ["Mar-01-2026", "Mar-15-2026"], ["2026-03-01", "2026-03-15"], 0, False, None, ""
+    ),
     # After an hour alone a lone letter is no am or pm (`10 p` may be ten pence): pandas read 22:00, written as the
     # day without its hour.
     "letter_after_hour": Reading(
@@ -1037,6 +1059,12 @@ PASTED: dict[str, Pasted] = {
     "letter_glued_to_clock": Pasted("text", None, []),
     "letter_before_zone": Pasted("text", None, []),
     "letter_after_hour": Pasted("text", None, []),
+    "month_label_name": Pasted("text", None, []),
+    "month_label_slash": Pasted("text", None, []),
+    "month_label_other_name": Pasted("text", None, []),
+    "month_label_name_first": Pasted("text", None, []),
+    "month_label_dot": Pasted("text", None, []),
+    "name_dashes_month_first": Pasted("text", None, []),
     "clock_inside_month": Pasted("text", None, []),
     "clock_inside_comma": Pasted("text", None, []),
     "clock_inside_numbers": Pasted("text", None, []),
@@ -1152,6 +1180,18 @@ CHANGED: dict[str, Reading] = {
     "zone_word_beside_utc": Reading(
         READINGS["zone_word_beside_utc"].cells, ["2026-03-01T10:00:00+00:00", None], 1, True, None, ""
     ),
+    # A month name beside a numeric month (`2026-02`, `02/2026`) names the month twice and no day: unreadable, where
+    # pandas took the month's number for the day (2 February, and 5 March for `2026-05 Mar`).
+    **{
+        name: Reading(READINGS[name].cells, [None] * len(READINGS[name].cells), len(READINGS[name].cells))
+        for name in (
+            "month_label_name",
+            "month_label_slash",
+            "month_label_other_name",
+            "month_label_name_first",
+            "month_label_dot",
+        )
+    },
     # A lone `a` or `p` after an hour alone is no am or pm: unreadable, where the hour pandas read was dropped.
     "letter_after_hour": Reading(READINGS["letter_after_hour"].cells, [None] * 4, 4),
     # A clock inside a cell is a time only between a day without a year and the year, as programs write a moment:
@@ -1347,6 +1387,9 @@ UNREADABLE: dict[str, list[str | None]] = {
     "a midnight with AM after a year": ["2026 12 AM", "2027 12 AM"],
     "a midnight with am after a month name": ["March 2026 12am", "April 2026 12am"],
     "a program timestamp past the offsets in use": ["Sun Mar 1 10:00:00 2026 -1700", "Mon Mar 2 11:30:00 2026 -1700"],
+    "a program timestamp with two zones": ["Mar 1 10:00 UTC 2026 +0100", "Mar 2 11:30 UTC 2026 +0100"],
+    "a clock between a number and a year, no month": ["1 10:00 2026", "on 1 10:00 2026"],
+    "a two-digit year after a clock": ["Mar 1 10:00 26", "Mar 2 11:30 26"],
 }
 """Cells with more after their date than a time: pandas read a range as days with made-up offsets (2, 7 and 11
 March, beside a notice of offsets no cell holds), a sign and digits as 05:00, and an interval as its first day."""
@@ -1578,6 +1621,29 @@ class TestStrictRule:
 
         assert seen == []
         assert reading == Reading([cell], [None], 1) and prepare_module._date_cell(cell) is None
+
+    @pytest.mark.parametrize(
+        ("local", "name"),
+        [("UTC", "UTC"), ("Europe/Paris", "CET"), ("America/New_York", "EST"), ("Europe/London", "GMT")],
+    )
+    def test_a_zone_word_reads_alike_whatever_the_machine_zone(
+        self, local: str, name: str, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """pandas reads no zone from the name of the machine's own zone (`CET` on a machine set to CET), so the check
+        of a zone word answers here as on the server, which runs in UTC: only `UTC` and `GMT` are zones."""
+        monkeypatch.setenv("TZ", local)
+        time.tzset()
+        prepare_module._zone_word.cache_clear()
+        try:
+            names = set(time.tzname)
+            words = {"UTC", "GMT", "CET", "CEST", "EST", "EDT", "BST", *names}
+            zones = {word for word in words if isinstance(prepare_module._zone_word(word), timedelta)}
+        finally:
+            monkeypatch.undo()
+            time.tzset()
+            prepare_module._zone_word.cache_clear()
+
+        assert name in names and zones == {"UTC", "GMT"}
 
     @pytest.mark.parametrize("word", ["UTC", "GMT", "of", "and", "Sun", "h", "CET", "EST", "utc"])
     def test_a_zone_word_reads_alike_after_every_date_and_time(self, word: str) -> None:
