@@ -6,6 +6,11 @@ every `lib-*` extra and sets `ANYPLOT_REQUIRE_LIBRARIES=1` (`.github/workflows/c
 does not import fails the test instead, so a dropped extra or a broken wheel can never turn the validator's walks
 and the harness's library cases into silent skips again (on 2026-11-02 they hid `pygal.config.callable`, an alias
 of `types.FunctionType` the validator admitted).
+
+The JavaScript runtime works the same way: the tests that render through Node and Chromium (the harness in
+`automation/js-render/render.mjs`) need `node`, the lock's `node_modules` and Playwright's browser, which CI's test job
+sets up and announces with `ANYPLOT_REQUIRE_JS_RUNTIME=1`. A test reports a missing piece through
+`skip_or_fail_js_runtime`: a skip on a developer machine, a failure there.
 """
 
 import importlib
@@ -17,6 +22,7 @@ import pytest
 
 
 REQUIRE_LIBRARIES_ENV = "ANYPLOT_REQUIRE_LIBRARIES"
+REQUIRE_JS_RUNTIME_ENV = "ANYPLOT_REQUIRE_JS_RUNTIME"
 
 
 def libraries_required() -> bool:
@@ -29,6 +35,21 @@ def skip_or_fail(reason: str) -> NoReturn:
     requires the libraries."""
     if libraries_required():
         pytest.fail(f"{reason} ({REQUIRE_LIBRARIES_ENV}=1: this job installs every lib-* extra)")
+    pytest.skip(reason)
+
+
+def js_runtime_required() -> bool:
+    """Whether a missing Node, `node_modules` or browser fails the test (CI's test job) rather than skipping it."""
+    return os.environ.get(REQUIRE_JS_RUNTIME_ENV) == "1"
+
+
+def skip_or_fail_js_runtime(reason: str) -> NoReturn:
+    """Skip the test for `reason` (Node, the lock's `node_modules` or a browser that launches is missing here), or
+    fail it where CI requires the JavaScript runtime."""
+    if js_runtime_required():
+        pytest.fail(
+            f"{reason} ({REQUIRE_JS_RUNTIME_ENV}=1: this job installs Node, the lock's node_modules and Chromium)"
+        )
     pytest.skip(reason)
 
 

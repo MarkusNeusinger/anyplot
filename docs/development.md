@@ -106,6 +106,18 @@ uv sync --extra test --extra agents --extra lib-matplotlib --extra lib-seaborn \
   --extra lib-plotly --extra lib-bokeh
 ```
 
+The job also sets up the JavaScript render runtime with the `setup-node`
+action and sets `ANYPLOT_REQUIRE_JS_RUNTIME=1`. The tests of the render
+harness (`automation/js-render/render.mjs`) need Node, the packages of the root
+`package-lock.json` and Playwright's Chromium. On your machine they skip when
+one is missing, and in CI they fail. To run them locally, install the packages
+and the browser:
+
+```bash
+npm ci
+npx playwright install chromium
+```
+
 The e2e tests run in a separate job, "Run E2E Tests", after it: that job is
 the only one that logs in to GCP and reaches the Cloud SQL `test` database,
 and it skips PRs by Dependabot and Google Jules, whose code nobody has read

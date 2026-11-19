@@ -75,7 +75,7 @@ import tree_sitter_language_pack
 from tree_sitter import Language, Node, Parser, Tree
 
 
-TREE_SITTER_VERSION = "0.26.0"
+TREE_SITTER_VERSION = "0.26.1"
 """The pinned version (`pyproject.toml`, the `agents` extra); a test compares it with the installed one."""
 
 GRAMMARS_DIR_ENV = "TREE_SITTER_LANGUAGE_PACK_LIBS_DIR"

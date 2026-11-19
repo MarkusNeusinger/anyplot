@@ -14,9 +14,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
-import pytest
-
 from agents.anyplot.code.profiles.javascript import allowlist as copy
+from tests.libraries import skip_or_fail_js_runtime
 
 from .conftest import JS_CATALOGUE_FILES, REPO_ROOT
 
@@ -52,7 +51,7 @@ def test_the_copy_is_byte_for_byte_what_the_images_script_writes() -> None:
 def test_the_copy_equals_the_allowlist_of_the_installed_packages() -> None:
     modules = _node_modules()
     if modules is None:
-        pytest.skip("needs the lock's node_modules (npm ci --ignore-scripts, or ANYPLOT_NODE_MODULES)")
+        skip_or_fail_js_runtime("needs the lock's node_modules (npm ci --ignore-scripts, or ANYPLOT_NODE_MODULES)")
     spec = importlib.util.spec_from_file_location("import_allowlist", BUILDER)
     assert spec is not None and spec.loader is not None
     builder = importlib.util.module_from_spec(spec)
@@ -70,7 +69,7 @@ def test_the_removed_exports_are_not_exported_and_the_catalogue_imports_nothing_
     modules = _node_modules()
     node = shutil.which("node")
     if modules is None or node is None:
-        pytest.skip("needs node on PATH and the lock's node_modules")
+        skip_or_fail_js_runtime("needs node on PATH and the lock's node_modules")
     from agents.anyplot.code.profiles.javascript.regions import find_regions
 
     wanted: dict[str, set[str]] = {}
@@ -99,7 +98,7 @@ def test_the_removed_exports_are_not_exported_and_the_catalogue_imports_nothing_
         check=False,
     )
     if done.returncode != 0:
-        pytest.skip(f"node could not import MUI X here: {done.stderr.strip()[-300:]}")
+        skip_or_fail_js_runtime(f"node could not import MUI X here: {done.stderr.strip()[-300:]}")
     exported: dict[str, list[str] | None] = json.loads(done.stdout.strip().splitlines()[-1])
 
     every = {name for names in exported.values() if names for name in names}
