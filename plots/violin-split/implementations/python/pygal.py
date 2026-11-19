@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-split: Split Violin Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-08
@@ -7,6 +7,7 @@ Quality: 92/100 | Updated: 2026-05-08
 import os
 
 import numpy as np
+import pandas as pd
 import pygal
 from pygal.style import Style
 
@@ -17,38 +18,38 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette: position 1 (brand green) and position 2 (vermillion)
-COLOR_1 = "#009E73"  # Before
-COLOR_2 = "#C475FD"  # After
+# Imprint palette, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Patient recovery scores before/after treatment across clinics
-np.random.seed(42)
-categories = ["Clinic A", "Clinic B", "Clinic C", "Clinic D"]
-split_groups = ["Before", "After"]
+# Constants
+VALUE_RANGE = (0, 100)  # recovery score is a 0-100 scale
 
-# Generate realistic before/after data with different improvements per clinic
-data = {}
-for cat in categories:
-    data[cat] = {}
-    if cat == "Clinic A":
-        data[cat]["Before"] = np.random.normal(45, 12, 80)
-        data[cat]["After"] = np.random.normal(72, 10, 80)
-    elif cat == "Clinic B":
-        data[cat]["Before"] = np.random.normal(50, 15, 80)
-        data[cat]["After"] = np.random.normal(68, 12, 80)
-    elif cat == "Clinic C":
-        data[cat]["Before"] = np.random.normal(42, 10, 80)
-        data[cat]["After"] = np.random.normal(78, 8, 80)
-    else:  # Clinic D
-        data[cat]["Before"] = np.random.normal(55, 18, 80)
-        data[cat]["After"] = np.random.normal(65, 14, 80)
+CLINIC = "Clinic"  # role: category
+RECOVERY = "Recovery Score (0-100)"  # role: value
+PERIOD = "Period"  # role: split_group
 
-# Clip to realistic 0-100 range
-for cat in categories:
-    for group in split_groups:
-        data[cat][group] = np.clip(data[cat][group], 10, 95)
+# Data: replace this block with your own table, for example df = pd.read_csv("recovery.csv")
+rng = np.random.default_rng(42)
+n_patients = 80
+# (mean, std) of the recovery score per clinic, before and after treatment
+profile = {
+    "Clinic A": {"Before": (45, 12), "After": (72, 10)},
+    "Clinic B": {"Before": (50, 15), "After": (68, 12)},
+    "Clinic C": {"Before": (42, 10), "After": (78, 8)},
+    "Clinic D": {"Before": (55, 18), "After": (65, 14)},
+}
+rows = []
+for clinic, groups in profile.items():
+    for period, (mean, std) in groups.items():
+        scores = np.clip(rng.normal(mean, std, n_patients), 10, 95)
+        rows.append(pd.DataFrame({CLINIC: clinic, PERIOD: period, RECOVERY: scores}))
+df = pd.concat(rows, ignore_index=True)
 
-# Custom style for 4800x2700 px canvas
+# Plot
+clinics = list(dict.fromkeys(df[CLINIC]))
+periods = list(dict.fromkeys(df[PERIOD]))
+n_clinics = len(clinics)
+
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -56,130 +57,92 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     guide_stroke_color=INK_MUTED,
-    colors=(COLOR_1, COLOR_2),
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
+    # pygal colors series by position: every half violin of a group, then two marker series per half
+    colors=tuple(IMPRINT_PALETTE[g] for g in range(len(periods)) for _ in clinics)
+    + (INK,) * (2 * n_clinics * len(periods)),
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     opacity=0.7,
     opacity_hover=0.9,
 )
 
-# Create XY chart for split violin plot
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="violin-split · pygal · anyplot.ai",
-    x_title="Clinic",
-    y_title="Recovery Score (0-100)",
+    title="violin-split · python · pygal · anyplot.ai",
+    x_title=CLINIC,
+    y_title=RECOVERY,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=2,
+    legend_at_bottom_columns=(3 * n_clinics * len(periods)) // 2
+    + 1,  # one legend row: the unlabeled series would add empty rows
+    truncate_legend=-1,
     stroke=True,
     fill=True,
     dots_size=0,
     show_x_guides=False,
     show_y_guides=True,
-    range=(0, 100),
-    xrange=(0, 5.5),
-    margin=60,
+    range=VALUE_RANGE,
+    xrange=(0, n_clinics + 1.5),
+    margin=40,
 )
 
-# Parameters for violin shapes
 violin_width = 0.38
 n_points = 80
 marker_width = 0.04
+marker_offset = 0.08
 
-# Pre-compute all violin shapes and markers
-before_violins = []
-after_violins = []
-before_markers = []
-after_markers = []
+violins = {period: [] for period in periods}
+markers = {period: [] for period in periods}
 
-for i, category in enumerate(categories):
+for i, clinic in enumerate(clinics):
     center_x = i + 1.25
+    for j, period in enumerate(periods):
+        side = -1 if j == 0 else 1  # first group on the left, second on the right
+        values = df.loc[(df[CLINIC] == clinic) & (df[PERIOD] == period), RECOVERY].dropna().to_numpy()
+        if len(values) < 2:
+            continue
 
-    for group in split_groups:
-        values = data[category][group]
-
-        # Create range of y values for density
-        y_min, y_max = values.min(), values.max()
-        padding = (y_max - y_min) * 0.15
-        y_range = np.linspace(y_min - padding, y_max + padding, n_points)
-
-        # Compute Gaussian KDE using Silverman's rule (inlined)
-        n = len(values)
-        std = np.std(values)
-        iqr = np.percentile(values, 75) - np.percentile(values, 25)
-        bandwidth = 0.9 * min(std, iqr / 1.34) * n ** (-0.2)
-
-        density = np.zeros_like(y_range)
-        for v in values:
-            density += np.exp(-0.5 * ((y_range - v) / bandwidth) ** 2)
-        density /= n * bandwidth * np.sqrt(2 * np.pi)
-
-        # Normalize density to desired width
+        # Gaussian KDE with Silverman's rule
+        padding = (values.max() - values.min()) * 0.15
+        y_grid = np.linspace(values.min() - padding, values.max() + padding, n_points)
+        q1, median, q3 = np.percentile(values, [25, 50, 75])
+        bandwidth = 0.9 * min(values.std(), (q3 - q1) / 1.34) * len(values) ** (-0.2)
+        density = np.exp(-0.5 * ((y_grid[:, None] - values[None, :]) / bandwidth) ** 2).sum(axis=1)
         density = density / density.max() * violin_width
 
-        # Compute quartile statistics
-        median = float(np.median(values))
-        q1 = float(np.percentile(values, 25))
-        q3 = float(np.percentile(values, 75))
+        outline = [(center_x + side * d, y) for y, d in zip(y_grid, density, strict=True)]
+        violins[period].append([(center_x, y_grid[0]), *outline, (center_x, y_grid[-1]), (center_x, y_grid[0])])
+        markers[period].append((center_x + side * marker_offset, q1, median, q3))
 
-        # Create half-violin shape (split violin - each group on one side)
-        if group == "Before":
-            # Left half - density extends to the left
-            half_points = [(center_x - d, y) for y, d in zip(y_range, density, strict=True)]
-            half_points = [(center_x, y_range[0])] + half_points + [(center_x, y_range[-1]), (center_x, y_range[0])]
-            before_violins.append(half_points)
-            before_markers.append((center_x, median, q1, q3, -0.08))
-        else:
-            # Right half - density extends to the right
-            half_points = [(center_x + d, y) for y, d in zip(y_range, density, strict=True)]
-            half_points = [(center_x, y_range[0])] + half_points + [(center_x, y_range[-1]), (center_x, y_range[0])]
-            after_violins.append(half_points)
-            after_markers.append((center_x, median, q1, q3, 0.08))
+# Half violins: one legend entry per group, same color in every category
+for period in periods:
+    for k, shape in enumerate(violins[period]):
+        chart.add(period if k == 0 else None, shape, show_dots=False)
 
-# Add all "Before" violins first (green, with legend entry for first one only)
-for i, violin in enumerate(before_violins):
-    label = "Before" if i == 0 else None
-    chart.add(label, violin, show_dots=False)
+# Quartile markers in ink: IQR line and median tick per half, no legend entries
+for period in periods:
+    for x, q1, median, q3 in markers[period]:
+        chart.add(None, [(x, q1), (x, q3)], stroke=True, fill=False, show_dots=False, stroke_style={"width": 6})
+        chart.add(
+            None,
+            [(x - marker_width, median), (x + marker_width, median)],
+            stroke=True,
+            fill=False,
+            show_dots=False,
+            stroke_style={"width": 8},
+        )
 
-# Add all "After" violins (orange, with legend entry for first one only)
-for i, violin in enumerate(after_violins):
-    label = "After" if i == 0 else None
-    chart.add(label, violin, show_dots=False)
+chart.x_labels = (
+    [{"value": 0, "label": ""}]
+    + [{"value": i + 1.25, "label": clinic} for i, clinic in enumerate(clinics)]
+    + [{"value": n_clinics + 1.5, "label": ""}]
+)
 
-# Add quartile markers for "Before" group (no legend entries)
-for center_x, median, q1, q3, offset in before_markers:
-    # IQR line (thin vertical line)
-    iqr_line = [(center_x + offset, q1), (center_x + offset, q3)]
-    chart.add(None, iqr_line, stroke=True, fill=False, show_dots=False, stroke_style={"width": 8})
-    # Median marker (small horizontal line)
-    median_line = [(center_x + offset - marker_width, median), (center_x + offset + marker_width, median)]
-    chart.add(None, median_line, stroke=True, fill=False, show_dots=False, stroke_style={"width": 12})
-
-# Add quartile markers for "After" group (no legend entries)
-for center_x, median, q1, q3, offset in after_markers:
-    # IQR line
-    iqr_line = [(center_x + offset, q1), (center_x + offset, q3)]
-    chart.add(None, iqr_line, stroke=True, fill=False, show_dots=False, stroke_style={"width": 8})
-    # Median marker
-    median_line = [(center_x + offset - marker_width, median), (center_x + offset + marker_width, median)]
-    chart.add(None, median_line, stroke=True, fill=False, show_dots=False, stroke_style={"width": 12})
-
-# X-axis labels for categories
-chart.x_labels = [
-    {"value": 0, "label": ""},
-    {"value": 1.25, "label": "Clinic A"},
-    {"value": 2.25, "label": "Clinic B"},
-    {"value": 3.25, "label": "Clinic C"},
-    {"value": 4.25, "label": "Clinic D"},
-    {"value": 5.5, "label": ""},
-]
-
-# Save outputs
+# Save
 chart.render_to_file(f"plot-{THEME}.html")
 chart.render_to_png(f"plot-{THEME}.png")
