@@ -1,4 +1,4 @@
-# A plot comes with an interactive HTML view beside its image
+# Plots get an interactive HTML view beside their image
 
 - Date: 2026-01-05
 - Proposed: the site showed each plot as an image.
