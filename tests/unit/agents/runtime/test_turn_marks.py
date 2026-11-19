@@ -22,13 +22,13 @@ from agents.anyplot import pipeline, telemetry, turn_marks
 from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_NOTE_CHARS, Binding
 from agents.anyplot.services import Services
-from agents.anyplot.session_state import SUMMARY_PENDING, confirmation_fingerprint
+from agents.anyplot.session_state import SUMMARY_PENDING, confirmation_fingerprint, read_session
 from agents.anyplot.turn_marks import RoleMark, TableFacts, mark_codes, table_facts
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import default_script
-from .test_paste_conversions import SID, open_spec, paste, pasted, say
-from .test_service_flow import HEADERS, USER, permissive_queue, prepare_call
+from .test_paste_conversions import SID, block_now, open_spec, paste, pasted, say
+from .test_service_flow import HEADERS, USER, _session_state, permissive_queue, prepare_call
 
 
 def facts(dataset_id: str, columns: str, **bindings: str) -> TableFacts:
@@ -234,14 +234,14 @@ async def readings_session(client: httpx.AsyncClient, runtime: Runtime) -> str:
 
 
 async def test_the_observed_turn_ends_with_a_line_per_moved_role_after_its_own_change_lines(
-    client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+    client: httpx.AsyncClient, runtime: Runtime, services: Services, swap_models, caplog: pytest.LogCaptureFixture
 ) -> None:
     """The eval's case: a daily mean, the dates as days since the first one, x and y reassigned. The page shows a line
     per role after the data step's own; the telemetry counts the codes alone; the root reads none of it."""
     caplog.set_level(logging.INFO)
     script = default_script()
     script["root"] = [prepare_call(DAILY_MEAN, DAY_NUMBERS), REBIND, {"text": "Daily means per station."}]
-    fake = swap_models("anthropic-vertex", script)
+    swap_models("anthropic-vertex", script)
     sid = await readings_session(client, runtime)
 
     events = await say(client, sid, {"text": "the daily mean of the temperature per station"})
@@ -251,9 +251,13 @@ async def test_the_observed_turn_ends_with_a_line_per_moved_role_after_its_own_c
     steps, lines = done["dataset"]["changes"][:-2], done["dataset"]["changes"][-2:]
     assert lines == OBSERVED_MARKS
     assert len(steps) == 2 and steps[0].startswith("averaged") and steps[1].startswith(f"new column {DAYS}:")
-    # Only the page reads the lines: no tool result and no session block of the turn holds them.
-    seen = json.dumps(fake.calls, ensure_ascii=False)
-    assert all(line not in seen for line in OBSERVED_MARKS)
+    # Only the page reads the lines: the version keeps the data step's own, and the session block of the next turn,
+    # which lists each version with its change lines, holds none of the marks.
+    view = read_session(await _session_state(client, sid))
+    stored = services.datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+    assert stored is not None and stored.changes == steps
+    block = await block_now(client, sid)
+    assert steps[0] in block and all(line not in block for line in OBSERVED_MARKS)
     (turn,) = chat_turns(caplog)
     assert turn["turn_marks"] == ["axis_moved", "new_column_bound"]
     assert all(name not in json.dumps(turn) for name in (TIME, STATION, TEMP, HUMID, DAYS))
