@@ -49,7 +49,8 @@ The operations:
   date (a second date such as `2026-03-01-2026-03-05`, more numbers such as `2026-03-01/05`, a
   number alone after a space, a sign and digits after a space, a range of times such as
   `2026-03-01 9:00-17:00` or `T10-12`, a time after a month or a year, a word after the date's
-  last part such as `2026-03-01 approved`, `2026 of` or a weekday after the date, where a word
+  last part, glued to it or not, such as `2026-03-01 approved`, `2026 of`, `2026-03-01of` or a
+  weekday after the date, where a word
   before the date or between its parts, as `Sunday, 1 March 2026` and `1st of March 2026`, and
   one that joins it to a time, as `1 March 2026 at 10:00`, stay) makes the cell
   unreadable, counted like any other, before pandas could guess a reading; the column is
@@ -4607,7 +4608,9 @@ def _date_shape(text: str, *, word_at_end: bool = False) -> DateShape | None:
     month name (`months.month_number`), a quarter (`Q1`) and other words, between `-`, `.`, `/`, commas and spaces.
     A word before the date or between its parts (`Sunday, 1 March 2026`, `1st of March 2026`) is the reader's to take
     or fail on; a word after the date's last part is more after the date (`2026-03-01 of`, `2026 of`, `2026-03-01
-    approved`): no reading takes it, since pandas would skip `of`, `on` or `and` and read the rest. Only with
+    approved`), and so are letters on its last number (`2026-03-01of`; an ordinal suffix stands on a number another
+    part follows, as `1st March 2026` and `March 1st, 2026`): no reading takes it, since pandas would skip `of`, `on`
+    or `and` and read the rest. Only with
     `word_at_end` may words end it: for the date before a time, which they join to it (`1 March 2026 at 10:00`), and
     for the reason a refusal names (`_date_then_more`).
 
@@ -4633,6 +4636,7 @@ def _date_shape(text: str, *, word_at_end: bool = False) -> DateShape | None:
             quarters += 1
         elif (number := _NUMBER_PART.fullmatch(part)) is not None:
             numbers.append(len(number.group(1)))
+            word_last = number.end(1) < len(part)  # `2026-03-01of`, `2026of`: letters on the last number are a word
         elif _WORD_PART.fullmatch(part):
             month = month_number(part) is not None
             months += month

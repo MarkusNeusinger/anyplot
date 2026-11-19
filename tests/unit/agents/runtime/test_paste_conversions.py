@@ -232,11 +232,15 @@ class TestMakeConversions:
             ["2026-03-01/05", "2026-03-06/09", "2026-03-10/12"],
             ["2026-03-01T10-12", "2026-03-02T10-12", "2026-03-03T10-12"],
             ["2026-03-01 9:00-17:00", "2026-03-02 9:00-15:00", "2026-03-03 8:00-12:00"],
+            ["2026-03-01 of", "2026-03-02 on", "2026-03-03 and"],
+            ["2026 of", "2027 on", "2028 and"],
+            ["2026-03-01of", "2026-03-02of", "2026-03-03of"],
         ],
     )
     def test_more_after_a_date_than_a_time_is_never_read_as_dates_unasked(self, cells: list[str]) -> None:
-        """A range, an interval or a sign and digits after a date was read by guess (2, 7 and 11 March for three
-        ranges, 05:00 for `-05:00`) and rated certain; such cells are unreadable now, so nothing is made."""
+        """A range, an interval, a sign and digits or a word after a date was read by guess (2, 7 and 11 March for
+        three ranges, 05:00 for `-05:00`, the day or the year with `of` skipped) and rated certain; such cells are
+        unreadable now, so nothing is made."""
         text = "day,kWh\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
         store, view = pasted(text, "line-timeseries-rolling")
 
