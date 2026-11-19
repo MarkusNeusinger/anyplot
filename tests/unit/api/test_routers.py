@@ -1511,8 +1511,8 @@ class TestSeoProxyRouter:
             # No event carries what a visitor typed any more (docs/reference/plausible.md, "Search");
             # what Plausible still stores is a fact about today, not a note on older entries,
             # through the item's end, as on the human page.
-            "no IP address stored. Search texts sent until November 2026 are still stored by Plausible, "
-            "no longer shown.</li>",
+            "no IP address stored. Search texts sent up to and including November 2026 are still stored "
+            "by Plausible, no longer shown.</li>",
             # Every field the feedback record holds, each by its name, then who reads it: the operator,
             # and the coding assistant the admin page's "copy prompt for Claude Code" button hands the
             # message, page and reaction to (app/src/utils/claudePrompt.ts).

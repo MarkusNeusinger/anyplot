@@ -301,7 +301,7 @@ describe('LegalPage', () => {
     // within November 2026, so the month is included.
     expect(
       screen.getByText(
-        /search texts sent until november 2026 are still stored by Plausible, no longer shown/
+        /search texts sent up to and including november 2026 are still stored by Plausible, no longer shown/
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/still show there/)).not.toBeInTheDocument();
@@ -339,7 +339,7 @@ describe('LegalPage', () => {
     // that, and no longer that a text is sent. The whole row, so neither can fall off its end.
     const analytics = screen.getByRole('row', { name: /^analytics\s/ });
     expect(analytics).toHaveTextContent(
-      /^analytics\s*Plausible counts page views, searches, clicks, copies and downloads, only in aggregate, on a public dashboard: no cookies, no cross-site id, no IP address kept\. search texts sent until november 2026 are still stored by Plausible, no longer shown\.\s*where: Plausible Analytics \(EU, proxied\)$/
+      /^analytics\s*Plausible counts page views, searches, clicks, copies and downloads, only in aggregate, on a public dashboard: no cookies, no cross-site id, no IP address kept\. search texts sent up to and including november 2026 are still stored by Plausible, no longer shown\.\s*where: Plausible Analytics \(EU, proxied\)$/
     );
     expect(analytics).not.toHaveTextContent(/is sent too/);
     // The browser's storage is named, not hidden behind "no cookies".

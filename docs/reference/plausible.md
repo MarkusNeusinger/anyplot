@@ -296,7 +296,7 @@ included, so the count is smaller from that day on and isn't comparable with
 earlier months.
 
 Neither event carries what the visitor typed. Until 2026-11-18 both sent it
-as the property `query`, and the public dashboard listed it. Since 2026-11-20
+as the property `query`, and the public dashboard listed it. Since 2026-11-19
 `query` is no longer among the site's allowed properties, so the dashboard
 no longer shows those texts; Plausible still stores them, because it can't
 delete single property values. Because
@@ -391,8 +391,9 @@ The legal page's privacy section (`app/src/pages/LegalPage.tsx`) and its
 crawler copy in `api/routers/seo.py` (`_LEGAL_BOT_BODY`) describe this list
 in the row "searches without a hit" (`#search-misses`): the text in
 lowercase and cut at 40 characters, what the rule keeps out, and the 180
-days. Their analytics row says only that search texts sent until November
-2026 are still stored by Plausible and no longer shown. If you change
+days. Their analytics row says only that search texts sent up to and
+including November 2026 are still stored by Plausible and no longer shown.
+If you change
 `normalizeQuery()`, the rule, or `RETENTION_DAYS`, or send typed text in an
 event property again, update both; `app/src/pages/LegalPage.test.tsx` holds
 the row to `MAX_QUERY_LENGTH`, and `tests/unit/api/test_search_misses.py`
@@ -1089,16 +1090,16 @@ event.
     not confirmed
 - [x] After `stayed_10s` is deployed (2026-11-14): the goal `stayed_10s`
   (custom event) and the property `input` added (read back through the Sites
-  API on 2026-11-20)
+  API on 2026-11-19)
 - [x] After the app's deploy that stops sending `query` (the private list of
   search misses): the texts sent until then stay, as the owner decided, and
   are not deleted. The property `query` was removed from the dashboard's
-  allowed properties on 2026-11-20 (read back through the Sites API), which
+  allowed properties on 2026-11-19 (read back through the Sites API), which
   hides it and keeps the texts at Plausible. The privacy page's clause
   (`app/src/pages/LegalPage.tsx`) and its crawler copy (`api/routers/seo.py`)
   say so in the same change: "still stored by Plausible, no longer shown"
 
 ---
 
-**Last Updated**: 2026-11-20
+**Last Updated**: 2026-11-19
 **Status**: Twelve custom events, all twelve dashboard goals; `stayed_10s` is sent and measured and doesn't change the bounce rate yet. No event carries what a visitor typed: the gallery's searches that found nothing are in a private list in the database; the texts sent before are still stored at Plausible and hidden from the dashboard. Pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here
