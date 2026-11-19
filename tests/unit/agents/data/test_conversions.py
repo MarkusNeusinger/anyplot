@@ -432,6 +432,15 @@ class TestRowNumbersBesideUnreadDates:
 
         assert found(text, roles=parse_roles(LINE)) == []
 
+    @pytest.mark.parametrize(("others", "certain"), [(1, False), (2, True)])
+    def test_at_most_a_tenth_of_the_cells_may_look_like_no_date(self, others: int, certain: bool) -> None:
+        """The share past which `set_type` refuses: one note in ten cells is a column of dates, two are not."""
+        cells = [f"2026/03/{day:02d}" for day in range(1, 11 - others)] + ["offen"] * others
+
+        [candidate] = found(day_column(cells), roles=parse_roles(LINE))
+
+        assert isinstance(candidate, RowNumbers) and candidate.rows == 10 and candidate.certain is certain
+
     def test_the_first_free_column_that_looks_like_dates_is_named(self) -> None:
         cities = ["Bern", "Basel", "Genf", "Chur"]
         text = "city,day,orders\n" + "".join(f"{city},2026/03/0{day},{day}\n" for day, city in enumerate(cities, 1))
