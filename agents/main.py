@@ -327,6 +327,7 @@ from agents.anyplot.switch import CARRY, Target, carry_for, read_carry, source_p
 from agents.anyplot.switch import summary as switch_summary
 from agents.anyplot.telemetry import SwitchSource
 from agents.anyplot.theme_render import RenderGone, render_theme
+from agents.anyplot.turn_marks import RoleMark, mark_codes, table_facts, turn_marks
 from agents.renderer.wire import (
     CONVERT_DAMAGES,
     CONVERT_EXEC_DENY_EXIT,
@@ -2418,7 +2419,13 @@ def _view_in_force(
 
 
 async def _session_sync(
-    runtime: Runtime, user: str, sid: str, *, dataset_before: str | None = None, ledger: RequestLedger | None = None
+    runtime: Runtime,
+    user: str,
+    sid: str,
+    *,
+    dataset_before: str | None = None,
+    ledger: RequestLedger | None = None,
+    marks: Sequence[RoleMark] = (),
 ) -> dict[str, Any]:
     """The `done` event's sync fields after a turn: the bindings, whether the data is confirmed, a changed dataset,
     the session language, the wide-table offer in it (`suggestion`, whenever the session has data) and the view of
@@ -2430,7 +2437,9 @@ async def _session_sync(
     the new version as the dataset route would answer it (`roles` included, because a
     `generate_data` in a session without data stores its first version, and the page
     learns the spec's roles only from a dataset answer), plus the turn's change lines
-    from the ledger. The page learns both from `done`. The root's `set_language` may have set
+    from the ledger and, after them, the lines of the turn's `marks` (`turn_marks.py`: a role the
+    turn reassigned, in the server's words), which only the page reads. The page learns both from `done`.
+    The root's `set_language` may have set
     the session language, so `language` carries it as `{language, source}` after every run,
     for the page's chip, with `offer` when the scope guard offered the message's language
     (`_language_body`). Empty when the session is gone, so the stream still closes.
@@ -2456,7 +2465,7 @@ async def _session_sync(
         # The view of the plot in force after the turn, which its `prepare_data` may have set, changed or cleared.
         payload["view"] = _view_in_force(session.state, view, stored, view.bindings)
         if view.dataset_id != dataset_before:
-            changes = list(ledger.dataset_changes) if ledger is not None else []
+            changes = [*(ledger.dataset_changes if ledger is not None else []), *(mark.line for mark in marks)]
             original_version = original_number(get_services().datasets, sid, view)
             payload["dataset"] = {
                 **dataset_payload(stored, view.bindings, can_undo=view.can_undo, original_version=original_version),
@@ -2470,13 +2479,14 @@ async def _session_sync(
 @dataclass(frozen=True)
 class TurnFacts:
     """What the `chat_turn` telemetry line needs from the route besides the ledger: the action, the session
-    language and its source (read before the turn, and again after its run, `_after_turn`), and the turn's
-    stopwatch."""
+    language and its source (read before the turn, and again after its run, `_after_turn`), the turn's
+    stopwatch, and the turn's marks (`turn_marks.py`, read after its run), whose lines the `done` event carries."""
 
     action: Action | None
     language_source: str | None
     language: str | None = None
     clock: telemetry.Clock = field(default_factory=telemetry.Clock)
+    marks: tuple[RoleMark, ...] = ()
 
 
 async def _summarized(runtime: Runtime, user: str, sid: str, dataset_ids: Collection[str]) -> None:
@@ -2519,12 +2529,12 @@ async def _settle_kept_note(runtime: Runtime, user: str, sid: str, ledger: Reque
         logger.warning("kept note not settled: %s", type(exc).__name__)
 
 
-async def _after_turn(runtime: Runtime, user: str, sid: str, facts: TurnFacts) -> TurnFacts:
-    """`facts` with the session language and its source as the turn left them.
+async def _after_turn(runtime: Runtime, user: str, sid: str, facts: TurnFacts, ledger: RequestLedger) -> TurnFacts:
+    """`facts` with the session language and its source as the turn left them, and the turn's marks.
 
     The root's `set_language` sets them inside the run (`_produce`), so the turn that switches the language
     records the new value, not the one it started with. The values from before the turn stay when the session is
-    gone.
+    gone. Read once, so the `chat_turn` line counts the marks whose lines the `done` event shows.
     """
     try:
         view = read_session((await runtime.session(user, sid)).state)
@@ -2532,7 +2542,20 @@ async def _after_turn(runtime: Runtime, user: str, sid: str, facts: TurnFacts) -
         return facts
     if view is None:
         return facts
-    return replace(facts, language=view.language, language_source=view.language_source)
+    marks = _turn_marks(ledger, view, sid)
+    return replace(facts, language=view.language, language_source=view.language_source, marks=marks)
+
+
+def _turn_marks(ledger: RequestLedger, view: SessionView, sid: str) -> tuple[RoleMark, ...]:
+    """What the turn did to the plot's roles (`turn_marks.py`), from where the root's steps began to the table and
+    bindings it ended with; never raises, since a mark must never cost the turn its `done`."""
+    try:
+        stored = get_services().datasets.get(view.dataset_id, sid) if view.dataset_id else None
+        end = table_facts(stored.dataset_id, stored.profile, view.bindings) if stored is not None else None
+        return tuple(turn_marks(ledger.marks_from, end))
+    except Exception as exc:
+        logger.warning("turn marks failed: %s", type(exc).__name__)
+        return ()
 
 
 def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None = None) -> None:
@@ -2554,6 +2577,7 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
         prep_ops=sorted({op for op in [*ledger.prep_ops, *ledger.view_ops] if op in telemetry.PREP_OPS}),
         prep_calls=ledger.tools.count("prepare_data"),
         capability_gap=telemetry.closed_set(ledger.capability_gaps, telemetry.CAPABILITY_GAPS),
+        turn_marks=[code for code in mark_codes(facts.marks) if code in telemetry.TURN_MARKS],
         refusal=codes.refusal,
         error=codes.error,
         reply_reasked=ledger.reply_reasked,
@@ -2783,6 +2807,9 @@ async def post_message(
     # a pasted note that happens to end the same way only goes unchecked in the render.
     words = [body.text] if body.text else []
     stored = services.datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+    if view is not None and stored is not None:
+        # What the turn's marks compare its end with (`turn_marks.py`); a step of the server's own moves it.
+        ledger.marks_from = table_facts(stored.dataset_id, stored.profile, view.bindings)
     if stored is not None:
         words += [line for line in stored.context_lines if not line.endswith(CONSTANT_NOTE_SUFFIX)]
     if ledger.paste_note and view is not None and stored is not None:
@@ -2858,7 +2885,7 @@ async def post_message(
                 # The client went: the turn's line still books what it spent, once, after the producer stopped.
                 after = facts
                 with contextlib.suppress(BaseException):  # the original exit goes on after the line
-                    after = await _after_turn(runtime, user, sid, facts)
+                    after = await _after_turn(runtime, user, sid, facts, ledger)
                 _telemetry_turn(ledger, after, "cancelled")
                 _keep_turn(runtime, ledger, after, "cancelled")
         try:
@@ -2868,7 +2895,7 @@ async def post_message(
                 failure = "deadline"
             attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
             # Written before anything else is yielded: a client that goes during the error event loses no line.
-            after = await _after_turn(runtime, user, sid, facts)
+            after = await _after_turn(runtime, user, sid, facts, ledger)
             _telemetry_turn(ledger, after, failure)
             _keep_turn(runtime, ledger, after, failure)
             if failure is not None:
@@ -2887,7 +2914,9 @@ async def post_message(
                 await _hand_bound_seen(runtime, user, sid)
             # Read while the run is still active: no undo or paste can slip in between the run's end
             # and the `done` that reports its dataset, so the version and the change lines agree.
-            sync = await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger)
+            sync = await _session_sync(
+                runtime, user, sid, dataset_before=dataset_before, ledger=ledger, marks=after.marks
+            )
         finally:
             runtime.finish(sid, run)
         # A switch the root asked for goes to the page only with a turn that ended well: after a failure the page

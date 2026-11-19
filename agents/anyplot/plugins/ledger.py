@@ -74,6 +74,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
 from ..schemas import Theme
 from ..settings import AgentSettings
+from ..turn_marks import TableFacts
 
 
 if TYPE_CHECKING:  # the record's model imports this module
@@ -316,6 +317,11 @@ class RequestLedger:
     last_calls: dict[str, CallFacts] = field(default_factory=dict)
     dataset_changes: list[str] = field(default_factory=list)
     """The change lines of every `prepare_data` call of the turn, in order: the `done` event's `dataset.changes`."""
+    marks_from: TableFacts | None = None
+    """The table and bindings the turn's marks compare its end with (`turn_marks.py`): set by the `/messages` route
+    before the run, moved to the version a step of the server's own left (the paste conversions of a summary turn, a
+    repeated key a plot run combined), and carried through the root's renames by `prepare_data`. None without a route
+    (`adk web`) and in a session without data: no marks. It names the user's columns, so it is never logged or sent."""
     data_step: tuple[str, str] | None = None
     """The dataset id and the announcement of the repeated key a plot run of this invocation combined
     (`repeated_keys.combine_repeated_key`), so a run ADK re-runs on resume, which finds the key combined already,

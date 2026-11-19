@@ -246,6 +246,7 @@ from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS, adapter_name
 from .sub_agents.reviewer import REVIEWER_MODES, REVIEWER_NAME, use_reviewer_mode
 from .switch import CARRY, Carry, read_carry
+from .turn_marks import table_facts
 
 
 logger = logging.getLogger(__name__)
@@ -2297,6 +2298,9 @@ def _combine_repeated_key(
         ctx.state[key] = value
     ledger.dataset_changes.extend(combined.changes)
     ledger.data_step = (combined.version.dataset_id, combined.line)
+    # The server's own step, announced with the plot: the turn's marks start from the version it left (`turn_marks.py`).
+    version = combined.version
+    ledger.marks_from = table_facts(version.dataset_id, version.stored.profile, version.bindings)
     return read_session(ctx.state) or view, combined.version.stored, combined.line
 
 

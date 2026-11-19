@@ -293,6 +293,10 @@ CapabilityGap = Literal[
 """What kind of data change the root named as one no operation can make (`prepare.UnsupportedFamily`, pinned equal by
 a test): the family only, never the request."""
 CAPABILITY_GAPS: frozenset[str] = frozenset(get_args(CapabilityGap))
+TurnMark = Literal["axis_moved", "new_column_bound"]
+"""What a turn that changed the table did to the plot's roles, as the server marks it (`turn_marks.TurnMark`, pinned
+equal by a test): the code only, never the role or a column."""
+TURN_MARKS: frozenset[str] = frozenset(get_args(TurnMark))
 ConversionOutcome = Literal["none", "date", "number", "index", "asked"]
 """What a turn did about a required role left open (`data/conversions.py`): `none` when the session block listed no
 conversion; `date`, `number` or `index` for the column `prepare_data` made; `asked` when a conversion was listed and
@@ -528,6 +532,10 @@ class ChatTurn(_Event):
     capability_gap: list[CapabilityGap] = _list()
     """The families of the data changes the root named as ones no operation can make in this turn (`unsupported`,
     since 2026-11-07): what the chat is asked for and cannot do, counted without a word of the request."""
+    turn_marks: list[TurnMark] = _list()
+    """The marks of a turn that changed the table, distinct and sorted (`turn_marks.py`): a role that took another
+    column or lost its own (`axis_moved`), a column the turn made on a role (`new_column_bound`). The data card shows
+    a line per marked role; the line counts the codes, never a role or a column."""
     conversion: ConversionOutcome = "none"
     undo: bool = False
     to_long: bool = False

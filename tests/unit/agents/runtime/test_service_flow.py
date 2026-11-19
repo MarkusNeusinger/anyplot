@@ -2948,7 +2948,9 @@ async def test_a_free_date_column_is_offered_for_an_open_measure_and_made_only_o
     assert name == "done" and done["dataset"]["version"] == 2
     assert done["dataset"]["changes"] == [
         "new column Subscription Date (Tage): 3 dates of Subscription Date read as whole days since 2020-03-25, the "
-        "earliest date, which is 0; Subscription Date stays as it is"
+        "earliest date, which is 0; Subscription Date stays as it is",
+        # The carry put the new column on the open role: the server's mark says so after the step's own line.
+        "y takes the new column 'Subscription Date (Tage)'",
     ]
     assert done["bindings"] == [{"role": "x", "column": "Index"}, {"role": "y", "column": "Subscription Date (Tage)"}]
     context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid, events=[]))
@@ -3020,7 +3022,9 @@ async def test_a_column_set_to_text_stays_text_in_later_versions_until_undone(
 
     first = parse_sse((await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "a"})).text)
     dataset = first[-1][1]["dataset"]
-    assert dataset["changes"] == ["Exam Score: 24 cells now text"] and dtype_of(dataset, "Exam Score") == "text"
+    # A text column no longer fits the number role y: the carry leaves it open, and the server's mark says so.
+    assert dataset["changes"] == ["Exam Score: 24 cells now text", "y lost its column 'Exam Score' and holds none now"]
+    assert dtype_of(dataset, "Exam Score") == "text"
     second = parse_sse((await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "b"})).text)
     dataset = second[-1][1]["dataset"]
     assert dataset["version"] == 3 and dtype_of(dataset, "Exam Score") == "text"
@@ -3331,6 +3335,9 @@ async def test_generate_data_on_a_paste_is_the_next_version_and_undo_restores_th
     assert done["dataset"]["changes"] == [
         "generated 5 rows: x from -1 to 1, y = log(x)",
         "y: 3 of 5 values are undefined and left empty",
+        # The table replaced the paste, so both roles hold its columns now: the server's marks name them.
+        "x takes the new column 'x' instead of 'Study Hours'",
+        "y takes the new column 'y' instead of 'Exam Score'",
     ]
     # A generated table starts from the default bindings for its columns.
     assert done["dataset"]["bindings"] == [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]

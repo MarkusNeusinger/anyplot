@@ -81,6 +81,7 @@ from .settings import get_settings
 from .sub_agents.adapter import ADAPTERS
 from .sub_agents.reviewer import reviewer
 from .tools.session import SESSION_TOOLS, plot_pipeline
+from .turn_marks import table_facts
 
 
 logger = logging.getLogger(__name__)
@@ -496,6 +497,8 @@ async def make_paste_conversions(callback_context: CallbackContext) -> types.Con
         callback_context.state[key] = value
     ledger.conversions_made = made.version.dataset_id
     ledger.dataset_changes.extend(made.changes)
+    # The server's own step says what it bound: the turn's marks start from the version it left (`turn_marks.py`).
+    ledger.marks_from = table_facts(made.version.dataset_id, made.version.stored.profile, made.version.bindings)
     telemetry.note_conversion(session_id, made.outcome)
     return None
 

@@ -1029,6 +1029,9 @@ async def prepare_data(
     if prepared is not None and (outcome := _conversion_outcome(prepared, parsed.profile, version.bindings)):
         telemetry.note_conversion(session_id, outcome)
     ledger.dataset_changes.extend(changes)
+    if ledger.marks_from is not None:
+        # A renamed column is still itself: the turn's marks see neither a new column nor a moved role in it.
+        ledger.marks_from = ledger.marks_from.renamed(lambda name: renamed(name, routed.table))
     # The names only, for the telemetry; an applied view is the table's step, under its own name.
     ledger.prep_ops.extend([*(["apply_view"] if routed.apply else []), *(op.op for op in routed.table)])
     if not start.current:
