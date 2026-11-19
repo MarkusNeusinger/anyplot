@@ -296,11 +296,15 @@ describe('LegalPage', () => {
     // The rule keeps out an e-mail address and a link with its scheme, not every address or link:
     // the row claims neither.
     expect(misses).not.toHaveTextContent(/nothing that looks like an address or a link/);
-    // The search texts the app sent before the change still stand on the public dashboard. The
-    // change shipped within November 2026, so the month is included.
+    // The search texts the app sent before the change are still stored at Plausible, but the
+    // property that carried them is no longer shown on the public dashboard. The change shipped
+    // within November 2026, so the month is included.
     expect(
-      screen.getByText(/search texts sent up to and including november 2026 still show there/)
+      screen.getByText(
+        /search texts sent until november 2026 are still stored by Plausible, no longer shown/
+      )
     ).toBeInTheDocument();
+    expect(screen.queryByText(/still show there/)).not.toBeInTheDocument();
   });
 
   it('does not claim more privacy than the code delivers', () => {
@@ -331,11 +335,11 @@ describe('LegalPage', () => {
     ).toBeInTheDocument();
     // No event carries what a visitor typed any more (docs/reference/plausible.md, "Search"): the
     // gallery search's text goes to the private list instead. The search texts sent before the
-    // change still stand on the public dashboard, so the row says that, and no longer that a
-    // text is sent. The whole row, so neither can fall off its end.
+    // change are still stored at Plausible and hidden from the public dashboard, so the row says
+    // that, and no longer that a text is sent. The whole row, so neither can fall off its end.
     const analytics = screen.getByRole('row', { name: /^analytics\s/ });
     expect(analytics).toHaveTextContent(
-      /^analytics\s*Plausible counts page views, searches, clicks, copies and downloads, only in aggregate, on a public dashboard: no cookies, no cross-site id, no IP address kept\. search texts sent up to and including november 2026 still show there\.\s*where: Plausible Analytics \(EU, proxied\)$/
+      /^analytics\s*Plausible counts page views, searches, clicks, copies and downloads, only in aggregate, on a public dashboard: no cookies, no cross-site id, no IP address kept\. search texts sent until november 2026 are still stored by Plausible, no longer shown\.\s*where: Plausible Analytics \(EU, proxied\)$/
     );
     expect(analytics).not.toHaveTextContent(/is sent too/);
     // The browser's storage is named, not hidden behind "no cookies".

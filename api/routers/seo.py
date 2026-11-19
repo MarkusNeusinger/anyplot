@@ -1211,8 +1211,8 @@ _LEGAL_BOT_BODY = (
     "<li>Analytics: Plausible Analytics (EU), through this domain, counts page views, searches, "
     "clicks, copies and downloads, only in aggregate, on a "
     '<a href="https://plausible.io/anyplot.ai">public dashboard</a>; no cookies, no cross-site id, '
-    "no IP address stored. Search texts sent up to and including November 2026 still show "
-    "there.</li>"
+    "no IP address stored. Search texts sent until November 2026 are still stored by Plausible, "
+    "no longer shown.</li>"
     "<li>Hosting: Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands (europe-west4).</li>"
     "<li>Server logs: IP address, URL and user-agent of each request, for security and debugging; "
     "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4).</li>"
