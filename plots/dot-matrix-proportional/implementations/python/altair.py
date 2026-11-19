@@ -1,7 +1,7 @@
 """anyplot.ai
 dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-11-19
+Quality: pending | Updated: 2026-11-19
 """
 
 import importlib
