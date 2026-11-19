@@ -1313,7 +1313,6 @@ class TestMonthsAndQuarters:
             ["May", "June", "April"],  # names that look like months, no year
             ["Nov 2026", "Oct 2026", "n/a yet"],  # one cell of neither
             ["Nov 2026", "2026-10", "2026-09"],  # two forms in one column
-            ["26 Nov 2026", "25 Nov 2026"],  # a day: a date, never its month
             ["Q1 2026", "Q2 2026"],
             ["Nov 0900", "Dec 0900"],  # outside the years a month may hold
         ],
@@ -1322,6 +1321,13 @@ class TestMonthsAndQuarters:
         parsed = parse_dataset("Month;Price\n" + "".join(f"{cell};{index}\n" for index, cell in enumerate(cells)))
 
         assert parsed.column_dtypes["Month"] == "text"
+        assert not warned(parsed, "read as months")
+
+    def test_a_day_with_a_month_name_is_a_date_never_its_month(self) -> None:
+        parsed = parse_dataset("Month;Price\n26 Nov 2026;1\n25 Nov 2026;2\n")
+
+        assert parsed.column_dtypes["Month"] == "datetime"
+        assert parsed.csv.splitlines()[1:] == ["2026-11-26,1", "2026-11-25,2"]
         assert not warned(parsed, "read as months")
 
     def test_a_person_named_may_stays_a_name(self) -> None:

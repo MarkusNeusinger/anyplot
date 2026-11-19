@@ -67,6 +67,11 @@ def profile(csv: str) -> DatasetProfile:
     return parse_dataset(csv).profile
 
 
+DAY_8, DAY_9 = "2026-11-08+01:00", "2026-11-09+01:00"
+"""Days with a UTC offset and no time: the paste keeps them text, and a `set_type` to dates reads them on request,
+so a column of them is the source of a date conversion."""
+
+
 def role(name: str, *kinds: RoleKind, required: bool = True, variadic: bool = False) -> DataRole:
     return DataRole(name=name, kinds=kinds, required=required, variadic=variadic, description="")
 
@@ -727,8 +732,8 @@ class TestNewDateColumn:
     def test_a_converted_column_takes_its_source_off_the_optional_roles(self) -> None:
         """Second opinion of 2026-11-02: `Month` on `series` beside `Month (date)` on the date role is one series a row."""
         roles = [role("date", "datetime"), role("value", "numeric"), role("series", "categorical", required=False)]
-        before = profile("Month,p\n8 Nov 2026,5\n9 Nov 2026,7\n")
-        after = profile("Month,p,Month (date)\n8 Nov 2026,5,2026-11-08\n9 Nov 2026,7,2026-11-09\n")
+        before = profile(f"Month,p\n{DAY_8},5\n{DAY_9},7\n")
+        after = profile(f"Month,p,Month (date)\n{DAY_8},5,2026-11-08\n{DAY_9},7,2026-11-09\n")
         bindings = bind(("value", "p"), ("series", "Month"))
 
         carried = carry_bindings(bindings, roles, after, before, {"Month (date)": "Month"})
@@ -737,8 +742,8 @@ class TestNewDateColumn:
 
     def test_a_required_role_keeps_the_source(self) -> None:
         roles = [role("date", "datetime"), role("value", "numeric"), role("label", "text")]
-        before = profile("Month,p\n8 Nov 2026,5\n9 Nov 2026,7\n")
-        after = profile("Month,p,Month (date)\n8 Nov 2026,5,2026-11-08\n9 Nov 2026,7,2026-11-09\n")
+        before = profile(f"Month,p\n{DAY_8},5\n{DAY_9},7\n")
+        after = profile(f"Month,p,Month (date)\n{DAY_8},5,2026-11-08\n{DAY_9},7,2026-11-09\n")
         bindings = bind(("value", "p"), ("label", "Month"))
 
         carried = carry_bindings(bindings, roles, after, before, {"Month (date)": "Month"})
@@ -747,15 +752,15 @@ class TestNewDateColumn:
 
     def test_a_conversion_no_role_took_leaves_the_source_alone(self) -> None:
         roles = [role("x", "numeric"), role("series", "categorical", required=False)]
-        before = profile("x,Month\n1,8 Nov 2026\n2,9 Nov 2026\n")
-        after = profile("x,Month,Month (date)\n1,8 Nov 2026,2026-11-08\n2,9 Nov 2026,2026-11-09\n")
+        before = profile(f"x,Month\n1,{DAY_8}\n2,{DAY_9}\n")
+        after = profile(f"x,Month,Month (date)\n1,{DAY_8},2026-11-08\n2,{DAY_9},2026-11-09\n")
         bindings = bind(("x", "x"), ("series", "Month"))
 
         assert as_pairs(carry_bindings(bindings, roles, after, before, {"Month (date)": "Month"})) == as_pairs(bindings)
 
     def test_an_undo_gives_the_source_back(self) -> None:
         roles = [role("date", "datetime"), role("value", "numeric"), role("series", "categorical", required=False)]
-        before = profile("Month,p\n8 Nov 2026,5\n9 Nov 2026,7\n")
+        before = profile(f"Month,p\n{DAY_8},5\n{DAY_9},7\n")
 
         assert as_pairs(carry_bindings(bind(("date", "Month (date)"), ("value", "p")), roles, before)) == [
             ("value", "p"),
@@ -845,8 +850,8 @@ class TestAxisAndRowNumbers:
         assert as_pairs(carried) == [("category", "index"), ("value", "value")]
 
     def test_a_new_date_column_takes_the_axis_and_moves_the_measure(self) -> None:
-        before = profile("Datum;Preis\n8 Nov 2026;1\n9 Nov 2026;3\n")
-        after = profile("Datum,Preis,Datum (Datum)\n8 Nov 2026,1,2026-11-08\n9 Nov 2026,3,2026-11-09\n")
+        before = profile(f"Datum;Preis\n{DAY_8};1\n{DAY_9};3\n")
+        after = profile(f"Datum,Preis,Datum (Datum)\n{DAY_8},1,2026-11-08\n{DAY_9},3,2026-11-09\n")
 
         carried = carry_bindings(default_bindings(LINE, before), LINE, after, before, {"Datum (Datum)": "Datum"})
 
