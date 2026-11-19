@@ -86,6 +86,22 @@ runs. `--gcloud-token` mints the renderer's ID token with `gcloud auth
 print-identity-token` and mints a new one whenever it is within 10 minutes of its
 one-hour expiry, so a full run outlasts a token.
 
+**Promoted cases keep to their route.** A promoted feedback case sent before 2026-11-19,
+or without a recorded send time, replays only on Claude through Vertex AI in `eu`, the
+one route its sender was told about, unless it comes from the admin lane or holds the
+operator's own data (`agents/evals/replay.py`). The case selection
+compares that pin with every model route the run resolved (the root, the adapter, the
+reviewer and the judge, after the flags, the environment and the defaults, with an
+endpoint override the Claude client would take, and matching the agents as they were
+built), so a run that would send such a case elsewhere (`--provider gemini`,
+`--location global` or `us`, `AGENT_TRANSPORT=claude-cli`, `ANTHROPIC_VERTEX_BASE_URL`)
+ends with exit code 2 before the preflight and names each pinned case and each route
+that leaves the pin. `--skip-pinned` leaves those cases out instead and prints their ids
+to stderr; the stamp records only how many (`pinned_left_out`), and such a run is never
+saved as a baseline. Each run record carries the case's `origin`, `sent_at`, `lane`,
+`owner_chat`, `earlier_case` and `saved_session`, so `score.py` can apply the same
+rule to the renders `--keep-attempts` kept.
+
 With a baseline (`--baseline FILE`, by default `agents/evals/baselines/<pinned model>.json`
 when it exists) the run prints the diff table over the cases both reports hold: pass
 rate, accept-match rate, cost per successful plot, latency percentiles and every case
@@ -254,6 +270,11 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("--cases", default="smoke", help="smoke, full, stress, or comma-separated globs over case ids")
     parser.add_argument(
+        "--skip-pinned",
+        action="store_true",
+        help="leave out the promoted cases that may replay only on Claude through Vertex AI in eu, and run the rest",
+    )
+    parser.add_argument(
         "--static",
         action="store_true",
         help="run only the model-free static stage (agents/evals/stress.py); no model is called, renderer fake by default",
@@ -392,6 +413,9 @@ class MatrixConfig:
     keep_attempts: bool = False
     theme: str | None = None
     """`--theme`: the site theme every turn sends, as the page does; None sends none, and the plots render light."""
+    pinned_left_out: int = 0
+    """How many pinned promoted cases `--skip-pinned` left out, the stamp's `pinned_left_out`; never their ids, which
+    go to stderr alone."""
     argv: list[str] = field(default_factory=list)
 
 
@@ -598,6 +622,7 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
     from agents.anyplot.render.runtimes import runtime_for
     from agents.anyplot.settings import get_settings
     from agents.evals.cases import load_cases, select_cases
+    from agents.evals.replay import NO_MODEL_CALL
 
     firsts: dict[str, EvalCase] = {}
     for case in cases:
@@ -610,7 +635,8 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
             (each for each in cases if each.library == library and _bundles_as_it_stands(each, runtime)), None
         )
         if stand_in is None:
-            smoke = smoke if smoke is not None else select_cases(load_cases(), "smoke")
+            # The stand-in lends only its catalogue file, rendered on `PREFLIGHT_DATA`: no model sees any case.
+            smoke = smoke if smoke is not None else select_cases(load_cases(), "smoke", routes=NO_MODEL_CALL)
             stand_in = next(
                 (each for each in smoke if each.library == library and _bundles_as_it_stands(each, runtime)), None
             )
@@ -722,7 +748,14 @@ def parse_events(chunks: list[tuple[float, bytes]], started: float) -> list[Even
 
 
 def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
-    """A run record before the run: every field the report reads, with its empty value."""
+    """A run record before the run: every field the report reads, with its empty value.
+
+    `origin`, `sent_at`, `lane`, `owner_chat`, `earlier_case` and `saved_session` are what `replay.is_pinned`
+    reads, so `score.py` can apply the same rule to the renders `--keep-attempts` kept, also after the case itself has
+    left `.cases/`.
+    """
+    from agents.evals.replay import format_sent_at
+
     return {
         "case_id": case.case_id,
         "repeat": repeat,
@@ -732,6 +765,11 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "expected": case.expected,
         "tags": list(case.tags),
         "origin": case.origin,
+        "sent_at": format_sent_at(case.sent_at) if case.sent_at is not None else None,
+        "lane": case.lane,
+        "owner_chat": case.owner_chat,
+        "earlier_case": case.earlier_case,
+        "saved_session": case.saved_session,
         "status": "harness_error",
         "reason": None,
         "attempts": 0,
@@ -1745,6 +1783,7 @@ def build_stamp(
         "gallery_seed": config.seed,
         "baseline": str(config.baseline_path) if config.baseline_path else None,
         "theme": config.theme,
+        "pinned_left_out": config.pinned_left_out,
         "argv": list(config.argv),
     }
 
@@ -1783,6 +1822,10 @@ def write_baseline(report: dict[str, Any], baselines_dir: Path) -> tuple[Path | 
         return None, f"not saved as a baseline: the run stopped early ({report['stopped']})"
     if any(run.get("origin") != "fixtures" for run in runs):
         return None, "not saved as a baseline: the run includes promoted cases, which hold users' data"
+    left_out = (report.get("stamp") or {}).get("pinned_left_out")
+    if left_out:
+        # A committed file must not even count the promoted cases a selection held.
+        return None, f"not saved as a baseline: --skip-pinned left out {left_out} promoted cases of its selection"
     errors = sorted({str(run.get("case_id")) for run in runs if is_error(run)})
     if errors:
         return None, (
@@ -2066,6 +2109,7 @@ def _run_static(args: argparse.Namespace, settings: "AgentSettings") -> int:
     from agents.anyplot.render import make_backend
     from agents.anyplot.render.contract import RendererUnavailable
     from agents.evals.cases import CaseError, load_cases, select_cases
+    from agents.evals.replay import NO_MODEL_CALL
     from agents.evals.stress import StaticContext, StaticResult, run_static
 
     try:
@@ -2073,7 +2117,8 @@ def _run_static(args: argparse.Namespace, settings: "AgentSettings") -> int:
     except RendererUnavailable as exc:
         raise SetupError(f"renderer {settings.renderer}: {exc}") from exc
     try:
-        cases = select_cases(load_cases(), args.cases)
+        # The static stage calls no model; its stand-in renders go to the renderer alone.
+        cases = select_cases(load_cases(), args.cases, routes=NO_MODEL_CALL)
     except CaseError as exc:
         raise SetupError(str(exc)) from exc
     if not cases:
@@ -2109,7 +2154,6 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
     from agents.anyplot.render import make_backend
     from agents.anyplot.render.contract import RendererUnavailable
     from agents.anyplot.settings import AgentSettings
-    from agents.evals.cases import CaseError, load_cases, select_cases
 
     price_of(settings.model)
     price_of(settings.judge_model)
@@ -2122,12 +2166,7 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         make_backend(settings)
     except RendererUnavailable as exc:
         raise SetupError(f"renderer {settings.renderer}: {exc}") from exc
-    try:
-        cases = select_cases(load_cases(), args.cases)
-    except CaseError as exc:
-        raise SetupError(str(exc)) from exc
-    if not cases:
-        raise SetupError(f"no case matches --cases {args.cases!r}")
+    cases, left_out = select_for_run(args.cases, settings, skip_pinned=args.skip_pinned)
     # The smoke set holds a plotnine and an altair case (since 2026-10-25), a pygal and a lets-plot case (since
     # 2026-10-26), a ggplot2 case (since 2026-10-29), a makie case and a chartjs, d3, echarts and highcharts case
     # (since 2026-10-30) and a muix, a plotly and a bokeh case (since 2026-10-31), which the default `AGENT_LIBRARIES`
@@ -2160,9 +2199,59 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         keep_attempts=args.keep_attempts,
         theme=args.theme,
         render_token=RenderToken(os.environ) if args.gcloud_token else None,
+        pinned_left_out=left_out,
         argv=list(sys.argv[1:] if argv is None else argv),
     )
     return asyncio.run(run_matrix(cases, config))
+
+
+def select_for_run(
+    selector: str,
+    settings: "AgentSettings",
+    *,
+    skip_pinned: bool = False,
+    load: "Callable[[], list[EvalCase]] | None" = None,
+    echo: Callable[[str], None] = _echo,
+) -> tuple[list["EvalCase"], int]:
+    """The cases of `--cases` for a run on `settings`, and how many pinned ones `--skip-pinned` left out.
+
+    The selection checks every model route the run resolved (`replay.checked_routes`: after the flags, the
+    environment and the defaults, with an endpoint override, and matching the agents as they were built) before the
+    preflight and before any model call. A pinned promoted case on another route stops the run with the refusal's
+    message; with `skip_pinned` the run goes on without those cases and prints their ids to stderr, and the stamp
+    records their count alone, because a synced case's id names the second its feedback was sent.
+    """
+    from agents.evals.cases import CaseError, load_cases, select_cases
+    from agents.evals.replay import ReplayRefused, RoutesDiffer, checked_routes
+
+    try:
+        routes = checked_routes(settings)
+    except RoutesDiffer as exc:
+        raise SetupError(str(exc)) from None
+    try:
+        every = (load or load_cases)()
+        try:
+            return _nonempty(select_cases(every, selector, routes=routes), selector), 0
+        except ReplayRefused as refused:
+            if not skip_pinned:
+                raise SetupError(str(refused)) from None
+            left_out = {case.case_id for case in refused.cases}
+            echo(refused.left_out())
+            rest = select_cases([case for case in every if case.case_id not in left_out], selector, routes=routes)
+            if not rest:
+                raise SetupError(
+                    f"--skip-pinned left out every case --cases {selector!r} selects ({len(left_out)} pinned); "
+                    "nothing is left to run"
+                ) from None
+            return rest, len(left_out)
+    except CaseError as exc:
+        raise SetupError(str(exc)) from exc
+
+
+def _nonempty(cases: list["EvalCase"], selector: str) -> list["EvalCase"]:
+    if not cases:
+        raise SetupError(f"no case matches --cases {selector!r}")
+    return cases
 
 
 if __name__ == "__main__":

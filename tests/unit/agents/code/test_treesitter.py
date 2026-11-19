@@ -27,6 +27,7 @@ from agents.anyplot.code.treesitter import (
     walk,
 )
 
+from ..tracked import tracked_python_files
 from .conftest import R_CATALOGUE_FILES, REPO_ROOT, merged_specs
 
 
@@ -44,7 +45,7 @@ def test_the_service_reads_grammars_only_through_the_registry_that_never_downloa
     `LanguageRegistry` loads from the grammar directory alone, so no module under agents/ uses anything else."""
     allowed = {"LanguageRegistry", "LanguageNotFoundError"}
     used: dict[str, set[str]] = {}
-    for path in (REPO_ROOT / "agents").rglob("*.py"):
+    for path in tracked_python_files():
         tree = ast.parse(path.read_text(encoding="utf-8"))
         names = used.setdefault(str(path.relative_to(REPO_ROOT)), set())
         aliases = {

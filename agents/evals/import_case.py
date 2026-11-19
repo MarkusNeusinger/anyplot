@@ -34,7 +34,19 @@ else: a feedback case holds a user's data, and everything under
   `--expected`, else from the manifest's reaction by the triage's rule (`thumbs_up` →
   `accepted`, `thumbs_down` → `rejected`; `bug` and `idea` imply no outcome, so they
   need `--expected`; a bundle without a manifest → `unknown`);
-  `tags` `["imported", <reaction>]`; and `source`, where the case came from. The
+  `tags` `["imported", <reaction>]`; `source`, where the case came from; `sent_at`, when
+  the feedback was sent, the manifest's `created_at`; `lane`, `admin` or `public`, the BFF
+  lane that served the chat, read from the form of the manifest's `user_hash`
+  (`replay.lane_of`; the value itself is never copied); `earlier_case`, a closed code for
+  what the case corrects, read from the manifest's `replaces` against the cut-off (`none`,
+  `before_cutoff`, `after_cutoff`, or `unknown` when that value names no readable case;
+  never the earlier case's id or send second); and `owner_chat: true` only
+  with `--owner-chat`, which asserts that the case's data is your own. A bundle has no
+  manifest, so its case records `saved_session: true` and neither a send time, a lane nor
+  a correction. A case sent before 2026-11-19, or without `sent_at`, or one that corrects
+  a case sent before then, replays only on Claude through Vertex AI in `eu`, the one route
+  its sender was told about, unless its lane is `admin` or `owner_chat` is set
+  (`agents/evals/replay.py`); `sync_cases.py` never sets `owner_chat`. The
   bundle holds the session's bindings when it was taken, not each version's, so a
   binding that names a column the version's `data.csv` lacks (a later data change
   renamed or dropped it) is refused: the harness could not bind it;
@@ -81,6 +93,8 @@ from typing import Any
 
 EVALS_DIR = Path(__file__).resolve().parent
 PROMOTED_DIR = EVALS_DIR / ".cases"
+"""The git-ignored directory of the promoted cases, the harness's only default for it; read through
+`promoted_cases_dir` when it is used, never captured at import."""
 FIXTURES_DIR = EVALS_DIR / "fixtures" / "cases"
 MANIFEST_NAME = "manifest.json"
 REACTIONS = frozenset({"thumbs_up", "thumbs_down", "bug", "idea"})
@@ -103,6 +117,64 @@ MAX_CHANGE_REQUEST_CHARS = 600
 _EXPORT_LIBRARY = re.compile(
     r"\A(?P<marker>#|//) Adapted by anyplot\.ai from [a-z0-9-]+ \((?P<library>[a-z][a-z0-9]*)[ )]"
 )
+
+
+class RealCasesUnderTest(RuntimeError):
+    """A test, or a process that imported pytest, reached the real promoted directory, which holds visitors' data."""
+
+
+_MAX_LINKS = 40
+
+
+def under_test() -> bool:
+    """Whether this process runs tests: it imported pytest, or a running test started it (`PYTEST_CURRENT_TEST`, which a
+    child process inherits)."""
+    return "pytest" in sys.modules or "PYTEST_CURRENT_TEST" in os.environ
+
+
+def names_real_cases(candidate: Path | str) -> bool:
+    """Whether `candidate` names the real promoted directory, or a path inside it, in any spelling: relative, with `.`
+    or `..`, as a string, or through symbolic links.
+
+    Decided from the names and from the links on the way, never by opening, listing or stat-ing that directory: the
+    path is normalised by its names first, the parents of what is left are resolved, and a link is read, not followed.
+    """
+    real = EVALS_DIR.resolve() / ".cases"
+    path = Path(os.path.normpath(Path(candidate).absolute()))
+    for _ in range(_MAX_LINKS):
+        if path == real or real in path.parents:
+            return True
+        parent = path.parent.resolve()
+        here = parent / path.name
+        if here == real or real in here.parents:
+            return True
+        if not here.is_symlink():
+            return False
+        target = Path(os.readlink(here))
+        path = Path(os.path.normpath(target if target.is_absolute() else parent / target))
+    return True  # a loop of links: refused like the directory itself
+
+
+def guard_promoted_dir(directory: Path | str) -> Path:
+    """`directory` as a path, refused when a test reaches the real promoted directory through it (`names_real_cases`)."""
+    if under_test() and names_real_cases(directory):
+        raise RealCasesUnderTest(
+            f"refused to use {directory} for promoted cases: it is the real agents/evals/.cases/, which holds "
+            "visitors' data, and this process runs tests (it imported pytest, or a test started it), so it must never "
+            "read it. In a test, point import_case.PROMOTED_DIR, or the directory you pass, at a temporary directory; "
+            "outside a test, run the tool in a process that has not imported pytest."
+        )
+    return Path(directory)
+
+
+def promoted_cases_dir() -> Path:
+    """`PROMOTED_DIR` as it stands when it is used, so a test can point it at a temporary directory.
+
+    The real directory holds visitors' data, so a process that runs tests never gets it (`guard_promoted_dir`): the eval
+    tests point `PROMOTED_DIR` at an empty temporary directory (`tests/unit/agents/evals/conftest.py`), and a test that
+    reaches the default without that fails here, before anything reads the directory.
+    """
+    return guard_promoted_dir(PROMOTED_DIR)
 
 
 class ImportRefused(ValueError):
@@ -321,15 +393,40 @@ class ImportedCase:
     notes: list[str]
 
 
+def sent_at_of(source: Source) -> str | None:
+    """The manifest's `created_at`, when the feedback was sent, in the form `case.json` keeps; None without one.
+
+    Read from the manifest only, never from the case id or a directory name: a value that is not a UTC time in the
+    manifest's own form (`YYYY-MM-DDTHH:MM:SSZ`) is no send time, and the case without one is pinned.
+    """
+    from agents.evals.replay import format_sent_at, parse_sent_at
+
+    if source.manifest is None:
+        return None
+    try:
+        return format_sent_at(parse_sent_at(source.manifest.get("created_at")))
+    except ValueError:
+        return None
+
+
 def build_case(
-    source: Source, expected: str | None, *, request: str | None = None, no_request: bool = False
+    source: Source,
+    expected: str | None,
+    *,
+    request: str | None = None,
+    no_request: bool = False,
+    owner_chat: bool = False,
 ) -> ImportedCase:
     """The eval case of a source; raises `ImportRefused` when it cannot run.
 
     `request` is the change request the user gives for the version (`--change-request`),
     and `no_request` says that `create_plot` made it (`--no-change-request`); without
-    either, the transcript decides, or the import is refused when it cannot.
+    either, the transcript decides, or the import is refused when it cannot. `owner_chat`
+    marks the case's data as the operator's own (`--owner-chat`), so it may replay on any
+    route; a saved session has no manifest and so no lane, and only the person who imports
+    it can say whose data it holds.
     """
+    from agents.evals.replay import PINNED_ROUTE, UNKNOWN, earlier_case_of, lane_of
     from core.constants import SUPPORTED_LIBRARIES
 
     raw_session = source.bundle.get("session")
@@ -385,6 +482,25 @@ def build_case(
             request = None
     locale = session.get("locale")
     language = session_language(session, source.version)
+    sent_at = sent_at_of(source)
+    # The lane alone is kept, never the `user_hash` it is read from.
+    lane = lane_of(source.manifest.get("user_hash")) if source.manifest is not None else None
+    # A closed code, never the earlier case's id or send second: a stored case's id begins with that second, so
+    # either would point at another case of the same visitor. The rule needs only which side of the cut-off it is on.
+    earlier_case = (
+        (earlier_case_of(source.manifest.get("replaces")) if "replaces" in source.manifest else UNKNOWN)
+        if source.manifest is not None
+        else None
+    )
+    if sent_at is None and lane != "admin" and not owner_chat:
+        what = (
+            "a saved session records no send time"
+            if source.manifest is None
+            else "the manifest's created_at is unreadable"
+        )
+        notes.append(f"{what}, so the case replays only on {PINNED_ROUTE}; pass --owner-chat if its data is your own")
+    if lane == "public" and owner_chat:
+        notes.append("the manifest says the public lane served this chat; --owner-chat marks its data as yours anyway")
     case = {
         "spec_id": spec_id,
         "library": library,
@@ -394,6 +510,12 @@ def build_case(
         "expected": expected,
         "tags": [IMPORTED_TAG, reaction] if reaction else [IMPORTED_TAG],
         "source": source.description,
+        **({"sent_at": sent_at} if sent_at is not None else {}),
+        **({"lane": lane} if lane is not None else {}),
+        # Always written for a stored case: a case without the field is pinned.
+        **({"earlier_case": earlier_case} if earlier_case is not None else {}),
+        **({"saved_session": True} if source.manifest is None else {}),
+        **({"owner_chat": True} if owner_chat else {}),
     }
     return ImportedCase(case=case, data_csv=source.data_csv, change_request=request, notes=notes)
 
@@ -410,7 +532,7 @@ def write_case(
     from agents.anyplot.settings import FIXTURE_PATTERN
     from agents.evals.cases import CaseError, load_case
 
-    promoted_dir = PROMOTED_DIR if promoted_dir is None else promoted_dir
+    promoted_dir = promoted_cases_dir() if promoted_dir is None else guard_promoted_dir(promoted_dir)
     fixtures_dir = FIXTURES_DIR if fixtures_dir is None else fixtures_dir
     # Checked before the id becomes part of any path.
     if not re.fullmatch(FIXTURE_PATTERN, case_id):
@@ -485,6 +607,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--version", type=int, help="the plot version (default: the case's, or the newest)")
     parser.add_argument("--force", action="store_true", help="replace an imported case of the same id")
+    parser.add_argument(
+        "--owner-chat",
+        action="store_true",
+        help="assert that the case's data is your own, the operator's: it may then replay on any model route "
+        "(sync_cases never sets this)",
+    )
     request = parser.add_mutually_exclusive_group()
     request.add_argument(
         "--change-request", metavar="TEXT", help="the request that made the version, when the transcript cannot tell"
@@ -507,7 +635,13 @@ def main(argv: list[str] | None = None) -> int:
             source = read_bundle_file(args.source, args.version)
         else:
             raise ImportRefused(f"{args.source}: no such file or directory")
-        imported = build_case(source, args.expected, request=args.change_request, no_request=args.no_change_request)
+        imported = build_case(
+            source,
+            args.expected,
+            request=args.change_request,
+            no_request=args.no_change_request,
+            owner_chat=args.owner_chat,
+        )
         target = write_case(args.case_id or source.default_id, imported, force=args.force)
     except ImportRefused as exc:
         print(f"refused: {exc}", file=sys.stderr)

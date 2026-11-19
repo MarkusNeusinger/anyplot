@@ -39,6 +39,7 @@ from agents.anyplot.models import (
 from agents.anyplot.schemas import MAX_FULL_CODE_CHARS, AdaptPlan, Verdict
 from agents.anyplot.settings import MAX_THINKING_BUDGET, AgentSettings
 
+from ..tracked import tracked_python_files
 from .fakes import SCATTER_PLAN, FakeAnthropic
 
 
@@ -186,7 +187,7 @@ class TestFactories:
         pattern = re.compile(r"\b(?:AsyncAnthropicVertex|AnthropicVertex|AsyncAnthropic|Gemini|Claude|genai\.Client)\(")
         offenders = [
             str(path.relative_to(PACKAGE))
-            for path in PACKAGE.rglob("*.py")
+            for path in tracked_python_files()
             if path.name != "models.py" and pattern.search(path.read_text(encoding="utf-8"))
         ]
         assert offenders == []

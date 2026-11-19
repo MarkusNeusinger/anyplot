@@ -1442,6 +1442,14 @@ statistics after that. The table's columns are in
   On the dev machine, `agents/evals/sync_cases.py` pulls the promoted, active
   cases into `agents/evals/.cases/` and removes the retired ones (see
   [Sync promoted cases from the bucket](../../agents/README.md#sync-promoted-cases-from-the-bucket)).
+  A promoted case sent before 2026-11-19, the manifest's `created_at`, replays
+  there only on Claude through Vertex AI in `eu`, the one AI route its sender
+  was told about, unless its `user_hash` has the admin lane's form (see
+  [Promoted cases keep to their route](../../agents/README.md#promoted-cases-keep-to-their-route)).
+  That form says who held the admin door, with one id for every holder of the
+  admin token, not whose data was pasted: the exemption assumes the admin chat
+  holds your own data, so a visitor's table reproduced there becomes an exempt
+  case.
 - **Triage rounds.** To go through the open cases in one round, use the
   `triage-agent-cases` project skill (`.claude/skills/triage-agent-cases/`):
   it lists and copies the cases read-only, proposes a status and tags per case

@@ -240,6 +240,21 @@ class TestSync:
         assert [(case.case_id, case.origin) for case in loaded] == [(target.name, "promoted")]
         assert leftovers(cases) == []
 
+    def test_a_synced_case_records_its_send_time_and_lane_and_never_the_owner_mark(self, cases) -> None:
+        """The lane comes from the manifest's `user_hash`, whose value stays out of `case.json`; the owner mark is
+        `--owner-chat`'s alone, by hand (`agents/evals/replay.py`)."""
+        files = stored()
+        store = MemoryStore((CASE_A, files))
+
+        sync([row_for(files, promoted_at=PROMOTED, expected="rejected")], store, cases, force=False)
+
+        text = written(cases / dir_name(CASE_A))["case.json"]
+        case_json = json.loads(text)
+        assert case_json["sent_at"] == manifest_of(files)["created_at"] == "2026-10-12T14:30:05Z"
+        assert case_json["lane"] == "admin" and manifest_of(files)["user_hash"] not in text
+        assert "owner_chat" not in case_json
+        assert case_json["earlier_case"] == "none"  # the stored case corrects none
+
     def test_a_case_with_the_turn_record_syncs_as_before(self, cases) -> None:
         """The manifest keeps the bundle's `turns`; the importer reads nothing of it."""
         plain, recorded = stored(), stored(turns=TURNS)

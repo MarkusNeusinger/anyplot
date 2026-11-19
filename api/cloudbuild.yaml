@@ -44,7 +44,9 @@ substitutions:
   _CF_ACCESS_AUD: ""
   # Comma-separated. Browser users with a valid Cloudflare Access JWT but an
   # email not in this list get 403. Required for the JWT path to authorize
-  # anyone.
+  # anyone. Whoever is added here is also exempt from the eval harness's
+  # replay pin for their feedback cases (agents/README.md, "Promoted cases keep
+  # to their route").
   _ADMIN_ALLOWED_EMAILS: ""
   # Agent chat BFF (/debug/agent/*, api/routers/agent.py) — ships dark. Every
   # route answers 404 until AGENT_ENABLED is true AND AGENT_SERVICE_URL and the

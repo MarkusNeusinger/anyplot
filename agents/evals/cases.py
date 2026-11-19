@@ -21,9 +21,16 @@ sources:
   data (`origin="promoted"`). `agents/evals/sync_cases.py` pulls the promoted cases from
   the private bucket and removes the retired ones; `agents/evals/import_case.py` writes
   one by hand from a saved session or a copied case directory. The harness reads the
-  directory when it exists.
+  directory when it exists. Such a case's `case.json` may record `sent_at`, when its
+  feedback was sent (the manifest's `created_at`, `YYYY-MM-DDTHH:MM:SSZ`), `lane`, the
+  BFF lane that served its chat (`admin` or `public`), and `owner_chat: true` for a case
+  that holds the operator's own data; a case sent before 2026-11-19, or without
+  `sent_at`, replays only on Claude through Vertex AI in `eu` unless its lane is `admin`
+  or it holds the operator's own data (`agents/evals/replay.py`).
 
-`select_cases` takes the harness's `--cases` value: `smoke` (the cases tagged `smoke`:
+`select_cases` takes the harness's `--cases` value and the routes of every model the
+caller sends the selected cases to, and refuses a pinned case those routes would take
+elsewhere (`replay.check`). The value is `smoke` (the cases tagged `smoke`:
 one generated matplotlib or seaborn case per spec, one plotnine and one altair case since
 2026-10-25, one pygal and one lets-plot case since 2026-10-26, one ggplot2 case since
 2026-10-29, one makie case and one each for chartjs, d3, echarts and highcharts since
@@ -44,6 +51,7 @@ import fnmatch
 import json
 import re
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal, get_args
 
@@ -52,10 +60,10 @@ from agents.anyplot.language import LANGUAGE_PATTERN, is_valid
 from agents.anyplot.schemas import Binding, ShownGroup, Theme
 from agents.anyplot.session_state import CatalogueSnapshot
 from agents.anyplot.settings import FIXTURE_PATTERN
+from agents.evals import import_case, replay
 from core.constants import SUPPORTED_LIBRARIES
 
 
-PROMOTED_DIR = Path(__file__).resolve().parent / ".cases"
 Expected = Literal["accepted", "rejected", "unknown"]
 Origin = Literal["fixtures", "promoted"]
 EXPECTED: tuple[str, ...] = ("accepted", "rejected", "unknown")
@@ -145,6 +153,19 @@ class EvalCase:
     operations that all land in the view; empty for a case whose plot draws every row."""
     view_checks: ViewChecks | None = None
     """What the runs under `before_view` must show; None checks the drawn rows alone (`ViewChecks`)."""
+    sent_at: datetime | None = None
+    """When a promoted case's feedback was sent (`sent_at` in `case.json`); None when the case does not record it,
+    which pins it (`replay.is_pinned`)."""
+    lane: replay.Lane | None = None
+    """The BFF lane that served the case's chat (`lane` in `case.json`); None when the case does not record it. A case
+    of the `admin` lane may replay anywhere (`replay.is_pinned`)."""
+    owner_chat: bool = False
+    """`owner_chat: true` in `case.json`: the case holds the operator's own data and may replay anywhere."""
+    earlier_case: str = replay.UNKNOWN
+    """What the case corrects (`earlier_case` in `case.json`, a code of `replay.EARLIER_CASES`); `unknown` when the case
+    records none, which pins it like `before_cutoff` (`replay.is_pinned`)."""
+    saved_session: bool = False
+    """`saved_session: true` in `case.json`: imported from a bundle `.save()` downloaded, which has no manifest."""
     snapshot_file: Path | None = field(default=None, repr=False)
 
     def snapshot(self) -> CatalogueSnapshot:
@@ -154,8 +175,19 @@ class EvalCase:
         return snapshot_from_repo(self.spec_id, self.library)
 
 
-def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
-    """Read and validate one case directory."""
+PROMOTED_FIELDS: tuple[str, ...] = ("sent_at", "lane", "owner_chat", "earlier_case", "saved_session")
+"""The `case.json` fields only an imported case carries; a fixture that has one, or the `imported` tag, is refused."""
+
+
+def load_case(directory: Path, origin: Origin) -> EvalCase:
+    """Read and validate one case directory.
+
+    `origin` has no default: where a case lies must never decide what it is, so a caller names it, and a case under the
+    fixtures that carries what only an imported case carries is refused rather than run as a synthetic one.
+
+    It reads the directory it is given: the refusal of the real promoted directory under test sits where a tool takes
+    the directory of all promoted cases (`load_cases`, the import, the sync), not here.
+    """
     case_id = directory.name
     if not _CASE_ID.fullmatch(case_id):
         raise CaseError(f"{directory}: not a case id ({FIXTURE_PATTERN})")
@@ -177,6 +209,12 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
     tags = raw.get("tags", [])
     if not isinstance(tags, list) or not all(isinstance(tag, str) for tag in tags):
         raise CaseError(f"{directory}/case.json: tags must be a list of strings")
+    if origin == "fixtures" and (set(PROMOTED_FIELDS) & set(raw) or import_case.IMPORTED_TAG in tags):
+        raise CaseError(
+            f"{directory}/case.json: a fixture carries what only an imported case carries ({', '.join(PROMOTED_FIELDS)} "
+            f"or the {import_case.IMPORTED_TAG!r} tag); a feedback case belongs in agents/evals/.cases/, never among "
+            "the fixtures"
+        )
     bindings = _bindings(raw.get("bindings"), directory)
     change_file = directory / "change_request.txt"
     change_request = change_file.read_text(encoding="utf-8").strip() if change_file.is_file() else None
@@ -201,6 +239,20 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
     if view_checks is not None and view_checks.clear and change_request is not None:
         # The clearing is the case's follow-up turn; a typed follow-up as well would leave open which one it clears.
         raise CaseError(f"{directory}/case.json: view_checks.clear and a change_request.txt exclude each other")
+    sent_at = _sent_at(raw.get("sent_at"), directory)
+    lane = raw.get("lane")
+    if lane is not None and lane not in replay.LANES:
+        raise CaseError(f"{directory}/case.json: lane must be one of {', '.join(replay.LANES)}")
+    owner_chat = raw.get("owner_chat", False)
+    if not isinstance(owner_chat, bool):
+        raise CaseError(f"{directory}/case.json: owner_chat must be true or false")
+    saved_session = raw.get("saved_session", False)
+    if not isinstance(saved_session, bool):
+        raise CaseError(f"{directory}/case.json: saved_session must be true or false")
+    try:
+        earlier_case = replay.parse_earlier_case(raw.get("earlier_case"), present="earlier_case" in raw)
+    except ValueError as exc:
+        raise CaseError(f"{directory}/case.json: {exc}") from exc
     snapshot_file = directory / "snapshot.json"
     perturbation = raw.get("perturbation")
     return EvalCase(
@@ -222,8 +274,25 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
         before_operations=before_operations,
         before_view=before_view,
         view_checks=view_checks,
+        sent_at=sent_at,
+        lane=lane,
+        owner_chat=owner_chat,
+        earlier_case=earlier_case,
+        saved_session=saved_session,
         snapshot_file=snapshot_file if snapshot_file.is_file() else None,
     )
+
+
+def _sent_at(value: Any, directory: Path) -> datetime | None:
+    """`sent_at` of `case.json` as an aware UTC time; a value in another form is a broken case, not a missing one."""
+    if value is None:
+        return None
+    try:
+        return replay.parse_sent_at(value)
+    except ValueError as exc:
+        raise CaseError(
+            f"{directory}/case.json: sent_at must be a UTC time as YYYY-MM-DDTHH:MM:SSZ in ASCII digits"
+        ) from exc
 
 
 def _before_operations(value: Any, directory: Path) -> tuple[tuple[dict[str, Any], ...], ...]:
@@ -368,8 +437,16 @@ def _bindings(value: Any, directory: Path) -> list[Binding] | None:
         raise CaseError(f"{directory}/case.json: invalid binding ({type(exc).__name__})") from exc
 
 
-def load_cases(fixtures_dir: Path = CASES_DIR, promoted_dir: Path = PROMOTED_DIR) -> list[EvalCase]:
-    """Every case of both sources, sorted by case id; a case id in both is an error."""
+def load_cases(fixtures_dir: Path = CASES_DIR, promoted_dir: Path | None = None) -> list[EvalCase]:
+    """Every case of both sources, sorted by case id; a case id in both is an error.
+
+    `promoted_dir` defaults to `import_case.promoted_cases_dir()`, resolved on each call rather than bound at import, so
+    the eval tests' fixture can point it at an empty temporary directory and a test never reads a visitor's case; a
+    directory a caller names passes the same guard (`import_case.guard_promoted_dir`).
+    """
+    promoted_dir = (
+        import_case.promoted_cases_dir() if promoted_dir is None else import_case.guard_promoted_dir(promoted_dir)
+    )
     cases: dict[str, EvalCase] = {}
     sources: tuple[tuple[Path, Origin], ...] = ((fixtures_dir, "fixtures"), (promoted_dir, "promoted"))
     for directory, origin in sources:
@@ -383,13 +460,44 @@ def load_cases(fixtures_dir: Path = CASES_DIR, promoted_dir: Path = PROMOTED_DIR
     return [cases[case_id] for case_id in sorted(cases)]
 
 
-def select_cases(cases: list[EvalCase], selector: str) -> list[EvalCase]:
-    """The cases `--cases` names: `smoke`, `full` (all but the stress cases), `stress`, or comma-separated globs."""
+def load_named(
+    wanted: dict[str, str], fixtures_dir: Path = CASES_DIR, promoted_dir: Path | None = None
+) -> dict[str, EvalCase]:
+    """The cases `wanted` names, each by its id from its origin's directory (`{case_id: origin}`), without listing either
+    directory: a caller that needs a few cases reads those and no other. An id whose directory is gone is left out."""
+    promoted_dir = (
+        import_case.promoted_cases_dir() if promoted_dir is None else import_case.guard_promoted_dir(promoted_dir)
+    )
+    roots: dict[str, tuple[Path, Origin]] = {
+        "fixtures": (fixtures_dir, "fixtures"),
+        "promoted": (promoted_dir, "promoted"),
+    }
+    found: dict[str, EvalCase] = {}
+    for case_id, origin in wanted.items():
+        if origin not in roots or not _CASE_ID.fullmatch(case_id):
+            continue
+        root, known = roots[origin]
+        if (root / case_id / "case.json").is_file():
+            found[case_id] = load_case(root / case_id, known)
+    return found
+
+
+def select_cases(cases: list[EvalCase], selector: str, *, routes: replay.Routes) -> list[EvalCase]:
+    """The cases `--cases` names: `smoke`, `full` (all but the stress cases), `stress`, or comma-separated globs.
+
+    `routes` is every model route the caller sends the selected cases' data to (`replay.routes_of` for a matrix
+    run), or `replay.NO_MODEL_CALL` for a caller that calls no model. A pinned promoted case among the selected that a
+    route would take elsewhere raises `replay.ReplayRefused`: every tool that selects eval cases passes this check
+    before its first model call.
+    """
     if selector == "full":
-        return [case for case in cases if STRESS_TAG not in case.tags]
-    if selector == "smoke":
-        return [case for case in cases if SMOKE_TAG in case.tags]
-    if selector == STRESS_TAG:
-        return [case for case in cases if STRESS_TAG in case.tags]
-    patterns = [pattern.strip() for pattern in selector.split(",") if pattern.strip()]
-    return [case for case in cases if any(fnmatch.fnmatchcase(case.case_id, pattern) for pattern in patterns)]
+        picked = [case for case in cases if STRESS_TAG not in case.tags]
+    elif selector == "smoke":
+        picked = [case for case in cases if SMOKE_TAG in case.tags]
+    elif selector == STRESS_TAG:
+        picked = [case for case in cases if STRESS_TAG in case.tags]
+    else:
+        patterns = [pattern.strip() for pattern in selector.split(",") if pattern.strip()]
+        picked = [case for case in cases if any(fnmatch.fnmatchcase(case.case_id, pattern) for pattern in patterns)]
+    replay.check(picked, routes)
+    return picked

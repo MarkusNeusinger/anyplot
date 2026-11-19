@@ -16,9 +16,15 @@ directory:
 * active, no directory: download `manifest.json` (and `data.csv` when the case holds it)
   from `cases/<case_id>/` into a temporary directory and import it with the importer's
   own functions and the row's `expected` (`written`), or report why the importer
-  refuses it and what to do instead (`skipped`);
+  refuses it and what to do instead (`skipped`). The case records the manifest's
+  `created_at` as `sent_at` and the lane its `user_hash` names (`admin` or `public`, never
+  the value), and never `owner_chat`, which only `import_case.py --owner-chat` writes: a
+  case sent before 2026-11-19 that is not from the admin lane replays only on Claude
+  through Vertex AI in `eu` (`agents/evals/replay.py`);
 * active, a directory: `kept` as it is, so a case you imported by hand with
-  `--change-request` survives; `--force` imports it again;
+  `--change-request` survives; `--force` imports it again, which also records the
+  `sent_at` and `lane` of a case imported before the fields existed (and drops a
+  hand-set `--change-request` or `--owner-chat`);
 * not active, a directory: `removed`. The directory is renamed out of `.cases/` first,
   so the harness never meets half a case;
 * a `case-*` directory without a row: `unknown`, left alone. Other directories, such as
@@ -196,8 +202,12 @@ def sync(rows: list[AgentFeedback], store: CaseStore, cases_dir: Path, *, force:
     """Bring `cases_dir` in line with the rows: write the active cases, remove the others.
 
     Only `case-*` directories whose case has a row are written or removed; a bucket or file
-    error of one case is reported as `failed` and the next case goes on.
+    error of one case is reported as `failed` and the next case goes on. A test never gets
+    the real directory here (`import_case.guard_promoted_dir`).
     """
+    from agents.evals import import_case
+
+    cases_dir = import_case.guard_promoted_dir(cases_dir)
     present = {path.name for path in cases_dir.iterdir() if path.is_dir()} if cases_dir.is_dir() else set()
     owned: set[str] = set()
     actions: list[Action] = []
@@ -453,7 +463,7 @@ def main(argv: list[str] | None = None, *, store: CaseStore | None = None, cases
     if store is None:
         store = GcsCaseStore(bucket_name(args.bucket))
     if cases_dir is None:
-        cases_dir = import_case.PROMOTED_DIR
+        cases_dir = import_case.promoted_cases_dir()
     try:
         actions = asyncio.run(run(args, store, cases_dir))
     except TableUnavailable as exc:

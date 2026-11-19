@@ -42,6 +42,7 @@ from agents.evals.matrix import (
     parse_events,
     run_matrix,
 )
+from agents.evals.replay import NO_MODEL_CALL
 from agents.evals.report import Flip, summarize, summary_markdown
 from agents.main import Runtime
 
@@ -58,8 +59,13 @@ BAD_PLAN: dict[str, Any] = {
 EMPTY_PLAN: dict[str, Any] = {"edits": [], "changes": []}
 
 
+def fixture_cases(selector: str) -> list:
+    """The committed fixture cases `selector` names; the scripted models of these tests call no real model."""
+    return select_cases(load_cases(promoted_dir=Path("/nonexistent")), selector, routes=NO_MODEL_CALL)
+
+
 def two_fixtures() -> list:
-    cases = select_cases(load_cases(promoted_dir=Path("/nonexistent")), "bar-grouped-seaborn,scatter-basic-matplotlib")
+    cases = fixture_cases("bar-grouped-seaborn,scatter-basic-matplotlib")
     assert [case.case_id for case in cases] == ["bar-grouped-seaborn", "scatter-basic-matplotlib"]
     return cases
 
@@ -550,7 +556,7 @@ async def test_each_view_fixture_reaches_the_adapter_through_the_app(
             "adapter": [{"json": BAD_PLAN}, {"json": BAD_PLAN}],
         },
     )
-    (case,) = select_cases(load_cases(promoted_dir=Path("/nonexistent")), case_id)
+    (case,) = fixture_cases(case_id)
 
     result = await run_matrix(
         [case], config(tmp_path, cases=case_id), services=services, runtime=runtime(), echo=lambda _: None
@@ -669,7 +675,7 @@ async def test_gate_failures_and_a_padded_canvas_do_not_pass(
             "reviewer": [],
         },
     )
-    cases = select_cases(load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-matplotlib")
+    cases = fixture_cases("scatter-basic-matplotlib")
 
     result = await run_matrix(
         cases, config(tmp_path, cases="scatter-basic-matplotlib"), services=services, runtime=runtime(), echo=print
@@ -998,9 +1004,7 @@ async def test_the_preflight_passes_over_a_muix_file_written_for_muix_7(
     bundle step until the adapter rewrites it, so the preflight renders the library's next selected case whose file
     bundles as it stands, and the other libraries keep their first case. The preflight checks the renderer, it
     evaluates no case."""
-    cases = select_cases(
-        load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-muix-*,violin-basic-muix-n12,scatter-basic-d3-n12"
-    )
+    cases = fixture_cases("scatter-basic-muix-*,violin-basic-muix-n12,scatter-basic-d3-n12")
     assert [case.case_id for case in cases][:2] == ["scatter-basic-d3-n12", "scatter-basic-muix-date"]
     assert MUIX_7_IMPORT in cases[1].snapshot().code
 
@@ -1022,7 +1026,7 @@ async def test_a_selection_of_muix_7_files_alone_passes_the_preflight_through_th
     from agents.evals import cases as cases_module
     from agents.evals.make_fixtures import LIBRARY_SMOKE
 
-    selected = select_cases(load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-muix-*")
+    selected = fixture_cases("scatter-basic-muix-*")
     assert len(selected) == 6 and LIBRARY_SMOKE["muix"] == ("pie-basic", "renamed")
     lines: list[str] = []
 
@@ -1091,6 +1095,52 @@ async def test_three_errors_in_a_row_stop_the_run(
     )
 
     assert result.exit_code == EXIT_OUTAGE and len(result.report["runs"]) == matrix.MAX_ERRORS_IN_A_ROW
+
+
+async def test_skip_pinned_writes_no_id_of_a_case_it_left_out(
+    tmp_path: Path, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A synced case's id names the second its feedback was sent, so the ids of the cases `--skip-pinned` left out go to
+    stderr alone: no report, summary, gallery or baseline holds one, and the run is not saved as a baseline."""
+    from agents.evals import replay
+    from agents.evals.cases import load_case
+
+    invented = "case-20261112t074027z-0a1b2c3d"
+    directory = tmp_path / "promoted" / invented
+    directory.mkdir(parents=True)
+    fields = {"spec_id": "scatter-basic", "library": "matplotlib", "expected": "rejected", "tags": ["imported"]}
+    (directory / "case.json").write_text(json.dumps({**fields, "sent_at": "2026-11-12T07:40:27Z"}), encoding="utf-8")
+    (directory / "data.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+    pinned = load_case(directory, "promoted")
+    monkeypatch.setattr(replay, "built_routes", lambda environ=None: ())  # as built by a fresh process
+    stderr: list[str] = []
+
+    cases, left_out = matrix.select_for_run(
+        "bar-grouped-seaborn,scatter-basic-matplotlib,case-*",
+        AgentSettings(location="global"),
+        skip_pinned=True,
+        load=lambda: [*two_fixtures(), pinned],
+        echo=stderr.append,
+    )
+    ok = {"status": "ok", "attempts": 1}
+    monkeypatch.setattr(
+        matrix.CaseRunner, "run", scripted_records({"bar-grouped-seaborn": ok, "scatter-basic-matplotlib": ok})
+    )
+    out = tmp_path / "out"
+    result = await run_matrix(
+        cases,
+        config(out, preflight=False, pinned_left_out=left_out, save_baseline=True, baselines_dir=out / "baselines"),
+        services=services,
+        runtime=runtime(),
+        echo=stderr.append,
+    )
+
+    assert left_out == 1 and any(invented in line for line in stderr)
+    assert result.report["stamp"]["pinned_left_out"] == 1
+    assert result.baseline_written is None
+    assert any("--skip-pinned left out 1 promoted cases" in note for note in result.notes)
+    texts = [path.read_text(errors="replace") for path in out.rglob("*") if path.is_file()]
+    assert texts and not any(invented in text or "20261112t074027z" in text for text in texts)
 
 
 async def test_harness_errors_count_as_failures_and_exit_1(

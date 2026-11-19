@@ -26,6 +26,7 @@ from agents.evals.import_case import (
     read_case_dir,
     write_case,
 )
+from agents.evals.replay import format_sent_at, is_pinned
 
 
 BUNDLE_FILE = Path(__file__).with_name("session_bundle.json")
@@ -79,9 +80,11 @@ def _case_dir(
     version: int = 2,
     include_data: bool = True,
     turns: dict | None = None,
+    user_hash: str = "adm_0123456789abcdef",
 ) -> Path:
     """A case directory exactly as the BFF's feedback route stores it (`api/agent_cases.py`); `turns`, the record of
-    each turn, as a bundle since 2026-11-09 carries it."""
+    each turn, as a bundle since 2026-11-09 carries it; `user_hash` in the admin lane's form unless a test names
+    another."""
     from api.agent_cases import Submission
     from api.agent_cases import build_case as build_stored_case
 
@@ -100,7 +103,7 @@ def _case_dir(
         case_id="20261012T143005Z-1a2b3c4d",
         created_at=datetime(2026, 10, 12, 14, 30, 5, tzinfo=UTC),
         bucket="anyplot-agent-cases",
-        user_hash="adm_0123456789abcdef",
+        user_hash=user_hash,
         session_id="S1abcdefgh",
     )
     directory = tmp_path / "download" / case.case_id
@@ -132,6 +135,7 @@ class TestFromABundleFile:
             "expected": "unknown",
             "tags": ["imported"],
             "source": "saved session anyplot-session-AbCdEf12.json, version 2",
+            "saved_session": True,
         }  # no `language`: the bundle predates the session language, so the replay keeps the default
         assert files["data.csv"] == DATA
         assert files["change_request.txt"] == "log scale on y\n"
@@ -347,6 +351,147 @@ class TestFromAStoredCase:
         assert set(_written(promoted / "older")) == {"case.json", "data.csv"}
 
 
+def _with_created_at(directory: Path, value: str) -> Path:
+    manifest_file = directory / "manifest.json"
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    manifest["created_at"] = value
+    manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
+    return directory
+
+
+PUBLIC_USER = "pub_fedcba9876543210"
+"""A `user_hash` in the public lane's form, invented."""
+
+
+class TestWhereTheCaseMayReplay:
+    """`sent_at` and `lane` from the manifest and `owner_chat` from `--owner-chat` decide where a case may replay
+    (`agents/evals/replay.py`); the import never guesses any of them and never copies the `user_hash`."""
+
+    PIN_NOTE = "replays only on Claude by Anthropic through Vertex AI in location eu; pass --owner-chat if its data"
+
+    def test_a_public_case_records_its_send_time_and_lane_never_the_hash(self, tmp_path, promoted, capsys) -> None:
+        assert main([str(_case_dir(tmp_path, user_hash=PUBLIC_USER)), "--id", "stored"]) == 0
+
+        text = _written(promoted / "stored")["case.json"]
+        case_json = json.loads(text)
+        assert (case_json["sent_at"], case_json["lane"]) == ("2026-10-12T14:30:05Z", "public")
+        assert "owner_chat" not in case_json and PUBLIC_USER not in text and "user_hash" not in text
+        assert is_pinned(load_case(promoted / "stored", "promoted"))
+        assert self.PIN_NOTE not in capsys.readouterr().err  # the time is known; that it pins is the rule's business
+
+    def test_an_admin_lane_case_may_replay_anywhere(self, tmp_path, promoted) -> None:
+        assert main([str(_case_dir(tmp_path)), "--id", "admin"]) == 0
+
+        text = _written(promoted / "admin")["case.json"]
+        assert json.loads(text)["lane"] == "admin" and "adm_0123456789abcdef" not in text
+        assert not is_pinned(load_case(promoted / "admin", "promoted"))
+
+    @pytest.mark.parametrize("user_hash", ["0123456789abcdef", "adm_0123", "adm_0123456789ABCDEF", "admin"])
+    def test_a_user_hash_of_neither_form_names_no_lane(self, tmp_path, promoted, user_hash) -> None:
+        """A case stored without the lane prefix, or with a near miss of it, is no admin case."""
+        assert main([str(_case_dir(tmp_path, user_hash=user_hash)), "--id", "nolane"]) == 0
+
+        assert "lane" not in json.loads(_written(promoted / "nolane")["case.json"])
+        assert is_pinned(load_case(promoted / "nolane", "promoted"))
+
+    def test_a_manifest_without_a_user_hash_names_no_lane(self, tmp_path, promoted) -> None:
+        directory = _case_dir(tmp_path)
+        manifest_file = directory / "manifest.json"
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        del manifest["user_hash"]
+        manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
+
+        assert main([str(directory), "--id", "nohash"]) == 0
+
+        assert "lane" not in json.loads(_written(promoted / "nohash")["case.json"])
+        assert is_pinned(load_case(promoted / "nohash", "promoted"))
+
+    def test_a_case_sent_at_the_cut_off_may_replay_anywhere(self, tmp_path, promoted) -> None:
+        directory = _with_created_at(_case_dir(tmp_path, user_hash=PUBLIC_USER), "2026-11-19T00:00:00Z")
+
+        assert main([str(directory), "--id", "fresh"]) == 0
+
+        case = load_case(promoted / "fresh", "promoted")
+        assert format_sent_at(case.sent_at) == "2026-11-19T00:00:00Z" and not is_pinned(case)
+
+    def test_a_manifest_time_in_another_form_is_no_send_time(self, tmp_path, promoted, capsys) -> None:
+        """Even a time after the cut-off: only the manifest's own form counts, and nothing is read from the id."""
+        directory = _with_created_at(_case_dir(tmp_path, user_hash=PUBLIC_USER), "2026-11-20T10:00:00+00:00")
+
+        assert main([str(directory), "--id", "odd"]) == 0
+
+        assert "sent_at" not in json.loads(_written(promoted / "odd")["case.json"])
+        assert f"note: the manifest's created_at is unreadable, so the case {self.PIN_NOTE}" in capsys.readouterr().err
+        assert is_pinned(load_case(promoted / "odd", "promoted"))
+
+    def test_a_saved_session_has_no_send_time_and_says_so(self, tmp_path, promoted, capsys) -> None:
+        assert main([str(_bundle_file(tmp_path, _bundle())), "--id", "saved"]) == 0
+
+        case_json = json.loads(_written(promoted / "saved")["case.json"])
+        assert "sent_at" not in case_json and "lane" not in case_json
+        assert f"note: a saved session records no send time, so the case {self.PIN_NOTE}" in capsys.readouterr().err
+        assert is_pinned(load_case(promoted / "saved", "promoted"))
+
+    @pytest.mark.parametrize("kind", ["bundle", "case"])
+    def test_the_owner_mark_comes_from_the_flag_alone(self, tmp_path, promoted, capsys, kind) -> None:
+        source = _bundle_file(tmp_path, _bundle()) if kind == "bundle" else _case_dir(tmp_path, user_hash=PUBLIC_USER)
+
+        assert main([str(source), "--id", "mine", "--owner-chat"]) == 0
+
+        assert json.loads(_written(promoted / "mine")["case.json"])["owner_chat"] is True
+        case = load_case(promoted / "mine", "promoted")
+        assert case.owner_chat and not is_pinned(case)
+        err = capsys.readouterr().err
+        assert self.PIN_NOTE not in err
+        public_note = "note: the manifest says the public lane served this chat; --owner-chat marks its data as yours"
+        assert (public_note in err) is (kind == "case")
+
+    def test_build_case_without_the_flag_never_marks(self, tmp_path) -> None:
+        """`sync_cases.py` calls `build_case` without `owner_chat`."""
+        imported = build_case(read_case_dir(_case_dir(tmp_path), None), None)
+
+        assert "owner_chat" not in imported.case and imported.case["sent_at"] == "2026-10-12T14:30:05Z"
+        assert imported.case["lane"] == "admin"
+
+    @pytest.mark.parametrize(
+        ("replaces", "recorded", "pinned"),
+        [
+            (None, "none", False),
+            ("20261118T080000Z-0a1b2c3d", "before_cutoff", True),  # corrects a case sent before the cut-off
+            ("20261119T080000Z-0a1b2c3d", "after_cutoff", False),
+            ("not-a-case-id", "unknown", True),
+            ("20261318T080000Z-0a1b2c3d", "unknown", True),  # month 13: no time to read
+        ],
+    )
+    def test_a_correction_records_a_closed_code_never_the_earlier_cases_id_or_second(
+        self, tmp_path, promoted, replaces, recorded, pinned
+    ) -> None:
+        directory = _with_created_at(_case_dir(tmp_path, user_hash=PUBLIC_USER), "2026-11-19T09:00:00Z")
+        manifest_file = directory / "manifest.json"
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        manifest["replaces"] = replaces
+        manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
+
+        assert main([str(directory), "--id", "corrected"]) == 0
+
+        text = _written(promoted / "corrected")["case.json"]
+        assert json.loads(text)["earlier_case"] == recorded
+        assert replaces is None or (replaces not in text and replaces[:15] not in text and "2026-11-18" not in text)
+        assert is_pinned(load_case(promoted / "corrected", "promoted")) is pinned
+
+    def test_a_manifest_without_the_replaces_field_records_an_unknown_correction(self, tmp_path, promoted) -> None:
+        directory = _with_created_at(_case_dir(tmp_path, user_hash=PUBLIC_USER), "2026-11-19T09:00:00Z")
+        manifest_file = directory / "manifest.json"
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        del manifest["replaces"]
+        manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
+
+        assert main([str(directory), "--id", "nofield"]) == 0
+
+        assert json.loads(_written(promoted / "nofield")["case.json"])["earlier_case"] == "unknown"
+        assert is_pinned(load_case(promoted / "nofield", "promoted"))
+
+
 class TestWhereItWrites:
     def test_an_existing_case_needs_force(self, tmp_path, promoted, capsys) -> None:
         source = str(_bundle_file(tmp_path, _bundle()))
@@ -406,7 +551,10 @@ class TestWhereItWrites:
         assert "python -m agents.evals.sync_cases" in err
 
     def test_writes_into_the_git_ignored_promoted_directory_by_default(self) -> None:
-        assert import_case.PROMOTED_DIR == Path(import_case.__file__).parent / ".cases"
+        """The default is `agents/evals/.cases/`, which git ignores; under pytest the eval fixture points
+        `PROMOTED_DIR` elsewhere, and the guard derives the real location from `EVALS_DIR`."""
+        assert import_case.EVALS_DIR / ".cases" == Path(import_case.__file__).resolve().parent / ".cases"
+        assert import_case.promoted_cases_dir() != import_case.EVALS_DIR / ".cases"
         ignored = (Path(import_case.__file__).parents[2] / ".gitignore").read_text()
         assert "agents/evals/.cases/" in ignored.splitlines()
 

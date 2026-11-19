@@ -513,6 +513,14 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
         ]
     if report.get("stopped"):
         lines += [f"**Stopped early** ({report['stopped']}): the rates cover the runs that finished.", ""]
+    left_out = stamp.get("pinned_left_out")
+    if isinstance(left_out, int) and left_out > 0:
+        # The count alone: the ids went to stderr, and no written file holds them.
+        count = "1 pinned promoted case" if left_out == 1 else f"{left_out} pinned promoted cases"
+        lines += [
+            f"**Left out:** {count} (`--skip-pinned`), which replay only on Claude through Vertex AI in `eu`.",
+            "",
+        ]
     lines += ["## Results", ""]
     lines += _table(
         ["Metric", "Value"],
