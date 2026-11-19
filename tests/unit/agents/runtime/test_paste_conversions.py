@@ -174,16 +174,20 @@ class TestMakeConversions:
         ("spec", "text"),
         [
             # `uncertain`: still the root's one question.
-            ("line-timeseries-rolling", "Datum,Preis\n26.11.26,1\n27.11.26,2\n"),  # the century of a two-digit year
+            ("line-timeseries-rolling", '{"01/11/2026": 1, "02/11/2026": 2}'),  # the day and month order is a guess
             (
                 "line-timeseries-rolling",
-                "Datum;Preis\n" + "".join(f"{day} Nov 2026;{day}\n" for day in range(1, 11)) + "offen;11\n",
+                "Datum;Preis\n" + "".join(f"2026-11-{day:02d};{day}\n" for day in range(1, 11)) + "offen;11\n",
             ),  # a cell that would be missing
+            ("line-timeseries-rolling", "Datum,Preis\n26.11.26,1\n27.11.26,2\n"),  # a two-digit year: no candidate
             ("scatter-basic", 'k,v\n1,"$1,234"\n2,7\n3,"$12"\n'),  # the decimal mark is a guess
             ("scatter-basic", "Kennung;Wert\n007;1\n012;2\n105;3\n"),  # leading zeros
             ("bar-basic", "value\n1\n3\n5\n"),  # a row number as a label says nothing
             # Ids and codes stay text: no line at all.
-            ("line-timeseries-rolling", "Order ID,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n"),
+            (
+                "line-timeseries-rolling",
+                "Order ID;Preis\n" + "".join(f"2026-11-{day:02d};{day}\n" for day in range(1, 11)) + "offen;11\n",
+            ),
             # An offer waits for the user's request: the unit is the user's choice.
             ("scatter-basic", "Index,First Name,Subscription Date\n1,Mara,2020-08-24\n2,Tobin,2021-04-23\n"),
             # No open role.

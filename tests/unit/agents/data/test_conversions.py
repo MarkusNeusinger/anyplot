@@ -127,7 +127,8 @@ class TestCandidates:
         assert found(text) == []
 
     def test_a_column_kept_text_on_request_is_no_candidate(self) -> None:
-        assert found("Datum,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n", keep_text=["Datum"]) == []
+        assert found(DAYS) != []
+        assert found(DAYS, keep_text=["Datum"]) == []
 
     def test_a_column_a_role_holds_is_no_candidate(self) -> None:
         """A conversion is a suggestion, like the defaults: it takes a free column only, although a column bound by
@@ -181,10 +182,10 @@ class TestCandidates:
     @pytest.mark.parametrize(
         "text",
         [
-            "Order ID,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n",  # the name says an id
-            "Code,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n",
+            DAYS.replace("Datum", "Order ID"),  # the name says an id, though ten of eleven cells read as dates
+            DAYS.replace("Datum", "Code"),
             "Season,Preis\n2009-10,1\n2010-11,2\n2011-12,3\n",  # spans of years
-            "Saison,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n",
+            DAYS.replace("Datum", "Saison"),
             "Land,Preis\nAT,1\nCH,2\nDE,3\n",  # short capitals
         ],
     )
@@ -592,8 +593,7 @@ class TestRanges:
 def test_bindings_are_untouched() -> None:
     """The check reads the bindings; it never changes them."""
     bindings = [Binding(role="value", column="Preis")]
-    parsed = parse_dataset("Datum,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n")
+    parsed = parse_dataset(DAYS)
 
-    candidates(bindings, parse_roles(ROLLING), parsed.profile, parsed)
-
+    assert candidates(bindings, parse_roles(ROLLING), parsed.profile, parsed) != []
     assert bindings == [Binding(role="value", column="Preis")]
