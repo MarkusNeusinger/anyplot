@@ -26,7 +26,7 @@ import pytest
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.category import StrCategoryFormatter
 from matplotlib.figure import Figure
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FixedLocator, FormatStrFormatter, FuncFormatter, MultipleLocator
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot.data.generate import Generate
@@ -666,8 +666,8 @@ class TestShows:
     def test_a_result_without_drawn_texts_hands_the_root_no_texts(
         self, texts: dict[str, dict[str, Any]] | None, complete: bool
     ) -> None:
-        """User test of 2026-11-01: handed `texts: null`, the root told the user it could not read the title back.
-        Without drawn texts (`None` or `{}`), both `texts` and `texts_complete` stay out of the fenced result."""
+        """Handed `texts: null`, the root told the user it could not read the title back. Without drawn texts
+        (`None` or `{}`), both `texts` and `texts_complete` stay out of the fenced result."""
         result = finish(run_shipping(texts=texts, texts_complete=complete, reviewed_ok=True))
         assert result.shows is not None
         assert result.shows.texts == texts and result.shows.texts_complete is complete
@@ -1737,6 +1737,108 @@ class TestHarnessAxes:
         probed_path = tmp_path / "plot-light.png"
         probed_fig.savefig(probed_path, dpi=200)
         assert probed_path.read_bytes() == clean_bytes
+
+    def test_the_axes_probe_runs_no_plot_formatter_so_a_counting_formatter_saves_the_same_png(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A formatter that counts its calls writes the count into its labels, so one more call changes the PNG."""
+        calls = {"n": 0}
+
+        def counting(value: float, _pos: int | None) -> str:
+            calls["n"] += 1
+            return f"{value:.0f}·{calls['n']}"
+
+        def save() -> tuple[bytes, int, object]:
+            calls["n"] = 0
+            fig = Figure(figsize=(8, 4.5))
+            FigureCanvasAgg(fig)
+            ax = fig.subplots()
+            ax.plot([0.0, 10.0], [0.0, 1.0])
+            ax.xaxis.set_major_formatter(FuncFormatter(counting))
+            fig.savefig(tmp_path / "plot-light.png", dpi=100)
+            report = json.loads((tmp_path / "probe-light.json").read_text(encoding="utf-8"))
+            return (tmp_path / "plot-light.png").read_bytes(), calls["n"], report.get("axes")
+
+        def no_axes(figure: Figure, drawn: object = None) -> list[object]:
+            return []
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(Figure, "savefig", Figure.savefig)
+        harness.install_probe("light")
+        png, count, axes = save()
+        assert axes == [
+            {"x": {"scale": "linear", "min": -0.5, "max": 10.5}, "y": {"scale": "linear", "min": -0.05, "max": 1.05}}
+        ]
+
+        # The same save with the axes probe left out: equal bytes and calls mean the axes probe added none.
+        monkeypatch.setattr(harness, "drawn_axes", no_axes)
+        assert save() == (png, count, [])
+
+    def test_tick_positions_set_without_labels_keep_the_numeric_range(self) -> None:
+        """`set_xticks` without labels installs a `FixedLocator` and keeps the scale's formatter: the axis shows numbers."""
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.plot([0.0, 10.0], [2.0, 8.0])
+        ax.set_xticks([0.0, 5.0, 10.0])
+        ax.set_xlim(-0.5, 10.5)
+        ax.set_ylim(0.0, 10.0)
+        assert isinstance(ax.xaxis.get_major_locator(), FixedLocator)
+
+        report = harness.probe(fig, 200)
+
+        assert report["axes"] == [
+            {"x": {"scale": "linear", "min": -0.5, "max": 10.5}, "y": {"scale": "linear", "min": 0.0, "max": 10.0}}
+        ]
+
+    def test_a_category_major_axis_with_scale_formatted_minor_labels_reports_no_range(self) -> None:
+        """Only the axis-level category check leaves this axis out: its minor group draws numbers between the majors."""
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.plot([0.0, 1.0], [2.0, 8.0])
+        ax.xaxis.set_major_formatter(StrCategoryFormatter({"Bern": 0, "Zürich": 1}))
+        ax.xaxis.set_minor_locator(MultipleLocator(0.1))
+        ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))
+        ax.set_ylim(0.0, 10.0)
+        assert ax.xaxis.get_converter() is None
+
+        report = harness.probe(fig, 200)
+
+        assert "0.3" in {entry["text"] for entry in report["labels"]}  # a minor label, drawn
+        assert report["axes"] == [{"y": {"scale": "linear", "min": 0.0, "max": 10.0}}]
+
+    def test_a_hand_labelled_major_axis_with_scale_formatted_minor_labels_reports_no_range(self) -> None:
+        """Only the axis-level hand-label check leaves this axis out: its minor group draws numbers between the bars."""
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.bar(range(3), [10.0, 20.0, 40.0])
+        ax.set_xticks(range(3), labels=["Bern", "Zürich", "Genf"])
+        ax.xaxis.set_minor_locator(MultipleLocator(0.5))
+        ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))
+        ax.set_ylim(0.0, 45.0)
+
+        report = harness.probe(fig, 200)
+
+        assert {"Bern", "1.5"} <= {entry["text"] for entry in report["labels"]}  # a major and a minor label, drawn
+        assert report["axes"] == [{"y": {"scale": "linear", "min": 0.0, "max": 45.0}}]
+
+    def test_a_log_axis_inside_one_decade_reports_its_range_from_its_minor_labels(self) -> None:
+        """Between 2 and 8 no power of ten is in view, so every label the axis draws is a minor one."""
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.plot([1.0, 2.0, 3.0], [2.0, 5.0, 8.0])
+        ax.set_yscale("log")
+        ax.set_xlim(1.0, 3.0)
+        ax.set_ylim(2.0, 8.0)
+
+        report = harness.probe(fig, 200)
+
+        assert report["axes"] == [
+            {"x": {"scale": "linear", "min": 1.0, "max": 3.0}, "y": {"scale": "log", "min": 2.0, "max": 8.0}}
+        ]
 
 
 PYGAL_SVG = """<svg xmlns="http://www.w3.org/2000/svg" class="pygal-chart">
