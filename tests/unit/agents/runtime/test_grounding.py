@@ -1580,10 +1580,11 @@ class TestHarnessAxes:
         formatter_only_fig = Figure(figsize=(16, 9))
         formatter_only_ax = formatter_only_fig.subplots()
         formatter_only_ax.plot([0.0, 1.0], [2.0, 8.0])
-        formatter_only_ax.xaxis.set_major_formatter(StrCategoryFormatter({0: "Bern", 1: "Zürich"}))
+        formatter_only_ax.xaxis.set_major_formatter(StrCategoryFormatter({"Bern": 0, "Zürich": 1}))
         formatter_only_ax.set_ylim(0.0, 10.0)
         assert formatter_only_ax.xaxis.get_converter() is None
         assert type(formatter_only_ax.xaxis.get_major_locator()).__module__ != "matplotlib.category"
+        assert formatter_only_ax.xaxis.get_major_formatter().format_ticks([0.0, 1.0]) == ["Bern", "Zürich"]
         assert_axes(formatter_only_fig, [{"y": {"scale": "linear", "min": 0.0, "max": 10.0}}])
 
         cat_grid = sns.catplot(
