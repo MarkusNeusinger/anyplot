@@ -41,7 +41,7 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    visible `plot()` lines (`line_points`), the content of the drawn texts by role
    (`labels`, `drawn_labels`: what the root's closing reply is grounded in), and, for
    matplotlib and seaborn, the measured axis ranges of the first `AXES_LIMIT` non-empty
-   rectilinear axes that draw ticks and are not a colorbar's (`axes`, `drawn_axes`; plotnine
+   rectilinear axes that draw scale tick labels and are not a colorbar's (`axes`, `drawn_axes`; plotnine
    maps its scales before matplotlib and reports none). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
    (`axis("off")`, a twin's), which report themselves visible but are never drawn,
@@ -169,6 +169,7 @@ stdout, so the host reads them as hints (a retry decision, a memory figure), nev
 as a verdict.
 """
 
+import copy
 import datetime
 import errno
 import functools
@@ -1698,9 +1699,32 @@ def _converter(axis):
 
 
 def _is_category_axis(axis):
-    """Whether an axis maps string categories to positions (`matplotlib.category.StrCategoryConverter`)."""
+    """Whether an axis maps string categories to positions (`matplotlib.category`), with or without its own converter."""
     converter = _converter(axis)
-    return converter is not None and "category" in type(converter).__module__
+    if converter is not None and "category" in type(converter).__module__:
+        return True
+    return (
+        type(axis.get_major_formatter()).__module__ == "matplotlib.category"
+        or type(axis.get_major_locator()).__module__ == "matplotlib.category"
+    )
+
+
+def _is_hand_labelled_formatter(formatter):
+    """Whether `formatter` writes labels set by hand (`set_ticklabels`: `Axis._format_with_dict` or `FixedFormatter`)."""
+    from matplotlib import ticker as mticker
+    from matplotlib.axis import Axis
+
+    if isinstance(formatter, mticker.FixedFormatter):
+        return True
+    if isinstance(formatter, mticker.FuncFormatter):
+        wrapped = getattr(formatter, "func", None)
+        return isinstance(wrapped, functools.partial) and wrapped.func is Axis._format_with_dict
+    return False
+
+
+def _is_hand_labelled_axis(axis):
+    """Whether an axis's major tick labels were set by hand rather than formatted from its scale."""
+    return _is_hand_labelled_formatter(axis.get_major_formatter())
 
 
 def _is_plotnine_figure(figure):
@@ -1759,9 +1783,91 @@ def _iso_date(axis, value):
     return text if 10 <= len(text) <= 32 and text[4:5] == "-" else None
 
 
+def _has_visible_tick_label(axis):
+    """Whether `axis` draws at least one non-empty non-categorical non-hand-set tick label inside its view interval.
+
+    Reads locator positions, a shallow copy of the formatter, and any already-materialized `Tick`
+    objects (`axis.__dict__`) or the axis's tick-parameter dict without materializing ticks or
+    mutating formatter state, so calling `drawn_axes` never alters a render's PNG bytes.
+    """
+    import matplotlib as mpl
+    from matplotlib import ticker as mticker
+    from matplotlib import transforms as mtransforms
+
+    axes = getattr(axis, "axes", None)
+    if getattr(axes, "name", "") == "3d" and getattr(axis, "_tick_position", None) == "none":
+        return False
+    view_low, view_high = axis.get_view_interval()
+    low, high = float(view_low), float(view_high)
+    if not (math.isfinite(low) and math.isfinite(high)):
+        return False
+    if low > high:
+        low, high = high, low
+    if getattr(axes, "name", "") == "3d" and mpl.rcParams["axes3d.automargin"]:
+        margin = 0.019965277777777776
+        delta = high - low
+        high -= delta * margin
+        low += delta * margin
+    try:
+        transform = axis.get_transform()
+        interval_t = transform.transform([low, high])
+    except Exception:
+        return False
+    for ticks_attr, kw_attr, get_locator, get_formatter in (
+        ("majorTicks", "_major_tick_kw", axis.get_major_locator, axis.get_major_formatter),
+        ("minorTicks", "_minor_tick_kw", axis.get_minor_locator, axis.get_minor_formatter),
+    ):
+        kw = getattr(axis, kw_attr, {})
+        if not axis._tick_group_visible(kw):
+            continue
+        locator = get_locator()
+        formatter = get_formatter()
+        if (
+            isinstance(locator, mticker.NullLocator)
+            or isinstance(formatter, mticker.NullFormatter)
+            or type(locator).__module__ == "matplotlib.category"
+            or type(formatter).__module__ == "matplotlib.category"
+            or _is_hand_labelled_formatter(formatter)
+        ):
+            continue
+        try:
+            copied_locator = copy.copy(locator)
+        except Exception:
+            copied_locator = locator
+        locs = copied_locator()
+        if not len(locs):
+            continue
+        try:
+            copied_formatter = copy.copy(formatter)
+            if getattr(copied_formatter, "_locator", None) is locator:
+                copied_formatter._locator = copied_locator
+        except Exception:
+            copied_formatter = formatter
+        labels = copied_formatter.format_ticks(locs)
+        materialized = axis.__dict__.get(ticks_attr)
+        default_visible = bool(kw.get("label1On", True) or kw.get("label2On", False))
+        for index, (loc, text) in enumerate(zip(locs, labels, strict=False)):
+            if not str(text).strip():
+                continue
+            if materialized:
+                tick = materialized[index] if index < len(materialized) else materialized[0]
+                visible = tick.get_visible() and (tick.label1.get_visible() or tick.label2.get_visible())
+            else:
+                visible = default_visible
+            if not visible:
+                continue
+            try:
+                loc_t = transform.transform(loc)
+            except Exception:
+                continue
+            if mtransforms._interval_contains_close(interval_t, loc_t):
+                return True
+    return False
+
+
 def _axis_range(axis, get_limits):
-    """One axis's `{"scale", "min", "max"}`, or None when hidden, tickless, categorical, non-finite or another scale."""
-    if axis is None or not axis.get_visible() or not len(axis.get_ticklocs()) or _is_category_axis(axis):
+    """One axis's `{"scale", "min", "max"}`, or None when hidden, unlabelled, categorical, hand-labelled, non-finite or another scale."""
+    if axis is None or not axis.get_visible() or _is_category_axis(axis) or _is_hand_labelled_axis(axis):
         return None
     scale = _axis_scale(axis)
     if scale is None:
@@ -1769,6 +1875,8 @@ def _axis_range(axis, get_limits):
     raw_low, raw_high = get_limits()
     low, high = float(raw_low), float(raw_high)
     if not (math.isfinite(low) and math.isfinite(high)):
+        return None
+    if not _has_visible_tick_label(axis):
         return None
     if low > high:
         low, high = high, low
@@ -1787,9 +1895,10 @@ def drawn_axes(figure):
     Colorbars, invisible axes, axes with `axison` false (or `_axis3don` false on 3D axes) and
     non-rectilinear projections (`polar`, map projections) are skipped. Each entry holds `x`,
     `y` and, on a 3D axes, `z`, each with `scale` (`linear`, `log`, `date`) and sorted `min`
-    and `max` at full precision or as ISO 8601 strings; a hidden, tickless, categorical,
-    non-finite or `other`-scaled axis is left out of its entry, and an entry with no axis left
-    is skipped without counting towards `AXES_LIMIT`.
+    and `max` at full precision or as ISO 8601 strings; an axis that is hidden, has no visible
+    tick label, is categorical (`matplotlib.category` converter, formatter or locator), has
+    hand-set tick labels (`set_ticklabels`), is non-finite or uses another scale is left out of
+    its entry, and an entry with no axis left is skipped without counting towards `AXES_LIMIT`.
     """
     if _is_plotnine_figure(figure):
         return []

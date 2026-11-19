@@ -18,14 +18,16 @@ Three measurements, all code:
   text probes their rows load (`text_probe.R`, `text_probe.jl`, `harness.collect_text_probe`).
   The probe is written by the code under test, so every value is checked for type and
   clipped; a probe without `labels` (a failed text report) yields None, which the root never
-  sees (`plugins/tool_safety.fence_pipeline_notes` drops it), and a run with requested texts
-  then carries `UNVERIFIED_LINE` instead of a silent pass.
+  sees (`plugins/tool_safety.fence_pipeline_notes` drops both None and an empty dict, together
+  with `texts_complete`), and a run with requested texts then carries `UNVERIFIED_LINE` instead
+  of a silent pass.
 * `plot_axes` reads the measured axis ranges the render's probe reports (`axes`,
-  `harness.drawn_axes`: matplotlib and seaborn; plotnine maps its scales before matplotlib
-  and reports none) into `PlotShows.axes`, at most `MAX_AXES` non-empty entries of `x`, `y`
-  and `z`, each with a closed `scale` (`linear`, `log`, `date`) and sorted finite numbers or
-  ISO 8601 strings; a probe without `axes` yields None, and `fence_pipeline_notes` drops both
-  None and an empty list.
+  `harness.drawn_axes`: matplotlib and seaborn, leaving out axes that are hidden, have no
+  visible tick label, use `matplotlib.category`, or set tick labels by hand; plotnine maps its
+  scales before matplotlib and reports none) into `PlotShows.axes`, at most `MAX_AXES`
+  non-empty entries of `x`, `y` and `z`, each with a closed `scale` (`linear`, `log`, `date`)
+  and sorted finite numbers or ISO 8601 strings; a probe without `axes` yields None, and
+  `fence_pipeline_notes` drops both None and an empty list.
 * `expected_misses` checks each of the run's `expected_texts` (the texts and number formats
   the user asked to see, verbatim) against all drawn texts, never the `PlotShows.texts`
   record. A

@@ -10,16 +10,18 @@
   number of distinct texts recorded in that role) and either `texts` (every text
   in drawing order, up to 20 for x and y tick labels and 16 for annotations) or
   `first` and `last` (the two ends of a longer run), `PlotShows.texts_complete`
-  marks when the probe stopped before every drawn text (omitted when `true`),
+  marks when the probe stopped before every drawn text (omitted when `true` or
+  when `texts` is absent or empty, which `fence_pipeline_notes` drops),
   `requested_not_found` still checks the full probe output, and the reply figure
   check ignores `count` as a number source. For matplotlib and seaborn plots
   (plotnine maps its scales before matplotlib and reports none),
   `PlotShows.axes` reports the measured `min`, `max`, and `scale` (`linear`,
   `log`, or `date` as ISO 8601) of the first two non-empty rectilinear
   non-colorbar axes with `axison` on (`x`, `y`, and `z` for 3D axes, skipping
-  hidden, tickless, categorical, and `other`-scaled axes), credited as
-  `drawn_text` in the figure check, and the assistant states axis ranges only
-  from `axes`. In sandbox mode, the JavaScript text probe also wraps `fillText`
+  hidden axes, axes with no visible tick label, `matplotlib.category`
+  converters/formatters/locators, hand-set tick labels, non-finite limits, and
+  `other`-scaled axes), credited as `drawn_text` in the figure check, and the
+  assistant states axis ranges only from `axes`. In sandbox mode, the JavaScript text probe also wraps `fillText`
   and `strokeText` for Chart.js, keeping each chart's last complete draw and
   subtracting model-reported texts by count so plugin-drawn value labels and
   doughnut center numbers reach the assistant as `annotations`.

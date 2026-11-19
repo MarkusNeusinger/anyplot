@@ -20,9 +20,11 @@ from typing import Any, cast
 from zoneinfo import ZoneInfo
 
 import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.category import StrCategoryFormatter
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
 
@@ -460,6 +462,7 @@ def run_shipping(**candidate: Any) -> Run:
     assert dataset is not None
     view = SessionView("scatter-basic", "matplotlib", "en", snapshot, "code", [], None)
     run = Run(view=view, dataset=dataset, attempts=1)
+    candidate.setdefault("texts_complete", texts_complete(candidate.get("drawn")))
     run.best = Candidate(working="w", run_form="r", pngs={}, plan=AdaptPlan(), attempt=1, **candidate)
     return run
 
@@ -659,20 +662,94 @@ class TestShows:
         assert set(inner["texts"]["x tick labels"]) == {"count", "first", "last"}
 
     @pytest.mark.parametrize("texts", [None, {}])
+    @pytest.mark.parametrize("complete", [True, False])
     def test_a_result_without_drawn_texts_hands_the_root_no_texts(
-        self, texts: dict[str, dict[str, Any]] | None
+        self, texts: dict[str, dict[str, Any]] | None, complete: bool
     ) -> None:
         """User test of 2026-11-01: handed `texts: null`, the root told the user it could not read the title back.
-        Without drawn texts the root gets no `texts` at all; an empty report (nothing drawn) stays as it is."""
-        result = finish(run_shipping(texts=texts, reviewed_ok=True))
+        Without drawn texts (`None` or `{}`), both `texts` and `texts_complete` stay out of the fenced result."""
+        result = finish(run_shipping(texts=texts, texts_complete=complete, reviewed_ok=True))
+        assert result.shows is not None
+        assert result.shows.texts == texts and result.shows.texts_complete is complete
 
         fenced = fence_pipeline_notes(result.model_dump(mode="json"))
 
         match = re.search(r"<tool_notes>\n(.*)\n</tool_notes>", fenced["shows"], re.DOTALL)
         assert match is not None
         inner = json.loads(match[1])
-        assert ("texts" in inner) is (texts is not None) and inner["review"] == "passed"
-        assert '"texts": null' not in fenced["shows"]
+        assert "texts" not in inner and "texts_complete" not in inner and inner["review"] == "passed"
+        assert '"texts"' not in fenced["shows"] and '"texts_complete"' not in fenced["shows"]
+
+    async def test_over_the_cap_without_headings_drops_empty_texts_dict_and_texts_complete(self) -> None:
+        """An over-the-cap plot with no title or subtitle whose kept roles still exceed the cap steps down to
+        `SHOWS_HEADING_GROUPS` (`{}`), and `fence_pipeline_notes` drops that empty `texts` dict like `None`."""
+        context = SimpleNamespace(agent_name="anyplot", invocation_id="i", state={})
+        base = largest_result("中")
+        emoji_shows = largest_result("😀").shows
+        assert base.shows is not None and emoji_shows is not None and emoji_shows.texts is not None
+        without_headings = {
+            group: role for group, role in emoji_shows.texts.items() if group not in SHOWS_HEADING_GROUPS
+        }
+        over = base.model_copy(
+            update={"shows": emoji_shows.model_copy(update={"texts": without_headings, "texts_complete": False})}
+        ).model_dump(mode="json")
+        first, second, third = shrunk_shows(over)
+        assert result_size(fence_pipeline_notes(first)) > result_limit("plot_pipeline")
+        assert second["shows"]["texts"] == {} and third["shows"]["texts"] is None
+
+        replaced = await ToolSafetyPlugin().after_tool_callback(
+            tool=cast(Any, SimpleNamespace(name="plot_pipeline")),
+            tool_args={},
+            tool_context=cast(Any, context),
+            result=over,
+        )
+
+        assert replaced is not None and replaced.get("status") == "needs_attention"
+        assert result_size(replaced) <= result_limit("plot_pipeline")
+        match = re.search(r"<tool_notes>\n(.*)\n</tool_notes>", replaced["shows"], re.DOTALL)
+        assert match is not None
+        inner = json.loads(match[1])
+        assert "texts" not in inner and "texts_complete" not in inner
+        assert len(inner["axes"]) == MAX_AXES
+        assert '"texts"' not in replaced["shows"] and '"texts_complete"' not in replaced["shows"]
+
+    async def test_smaller_versions_keep_texts_complete_false_until_texts_is_omitted(self) -> None:
+        """At the three-byte maximum with `texts_complete=False`, smaller versions that keep `texts` keep
+        `texts_complete: false`, while the `texts: None` version omits both `texts` and `texts_complete`."""
+        context = SimpleNamespace(agent_name="anyplot", invocation_id="i", state={})
+        three_byte = largest_result("中")
+        assert three_byte.shows is not None
+        three_byte_cut = three_byte.model_copy(
+            update={"shows": three_byte.shows.model_copy(update={"texts_complete": False})}
+        ).model_dump(mode="json")
+        first, second, third = shrunk_shows(three_byte_cut)
+        for smaller in (first, second):
+            assert smaller["shows"]["texts_complete"] is False
+            fenced = fence_pipeline_notes(smaller)
+            smaller_match = re.search(r"<tool_notes>\n(.*)\n</tool_notes>", fenced["shows"], re.DOTALL)
+            assert smaller_match is not None
+            assert json.loads(smaller_match[1])["texts_complete"] is False
+        assert third["shows"]["texts"] is None and third["shows"]["texts_complete"] is False
+        third_fenced = fence_pipeline_notes(third)
+        third_match = re.search(r"<tool_notes>\n(.*)\n</tool_notes>", third_fenced["shows"], re.DOTALL)
+        assert third_match is not None
+        third_inner = json.loads(third_match[1])
+        assert "texts" not in third_inner and "texts_complete" not in third_inner
+
+        replaced = await ToolSafetyPlugin().after_tool_callback(
+            tool=cast(Any, SimpleNamespace(name="plot_pipeline")),
+            tool_args={},
+            tool_context=cast(Any, context),
+            result=three_byte_cut,
+        )
+
+        assert replaced is not None and replaced.get("status") == "needs_attention"
+        assert result_size(replaced) == 49_586 <= result_limit("plot_pipeline")
+        match = re.search(r"<tool_notes>\n(.*)\n</tool_notes>", replaced["shows"], re.DOTALL)
+        assert match is not None
+        inner = json.loads(match[1])
+        assert set(inner["texts"]) == set(SHOWS_HEADING_GROUPS)
+        assert inner["texts_complete"] is False
 
     @pytest.mark.parametrize("library", ["pygal", "plotly", "altair"])
     def test_a_result_without_axes_holds_no_axes_key_and_is_byte_identical(self, library: str) -> None:
@@ -703,7 +780,14 @@ class TestShows:
         view = SessionView("bar-basic", library, "en", snapshot, "code", [], None)
         run = Run(view=view, dataset=dataset, attempts=1)
         run.best = Candidate(
-            working="w", run_form="r", pngs={}, plan=AdaptPlan(), attempt=1, texts=shown(MILLIONS_EN), reviewed_ok=True
+            working="w",
+            run_form="r",
+            pngs={},
+            plan=AdaptPlan(),
+            attempt=1,
+            texts=shown(MILLIONS_EN),
+            texts_complete=True,
+            reviewed_ok=True,
         )
         result = finish(run)
         assert result.shows is not None and result.shows.axes is None
@@ -1417,6 +1501,241 @@ class TestHarnessAxes:
         assert mpl_report["axes"] == [
             {"x": {"scale": "linear", "min": 0.0, "max": 5.0}, "y": {"scale": "linear", "min": 10.0, "max": 20.0}}
         ]
+
+    def test_hand_labelled_and_converterless_categorical_axes_report_no_range(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import seaborn as sns
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(Figure, "savefig", Figure.savefig)
+        harness.install_probe("light")
+
+        def assert_axes(fig_obj: Figure, expected: list[dict[str, Any]]) -> None:
+            assert harness.drawn_axes(fig_obj) == expected
+            FigureCanvasAgg(fig_obj)
+            fig_obj.savefig(tmp_path / "plot-light.png", dpi=200)
+            saved = json.loads((tmp_path / "probe-light.json").read_text(encoding="utf-8"))
+            assert saved["axes"] == expected
+
+        # 1. Bar chart with set_xticks(labels=...): x left out, y kept.
+        xticks_fig = Figure(figsize=(16, 9))
+        xticks_ax = xticks_fig.subplots()
+        xticks_ax.bar(range(3), [10.0, 20.0, 40.0])
+        xticks_ax.set_xticks(range(3), labels=["Bern", "Zürich", "Genf"])
+        xticks_ax.set_ylim(0.0, 45.0)
+        assert_axes(xticks_fig, [{"y": {"scale": "linear", "min": 0.0, "max": 45.0}}])
+
+        # 2a. Bar chart with set_xticks then set_xticklabels (FuncFormatter over Axis._format_with_dict).
+        xticklabels_dict_fig = Figure(figsize=(16, 9))
+        xticklabels_dict_ax = xticklabels_dict_fig.subplots()
+        xticklabels_dict_ax.bar(range(3), [10.0, 20.0, 40.0])
+        xticklabels_dict_ax.set_xticks(range(3))
+        xticklabels_dict_ax.set_xticklabels(["Bern", "Zürich", "Genf"])
+        xticklabels_dict_ax.set_ylim(0.0, 45.0)
+        assert_axes(xticklabels_dict_fig, [{"y": {"scale": "linear", "min": 0.0, "max": 45.0}}])
+
+        # 2b. Bar chart with set_xticklabels without prior set_xticks (FixedFormatter).
+        xticklabels_fixed_fig = Figure(figsize=(16, 9))
+        xticklabels_fixed_ax = xticklabels_fixed_fig.subplots()
+        xticklabels_fixed_ax.bar(range(3), [10.0, 20.0, 40.0])
+        with pytest.warns(UserWarning, match="set_ticklabels"):
+            xticklabels_fixed_ax.set_xticklabels(["Bern", "Zürich", "Genf"])
+        xticklabels_fixed_ax.set_ylim(0.0, 45.0)
+        assert_axes(xticklabels_fixed_fig, [{"y": {"scale": "linear", "min": 0.0, "max": 45.0}}])
+
+        # 3. pandas plot.bar: x left out, y kept.
+        pandas_fig = Figure(figsize=(16, 9))
+        pandas_ax = pandas_fig.subplots()
+        pd.Series([10.0, 20.0, 40.0], index=["Bern", "Zürich", "Genf"]).plot.bar(ax=pandas_ax)
+        pandas_ax.set_ylim(0.0, 45.0)
+        assert_axes(pandas_fig, [{"y": {"scale": "linear", "min": 0.0, "max": 45.0}}])
+
+        # 4. sns.heatmap on a 2x3 table: both axes left out.
+        heatmap_fig = Figure(figsize=(16, 9))
+        sns.heatmap(
+            pd.DataFrame([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], index=["R1", "R2"], columns=["C1", "C2", "C3"]),
+            ax=heatmap_fig.subplots(),
+        )
+        assert_axes(heatmap_fig, [])
+
+        raw_heatmap_fig = Figure(figsize=(16, 9))
+        sns.heatmap([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], ax=raw_heatmap_fig.subplots())
+        assert_axes(raw_heatmap_fig, [])
+
+        # 5. Second facet of a shared categorical x (subplots(sharex=True), formatter-only, and sns.catplot(col=...)).
+        shared_fig = Figure(figsize=(16, 9))
+        left_ax, right_ax = shared_fig.subplots(1, 2, sharex=True)
+        left_ax.bar(["Bern", "Zürich", "Genf"], [10.0, 20.0, 30.0])
+        left_ax.set_ylim(0.0, 35.0)
+        right_ax.bar(range(3), [5.0, 15.0, 25.0])
+        right_ax.set_ylim(0.0, 30.0)
+        assert right_ax.xaxis.get_converter() is None
+        assert type(right_ax.xaxis.get_major_formatter()).__module__ == "matplotlib.category"
+        assert_axes(
+            shared_fig,
+            [{"y": {"scale": "linear", "min": 0.0, "max": 35.0}}, {"y": {"scale": "linear", "min": 0.0, "max": 30.0}}],
+        )
+
+        formatter_only_fig = Figure(figsize=(16, 9))
+        formatter_only_ax = formatter_only_fig.subplots()
+        formatter_only_ax.plot([0.0, 1.0], [2.0, 8.0])
+        formatter_only_ax.xaxis.set_major_formatter(StrCategoryFormatter({0: "Bern", 1: "Zürich"}))
+        formatter_only_ax.set_ylim(0.0, 10.0)
+        assert formatter_only_ax.xaxis.get_converter() is None
+        assert type(formatter_only_ax.xaxis.get_major_locator()).__module__ != "matplotlib.category"
+        assert_axes(formatter_only_fig, [{"y": {"scale": "linear", "min": 0.0, "max": 10.0}}])
+
+        cat_grid = sns.catplot(
+            data=pd.DataFrame(
+                {
+                    "city": ["Bern", "Zürich", "Genf"] * 2,
+                    "value": [10.0, 20.0, 40.0, 15.0, 25.0, 35.0],
+                    "group": ["A", "A", "A", "B", "B", "B"],
+                }
+            ),
+            x="city",
+            y="value",
+            col="group",
+            kind="bar",
+        )
+        try:
+            cat_grid.set(ylim=(0.0, 45.0))
+            assert cat_grid.axes[0, 1].xaxis.get_converter() is None
+            assert_axes(cat_grid.figure, [{"y": {"scale": "linear", "min": 0.0, "max": 45.0}}])
+        finally:
+            plt.close(cat_grid.figure)
+
+        # 6. Numeric axis with hand-set labels (including digit strings): x left out, y kept.
+        hand_numeric_fig = Figure(figsize=(16, 9))
+        hand_numeric_ax = hand_numeric_fig.subplots()
+        hand_numeric_ax.plot([0.0, 10.0, 20.0], [2.0, 5.0, 8.0])
+        hand_numeric_ax.set_xticks([0.0, 10.0, 20.0], labels=["0", "10", "20"])
+        hand_numeric_ax.set_xlim(-1.0, 21.0)
+        hand_numeric_ax.set_ylim(0.0, 10.0)
+        assert_axes(hand_numeric_fig, [{"y": {"scale": "linear", "min": 0.0, "max": 10.0}}])
+
+        # 7. Plain line: both kept, unchanged.
+        line_fig = Figure(figsize=(16, 9))
+        line_ax = line_fig.subplots()
+        line_ax.plot([0.0, 10.0], [5.0, 25.0])
+        line_ax.set_xlim(0.0, 10.0)
+        line_ax.set_ylim(5.0, 25.0)
+        assert_axes(
+            line_fig,
+            [{"x": {"scale": "linear", "min": 0.0, "max": 10.0}, "y": {"scale": "linear", "min": 5.0, "max": 25.0}}],
+        )
+
+        # 8. Image axis (imshow) with default ticks: both kept at their exact pixel-edge limits.
+        imshow_fig = Figure(figsize=(16, 9))
+        imshow_ax = imshow_fig.subplots()
+        imshow_ax.imshow([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+        assert_axes(
+            imshow_fig,
+            [{"x": {"scale": "linear", "min": -0.5, "max": 2.5}, "y": {"scale": "linear", "min": -0.5, "max": 1.5}}],
+        )
+
+    def test_axes_without_visible_tick_labels_rugplot_and_jointplot(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import seaborn as sns
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(Figure, "savefig", Figure.savefig)
+        harness.install_probe("light")
+
+        def assert_axes(fig_obj: Figure, expected: list[dict[str, Any]]) -> None:
+            assert harness.drawn_axes(fig_obj) == expected
+            FigureCanvasAgg(fig_obj)
+            fig_obj.savefig(tmp_path / "plot-light.png", dpi=200)
+            saved = json.loads((tmp_path / "probe-light.json").read_text(encoding="utf-8"))
+            assert saved["axes"] == expected
+
+        # 9. Rug plot: when dummy y tick labels are hidden, only x is reported; a bare call draws y -0.06..0.06 too.
+        rug_hidden_kw_fig = Figure(figsize=(16, 9))
+        rug_hidden_kw_ax = rug_hidden_kw_fig.subplots()
+        sns.rugplot(data=pd.DataFrame({"x": [10.0, 20.0, 50.0]}), x="x", ax=rug_hidden_kw_ax)
+        rug_hidden_kw_ax.set_xlim(0.0, 60.0)
+        rug_hidden_kw_ax.tick_params(labelleft=False)
+        assert len(rug_hidden_kw_ax.yaxis.get_ticklocs()) > 0
+        assert_axes(rug_hidden_kw_fig, [{"x": {"scale": "linear", "min": 0.0, "max": 60.0}}])
+
+        rug_hidden_ticks_fig = Figure(figsize=(16, 9))
+        rug_hidden_ticks_ax = rug_hidden_ticks_fig.subplots()
+        sns.rugplot(data=pd.DataFrame({"x": [10.0, 20.0, 50.0]}), x="x", ax=rug_hidden_ticks_ax)
+        rug_hidden_ticks_ax.set_xlim(0.0, 60.0)
+        plt.setp(rug_hidden_ticks_ax.get_yticklabels(), visible=False)
+        assert_axes(rug_hidden_ticks_fig, [{"x": {"scale": "linear", "min": 0.0, "max": 60.0}}])
+
+        rug_bare_fig = Figure(figsize=(16, 9))
+        rug_bare_ax = rug_bare_fig.subplots()
+        sns.rugplot(data=pd.DataFrame({"x": [10.0, 20.0, 50.0]}), x="x", ax=rug_bare_ax)
+        rug_bare_ax.set_xlim(0.0, 60.0)
+        assert_axes(
+            rug_bare_fig,
+            [
+                {
+                    "x": {"scale": "linear", "min": 0.0, "max": 60.0},
+                    "y": {"scale": "linear", "min": -0.060000000000000005, "max": 0.060000000000000005},
+                }
+            ],
+        )
+
+        # 10. Joint plot: default marginal_ticks=False hides all marginal tick labels, leaving only ax_joint's x and y.
+        joint_grid = sns.jointplot(
+            data=pd.DataFrame({"x": [1.0, 2.0, 3.0, 4.0], "y": [10.0, 20.0, 30.0, 40.0]}), x="x", y="y"
+        )
+        try:
+            joint_grid.ax_joint.set_xlim(0.0, 5.0)
+            joint_grid.ax_joint.set_ylim(0.0, 50.0)
+            assert_axes(
+                joint_grid.figure,
+                [{"x": {"scale": "linear", "min": 0.0, "max": 5.0}, "y": {"scale": "linear", "min": 0.0, "max": 50.0}}],
+            )
+        finally:
+            plt.close(joint_grid.figure)
+
+    def test_drawn_axes_and_install_probe_leave_render_png_bytes_unchanged(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def build_figure() -> Figure:
+            fig = Figure(figsize=(16, 9))
+            FigureCanvasAgg(fig)
+            ax_line, ax_bar, ax_img, ax_rug = fig.subplots(1, 4)
+            ax_line.plot([0.0, 10.0], [5.0, 25.0])
+            ax_line.set_xlim(0.0, 10.0)
+            ax_line.set_ylim(5.0, 25.0)
+            ax_bar.bar(range(3), [10.0, 20.0, 40.0])
+            ax_bar.set_xticks(range(3), labels=["Bern", "Zürich", "Genf"])
+            ax_bar.set_ylim(0.0, 45.0)
+            ax_img.imshow([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+            ax_rug.plot([1.0, 3.0], [0.1, 0.1])
+            ax_rug.set_xlim(0.0, 4.0)
+            ax_rug.tick_params(labelleft=False)
+            return fig
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(Figure, "savefig", Figure.savefig)
+
+        clean_fig = build_figure()
+        clean_path = tmp_path / "clean.png"
+        clean_fig.savefig(clean_path, dpi=200)
+        clean_bytes = clean_path.read_bytes()
+
+        direct_fig = build_figure()
+        assert harness.drawn_axes(direct_fig) == [
+            {"x": {"scale": "linear", "min": 0.0, "max": 10.0}, "y": {"scale": "linear", "min": 5.0, "max": 25.0}},
+            {"y": {"scale": "linear", "min": 0.0, "max": 45.0}},
+        ]
+        direct_path = tmp_path / "direct.png"
+        direct_fig.savefig(direct_path, dpi=200)
+        assert direct_path.read_bytes() == clean_bytes
+
+        harness.install_probe("light")
+        probed_fig = build_figure()
+        probed_path = tmp_path / "plot-light.png"
+        probed_fig.savefig(probed_path, dpi=200)
+        assert probed_path.read_bytes() == clean_bytes
 
 
 PYGAL_SVG = """<svg xmlns="http://www.w3.org/2000/svg" class="pygal-chart">
