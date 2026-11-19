@@ -36,9 +36,10 @@ That's what leading the models takes: knowing which question to ask, when an ans
 when the structure starts to turn into a mess. It shows in four ways:
 
 - **Decisions on record.** The [agent chat's design](agent-network.md) names an owner decision, rule, or
-  request more than 80 times, each with its date and reason. Three examples: a safety check that can't answer
-  refuses instead of guessing (2026-10-11); data keeps the precision it came with (2026-10-15); and usage
-  telemetry never holds a message, a data value, or a column name (2026-10-16).
+  request more than 80 times, each with its date and reason. Three examples: the chat settles the data
+  first, in a step the user confirms, before it draws a plot (2026-10-11); data keeps the precision it
+  came with (2026-10-15); and usage telemetry never holds a message, a data value, or a column name
+  (2026-10-16).
 - **Pushing back after testing.** On 2026-10-14 a live test showed plain answers, and even refusals,
   waiting about 60 seconds behind the plot queue. My note was "bei sowas muss schnell die antwort kommen"
   (with something like this, the answer has to come fast). The same day the queue shrank to the sandbox
