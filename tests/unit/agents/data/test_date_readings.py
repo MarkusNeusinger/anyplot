@@ -247,6 +247,8 @@ ADDED: dict[str, Row] = {
     "day_month_en_long": Row(["1 March 2026", "15 March 2026"], ["2026-03-01", "2026-03-15"]),
     "day_month_de": Row(["1. März 2026", "15. Okt. 2026"], ["2026-03-01", "2026-10-15"]),
     "day_month_fr": Row(["1 mars 2026", "15 févr. 2026"], ["2026-03-01", "2026-02-15"]),
+    "day_month_ru": Row(["1 марта 2026", "15 мая 2026"], ["2026-03-01", "2026-05-15"]),
+    "day_month_zh_name": Row(["1 三月 2026", "15 五月 2026"], ["2026-03-01", "2026-05-15"]),
     "month_day_en": Row(["March 1, 2026", "Nov. 15, 2026"], ["2026-03-01", "2026-11-15"]),
     "day_month_time": Row(
         ["8 Nov 2026 10:00", "9 Nov 2026 9:05:30"], ["2026-11-08T10:00:00", "2026-11-09T09:05:30"], with_time=True
@@ -279,10 +281,11 @@ ADDED: dict[str, Row] = {
         with_time=True,
     ),
 }
-"""Forms the list took in after the first cut: a day with a month name and a four-digit year, in the eleven languages
-of `months.py` and in the orders people write, also with a time; and an ISO time after a lowercase `t`, as RFC 3339
-allows. The paste kept every one of them as text before (`1. März 2026` read in no conversion either), and types them
-now, without a note: unlike a month, such a cell names its day."""
+"""Forms the list took in after the first cut: a day with a month name and a four-digit year, the month a name of
+`months.py` written as one word (`NUMBERED_MONTH_DAYS` has the boundary), in the orders people write, also with a time;
+and an ISO time after a lowercase `t`, as RFC 3339 allows. The paste kept every one of them as text before
+(`1. März 2026` read in no conversion either), and types them now, a day with a month name with a note that counts
+them, since a column of labels can take that form too."""
 
 
 @pytest.mark.parametrize("name", list(ADDED))
@@ -308,6 +311,31 @@ def test_an_added_form_is_typed_at_the_paste(name: str) -> None:
     )
 
     assert pasted(row.cells) == ("datetime", row.values, notes)
+
+
+NUMBERED_MONTH_DAYS: dict[str, list[str]] = {
+    "day_vi": ["1 tháng 3 năm 2026", "2 tháng 3 năm 2026"],
+    "day_zh_numbered": ["1 3月 2026", "2 3月 2026"],
+    "day_zh_usual": ["2026年3月1日", "2026年3月2日"],
+}
+"""Days whose month is written with its number and a marker (`3月`, `tháng 3`), no name of one word: no form of the
+list, so unread with the forms in a conversion and kept as text at the paste. The same months without a day still read
+as months of a year, on both sides (`LISTED`: `month_zh` is `2026年3月`, `month_vi` is `tháng 3 năm 2026`), and a
+written name of the table reads in a day (`ADDED`: `day_month_zh_name` is `1 三月 2026`)."""
+
+
+@pytest.mark.parametrize("name", list(NUMBERED_MONTH_DAYS))
+def test_a_day_with_a_numbered_month_is_no_form_of_the_list(name: str) -> None:
+    cells = NUMBERED_MONTH_DAYS[name]
+    text = "d,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+    operation = {"op": "set_type", "column": "d", "type": "datetime"}
+
+    with pytest.raises(PrepareError) as caught:
+        apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+    assert caught.value.message == f"column 'd': 2 of 2 cells cannot be read as dates; {FORMS}"
+    assert caught.value.unread == {"no_form": 2}
+    assert pasted(cells) == ("text", cells, [])
 
 
 class TestDaysWithAMonthName:

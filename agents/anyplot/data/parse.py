@@ -443,6 +443,9 @@ _ISO_DATE = re.compile(r"([0-9]{4})-([0-9]{2})-([0-9]{2})" + _ISO_TIME)
 _DOT_DATE = re.compile(r"([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{4})" + _LOCAL_TIME)
 _SLASH_DATE = re.compile(r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})" + _LOCAL_TIME)
 _MONTH_WORD = r"([^\W\d_]+\.?)"
+"""The month of a day: a name of `months.py` written as one word, its abbreviation's dot allowed (`Nov.`, `März`,
+`марта`, `三月`). A month written with its number and a marker (`3月`, `tháng 3`) is no such word, so it reads as a
+month of a year (`2026年3月`, `tháng 3 năm 2026`: `months.month_year`), never as part of a day (`2026年3月1日`)."""
 _DAY_MONTH_DATE = re.compile(r"([0-9]{1,2})\.? " + _MONTH_WORD + r" ([0-9]{4})" + _LOCAL_TIME)
 """A day, a month name and a year (`8 Nov 2026`, `1 March 2026`, `1. März 2026`), with an optional time."""
 _MONTH_DAY_DATE = re.compile(_MONTH_WORD + r" ([0-9]{1,2}),? ([0-9]{4})" + _LOCAL_TIME)
@@ -3863,7 +3866,7 @@ def _date_shape(cell: str) -> _Shaped | None:
             continue
         first, second, year, *clock = found.groups()
         day, word = (first, second) if day_first else (second, first)
-        month = month_number(word)  # a name in one of the eleven languages, its abbreviation's dot allowed
+        month = month_number(word)  # a name of one word (`_MONTH_WORD`), its abbreviation's dot allowed
         if month is None:
             return None
         return _Shaped("day_month", (int(day), month, int(year), *(int(part) if part else 0 for part in clock)))

@@ -24,13 +24,15 @@
   made such conversions without asking. (#13199)
 
 - **A pasted column of days with a month name is a date column.** `8 Nov 2026`,
-  `1. März 2026` or `March 1, 2026` (also `Mar 1 2026`), in the eleven
-  languages of the chat's month names, are typed as dates at the paste, with
-  a note that counts them, and so is an ISO time with a lowercase `t` or `z`
+  `1. März 2026` or `March 1, 2026` (also `Mar 1 2026`), the month a name
+  written as one word, are typed as dates at the paste, with a note that
+  counts them, and so is an ISO time with a lowercase `t` or `z`
   (`2026-03-01t10:00z`); a headerless list of such dates is one date column,
   and a no-break space inside a date reads as a plain one. Before, such a
   column stayed text, and for an open date role the chat made a conversion
-  into a new column first. (#13199)
+  into a new column first. A month written with its number and a marker
+  (`3月`, `tháng 3`) is no such name: it reads as a month of a year
+  (`2026年3月`, `tháng 3 năm 2026`), not as part of a day. (#13199)
 
 ### Fixed
 

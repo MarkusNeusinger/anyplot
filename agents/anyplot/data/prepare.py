@@ -44,9 +44,10 @@ The operations:
   a UTC offset of −12:00 to +14:00 (`Z` or `z` for UTC); `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
   and a day with a month name and a four-digit year (`8 Nov 2026`, `1. März 2026`,
   `March 1, 2026`), each also with a time; a month, `2026-03` or a month name with a four-digit
-  year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are the eleven languages of
-  `months.py`. Each cell reads in its own form, and the change line names each form read; the
-  slash dates have one order of day and month, decided as at the paste (day first by guess,
+  year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are those of `months.py`,
+  in a day only a name written as one word: a month written with its number and a marker
+  (`3月`, `tháng 3`) reads as a month of a year (`2026年3月`), not as part of a day. Each
+  cell reads in its own form, and the change line names each form read; the slash dates have one order of day and month, decided as at the paste (day first by guess,
   which the reading names, when no slash cell settles it in a column of slash dates; beside
   other forms only an order the slash dates settle); any other cell is unreadable. The
   refusal says why, by the reason of each cell left unread (`parse.UnreadReason`,
