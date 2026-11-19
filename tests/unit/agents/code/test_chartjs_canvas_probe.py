@@ -8,7 +8,9 @@ Two layers exercise the same acceptance figures against `automation/js-render/re
    against the pinned library bundles in `node_modules/` (`chart.js`, `echarts`, `highcharts`). It needs only `node`
    and `node_modules/`, so every acceptance case and mutation check runs without a browser binary.
 2. `TestInChromium` runs the full Playwright Chromium render (`plot-light.png` + `probe-light.json`) wherever
-   Playwright's browser is installed (as in CI) and skips cleanly with the harness's skip message otherwise.
+   Playwright's browser is installed (as in CI). Without Node, the lock's `node_modules` or a browser that launches,
+   both layers skip through `skip_or_fail_js_runtime`, which fails them instead where CI sets
+   `ANYPLOT_REQUIRE_JS_RUNTIME=1`.
 """
 
 from __future__ import annotations
@@ -23,6 +25,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+
+from tests.libraries import skip_or_fail_js_runtime
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -846,7 +850,7 @@ def evaluate_written_html(tmp_path: Path, html_file: Path, *, library: str = "ch
     node = shutil.which("node")
     modules = _node_modules()
     if node is None or modules is None:
-        pytest.skip("needs node on PATH and the lock's node_modules")
+        skip_or_fail_js_runtime("needs node on PATH and the lock's node_modules")
     eval_dir = tmp_path / "html-eval"
     eval_dir.mkdir(parents=True, exist_ok=True)
     (eval_dir / "make_dom.mjs").write_text(MAKE_DOM_MJS, encoding="utf-8")
@@ -882,7 +886,7 @@ def run_node_probe(
     node = shutil.which("node")
     modules = _node_modules()
     if node is None or modules is None:
-        pytest.skip("needs node on PATH and the lock's node_modules")
+        skip_or_fail_js_runtime("needs node on PATH and the lock's node_modules")
 
     work = tmp_path / "work"
     work.mkdir(parents=True, exist_ok=True)
@@ -1999,7 +2003,7 @@ def browser_harness(tmp_path_factory: pytest.TempPathFactory) -> BrowserHarness:
     node = shutil.which("node")
     modules = _node_modules()
     if node is None or modules is None:
-        pytest.skip("needs node on PATH and the lock's node_modules (npm ci, or ANYPLOT_NODE_MODULES)")
+        skip_or_fail_js_runtime("needs node on PATH and the lock's node_modules (npm ci, or ANYPLOT_NODE_MODULES)")
     root = tmp_path_factory.mktemp("checkout")
     (root / "automation" / "js-render").mkdir(parents=True)
     shutil.copy(HARNESS, root / "automation" / "js-render" / "render.mjs")
@@ -2012,7 +2016,7 @@ def browser_harness(tmp_path_factory: pytest.TempPathFactory) -> BrowserHarness:
     allowlist.write_text(json.dumps(builder.allowlist(modules)), encoding="utf-8")
     probe = BrowserHarness(root, node, allowlist).render(tmp_path_factory.mktemp("probe"), CANVAS, sandbox=False)
     if probe.returncode != 0:
-        pytest.skip(f"the harness cannot render here (no browser?): {probe.stderr.strip()[-300:]}")
+        skip_or_fail_js_runtime(f"the harness cannot render here (no browser?): {probe.stderr.strip()[-300:]}")
     return BrowserHarness(root, node, allowlist)
 
 
