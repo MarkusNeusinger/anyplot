@@ -249,6 +249,10 @@ ADDED: dict[str, Row] = {
         ["1. März 2026 10:00", "2. März 2026 11:30"], ["2026-03-01T10:00:00", "2026-03-02T11:30:00"], True
     ),
     "month_day_without_comma": Row(["Mar 1 2026", "Mar 15 2026"], ["2026-03-01", "2026-03-15"]),
+    "month_day_long_without_comma": Row(["March 1 2026", "March 15 2026"], ["2026-03-01", "2026-03-15"]),
+    "month_day_without_comma_time": Row(
+        ["May 5 2026 10:00", "May 6 2026 9:05"], ["2026-05-05T10:00:00", "2026-05-06T09:05:00"], with_time=True
+    ),
     "month_day_time": Row(
         ["March 1, 2026 10:00", "March 2, 2026 11:30"], ["2026-03-01T10:00:00", "2026-03-02T11:30:00"], True
     ),
@@ -256,6 +260,16 @@ ADDED: dict[str, Row] = {
     "lowercase_t_offset": Row(
         ["2026-03-01t10:00+01:00", "2026-03-02t11:30+01:00"],
         ["2026-03-01T10:00:00+01:00", "2026-03-02T11:30:00+01:00"],
+        with_time=True,
+    ),
+    "lowercase_z": Row(
+        ["2026-03-01T10:00:00z", "2026-03-02T11:30z"],
+        ["2026-03-01T10:00:00+00:00", "2026-03-02T11:30:00+00:00"],
+        with_time=True,
+    ),
+    "lowercase_t_and_z": Row(
+        ["2026-03-01t10:00z", "2026-03-02t11:30:15z"],
+        ["2026-03-01T10:00:00+00:00", "2026-03-02T11:30:15+00:00"],
         with_time=True,
     ),
 }
@@ -308,6 +322,11 @@ class TestDaysWithAMonthName:
     def test_a_word_that_names_no_month_is_no_date(self) -> None:
         assert converted(["1 am 2026", "2 am 2026"])["failed"] == 2
 
+    def test_a_month_name_a_day_and_a_year_is_that_day_never_a_month(self) -> None:
+        """`Nov 26 2026` holds a four-digit year after the day: 26 November 2026, never November of a year 26."""
+        assert converted(["Nov 26 2026", "Nov 25 2026"])["values"] == ["2026-11-26", "2026-11-25"]
+        assert pasted(["Nov 26 2026", "Nov 25 2026"]) == ("datetime", ["2026-11-26", "2026-11-25"], [])
+
     def test_a_month_without_a_day_is_still_its_first_day(self) -> None:
         assert pasted(["Nov 2026", "Dec 2026"]) == ("datetime", ["2026-11-01", "2026-12-01"], [MONTH_NAMES])
 
@@ -315,6 +334,8 @@ class TestDaysWithAMonthName:
 UNLISTED: dict[str, tuple[list[str], str]] = {
     "two_digit_year": (["01.03.26", "15.03.26"], "text"),
     "day_month_two_digit_year": (["8 Nov 26", "9 Nov 26"], "text"),
+    "month_day_without_year": (["Nov 26", "Nov 25"], "text"),
+    "date_with_lowercase_z_and_no_time": (["2026-03-01z", "2026-03-02z"], "text"),
     "am_pm": (["3/15/2026 10:00 AM", "3/16/2026 2:30 PM"], "text"),
     "year_slash": (["2026/03/01", "2026/03/15"], "text"),
     "dashes_day_first": (["15-03-2026", "16-03-2026"], "text"),

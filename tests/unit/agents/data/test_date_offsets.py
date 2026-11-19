@@ -544,7 +544,13 @@ class TestFilterBound:
         )
 
     @pytest.mark.parametrize(
-        ("value", "kept"), [("2026-03-01T10:00:00+01:00", ["3", "4"]), ("2026-02-28T23:00:00Z", ["2", "3", "4"])]
+        ("value", "kept"),
+        [
+            ("2026-03-01T10:00:00+01:00", ["3", "4"]),
+            ("2026-02-28T23:00:00Z", ["2", "3", "4"]),
+            ("2026-02-28T23:00:00z", ["2", "3", "4"]),  # RFC 3339 allows a lowercase z, read as UTC as `Z` is
+            ("2026-02-28t23:00z", ["2", "3", "4"]),
+        ],
     )
     def test_a_time_with_an_offset_compares_moments_as_before(self, value: str, kept: list[str]) -> None:
         assert column(prepare(self.ZONED, keep("ge", value)), "v") == kept

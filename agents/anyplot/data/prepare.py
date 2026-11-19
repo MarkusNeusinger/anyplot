@@ -41,7 +41,7 @@ The operations:
   crash). Without `date_format` the cells are read in the forms of the date list, with the
   parser's own reader (`parse.read_dates`), so a cell converts exactly when the paste would
   type it: `2026-03-01`, also with a time after `T` (or `t`) or a space, seconds, a fraction and
-  a UTC offset of −12:00 to +14:00; `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
+  a UTC offset of −12:00 to +14:00 (`Z` or `z` for UTC); `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
   and a day with a month name and a four-digit year (`8 Nov 2026`, `1. März 2026`,
   `March 1, 2026`), each also with a time; a month, `2026-03` or a month name with a four-digit
   year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are the eleven languages of
@@ -4281,6 +4281,8 @@ def _moment(value: str, column: str, zone: tzinfo | None = None) -> pd.Timestamp
         # `fromisoformat` takes any character after the date for the `T` (RFC 3339 allows `t` and a space too):
         # `2024-01-01−05:00` would read as 05:00.
         raise _not_an_iso_date(column)
+    if start is not None and ":" in text and text.endswith("z"):
+        text = text[:-1] + "Z"  # RFC 3339 allows a lowercase `z` after a time, which `fromisoformat` refuses
     try:
         moment = datetime.fromisoformat(text)
     except ValueError:

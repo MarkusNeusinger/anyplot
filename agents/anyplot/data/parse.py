@@ -449,24 +449,24 @@ as optional as the dot after the day of `1. März 2026`."""
 
 _ISO_STAMP = re.compile(
     r"([0-9]{4})-([0-9]{2})-([0-9]{2})"
-    r"(?:[Tt ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:[.,]([0-9]{1,9}))?)?(Z|[+-][0-9]{2}(?::?[0-9]{2})?)?)?"
+    r"(?:[Tt ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:[.,]([0-9]{1,9}))?)?([Zz]|[+-][0-9]{2}(?::?[0-9]{2})?)?)?"
 )
 """An ISO date, or a timestamp with seconds, a fraction of up to nine digits and an offset (`_as_iso_stamps`); the `T`
-may be lowercase, as RFC 3339 allows."""
+and the `Z` may be lowercase, as RFC 3339 allows."""
 UTC_OFFSETS = (-12 * 60, 14 * 60)
 """The UTC offsets in use, in minutes east of UTC: from −12:00 to +14:00. A sign and digits past them after a time end a
 range of times (`08:00-16:30`), never an offset (`utc_offset`)."""
-_OFFSET_SHAPE = re.compile(r"Z|([+-])([0-9]{2})(?::?([0-9]{2}))?")
+_OFFSET_SHAPE = re.compile(r"[Zz]|([+-])([0-9]{2})(?::?([0-9]{2}))?")
 
 
 def utc_offset(text: str) -> int | None:
-    """The minutes east of UTC of an offset written `Z`, `±HH`, `±HHMM` or `±HH:MM` within `UTC_OFFSETS`, else None:
-    the one definition of an offset for the paste, a conversion to dates, the dates with an offset and a condition's
-    value (`prepare._moment`)."""
+    """The minutes east of UTC of an offset written `Z` (or `z`, as RFC 3339 allows), `±HH`, `±HHMM` or `±HH:MM`
+    within `UTC_OFFSETS`, else None: the one definition of an offset for the paste, a conversion to dates, the dates
+    with an offset and a condition's value (`prepare._moment`)."""
     shape = _OFFSET_SHAPE.fullmatch(text)
     if shape is None:
         return None
-    if text == "Z":
+    if text in ("Z", "z"):
         return 0
     sign, hours, minutes = shape.groups()
     if int(minutes or 0) > 59:
