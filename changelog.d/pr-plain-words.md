@@ -10,9 +10,10 @@
   to tell from it alone what the change is for, and an author who cannot say
   that plainly looks at the change again before writing around it. The section
   says what the merge hangs on, claims no more than the technical sections
-  back and names no file or setting. The owner merges every ordinary pull request himself, and
-  the technical sections stay for the reviewer. `/open-pr` checks the section,
-  the title and the fragment against the final diff before a pull request is
-  reported ready, and the Gemini take-over checks the section again after its
-  review, since Gemini writes it before the review rounds. Catalogue-only,
-  pipeline and Dependabot pull requests are exempt.
+  back and names no file or setting. The owner merges every ordinary pull
+  request himself, and the technical sections stay for the reviewer.
+  `/open-pr` checks the section, the title and the fragment against the final
+  diff before a pull request is reported ready, and the Gemini take-over
+  checks the section again after its review, since Gemini writes it before
+  the review rounds. Catalogue-only, pipeline and Dependabot pull requests
+  are exempt.

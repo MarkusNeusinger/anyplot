@@ -9,7 +9,7 @@
   stays as it is. His reason: he merges every ordinary pull request himself, and from its description
   he could not tell what the largest open pull request actually did; if the opening does not make
   the point of a change clear, the technical part after it does not either, and it shows whether the
-  whole pull request makes sense as it was meant. He asked for a second opinion on the section's form, which Fable and
-  Gemini 4 Carbon gave, and for the rule to go into the instructions agents follow when they write
-  a pull request.
+  whole pull request makes sense as it was meant. He asked for a second opinion on the section's
+  form, which Fable and Gemini 4 Carbon gave, and for the rule to go into the instructions agents
+  follow when they write a pull request.
 - Where: `agentic/commands/pull_request.md`
