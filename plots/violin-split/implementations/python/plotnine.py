@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 violin-split: Split Violin Plot
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-08
+Quality: pending | Updated: 2026-11-19
 """
 
 import os
@@ -18,6 +18,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_fill_manual,
+    scale_x_discrete,
     theme,
     theme_minimal,
 )
@@ -30,67 +31,60 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series is always #009E73 (brand)
-IMPRINT = ["#009E73", "#C475FD"]
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Employee satisfaction scores before and after training program
+# Columns: set these to your table's column names
+AGE_GROUP = "Age group (years)"  # role: category
+BLOOD_PRESSURE = "Systolic blood pressure (mmHg)"  # role: value
+PERIOD = "Period"  # role: split_group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("blood_pressure.csv")
 np.random.seed(42)
+age_groups = ["18-34", "35-49", "50-64", "65+"]
+before_means, before_sds = [128, 134, 145, 156], [10, 12, 15, 18]
+after_means, after_sds = [118, 123, 128, 136], [8, 10, 11, 13]
+sizes = [80, 100, 90, 70]
+frames = []
+for i, age_group in enumerate(age_groups):
+    for period, mean, sd in (
+        ("Before treatment", before_means[i], before_sds[i]),
+        ("After treatment", after_means[i], after_sds[i]),
+    ):
+        frames.append(
+            pd.DataFrame({AGE_GROUP: age_group, BLOOD_PRESSURE: np.random.normal(mean, sd, sizes[i]), PERIOD: period})
+        )
+df = pd.concat(frames, ignore_index=True)
 
-categories = ["Engineering", "Marketing", "Sales", "Support"]
-
-data = []
-for category in categories:
-    # Generate different distributions for each category and time point
-    if category == "Engineering":
-        before = np.random.normal(65, 12, 80)
-        after = np.random.normal(78, 10, 80)
-    elif category == "Marketing":
-        before = np.random.normal(58, 15, 100)
-        after = np.random.normal(72, 12, 100)
-    elif category == "Sales":
-        before = np.random.normal(70, 10, 90)
-        after = np.random.normal(82, 8, 90)
-    else:  # Support
-        before = np.random.normal(55, 18, 70)
-        after = np.random.normal(75, 14, 70)
-
-    for val in before:
-        data.append({"category": category, "value": val, "split_group": "Before Training"})
-    for val in after:
-        data.append({"category": category, "value": val, "split_group": "After Training"})
-
-df = pd.DataFrame(data)
-
-# Clip values to realistic range (0-100 for satisfaction scores)
-df["value"] = df["value"].clip(0, 100)
-
-# Plot - True split violin with left-right style for side-by-side halves
+# Plot
+periods = df[PERIOD].unique().tolist()
 plot = (
-    ggplot(df, aes(x="category", y="value", fill="split_group"))
-    + geom_violin(style="left-right", alpha=0.8, size=0.8, scale="width", trim=True)
-    + geom_boxplot(width=0.15, alpha=0.9, outlier_alpha=0.5, outlier_size=2, size=0.6, position="identity")
-    + scale_fill_manual(values=IMPRINT)
-    + labs(x="Department", y="Satisfaction Score (0-100)", fill="Period", title="violin-split · plotnine · anyplot.ai")
+    ggplot(df, aes(x=AGE_GROUP, y=BLOOD_PRESSURE, fill=PERIOD))
+    + geom_violin(df[df[PERIOD] == periods[0]], style="left", alpha=0.85, size=0.4, scale="width", position="identity")
+    + geom_violin(df[df[PERIOD] == periods[1]], style="right", alpha=0.85, size=0.4, scale="width", position="identity")
+    + geom_boxplot(width=0.12, alpha=0.9, outlier_alpha=0.5, outlier_size=1, size=0.4, color=INK, position="identity")
+    + scale_x_discrete(limits=df[AGE_GROUP].unique().tolist())
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=periods)
+    + labs(title="violin-split · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_y=element_line(color=INK, alpha=0.10, size=0.3),
         panel_grid_major_x=element_line(color=INK, alpha=0.05, size=0.2),
+        panel_grid_minor=element_line(color=INK, alpha=0.04, size=0.2),
         panel_border=element_rect(color=INK_SOFT, fill=None),
-        axis_title_x=element_text(size=20, color=INK),
-        axis_title_y=element_text(size=20, color=INK),
-        axis_text_x=element_text(size=16, color=INK_SOFT),
-        axis_text_y=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK, ha="center"),
+        plot_title=element_text(size=12, color=INK, ha="center"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
