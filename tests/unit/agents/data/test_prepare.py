@@ -788,11 +788,11 @@ class TestSetTypeDatetime:
 
     def test_without_a_format_each_cell_reads_in_its_own_form(self) -> None:
         """The paste keeps such a mix as text; a request reads every cell in its form of the list, and the change line
-        names each form, the slash date's order (a guess here) among them."""
-        text = "t,v\nJan 2024,1\n2024-02,2\n03/04/2024,3\n15 March 2024,4\n"
+        names each form, the slash date's order (settled by a day over 12) among them."""
+        text = "t,v\nJan 2024,1\n2024-02,2\n15/04/2024,3\n15 March 2024,4\n"
         prepared = prepare(text, {"op": "set_type", "column": "t", "type": "datetime"})
 
-        assert cells(prepared, 0) == ["2024-01-01", "2024-02-01", "2024-04-03", "2024-03-15"]
+        assert cells(prepared, 0) == ["2024-01-01", "2024-02-01", "2024-04-15", "2024-03-15"]
         assert prepared.changes == [
             "t: 4 cells read as dates (format inferred cell by cell: day before month; a day, a month name and a year; "
             "months as their first day)"
@@ -2736,7 +2736,7 @@ class TestFidelity:
         text = "label,t\nx,2024-01-05T12:00+01:00\ny,2024-07-05T12:00\nz,2024-08-01 09:30+02:00\n"
         code, message = failure(text, set_dates(column="t"))
 
-        assert code == "type_mismatch" and "no time is given a zone by guess" in message
+        assert code == "type_mismatch" and "no cell is given a zone by guess" in message
 
 
 def set_number(column: str) -> dict[str, Any]:

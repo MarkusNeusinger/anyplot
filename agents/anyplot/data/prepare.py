@@ -47,9 +47,10 @@ The operations:
   year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are the eleven languages of
   `months.py`. Each cell reads in its own form, and the change line names each form read; the
   slash dates have one order of day and month, decided as at the paste (day first by guess,
-  which the reading names, when no slash cell settles it); any other cell is unreadable. The
+  which the reading names, when no slash cell settles it in a column of slash dates; beside
+  other forms only an order the slash dates settle); any other cell is unreadable. The
   refusal says why, by the reason of each cell left unread (`parse.UnreadReason`,
-  `_unread_words`): a day that does not exist, slash dates whose cells disagree about the order,
+  `_unread_words`): a day that does not exist, slash dates that settle no single order,
   or no form of the list, for which it names the forms the chat reads (`parse.DATE_FORMS`); the
   change line of a conversion that leaves cells missing says the same where the whole line holds
   it. The paste and a conversion differ in four places, each on purpose: the paste types a column
@@ -1883,19 +1884,21 @@ def _shape_words(shape: DateShape, day_first: bool) -> str:
 
 def _unread_words(unread: Counter[UnreadReason]) -> str:
     """Why a reading without a format left cells unread, one clause per reason it found (`parse.UnreadReason`), in this
-    order: days the calendar does not have, with their count; the slash dates of a column whose own cells disagree
-    about the order of day and month; and, for cells of no form of the list, the forms the chat reads. A cell of a
-    form the list reads is never told the forms, which name its own."""
+    order: days the calendar does not have, with their count; slash dates whose column settles no single order of day
+    and month (both orders, or none beside cells of another form), with their count and the format that sets the
+    order, which serves a column of slash dates only; and, for cells of no form of the list, the forms the chat reads.
+    A cell of a form the list reads is never told the forms, which name its own."""
     clauses = []
     if impossible := unread["no_such_date"]:
         clauses.append(
             f"{_count(impossible, 'cell')} {'names' if impossible == 1 else 'name'} a day that does not exist, "
             "such as 31 November"
         )
-    if unread["order_conflict"]:
+    if slash := unread["slash_order"]:
         clauses.append(
-            "its slash dates disagree about the order of day and month (some read only day first, others only month "
-            "first), which a date_format of DD/MM/YYYY or MM/DD/YYYY settles"
+            f"its slash dates settle no single order of day and month, so {slash} of them "
+            f"{'is' if slash == 1 else 'are'} not read; a date_format of DD/MM/YYYY or MM/DD/YYYY sets the order for a "
+            "column of slash dates only"
         )
     if unread["no_form"]:
         clauses.append(DATE_FORMS)
@@ -4515,9 +4518,9 @@ def _to_dates(series: pd.Series, date_format: str | None) -> _Dates:
     own reader (`parse.read_dates`), so a conversion reads a cell exactly when the paste would type it.
 
     A date followed directly by a UTC offset and no time is read as the day written (`_day_offsets`); beside a cell
-    read with a time, such a day is refused (`_days_beside_times`), as a day is no moment. Without a format, times
-    with and without an offset are refused (`_naive_and_zoned`), and different offsets are read in UTC with a notice
-    that names them, as the parser writes such a column.
+    read with a time, such a day is refused (`_days_beside_times`), as a day is no moment. Without a format, cells
+    with and without an offset are refused with their counts (`_naive_and_zoned`), and different offsets are read in
+    UTC with a notice that names them, as the parser writes such a column.
     """
     texts = _texts(series)
     if date_format == "MM.YYYY" and _kind(series) == "number":
@@ -4553,7 +4556,9 @@ def _to_dates(series: pd.Series, date_format: str | None) -> _Dates:
     else:
         zones = listed.offsets
         if None in zones and len(zones) > 1:
-            raise _naive_and_zoned(series.name)
+            zoned = sum(moment is not None and moment.tzinfo is not None for moment in moments)
+            naive = sum(moment is not None and moment.tzinfo is None for moment in moments)
+            raise _naive_and_zoned(series.name, zoned, naive)
         if len(zones) > 1:
             shown = ", ".join(_offset_text(zone) for zone in sorted(zone for zone in zones if zone is not None))
             notice = f"times with the UTC offsets {shown} converted to UTC (+00:00); the instants are the same"
@@ -4663,11 +4668,13 @@ def _dropped_note(dropped: Counter[str], room: int) -> str:
     )
 
 
-def _naive_and_zoned(column: object) -> PrepareError:
+def _naive_and_zoned(column: object, zoned: int, naive: int) -> PrepareError:
+    """The refusal of cells with a UTC offset beside cells without one, counted: a cell without one may be a day as
+    well as a time, so it is called a cell."""
     return PrepareError(
         "type_mismatch",
-        f"column '{column}' holds times with a UTC offset and times without one; no time is given a zone by guess, "
-        "so the column stays as it is",
+        f"column '{column}' holds {_count(zoned, 'cell')} with a UTC offset and {_count(naive, 'cell')} without one; "
+        "no cell is given a zone by guess, so the column stays as it is",
     )
 
 

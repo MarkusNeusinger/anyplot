@@ -8,12 +8,14 @@
   decided once for the whole column; a day with a month name and a year
   (`8 Nov 2026`, `1. März 2026`, `March 1, 2026`), each also with a time; and
   months such as `2026-03` or `Mar 2026`. Each cell reads in its own form, so
-  ISO dates beside `11 Mar 2026` all convert. A cell in any other form is not
-  read, and the chat says why: a day that does not exist, slash dates that
-  disagree about the order of day and month, or, for a form outside the list,
-  the forms it reads ("the chat reads 2026-03-01, 01.03.2026, 03/15/2026,
-  8 Nov 2026, each also with a time, and months such as 2026-03 or
-  Mar 2026"). A format such as `YYYYMMDD` or `MM/YYYY` still reads its own
+  ISO dates beside `11 Mar 2026` all convert; a slash date beside other forms
+  reads only in an order the column's slash dates settle, never by guess. A
+  cell in any other form is not read, and the chat says why: a day that does
+  not exist, slash dates that settle no single order of day and month, or,
+  for a form outside the list, the forms it reads ("the chat reads
+  2026-03-01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a time, and
+  months such as 2026-03 or Mar 2026"). A format such as `YYYYMMDD` or
+  `MM/YYYY` still reads its own
   form on request, and a form no format names, such as `1st March 2026` or
   `2026/03/01`, is read by no conversion now. Before, a general reader
   guessed the format cell by cell: it read a range of days as its first day,

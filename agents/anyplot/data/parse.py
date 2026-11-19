@@ -435,7 +435,11 @@ _HEADER_TOKENS = re.compile(r"[^\s()\[\]{},;:]+")
 # Text that is a literal: an optional Python assignment, then `[`, `{` or `(`.
 _LITERAL_START = re.compile(r"(?:[^\W\d]\w*\s*=\s*)?(?=[\[{(])")
 
+_ISO_TIME = r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2}))?)?"
 _LOCAL_TIME = r"(?: ([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?)?"
+_ISO_DATE = re.compile(r"([0-9]{4})-([0-9]{2})-([0-9]{2})" + _ISO_TIME)
+"""An ISO date with an optional time, as finding the table takes a value (`_looks_like_value`); typing reads the wider
+`_ISO_STAMP`."""
 _DOT_DATE = re.compile(r"([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{4})" + _LOCAL_TIME)
 _SLASH_DATE = re.compile(r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})" + _LOCAL_TIME)
 _MONTH_WORD = r"([^\W\d_]+\.?)"
@@ -3710,12 +3714,12 @@ def keeps_value(text: str, value: float) -> bool:
         return False
 
 
-UnreadReason = Literal["no_form", "no_such_date", "order_conflict"]
+UnreadReason = Literal["no_form", "no_such_date", "slash_order"]
 """Why the date list left a cell unread: it has no form of the list (`no_form`: `1st March 2026`, an offset past those
 in use, a month of a year past `MONTH_YEARS`); its form names no date or time (`no_such_date`: `31 Nov 2026`,
-`29 Feb 2025`, `25:00`); or it is a slash date in a column whose own cells settle both orders of day and month
-(`order_conflict`). A closed set: a refusal's sentence is chosen by it (`prepare._unread_words`), and a count of refusals
-by their reason reads the same field."""
+`29 Feb 2025`, `31/31/2026`, `25:00`); or it is a slash date whose column's slash dates settle no single order of day
+and month (`slash_order`: they settle both, or none beside cells of another form). A closed set: a refusal's sentence is
+chosen by it (`prepare._unread_words`), and a count of refusals by their reason reads the same field."""
 
 
 @dataclass(frozen=True)
@@ -3762,8 +3766,10 @@ def read_dates(cells: Iterable[str]) -> DateCells:
     a column only when every cell reads and all of them have one shape (`DateCells.shape`); a conversion reads every
     cell it can. The slash dates of a column have one order of day and month, as the paste decides it: month first
     when a cell reads in that order alone (`03/15/2026`), else day first, by guess (`guessed`) when no cell settles it
-    and some cell reads otherwise the other way; when cells settle both orders (`15/03/2026` beside `03/15/2026`), no
-    order fits the column and no slash cell reads.
+    and some cell reads otherwise the other way. A slash date that reads differently in the two orders is unread
+    (`slash_order`) when no single order fits: its column's slash dates settle both (`15/03/2026` beside `03/15/2026`),
+    or none in a column that mixes forms, where a guess could not be taken back; one that names no day in either order
+    keeps its own reason (`31/31/2026`, `no_such_date`).
     """
     found = {cell: _date_shape(cell.translate(_SPACE_FOLD)) for cell in dict.fromkeys(cells)}
     orders = {
@@ -3774,7 +3780,16 @@ def read_dates(cells: Iterable[str]) -> DateCells:
     day_only = any(first is not None and second is None for first, second in orders.values())
     month_only = any(first is None and second is not None for first, second in orders.values())
     day_first = not month_only
-    guessed = not day_only and not month_only and any(first != second for first, second in orders.values())
+    # A cell of another form that reads makes a mix: there a guessed order could never be taken back by a swap, which
+    # would turn the other cells too, so slash dates read only in an order their own cells settle.
+    mixed = bool(orders) and any(
+        shaped is not None and shaped.shape != "slash" and _READERS[shaped.shape](shaped) is not None
+        for shaped in found.values()
+    )
+    unsettled = day_only == month_only and (day_only or mixed)
+    guessed = (
+        not mixed and not day_only and not month_only and any(first != second for first, second in orders.values())
+    )
     moments: dict[str, datetime] = {}
     unread: dict[str, UnreadReason] = {}
     for cell, shaped in found.items():
@@ -3783,8 +3798,8 @@ def read_dates(cells: Iterable[str]) -> DateCells:
             continue
         if shaped.shape == "slash":
             first, second = orders[cell]
-            if day_only and month_only:
-                unread[cell] = "order_conflict" if first or second else "no_such_date"
+            if unsettled and first != second:
+                unread[cell] = "slash_order"
                 continue
             moment = first if day_first else second
         else:
@@ -4248,7 +4263,7 @@ def _build(
             f"{_count(len(flagged), 'column')} of flags ({shown}) beside number columns kept as text columns named "
             f"after them, such as '{names[flagged[0]]}', with {_count(flags.total(), 'flagged cell')}"
         )
-    if all(_looks_like_value(name) for name in names):
+    if all(_looks_like_value(name) or _header_date(name) for name in names):
         warnings.append("every header looks like a value; the first row may be data rather than column names")
 
     for position, (header, name, carries, column) in enumerate(
@@ -4692,23 +4707,31 @@ def _header_as_row(headers: list[str], source_format: SourceFormat) -> bool:
 
 
 def _header_is_value(header: str) -> bool:
-    """A header that is a value by its form alone: a number, also with a unit (`007 kg`, `€5`), a date or a
-    boolean (`true` / `false`, any case)."""
+    """A header that is a value by its form alone: a number, also with a unit (`007 kg`, `€5`), a date of a form of
+    the list (`_header_date`) or a boolean (`true` / `false`, any case)."""
     text = header.strip()
-    if _looks_like_value(text) or text.casefold() in ("true", "false"):
+    if _looks_like_value(text) or _header_date(text) or text.casefold() in ("true", "false"):
         return True
     split = _split_unit(text)
     return split is not None and _looks_like_value(split[0].strip())
 
 
 def _looks_like_value(name: str) -> bool:
-    """A number, or a cell of a form of the date list (`_date_shape`), the forms the paste types as dates."""
     return bool(
         _FLOAT.fullmatch(name)
         or _DECIMAL_COMMA.fullmatch(name)
-        or _date_shape(name.translate(_SPACE_FOLD)) is not None
+        or _ISO_DATE.fullmatch(name)
+        or _DOT_DATE.fullmatch(name)
+        or _SLASH_DATE.fullmatch(name)
         or _grouped_like(name)
     )
+
+
+def _header_date(name: str) -> bool:
+    """Whether a header is a date of a form of the list (`_date_shape`): such a header may be the first row of data.
+    Only the header checks ask it; finding the table keeps `_looks_like_value`, since a title above, or a second header
+    line of months, seasons or written days, is a header there."""
+    return _date_shape(name.strip().translate(_SPACE_FOLD)) is not None
 
 
 def _grouped_like(cell: str) -> bool:
