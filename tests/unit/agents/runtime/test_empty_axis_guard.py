@@ -22,6 +22,7 @@ from agents.anyplot.plugins.ledger import ledger_for
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import DATASET_ID, SUMMARY_PENDING, read_session
 from agents.anyplot.tools.session import (
+    COLUMN_HELD_FILLED_MESSAGE,
     COLUMN_HELD_MESSAGE,
     LOSING_LINE,
     LOST_LINE,
@@ -51,6 +52,8 @@ LOST_Y = "<user_data>\ny: Feuchte\n</user_data>"
 REPLY = {"text": "Daily mean per sensor: 8 readings became 5 rows. Feuchte is gone, so y has no column now."}
 HELD = COLUMN_HELD_MESSAGE.format(roles="y")
 """The guard's refusal for the emptied y, as the root reads it in the call's answer."""
+HELD_FILLED = COLUMN_HELD_FILLED_MESSAGE.format(roles="y")
+"""The same refusal once y holds a column again: nothing about a role that waits."""
 ATTRIBUTION = "anyplot.agents.attribution"
 FAHRENHEIT = {"op": "compute", "name": "Fahrenheit", "expression": "t * 1.8 + 32", "inputs": {"t": "Temperatur"}}
 
@@ -389,6 +392,72 @@ class TestWhatTheGuardLeaves:
         )
 
 
+class TestTheReviewedCases:
+    async def test_a_column_read_as_dates_and_numbered_in_the_emptying_call_is_held(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """`Zeitpunkt` is text when the turn begins (read as text in an earlier turn); one call reads it as dates,
+        turns it into days and drops it with Feuchte. The column is a date only in the middle of the call, so the
+        record comes from the operation as it runs: refused, nothing stored, the table as it was."""
+        as_text = {"op": "set_type", "column": "Zeitpunkt", "type": "text"}
+        as_dates = {"op": "set_type", "column": "Zeitpunkt", "type": "datetime"}
+        drop = {"op": "drop_columns", "columns": ["Zeitpunkt", "Feuchte"]}
+        script = default_script()
+        script["root"] = [
+            prepare_call(as_text),
+            {"text": "Zeitpunkt is text now."},
+            prepare_call(as_dates, DAYS, drop),
+            REPLY,
+        ]
+        fake = swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime)
+        await say(client, sid, {"text": "Read Zeitpunkt as text."})
+        before = await outcome(runtime, sid)
+
+        await say(client, sid, {"text": "Days since the start instead of the time, and drop Feuchte."})
+
+        assert (
+            await outcome(runtime, sid)
+            == before
+            == ({"x": "Temperatur", "y": "Feuchte"}, ["Zeitpunkt", "Sensor", "Temperatur", "Feuchte"])
+        )
+        refused = answers(fake, 3)
+        assert HELD in refused and LOSING_LINE.format(role="y", column="Feuchte") in refused
+        assert MADE_NOW_LINE.format(name="Tag") in refused
+
+    async def test_residual_an_asked_row_number_after_the_emptied_role_was_filled_again_waits_a_turn(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """Accepted residual: the turn stays armed after the root put a column that was there on the emptied y, since
+        typed records cannot tell that refill from the root's own unasked one, which would let a date number nobody
+        asked for into the table. The refusal then says only what holds, nothing of a role that waits; the same call in
+        the next turn is stored and lands on no role."""
+        rows = prepare_call({"op": "row_number", "name": "RowID"})
+        script = default_script()
+        script["root"] = [
+            prepare_call({"op": "drop_columns", "columns": ["Feuchte"]}),
+            bindings_call(x="Temperatur", y="Temperatur"),
+            rows,
+            {"text": "Feuchte dropped; RowID can be made in the next turn."},
+            rows,
+            {"text": "RowID numbers the rows 1 to 8."},
+        ]
+        fake = swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime)
+
+        await say(client, sid, {"text": "Drop Feuchte, put Temperatur on y too, and add row numbers as RowID."})
+        refused = answers(fake, 3)
+        after_first = await outcome(runtime, sid)
+        await say(client, sid, {"text": "Add row numbers as RowID."})
+
+        assert HELD_FILLED in refused and HELD not in refused
+        assert after_first == ({"x": "Temperatur", "y": "Temperatur"}, ["Zeitpunkt", "Sensor", "Temperatur"])
+        assert await outcome(runtime, sid) == (
+            {"x": "Temperatur", "y": "Temperatur"},
+            ["RowID", "Zeitpunkt", "Sensor", "Temperatur"],
+        )
+
+
 class TestTheKnownGap:
     async def test_known_gap_an_unasked_derived_column_still_takes_the_emptied_axis(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
@@ -482,7 +551,8 @@ class TestSetBindings:
         refused = await set_bindings([{"role": "x", "column": "Tag"}, {"role": "y", "column": "Temperatur"}], context)
 
         assert before["status"] == "ok"
-        assert (refused["code"], refused["message"]) == ("invalid_bindings", HELD)
+        # y holds Tag by the first binding, so no role the turn emptied is open: the sentence for a filled role.
+        assert (refused["code"], refused["message"]) == ("invalid_bindings", HELD_FILLED)
         assert ledger.guard_held == ["set_bindings"]
         view = read_session(context.state)
         assert view is not None and {b.role: b.column for b in view.bindings} == {"x": "Temperatur", "y": "Tag"}

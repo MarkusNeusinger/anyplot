@@ -923,6 +923,108 @@ class TestASelectionThatHidesNoRow:
         assert lines[-1] == "the plot draws 3 of 12 rows of data v2" and answer["landed"] == "table"
 
 
+POINTS_40 = {"selections": [[{"column": "Points", "test": "ge", "value": "40"}]]}
+SHOWN_40 = {"rows": 12, "of_rows": 24, "parts": ["Points ≥ 40"]}
+
+
+async def undo(client: httpx.AsyncClient, sid: str) -> dict[str, Any]:
+    """The page's `.undo()`, its answer."""
+    response = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert response.status_code == 200, response.text
+    answer: dict[str, Any] = response.json()
+    return answer
+
+
+async def view_now(runtime: Runtime, sid: str) -> Any:
+    return (await runtime.session(USER, sid)).state.get(PLOT_VIEW)
+
+
+class TestTheUndoTakesBackTheView:
+    """An undo takes back what the undone step did to the view of the plot too (`StoredDataset.view_change`): the view
+    from before the step comes back while the view in force is still the one the step left. The undo's answer carries
+    the view the page then draws."""
+
+    async def test_a_selection_the_step_cleared_comes_back(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-1")
+        await prepare_data([only("Points", "ge", 40)], context)
+        await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+        await write_back(runtime, sid, context)
+        assert await view_now(runtime, sid) is None
+
+        answer = await undo(client, sid)
+
+        assert (answer["version"], answer["view"]) == (1, SHOWN_40)
+        assert await view_now(runtime, sid) == POINTS_40
+
+    async def test_the_view_an_apply_view_moved_into_the_table_comes_back(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-2")
+        await prepare_data([only("Points", "ge", 40)], context)
+        await prepare_data([{"op": "apply_view"}], context)
+        await write_back(runtime, sid, context)
+
+        answer = await undo(client, sid)
+
+        assert (answer["version"], answer["view"]) == (1, SHOWN_40)
+        assert await view_now(runtime, sid) == POINTS_40
+
+    async def test_a_view_the_user_changed_after_the_step_stays(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """The later view is the user's later word: the undo leaves it, and the answer draws it on the old table."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-3")
+        await prepare_data([only("Points", "ge", 40)], context)
+        await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+        await prepare_data([only("Goals", "ge", 10)], context)
+        await write_back(runtime, sid, context)
+        later = await view_now(runtime, sid)
+
+        answer = await undo(client, sid)
+
+        assert later == {"selections": [[{"column": "Goals", "test": "ge", "value": "10"}]]}
+        assert await view_now(runtime, sid) == later
+        assert answer["view"] == {"rows": 17, "of_rows": 24, "parts": ["Goals ≥ 10"]}
+
+    async def test_two_undos_take_back_two_steps_each_with_its_own_view(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """The second step changed no view: its undo leaves the view as it is, the first one's brings it back."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-4")
+        await prepare_data([only("Points", "ge", 40)], context)
+        await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+        await prepare_data([{"op": "rename", "column": "Goals", "name": "Tore"}], context)
+        await write_back(runtime, sid, context)
+
+        first = await undo(client, sid)
+        first_view = await view_now(runtime, sid)
+        second = await undo(client, sid)
+
+        assert (first["version"], first["view"], first_view) == (2, None, None)
+        assert (second["version"], second["view"]) == (1, SHOWN_40)
+        assert await view_now(runtime, sid) == POINTS_40
+
+    async def test_a_view_set_with_a_change_of_the_table_goes_with_its_undo(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """The side effect of the same rule: a call that renamed a column and set a view on it is undone whole, so the
+        view from before it (none) is in force again, not one that names a column the old table does not have."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-5")
+        await prepare_data([{"op": "rename", "column": "Points", "name": "Punkte"}, only("Punkte", "ge", 40)], context)
+        await write_back(runtime, sid, context)
+        assert await view_now(runtime, sid) == {"selections": [[{"column": "Punkte", "test": "ge", "value": "40"}]]}
+
+        answer = await undo(client, sid)
+
+        assert (answer["version"], answer["view"]) == (1, None)
+        assert await view_now(runtime, sid) is None
+
+
 class TestQuestionsUnderAView:
     """A question reads the whole table unless it asks for the rows the plot draws, and the answer says which: a
     total over 24 rows is no total of the 12 the user is looking at."""

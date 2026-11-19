@@ -13,8 +13,9 @@ The guard reads typed records only, never a word of the request:
 * `emptied`: the required roles a `prepare_data` call leaves open that were bound before it. They are judged with
   the turn's fills that no role held before the call hidden (`hidden`), so a call that empties a role and fills it
   with one of its own counts as emptying it.
-* `made_columns`: the new columns that hold a date turned into numbers (`Prepared.converted` with a date column as
-  its source, which `date_number` makes) or the row numbers (`Prepared.row_numbers`): the two fills the server offers
+* `made_columns`: the new columns that hold a date turned into numbers (`Prepared.date_numbers`: a `date_number`, or
+  `extract` with `digits` on a column that is a date when the operation runs, so a column read as dates and numbered
+  in the same call counts) or the row numbers (`Prepared.row_numbers`): the two fills the server offers
   for an open number axis, which no request of the turn's own needs to fill one. A conversion of a text column (a
   `set_type` into a column of its own, `extract`, `strip`, `replace`, `split`) is none: it is usually the request's
   own, a price read from `CHF 1'200` and then summed per region by the same call, whose aggregate takes the axes'
@@ -38,7 +39,7 @@ operation of the turn added (`added_columns`) taking a role whose column the tur
 the eval show whether the root goes round the guard that way.
 """
 
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 
 from core.spec_roles import DataRole
@@ -60,15 +61,12 @@ class Emptied:
         return f"{self.role}: {self.column}"
 
 
-def made_columns(
-    converted: Mapping[str, str], row_numbers: Sequence[str], dates: Collection[str], before: Collection[str]
-) -> list[str]:
-    """The new columns of a call that hold a date turned into numbers or the row numbers, in order: the columns of
-    `Prepared.converted` whose source is one of `dates` (the date columns of the tables the call started from and
-    left), and `Prepared.row_numbers`, each only when the table the call started from (`before`, its column names) did
-    not have it, so a row-number column the paste already had is none."""
-    names = [*(name for name, source in converted.items() if name != source and source in dates), *row_numbers]
-    return [name for name in dict.fromkeys(names) if name not in before]
+def made_columns(date_numbers: Sequence[str], row_numbers: Sequence[str], before: Collection[str]) -> list[str]:
+    """The new columns of a call that hold a date turned into numbers or the row numbers, in order:
+    `Prepared.date_numbers`, which the engine records when the operation runs on a column that is a date at that
+    moment, and `Prepared.row_numbers`, each only when the table the call started from (`before`, its column names)
+    did not have it, so a row-number column the paste already had is none."""
+    return [name for name in dict.fromkeys([*date_numbers, *row_numbers]) if name not in before]
 
 
 ADDING_OPS = frozenset(
@@ -110,31 +108,34 @@ def renamed(names: Sequence[str], operations: Sequence[Operation]) -> list[str]:
     return current
 
 
-def emptied(
+def open_roles(
     before: list[Binding],
     roles: list[DataRole],
     previous: DatasetProfile,
     profile: DatasetProfile,
     hidden: Collection[str],
+) -> list[str]:
+    """The required roles a change of the data leaves open, as the carry (`carry_bindings`) of `before`, the bindings
+    on `previous`, leaves them on `profile` with the columns named in `hidden` left out."""
+    shown = profile.model_copy(update={"columns": [column for column in profile.columns if column.name not in hidden]})
+    return check_bindings(carry_bindings(before, roles, shown, previous), roles, shown).missing_roles
+
+
+def emptied(
+    before: list[Binding], roles: list[DataRole], previous: DatasetProfile, open_now: Collection[str]
 ) -> list[Emptied]:
-    """The required roles a change of the data leaves open that `before`, the bindings on `previous`, held, with the
-    columns of `profile` named in `hidden` left out: the carry (`carry_bindings`) on the table without them.
+    """The roles of `open_now` (`open_roles`: open after a change, its fills hidden) that `before`, the bindings on
+    `previous`, held.
 
     A role open before the change is none of them: it was not this change's doing. A role the carry fills with a column
-    that is not hidden (a rename's, an aggregate's own, a free column that fits) keeps a column and is none either."""
-    shown = profile.model_copy(update={"columns": [column for column in profile.columns if column.name not in hidden]})
-    carried = carry_bindings(before, roles, shown, previous)
+    that is not hidden (a rename's, an aggregate's own, a free column that fits) is not open and is none either."""
     open_before = set(check_bindings(before, roles, previous).missing_roles)
     held: dict[str, str] = {}
     for binding in before:
         role = resolve_role(binding.role, roles)
         if role is not None:
             held.setdefault(role.name, binding.column)
-    return [
-        Emptied(name, held[name])
-        for name in check_bindings(carried, roles, shown).missing_roles
-        if name not in open_before and name in held
-    ]
+    return [Emptied(name, held[name]) for name in open_now if name not in open_before and name in held]
 
 
 def held_bindings(bindings: Sequence[Binding], before: Collection[Binding], made: Collection[str]) -> list[Binding]:
