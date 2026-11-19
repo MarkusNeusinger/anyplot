@@ -439,8 +439,9 @@ This section is for the Gemini agent in the owner's agy session.
 
    ```markdown
    ## In plain words
-   What a person ran into before, what happens now, and how it is solved,
-   for a reader who does not know the code.
+   What was wrong or missing, and for whom; what happens now; and how it is
+   solved, for a reader who does not know the code, in as few sentences as
+   the change allows.
 
    **What you would notice:** who notices what, and where.
 

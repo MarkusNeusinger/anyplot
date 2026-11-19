@@ -18,13 +18,18 @@ plan_file: $2
   - A `## Plan` section linking to the plan/spec file if one exists
   - A `## Test plan` section with a checklist of how to verify the changes
 - **In plain words.** The body opens with `## In plain words`, before `## Summary`: at most 150 words for a reader
-  who does not know the code. It may be the only section the owner reads before he merges. The technical sections
-  stay as they are.
-  1. Write it last, as prose: what a person ran into before (not the title again), what happens now, and how it is
-     solved, in a few sentences. For a small change, one sentence and the next line are enough.
+  who does not know the code. That is a ceiling, not a target: use as few sentences as the change allows, and never
+  pad a small one. It may be the only section the owner reads before he merges, so a reader must be able to tell from
+  it alone what the change is for. It is also your check on the change: if you cannot say its purpose plainly in a
+  few sentences, the description is not the problem. Stop and look at the change again (is it one change, is its
+  purpose clear, should it be split) instead of writing around it. This holds for every kind of change: the site, the
+  chat, the pipeline and its prompts, workflows and CI, docs, infrastructure. The technical sections stay as they are.
+  1. Write it last, as prose: what was wrong or missing, and for whom (a visitor, the owner, a contributor, the
+     pipeline), not the title again; what happens now; and how it is solved, in a few sentences. For a small change,
+     one sentence and the next line are enough.
   2. Then one fixed line, `**What you would notice:**` who notices what, and where (the site, the chat, the admin
-     pages, logs, evals, CI). Write "nothing on the site" only when nothing a visitor meets changes, and say where
-     the change does show.
+     pages, the pipeline, logs, evals, CI, the docs). Write "nothing on the site" only when nothing a visitor meets
+     changes, and say where the change does show.
   3. Say what the merge hangs on: a switch that ships off, a path no test or run exercised, a call the owner still
      has to make.
   4. Claim no more than the technical sections back. An example is optional; take it from a test in this pull
@@ -70,7 +75,7 @@ branch state matches what the PR description claims.
 ```
 gh pr create --title "<pr_title>" --body "$(cat <<'EOF'
 ## In plain words
-<what a person ran into before, what happens now, and how it is solved; what the merge hangs on>
+<what was wrong or missing, and for whom; what happens now; how it is solved; what the merge hangs on>
 
 **What you would notice:** <who notices what, and where>
 
