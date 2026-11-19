@@ -729,6 +729,77 @@ READINGS: dict[str, Reading] = {
         None,
         "",
     ),
+    # A clock inside a cell with a day put together around it: what stands after the time made the day.
+    "clock_inside_month": Reading(
+        ["2026-03 10:00 / 05", "Nov 2026 10:00 / 05"], ["2026-03-05T10:00:00", "2026-11-05T10:00:00"], 0, True, None, ""
+    ),
+    "clock_inside_comma": Reading(
+        ["2026-03 10:00 , 10", "2026-04 11:00 , 12"], ["2026-03-10T10:00:00", "2026-04-12T11:00:00"], 0, True, None, ""
+    ),
+    "clock_inside_numbers": Reading(
+        ["01.03 10:00 2026", "15.03 11:00 2026"], ["2026-01-01T10:00:00", None], 1, True, None, ""
+    ),
+    "clock_before_date": Reading(
+        ["Sunday 10:00 2026-03-01", "Monday 11:00 2026-03-02"],
+        ["2026-01-03T10:00:00", "2026-02-03T11:00:00"],
+        0,
+        True,
+        "the day and month order",
+        "",
+    ),
+    "clock_inside_name": Reading(
+        ["1 10:00 March 2026", "March 11:00 15 2026"], ["2026-03-01T10:00:00", "2026-03-15T11:00:00"], 0, True, None, ""
+    ),
+    # Moments as programs write them: a day without its year, the clock, am or pm, the year, and a zone before or
+    # after the year.
+    "program_meridiem": Reading(
+        ["Sun Mar 1 10:00 PM 2026", "Sun Mar 15 11:30 p 2026"],
+        ["2026-03-01T22:00:00", "2026-03-15T23:30:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "program_utc_before_year": Reading(
+        ["Sun Mar 1 10:00:00 UTC 2026", "Mon Mar 2 11:30:00 UTC 2026"],
+        ["2026-03-01T10:00:00+00:00", "2026-03-02T11:30:00+00:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "program_offset_before_year": Reading(
+        ["Sun Mar 1 10:00:00 +0100 2026", "Mon Mar 2 11:30:00 +0100 2026"],
+        ["2026-03-01T10:00:00+01:00", "2026-03-02T11:30:00+01:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "program_day_first": Reading(
+        ["Sun 1 Mar 10:00:00 2026", "Mon 2 Mar 11:30:00 2026"],
+        ["2026-03-01T10:00:00", "2026-03-02T11:30:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "program_ordinal": Reading(
+        ["Sun Mar 1st 10:00:00 2026", "Mon Mar 2nd 11:30:00 2026"],
+        ["2026-03-01T10:00:00", "2026-03-02T11:30:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "program_no_weekday": Reading(
+        ["Mar 1 10:00:00 2026", "Mar 2 11:30:00.250 2026"],
+        ["2026-03-01T10:00:00", "2026-03-02T11:30:00.250000"],
+        0,
+        True,
+        None,
+        "",
+    ),
     # After an hour alone a lone letter is no am or pm (`10 p` may be ten pence): pandas read 22:00, written as the
     # day without its hour.
     "letter_after_hour": Reading(
@@ -966,6 +1037,17 @@ PASTED: dict[str, Pasted] = {
     "letter_glued_to_clock": Pasted("text", None, []),
     "letter_before_zone": Pasted("text", None, []),
     "letter_after_hour": Pasted("text", None, []),
+    "clock_inside_month": Pasted("text", None, []),
+    "clock_inside_comma": Pasted("text", None, []),
+    "clock_inside_numbers": Pasted("text", None, []),
+    "clock_before_date": Pasted("text", None, []),
+    "clock_inside_name": Pasted("text", None, []),
+    "program_meridiem": Pasted("text", None, []),
+    "program_utc_before_year": Pasted("text", None, []),
+    "program_offset_before_year": Pasted("text", None, []),
+    "program_day_first": Pasted("text", None, []),
+    "program_ordinal": Pasted("text", None, []),
+    "program_no_weekday": Pasted("text", None, []),
 }
 PASTE_CHANGED: dict[str, Pasted] = {
     # An offset past those in use (-12:00 to +14:00) is the end of a range, never an offset: the paste keeps the
@@ -1072,6 +1154,19 @@ CHANGED: dict[str, Reading] = {
     ),
     # A lone `a` or `p` after an hour alone is no am or pm: unreadable, where the hour pandas read was dropped.
     "letter_after_hour": Reading(READINGS["letter_after_hour"].cells, [None] * 4, 4),
+    # A clock inside a cell is a time only between a day without a year and the year, as programs write a moment:
+    # elsewhere pandas put a day together from what stands around it (5 March from `2026-03 10:00 / 05`, 1 January
+    # from `01.03 10:00 2026`, 3 January from `Sunday 10:00 2026-03-01`).
+    **{
+        name: Reading(READINGS[name].cells, [None, None], 2)
+        for name in (
+            "clock_inside_month",
+            "clock_inside_comma",
+            "clock_inside_numbers",
+            "clock_before_date",
+            "clock_inside_name",
+        )
+    },
     "utc_after_hour": _timed("utc_after_hour", ["2026-03-01T10:00:00+00:00", "2026-03-02T11:00:00+00:00"]),
     "gmt_after_am": _timed("gmt_after_am", ["2026-03-01T10:00:00+00:00", "2026-03-02T11:00:00+00:00"]),
 }
@@ -1439,6 +1534,29 @@ class TestStrictRule:
     def test_a_word_after_the_date_never_reaches_the_reader(self, cell: str, monkeypatch: pytest.MonkeyPatch) -> None:
         """A word after the date's last part is more after the date: the gate leaves the cell out before pandas, whose
         reader skips some words (`of`, `on`, `and`) and would read `2026 of` as the year 2026, rated certain."""
+        seen: list[str] = []
+        reader = prepare_module._inferred_dates
+
+        def spy(texts: pd.Series, day_first: bool, column: object) -> tuple[pd.Series, bool]:
+            seen.extend(text for text in texts if isinstance(text, str))
+            return reader(texts, day_first, column)
+
+        monkeypatch.setattr(prepare_module, "_inferred_dates", spy)
+
+        reading = converted([cell])
+
+        assert seen == []
+        assert reading == Reading([cell], [None], 1) and prepare_module._date_cell(cell) is None
+
+    @pytest.mark.parametrize(
+        "cell",
+        ["2026-03 10:00 / 05", "2026-03 10:00 , 10", "Nov 2026 10:00 / 05", "01.03 10:00 2026", "1 10:00 March 2026"],
+    )
+    def test_a_clock_inside_a_cell_counts_only_as_programs_write_it(
+        self, cell: str, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A clock inside a cell is a time only between a day without a year and the year (`Sun Mar 1 10:00:00
+        2026`); elsewhere the gate leaves the cell out before pandas, which put a day together around the clock."""
         seen: list[str] = []
         reader = prepare_module._inferred_dates
 

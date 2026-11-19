@@ -46,8 +46,10 @@ The operations:
   zone (`Z`, `+01:00`, ` UTC`; an offset in use, −12:00 to +14:00, `parse.utc_offset`, after
   an hour alone or with am or pm only as `Z` or `±HH:MM`, and a word only when pandas reads an
   offset from it, so `UTC` and `GMT` are zones and `10:00 of` or `10:00 Sun` is no time), or a
-  day with its clock between the day and the year as programs write it
-  (`Sun Mar 1 10:00:00 2026`). Anything else after the
+  moment as programs write it, a day without its year, the clock and the year, a zone before or
+  after the year (`Sun Mar 1 10:00:00 2026`, `Sun Mar 1 10:00:00 UTC 2026`). A clock inside a
+  cell in any other shape (`2026-03 10:00 / 05`, which pandas read as 5 March, `01.03 10:00
+  2026`) makes it unreadable, and so does anything else after the
   date (a second date such as `2026-03-01-2026-03-05`, more numbers such as `2026-03-01/05`, a
   number alone after a space, a sign and digits after a space, a range of times such as
   `2026-03-01 9:00-17:00` or `T10-12`, a time after a month or a year, a word after the date's
@@ -4566,7 +4568,12 @@ March and `1 March 23` the year 2023."""
 _TIME_SHAPED = _time_at_end("[0-9]{1,2}", "[0-9]{1,2}")
 """`_TIME_AFTER_DATE` with any two digits: `T25` and ` 10:60` have a time's shape though no clock shows them."""
 _INNER_CLOCK = re.compile(rf"\s{_HOUR}:{_MINUTE}(?::{_MINUTE}(?:[.,][0-9]{{1,9}})?)?(?=\s)")
-_ZONE_AT_END = re.compile(r"(?:\s(?P<offset>[Zz]|[+-][0-9]{2}(?::?[0-9]{2})?)|\s(?P<word>[^\W\d_]{1,5}))$")
+_ZONE_TEXT = r"[Zz]|[+-][0-9]{2}(?::?[0-9]{2})?|[^\W\d_]{1,5}"
+_CLOCK_THEN_YEAR = re.compile(
+    rf"(?:{_MERIDIEM}|{_LETTER_MERIDIEM})?(?:\s(?P<before>{_ZONE_TEXT}))?\s+[0-9]{{4}}(?:\s(?P<after>{_ZONE_TEXT}))?"
+)
+"""What follows a clock inside a cell as programs write a moment: am or pm, then the year of four digits, a zone before
+or after it (`10:00:00 2026`, `10:00 PM 2026`, `10:00:00 UTC 2026`, `10:00:00 2026 +0100`)."""
 _UTC = ("Z", "z")
 """UTC as a zone letter: RFC 3339 allows `z` as it allows `t`."""
 
@@ -4596,28 +4603,55 @@ def _zone_word(word: str) -> object:
 
 
 def _zone_word_read(zone: re.Match[str]) -> bool:
-    """Whether a time has no word in its zone's place (`_ZONE`, `_ZONE_AT_END`) or a word pandas reads a UTC offset
-    from (`_zone_word`). A word it skips leaves a time read by guess, the word dropped, and a zone it does not know a
-    time it cannot read: either cell is no date and a time, so it is unreadable before the column is read."""
+    """Whether a time has no word in its zone's place (`_ZONE`) or a word pandas reads a UTC offset from
+    (`_zone_word`). A word it skips leaves a time read by guess, the word dropped, and a zone it does not know a time
+    it cannot read: either cell is no date and a time, so it is unreadable before the column is read."""
     word = zone.group("word")
     return word is None or isinstance(_zone_word(word), timedelta)
 
 
+def _zone_text_fits(zone: str) -> bool:
+    """Whether a zone beside the year of a program's moment is one: `Z`, an offset in use (`parse.utc_offset`) or a
+    word pandas reads an offset from (`_zone_word`)."""
+    if zone in _UTC:
+        return True
+    if zone[0] in "+-":
+        return utc_offset(zone) is not None
+    return isinstance(_zone_word(zone), timedelta)
+
+
+def _day_without_year(text: str) -> bool:
+    """Whether a text names a day and no year, as programs write it before the clock: a month name and the day's
+    number of one or two digits (`Mar 1`, `1 Mar`, `Mar 1st`), a weekday or another word beside them (`Sun Mar 1`)."""
+    numbers = months = 0
+    for part in _DATE_PARTS.split(text.strip()):
+        if not part:
+            continue
+        if (number := _NUMBER_PART.fullmatch(part)) is not None:
+            if len(number.group(1)) > 2:
+                return False
+            numbers += 1
+        elif _WORD_PART.fullmatch(part):
+            months += month_number(part) is not None
+        else:
+            return False
+    return numbers == 1 and months == 1
+
+
 def _time_inside(text: str) -> bool:
-    """Whether a cell is a day with its clock between the day and the year, as programs write a moment
-    (`Sun Mar 1 10:00:00 2026`, also with a zone after the year: `Sun Mar 1 10:00:00 2026 +0100`)."""
+    """Whether a cell is a moment as programs write it, its clock inside the date: a day without its year
+    (`_day_without_year`), the clock, am or pm, and the year, with a zone before or after the year
+    (`_CLOCK_THEN_YEAR`: `Sun Mar 1 10:00:00 2026`, `Sun Mar 1 10:00:00 UTC 2026`, `Sun Mar 1 10:00:00 2026 +0100`).
+    A clock anywhere else inside a cell is no time, and the cell no date: pandas put a day together around the clock
+    (`2026-03 10:00 / 05` as 5 March, `01.03 10:00 2026` as 1 January, `Sunday 10:00 2026-03-01` as 3 January)."""
     clock = _INNER_CLOCK.search(text)
     if clock is None:
         return False
-    rest = text[: clock.start()] + text[clock.end() :]
-    zone = _ZONE_AT_END.search(rest)
-    if zone is not None:
-        if zone.group("offset") not in (None, *_UTC) and utc_offset(zone.group("offset")) is None:
-            return False
-        if not _zone_word_read(zone):
-            return False
-        rest = rest[: zone.start()]
-    return _date_shape(rest) == "day"
+    after = _CLOCK_THEN_YEAR.fullmatch(text, clock.end())
+    if after is None or (after.group("before") and after.group("after")):
+        return False
+    zone = after.group("before") or after.group("after")
+    return (zone is None or _zone_text_fits(zone)) and _day_without_year(text[: clock.start()])
 
 
 _DATE_PARTS = re.compile(r"[-./,\s]+")
