@@ -34,11 +34,13 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
   way"); list the PRs again when it does.
 - **When Dependabot doesn't answer the rebase, check the merge yourself.** On 2026-11-18, #13099
   and #13132 got no reaction to `@dependabot rebase` in over 30 minutes. After about 15 minutes,
-  stop waiting: in a scratch worktree on `origin/main`, `git merge` the PR head, which is the tree
-  GitHub's squash produces. For `uv.lock`, run `uv lock --check`. For `app/`, run `yarn install
-  --frozen-lockfile` (the repository uses yarn classic 1.22, which ignores `--immutable`), confirm
-  that `git status` shows no lock change, then run `yarn lint` and `yarn build`. A clean result
-  lets you merge the PR without the rebase.
+  stop waiting: in a scratch worktree on a freshly fetched `origin/main`, run `git fetch origin
+  pull/<num>/head` and `git merge FETCH_HEAD`, which gives the tree GitHub's squash produces. For
+  `uv.lock`, run `uv lock --check` and the tests of what uses the package. For `app/`, run CI's
+  frontend gate in `app/`: `yarn install --frozen-lockfile` (the repository uses yarn classic
+  1.22, which ignores `--immutable`; confirm that `git status` shows no lock change), `yarn lint`,
+  `yarn fm:check`, `yarn type-check`, `yarn test`, and `yarn build`. A clean result lets you
+  merge the PR without the rebase.
 - **`CI: Image` is not a required check.** A PR that is red only in "Build renderer image and
   render through the harness" shows `UNSTABLE`, not `BLOCKED`, so auto-merge would merge it. Fix
   it first, and merge by hand once that check is green on the new head. A `js-render-minor` bump
@@ -98,9 +100,11 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
 4. When the last PR has merged and its deploys finished, run the site smoke once more
    (`/open-pr` skill §4). A failure is an incident: report it at once with the merges since the
    last passing run.
-5. Check `main`'s own CI on the last merge's SHA: `gh run list --branch main --json
-   headSha,workflowName,status,conclusion`. Each merge cancels the runs of the one before, so
-   only the last merge's runs have tested the combined state; a red one blocks "done". Then
+5. Check `main`'s own CI on the last merge: take its SHA (`gh pr view <num> --json mergeCommit
+   --jq .mergeCommit.oid`), then run `gh run list --commit <sha> --event push --json
+   workflowName,status,conclusion`. Each merge cancels the runs of the one before, so only the
+   last merge's runs have tested the combined state. A run still in progress is reported as
+   pending, never as green, and a red one blocks "done". Then
    **stop — do not leave a background monitor running.** Orphaned monitors fire notifications
    into later sessions. Report the list with each PR's end state instead.
 
