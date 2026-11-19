@@ -42,6 +42,7 @@ from agents.evals.matrix import (
     parse_events,
     run_matrix,
 )
+from agents.evals.replay import NO_MODEL_CALL
 from agents.evals.report import Flip, summarize, summary_markdown
 from agents.main import Runtime
 
@@ -58,8 +59,13 @@ BAD_PLAN: dict[str, Any] = {
 EMPTY_PLAN: dict[str, Any] = {"edits": [], "changes": []}
 
 
+def fixture_cases(selector: str) -> list:
+    """The committed fixture cases `selector` names; the scripted models of these tests call no real model."""
+    return select_cases(load_cases(promoted_dir=Path("/nonexistent")), selector, routes=NO_MODEL_CALL)
+
+
 def two_fixtures() -> list:
-    cases = select_cases(load_cases(promoted_dir=Path("/nonexistent")), "bar-grouped-seaborn,scatter-basic-matplotlib")
+    cases = fixture_cases("bar-grouped-seaborn,scatter-basic-matplotlib")
     assert [case.case_id for case in cases] == ["bar-grouped-seaborn", "scatter-basic-matplotlib"]
     return cases
 
@@ -504,7 +510,7 @@ async def test_each_view_fixture_reaches_the_adapter_through_the_app(
             "adapter": [{"json": BAD_PLAN}, {"json": BAD_PLAN}],
         },
     )
-    (case,) = select_cases(load_cases(promoted_dir=Path("/nonexistent")), case_id)
+    (case,) = fixture_cases(case_id)
 
     result = await run_matrix(
         [case], config(tmp_path, cases=case_id), services=services, runtime=runtime(), echo=lambda _: None
@@ -623,7 +629,7 @@ async def test_gate_failures_and_a_padded_canvas_do_not_pass(
             "reviewer": [],
         },
     )
-    cases = select_cases(load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-matplotlib")
+    cases = fixture_cases("scatter-basic-matplotlib")
 
     result = await run_matrix(
         cases, config(tmp_path, cases="scatter-basic-matplotlib"), services=services, runtime=runtime(), echo=print
@@ -952,9 +958,7 @@ async def test_the_preflight_passes_over_a_muix_file_written_for_muix_7(
     bundle step until the adapter rewrites it, so the preflight renders the library's next selected case whose file
     bundles as it stands, and the other libraries keep their first case. The preflight checks the renderer, it
     evaluates no case."""
-    cases = select_cases(
-        load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-muix-*,violin-basic-muix-n12,scatter-basic-d3-n12"
-    )
+    cases = fixture_cases("scatter-basic-muix-*,violin-basic-muix-n12,scatter-basic-d3-n12")
     assert [case.case_id for case in cases][:2] == ["scatter-basic-d3-n12", "scatter-basic-muix-date"]
     assert MUIX_7_IMPORT in cases[1].snapshot().code
 
@@ -976,7 +980,7 @@ async def test_a_selection_of_muix_7_files_alone_passes_the_preflight_through_th
     from agents.evals import cases as cases_module
     from agents.evals.make_fixtures import LIBRARY_SMOKE
 
-    selected = select_cases(load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-muix-*")
+    selected = fixture_cases("scatter-basic-muix-*")
     assert len(selected) == 6 and LIBRARY_SMOKE["muix"] == ("pie-basic", "renamed")
     lines: list[str] = []
 

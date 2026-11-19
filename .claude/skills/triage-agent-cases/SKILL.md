@@ -44,6 +44,10 @@ inputs carry over (data shape, bindings, request, expected outcome).
   structural fix over symptomatic fix).
 - **Replays cost money.** A harness run (`agents.evals.matrix`) or a live
   session calls Vertex. Run one only with the owner's OK and a stated budget.
+  A promoted case sent before 2026-11-19 that the admin lane did not serve
+  replays only on Claude through Vertex AI in `eu`, and the harness refuses any
+  other route for it
+  (`agents/README.md`, "Promoted cases keep to their route").
 - **Never join telemetry to a case.** The telemetry's session hash is salted
   on purpose; do not join by time either (`docs/reference/agent-telemetry.md`).
 

@@ -21,9 +21,16 @@ sources:
   data (`origin="promoted"`). `agents/evals/sync_cases.py` pulls the promoted cases from
   the private bucket and removes the retired ones; `agents/evals/import_case.py` writes
   one by hand from a saved session or a copied case directory. The harness reads the
-  directory when it exists.
+  directory when it exists. Such a case's `case.json` may record `sent_at`, when its
+  feedback was sent (the manifest's `created_at`, `YYYY-MM-DDTHH:MM:SSZ`), `lane`, the
+  BFF lane that served its chat (`admin` or `public`), and `owner_chat: true` for a case
+  that holds the operator's own data; a case sent before 2026-11-19, or without
+  `sent_at`, replays only on Claude through Vertex AI in `eu` unless its lane is `admin`
+  or it holds the operator's own data (`agents/evals/replay.py`).
 
-`select_cases` takes the harness's `--cases` value: `smoke` (the cases tagged `smoke`:
+`select_cases` takes the harness's `--cases` value and the routes of every model the
+caller sends the selected cases to, and refuses a pinned case those routes would take
+elsewhere (`replay.check`). The value is `smoke` (the cases tagged `smoke`:
 one generated matplotlib or seaborn case per spec, one plotnine and one altair case since
 2026-10-25, one pygal and one lets-plot case since 2026-10-26, one ggplot2 case since
 2026-10-29, one makie case and one each for chartjs, d3, echarts and highcharts since
@@ -44,6 +51,7 @@ import fnmatch
 import json
 import re
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal, get_args
 
@@ -52,6 +60,7 @@ from agents.anyplot.language import LANGUAGE_PATTERN, is_valid
 from agents.anyplot.schemas import Binding, ShownGroup, Theme
 from agents.anyplot.session_state import CatalogueSnapshot
 from agents.anyplot.settings import FIXTURE_PATTERN
+from agents.evals import replay
 from core.constants import SUPPORTED_LIBRARIES
 
 
@@ -145,6 +154,14 @@ class EvalCase:
     operations that all land in the view; empty for a case whose plot draws every row."""
     view_checks: ViewChecks | None = None
     """What the runs under `before_view` must show; None checks the drawn rows alone (`ViewChecks`)."""
+    sent_at: datetime | None = None
+    """When a promoted case's feedback was sent (`sent_at` in `case.json`); None when the case does not record it,
+    which pins it (`replay.is_pinned`)."""
+    lane: replay.Lane | None = None
+    """The BFF lane that served the case's chat (`lane` in `case.json`); None when the case does not record it. A case
+    of the `admin` lane may replay anywhere (`replay.is_pinned`)."""
+    owner_chat: bool = False
+    """`owner_chat: true` in `case.json`: the case holds the operator's own data and may replay anywhere."""
     snapshot_file: Path | None = field(default=None, repr=False)
 
     def snapshot(self) -> CatalogueSnapshot:
@@ -201,6 +218,13 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
     if view_checks is not None and view_checks.clear and change_request is not None:
         # The clearing is the case's follow-up turn; a typed follow-up as well would leave open which one it clears.
         raise CaseError(f"{directory}/case.json: view_checks.clear and a change_request.txt exclude each other")
+    sent_at = _sent_at(raw.get("sent_at"), directory)
+    lane = raw.get("lane")
+    if lane is not None and lane not in replay.LANES:
+        raise CaseError(f"{directory}/case.json: lane must be one of {', '.join(replay.LANES)}")
+    owner_chat = raw.get("owner_chat", False)
+    if not isinstance(owner_chat, bool):
+        raise CaseError(f"{directory}/case.json: owner_chat must be true or false")
     snapshot_file = directory / "snapshot.json"
     perturbation = raw.get("perturbation")
     return EvalCase(
@@ -222,8 +246,21 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
         before_operations=before_operations,
         before_view=before_view,
         view_checks=view_checks,
+        sent_at=sent_at,
+        lane=lane,
+        owner_chat=owner_chat,
         snapshot_file=snapshot_file if snapshot_file.is_file() else None,
     )
+
+
+def _sent_at(value: Any, directory: Path) -> datetime | None:
+    """`sent_at` of `case.json` as an aware UTC time; a value in another form is a broken case, not a missing one."""
+    if value is None:
+        return None
+    try:
+        return replay.parse_sent_at(value)
+    except ValueError as exc:
+        raise CaseError(f"{directory}/case.json: sent_at must be a UTC time as YYYY-MM-DDTHH:MM:SSZ") from exc
 
 
 def _before_operations(value: Any, directory: Path) -> tuple[tuple[dict[str, Any], ...], ...]:
@@ -383,13 +420,22 @@ def load_cases(fixtures_dir: Path = CASES_DIR, promoted_dir: Path = PROMOTED_DIR
     return [cases[case_id] for case_id in sorted(cases)]
 
 
-def select_cases(cases: list[EvalCase], selector: str) -> list[EvalCase]:
-    """The cases `--cases` names: `smoke`, `full` (all but the stress cases), `stress`, or comma-separated globs."""
+def select_cases(cases: list[EvalCase], selector: str, *, routes: replay.Routes) -> list[EvalCase]:
+    """The cases `--cases` names: `smoke`, `full` (all but the stress cases), `stress`, or comma-separated globs.
+
+    `routes` is every model route the caller sends the selected cases' data to (`replay.routes_of` for a matrix
+    run), or `replay.NO_MODEL_CALL` for a caller that calls no model. A pinned promoted case among the selected that a
+    route would take elsewhere raises `replay.ReplayRefused`: every tool that selects eval cases passes this check
+    before its first model call.
+    """
     if selector == "full":
-        return [case for case in cases if STRESS_TAG not in case.tags]
-    if selector == "smoke":
-        return [case for case in cases if SMOKE_TAG in case.tags]
-    if selector == STRESS_TAG:
-        return [case for case in cases if STRESS_TAG in case.tags]
-    patterns = [pattern.strip() for pattern in selector.split(",") if pattern.strip()]
-    return [case for case in cases if any(fnmatch.fnmatchcase(case.case_id, pattern) for pattern in patterns)]
+        picked = [case for case in cases if STRESS_TAG not in case.tags]
+    elif selector == "smoke":
+        picked = [case for case in cases if SMOKE_TAG in case.tags]
+    elif selector == STRESS_TAG:
+        picked = [case for case in cases if STRESS_TAG in case.tags]
+    else:
+        patterns = [pattern.strip() for pattern in selector.split(",") if pattern.strip()]
+        picked = [case for case in cases if any(fnmatch.fnmatchcase(case.case_id, pattern) for pattern in patterns)]
+    replay.check(picked, routes)
+    return picked

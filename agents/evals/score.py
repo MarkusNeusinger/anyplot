@@ -25,6 +25,15 @@ order (`attempt_renders`). The first render is the first one of the first turn. 
 shipped render is the one of the shipped attempt in the last turn, counted over the
 attempts that reached the renderer (an attempt that failed its check renders nothing).
 When both are the same render it is scored once and counts for both.
+
+A promoted case's kept render, code and data are that case's data, so the scorer applies the
+replay rule (`agents/evals/replay.py`) to the records it is about to score, before the probe
+and before it reads any kept file: a record of a promoted case sent before 2026-11-19 that is
+neither from the admin lane nor marked as the operator's own data, or one that names no origin
+or send time (every report from before the rule), may be scored only on Claude through Vertex
+AI in `eu`. Another `--location` or `--transport claude-cli` then ends
+with exit code 2 and names each pinned case; `--skip-pinned` leaves their runs out and the
+scores' summary counts them.
 """
 
 import argparse
@@ -52,6 +61,7 @@ from agents.anyplot.scoring import (
     system_prompt,
     user_text,
 )
+from agents.evals.replay import ReplayRefused, Route, check, record_facts
 
 
 DEFAULT_MODEL = "claude-opus-5-5"
@@ -530,6 +540,14 @@ def markdown(summary: dict[str, Any]) -> str:
         lines += [f"- {item['run']}: {item['score']}" for item in summary["clean_gates_low_score"]]
     if summary["score_errors"]:
         lines += ["", f"Scoring errors: {len(summary['score_errors'])}"]
+    left_out = summary.get("pinned_left_out") or []
+    if left_out:
+        count = "1 pinned promoted case" if len(left_out) == 1 else f"{len(left_out)} pinned promoted cases"
+        lines += [
+            "",
+            f"Left out: {count} (--skip-pinned), which may be scored only on Claude through Vertex AI in eu: "
+            f"{', '.join(left_out)}",
+        ]
     return "\n".join(lines) + "\n"
 
 
@@ -557,6 +575,11 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--budget-usd", type=float, help="stop before the list-price spend could pass this")
     parser.add_argument(
         "--sample", type=positive_int, help="score this many runs (1 or more), spread evenly over the report's runs"
+    )
+    parser.add_argument(
+        "--skip-pinned",
+        action="store_true",
+        help="leave out the runs of promoted cases that may be scored only on Claude through Vertex AI in eu",
     )
     parser.add_argument("--estimate-only", action="store_true", help="print the job count and cost estimate, then stop")
     parser.add_argument(
@@ -586,6 +609,29 @@ def spread(items: list[Any], count: int) -> list[Any]:
     return [items[int(index * step)] for index in range(count)]
 
 
+def scorer_route(args: argparse.Namespace) -> Route:
+    """Where the scoring calls go: Claude's Vertex AI client (`make_anthropic_client`) at `--location`, or the CLI."""
+    return Route("scorer", args.model, "anthropic-vertex", args.transport, args.location)
+
+
+def admit(records: list[dict[str, Any]], route: Route, *, skip_pinned: bool) -> tuple[list[dict[str, Any]], list[str]]:
+    """The records the scorer may send on `route`, and the case ids `skip_pinned` left out.
+
+    Each record's own `origin`, `sent_at`, `lane` and `owner_chat` decide (`replay.record_facts`), never the case's
+    current directory: a case retired since the run has left `.cases/`, and its kept files have not. `ReplayRefused` when a
+    pinned record would leave the pin and `skip_pinned` is off.
+    """
+    try:
+        check([record_facts(record) for record in records], [route])
+    except ReplayRefused as refused:
+        if not skip_pinned:
+            raise
+        print(refused.left_out(), file=sys.stderr)
+        left_out = [case.case_id for case in refused.cases]
+        return [record for record in records if str(record.get("case_id")) not in left_out], left_out
+    return records, []
+
+
 def main(argv: list[str] | None = None) -> int:
     from agents.evals.cases import load_cases
 
@@ -601,6 +647,14 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if args.sample is not None:
         records = spread(records, args.sample)
+    try:
+        records, left_out = admit(records, scorer_route(args), skip_pinned=args.skip_pinned)
+    except ReplayRefused as exc:
+        print(f"refused: {exc}", file=sys.stderr)
+        return 2
+    if not records:
+        print("--skip-pinned left out every run, so nothing is left to score", file=sys.stderr)
+        return 2
     cases = {case.case_id: case for case in load_cases()}
     jobs: list[tuple[Target, ScoreRequest]] = []
     for record in records:
@@ -631,6 +685,7 @@ def main(argv: list[str] | None = None) -> int:
     scored = outcome.scored
     summary = summarize(scored, records, args.model)
     summary["stopped"] = outcome.stopped
+    summary["pinned_left_out"] = left_out
     out = {
         "report": args.report.name,
         "summary": summary,

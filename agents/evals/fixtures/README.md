@@ -10,6 +10,8 @@ Each directory under `cases/` is one case of the regression harness (`agents/eva
 | `change_request.txt` | Optional: a follow-up message the harness sends after the plot is created |
 | `standin.txt` | Stress cases only, optional: the middle of a hand-written working form, a stand-in for the adapter's answer that the static stage renders without a model |
 
+A promoted feedback case's `case.json` (in the git-ignored `agents/evals/.cases/`, never here) may also carry `sent_at`, when its feedback was sent, as `YYYY-MM-DDTHH:MM:SSZ` (the manifest's `created_at`), `lane` (`admin` or `public`, the lane that served its chat), and `owner_chat: true`, which only `import_case.py --owner-chat` writes. A promoted case sent before 2026-11-19, or without `sent_at`, replays only on Claude through Vertex AI in `eu` unless its lane is `admin` or it carries `owner_chat`; a fixture replays on any route (`agents/evals/replay.py`).
+
 A stress case's `case.json` also carries `bound_expected` (the gate, limit or error that must bound it), `needs_model`, `static` and `render` (what the static stage must measure), and for an injection case `marker`; `agents/evals/make_stress.py` documents each field.
 
 There are 938 cases:

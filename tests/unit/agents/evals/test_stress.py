@@ -23,6 +23,7 @@ from agents.anyplot.settings import get_settings
 from agents.evals import matrix
 from agents.evals.cases import CaseError, EvalCase, load_cases, select_cases
 from agents.evals.matrix import EXIT_OK, EXIT_OUTAGE, configure, parse_args
+from agents.evals.replay import NO_MODEL_CALL
 from agents.evals.stress import (
     StaticContext,
     compose_standin,
@@ -43,7 +44,8 @@ HEADERS = {"X-Anyplot-User": USER, "X-Request-Id": "req-stress"}
 
 @pytest.fixture(scope="module")
 def stress_cases() -> dict[str, EvalCase]:
-    return {case.case_id: case for case in select_cases(load_cases(promoted_dir=Path("/nonexistent")), "stress")}
+    cases = load_cases(promoted_dir=Path("/nonexistent"))
+    return {case.case_id: case for case in select_cases(cases, "stress", routes=NO_MODEL_CALL)}
 
 
 def context(backend: FakeBackend | None = None, renderer: str = "fake") -> StaticContext:

@@ -6,6 +6,7 @@ import json
 import re
 import shutil
 import statistics
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ from agents.anyplot.dev_fixture import CASES_DIR
 from agents.anyplot.grounding import GROUP_LIMITS
 from agents.evals.cases import CaseError, FollowUpChecks, ViewChecks, load_case, load_cases, select_cases
 from agents.evals.matrix import holds_token, view_tokens
+from agents.evals.replay import NO_MODEL_CALL
 
 
 def _write(directory: Path, case: dict, data: str = "a,b\n1,2\n") -> Path:
@@ -88,18 +90,21 @@ def test_the_german_message_case_sets_the_language_by_its_first_typed_message() 
 def test_selection_by_smoke_full_and_globs() -> None:
     cases = load_cases(promoted_dir=Path("/nonexistent"))
 
-    smoke = select_cases(cases, "smoke")
+    def select(selector: str) -> list:
+        return select_cases(cases, selector, routes=NO_MODEL_CALL)
+
+    smoke = select("smoke")
     assert len(smoke) == 25 and all("smoke" in case.tags for case in smoke)
-    full = select_cases(cases, "full")
+    full = select("full")
     assert len(full) == 915 and full == [case for case in cases if "stress" not in case.tags]
-    assert [case.case_id for case in select_cases(cases, "*-view-*")] == sorted(VIEW_CASES)
-    stress = select_cases(cases, "stress")
+    assert [case.case_id for case in select("*-view-*")] == sorted(VIEW_CASES)
+    stress = select("stress")
     assert len(stress) == 23 and all("stress" in case.tags for case in stress)
-    assert len(select_cases(cases, "stress-compute-*")) == 3
-    assert len(select_cases(cases, "*-seaborn-n5000")) == 10
-    picked = select_cases(cases, "pie-basic-*, scatter-basic-matplotlib")
+    assert len(select("stress-compute-*")) == 3
+    assert len(select("*-seaborn-n5000")) == 10
+    picked = select("pie-basic-*, scatter-basic-matplotlib")
     assert len(picked) == 91 and picked[-1].case_id == "scatter-basic-matplotlib"  # 90 pie-basic cases, 15 libraries
-    assert select_cases(cases, "nothing-*") == []
+    assert select("nothing-*") == []
 
 
 def test_a_case_reads_its_fields_and_builds_its_snapshot(tmp_path: Path) -> None:
@@ -116,6 +121,40 @@ def test_a_case_reads_its_fields_and_builds_its_snapshot(tmp_path: Path) -> None
     assert case.language is None
     snapshot = case.snapshot()
     assert snapshot.spec_id == "scatter-basic" and "THEME" in snapshot.code
+    assert (case.sent_at, case.lane, case.owner_chat) == (None, None, False)
+
+
+def test_a_promoted_case_reads_when_it_was_sent_its_lane_and_the_owner_mark(tmp_path: Path) -> None:
+    fields = {**VALID, "sent_at": "2026-11-18T23:59:59Z", "lane": "public", "owner_chat": True}
+
+    case = load_case(_write(tmp_path / "sent", fields), "promoted")
+
+    assert case.sent_at == datetime(2026, 11, 18, 23, 59, 59, tzinfo=UTC)
+    assert (case.lane, case.owner_chat) == ("public", True)
+    assert load_case(_write(tmp_path / "admin", {**VALID, "lane": "admin"}), "promoted").lane == "admin"
+
+
+@pytest.mark.parametrize("value", ["owner", "Admin", "adm_0123456789abcdef", 1])
+def test_a_lane_is_admin_or_public(tmp_path: Path, value: object) -> None:
+    """A closed value: never a `user_hash`, never a near miss."""
+    with pytest.raises(CaseError, match="lane must be one of admin, public"):
+        load_case(_write(tmp_path / "odd", {**VALID, "lane": value}), "promoted")
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["2026-11-18T23:59:59", "2026-11-18T23:59:59+00:00", "2026-11-19T00:59:59+01:00", "2026-11-18 23:59:59Z", ""],
+)
+def test_a_send_time_in_another_form_is_refused_never_guessed(tmp_path: Path, value: str) -> None:
+    """Only the manifest's own form is a send time; a naive time or another offset is a broken case."""
+    with pytest.raises(CaseError, match="sent_at must be a UTC time"):
+        load_case(_write(tmp_path / "odd", {**VALID, "sent_at": value}), "promoted")
+
+
+@pytest.mark.parametrize("value", ["true", 1, None])
+def test_the_owner_mark_is_true_or_false(tmp_path: Path, value: object) -> None:
+    with pytest.raises(CaseError, match="owner_chat must be true or false"):
+        load_case(_write(tmp_path / "odd", {**VALID, "owner_chat": value}), "promoted")
 
 
 def test_a_case_may_take_data_steps_before_its_plot(tmp_path: Path) -> None:
