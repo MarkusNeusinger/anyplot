@@ -184,6 +184,9 @@ def load_case(directory: Path, origin: Origin) -> EvalCase:
 
     `origin` has no default: where a case lies must never decide what it is, so a caller names it, and a case under the
     fixtures that carries what only an imported case carries is refused rather than run as a synthetic one.
+
+    It reads the directory it is given: the refusal of the real promoted directory under test sits where a tool takes
+    the directory of all promoted cases (`load_cases`, the import, the sync), not here.
     """
     case_id = directory.name
     if not _CASE_ID.fullmatch(case_id):

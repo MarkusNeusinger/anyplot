@@ -36,17 +36,21 @@
   the promoted runs of an older report, and reads only the cases its admitted
   runs name. A test in the API's tree holds the two lane forms to the routes
   that write them. (#13200)
-- **No test reads the promoted cases any more.** Four eval tests (two static
-  runs of `matrix.main`, its no-match exit and a preflight's smoke pick)
-  called `load_cases()` with its default, which was bound at import to the
+- **No test reaches the promoted cases by accident any more.** Four eval
+  tests (two static runs of `matrix.main`, its no-match exit and a
+  preflight's smoke pick) called `load_cases()` with its default, which was
+  bound at import to the
   real `agents/evals/.cases/`, so in a checkout that holds promoted cases a
   test run read a visitor's data into memory, and four tests outside the eval
   folder walked all of `agents/` with `rglob` and so listed its entries. The
   default is now read on each call (`import_case.promoted_cases_dir`), an
   autouse fixture points it at an empty temporary directory for every eval
-  test, and `import_case.guard_promoted_dir` refuses the real directory,
-  through the default or a directory a caller names, in any spelling
-  (relative, with `..`, a string, a symbolic link, a path inside it), in any
-  process that has imported pytest or that a test started
-  (`PYTEST_CURRENT_TEST`), before anything reads it. The four walks read the
-  tracked files from `git ls-files` instead. (#13200)
+  test, and `import_case.guard_promoted_dir` refuses the real directory
+  wherever a tool takes the directory of the promoted cases (the loader's
+  default or a directory a caller names, the import and the sync), in any
+  spelling (relative, with `..`, a string, a symbolic link, a path inside
+  it), in any process that has imported pytest or that a test started
+  (`PYTEST_CURRENT_TEST`), before that tool reads it. The guard sits at those
+  entrances, not at the reader of a single case: a test that hands
+  `cases.load_case` one case directory by name is not refused. The four walks
+  read the tracked files from `git ls-files` instead. (#13200)
