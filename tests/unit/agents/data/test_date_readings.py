@@ -1550,7 +1550,15 @@ class TestStrictRule:
 
     @pytest.mark.parametrize(
         "cell",
-        ["2026-03 10:00 / 05", "2026-03 10:00 , 10", "Nov 2026 10:00 / 05", "01.03 10:00 2026", "1 10:00 March 2026"],
+        [
+            "2026-03 10:00 / 05",
+            "2026-03 10:00 , 10",
+            "Nov 2026 10:00 / 05",
+            "01.03 10:00 2026",
+            "1 10:00 March 2026",
+            "Sun Mar 1 10:00:00 2026 / 05",
+            "Sun Mar 1 10:00:00 2026 2027",
+        ],
     )
     def test_a_clock_inside_a_cell_counts_only_as_programs_write_it(
         self, cell: str, monkeypatch: pytest.MonkeyPatch
