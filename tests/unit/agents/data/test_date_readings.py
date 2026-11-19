@@ -46,15 +46,10 @@ FORMS = (
     "the chat reads 2026-03-01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a time, "
     "and months such as 2026-03 or Mar 2026"
 )
-
-
-def slash_order(unread: int) -> str:
-    """The clause of `unread` slash dates whose column settles no single order of day and month."""
-    return (
-        f"its slash dates settle no single order of day and month, so {unread} of them "
-        f"{'is' if unread == 1 else 'are'} not read; a date_format of DD/MM/YYYY or MM/DD/YYYY sets the order for a "
-        "column of slash dates only"
-    )
+SLASH_ORDER = (
+    "its slash dates settle no single order of day and month; a date_format of DD/MM/YYYY or MM/DD/YYYY sets one only "
+    "for a column of slash dates"
+)
 
 
 @dataclass(frozen=True)
@@ -511,11 +506,27 @@ class TestEachCellInItsOwnForm:
         cells = [f"2026-03-{day:02d}" for day in range(1, 11)]
         reading = converted([*cells, "03/04/2026", "05/05/2026"])
         conversion = _date_conversion(pd.Series([*cells, "03/04/2026"], dtype="str", name="d"), None)
+        dry = dry_run(pd.DataFrame({"d": pd.Series([*cells, "03/04/2026"], dtype="str")}), "d", "datetime")
 
         assert reading["values"][-2:] == [None, "2026-05-05"] and reading["failed"] == 1
         assert reading["guess"] is None and conversion.guess is None and conversion.order is None
         assert conversion.unread == {"slash_order": 1}
         assert read_dates([*cells, "03/04/2026"]).guessed is False
+        # An open role proposes it as for any unread cell: one cell missing, no order named as a guess.
+        assert dry is not None and (dry.read, dry.present, dry.guess) == (10, 11, None)
+
+    def test_the_slash_reason_shows_on_an_in_place_change_line_beside_a_long_name(self) -> None:
+        cells = [f"2026-03-{day:02d}" for day in range(1, 11)]
+        column = "Date of the reading at the eastern station"
+        text = f"{column},v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate([*cells, "03/04/2026"]))
+        operation = {"op": "set_type", "column": column, "type": "datetime"}
+
+        [line] = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation])).changes
+
+        assert line == (
+            f"{column}: 10 cells read as dates (format inferred, year first), 1 cell could not be read as a date and is "
+            f"now missing; {SLASH_ORDER}"
+        )
 
     def test_the_slash_reason_of_a_mix_is_the_reason_of_a_column_that_settles_both_orders(self) -> None:
         """Two settled orders, or none beside cells of another form: one reason, one sentence, whose format advice
@@ -528,10 +539,16 @@ class TestEachCellInItsOwnForm:
                 apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
 
             unread = len(cells) - 1 if "15/03/2026" in cells else 1
-            assert caught.value.message == (
-                f"column 'd': {unread} of 3 cells cannot be read as dates; {slash_order(unread)}"
-            )
+            assert caught.value.message == f"column 'd': {unread} of 3 cells cannot be read as dates; {SLASH_ORDER}"
             assert caught.value.unread == {"slash_order": unread}
+
+    def test_a_slash_date_left_unread_beside_zoned_times_is_no_cell_without_an_offset(self) -> None:
+        """The zone refusal counts the cells that read: a slash date unread for its order leaves the zoned times alone,
+        which convert, the slash date missing with its reason, as any unread cell beside them."""
+        cells = [f"2026-03-{day:02d}T10:00:00+01:00" for day in range(1, 11)]
+        reading = converted([*cells, "03/04/2026"])
+
+        assert reading["values"][-2:] == ["2026-03-10T10:00:00+01:00", None] and reading["failed"] == 1
 
     @pytest.mark.parametrize(
         "cells",
@@ -868,7 +885,7 @@ class TestMessages:
         with pytest.raises(PrepareError) as caught:
             apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
 
-        assert caught.value.message == f"column 'd': 3 of 3 cells cannot be read as dates; {slash_order(3)}"
+        assert caught.value.message == f"column 'd': 3 of 3 cells cannot be read as dates; {SLASH_ORDER}"
         assert caught.value.unread == {"slash_order": 3}
 
     def test_days_that_do_not_exist_are_refused_with_their_count(self) -> None:

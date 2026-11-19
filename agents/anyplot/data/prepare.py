@@ -1820,14 +1820,13 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
     dates = _to_dates(series, date_format)
     listed = dates.listed
     order: str | None = None
-    guessed = False
     if listed is not None:
-        guessed = listed.guessed
-        # Only a column of slash dates alone may swap its day and month later: a swap would turn its other cells too.
-        order = "day" if guessed and listed.shape == "slash" else None
+        # The reader guesses for a column of slash dates alone (`DateCells.guessed`), the one column that may swap its
+        # day and month later: in a mix a swap would turn the other cells too, so there it reads no guessed order.
+        order = "day" if listed.guessed else None
     elif date_format in ("MM/DD/YYYY", *_DAY_FIRST_FORMATS) and _order_open(dates.values):
         order = "month" if date_format == "MM/DD/YYYY" else "day"
-    guess = "the day and month order" if order or guessed else None
+    guess = "the day and month order" if order else None
     if dates.dropped:
         # The written day of a date with a UTC offset is a choice (the day in UTC is another reading), so an open
         # role proposes the conversion instead of making it unasked (`DryRun.certain`).
@@ -1882,24 +1881,29 @@ def _shape_words(shape: DateShape, day_first: bool) -> str:
     }[shape]
 
 
+SLASH_ORDER = (
+    "its slash dates settle no single order of day and month; a date_format of DD/MM/YYYY or MM/DD/YYYY sets one only "
+    "for a column of slash dates"
+)
+"""Why slash dates were left unread (`parse.UnreadReason` `slash_order`): their column's slash dates settle both orders,
+or none beside cells of another form. True of both, and so is its advice: a format reads a column of one form, so it
+helps a column of slash dates and not a mix. Without a count, as the refusal and the change line count the cells, so
+the reason fits beside them on more change lines."""
+
+
 def _unread_words(unread: Counter[UnreadReason]) -> str:
     """Why a reading without a format left cells unread, one clause per reason it found (`parse.UnreadReason`), in this
     order: days the calendar does not have, with their count; slash dates whose column settles no single order of day
-    and month (both orders, or none beside cells of another form), with their count and the format that sets the
-    order, which serves a column of slash dates only; and, for cells of no form of the list, the forms the chat reads.
-    A cell of a form the list reads is never told the forms, which name its own."""
+    and month (`SLASH_ORDER`); and, for cells of no form of the list, the forms the chat reads. A cell of a form the
+    list reads is never told the forms, which name its own."""
     clauses = []
     if impossible := unread["no_such_date"]:
         clauses.append(
             f"{_count(impossible, 'cell')} {'names' if impossible == 1 else 'name'} a day that does not exist, "
             "such as 31 November"
         )
-    if slash := unread["slash_order"]:
-        clauses.append(
-            f"its slash dates settle no single order of day and month, so {slash} of them "
-            f"{'is' if slash == 1 else 'are'} not read; a date_format of DD/MM/YYYY or MM/DD/YYYY sets the order for a "
-            "column of slash dates only"
-        )
+    if unread["slash_order"]:
+        clauses.append(SLASH_ORDER)
     if unread["no_form"]:
         clauses.append(DATE_FORMS)
     return "; ".join(clauses)

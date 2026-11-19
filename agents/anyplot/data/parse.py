@@ -3738,7 +3738,8 @@ class DateCells:
     day_first: bool = True
     """The order of the column's slash dates: month first only when a cell reads that way alone (`03/15/2026`)."""
     guessed: bool = False
-    """Slash dates read day first although no cell settles the order and some cell reads otherwise month first."""
+    """Slash dates read day first although no cell settles the order and some cell reads otherwise month first: only
+    in a column of slash dates alone, as beside cells of another form such a slash date is unread (`slash_order`)."""
 
     @property
     def shape(self) -> DateShape | None:
