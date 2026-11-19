@@ -397,7 +397,10 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         # The errors quote column names from the user's dataset.
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
         return {"status": "error", "code": "invalid_bindings", "errors": errors}
-    _note_taken(ledger, "set_bindings", view.bindings, parsed, roles, ledger.emptied_roles, ledger.added_columns)
+    emptied_roles = ledger.emptied_roles
+    _note_taken(
+        ledger, "set_bindings", view.bindings, parsed, roles, emptied_roles, emptied_roles, ledger.added_columns
+    )
     # Other bindings than the user confirmed leave the confirmation's fingerprint behind and the panel asks again,
     # unless they only leave out confirmed number series (`narrowed_confirmation`, `AGENT_NARROWED_BINDINGS`).
     if get_settings().narrowed_bindings == "keep":
@@ -667,17 +670,27 @@ def _note_taken(
     after: Sequence[Binding],
     roles: list[DataRole],
     taken: Collection[str],
+    emptied: Collection[str],
     added: Mapping[str, str],
 ) -> None:
-    """The guard's log line for each binding of `after` that puts a column an operation of the turn added (`added`,
-    with the operation's name) on a role of `taken`, the roles whose column the turn took: the known gap, a derived
-    column or a text conversion the guard lets through, whether the user asked for it or not."""
+    """The guard's log line for each new binding of `after` that fills a role the turn took the column of. Both
+    count, neither judges: the line is written whether the user asked for the binding or not.
+
+    * `bound`: a column an operation of the turn added (`added`, with the operation's name) on a role of `taken`, the
+      roles whose column the turn took: the known gap, a derived column or a text conversion the guard lets through.
+    * `refilled`: a column that was there before the turn (no operation of it added the column) on a role of
+      `emptied`, the roles the turn left open (`RequestLedger.emptied_roles`), by `set_bindings` or by the carry of a
+      later call, such as a column read as numbers in place that the carry puts on the open role. Only the role: the
+      column is the user's. A role whose column a rename moved is not in `emptied`, so a rename is no refill."""
     for binding in after:
         role = resolve_role(binding.role, roles)
         name = role.name if role is not None else binding.role
-        if binding in before or name not in taken or binding.column not in added:
+        if binding in before:
             continue
-        attribution("emptied_role", ledger, tool=tool, outcome="bound", role=name, kind=added[binding.column])
+        if binding.column in added and name in taken:
+            attribution("emptied_role", ledger, tool=tool, outcome="bound", role=name, kind=added[binding.column])
+        elif binding.column not in added and name in emptied:
+            attribution("emptied_role", ledger, tool=tool, outcome="refilled", role=name)
 
 
 @dataclass(frozen=True)
@@ -975,7 +988,8 @@ async def prepare_data(
             and (role := resolve_role(binding.role, roles)) is not None
         }
         taken = {*ledger.emptied_roles, *took}
-        _note_taken(ledger, PREPARE_TOOL, view.bindings, version.bindings, roles, taken, turn.added)
+        emptied_roles = ledger.emptied_roles
+        _note_taken(ledger, PREPARE_TOOL, view.bindings, version.bindings, roles, taken, emptied_roles, turn.added)
     base = {
         "status": "ok",
         "rows": parsed.profile.rows,

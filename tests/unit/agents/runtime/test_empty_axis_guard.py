@@ -18,6 +18,7 @@ import httpx
 import pytest
 
 from agents.anyplot.agent import CONVERSIONS_HEADING, EMPTIED_HEADING
+from agents.anyplot.data.emptied import ADDING_OPS
 from agents.anyplot.plugins.ledger import ledger_for
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import DATASET_ID, SUMMARY_PENDING, read_session
@@ -104,11 +105,27 @@ def block_of(fake: Any, call: int) -> str:
     return str(fake.calls[call]["system"][-1]["text"])
 
 
+GUARD_WORDS = {
+    "tool": {"prepare_data", "set_bindings"},
+    "outcome": {"refused", "kept_off", "bound", "refilled"},
+    "role": {"x", "y"},
+    "kind": set(ADDING_OPS),
+}
+"""Every value an `emptied_role` line may hold on `scatter-basic`: closed words, the spec's role names and operation
+names, so no column of the user's can stand in one."""
+
+
 def guard_lines(caplog: pytest.LogCaptureFixture) -> list[dict[str, Any]]:
-    """The guard's log lines (hook `emptied_role`) the turn wrote, without the envelope every attribution line has."""
+    """The guard's log lines (hook `emptied_role`) the turn wrote, without the envelope every attribution line has,
+    each checked to be content-free: every value one of `GUARD_WORDS`."""
     lines = [json.loads(record.getMessage()) for record in caplog.records if record.name == ATTRIBUTION]
     envelope = {"severity", "hook", "request_id", "user", "session", "llm_calls", "tokens"}
-    return [{k: v for k, v in line.items() if k not in envelope} for line in lines if line["hook"] == "emptied_role"]
+    found = [{k: v for k, v in line.items() if k not in envelope} for line in lines if line["hook"] == "emptied_role"]
+    for line in found:
+        for key, value in line.items():
+            words = GUARD_WORDS[key.rstrip("s")]  # `roles` and `kinds` hold lists of the same words
+            assert set(value if isinstance(value, list) else [value]) <= words, line
+    return found
 
 
 class TestTheWaysIn:
@@ -456,6 +473,53 @@ class TestTheReviewedCases:
             {"x": "Temperatur", "y": "Temperatur"},
             ["RowID", "Zeitpunkt", "Sensor", "Temperatur"],
         )
+
+
+class TestRefilled:
+    """A column that was there before the turn, put on a role the turn emptied, writes `refilled`: it counts, it does
+    not judge, so an asked refill writes it too."""
+
+    async def test_the_root_binding_temperatur_to_the_emptied_y_logs_refilled(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
+        script = default_script()
+        script["root"] = [
+            prepare_call({"op": "drop_columns", "columns": ["Feuchte"]}),
+            bindings_call(x="Temperatur", y="Temperatur"),
+            REPLY,
+        ]
+        swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime)
+
+        await say(client, sid, {"text": "Drop Feuchte."})
+
+        assert (await outcome(runtime, sid))[0] == {"x": "Temperatur", "y": "Temperatur"}
+        assert guard_lines(caplog) == [{"tool": "set_bindings", "outcome": "refilled", "role": "y"}]
+
+    async def test_the_carry_of_a_later_call_putting_a_column_that_was_there_on_y_logs_refilled(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """`Akku`, read as text in an earlier turn, is read as numbers in place after the drop emptied y: the carry
+        puts it on the open y (`carry_bindings`, a conversion for an open role), with no new column."""
+        akku = SENSORS.replace("Feuchte\n", "Feuchte,Akku\n").replace("\n2026", ",9\n2026").rstrip("\n") + ",9\n"
+        script = default_script()
+        script["root"] = [
+            prepare_call({"op": "set_type", "column": "Akku", "type": "text"}),
+            {"text": "Akku is text now."},
+            prepare_call({"op": "drop_columns", "columns": ["Feuchte"]}),
+            prepare_call({"op": "set_type", "column": "Akku", "type": "number"}),
+            REPLY,
+        ]
+        swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime, akku)
+        await say(client, sid, {"text": "Read Akku as text."})
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
+
+        await say(client, sid, {"text": "Drop Feuchte and read Akku as numbers."})
+
+        assert (await outcome(runtime, sid))[0] == {"x": "Temperatur", "y": "Akku"}
+        assert guard_lines(caplog) == [{"tool": "prepare_data", "outcome": "refilled", "role": "y"}]
 
 
 class TestTheKnownGap:

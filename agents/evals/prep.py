@@ -149,7 +149,8 @@ is the list price of every call the attribution log booked (`pricing.call_cost`,
 It writes `<out>/<date>-prep-<model>.json` (the stamp, the gates, the summary, every
 case's canonical expected and found operations, `ops_exact`, what its table missed in
 words that name columns at most (`table_miss`), its tool calls, refusal, cost and
-latency; never a dataset, a cell or a message, which stay in the fixtures) and prints a table.
+latency, and, never scored, the bindings the turn ended with and the guard's log lines on an emptied role
+(`bindings`, `guard`); never a dataset, a cell or a message, which stay in the fixtures) and prints a table.
 The exit code is 0 when the gate holds, 1 when it does not, 2 for a setup error (a
 fixture that does not load or whose expected operations fail the `Operation` or
 `Generate` models, an unpriced model) and 4 for an outage.
@@ -271,6 +272,8 @@ CONDITION_OPERATIONS = frozenset({"drop_rows", "blank", "keep_rows"})
 """The operations whose `where` is one list of conditions that must all hold."""
 MAX_REPLY_NAMES = 6
 """The texts one case may ask its reply to contain (`PrepCase.reply_names`)."""
+GUARD_FIELDS = ("tool", "outcome", "roles", "role", "kinds", "kind")
+"""The fields of an `emptied_role` log line the report keeps (`CaseResult.guard`): the line without its envelope."""
 MAX_OTHER_READINGS = 1
 """The other readings one case may accept beside its expected operations (`PrepCase.also_accepted`): a request with
 two fair readings has one more, and a request with more is no clear test of the root's choice."""
@@ -1067,6 +1070,12 @@ class CaseResult:
     reply_error: str | None = None
     """The turn ended with the service's `error` for a withheld or missing reply (`matrix.MODEL_ERRORS`): the model's
     outcome, so the case is answered and a miss with this cause, never `unavailable`."""
+    bindings: dict[str, str] | None = None
+    """The bindings the session holds after the turn, role: column, for the report only, never scored: on which role a
+    column ended. The columns are the fixture's own, as in `expected` and `found`."""
+    guard: list[dict[str, Any]] = field(default_factory=list)
+    """The turn's log lines of the guard on an emptied role (hook `emptied_role`: tool, outcome, and the role names and
+    operation names), for the report only, never scored: content-free by the line's own rule."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -1083,10 +1092,13 @@ def _detail(response: httpx.Response) -> str:
 
 
 def _book(result: CaseResult, lines: list[dict[str, Any]], settings: AgentSettings) -> None:
-    """Add one request's attribution lines to the result: model calls at list price, the judges too."""
+    """Add one request's attribution lines to the result: model calls at list price, the judges too, and the guard's
+    lines on an emptied role (`CaseResult.guard`) without their envelope."""
     for line in lines:
         hook = line.get("hook")
-        if hook == "model":
+        if hook == "emptied_role":
+            result.guard.append({key: line[key] for key in GUARD_FIELDS if key in line})
+        elif hook == "model":
             result.llm_calls += 1
             result.cost_usd += call_cost(settings.model, settings.location, line)
         elif hook in ("data_judge", "notes_judge", "scope_guard"):
@@ -1387,6 +1399,8 @@ class CaseRunner:
         stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
         if view is not None and stored is not None:
             result.roles_open = not check_bindings(view.bindings, view.snapshot.roles(), stored.profile).complete
+        if view is not None:
+            result.bindings = {binding.role: binding.column for binding in view.bindings}
         # The `certain` conversions the server made before the root ran: part of the turn's data, first in order.
         # Each case has a session of its own, so a record in it is this turn's.
         made = read_conversions_made(session.state)
@@ -1835,6 +1849,8 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "plot_wishes": result.plot_wishes,
             "plot_wishes_kept": result.plot_wishes_kept,
             "tool_calls": result.tool_calls,
+            "bindings": result.bindings,
+            "guard": result.guard,
         }
         for case, result in pairs
         if result.operations is not None and not result.match

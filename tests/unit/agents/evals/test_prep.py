@@ -1292,6 +1292,33 @@ def script_for(*answers: list[dict[str, Any]]) -> dict[str, list[Any]]:
 
 
 class TestRun:
+    def test_the_report_holds_the_bindings_after_the_turn_and_the_guards_lines(
+        self, services: Services, swap_models
+    ) -> None:
+        """Report-only fields, never scored: on which role a column ended, and the guard's content-free lines on an
+        emptied role. Here the drop empties y and the root binds Study Hours to it as well: a refill, which counts."""
+        drop = {"op": "drop_columns", "columns": ["Exam Score"]}
+        cases = [case("g-001", "drop the exam score", [drop])]
+        both = [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Study Hours"}]
+        root_turns = [
+            [
+                {"call": "prepare_data", "args": {"operations": [drop]}},
+                {"call": "set_bindings", "args": {"bindings": both}},
+                {"text": "Exam Score dropped; Study Hours on both axes."},
+            ]
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+        judge: FakeJudge = services.judge  # type: ignore[assignment]
+        judge.script.extend([JudgeVerdict(verdict="in_scope", lang="en")])
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        result = results[0]
+        assert result.match and result.bindings == {"x": "Study Hours", "y": "Study Hours"}
+        assert result.guard == [{"tool": "set_bindings", "outcome": "refilled", "role": "y"}]
+        written = dataclasses.asdict(result)  # as the report file holds every result
+        assert (written["bindings"], written["guard"]) == (result.bindings, result.guard)
+
     def test_a_case_with_two_fair_readings_matches_either(self, services: Services, swap_models) -> None:
         """`de-klasse-aus-vorzeichen`: "y positiv ist Klasse 1, sonst Klasse 2" in a new column named Klasse reads as
         the labels `Klasse 1` and `Klasse 2`, or as `1` and `2`. Either table matches; a third does not, and its miss

@@ -32,11 +32,13 @@ records when one message both empties an axis and asks for the days or the row n
 turn, and the next turn lists the offer.
 
 The other side of the boundary is a known gap: a derived column or a text conversion the root adds unasked and puts on
-the emptied axis passes. So three outcomes write one content-free log line each (hook `emptied_role`: the tool, the
+the emptied axis passes. So four outcomes write one content-free log line each (hook `emptied_role`: the tool, the
 outcome, the spec's role names and the names of the operations that made the columns, never a column or a cell):
-`refused`, `kept_off` for a change stored with an earlier fill kept off the role, and `bound` for a column another
-operation of the turn added (`added_columns`) taking a role whose column the turn took. The last is how real use and
-the eval show whether the root goes round the guard that way.
+`refused`, `kept_off` for a change stored with an earlier fill kept off the role, `bound` for a column another
+operation of the turn added (`added_columns`) taking a role whose column the turn took, and `refilled` (the role only)
+for a column that was there before the turn put on a role the turn emptied, by `set_bindings` or by a later call's
+carry. `bound` and `refilled` count and do not judge: an asked binding writes them too. They are how real use and the
+eval show whether the root goes round the guard that way.
 """
 
 from collections.abc import Collection, Sequence
