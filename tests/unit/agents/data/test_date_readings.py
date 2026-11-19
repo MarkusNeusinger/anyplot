@@ -695,6 +695,50 @@ READINGS: dict[str, Reading] = {
         None,
         "",
     ),
+    # A lone `a` or `p` after a clock is am or pm, also glued to it, with a dot or before a zone; `12:00 a` is
+    # midnight and `13:00 p` no time.
+    "letter_pm_after_clock": Reading(
+        ["2026-03-01 10:00 p", "2026-03-15 11:30 p", "2026-03-16 12:00 p", "2026-03-17 9:5 P"],
+        ["2026-03-01T22:00:00", "2026-03-15T23:30:00", "2026-03-16T12:00:00", "2026-03-17T21:05:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "letter_am_after_clock": Reading(
+        ["2026-03-01 10:00 a", "2026-03-15 12:00 a", "2026-03-16 10:00:30 A"],
+        ["2026-03-01T10:00:00", "2026-03-15T00:00:00", "2026-03-16T10:00:30"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "letter_glued_to_clock": Reading(
+        ["2026-03-01 10:00p", "2026-03-15T11:30a", "2026-03-16, 10:00 p.", "2026-03-17 13:00 p"],
+        ["2026-03-01T22:00:00", "2026-03-15T11:30:00", "2026-03-16T22:00:00", None],
+        1,
+        True,
+        None,
+        "",
+    ),
+    "letter_before_zone": Reading(
+        ["2026-03-01 10:00 p UTC", "2026-03-15 11:30 a UTC"],
+        ["2026-03-01T22:00:00+00:00", "2026-03-15T11:30:00+00:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    # After an hour alone a lone letter is no am or pm (`10 p` may be ten pence): pandas read 22:00, written as the
+    # day without its hour.
+    "letter_after_hour": Reading(
+        ["2026-03-01 10 p", "2026-03-15 11 a", "2026-03-16 10p", "2026-03-17T11a"],
+        ["2026-03-01", "2026-03-15", "2026-03-16", "2026-03-17"],
+        0,
+        False,
+        None,
+        "",
+    ),
 }
 PASTED: dict[str, Pasted] = {
     "iso_date": Pasted("datetime", ["2026-03-01", "2026-03-02", "2026-12-31"], []),
@@ -917,6 +961,11 @@ PASTED: dict[str, Pasted] = {
     "gmt_after_am": Pasted("text", None, []),
     "cet_after_hour": Pasted("text", None, []),
     "program_utc": Pasted("text", None, []),
+    "letter_pm_after_clock": Pasted("text", None, []),
+    "letter_am_after_clock": Pasted("text", None, []),
+    "letter_glued_to_clock": Pasted("text", None, []),
+    "letter_before_zone": Pasted("text", None, []),
+    "letter_after_hour": Pasted("text", None, []),
 }
 PASTE_CHANGED: dict[str, Pasted] = {
     # An offset past those in use (-12:00 to +14:00) is the end of a range, never an offset: the paste keeps the
@@ -1021,6 +1070,8 @@ CHANGED: dict[str, Reading] = {
     "zone_word_beside_utc": Reading(
         READINGS["zone_word_beside_utc"].cells, ["2026-03-01T10:00:00+00:00", None], 1, True, None, ""
     ),
+    # A lone `a` or `p` after an hour alone is no am or pm: unreadable, where the hour pandas read was dropped.
+    "letter_after_hour": Reading(READINGS["letter_after_hour"].cells, [None] * 4, 4),
     "utc_after_hour": _timed("utc_after_hour", ["2026-03-01T10:00:00+00:00", "2026-03-02T11:00:00+00:00"]),
     "gmt_after_am": _timed("gmt_after_am", ["2026-03-01T10:00:00+00:00", "2026-03-02T11:00:00+00:00"]),
 }

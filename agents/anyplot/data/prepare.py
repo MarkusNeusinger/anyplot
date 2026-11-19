@@ -42,7 +42,7 @@ The operations:
   a cell is read only when it is a date alone or a date followed by a time (`_date_cell`, the
   strict rule): a date of numbers, a month name or a quarter (`2026-03-01`, `01 03 2026`,
   `1 March 2026`, `2026-03`, `2026-Q1`), and after a date that names a day a time behind `T`,
-  `t` or a space (`T10` only after `T`, ` 9:05`, ` 10:00:05.25`, ` 2:30 PM`, `T1000`) with its
+  `t` or a space (`T10` only after `T`, ` 9:05`, ` 10:00:05.25`, ` 2:30 PM`, ` 10:00 p`, `T1000`) with its
   zone (`Z`, `+01:00`, ` UTC`; an offset in use, −12:00 to +14:00, `parse.utc_offset`, after
   an hour alone or with am or pm only as `Z` or `±HH:MM`, and a word only when pandas reads an
   offset from it, so `UTC` and `GMT` are zones and `10:00 of` or `10:00 Sun` is no time), or a
@@ -4537,6 +4537,9 @@ _ISO_DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 _HOUR = r"(?:[01]?[0-9]|2[0-3])"
 _MINUTE = r"[0-5]?[0-9]"
 _MERIDIEM = r"\s*[AaPp]\.?\s?[Mm]\.?"
+_LETTER_MERIDIEM = r"\s*[AaPp]\.?(?![^\W\d_])"
+"""am or pm as a lone `a` or `p` (`10:00 p`, `10:00p`), which counts after a clock only: after an hour alone it may
+be anything else (`10 p`, ten pence), as a number alone after a space need not be an hour."""
 _ZONE = r"(?:\s?(?P<offset>[Zz]|[+-][0-9]{2}(?::?[0-9]{2})?)|\s(?P<word>[^\W\d_]{1,5}))"
 
 
@@ -4544,8 +4547,9 @@ def _time_at_end(hour: str, minute: str) -> re.Pattern[str]:
     """The pattern of a time at the end of a cell (`_TIME_AFTER_DATE`), with the digits its hour and minutes take."""
     clock = rf"{hour}:{minute}(?::{minute}(?:[.,][0-9]{{1,9}})?)?"
     return re.compile(
-        rf"(?:[Tt](?:{clock}|(?P<hour>{hour})|[0-9]{{4}}(?:[0-9]{{2}})?)|,?\s+(?:{clock}|(?P<marked>{hour})(?={_MERIDIEM})))"
-        rf"(?P<meridiem>{_MERIDIEM})?{_ZONE}?$"
+        rf"(?:(?:[Tt]|,?\s+)(?P<clock>{clock})|[Tt](?:(?P<hour>{hour})|[0-9]{{4}}(?:[0-9]{{2}})?)"
+        rf"|,?\s+(?P<marked>{hour})(?={_MERIDIEM}))"
+        rf"(?P<meridiem>{_MERIDIEM}|(?(clock){_LETTER_MERIDIEM}|(?!)))?{_ZONE}?$"
     )
 
 
@@ -4553,7 +4557,7 @@ _TIME_AFTER_DATE = _time_at_end(_HOUR, _MINUTE)
 """A time at the end of a cell, after its date: `T` or `t` (RFC 3339 allows both), or a space or a comma and a
 space, then an hour with its minutes and seconds and a fraction (`10:00`, `9:5`, `10:00:05.25`), or after `T` an hour
 alone (`T10`, ISO's hour of a day) or a compact `HHMM` or `HHMMSS`; then am or pm (`10am`, `2:30 PM`, also after a
-space: ` 10 AM`), and a zone: `Z` (or `z`) or an offset (`+01:00`, `-0500`, `+01`, one in use and in the form `_zone_fits`
+space: ` 10 AM`; after a clock also a lone `a` or `p`, `10:00 p`, `_LETTER_MERIDIEM`), and a zone: `Z` (or `z`) or an offset (`+01:00`, `-0500`, `+01`, one in use and in the form `_zone_fits`
 asks), or after a space a word of up to five letters (`UTC`, `GMT`), a zone only when pandas reads an offset from it
 (`_zone_word_read`). A number alone after a
 space is no hour (`2026-03-01 10` may be a count or a label as much as 10:00), and letters right after an hour are no
