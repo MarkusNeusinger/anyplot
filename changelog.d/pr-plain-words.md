@@ -16,4 +16,4 @@
   diff before a pull request is reported ready, and the Gemini take-over
   checks the section again after its review, since Gemini writes it before
   the review rounds. Catalogue-only, pipeline and Dependabot pull requests
-  are exempt.
+  are exempt. (#13202)

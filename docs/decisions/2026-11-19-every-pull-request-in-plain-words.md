@@ -12,4 +12,4 @@
   whole pull request makes sense as it was meant. He asked for a second opinion on the section's
   form, which Fable and Gemini 4 Carbon gave, and for the rule to go into the instructions agents
   follow when they write a pull request.
-- Where: `agentic/commands/pull_request.md`
+- Where: #13202
