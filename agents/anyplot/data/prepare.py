@@ -381,6 +381,7 @@ from datetime import UTC, date, datetime, timedelta, timezone, tzinfo
 from decimal import ROUND_FLOOR, InvalidOperation, localcontext
 from decimal import Decimal as ExactDecimal
 from fractions import Fraction
+from functools import lru_cache
 from typing import Annotated, Any, Literal, Self
 
 import numpy as np
@@ -4580,13 +4581,22 @@ def _zone_fits(time: re.Match[str]) -> bool:
     return not alone or ":" in offset
 
 
-def _zone_word_read(text: str, zone: re.Match[str]) -> bool:
-    """Whether a cell's time has no word in its zone's place (`_ZONE`, `_ZONE_AT_END`), or a word pandas reads a UTC
-    offset from (`UTC`, `GMT`): that word is a zone. A word pandas skips or takes for something else (`of`, `on`,
-    `and`, `Sun`) leaves the time without an offset, a reading that drops the word by guess, and a zone it does not
-    know (`CET`, `EST`) gives no reading at all; either cell is no date and a time. The word is judged by what pandas
-    reads, the cell alone, never by a list of words."""
-    return zone.group("word") is None or isinstance(_offset_of(text, not _YEAR_FIRST.match(text)), timedelta)
+@lru_cache(maxsize=256)
+def _zone_word(word: str) -> object:
+    """What pandas reads from a word in the zone's place after a time: a UTC offset (a timedelta) for a zone (`UTC`,
+    `GMT`), None for a word it skips or takes for something else (`of`, `on`, `and`, `Sun`), which leaves the time
+    without one, NaT for a word it fails on (`CET`, `EST`). The word is judged by what pandas reads, never by a list
+    of words, and after a fixed moment: the answer is the word's own, which the date and the time before it do not
+    change, so a column of `UTC` times is not read cell by cell twice."""
+    return _offset_of(f"2000-01-01 00:00 {word}", False)
+
+
+def _zone_word_read(zone: re.Match[str]) -> bool:
+    """Whether a time has no word in its zone's place (`_ZONE`, `_ZONE_AT_END`) or a word pandas reads a UTC offset
+    from (`_zone_word`). A word it skips leaves a time read by guess, the word dropped, and a zone it does not know a
+    time it cannot read: either cell is no date and a time, so it is unreadable before the column is read."""
+    word = zone.group("word")
+    return word is None or isinstance(_zone_word(word), timedelta)
 
 
 def _time_inside(text: str) -> bool:
@@ -4600,7 +4610,7 @@ def _time_inside(text: str) -> bool:
     if zone is not None:
         if zone.group("offset") not in (None, *_UTC) and utc_offset(zone.group("offset")) is None:
             return False
-        if not _zone_word_read(text, zone):
+        if not _zone_word_read(zone):
             return False
         rest = rest[: zone.start()]
     return _date_shape(rest) == "day"
@@ -4693,7 +4703,8 @@ def _date_then_more(text: str) -> bool:
             shaped = _TIME_SHAPED.fullmatch(text[cut.start() :])
             if shaped is None or not _zone_fits(shaped):
                 return True
-            return shaped.group("word") is not None and _offset_of(text, not _YEAR_FIRST.match(text)) is None
+            word = shaped.group("word")
+            return word is not None and _zone_word(word) is None
     return False
 
 
@@ -4714,7 +4725,7 @@ def _date_cell(text: str) -> bool | None:
         time is not None
         and _zone_fits(time)
         and _date_shape(text[: time.start()], word_at_end=True) == "day"
-        and _zone_word_read(text, time)
+        and _zone_word_read(time)
     ):
         return True
     if _time_inside(text):

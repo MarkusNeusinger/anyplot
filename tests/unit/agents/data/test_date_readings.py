@@ -12,6 +12,7 @@ with their new reading.
 import csv
 import io
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any
 
 import pandas as pd
@@ -1400,6 +1401,23 @@ class TestStrictRule:
 
         assert seen == []
         assert reading == Reading([cell], [None], 1) and prepare_module._date_cell(cell) is None
+
+    @pytest.mark.parametrize("word", ["UTC", "GMT", "of", "and", "Sun", "h", "CET", "EST", "utc"])
+    def test_a_zone_word_reads_alike_after_every_date_and_time(self, word: str) -> None:
+        """`_zone_word` reads a word after a fixed moment and keeps the answer: whether pandas reads a zone from it
+        must not depend on the date and the time before it, in any form the gate takes."""
+        dates = ["2026-03-01", "01.03.2026", "03/15/2026", "1 March 2026", "March 1, 2026", "20260301"]
+        times = ["T10", "t10", " 10:00", "T10:00:00", " 10:00:00.5", " 10am", " 10 AM", " 10:00 PM", "T1000", ", 10:00"]
+        stamps = ["Sun Mar 1 10:00:00 2026", "Mon Mar 2 9:05 2026"]
+        expected = isinstance(prepare_module._zone_word(word), timedelta)
+        read = [
+            prepare_module._offset_of(cell, not cell.startswith("2026"))
+            for cell in [f"{date}{time} {word}" for date in dates for time in times] + [f"{s} {word}" for s in stamps]
+        ]
+
+        readings = [offset for offset in read if offset is not pd.NaT]
+        assert {isinstance(offset, timedelta) for offset in readings} <= {expected}
+        assert expected == (word in ("UTC", "GMT")) and bool(readings) == (word not in ("h", "CET", "EST", "utc"))
 
     @pytest.mark.parametrize(
         "cell",
