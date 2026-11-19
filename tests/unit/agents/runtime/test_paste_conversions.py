@@ -169,12 +169,21 @@ class TestMakeConversions:
     @pytest.mark.parametrize(
         ("cells", "why"),
         [
-            (["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"], DATE_FORMS),
-            (["1st March 2026", "2nd March 2026", "3rd March 2026", "4th March 2026"], DATE_FORMS),
-            (["2026-03-01 10:00:00 UTC", "2026-03-02 10:00:00 UTC", "2026-03-03 10:00:00 UTC"], DATE_FORMS),
+            (
+                ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04"],
+                f"column 'day' looks like dates, but 4 of 4 cells would not read: {DATE_FORMS}",
+            ),
+            (
+                ["1st March 2026", "2nd March 2026", "3rd March 2026", "4th March 2026"],
+                f"column 'day' looks like dates, but 4 of 4 cells would not read: {DATE_FORMS}",
+            ),
+            (
+                ["2026-03-01 10:00:00 UTC", "2026-03-02 10:00:00 UTC", "2026-03-03 10:00:00 UTC"],
+                f"column 'day' looks like dates, but 3 of 3 cells would not read: {DATE_FORMS}",
+            ),
             (
                 ["2026-03-01T10:00Z", "2026-03-02T10:00", "2026-03-03T10:00Z", "2026-03-04T10:00"],
-                "column 'day' holds 2 cells with a UTC offset and 2 cells without one",
+                "would be refused: column 'day' holds 2 cells with a UTC offset and 2 cells without one",
             ),
         ],
     )
@@ -197,7 +206,7 @@ class TestMakeConversions:
             cache=stored.dry_runs,
         )
         assert isinstance(line, RowNumbers) and not line.certain
-        assert f"column 'day' looks like dates that would not read: {why}" in line.line()
+        assert why in line.line()
 
     def test_a_column_of_ranges_fills_both_bounds(self) -> None:
         store, view = pasted(RANGES, "range-interval")

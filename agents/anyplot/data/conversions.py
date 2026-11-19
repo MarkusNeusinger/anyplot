@@ -67,14 +67,14 @@ Last comes the row number, when no column and no conversion can fill the open ro
 line plot). On a required axis it counts as `certain`: the column `index` holds 1 to n, the axis
 takes it, and a number column that sat there moves to the open measure, with one line in
 the reply. On an axis that takes dates, a free text column that looks like dates no conversion
-takes (`prepare.unread_dates`: `2026/03/01`, `1st March 2026`, `2026-03-01 10:00:00 UTC`, a day
-that does not exist, slash dates of no single order, times with and without a UTC offset in one
-column) makes it `uncertain` instead: the user may mean those dates, so the root asks, and the
-line names the column and says why its dates would not read in the words of the refused
-conversion, the forms the chat reads among them. On a role that names each row (a bar chart
-without labels) it is `uncertain`: the root offers it as its one question. A row-number column
-the paste already has is reused, and
-nothing here runs for `/dataset/copy`, which copies confirmed data byte for byte.
+takes in more than half of its cells (`prepare.unread_dates`: `2026/03/01`, `1st March 2026`,
+`2026-03-01 10:00:00 UTC`, a day that does not exist, slash dates of no single order, times with
+and without a UTC offset in one column) makes it `uncertain` instead: the user may mean those
+dates, so the root asks, and the line names the column, counts the cells that would not read and
+says why in the words of the refused conversion, the forms the chat reads among them. On a role
+that names each row (a bar chart without labels) it is `uncertain`: the root offers it as its one
+question. A row-number column the paste already has is reused, and nothing here runs for
+`/dataset/copy`, which copies confirmed data byte for byte.
 
 A date column is never a number candidate, but a required role that takes numbers only (`bindings.is_measure`),
 left open by every line above, gets an offer when a date column is free (`DateNumbers`, owner decision of
@@ -303,10 +303,15 @@ class RowNumbers:
             line += f", and {moved.role} takes '{moved.column}', which {self.role} holds now"
         if self.certain:
             line += "; certain: a list of values is drawn by position, and this is wanted, never a mistake"
+        elif self.unread is not None and self.unread.unread is None:
+            # The refusal's sentence names the column itself.
+            line += f"; uncertain: {self.role} takes dates, but a conversion to dates would be refused: "
+            line += self.unread.why
         elif self.unread is not None:
+            dates = self.unread
             line += (
-                f"; uncertain: {self.role} takes dates, and column '{self.unread.column}' looks like dates that would "
-                f"not read: {self.unread.why}"
+                f"; uncertain: {self.role} takes dates, and column '{dates.column}' looks like dates, but "
+                f"{dates.unread} of {dates.present} cells would not read: {dates.why}"
             )
         else:
             line += f"; uncertain: the table has no labels for {self.role}, and a row number says nothing as a label"

@@ -343,21 +343,24 @@ NAIVE_AND_ZONED = (
     "column stays as it is"
 )
 UNREAD = {
-    # The row numbers took the date axis unasked beside these: a form outside the date list, dates the list leaves
-    # unread for a reason of its own, or dates it reads that a conversion refuses as a whole.
-    "a slashes year first": (SLASHES, DATE_FORMS),
-    "b ordinal day": (["1st March 2026", "2nd March 2026", "3rd March 2026", "4th March 2026"], DATE_FORMS),
-    "c one 31.02. in four": (["28.02.2026", "31.02.2026", "01.03.2026", "02.03.2026"], NO_SUCH_DAY),
-    "f slashes in both orders": (["15/03/2026", "03/15/2026", "04/05/2026", "06/07/2026"], SLASH_ORDER),
-    "g a slash date beside ISO": (["2026-03-01", "03/04/2026", "2026-03-05", "2026-03-07"], SLASH_ORDER),
-    "h UTC as a word": ([f"2026-03-0{day} 10:00:00 UTC" for day in range(1, 5)], DATE_FORMS),
-    "i a space before the offset": ([f"2026-03-0{day} 10:00:00 +0100" for day in range(1, 5)], DATE_FORMS),
-    "j AM and PM": ([f"3/{day}/2026 10:00:00 AM" for day in range(1, 5)], DATE_FORMS),
-    "k a range of times after the date": ([f"2026-03-0{day} 08:00-16:30" for day in range(1, 5)], DATE_FORMS),
-    "l two-digit year with dots": ([f"0{day}.03.26" for day in range(1, 5)], DATE_FORMS),
-    "m two-digit year with slashes": ([f"3/{day}/26" for day in range(13, 17)], DATE_FORMS),
-    "an hour label after the date": ([f"2026-03-01-0{hour}" for hour in range(4)], DATE_FORMS),
-    "times with and without a UTC offset": (MIXED_ZONES, NAIVE_AND_ZONED),
+    # The row numbers took the date axis unasked beside these: a form outside the date list, or dates the list leaves
+    # unread for a reason of its own. Each with the cells that would not read, of four.
+    "a slashes year first": (SLASHES, 4, DATE_FORMS),
+    "b ordinal day": (["1st March 2026", "2nd March 2026", "3rd March 2026", "4th March 2026"], 4, DATE_FORMS),
+    "c one 31.02. in four": (["28.02.2026", "31.02.2026", "01.03.2026", "02.03.2026"], 1, NO_SUCH_DAY),
+    "f slashes in both orders": (["15/03/2026", "03/15/2026", "04/05/2026", "06/07/2026"], 4, SLASH_ORDER),
+    "g a slash date beside ISO": (["2026-03-01", "03/04/2026", "2026-03-05", "2026-03-07"], 1, SLASH_ORDER),
+    "h UTC as a word": ([f"2026-03-0{day} 10:00:00 UTC" for day in range(1, 5)], 4, DATE_FORMS),
+    "i a space before the offset": ([f"2026-03-0{day} 10:00:00 +0100" for day in range(1, 5)], 4, DATE_FORMS),
+    "j AM and PM": ([f"3/{day}/2026 10:00:00 AM" for day in range(1, 5)], 4, DATE_FORMS),
+    "k a range of times after the date": ([f"2026-03-0{day} 08:00-16:30" for day in range(1, 5)], 4, DATE_FORMS),
+    "l two-digit year with dots": ([f"0{day}.03.26" for day in range(1, 5)], 4, DATE_FORMS),
+    "m two-digit year with slashes": ([f"3/{day}/26" for day in range(13, 17)], 4, DATE_FORMS),
+    "an hour label after the date": ([f"2026-03-01-0{hour}" for hour in range(4)], 4, DATE_FORMS),
+    # JavaScript's `toLocaleString()`: a comma after the year.
+    "en-US locale string": ([f"3/{day}/2026, 10:00:00 AM" for day in range(1, 5)], 4, DATE_FORMS),
+    "de-DE locale string": ([f"{day}.3.2026, 10:00:00" for day in range(1, 5)], 4, DATE_FORMS),
+    "en-GB locale string": ([f"0{day}/03/2026, 10:00" for day in range(1, 5)], 4, DATE_FORMS),
 }
 CERTAIN_ROW_NUMBERS = {
     # Never read, and no date look the rule takes either: these keep their row numbers unasked.
@@ -406,17 +409,18 @@ CERTAIN_ROW_NUMBERS = {
 
 class TestRowNumbersBesideUnreadDates:
     """A text column that looks like dates no conversion takes: the row numbers wait for a yes on an axis that takes
-    dates, since the user may mean those dates, and the line says why they would not read."""
+    dates, since the user may mean those dates, and the line says how many cells would not read and why."""
 
-    @pytest.mark.parametrize(("cells", "why"), list(UNREAD.values()), ids=list(UNREAD))
-    def test_the_row_numbers_are_a_question(self, cells: list[str], why: str) -> None:
+    @pytest.mark.parametrize(("cells", "unread", "why"), list(UNREAD.values()), ids=list(UNREAD))
+    def test_the_row_numbers_are_a_question(self, cells: list[str], unread: int, why: str) -> None:
         [candidate] = found(day_column(cells), roles=parse_roles(LINE))
 
         assert isinstance(candidate, RowNumbers) and candidate.role == "x" and not candidate.certain
-        assert candidate.unread == UnreadDates("day", why)
-        assert f"; uncertain: x takes dates, and column 'day' looks like dates that would not read: {why};" in (
-            candidate.line()
-        )
+        assert candidate.unread == UnreadDates("day", why, unread, 4)
+        assert (
+            f"; uncertain: x takes dates, and column 'day' looks like dates, but {unread} of 4 cells would not read: "
+            f"{why};"
+        ) in candidate.line()
         assert candidate.operations() == [{"op": "row_number", "name": "index"}]
 
     def test_the_line_keeps_its_parts_and_names_the_forms(self) -> None:
@@ -424,12 +428,13 @@ class TestRowNumbersBesideUnreadDates:
 
         assert candidate.line() == (
             "y: no column or conversion fills it; a new column 'index' with the row numbers 1 to 4 takes x, and y "
-            "takes 'orders', which x holds now; uncertain: x takes dates, and column 'day' looks like dates that "
-            "would not read: the chat reads 2026-03-01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a time, "
-            'and months such as 2026-03 or Mar 2026; operations: [{"op": "row_number", "name": "index"}]'
+            "takes 'orders', which x holds now; uncertain: x takes dates, and column 'day' looks like dates, but 4 of "
+            "4 cells would not read: the chat reads 2026-03-01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a "
+            'time, and months such as 2026-03 or Mar 2026; operations: [{"op": "row_number", "name": "index"}]'
         )
 
     def test_times_with_and_without_an_offset_say_what_the_refused_conversion_says(self) -> None:
+        """Every cell reads, so nothing is counted: the refusal's own sentence, which names the column once."""
         text = day_column(MIXED_ZONES)
         conversion = OPERATIONS.validate_python([{"op": "set_type", "column": "day", "type": "datetime"}])
 
@@ -437,7 +442,13 @@ class TestRowNumbersBesideUnreadDates:
 
         with pytest.raises(PrepareError) as refused:
             apply_operations(parse_dataset(text), conversion)
-        assert isinstance(candidate, RowNumbers) and candidate.unread == UnreadDates("day", refused.value.message)
+        assert isinstance(candidate, RowNumbers) and not candidate.certain
+        assert candidate.unread == UnreadDates("day", refused.value.message, None, 4)
+        assert candidate.line() == (
+            "y: no column or conversion fills it; a new column 'index' with the row numbers 1 to 4 takes x, and y "
+            "takes 'orders', which x holds now; uncertain: x takes dates, but a conversion to dates would be refused: "
+            f'{NAIVE_AND_ZONED}; operations: [{{"op": "row_number", "name": "index"}}]'
+        )
 
     @pytest.mark.parametrize(
         ("text", "line_roles", "keep_text"), list(CERTAIN_ROW_NUMBERS.values()), ids=list(CERTAIN_ROW_NUMBERS)
@@ -467,14 +478,34 @@ class TestRowNumbersBesideUnreadDates:
 
         assert found(text, roles=parse_roles(LINE)) == []
 
-    @pytest.mark.parametrize(("others", "certain"), [(1, False), (2, True)])
-    def test_at_most_a_tenth_of_the_cells_may_look_like_no_date(self, others: int, certain: bool) -> None:
-        """The share past which `set_type` refuses: one note in ten cells is a column of dates, two are not."""
-        cells = [f"2026/03/{day:02d}" for day in range(1, 11 - others)] + ["offen"] * others
+    def test_a_column_that_is_mostly_dates_is_a_question(self) -> None:
+        """Two notes in twelve cells are past the tenth a conversion may drop, so no conversion is listed; the ten
+        dates still make the row numbers a question."""
+        cells = [f"2026-03-{day:02d}" for day in range(1, 11)] + ["TBD", "open"]
 
         [candidate] = found(day_column(cells), roles=parse_roles(LINE))
 
-        assert isinstance(candidate, RowNumbers) and candidate.rows == 10 and candidate.certain is certain
+        assert isinstance(candidate, RowNumbers) and candidate.rows == 12 and not candidate.certain
+        assert candidate.unread == UnreadDates("day", DATE_FORMS, 2, 12)
+        assert f"column 'day' looks like dates, but 2 of 12 cells would not read: {DATE_FORMS};" in candidate.line()
+
+    def test_the_count_takes_each_cell_with_its_repeats(self) -> None:
+        """As the refusal of a conversion counts the cells: two distinct cells in four rows are four cells."""
+        text = day_column(["2026/03/01", "2026/03/01", "2026/03/02", "2026/03/02"])
+
+        [candidate] = found(text, roles=parse_roles(LINE))
+
+        assert isinstance(candidate, RowNumbers) and candidate.unread == UnreadDates("day", DATE_FORMS, 4, 4)
+
+    @pytest.mark.parametrize("dates", [3, 5])
+    def test_a_column_that_is_half_dates_or_less_keeps_them_certain(self, dates: int) -> None:
+        """More than half of the cells must look like dates (`DATE_LIKE_SHARE`): exactly half is not enough."""
+        words = ["open", "TBD", "later", "closed", "pending", "soon", "paused"]
+        cells = [f"2026-03-{day:02d}" for day in range(1, dates + 1)] + words[: 10 - dates]
+
+        [candidate] = found(day_column(cells), roles=parse_roles(LINE))
+
+        assert isinstance(candidate, RowNumbers) and candidate.rows == 10 and candidate.certain
 
     def test_the_first_free_column_that_looks_like_dates_is_named(self) -> None:
         cities = ["Bern", "Basel", "Genf", "Chur"]
@@ -482,7 +513,7 @@ class TestRowNumbersBesideUnreadDates:
 
         [candidate] = found(text, roles=parse_roles(LINE))
 
-        assert isinstance(candidate, RowNumbers) and candidate.unread == UnreadDates("day", DATE_FORMS)
+        assert isinstance(candidate, RowNumbers) and candidate.unread == UnreadDates("day", DATE_FORMS, 4, 4)
 
     def test_the_verdict_is_made_once_per_version(self) -> None:
         cache: dict[tuple[str, str], DryRun | RangeRun | UnreadDates | None] = {}
