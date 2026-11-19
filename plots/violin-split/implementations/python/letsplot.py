@@ -1,17 +1,34 @@
 """ anyplot.ai
 violin-split: Split Violin Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-08
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-19
 """
 
 import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_boxplot,
+    geom_violin,
+    ggplot,
+    ggsize,
+    labs,
+    position_nudge,
+    scale_fill_manual,
+    theme,
+    theme_minimal,
+)
 from lets_plot.export import ggsave
 
-LetsPlot.setup_html()  # noqa: F405
+
+LetsPlot.setup_html()
 
 # Theme tokens (see prompts/default-style-guide.md)
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -21,108 +38,70 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID_LINE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette (first series always #009E73)
-COLOR_BEFORE = "#009E73"  # Okabe-Ito position 1
-COLOR_AFTER = "#C475FD"  # Okabe-Ito position 2
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Employee satisfaction scores before and after office redesign across departments
+# Columns: set these to your table's column names
+DEPARTMENT = "Department"  # role: category
+SATISFACTION = "Satisfaction Score (0-100)"  # role: value
+PERIOD = "Period"  # role: split_group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("satisfaction.csv")
+# Employee satisfaction scores before and after an office redesign, per department
 np.random.seed(42)
-
-departments = ["Engineering", "Marketing", "Sales", "Design"]
-data = []
-
-# Generate realistic distributions showing varied effects of office redesign
 distributions = {
-    "Engineering": {"Before": {"mean": 65, "std": 12}, "After": {"mean": 78, "std": 10}},
-    "Marketing": {"Before": {"mean": 58, "std": 15}, "After": {"mean": 72, "std": 11}},
-    "Sales": {"Before": {"mean": 70, "std": 14}, "After": {"mean": 75, "std": 12}},
-    "Design": {"Before": {"mean": 55, "std": 18}, "After": {"mean": 82, "std": 8}},
+    "Engineering": {"Before": (65, 12), "After": (78, 10)},
+    "Marketing": {"Before": (58, 15), "After": (72, 11)},
+    "Sales": {"Before": (70, 14), "After": (75, 12)},
+    "Design": {"Before": (55, 18), "After": (82, 8)},
 }
-
-for dept in departments:
-    for period in ["Before", "After"]:
-        params = distributions[dept][period]
+rows = []
+for dept, periods in distributions.items():
+    for period, (mean, std) in periods.items():
         n_samples = np.random.randint(80, 150)
-        values = np.random.normal(params["mean"], params["std"], n_samples)
-        values = np.clip(values, 20, 100)
-        for v in values:
-            data.append({"Department": dept, "Satisfaction": v, "Period": period})
+        values = np.clip(np.random.normal(mean, std, n_samples), 20, 100)
+        rows.append(pd.DataFrame({DEPARTMENT: dept, SATISFACTION: values, PERIOD: period}))
+df = pd.concat(rows, ignore_index=True)
 
-df = pd.DataFrame(data)
+# Plot: reads only df and the constants above
+periods = list(df[PERIOD].drop_duplicates())
+left, right = periods[0], periods[-1]
+df_left = df[df[PERIOD] == left]
+df_right = df[df[PERIOD] == right]
 
-# Prepare data for split violin
-df_before = df[df["Period"] == "Before"].copy()
-df_after = df[df["Period"] == "After"].copy()
+violin = {"trim": True, "size": 0.4, "alpha": 0.75}
+box = {"width": 0.08, "outlier_shape": None, "alpha": 0.9, "size": 0.3, "show_legend": False}
+mapping = aes(x=DEPARTMENT, y=SATISFACTION, fill=PERIOD)
 
-# Create split violin plot
 plot = (
-    ggplot()  # noqa: F405
-    # Left half: Before (show_half=-1)
-    + geom_violin(  # noqa: F405
-        aes(x="Department", y="Satisfaction", fill="Period"),  # noqa: F405
-        data=df_before,
-        show_half=-1,
-        trim=False,
-        size=0.8,
-        alpha=0.75,
-    )
-    # Right half: After (show_half=1)
-    + geom_violin(  # noqa: F405
-        aes(x="Department", y="Satisfaction", fill="Period"),  # noqa: F405
-        data=df_after,
-        show_half=1,
-        trim=False,
-        size=0.8,
-        alpha=0.75,
-    )
-    # Inner quartile lines for distribution visualization
-    + geom_boxplot(  # noqa: F405
-        aes(x="Department", y="Satisfaction", fill="Period"),  # noqa: F405
-        data=df_before,
-        width=0.08,
-        outlier_shape=None,
-        position=position_nudge(x=-0.05),  # noqa: F405
-        alpha=0.9,
-        size=0.6,
-        show_legend=False,
-    )
-    + geom_boxplot(  # noqa: F405
-        aes(x="Department", y="Satisfaction", fill="Period"),  # noqa: F405
-        data=df_after,
-        width=0.08,
-        outlier_shape=None,
-        position=position_nudge(x=0.05),  # noqa: F405
-        alpha=0.9,
-        size=0.6,
-        show_legend=False,
-    )
-    # Okabe-Ito colors (Before=#009E73, After=#C475FD)
-    + scale_fill_manual(values=[COLOR_AFTER, COLOR_BEFORE], name="Period")  # noqa: F405
-    + scale_y_continuous(limits=[15, 105])  # noqa: F405
-    # Labels
-    + labs(x="Department", y="Satisfaction Score (0-100)", title="violin-split · letsplot · anyplot.ai")  # noqa: F405
-    # Theme-adaptive styling
-    + theme_minimal()  # noqa: F405
-    + theme(  # noqa: F405
-        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
-        panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
-        panel_grid_major_x=element_blank(),  # noqa: F405
-        panel_grid_minor=element_blank(),  # noqa: F405
-        panel_grid_major_y=element_line(color=GRID_LINE, size=0.4),  # noqa: F405
-        plot_title=element_text(size=24, face="bold", color=INK),  # noqa: F405
-        axis_title_x=element_text(size=20, color=INK),  # noqa: F405
-        axis_title_y=element_text(size=20, color=INK),  # noqa: F405
-        axis_text_x=element_text(size=16, color=INK_SOFT),  # noqa: F405
-        axis_text_y=element_text(size=16, color=INK_SOFT),  # noqa: F405
-        axis_line=element_line(color=INK_SOFT, size=0.4),  # noqa: F405
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
-        legend_title=element_text(size=18, color=INK),  # noqa: F405
-        legend_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
+    ggplot()
+    # Left half: first split group; right half: last split group
+    + geom_violin(mapping, data=df_left, show_half=-1, **violin)
+    + geom_violin(mapping, data=df_right, show_half=1, **violin)
+    # Inner boxplots at the quartiles of each half
+    + geom_boxplot(mapping, data=df_left, position=position_nudge(x=-0.05), **box)
+    + geom_boxplot(mapping, data=df_right, position=position_nudge(x=0.05), **box)
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=periods, name=PERIOD)
+    + labs(x=DEPARTMENT, y=SATISFACTION, title="violin-split · python · letsplot · anyplot.ai")
+    + theme_minimal()
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major_x=element_blank(),
+        panel_grid_minor=element_blank(),
+        panel_grid_major_y=element_line(color=GRID_LINE, size=0.3),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="right",
     )
-    + ggsize(1600, 900)  # noqa: F405
+    + ggsize(800, 450)
 )
 
-# Save outputs (scale 3x to get 4800 x 2700 px)
-ggsave(plot, f"plot-{THEME}.png", scale=3)
-ggsave(plot, f"plot-{THEME}.html")
+# Save: 800 x 450 at scale 4 = 3200 x 1800 px
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
