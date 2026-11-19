@@ -733,8 +733,9 @@ def _turn_columns(
 
     1. the call is refused when it makes a held column that replaces no taken role's own column;
     2. its real carry (`push_version` computes the same) is judged: a held column on a taken role it does not replace
-       refuses the call when the root bound it there before the call, and is kept off every role (`kept_off`) when
-       the carry alone would put it there, so the change the user asked for is stored and the role waits.
+       is kept off every role (`kept_off`, the held columns no role holds), so the change the user asked for is stored
+       and the role waits; when the carry without them still puts one there, the root bound it before the call, and
+       the call is refused.
 
     The refusal's sentence: `ROWS_REPLACE_MESSAGE` when row numbers are at issue (made by the call, or held by the role)
     and the call removes the taken role's column with `drop_columns`, in a turn that had taken none before; else
@@ -772,9 +773,10 @@ def _turn_columns(
     if not alien and not wrong:
         return _TurnColumns(first, all_taken, held, added)
     kinds = [added.get(name, "") for name in [*alien, *(binding.column for binding in wrong)]]
-    if not alien and not any(binding in bindings for binding in wrong):
-        # Only the carry would put an earlier call's held column on a taken role: the change is the user's and is
-        # stored, every held column no role holds and none replaces stays off every role, and the role waits.
+    if not alien:
+        # The carry would put an earlier call's held column on a taken role: the change is the user's and is stored,
+        # every held column no role holds and none replaces stays off every role, and the role waits. A held column
+        # the root bound before stays bound, so the carry still puts it on the taken role and the call is refused.
         bound = {binding.column for binding in bindings}
         kept_off = [name for name in held if name not in bound and name not in replacing]
         offered = parsed.profile.model_copy(
