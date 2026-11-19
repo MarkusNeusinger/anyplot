@@ -25,6 +25,7 @@ from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.plot_view import (
     CALENDAR_ORDER_LINE,
     CLEARED_LINE,
+    IDLE_SELECTION_LINE,
     OLDEST_FIRST_LINE,
     PLOT_VIEW,
     PlotView,
@@ -862,6 +863,64 @@ class TestApplyView:
         assert "there is no view of the plot to apply" in without["errors"]
         assert "leave from_version out" in earlier["errors"]
         assert context.state[DATASET_ID] == table and context.state[PLOT_VIEW] is not None
+
+
+class TestASelectionThatHidesNoRow:
+    """A change of the table that leaves only rows a selection keeps: the selection hides nothing any more and is
+    cleared, whatever words the change used. The prep eval's `fr-appliquer-la-vue-au-tableau` kept the rows with a
+    `keep_rows` of the table instead of `apply_view`, and the old selection stayed in force on the plot."""
+
+    async def test_the_same_condition_on_the_table_clears_it(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-1")
+        await prepare_data([only("Points", "ge", 40)], context)
+
+        answer = await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+
+        assert (answer["status"], answer["landed"], answer["version"], answer["rows"]) == ("ok", "table", 2, 12)
+        assert context.state[PLOT_VIEW] is None
+        assert fenced(answer["view"], "tool_notes") == [
+            IDLE_SELECTION_LINE.format(words="Points ≥ 40"),
+            "the plot draws all 12 rows of data v2",
+        ]
+
+    async def test_the_same_rows_in_other_words_clear_it(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        """Dropping the rows below 40 leaves exactly the rows `Points ≥ 40` showed: the rows decide, not the words."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-2")
+        await prepare_data([only("Points", "ge", 40)], context)
+        below = {"op": "drop_rows", "where": [{"column": "Points", "test": "lt", "value": "40"}]}
+
+        answer = await prepare_data([below], context)
+
+        assert (answer["status"], answer["rows"]) == ("ok", 12) and context.state[PLOT_VIEW] is None
+        assert fenced(answer["view"], "tool_notes")[0] == IDLE_SELECTION_LINE.format(words="Points ≥ 40")
+
+    async def test_a_selection_that_still_hides_rows_stays(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-3")
+        await prepare_data([only("Points", "ge", 40)], context)
+        held = context.state[PLOT_VIEW]
+        below = {"op": "drop_rows", "where": [{"column": "Points", "test": "lt", "value": "20"}]}
+
+        answer = await prepare_data([below], context)
+
+        assert answer["status"] == "ok" and answer["rows"] > 12
+        assert context.state[PLOT_VIEW] == held and "view" not in answer
+
+    async def test_only_the_selection_goes_and_a_top_n_stays(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        """A top N orders the rows it draws even when it keeps them all, so it is no selection that hides nothing."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-4")
+        top = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 3}]
+        await prepare_data([only("Points", "ge", 40), *top], context)
+
+        answer = await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+
+        assert context.state[PLOT_VIEW] == {"selections": [], "top": {"column": "Points", "descending": True, "n": 3}}
+        lines = fenced(answer["view"], "tool_notes")
+        assert lines[0] == IDLE_SELECTION_LINE.format(words="Points ≥ 40")
+        assert lines[-1] == "the plot draws 3 of 12 rows of data v2" and answer["landed"] == "table"
 
 
 class TestQuestionsUnderAView:

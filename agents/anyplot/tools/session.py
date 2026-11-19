@@ -82,7 +82,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   so the table and the confirmation stand and the plot may run in the same turn. The result then names
   `landed` (`view`, `table`, `table_and_view`), the view's lines fenced as `<tool_notes>` and, for a view
   alone, `plot_outdated`; `reset_view` clears the view, and a view that does not fit the table the call
-  leaves refuses the whole call.
+  leaves refuses the whole call. A selection held from before that keeps every row of the table the call
+  leaves is cleared with a line of its own (`plot_view.idle_selections`).
 * `query_data(operations, columns, limit, from_version)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, or of the two only a
   question takes (`prepare.QueryOperation`: an `aggregate` without `by`, a `fit`), then
@@ -165,6 +166,7 @@ from ..pipeline import (
 )
 from ..plot_view import (
     CLEARED_LINE,
+    IDLE_SELECTION_LINE,
     Current,
     PlotView,
     Routed,
@@ -172,12 +174,14 @@ from ..plot_view import (
     ViewRefused,
     breaks_bindings,
     current,
+    idle_selections,
     merged,
     route,
     settled_delta,
     table_only,
     view_delta,
     view_of,
+    without_selections,
 )
 from ..plugins.ledger import attribution, ledger_for
 from ..plugins.tool_safety import (
@@ -711,6 +715,21 @@ async def prepare_data(
                 message = _fenced_lines([VIEW_BREAKS_BINDINGS])
                 return {"status": "error", "code": "invalid_operation", "message": message}
             shown, seen, cleared = PlotView(), None, True
+    idle: list[str] = []
+    if stores and seen is not None:
+        # A selection held from before that keeps every row the new table has: the change of the table did what it
+        # did, so it is cleared with a line (`plot_view.idle_selections`). One the call named itself is its own word.
+        before = (
+            PlotView()
+            if routed.reset
+            else PlotView(selections=[w for w in held.selections if w not in routed.selections])
+        )
+        gone = idle_selections(shown, before, parsed, view.language)
+        if gone:
+            text = [name for name, dtype in parsed.column_dtypes.items() if dtype == "text"]
+            idle = [IDLE_SELECTION_LINE.format(words=PlotView(selections=[where]).words(text)) for where in gone]
+            shown = without_selections(shown, gone)
+            seen = None if shown.empty else view_of(parsed, shown, view.language)
     if not stores:
         return _view_result(tool_context, view, start.stored, shown, seen, routed)
     changes = rebuilt_changes(start, [*moved, *(prepared.changes if prepared is not None else [])])
@@ -748,9 +767,10 @@ async def prepare_data(
         "version": version.version,
         "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(changes, ensure_ascii=False)),
     }
-    if routed.view or cleared:
-        # The view of this call, or one held from before that the new table no longer fits: stored with the version.
-        # Only a view the call itself named settles what a paste had set aside (`settled_delta`).
+    if routed.view or cleared or idle:
+        # The view of this call, or one held from before that the new table no longer fits or no longer needs all of:
+        # stored with the version. Only a view the call itself named settles what a paste had set aside
+        # (`settled_delta`).
         for key, value in (settled_delta(shown) if routed.view else view_delta(shown)).items():
             tool_context.state[key] = value
         ledger.view_ops.extend(view_op_names(routed))
@@ -758,7 +778,7 @@ async def prepare_data(
         both = routed.view and not (routed.apply and shown.empty)
         base["landed"] = "table_and_view" if both else "table"
         base["view"] = _view_lines(
-            shown, seen, version.version, parsed.profile.rows, cleared=cleared, applied=routed.apply
+            shown, seen, version.version, parsed.profile.rows, cleared=cleared, applied=routed.apply, idle=idle
         )
     elif any(isinstance(operation, KeepRows) for operation in routed.table):
         base["landed"] = "table"  # a `keep_rows` the call's order or its `target` sent to the table
@@ -789,15 +809,24 @@ def view_op_names(routed: Routed) -> list[str]:
 
 
 def _view_lines(
-    shown: PlotView, seen: Viewed | None, data_version: int, table_rows: int, *, cleared: bool, applied: bool = False
+    shown: PlotView,
+    seen: Viewed | None,
+    data_version: int,
+    table_rows: int,
+    *,
+    cleared: bool,
+    applied: bool = False,
+    idle: Sequence[str] = (),
 ) -> str:
     """The view as a tool result carries it, fenced: each step's line with its counts and the server's summary, or the
-    one line of a view that is no more: applied to the table, cleared by the call, or no longer fitting."""
+    one line of a view that is no more: applied to the table, cleared by the call, or no longer fitting. `idle` are
+    the lines of the selections the call's change of the table cleared (`plot_view.idle_selections`), which say why
+    on their own."""
     if seen is not None and not shown.empty:
-        lines = [*([VIEW_APPLIED] if applied else []), *seen.changes, seen.summary(data_version)]
+        lines = [*([VIEW_APPLIED] if applied else []), *idle, *seen.changes, seen.summary(data_version)]
     else:
-        gone = VIEW_APPLIED if applied else CLEARED_LINE if cleared else VIEW_CLEARED
-        lines = [gone, f"the plot draws all {table_rows} rows of data v{data_version}"]
+        gone = [VIEW_APPLIED] if applied else [CLEARED_LINE] if cleared else [] if idle else [VIEW_CLEARED]
+        lines = [*gone, *idle, f"the plot draws all {table_rows} rows of data v{data_version}"]
     return DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(lines, ensure_ascii=False))
 
 
