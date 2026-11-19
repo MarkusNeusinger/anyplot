@@ -135,6 +135,7 @@ class TestFromABundleFile:
             "expected": "unknown",
             "tags": ["imported"],
             "source": "saved session anyplot-session-AbCdEf12.json, version 2",
+            "saved_session": True,
         }  # no `language`: the bundle predates the session language, so the replay keeps the default
         assert files["data.csv"] == DATA
         assert files["change_request.txt"] == "log scale on y\n"
@@ -451,6 +452,44 @@ class TestWhereTheCaseMayReplay:
 
         assert "owner_chat" not in imported.case and imported.case["sent_at"] == "2026-10-12T14:30:05Z"
         assert imported.case["lane"] == "admin"
+
+    @pytest.mark.parametrize(
+        ("replaces", "recorded", "pinned"),
+        [
+            (None, None, False),
+            ("20261118T080000Z-0a1b2c3d", "2026-11-18T08:00:00Z", True),  # corrects a case sent before the cut-off
+            ("20261119T080000Z-0a1b2c3d", "2026-11-19T08:00:00Z", False),
+            ("not-a-case-id", "unknown", True),
+            ("20261318T080000Z-0a1b2c3d", "unknown", True),  # month 13: no time to read
+        ],
+    )
+    def test_a_correction_records_when_the_case_it_corrects_was_sent_never_its_id(
+        self, tmp_path, promoted, replaces, recorded, pinned
+    ) -> None:
+        directory = _with_created_at(_case_dir(tmp_path, user_hash=PUBLIC_USER), "2026-11-19T09:00:00Z")
+        manifest_file = directory / "manifest.json"
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        manifest["replaces"] = replaces
+        manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
+
+        assert main([str(directory), "--id", "corrected"]) == 0
+
+        text = _written(promoted / "corrected")["case.json"]
+        assert json.loads(text)["replaces_sent_at"] == recorded
+        assert replaces is None or replaces not in text
+        assert is_pinned(load_case(promoted / "corrected", "promoted")) is pinned
+
+    def test_a_manifest_without_the_replaces_field_records_an_unknown_correction(self, tmp_path, promoted) -> None:
+        directory = _with_created_at(_case_dir(tmp_path, user_hash=PUBLIC_USER), "2026-11-19T09:00:00Z")
+        manifest_file = directory / "manifest.json"
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        del manifest["replaces"]
+        manifest_file.write_text(json.dumps(manifest), encoding="utf-8")
+
+        assert main([str(directory), "--id", "nofield"]) == 0
+
+        assert json.loads(_written(promoted / "nofield")["case.json"])["replaces_sent_at"] == "unknown"
+        assert is_pinned(load_case(promoted / "nofield", "promoted"))
 
 
 class TestWhereItWrites:

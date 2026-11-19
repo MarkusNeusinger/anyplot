@@ -163,5 +163,5 @@ def test_requests_and_stand_ins(files: dict[str, str]) -> None:
 
 def test_every_committed_stress_case_loads() -> None:
     for directory in sorted(CASES_DIR.glob(PREFIX + "*")):
-        case = load_case(directory)
+        case = load_case(directory, "fixtures")
         assert "stress" in case.tags and case.data_text

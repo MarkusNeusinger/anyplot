@@ -1051,6 +1051,52 @@ async def test_three_errors_in_a_row_stop_the_run(
     assert result.exit_code == EXIT_OUTAGE and len(result.report["runs"]) == matrix.MAX_ERRORS_IN_A_ROW
 
 
+async def test_skip_pinned_writes_no_id_of_a_case_it_left_out(
+    tmp_path: Path, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A synced case's id names the second its feedback was sent, so the ids of the cases `--skip-pinned` left out go to
+    stderr alone: no report, summary, gallery or baseline holds one, and the run is not saved as a baseline."""
+    from agents.evals import replay
+    from agents.evals.cases import load_case
+
+    invented = "case-20261112t074027z-0a1b2c3d"
+    directory = tmp_path / "promoted" / invented
+    directory.mkdir(parents=True)
+    fields = {"spec_id": "scatter-basic", "library": "matplotlib", "expected": "rejected", "tags": ["imported"]}
+    (directory / "case.json").write_text(json.dumps({**fields, "sent_at": "2026-11-12T07:40:27Z"}), encoding="utf-8")
+    (directory / "data.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+    pinned = load_case(directory, "promoted")
+    monkeypatch.setattr(replay, "built_routes", lambda environ=None: ())  # as built by a fresh process
+    stderr: list[str] = []
+
+    cases, left_out = matrix.select_for_run(
+        "bar-grouped-seaborn,scatter-basic-matplotlib,case-*",
+        AgentSettings(location="global"),
+        skip_pinned=True,
+        load=lambda: [*two_fixtures(), pinned],
+        echo=stderr.append,
+    )
+    ok = {"status": "ok", "attempts": 1}
+    monkeypatch.setattr(
+        matrix.CaseRunner, "run", scripted_records({"bar-grouped-seaborn": ok, "scatter-basic-matplotlib": ok})
+    )
+    out = tmp_path / "out"
+    result = await run_matrix(
+        cases,
+        config(out, preflight=False, pinned_left_out=left_out, save_baseline=True, baselines_dir=out / "baselines"),
+        services=services,
+        runtime=runtime(),
+        echo=stderr.append,
+    )
+
+    assert left_out == 1 and any(invented in line for line in stderr)
+    assert result.report["stamp"]["pinned_left_out"] == 1
+    assert result.baseline_written is None
+    assert any("--skip-pinned left out 1 promoted cases" in note for note in result.notes)
+    texts = [path.read_text(errors="replace") for path in out.rglob("*") if path.is_file()]
+    assert texts and not any(invented in text or "20261112t074027z" in text for text in texts)
+
+
 async def test_harness_errors_count_as_failures_and_exit_1(
     tmp_path: Path, services: Services, monkeypatch: pytest.MonkeyPatch
 ) -> None:

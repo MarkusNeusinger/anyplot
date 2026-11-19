@@ -74,7 +74,7 @@ def test_every_committed_case_loads() -> None:
 
 def test_the_german_message_case_sets_the_language_by_its_first_typed_message() -> None:
     """The owner's eval case: an English first plot, then a German follow-up that the scope judge reads as `de`."""
-    case = load_case(CASES_DIR / "scatter-basic-matplotlib-german-message")
+    case = load_case(CASES_DIR / "scatter-basic-matplotlib-german-message", "fixtures")
 
     assert (case.spec_id, case.library, case.expected) == ("scatter-basic", "matplotlib", "accepted")
     assert {"de", "language"} <= set(case.tags) and "smoke" not in case.tags
@@ -134,6 +134,54 @@ def test_a_promoted_case_reads_when_it_was_sent_its_lane_and_the_owner_mark(tmp_
     assert load_case(_write(tmp_path / "admin", {**VALID, "lane": "admin"}), "promoted").lane == "admin"
 
 
+def test_a_case_says_where_it_comes_from(tmp_path: Path) -> None:
+    """Where a case lies must never decide what it is: `load_case` has no default origin."""
+    directory = _write(tmp_path / "plain", VALID)
+
+    with pytest.raises(TypeError):
+        load_case(directory)
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"sent_at": "2026-11-12T07:40:27Z"},
+        {"lane": "public"},
+        {"owner_chat": False},
+        {"replaces_sent_at": None},
+        {"saved_session": True},
+        {"tags": ["imported", "thumbs_down"]},
+    ],
+    ids=["sent_at", "lane", "owner_chat", "replaces_sent_at", "saved_session", "imported-tag"],
+)
+def test_a_fixture_that_carries_what_only_an_imported_case_carries_is_refused(tmp_path: Path, fields: dict) -> None:
+    """Such a case would replay anywhere as a synthetic one, and could be committed as a fixture."""
+    directory = _write(tmp_path / "case-invented-copied", {**VALID, **fields})
+
+    with pytest.raises(CaseError, match="a fixture carries what only an imported case carries"):
+        load_case(directory, "fixtures")
+    assert load_case(directory, "promoted").origin == "promoted"
+
+
+@pytest.mark.parametrize("value", ["2026-11-19t00:00:00z", "2026-1-9T0:0:0Z", "２０２６-11-19T00:00:00Z"])
+def test_a_send_time_needs_ascii_digits_padded_and_capitals(tmp_path: Path, value: str) -> None:
+    with pytest.raises(CaseError, match="sent_at must be a UTC time"):
+        load_case(_write(tmp_path / "odd", {**VALID, "sent_at": value}), "promoted")
+
+
+@pytest.mark.parametrize(
+    ("value", "replaces"),
+    [(None, None), ("unknown", "unknown"), ("2026-11-18T08:00:00Z", datetime(2026, 11, 18, 8, tzinfo=UTC))],
+)
+def test_a_promoted_case_reads_the_case_it_corrects(tmp_path: Path, value: object, replaces: object) -> None:
+    case = load_case(_write(tmp_path / "corrected", {**VALID, "replaces_sent_at": value}), "promoted")
+
+    assert case.replaces == replaces
+    assert load_case(_write(tmp_path / "plain", VALID), "promoted").replaces == "unknown"  # absent fails closed
+    with pytest.raises(CaseError, match="replaces_sent_at must be"):
+        load_case(_write(tmp_path / "odd", {**VALID, "replaces_sent_at": "20261118T080000Z-0a1b2c3d"}), "promoted")
+
+
 @pytest.mark.parametrize("value", ["owner", "Admin", "adm_0123456789abcdef", 1])
 def test_a_lane_is_admin_or_public(tmp_path: Path, value: object) -> None:
     """A closed value: never a `user_hash`, never a near miss."""
@@ -160,23 +208,23 @@ def test_the_owner_mark_is_true_or_false(tmp_path: Path, value: object) -> None:
 def test_a_case_may_take_data_steps_before_its_plot(tmp_path: Path) -> None:
     steps = [[{"op": "sort", "column": "b", "descending": True}], [{"op": "keep_rows", "n": 1}]]
 
-    case = load_case(_write(tmp_path / "stepped", {**VALID, "before_operations": steps}))
+    case = load_case(_write(tmp_path / "stepped", {**VALID, "before_operations": steps}), "fixtures")
 
     assert case.before_operations == tuple(tuple(operations) for operations in steps)
-    assert load_case(_write(tmp_path / "plain", VALID)).before_operations == ()
+    assert load_case(_write(tmp_path / "plain", VALID), "fixtures").before_operations == ()
 
 
 def test_a_case_may_draw_under_a_view_of_the_plot(tmp_path: Path) -> None:
     top = [{"op": "sort", "column": "b", "descending": True}, {"op": "keep_rows", "n": 1}]
     fields = {"before_view": [KEEP_B, *top], "view_checks": {"named": True, "clear": True}}
 
-    case = load_case(_write(tmp_path / "viewed", {**VALID, **fields}))
+    case = load_case(_write(tmp_path / "viewed", {**VALID, **fields}), "fixtures")
 
     assert case.before_view == (KEEP_B, *top)
     assert case.view_checks == ViewChecks(named=True, clear=True, no_dq03=False)
     # Without checks the harness checks the drawn rows alone; without a view the case is as before.
-    assert load_case(_write(tmp_path / "unchecked", {**VALID, "before_view": top})).view_checks is None
-    plain = load_case(_write(tmp_path / "plain", VALID))
+    assert load_case(_write(tmp_path / "unchecked", {**VALID, "before_view": top}), "fixtures").view_checks is None
+    plain = load_case(_write(tmp_path / "plain", VALID), "fixtures")
     assert (plain.before_view, plain.view_checks) == ((), None)
 
 
@@ -185,12 +233,12 @@ def test_the_clearing_of_a_view_is_the_cases_only_follow_up(tmp_path: Path) -> N
     (directory / "change_request.txt").write_text("make the bars blue\n")
 
     with pytest.raises(CaseError, match="view_checks.clear and a change_request.txt exclude each other"):
-        load_case(directory)
+        load_case(directory, "fixtures")
 
 
 @pytest.mark.parametrize("language", ["de", "Deutsch", "Klingon", "Old Norse"])
 def test_a_case_may_name_the_session_language_it_chooses(tmp_path: Path, language: str) -> None:
-    case = load_case(_write(tmp_path / "chosen", {**VALID, "language": language}))
+    case = load_case(_write(tmp_path / "chosen", {**VALID, "language": language}), "fixtures")
 
     assert case.language == language
 
@@ -234,7 +282,7 @@ def test_invalid_fields_are_refused(tmp_path: Path, change: dict, message: str) 
     directory = _write(tmp_path / "bad-case", {**VALID, **change})
 
     with pytest.raises(CaseError, match=message):
-        load_case(directory)
+        load_case(directory, "fixtures")
 
 
 COMBINED = {
@@ -249,7 +297,7 @@ COMBINED = {
 def test_the_combined_request_cases_check_every_part_of_their_follow_up(case_id: str) -> None:
     """User test of 2026-11-01: "make the title German and use a log scale" lost the log scale. Each case's follow-up
     asks for two things (the control for one), and its checks measure each part in the shipped version."""
-    case = load_case(CASES_DIR / case_id)
+    case = load_case(CASES_DIR / case_id, "fixtures")
     message, language = COMBINED[case_id]
 
     assert case.change_request == message and "combined-request" in case.tags
@@ -306,7 +354,7 @@ def test_the_combined_request_patterns_tell_the_change_from_the_catalogue(patter
         "labels": ("scatter-basic-matplotlib-combined-theme-grid", "code_kept", 1),
     }
     case_id, field_name, index = cases[pattern]
-    checks = load_case(CASES_DIR / case_id).checks
+    checks = load_case(CASES_DIR / case_id, "fixtures").checks
     assert checks is not None
 
     assert (re.search(getattr(checks, field_name)[index], code) is not None) is found
@@ -325,7 +373,7 @@ SUMMARY_CALL = re.compile(r"\b(?:mean|median|sum)\(")
 
 
 def _rows(case_id: str) -> list[dict[str, str]]:
-    return list(csv.DictReader(io.StringIO(load_case(CASES_DIR / case_id).data_text)))
+    return list(csv.DictReader(io.StringIO(load_case(CASES_DIR / case_id, "fixtures").data_text)))
 
 
 @pytest.mark.parametrize("case_id", sorted(VIEW_CASES))
@@ -339,7 +387,7 @@ def test_the_view_cases_hold_the_premises_their_checks_read(case_id: str) -> Non
     from agents.anyplot.data.prepare import Operation
     from agents.anyplot.plot_view import PlotView, merged, route
 
-    case = load_case(CASES_DIR / case_id)
+    case = load_case(CASES_DIR / case_id, "fixtures")
     checks = VIEW_CASES[case_id]
     assert case.view_checks == checks and "view" in case.tags and case.change_request is None
     code = case.snapshot().code
@@ -378,15 +426,15 @@ def test_checks_are_read_and_need_a_follow_up(tmp_path: Path) -> None:
     }
     directory = _write(tmp_path / "checked", {**VALID, "checks": checks})
     with pytest.raises(CaseError, match="checks need a change_request.txt"):
-        load_case(directory)
+        load_case(directory, "fixtures")
     (directory / "change_request.txt").write_text("German labels and a grid\n")
 
-    case = load_case(directory)
+    case = load_case(directory, "fixtures")
 
     assert case.checks == FollowUpChecks(
         language="de", theme="dark", code_added=("grid\\(",), code_kept=("PAGE_BG",), texts_changed=("title", "legend")
     )
-    assert load_case(_write(tmp_path / "unchecked", VALID)).checks is None
+    assert load_case(_write(tmp_path / "unchecked", VALID), "fixtures").checks is None
 
 
 @pytest.mark.parametrize(
@@ -413,7 +461,7 @@ def test_invalid_checks_are_refused(tmp_path: Path, checks: object, message: str
     (directory / "change_request.txt").write_text("a follow-up\n")
 
     with pytest.raises(CaseError, match=message):
-        load_case(directory)
+        load_case(directory, "fixtures")
 
 
 def test_missing_files_and_bad_ids_are_refused(tmp_path: Path) -> None:
@@ -421,9 +469,9 @@ def test_missing_files_and_bad_ids_are_refused(tmp_path: Path) -> None:
     directory.mkdir()
     (directory / "case.json").write_text(json.dumps(VALID))
     with pytest.raises(CaseError, match="case.json and data.csv"):
-        load_case(directory)
+        load_case(directory, "fixtures")
     with pytest.raises(CaseError, match="not a case id"):
-        load_case(_write(tmp_path / "Upper_Case", VALID))
+        load_case(_write(tmp_path / "Upper_Case", VALID), "fixtures")
 
 
 def test_promoted_cases_join_and_may_not_shadow_a_fixture(tmp_path: Path) -> None:

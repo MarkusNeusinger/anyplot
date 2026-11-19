@@ -91,13 +91,16 @@ or without a recorded send time, replays only on Claude through Vertex AI in `eu
 one route its sender was told about, unless it comes from the admin lane or holds the
 operator's own data (`agents/evals/replay.py`). The case selection
 compares that pin with every model route the run resolved (the root, the adapter, the
-reviewer and the judge, after the flags, the environment and the defaults), so a run
-that would send such a case elsewhere (`--provider gemini`, `--location global` or
-`us`, `AGENT_TRANSPORT=claude-cli`) ends with exit code 2 before the preflight and
-names each pinned case and each route that leaves the pin. `--skip-pinned` leaves those
-cases out instead, prints them, and the stamp records them as `pinned_left_out`. Each
-run record carries the case's `origin`, `sent_at`, `lane` and `owner_chat`, so `score.py` can
-apply the same rule to the renders `--keep-attempts` kept.
+reviewer and the judge, after the flags, the environment and the defaults, with an
+endpoint override the Claude client would take, and matching the agents as they were
+built), so a run that would send such a case elsewhere (`--provider gemini`,
+`--location global` or `us`, `AGENT_TRANSPORT=claude-cli`, `ANTHROPIC_VERTEX_BASE_URL`)
+ends with exit code 2 before the preflight and names each pinned case and each route
+that leaves the pin. `--skip-pinned` leaves those cases out instead and prints their ids
+to stderr; the stamp records only how many (`pinned_left_out`), and such a run is never
+saved as a baseline. Each run record carries the case's `origin`, `sent_at`, `lane`,
+`owner_chat`, `replaces_sent_at` and `saved_session`, so `score.py` can apply the same
+rule to the renders `--keep-attempts` kept.
 
 With a baseline (`--baseline FILE`, by default `agents/evals/baselines/<pinned model>.json`
 when it exists) the run prints the diff table over the cases both reports hold: pass
@@ -410,8 +413,9 @@ class MatrixConfig:
     keep_attempts: bool = False
     theme: str | None = None
     """`--theme`: the site theme every turn sends, as the page does; None sends none, and the plots render light."""
-    pinned_left_out: tuple[str, ...] = ()
-    """The pinned promoted cases `--skip-pinned` left out, which the stamp records as `pinned_left_out`."""
+    pinned_left_out: int = 0
+    """How many pinned promoted cases `--skip-pinned` left out, the stamp's `pinned_left_out`; never their ids, which
+    go to stderr alone."""
     argv: list[str] = field(default_factory=list)
 
 
@@ -746,10 +750,11 @@ def parse_events(chunks: list[tuple[float, bytes]], started: float) -> list[Even
 def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
     """A run record before the run: every field the report reads, with its empty value.
 
-    `origin`, `sent_at`, `lane` and `owner_chat` are what `replay.is_pinned` reads, so `score.py` can apply the same
-    rule to the renders `--keep-attempts` kept, also after the case itself has left `.cases/`.
+    `origin`, `sent_at`, `lane`, `owner_chat`, `replaces_sent_at` and `saved_session` are what `replay.is_pinned`
+    reads, so `score.py` can apply the same rule to the renders `--keep-attempts` kept, also after the case itself has
+    left `.cases/`.
     """
-    from agents.evals.replay import format_sent_at
+    from agents.evals.replay import format_replaces, format_sent_at
 
     return {
         "case_id": case.case_id,
@@ -763,6 +768,8 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "sent_at": format_sent_at(case.sent_at) if case.sent_at is not None else None,
         "lane": case.lane,
         "owner_chat": case.owner_chat,
+        "replaces_sent_at": format_replaces(case.replaces),
+        "saved_session": case.saved_session,
         "status": "harness_error",
         "reason": None,
         "attempts": 0,
@@ -1767,7 +1774,7 @@ def build_stamp(
         "gallery_seed": config.seed,
         "baseline": str(config.baseline_path) if config.baseline_path else None,
         "theme": config.theme,
-        "pinned_left_out": list(config.pinned_left_out),
+        "pinned_left_out": config.pinned_left_out,
         "argv": list(config.argv),
     }
 
@@ -1806,6 +1813,10 @@ def write_baseline(report: dict[str, Any], baselines_dir: Path) -> tuple[Path | 
         return None, f"not saved as a baseline: the run stopped early ({report['stopped']})"
     if any(run.get("origin") != "fixtures" for run in runs):
         return None, "not saved as a baseline: the run includes promoted cases, which hold users' data"
+    left_out = (report.get("stamp") or {}).get("pinned_left_out")
+    if left_out:
+        # A committed file must not even count the promoted cases a selection held.
+        return None, f"not saved as a baseline: --skip-pinned left out {left_out} promoted cases of its selection"
     errors = sorted({str(run.get("case_id")) for run in runs if is_error(run)})
     if errors:
         return None, (
@@ -2192,29 +2203,38 @@ def select_for_run(
     skip_pinned: bool = False,
     load: "Callable[[], list[EvalCase]] | None" = None,
     echo: Callable[[str], None] = _echo,
-) -> tuple[list["EvalCase"], tuple[str, ...]]:
-    """The cases of `--cases` for a run on `settings`, and the pinned ones `--skip-pinned` left out.
+) -> tuple[list["EvalCase"], int]:
+    """The cases of `--cases` for a run on `settings`, and how many pinned ones `--skip-pinned` left out.
 
-    The selection checks every model route the run resolved (`replay.routes_of`, after the flags, the environment
-    and the defaults) before the preflight and before any model call. A pinned promoted case on another route stops
-    the run with the refusal's message; with `skip_pinned` the run goes on without those cases, prints which it left
-    out, and the stamp records them.
+    The selection checks every model route the run resolved (`replay.checked_routes`: after the flags, the
+    environment and the defaults, with an endpoint override, and matching the agents as they were built) before the
+    preflight and before any model call. A pinned promoted case on another route stops the run with the refusal's
+    message; with `skip_pinned` the run goes on without those cases and prints their ids to stderr, and the stamp
+    records their count alone, because a synced case's id names the second its feedback was sent.
     """
     from agents.evals.cases import CaseError, load_cases, select_cases
-    from agents.evals.replay import ReplayRefused, routes_of
+    from agents.evals.replay import ReplayRefused, RoutesDiffer, checked_routes
 
-    routes = routes_of(settings)
+    try:
+        routes = checked_routes(settings)
+    except RoutesDiffer as exc:
+        raise SetupError(str(exc)) from None
     try:
         every = (load or load_cases)()
         try:
-            return _nonempty(select_cases(every, selector, routes=routes), selector), ()
+            return _nonempty(select_cases(every, selector, routes=routes), selector), 0
         except ReplayRefused as refused:
             if not skip_pinned:
                 raise SetupError(str(refused)) from None
-            left_out = tuple(case.case_id for case in refused.cases)
+            left_out = {case.case_id for case in refused.cases}
             echo(refused.left_out())
-            rest = [case for case in every if case.case_id not in left_out]
-            return _nonempty(select_cases(rest, selector, routes=routes), selector), left_out
+            rest = select_cases([case for case in every if case.case_id not in left_out], selector, routes=routes)
+            if not rest:
+                raise SetupError(
+                    f"--skip-pinned left out every case --cases {selector!r} selects ({len(left_out)} pinned); "
+                    "nothing is left to run"
+                ) from None
+            return rest, len(left_out)
     except CaseError as exc:
         raise SetupError(str(exc)) from exc
 

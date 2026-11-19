@@ -161,6 +161,11 @@ class EvalCase:
     of the `admin` lane may replay anywhere (`replay.is_pinned`)."""
     owner_chat: bool = False
     """`owner_chat: true` in `case.json`: the case holds the operator's own data and may replay anywhere."""
+    replaces: replay.Replaces = replay.UNKNOWN
+    """When the case this one corrects was sent (`replaces_sent_at` in `case.json`); None when it corrects none,
+    `unknown` when the case records neither, which pins it (`replay.is_pinned`)."""
+    saved_session: bool = False
+    """`saved_session: true` in `case.json`: imported from a bundle `.save()` downloaded, which has no manifest."""
     snapshot_file: Path | None = field(default=None, repr=False)
 
     def snapshot(self) -> CatalogueSnapshot:
@@ -170,8 +175,16 @@ class EvalCase:
         return snapshot_from_repo(self.spec_id, self.library)
 
 
-def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
-    """Read and validate one case directory."""
+PROMOTED_FIELDS: tuple[str, ...] = ("sent_at", "lane", "owner_chat", "replaces_sent_at", "saved_session")
+"""The `case.json` fields only an imported case carries; a fixture that has one, or the `imported` tag, is refused."""
+
+
+def load_case(directory: Path, origin: Origin) -> EvalCase:
+    """Read and validate one case directory.
+
+    `origin` has no default: where a case lies must never decide what it is, so a caller names it, and a case under the
+    fixtures that carries what only an imported case carries is refused rather than run as a synthetic one.
+    """
     case_id = directory.name
     if not _CASE_ID.fullmatch(case_id):
         raise CaseError(f"{directory}: not a case id ({FIXTURE_PATTERN})")
@@ -193,6 +206,12 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
     tags = raw.get("tags", [])
     if not isinstance(tags, list) or not all(isinstance(tag, str) for tag in tags):
         raise CaseError(f"{directory}/case.json: tags must be a list of strings")
+    if origin == "fixtures" and (set(PROMOTED_FIELDS) & set(raw) or import_case.IMPORTED_TAG in tags):
+        raise CaseError(
+            f"{directory}/case.json: a fixture carries what only an imported case carries ({', '.join(PROMOTED_FIELDS)} "
+            f"or the {import_case.IMPORTED_TAG!r} tag); a feedback case belongs in agents/evals/.cases/, never among "
+            "the fixtures"
+        )
     bindings = _bindings(raw.get("bindings"), directory)
     change_file = directory / "change_request.txt"
     change_request = change_file.read_text(encoding="utf-8").strip() if change_file.is_file() else None
@@ -224,6 +243,15 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
     owner_chat = raw.get("owner_chat", False)
     if not isinstance(owner_chat, bool):
         raise CaseError(f"{directory}/case.json: owner_chat must be true or false")
+    saved_session = raw.get("saved_session", False)
+    if not isinstance(saved_session, bool):
+        raise CaseError(f"{directory}/case.json: saved_session must be true or false")
+    try:
+        replaces = replay.parse_replaces(raw.get("replaces_sent_at"), present="replaces_sent_at" in raw)
+    except ValueError as exc:
+        raise CaseError(
+            f"{directory}/case.json: replaces_sent_at must be null, unknown or a UTC time as YYYY-MM-DDTHH:MM:SSZ"
+        ) from exc
     snapshot_file = directory / "snapshot.json"
     perturbation = raw.get("perturbation")
     return EvalCase(
@@ -248,6 +276,8 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
         sent_at=sent_at,
         lane=lane,
         owner_chat=owner_chat,
+        replaces=replaces,
+        saved_session=saved_session,
         snapshot_file=snapshot_file if snapshot_file.is_file() else None,
     )
 
@@ -259,7 +289,9 @@ def _sent_at(value: Any, directory: Path) -> datetime | None:
     try:
         return replay.parse_sent_at(value)
     except ValueError as exc:
-        raise CaseError(f"{directory}/case.json: sent_at must be a UTC time as YYYY-MM-DDTHH:MM:SSZ") from exc
+        raise CaseError(
+            f"{directory}/case.json: sent_at must be a UTC time as YYYY-MM-DDTHH:MM:SSZ in ASCII digits"
+        ) from exc
 
 
 def _before_operations(value: Any, directory: Path) -> tuple[tuple[dict[str, Any], ...], ...]:
@@ -408,9 +440,12 @@ def load_cases(fixtures_dir: Path = CASES_DIR, promoted_dir: Path | None = None)
     """Every case of both sources, sorted by case id; a case id in both is an error.
 
     `promoted_dir` defaults to `import_case.promoted_cases_dir()`, resolved on each call rather than bound at import, so
-    the eval tests' fixture can point it at an empty temporary directory and a test never reads a visitor's case.
+    the eval tests' fixture can point it at an empty temporary directory and a test never reads a visitor's case; a
+    directory a caller names passes the same guard (`import_case.guard_promoted_dir`).
     """
-    promoted_dir = import_case.promoted_cases_dir() if promoted_dir is None else promoted_dir
+    promoted_dir = (
+        import_case.promoted_cases_dir() if promoted_dir is None else import_case.guard_promoted_dir(promoted_dir)
+    )
     cases: dict[str, EvalCase] = {}
     sources: tuple[tuple[Path, Origin], ...] = ((fixtures_dir, "fixtures"), (promoted_dir, "promoted"))
     for directory, origin in sources:
@@ -422,6 +457,28 @@ def load_cases(fixtures_dir: Path = CASES_DIR, promoted_dir: Path | None = None)
                 raise CaseError(f"case id {case.case_id} exists in both {fixtures_dir} and {promoted_dir}")
             cases[case.case_id] = case
     return [cases[case_id] for case_id in sorted(cases)]
+
+
+def load_named(
+    wanted: dict[str, str], fixtures_dir: Path = CASES_DIR, promoted_dir: Path | None = None
+) -> dict[str, EvalCase]:
+    """The cases `wanted` names, each by its id from its origin's directory (`{case_id: origin}`), without listing either
+    directory: a caller that needs a few cases reads those and no other. An id whose directory is gone is left out."""
+    promoted_dir = (
+        import_case.promoted_cases_dir() if promoted_dir is None else import_case.guard_promoted_dir(promoted_dir)
+    )
+    roots: dict[str, tuple[Path, Origin]] = {
+        "fixtures": (fixtures_dir, "fixtures"),
+        "promoted": (promoted_dir, "promoted"),
+    }
+    found: dict[str, EvalCase] = {}
+    for case_id, origin in wanted.items():
+        if origin not in roots or not _CASE_ID.fullmatch(case_id):
+            continue
+        root, known = roots[origin]
+        if (root / case_id / "case.json").is_file():
+            found[case_id] = load_case(root / case_id, known)
+    return found
 
 
 def select_cases(cases: list[EvalCase], selector: str, *, routes: replay.Routes) -> list[EvalCase]:

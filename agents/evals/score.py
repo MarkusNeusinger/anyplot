@@ -28,12 +28,15 @@ When both are the same render it is scored once and counts for both.
 
 A promoted case's kept render, code and data are that case's data, so the scorer applies the
 replay rule (`agents/evals/replay.py`) to the records it is about to score, before the probe
-and before it reads any kept file: a record of a promoted case sent before 2026-11-19 that is
-neither from the admin lane nor marked as the operator's own data, or one that names no origin
-or send time (every report from before the rule), may be scored only on Claude through Vertex
-AI in `eu`. Another `--location` or `--transport claude-cli` then ends
-with exit code 2 and names each pinned case; `--skip-pinned` leaves their runs out and the
-scores' summary counts them.
+and before it reads any kept file: a record of a promoted case that the rule pins (sent before
+2026-11-19 or correcting such a case, neither from the admin lane nor marked as the operator's
+own data), or a promoted record without the send time, lane and correction fields, which every
+report from before the rule lacks, may be scored only on Claude through Vertex AI in `eu`. Run
+records have carried `origin` since #12116, so the fixture runs of an older report score
+anywhere. Another `--location`, `--transport claude-cli` or an endpoint override then ends with
+exit code 2 and names each pinned case; `--skip-pinned` leaves their runs out, prints their ids
+to stderr, and the scores' summary counts them. The scorer reads only the cases its admitted
+records name, for their bindings.
 """
 
 import argparse
@@ -61,7 +64,7 @@ from agents.anyplot.scoring import (
     system_prompt,
     user_text,
 )
-from agents.evals.replay import ReplayRefused, Route, check, record_facts
+from agents.evals.replay import ReplayRefused, Route, check, endpoint_override, record_facts
 
 
 DEFAULT_MODEL = "claude-opus-5-5"
@@ -540,14 +543,11 @@ def markdown(summary: dict[str, Any]) -> str:
         lines += [f"- {item['run']}: {item['score']}" for item in summary["clean_gates_low_score"]]
     if summary["score_errors"]:
         lines += ["", f"Scoring errors: {len(summary['score_errors'])}"]
-    left_out = summary.get("pinned_left_out") or []
-    if left_out:
-        count = "1 pinned promoted case" if len(left_out) == 1 else f"{len(left_out)} pinned promoted cases"
-        lines += [
-            "",
-            f"Left out: {count} (--skip-pinned), which may be scored only on Claude through Vertex AI in eu: "
-            f"{', '.join(left_out)}",
-        ]
+    left_out = summary.get("pinned_left_out")
+    if isinstance(left_out, int) and left_out > 0:
+        # The count alone: the ids went to stderr, and no written file holds them.
+        count = "1 pinned promoted case" if left_out == 1 else f"{left_out} pinned promoted cases"
+        lines += ["", f"Left out: {count} (--skip-pinned), which may be scored only on Claude through Vertex AI in eu."]
     return "\n".join(lines) + "\n"
 
 
@@ -610,16 +610,18 @@ def spread(items: list[Any], count: int) -> list[Any]:
 
 
 def scorer_route(args: argparse.Namespace) -> Route:
-    """Where the scoring calls go: Claude's Vertex AI client (`make_anthropic_client`) at `--location`, or the CLI."""
-    return Route("scorer", args.model, "anthropic-vertex", args.transport, args.location)
+    """Where the scoring calls go: Claude's Vertex AI client (`make_anthropic_client`) at `--location`, which takes an
+    endpoint override from the environment (`replay.ENDPOINT_OVERRIDES`), or the CLI."""
+    endpoint = endpoint_override() if args.transport == "vertex" else None
+    return Route("scorer", args.model, "anthropic-vertex", args.transport, args.location, endpoint)
 
 
-def admit(records: list[dict[str, Any]], route: Route, *, skip_pinned: bool) -> tuple[list[dict[str, Any]], list[str]]:
-    """The records the scorer may send on `route`, and the case ids `skip_pinned` left out.
+def admit(records: list[dict[str, Any]], route: Route, *, skip_pinned: bool) -> tuple[list[dict[str, Any]], int]:
+    """The records the scorer may send on `route`, and how many cases `skip_pinned` left out (their ids go to stderr).
 
-    Each record's own `origin`, `sent_at`, `lane` and `owner_chat` decide (`replay.record_facts`), never the case's
-    current directory: a case retired since the run has left `.cases/`, and its kept files have not. `ReplayRefused` when a
-    pinned record would leave the pin and `skip_pinned` is off.
+    Each record's own facts decide (`replay.record_facts`), never the case's current directory: a case retired since
+    the run has left `.cases/`, and its kept files have not. `ReplayRefused` when a pinned record would leave the pin and
+    `skip_pinned` is off.
     """
     try:
         check([record_facts(record) for record in records], [route])
@@ -627,13 +629,13 @@ def admit(records: list[dict[str, Any]], route: Route, *, skip_pinned: bool) -> 
         if not skip_pinned:
             raise
         print(refused.left_out(), file=sys.stderr)
-        left_out = [case.case_id for case in refused.cases]
-        return [record for record in records if str(record.get("case_id")) not in left_out], left_out
-    return records, []
+        left_out = {case.case_id for case in refused.cases}
+        return [record for record in records if str(record.get("case_id")) not in left_out], len(left_out)
+    return records, 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    from agents.evals.cases import load_cases
+    from agents.evals.cases import load_named
 
     args = parse_args(argv)
     try:
@@ -655,7 +657,8 @@ def main(argv: list[str] | None = None) -> int:
     if not records:
         print("--skip-pinned left out every run, so nothing is left to score", file=sys.stderr)
         return 2
-    cases = {case.case_id: case for case in load_cases()}
+    # For the bindings alone, and only the cases the admitted records name: no other stored case is read.
+    cases = load_named({str(record.get("case_id")): str(record.get("origin")) for record in records})
     jobs: list[tuple[Target, ScoreRequest]] = []
     for record in records:
         case = cases.get(record["case_id"])

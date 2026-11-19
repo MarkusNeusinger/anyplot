@@ -93,6 +93,7 @@ from agents.anyplot.turn_record import (
 )
 from agents.main import MessageBody, QueueOutcome, Runtime, TurnFacts, _keep_turn, app, get_runtime, post_message
 
+from ..tracked import tracked_python_files
 from .fakes import SCATTER_PLAN, VERDICT_OK
 from .test_run_queue import Clock
 from .test_service_flow import HEADERS, USER, open_session, parse_sse, permissive_queue
@@ -119,7 +120,7 @@ IN_SCOPE = ("scope_guard", "in_scope")
 
 
 def source_files() -> list[Path]:
-    return [path for path in AGENTS.rglob("*.py") if "evals" not in path.parts]
+    return [path for path in tracked_python_files() if "evals" not in path.relative_to(AGENTS).parts]
 
 
 # --- the closed sets ------------------------------------------------------------------------

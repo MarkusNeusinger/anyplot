@@ -33,6 +33,8 @@ from agents.anyplot.session_state import PLOT_LANGUAGE, initial_state, language_
 from agents.anyplot.settings import AgentSettings
 from agents.anyplot.tools.session import ROOT_TOOL_NAMES
 
+from ..tracked import tracked_python_files
+
 
 REPO = Path(__file__).resolve().parents[4]
 
@@ -159,7 +161,7 @@ class TestRegistry:
 
     def test_no_adk_server_or_executor_imports(self) -> None:
         forbidden = ("google.adk.cli", "code_executors", "LoggingPlugin", "google_search", "url_context", "AgentTool")
-        for path in (REPO / "agents").rglob("*.py"):
+        for path in tracked_python_files():
             imports = [
                 line for line in path.read_text(encoding="utf-8").splitlines() if line.startswith(("import ", "from "))
             ]

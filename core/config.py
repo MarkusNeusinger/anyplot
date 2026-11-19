@@ -239,7 +239,9 @@ class Settings(BaseSettings):
     in production. Accepts either a JSON array (`["a@b.com","c@d.com"]`)
     or a comma-separated string (`a@b.com,c@d.com`) when set via env var.
     `NoDecode` keeps pydantic-settings from JSON-parsing the env value
-    before our field_validator runs (so a comma-separated string is OK)."""
+    before our field_validator runs (so a comma-separated string is OK).
+    Whoever is added is also exempt from the eval harness's replay pin for
+    their feedback cases (agents/README.md, "Promoted cases keep to their route")."""
 
     @field_validator("admin_allowed_emails", mode="before")
     @classmethod

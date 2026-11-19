@@ -37,11 +37,14 @@ else: a feedback case holds a user's data, and everything under
   `tags` `["imported", <reaction>]`; `source`, where the case came from; `sent_at`, when
   the feedback was sent, the manifest's `created_at`; `lane`, `admin` or `public`, the BFF
   lane that served the chat, read from the form of the manifest's `user_hash`
-  (`replay.lane_of`; the value itself is never copied); and `owner_chat: true` only with
-  `--owner-chat`, which asserts that the case's data is your own. A bundle has no
-  manifest, so its case records neither a send time nor a lane. A case sent before
-  2026-11-19, or without `sent_at`, replays only on Claude through Vertex AI in `eu`, the
-  one route its sender was told about, unless its lane is `admin` or `owner_chat` is set
+  (`replay.lane_of`; the value itself is never copied); `replaces_sent_at`, the second
+  the case it corrects was sent, read from the manifest's `replaces` (null when it
+  corrects none, `unknown` when that value is no case id); and `owner_chat: true` only
+  with `--owner-chat`, which asserts that the case's data is your own. A bundle has no
+  manifest, so its case records `saved_session: true` and neither a send time, a lane nor
+  a correction. A case sent before 2026-11-19, or without `sent_at`, or one that corrects
+  a case sent before then, replays only on Claude through Vertex AI in `eu`, the one route
+  its sender was told about, unless its lane is `admin` or `owner_chat` is set
   (`agents/evals/replay.py`); `sync_cases.py` never sets `owner_chat`. The
   bundle holds the session's bindings when it was taken, not each version's, so a
   binding that names a column the version's `data.csv` lacks (a later data change
@@ -116,21 +119,61 @@ _EXPORT_LIBRARY = re.compile(
 
 
 class RealCasesUnderTest(RuntimeError):
-    """A test reached the real promoted directory, which holds visitors' data."""
+    """A test, or a process that imported pytest, reached the real promoted directory, which holds visitors' data."""
+
+
+_MAX_LINKS = 40
+
+
+def under_test() -> bool:
+    """Whether this process runs tests: it imported pytest, or a running test started it (`PYTEST_CURRENT_TEST`, which a
+    child process inherits)."""
+    return "pytest" in sys.modules or "PYTEST_CURRENT_TEST" in os.environ
+
+
+def names_real_cases(candidate: Path | str) -> bool:
+    """Whether `candidate` names the real promoted directory, or a path inside it, in any spelling: relative, with `.`
+    or `..`, as a string, or through symbolic links.
+
+    Decided from the names and from the links on the way, never by opening, listing or stat-ing that directory: the
+    path is normalised by its names first, the parents of what is left are resolved, and a link is read, not followed.
+    """
+    real = EVALS_DIR.resolve() / ".cases"
+    path = Path(os.path.normpath(Path(candidate).absolute()))
+    for _ in range(_MAX_LINKS):
+        if path == real or real in path.parents:
+            return True
+        parent = path.parent.resolve()
+        here = parent / path.name
+        if here == real or real in here.parents:
+            return True
+        if not here.is_symlink():
+            return False
+        target = Path(os.readlink(here))
+        path = Path(os.path.normpath(target if target.is_absolute() else parent / target))
+    return True  # a loop of links: refused like the directory itself
+
+
+def guard_promoted_dir(directory: Path | str) -> Path:
+    """`directory` as a path, refused when a test reaches the real promoted directory through it (`names_real_cases`)."""
+    if under_test() and names_real_cases(directory):
+        raise RealCasesUnderTest(
+            f"refused to use {directory} for promoted cases: it is the real agents/evals/.cases/, which holds "
+            "visitors' data, and this process runs tests (it imported pytest, or a test started it), so it must never "
+            "read it. In a test, point import_case.PROMOTED_DIR, or the directory you pass, at a temporary directory; "
+            "outside a test, run the tool in a process that has not imported pytest."
+        )
+    return Path(directory)
 
 
 def promoted_cases_dir() -> Path:
     """`PROMOTED_DIR` as it stands when it is used, so a test can point it at a temporary directory.
 
-    The real directory holds visitors' data, so a process that has imported pytest never gets it: the eval tests point
-    `PROMOTED_DIR` at an empty temporary directory (`tests/unit/agents/evals/conftest.py`), and a test that reaches the
-    default without that fails here, before anything reads the directory.
+    The real directory holds visitors' data, so a process that runs tests never gets it (`guard_promoted_dir`): the eval
+    tests point `PROMOTED_DIR` at an empty temporary directory (`tests/unit/agents/evals/conftest.py`), and a test that
+    reaches the default without that fails here, before anything reads the directory.
     """
-    if "pytest" in sys.modules and PROMOTED_DIR == EVALS_DIR / ".cases":
-        raise RealCasesUnderTest(
-            "a test reached the real agents/evals/.cases/: point import_case.PROMOTED_DIR at a temporary directory"
-        )
-    return PROMOTED_DIR
+    return guard_promoted_dir(PROMOTED_DIR)
 
 
 class ImportRefused(ValueError):
@@ -382,7 +425,7 @@ def build_case(
     route; a saved session has no manifest and so no lane, and only the person who imports
     it can say whose data it holds.
     """
-    from agents.evals.replay import PINNED_ROUTE, lane_of
+    from agents.evals.replay import PINNED_ROUTE, UNKNOWN, format_replaces, lane_of, replaced_sent_at
     from core.constants import SUPPORTED_LIBRARIES
 
     raw_session = source.bundle.get("session")
@@ -441,6 +484,13 @@ def build_case(
     sent_at = sent_at_of(source)
     # The lane alone is kept, never the `user_hash` it is read from.
     lane = lane_of(source.manifest.get("user_hash")) if source.manifest is not None else None
+    # The second the replaced case was sent, never its id: the rule needs the time alone, and the case's own
+    # `sent_at` is already a second of the same kind, so the field names no other case and links nothing new.
+    replaces = (
+        format_replaces(replaced_sent_at(source.manifest.get("replaces")) if "replaces" in source.manifest else UNKNOWN)
+        if source.manifest is not None
+        else None
+    )
     if sent_at is None and lane != "admin" and not owner_chat:
         what = (
             "a saved session records no send time"
@@ -461,6 +511,9 @@ def build_case(
         "source": source.description,
         **({"sent_at": sent_at} if sent_at is not None else {}),
         **({"lane": lane} if lane is not None else {}),
+        # Always written for a stored case, null when it corrects none: a case without the field is pinned.
+        **({"replaces_sent_at": replaces} if source.manifest is not None else {}),
+        **({"saved_session": True} if source.manifest is None else {}),
         **({"owner_chat": True} if owner_chat else {}),
     }
     return ImportedCase(case=case, data_csv=source.data_csv, change_request=request, notes=notes)
@@ -478,7 +531,7 @@ def write_case(
     from agents.anyplot.settings import FIXTURE_PATTERN
     from agents.evals.cases import CaseError, load_case
 
-    promoted_dir = promoted_cases_dir() if promoted_dir is None else promoted_dir
+    promoted_dir = promoted_cases_dir() if promoted_dir is None else guard_promoted_dir(promoted_dir)
     fixtures_dir = FIXTURES_DIR if fixtures_dir is None else fixtures_dir
     # Checked before the id becomes part of any path.
     if not re.fullmatch(FIXTURE_PATTERN, case_id):

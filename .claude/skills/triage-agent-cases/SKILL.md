@@ -47,7 +47,9 @@ inputs carry over (data shape, bindings, request, expected outcome).
   A promoted case sent before 2026-11-19 that the admin lane did not serve
   replays only on Claude through Vertex AI in `eu`, and the harness refuses any
   other route for it
-  (`agents/README.md`, "Promoted cases keep to their route").
+  (`agents/README.md`, "Promoted cases keep to their route"). The admin lane
+  says who held the admin door, not whose data was pasted: a visitor's table
+  reproduced in the admin chat becomes an exempt case.
 - **Never join telemetry to a case.** The telemetry's session hash is salted
   on purpose; do not join by time either (`docs/reference/agent-telemetry.md`).
 

@@ -202,8 +202,12 @@ def sync(rows: list[AgentFeedback], store: CaseStore, cases_dir: Path, *, force:
     """Bring `cases_dir` in line with the rows: write the active cases, remove the others.
 
     Only `case-*` directories whose case has a row are written or removed; a bucket or file
-    error of one case is reported as `failed` and the next case goes on.
+    error of one case is reported as `failed` and the next case goes on. A test never gets
+    the real directory here (`import_case.guard_promoted_dir`).
     """
+    from agents.evals import import_case
+
+    cases_dir = import_case.guard_promoted_dir(cases_dir)
     present = {path.name for path in cases_dir.iterdir() if path.is_dir()} if cases_dir.is_dir() else set()
     owned: set[str] = set()
     actions: list[Action] = []
