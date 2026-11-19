@@ -401,6 +401,10 @@ class RequestLedger:
     """The new columns of this turn's `prepare_data` calls that hold a date turned into numbers or the row numbers and
     that the current table still has, under their current names (`emptied.made_columns`): what the guard on an emptied
     role keeps off every role."""
+    added_columns: dict[str, str] = field(default_factory=dict)
+    """The new columns this turn's `prepare_data` operations added beside the others that the current table still has,
+    each with the operation's name (`emptied.added_columns`): the guard's log line names the operation, never the
+    column."""
     guard_held: list[str] = field(default_factory=list)
     """The names of the tool calls the guard on an emptied role refused before they stored anything
     (`data/emptied.py`): they count against none of the turn's caps (`calls_of`), so the root can still make the

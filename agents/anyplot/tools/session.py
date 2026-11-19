@@ -117,7 +117,7 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 import json
 import math
 import secrets
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -130,8 +130,8 @@ from core.spec_roles import DataRole
 from .. import telemetry
 from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
-from ..data.bindings import carry_bindings
-from ..data.emptied import Emptied, emptied, held_bindings, made_columns, renamed
+from ..data.bindings import carry_bindings, check_bindings, resolve_role
+from ..data.emptied import Emptied, added_columns, emptied, held_bindings, made_columns, renamed
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import (
@@ -383,13 +383,18 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         # A date turned into numbers or the row numbers, made in a turn whose change of the data emptied a role, take
         # no role in it (`data/emptied.py`).
         ledger.guard_held.append("set_bindings")
-        return _column_held(ledger.emptied_roles, {}, [], [binding.column for binding in landed], "invalid_bindings")
+        columns = [binding.column for binding in landed]
+        _note_held(
+            ledger, "set_bindings", ledger.emptied_roles, [ledger.added_columns.get(name, "") for name in columns]
+        )
+        return _column_held(ledger.emptied_roles, {}, [], columns, "invalid_bindings")
     roles = view.snapshot.roles()
     check, delta = apply_bindings(parsed, roles, profile)
     if not delta:
         # The errors quote column names from the user's dataset.
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
         return {"status": "error", "code": "invalid_bindings", "errors": errors}
+    _note_taken(ledger, "set_bindings", view.bindings, parsed, roles, ledger.emptied_roles, ledger.added_columns)
     # Other bindings than the user confirmed leave the confirmation's fingerprint behind and the panel asks again,
     # unless they only leave out confirmed number series (`narrowed_confirmation`, `AGENT_NARROWED_BINDINGS`).
     if get_settings().narrowed_bindings == "keep":
@@ -585,16 +590,17 @@ def _version_refusal(code: VersionRefusal) -> dict[str, Any]:
 
 
 COLUMN_HELD_MESSAGE = (
-    "Nothing changed. In a turn whose change of the data leaves a required role without the column it was bound to "
-    "({roles}), no date is turned into numbers, no row number is made, and none made in the turn takes a role: the "
-    "role waits for the user, and the next turn lists what the server can compute for it. Leave that column out of "
-    "the call; the errors say which role loses or lost which column."
+    "Nothing changed. A change of this turn takes the column of {roles}, so in this turn no date is turned into "
+    "numbers and no row number is made, and none takes a role. Make the rest of the change without that column. In "
+    "the reply, name the role whose column the change takes and say that the next turn lists what can fill it; if the "
+    "user asked for the column held here, say it can be made in the next turn."
 )
 """The refusal of the guard on an emptied role (`data/emptied.py`): server text, the role names the spec's own; the
-columns stand fenced beside it under `errors`. It never says a role lost its column, since the call it refuses may be
-the one that would have emptied it: the `errors` lines tell the two apart. It comes with the code the tool answers a
-call it cannot make with (`invalid_operation`, `invalid_bindings`), as the refusal of a view that would break the
-bindings does: the message says why."""
+columns stand fenced beside it under `errors`. It names no operation the root could try instead, since a derived
+column on the emptied axis would pass the guard (the known gap its log line counts), and it says why a conversion the
+user did ask for waits a turn. It never says a role lost its column, since the call it refuses may be the one that
+would have emptied it: the `errors` lines tell the two apart. It comes with the code the tool answers a call it cannot
+make with (`invalid_operation`, `invalid_bindings`), as the refusal of a view that would break the bindings does."""
 LOST_LINE = "{role} lost its column '{column}' in an earlier change of this turn"
 LOSING_LINE = "{role} would lose its column '{column}' with this call"
 MADE_NOW_LINE = "'{name}' holds a date turned into numbers or the row numbers, and this call would make it"
@@ -620,14 +626,50 @@ def _column_held(
     return {"status": "error", "code": code, "message": message, "errors": _fenced_lines(lines)}
 
 
+def _note_held(ledger: RequestLedger, tool: str, roles: Iterable[str], kinds: Iterable[str]) -> None:
+    """The guard's log line (hook `emptied_role`) for a refused call: the tool, the roles the turn's change takes the
+    column of, and the names of the operations that made the held columns. Content-free: the spec's role names and
+    closed operation names, never a column or a cell."""
+    attribution(
+        "emptied_role",
+        ledger,
+        tool=tool,
+        outcome="refused",
+        roles=sorted(set(roles)),
+        kinds=sorted({kind for kind in kinds if kind}),
+    )
+
+
+def _note_taken(
+    ledger: RequestLedger,
+    tool: str,
+    before: Collection[Binding],
+    after: Sequence[Binding],
+    roles: list[DataRole],
+    taken: Collection[str],
+    added: Mapping[str, str],
+) -> None:
+    """The guard's log line for each binding of `after` that puts a column an operation of the turn added (`added`,
+    with the operation's name) on a role of `taken`, the roles whose column the turn took: the known gap, a derived
+    column or a text conversion the guard lets through, whether the user asked for it or not."""
+    for binding in after:
+        role = resolve_role(binding.role, roles)
+        name = role.name if role is not None else binding.role
+        if binding in before or name not in taken or binding.column not in added:
+            continue
+        attribution("emptied_role", ledger, tool=tool, outcome="bound", role=name, kind=added[binding.column])
+
+
 @dataclass(frozen=True)
 class _TurnColumns:
     """What one `prepare_data` call does to the guard on an emptied role: the roles it empties (`emptied`), the
-    turn's columns of a date turned into numbers or the row numbers once it is stored (`made`), and its refusal when it
-    would make or bind one in a turn that emptied a role."""
+    turn's columns of a date turned into numbers or the row numbers once it is stored (`made`) and the columns its
+    operations added with their names (`added`), and its refusal when it would make or bind one of `made` in a turn
+    that emptied a role."""
 
     emptied: list[Emptied]
     made: list[str]
+    added: dict[str, str]
     refusal: dict[str, Any] | None = None
 
 
@@ -660,17 +702,24 @@ def _turn_columns(
     before = {column.name for column in start.columns}
     new = [name for name in made_columns(converted, row_numbers, dates, before) if name in names]
     made = [name for name in dict.fromkeys([*renamed(ledger.made_columns, operations), *new]) if name in names]
+    earlier = dict(zip(renamed(list(ledger.added_columns), operations), ledger.added_columns.values(), strict=True))
+    added = {
+        name: kind
+        for name, kind in {**earlier, **added_columns(operations, before, names, new)}.items()
+        if name in names
+    }
     bound = {binding.column for binding in bindings}
     now = {item.role: item.column for item in emptied(bindings, roles, current, parsed.profile, set(made) - bound)}
     if not ledger.emptied_roles and not now:
-        return _TurnColumns([], made)
+        return _TurnColumns([], made, added)
     emptied_now = [Emptied(role, column) for role, column in now.items()]
     carried = carry_bindings(bindings, roles, parsed.profile, current, converted, row_numbers, splits)
     landed = [binding.column for binding in held_bindings(carried, bindings, made)]
     if not new and not landed:
-        return _TurnColumns(emptied_now, made)
+        return _TurnColumns(emptied_now, made, added)
+    _note_held(ledger, PREPARE_TOOL, [*ledger.emptied_roles, *now], [added.get(name, "") for name in [*new, *landed]])
     refusal = _column_held(ledger.emptied_roles, now, new, landed, "invalid_operation")
-    return _TurnColumns(emptied_now, made, refusal)
+    return _TurnColumns(emptied_now, made, added, refusal)
 
 
 async def prepare_data(
@@ -876,9 +925,18 @@ async def prepare_data(
     if not start.current:
         ledger.rebuilt_from.append(start.number)
     if turn is not None:
-        ledger.made_columns = turn.made
+        ledger.made_columns, ledger.added_columns = turn.made, turn.added
         for item in turn.emptied:
             ledger.emptied_roles.setdefault(item.role, item.column)
+        # The roles whose column this call took (gone, or no longer fitting the role), filled or not.
+        took = {
+            role.name
+            for binding in view.bindings
+            if check_bindings([binding], roles, parsed.profile).errors
+            and (role := resolve_role(binding.role, roles)) is not None
+        }
+        taken = {*ledger.emptied_roles, *took}
+        _note_taken(ledger, PREPARE_TOOL, view.bindings, version.bindings, roles, taken, turn.added)
     base = {
         "status": "ok",
         "rows": parsed.profile.rows,

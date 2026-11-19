@@ -289,6 +289,8 @@ OUTSIDE_HOOKS = frozenset(
         "budget_pipeline",
         "data_code",
         "data_judge",
+        # The guard on an emptied role (`data/emptied.py`): the call it refused carries its code in the record.
+        "emptied_role",
         # The run's and the model's lines: the session's last run (`last_run.rounds`) carries the run.
         "model",
         "run",

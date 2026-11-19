@@ -27,6 +27,12 @@ whose carry binds one, and a `set_bindings` call that binds one (`tools/session.
 of the turn's caps (`RequestLedger.guard_held`). The two cannot be told apart by these records when one message both
 empties an axis and asks for the days or the row numbers on it: that request waits one turn, and the next turn lists
 the offer.
+
+The other side of the boundary is a known gap: a derived column or a text conversion the root adds unasked and puts on
+the emptied axis passes. So two outcomes write one content-free log line each (hook `emptied_role`: the tool, the
+outcome, the spec's role names and the names of the operations that made the columns, never a column or a cell): a
+refusal, and a column another operation of the turn added (`added_columns`) taking a role whose column the turn took.
+The second line is how real use and the eval show whether the root goes round the guard that way.
 """
 
 from collections.abc import Collection, Mapping, Sequence
@@ -36,7 +42,7 @@ from core.spec_roles import DataRole
 
 from ..schemas import Binding, DatasetProfile
 from .bindings import carry_bindings, check_bindings, resolve_role
-from .prepare import Operation, Rename
+from .prepare import Operation, Rename, Split
 
 
 @dataclass(frozen=True)
@@ -60,6 +66,35 @@ def made_columns(
     not have it, so a row-number column the paste already had is none."""
     names = [*(name for name, source in converted.items() if name != source and source in dates), *row_numbers]
     return [name for name in dict.fromkeys(names) if name not in before]
+
+
+ADDING_OPS = frozenset(
+    {
+        *("set_type", "classify", "derive", "make_date", "row_number", "date_number", "split"),
+        *("extract", "strip", "replace", "compute", "diff", "rolling"),
+    }
+)
+"""The operations that add a column beside the ones there (`set_type` only with a `name` of its own)."""
+
+
+def added_columns(
+    operations: Sequence[Operation], before: Collection[str], after: Collection[str], made: Collection[str]
+) -> dict[str, str]:
+    """The new columns of a call that an operation added beside the others, each with that operation's name, a closed
+    word: what the guard's log line says about a column, never its name. `before` and `after` are the column names of
+    the tables the call started from and left; `made` are the call's own `made_columns`, among them a `date_number`'s
+    column, whose name the server chose. A column a rename, an `aggregate` or a pivot made is none: it holds what was
+    there."""
+    named: dict[str, str] = {}
+    for operation in operations:
+        if isinstance(operation, Rename):
+            named = {operation.name if name == operation.column else name: kind for name, kind in named.items()}
+        elif operation.op in ADDING_OPS:
+            names = operation.names if isinstance(operation, Split) else [getattr(operation, "name", None)]
+            named.update({name: operation.op for name in names if name})
+    return {
+        name: named.get(name, "date_number") for name in after if name not in before and (name in named or name in made)
+    }
 
 
 def renamed(names: Sequence[str], operations: Sequence[Operation]) -> list[str]:

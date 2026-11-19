@@ -10,6 +10,7 @@ column the request derives or converts from text itself still takes the axis it 
 """
 
 import json
+import logging
 from collections.abc import AsyncIterator, Iterator
 from typing import Any
 
@@ -33,7 +34,7 @@ from agents.main import Runtime, app, get_runtime
 from .fakes import default_script
 from .test_from_version import context_for
 from .test_paste_conversions import block_now, open_spec, paste, say
-from .test_service_flow import USER, permissive_queue, prepare_call
+from .test_service_flow import HEADERS, USER, permissive_queue, prepare_call
 
 
 SENSORS = (
@@ -50,6 +51,8 @@ LOST_Y = "<user_data>\ny: Feuchte\n</user_data>"
 REPLY = {"text": "Daily mean per sensor: 8 readings became 5 rows. Feuchte is gone, so y has no column now."}
 HELD = COLUMN_HELD_MESSAGE.format(roles="y")
 """The guard's refusal for the emptied y, as the root reads it in the call's answer."""
+ATTRIBUTION = "anyplot.agents.attribution"
+FAHRENHEIT = {"op": "compute", "name": "Fahrenheit", "expression": "t * 1.8 + 32", "inputs": {"t": "Temperatur"}}
 
 
 def bindings_call(**pairs: str) -> dict[str, Any]:
@@ -98,12 +101,20 @@ def block_of(fake: Any, call: int) -> str:
     return str(fake.calls[call]["system"][-1]["text"])
 
 
+def guard_lines(caplog: pytest.LogCaptureFixture) -> list[dict[str, Any]]:
+    """The guard's log lines (hook `emptied_role`) the turn wrote, without the envelope every attribution line has."""
+    lines = [json.loads(record.getMessage()) for record in caplog.records if record.name == ATTRIBUTION]
+    envelope = {"severity", "hook", "request_id", "user", "session", "llm_calls", "tokens"}
+    return [{k: v for k, v in line.items() if k not in envelope} for line in lines if line["hook"] == "emptied_role"]
+
+
 class TestTheWaysIn:
     async def test_the_same_data_step_stores_nothing_and_the_column_lands_nowhere(
-        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
     ) -> None:
         """The daily mean and the days since the first date in one call: the carry would bind `Tag` to the y that
         the same call emptied, so the call is refused, whole."""
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
         script = default_script()
         script["root"] = [prepare_call(DAILY_MEAN, DAYS), REPLY]
         fake = swap_models("anthropic-vertex", script)
@@ -118,6 +129,10 @@ class TestTheWaysIn:
         # Nothing was stored, so y still holds Feuchte: the refusal says it would lose it, never that it lost it.
         assert LOSING_LINE.format(role="y", column="Feuchte") in refused and MADE_NOW_LINE.format(name="Tag") in refused
         assert LOST_LINE.format(role="y", column="Feuchte") not in refused
+        # One content-free line: the role and the operation, no column of the user's.
+        lines = guard_lines(caplog)
+        assert lines == [{"tool": "prepare_data", "outcome": "refused", "roles": ["y"], "kinds": ["date_number"]}]
+        assert "Feuchte" not in json.dumps(lines) and "Tag" not in json.dumps(lines)
 
     async def test_a_second_data_step_stores_nothing_and_the_reply_names_the_axis(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
@@ -139,10 +154,11 @@ class TestTheWaysIn:
         assert EMPTIED_HEADING.split("{", 1)[0] not in block_of(fake, 0)
 
     async def test_an_unasked_row_number_through_a_second_step_lands_nowhere(
-        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
     ) -> None:
         """The row numbers would take x and move Temperatur to the emptied y: no column made in the turn lands on
         any role, not only on the emptied one."""
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
         script = default_script()
         script["root"] = [prepare_call(DAILY_MEAN), prepare_call(ROWS), REPLY]
         fake = swap_models("anthropic-vertex", script)
@@ -153,6 +169,9 @@ class TestTheWaysIn:
         bound, columns = await outcome(runtime, sid)
         assert bound == {"x": "Temperatur"} and "index" not in columns
         assert HELD in answers(fake, 2)
+        assert guard_lines(caplog) == [
+            {"tool": "prepare_data", "outcome": "refused", "roles": ["y"], "kinds": ["row_number"]}
+        ]
 
     async def test_a_binding_call_never_puts_such_a_column_on_an_axis(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
@@ -180,7 +199,11 @@ class TestTheWaysIn:
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
     ) -> None:
         """Made first, while every role was bound, the row numbers take no role; the drop of Feuchte would then let
-        the carry put them on y. That call is refused, so y keeps Feuchte."""
+        the carry put them on y. That call is refused, so y keeps Feuchte.
+
+        What the table holds after such a turn, as it stands: the row numbers the first call made stay in it, unbound,
+        since nothing was refused when they were made, and the asked drop of Feuchte did not happen; a drop that takes
+        the row numbers with it would be stored. Undoing the turn's earlier call is not the guard's to do."""
         script = default_script()
         script["root"] = [prepare_call(ROWS), prepare_call({"op": "drop_columns", "columns": ["Feuchte"]}), REPLY]
         fake = swap_models("anthropic-vertex", script)
@@ -188,11 +211,32 @@ class TestTheWaysIn:
 
         await say(client, sid, {"text": "Drop the humidity."})
 
-        bound, _ = await outcome(runtime, sid)
+        bound, columns = await outcome(runtime, sid)
         refused = answers(fake, 2)
         assert bound == {"x": "Temperatur", "y": "Feuchte"} and HELD in refused
+        assert columns == ["index", "Zeitpunkt", "Sensor", "Temperatur", "Feuchte"]
         assert LOSING_LINE.format(role="y", column="Feuchte") in refused
         assert MADE_BEFORE_LINE.format(name="index") in refused
+
+    async def test_after_that_refusal_a_drop_that_takes_the_row_numbers_with_it_is_stored(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The way out of the order above within the turn: nothing of the turn's is left to land on y."""
+        drop = {"op": "drop_columns", "columns": ["Feuchte"]}
+        script = default_script()
+        script["root"] = [
+            prepare_call(ROWS),
+            prepare_call(drop),
+            prepare_call({**drop, "columns": ["Feuchte", "index"]}),
+            REPLY,
+        ]
+        swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime)
+
+        await say(client, sid, {"text": "Drop the humidity."})
+
+        bound, columns = await outcome(runtime, sid)
+        assert bound == {"x": "Temperatur"} and columns == ["Zeitpunkt", "Sensor", "Temperatur"]
 
     async def test_a_text_column_the_request_converts_and_sums_is_its_own(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
@@ -263,19 +307,15 @@ class TestWhatTheGuardLeaves:
         assert bound == {"x": "Temperatur", "y": "Tag"} and columns[-1] == "Tag"
 
     async def test_a_derived_column_the_request_names_takes_the_axis_it_names(
-        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
     ) -> None:
-        """A computed column is the request's own, no conversion: in the turn that emptied y, the root binds it."""
-        fahrenheit = {
-            "op": "compute",
-            "name": "Fahrenheit",
-            "expression": "t * 1.8 + 32",
-            "inputs": {"t": "Temperatur"},
-        }
+        """A computed column is the request's own, no conversion: in the turn that emptied y, the root binds it. The
+        same calls without the request are the known gap below, so the binding writes its log line either way."""
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
         script = default_script()
         script["root"] = [
             prepare_call(DAILY_MEAN),
-            prepare_call(fahrenheit),
+            prepare_call(FAHRENHEIT),
             bindings_call(x="Temperatur", y="Fahrenheit"),
             REPLY,
         ]
@@ -286,6 +326,111 @@ class TestWhatTheGuardLeaves:
 
         bound, columns = await outcome(runtime, sid)
         assert bound == {"x": "Temperatur", "y": "Fahrenheit"} and columns[-1] == "Fahrenheit"
+        assert guard_lines(caplog) == [{"tool": "set_bindings", "outcome": "bound", "role": "y", "kind": "compute"}]
+
+    async def test_residual_a_date_number_asked_with_the_change_that_empties_the_axis_comes_in_the_next_turn(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """Accepted residual: one message that asks for the daily mean and for the days since the first date reads,
+        by the typed records, as the fault. The days wait: the root makes the daily mean alone, and the same request
+        in the next turn goes through and takes y, as an offer the user took."""
+        script = default_script()
+        script["root"] = [
+            prepare_call(DAILY_MEAN, DAYS),
+            prepare_call(DAILY_MEAN),
+            {"text": "Daily mean per sensor: 5 rows. y lost Feuchte; the days can be made in the next turn."},
+            prepare_call(DAYS),
+            {"text": "Tag holds the days since 2026-01-01 and takes y."},
+        ]
+        swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime)
+
+        await say(client, sid, {"text": "Tagesmittel pro Sensor, und gib mir die Tage seit Beginn als Spalte."})
+        after_first = await outcome(runtime, sid)
+        await say(client, sid, {"text": "Gib mir die Tage seit Beginn als Spalte."})
+
+        assert after_first == ({"x": "Temperatur"}, ["Zeitpunkt", "Sensor", "Temperatur"])
+        assert await outcome(runtime, sid) == (
+            {"x": "Temperatur", "y": "Tag"},
+            ["Zeitpunkt", "Sensor", "Temperatur", "Tag"],
+        )
+
+
+class TestTheKnownGap:
+    async def test_known_gap_an_unasked_derived_column_still_takes_the_emptied_axis(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Not a promise, the state of things: a column a `compute` adds in the call that empties y fills y through
+        the carry, whether the user asked for it or not, since nothing typed tells the two apart. What the guard does
+        about it is the log line, which says how often it happens; a fix needs a decision of its own."""
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
+        script = default_script()
+        script["root"] = [prepare_call(DAILY_MEAN, FAHRENHEIT), REPLY]
+        swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime)
+
+        await say(client, sid, {"text": "Bilde das Tagesmittel der Temperatur pro Sensor."})
+
+        bound, columns = await outcome(runtime, sid)
+        assert bound == {"x": "Temperatur", "y": "Fahrenheit"} and columns[-1] == "Fahrenheit"
+        lines = guard_lines(caplog)
+        assert lines == [{"tool": "prepare_data", "outcome": "bound", "role": "y", "kind": "compute"}]
+        assert "Fahrenheit" not in json.dumps(lines) and "Feuchte" not in json.dumps(lines)
+
+
+class TestOtherTurns:
+    """The guard reads only this turn's own calls: a paste's summary turn and the turn after an undo bind as before."""
+
+    async def test_the_summary_turn_keeps_the_servers_row_numbers_and_the_roots_own_change(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The paste arrives with one number column, so y is open; the server makes the `certain` row numbers before
+        the root runs (`paste_conversions.py`, not a call of the root's), x takes them and y the numbers, and the
+        root's rename in the same turn carries them on. Nothing is refused."""
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
+        script = default_script()
+        script["root"] = [
+            prepare_call({"op": "rename", "column": "Wert", "name": "Messwert"}),
+            {"text": "6 rows; x: row number 1 to 6; Wert renamed to Messwert."},
+        ]
+        fake = swap_models("anthropic-vertex", script)
+        sid = await open_spec(client, "scatter-basic")
+        await paste(client, sid, "Wert\n13\n27\n8\n19\n42\n5\n")
+
+        await say(client, sid, {"text": "Nenne die Spalte Messwert."})
+
+        bound, columns = await outcome(runtime, sid)
+        assert (bound, columns) == ({"x": "index", "y": "Messwert"}, ["index", "Messwert"])
+        assert HELD not in answers(fake, 1) and guard_lines(caplog) == []
+
+    async def test_the_turn_after_an_undo_takes_the_offer_again(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """An undo is the page's, outside any turn, and its carry is the one it always was; the next turn starts with
+        y open, not emptied by that turn, so the days asked for then take y."""
+        script = default_script()
+        script["root"] = [
+            prepare_call(DAILY_MEAN),
+            REPLY,
+            prepare_call(DAYS),
+            {"text": "Tag takes y."},
+            prepare_call(DAYS),
+            {"text": "Tag takes y again."},
+        ]
+        swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime)
+        await say(client, sid, {"text": "Bilde das Tagesmittel der Temperatur pro Sensor."})
+        await say(client, sid, {"text": "Nimm die Tage seit dem ersten Datum für y."})
+
+        undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+        after_undo = await outcome(runtime, sid)
+        await say(client, sid, {"text": "Doch, nimm die Tage für y."})
+
+        assert undone.status_code == 200 and after_undo == ({"x": "Temperatur"}, ["Zeitpunkt", "Sensor", "Temperatur"])
+        assert await outcome(runtime, sid) == (
+            {"x": "Temperatur", "y": "Tag"},
+            ["Zeitpunkt", "Sensor", "Temperatur", "Tag"],
+        )
 
 
 class TestSetBindings:
