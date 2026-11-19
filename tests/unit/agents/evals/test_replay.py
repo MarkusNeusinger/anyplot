@@ -466,6 +466,23 @@ class TestTheAgentsAsBuilt:
     def test_settings_that_match_the_built_agents_pass(self) -> None:
         assert checked_routes(AgentSettings(), environ={}) == PINNED_ROUTES
 
+    def test_agents_built_for_the_cli_stop_a_check_on_vertex_ai(self, monkeypatch) -> None:
+        """Only the transport differs: the agents were built for `claude-cli`, the settings are on Vertex AI in `eu`."""
+        cli = tuple(
+            Route(route.role, route.model, route.provider, replay.cli_transport(route.role), route.location)
+            for route in PINNED_ROUTES[:3]
+        )
+        monkeypatch.setattr(replay, "built_routes", lambda environ=None: cli)
+
+        with pytest.raises(RoutesDiffer) as differ:
+            checked_routes(AgentSettings(), environ={})
+
+        text = str(differ.value)
+        built = "built adapter claude-haiku-5-5: provider anthropic-vertex, transport claude-cli, location eu"
+        checked = "checked adapter claude-haiku-5-5: provider anthropic-vertex, transport vertex, location eu"
+        assert f"  {built}; {checked}.\n" in text and "built reviewer" in text
+        assert "built root" not in text  # the root's chat goes to Vertex AI on either transport
+
     def test_settings_other_than_the_built_agents_stop_the_check(self) -> None:
         with pytest.raises(RoutesDiffer) as differ:
             checked_routes(AgentSettings(location="global"), environ={})
