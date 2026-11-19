@@ -642,6 +642,58 @@ READINGS: dict[str, Reading] = {
         None,
         "",
     ),
+    # A word in the zone's place that pandas skips or takes for no zone: the time is read without one.
+    "zone_word_after_time": Reading(
+        ["2026-03-01 10:00 of", "2026-03-02 11:30 on"],
+        ["2026-03-01T10:00:00", "2026-03-02T11:30:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "zone_word_after_hour": Reading(
+        ["2026-03-01T10 and", "2026-03-02T11 and"], ["2026-03-01", "2026-03-02"], 0, False, None, ""
+    ),
+    "zone_word_after_am": Reading(
+        ["2026-03-01 10am of", "2026-03-02 11am of"], ["2026-03-01", "2026-03-02"], 0, False, None, ""
+    ),
+    "weekday_short_after_time": Reading(
+        ["2026-03-01 10:00 Sun", "2026-03-02 11:30 Mon"],
+        ["2026-03-01T10:00:00", "2026-03-02T11:30:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "zone_word_after_program": Reading(
+        ["Sun Mar 1 10:00:00 2026 of", "Mon Mar 2 11:30:00 2026 of"],
+        ["2026-03-01T10:00:00", "2026-03-02T11:30:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "zone_word_beside_utc": Reading(
+        ["2026-03-01 10:00 UTC", "2026-03-02 11:30 of"],
+        refused="column 'd' holds times with a UTC offset and times without one; no time is given a zone by guess, "
+        "so the column stays as it is",
+    ),
+    # A zone word pandas reads after a lone hour or am or pm: main wrote the day alone, dropping hour and zone.
+    "utc_after_hour": Reading(
+        ["2026-03-01T10 UTC", "2026-03-02T11 UTC"], ["2026-03-01", "2026-03-02"], 0, False, None, ""
+    ),
+    "gmt_after_am": Reading(
+        ["2026-03-01 10am GMT", "2026-03-02 11am GMT"], ["2026-03-01", "2026-03-02"], 0, False, None, ""
+    ),
+    "cet_after_hour": Reading(["2026-03-01T10 CET", "2026-03-02T11 CET"], [None, None], 2, False, None, ""),
+    "program_utc": Reading(
+        ["Sun Mar 1 10:00:00 2026 UTC", "Mon Mar 2 11:30:00 2026 UTC"],
+        ["2026-03-01T10:00:00+00:00", "2026-03-02T11:30:00+00:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
 }
 PASTED: dict[str, Pasted] = {
     "iso_date": Pasted("datetime", ["2026-03-01", "2026-03-02", "2026-12-31"], []),
@@ -854,6 +906,16 @@ PASTED: dict[str, Pasted] = {
     "weekday_after_time": Pasted("text", None, []),
     "zone_then_offset": Pasted("text", None, []),
     "zone_then_word": Pasted("text", None, []),
+    "zone_word_after_time": Pasted("text", None, []),
+    "zone_word_after_hour": Pasted("text", None, []),
+    "zone_word_after_am": Pasted("text", None, []),
+    "weekday_short_after_time": Pasted("text", None, []),
+    "zone_word_after_program": Pasted("text", None, []),
+    "zone_word_beside_utc": Pasted("text", None, []),
+    "utc_after_hour": Pasted("text", None, []),
+    "gmt_after_am": Pasted("text", None, []),
+    "cet_after_hour": Pasted("text", None, []),
+    "program_utc": Pasted("text", None, []),
 }
 PASTE_CHANGED: dict[str, Pasted] = {
     # An offset past those in use (-12:00 to +14:00) is the end of a range, never an offset: the paste keeps the
@@ -946,8 +1008,20 @@ CHANGED: dict[str, Reading] = {
             "weekday_after_time",
             "zone_then_offset",
             "zone_then_word",
+            "zone_word_after_time",
+            "zone_word_after_hour",
+            "zone_word_after_am",
+            "weekday_short_after_time",
+            "zone_word_after_program",
         )
     },
+    # A word after a time is a zone only when pandas reads one from it (`UTC`, `GMT`); one it skips (`of`, `Sun`)
+    # leaves a time without a zone, read by guess: unreadable, so a zone beside it no longer refuses the column.
+    "zone_word_beside_utc": Reading(
+        READINGS["zone_word_beside_utc"].cells, ["2026-03-01T10:00:00+00:00", None], 1, True, None, ""
+    ),
+    "utc_after_hour": _timed("utc_after_hour", ["2026-03-01T10:00:00+00:00", "2026-03-02T11:00:00+00:00"]),
+    "gmt_after_am": _timed("gmt_after_am", ["2026-03-01T10:00:00+00:00", "2026-03-02T11:00:00+00:00"]),
 }
 """The rows whose reading the strict date rule changes on purpose, with the reading they have now."""
 
@@ -1214,6 +1288,8 @@ class TestStrictRule:
             (["2026-03 approved", "2026-04 approved"], 2),  # a word after a month: more, as after a day
             (["2026 of", "2027 on"], 2),  # and after a year
             (["2026-03T10:00", "2026-04T11:00"], 0),  # a time after a month: unread, but no more than a time
+            (["2026-03-01 10:00 of", "2026-03-02T11 and"], 2),  # a word after a time that pandas takes for no zone
+            (["2026-03-01 10:00 CET", "2026-03-02 11:30 EST"], 0),  # a zone pandas does not know: no more than a time
         ],
     )
     def test_the_reason_counts_a_date_with_more_after_it(self, cells: list[str], more: int) -> None:
@@ -1302,6 +1378,10 @@ class TestStrictRule:
             "2026-03-01of",
             "2026of",
             "2026-03-01 10:00 UTC of",
+            "2026-03-01 10:00 of",
+            "2026-03-01T10 and",
+            "2026-03-01 10:00 Sun",
+            "Sun Mar 1 10:00:00 2026 of",
         ],
     )
     def test_a_word_after_the_date_never_reaches_the_reader(self, cell: str, monkeypatch: pytest.MonkeyPatch) -> None:

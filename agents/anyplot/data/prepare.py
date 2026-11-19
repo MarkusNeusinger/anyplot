@@ -43,9 +43,11 @@ The operations:
   strict rule): a date of numbers, a month name or a quarter (`2026-03-01`, `01 03 2026`,
   `1 March 2026`, `2026-03`, `2026-Q1`), and after a date that names a day a time behind `T`,
   `t` or a space (`T10` only after `T`, ` 9:05`, ` 10:00:05.25`, ` 2:30 PM`, `T1000`) with its
-  zone (`Z`, `+01:00`, ` UTC`; an offset in use, −12:00 to +14:00, `parse.utc_offset`, and after
-  an hour alone or with am or pm only `Z` or `±HH:MM`), or a day with its clock between the
-  day and the year as programs write it (`Sun Mar 1 10:00:00 2026`). Anything else after the
+  zone (`Z`, `+01:00`, ` UTC`; an offset in use, −12:00 to +14:00, `parse.utc_offset`, after
+  an hour alone or with am or pm only as `Z` or `±HH:MM`, and a word only when pandas reads an
+  offset from it, so `UTC` and `GMT` are zones and `10:00 of` or `10:00 Sun` is no time), or a
+  day with its clock between the day and the year as programs write it
+  (`Sun Mar 1 10:00:00 2026`). Anything else after the
   date (a second date such as `2026-03-01-2026-03-05`, more numbers such as `2026-03-01/05`, a
   number alone after a space, a sign and digits after a space, a range of times such as
   `2026-03-01 9:00-17:00` or `T10-12`, a time after a month or a year, a word after the date's
@@ -4534,7 +4536,7 @@ _ISO_DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 _HOUR = r"(?:[01]?[0-9]|2[0-3])"
 _MINUTE = r"[0-5]?[0-9]"
 _MERIDIEM = r"\s*[AaPp]\.?\s?[Mm]\.?"
-_ZONE = r"(?:\s?(?P<offset>[Zz]|[+-][0-9]{2}(?::?[0-9]{2})?)|\s[^\W\d_]{1,5})"
+_ZONE = r"(?:\s?(?P<offset>[Zz]|[+-][0-9]{2}(?::?[0-9]{2})?)|\s(?P<word>[^\W\d_]{1,5}))"
 
 
 def _time_at_end(hour: str, minute: str) -> re.Pattern[str]:
@@ -4551,22 +4553,24 @@ _TIME_AFTER_DATE = _time_at_end(_HOUR, _MINUTE)
 space, then an hour with its minutes and seconds and a fraction (`10:00`, `9:5`, `10:00:05.25`), or after `T` an hour
 alone (`T10`, ISO's hour of a day) or a compact `HHMM` or `HHMMSS`; then am or pm (`10am`, `2:30 PM`, also after a
 space: ` 10 AM`), and a zone: `Z` (or `z`) or an offset (`+01:00`, `-0500`, `+01`, one in use and in the form `_zone_fits`
-asks), or after a space a word of up to five letters (`UTC`, which pandas reads or fails on). A number alone after a
+asks), or after a space a word of up to five letters (`UTC`, `GMT`), a zone only when pandas reads an offset from it
+(`_zone_word_read`). A number alone after a
 space is no hour (`2026-03-01 10` may be a count or a label as much as 10:00), and letters right after an hour are no
 zone (`1st` is an ordinal). A time stands only after a date that names a day (`_date_cell`), so `2026-03 10` is 10
 March and `1 March 23` the year 2023."""
 _TIME_SHAPED = _time_at_end("[0-9]{1,2}", "[0-9]{1,2}")
 """`_TIME_AFTER_DATE` with any two digits: `T25` and ` 10:60` have a time's shape though no clock shows them."""
 _INNER_CLOCK = re.compile(rf"\s{_HOUR}:{_MINUTE}(?::{_MINUTE}(?:[.,][0-9]{{1,9}})?)?(?=\s)")
-_ZONE_AT_END = re.compile(r"(?:\s(?P<offset>[Zz]|[+-][0-9]{2}(?::?[0-9]{2})?)|\s[^\W\d_]{1,5})$")
+_ZONE_AT_END = re.compile(r"(?:\s(?P<offset>[Zz]|[+-][0-9]{2}(?::?[0-9]{2})?)|\s(?P<word>[^\W\d_]{1,5}))$")
 _UTC = ("Z", "z")
 """UTC as a zone letter: RFC 3339 allows `z` as it allows `t`."""
 
 
 def _zone_fits(time: re.Match[str]) -> bool:
-    """Whether the zone of a time is one: an offset in use (`parse.utc_offset`: `-17:00` after `09:00` is the end of a
-    range of times), and after an hour alone or an hour with am or pm only `Z` or `±HH:MM` (`T10-12` is 10 to 12,
-    `10am-12` 10 to 12 too, while `T10+01:00` and `T10:00+01` are times with an offset)."""
+    """Whether the offset of a time is one: an offset in use (`parse.utc_offset`: `-17:00` after `09:00` is the end
+    of a range of times), and after an hour alone or an hour with am or pm only as `Z` or `±HH:MM` (`T10-12` is 10 to
+    12, `10am-12` 10 to 12 too, while `T10+01:00` and `T10:00+01` are times with an offset). A zone word, which is no
+    range, is the same after every time (`_zone_word_read`)."""
     offset = time.group("offset")
     if offset is None or offset in _UTC:
         return True
@@ -4574,6 +4578,15 @@ def _zone_fits(time: re.Match[str]) -> bool:
         return False
     alone = time.group("hour") is not None or time.group("marked") is not None or time.group("meridiem") is not None
     return not alone or ":" in offset
+
+
+def _zone_word_read(text: str, zone: re.Match[str]) -> bool:
+    """Whether a cell's time has no word in its zone's place (`_ZONE`, `_ZONE_AT_END`), or a word pandas reads a UTC
+    offset from (`UTC`, `GMT`): that word is a zone. A word pandas skips or takes for something else (`of`, `on`,
+    `and`, `Sun`) leaves the time without an offset, a reading that drops the word by guess, and a zone it does not
+    know (`CET`, `EST`) gives no reading at all; either cell is no date and a time. The word is judged by what pandas
+    reads, the cell alone, never by a list of words."""
+    return zone.group("word") is None or isinstance(_offset_of(text, not _YEAR_FIRST.match(text)), timedelta)
 
 
 def _time_inside(text: str) -> bool:
@@ -4586,6 +4599,8 @@ def _time_inside(text: str) -> bool:
     zone = _ZONE_AT_END.search(rest)
     if zone is not None:
         if zone.group("offset") not in (None, *_UTC) and utc_offset(zone.group("offset")) is None:
+            return False
+        if not _zone_word_read(text, zone):
             return False
         rest = rest[: zone.start()]
     return _date_shape(rest) == "day"
@@ -4665,9 +4680,10 @@ _CUTS = re.compile(r"[-./,\s+:Tt]")
 def _date_then_more(text: str) -> bool:
     """Whether a cell no reading takes holds more after its date than a time: the shape a refusal names as its
     reason. That is a date of any shape with a word after it, as the gate sees it (`2026-03-01 approved`, `2026 of`),
-    or a date that names a day and more after it (`2026-03-01-2026-03-05`, `13.03.2026-05:00`, `2026-03-01/05`). A
-    time's shape after the date (an impossible one, `T25` or ` 10:60`, included) or a date with an offset
-    (`2026-02-30+01:00`) is no "more": those cells hold a day or a time no calendar has, by any reading."""
+    or a date that names a day and more after it (`2026-03-01-2026-03-05`, `13.03.2026-05:00`, `2026-03-01/05`), a
+    word after its time that pandas reads no zone from included (`2026-03-01 10:00 of`). A time's shape after the date
+    (an impossible one, `T25` or ` 10:60`, included), a zone pandas does not know (`10:00 CET`) or a date with an
+    offset (`2026-02-30+01:00`) is no "more": those cells hold a day, a time or a zone no reading has."""
     if DATE_OFFSET.fullmatch(text):
         return False
     if _date_shape(text) is None and _date_shape(text, word_at_end=True) is not None:
@@ -4675,22 +4691,31 @@ def _date_then_more(text: str) -> bool:
     for cut in _CUTS.finditer(text):
         if cut.start() and _date_shape(text[: cut.start()]) == "day":
             shaped = _TIME_SHAPED.fullmatch(text[cut.start() :])
-            return shaped is None or not _zone_fits(shaped)
+            if shaped is None or not _zone_fits(shaped):
+                return True
+            return shaped.group("word") is not None and _offset_of(text, not _YEAR_FIRST.match(text)) is None
     return False
 
 
 def _date_cell(text: str) -> bool | None:
     """True for a cell that is a date followed by a time, False for a date alone, None for any other cell.
 
-    The strict rule of every conversion without a format: a time (`_TIME_AFTER_DATE`, its zone as `_zone_fits` asks)
-    counts only after a date that names a day, and the rest of the cell must then be that date alone (`_date_shape`);
-    a clock between the day and the year (`_time_inside`, `Sun Mar 1 10:00:00 2026`) is a time too. A cell with anything else
-    after its date, a second date (`2026-03-01-2026-03-05`), more numbers (`2026-03-01/05`) or a sign and digits
-    after a space (`2026-03-01 -05:00`), is no date: it is counted as unreadable, never guessed.
+    The strict rule of every conversion without a format: a time (`_TIME_AFTER_DATE`, its offset as `_zone_fits` asks,
+    a zone word only one pandas reads an offset from, `_zone_word_read`) counts only after a date that names a day,
+    and the rest of the cell must then be that date alone (`_date_shape`); a clock between the day and the year
+    (`_time_inside`, `Sun Mar 1 10:00:00 2026`) is a time too. A cell with anything else after its date, a second date
+    (`2026-03-01-2026-03-05`), more numbers (`2026-03-01/05`), a sign and digits after a space (`2026-03-01 -05:00`)
+    or a word after its time that is no zone (`2026-03-01 10:00 of`), is no date: it is counted as unreadable, never
+    guessed.
     """
     text = text.strip()
     time = _TIME_AFTER_DATE.search(text)
-    if time is not None and _zone_fits(time) and _date_shape(text[: time.start()], word_at_end=True) == "day":
+    if (
+        time is not None
+        and _zone_fits(time)
+        and _date_shape(text[: time.start()], word_at_end=True) == "day"
+        and _zone_word_read(text, time)
+    ):
         return True
     if _time_inside(text):
         return True

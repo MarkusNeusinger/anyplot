@@ -235,6 +235,9 @@ class TestMakeConversions:
             ["2026-03-01 of", "2026-03-02 on", "2026-03-03 and"],
             ["2026 of", "2027 on", "2028 and"],
             ["2026-03-01of", "2026-03-02of", "2026-03-03of"],
+            ["2026-03-01 10:00 of", "2026-03-02 11:30 on", "2026-03-03 12:00 and"],
+            ["2026-03-01T10 and", "2026-03-02T11 and", "2026-03-03T12 and"],
+            ["2026-03-01 10:00 Sun", "2026-03-02 11:30 Mon", "2026-03-03 12:00 Tue"],
         ],
     )
     def test_more_after_a_date_than_a_time_is_never_read_as_dates_unasked(self, cells: list[str]) -> None:

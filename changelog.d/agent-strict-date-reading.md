@@ -10,10 +10,12 @@
   text. Before, a range such as `2026-03-01-2026-03-05` was read as 2
   March beside a notice of UTC offsets no cell held, `2026-03-01 -05:00` or
   `13.03.2026-05:00` as that day at 05:00, `2026-03-01/05` as 1 March,
-  `2026-03-01 of` and `2026 of` as that day and that year, the word skipped,
-  and a range of times such as `2026-03-01 9:00-17:00` as 09:00 at an offset
-  of -17:00, which no place has; each was rated certain and made without
-  asking. A word before the date, as in `Sunday, 1 March 2026`, still reads.
+  `2026-03-01 of` and `2026 of` as that day and that year and
+  `2026-03-01 10:00 of` as 10:00, the word skipped, and a range of times
+  such as `2026-03-01 9:00-17:00` as 09:00 at an offset of -17:00, which no
+  place has; each was rated certain and made without asking. A word before
+  the date, as in `Sunday, 1 March 2026`, still reads, and a word after a
+  time counts as its zone only when it is read as one, as `UTC` is.
   (#13187)
 - **A time without a colon keeps its hour.** Hours such as `2026-03-01T00`
   to `T03`, `2026-03-01 10am` and `2026-03-01T1000` are written with their
