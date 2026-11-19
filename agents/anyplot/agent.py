@@ -11,7 +11,9 @@
   lines fenced, since they name the user's columns), the required roles this turn's own change
   of the data left without the columns they were bound to, for the rest of the turn (`data/emptied.py`,
   the columns fenced), whether
-  the user pasted notes with the data (a fixed line, never the notes), plot
+  the user pasted notes with the data (a fixed line, never the notes), on a paste's summary
+  turn the data's profile as `get_dataset_profile` returns it (`profile_block`, its texts in
+  the tool's own fences) and, after a paste that replaced data, a fixed sentence that says so, plot
   versions and the latest version's theme, so a change keeps it, and the plot memory's
   entries with their ids, inside a `<tool_notes>` fence). The root's
   `before_model_callback` (`add_session_context`) appends it to the system
@@ -40,7 +42,9 @@
   marks Claude prompt-cache breakpoints. `adk web agents` finds `app` in this module.
 """
 
+import json
 import logging
+from collections.abc import Mapping
 from typing import Any
 
 from google.adk import Agent
@@ -57,7 +61,7 @@ from google.genai import types
 from . import telemetry
 from .data.bindings import check_bindings
 from .data.conversions import candidates
-from .dataset_versions import kept_versions, version_lines
+from .dataset_versions import kept_versions, replaced_earlier_data, version_lines
 from .dev_fixture import DevFixturePlugin
 from .language import english_name, same_language
 from .memory import MemoryEntry, read_memory
@@ -80,7 +84,7 @@ from .session_state import plot_language, read_conversions_made, read_session, u
 from .settings import get_settings
 from .sub_agents.adapter import ADAPTERS
 from .sub_agents.reviewer import reviewer
-from .tools.session import SESSION_TOOLS, plot_pipeline
+from .tools.session import SESSION_TOOLS, plot_pipeline, profile_result
 
 
 logger = logging.getLogger(__name__)
@@ -187,6 +191,25 @@ PASTED_LINE = (
 A persona test of 2026-11-06: after a re-paste with a note, the root answered root.md's rule for a table typed into
 the box ("I can't read data from the message itself") although the table had arrived as the attachment of that very
 turn. The line says where the table is, so the rule for typed tables never reads as this turn's."""
+REPLACED_DATA_LINE = (
+    "; this paste replaced the data the session held before, so nothing said before this turn describes this table, "
+    "your own earlier replies included"
+)
+"""The end of `PASTED_LINE` when the paste replaced data the session held (`dataset_versions.replaced_earlier_data`).
+
+Production, 2026-11-19, two runs of two: a second table with a column `day` of text replaced one whose `day` held
+dates, and the root answered the note sent with it from its own summary of the first table ("already reads as dates"),
+with no tool call. The fact is the server's numbering of the paste, never a reading of the conversation."""
+PROFILE_HEADING = (
+    "Profile of the data in force now: what get_dataset_profile returns for it, each field under the tool's own name "
+    "(see 'Step 1: the data')"
+)
+"""The session block's heading over the current data's profile on a paste's summary turn (`profile_block`): the
+summary is written from it in one model call, and the turn's own change of the data shows in it on the next call."""
+PROFILE_FIELDS = ("rows", "bindings", "to_long", "profile", "truncated")
+"""The fields of `tools.session.profile_result` the session block lists, in the tool's order: a count, a flag and the
+texts the tool fences as data under its preamble. A field outside this list stays out of the block, which has
+instruction priority, until it is listed here; `status` says nothing there."""
 REPEATED_KEY_LINE = (
     "- Repeated key: {fact}, and the plot draws one value per {per}; the line below names the columns, and the "
     "offer is the counted aggregate (see 'Step 1: the data')"
@@ -216,8 +239,10 @@ BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under binding
 describing other bindings than the real ones twice ("Staatsangehörigkeit for series" while series was
 `Kanton`; "Jahr as category, CO2 as value" while category was `Bevölkerung` and value `Jahr`): the root
 had only "complete" and guessed the rest from the profile. The list itself stands in the tool result,
-not here: a measurement of 2026-10-15 with the list in this block saw the root take it for text the
-user had written (1 of 6 summaries)."""
+not on this line: a measurement of 2026-10-15 with the list in this block saw the root take it for text the
+user had written (1 of 6 summaries), while the block still stood in the user's turn (`add_session_context`). On a
+paste's summary turn the block carries that tool result (`PROFILE_HEADING`), the list fenced as data under the
+tool's preamble."""
 
 
 MEMORY_HEADING = (
@@ -251,6 +276,19 @@ def memory_block(memory: list[MemoryEntry]) -> str:
     return f"- {MEMORY_HEADING.format(count=len(memory))}\n{entries}"
 
 
+def profile_block(result: Mapping[str, Any]) -> str:
+    """What `get_dataset_profile` returns (`tools.session.profile_result`) as the session block lists it: the heading,
+    then one `name: value` line per field of `PROFILE_FIELDS` the result holds. A text field is the tool's own text,
+    the preamble and the fence that hold the user's column names and cells, as is, so its line breaks stay real; a
+    count or a flag is written as JSON writes it."""
+    lines = [f"- {PROFILE_HEADING}"]
+    for name in PROFILE_FIELDS:
+        if name in result:
+            value = result[name]
+            lines.append(f"{name}: {value if isinstance(value, str) else json.dumps(value)}")
+    return "\n".join(lines)
+
+
 async def session_context(context: ReadonlyContext) -> str:
     """The server-validated session facts the root needs each turn.
 
@@ -266,6 +304,10 @@ async def session_context(context: ReadonlyContext) -> str:
     name follow inside `<user_notes>` and `<user_data>` with their preambles
     (`RequestLedger.paste_context`): user text, but judged at the paste, fenced as data
     as the binding warnings' column names are, and kept out of the judged user turn.
+    On every call of a paste's summary turn the current data's profile follows the line
+    that says it was pasted, as `get_dataset_profile` returns it (`profile_block`): the
+    column names, cells and bindings inside the tool's own `<user_data>` fences under its
+    data preamble, only the heading, the field names and the counts outside them.
     """
     view = read_session(context.state)
     if view is None:
@@ -387,12 +429,16 @@ async def session_context(context: ReadonlyContext) -> str:
             # The first turn on a paste: a typed message is the user's note with it (root.md, the summary rule). For
             # every call of the turn: the reply after the root's own `prepare_data`, on a version that is no paste,
             # is still the summary, with the row count after the change (the prep eval's `no_row_count` misses).
-            lines.append(PASTED_LINE)
+            replaced = replaced_earlier_data(services.datasets, session_id, view)
+            lines.append(PASTED_LINE + (REPLACED_DATA_LINE if replaced else ""))
             before = view_before(context.state, dataset, view.language)
             if before is not None and held.viewed is None:
                 # The view of the data this paste replaced, which would fit the new table too: named, never applied.
                 lines.append(VIEW_BEFORE_LINE)
                 lines.append(fence("tool_notes", before))
+            # The table that arrived, as the tool returns it, so the summary needs no call to read it. Read from the
+            # version in force at each call: the server's conversions before the first, the root's own change after.
+            lines.append(profile_block(profile_result(view, dataset)))
         if ledger is not None and ledger.paste_context:
             # The note's turn: the paste's notes and file name, fenced with their preambles, for every call of the
             # turn.
