@@ -87,9 +87,9 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   leaves refuses the whole call. A selection held from before that keeps every row of the table the call
   leaves is cleared with a line of its own (`plot_view.idle_selections`). Once a call of the turn has left a
   required role without the column it was bound to, a call that turns a date into numbers or makes the row
-  numbers, or whose carry would put such a column on a role, is refused before anything is stored, with
-  `invalid_operation` and a fixed `message`, and
-  counts against none of the turn's caps (`data/emptied.py`, `_turn_columns`).
+  numbers is refused before anything is stored, with `invalid_operation` and a fixed `message`, and counts
+  against none of the turn's caps; a call that makes none but whose carry would put such a column of an
+  earlier call on a role is stored with that column kept off every role (`data/emptied.py`, `_turn_columns`).
 * `query_data(operations, columns, limit, from_version)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, or of the two only a
   question takes (`prepare.QueryOperation`: an `aggregate` without `by`, a `fit`), then
@@ -118,7 +118,7 @@ import json
 import math
 import secrets
 from collections.abc import Collection, Iterable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from google.adk import Workflow
@@ -626,15 +626,18 @@ def _column_held(
     return {"status": "error", "code": code, "message": message, "errors": _fenced_lines(lines)}
 
 
-def _note_held(ledger: RequestLedger, tool: str, roles: Iterable[str], kinds: Iterable[str]) -> None:
-    """The guard's log line (hook `emptied_role`) for a refused call: the tool, the roles the turn's change takes the
-    column of, and the names of the operations that made the held columns. Content-free: the spec's role names and
-    closed operation names, never a column or a cell."""
+def _note_held(
+    ledger: RequestLedger, tool: str, roles: Iterable[str], kinds: Iterable[str], *, outcome: str = "refused"
+) -> None:
+    """The guard's log line (hook `emptied_role`) for a call it held a column from: the tool, the outcome (`refused`,
+    or `kept_off` for a change stored with an earlier call's fill kept off every role), the roles the turn's change
+    takes the column of, and the names of the operations that made the held columns. Content-free: the spec's role
+    names and closed operation names, never a column or a cell."""
     attribution(
         "emptied_role",
         ledger,
         tool=tool,
-        outcome="refused",
+        outcome=outcome,
         roles=sorted(set(roles)),
         kinds=sorted({kind for kind in kinds if kind}),
     )
@@ -664,13 +667,15 @@ def _note_taken(
 class _TurnColumns:
     """What one `prepare_data` call does to the guard on an emptied role: the roles it empties (`emptied`), the
     turn's columns of a date turned into numbers or the row numbers once it is stored (`made`) and the columns its
-    operations added with their names (`added`), and its refusal when it would make or bind one of `made` in a turn
-    that emptied a role."""
+    operations added with their names (`added`), its refusal when it would make one of `made` or put one on a role in
+    a turn that emptied a role, and `kept_off`, the earlier calls' fills its carry gives no role when the call is
+    stored."""
 
     emptied: list[Emptied]
     made: list[str]
     added: dict[str, str]
     refusal: dict[str, Any] | None = None
+    kept_off: list[str] = field(default_factory=list)
 
 
 def _turn_columns(
@@ -690,8 +695,9 @@ def _turn_columns(
     numbers or the row numbers (`emptied.made_columns`) are the earlier calls' under this call's renames and this
     call's own new ones, each while the table still has it. The call empties a role when it leaves one open that it
     found bound, judged with those columns hidden that no role held. Once the turn has emptied a role, the call is
-    refused when it makes such a column or when the carry that stores it (`push_version`, which computes the same
-    bindings) would put one on a role.
+    refused when it makes such a column, or when the carry that stores it (`push_version`, which computes the same
+    bindings) would move one a role held. When the carry would only put an earlier call's fill on a role, the call is
+    the user's change and is stored, with every such fill no role holds kept off the roles (`kept_off`).
     """
     names = {column.name for column in parsed.profile.columns}
     converted = prepared.converted if prepared is not None else {}
@@ -717,7 +723,14 @@ def _turn_columns(
     landed = [binding.column for binding in held_bindings(carried, bindings, made)]
     if not new and not landed:
         return _TurnColumns(emptied_now, made, added)
-    _note_held(ledger, PREPARE_TOOL, [*ledger.emptied_roles, *now], [added.get(name, "") for name in [*new, *landed]])
+    emptying = [*ledger.emptied_roles, *now]
+    kinds = [added.get(name, "") for name in [*new, *landed]]
+    if not new and not bound & set(landed):
+        # Fills an earlier call of the turn made, which this change's carry would put on a role: the change is the
+        # user's and is stored, every such fill no role holds stays off every role, and the role waits for the user.
+        _note_held(ledger, PREPARE_TOOL, emptying, kinds, outcome="kept_off")
+        return _TurnColumns(emptied_now, made, added, kept_off=[name for name in made if name not in bound])
+    _note_held(ledger, PREPARE_TOOL, emptying, kinds)
     refusal = _column_held(ledger.emptied_roles, now, new, landed, "invalid_operation")
     return _TurnColumns(emptied_now, made, added, refusal)
 
@@ -865,10 +878,13 @@ async def prepare_data(
         # (`push_version` computes them the same way), so a call that changes the table is checked like any other.
         bound = view.bindings
         if stores:
+            kept_off = set(turn.kept_off) if turn is not None else set()
             bound = carry_bindings(
                 view.bindings,
                 roles,
-                parsed.profile,
+                parsed.profile.model_copy(
+                    update={"columns": [column for column in parsed.profile.columns if column.name not in kept_off]}
+                ),
                 start.stored.profile,
                 prepared.converted if prepared is not None else None,
                 prepared.row_numbers if prepared is not None else (),
@@ -911,6 +927,7 @@ async def prepare_data(
             splits=prepared.splits if prepared is not None else (),
             changes=changes,
             made_from=None if start.current else start.stored,
+            kept_off=turn.kept_off if turn is not None else (),
         )
     except StoreFull:
         return _error("capacity")

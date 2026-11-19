@@ -31,10 +31,10 @@ from agents.anyplot.tools.session import (
 )
 from agents.main import Runtime, app, get_runtime
 
-from .fakes import default_script
+from .fakes import FakeAnthropic, default_script
 from .test_from_version import context_for
 from .test_paste_conversions import block_now, open_spec, paste, say
-from .test_service_flow import HEADERS, USER, permissive_queue, prepare_call
+from .test_service_flow import HEADERS, USER, create_plot, permissive_queue, prepare_call
 
 
 SENSORS = (
@@ -195,39 +195,47 @@ class TestTheWaysIn:
         bound, columns = await outcome(runtime, sid)
         assert bound == {"x": "Temperatur", "y": "Temperatur"} and "Tag" not in columns
 
-    async def test_a_column_made_before_the_change_that_empties_the_axis_lands_nowhere(
-        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    async def test_a_column_made_before_the_change_that_empties_the_axis_is_kept_off_it(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
     ) -> None:
         """Made first, while every role was bound, the row numbers take no role; the drop of Feuchte would then let
-        the carry put them on y. That call is refused, so y keeps Feuchte.
-
-        What the table holds after such a turn, as it stands: the row numbers the first call made stay in it, unbound,
-        since nothing was refused when they were made, and the asked drop of Feuchte did not happen; a drop that takes
-        the row numbers with it would be stored. Undoing the turn's earlier call is not the guard's to do."""
+        the carry put them on y. The drop is the user's change and is stored; the row numbers stay in the table,
+        unbound, kept off y, and y waits for the user, as after any change that empties it. A binding that puts them
+        on a role in the same turn is still refused, and the next turn offers them."""
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
         script = default_script()
-        script["root"] = [prepare_call(ROWS), prepare_call({"op": "drop_columns", "columns": ["Feuchte"]}), REPLY]
+        script["root"] = [
+            prepare_call(ROWS),
+            prepare_call({"op": "drop_columns", "columns": ["Feuchte"]}),
+            bindings_call(x="Temperatur", y="index"),
+            REPLY,
+        ]
         fake = swap_models("anthropic-vertex", script)
         sid = await summarized(client, runtime)
 
         await say(client, sid, {"text": "Drop the humidity."})
 
         bound, columns = await outcome(runtime, sid)
-        refused = answers(fake, 2)
-        assert bound == {"x": "Temperatur", "y": "Feuchte"} and HELD in refused
-        assert columns == ["index", "Zeitpunkt", "Sensor", "Temperatur", "Feuchte"]
-        assert LOSING_LINE.format(role="y", column="Feuchte") in refused
-        assert MADE_BEFORE_LINE.format(name="index") in refused
+        assert bound == {"x": "Temperatur"} and columns == ["index", "Zeitpunkt", "Sensor", "Temperatur"]
+        assert HELD not in answers(fake, 2) and f"- {EMPTIED_HEADING.format(count=1)}\n{LOST_Y}" in block_of(fake, 2)
+        refused = answers(fake, 3)
+        assert '\\"code\\": \\"invalid_bindings\\"' in refused and MADE_BEFORE_LINE.format(name="index") in refused
+        assert guard_lines(caplog) == [
+            {"tool": "prepare_data", "outcome": "kept_off", "roles": ["y"], "kinds": ["row_number"]},
+            {"tool": "set_bindings", "outcome": "refused", "roles": ["y"], "kinds": ["row_number"]},
+        ]
+        listed = await block_now(client, sid)
+        assert CANDIDATES in listed and '"op": "row_number", "name": "index"' in listed and "takes x" in listed
 
-    async def test_after_that_refusal_a_drop_that_takes_the_row_numbers_with_it_is_stored(
-        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    async def test_a_drop_that_takes_the_earlier_row_numbers_with_it_keeps_nothing_off(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
     ) -> None:
-        """The way out of the order above within the turn: nothing of the turn's is left to land on y."""
-        drop = {"op": "drop_columns", "columns": ["Feuchte"]}
+        """With the row numbers dropped too, nothing of the turn's is left that could take y: a plain emptying."""
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
         script = default_script()
         script["root"] = [
             prepare_call(ROWS),
-            prepare_call(drop),
-            prepare_call({**drop, "columns": ["Feuchte", "index"]}),
+            prepare_call({"op": "drop_columns", "columns": ["Feuchte", "index"]}),
             REPLY,
         ]
         swap_models("anthropic-vertex", script)
@@ -237,6 +245,31 @@ class TestTheWaysIn:
 
         bound, columns = await outcome(runtime, sid)
         assert bound == {"x": "Temperatur"} and columns == ["Zeitpunkt", "Sensor", "Temperatur"]
+        assert guard_lines(caplog) == []
+
+    async def test_the_plot_button_after_such_a_turn_answers_that_y_is_open(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The kept-off column leaves y bound to nothing: confirmed as shown, the plot run stops before the adapter
+        with `incomplete_bindings`."""
+        script = default_script()
+        script["root"] = [
+            prepare_call(ROWS),
+            prepare_call({"op": "drop_columns", "columns": ["Feuchte"]}),
+            REPLY,
+            {"call": "plot_pipeline", "args": {}},
+            {"text": "y has no column yet, so no plot was made."},
+        ]
+        fake = swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime)
+        await say(client, sid, {"text": "Drop the humidity."})
+        assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
+
+        events = await create_plot(client, sid)
+
+        assert '\\"reason\\": \\"incomplete_bindings\\"' in answers(fake, len(fake.calls) - 1)
+        assert all(FakeAnthropic.kind(call) == "root" for call in fake.calls)  # no adapter, no reviewer
+        assert not any(name == "plot" and data.get("status") == "ok" for name, data in events)
 
     async def test_a_text_column_the_request_converts_and_sums_is_its_own(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models

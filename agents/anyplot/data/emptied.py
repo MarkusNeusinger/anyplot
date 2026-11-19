@@ -22,17 +22,20 @@ The guard reads typed records only, never a word of the request:
   `make_date`): a request that names one gets it on the axis it names, also in a turn that emptied another.
 * `held_bindings`: the bindings that put such a column on a role that did not hold it before.
 
-Once a call of the turn has emptied a role, the root's tools refuse a `prepare_data` call that makes such a column or
-whose carry binds one, and a `set_bindings` call that binds one (`tools/session.py`); the refusal counts against none
-of the turn's caps (`RequestLedger.guard_held`). The two cannot be told apart by these records when one message both
-empties an axis and asks for the days or the row numbers on it: that request waits one turn, and the next turn lists
-the offer.
+Once a call of the turn has emptied a role, the root's tools refuse a `prepare_data` call that makes such a column,
+and a `set_bindings` call that binds one (`tools/session.py`); the refusal counts against none of the turn's caps
+(`RequestLedger.guard_held`). A call that makes none, but whose carry would put a fill an earlier call of the turn made
+on a role, is the user's change: it is stored, the fill stays in the table and off every role, and the role waits for
+the user, since the decided outcome is that the role waits, not the change. The two cannot be told apart by these
+records when one message both empties an axis and asks for the days or the row numbers on it: that request waits one
+turn, and the next turn lists the offer.
 
 The other side of the boundary is a known gap: a derived column or a text conversion the root adds unasked and puts on
-the emptied axis passes. So two outcomes write one content-free log line each (hook `emptied_role`: the tool, the
-outcome, the spec's role names and the names of the operations that made the columns, never a column or a cell): a
-refusal, and a column another operation of the turn added (`added_columns`) taking a role whose column the turn took.
-The second line is how real use and the eval show whether the root goes round the guard that way.
+the emptied axis passes. So three outcomes write one content-free log line each (hook `emptied_role`: the tool, the
+outcome, the spec's role names and the names of the operations that made the columns, never a column or a cell):
+`refused`, `kept_off` for a change stored with an earlier fill kept off the role, and `bound` for a column another
+operation of the turn added (`added_columns`) taking a role whose column the turn took. The last is how real use and
+the eval show whether the root goes round the guard that way.
 """
 
 from collections.abc import Collection, Mapping, Sequence

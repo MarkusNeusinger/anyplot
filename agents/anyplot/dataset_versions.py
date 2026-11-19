@@ -52,7 +52,7 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
 `dataset` (plus `changes`); the paste route answers the same fields. No ADK import.
 """
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any, Literal
 
@@ -267,6 +267,7 @@ def push_version(
     splits: Sequence[Sequence[str]] = (),
     changes: Sequence[str] = (),
     made_from: StoredDataset | None = None,
+    kept_off: Collection[str] = (),
 ) -> DatasetVersion:
     """Store `parsed` as the session's next dataset version, under the session's next number; raises `StoreFull`
     (nothing changes then).
@@ -285,7 +286,11 @@ def push_version(
     choice made for the old columns says nothing about the new ones even when a name
     such as `x` returns. `pinned` gives those bindings, keeps the current bindings that
     still hold on the kept columns, and the defaults for the other roles (`filled_bindings`),
-    for `.to_long()`, which knows the roles its new columns are made for.
+    for `.to_long()`, which knows the roles its new columns are made for. `kept_off` names
+    columns of `parsed` the carry gives no role, as if the table had none of them: the guard on
+    an emptied role (`data/emptied.py`) keeps the date numbers or row numbers an earlier call of
+    the turn made off the role a later change empties, so the change is stored and the role
+    waits for the user.
 
     The notes pasted with the data (`context_lines`) belong to the session's data, not to one
     version: the new version carries the current version's notes, also after `generate_data`.
@@ -336,7 +341,12 @@ def push_version(
     elif rebind:
         bindings = default_bindings(roles, stored.profile)
     else:
-        bindings = carry_bindings(view.bindings, roles, stored.profile, previous, converted, row_numbers, splits)
+        offered = stored.profile
+        if kept_off:
+            offered = offered.model_copy(
+                update={"columns": [column for column in offered.columns if column.name not in kept_off]}
+            )
+        bindings = carry_bindings(view.bindings, roles, offered, previous, converted, row_numbers, splits)
     delta = {**_delta(dataset_id, bindings, history, version), DATASET_TOP: version}
     if rebind:
         # A computed table in place of the data is new data, as a paste is: the view of the plot was set on the
