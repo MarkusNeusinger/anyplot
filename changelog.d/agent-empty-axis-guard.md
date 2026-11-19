@@ -1,12 +1,14 @@
 ### Fixed
 
 - **The chat no longer fills an emptied plot axis with a column nobody asked
-  for.** After a change of the data that took an axis's column (the daily mean
-  per sensor drops the humidity of a scatter plot's y), the assistant added the
-  timestamps as days since the first date and put them on the chart. In such a
-  turn the server now refuses to turn a date into numbers or to make row
-  numbers, or to bind such a column, whichever call tries it, and the refusal
-  costs none of the turn's two data steps. The table keeps only what was asked
+  for.** After a change of the data that took the column of a required role
+  (the daily mean per sensor drops the humidity of a scatter plot's y), the
+  assistant added the timestamps as days since the first date and put them on
+  the chart. In such a turn the server now refuses to turn a date into numbers
+  or to make row numbers, or to bind such a column, whichever call tries it,
+  and the refusal costs none of the turn's two data steps. A multi-series
+  plot's series count as one role, taken only when the last one is gone, and an
+  optional role such as a series grouping never counts. The table keeps only what was asked
   for, the reply names the axis that lost its column, the plot waits, and the
   next turn lists what the server can compute for it. The axis's own dates
   turned into numbers in their place ("the days since the start on x instead

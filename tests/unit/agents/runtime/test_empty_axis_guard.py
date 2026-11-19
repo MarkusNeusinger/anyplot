@@ -1,4 +1,4 @@
-"""The guard on a role the turn's own change of the data left without its column (`data/emptied.py`).
+"""The guard on a required role the turn's own change of the data left without its column (`data/emptied.py`).
 
 The prep eval's `de-tagesmittel-pro-sensor`: the daily mean of the temperature per sensor drops the humidity, so the
 scatter plot's y axis loses its column and no column is left for it. The root then added the timestamps as days since
@@ -744,6 +744,130 @@ class TestARenameTakesNoRole:
         )
 
 
+LONG = "Datum,Gruppe,Wert\n2025-01-01,A,4\n2025-01-01,B,3\n2025-01-02,A,6\n2025-01-02,B,2\n2025-01-03,A,5\n2025-01-03,B,4\n"
+"""A long table on `line-multi`: x Datum, y1 Wert, and the optional series Gruppe."""
+WIDE = "Datum,A,B\n2025-01-01,4,3\n2025-01-02,6,2\n2025-01-03,5,4\n2025-01-04,8,5\n"
+"""A wide table on `line-multi`: x Datum and the family y, y1 A and y2 B."""
+WIDE3 = "Datum,A,B,C\n2025-01-01,4,3,9\n2025-01-02,6,2,8\n2025-01-03,5,4,7\n2025-01-04,8,5,6\n"
+"""The same with three series, y1 A, y2 B and y3 C."""
+TOTAL = {"op": "aggregate", "by": ["Datum"], "column": "Wert", "how": "sum"}
+YEAR = {"op": "date_number", "column": "Datum", "unit": "year", "name": "J"}
+
+
+class TestOnlyARequiredRoleIsTaken:
+    """A turn is taken only by a required role of the spec, and a family of roles is one role: an optional role that
+    loses its column, or a family that keeps one of its series, makes no taken turn."""
+
+    async def test_the_total_per_day_drops_the_optional_series_and_the_year_is_stored(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
+        fake, sid = await turn_of(
+            client, runtime, swap_models, [prepare_call(TOTAL), prepare_call(YEAR)], text=LONG, spec="line-multi"
+        )
+
+        assert await outcome(runtime, sid) == ({"x": "Datum", "y1": "Wert"}, ["Datum", "Wert", "J"])
+        assert HELD not in answers(fake, 2) and guard_lines(caplog) == []
+
+    async def test_one_series_dropped_of_two_takes_no_role_and_the_days_are_stored(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
+        drop = {"op": "drop_columns", "columns": ["B"]}
+        fake, sid = await turn_of(
+            client, runtime, swap_models, [prepare_call(drop), prepare_call(TAGE)], text=WIDE, spec="line-multi"
+        )
+
+        assert await outcome(runtime, sid) == ({"x": "Datum", "y1": "A"}, ["Datum", "A", "Tage"])
+        assert HELD not in answers(fake, 2) and guard_lines(caplog) == []
+
+
+class TestAFamilyIsOneRole:
+    """Once a family's last series is gone, the family is taken, and a binding is judged by the spec's role it names:
+    the row numbers or the days land on no member of it, whatever the member's number."""
+
+    async def test_the_row_numbers_are_kept_off_the_family_and_refused_on_a_new_member(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
+        steps = [
+            prepare_call(NR),
+            prepare_call({"op": "drop_columns", "columns": ["A", "B"]}),
+            bindings_call(x="Datum", y4="Nr"),
+        ]
+        fake, sid = await turn_of(client, runtime, swap_models, steps, text=WIDE, spec="line-multi")
+
+        assert await outcome(runtime, sid) == ({"x": "Datum"}, ["Nr", "Datum"])
+        assert HELD in answers(fake, 3)
+        assert guard_lines(caplog) == [
+            {"tool": "prepare_data", "outcome": "kept_off", "roles": ["y"], "kinds": ["row_number"]},
+            {"tool": "set_bindings", "outcome": "refused", "roles": ["y"], "kinds": ["row_number"]},
+        ]
+        lost = "<user_data>\ny: A\ny: B\n</user_data>"
+        assert lost in block_of(fake, 3)  # the family once, with each of its columns of the turn's start
+
+    async def test_the_days_are_refused_once_the_last_series_is_gone(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        steps = [prepare_call({"op": "drop_columns", "columns": ["A", "B"]}), prepare_call(TAGE)]
+        fake, sid = await turn_of(client, runtime, swap_models, steps, text=WIDE, spec="line-multi")
+
+        assert await outcome(runtime, sid) == ({"x": "Datum"}, ["Datum"])
+        assert HELD in answers(fake, 2)
+
+    @pytest.mark.parametrize("first", [None, NR])
+    async def test_a_family_filled_again_by_any_member_gets_the_sentence_for_a_filled_role(
+        self,
+        client: httpx.AsyncClient,
+        runtime: Runtime,
+        swap_models,
+        caplog: pytest.LogCaptureFixture,
+        first: dict[str, Any] | None,
+    ) -> None:
+        """The sum of A and B replaces both series in one call, and the carry puts it on `y1`: the family holds a column
+        again, so a later refusal says nothing of a role that waits, of a data step (the days) or of a binding call
+        (the row numbers made before the sum), and the log lines name the family, never the member."""
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
+        total = {"op": "compute", "name": "S", "expression": "a + b", "inputs": {"a": "A", "b": "B"}}
+        replace = prepare_call(total, {"op": "drop_columns", "columns": ["A", "B"]})
+        steps = (
+            [replace, prepare_call(TAGE)]
+            if first is None
+            else [prepare_call(first), replace, bindings_call(x="Datum", y1="S", y2="Nr")]
+        )
+        fake, sid = await turn_of(client, runtime, swap_models, steps, text=WIDE, spec="line-multi")
+
+        bound, _ = await outcome(runtime, sid)
+        assert bound == {"x": "Datum", "y1": "S"}
+        refused = answers(fake, len(steps))
+        assert HELD_FILLED in refused and HELD not in refused
+        made = (
+            [{"tool": "prepare_data", "outcome": "kept_off", "roles": ["y"], "kinds": ["row_number"]}] if first else []
+        )
+        tool, kind = ("prepare_data", "date_number") if first is None else ("set_bindings", "row_number")
+        assert guard_lines(caplog) == [
+            *made,
+            {"tool": "prepare_data", "outcome": "bound", "role": "y", "kind": "compute"},
+            {"tool": tool, "outcome": "refused", "roles": ["y"], "kinds": [kind]},
+        ]
+
+
+class TestTheRowsSentenceNeedsTheDrop:
+    async def test_an_aggregate_and_row_numbers_in_one_call_get_the_general_sentence(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The aggregate takes y's column without a `drop_columns`: "remove the column in the next turn" would be no
+        way out of it, so the refusal is the general sentence, never the row-number one."""
+        fake, sid = await turn_of(client, runtime, swap_models, [prepare_call(DAILY_MEAN, ROWS)])
+
+        assert await outcome(runtime, sid) == (
+            {"x": "Temperatur", "y": "Feuchte"},
+            ["Zeitpunkt", "Sensor", "Temperatur", "Feuchte"],
+        )
+        refused = answers(fake, 1)
+        assert HELD in refused and ROWS_REPLACE_MESSAGE not in refused
+
+
 class TestWhatIsNoHeldColumn:
     async def test_a_reformatted_copy_of_a_date_is_stored(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
@@ -816,6 +940,77 @@ class TestNamedLimits:
         await say(client, sid, {"text": "Call Temperatur Temp."})
 
         assert await outcome(runtime, sid) == ({"x": name, "y": "Temp"}, [name, "Zeitpunkt", "Sensor", "Temp"])
+
+    @pytest.mark.parametrize(("made", "column"), [(NR, "Nr"), (TAGE, "Tage")])
+    @pytest.mark.parametrize("bind", [False, True])
+    async def test_known_limit_a_series_dropped_while_others_stay_lets_a_held_column_join_as_a_series(
+        self,
+        client: httpx.AsyncClient,
+        runtime: Runtime,
+        swap_models,
+        caplog: pytest.LogCaptureFixture,
+        made: dict[str, Any],
+        column: str,
+        bind: bool,
+    ) -> None:
+        """A limit, not a promise: one series of three is dropped and two are left, so the family y is not taken and the
+        turn is no taken turn; the row numbers or the days made before it then go on as a further series, bound by the
+        root or put there by the carry alone."""
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION)
+        steps = [prepare_call(made), prepare_call({"op": "drop_columns", "columns": ["A"]})]
+        if bind:
+            steps.append(bindings_call(x="Datum", y2="B", y3="C", y4=column))
+        _, sid = await turn_of(client, runtime, swap_models, steps, text=WIDE3, spec="line-multi")
+
+        bound, _ = await outcome(runtime, sid)
+        if bind:
+            assert bound == {"x": "Datum", "y2": "B", "y3": "C", "y4": column}
+        else:
+            assert bound == {"x": "Datum", "y1": column, "y2": "B", "y3": "C"}
+        assert guard_lines(caplog) == []
+
+    @pytest.mark.parametrize(
+        ("made", "columns"),
+        [
+            ({"op": "row_number", "name": "Feuchte"}, ["Feuchte", "Zeitpunkt", "Sensor", "Temperatur", "F"]),
+            ({**DAYS, "name": "Feuchte"}, ["Zeitpunkt", "Sensor", "Temperatur", "F", "Feuchte"]),
+        ],
+    )
+    async def test_known_limit_a_held_column_under_the_old_name_of_a_renamed_column_keeps_its_binding(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, made: dict[str, Any], columns: list[str]
+    ) -> None:
+        """A limit, not a promise, and main does the same: y's column is renamed away and the call makes the row numbers
+        or the days under its old name. The turn's start follows the rename, so y is not taken, and the binding, kept
+        by name, now holds the new column."""
+        rename = {"op": "rename", "column": "Feuchte", "name": "F"}
+        _, sid = await turn_of(client, runtime, swap_models, [prepare_call(rename, made)])
+
+        assert await outcome(runtime, sid) == ({"x": "Temperatur", "y": "Feuchte"}, columns)
+
+    async def test_known_limit_ys_column_read_as_text_stays_so_the_days_take_y(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """A limit, not a promise, and main does the same: Feuchte read as text stays in the table, so y is not taken,
+        though the column no longer fits it; the carry puts the days of the same call on y."""
+        as_text = {"op": "set_type", "column": "Feuchte", "type": "text"}
+        _, sid = await turn_of(client, runtime, swap_models, [prepare_call(as_text, DAYS)])
+
+        assert await outcome(runtime, sid) == (
+            {"x": "Temperatur", "y": "Tag"},
+            ["Zeitpunkt", "Sensor", "Temperatur", "Feuchte", "Tag"],
+        )
+
+    async def test_known_limit_ys_column_read_as_text_stays_so_the_row_numbers_take_x(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The same with the row numbers in a second call: the carry puts them on x and moves Temperatur to y."""
+        as_text = {"op": "set_type", "column": "Feuchte", "type": "text"}
+        _, sid = await turn_of(client, runtime, swap_models, [prepare_call(as_text), prepare_call(ROWS)])
+
+        assert await outcome(runtime, sid) == (
+            {"x": "index", "y": "Temperatur"},
+            ["index", "Zeitpunkt", "Sensor", "Temperatur", "Feuchte"],
+        )
 
 
 class TestTheKnownGap:
@@ -906,7 +1101,7 @@ class TestSetBindings:
         context = await context_for(client, sid, "inv-e-1")
         ledger = ledger_for("inv-e-1")
         ledger.made_columns = {"Tag": "Zeitpunkt"}
-        ledger.taken_roles = {"y": "Feuchte"}
+        ledger.taken_roles = {"y": ["Feuchte"]}
 
         on_x = await set_bindings([{"role": "x", "column": "Tag"}, {"role": "y", "column": "Temperatur"}], context)
         on_y = await set_bindings([{"role": "x", "column": "Temperatur"}, {"role": "y", "column": "Tag"}], context)

@@ -1054,6 +1054,30 @@ class TestTheUndoTakesBackTheView:
         assert (answer["version"], answer["view"]) == (1, None)
         assert await view_now(runtime, sid) is None
 
+    async def test_known_limit_a_view_set_and_cleared_after_the_step_does_not_keep_the_undo_from_restoring(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """A limit, not a promise: the undo compares the view in force with the one the step left, never what came
+        between. A later turn sets a view and the next one clears it again, so the view in force is the step's again,
+        and the undo brings the step's old view back over that later clear."""
+        sid = await pasted_session(client, TEAMS)
+        steps = [
+            [only("Points", "ge", 40)],
+            [{**only("Points", "ge", 40), "target": "table"}],
+            [only("Goals", "ge", 10)],
+            [{"op": "reset_view"}],
+        ]
+        for number, operations in enumerate(steps):
+            context = await context_for(client, sid, f"inv-u-7-{number}")
+            await prepare_data(operations, context)
+            await write_back(runtime, sid, context)
+        assert await view_now(runtime, sid) is None
+
+        answer = await undo(client, sid)
+
+        assert (answer["version"], answer["view"]) == (1, SHOWN_40)
+        assert await view_now(runtime, sid) == POINTS_40
+
 
 class TestQuestionsUnderAView:
     """A question reads the whole table unless it asks for the rows the plot draws, and the answer says which: a

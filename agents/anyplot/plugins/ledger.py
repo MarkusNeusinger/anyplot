@@ -392,14 +392,15 @@ class RequestLedger:
     rebuilt_from: list[int] = field(default_factory=list)
     """The numbers of the earlier versions this turn's `prepare_data` calls started from (`from_version`): a rebuild
     changed the data also without an operation, which `prep_ops` would not show."""
-    turn_start: dict[str, str] | None = None
-    """The bindings in force when the turn's first `prepare_data` or `set_bindings` call came, role: column, each
-    column under its current name as the turn's renames move it (`data/emptied.py`): the start of the turn the guard
-    on a taken role judges every step against. None until that call."""
-    taken_roles: dict[str, str] = field(default_factory=dict)
-    """The roles whose column of the turn's start a stored call of this turn took, each with that column
-    (`emptied.taken`): from then on the turn makes no held column, and the session block lists the ones still open.
-    Role names and the user's column names, never sent anywhere but that block."""
+    turn_start: dict[str, list[str]] | None = None
+    """The bindings in force when the turn's first `prepare_data` or `set_bindings` call came, per required spec role
+    with the columns it held (`emptied.start_columns`: a family's members together), each column under its current
+    name as the turn's renames move it (`data/emptied.py`): the start of the turn the guard on a taken role judges
+    every step against. None until that call."""
+    taken_roles: dict[str, list[str]] = field(default_factory=dict)
+    """The required spec roles none of whose columns of the turn's start is left after a stored call of this turn,
+    each with those columns (`emptied.taken`): from then on the turn makes no held column, and the session block lists
+    the ones still open. Role names and the user's column names, never sent anywhere but that block."""
     made_columns: dict[str, str | None] = field(default_factory=dict)
     """The held columns this turn's `prepare_data` calls made that the current table still has, under their current
     names, each with the column its date was read from or None for the row numbers (`emptied.held_columns`)."""

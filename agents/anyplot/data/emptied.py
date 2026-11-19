@@ -9,24 +9,35 @@ neither by itself. The table holds only what was asked for, the reply says which
 waits, and the next turn lists what the server can compute.
 
 One rule, judged on typed records only, never on a word of the request, against the turn's first bindings
-(`RequestLedger.turn_start`, the bindings in force when the turn's first data or binding call came, followed through
-the turn's renames):
+(`RequestLedger.turn_start`, the bindings in force when the turn's first data or binding call came, kept per required
+role of the spec by `start_columns` and followed through the turn's renames):
 
-* A role is taken (`taken`) when the column it held at the start of the turn is no longer in the table. A role that
-  was open at the start is never taken, so the conversion the user takes from an offer binds as before.
+* A required role of the spec is taken (`taken`) when none of the columns it held at the start of the turn is left in
+  the table. A family of roles (the series `y1`, `y2`, ... of a multi-series plot) is one role, taken only when its
+  last series is gone, and a binding is judged by the spec's role it names (`family_name`), so `y4` belongs to the
+  family of `y1`. An optional role, and one the plot computes when it is open (`DataRole.computed`), never makes a
+  turn a taken turn: the plot does not wait for it. A role that was open at the start is never taken, so the
+  conversion the user takes from an offer binds as before.
 * A held column (`held_columns`) is a column the turn made that holds a date turned into numbers
   (`Prepared.date_numbers`, recorded as the operation runs) or the row numbers (`Prepared.row_numbers`): the two fills
   the server offers for an open number axis. A conversion of a text column, a `set_type` in place and a derived column
   (`derive`, `compute`, `classify`, `make_date`) are none: they are the request's own.
 * In a turn with a taken role, no held column is made and none ends on a taken role (`wrong_bindings`), except a
-  date number made from the taken role's own column (`replaces`): "the days since the start on x instead of the dates"
-  replaces the dates, on that role and no other. Row numbers have no source, so they never replace.
+  date number made from one of the taken role's own columns (`replaces`): "the days since the start on x instead of
+  the dates" replaces the dates, on that role and no other. Row numbers have no source, so they never replace.
 
 `tools/session.py` acts on it: a call that makes a held column in such a turn, or that ends with one bound by the
 root on a taken role, is refused and counts against none of the turn's caps (`RequestLedger.guard_held`); a call
 whose carry alone would put an earlier call's held column on a taken role is stored with that column kept off.
-One message that both takes an axis's column and asks for the days or the row numbers on it cannot be told from the
-fault by these records: it waits one turn.
+One message that both takes the column of a required role and asks for the days or the row numbers on it cannot be
+told from the fault by these records: it waits one turn.
+
+Named limits, pinned as they stand and none of them a promise: a family that keeps one of its series is not taken, so
+a held column made in the turn joins it as a series, put on the open member by the carry alone or bound by the root; a held column made under the old name of a column the turn renamed
+away keeps that binding, since the start follows the rename; a role's column read as text stays in the table, so the
+role is not taken though the column no longer fits it; the carry itself can refill a taken role with a spare column
+(the year or the month an `aggregate` keeps), and the turn stays taken, so a date number the user asks for then waits
+one turn, as after a refill by the root; `run_data_code`, `generate_data` and the next turn's carry are not covered.
 
 The other side of the boundary is a known gap: a derived column or a text conversion the root adds unasked and puts on
 the taken axis passes. So the guard writes one content-free log line per event (hook `emptied_role`: the tool, the
@@ -37,7 +48,10 @@ column that was there before the turn on a taken role. `bound` and `refilled` co
 
 from collections.abc import Collection, Mapping, Sequence
 
+from core.spec_roles import DataRole
+
 from ..schemas import Binding
+from .bindings import resolve_role
 from .prepare import Operation, Rename, Split
 
 
@@ -90,24 +104,56 @@ def renamed(name: str, operations: Sequence[Operation]) -> str:
     return name
 
 
-def taken(start: Mapping[str, str], columns: Collection[str]) -> dict[str, str]:
-    """The roles of `start` (role: the column it held at the start of the turn) whose column `columns` lacks."""
-    return {role: column for role, column in start.items() if column not in columns}
+def family_name(role: str, roles: list[DataRole]) -> str:
+    """The spec role a binding's role names (`y` for its member `y2`), as `check_bindings` lists a missing one."""
+    spec_role = resolve_role(role, roles)
+    return spec_role.name if spec_role is not None else role
 
 
-def replaces(column: str, role: str, held: Mapping[str, str | None], taken_roles: Mapping[str, str]) -> bool:
-    """Whether the held `column` is a date number made from the very column the taken `role` held at the start."""
-    return role in taken_roles and held.get(column) is not None and held.get(column) == taken_roles[role]
+def start_columns(bindings: Sequence[Binding], roles: list[DataRole]) -> dict[str, list[str]]:
+    """The bindings at the start of the turn as the guard keeps them: each required role of the spec that holds a
+    column (neither an optional role nor one the plot computes, the roles `check_bindings` never lists as missing)
+    with the columns it holds, a family's members together under the family's name, in binding order."""
+    required = {role.name for role in roles if role.required and not role.computed}
+    start: dict[str, list[str]] = {}
+    for binding in bindings:
+        name = family_name(binding.role, roles)
+        if name in required:
+            start.setdefault(name, []).append(binding.column)
+    return start
+
+
+def taken(start: Mapping[str, Sequence[str]], columns: Collection[str]) -> dict[str, list[str]]:
+    """The roles of `start` (role: the columns it held at the start of the turn) none of whose columns `columns`
+    holds: a family keeps its role while one of its series is left."""
+    return {role: list(held) for role, held in start.items() if not any(column in columns for column in held)}
+
+
+def replaces(
+    column: str,
+    role: str,
+    held: Mapping[str, str | None],
+    taken_roles: Mapping[str, Sequence[str]],
+    roles: list[DataRole],
+) -> bool:
+    """Whether the held `column` on `role` (a binding's role or a spec role) is a date number made from one of the
+    very columns the taken spec role held at the start."""
+    source = held.get(column)
+    family = family_name(role, roles)
+    return family in taken_roles and source is not None and source in taken_roles[family]
 
 
 def wrong_bindings(
-    bindings: Sequence[Binding], held: Mapping[str, str | None], taken_roles: Mapping[str, str]
+    bindings: Sequence[Binding],
+    held: Mapping[str, str | None],
+    taken_roles: Mapping[str, Sequence[str]],
+    roles: list[DataRole],
 ) -> list[Binding]:
-    """The bindings that put a held column on a taken role it does not replace."""
+    """The bindings that put a held column on a member of a taken spec role it does not replace."""
     return [
         binding
         for binding in bindings
-        if binding.role in taken_roles
+        if family_name(binding.role, roles) in taken_roles
         and binding.column in held
-        and not replaces(binding.column, binding.role, held, taken_roles)
+        and not replaces(binding.column, binding.role, held, taken_roles, roles)
     ]

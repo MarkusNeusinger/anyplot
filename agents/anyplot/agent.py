@@ -8,8 +8,8 @@
   versions of the data that `prepare_data` and `query_data` can start from (their change
   lines fenced, since they name the user's columns), the
   conversions that would fill a required role left open (`data/conversions.py`, their
-  lines fenced, since they name the user's columns), the roles this turn's own change of the
-  data left without the column they were bound to, for the rest of the turn (`data/emptied.py`,
+  lines fenced, since they name the user's columns), the required roles this turn's own change
+  of the data left without the columns they were bound to, for the rest of the turn (`data/emptied.py`,
   the columns fenced), whether
   the user pasted notes with the data (a fixed line, never the notes), plot
   versions and the latest version's theme, so a change keeps it, and the plot memory's
@@ -54,10 +54,8 @@ from google.adk.plugins.base_plugin import BasePlugin
 from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
 from google.genai import types
 
-from core.spec_roles import DataRole
-
 from . import telemetry
-from .data.bindings import check_bindings, resolve_role
+from .data.bindings import check_bindings
 from .data.conversions import candidates
 from .dataset_versions import kept_versions, version_lines
 from .dev_fixture import DevFixturePlugin
@@ -135,14 +133,15 @@ CONVERSIONS_HEADING = (
 """The session block's line over the conversion candidates of the roles left open (`data/conversions.py`), live test
 of 2026-11-01: the root asked the user for a date column that a conversion of the `Month` text would have made."""
 EMPTIED_HEADING = (
-    "Roles this turn's change of the data left without the column they were bound to: {count}, listed below with that "
-    "column. Say in the reply which role lost its column and that the plot waits for one. For the rest of this turn "
+    "Roles this turn's change of the data left without the columns they were bound to: {count}, listed below with "
+    "those columns, one line each. Say in the reply which role lost its column and that the plot waits for one. For the rest of this turn "
     "no date is turned into numbers and no row number is made, and none made in this turn takes these roles, which "
     "the server refuses: the next turn lists what it can compute for them, and one the user asks for is made then "
     "(see 'Step 1: the data')"
 )
-"""The session block's line over the roles whose column of the turn's start a `prepare_data` call of this turn took
-(`RequestLedger.taken_roles`, `data/emptied.py`), for every later model call of the turn while they hold no column.
+"""The session block's line over the required roles whose columns of the turn's start a `prepare_data` call of this
+turn took (`RequestLedger.taken_roles`, `data/emptied.py`), for every later model call of the turn while they hold no
+column.
 Without it the root saw only "missing roles" and filled the axis with a column nobody asked for; the line is the fact
 the reply states, and the guard in the tools holds whatever the root tries all the same. It speaks of the rest of the
 turn, since a held column made before the role was taken is no lie of it."""
@@ -236,12 +235,6 @@ statement that the messages the root sees are others. It says nothing about why 
 outage), and nothing about what the root should answer: its own refusal of a message stays its own decision."""
 
 
-def family_name(role: str, roles: list[DataRole]) -> str:
-    """The spec role a binding's role names (`y` for its member `y2`), as `check_bindings` lists a missing one."""
-    spec_role = resolve_role(role, roles)
-    return spec_role.name if spec_role is not None else role
-
-
 def memory_line(entry: MemoryEntry) -> str:
     """One memory entry as the session block lists it: `m3 axis_label/x: x-axis label: 'Zeit (h)'`."""
     where = f"{entry.kind}/{entry.target}" if entry.target else entry.kind
@@ -326,16 +319,16 @@ async def session_context(context: ReadonlyContext) -> str:
             )
         turn_ledger = CURRENT_LEDGER.get()
         taken_roles = turn_ledger.taken_roles if turn_ledger is not None else {}
-        lost = [
-            f"{role}: {column}"
-            for role, column in taken_roles.items()
-            if family_name(role, view.snapshot.roles()) in check.missing_roles
-        ]
+        # The required spec roles this turn's own change of the data took the columns of (`data/emptied.py`), while
+        # they hold none, one line per column; the columns are the user's, so they stand inside a data fence.
+        lost = {role: columns for role, columns in taken_roles.items() if role in check.missing_roles}
         if lost:
-            # The roles this turn's own change of the data took the column of (`data/emptied.py`), while they hold none;
-            # the columns are the user's, so they stand inside a data fence.
             lines.append(f"- {EMPTIED_HEADING.format(count=len(lost))}")
-            lines.append(fence("user_data", "\n".join(lost)))
+            lines.append(
+                fence(
+                    "user_data", "\n".join(f"{role}: {column}" for role, columns in lost.items() for column in columns)
+                )
+            )
         by_user = user_bound(context.state, view.bindings)
         if by_user:
             lines.append(USER_BOUND_LINE.format(count=len(by_user)))
