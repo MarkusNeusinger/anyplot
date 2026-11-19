@@ -41,6 +41,7 @@ candidate when more than a tenth fail), days with a UTC offset, or a column the 
 text by its own rule (the keys of `json_pairs`, a `json_stat` dimension). Dates in another form
 are no candidate: a `set_type` with a `date_format` reads the forms a format names (`YYYYMMDD`,
 `MM/YYYY`, `YYYY`) on request, and no conversion reads the others (`1st March 2026`, `2026/03/01`).
+Beside such a column, the row numbers take an axis that takes dates only on a yes (below).
 
 Converted dates that run newest first stay in the order of the rows: a plot run draws a
 bound date column oldest first by itself (`plot_view.drawn_in_order`), so no conversion
@@ -65,7 +66,12 @@ Last comes the row number, when no column and no conversion can fill the open ro
 (`RowNumbers`, `bindings.row_slot`, the owner's live test of 2026-11-02: `1,3,5,4,6,2` on a
 line plot). On a required axis it counts as `certain`: the column `index` holds 1 to n, the axis
 takes it, and a number column that sat there moves to the open measure, with one line in
-the reply. On a role that names each row (a bar chart without labels) it is `uncertain`: the
+the reply. On an axis that takes dates, a free text column that looks like dates the date list
+leaves unread (`prepare.unread_dates`: `2026/03/01`, `1st March 2026`, `2026-03-01 10:00:00 UTC`, a
+day that does not exist, slash dates of no single order) makes it `uncertain` instead: the user
+may mean those dates, so the root asks, and the line names the column and says why its dates
+would not read in the words of a refused conversion (`prepare._unread_words`), the forms the chat
+reads among them. On a role that names each row (a bar chart without labels) it is `uncertain`: the
 root offers it as its one question. A row-number column the paste already has is reused, and
 nothing here runs for `/dataset/copy`, which copies confirmed data byte for byte.
 
@@ -88,7 +94,7 @@ the conversion is the same in every run. Each dry run is made once per dataset v
 """
 
 import json
-from collections.abc import Collection, MutableMapping
+from collections.abc import Callable, Collection, MutableMapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -109,7 +115,18 @@ from .bindings import (
 from .bounds import BoundPair, bound_pairs
 from .computed import match_score
 from .parse import ParsedDataset, id_like, span_like
-from .prepare import ROW_NUMBER_NAME, DryRun, RangeRun, dry_run, range_run, read_frame, suffixed_name, year_run
+from .prepare import (
+    ROW_NUMBER_NAME,
+    DryRun,
+    RangeRun,
+    UnreadDates,
+    dry_run,
+    range_run,
+    read_frame,
+    suffixed_name,
+    unread_dates,
+    year_run,
+)
 from .temporal import year_score
 
 
@@ -255,6 +272,9 @@ class RowNumbers:
     slot: RowSlot
     name: str
     rows: int
+    unread: UnreadDates | None = None
+    """A free text column that looks like dates the date list leaves unread, for an axis that takes dates
+    (`prepare.unread_dates`): the user may mean those dates, so the row numbers wait for a yes."""
 
     @property
     def role(self) -> str:
@@ -262,7 +282,7 @@ class RowNumbers:
 
     @property
     def certain(self) -> bool:
-        return self.slot.certain
+        return self.slot.certain and self.unread is None
 
     @property
     def outcome(self) -> Outcome:
@@ -282,6 +302,11 @@ class RowNumbers:
             line += f", and {moved.role} takes '{moved.column}', which {self.role} holds now"
         if self.certain:
             line += "; certain: a list of values is drawn by position, and this is wanted, never a mistake"
+        elif self.unread is not None:
+            line += (
+                f"; uncertain: {self.role} takes dates, and column '{self.unread.column}' looks like dates that would "
+                f"not read: {self.unread.why}"
+            )
         else:
             line += f"; uncertain: the table has no labels for {self.role}, and a row number says nothing as a label"
         return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
@@ -347,7 +372,7 @@ def candidates(
     *,
     language: str = DEFAULT_LANGUAGE,
     keep_text: Collection[str] = (),
-    cache: MutableMapping[tuple[str, str], DryRun | RangeRun | None] | None = None,
+    cache: MutableMapping[tuple[str, str], DryRun | RangeRun | UnreadDates | None] | None = None,
 ) -> list[Candidate | RangeSplit | RowNumbers | DateNumbers]:
     """The conversions that would fill the required roles `bindings` leave open, at most `MAX_CANDIDATES`.
 
@@ -357,10 +382,11 @@ def candidates(
     it takes only a column no binding holds and gives each column to one role: a column on
     several roles is the user's choice only (`bindings.check_bindings`). `keep_text` names the
     columns kept text on request, `cache` holds the dry runs by column and type
-    (`StoredDataset.dry_runs`; `range` for the ranges); `parsed` is read into a frame only when a
-    dry run is due. With no conversion at all, the row numbers (`RowNumbers`). Last, an offer of a
-    free date column for each open role that takes numbers only and that none of these fills
-    (`DateNumbers`).
+    (`StoredDataset.dry_runs`; `range` for the ranges, `unread` for dates the list leaves
+    unread); `parsed` is read into a frame only when a dry run is due. With no conversion at all,
+    the row numbers (`RowNumbers`), `uncertain` on an axis that takes dates while a free column
+    looks like dates that would not read. Last, an offer of a free date column for each open role
+    that takes numbers only and that none of these fills (`DateNumbers`).
     """
     missing = set(check_bindings(bindings, roles, profile).missing_roles)
     if not missing:
@@ -397,6 +423,16 @@ def candidates(
             runs[key] = range_run(frame, column, profile.decimal)
         result = runs[key]
         return result if isinstance(result, RangeRun) else None
+
+    def unread(column: str) -> UnreadDates | None:
+        nonlocal frame
+        key = (column, "unread")
+        if key not in runs:
+            if frame is None:
+                frame = read_frame(parsed)
+            runs[key] = unread_dates(frame, column)
+        result = runs[key]
+        return result if isinstance(result, UnreadDates) else None
 
     slot = axis_slot(bindings, roles, profile)
     moved = slot.moved if slot is not None else None
@@ -439,7 +475,7 @@ def candidates(
             on_axis = slot is not None and role.name == slot.role.name
             found.append(Candidate(role.name, dry, name, moved if on_axis else None))
             break
-    filled = found or _row_numbers(bindings, roles, profile, used)
+    filled = found or _row_numbers(bindings, roles, profile, used, free, unread)
     return [*filled, *_date_numbers(roles, profile, missing, used, filled)][:MAX_CANDIDATES]
 
 
@@ -477,9 +513,19 @@ def _date_numbers(
 
 
 def _row_numbers(
-    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, used: Collection[str]
+    bindings: list[Binding],
+    roles: list[DataRole],
+    profile: DatasetProfile,
+    used: Collection[str],
+    free: Sequence[str],
+    unread: Callable[[str], UnreadDates | None],
 ) -> list[Candidate | RangeSplit | RowNumbers]:
-    """The row numbers as the one candidate, when `bindings.row_slot` finds them a role."""
+    """The row numbers as the one candidate, when `bindings.row_slot` finds them a role.
+
+    On an axis that takes dates, the first of the `free` text columns that looks like dates the date list leaves
+    unread (`unread`) makes them `uncertain`: numbering the rows unasked would draw them in place of what the user
+    may mean as dates, so the root asks, and the line says why the dates would not read.
+    """
     slot = row_slot(bindings, roles, profile)
     if slot is None:
         return []
@@ -489,7 +535,11 @@ def _row_numbers(
     while not pasted and name in names:
         name = f"{ROW_NUMBER_NAME}_{number}"
         number += 1
-    return [RowNumbers(slot, name, profile.rows)]
+    role = resolve_role(slot.role, roles)
+    dates = None
+    if slot.certain and role is not None and "datetime" in role.kinds:
+        dates = next((found for column in free if (found := unread(column)) is not None), None)
+    return [RowNumbers(slot, name, profile.rows, dates)]
 
 
 def new_name(column: str, target: Target, language: str, taken: Collection[str]) -> str:

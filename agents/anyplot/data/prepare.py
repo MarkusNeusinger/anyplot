@@ -2048,6 +2048,64 @@ def range_run(frame: pd.DataFrame, column: str, decimal: str = ".") -> RangeRun 
     return None
 
 
+@dataclass(frozen=True)
+class UnreadDates:
+    """A text column that looks like dates the date list leaves unread (`unread_dates`): the column, and why its dates
+    would not read, in the words of a refused conversion to dates (`_unread_words`)."""
+
+    column: str
+    why: str
+
+
+_NUMBERED_START = re.compile(r"([0-9]{1,4})([/.-])([0-9]{1,2})\2([0-9]{1,4})(?![0-9])")
+"""Three numbers joined by one separator at the start of a cell, the first and the last of one to four digits and the
+middle of one or two (`2026/03/01`, `01.03.26`, `3/13/26`, `2026-03-01 10:00:00 UTC`): the shape of a date, whatever
+follows it, also where the date list reads no form."""
+_LETTERS = re.compile(r"[^\W\d_]+")
+"""A run of letters, as the date list takes a month written as a word (`parse._MONTH_WORD`): a month written with its
+number and a marker (`3月`) is no such word, so `2026年3月1日` holds no month name, as the list reads no day in it."""
+
+
+def unread_dates(frame: pd.DataFrame, column: str) -> UnreadDates | None:
+    """The text column `column` of `frame` when it looks like dates that the date list (`parse.read_dates`) leaves
+    unread, with why; else None.
+
+    A cell looks like a date when the list reads it, or leaves it unread as a day that does not exist or as a slash
+    date of no single order, or, in no form of the list, when it starts with three numbers joined by one separator
+    (`_NUMBERED_START`) or holds a number and a month name the list knows (`months.month_number`: `1st March 2026`).
+    The column does when at most `MAX_FAILED_SHARE` of its non-empty cells do not, the share past which `set_type`
+    refuses, and when the list leaves a cell unread: a column whose every cell reads although no conversion takes it
+    (times with and without an offset) has no unread dates to name. A column of `YYYY-NN` cells alone is none, as
+    for `dry_run`: the parser reads months of that shape itself, so one it kept text is a span of years (`2012-13`
+    beside `2009-10`) or holds ids. The reasons are counted per cell, as a refused conversion counts them
+    (`_date_conversion`).
+    """
+    series = frame[column]
+    if _kind(series) != "text":
+        return None
+    cells = [cell.strip() for cell in series if isinstance(cell, str) and cell.strip()]
+    if all(YEAR_MONTH.fullmatch(cell) for cell in cells):
+        return None
+    listed = read_dates(cells)
+    if not listed.unread:
+        return None
+    unlike = sum(not _date_like(cell, listed) for cell in cells)
+    if unlike > MAX_FAILED_SHARE * len(cells):
+        return None
+    return UnreadDates(column, _unread_words(Counter(listed.unread[cell] for cell in cells if cell in listed.unread)))
+
+
+def _date_like(cell: str, listed: DateCells) -> bool:
+    """Whether a cell of a column the date list read (`unread_dates`) looks like a date."""
+    if listed.unread.get(cell) != "no_form":
+        return True  # read, a day that does not exist, or a slash date of no single order
+    if _NUMBERED_START.match(cell):
+        return True
+    return any("0" <= char <= "9" for char in cell) and any(
+        month_number(word) is not None for word in _LETTERS.findall(cell)
+    )
+
+
 def _numbers_of(cells: list[str], decimal: str) -> Conversion | None:
     """The cells read as `set_type` reads numbers, or None when it would refuse them (two units)."""
     try:
