@@ -113,8 +113,16 @@ login. Call the API host directly, with the admin token:
    `.env` belongs to the local server, and production answers it with
    `401 Invalid admin token`. Reading the secret is Secret Manager access:
    ask the owner first and name the secret. Read it inside the script's own
-   process and strip the trailing newline, for example with
-   `subprocess.run(["gcloud", "secrets", "versions", "access", "latest", "--secret=ADMIN_TOKEN", "--project=anyplot"], capture_output=True, text=True)`.
+   process, fail when `gcloud` fails, and strip the trailing newline:
+
+   ```python
+   read = subprocess.run(
+       ["gcloud", "secrets", "versions", "access", "latest", "--secret=ADMIN_TOKEN", "--project=anyplot"],
+       capture_output=True, text=True, check=True,
+   )
+   token = read.stdout.rstrip("\n")
+   ```
+
    Never print it, write it to a file, or put it on a command line.
 3. **Headers on every request:** `X-Admin-Token`, and
    `X-Anyplot-Client: agent-chat/1`. Without the second one every `POST`,
@@ -126,10 +134,16 @@ login. Call the API host directly, with the admin token:
    - `POST /sessions` with `{"spec_id", "library", "locale"}` returns
      `session_id`.
    - `POST /sessions/{sid}/dataset` with `{"text": "<the table>"}`.
+   - The page then sends its automatic first turn by itself,
+     `POST /sessions/{sid}/messages` with `{"action": "summarize_data"}`:
+     the assistant's summary of the data. Send it when the check is meant
+     to reproduce the page, and count its model calls. A check of one data
+     step can leave it out; say so in the report.
    - `POST /sessions/{sid}/messages` with `{"text": "..."}` answers as a
      server-sent event stream: `ready`, `status`, `plot`, `message`,
-     `done`. The `done` event carries the dataset with its `changes`
-     lines.
+     `done`. The `done` event carries `dataset`, with its `changes` lines,
+     only when that turn changed the data; after any other turn it holds
+     the sync fields alone, which is no failure.
    - Before the first plot: `POST /sessions/{sid}/dataset/confirm`, then
      `POST /sessions/{sid}/messages` with `{"action": "create_plot"}`.
      Without the confirmation the `plot` event says `not_ready` with the
