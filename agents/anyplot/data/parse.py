@@ -448,16 +448,17 @@ _ISO_STAMP = re.compile(
 UTC_OFFSETS = (-12 * 60, 14 * 60)
 """The UTC offsets in use, in minutes east of UTC: from −12:00 (Baker Island) to +14:00 (the Line Islands). A sign
 and digits past them after a time is the end of a range (`08:00-16:30`), never an offset (`utc_offset`)."""
-_OFFSET_SHAPE = re.compile(r"Z|([+-])([0-9]{2})(?::?([0-9]{2}))?")
+_OFFSET_SHAPE = re.compile(r"[Zz]|([+-])([0-9]{2})(?::?([0-9]{2}))?")
 
 
 def utc_offset(text: str) -> int | None:
-    """The minutes east of UTC of an offset written `Z`, `±HH`, `±HHMM` or `±HH:MM` and within `UTC_OFFSETS`, else
-    None: the one definition of an offset for the paste, the conversions, the dates with an offset and the bounds."""
+    """The minutes east of UTC of an offset written `Z` (or `z`, as RFC 3339 allows), `±HH`, `±HHMM` or `±HH:MM` and
+    within `UTC_OFFSETS`, else None: the one definition of an offset for the paste, the conversions, the dates with an
+    offset and the bounds."""
     shape = _OFFSET_SHAPE.fullmatch(text)
     if shape is None:
         return None
-    if text == "Z":
+    if text in ("Z", "z"):
         return 0
     sign, hours, minutes = shape.groups()
     if int(minutes or 0) > 59:
@@ -467,7 +468,7 @@ def utc_offset(text: str) -> int | None:
     return total if low <= total <= high else None
 
 
-DATE_OFFSET = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})(Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])")
+DATE_OFFSET = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})([Zz]|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])")
 """An ISO date followed directly by a UTC offset and no time, in a form that is an offset only: `Z` or `±HH:MM`
 (`2026-03-01+01:00`, `2026-03-01-05:00`, `2026-03-01Z`); the date is group 1, the offset as written group 2. The
 parser keeps such a column as written, text with `OFFSET_DATES` (`_as_dates`); `set_type` reads each written day and

@@ -560,6 +560,26 @@ READINGS: dict[str, Reading] = {
         "the days of 2 dates with a UTC offset as written, the offset dropped",
         "",
     ),
+    "iso_lower_z": Reading(
+        ["2026-03-01T10:00:00z", "2026-03-02T11:30:00z"],
+        ["2026-03-01T10:00:00+00:00", "2026-03-02T11:30:00+00:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "iso_space_lower_z": Reading(
+        ["2026-03-01 10:00z", "2026-03-02 11:30z"],
+        ["2026-03-01T10:00:00+00:00", "2026-03-02T11:30:00+00:00"],
+        0,
+        True,
+        None,
+        "",
+    ),
+    "lone_hour_lower_z": Reading(
+        ["2026-03-01T10z", "2026-03-02T11z"], ["2026-03-01", "2026-03-02"], 0, False, None, ""
+    ),
+    "f4_lower_z": Reading(["2026-03-01z", "2026-03-02z"], [None, None], 2, False, None, ""),
 }
 PASTED: dict[str, Pasted] = {
     "iso_date": Pasted("datetime", ["2026-03-01", "2026-03-02", "2026-12-31"], []),
@@ -753,12 +773,25 @@ PASTED: dict[str, Pasted] = {
             "(YYYY-MM-DD±HH:MM or YYYY-MM-DDZ)"
         ],
     ),
+    "iso_lower_z": Pasted("text", None, []),
+    "iso_space_lower_z": Pasted("text", None, []),
+    "lone_hour_lower_z": Pasted("text", None, []),
+    "f4_lower_z": Pasted("text", None, []),
 }
 PASTE_CHANGED: dict[str, Pasted] = {
     # An offset past those in use (-12:00 to +14:00) is the end of a range, never an offset: the paste keeps the
     # cells as text (it had typed `08:00-16:30` as 08:00 at -16:30), and `2026-03-01-13:00` gets no offset note.
     "time_range_late_end": Pasted("text", None, []),
     "f4_offset_beyond_range": Pasted("text", None, []),
+    # `z` is UTC as `Z` is (RFC 3339): a column of dates followed by it gets the note of dates with an offset.
+    "f4_lower_z": Pasted(
+        "text",
+        None,
+        [
+            "column 'd': kept as text: every cell is a date followed directly by a UTC offset, with no time "
+            "(YYYY-MM-DD±HH:MM or YYYY-MM-DDZ)"
+        ],
+    ),
 }
 """The rows whose paste the strict date rule changes on purpose, with the paste they have now."""
 
@@ -805,9 +838,15 @@ CHANGED: dict[str, Reading] = {
     "time_range_late_end": Reading(READINGS["time_range_late_end"].cells, [None, None], 2),
     "f4_offset_beyond_range": Reading(
         READINGS["f4_offset_beyond_range"].cells,
-        refused="column 'd' holds dates followed directly by a sign and digits in no UTC offset form (such as "
-        "YYYY-MM-DD-HH or YYYY-MM-DD±HHMM), which may be an hour as well as an offset, so the column stays as it is: an "
-        "offset reads in the form YYYY-MM-DD±HH:MM, a time in the form YYYY-MM-DDTHH:MM",
+        refused="column 'd' holds dates followed directly by an offset outside -12:00 to +14:00, the UTC offsets in "
+        "use, so the column stays as it is",
+    ),
+    # `z` is UTC as `Z` is (RFC 3339): read as `Z` reads, where it had been unread or its hour dropped.
+    "lone_hour_lower_z": _timed("lone_hour_lower_z", ["2026-03-01T10:00:00+00:00", "2026-03-02T11:00:00+00:00"]),
+    "f4_lower_z": Reading(
+        READINGS["f4_lower_z"].cells,
+        ["2026-03-01", "2026-03-02"],
+        guess="the days of 2 dates with a UTC offset as written, the offset dropped",
     ),
 }
 """The rows whose reading the strict date rule changes on purpose, with the reading they have now."""
@@ -986,6 +1025,7 @@ UNREADABLE: dict[str, list[str | None]] = {
     "a midnight with AM after a month": ["2026-03 12 AM", "2026-04 12 AM"],
     "a midnight with AM after a year": ["2026 12 AM", "2027 12 AM"],
     "a midnight with am after a month name": ["March 2026 12am", "April 2026 12am"],
+    "a program timestamp past the offsets in use": ["Sun Mar 1 10:00:00 2026 -1700", "Mon Mar 2 11:30:00 2026 -1700"],
 }
 """Cells with more after their date than a time: pandas read a range as days with made-up offsets (2, 7 and 11
 March, beside a notice of offsets no cell holds), a sign and digits as 05:00, and an interval as its first day."""
@@ -1094,6 +1134,7 @@ class TestStrictRule:
         ("offset", "minutes"),
         [
             ("Z", 0),
+            ("z", 0),
             ("+01:00", 60),
             ("-05:30", -330),
             ("+0100", 60),
@@ -1110,6 +1151,19 @@ class TestStrictRule:
     def test_an_offset_is_one_in_use(self, offset: str, minutes: int | None) -> None:
         """One definition for the paste, the conversions, the dates with an offset and the bounds."""
         assert utc_offset(offset) == minutes
+
+    def test_a_bound_with_a_day_and_an_offset_past_those_in_use_says_so(self) -> None:
+        """The form of a date with an offset is right, only the offset is none in use: the refusal says that."""
+        text = "t,v\n2026-03-01T10:00:00,1\n2026-03-02T10:00:00,2\n"
+        operation = {"op": "keep_rows", "where": [{"column": "t", "test": "ge", "value": "2026-03-01-13:00"}]}
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+        assert caught.value.message == (
+            "the value for column 't' is a date followed directly by an offset outside -12:00 to +14:00, the UTC "
+            "offsets in use"
+        )
 
     def test_a_bound_past_the_offsets_in_use_is_refused(self) -> None:
         text = "t,v\n2026-03-01T10:00:00+01:00,1\n2026-03-02T10:00:00+01:00,2\n"

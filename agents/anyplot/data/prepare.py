@@ -4269,6 +4269,12 @@ def _moment(value: str, column: str, zone: tzinfo | None = None) -> pd.Timestamp
     """
     text = value.strip()
     day = date_offset(text)
+    if day is None and DATE_OFFSET.fullmatch(text):
+        raise PrepareError(
+            "invalid_operation",
+            f"the value for column '{column}' is a date followed directly by an offset outside -12:00 to +14:00, the "
+            "UTC offsets in use",
+        )
     if day is None and DATE_SIGN_DIGITS.fullmatch(text):
         raise PrepareError(
             "invalid_operation",
@@ -4524,7 +4530,7 @@ _ISO_DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 _HOUR = r"(?:[01]?[0-9]|2[0-3])"
 _MINUTE = r"[0-5]?[0-9]"
 _MERIDIEM = r"\s*[AaPp]\.?\s?[Mm]\.?"
-_ZONE = r"(?:\s?(?P<offset>Z|[+-][0-9]{2}(?::?[0-9]{2})?)|\s[^\W\d_]{1,5})"
+_ZONE = r"(?:\s?(?P<offset>[Zz]|[+-][0-9]{2}(?::?[0-9]{2})?)|\s[^\W\d_]{1,5})"
 
 
 def _time_at_end(hour: str, minute: str) -> re.Pattern[str]:
@@ -4540,7 +4546,7 @@ _TIME_AFTER_DATE = _time_at_end(_HOUR, _MINUTE)
 """A time at the end of a cell, after its date: `T` or `t` (RFC 3339 allows both), or a space or a comma and a
 space, then an hour with its minutes and seconds and a fraction (`10:00`, `9:5`, `10:00:05.25`), or after `T` an hour
 alone (`T10`, ISO's hour of a day) or a compact `HHMM` or `HHMMSS`; then am or pm (`10am`, `2:30 PM`, also after a
-space: ` 10 AM`), and a zone: `Z` or an offset (`+01:00`, `-0500`, `+01`, one in use and in the form `_zone_fits`
+space: ` 10 AM`), and a zone: `Z` (or `z`) or an offset (`+01:00`, `-0500`, `+01`, one in use and in the form `_zone_fits`
 asks), or after a space a word of up to five letters (`UTC`, which pandas reads or fails on). A number alone after a
 space is no hour (`2026-03-01 10` may be a count or a label as much as 10:00), and letters right after an hour are no
 zone (`1st` is an ordinal). A time stands only after a date that names a day (`_date_cell`), so `2026-03 10` is 10
@@ -4548,7 +4554,9 @@ March and `1 March 23` the year 2023."""
 _TIME_SHAPED = _time_at_end("[0-9]{1,2}", "[0-9]{1,2}")
 """`_TIME_AFTER_DATE` with any two digits: `T25` and ` 10:60` have a time's shape though no clock shows them."""
 _INNER_CLOCK = re.compile(rf"\s{_HOUR}:{_MINUTE}(?::{_MINUTE}(?:[.,][0-9]{{1,9}})?)?(?=\s)")
-_ZONE_AT_END = re.compile(r"(?:\s(?P<offset>Z|[+-][0-9]{2}(?::?[0-9]{2})?)|\s[^\W\d_]{1,5})$")
+_ZONE_AT_END = re.compile(r"(?:\s(?P<offset>[Zz]|[+-][0-9]{2}(?::?[0-9]{2})?)|\s[^\W\d_]{1,5})$")
+_UTC = ("Z", "z")
+"""UTC as a zone letter: RFC 3339 allows `z` as it allows `t`."""
 
 
 def _zone_fits(time: re.Match[str]) -> bool:
@@ -4556,7 +4564,7 @@ def _zone_fits(time: re.Match[str]) -> bool:
     range of times), and after an hour alone or an hour with am or pm only `Z` or `±HH:MM` (`T10-12` is 10 to 12,
     `10am-12` 10 to 12 too, while `T10+01:00` and `T10:00+01` are times with an offset)."""
     offset = time.group("offset")
-    if offset is None or offset == "Z":
+    if offset is None or offset in _UTC:
         return True
     if utc_offset(offset) is None:
         return False
@@ -4573,7 +4581,7 @@ def _time_inside(text: str) -> bool:
     rest = text[: clock.start()] + text[clock.end() :]
     zone = _ZONE_AT_END.search(rest)
     if zone is not None:
-        if zone.group("offset") not in (None, "Z") and utc_offset(zone.group("offset")) is None:
+        if zone.group("offset") not in (None, *_UTC) and utc_offset(zone.group("offset")) is None:
             return False
         rest = rest[: zone.start()]
     return _date_shape(rest) == "day"
@@ -4692,6 +4700,13 @@ def _day_offsets(texts: pd.Series, column: object) -> tuple[pd.Series, list[str 
     for text in texts:
         cell = text.strip() if isinstance(text, str) else None
         found = date_offset(cell) if cell is not None else None
+        if cell is not None and found is None and DATE_OFFSET.fullmatch(cell):
+            # The form of a date with an offset, with an offset no place has: say so, not that the form is wrong.
+            raise PrepareError(
+                "type_mismatch",
+                f"column '{column}' holds dates followed directly by an offset outside -12:00 to +14:00, the UTC "
+                "offsets in use, so the column stays as it is",
+            )
         if cell is not None and found is None and DATE_SIGN_DIGITS.fullmatch(cell):
             raise PrepareError(
                 "type_mismatch",
