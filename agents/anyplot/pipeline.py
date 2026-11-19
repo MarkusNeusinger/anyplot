@@ -494,10 +494,9 @@ class Candidate:
     up to this render that changed the code (`Run.changes`), so a best-scored earlier render reports its own."""
     texts: dict[ShownGroup, ShownRole] | None = None
     """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels, which
-    the root never sees (`tool_safety.fence_pipeline_notes`)."""
-    texts_complete: bool | None = None
-    """`PlotShows.texts_complete` (`grounding.texts_complete`): False when the probe stopped before every drawn text;
-    None falls back to `drawn`."""
+    the root never sees (`tool_safety.fence_pipeline_notes` drops both None and `{}`)."""
+    texts_complete: bool = field(kw_only=True)
+    """`PlotShows.texts_complete` (`grounding.texts_complete`): False when the probe stopped before every drawn text."""
     axes: list[ShownAxes] | None = None
     """This render's measured axis ranges (`grounding.plot_axes`), for `PlotShows` on matplotlib and seaborn; None
     or empty when the render reported none, both dropped by `tool_safety.fence_pipeline_notes`."""
@@ -1824,9 +1823,7 @@ def finish(run: Run) -> PlotResult:
         ],
         shows=PlotShows(
             texts=shipped.texts,
-            texts_complete=(
-                texts_complete(shipped.drawn) if shipped.texts_complete is None else shipped.texts_complete
-            ),
+            texts_complete=shipped.texts_complete,
             axes=shipped.axes,
             review=_review_state(shipped, meets_bar),
             score=shipped.review_score,

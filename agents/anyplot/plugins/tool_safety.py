@@ -52,8 +52,8 @@
   for `get_dataset_profile`, whose 16 KB of profile sit next to the pasted notes); a result outside them becomes an error. The `plot_pipeline` result
   reaches the root with its model-written `changes` and `residual_defects` fenced as
   `<tool_notes>` under `notes`, and what the shipped render shows (`PlotShows`) fenced
-  the same way under `shows`, without `texts` when the render reported none, `texts_complete`
-  when it is true, or `axes` when it reported none or an empty list.
+  the same way under `shows`, without `texts` when the render reported none or an empty dict,
+  `texts_complete` when it is true or `texts` is omitted, or `axes` when it reported none or an empty list.
 * `on_tool_error_callback`: any exception becomes `{"status": "error", "code": ...}`
   with a fixed code; the exception text never reaches the model.
 * The turn's record of the root's calls (`RequestLedger.tool_calls`): `before_tool_callback` notes each call with its
@@ -604,11 +604,12 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
     if result.get(SHOWS_KEY):
         shown = result[SHOWS_KEY]
         if isinstance(shown, dict):
-            # No drawn texts (a probe that reported none, or `shrunk_shows`): the root gets no `texts` at all, so it
-            # has nothing to quote and no null to narrate (user test of 2026-11-01: "I couldn't read the title back").
-            # `texts_complete` stays out when True (or without `texts`), and an empty `axes` list goes like None.
+            # No drawn texts (a probe that reported none, an empty dict, or `shrunk_shows` with nothing left): the root
+            # gets no `texts` at all, so it has nothing to quote and no null or `{}` to narrate (user test of 2026-11-01:
+            # "I couldn't read the title back"). `texts_complete` qualifies `texts` and stays out when True or without
+            # `texts`; an empty `axes` list goes like None.
             drop = {
-                *(("texts", "texts_complete") if shown.get("texts") is None else ()),
+                *(("texts", "texts_complete") if not shown.get("texts") else ()),
                 *(("texts_complete",) if shown.get("texts_complete") is not False else ()),
                 *(("axes",) if not shown.get("axes") else ()),
             }
@@ -626,8 +627,9 @@ SHOWS_HEADING_GROUPS = ("title", "subtitle")
 
 def shrunk_shows(result: dict[str, Any]) -> list[dict[str, Any]]:
     """Smaller versions of a `plot_pipeline` result, in order: `shows.texts` without tick labels and other texts,
-    then with the title and subtitle alone, then without any texts (`null`, which `fence_pipeline_notes` leaves out,
-    so the root quotes no plot text); `shows.axes` stays in all three."""
+    then with the title and subtitle alone, then without any texts (`null`; `fence_pipeline_notes` leaves out both
+    `null` and `{}` together with `texts_complete`, so the root quotes no plot text); `shows.axes` stays in all three,
+    and `shows.texts_complete` keeps its value while `texts` is non-empty."""
     shows = result.get(SHOWS_KEY)
     if not isinstance(shows, dict) or not isinstance(shows.get("texts"), dict):
         return []

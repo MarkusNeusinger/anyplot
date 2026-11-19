@@ -957,12 +957,17 @@ class PlotShows(_ServerContract):
 
     `texts` are the drawn texts by role (`ShownRole`), read from the render's probe
     (`grounding.plot_texts`); None when the renderer reported none (a renderer older than the
-    `labels` probe field). `texts_complete` is False whenever the probe stopped before every
-    drawn text or cut one (`grounding.texts_complete`), and omitted from the fenced result when
-    True so the common case costs no bytes. `axes` are the measured axis ranges (`ShownAxes`,
-    `grounding.plot_axes`) of the first `MAX_AXES` non-empty rectilinear non-colorbar axes for
-    matplotlib and seaborn (plotnine maps its scales before matplotlib and reports none); None
-    or empty when the render reported none, both omitted from the fenced result.
+    `labels` probe field, or a failed probe), or `{}` when it reported zero drawn texts, both
+    omitted from the fenced result (`tool_safety.fence_pipeline_notes`). `texts_complete` records
+    whether the probe reported every drawn text without truncation (`grounding.texts_complete`):
+    preserved on the model and across smaller `shrunk_shows` versions that still carry `texts`, and
+    omitted from the fenced result when True (so the common case costs no bytes) or whenever `texts`
+    itself is omitted (`None` or `{}`), since it qualifies `texts`. `axes` are the measured axis
+    ranges (`ShownAxes`, `grounding.plot_axes`) of the first `MAX_AXES` non-empty rectilinear
+    non-colorbar axes for matplotlib and seaborn (leaving out hidden axes, axes with no visible tick
+    label, categorical converters/formatters/locators, hand-set tick labels, non-finite limits, and
+    other scales; plotnine maps its scales before matplotlib and reports none); None or empty when
+    the render reported none, both omitted from the fenced result.
     `review` is the verdict on exactly this render (`passed`: it met the ship bar), `score`
     the catalogue review's score, `requested_not_found` the `expected_texts` the drawn
     texts do not show (`grounding.expected_misses`). The texts are written by the code under
