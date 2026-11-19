@@ -680,8 +680,8 @@ class Prepared:
     date_numbers: list[str] = field(default_factory=list)
     """The number columns made from a column that was a date when the operation ran: every `date_number`, and a text
     operation (`extract` with `digits`) on a date column. Read from the frame at that moment, never from the tables at
-    the ends of the call, so a column read as dates and turned into numbers in one call counts too: the guard on an
-    emptied role holds them (`data/emptied.py`)."""
+    the ends of the call, so a column read as dates and turned into numbers in one call counts too: the guard on a
+    taken role holds them (`data/emptied.py`)."""
     splits: list[list[str]] = field(default_factory=list)
     """The new columns of each `split`, in the order of its parts: two neighbouring parts may fill a lower and upper
     bound pair left open (`bindings.carry_bindings`), and no other two columns of one source may."""

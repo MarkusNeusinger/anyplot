@@ -289,9 +289,9 @@ def push_version(
     still hold on the kept columns, and the defaults for the other roles (`filled_bindings`),
     for `.to_long()`, which knows the roles its new columns are made for. `kept_off` names
     columns of `parsed` the carry gives no role, as if the table had none of them: the guard on
-    an emptied role (`data/emptied.py`) keeps the date numbers or row numbers an earlier call of
-    the turn made off the role a later change empties, so the change is stored and the role
-    waits for the user. `view_change` is the view of the plot before the step and after it, kept
+    a taken role (`data/emptied.py`) keeps the date numbers or row numbers an earlier call of
+    the turn made off the role a later change takes the column of, so the change is stored and
+    the role waits for the user. `view_change` is the view of the plot before the step and after it, kept
     with the version (`StoredDataset.view_change`) for the undo of this very step.
 
     The notes pasted with the data (`context_lines`) belong to the session's data, not to one

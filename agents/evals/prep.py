@@ -149,7 +149,7 @@ is the list price of every call the attribution log booked (`pricing.call_cost`,
 It writes `<out>/<date>-prep-<model>.json` (the stamp, the gates, the summary, every
 case's canonical expected and found operations, `ops_exact`, what its table missed in
 words that name columns at most (`table_miss`), its tool calls, refusal, cost and
-latency, and, never scored, the bindings the turn ended with and the guard's log lines on an emptied role
+latency, and, never scored, the bindings the turn ended with and the guard's log lines on a taken role
 (`bindings`, `guard`); never a dataset, a cell or a message, which stay in the fixtures) and prints a table.
 The exit code is 0 when the gate holds, 1 when it does not, 2 for a setup error (a
 fixture that does not load or whose expected operations fail the `Operation` or
@@ -1074,7 +1074,7 @@ class CaseResult:
     """The bindings the session holds after the turn, role: column, for the report only, never scored: on which role a
     column ended. The columns are the fixture's own, as in `expected` and `found`."""
     guard: list[dict[str, Any]] = field(default_factory=list)
-    """The turn's log lines of the guard on an emptied role (hook `emptied_role`: tool, outcome, and the role names and
+    """The turn's log lines of the guard on a taken role (hook `emptied_role`: tool, outcome, and the role names and
     operation names), for the report only, never scored: content-free by the line's own rule."""
     llm_calls: int = 0
     cost_usd: float = 0.0
@@ -1093,7 +1093,7 @@ def _detail(response: httpx.Response) -> str:
 
 def _book(result: CaseResult, lines: list[dict[str, Any]], settings: AgentSettings) -> None:
     """Add one request's attribution lines to the result: model calls at list price, the judges too, and the guard's
-    lines on an emptied role (`CaseResult.guard`) without their envelope."""
+    lines on a taken role (`CaseResult.guard`) without their envelope."""
     for line in lines:
         hook = line.get("hook")
         if hook == "emptied_role":

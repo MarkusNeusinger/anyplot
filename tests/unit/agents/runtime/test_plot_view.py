@@ -896,6 +896,18 @@ class TestASelectionThatHidesNoRow:
         assert (answer["status"], answer["rows"]) == ("ok", 12) and context.state[PLOT_VIEW] is None
         assert fenced(answer["view"], "tool_notes")[0] == IDLE_SELECTION_LINE.format(words="Points ≥ 40")
 
+    async def test_a_selection_the_call_names_itself_stays(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
+        """The call drops the rows below 40 and sets `Points ≥ 40` on the plot: the user's word of this call stays,
+        though it hides no row of the table the call leaves."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-i-5")
+        below = {"op": "drop_rows", "where": [{"column": "Points", "test": "lt", "value": "40"}]}
+
+        answer = await prepare_data([below, only("Points", "ge", 40)], context)
+
+        assert (answer["status"], answer["landed"], answer["rows"]) == ("ok", "table_and_view", 12)
+        assert context.state[PLOT_VIEW] == POINTS_40
+
     async def test_a_selection_that_still_hides_rows_stays(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
         sid = await pasted_session(client, TEAMS)
         context = await context_for(client, sid, "inv-i-3")
@@ -1007,6 +1019,24 @@ class TestTheUndoTakesBackTheView:
         assert (first["version"], first["view"], first_view) == (2, None, None)
         assert (second["version"], second["view"]) == (1, SHOWN_40)
         assert await view_now(runtime, sid) == POINTS_40
+
+    async def test_a_top_n_beside_the_cleared_selection_comes_back_with_it(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """The step cleared the idle selection and kept the top N; the undo puts the whole view of before back."""
+        sid = await pasted_session(client, TEAMS)
+        context = await context_for(client, sid, "inv-u-6")
+        top = [{"op": "sort", "column": "Points", "descending": True}, {"op": "keep_rows", "n": 3}]
+        await prepare_data([only("Points", "ge", 40), *top], context)
+        await prepare_data([{**only("Points", "ge", 40), "target": "table"}], context)
+        await write_back(runtime, sid, context)
+        kept = await view_now(runtime, sid)
+
+        answer = await undo(client, sid)
+
+        assert kept == {"selections": [], "top": {"column": "Points", "descending": True, "n": 3}}
+        assert await view_now(runtime, sid) == {**POINTS_40, "top": {"column": "Points", "descending": True, "n": 3}}
+        assert answer["view"] == {"rows": 3, "of_rows": 24, "parts": ["Points ≥ 40", "top 3 by Points"]}
 
     async def test_a_view_set_with_a_change_of_the_table_goes_with_its_undo(
         self, client: httpx.AsyncClient, runtime: Runtime

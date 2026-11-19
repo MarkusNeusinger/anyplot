@@ -8,8 +8,10 @@
   numbers, or to bind such a column, whichever call tries it, and the refusal
   costs none of the turn's two data steps. The table keeps only what was asked
   for, the reply names the axis that lost its column, the plot waits, and the
-  next turn lists what the server can compute for it. A column the request
-  derives or converts from text itself still takes the axis it names.
+  next turn lists what the server can compute for it. The axis's own dates
+  turned into numbers in their place ("the days since the start on x instead
+  of the dates") still take it, and a column the request derives or converts
+  from text itself still takes the axis it names.
 - **A plot selection that hides no row any more is cleared.** After "keep only
   these rows in the table", the old selection stayed in force on the plot. A
   change of the table now clears every selection that keeps all of its rows,

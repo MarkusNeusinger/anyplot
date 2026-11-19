@@ -392,21 +392,23 @@ class RequestLedger:
     rebuilt_from: list[int] = field(default_factory=list)
     """The numbers of the earlier versions this turn's `prepare_data` calls started from (`from_version`): a rebuild
     changed the data also without an operation, which `prep_ops` would not show."""
-    emptied_roles: dict[str, str] = field(default_factory=dict)
-    """The required roles a `prepare_data` call of this turn left without the column they were bound to, each with
-    that column (`data/emptied.py`): from then on the turn turns no date into numbers, makes no row numbers and binds
-    none it made, and the session block lists the ones still open. Role names and the user's column names, never sent
-    anywhere but that block."""
-    made_columns: list[str] = field(default_factory=list)
-    """The new columns of this turn's `prepare_data` calls that hold a date turned into numbers or the row numbers and
-    that the current table still has, under their current names (`emptied.made_columns`): what the guard on an emptied
-    role keeps off every role."""
+    turn_start: dict[str, str] | None = None
+    """The bindings in force when the turn's first `prepare_data` or `set_bindings` call came, role: column, each
+    column under its current name as the turn's renames move it (`data/emptied.py`): the start of the turn the guard
+    on a taken role judges every step against. None until that call."""
+    taken_roles: dict[str, str] = field(default_factory=dict)
+    """The roles whose column of the turn's start a stored call of this turn took, each with that column
+    (`emptied.taken`): from then on the turn makes no held column, and the session block lists the ones still open.
+    Role names and the user's column names, never sent anywhere but that block."""
+    made_columns: dict[str, str | None] = field(default_factory=dict)
+    """The held columns this turn's `prepare_data` calls made that the current table still has, under their current
+    names, each with the column its date was read from or None for the row numbers (`emptied.held_columns`)."""
     added_columns: dict[str, str] = field(default_factory=dict)
     """The new columns this turn's `prepare_data` operations added beside the others that the current table still has,
     each with the operation's name (`emptied.added_columns`): the guard's log line names the operation, never the
     column."""
     guard_held: list[str] = field(default_factory=list)
-    """The names of the tool calls the guard on an emptied role refused before they stored anything
+    """The names of the tool calls the guard on a taken role refused before they stored anything
     (`data/emptied.py`): they count against none of the turn's caps (`calls_of`), so the root can still make the
     change the user asked for in its two calls."""
     capability_gaps: list[str] = field(default_factory=list)

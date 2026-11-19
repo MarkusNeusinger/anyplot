@@ -20,6 +20,7 @@ import pytest
 from agents.anyplot.agent import CONVERSIONS_HEADING, EMPTIED_HEADING
 from agents.anyplot.data.emptied import ADDING_OPS
 from agents.anyplot.plugins.ledger import ledger_for
+from agents.anyplot.render.contract import DataOutput
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import DATASET_ID, SUMMARY_PENDING, read_session
 from agents.anyplot.tools.session import (
@@ -29,6 +30,7 @@ from agents.anyplot.tools.session import (
     LOST_LINE,
     MADE_BEFORE_LINE,
     MADE_NOW_LINE,
+    ROWS_REPLACE_MESSAGE,
     set_bindings,
 )
 from agents.main import Runtime, app, get_runtime
@@ -77,9 +79,11 @@ async def client(runtime: Runtime, services: Services) -> AsyncIterator[httpx.As
         yield http
 
 
-async def summarized(client: httpx.AsyncClient, runtime: Runtime, text: str = SENSORS) -> str:
-    """A `scatter-basic` session with `text` pasted and summarized, as the page leaves it after the summary turn."""
-    sid = await open_spec(client, "scatter-basic")
+async def summarized(
+    client: httpx.AsyncClient, runtime: Runtime, text: str = SENSORS, spec: str = "scatter-basic"
+) -> str:
+    """A session of `spec` with `text` pasted and summarized, as the page leaves it after the summary turn."""
+    sid = await open_spec(client, spec)
     await paste(client, sid, text)
     await runtime.write_state(await runtime.session(USER, sid), {SUMMARY_PENDING: None})
     return sid
@@ -522,6 +526,283 @@ class TestRefilled:
         assert guard_lines(caplog) == [{"tool": "prepare_data", "outcome": "refilled", "role": "y"}]
 
 
+SERIES = (
+    "Datum,Wert,Ort\n2025-01-01,4,Bern\n2025-01-02,6,Bern\n2025-01-03,5,Thun\n2025-01-04,9,Thun\n2025-01-05,7,Bern\n"
+)
+"""A daily series on `line-basic`: x Datum, y Wert."""
+SALES = (
+    "Region,Umsatz,Kosten,Jahr,Monat\nNord,120,80,2025,1\nSued,90,60,2025,1\nNord,130,85,2025,2\nSued,95,66,2025,2\n"
+    "Nord,140,90,2025,3\n"
+)
+"""Sales by month in parts on `scatter-basic`: x Umsatz, y Kosten (the year, one value in five rows, is a constant no
+axis takes), and the year and the month as spare numbers."""
+TAGE = {"op": "date_number", "column": "Datum", "unit": "days", "name": "Tage"}
+DROP_DATUM = {"op": "drop_columns", "columns": ["Datum"]}
+NR = {"op": "row_number", "name": "Nr"}
+
+
+async def turn_of(
+    client: httpx.AsyncClient,
+    runtime: Runtime,
+    swap_models: Any,
+    steps: list[dict[str, Any]],
+    *,
+    text: str = SENSORS,
+    spec: str = "scatter-basic",
+) -> tuple[Any, str]:
+    """One turn that makes the scripted calls `steps`, then replies."""
+    script = default_script()
+    script["root"] = [*steps, REPLY]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await summarized(client, runtime, text, spec)
+    await say(client, sid, {"text": "Do as I asked."})
+    return fake, sid
+
+
+class TestTheTurnsStart:
+    """A role is taken when the column it held at the start of the turn is gone, whatever the bindings in force say:
+    a `set_bindings` before the data step no longer disarms the guard, and a spare column the carry could put on the
+    taken role does not make the made column harmless."""
+
+    async def test_unbinding_y_first_does_not_free_the_days(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        fake, sid = await turn_of(
+            client, runtime, swap_models, [bindings_call(x="Temperatur"), prepare_call(DAILY_MEAN), prepare_call(DAYS)]
+        )
+
+        assert await outcome(runtime, sid) == ({"x": "Temperatur"}, ["Zeitpunkt", "Sensor", "Temperatur"])
+        assert HELD in answers(fake, 3)
+
+    async def test_unbinding_y_first_does_not_free_the_row_numbers(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        fake, sid = await turn_of(
+            client, runtime, swap_models, [bindings_call(x="Temperatur"), prepare_call(DAILY_MEAN), prepare_call(ROWS)]
+        )
+
+        assert await outcome(runtime, sid) == ({"x": "Temperatur"}, ["Zeitpunkt", "Sensor", "Temperatur"])
+        assert HELD in answers(fake, 3)
+
+    async def test_moving_y_onto_x_first_does_not_free_the_days(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """y holds Temperatur when the aggregate drops Feuchte, its column of the turn's start: still taken. The days
+        are refused with the sentence for a filled role, and the binding of them finds no such column."""
+        steps = [
+            bindings_call(x="Temperatur", y="Temperatur"),
+            prepare_call(DAILY_MEAN),
+            prepare_call(DAYS),
+            bindings_call(x="Temperatur", y="Tag"),
+        ]
+        fake, sid = await turn_of(client, runtime, swap_models, steps)
+
+        assert await outcome(runtime, sid) == (
+            {"x": "Temperatur", "y": "Temperatur"},
+            ["Zeitpunkt", "Sensor", "Temperatur"],
+        )
+        assert HELD_FILLED in answers(fake, 3)
+
+    @pytest.mark.parametrize("keep_date", [True, False])
+    async def test_a_date_built_numbered_and_y_dropped_in_one_call_is_refused(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, keep_date: bool
+    ) -> None:
+        """The year and the month could fill y; the days would take it. The days come from the built date, not from
+        Kosten, y's column of the start: refused, with the built date kept or dropped."""
+        dropped = ["Kosten"] if keep_date else ["Datum", "Kosten"]
+        built = [
+            {"op": "make_date", "name": "Datum", "year": "Jahr", "month": "Monat"},
+            TAGE,
+            {"op": "drop_columns", "columns": dropped},
+        ]
+        fake, sid = await turn_of(client, runtime, swap_models, [prepare_call(*built)], text=SALES)
+
+        assert await outcome(runtime, sid) == (
+            {"x": "Umsatz", "y": "Kosten"},
+            ["Region", "Umsatz", "Kosten", "Jahr", "Monat"],
+        )
+        assert HELD in answers(fake, 1)
+
+
+class TestTheReplacement:
+    """A date number made from the very column a taken role held at the turn's start replaces it, on that role and no
+    other. The original fault stays refused, because there the days come from another column than y lost."""
+
+    async def test_the_days_instead_of_the_dates_in_one_call_take_x(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        fake, sid = await turn_of(
+            client, runtime, swap_models, [prepare_call(TAGE, DROP_DATUM)], text=SERIES, spec="line-basic"
+        )
+
+        assert await outcome(runtime, sid) == ({"x": "Tage", "y": "Wert"}, ["Wert", "Ort", "Tage"])
+        assert EMPTIED_HEADING.split("{", 1)[0] not in block_of(fake, 1)  # x holds its replacement: nothing waits
+
+    async def test_the_days_then_the_drop_in_two_calls_take_x(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        _, sid = await turn_of(
+            client, runtime, swap_models, [prepare_call(TAGE), prepare_call(DROP_DATUM)], text=SERIES, spec="line-basic"
+        )
+
+        assert await outcome(runtime, sid) == ({"x": "Tage", "y": "Wert"}, ["Wert", "Ort", "Tage"])
+
+    async def test_the_days_bound_to_x_then_the_drop_stay(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The order of the review's t02 with the replacement: the drop takes x while x holds its own date's days."""
+        steps = [prepare_call(TAGE), bindings_call(x="Tage", y="Wert"), prepare_call(DROP_DATUM)]
+        _, sid = await turn_of(client, runtime, swap_models, steps, text=SERIES, spec="line-basic")
+
+        assert await outcome(runtime, sid) == ({"x": "Tage", "y": "Wert"}, ["Wert", "Ort", "Tage"])
+
+    async def test_the_days_do_not_replace_another_roles_column(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The days of the dates are x's replacement, never y's: the drop of Wert with them is refused."""
+        fake, sid = await turn_of(
+            client,
+            runtime,
+            swap_models,
+            [prepare_call(TAGE, {"op": "drop_columns", "columns": ["Wert"]})],
+            text=SERIES,
+            spec="line-basic",
+        )
+
+        assert await outcome(runtime, sid) == ({"x": "Datum", "y": "Wert"}, ["Datum", "Wert", "Ort"])
+        assert COLUMN_HELD_MESSAGE.format(roles="y") in answers(fake, 1)
+
+    async def test_the_original_fault_stays_refused(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        fake, sid = await turn_of(client, runtime, swap_models, [prepare_call(DAILY_MEAN, DAYS)])
+
+        assert await outcome(runtime, sid) == (
+            {"x": "Temperatur", "y": "Feuchte"},
+            ["Zeitpunkt", "Sensor", "Temperatur", "Feuchte"],
+        )
+        assert HELD in answers(fake, 1)
+
+
+class TestRowNumbersNeverReplace:
+    """Row numbers have no source: "the row numbers on x instead of the dates" takes two turns in every order, and the
+    refusal says which ones work."""
+
+    async def test_rows_instead_of_the_dates_in_one_call_are_refused_with_what_works(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        fake, sid = await turn_of(
+            client, runtime, swap_models, [prepare_call(DROP_DATUM, NR)], text=SERIES, spec="line-basic"
+        )
+
+        assert await outcome(runtime, sid) == ({"x": "Datum", "y": "Wert"}, ["Datum", "Wert", "Ort"])
+        assert ROWS_REPLACE_MESSAGE in answers(fake, 1)
+
+    async def test_what_the_refusal_says_works_does_work(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """Made and bound while Datum stays, in this turn; Datum removed in the next one, where x's column of the start
+        is Nr."""
+        script = default_script()
+        script["root"] = [prepare_call(NR), bindings_call(x="Nr", y="Wert"), REPLY, prepare_call(DROP_DATUM), REPLY]
+        swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime, SERIES, "line-basic")
+
+        await say(client, sid, {"text": "Number the rows and put them on x."})
+        first = await outcome(runtime, sid)
+        await say(client, sid, {"text": "Now remove the dates."})
+
+        assert first == ({"x": "Nr", "y": "Wert"}, ["Nr", "Datum", "Wert", "Ort"])
+        assert await outcome(runtime, sid) == ({"x": "Nr", "y": "Wert"}, ["Nr", "Wert", "Ort"])
+
+    async def test_rows_bound_to_x_then_the_drop_in_one_turn_refuse_the_drop(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The review's t02 with row numbers: the drop would take x while x holds a held column the root bound there,
+        so the drop is refused; the row numbers and their binding stay."""
+        steps = [prepare_call(NR), bindings_call(x="Nr", y="Wert"), prepare_call(DROP_DATUM)]
+        fake, sid = await turn_of(client, runtime, swap_models, steps, text=SERIES, spec="line-basic")
+
+        assert await outcome(runtime, sid) == ({"x": "Nr", "y": "Wert"}, ["Nr", "Datum", "Wert", "Ort"])
+        refused = answers(fake, 3)
+        assert ROWS_REPLACE_MESSAGE in refused  # what works: the drop of the dates in the next turn
+        assert MADE_BEFORE_LINE.format(name="Nr") in refused
+
+
+class TestWhatIsNoHeldColumn:
+    async def test_a_reformatted_copy_of_a_date_is_stored(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """`replace` of "-" by "/" in the dates makes dates again, no numbers: no held column, also after y's column
+        was taken."""
+        reformat = {"op": "replace", "column": "Zeitpunkt", "old": "-", "new": "/", "name": "Zeit"}
+        fake, sid = await turn_of(
+            client,
+            runtime,
+            swap_models,
+            [prepare_call({"op": "drop_columns", "columns": ["Feuchte"]}), prepare_call(reformat)],
+        )
+
+        assert (await outcome(runtime, sid))[1] == ["Zeitpunkt", "Sensor", "Temperatur", "Zeit"]
+        assert HELD not in answers(fake, 2) and HELD_FILLED not in answers(fake, 2)
+
+    async def test_the_line_speaks_of_the_rest_of_the_turn_after_row_numbers_made_before(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """Row numbers made before y's column was taken stay in the table: the line says what holds from then on."""
+        fake, _ = await turn_of(
+            client,
+            runtime,
+            swap_models,
+            [prepare_call(ROWS), prepare_call({"op": "drop_columns", "columns": ["Feuchte"]})],
+        )
+
+        assert "For the rest of this turn no date is turned into numbers and no row number is made" in block_of(fake, 2)
+
+
+class TestNamedLimits:
+    """What the guard does not cover, by name, as it stands; none of it is a promise."""
+
+    async def test_known_limit_a_whole_new_table_from_code_is_not_guarded(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, backend: Any
+    ) -> None:
+        """`run_data_code` (and `generate_data`) store a new table with the default bindings: the guard reads the
+        changes of the table the turn started with, so the days in a computed table take y."""
+        backend.data_script = lambda job: DataOutput(
+            exit_code=0, csv_text="Sensor,Temperatur,Tag\nS1,14.5,0\nS2,16.6,0\nS1,15.5,1\n", wall_s=0.1
+        )
+        code = {"code": "import pandas as pd\ndf = pd.DataFrame({'a': [1, 2]})", "source_language": "other"}
+        _, sid = await turn_of(
+            client, runtime, swap_models, [prepare_call(DAILY_MEAN), {"call": "run_data_code", "args": code}]
+        )
+
+        assert await outcome(runtime, sid) == ({"x": "Temperatur", "y": "Tag"}, ["Sensor", "Temperatur", "Tag"])
+
+    @pytest.mark.parametrize("name", ["Zeile", "index"])
+    async def test_known_limit_the_next_turns_carry_may_put_a_kept_off_column_on_x(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, name: str
+    ) -> None:
+        """After a turn that kept the row numbers off y, the next turn's rename of x's column lets the plain default
+        carry bind the free columns again: the row-number column comes first in the table, x takes it and the renamed
+        column goes to the open y. Main does the same with any spare number column when a binding goes."""
+        script = default_script()
+        script["root"] = [
+            prepare_call({"op": "row_number", "name": name}),
+            prepare_call({"op": "drop_columns", "columns": ["Feuchte"]}),
+            REPLY,
+            prepare_call({"op": "rename", "column": "Temperatur", "name": "Temp"}),
+            REPLY,
+        ]
+        swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime)
+
+        await say(client, sid, {"text": "Number the rows and drop Feuchte."})
+        assert (await outcome(runtime, sid))[0] == {"x": "Temperatur"}
+        await say(client, sid, {"text": "Call Temperatur Temp."})
+
+        assert await outcome(runtime, sid) == ({"x": name, "y": "Temp"}, [name, "Zeitpunkt", "Sensor", "Temp"])
+
+
 class TestTheKnownGap:
     async def test_known_gap_an_unasked_derived_column_still_takes_the_emptied_axis(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
@@ -600,23 +881,23 @@ class TestOtherTurns:
 
 
 class TestSetBindings:
-    async def test_it_refuses_the_turns_date_numbers_only_once_the_turn_emptied_a_role(
+    async def test_it_refuses_a_held_column_on_a_taken_role_and_leaves_the_other_roles_alone(
         self, client: httpx.AsyncClient, runtime: Runtime
     ) -> None:
-        """The binding call alone: a column of dates turned into numbers that the turn made, once a role it emptied is
-        open; the same binding before that is the user's offer taken."""
+        """The binding call alone, on a turn that made `Tag` from the dates and took y's column: `Tag` on x, which is
+        not taken, binds; `Tag` on y is refused, and since y holds Temperatur then, with the sentence for a filled
+        role."""
         sid = await summarized(client, runtime, SENSORS.replace("Feuchte", "Tag"))
         context = await context_for(client, sid, "inv-e-1")
         ledger = ledger_for("inv-e-1")
-        ledger.made_columns = ["Tag"]
+        ledger.made_columns = {"Tag": "Zeitpunkt"}
+        ledger.taken_roles = {"y": "Feuchte"}
 
-        before = await set_bindings([{"role": "x", "column": "Temperatur"}, {"role": "y", "column": "Tag"}], context)
-        ledger.emptied_roles["y"] = "Feuchte"
-        refused = await set_bindings([{"role": "x", "column": "Tag"}, {"role": "y", "column": "Temperatur"}], context)
+        on_x = await set_bindings([{"role": "x", "column": "Tag"}, {"role": "y", "column": "Temperatur"}], context)
+        on_y = await set_bindings([{"role": "x", "column": "Temperatur"}, {"role": "y", "column": "Tag"}], context)
 
-        assert before["status"] == "ok"
-        # y holds Tag by the first binding, so no role the turn emptied is open: the sentence for a filled role.
-        assert (refused["code"], refused["message"]) == ("invalid_bindings", HELD_FILLED)
+        assert on_x["status"] == "ok"
+        assert (on_y["code"], on_y["message"]) == ("invalid_bindings", HELD_FILLED)
         assert ledger.guard_held == ["set_bindings"]
         view = read_session(context.state)
-        assert view is not None and {b.role: b.column for b in view.bindings} == {"x": "Temperatur", "y": "Tag"}
+        assert view is not None and {b.role: b.column for b in view.bindings} == {"x": "Tag", "y": "Temperatur"}
