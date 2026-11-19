@@ -129,6 +129,7 @@ SAMPLES: dict[str, str] = {
     "column 'm': 12 cells read as months (a month name and a year, each as the first day of the month)": (
         "month_names_read"
     ),
+    "column 'd': 3 cells read as dates (a day, a month name and a year)": "day_month_dates_read",
     f"column 'v': {minus_note(3)}": "typographic_minus_read",
     f"column 'v': {minus_note(1)}": "typographic_minus_read",
     "column 'country': NA read as a code (such as Namibia or North America), not as a missing cell": "na_as_code",

@@ -27,7 +27,7 @@ import pandas as pd
 import pytest
 from pydantic import TypeAdapter
 
-from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.parse import DateCells, parse_dataset, read_dates, utc_offset
 from agents.anyplot.data.prepare import (
     Operation,
     PrepareError,
@@ -43,6 +43,10 @@ OPERATIONS = TypeAdapter(list[Operation])
 FORMS = (
     "the chat reads 2026-03-01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a time, "
     "and months such as 2026-03 or Mar 2026"
+)
+CONFLICT = (
+    "its slash dates disagree about the order of day and month (some read only day first, others only month first), "
+    "which a date_format of DD/MM/YYYY or MM/DD/YYYY settles"
 )
 
 
@@ -294,9 +298,14 @@ def test_an_added_form_converts(name: str) -> None:
 
 @pytest.mark.parametrize("name", list(ADDED))
 def test_an_added_form_is_typed_at_the_paste(name: str) -> None:
+    """A day with a month name is typed with a note, as months are, since labels can take that form too."""
     row = ADDED[name]
+    written_month = not name.startswith("lowercase")
+    notes = (
+        [f"column 'd': {len(row.cells)} cells read as dates (a day, a month name and a year)"] if written_month else []
+    )
 
-    assert pasted(row.cells) == ("datetime", row.values, [])
+    assert pasted(row.cells) == ("datetime", row.values, notes)
 
 
 class TestDaysWithAMonthName:
@@ -306,11 +315,11 @@ class TestDaysWithAMonthName:
         assert reading["values"] == [None, "2026-11-30"] and reading["failed"] == 1
         assert pasted(["31 Nov 2026", "30 Nov 2026"])[0] == "text"
 
-    def test_beside_iso_dates_such_a_cell_is_of_another_shape(self) -> None:
+    def test_beside_iso_dates_such_a_cell_reads_in_a_conversion_and_the_paste_keeps_the_mix(self) -> None:
         cells = ["2026-11-07", "8 Nov 2026", "2026-11-09"]
 
-        assert converted(cells)["values"] == ["2026-11-07", None, "2026-11-09"]
-        assert pasted(cells)[0] == "text"
+        assert converted(cells)["values"] == ["2026-11-07", "2026-11-08", "2026-11-09"]
+        assert pasted(cells) == ("text", cells, [])
 
     def test_both_orders_are_one_shape(self) -> None:
         """The name settles which part is the month, so `8 Nov 2026` beside `March 1, 2026` takes no order."""
@@ -325,7 +334,21 @@ class TestDaysWithAMonthName:
     def test_a_month_name_a_day_and_a_year_is_that_day_never_a_month(self) -> None:
         """`Nov 26 2026` holds a four-digit year after the day: 26 November 2026, never November of a year 26."""
         assert converted(["Nov 26 2026", "Nov 25 2026"])["values"] == ["2026-11-26", "2026-11-25"]
-        assert pasted(["Nov 26 2026", "Nov 25 2026"]) == ("datetime", ["2026-11-26", "2026-11-25"], [])
+        assert pasted(["Nov 26 2026", "Nov 25 2026"]) == (
+            "datetime",
+            ["2026-11-26", "2026-11-25"],
+            ["column 'd': 2 cells read as dates (a day, a month name and a year)"],
+        )
+
+    def test_labels_that_happen_to_be_such_days_are_typed_with_the_note(self) -> None:
+        """Italian month abbreviations with a day and a year: the typing is said, so a request can take it back."""
+        cells = ["Gen 2 2026", "Set 1 2026", "Mar 3 2026"]
+
+        assert pasted(cells) == (
+            "datetime",
+            ["2026-01-02", "2026-09-01", "2026-03-03"],
+            ["column 'd': 3 cells read as dates (a day, a month name and a year)"],
+        )
 
     def test_a_month_without_a_day_is_still_its_first_day(self) -> None:
         assert pasted(["Nov 2026", "Dec 2026"]) == ("datetime", ["2026-11-01", "2026-12-01"], [MONTH_NAMES])
@@ -431,25 +454,52 @@ class TestOneOrderPerColumn:
         assert pasted(["01.03.2026", "02.03.2026"]) == ("datetime", ["2026-03-01", "2026-03-02"], [])
 
 
-class TestOneShapePerColumn:
-    def test_cells_of_another_listed_shape_are_unreadable(self) -> None:
-        """A column has one shape, the one most of its cells have; the paste keeps such a mix as text."""
-        cells = ["2026-03-01", "2026-03-02", "2026-03-03", "04.03.2026"]
+class TestEachCellInItsOwnForm:
+    """A conversion reads every cell in its own form of the list; the paste types a column of one form only and keeps
+    a mix as written. Only the order of day and month of the slash dates is the column's."""
 
+    @pytest.mark.parametrize(
+        ("cells", "values"),
+        [
+            (
+                [f"2026-03-{day:02d}" for day in range(1, 11)] + ["11 Mar 2026"],
+                [f"2026-03-{day:02d}" for day in range(1, 12)],
+            ),
+            (["2026-03", "Apr 2026", "2026-05"], ["2026-03-01", "2026-04-01", "2026-05-01"]),
+            (["2026-03-01", "01.03.2026"], ["2026-03-01", "2026-03-01"]),
+            (["01.03.2026", "2026-03-02", "2026-04"], ["2026-03-01", "2026-03-02", "2026-04-01"]),
+        ],
+    )
+    def test_a_conversion_reads_every_cell_and_the_paste_keeps_the_mix(
+        self, cells: list[str], values: list[str]
+    ) -> None:
         reading = converted(cells)
 
-        assert reading["values"] == ["2026-03-01", "2026-03-02", "2026-03-03", None] and reading["failed"] == 1
-        assert pasted(cells)[0] == "text"
+        assert reading["values"] == values and reading["failed"] == 0
+        assert pasted(cells) == ("text", cells, [])
 
-    def test_a_tie_takes_the_shape_the_paste_tries_first(self) -> None:
-        reading = converted(["01.03.2026", "2026-03-02"])
+    def test_the_reading_names_each_form_it_read(self) -> None:
+        text = "d,v\n" + "".join(f"2026-03-{day:02d},{day}\n" for day in range(1, 11)) + "11 Mar 2026,11\n"
+        operation = {"op": "set_type", "column": "d", "type": "datetime"}
 
-        assert reading["values"] == [None, "2026-03-02"]
+        [line] = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation])).changes
 
-    def test_a_month_beside_a_day_is_unreadable(self) -> None:
-        reading = converted(["2026-03-01", "2026-03-02", "2026-04"])
+        assert (
+            line
+            == "d: 11 cells read as dates (format inferred cell by cell: year first; a day, a month name and a year)"
+        )
 
-        assert reading["values"] == ["2026-03-01", "2026-03-02", None]
+    def test_slash_dates_beside_others_keep_the_columns_order_and_carry_none(self) -> None:
+        """`03/15/2026` settles month first for the slash dates; the ISO cell reads as written. A later swap would
+        turn the ISO cell too, so a guessed order of a mixed column is said but never carried to be swapped."""
+        assert converted(["03/15/2026", "03/02/2026", "2026-03-03"])["values"] == [
+            "2026-03-15",
+            "2026-03-02",
+            "2026-03-03",
+        ]
+        guessed = converted(["01/02/2026", "2026-03-03"])
+        assert guessed["values"] == ["2026-02-01", "2026-03-03"] and guessed["guess"] == "the day and month order"
+        assert _date_conversion(pd.Series(["01/02/2026", "2026-03-03"], dtype="str", name="d"), None).order is None
 
 
 class TestMonthsOfASpanColumn:
@@ -489,6 +539,90 @@ def test_times_with_and_without_an_offset_stay_text_at_the_paste_and_are_refused
         "column 'd' holds times with a UTC offset and times without one; no time is given a zone by guess, so the "
         "column stays as it is"
     )
+
+
+class TestInvisibleSpaces:
+    """A no-break, a narrow no-break or a figure space, as spreadsheets and typeset pages write one, is a plain space
+    for reading a date; a column that stays text keeps its cells as written."""
+
+    CELLS = ["1\N{NO-BREAK SPACE}March\N{NO-BREAK SPACE}2026", "2\N{FIGURE SPACE}March 2026"]
+
+    def test_a_date_with_such_spaces_reads_at_the_paste_and_in_a_conversion(self) -> None:
+        assert converted(list(self.CELLS))["values"] == ["2026-03-01", "2026-03-02"]
+        assert pasted(list(self.CELLS))[:2] == ("datetime", ["2026-03-01", "2026-03-02"])
+        timed = ["2026-03-01\N{NARROW NO-BREAK SPACE}10:00", "2026-03-02\N{NO-BREAK SPACE}11:30"]
+        assert converted(timed)["values"] == ["2026-03-01T10:00:00", "2026-03-02T11:30:00"]
+        assert pasted(timed)[:2] == ("datetime", ["2026-03-01T10:00:00", "2026-03-02T11:30:00"])
+
+    def test_a_column_that_stays_text_keeps_the_spaces(self) -> None:
+        assert pasted([self.CELLS[0], "soon"]) == ("text", [self.CELLS[0], "soon"], [])
+
+
+class TestTheTableFinder:
+    """A line of a form of the list is a value when the parser finds the table: a list of such dates is one column of
+    dates, never pairs of a label and a number, and a first row of such dates may be data."""
+
+    def test_a_headerless_list_of_days_with_a_month_name_is_one_date_column(self) -> None:
+        parsed = parse_dataset("8 Nov 2026\n9 Nov 2026\n10 Nov 2026\n")
+
+        assert parsed.csv.splitlines() == ["value", "2026-11-08", "2026-11-09", "2026-11-10"]
+        assert parsed.warnings[0].startswith("no header line: the first line is a value, kept as the first row")
+
+    def test_a_headerless_list_of_months_is_one_column_of_months(self) -> None:
+        parsed = parse_dataset("Nov 2026\nDec 2026\nJan 2027\n")
+
+        assert parsed.csv.splitlines() == ["value", "2026-11-01", "2026-12-01", "2027-01-01"]
+
+    def test_a_headerless_two_column_table_warns_that_its_first_row_may_be_data(self) -> None:
+        parsed = parse_dataset("8 Nov 2026,3\n9 Nov 2026,4\n10 Nov 2026,5\n")
+
+        assert "every header looks like a value; the first row may be data rather than column names" in parsed.warnings
+
+    def test_a_wide_table_with_such_dates_as_headers_keeps_them_as_names(self) -> None:
+        parsed = parse_dataset("Name,8 Nov 2026,9 Nov 2026,10 Nov 2026\nA,1,2,3\nB,4,5,6\n")
+
+        assert list(parsed.column_dtypes) == ["Name", "8 Nov 2026", "9 Nov 2026", "10 Nov 2026"]
+        assert parsed.warnings == []
+
+    def test_pairs_of_a_label_and_a_number_are_still_pairs(self) -> None:
+        assert parse_dataset("Hund 7\nKatze 3\nMaus 2\n").csv.splitlines()[:2] == ["label,value", "Hund,7"]
+
+
+class TestTheCrowdedLine:
+    def test_the_reading_words_never_give_way_to_the_reason(self) -> None:
+        """The line holds its step and counts but not the forms beside them: the forms give way, and the order the
+        slash dates were read in stays whole (placed beside the start of the step alone, they cut it)."""
+        name = "Ablesedatum des Stromzaehlers"
+        cells = [f"03/{day}/2026" for day in range(13, 23)] + ["1st March 2026"]
+        text = f"{name},kWh\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+        operation = {"op": "set_type", "column": name, "type": "datetime", "name": f"{name} (Datum)"}
+
+        [line] = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation])).changes
+
+        assert line == (
+            f"new column {name} (Datum): 10 cells of {name} read as dates (format inferred, month before day), "
+            f"1 cell could not be read as a date and is now missing; {name} stays as it is"
+        )
+
+
+class TestEdges:
+    @pytest.mark.parametrize("offset", ["+01:60", "+01:75", "-05:99"])
+    def test_minutes_of_an_offset_past_59_are_no_offset(self, offset: str) -> None:
+        assert utc_offset(offset) is None
+        cells = [f"2026-03-01T10:00{offset}", f"2026-03-02T10:00{offset}"]
+        assert converted(cells)["failed"] == 2 and pasted(cells)[0] == "text"
+
+    def test_a_zoned_time_with_nanoseconds_keeps_its_digits_on_both_sides(self) -> None:
+        cells = ["2026-03-01T10:00:00.123456789+01:00", "2026-03-02T10:00:00.5+01:00"]
+
+        assert converted(cells)["values"] == ["2026-03-01T10:00:00.123456789+01:00", "2026-03-02T10:00:00.500000+01:00"]
+        assert pasted(cells)[:2] == (
+            "datetime",
+            ["2026-03-01T10:00:00.123456789+01:00", "2026-03-02T10:00:00.500000000+01:00"],
+        )
+
+    def test_no_cell_reads_as_no_shape(self) -> None:
+        assert read_dates([]) == DateCells()
 
 
 class TestOffsetsInUse:
@@ -619,15 +753,53 @@ class TestMessages:
 
         assert caught.value.message == f"column '{name}': 12 of 12 cells cannot be read as dates; {FORMS}"
 
-    def test_a_slash_column_that_settles_both_orders_is_refused_with_the_forms(self) -> None:
-        """No order fits the column, as at the paste: no majority of cells decides it."""
+    def test_a_slash_column_that_settles_both_orders_is_refused_with_its_reason(self) -> None:
+        """No order fits the column, as at the paste: no majority of cells decides it, and its cells are in a form of
+        the list, so the refusal says why instead of naming the forms."""
         text = "d,v\n15/03/2026,1\n03/15/2026,2\n01/02/2026,3\n"
         operation = {"op": "set_type", "column": "d", "type": "datetime"}
 
         with pytest.raises(PrepareError) as caught:
             apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
 
-        assert caught.value.message == f"column 'd': 3 of 3 cells cannot be read as dates; {FORMS}"
+        assert caught.value.message == f"column 'd': 3 of 3 cells cannot be read as dates; {CONFLICT}"
+        assert caught.value.unread == {"order_conflict": 3}
+
+    def test_days_that_do_not_exist_are_refused_with_their_count(self) -> None:
+        text = "d,v\n31 Nov 2026,1\n29 Feb 2025,2\n29 Feb 2024,3\n"
+        operation = {"op": "set_type", "column": "d", "type": "datetime"}
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+        assert caught.value.message == (
+            "column 'd': 2 of 3 cells cannot be read as dates; 2 cells name a day that does not exist, such as 31 November"
+        )
+        assert caught.value.unread == {"no_such_date": 2}
+
+    def test_each_reason_has_its_clause_in_one_refusal(self) -> None:
+        text = "d,v\n31 Nov 2026,1\n1st March 2026,2\n2026-03-03,3\n"
+        operation = {"op": "set_type", "column": "d", "type": "datetime"}
+
+        with pytest.raises(PrepareError) as caught:
+            apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+
+        assert caught.value.message == (
+            "column 'd': 2 of 3 cells cannot be read as dates; 1 cell names a day that does not exist, such as 31 "
+            f"November; {FORMS}"
+        )
+        assert caught.value.unread == {"no_such_date": 1, "no_form": 1}
+
+    def test_a_missing_day_beside_many_dates_is_said_in_the_change_line(self) -> None:
+        text = "d,v\n" + "".join(f"2026-11-{day:02d},{day}\n" for day in range(1, 11)) + "31 Nov 2026,11\n"
+        operation = {"op": "set_type", "column": "d", "type": "datetime", "name": "d (date)"}
+
+        [line] = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation])).changes
+
+        assert line == (
+            "new column d (date): 10 cells of d read as dates (format inferred, year first), 1 cell could not be read "
+            "as a date and is now missing; 1 cell names a day that does not exist, such as 31 November; d stays as it is"
+        )
 
     def test_a_format_names_no_forms(self) -> None:
         text = "day,kWh\n" + "".join(f"2026/03/{day:02d},{day}\n" for day in range(1, 13))

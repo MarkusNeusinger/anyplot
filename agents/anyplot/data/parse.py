@@ -435,9 +435,7 @@ _HEADER_TOKENS = re.compile(r"[^\s()\[\]{},;:]+")
 # Text that is a literal: an optional Python assignment, then `[`, `{` or `(`.
 _LITERAL_START = re.compile(r"(?:[^\W\d]\w*\s*=\s*)?(?=[\[{(])")
 
-_ISO_TIME = r"(?:[Tt ]([0-9]{2}):([0-9]{2})(?::([0-9]{2}))?)?"
 _LOCAL_TIME = r"(?: ([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?)?"
-_ISO_DATE = re.compile(r"([0-9]{4})-([0-9]{2})-([0-9]{2})" + _ISO_TIME)
 _DOT_DATE = re.compile(r"([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{4})" + _LOCAL_TIME)
 _SLASH_DATE = re.compile(r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})" + _LOCAL_TIME)
 _MONTH_WORD = r"([^\W\d_]+\.?)"
@@ -805,9 +803,13 @@ def parse_dataset(
 def _layout_may_read(read: tuple[list[str], list[list[str]], SourceFormat]) -> bool:
     """Whether a delimited reading may have missed one of the two layouts: one column (no delimiter split the lines),
     fewer than two rows, or a header whose every name is a label with its value (`Hund 7`, `Katze 3`: no names). The
-    layout reads only when its own strict shape matches the whole text (`layouts.read_layout`)."""
+    layout reads only when its own strict shape matches the whole text (`layouts.read_layout`). A column whose every
+    line is a date of the list (`8 Nov 2026`, `Nov 2026`) is one column of dates, never pairs of `8 Nov` and `2026`."""
     headers, rows, _ = read
-    return len(headers) == 1 or len(rows) < LAYOUT_MIN_ROWS or all(is_pair(name) for name in headers)
+    if len(headers) == 1:
+        lines = [line.strip() for line in [headers[0], *(cell for row in rows for cell in row[:1])] if line.strip()]
+        return not lines or not all(_date_shape(line.translate(_SPACE_FOLD)) is not None for line in lines)
+    return len(rows) < LAYOUT_MIN_ROWS or all(is_pair(name) for name in headers)
 
 
 def _layout_read(
@@ -3274,9 +3276,9 @@ def _type_column(column: _Column) -> None:
        `YYYY-MM-DD[(T|t| )HH:MM[:SS[.fraction]][offset]]` (`_as_iso_stamps`: up to nine
        fraction digits and the offset kept as written, an offset within −12:00 to +14:00,
        `utc_offset`), `DD.MM.YYYY`, `DD/MM/YYYY` / `MM/DD/YYYY`, or a day with a month name
-       and a four-digit year (`8 Nov 2026`, `1. März 2026`, `March 1, 2026`, no note: the cell
-       names its day), the last four with an optional ` HH:MM[:SS]` and one- or two-digit day
-       and month. A slash column is day-first when a first part exceeds 12, month-first
+       and a four-digit year (`8 Nov 2026`, `1. März 2026`, `March 1, 2026`, with a note that
+       counts them, `DAY_MONTH_DATES`), the last four with an optional ` HH:MM[:SS]` and one- or
+       two-digit day and month; a column that mixes forms stays text. A slash column is day-first when a first part exceeds 12, month-first
        when a second part does, not a date when both happen, and day-first with a
        warning when neither does. Written as `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM:SS`
        for the whole column when any cell has a time. Months, `YYYY-MM` or a month name
@@ -3708,22 +3710,36 @@ def keeps_value(text: str, value: float) -> bool:
         return False
 
 
+UnreadReason = Literal["no_form", "no_such_date", "order_conflict"]
+"""Why the date list left a cell unread: it has no form of the list (`no_form`: `1st March 2026`, an offset past those
+in use, a month of a year past `MONTH_YEARS`); its form names no date or time (`no_such_date`: `31 Nov 2026`,
+`29 Feb 2025`, `25:00`); or it is a slash date in a column whose own cells settle both orders of day and month
+(`order_conflict`). A closed set: a refusal's sentence is chosen by it (`prepare._unread_words`), and a count of refusals
+by their reason reads the same field."""
+
+
 @dataclass(frozen=True)
 class DateCells:
-    """A column's cells as the date list reads them (`read_dates`): one shape for the column, each distinct cell of that
-    shape that names a moment read, every other cell unread."""
+    """A column's cells as the date list reads them (`read_dates`): each distinct cell in its own form, every cell no
+    form reads unread with its reason."""
 
-    shape: DateShape | None
-    """The shape most cells have, a tie going to the earlier of `DATE_SHAPES`; None when no cell has one."""
+    shapes: tuple[DateShape, ...] = ()
+    """The shapes of the cells read, in the order of `DATE_SHAPES`: the paste types a column of one shape only."""
     moments: dict[str, datetime] = field(default_factory=dict)
     """Each distinct cell read: aware for an ISO time with a UTC offset (`Z` is UTC), else naive."""
     fractions: dict[str, str] = field(default_factory=dict)
     """An ISO cell's fraction of a second as written, up to nine digits ("" without one); its moment holds six."""
-    unread: frozenset[str] = frozenset()
+    unread: dict[str, UnreadReason] = field(default_factory=dict)
+    """Each distinct cell left unread, with why (`UnreadReason`)."""
     day_first: bool = True
-    """The order of a slash column: month first only when a cell reads that way alone (`03/15/2026`)."""
+    """The order of the column's slash dates: month first only when a cell reads that way alone (`03/15/2026`)."""
     guessed: bool = False
-    """A slash column read day first although no cell settles the order and some cell reads otherwise month first."""
+    """Slash dates read day first although no cell settles the order and some cell reads otherwise month first."""
+
+    @property
+    def shape(self) -> DateShape | None:
+        """The one shape of every cell read, as the paste types a column; None for no cell or cells of several."""
+        return self.shapes[0] if len(self.shapes) == 1 else None
 
     @property
     def with_time(self) -> bool:
@@ -3740,41 +3756,67 @@ def read_dates(cells: Iterable[str]) -> DateCells:
     """The cells, each non-empty and trimmed, as dates in the forms of the list (`DATE_SHAPES`): the one reader of the
     paste (`_as_dates`) and of a conversion to dates without a format (`prepare._date_conversion`).
 
-    Each cell has at most one shape. The column takes the shape most of its cells have and reads only cells of it,
-    since a column has one shape; a cell of the column's shape is unread too when it names no moment (`2026-02-30`,
-    a month or a year past `MONTH_YEARS`, a UTC offset past those in use, `utc_offset`). A slash column has one order
-    of day and month, as the paste decides it: month first when a cell reads in that order alone (`03/15/2026`),
-    else day first, by guess (`guessed`) when no cell settles it and some cell reads otherwise the other way; when
-    cells settle both orders (`15/03/2026` beside `03/15/2026`), no order fits the column and no slash cell reads.
+    Each cell reads in its own form, read with a no-break, a narrow no-break or a figure space as a plain space
+    (`_SPACE_FOLD`), and is unread, with its reason (`UnreadReason`), when it has none or its form names no moment
+    (`2026-02-30`, a month or a year past `MONTH_YEARS`, a UTC offset past those in use, `utc_offset`). The paste types
+    a column only when every cell reads and all of them have one shape (`DateCells.shape`); a conversion reads every
+    cell it can. The slash dates of a column have one order of day and month, as the paste decides it: month first
+    when a cell reads in that order alone (`03/15/2026`), else day first, by guess (`guessed`) when no cell settles it
+    and some cell reads otherwise the other way; when cells settle both orders (`15/03/2026` beside `03/15/2026`), no
+    order fits the column and no slash cell reads.
     """
-    present = list(cells)
-    shapes = {cell: _date_shape(cell) for cell in dict.fromkeys(present)}
-    counts = Counter(found.shape for cell in present if (found := shapes[cell]) is not None)
-    if not counts:
-        return DateCells(None, unread=frozenset(shapes))
-    chosen = max(DATE_SHAPES, key=lambda shape: (counts[shape], -DATE_SHAPES.index(shape)))
-    mine = {cell: found for cell, found in shapes.items() if found is not None and found.shape == chosen}
-    moments: dict[str, datetime | None] = {}
-    day_first, guessed = True, False
-    if chosen == "slash":
-        orders = {cell: (_day_first(found), _month_first(found)) for cell, found in mine.items()}
-        day_only = any(first is not None and second is None for first, second in orders.values())
-        month_only = any(first is None and second is not None for first, second in orders.values())
-        if not (day_only and month_only):
-            day_first = not month_only
-            guessed = not day_only and not month_only and any(first != second for first, second in orders.values())
-            moments = {cell: pair[0] if day_first else pair[1] for cell, pair in orders.items()}
-    else:
-        moments = {cell: _READERS[chosen](found) for cell, found in mine.items()}
-    read = {cell: moment for cell, moment in moments.items() if moment is not None}
+    found = {cell: _date_shape(cell.translate(_SPACE_FOLD)) for cell in dict.fromkeys(cells)}
+    orders = {
+        cell: (_day_first(shaped), _month_first(shaped))
+        for cell, shaped in found.items()
+        if shaped is not None and shaped.shape == "slash"
+    }
+    day_only = any(first is not None and second is None for first, second in orders.values())
+    month_only = any(first is None and second is not None for first, second in orders.values())
+    day_first = not month_only
+    guessed = not day_only and not month_only and any(first != second for first, second in orders.values())
+    moments: dict[str, datetime] = {}
+    unread: dict[str, UnreadReason] = {}
+    for cell, shaped in found.items():
+        if shaped is None:
+            unread[cell] = "no_form"
+            continue
+        if shaped.shape == "slash":
+            first, second = orders[cell]
+            if day_only and month_only:
+                unread[cell] = "order_conflict" if first or second else "no_such_date"
+                continue
+            moment = first if day_first else second
+        else:
+            moment = _READERS[shaped.shape](shaped)
+        if moment is None:
+            unread[cell] = _why_unread(shaped)
+        else:
+            moments[cell] = moment
+    shapes = {shaped.shape for cell, shaped in found.items() if shaped is not None and cell in moments}
     return DateCells(
-        chosen,
-        read,
-        {cell: mine[cell].fraction for cell in read} if chosen == "iso" else {},
-        frozenset(cell for cell in shapes if cell not in read),
+        tuple(shape for shape in DATE_SHAPES if shape in shapes),
+        moments,
+        {cell: shaped.fraction for cell, shaped in found.items() if shaped is not None and cell in moments},
+        unread,
         day_first,
         guessed,
     )
+
+
+_SPACE_FOLD = str.maketrans({"\N{NO-BREAK SPACE}": " ", "\N{NARROW NO-BREAK SPACE}": " ", "\N{FIGURE SPACE}": " "})
+"""The spaces a cell copied from a spreadsheet or a typeset page writes for a plain one (`1 March 2026`, `10 000`):
+a date reads with a plain space there, and a column that stays text keeps the cell as written."""
+
+
+def _why_unread(cell: "_Shaped") -> UnreadReason:
+    """Why a cell of a shape of the list names no moment: an offset past those in use, or a month of a year past
+    `MONTH_YEARS`, is no form of the list; anything else is a date or a time the calendar does not have."""
+    if cell.shape == "iso" and cell.offset is not None and utc_offset(cell.offset) is None:
+        return "no_form"
+    if cell.shape in ("month", "month_name") and not MONTH_YEARS[0] <= cell.numbers[0] <= MONTH_YEARS[1]:
+        return "no_form"
+    return "no_such_date"
 
 
 @dataclass(frozen=True)
@@ -3874,7 +3916,8 @@ def _offset_minutes(moment: datetime) -> int | None:
 
 
 def _as_iso_stamps(column: _Column, dates: DateCells) -> bool:
-    """ISO dates and timestamps (`read_dates`) with every digit and the offset as written (owner rule of 2026-10-15).
+    """ISO dates and timestamps (`read_dates`) with every digit and the offset as written: a digit or a zone that
+    changed without a word would be a value the user never wrote.
 
     A fraction of up to nine digits stays (each cell padded to the column's longest fraction, which changes no value
     and lets `pd.read_csv(parse_dates=...)` read the column as one format), and so does an offset (`Z`, `+01`, `+0100`,
@@ -3944,13 +3987,18 @@ def _offset_text(minutes: int | None) -> str:
 
 
 def _as_dates(column: _Column, present: list[str]) -> bool:
-    """A column of the date list (`read_dates`), typed when every cell reads; a column of days with a UTC offset
-    (`_offset_days`) stays text with its note."""
+    """A column of the date list (`read_dates`), typed when every cell reads and all of them have one shape; a column
+    that mixes forms stays text as written, which a conversion reads cell by cell on request. A column of days with a
+    UTC offset (`_offset_days`) stays text with its note.
+
+    Days with a month name (`8 Nov 2026`, `Gen 2 2026`) are typed with a note (`DAY_MONTH_DATES`), as months are: a
+    column of titles or labels whose every cell happens to be one would otherwise turn into dates without a word.
+    """
     if _offset_days(present):
         column.notes.append(OFFSET_DATES)
         return False
     dates = read_dates(present)
-    if dates.unread or not dates.moments:
+    if dates.unread or dates.shape is None:
         return False
     if dates.shape == "iso":
         return _as_iso_stamps(column, dates)
@@ -3958,8 +4006,15 @@ def _as_dates(column: _Column, present: list[str]) -> bool:
         return _as_periods(column, present, dates)
     if dates.guessed:
         column.notes.append(AMBIGUOUS_DATE_ORDER)
+    if dates.shape == "day_month":
+        column.notes.append(f"{_count(len(present), 'cell')} {DAY_MONTH_DATES}")
     _typed_dates(column, dates.moments, dates.with_time)
     return True
+
+
+DAY_MONTH_DATES = "read as dates (a day, a month name and a year)"
+"""The note of a pasted column of days with a month name, after its count (`_as_dates`), worded as the months' note
+is: a request to keep the column as text takes the reading back."""
 
 
 def _typed_dates(column: _Column, moments: Mapping[str, datetime], with_time: bool) -> None:
@@ -4647,12 +4702,11 @@ def _header_is_value(header: str) -> bool:
 
 
 def _looks_like_value(name: str) -> bool:
+    """A number, or a cell of a form of the date list (`_date_shape`), the forms the paste types as dates."""
     return bool(
         _FLOAT.fullmatch(name)
         or _DECIMAL_COMMA.fullmatch(name)
-        or _ISO_DATE.fullmatch(name)
-        or _DOT_DATE.fullmatch(name)
-        or _SLASH_DATE.fullmatch(name)
+        or _date_shape(name.translate(_SPACE_FOLD)) is not None
         or _grouped_like(name)
     )
 

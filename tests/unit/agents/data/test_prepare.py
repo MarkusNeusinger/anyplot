@@ -786,14 +786,17 @@ class TestSetTypeDatetime:
 
         assert failure(text, operation) == ("type_mismatch", "column 't': 1 of 3 cells cannot be read as dates")
 
-    def test_without_a_format_a_column_has_one_form(self) -> None:
-        """Cells of several forms are no column of dates, as at the paste: only those of the column's shape read."""
+    def test_without_a_format_each_cell_reads_in_its_own_form(self) -> None:
+        """The paste keeps such a mix as text; a request reads every cell in its form of the list, and the change line
+        names each form, the slash date's order (a guess here) among them."""
         text = "t,v\nJan 2024,1\n2024-02,2\n03/04/2024,3\n15 March 2024,4\n"
+        prepared = prepare(text, {"op": "set_type", "column": "t", "type": "datetime"})
 
-        assert failure(text, {"op": "set_type", "column": "t", "type": "datetime"}) == (
-            "type_mismatch",
-            f"column 't': 3 of 4 cells cannot be read as dates; {DATE_FORMS}",
-        )
+        assert cells(prepared, 0) == ["2024-01-01", "2024-02-01", "2024-04-03", "2024-03-15"]
+        assert prepared.changes == [
+            "t: 4 cells read as dates (format inferred cell by cell: day before month; a day, a month name and a year; "
+            "months as their first day)"
+        ]
 
     def test_without_a_format_the_order_of_a_slash_column_is_the_columns(self) -> None:
         text = "t,v\n03/04/2024,1\n03/15/2024,2\n"
@@ -836,9 +839,9 @@ class TestSetTypeDatetime:
         ]
 
         mixed = "t;v\nOkt. 2026;1\nOkt. 2026;2\n15.03.2026;3\n"
-        with pytest.raises(PrepareError) as caught:  # a dot date beside months is a cell of another shape
-            apply_operations(parse_dataset(mixed, text_columns=["t"]), to_dates)
-        assert caught.value.message == f"column 't': 1 of 3 cells cannot be read as dates; {DATE_FORMS}"
+        assert apply_operations(parse_dataset(mixed, text_columns=["t"]), to_dates).changes == [
+            "t: 3 cells read as dates (format inferred cell by cell: day before month; months as their first day)"
+        ]
 
     def test_month_names_leave_no_day_and_month_order_open(self) -> None:
         """`Nov 2026` names its month: no `AMBIGUOUS_DATE_ORDER` note travels with it, unlike `01/11/2026`."""

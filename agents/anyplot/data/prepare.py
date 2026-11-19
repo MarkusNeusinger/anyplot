@@ -39,18 +39,24 @@ The operations:
   and stored at microseconds, so any year from 1 to 9999 fits (a datetime64[ns] holds
   only 1677 to 2262; a date pandas still cannot hold is an `invalid_operation`, never a
   crash). Without `date_format` the cells are read in the forms of the date list, with the
-  parser's own reader (`parse.read_dates`), so a cell converts exactly when the paste would
-  type it: `2026-03-01`, also with a time after `T` (or `t`) or a space, seconds, a fraction and
+  parser's own reader (`parse.read_dates`), so a cell converts when it is in a form the paste
+  types: `2026-03-01`, also with a time after `T` (or `t`) or a space, seconds, a fraction and
   a UTC offset of −12:00 to +14:00 (`Z` or `z` for UTC); `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
   and a day with a month name and a four-digit year (`8 Nov 2026`, `1. März 2026`,
   `March 1, 2026`), each also with a time; a month, `2026-03` or a month name with a four-digit
   year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are the eleven languages of
-  `months.py`. The column has one
-  shape, the one most of its cells have, and one order of day and month, decided as at the
-  paste (day first by guess, which the reading names, when no slash cell settles it); any
-  other cell is unreadable, and the refusal names the forms the chat reads (`parse.DATE_FORMS`), as
-  does the change line of a conversion that leaves cells missing, where the line holds them beside
-  its counts and notices. A form outside the list reads only with a `date_format` that names it
+  `months.py`. Each cell reads in its own form, and the change line names each form read; the
+  slash dates have one order of day and month, decided as at the paste (day first by guess,
+  which the reading names, when no slash cell settles it); any other cell is unreadable. The
+  refusal says why, by the reason of each cell left unread (`parse.UnreadReason`,
+  `_unread_words`): a day that does not exist, slash dates whose cells disagree about the order,
+  or no form of the list, for which it names the forms the chat reads (`parse.DATE_FORMS`); the
+  change line of a conversion that leaves cells missing says the same where the whole line holds
+  it. The paste and a conversion differ in four places, each on purpose: the paste types a column
+  of one form only, while a conversion reads a mix cell by cell; it keeps year spans and columns
+  named for ids or seasons as text, while a request reads their `YYYY-MM` cells as months; it keeps
+  days with a UTC offset as text, while a request reads their days; and it keeps times with and
+  without an offset as text, while a request is refused with the reason. A form outside the list reads only with a `date_format` that names it
   (`YYYYMMDD`, `MM/YYYY`, `YYYY`); one that no format names (`1st March 2026`, `2026/03/01`,
   `01.03.26`) reads in no conversion. A fraction of a second and a UTC offset are
   kept (`_cell_text`), different offsets in one column are read in UTC with the offsets
@@ -360,7 +366,7 @@ import re
 import sys
 import unicodedata
 from collections import Counter
-from collections.abc import Callable, Collection, Hashable, Iterable, Sequence
+from collections.abc import Callable, Collection, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, timedelta, timezone, tzinfo
 from decimal import ROUND_FLOOR, InvalidOperation, localcontext
@@ -406,7 +412,9 @@ from .parse import (
     MISSING_VALUES,
     YEAR_MONTH,
     DateCells,
+    DateShape,
     ParsedDataset,
+    UnreadReason,
     ascii_minus,
     canonical_names,
     date_offset,
@@ -661,10 +669,14 @@ _DAY_FIRST_FORMATS = frozenset(("DD.MM.YYYY", "DD/MM/YYYY"))
 class PrepareError(Exception):
     """An operation that cannot be applied; `code` is fixed, `message` names columns at most."""
 
-    def __init__(self, code: PrepareErrorCode, message: str) -> None:
+    def __init__(
+        self, code: PrepareErrorCode, message: str, *, unread: Mapping[UnreadReason, int] | None = None
+    ) -> None:
         super().__init__(f"{code}: {message}")
         self.code: PrepareErrorCode = code
         self.message = message
+        self.unread: dict[UnreadReason, int] = dict(unread or {})
+        """Per reason (`parse.UnreadReason`), the cells a refused reading of dates without a format left unread."""
 
 
 @dataclass(frozen=True)
@@ -1633,7 +1645,7 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
             return _reread_dates(frame, op, present, carried)
         conversion = _date_conversion(series, op.date_format)
     what = "numbers" if op.type == "number" else "dates"
-    _check_failed(op.column, conversion.failed, present, what, conversion.forms)
+    _check_failed(op.column, conversion.failed, present, what, conversion.why, conversion.unread)
     # A conversion into a new column keeps the source as it is: what the cells said stays beside what was read.
     target = op.name or op.column
     result[target] = conversion.values
@@ -1659,8 +1671,8 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
     # The cells left missing are a loss of the step itself: kept whole, whatever the notices beside them take.
     missing = ""
     if conversion.failed:
-        # Without a format the count says itself what the cells were not read as: it stays when the forms give way.
-        what = (" as a date" if conversion.failed == 1 else " as dates") if conversion.forms else ""
+        # Without a format the count says itself what the cells were not read as: it stays when the reason gives way.
+        what = (" as a date" if conversion.failed == 1 else " as dates") if conversion.why else ""
         count = _count(conversion.failed, "cell")
         missing = f", {count} could not be read{what} and {_be(conversion.failed)} now missing"
     kept = missing + (f"; {op.column} stays as it is" if op.name is not None else "")
@@ -1674,11 +1686,11 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         # The offsets are listed while the line keeps the start that names its step beside the counts.
         room = MAX_NOTE_CHARS - head - len(kept) - 2 - (len(notice) + 2 if notice else 0)
         notice = _joined(notice, _dropped_note(conversion.dropped, room))
-    forms = f"; {conversion.forms}" if conversion.forms else ""
-    if forms and head + len(kept) + len(forms) + (len(notice) + 2 if notice else 0) <= MAX_NOTE_CHARS:
-        # The forms the chat reads say why the cells were left missing, where the line holds them beside the start
-        # of its step, its counts and its notices: a count or a notice is a loss said, and never gives way to them.
-        kept = missing + forms + kept[len(missing) :]
+    why = f"; {conversion.why}" if conversion.why else ""
+    if why and len(change) + len(kept) + len(why) + (len(notice) + 2 if notice else 0) <= MAX_NOTE_CHARS:
+        # Why the cells were left missing, where the whole line holds it: the reading's words (the order a slash
+        # column was read in), its counts and its notices never give way to it.
+        kept = missing + why + kept[len(missing) :]
     return result, _with_notice(change, notice, kept)
 
 
@@ -1722,10 +1734,13 @@ class Conversion:
     dropped: Counter[str] = field(default_factory=Counter)
     """Per UTC offset as written, the dates read whose cell had it and no time (`parse.DATE_OFFSET`), read as the day
     written without it (`_day_offsets`); `_set_type` counts them in its change line (`_dropped_note`)."""
-    forms: str = ""
-    """What a reading of dates without a format reads (`parse.DATE_FORMS`), when it left cells unread: the refusal
-    names the forms, and so does the change line where it holds them beside the start of its step, its counts and
-    its notices (`_set_type`); "" when every cell read or the request named its format."""
+    unread: Counter[UnreadReason] = field(default_factory=Counter)
+    """Per reason (`parse.UnreadReason`), the cells a reading of dates without a format left unread: the refusal's
+    words are chosen by it (`_unread_words`), and a count of refusals by their reason reads it."""
+    why: str = ""
+    """What a reading of dates without a format says of the cells it left unread (`_unread_words`): the refusal says
+    it, and so does the change line where the whole line holds it (`_set_type`); "" when every cell read or the
+    request named its format."""
 
 
 def _number_conversion(series: pd.Series, requested: str) -> Conversion:
@@ -1804,11 +1819,14 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
     dates = _to_dates(series, date_format)
     listed = dates.listed
     order: str | None = None
+    guessed = False
     if listed is not None:
-        order = "day" if listed.guessed else None
+        guessed = listed.guessed
+        # Only a column of slash dates alone may swap its day and month later: a swap would turn its other cells too.
+        order = "day" if guessed and listed.shape == "slash" else None
     elif date_format in ("MM/DD/YYYY", *_DAY_FIRST_FORMATS) and _order_open(dates.values):
         order = "month" if date_format == "MM/DD/YYYY" else "day"
-    guess = "the day and month order" if order else None
+    guess = "the day and month order" if order or guessed else None
     if dates.dropped:
         # The written day of a date with a UTC offset is a choice (the day in UTC is another reading), so an open
         # role proposes the conversion instead of making it unasked (`DryRun.certain`).
@@ -1819,15 +1837,23 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
         reading = "read as years (YYYY, each as 1 January)"
     elif date_format:
         reading = f"read as dates ({date_format})"
+    elif listed is not None and len(listed.shapes) > 1:
+        words = dict.fromkeys(_shape_words(shape, listed.day_first) for shape in listed.shapes)
+        reading = f"read as dates (format inferred cell by cell: {'; '.join(words)})"
     elif listed is not None and listed.shape == "month_name":
         reading = MONTH_NAMES_READING
     elif listed is not None and listed.shape == "day_month":
         reading = DAY_MONTH_READING
     elif listed is not None and listed.shape in ("dot", "slash"):
-        how = "day before month" if listed.day_first else "month before day"
-        reading = f"read as dates (format inferred, {how})"
+        reading = f"read as dates (format inferred, {_shape_words(listed.shape, listed.day_first)})"
     else:
         reading = "read as dates (format inferred, year first)"  # `2026-03-01` and `2026-03`: the year leads
+    unread: Counter[UnreadReason] = Counter()
+    if listed is not None and dates.failed:
+        # A cell that read but a nanosecond column cannot hold (before 1677) has no reason of the list's: no form.
+        for text, value in zip(dates.cells, dates.values, strict=True):
+            if text is not None and pd.isna(value):
+                unread[listed.unread.get(text, "no_form")] += 1
     return Conversion(
         dates.values,
         dates.failed,
@@ -1837,8 +1863,43 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
         order,
         guess,
         dropped=dates.dropped,
-        forms=DATE_FORMS if listed is not None and dates.failed else "",
+        unread=unread,
+        why=_unread_words(unread),
     )
+
+
+def _shape_words(shape: DateShape, day_first: bool) -> str:
+    """How a reading without a format names the cells of one shape it read (`_date_conversion`)."""
+    if shape == "slash":
+        return "day before month" if day_first else "month before day"
+    return {
+        "iso": "year first",
+        "dot": "day before month",
+        "day_month": "a day, a month name and a year",
+        "month": "months as their first day",
+        "month_name": "months as their first day",
+    }[shape]
+
+
+def _unread_words(unread: Counter[UnreadReason]) -> str:
+    """Why a reading without a format left cells unread, one clause per reason it found (`parse.UnreadReason`), in this
+    order: days the calendar does not have, with their count; the slash dates of a column whose own cells disagree
+    about the order of day and month; and, for cells of no form of the list, the forms the chat reads. A cell of a
+    form the list reads is never told the forms, which name its own."""
+    clauses = []
+    if impossible := unread["no_such_date"]:
+        clauses.append(
+            f"{_count(impossible, 'cell')} {'names' if impossible == 1 else 'name'} a day that does not exist, "
+            "such as 31 November"
+        )
+    if unread["order_conflict"]:
+        clauses.append(
+            "its slash dates disagree about the order of day and month (some read only day first, others only month "
+            "first), which a date_format of DD/MM/YYYY or MM/DD/YYYY settles"
+        )
+    if unread["no_form"]:
+        clauses.append(DATE_FORMS)
+    return "; ".join(clauses)
 
 
 DRY_RUN_SAMPLE = 20
@@ -4436,14 +4497,16 @@ def _plain_number(body: str, decimal: str) -> str | None:
 class _Dates:
     """A column's cells read as dates (`_to_dates`): NaT where a cell cannot be read, how many non-missing cells
     failed, whether the column is written with a time, the notice of different UTC offsets converted to UTC, else "",
-    the UTC offsets dropped from dates read as the day written (`_day_offsets`), counted per offset as written, and,
-    without a format, the date list's reading of the cells (`parse.read_dates`)."""
+    the UTC offsets dropped from dates read as the day written (`_day_offsets`), counted per offset as written, the
+    cells as the reading saw them (trimmed, the day of a date with an offset alone), and, without a format, the date
+    list's reading of them (`parse.read_dates`)."""
 
     values: pd.Series
     failed: int
     with_time: bool
     notice: str
     dropped: Counter[str]
+    cells: list[str | None] = field(default_factory=list)
     listed: DateCells | None = None
 
 
@@ -4501,7 +4564,7 @@ def _to_dates(series: pd.Series, date_format: str | None) -> _Dates:
         # Every cell read is a day: a colon is left only in a cell that did not read (`n.a.: none`), counted as such.
         with_time = False
     dropped = Counter(offset for offset, read in zip(offsets, values.notna(), strict=True) if offset and read)
-    return _Dates(values, failed, with_time, notice, dropped, listed)
+    return _Dates(values, failed, with_time, notice, dropped, cells, listed)
 
 
 _NS_RANGE = (datetime(1677, 9, 22), datetime(2262, 4, 11))
@@ -4665,11 +4728,14 @@ def _month_year_texts(series: pd.Series, texts: pd.Series) -> pd.Series:
     return pd.Series(padded, index=series.index, dtype="str")
 
 
-def _check_failed(column: str, failed: int, present: int, what: str, forms: str = "") -> None:
-    """Refuse a reading that leaves more than `MAX_FAILED_SHARE` of the cells unread; `forms` names what it reads."""
+def _check_failed(
+    column: str, failed: int, present: int, what: str, why: str = "", unread: Counter[UnreadReason] | None = None
+) -> None:
+    """Refuse a reading that leaves more than `MAX_FAILED_SHARE` of the cells unread; `why` says why
+    (`_unread_words`), and the refusal carries the reasons (`PrepareError.unread`) for a count by reason."""
     if present and failed / present > MAX_FAILED_SHARE:
         message = f"column '{column}': {failed} of {present} cells cannot be read as {what}"
-        raise PrepareError("type_mismatch", f"{message}; {forms}" if forms else message)
+        raise PrepareError("type_mismatch", f"{message}; {why}" if why else message, unread=unread)
 
 
 _PERIOD_WORDS = {

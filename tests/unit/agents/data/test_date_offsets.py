@@ -282,6 +282,8 @@ class TestConversion:
             "2026-03-02T10:00:00.5",
             "2026-03-02t10:00",  # RFC 3339 allows a lowercase t
             "2026-03-02t10:00+01:00",
+            "02.03.2026 10:00",  # a time in another form of the list, which a conversion reads cell by cell
+            "01.03.2026 00:00",  # a midnight written out is a time too
         ],
     )
     def test_beside_times_the_column_stays_as_it_is(self, timed: str) -> None:
@@ -312,10 +314,8 @@ class TestConversion:
         [
             "2026-03-02T10",  # an hour without its minutes is no time of the list
             "2026-03-02T00",
-            "02.03.2026 10:00",  # a dot date beside ISO days is a cell of another shape
             "2026-03-02/05",
             "2026-03-02 10",
-            "01.03.2026 00:00",
             "2026-03-02T0000",
             "03/02/2026 12 AM",
         ],
@@ -327,16 +327,16 @@ class TestConversion:
 
         assert (code, message) == ("type_mismatch", f"column 'day': 1 of 3 cells cannot be read as dates; {DATE_FORMS}")
 
-    @pytest.mark.parametrize("day", ["Mar 1 2026", "01 03 2026"])
-    def test_a_date_written_with_spaces_is_unreadable_not_a_time(self, day: str) -> None:
-        """A space between the parts of a date makes no time: beside the days the cell is of another shape
-        (`Mar 1 2026`, a day with a month name) or of no form of the list (`01 03 2026`), and is missing."""
+    @pytest.mark.parametrize(("day", "read"), [("Mar 1 2026", "2026-03-01"), ("01 03 2026", "")])
+    def test_a_date_written_with_spaces_is_no_time(self, day: str, read: str) -> None:
+        """A space between the parts of a date makes no time: `Mar 1 2026` is a day with a month name, read in its
+        own form beside the days, and `01 03 2026` is no form of the list, so it is missing."""
         text = f"day,kWh\n{day},1\n" + "".join(f"2026-03-{day:02d}+01:00,{day}\n" for day in range(2, 12))
 
         prepared = prepare(text, to_dates())
 
-        assert column(prepared, "day (date)") == [""] + [f"2026-03-{day:02d}" for day in range(2, 12)]
-        assert ", 1 cell could not be read as a date and is now missing" in prepared.changes[0]
+        assert column(prepared, "day (date)") == [read] + [f"2026-03-{day:02d}" for day in range(2, 12)]
+        assert (", 1 cell could not be read as a date and is now missing" in prepared.changes[0]) == (not read)
         assert prepared.changes[0].endswith(
             "10 dates had the UTC offset +01:00, which was dropped; the days are as written"
         )
