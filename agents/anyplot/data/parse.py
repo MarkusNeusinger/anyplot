@@ -465,8 +465,13 @@ def utc_offset(text: str) -> int | None:
     if int(minutes or 0) > 59:
         return None
     total = (int(hours) * 60 + int(minutes or 0)) * (-1 if sign == "-" else 1)
+    return total if offset_in_use(total) else None
+
+
+def offset_in_use(minutes: float) -> bool:
+    """Whether an offset of `minutes` east of UTC is one in use (`UTC_OFFSETS`), for an offset Python read as well."""
     low, high = UTC_OFFSETS
-    return total if low <= total <= high else None
+    return low <= minutes <= high
 
 
 DATE_OFFSET = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})(Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])")
@@ -491,9 +496,9 @@ def date_offset(text: str) -> re.Match[str] | None:
 DATE_FORMS = (
     "the chat reads 2026-03-01, 01.03.2026, 03/15/2026, each also with a time, and months such as 2026-03 or Mar 2026"
 )
-"""The forms the date list reads (`read_dates`), as the clause a conversion to dates without a format adds when it
-leaves cells unread or is refused for them (`prepare._date_conversion`): no detection of a near miss is needed, since
-the request itself asked for dates."""
+"""The forms the date list reads (`read_dates`), as the clause a conversion to dates without a format adds when it is
+refused for unread cells, or leaves some missing and its change line has room for it (`prepare._set_type`): no
+detection of a near miss is needed, since the request itself asked for dates."""
 OFFSET_DATES = (
     "kept as text: every cell is a date followed directly by a UTC offset, with no time "
     "(YYYY-MM-DD±HH:MM or YYYY-MM-DDZ)"

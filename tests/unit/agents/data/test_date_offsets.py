@@ -113,7 +113,7 @@ class TestPaste:
         assert parsed.csv.splitlines()[1] == f"2026-03-01{offset},12"
         assert NOTE in parsed.warnings
 
-    @pytest.mark.parametrize("offset", ["-03", "+01", "-0500", "+0100", "-05:00:00"])
+    @pytest.mark.parametrize("offset", ["-03", "+01", "-0500", "+0100", "-05:00:00", "-17:00", "+15:00"])
     def test_a_sign_and_digits_in_no_offset_form_get_no_offset_note(self, offset: str) -> None:
         """`2026-03-01-03` may be an hour label: no sentence calls it an offset; the column is text as before."""
         parsed = parse_dataset(table(offset))
@@ -280,6 +280,19 @@ class TestConversion:
             "column 'day' holds dates with a UTC offset and no time beside times; such a date names a day, not a "
             "moment, so the column stays as it is"
         )
+
+    @pytest.mark.parametrize(
+        "timed", ["2026-03-02T10", "2026-03-02T10:00+01:00", "2026-03-02 10:00", "2026-03-02 12 AM"]
+    )
+    def test_with_a_format_an_iso_date_and_a_time_beside_the_days_refuses_the_column(self, timed: str) -> None:
+        """A format reads the column as it did: an ISO date with a time's shape refuses it, whether the format reads
+        that cell or not."""
+        text = f"day,kWh\n2026-03-01+01:00,12\n{timed},15\n2026-03-03+01:00,11\n"
+
+        code, message = refusal(text, to_dates(date_format="YYYY-MM-DD"))
+
+        assert code == "type_mismatch"
+        assert message.startswith("column 'day' holds dates with a UTC offset and no time beside times")
 
     @pytest.mark.parametrize(
         "timed",

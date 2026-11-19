@@ -46,8 +46,9 @@ The operations:
   `Okt. 2026`, in the eleven languages of `months.py`), as its first day. The column has one
   shape, the one most of its cells have, and one order of day and month, decided as at the
   paste (day first by guess, which the reading names, when no slash cell settles it); any
-  other cell is unreadable, and the refusal or the change line names the forms the chat reads
-  (`parse.DATE_FORMS`). A form outside the list reads only with a `date_format` that names it
+  other cell is unreadable, and the refusal names the forms the chat reads (`parse.DATE_FORMS`), as
+  does the change line of a conversion that leaves cells missing, where the line holds them beside
+  its counts and notices. A form outside the list reads only with a `date_format` that names it
   (`YYYYMMDD`, `MM/YYYY`, `YYYY`); one that no format names (`1 March 2026`, `2026/03/01`,
   `01.03.26`) reads in no conversion. A fraction of a second and a UTC offset are
   kept (`_cell_text`), different offsets in one column are read in UTC with the offsets
@@ -401,7 +402,6 @@ from .parse import (
     MAX_COMPUTED_BYTES,
     MAX_INPUT_CELL_CHARS,
     MISSING_VALUES,
-    UTC_OFFSETS,
     YEAR_MONTH,
     DateCells,
     ParsedDataset,
@@ -410,6 +410,7 @@ from .parse import (
     date_offset,
     keeps_value,
     minus_note,
+    offset_in_use,
     pandas_dtypes,
     parse_dataset,
     read_dates,
@@ -1718,7 +1719,8 @@ class Conversion:
     written without it (`_day_offsets`); `_set_type` counts them in its change line (`_dropped_note`)."""
     forms: str = ""
     """What a reading of dates without a format reads (`parse.DATE_FORMS`), when it left cells unread: the refusal
-    and the change line name the forms, "" when every cell read or the request named its format."""
+    names the forms, and so does the change line where it holds them beside the start of its step, its counts and
+    its notices (`_set_type`); "" when every cell read or the request named its format."""
 
 
 def _number_conversion(series: pd.Series, requested: str) -> Conversion:
@@ -4274,8 +4276,7 @@ def _moment(value: str, column: str, zone: tzinfo | None = None) -> pd.Timestamp
     except ValueError:
         raise _not_an_iso_date(column) from None
     shift = moment.utcoffset()
-    low, high = UTC_OFFSETS
-    if shift is not None and not low <= shift.total_seconds() / 60 <= high:
+    if shift is not None and not offset_in_use(shift.total_seconds() / 60):
         raise _not_an_iso_date(column)
     stamp = pd.Timestamp(moment)
     if zone is None and stamp.tzinfo is not None:
@@ -4449,7 +4450,14 @@ def _to_dates(series: pd.Series, date_format: str | None) -> _Dates:
     texts, offsets = _day_offsets(texts, series.name)
     cells = [text.strip() if isinstance(text, str) else None for text in texts]
     listed = None
+    days = any(offset is not None for offset in offsets)
     if date_format:
+        if days and any(
+            cell is not None and offset is None and _ISO_DAY_TIME.match(cell)
+            for cell, offset in zip(cells, offsets, strict=True)
+        ):
+            # An ISO date with a time beside the days refuses the column whether the format reads that cell or not.
+            raise _days_beside_times(series.name)
         # Python's own reader, one cell at a time: any year from 1 to 9999, stored at the parser's microseconds
         # (a datetime64[ns] holds only 1677 to 2262, review of 2026-10-15).
         moments = [_read_date(cell, date_format) if cell is not None else None for cell in cells]
@@ -4458,7 +4466,6 @@ def _to_dates(series: pd.Series, date_format: str | None) -> _Dates:
         listed = read_dates(cell for cell in cells if cell is not None)
         moments = [listed.moments.get(cell) if cell is not None else None for cell in cells]
         with_time = listed.with_time
-    days = any(offset is not None for offset in offsets)
     if days and any(
         offset is None and moment is not None and ":" in cell
         for cell, offset, moment in zip(cells, offsets, moments, strict=True)
@@ -4515,6 +4522,12 @@ def _offset_text(minutes: int) -> str:
 
 _ISO_DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 """The start of an ISO date, `YYYY-MM-DD`; a time after it stands behind `T` or a space (`_moment`)."""
+_ISO_DAY_TIME = re.compile(
+    r"\s*[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[Tt ][0-9]{1,2}(?::[0-9]{2}|\s*[AaPp]\.?\s?[Mm]\.?|$)|[Tt][0-9]{4})"
+)
+"""An ISO date followed by a time (`2026-03-01T10`, `2026-03-01 10:00`, `2026-03-01t10:00+01:00`): with a format, such a
+cell beside dates with a UTC offset and no time refuses the column, read or not (`_to_dates`). Without a format a cell
+of the date list holds a time when it holds a colon, and every other cell is unreadable."""
 
 
 def _days_beside_times(column: object) -> PrepareError:

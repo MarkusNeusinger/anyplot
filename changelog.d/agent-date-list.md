@@ -6,10 +6,13 @@
   `2026-03-01`, also with a time, seconds, a fraction and a UTC offset;
   `01.03.2026`; `03/15/2026` or `15/03/2026`, with the order of day and month
   decided once for the whole column; and months such as `2026-03` or
-  `Mar 2026`. A cell in any other form is not read, and the chat says which
-  forms it reads ("the chat reads 2026-03-01, 01.03.2026, 03/15/2026, each
-  also with a time, and months such as 2026-03 or Mar 2026"); a format such
-  as `YYYYMMDD` or `MM/YYYY` still reads its own form on request. Before, a
+  `Mar 2026`. A cell in any other form is not read, and the refusal says
+  which forms the chat reads ("the chat reads 2026-03-01, 01.03.2026,
+  03/15/2026, each also with a time, and months such as 2026-03 or
+  Mar 2026"), as does the change line when it leaves cells missing and has
+  room for it; a format such as `YYYYMMDD` or `MM/YYYY` still reads its own
+  form on request, and a form no format names, such as `1 March 2026` or
+  `2026/03/01`, is read by no conversion now. Before, a
   general reader guessed the format cell by cell: it read a range of days as
   its first day, hour labels `T00` to `T03` as one day four times, `-05:00`
   after a space as 05:00, and month-first dates in one column partly day
