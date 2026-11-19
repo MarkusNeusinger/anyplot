@@ -187,7 +187,7 @@ from ..schemas import (
 )
 from .layouts import MIN_ROWS as LAYOUT_MIN_ROWS
 from .layouts import Layout, is_pair, read_layout
-from .months import month_year, named_months
+from .months import month_number, month_year, named_months
 
 
 MAX_INPUT_BYTES = 1024 * 1024
@@ -435,17 +435,23 @@ _HEADER_TOKENS = re.compile(r"[^\s()\[\]{},;:]+")
 # Text that is a literal: an optional Python assignment, then `[`, `{` or `(`.
 _LITERAL_START = re.compile(r"(?:[^\W\d]\w*\s*=\s*)?(?=[\[{(])")
 
-_ISO_TIME = r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2}))?)?"
+_ISO_TIME = r"(?:[Tt ]([0-9]{2}):([0-9]{2})(?::([0-9]{2}))?)?"
 _LOCAL_TIME = r"(?: ([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?)?"
 _ISO_DATE = re.compile(r"([0-9]{4})-([0-9]{2})-([0-9]{2})" + _ISO_TIME)
 _DOT_DATE = re.compile(r"([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{4})" + _LOCAL_TIME)
 _SLASH_DATE = re.compile(r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})" + _LOCAL_TIME)
+_MONTH_WORD = r"([^\W\d_]+\.?)"
+_DAY_MONTH_DATE = re.compile(r"([0-9]{1,2})\.? " + _MONTH_WORD + r" ([0-9]{4})" + _LOCAL_TIME)
+"""A day, a month name and a year (`8 Nov 2026`, `1 March 2026`, `1. März 2026`), with an optional time."""
+_MONTH_DAY_DATE = re.compile(_MONTH_WORD + r" ([0-9]{1,2}), ([0-9]{4})" + _LOCAL_TIME)
+"""A month name, a day and a year (`March 1, 2026`, `Nov. 8, 2026`), with an optional time."""
 
 _ISO_STAMP = re.compile(
     r"([0-9]{4})-([0-9]{2})-([0-9]{2})"
-    r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:[.,]([0-9]{1,9}))?)?(Z|[+-][0-9]{2}(?::?[0-9]{2})?)?)?"
+    r"(?:[Tt ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:[.,]([0-9]{1,9}))?)?(Z|[+-][0-9]{2}(?::?[0-9]{2})?)?)?"
 )
-"""An ISO date, or a timestamp with seconds, a fraction of up to nine digits and an offset (`_as_iso_stamps`)."""
+"""An ISO date, or a timestamp with seconds, a fraction of up to nine digits and an offset (`_as_iso_stamps`); the `T`
+may be lowercase, as RFC 3339 allows."""
 UTC_OFFSETS = (-12 * 60, 14 * 60)
 """The UTC offsets in use, in minutes east of UTC: from −12:00 to +14:00. A sign and digits past them after a time end a
 range of times (`08:00-16:30`), never an offset (`utc_offset`)."""
@@ -494,7 +500,8 @@ def date_offset(text: str) -> re.Match[str] | None:
 
 
 DATE_FORMS = (
-    "the chat reads 2026-03-01, 01.03.2026, 03/15/2026, each also with a time, and months such as 2026-03 or Mar 2026"
+    "the chat reads 2026-03-01, 01.03.2026, 03/15/2026, 8 Nov 2026, each also with a time, "
+    "and months such as 2026-03 or Mar 2026"
 )
 """The forms the date list reads (`read_dates`), as the clause a conversion to dates without a format adds when it is
 refused for unread cells, or leaves some missing and its change line has room for it (`prepare._set_type`): no
@@ -508,11 +515,14 @@ written, and only a request reads their days, since reading them drops the offse
 
 YEAR_MONTH = re.compile(r"([0-9]{4})-([0-9]{2})")
 """A month as ISO 8601 writes it (`2025-01`), read as its first day (`read_dates`)."""
-DateShape = Literal["iso", "dot", "slash", "month", "month_name"]
-DATE_SHAPES: tuple[DateShape, ...] = ("iso", "dot", "slash", "month", "month_name")
+DateShape = Literal["iso", "dot", "slash", "day_month", "month", "month_name"]
+DATE_SHAPES: tuple[DateShape, ...] = ("iso", "dot", "slash", "day_month", "month", "month_name")
 """The shapes of the date list in the order the paste tries them (`read_dates`): `2026-03-01` with an optional time
 (`_ISO_STAMP`), `01.03.2026` and `03/15/2026` or `15/03/2026`, each with an optional time (`_DOT_DATE`,
-`_SLASH_DATE`), `2026-03` (`YEAR_MONTH`), and a month name with a four-digit year (`Mar 2026`, `months.month_year`)."""
+`_SLASH_DATE`), a day with a month name and a four-digit year, also with a time (`8 Nov 2026`, `1. März 2026`,
+`March 1, 2026`: `_DAY_MONTH_DATE`, `_MONTH_DAY_DATE`), `2026-03` (`YEAR_MONTH`), and a month name with a four-digit
+year (`Mar 2026`, `months.month_year`). A new form is one more shape here, its pattern in `_date_shape` and its reader
+in `_READERS`: the paste and every conversion without a format read it from then on."""
 _NUMBERED_SHAPES: dict[DateShape, re.Pattern[str]] = {"dot": _DOT_DATE, "slash": _SLASH_DATE, "month": YEAR_MONTH}
 """The shapes after the ISO one that are numbers alone, in the order `DATE_SHAPES` tries them."""
 SPAN_WORDS: frozenset[str] = frozenset(
@@ -3260,11 +3270,12 @@ def _type_column(column: _Column) -> None:
 
     1. **datetime**: every non-missing cell reads in one form of the date list (`read_dates`,
        which a `set_type` to dates without a format reads with too): ISO
-       `YYYY-MM-DD[(T| )HH:MM[:SS[.fraction]][offset]]` (`_as_iso_stamps`: up to nine
+       `YYYY-MM-DD[(T|t| )HH:MM[:SS[.fraction]][offset]]` (`_as_iso_stamps`: up to nine
        fraction digits and the offset kept as written, an offset within −12:00 to +14:00,
-       `utc_offset`), `DD.MM.YYYY`, or `DD/MM/YYYY` / `MM/DD/YYYY`,
-       the last three with an optional ` HH:MM[:SS]` and one- or two-digit day and
-       month. A slash column is day-first when a first part exceeds 12, month-first
+       `utc_offset`), `DD.MM.YYYY`, `DD/MM/YYYY` / `MM/DD/YYYY`, or a day with a month name
+       and a four-digit year (`8 Nov 2026`, `1. März 2026`, `March 1, 2026`, no note: the cell
+       names its day), the last four with an optional ` HH:MM[:SS]` and one- or two-digit day
+       and month. A slash column is day-first when a first part exceeds 12, month-first
        when a second part does, not a date when both happen, and day-first with a
        warning when neither does. Written as `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM:SS`
        for the whole column when any cell has a time. Months, `YYYY-MM` or a month name
@@ -3769,7 +3780,8 @@ def read_dates(cells: Iterable[str]) -> DateCells:
 class _Shaped:
     """A cell's shape of the date list and its numbers as written, an absent time as 0: year, month and day, then the
     time, for an ISO cell, whose fraction and offset are kept as written; the first part, the second and the year,
-    then the time, for a dot or a slash cell; the year and the month for a month."""
+    then the time, for a dot or a slash cell; the day, the month the name names and the year, then the time, for a
+    day with a month name in either order; the year and the month for a month."""
 
     shape: DateShape
     numbers: tuple[int, ...]
@@ -3786,6 +3798,16 @@ def _date_shape(cell: str) -> _Shaped | None:
         found = pattern.fullmatch(cell)
         if found is not None:
             return _Shaped(shape, tuple(int(part) if part else 0 for part in found.groups()))
+    for pattern, day_first in ((_DAY_MONTH_DATE, True), (_MONTH_DAY_DATE, False)):
+        found = pattern.fullmatch(cell)
+        if found is None:
+            continue
+        first, second, year, *clock = found.groups()
+        day, word = (first, second) if day_first else (second, first)
+        month = month_number(word)  # a name in one of the eleven languages, its abbreviation's dot allowed
+        if month is None:
+            return None
+        return _Shaped("day_month", (int(day), month, int(year), *(int(part) if part else 0 for part in clock)))
     named = month_year(cell)
     return None if named is None else _Shaped("month_name", named)
 
@@ -3821,6 +3843,7 @@ def _first_of_month(cell: _Shaped) -> datetime | None:
 _READERS: dict[DateShape, Callable[[_Shaped], datetime | None]] = {
     "iso": _iso_moment,
     "dot": _day_first,
+    "day_month": _day_first,
     "month": _first_of_month,
     "month_name": _first_of_month,
 }

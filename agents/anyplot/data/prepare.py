@@ -40,16 +40,18 @@ The operations:
   only 1677 to 2262; a date pandas still cannot hold is an `invalid_operation`, never a
   crash). Without `date_format` the cells are read in the forms of the date list, with the
   parser's own reader (`parse.read_dates`), so a cell converts exactly when the paste would
-  type it: `2026-03-01`, also with a time after `T` or a space, seconds, a fraction and a UTC
-  offset of −12:00 to +14:00; `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`, each
-  also with a time; a month, `2026-03` or a month name with a four-digit year (`Nov 2026`,
-  `Okt. 2026`, in the eleven languages of `months.py`), as its first day. The column has one
+  type it: `2026-03-01`, also with a time after `T` (or `t`) or a space, seconds, a fraction and
+  a UTC offset of −12:00 to +14:00; `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
+  and a day with a month name and a four-digit year (`8 Nov 2026`, `1. März 2026`,
+  `March 1, 2026`), each also with a time; a month, `2026-03` or a month name with a four-digit
+  year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are the eleven languages of
+  `months.py`. The column has one
   shape, the one most of its cells have, and one order of day and month, decided as at the
   paste (day first by guess, which the reading names, when no slash cell settles it); any
   other cell is unreadable, and the refusal names the forms the chat reads (`parse.DATE_FORMS`), as
   does the change line of a conversion that leaves cells missing, where the line holds them beside
   its counts and notices. A form outside the list reads only with a `date_format` that names it
-  (`YYYYMMDD`, `MM/YYYY`, `YYYY`); one that no format names (`1 March 2026`, `2026/03/01`,
+  (`YYYYMMDD`, `MM/YYYY`, `YYYY`); one that no format names (`1st March 2026`, `2026/03/01`,
   `01.03.26`) reads in no conversion. A fraction of a second and a UTC offset are
   kept (`_cell_text`), different offsets in one column are read in UTC with the offsets
   named in the change line (owner decision of 2026-10-15, as the parser writes such a
@@ -1816,6 +1818,8 @@ def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
         reading = f"read as dates ({date_format})"
     elif listed is not None and listed.shape == "month_name":
         reading = MONTH_NAMES_READING
+    elif listed is not None and listed.shape == "day_month":
+        reading = DAY_MONTH_READING
     elif listed is not None and listed.shape in ("dot", "slash"):
         how = "day before month" if listed.day_first else "month before day"
         reading = f"read as dates (format inferred, {how})"
@@ -1978,6 +1982,9 @@ def read_frame(parsed: ParsedDataset) -> pd.DataFrame:
 
 MONTH_NAMES_READING = "read as months (a month name and a year, each as the first day of the month)"
 """The change line of a `set_type` to dates whose every read cell names a month and a year, as the parser's note says."""
+DAY_MONTH_READING = "read as dates (a day, a month name and a year)"
+"""The change line of a `set_type` to dates whose cells write a day with a month name (`8 Nov 2026`, `March 1, 2026`):
+the name settles which part is the month, so the reading takes no order of day and month."""
 _FOUR_DIGITS = re.compile(r"[0-9]{4}")
 _LETTERS = re.compile(r"[^\W\d_]+")
 

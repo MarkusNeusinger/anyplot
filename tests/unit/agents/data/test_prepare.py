@@ -857,7 +857,7 @@ class TestSetTypeDatetime:
             ["Nov 26", "Oct 26", "Sep 26"],  # a two-digit year
             ["13:00", "14:00", "15:30"],  # a time alone
             ["now", "today", "now"],
-            ["1 Nov 2026", "2 Nov 2026", "3 Nov 2026"],  # a form outside the list
+            ["1st Nov 2026", "2nd Nov 2026", "3rd Nov 2026"],  # an ordinal: a form outside the list
         ],
     )
     def test_a_cell_of_no_listed_form_is_refused_with_the_forms_that_read(self, cells: list[str]) -> None:

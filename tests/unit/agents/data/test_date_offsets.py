@@ -270,7 +270,16 @@ class TestConversion:
             "1 date had the UTC offset +01:00, which was dropped; the day is as written"
         )
 
-    @pytest.mark.parametrize("timed", ["2026-03-02T10:00+01:00", "2026-03-02 10:00", "2026-03-02T10:00:00.5"])
+    @pytest.mark.parametrize(
+        "timed",
+        [
+            "2026-03-02T10:00+01:00",
+            "2026-03-02 10:00",
+            "2026-03-02T10:00:00.5",
+            "2026-03-02t10:00",  # RFC 3339 allows a lowercase t
+            "2026-03-02t10:00+01:00",
+        ],
+    )
     def test_beside_times_the_column_stays_as_it_is(self, timed: str) -> None:
         """A date with an offset names a day, not a moment: no midnight is made up for it, at any offset."""
         code, message = refusal(f"day,kWh\n2026-03-01+01:00,12\n{timed},15\n2026-03-03+01:00,11\n", to_dates())
@@ -303,8 +312,6 @@ class TestConversion:
             "2026-03-02/05",
             "2026-03-02 10",
             "01.03.2026 00:00",
-            "2026-03-02t10:00",
-            "2026-03-02t10:00+01:00",
             "2026-03-02T0000",
             "03/02/2026 12 AM",
         ],

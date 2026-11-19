@@ -107,11 +107,12 @@ class TestCandidates:
         ]
 
     def test_a_column_of_dates_is_never_a_number_candidate(self) -> None:
-        """`Nov 26, 2026` would be 26.2026 behind a unit `Nov`: a date column serves a date role or none."""
+        """`Nov 26, 2026` would be 26.2026 behind a unit `Nov`: a date column serves a date role or none. The paste
+        types it as dates, so the open measure gets the offer of a free date column, never a number conversion."""
         roles = [*parse_roles(ROLLING)[:2]]
         text = "when;price;note\n2024-01-01;x;Nov 26, 2026\n2024-01-02;y;Nov 25, 2026\n"
 
-        assert found(text, roles=roles) == []
+        assert found(text, roles=roles) == [DateNumbers(role="value", column="note", dates=2)]
 
     @pytest.mark.parametrize(
         "text",
@@ -276,6 +277,16 @@ class TestRowNumbers:
         assert isinstance(candidate, Candidate) and candidate.role == "x" and candidate.certain
         assert candidate.moved == Binding(role="y", column="value")
         assert "y then takes 'value', which x holds now" in candidate.line()
+
+    def test_days_with_a_month_name_take_the_axis_without_a_conversion(self) -> None:
+        """A day with a month name is a date at the paste: it takes x, the numbers take y, nothing is left open."""
+        text = "Datum;Preis\n8 Nov 2026;1\n9 Nov 2026;3\n10 Nov 2026;2\n"
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes["Datum"] == "datetime"
+        bindings = default_bindings(parse_roles(LINE), parsed.profile)
+        assert {binding.role: binding.column for binding in bindings} == {"x": "Datum", "y": "Preis"}
+        assert found(text, roles=parse_roles(LINE)) == []
 
     def test_a_taken_name_gets_a_number(self) -> None:
         [candidate] = found("index,value\na,1\nb,2\nc,3\n", roles=parse_roles(LINE))

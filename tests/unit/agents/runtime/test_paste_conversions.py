@@ -133,6 +133,13 @@ class TestMakeConversions:
         new = next(column for column in stored.profile.columns if column.name == "category (date)")
         assert new.order == "descending"  # what a plot run reads to draw the rows oldest first
 
+    def test_days_with_a_month_name_are_dates_at_the_paste_and_nothing_is_made(self) -> None:
+        """`8 Nov 2026` is typed by the paste itself: the date role takes the column, and no conversion is due."""
+        store, view = pasted("Date,Visitors\n8 Nov 2026,412\n7 Nov 2026,398\n6 Nov 2026,455\n", SPEC)
+
+        assert make_conversions(store, SID, view, view.snapshot) is None
+        assert {binding.role: binding.column for binding in view.bindings} == {"date": "Date", "value": "Visitors"}
+
     @pytest.mark.parametrize(
         ("text", "values"),
         [
