@@ -17,7 +17,7 @@ from pydantic import TypeAdapter
 
 from agents.anyplot.data.bindings import default_bindings
 from agents.anyplot.data.conversions import Candidate, candidates
-from agents.anyplot.data.parse import MAX_COMPUTED_BYTES, ParsedDataset, _offset_days, parse_dataset
+from agents.anyplot.data.parse import DATE_FORMS, MAX_COMPUTED_BYTES, ParsedDataset, _offset_days, parse_dataset
 from agents.anyplot.data.prepare import (
     OFFSET_DAYS_READING,
     Operation,
@@ -270,26 +270,9 @@ class TestConversion:
             "1 date had the UTC offset +01:00, which was dropped; the day is as written"
         )
 
-    @pytest.mark.parametrize(
-        "timed",
-        [
-            "2026-03-02T10:00+01:00",
-            "2026-03-02 10:00",
-            "2026-03-02T10",
-            "2026-03-02T00",
-            "02.03.2026 10:00",  # a time after a date of another shape, found once the cell is read
-            "2026-03-02/05",  # a time of day the reading finds, though no `T` or space stands before it
-            "2026-03-02 10",
-            "01.03.2026 00:00",  # a midnight written out is a time too
-            "2026-03-02t10:00",  # RFC 3339 allows a lowercase t
-            "2026-03-02t10:00+01:00",
-            "2026-03-02T0000",  # a compact midnight, which the reading finds no hour in
-            "03/02/2026 12 AM",
-        ],
-    )
+    @pytest.mark.parametrize("timed", ["2026-03-02T10:00+01:00", "2026-03-02 10:00", "2026-03-02T10:00:00.5"])
     def test_beside_times_the_column_stays_as_it_is(self, timed: str) -> None:
-        """A date with an offset names a day, not a moment: no midnight is made up for it, at any offset, and no hour
-        of a time beside it (`T10`, with no colon) is dropped to make the column one of days."""
+        """A date with an offset names a day, not a moment: no midnight is made up for it, at any offset."""
         code, message = refusal(f"day,kWh\n2026-03-01+01:00,12\n{timed},15\n2026-03-03+01:00,11\n", to_dates())
 
         assert code == "type_mismatch"
@@ -298,14 +281,37 @@ class TestConversion:
             "moment, so the column stays as it is"
         )
 
+    @pytest.mark.parametrize(
+        "timed",
+        [
+            "2026-03-02T10",  # an hour without its minutes is no time of the list
+            "2026-03-02T00",
+            "02.03.2026 10:00",  # a dot date beside ISO days is a cell of another shape
+            "2026-03-02/05",
+            "2026-03-02 10",
+            "01.03.2026 00:00",
+            "2026-03-02t10:00",
+            "2026-03-02t10:00+01:00",
+            "2026-03-02T0000",
+            "03/02/2026 12 AM",
+        ],
+    )
+    def test_beside_a_cell_outside_the_date_list_that_cell_is_unreadable(self, timed: str) -> None:
+        """No hour of such a cell is dropped to make the column one of days: it reads as no date, and one of three is
+        more than a reading may leave missing."""
+        code, message = refusal(f"day,kWh\n2026-03-01+01:00,12\n{timed},15\n2026-03-03+01:00,11\n", to_dates())
+
+        assert (code, message) == ("type_mismatch", f"column 'day': 1 of 3 cells cannot be read as dates; {DATE_FORMS}")
+
     @pytest.mark.parametrize("day", ["Mar 1 2026", "01 03 2026"])
-    def test_a_date_written_with_spaces_is_no_time(self, day: str) -> None:
-        """A space between the parts of a date is no time: only a time's shape after it (`10`, `10:00`) is one."""
+    def test_a_date_written_with_spaces_is_unreadable_not_a_time(self, day: str) -> None:
+        """A space between the parts of a date makes no time, and no form of the list either: the cell is missing."""
         text = f"day,kWh\n{day},1\n" + "".join(f"2026-03-{day:02d}+01:00,{day}\n" for day in range(2, 12))
 
         prepared = prepare(text, to_dates())
 
-        assert column(prepared, "day (date)") == [f"2026-03-{day:02d}" for day in range(1, 12)]
+        assert column(prepared, "day (date)") == [""] + [f"2026-03-{day:02d}" for day in range(2, 12)]
+        assert ", 1 cell could not be read and is now missing" in prepared.changes[0]
         assert prepared.changes[0].endswith(
             "10 dates had the UTC offset +01:00, which was dropped; the days are as written"
         )

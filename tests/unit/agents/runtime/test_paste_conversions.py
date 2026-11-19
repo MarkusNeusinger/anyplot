@@ -56,6 +56,8 @@ RANGES = "team;games;mean;min–max\nalpha;140;61.5;48–80\nbeta;146;67.2;52–
 DAYS_WEST = "day,kWh\n2026-03-01-05:00,12\n2026-03-02-05:00,15\n2026-03-03-05:00,11\n"
 """Days with a UTC offset west of UTC and no time, which pandas alone reads as 05:00 on each day."""
 MADE_HEADING = "- Conversions the server made for open roles before this turn:"
+SPEC = "line-timeseries-rolling"
+"""A spec whose required date role a pasted text column of dates would fill."""
 
 
 def pasted(text: str, spec: str, language: str = "en") -> tuple[DatasetStore, SessionView]:
@@ -117,8 +119,9 @@ class TestMakeConversions:
 
     def test_newest_first_dates_keep_the_order_of_the_paste(self) -> None:
         """The order of a time series is the plot's (`plot_view.oldest_first`): the conversion reads the dates and
-        leaves the rows where the user put them."""
-        store, view = pasted("Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n24 Nov 2026;3\n", "line-timeseries-rolling")
+        leaves the rows where the user put them. The days are the keys of JSON pairs, which the parser keeps text, so
+        the dry run reads every cell: a pasted column of listed dates is typed at the paste already."""
+        store, view = pasted('{"2026-11-26": 1, "2026-11-25": 2, "2026-11-24": 3}', "line-timeseries-rolling")
 
         made = make_conversions(store, SID, view, view.snapshot)
 
@@ -126,8 +129,8 @@ class TestMakeConversions:
         assert [operation["op"] for operation in made.record.operations] == ["set_type"]
         assert "newest first" not in made.record.lines[0] and "oldest" not in made.record.lines[0]
         stored = store.get(made.version.dataset_id, SID)
-        assert stored is not None and stored.csv.splitlines()[1].startswith("26 Nov 2026")
-        new = next(column for column in stored.profile.columns if column.name == "Datum (date)")
+        assert stored is not None and stored.csv.splitlines()[1].startswith("2026-11-26")
+        new = next(column for column in stored.profile.columns if column.name == "category (date)")
         assert new.order == "descending"  # what a plot run reads to draw the rows oldest first
 
     @pytest.mark.parametrize(
@@ -216,6 +219,33 @@ class TestMakeConversions:
         else:
             assert spec == "line-basic" and text.startswith("hour,")
             assert made.record.operations == [{"op": "row_number", "name": "index"}]
+
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["2026-03-01-2026-03-05", "2026-03-06-2026-03-10", "2026-03-11-2026-03-15"],
+            ["2026-03-01T00", "2026-03-01T01", "2026-03-01T02", "2026-03-01T03"],
+            ["2026-03-01 -05:00", "2026-03-02 -05:00", "2026-03-03 -05:00"],
+            ["2026/03/01-05:00", "2026/03/02-05:00", "2026/03/03-05:00"],
+            ["13.03.2026-05:00", "14.03.2026-05:00", "15.03.2026-05:00"],
+            ["2026-03-01/05", "2026-03-02/05", "2026-03-03/05"],
+            ["2026-03-01 9:00-17:00", "2026-03-02 9:00-17:00", "2026-03-03 9:00-17:00"],
+            ["2026-03-01 08:00-16:30", "2026-03-02 08:00-16:30", "2026-03-03 08:00-16:30"],
+            ["2026-03-01 of", "2026-03-02 of", "2026-03-03 of"],
+            ["2026-03-01 10:00 of", "2026-03-02 10:00 of", "2026-03-03 10:00 of"],
+            ["2026-03 10:00 / 05", "2026-04 10:00 / 05", "2026-05 10:00 / 05"],
+            ["2026-02 February", "2026-03 March", "2026-04 April"],
+            ["1.2.3", "1.2.4", "1.2.5"],
+        ],
+    )
+    def test_a_form_outside_the_date_list_is_never_read_as_dates_unasked(self, cells: list[str]) -> None:
+        """The general reader made a date of each of these, the wrong one, and rated the conversion certain: a range
+        of days lost its second date, `T00` to `T03` became one day four times, `-16:30` after a time an offset."""
+        store, view = pasted("day,kWh\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells)), SPEC)
+
+        made = make_conversions(store, SID, view, view.snapshot)
+
+        assert made is None or all(operation["op"] != "set_type" for operation in made.record.operations)
 
     def test_a_full_store_makes_nothing(self, monkeypatch: pytest.MonkeyPatch) -> None:
         store, view = pasted(PRICES, "scatter-basic")

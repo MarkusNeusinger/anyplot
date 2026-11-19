@@ -104,9 +104,10 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    (R's `write.csv`: an empty header over `1` to `n`; pandas' `Unnamed: 0` over `0` to
    `n - 1`), with a warning that counts its cells (`_without_row_names`, live test round 5
    of 2026-10-15).
-5. **Type each column**, see `_type_column`: dates (months too: `2025-01` and, since
-   2026-11-01, `Nov 2026` in the eleven languages of `months.py`, each the first day of
-   its month; a column of dates each followed directly by a UTC offset and no time,
+5. **Type each column**, see `_type_column`: dates in the forms of the date list
+   (`read_dates`, the reader a conversion to dates without a format shares; months too:
+   `2025-01` and, since 2026-11-01, `Nov 2026` in the eleven languages of `months.py`, each
+   the first day of its month; a column of dates each followed directly by a UTC offset and no time,
    `2026-03-01+01:00`, stays text as written with a note that names that shape), then booleans, integers, numbers (a minus written `−` or `–` before the
    number is a sign, counted in a note; also with unambiguous thousands groups:
    `7.184.003`, `1'234'567`, `1 234,5`, `1,234,567`, see `_as_grouped_numbers`; a column of `1,234` shapes reads
@@ -162,9 +163,9 @@ import sys
 import tokenize
 import unicodedata
 from collections import Counter
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone, tzinfo
 from decimal import Decimal, InvalidOperation
 from itertools import pairwise, product
 from typing import Any, Literal
@@ -445,15 +446,54 @@ _ISO_STAMP = re.compile(
     r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:[.,]([0-9]{1,9}))?)?(Z|[+-][0-9]{2}(?::?[0-9]{2})?)?)?"
 )
 """An ISO date, or a timestamp with seconds, a fraction of up to nine digits and an offset (`_as_iso_stamps`)."""
+UTC_OFFSETS = (-12 * 60, 14 * 60)
+"""The UTC offsets in use, in minutes east of UTC: from −12:00 to +14:00. A sign and digits past them after a time end a
+range of times (`08:00-16:30`), never an offset (`utc_offset`)."""
+_OFFSET_SHAPE = re.compile(r"Z|([+-])([0-9]{2})(?::?([0-9]{2}))?")
+
+
+def utc_offset(text: str) -> int | None:
+    """The minutes east of UTC of an offset written `Z`, `±HH`, `±HHMM` or `±HH:MM` within `UTC_OFFSETS`, else None:
+    the one definition of an offset for the paste, a conversion to dates, the dates with an offset and a condition's
+    value (`prepare._moment`)."""
+    shape = _OFFSET_SHAPE.fullmatch(text)
+    if shape is None:
+        return None
+    if text == "Z":
+        return 0
+    sign, hours, minutes = shape.groups()
+    if int(minutes or 0) > 59:
+        return None
+    total = (int(hours) * 60 + int(minutes or 0)) * (-1 if sign == "-" else 1)
+    low, high = UTC_OFFSETS
+    return total if low <= total <= high else None
+
+
 DATE_OFFSET = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})(Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])")
 """An ISO date followed directly by a UTC offset and no time, in a form that is an offset only: `Z` or `±HH:MM`
-(`2026-03-01+01:00`, `2026-03-01-05:00`, `2026-03-01Z`); the date is group 1, the offset as written group 2. The
-parser keeps such a column as written, text with `OFFSET_DATES` (`_as_dates`); `set_type` reads each written day and
-counts the offsets it drops (`prepare._day_offsets`), and a condition takes it as the whole day (`prepare._moment`)."""
+(`2026-03-01+01:00`, `2026-03-01-05:00`, `2026-03-01Z`); the date is group 1, the offset as written group 2. Only an
+offset in use counts (`date_offset`). The parser keeps such a column as written, text with `OFFSET_DATES`
+(`_as_dates`); `set_type` reads each written day and counts the offsets it drops (`prepare._day_offsets`), and a
+condition takes it as the whole day (`prepare._moment`)."""
 DATE_SIGN_DIGITS = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}[+-][0-9][0-9:]*")
-"""An ISO date followed directly by a sign and digits, of any form. Unless it is a `DATE_OFFSET`, no reading takes it:
-`2026-03-01-03` and `2026-03-01+0100` are an hour label as much as an offset, and `2026-03-01-05:00:00` a time as much
-(pandas reads each of them as a time of day, and Python's `fromisoformat` takes any character for the `T`)."""
+"""An ISO date followed directly by a sign and digits, of any form. Unless it is a `date_offset`, no reading takes it:
+`2026-03-01-03` and `2026-03-01+0100` are an hour label as much as an offset, `2026-03-01-05:00:00` a time as much,
+and `2026-03-01-17:00` an hour, since no place is 17 hours behind UTC (Python's `fromisoformat` takes any character
+for the `T` and would read each of them as a time of day)."""
+
+
+def date_offset(text: str) -> re.Match[str] | None:
+    """A `DATE_OFFSET` cell whose offset is one in use (`utc_offset`), else None."""
+    found = DATE_OFFSET.fullmatch(text)
+    return found if found is not None and utc_offset(found.group(2)) is not None else None
+
+
+DATE_FORMS = (
+    "the chat reads 2026-03-01, 01.03.2026, 03/15/2026, each also with a time, and months such as 2026-03 or Mar 2026"
+)
+"""The forms the date list reads (`read_dates`), as the clause a conversion to dates without a format adds when it
+leaves cells unread or is refused for them (`prepare._date_conversion`): no detection of a near miss is needed, since
+the request itself asked for dates."""
 OFFSET_DATES = (
     "kept as text: every cell is a date followed directly by a UTC offset, with no time "
     "(YYYY-MM-DD±HH:MM or YYYY-MM-DDZ)"
@@ -462,19 +502,20 @@ OFFSET_DATES = (
 written, and only a request reads their days, since reading them drops the offsets."""
 
 YEAR_MONTH = re.compile(r"([0-9]{4})-([0-9]{2})")
-"""A month as ISO 8601 writes it (`2025-01`), read as its first day (`_as_periods`)."""
+"""A month as ISO 8601 writes it (`2025-01`), read as its first day (`read_dates`)."""
+DateShape = Literal["iso", "dot", "slash", "month", "month_name"]
+DATE_SHAPES: tuple[DateShape, ...] = ("iso", "dot", "slash", "month", "month_name")
+"""The shapes of the date list in the order the paste tries them (`read_dates`): `2026-03-01` with an optional time
+(`_ISO_STAMP`), `01.03.2026` and `03/15/2026` or `15/03/2026`, each with an optional time (`_DOT_DATE`,
+`_SLASH_DATE`), `2026-03` (`YEAR_MONTH`), and a month name with a four-digit year (`Mar 2026`, `months.month_year`)."""
+_NUMBERED_SHAPES: dict[DateShape, re.Pattern[str]] = {"dot": _DOT_DATE, "slash": _SLASH_DATE, "month": YEAR_MONTH}
+"""The shapes after the ISO one that are numbers alone, in the order `DATE_SHAPES` tries them."""
 SPAN_WORDS: frozenset[str] = frozenset(
     {"season", "seasons", "saison", "saisons", "spielzeit", "temporada", "stagione", "seizoen", "sezon", "span"}
 )
 """Words of a column name that say its `YYYY-NN` cells are spans of years, never months (`_as_periods`)."""
 MONTH_YEARS = (1000, 2200)
-"""The years a month or quarter column may hold (`prepare.MONTH_YEAR_RANGE`, the `set_type` reading of `YYYY-MM`)."""
-
-_DATE_FORMATS: tuple[tuple[re.Pattern[str], str], ...] = (
-    (_ISO_DATE, "iso"),
-    (_DOT_DATE, "dot"),
-    (_SLASH_DATE, "slash"),
-)
+"""The years a month column may hold (`read_dates`; `prepare.MONTH_YEAR_RANGE` for the `MM.YYYY` format)."""
 
 _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 AMBIGUOUS_DATE_ORDER = "day and month order is ambiguous; read as DD/MM/YYYY"
@@ -3212,9 +3253,11 @@ def canonical_headers(headers: Sequence[str], units: Sequence[str | None] | None
 def _type_column(column: _Column) -> None:
     """Give the column its dtype and canonical cells, in this order of attempts.
 
-    1. **datetime**: every non-missing cell matches one format: ISO
+    1. **datetime**: every non-missing cell reads in one form of the date list (`read_dates`,
+       which a `set_type` to dates without a format reads with too): ISO
        `YYYY-MM-DD[(T| )HH:MM[:SS[.fraction]][offset]]` (`_as_iso_stamps`: up to nine
-       fraction digits and the offset kept as written), `DD.MM.YYYY`, or `DD/MM/YYYY` / `MM/DD/YYYY`,
+       fraction digits and the offset kept as written, an offset within −12:00 to +14:00,
+       `utc_offset`), `DD.MM.YYYY`, or `DD/MM/YYYY` / `MM/DD/YYYY`,
        the last three with an optional ` HH:MM[:SS]` and one- or two-digit day and
        month. A slash column is day-first when a first part exceeds 12, month-first
        when a second part does, not a date when both happen, and day-first with a
@@ -3222,7 +3265,7 @@ def _type_column(column: _Column) -> None:
        for the whole column when any cell has a time. Months, `YYYY-MM` or a month name
        with a four-digit year (`Nov 2026`, `Okt. 2026`), are the first day of each month,
        with a note (`_as_periods`). A column whose every cell is a date followed directly
-       by a UTC offset and no time (`2026-03-01+01:00`, `2026-03-01Z`, `DATE_OFFSET`) stays
+       by a UTC offset and no time (`2026-03-01+01:00`, `2026-03-01Z`, `date_offset`) stays
        text as written, with the note `OFFSET_DATES` (`_offset_days`): an offset belongs to a
        time, and `set_type` reads the days on request.
     2. **boolean**: `true` / `false` in any letter case, written `True` / `False`.
@@ -3648,70 +3691,184 @@ def keeps_value(text: str, value: float) -> bool:
         return False
 
 
-def _match_all(pattern: re.Pattern[str], cells: list[str]) -> dict[str, tuple[int, ...]] | None:
-    """Each distinct cell's date and time fields as integers (an absent time is 0), or None on a miss."""
-    fields: dict[str, tuple[int, ...]] = {}
-    for cell in cells:
-        match = pattern.fullmatch(cell)
-        if match is None:
-            return None
-        fields[cell] = tuple(int(part) if part else 0 for part in match.groups())
-    return fields
+@dataclass(frozen=True)
+class DateCells:
+    """A column's cells as the date list reads them (`read_dates`): one shape for the column, each distinct cell of that
+    shape that names a moment read, every other cell unread."""
+
+    shape: DateShape | None
+    """The shape most cells have, a tie going to the earlier of `DATE_SHAPES`; None when no cell has one."""
+    moments: dict[str, datetime] = field(default_factory=dict)
+    """Each distinct cell read: aware for an ISO time with a UTC offset (`Z` is UTC), else naive."""
+    fractions: dict[str, str] = field(default_factory=dict)
+    """An ISO cell's fraction of a second as written, up to nine digits ("" without one); its moment holds six."""
+    unread: frozenset[str] = frozenset()
+    day_first: bool = True
+    """The order of a slash column: month first only when a cell reads that way alone (`03/15/2026`)."""
+    guessed: bool = False
+    """A slash column read day first although no cell settles the order and some cell reads otherwise month first."""
+
+    @property
+    def with_time(self) -> bool:
+        """Whether a cell read holds a time, which makes the column one of moments."""
+        return any(":" in cell for cell in self.moments)
+
+    @property
+    def offsets(self) -> set[int | None]:
+        """The UTC offsets of the cells read, in minutes east of UTC; None for a cell without one."""
+        return {_offset_minutes(moment) for moment in self.moments.values()}
 
 
-def _as_iso_stamps(column: _Column, present: list[str]) -> bool | None:
-    """ISO dates and timestamps with every digit and the offset as written (owner rule of 2026-10-15).
+def read_dates(cells: Iterable[str]) -> DateCells:
+    """The cells, each non-empty and trimmed, as dates in the forms of the list (`DATE_SHAPES`): the one reader of the
+    paste (`_as_dates`) and of a conversion to dates without a format (`prepare._date_conversion`).
 
-    None when a cell is no ISO date, so the other formats are tried. A fraction of up to nine
-    digits stays (each cell padded to the column's longest fraction, which changes no value and
-    lets `pd.read_csv(parse_dates=...)` read the column as one format), and so does an offset
-    (`Z`, `+01`, `+0100`, `+01:00`, written `+01:00`; `Z` as `+00:00`). A column that mixes
-    cells with and without an offset is not a date column: no time is given a zone by guess.
-    A column with several offsets (summer and winter time) is written in UTC (`+00:00`) with a
-    note naming the offsets, because pandas reads one offset per column; the instants stay.
+    Each cell has at most one shape. The column takes the shape most of its cells have and reads only cells of it,
+    since a column has one shape; a cell of the column's shape is unread too when it names no moment (`2026-02-30`,
+    a month or a year past `MONTH_YEARS`, a UTC offset past those in use, `utc_offset`). A slash column has one order
+    of day and month, as the paste decides it: month first when a cell reads in that order alone (`03/15/2026`),
+    else day first, by guess (`guessed`) when no cell settles it and some cell reads otherwise the other way; when
+    cells settle both orders (`15/03/2026` beside `03/15/2026`), no order fits the column and no slash cell reads.
     """
-    matches = []
-    for cell in present:
-        match = _ISO_STAMP.fullmatch(cell)
-        if match is None:
+    present = list(cells)
+    shapes = {cell: _date_shape(cell) for cell in dict.fromkeys(present)}
+    counts = Counter(found.shape for cell in present if (found := shapes[cell]) is not None)
+    if not counts:
+        return DateCells(None, unread=frozenset(shapes))
+    chosen = max(DATE_SHAPES, key=lambda shape: (counts[shape], -DATE_SHAPES.index(shape)))
+    mine = {cell: found for cell, found in shapes.items() if found is not None and found.shape == chosen}
+    moments: dict[str, datetime | None] = {}
+    day_first, guessed = True, False
+    if chosen == "slash":
+        orders = {cell: (_day_first(found), _month_first(found)) for cell, found in mine.items()}
+        day_only = any(first is not None and second is None for first, second in orders.values())
+        month_only = any(first is None and second is not None for first, second in orders.values())
+        if not (day_only and month_only):
+            day_first = not month_only
+            guessed = not day_only and not month_only and any(first != second for first, second in orders.values())
+            moments = {cell: pair[0] if day_first else pair[1] for cell, pair in orders.items()}
+    else:
+        moments = {cell: _READERS[chosen](found) for cell, found in mine.items()}
+    read = {cell: moment for cell, moment in moments.items() if moment is not None}
+    return DateCells(
+        chosen,
+        read,
+        {cell: mine[cell].fraction for cell in read} if chosen == "iso" else {},
+        frozenset(cell for cell in shapes if cell not in read),
+        day_first,
+        guessed,
+    )
+
+
+@dataclass(frozen=True)
+class _Shaped:
+    """A cell's shape of the date list and its numbers as written, an absent time as 0: year, month and day, then the
+    time, for an ISO cell, whose fraction and offset are kept as written; the first part, the second and the year,
+    then the time, for a dot or a slash cell; the year and the month for a month."""
+
+    shape: DateShape
+    numbers: tuple[int, ...]
+    fraction: str = ""
+    offset: str | None = None
+
+
+def _date_shape(cell: str) -> _Shaped | None:
+    stamp = _ISO_STAMP.fullmatch(cell)
+    if stamp is not None:
+        numbers = tuple(int(stamp.group(index) or 0) for index in range(1, 7))
+        return _Shaped("iso", numbers, stamp.group(7) or "", stamp.group(8))
+    for shape, pattern in _NUMBERED_SHAPES.items():
+        found = pattern.fullmatch(cell)
+        if found is not None:
+            return _Shaped(shape, tuple(int(part) if part else 0 for part in found.groups()))
+    named = month_year(cell)
+    return None if named is None else _Shaped("month_name", named)
+
+
+def _iso_moment(cell: _Shaped) -> datetime | None:
+    """An ISO cell's moment, its fraction cut to the six digits a `datetime` holds; None for one that names none."""
+    zone = None
+    if cell.offset is not None:
+        minutes = utc_offset(cell.offset)
+        if minutes is None:
             return None
-        matches.append((cell, match))
-    offsets: dict[str, int | None] = {}
-    stamps: dict[str, tuple[datetime, str]] = {}
-    for cell, match in matches:
-        year, month, day = int(match.group(1)), int(match.group(2)), int(match.group(3))
-        hour, minute, second = (int(match.group(index) or 0) for index in (4, 5, 6))
-        fraction, offset = match.group(7) or "", match.group(8)
-        try:
-            stamp = datetime(year, month, day, hour, minute, second, int((fraction + "000000")[:6]))
-        except ValueError:
-            return False
-        minutes: int | None = None
-        if offset is not None:
-            digits = offset[1:].replace(":", "") if offset != "Z" else "0000"
-            minutes = int(digits[:2]) * 60 + int(digits[2:4] or 0)
-            if minutes >= 24 * 60:
-                return False
-            minutes = -minutes if offset.startswith("-") else minutes
-            stamp = stamp.replace(tzinfo=timezone(timedelta(minutes=minutes)))
-        offsets[cell] = minutes
-        stamps[cell] = (stamp, fraction)
-    zones = set(offsets.values())
+        zone = timezone(timedelta(minutes=minutes))
+    year, month, day, hour, minute, second = cell.numbers
+    return _calendar(year, month, day, hour, minute, second, int((cell.fraction + "000000")[:6]), zone)
+
+
+def _day_first(cell: _Shaped) -> datetime | None:
+    day, month, year, hour, minute, second = cell.numbers
+    return _calendar(year, month, day, hour, minute, second)
+
+
+def _month_first(cell: _Shaped) -> datetime | None:
+    month, day, year, hour, minute, second = cell.numbers
+    return _calendar(year, month, day, hour, minute, second)
+
+
+def _first_of_month(cell: _Shaped) -> datetime | None:
+    year, month = cell.numbers
+    low, high = MONTH_YEARS
+    return _calendar(year, month, 1) if low <= year <= high else None
+
+
+_READERS: dict[DateShape, Callable[[_Shaped], datetime | None]] = {
+    "iso": _iso_moment,
+    "dot": _day_first,
+    "month": _first_of_month,
+    "month_name": _first_of_month,
+}
+"""How a cell of each shape but the slash's reads; a slash cell reads in the column's order (`read_dates`)."""
+
+
+def _calendar(
+    year: int,
+    month: int,
+    day: int,
+    hour: int = 0,
+    minute: int = 0,
+    second: int = 0,
+    microsecond: int = 0,
+    zone: tzinfo | None = None,
+) -> datetime | None:
+    """The moment of a date and a time, None when the calendar or the clock has none (`2026-02-30`, `25:00`)."""
+    try:
+        return datetime(year, month, day, hour, minute, second, microsecond, tzinfo=zone)
+    except ValueError:
+        return None
+
+
+def _offset_minutes(moment: datetime) -> int | None:
+    shift = moment.utcoffset()
+    return None if shift is None else int(shift.total_seconds()) // 60
+
+
+def _as_iso_stamps(column: _Column, dates: DateCells) -> bool:
+    """ISO dates and timestamps (`read_dates`) with every digit and the offset as written (owner rule of 2026-10-15).
+
+    A fraction of up to nine digits stays (each cell padded to the column's longest fraction, which changes no value
+    and lets `pd.read_csv(parse_dates=...)` read the column as one format), and so does an offset (`Z`, `+01`, `+0100`,
+    `+01:00`, written `+01:00`; `Z` as `+00:00`). A column that mixes cells with and without an offset is not a date
+    column: no time is given a zone by guess. A column with several offsets (summer and winter time) is written in
+    UTC (`+00:00`) with a note naming the offsets, because pandas reads one offset per column; the instants stay.
+    """
+    zones = dates.offsets
     if None in zones and len(zones) > 1:
         return False
     mixed = len(zones) > 1
     if mixed:
         shown = ", ".join(_offset_text(value) for value in sorted(zone for zone in zones if zone is not None))
         column.notes.append(f"times with the UTC offsets {shown} written in UTC (+00:00); the instants are the same")
-    digits = max((len(fraction) for _, fraction in stamps.values()), default=0)
-    if digits > 6 and any(not _NS_RANGE[0] <= _naive_utc(stamp) <= _NS_RANGE[1] for stamp, _ in stamps.values()):
+    digits = max((len(fraction) for fraction in dates.fractions.values()), default=0)
+    if digits > 6 and any(not _NS_RANGE[0] <= _naive_utc(stamp) <= _NS_RANGE[1] for stamp in dates.moments.values()):
         # pandas holds a nanosecond only between 1677 and 2262: the loader's `parse_dates` would leave such a
         # column text without a word (review of #12196), so it is text here, said, with every digit.
         column.notes.append(NS_OUT_OF_RANGE)
         return False
-    column.with_time = any(":" in cell for cell in present)
+    column.with_time = dates.with_time
     texts: dict[str, str] = {}
-    for cell, (stamp, fraction) in stamps.items():
+    for cell, stamp in dates.moments.items():
         if mixed:
             stamp = stamp.astimezone(timezone.utc)
         if not column.with_time:
@@ -3719,14 +3876,14 @@ def _as_iso_stamps(column: _Column, present: list[str]) -> bool | None:
             continue
         text = stamp.replace(microsecond=0, tzinfo=None).isoformat(timespec="seconds")
         if digits:
-            text += "." + fraction.ljust(digits, "0")
+            text += "." + dates.fractions[cell].ljust(digits, "0")
         if stamp.tzinfo is not None:
-            text += _offset_text(0 if mixed else offsets[cell])
+            text += _offset_text(0 if mixed else _offset_minutes(stamp))
         texts[cell] = text
     column.dtype = "datetime"
-    column.dates = [stamps[cell][0] for cell in column.source if cell]
+    column.dates = [dates.moments[cell] for cell in column.source if cell]
     column.date_texts = [texts[cell] for cell in column.source if cell]
-    column.date_rests = [int((stamps[cell][1] + "000000000")[6:9]) for cell in column.source if cell]
+    column.date_rests = [int((dates.fractions[cell] + "000000000")[6:9]) for cell in column.source if cell]
     column.cells = [texts[cell] if cell else "" for cell in column.source]
     return True
 
@@ -3758,52 +3915,33 @@ def _offset_text(minutes: int | None) -> str:
 
 
 def _as_dates(column: _Column, present: list[str]) -> bool:
+    """A column of the date list (`read_dates`), typed when every cell reads; a column of days with a UTC offset
+    (`_offset_days`) stays text with its note."""
     if _offset_days(present):
         column.notes.append(OFFSET_DATES)
         return False
-    stamped = _as_iso_stamps(column, present)
-    if stamped is not None:
-        return stamped
-    kind, fields = "", None
-    for pattern, candidate in _DATE_FORMATS:
-        fields = _match_all(pattern, present)
-        if fields is not None:
-            kind = candidate
-            break
-    if fields is None:
-        return _as_periods(column, present)
-
-    day_first = True
-    if kind == "slash":
-        first_big = any(parts[0] > 12 for parts in fields.values())
-        second_big = any(parts[1] > 12 for parts in fields.values())
-        if first_big and second_big:
-            return False
-        day_first = not second_big
-        if not first_big and not second_big and any(parts[0] != parts[1] for parts in fields.values()):
-            column.notes.append(AMBIGUOUS_DATE_ORDER)
-
-    parsed: dict[str, datetime] = {}
-    for cell, parts in fields.items():
-        if kind == "iso":
-            year, month, day = parts[0], parts[1], parts[2]
-        elif day_first:
-            day, month, year = parts[0], parts[1], parts[2]
-        else:
-            month, day, year = parts[0], parts[1], parts[2]
-        try:
-            parsed[cell] = datetime(year, month, day, parts[3], parts[4], parts[5])
-        except ValueError:
-            return False
-    column.dtype = "datetime"
-    column.with_time = any(":" in cell for cell in present)
-    column.dates = [parsed[cell] for cell in column.source if cell]
-    column.cells = [_iso(parsed[cell], column.with_time) if cell else "" for cell in column.source]
+    dates = read_dates(present)
+    if dates.unread or not dates.moments:
+        return False
+    if dates.shape == "iso":
+        return _as_iso_stamps(column, dates)
+    if dates.shape in ("month", "month_name"):
+        return _as_periods(column, present, dates)
+    if dates.guessed:
+        column.notes.append(AMBIGUOUS_DATE_ORDER)
+    _typed_dates(column, dates.moments, dates.with_time)
     return True
 
 
+def _typed_dates(column: _Column, moments: Mapping[str, datetime], with_time: bool) -> None:
+    column.dtype = "datetime"
+    column.with_time = with_time
+    column.dates = [moments[cell] for cell in column.source if cell]
+    column.cells = [_iso(moments[cell], with_time) if cell else "" for cell in column.source]
+
+
 def _offset_days(present: list[str]) -> bool:
-    """Whether every cell is a calendar date followed directly by a UTC offset and no time (`DATE_OFFSET`).
+    """Whether every cell is a calendar date followed directly by a UTC offset in use and no time (`date_offset`).
 
     A date column holds a day without an offset or a moment with one: written as a date, the offset would be gone
     without a word, and written as midnight at that offset, a time nobody wrote would stand in it. A column that mixes
@@ -3813,7 +3951,7 @@ def _offset_days(present: list[str]) -> bool:
     if not present:
         return False
     for cell in present:
-        match = DATE_OFFSET.fullmatch(cell)
+        match = date_offset(cell)
         if match is None:
             return False
         try:
@@ -3823,16 +3961,16 @@ def _offset_days(present: list[str]) -> bool:
     return True
 
 
-def _as_periods(column: _Column, present: list[str]) -> bool:
+def _as_periods(column: _Column, present: list[str], dates: DateCells) -> bool:
     """Months (`2025-01`, `Nov 2026`) as dates, each its first day, with a note (live test round 7 of 2026-10-16).
 
     The month of `YYYY-MM` read as text made a monthly series' `x` fall on the GWh column, and the root
     converted it on request with `set_type` (`YYYY-MM`, the first day of each month); the parser now reads it
     the same way at the paste, and the note names the reading, so no value changes unannounced. A year from
-    `MONTH_YEARS` and a month from 1 to 12 in every cell, or the column stays text. So does a span that only
-    looks like a month (`_year_spans`: seasons `2009-10`, `2010-11`, five-year bins `2000-05`, `2005-10`), and
-    a column whose name says ids, codes or seasons (`ID_WORDS`, `SPAN_WORDS`): turning those into dates would
-    change what the cells mean.
+    `MONTH_YEARS` and a month from 1 to 12 in every cell (`read_dates`), or the column stays text. So does a
+    span that only looks like a month (`_year_spans`: seasons `2009-10`, `2010-11`, five-year bins `2000-05`,
+    `2005-10`), and a column whose name says ids, codes or seasons (`ID_WORDS`, `SPAN_WORDS`): turning those
+    into dates unasked would change what the cells mean. A request reads them by their shape alone.
 
     Since the live test of 2026-11-01 a month name with a four-digit year in every cell (`Nov 2026`,
     `Okt. 2026`, `2026 Nov`, `März 2026`, in the eleven languages of `months.py`, `months.month_year`) reads
@@ -3841,46 +3979,20 @@ def _as_periods(column: _Column, present: list[str]) -> bool:
     one cell of neither (`Total`), stays text, and so does a two-digit year (`Nov 26`, which is as often
     26 November).
 
-    Quarters (`2025-Q1`) stay text: as a date they would read `2025-01-01` and lose the spelling that says
-    quarter; `set_type` reads them on request.
+    Quarters (`2025-Q1`) are no form of the list: they stay text, as a request leaves them too, since as a date
+    they would lose the spelling that says quarter.
     """
     if column.id_like or column.span_like:
         return False
-    fields = _match_all(YEAR_MONTH, present)
-    how = "YYYY-MM"
-    if fields is not None and _year_spans(list(fields.values())):
+    if dates.shape == "month" and _year_spans([(moment.year, moment.month) for moment in dates.moments.values()]):
         return False
-    if fields is None:
-        fields = _month_years(present)
-        how = "a month name and a year"
-    if fields is None:
-        return False
-    low, high = MONTH_YEARS
-    if not all(low <= year <= high and 1 <= month <= 12 for year, month in fields.values()):
-        return False
-    firsts = {cell: datetime(year, month, 1) for cell, (year, month) in fields.items()}
-    column.dtype = "datetime"
-    column.with_time = False
-    column.dates = [firsts[cell] for cell in column.source if cell]
-    column.cells = [_iso(firsts[cell], False) if cell else "" for cell in column.source]
+    _typed_dates(column, dates.moments, False)
+    how = "YYYY-MM" if dates.shape == "month" else "a month name and a year"
     column.notes.append(f"{_count(len(present), 'cell')} read as months ({how}, each as the first day of the month)")
     return True
 
 
-def _month_years(cells: list[str]) -> dict[str, tuple[int, ...]] | None:
-    """Each distinct cell's year and month when every cell names a month and a year (`months.month_year`), else None."""
-    fields: dict[str, tuple[int, ...]] = {}
-    for cell in cells:
-        if cell in fields:
-            continue
-        found = month_year(cell)
-        if found is None:
-            return None
-        fields[cell] = found
-    return fields
-
-
-def _year_spans(pairs: list[tuple[int, ...]]) -> bool:
+def _year_spans(pairs: list[tuple[int, int]]) -> bool:
     """Whether every `YYYY-NN` names a span of years rather than a month: the second part is the last two digits
     of a year 1 to 12 after the first, the same distance in every cell (`2009-10` a season, `2000-05` a bin)."""
     gaps = {(number - year) % 100 for year, number in pairs}
