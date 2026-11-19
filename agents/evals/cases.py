@@ -60,11 +60,10 @@ from agents.anyplot.language import LANGUAGE_PATTERN, is_valid
 from agents.anyplot.schemas import Binding, ShownGroup, Theme
 from agents.anyplot.session_state import CatalogueSnapshot
 from agents.anyplot.settings import FIXTURE_PATTERN
-from agents.evals import replay
+from agents.evals import import_case, replay
 from core.constants import SUPPORTED_LIBRARIES
 
 
-PROMOTED_DIR = Path(__file__).resolve().parent / ".cases"
 Expected = Literal["accepted", "rejected", "unknown"]
 Origin = Literal["fixtures", "promoted"]
 EXPECTED: tuple[str, ...] = ("accepted", "rejected", "unknown")
@@ -405,8 +404,13 @@ def _bindings(value: Any, directory: Path) -> list[Binding] | None:
         raise CaseError(f"{directory}/case.json: invalid binding ({type(exc).__name__})") from exc
 
 
-def load_cases(fixtures_dir: Path = CASES_DIR, promoted_dir: Path = PROMOTED_DIR) -> list[EvalCase]:
-    """Every case of both sources, sorted by case id; a case id in both is an error."""
+def load_cases(fixtures_dir: Path = CASES_DIR, promoted_dir: Path | None = None) -> list[EvalCase]:
+    """Every case of both sources, sorted by case id; a case id in both is an error.
+
+    `promoted_dir` defaults to `import_case.promoted_cases_dir()`, resolved on each call rather than bound at import, so
+    the eval tests' fixture can point it at an empty temporary directory and a test never reads a visitor's case.
+    """
+    promoted_dir = import_case.promoted_cases_dir() if promoted_dir is None else promoted_dir
     cases: dict[str, EvalCase] = {}
     sources: tuple[tuple[Path, Origin], ...] = ((fixtures_dir, "fixtures"), (promoted_dir, "promoted"))
     for directory, origin in sources:

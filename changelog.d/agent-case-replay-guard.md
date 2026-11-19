@@ -26,3 +26,13 @@
   renders `--keep-attempts` kept, also for a case that has left `.cases/` since,
   and treats a report from before the change as pinned. A test in the API's
   tree holds the two lane forms to the routes that write them.
+- **No test reads the promoted cases any more.** Four eval tests (two static
+  runs of `matrix.main`, its no-match exit and a preflight's smoke pick)
+  called `load_cases()` with its default, which was bound at import to the
+  real `agents/evals/.cases/`, so in a checkout that holds promoted cases a
+  test run read a visitor's data into memory. The default is now read on each
+  call (`import_case.promoted_cases_dir`), an autouse fixture points it at an
+  empty temporary directory for every eval test, and the resolver refuses the
+  real directory in any process that has imported pytest, before anything
+  reads it, so a test anywhere in the suite that reaches it without the
+  fixture fails instead.

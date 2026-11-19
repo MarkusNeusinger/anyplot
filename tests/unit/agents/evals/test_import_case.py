@@ -512,7 +512,10 @@ class TestWhereItWrites:
         assert "python -m agents.evals.sync_cases" in err
 
     def test_writes_into_the_git_ignored_promoted_directory_by_default(self) -> None:
-        assert import_case.PROMOTED_DIR == Path(import_case.__file__).parent / ".cases"
+        """The default is `agents/evals/.cases/`, which git ignores; under pytest the eval fixture points
+        `PROMOTED_DIR` elsewhere, and the guard derives the real location from `EVALS_DIR`."""
+        assert import_case.EVALS_DIR / ".cases" == Path(import_case.__file__).resolve().parent / ".cases"
+        assert import_case.promoted_cases_dir() != import_case.EVALS_DIR / ".cases"
         ignored = (Path(import_case.__file__).parents[2] / ".gitignore").read_text()
         assert "agents/evals/.cases/" in ignored.splitlines()
 

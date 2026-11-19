@@ -89,6 +89,8 @@ from typing import Any
 
 EVALS_DIR = Path(__file__).resolve().parent
 PROMOTED_DIR = EVALS_DIR / ".cases"
+"""The git-ignored directory of the promoted cases, the harness's only default for it; read through
+`promoted_cases_dir` when it is used, never captured at import."""
 FIXTURES_DIR = EVALS_DIR / "fixtures" / "cases"
 MANIFEST_NAME = "manifest.json"
 REACTIONS = frozenset({"thumbs_up", "thumbs_down", "bug", "idea"})
@@ -111,6 +113,24 @@ MAX_CHANGE_REQUEST_CHARS = 600
 _EXPORT_LIBRARY = re.compile(
     r"\A(?P<marker>#|//) Adapted by anyplot\.ai from [a-z0-9-]+ \((?P<library>[a-z][a-z0-9]*)[ )]"
 )
+
+
+class RealCasesUnderTest(RuntimeError):
+    """A test reached the real promoted directory, which holds visitors' data."""
+
+
+def promoted_cases_dir() -> Path:
+    """`PROMOTED_DIR` as it stands when it is used, so a test can point it at a temporary directory.
+
+    The real directory holds visitors' data, so a process that has imported pytest never gets it: the eval tests point
+    `PROMOTED_DIR` at an empty temporary directory (`tests/unit/agents/evals/conftest.py`), and a test that reaches the
+    default without that fails here, before anything reads the directory.
+    """
+    if "pytest" in sys.modules and PROMOTED_DIR == EVALS_DIR / ".cases":
+        raise RealCasesUnderTest(
+            "a test reached the real agents/evals/.cases/: point import_case.PROMOTED_DIR at a temporary directory"
+        )
+    return PROMOTED_DIR
 
 
 class ImportRefused(ValueError):
@@ -458,7 +478,7 @@ def write_case(
     from agents.anyplot.settings import FIXTURE_PATTERN
     from agents.evals.cases import CaseError, load_case
 
-    promoted_dir = PROMOTED_DIR if promoted_dir is None else promoted_dir
+    promoted_dir = promoted_cases_dir() if promoted_dir is None else promoted_dir
     fixtures_dir = FIXTURES_DIR if fixtures_dir is None else fixtures_dir
     # Checked before the id becomes part of any path.
     if not re.fullmatch(FIXTURE_PATTERN, case_id):

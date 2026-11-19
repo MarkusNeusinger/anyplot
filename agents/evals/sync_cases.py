@@ -459,7 +459,7 @@ def main(argv: list[str] | None = None, *, store: CaseStore | None = None, cases
     if store is None:
         store = GcsCaseStore(bucket_name(args.bucket))
     if cases_dir is None:
-        cases_dir = import_case.PROMOTED_DIR
+        cases_dir = import_case.promoted_cases_dir()
     try:
         actions = asyncio.run(run(args, store, cases_dir))
     except TableUnavailable as exc:

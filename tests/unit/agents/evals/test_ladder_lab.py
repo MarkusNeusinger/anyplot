@@ -21,8 +21,8 @@ def test_a_promoted_case_never_opens_in_the_lab(tmp_path: Path, monkeypatch: pyt
     """Every lab call goes through the Claude Code CLI, which is not Vertex AI, so the lab must never hold a promoted
     case (`agents/evals/replay.py`). It opens cases from the committed fixtures alone: an id that only the promoted
     directory holds fails before any call, also when that directory is the one the harness reads."""
-    import agents.evals.cases as cases_module
     from agents.anyplot.dev_fixture import FixtureError
+    from agents.evals import import_case
 
     promoted = tmp_path / ".cases"
     case_dir = promoted / "case-invented-promoted"
@@ -30,7 +30,7 @@ def test_a_promoted_case_never_opens_in_the_lab(tmp_path: Path, monkeypatch: pyt
     fields = {"spec_id": "scatter-basic", "library": "matplotlib", "bindings": [], "expected": "rejected"}
     (case_dir / "case.json").write_text(json.dumps(fields), encoding="utf-8")
     (case_dir / "data.csv").write_text("a,b\n1,2\n", encoding="utf-8")
-    monkeypatch.setattr(cases_module, "PROMOTED_DIR", promoted)
+    monkeypatch.setattr(import_case, "PROMOTED_DIR", promoted)
 
     with pytest.raises(FixtureError, match="case-invented-promoted"):
         ladder_lab.open_case("case-invented-promoted")
