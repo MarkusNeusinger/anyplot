@@ -128,6 +128,17 @@ class TestCopy:
         assert copied.csv is original.csv  # the very string: nothing was written or read again
         assert store.get(copy_id, "s1") is None  # the copy is the other session's only
 
+    def test_a_copy_carries_no_change_of_the_view(self, store: DatasetStore, parsed: ParsedDataset) -> None:
+        """The copy is the target's first version: there is no step before it whose undo could bring a view back."""
+        cleared = ({"selections": [[{"column": "value", "test": "ge", "value": "1"}]]}, None)
+        source_id = store.put("s1", parsed, view_change=cleared)
+
+        copy_id = store.copy(source_id, "s1", "s2")
+
+        original, copied = store.get(source_id, "s1"), store.get(copy_id or "", "s2")
+        assert original is not None and original.view_change == cleared
+        assert copied is not None and copied.view_change is None
+
     def test_the_copy_is_independent_of_the_original(self, store: DatasetStore, parsed: ParsedDataset) -> None:
         source_id = store.put("s1", parsed)
         copy_id = store.copy(source_id, "s1", "s2")
