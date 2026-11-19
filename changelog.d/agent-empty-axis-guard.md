@@ -13,18 +13,18 @@
   next turn lists what the server can compute for it. The axis's own dates
   turned into numbers in their place ("the days since the start on x instead
   of the dates") still take it, and a column the request derives or converts
-  from text itself still takes the axis it names.
+  from text itself still takes the axis it names. (#13198)
 - **A plot selection that hides no row any more is cleared.** After "keep only
   these rows in the table", the old selection stayed in force on the plot. A
   change of the table now clears every selection that keeps all of its rows,
   however the change was written, with a line that says so; a top N stays, as
-  it still orders the rows.
+  it still orders the rows. (#13198)
 - **An undo also takes back what the step did to the plot's view.** Undoing
   "keep only these rows in the table" or an `apply_view` brought the table back
   but drew every row. The view from before the step now comes back with it, as
-  long as the view in force is still the one the step left.
+  long as the view in force is still the one the step left. (#13198)
 - **Two prep eval cases no longer fail correct answers.**
   `en-code-strip-plot-calls` adds seeded noise, so it needs the code tool
   again; `de-klasse-aus-vorzeichen` accepts the labels `1` and `2` beside
   `Klasse 1` and `Klasse 2`, through a new `also_accepted` field for a request
-  with two fair readings.
+  with two fair readings. (#13198)
