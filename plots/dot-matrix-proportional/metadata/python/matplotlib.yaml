@@ -2,56 +2,52 @@ library: matplotlib
 language: python
 specification_id: dot-matrix-proportional
 created: '2026-05-08T22:02:08Z'
-updated: '2026-05-08T22:36:16Z'
+updated: '2026-11-19T02:50:27Z'
 generated_by: claude-sonnet
-workflow_run: 25581288581
+workflow_run: 44446456053
 issue: 5241
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 82
 review:
   strengths:
-  - 'Perfect spec compliance: 10x10 grid, correct left-to-right fill order, legend
-    with counts and percentages'
-  - 'Correct Okabe-Ito palette in canonical order (#009E73, #D55E00, #0072B2) with
-    full theme-adaptive chrome in both renders'
-  - 'Excellent data quality: neutral, realistic remote work survey scenario with plausible
-    proportions (44/35/21)'
-  - Clean minimal dot matrix design — axes off, no grid, dots with background-matching
-    edge colors for visual separation
-  - 'KISS code structure: linear flow, no functions or classes, all imports used,
-    fully deterministic'
+  - Exactly 100 equal dots in a 10x10 grid, filled left to right and top to bottom,
+    with each category forming one contiguous run (44 / 35 / 21)
+  - Grid dimensions, the fill order and the neutral remainder are computed from df
+    (np.repeat over counts plus remainder, ceil(sqrt(total)) columns), so the chart
+    adapts to any total
+  - ax.set_aspect('equal') keeps dot spacing identical in both directions, and page-coloured
+    dot edges separate neighbours cleanly in both themes
+  - 'Legend lists each category with its count out of the total in an elevated theme-adaptive
+    frame; Imprint order starts with #009E73 and data colours are identical in both
+    renders'
+  - Canvas is exactly 3200x1800 with no bbox_inches='tight', and the mandated title
+    with its descriptive prefix sits at about two thirds of the width
   weaknesses:
-  - 'Code/image mismatch: current code is missing the subtitle (''Each dot represents
-    one employee, n=100''), the callout annotation highlighting the top-choice insight
-    (''Hybrid 44%''), and percentage values in the legend format — the images in plot_images/
-    appear to be from a prior run'
-  - 'DE-03 depends on annotation: without the callout annotation, the code scores
-    2/6 on data storytelling — data is displayed but the viewer is not guided to the
-    key insight'
-  - 'Canvas utilization: axes span ~47% of figure width in a 16:10 landscape, leaving
-    wide side margins — a square figsize (e.g., 12x12) would better suit the square
-    dot grid'
-  - 'DE-01 ceiling: good design but not publication-ready; reads as well-configured
-    matplotlib rather than distinctive infographic quality'
+  - 'VQ-05 (both): the dot grid occupies only about 34 % of the canvas width and 60
+    % of its height, leaving wide empty bands to the sides and above and below the
+    legend, so the dots read smaller than the canvas allows → let the grid use more
+    of the height (about 70–75 %, +10–15 points) by widening the axes'' vertical extent.
+    Likely cause: fig.subplots_adjust(top=0.84, bottom=0.2) together with left=0.2,
+    right=0.8.'
+  - 'Suggestion: add percentage annotations next to the counts in the legend (the
+    Notes allow them).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Remote Work Survey · dot-matrix-proportional · matplotlib · anyplot.ai" in dark ink at fontsize=24, clearly readable. Secondary subtitle "Each dot represents one employee (n = 100)" in smaller muted text. Legend below grid shows colored patches in light elevated frame with dark-ink text. All chrome elements readable.
-      Data: 10x10 dot matrix. First 44 dots = #009E73 green (Hybrid). Next 35 = #D55E00 orange (Fully Remote). Final 21 = #0072B2 blue (In-Office). Callout annotation "Hybrid 44% top choice" with arrow pointing to green/orange boundary. Dots use background-matching edge colors for separation.
-      Legibility verdict: PASS — all text clearly readable on warm off-white surface
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: title "Remote Work Survey · dot-matrix-proportional · python · matplotlib · anyplot.ai" in dark ink, about two thirds of the width, centred at the top. No axes, ticks or grid (correct for a layout-positioned dot matrix). Legend in one row below the grid in an off-white elevated frame with a soft-grey edge: "Hybrid — 44 / 100", "Fully Remote — 35 / 100", "In-Office — 21 / 100" in soft dark ink, all readable.
+      Data: 10x10 grid of 100 equal circles. First 44 #009E73 green (rows 1–4 plus 4 dots of row 5), next 35 #C475FD purple (ending at column 9 of row 8), last 21 #4467A3 blue. Even spacing in both directions; no remainder because the counts sum to the total.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, subtitle, annotation text, and legend labels all render in light-colored ink (#F0EFE8 range). Legend frame uses dark elevated background (#242420). No dark-on-dark failures detected — all text is light on dark. Tick labels N/A (axes off).
-      Data: Colors identical to light render — #009E73 green, #D55E00 orange, #0072B2 blue. Theme invariance confirmed. Callout annotation text also visible in light ink.
-      Legibility verdict: PASS — all text clearly readable on near-black surface; no dark-on-dark failures
-
-    Note: Images show subtitle and annotation NOT present in current code (code ends at line 83 without these elements). Images appear to be from a prior pipeline run. Legend format in images (44/100 (44%)) also differs from code format (44 / 100).
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title in light ink; legend frame #242420 with a light-grey edge and light-grey labels. No dark-on-dark text anywhere.
+      Data: identical colours and positions to the light render (green, purple, blue); only the chrome flips. Blue #4467A3 is the darkest mark but still clearly visible against the near-black page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,72 +58,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title fontsize=24, legend fontsize=20 explicitly set; all text readable
-          in both themes
+        comment: Title at the length-scaled 10 pt and legend at 9 pt, readable in
+          both themes; title about 67 % of the width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; annotation positioned in whitespace
+        comment: No text collisions; dots separated by even gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: s=1000 dots on 10x10 grid are large and clearly visible with background-matching
-          edge separation
+        comment: 100 dots at s=190 are prominent in both themes; legend swatches match
+          the dot colours
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three Okabe-Ito colors CVD-safe with strong luminance contrast
+        comment: Green, purple and blue differ in hue and lightness; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
-        passed: true
-        comment: Balanced layout but axes span ~47% figure width; wide side margins
-          in 16:10 for square grid
+        passed: false
+        comment: Canvas 3200x1800 exact, but the grid uses only about a third of the
+          width and 60 % of the height (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title; axes correctly off for dot matrix
+        comment: 'N/A: no axes for a layout-positioned dot matrix; descriptive title
+          prefix'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito canonical order; correct backgrounds #FAF8F1/#1A1A17;
-          data colors identical across themes'
+        comment: 'Imprint order from #009E73; backgrounds #FAF8F1/#1A1A17; data colours
+          identical across themes; remainder in neutral INK_MUTED'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above-default: styled legend frame, edge color separation, theme-adaptive
-          chrome; not yet publication-ready'
+        passed: false
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, elevated legend
+          frame; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: ax.axis off, no grid, dot edge highlighting; wide side margins reduce
-          score
+        passed: false
+        comment: Clean, but the generous empty margins around a small grid add no
+          refinement beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Images show top-choice callout annotation; absent from current code
-          (would be 2/6 for code alone)
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -137,26 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dot matrix
+        comment: Correct dot matrix, one dot per unit
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid layout, fill order, color coding, legend with counts and percentages
-          all present
+        comment: Grid matches total (10x10), uniform dots, left-to-right top-to-bottom
+          fill, legend with counts; neutral remainder coded (C5, not triggered by
+          this data)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 44+35+21=100 correctly mapped
+        comment: 44 + 35 + 21 = 100 dots, each run equal to its count
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id, library, anyplot.ai; legend labels correct
+        comment: Title 'Remote Work Survey · dot-matrix-proportional · python · matplotlib
+          · anyplot.ai'; legend labels readable with counts
     data_quality:
       score: 15
       max: 15
@@ -166,19 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three categories with varied proportions showcase format effectively
+        comment: Three categories of distinct size, runs ending partway through rows;
+          remainder is conditional and not needed
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Remote work preference survey — neutral contemporary business scenario
+        comment: 'Remote-work preference survey: neutral and plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 100 employees, 44/35/21 split is factually plausible
+        comment: 'Checked: counts sum to total 100 (line 32); legend counts match
+          the dot runs (44/35/21)'
     code_quality:
       score: 10
       max: 10
@@ -188,58 +188,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: Linear zones, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, mpatches, plt — all used
+        comment: os, mpatches, plt, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with list comprehensions
+        comment: Vectorised np.repeat fill and index arithmetic; nothing a shorter
+          form replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no deprecated API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: ax.scatter, mpatches.Patch, fig.subplots_adjust, bbox_to_anchor —
-          all idiomatic
+        passed: false
+        comment: Axes API throughout; ax.set_aspect('equal') to keep spacing even
+          and a single vectorised scatter with per-point colours, beyond the prompt's
+          baseline
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Scatter-based dot matrix with edgecolors for separation; mpatches
-          legend — recognizable matplotlib techniques
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-19T02:47:04Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - patches
   patterns:
-  - iteration-over-groups
+  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
-  - edge-highlighting
