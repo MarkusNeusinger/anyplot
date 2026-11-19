@@ -456,14 +456,14 @@ class TestWhereTheCaseMayReplay:
     @pytest.mark.parametrize(
         ("replaces", "recorded", "pinned"),
         [
-            (None, None, False),
-            ("20261118T080000Z-0a1b2c3d", "2026-11-18T08:00:00Z", True),  # corrects a case sent before the cut-off
-            ("20261119T080000Z-0a1b2c3d", "2026-11-19T08:00:00Z", False),
+            (None, "none", False),
+            ("20261118T080000Z-0a1b2c3d", "before_cutoff", True),  # corrects a case sent before the cut-off
+            ("20261119T080000Z-0a1b2c3d", "after_cutoff", False),
             ("not-a-case-id", "unknown", True),
             ("20261318T080000Z-0a1b2c3d", "unknown", True),  # month 13: no time to read
         ],
     )
-    def test_a_correction_records_when_the_case_it_corrects_was_sent_never_its_id(
+    def test_a_correction_records_a_closed_code_never_the_earlier_cases_id_or_second(
         self, tmp_path, promoted, replaces, recorded, pinned
     ) -> None:
         directory = _with_created_at(_case_dir(tmp_path, user_hash=PUBLIC_USER), "2026-11-19T09:00:00Z")
@@ -475,8 +475,8 @@ class TestWhereTheCaseMayReplay:
         assert main([str(directory), "--id", "corrected"]) == 0
 
         text = _written(promoted / "corrected")["case.json"]
-        assert json.loads(text)["replaces_sent_at"] == recorded
-        assert replaces is None or replaces not in text
+        assert json.loads(text)["earlier_case"] == recorded
+        assert replaces is None or (replaces not in text and replaces[:15] not in text and "2026-11-18" not in text)
         assert is_pinned(load_case(promoted / "corrected", "promoted")) is pinned
 
     def test_a_manifest_without_the_replaces_field_records_an_unknown_correction(self, tmp_path, promoted) -> None:
@@ -488,7 +488,7 @@ class TestWhereTheCaseMayReplay:
 
         assert main([str(directory), "--id", "nofield"]) == 0
 
-        assert json.loads(_written(promoted / "nofield")["case.json"])["replaces_sent_at"] == "unknown"
+        assert json.loads(_written(promoted / "nofield")["case.json"])["earlier_case"] == "unknown"
         assert is_pinned(load_case(promoted / "nofield", "promoted"))
 
 

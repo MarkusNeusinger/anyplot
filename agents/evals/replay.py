@@ -10,8 +10,9 @@ operator reads a case "with ai coding assistants and in tests with other ai mode
   wording was live) is *pinned*: it replays only on Claude through Vertex AI in location `eu`.
   The pin is on what the sentence named, the provider, the transport and the location, not on
   a model id: another Claude model on Vertex AI in `eu` is the same route;
-* so is a case that corrects one sent before the cut-off (`replaces`): a session lives in one
-  page load, so the correction came from a tab that showed the old consent line;
+* so is a case that corrects one sent before the cut-off (`earlier_case: before_cutoff`): a
+  session lives in one page load, so the correction came from a tab that showed the old consent
+  line;
 * a promoted case sent at or after the cut-off may replay on any route;
 * so may a case from the admin lane (`lane: "admin"`, which the importer reads from the
   prefix the BFF gives every admin's user id, `ADMIN_LANE_PREFIX`), and a case marked as
@@ -22,8 +23,8 @@ operator reads a case "with ai coding assistants and in tests with other ai mode
 
 The check fails closed. A promoted case whose `case.json` records no `sent_at`, or a send time
 later than now, is pinned: every case imported before the field existed, and every saved session
-bundle, which records no send time. So is one that records no `replaces_sent_at`, or records it
-as `unknown`. A case without a lane, or with a `user_hash` of neither known form, is no admin case.
+bundle, which records no send time. So is one that records no `earlier_case`, or records it as
+`unknown`. A case without a lane, or with a `user_hash` of neither known form, is no admin case.
 A matrix report's run record whose origin, send time, lane or correction is missing counts the
 same way.
 
@@ -67,8 +68,15 @@ _SENT_AT: Final = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9
 other scripts' digits."""
 CASE_ID: Final = re.compile(r"(?P<time>[0-9]{8}T[0-9]{6}Z)-[0-9a-f]{8}")
 """A stored case's id (`core.agent_cases.CASE_ID_PATTERN`), whose first part is the second it was sent."""
+EarlierCase = Literal["none", "before_cutoff", "after_cutoff", "unknown"]
+"""What a case corrects, as `earlier_case` records it: no earlier case, one sent before the cut-off, one sent at or
+after it, or a `replaces` that names no readable case. A closed code, never the earlier case's id or send second: an
+id begins with that second, which would point at another case of the same visitor."""
+EARLIER_CASES: Final[tuple[str, ...]] = get_args(EarlierCase)
 UNKNOWN: Final = "unknown"
-"""`replaces_sent_at` of a case whose manifest names a replaced case whose time cannot be read."""
+FREE_EARLIER_CASES: Final = frozenset({"none", "after_cutoff"})
+"""The `earlier_case` codes that leave a case free; every other value, `before_cutoff` and `unknown` among them,
+pins it."""
 PINNED_PROVIDER: Final = "anthropic-vertex"
 PINNED_TRANSPORT: Final = "vertex"
 PINNED_LOCATION: Final = "eu"
@@ -98,8 +106,6 @@ _LANE_IDS: Final[dict[Lane, re.Pattern[str]]] = {
     "admin": re.compile(re.escape(ADMIN_LANE_PREFIX) + r"[0-9a-f]{16}"),
     "public": re.compile(re.escape(PUBLIC_LANE_PREFIX) + r"[0-9a-f]{16}"),
 }
-Replaces = datetime | Literal["unknown"] | None
-"""What a case corrects: the send time of the case it replaces, `unknown`, or None when it replaces none."""
 
 
 @dataclass(frozen=True)
@@ -177,7 +183,7 @@ class Replayable(Protocol):
     def owner_chat(self) -> bool: ...
 
     @property
-    def replaces(self) -> Replaces: ...
+    def earlier_case(self) -> str: ...
 
     @property
     def saved_session(self) -> bool: ...
@@ -192,7 +198,7 @@ class RecordFacts:
     sent_at: datetime | None
     lane: str | None
     owner_chat: bool
-    replaces: Replaces
+    earlier_case: str
     saved_session: bool
 
 
@@ -222,32 +228,30 @@ def format_sent_at(value: datetime) -> str:
     return value.astimezone(UTC).strftime(SENT_AT_FORMAT)
 
 
-def replaced_sent_at(replaces: Any) -> Replaces:
-    """When the case a manifest's `replaces` names was sent: the time its id begins with, None for no replaced case,
-    `UNKNOWN` for a value that is not a case id or whose time cannot be read. Only the time is kept, never the id."""
+def earlier_case_of(replaces: Any) -> EarlierCase:
+    """The `earlier_case` code of a manifest's `replaces`, read against the cut-off at import: `none` without one,
+    `before_cutoff` or `after_cutoff` by the second the earlier case's id begins with, `unknown` for a value that is no
+    case id or names no readable second. Only the code is kept, so a moved cut-off needs the cases imported again."""
     if replaces is None:
-        return None
+        return "none"
     match = CASE_ID.fullmatch(replaces) if isinstance(replaces, str) else None
     if match is None:
         return UNKNOWN
     try:
-        return datetime.strptime(match.group("time"), "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
+        sent = datetime.strptime(match.group("time"), "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
     except ValueError:
         return UNKNOWN
+    return "before_cutoff" if sent < CUTOFF else "after_cutoff"
 
 
-def parse_replaces(value: Any, *, present: bool) -> Replaces:
-    """`replaces_sent_at` of `case.json` or of a run record: absent or `unknown` is `UNKNOWN`, null is no replaced case,
-    else a send time in the exact form; ValueError for any other value."""
-    if not present or value == UNKNOWN:
+def parse_earlier_case(value: Any, *, present: bool) -> str:
+    """`earlier_case` of `case.json` or of a run record: absent is `unknown`; ValueError for a value outside the
+    vocabulary (`EARLIER_CASES`)."""
+    if not present:
         return UNKNOWN
-    if value is None:
-        return None
-    return parse_sent_at(value)
-
-
-def format_replaces(value: Replaces) -> str | None:
-    return format_sent_at(value) if isinstance(value, datetime) else value
+    if value not in EARLIER_CASES:
+        raise ValueError(f"earlier_case must be one of {', '.join(EARLIER_CASES)}")
+    return str(value)
 
 
 def record_facts(record: dict[str, Any]) -> RecordFacts:
@@ -259,16 +263,16 @@ def record_facts(record: dict[str, Any]) -> RecordFacts:
     except ValueError:
         sent_at = None
     try:
-        replaces = parse_replaces(record.get("replaces_sent_at"), present="replaces_sent_at" in record)
+        earlier_case = parse_earlier_case(record.get("earlier_case"), present="earlier_case" in record)
     except ValueError:
-        replaces = UNKNOWN
+        earlier_case = UNKNOWN
     return RecordFacts(
         case_id=str(record.get("case_id")),
         origin=origin if isinstance(origin, str) else None,
         sent_at=sent_at,
         lane=lane if lane in LANES else None,
         owner_chat=record.get("owner_chat") is True,
-        replaces=replaces,
+        earlier_case=earlier_case,
         saved_session=record.get("saved_session") is True,
     )
 
@@ -282,8 +286,7 @@ def is_pinned(case: Replayable, *, now: datetime | None = None) -> bool:
         return False
     if case.owner_chat is True or case.lane == "admin":
         return False
-    replaces = case.replaces
-    if replaces == UNKNOWN or (isinstance(replaces, datetime) and (replaces < CUTOFF or replaces > now)):
+    if case.earlier_case not in FREE_EARLIER_CASES:
         return True
     return case.sent_at is None or case.sent_at < CUTOFF or case.sent_at > now
 
@@ -300,16 +303,16 @@ def _reason(case: Replayable, now: datetime) -> str:
     else:
         when = f"sent {format_sent_at(case.sent_at)}"
     parts = [when, "from the public lane" if case.lane == "public" else "no lane recorded"]
-    if case.replaces == UNKNOWN:
+    if case.earlier_case == "before_cutoff":
+        parts.append("it follows a case sent before the cut-off")
+    elif case.earlier_case not in FREE_EARLIER_CASES:
         parts.append("no readable record of whether it corrects an earlier case")
-    elif isinstance(case.replaces, datetime) and (case.replaces < CUTOFF or case.replaces > now):
-        parts.append(f"it corrects a case sent {format_sent_at(case.replaces)}")
     return ", ".join(parts)
 
 
 def _missing(case: Replayable) -> bool:
     """Whether importing the case again could add what pins it: a stored case imported before the fields existed."""
-    return not case.saved_session and (case.sent_at is None or case.lane is None or case.replaces == UNKNOWN)
+    return not case.saved_session and (case.sent_at is None or case.lane is None or case.earlier_case == UNKNOWN)
 
 
 def _cases(count: int) -> str:

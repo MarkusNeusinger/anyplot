@@ -148,11 +148,11 @@ def test_a_case_says_where_it_comes_from(tmp_path: Path) -> None:
         {"sent_at": "2026-11-12T07:40:27Z"},
         {"lane": "public"},
         {"owner_chat": False},
-        {"replaces_sent_at": None},
+        {"earlier_case": "none"},
         {"saved_session": True},
         {"tags": ["imported", "thumbs_down"]},
     ],
-    ids=["sent_at", "lane", "owner_chat", "replaces_sent_at", "saved_session", "imported-tag"],
+    ids=["sent_at", "lane", "owner_chat", "earlier_case", "saved_session", "imported-tag"],
 )
 def test_a_fixture_that_carries_what_only_an_imported_case_carries_is_refused(tmp_path: Path, fields: dict) -> None:
     """Such a case would replay anywhere as a synthetic one, and could be committed as a fixture."""
@@ -169,17 +169,19 @@ def test_a_send_time_needs_ascii_digits_padded_and_capitals(tmp_path: Path, valu
         load_case(_write(tmp_path / "odd", {**VALID, "sent_at": value}), "promoted")
 
 
-@pytest.mark.parametrize(
-    ("value", "replaces"),
-    [(None, None), ("unknown", "unknown"), ("2026-11-18T08:00:00Z", datetime(2026, 11, 18, 8, tzinfo=UTC))],
-)
-def test_a_promoted_case_reads_the_case_it_corrects(tmp_path: Path, value: object, replaces: object) -> None:
-    case = load_case(_write(tmp_path / "corrected", {**VALID, "replaces_sent_at": value}), "promoted")
+@pytest.mark.parametrize("value", ["none", "before_cutoff", "after_cutoff", "unknown"])
+def test_a_promoted_case_reads_what_it_corrects_as_a_closed_code(tmp_path: Path, value: str) -> None:
+    case = load_case(_write(tmp_path / "corrected", {**VALID, "earlier_case": value}), "promoted")
 
-    assert case.replaces == replaces
-    assert load_case(_write(tmp_path / "plain", VALID), "promoted").replaces == "unknown"  # absent fails closed
-    with pytest.raises(CaseError, match="replaces_sent_at must be"):
-        load_case(_write(tmp_path / "odd", {**VALID, "replaces_sent_at": "20261118T080000Z-0a1b2c3d"}), "promoted")
+    assert case.earlier_case == value
+    assert load_case(_write(tmp_path / "plain", VALID), "promoted").earlier_case == "unknown"  # absent fails closed
+
+
+@pytest.mark.parametrize("value", [None, "2026-11-18T08:00:00Z", "20261118T080000Z-0a1b2c3d", "Before_Cutoff"])
+def test_an_earlier_case_outside_the_vocabulary_is_refused(tmp_path: Path, value: object) -> None:
+    """Never a time or an id: an id begins with the second its case was sent."""
+    with pytest.raises(CaseError, match="earlier_case must be one of none, before_cutoff, after_cutoff, unknown"):
+        load_case(_write(tmp_path / "odd", {**VALID, "earlier_case": value}), "promoted")
 
 
 @pytest.mark.parametrize("value", ["owner", "Admin", "adm_0123456789abcdef", 1])

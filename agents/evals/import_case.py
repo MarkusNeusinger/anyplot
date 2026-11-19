@@ -37,9 +37,10 @@ else: a feedback case holds a user's data, and everything under
   `tags` `["imported", <reaction>]`; `source`, where the case came from; `sent_at`, when
   the feedback was sent, the manifest's `created_at`; `lane`, `admin` or `public`, the BFF
   lane that served the chat, read from the form of the manifest's `user_hash`
-  (`replay.lane_of`; the value itself is never copied); `replaces_sent_at`, the second
-  the case it corrects was sent, read from the manifest's `replaces` (null when it
-  corrects none, `unknown` when that value is no case id); and `owner_chat: true` only
+  (`replay.lane_of`; the value itself is never copied); `earlier_case`, a closed code for
+  what the case corrects, read from the manifest's `replaces` against the cut-off (`none`,
+  `before_cutoff`, `after_cutoff`, or `unknown` when that value names no readable case;
+  never the earlier case's id or send second); and `owner_chat: true` only
   with `--owner-chat`, which asserts that the case's data is your own. A bundle has no
   manifest, so its case records `saved_session: true` and neither a send time, a lane nor
   a correction. A case sent before 2026-11-19, or without `sent_at`, or one that corrects
@@ -425,7 +426,7 @@ def build_case(
     route; a saved session has no manifest and so no lane, and only the person who imports
     it can say whose data it holds.
     """
-    from agents.evals.replay import PINNED_ROUTE, UNKNOWN, format_replaces, lane_of, replaced_sent_at
+    from agents.evals.replay import PINNED_ROUTE, UNKNOWN, earlier_case_of, lane_of
     from core.constants import SUPPORTED_LIBRARIES
 
     raw_session = source.bundle.get("session")
@@ -484,10 +485,10 @@ def build_case(
     sent_at = sent_at_of(source)
     # The lane alone is kept, never the `user_hash` it is read from.
     lane = lane_of(source.manifest.get("user_hash")) if source.manifest is not None else None
-    # The second the replaced case was sent, never its id: the rule needs the time alone, and the case's own
-    # `sent_at` is already a second of the same kind, so the field names no other case and links nothing new.
-    replaces = (
-        format_replaces(replaced_sent_at(source.manifest.get("replaces")) if "replaces" in source.manifest else UNKNOWN)
+    # A closed code, never the earlier case's id or send second: a stored case's id begins with that second, so
+    # either would point at another case of the same visitor. The rule needs only which side of the cut-off it is on.
+    earlier_case = (
+        (earlier_case_of(source.manifest.get("replaces")) if "replaces" in source.manifest else UNKNOWN)
         if source.manifest is not None
         else None
     )
@@ -511,8 +512,8 @@ def build_case(
         "source": source.description,
         **({"sent_at": sent_at} if sent_at is not None else {}),
         **({"lane": lane} if lane is not None else {}),
-        # Always written for a stored case, null when it corrects none: a case without the field is pinned.
-        **({"replaces_sent_at": replaces} if source.manifest is not None else {}),
+        # Always written for a stored case: a case without the field is pinned.
+        **({"earlier_case": earlier_case} if earlier_case is not None else {}),
         **({"saved_session": True} if source.manifest is None else {}),
         **({"owner_chat": True} if owner_chat else {}),
     }

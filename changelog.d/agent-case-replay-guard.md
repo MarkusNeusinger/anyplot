@@ -15,8 +15,9 @@
   `sync_cases.py` record in `case.json` the manifest's `created_at` as
   `sent_at`, the lane its `user_hash` names (`admin` or `public`, by the exact
   form the BFF gives each lane's ids; the value itself is never copied), and
-  the second the corrected case was sent (`replaces_sent_at`, never its id);
-  the sync never sets the owner mark. The check fails closed: a case without
+  a closed code for what it corrects (`earlier_case`: `none`, `before_cutoff`,
+  `after_cutoff` or `unknown`, never the earlier case's id or send second, read
+  against the cut-off at import); the sync never sets the owner mark. The check fails closed: a case without
   those fields (every case imported before, every saved session), with a send
   time later than now, or with a `user_hash` of neither form is pinned, and a
   case under the fixtures that carries them is refused. It sits in

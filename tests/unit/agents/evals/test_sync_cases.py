@@ -253,7 +253,7 @@ class TestSync:
         assert case_json["sent_at"] == manifest_of(files)["created_at"] == "2026-10-12T14:30:05Z"
         assert case_json["lane"] == "admin" and manifest_of(files)["user_hash"] not in text
         assert "owner_chat" not in case_json
-        assert case_json["replaces_sent_at"] is None  # the stored case corrects none
+        assert case_json["earlier_case"] == "none"  # the stored case corrects none
 
     def test_a_case_with_the_turn_record_syncs_as_before(self, cases) -> None:
         """The manifest keeps the bundle's `turns`; the importer reads nothing of it."""

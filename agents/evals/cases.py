@@ -161,9 +161,9 @@ class EvalCase:
     of the `admin` lane may replay anywhere (`replay.is_pinned`)."""
     owner_chat: bool = False
     """`owner_chat: true` in `case.json`: the case holds the operator's own data and may replay anywhere."""
-    replaces: replay.Replaces = replay.UNKNOWN
-    """When the case this one corrects was sent (`replaces_sent_at` in `case.json`); None when it corrects none,
-    `unknown` when the case records neither, which pins it (`replay.is_pinned`)."""
+    earlier_case: str = replay.UNKNOWN
+    """What the case corrects (`earlier_case` in `case.json`, a code of `replay.EARLIER_CASES`); `unknown` when the case
+    records none, which pins it like `before_cutoff` (`replay.is_pinned`)."""
     saved_session: bool = False
     """`saved_session: true` in `case.json`: imported from a bundle `.save()` downloaded, which has no manifest."""
     snapshot_file: Path | None = field(default=None, repr=False)
@@ -175,7 +175,7 @@ class EvalCase:
         return snapshot_from_repo(self.spec_id, self.library)
 
 
-PROMOTED_FIELDS: tuple[str, ...] = ("sent_at", "lane", "owner_chat", "replaces_sent_at", "saved_session")
+PROMOTED_FIELDS: tuple[str, ...] = ("sent_at", "lane", "owner_chat", "earlier_case", "saved_session")
 """The `case.json` fields only an imported case carries; a fixture that has one, or the `imported` tag, is refused."""
 
 
@@ -247,11 +247,9 @@ def load_case(directory: Path, origin: Origin) -> EvalCase:
     if not isinstance(saved_session, bool):
         raise CaseError(f"{directory}/case.json: saved_session must be true or false")
     try:
-        replaces = replay.parse_replaces(raw.get("replaces_sent_at"), present="replaces_sent_at" in raw)
+        earlier_case = replay.parse_earlier_case(raw.get("earlier_case"), present="earlier_case" in raw)
     except ValueError as exc:
-        raise CaseError(
-            f"{directory}/case.json: replaces_sent_at must be null, unknown or a UTC time as YYYY-MM-DDTHH:MM:SSZ"
-        ) from exc
+        raise CaseError(f"{directory}/case.json: {exc}") from exc
     snapshot_file = directory / "snapshot.json"
     perturbation = raw.get("perturbation")
     return EvalCase(
@@ -276,7 +274,7 @@ def load_case(directory: Path, origin: Origin) -> EvalCase:
         sent_at=sent_at,
         lane=lane,
         owner_chat=owner_chat,
-        replaces=replaces,
+        earlier_case=earlier_case,
         saved_session=saved_session,
         snapshot_file=snapshot_file if snapshot_file.is_file() else None,
     )

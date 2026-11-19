@@ -29,11 +29,11 @@ from agents.evals.replay import (
     built_routes,
     check,
     checked_routes,
+    earlier_case_of,
     is_pinned,
     lane_of,
     parse_sent_at,
     record_facts,
-    replaced_sent_at,
     routes_of,
 )
 from agents.evals.report import summarize, summary_markdown
@@ -62,7 +62,7 @@ CORRECTION = "case-invented-correction"
 OWNER = "case-invented-owner"
 """Sent from the public lane before the cut-off, its data marked as the operator's own: free."""
 UNKNOWN = "case-invented-unknown"
-"""No `sent_at`, no `lane`, no `replaces_sent_at`, as every case imported before the fields: pinned."""
+"""No `sent_at`, no `lane`, no `earlier_case`, as every case imported before the fields: pinned."""
 SAVED = "session-invented-saved"
 """A saved session: no manifest, so no send time, lane or correction, ever: pinned."""
 FIXTURE = "scatter-basic-invented-fixture"
@@ -74,6 +74,8 @@ PINNED_ROUTES = tuple(
 NOT_CLAUDE = "the provider is not Claude on Vertex AI; the model is not a Claude model"
 GATEWAY = "https://gateway.invalid/v1"
 REAL_BUILT_ROUTES = built_routes
+FRESH = {"case_id": "x", "origin": "promoted", "sent_at": "2026-11-19T00:00:00Z"}
+"""A run record of a promoted case sent at the cut-off, to which a test adds what it checks."""
 
 
 def write_case(root: Path, case_id: str, **fields: object) -> Path:
@@ -89,13 +91,11 @@ def on_disk(tmp_path: Path) -> list[EvalCase]:
     """One fixture and seven promoted cases, loaded from `tmp_path` as the harness loads them."""
     fixtures, promoted = tmp_path / "fixtures", tmp_path / ".cases"
     write_case(fixtures, FIXTURE, tags=["smoke"])
-    write_case(promoted, ADMIN, sent_at="2026-11-02T10:00:00Z", lane="admin", replaces_sent_at=None)
-    write_case(promoted, AT, sent_at="2026-11-19T00:00:00Z", lane="public", replaces_sent_at=None)
-    write_case(promoted, BEFORE, sent_at="2026-11-18T23:59:59Z", lane="public", replaces_sent_at=None)
-    write_case(
-        promoted, CORRECTION, sent_at="2026-11-19T06:00:00Z", lane="public", replaces_sent_at="2026-11-18T08:00:00Z"
-    )
-    write_case(promoted, OWNER, sent_at="2026-11-02T10:00:00Z", lane="public", owner_chat=True, replaces_sent_at=None)
+    write_case(promoted, ADMIN, sent_at="2026-11-02T10:00:00Z", lane="admin", earlier_case="none")
+    write_case(promoted, AT, sent_at="2026-11-19T00:00:00Z", lane="public", earlier_case="none")
+    write_case(promoted, BEFORE, sent_at="2026-11-18T23:59:59Z", lane="public", earlier_case="none")
+    write_case(promoted, CORRECTION, sent_at="2026-11-19T06:00:00Z", lane="public", earlier_case="before_cutoff")
+    write_case(promoted, OWNER, sent_at="2026-11-02T10:00:00Z", lane="public", owner_chat=True, earlier_case="none")
     write_case(promoted, UNKNOWN)
     write_case(promoted, SAVED, saved_session=True)
     return load_cases(fixtures_dir=fixtures, promoted_dir=promoted)
@@ -116,7 +116,7 @@ class TestTheRule:
     def test_a_promoted_case_without_its_fields_is_pinned(self, on_disk) -> None:
         case = by_id(on_disk)[UNKNOWN]
 
-        assert (case.sent_at, case.lane, case.replaces) == (None, None, "unknown") and is_pinned(case, now=NOW)
+        assert (case.sent_at, case.lane, case.earlier_case) == (None, None, "unknown") and is_pinned(case, now=NOW)
 
     def test_a_send_time_later_than_now_is_no_send_time(self, on_disk) -> None:
         future = replace(by_id(on_disk)[AT], sent_at=NOW + timedelta(seconds=1))
@@ -128,16 +128,17 @@ class TestTheRule:
         correction = by_id(on_disk)[CORRECTION]
 
         assert correction.sent_at is not None and correction.sent_at >= CUTOFF
-        assert correction.replaces == CUTOFF - timedelta(hours=16) and is_pinned(correction, now=NOW)
-        assert not is_pinned(replace(correction, replaces=CUTOFF), now=NOW)
-        assert is_pinned(replace(correction, replaces="unknown"), now=NOW)
-        assert not is_pinned(replace(correction, replaces=None), now=NOW)
+        assert correction.earlier_case == "before_cutoff" and is_pinned(correction, now=NOW)
+        assert not is_pinned(replace(correction, earlier_case="after_cutoff"), now=NOW)
+        assert is_pinned(replace(correction, earlier_case="unknown"), now=NOW)
+        assert not is_pinned(replace(correction, earlier_case="none"), now=NOW)
+        assert is_pinned(replace(correction, earlier_case="other"), now=NOW)  # outside the vocabulary pins
 
     def test_the_admin_lane_frees_a_case_whenever_it_was_sent(self, on_disk) -> None:
         case = by_id(on_disk)[ADMIN]
 
         assert case.lane == "admin" and case.sent_at is not None and case.sent_at < CUTOFF
-        assert not is_pinned(case, now=NOW) and not is_pinned(replace(case, replaces="unknown"), now=NOW)
+        assert not is_pinned(case, now=NOW) and not is_pinned(replace(case, earlier_case="unknown"), now=NOW)
 
     def test_the_owner_mark_frees_a_case_whenever_it_was_sent(self, on_disk) -> None:
         case = by_id(on_disk)[OWNER]
@@ -159,21 +160,12 @@ class TestTheRule:
         [
             ({"case_id": "x"}, True),  # defensive: no origin
             ({"case_id": "x", "origin": "promoted"}, True),  # a promoted run of a report from before the rule
-            ({"case_id": "x", "origin": "promoted", "sent_at": "2026-11-18T23:59:59Z", "replaces_sent_at": None}, True),
-            (
-                {"case_id": "x", "origin": "promoted", "sent_at": "2026-11-19T00:00:00Z", "replaces_sent_at": None},
-                False,
-            ),
-            ({"case_id": "x", "origin": "promoted", "sent_at": "2026-11-19T00:00:00Z"}, True),  # no correction field
-            (
-                {
-                    "case_id": "x",
-                    "origin": "promoted",
-                    "sent_at": "2026-11-19T00:00:00Z",
-                    "replaces_sent_at": "2026-11-18T00:00:00Z",
-                },
-                True,
-            ),
+            ({**FRESH, "sent_at": "2026-11-18T23:59:59Z", "earlier_case": "none"}, True),
+            ({**FRESH, "earlier_case": "none"}, False),
+            (FRESH, True),  # no earlier_case: unknown
+            ({**FRESH, "earlier_case": "before_cutoff"}, True),
+            ({**FRESH, "earlier_case": "after_cutoff"}, False),
+            ({**FRESH, "earlier_case": "2026-11-18"}, True),  # outside the vocabulary
             ({"case_id": "x", "origin": "promoted", "sent_at": "2026-11-19T00:00:00+00:00"}, True),  # not the form
             ({"case_id": "x", "origin": "promoted", "owner_chat": True}, False),
             ({"case_id": "x", "origin": "promoted", "owner_chat": "true"}, True),  # exactly true, nothing else
@@ -195,8 +187,8 @@ class TestTheRule:
             assert facts == (case.origin, case.lane, case.owner_chat, case.saved_session)
             assert is_pinned(record_facts(record), now=NOW) is is_pinned(case, now=NOW), case.case_id
         assert base_record(by_id(on_disk)[BEFORE], 1)["sent_at"] == "2026-11-18T23:59:59Z"
-        assert base_record(by_id(on_disk)[CORRECTION], 1)["replaces_sent_at"] == "2026-11-18T08:00:00Z"
-        assert base_record(by_id(on_disk)[UNKNOWN], 1)["replaces_sent_at"] == "unknown"
+        assert base_record(by_id(on_disk)[CORRECTION], 1)["earlier_case"] == "before_cutoff"
+        assert base_record(by_id(on_disk)[UNKNOWN], 1)["earlier_case"] == "unknown"
         assert base_record(by_id(on_disk)[FIXTURE], 1)["sent_at"] is None
 
     def test_the_send_time_has_the_manifests_form(self) -> None:
@@ -223,10 +215,11 @@ class TestTheRule:
             parse_sent_at(value)
 
     @pytest.mark.parametrize(
-        ("replaces", "sent"),
+        ("replaces", "code"),
         [
-            (None, None),
-            ("20261118T080000Z-0a1b2c3d", datetime(2026, 11, 18, 8, 0, 0, tzinfo=UTC)),
+            (None, "none"),
+            ("20261118T235959Z-0a1b2c3d", "before_cutoff"),
+            ("20261119T000000Z-0a1b2c3d", "after_cutoff"),  # the cut-off's own second
             ("20261118T080000Z-0A1B2C3D", "unknown"),  # not the id's form
             ("20261318T080000Z-0a1b2c3d", "unknown"),  # month 13: no time
             ("20261118T080000Z", "unknown"),
@@ -234,8 +227,8 @@ class TestTheRule:
             (17, "unknown"),
         ],
     )
-    def test_the_replaced_case_counts_by_the_second_its_id_begins_with(self, replaces, sent) -> None:
-        assert replaced_sent_at(replaces) == sent
+    def test_the_earlier_case_is_a_closed_code_by_the_side_of_the_cut_off(self, replaces, code) -> None:
+        assert earlier_case_of(replaces) == code
 
 
 def replace(case: EvalCase, **fields: object) -> EvalCase:
@@ -343,8 +336,8 @@ class TestTheCheck:
             "its sender was told about, and so does a correction of such a case, unless it comes from the admin lane "
             "or you marked its data as your own.\n"
             "  case-invented-before: sent 2026-11-18T23:59:59Z, from the public lane.\n"
-            "  case-invented-correction: sent 2026-11-19T06:00:00Z, from the public lane, it corrects a case sent "
-            "2026-11-18T08:00:00Z.\n"
+            "  case-invented-correction: sent 2026-11-19T06:00:00Z, from the public lane, it follows a case sent "
+            "before the cut-off.\n"
             "  case-invented-unknown: no send time recorded, no lane recorded, no readable record of whether it "
             "corrects an earlier case.\n"
             "This run resolved this model call to another route:\n"
@@ -567,7 +560,8 @@ class TestTheMatrix:
             "setup: 3 pinned eval cases may replay only on Claude by Anthropic through Vertex AI in location eu"
         ), err
         assert f"  {BEFORE}: sent 2026-11-18T23:59:59Z, from the public lane.\n" in err
-        assert f"  {CORRECTION}: sent 2026-11-19T06:00:00Z, from the public lane, it corrects a case sent " in err
+        correction = f"  {CORRECTION}: sent 2026-11-19T06:00:00Z, from the public lane, it follows a case sent before"
+        assert f"{correction} the cut-off.\n" in err
         assert f"  {route}" in err
         assert not (tmp_path / "out").exists()
 
@@ -662,14 +656,14 @@ class TestTheScorer:
         "origin": "promoted",
         "sent_at": "2026-11-18T23:59:59Z",
         "lane": "public",
-        "replaces_sent_at": None,
+        "earlier_case": "none",
     }
     FREE = {
         "case_id": AT,
         "origin": "promoted",
         "sent_at": "2026-11-19T00:00:00Z",
         "lane": "public",
-        "replaces_sent_at": None,
+        "earlier_case": "none",
     }
     OLD = {"case_id": UNKNOWN, "origin": "promoted"}
     """A promoted run of a report from before the rule: `origin` (since #12116), and nothing the rule reads."""
@@ -772,7 +766,7 @@ class TestTheScorer:
         """For the bindings, by id from the record's origin, and no other stored case: the directory is not listed."""
         promoted = tmp_path / ".cases"
         for case_id in (AT, "case-invented-other"):
-            write_case(promoted, case_id, sent_at="2026-11-19T00:00:00Z", lane="public", replaces_sent_at=None)
+            write_case(promoted, case_id, sent_at="2026-11-19T00:00:00Z", lane="public", earlier_case="none")
         monkeypatch.setattr(cases_module.import_case, "PROMOTED_DIR", promoted)
         read: list[Path] = []
         real_load_case = cases_module.load_case

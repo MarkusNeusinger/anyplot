@@ -99,7 +99,7 @@ ends with exit code 2 before the preflight and names each pinned case and each r
 that leaves the pin. `--skip-pinned` leaves those cases out instead and prints their ids
 to stderr; the stamp records only how many (`pinned_left_out`), and such a run is never
 saved as a baseline. Each run record carries the case's `origin`, `sent_at`, `lane`,
-`owner_chat`, `replaces_sent_at` and `saved_session`, so `score.py` can apply the same
+`owner_chat`, `earlier_case` and `saved_session`, so `score.py` can apply the same
 rule to the renders `--keep-attempts` kept.
 
 With a baseline (`--baseline FILE`, by default `agents/evals/baselines/<pinned model>.json`
@@ -750,11 +750,11 @@ def parse_events(chunks: list[tuple[float, bytes]], started: float) -> list[Even
 def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
     """A run record before the run: every field the report reads, with its empty value.
 
-    `origin`, `sent_at`, `lane`, `owner_chat`, `replaces_sent_at` and `saved_session` are what `replay.is_pinned`
+    `origin`, `sent_at`, `lane`, `owner_chat`, `earlier_case` and `saved_session` are what `replay.is_pinned`
     reads, so `score.py` can apply the same rule to the renders `--keep-attempts` kept, also after the case itself has
     left `.cases/`.
     """
-    from agents.evals.replay import format_replaces, format_sent_at
+    from agents.evals.replay import format_sent_at
 
     return {
         "case_id": case.case_id,
@@ -768,7 +768,7 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "sent_at": format_sent_at(case.sent_at) if case.sent_at is not None else None,
         "lane": case.lane,
         "owner_chat": case.owner_chat,
-        "replaces_sent_at": format_replaces(case.replaces),
+        "earlier_case": case.earlier_case,
         "saved_session": case.saved_session,
         "status": "harness_error",
         "reason": None,
