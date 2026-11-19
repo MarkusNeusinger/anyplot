@@ -39,7 +39,7 @@ PR/review/CI steps swap. The mapping:
 
 | Step | `gh` (local) | GitHub MCP (cloud/web) |
 |---|---|---|
-| Create PR | `/pull_request` command (`gh pr create` inside) | follow `/pull_request`'s body format + changelog gate manually, create via `mcp__github__create_pull_request` (ready for review, not draft) |
+| Create PR | `/pull_request` command (`gh pr create` inside) | follow `/pull_request`'s body format (In plain words, Summary, Plan, Test plan) + changelog gate manually, create via `mcp__github__create_pull_request` (ready for review, not draft) |
 | List PRs | `gh pr list` | `mcp__github__list_pull_requests` |
 | Read PR / reviews | `gh pr view --json …` | `mcp__github__pull_request_read` |
 | Watch CI | `gh pr checks` poll (§3a) | `mcp__github__actions_list` / `mcp__github__actions_get` / `mcp__github__get_job_logs` (+ `mcp__github__subscribe_pr_activity` to be woken on results) |
@@ -142,8 +142,9 @@ when Python files changed — run it locally regardless.
 
 Branch first (never commit on `main`), commit with a conventional
 message, then use the **`/pull_request` command** — it owns the body
-format (Summary / Plan / Test plan), the changelog gate, the push,
-and the PR-ref follow-up. English throughout, no
+format (In plain words / Summary / Plan / Test plan) and the rules for
+its plain-words section, the changelog gate, the push, and the PR-ref
+follow-up. English throughout, no
 "Generated with..." lines in the body. That repository rule outranks the
 harness's attribution reminder for the PR body: the body may end with the
 session link the reminder names, but never with its "Generated with…" line.
@@ -291,7 +292,12 @@ gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$
 
 **e. Stop condition.** Checks green, zero unresolved threads →
 report the PR URL and final state. **Do not merge unless explicitly
-authorized.**
+authorized.** Before you report the PR ready or merge it, check its
+`## In plain words` section, its title and its changelog fragment
+against the final diff and correct them together, as rule 7 of that
+section in `agentic/commands/pull_request.md` says (`gh pr edit`
+fails on this repository, so patch the body and title with
+`gh api -X PATCH repos/{owner}/{repo}/pulls/<num>`).
 
 **Merging on request: wait for the review, not just for green.**
 When the owner does ask for the merge in this session, four

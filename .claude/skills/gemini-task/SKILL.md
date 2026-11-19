@@ -438,6 +438,12 @@ This section is for the Gemini agent in the owner's agy session.
    PR format, so Claude can ship it without rewriting it:
 
    ```markdown
+   ## In plain words
+   What a person ran into before, what happens now, and how it is solved,
+   for a reader who does not know the code.
+
+   **What you would notice:** who notices what, and where.
+
    ## Summary
    - What changed and why, one bullet per change; name every file outside
      the task's Constraints and the gate that made you touch it.
@@ -466,8 +472,10 @@ This section is for the Gemini agent in the owner's agy session.
    - The steps still open and your questions, or "None".
    ```
 
-   For an issue, the body starts with `Closes #<number>`, and `## Plan` reads
-   `Issue #<number>.` On a branch shared by several packages, `## Plan` keeps
+   Write `## In plain words` by the rules in `agentic/commands/pull_request.md`.
+   For an issue, `## Plan` reads `Closes #<number>.`, since the body opens
+   with the plain-words section and GitHub reads the closing keyword anywhere
+   in it. On a branch shared by several packages, `## Plan` keeps
    one `<details>` block per package and a line per finished package with its
    last commit.
 
@@ -592,7 +600,10 @@ This section is for the Gemini agent in the owner's agy session.
    the Gemini model of the owner's interactive agy session (name the one that
    ran, Gemini 4 Carbon unless he says otherwise) and reviewed by Claude, with
    the defects the review found and the commits that fixed them.
-   This is provenance for the reviewer, not a "Generated with" footer. Then
+   This is provenance for the reviewer, not a "Generated with" footer. After
+   the review, check the `## In plain words` section against the final diff
+   and rewrite it where it no longer holds, because Gemini writes it before
+   the review rounds change the diff. Then
    `gh pr ready <pr>` starts the Copilot review; follow the
    PR through as `/open-pr` describes. Merge only on the owner's explicit OK in
    the session.
