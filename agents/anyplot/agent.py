@@ -8,7 +8,9 @@
   versions of the data that `prepare_data` and `query_data` can start from (their change
   lines fenced, since they name the user's columns), the
   conversions that would fill a required role left open (`data/conversions.py`, their
-  lines fenced, since they name the user's columns), whether
+  lines fenced, since they name the user's columns), the roles this turn's own change of the
+  data left without the column they were bound to, for the rest of the turn (`data/emptied.py`,
+  the columns fenced), whether
   the user pasted notes with the data (a fixed line, never the notes), plot
   versions and the latest version's theme, so a change keeps it, and the plot memory's
   entries with their ids, inside a `<tool_notes>` fence). The root's
@@ -55,6 +57,7 @@ from google.genai import types
 from . import telemetry
 from .data.bindings import check_bindings
 from .data.conversions import candidates
+from .data.emptied import Emptied
 from .dataset_versions import kept_versions, version_lines
 from .dev_fixture import DevFixturePlugin
 from .language import english_name, same_language
@@ -130,6 +133,16 @@ CONVERSIONS_HEADING = (
 )
 """The session block's line over the conversion candidates of the roles left open (`data/conversions.py`), live test
 of 2026-11-01: the root asked the user for a date column that a conversion of the `Month` text would have made."""
+EMPTIED_HEADING = (
+    "Roles this turn's change of the data left without the column they were bound to: {count}, listed below with that "
+    "column. Say in the reply which role lost its column and that the plot waits for one. In this turn no conversion "
+    "or row number is made for them and none takes a role, which the server refuses: the next turn lists what it can "
+    "compute for them (see 'Step 1: the data')"
+)
+"""The session block's line over the required roles a `prepare_data` call of this turn left open that were bound
+before it (`data/emptied.py`), for every later model call of the turn while they stay open. Without it the root saw
+only "missing roles" and filled the axis with a column nobody asked for; the line is the fact the reply states, and
+the guard in the tools holds whatever the root tries all the same."""
 MADE_HEADING = (
     "Conversions the server made for open roles before this turn: {count}, in a data version of their own, which "
     "the summary of this turn names as your own change, each with its count and its new column's name; the original "
@@ -302,6 +315,17 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(
                 f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid{BINDINGS_HINT}"
             )
+        turn_ledger = CURRENT_LEDGER.get()
+        lost = [
+            Emptied(role, column)
+            for role, column in (turn_ledger.emptied_roles.items() if turn_ledger is not None else [])
+            if role in check.missing_roles
+        ]
+        if lost:
+            # The roles this turn's own change of the data left open (`data/emptied.py`), while they still are; the
+            # columns they were bound to are the user's, so they stand inside a data fence.
+            lines.append(f"- {EMPTIED_HEADING.format(count=len(lost))}")
+            lines.append(fence("user_data", "\n".join(item.line() for item in lost)))
         by_user = user_bound(context.state, view.bindings)
         if by_user:
             lines.append(USER_BOUND_LINE.format(count=len(by_user)))

@@ -392,6 +392,17 @@ class RequestLedger:
     rebuilt_from: list[int] = field(default_factory=list)
     """The numbers of the earlier versions this turn's `prepare_data` calls started from (`from_version`): a rebuild
     changed the data also without an operation, which `prep_ops` would not show."""
+    emptied_roles: dict[str, str] = field(default_factory=dict)
+    """The required roles a `prepare_data` call of this turn left without the column they were bound to, each with
+    that column (`data/emptied.py`): from then on the turn makes no conversion and binds none it made, and the session
+    block lists the ones still open. Role names and the user's column names, never sent anywhere but that block."""
+    made_columns: list[str] = field(default_factory=list)
+    """The new columns this turn's `prepare_data` conversions made that the current table still has, under their
+    current names (`emptied.made_columns`): what the guard on an emptied role keeps off every role."""
+    guard_held: list[str] = field(default_factory=list)
+    """The names of the tool calls the guard on an emptied role refused before they stored anything
+    (`data/emptied.py`): they count against none of the turn's caps (`calls_of`), so the root can still make the
+    change the user asked for in its two calls."""
     capability_gaps: list[str] = field(default_factory=list)
     """The families of the `unsupported` operations the root named in this turn: a data change no operation can make
     (closed: `telemetry.CAPABILITY_GAPS`), never a word of what the user asked."""
@@ -460,8 +471,9 @@ class RequestLedger:
             step.input += tokens  # no split reported: the plain total counts as input
 
     def calls_of(self, tool: str) -> int:
-        """How many calls of `tool` ToolSafety allowed in this turn (`tools`): what every per-turn cap counts."""
-        return self.tools.count(tool)
+        """How many calls of `tool` ToolSafety allowed in this turn (`tools`), less the ones the guard on an emptied
+        role refused (`guard_held`): what every per-turn cap counts."""
+        return self.tools.count(tool) - self.guard_held.count(tool)
 
     def open_call(
         self, key: str, tool: str, verdict: str, *, refused: CallOutcome = "refused", shape: "CallShape | None" = None
