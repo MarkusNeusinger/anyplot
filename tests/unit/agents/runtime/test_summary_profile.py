@@ -28,6 +28,7 @@ from agents.anyplot.agent import (
     session_context,
 )
 from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.dataset_versions import replaced_earlier_data
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.plugins.tool_safety import RESULT_KEYS, result_size
 from agents.anyplot.policy import DATA_PREAMBLE, FENCE_TAGS
@@ -231,6 +232,62 @@ async def test_the_servers_conversions_show_in_the_profile_of_the_first_call(
     [seen] = blocks(fake)
     assert '"name":"Year (date)"' in field(seen, "profile")
     assert read_session(await _session_state(client, sid)).dataset_version == 2
+
+
+async def test_a_paste_after_computed_data_is_named_as_replacing_it(client: httpx.AsyncClient, swap_models) -> None:
+    """A table `generate_data` computed in a session without data is the session's first data, numbered 1, so the
+    paste after it replaced data the session held, though no paste came before it."""
+    fake = swap_models("anthropic-vertex", default_script())
+    curve = {"variables": [{"name": "x", "start": "0", "stop": "1"}], "series": [{"name": "y", "expression": "x**2"}]}
+    root_says(
+        fake,
+        {"call": "generate_data", "args": curve},
+        {"text": "y = x² from 0 to 1."},
+        {"text": "4 rows; x is Stunden, y is Punkte."},
+    )
+    sid = await open_spec(client, "scatter-basic")
+    await say(client, sid, {"text": "Plot y = x squared from 0 to 1."})
+    assert read_session(await _session_state(client, sid)).dataset_version == 1
+    assert (await paste(client, sid, HOURS))["version"] == 2
+
+    await say(client, sid, {"action": "summarize_data"})
+
+    assert f"{PASTED_LINE}{REPLACED_DATA_LINE}\n" in blocks(fake)[-1]
+
+
+async def test_an_original_that_left_the_store_names_no_replaced_data(services: Services) -> None:
+    """The original is the fact: without it the block says nothing about earlier data, and never reads the current
+    number instead, which the version made from a first paste (here 2) raises above 1."""
+    store = services.datasets
+    original = store.put("s1", parse_dataset(HOURS), number=1)
+    current = store.put("s1", parse_dataset(HOURS), number=2)
+    assert store.delete(original, "s1")
+    state = initial_state(
+        spec_id="scatter-basic",
+        library="matplotlib",
+        locale="en",
+        snapshot=snapshot_from_repo("scatter-basic", "matplotlib"),
+        normalised="x = 1",
+        readiness={},
+    )
+    state.update(
+        {
+            DATASET_ID: current,
+            DATASET_ORIGINAL: original,
+            DATASET_VERSION: 2,
+            DATASET_TOP: 2,
+            SUMMARY_PENDING: current,
+            BINDINGS: [{"role": "x", "column": "Stunden"}, {"role": "y", "column": "Punkte"}],
+        }
+    )
+    view = read_session(state)
+    assert view is not None
+
+    assert replaced_earlier_data(store, "s1", view) is False
+    block = await session_context(
+        cast(Any, SimpleNamespace(state=state, session=SimpleNamespace(id="s1", events=[]), invocation_id="i1"))
+    )
+    assert f"{PASTED_LINE}\n" in block and REPLACED_DATA_LINE not in block
 
 
 class TestFence:
