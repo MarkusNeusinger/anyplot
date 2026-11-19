@@ -2,49 +2,56 @@ library: altair
 language: python
 specification_id: dot-matrix-proportional
 created: '2026-05-08T22:07:47Z'
-updated: '2026-05-08T22:24:32Z'
+updated: '2026-11-19T02:51:50Z'
 generated_by: claude-sonnet
-workflow_run: 25581288965
+workflow_run: 44446105205
 issue: 5241
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 84
 review:
   strengths:
-  - 'Perfect spec compliance: 10x10 grid with correct left-to-right top-to-bottom
-    category fill'
-  - All font sizes explicitly set; both light and dark renders fully readable with
-    no legibility failures
-  - Correct Okabe-Ito palette with perfect theme-adaptive chrome; backgrounds and
-    text flip correctly
-  - Vega labelExpr in legend is a distinctive Altair-only technique that adds informative
-    count annotations
+  - Every dot is one attendee in a 10x10 grid with uniform size and spacing, filled
+    left to right and top to bottom so each response forms one readable run
+  - Legend labels carry each category's count ('Agree — 58'), built in pandas and
+    mapped through an explicit Scale domain/range
+  - Subtitle states the unit key '1 dot = 1 attendee' alongside the survey question
+  - Theme tokens threaded through title, subtitle, legend card and view in both renders;
+    output padded to the canonical 2400x2400 canvas
+  - Native Vega-Lite tooltip per dot in the HTML output
   weaknesses:
-  - DE-03 storytelling is minimal — dominant green proportion is naturally visible
-    but no visual technique actively draws attention to the majority insight (no percentage
-    labels, callout, or annotation on the majority block)
-  - 'DE-01 polish: chart is clean but lacks distinctive design flair to elevate beyond
-    a well-configured default (no dot edge highlights, no refined legend placement
-    integrated with the grid)'
+  - 'VQ-07 (both): the ordered Likert levels Agree / Neutral / Oppose are drawn in
+    categorical green #009E73, purple #C475FD and blue #4467A3, which presents them
+    as unrelated groups → diverging steps in their order: Agree #009E73, Neutral in
+    the muted anchor (#6B6A63 light / #A8A79F dark), Oppose #AE3030. Likely cause:
+    scale range taken from IMPRINT_PALETTE[i] by position.'
+  - 'VQ-05 (both): the 10x10 grid and the legend sit left-anchored under the wide
+    title, leaving about 28 % of the canvas width empty to the right of the grid →
+    a balanced layout with the grid centered or widened to use the space (for example
+    width/height about 480 instead of 400). Likely cause: properties(width=400, height=400)
+    while the title sets the bundle width, plus title anchor=''start''.'
+  - 'Suggestion: the remainder color NEUTRAL ''#8C8B84'' is a custom hex; the style
+    guide''s muted anchor (#6B6A63 light / #A8A79F dark) is the documented choice
+    for ''other'' dots.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct theme surface
-      Chrome: title "dot-matrix-proportional · altair · anyplot.ai" in dark ink (28px), subtitle "Conference session survey — Would you recommend this talk?" in secondary dark ink (20px), both clearly readable; legend titled "Response" with labels "Agree — 58", "Neutral — 27", "Oppose — 15" in secondary ink (18px) — all readable; no axes or tick labels (intentionally hidden)
-      Data: 100 circles in 10x10 grid; first 58 in #009E73 (teal-green), next 27 in #D55E00 (vermillion-orange), final 15 in #0072B2 (blue); dots large and clearly distinguishable; left-to-right top-to-bottom fill correct
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: warm off-white #FAF8F1, canonical 2400x2400 canvas.
+      Chrome: bold near-black title 'dot-matrix-proportional · python · altair · anyplot.ai' top-left, soft-ink subtitle 'Would you recommend this talk? 1 dot = 1 attendee'; no axes; elevated off-white legend card with ink-soft border below the grid, title 'Response', two columns: 'Agree — 58', 'Neutral — 27', 'Oppose — 15'. All text readable.
+      Data: 10x10 grid of equal circles: 58 green #009E73 (rows 1-5 plus 8 of row 6), 27 purple #C475FD, 15 blue #4467A3, filled left to right, top to bottom. Grid occupies the left ~72 % of the width; empty band on the right.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct dark theme surface
-      Chrome: title and subtitle in light ink (#F0EFE8 equivalent) — clearly readable against dark background; legend labels in secondary light ink (#B8B7B0 equivalent) — fully legible; legend box uses elevated dark surface (#242420) with light-stroke border; no dark-on-dark text failures
-      Data: colors identical to light render — #009E73 green, #D55E00 orange, #0072B2 blue — Okabe-Ito data colors correctly constant across themes
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink #F0EFE8, subtitle and legend labels in light soft ink, legend card #242420 with light border. No dark-on-dark text.
+      Data: identical green/purple/blue dots and identical layout to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -52,52 +59,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, subtitle 20px, legend
-          title 20px, legend labels 18px; fully readable in both renders'
+        comment: Title 88 px, legend labels 72 px, subtitle 64 px on the 2400 canvas;
+          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Dots uniformly spaced, legend in top-right does not overlap data,
-          no text collisions
+        comment: No text collisions; dots evenly spaced, legend card below the grid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Large circles (size=5500) perfectly sized for 10x10 grid; all 100
-          dots clearly distinguishable
+        comment: 100 large uniform dots, all clearly visible on both backgrounds;
+          legend glyphs match the dots
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; teal-green vs orange vs blue easily distinguished
-          with and without color
+        comment: Green, purple and blue are distinct in luminance and hue under CVD
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Square 3600x3600 well-suited; dot grid fills canvas generously;
-          minor: legend floats in top-right leaving small asymmetric void'
+        comment: Grid and legend sit left-anchored under the wide title, leaving about
+          28 % of the width empty right of the grid (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes intentionally hidden (correct for dot matrix); title follows
-          required format; subtitle provides domain context
+        comment: N/A axes (layout positions); subtitle states the question and the
+          unit key '1 dot = 1 attendee'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito positions 1-3 canonical order; backgrounds
-          #FAF8F1/#1A1A17; both renders theme-correct'
+        comment: Backgrounds and chrome correct in both themes, but the ordered Agree/Neutral/Oppose
+          levels use categorical green/purple/blue instead of a diverging ramp (defect
+          line)
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -105,22 +111,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean no-axis layout above defaults; correct palette; inline legend
-          counts thoughtful; does not reach publication polish
+        comment: Unit key '1 dot = 1 attendee' in the subtitle and an elevated legend
+          card with counts give a clear typographic hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: All axes removed, view stroke removed, legend has padding and cornerRadius;
-          above minimal default
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Natural visual hierarchy from 58 green dots; subtitle adds context;
-          no active emphasis technique for focal insight
+        comment: Legend card with padding and rounded corners aligned to the grid's
+          left edge; view stroke removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; no focal hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dot matrix with 10x10 grid matching total of 100
+        comment: Dot matrix, 10x10 for a total of 100
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid matches total; each dot = one unit; color-coded; left-to-right
-          top-to-bottom fill; legend with labels and counts
+        comment: One dot per unit, uniform size and spacing, left-to-right top-to-bottom
+          fill, legend with labels and counts; C1-C5 met (no remainder in this data;
+          remainder path coded)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: col:O and row:O ordinal encoding; ascending row sort; all 100 dots
-          correctly placed
+        comment: col/row ordinal layout; runs 58/27/15 counted correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels include category name and count
-          via Vega labelExpr
+        comment: Title 'dot-matrix-proportional · python · altair · anyplot.ai'; legend
+          'Response' with 'Agree — 58' etc.
     data_quality:
       score: 15
       max: 15
@@ -161,22 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three categories with meaningfully different proportions (58/27/15)
-          showcase the chart type well
+        comment: Three runs of clearly different length, one ending partway through
+          a row
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Conference session survey asking 'Would you recommend this talk?'
-          — neutral, real-world, non-controversial
+        comment: Conference talk recommendation survey — neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts sum exactly to 100; proportions (58%/27%/15%) plausible for
-          a conference talk with positive reception
+        comment: Counts sum to the total 100; checked 58+27+15 dots in the render
     code_quality:
       score: 10
       max: 10
@@ -186,56 +189,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> chart -> save; no functions
-          or classes'
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; no random data generation
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, importlib, altair (via importlib), pandas (via importlib)
-          used; all referenced
+        comment: importlib, math, os, sys, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable; Vega labelExpr appropriately complex for its
-          purpose; sys.path manipulation is standard repo boilerplate
+        comment: Legend labels built in pandas, no hand-rolled Vega expression; appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html;
-          current Altair API
+        comment: Saves plot-{THEME}.png padded to 2400x2400 and plot-{THEME}.html;
+          Altair 6 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of alt.Chart().mark_circle(), ordinal :O encoding, alt.Scale(domain,
-          range), alt.TitleParams, configure chain
+        comment: Ordinal x/y encodings with axis=None, Scale domain/range mapping,
+          TitleParams with subtitle, configure_view/legend chain
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses Vega expression language (labelExpr) in alt.Legend for dynamic
-          label formatting — distinctly Vega-Lite capability
+        passed: false
+        comment: Native Vega-Lite tooltip per dot in the HTML and a multi-column legend
+          via Legend(columns=2)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-19T02:48:13Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - hover-tooltips
   - html-export

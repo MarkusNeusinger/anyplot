@@ -36,9 +36,10 @@ That's what leading the models takes: knowing which question to ask, when an ans
 when the structure starts to turn into a mess. It shows in four ways:
 
 - **Decisions on record.** The [agent chat's design](agent-network.md) names an owner decision, rule, or
-  request more than 80 times, each with its date and reason. Three examples: a safety check that can't answer
-  refuses instead of guessing (2026-10-11); data keeps the precision it came with (2026-10-15); and usage
-  telemetry never holds a message, a data value, or a column name (2026-10-16).
+  request more than 80 times, each with its date and reason. Three examples: the chat settles the data
+  first, in a step the user confirms, before it draws a plot (2026-10-11); data keeps the precision it
+  came with (2026-10-15); and usage telemetry never holds a message, a data value, or a column name
+  (2026-10-16).
 - **Pushing back after testing.** On 2026-10-14 a live test showed plain answers, and even refusals,
   waiting about 60 seconds behind the plot queue. My note was "bei sowas muss schnell die antwort kommen"
   (with something like this, the answer has to come fast). The same day the queue shrank to the sandbox
@@ -51,8 +52,8 @@ when the structure starts to turn into a mess. It shows in four ways:
 - **Knowing what has to hold.** Security is a good example: I know what has to hold, private data and no
   way to abuse the service, and asking the right question is often enough for a model to find what still
   needs hardening. Before the chat went public, the question of what the request logs keep moved the
-  session id out of every URL, because Cloud Run keeps a request's URL together with the client's address
-  for 30 days ([`agent_public.py`](../../api/routers/agent_public.py)).
+  public chat's session id out of its URLs, because Cloud Run keeps a request's URL together with the
+  client's address for 30 days ([`agent_public.py`](../../api/routers/agent_public.py)).
 
 ## The path of a change
 
@@ -89,7 +90,7 @@ for every line; the stories live in the guardrails file. Three examples:
   the pull request was green. Since then an agent fixes a small build or test blocker on the spot, even
   when it's outside its task.
 - **2026-10-22, a blank site.** A dependency bump passed every check and deployed, and every page of
-  anyplot.ai rendered blank. I noticed about 45 minutes later. Since then the agent checks the live site
+  anyplot.ai rendered blank for about 45 minutes. Since then the agent checks the live site
   after every merge, and CI runs the same check on the built image.
 - **2026-10-30, a stall nobody reported.** A build agent stopped at midday while waiting for its own
   tests. A context summary called it "still working", and in the evening I was the one who asked

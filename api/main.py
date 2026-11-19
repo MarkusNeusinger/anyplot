@@ -23,8 +23,8 @@ from fastapi.exceptions import RequestValidationError  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
-from api import machine_reads  # noqa: E402
-from api.body_limit import BodyLimitMiddleware, Bound, ClientGoneFilter  # noqa: E402
+from api import machine_reads, search_misses  # noqa: E402
+from api.body_limit import BodyLimitMiddleware, ClientGoneFilter, LargeBodies  # noqa: E402
 from api.cache import cache_key, get_or_set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
@@ -49,11 +49,21 @@ from api.routers import (  # noqa: E402
     plots_router,
     preview_router,
     proxy_router,
+    search_router,
     seo_router,
     specs_router,
     stats_router,
 )
-from api.routers.agent import LOCAL_ORIGIN_REGEX, MAX_REQUEST_BODY_BYTES, AgentHTTPError, agent_http_error_handler  # noqa: E402
+from api.routers.agent import (  # noqa: E402
+    BODY_PREFIXES,
+    BODY_RULES,
+    LARGE_BODY_STALL_S,
+    LARGE_BODY_TOTAL_S,
+    LOCAL_ORIGIN_REGEX,
+    MAX_LARGE_BODIES,
+    AgentHTTPError,
+    agent_http_error_handler,
+)
 from api.routers.languages import _refresh_languages  # noqa: E402
 from api.routers.libraries import _refresh_libraries  # noqa: E402
 from api.routers.plots import _refresh_filter_all  # noqa: E402
@@ -178,6 +188,9 @@ async def lifespan(app: FastAPI):
             # `init_db()` stays awaited above — a request must never arrive
             # before the engine exists. See `_prewarm_cache` for the numbers.
             _start_prewarm()
+            # The search misses' retention delete, once at start and in the
+            # background, so it does not wait for a miss (production only).
+            search_misses.start_purge()
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
 
@@ -249,12 +262,18 @@ app.add_exception_handler(Exception, generic_exception_handler)
 #   request came from an allowlisted origin — it has to run after CORS on the
 #   way out.
 
-# Bound every request body before anything reads it (api/body_limit.py). The
-# two agent lanes carry pasted data and an uploaded file, so they keep the cap
-# their own routes already declare, answered with the code the chat page reads
-# from those routes; every other path takes the small default.
-_AGENT_BODY_BOUND = Bound(MAX_REQUEST_BODY_BYTES, detail="too_long")
-app.add_middleware(BodyLimitMiddleware, prefixes={"/agent": _AGENT_BODY_BOUND, "/debug/agent": _AGENT_BODY_BOUND})
+# Bound every request body before anything reads it (api/body_limit.py). Every
+# path takes the small default. The agent lanes answer a body above it with the
+# code the chat page reads from their routes, and two routes of each lane carry
+# data, a paste and an uploaded file: those get the body each needs
+# (api/routers/agent.py BODY_RULES), and their large bodies are taken a few at
+# a time, each with a limit on how long it may take to arrive.
+app.add_middleware(
+    BodyLimitMiddleware,
+    prefixes=BODY_PREFIXES,
+    rules=BODY_RULES,
+    large=LargeBodies(places=MAX_LARGE_BODIES, stall_s=LARGE_BODY_STALL_S, body_s=LARGE_BODY_TOTAL_S),
+)
 
 # Enable GZip compression for responses > 500 bytes
 # This significantly reduces payload size for JSON API responses
@@ -397,6 +416,7 @@ app.include_router(debug_router)
 app.include_router(agent_router)
 app.include_router(agent_public_router)
 app.include_router(feedback_router)
+app.include_router(search_router)
 
 
 # ASGI middleware to handle /mcp without trailing slash

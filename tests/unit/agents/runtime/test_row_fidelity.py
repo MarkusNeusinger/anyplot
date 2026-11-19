@@ -454,6 +454,26 @@ class TestCombineRepeatedKey:
 
         assert summed is not None and (summed.aggregate.how, summed.line) == ("sum", SUMMED)
 
+    def test_a_key_whose_rows_all_lack_the_value_combines_to_an_empty_cell_and_never_a_zero(self) -> None:
+        """Hour 8 has three students and no score for any of them. Summed, it has no total: a 0 would be drawn as a
+        point at zero beside the hours that were measured, and nothing would say that it was never recorded."""
+        gaps = "Student,Study Hours,Exam Score\n" + "".join(
+            f"S{i:02d},{2 + 2 * (i % 4)},{'' if i % 4 == 3 else 50 + 3 * i}\n" for i in range(12)
+        )
+        store, view = self.confirmed("line-basic", LINE_BINDINGS, gaps)
+
+        summed = combine_repeated_key(store, SID, view, store.get(view.dataset_id, SID), "sum")
+
+        assert summed is not None and summed.line == SUMMED
+        stored = summed.version.stored
+        assert stored.csv == "Study Hours,Exam Score\n2,186\n4,195\n6,204\n8,\n"
+        # The plot's own line counts a row it cannot draw from this: the column's missing cells.
+        assert {column.name: column.missing for column in stored.profile.columns} == {"Study Hours": 0, "Exam Score": 1}
+        assert stored.changes == [
+            "summed Exam Score by Study Hours: 4 rows, 1 other column dropped, "
+            "1 group without a value in Exam Score left empty, 3 rows without a value in Exam Score left out"
+        ]
+
     def test_the_choice_is_open_where_the_plot_type_does_not_say_that_rows_add_up(self) -> None:
         """A line or a plain bar draws a measurement per key, an amount or a rate: the user says which. The slices of
         a pie add up by what a pie is, so nothing is asked there. Unconfirmed data is never combined, so never asked

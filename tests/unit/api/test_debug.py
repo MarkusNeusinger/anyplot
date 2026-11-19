@@ -455,7 +455,7 @@ class TestRequireAdminCfAccess:
     RS256 signature or JWKS network round-trip.
     """
 
-    _ALLOWED = "meakeiok@gmail.com"
+    _ALLOWED = "owner@example.com"
     _DENIED = "stranger@example.com"
 
     def test_status_200_when_jwt_email_allowed(self, auth_client) -> None:

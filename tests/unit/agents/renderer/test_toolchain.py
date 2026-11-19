@@ -14,6 +14,7 @@ import pytest
 import yaml
 
 from agents.renderer import commands, toolchain
+from tests.libraries import skip_or_fail_js_runtime
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -555,10 +556,10 @@ class TestImportAllowlist:
         of 2026-10-30 (Fable's second opinion counted the same keys, `./package.json` included)."""
         root = Path(os.environ.get("ANYPLOT_NODE_MODULES", REPO_ROOT / "node_modules"))
         if not (root / "@mui" / "x-charts" / "package.json").is_file():
-            pytest.skip("no installed node_modules")
+            skip_or_fail_js_runtime("no installed node_modules")
         result = _allowlist_module().allowlist(root)
         lock = json.loads((REPO_ROOT / "package-lock.json").read_text(encoding="utf-8"))["packages"]
         if result["packages"] != {name: lock[f"node_modules/{name}"]["version"] for name in result["packages"]}:
-            pytest.skip("the installed node_modules is not the lock's")
+            skip_or_fail_js_runtime("the installed node_modules is not the lock's")
         assert "@mui/x-charts/BarChart" in result["specifiers"] and "react/jsx-runtime" in result["specifiers"]
         assert len(result["specifiers"]) == len(set(result["specifiers"]))

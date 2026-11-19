@@ -366,11 +366,77 @@ def test_the_attribution_hash_is_salted_and_not_the_telemetry_hash() -> None:
     assert session_hash("") == ""
 
 
+def test_a_cases_key_is_salted_and_joins_no_log_line_and_no_telemetry_row() -> None:
+    import hashlib
+
+    from agents.anyplot.plugins.ledger import case_key, session_hash
+
+    plain = hashlib.sha256(b"abc").hexdigest()
+    key = case_key("abc")
+    assert re.fullmatch(r"[0-9a-f]{16}", key) and key == case_key("abc")
+    assert key != case_key("abd")
+    assert key not in (plain[:16], telemetry.session_key("abc"))
+    assert not key.startswith(session_hash("abc"))
+
+
+def test_a_cases_key_depends_on_the_salt_and_has_a_domain_of_its_own(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A hash that kept its value under another salt would be one that a log's session id reproduces, whatever
+    prefix it mixes in; and a key in another hash's domain would join a case to that hash's lines."""
+    import hashlib
+
+    from agents.anyplot.plugins import ledger
+
+    key = ledger.case_key("abc")
+    for domain in ("", "user", "network", "attribution", "telemetry"):
+        assert key != ledger.salted("abc", domain, 16), domain
+    assert key not in (hashlib.sha256(b"case:abc").hexdigest()[:16], hashlib.sha256(b"abc").hexdigest()[:16])
+    monkeypatch.setattr(ledger, "SESSION_SALT", b"another process")
+    assert ledger.case_key("abc") != key
+
+
 def test_idempotency_keys_repeat_for_the_same_line_only() -> None:
     first = telemetry.idempotency_key("s", 1, "run1", "pipeline_run")
     assert first == telemetry.idempotency_key("s", 1, "run1", "pipeline_run")
     assert first != telemetry.idempotency_key("s", 1, "run2", "pipeline_run")
     assert first != telemetry.idempotency_key("s", 2, "run1", "pipeline_run")
+
+
+def test_an_idempotency_key_cannot_be_recomputed_from_what_the_logs_hold(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A telemetry line shows its session hash, turn and event, and the attribution lines show the request id that
+    `attempt` holds: a key that is a plain hash of the four joins a telemetry row to its debug lines."""
+    import hashlib
+
+    from agents.anyplot.plugins import ledger
+
+    fields = ("0123456789abcdef", 3, "turn:req-1", "chat_turn")
+    key = telemetry.idempotency_key(*fields)
+    assert re.fullmatch(r"[0-9a-f]{24}", key)
+    assert key != hashlib.sha256(b"0123456789abcdef|3|turn:req-1|chat_turn").hexdigest()[:24]
+    for domain in ("", "user", "network", "attribution", "telemetry", "case"):
+        assert key != ledger.salted("0123456789abcdef|3|turn:req-1|chat_turn", domain, 24), domain
+    monkeypatch.setattr(ledger, "SESSION_SALT", b"another process")
+    assert telemetry.idempotency_key(*fields) != key
+
+
+async def test_every_written_line_carries_the_salted_key_of_its_own_fields(
+    client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`emit` builds the key from the line's session hash, turn and event and the caller's `attempt`: the lines of
+    two refused pastes differ in `attempt` alone, and neither key is the plain hash of those values."""
+    import hashlib
+
+    caplog.set_level(logging.INFO)
+    sid = await open_session(client)
+    for text in ("a,b\n1,2\n3,4,5\n", "import numpy as np\nx = np.linspace(0, 10, 100)\ny = np.sin(x)\n"):
+        refused = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+        assert refused.status_code == 422
+    first, second = telemetry_lines(caplog)
+    assert (first["session"], first["turn"], first["event"]) == (second["session"], second["turn"], second["event"])
+    for index, line in enumerate((first, second), start=1):
+        fields = (line["session"], line["turn"], f"in{index}", "data_input")
+        assert line["idempotency_key"] == telemetry.idempotency_key(*fields)
+        plain = "|".join(str(part) for part in fields).encode()
+        assert line["idempotency_key"] != hashlib.sha256(plain).hexdigest()[:24]
 
 
 def test_a_rerun_node_keeps_its_run_index() -> None:

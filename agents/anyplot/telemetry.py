@@ -29,9 +29,9 @@ Envelope (every line): `log_type`, `schema`, `event`, `service` and `revision` (
 Run's `K_SERVICE` and `K_REVISION`), `source` (`live`; `fanout` for every line of a session
 the admin's "plot in all libraries" fan-out opened, `RequestLedger.fanout`; or `harness` for the
 eval harnesses, `harness()`), `session` (a salted hash), `spec_id`, `library`, `turn` (the
-session's user turns so far, from the request ledger), and `idempotency_key`, a hash of
-session, turn, attempt and event: the BigQuery base view keeps one row per key, so a
-line Cloud Logging delivers twice or a pipeline node ADK re-runs counts once.
+session's user turns so far, from the request ledger), and `idempotency_key`, a salted
+hash of session, turn, attempt and event: the BigQuery base view keeps one row per key, so
+a line Cloud Logging delivers twice or a pipeline node ADK re-runs counts once.
 
 The session hash is an HMAC-SHA256 of the session id under a random per-process salt
 (`plugins/ledger.SESSION_SALT`): the id travels in every `/v1` request URL that Cloud Run
@@ -39,12 +39,14 @@ logs, and a plain hash of it could be recomputed from those. Sessions live in me
 die with the instance (`max-instances=1`), so a salt that dies with the process keeps one
 session's lines together and still unlinkable to the request log. The attribution lines'
 `session` uses the same salt under another domain (`ledger.salted`), so telemetry rows
-and debug lines cannot be joined by it either.
+and debug lines cannot be joined by it either. The idempotency key takes the same salt
+under a domain of its own: its `attempt` often holds the request id, which the attribution
+lines carry too, so a plain hash of a line's own fields and that id could be recomputed
+from the two logs and would join them by the key.
 """
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import os
@@ -113,7 +115,13 @@ def session_key(session_id: str) -> str:
 
 
 def idempotency_key(session: str, turn: int, attempt: str, event: str) -> str:
-    return hashlib.sha256(f"{session}|{turn}|{attempt}|{event}".encode()).hexdigest()[:24]
+    """One line's key: 24 hex characters, the same for a line this process writes twice and for no other line.
+
+    Salted (`ledger.salted`, a domain of its own) because every other input is readable in a log: the line
+    itself holds session, turn and event, and `attempt` often holds the request id, which the attribution lines
+    carry. A plain hash of the four could be recomputed per request id and would join a telemetry row to its
+    debug lines. The salt lives as long as the process, and so does every session whose lines the key separates."""
+    return salted(f"{session}|{turn}|{attempt}|{event}", "idempotency", 24)
 
 
 # --- Closed sets --------------------------------------------------------------------------

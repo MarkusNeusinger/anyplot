@@ -4,11 +4,13 @@ Tests for api/routers/ endpoints.
 Tests the modular router endpoints.
 """
 
+import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
+from api import search_misses
 from api.cache import clear_cache, get_cache, get_cache_stats
 from api.main import app, fastapi_app
 from api.routers.plots import (
@@ -1209,13 +1211,39 @@ class TestSeoProxyRouter:
         assert "text/html" in response.headers["content-type"]
         assert "og:title" in response.text
         assert "https://anyplot.ai/about" in response.text
+        # The same description as AboutPage.tsx, in the meta tags search engines and link previews read.
+        description = (
+            "About anyplot.ai: built by Markus Neusinger with AI agents he directs. How the catalogue "
+            "is written and reviewed, the stack, and what it costs to run."
+        )
+        assert len(description) <= 155
+        assert f'<meta name="description" content="{description}" />' in response.text
+        assert f'<meta property="og:description" content="{description}" />' in response.text
         # registry-derived count + the pipeline sequence
         assert "15 libraries" in response.text
-        assert "AI-drafted, human-approved" in response.text
-        assert "never patched by hand" in response.text
+        # The lede as AboutPage.tsx has it: ideas arrive as issues, the builder approves the specs.
+        assert (
+            "Plot ideas come in as GitHub issues; AI drafts the specification, generates code for every "
+            "library, and reviews each implementation. I approve new specs and tune the rules when "
+            "something repeatedly fails."
+        ) in response.text
+        assert (
+            "idea → a GitHub issue; spec → AI drafts, I approve; code → AI writes (per library); "
+            "review → AI scores (24 criteria); fix → AI repairs (up to 4 times); rules → I set and change them."
+        ) in response.text
+        assert "human-approved" not in response.text
+        # In the first person, as AboutPage.tsx says it, and as a rule rather than an absolute.
+        assert "The pipeline runs on its own schedule, by rules I set." in response.text
+        assert (
+            "I update the spec and regenerate its libraries. I don't fix a plot by editing its code: a patch "
+            "fixes one plot, a fix to the spec or a rule reaches every plot it governs when that plot is next "
+            "regenerated."
+        ) in response.text
+        assert "never patch" not in response.text
         # bot parity with the page's review, chat and MCP sections (AboutPage.tsx)
         for heading in ("<h2>Review</h2>", "<h2>Use with my data</h2>", "<h2>MCP server</h2>"):
             assert heading in response.text
+        assert "choose .use_my_data() on its page, and paste your data." in response.text
         assert "rubric of 24 criteria" in response.text
         # The MCP section's pointer at the machine readers on the stats page, as AboutPage.tsx has it.
         assert "how many assistants and crawlers read the catalogue and how many came on behalf of a person" in (
@@ -1223,6 +1251,112 @@ class TestSeoProxyRouter:
         )
         for link in ("https://anyplot.ai/stats", "https://anyplot.ai/plots", "https://anyplot.ai/mcp"):
             assert f'href="{link}"' in response.text
+        # The chat's second paragraph, as AboutPage.tsx has it, with its link to the design document.
+        for sentence in (
+            "One agent talks to you, an adapter writes the code changes, and a reviewer scores the render; the "
+            "loop that calls them is plain code.",
+            "A validator reads the code before anything runs, and code decides from the reviewer's points whether "
+            "a repair is due: one repair and two reviews at most.",
+            "What the review still finds comes back as notes with the plot.",
+            "My rules: open to everyone, no login, hosted in the EU, and I keep what you paste or write only if "
+            "you send feedback.",
+            "By those rules I decided which model answers, where the code it writes runs, and what the usage logs "
+            "may hold; ",
+            "the design document on GitHub</a> records these decisions with their dates.",
+        ):
+            assert sentence in response.text, sentence
+        assert (
+            '<a href="https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/agent-network.md">'
+            "the design document on GitHub</a>"
+        ) in response.text
+
+    def test_seo_about_tells_the_origin_and_speaks_as_its_builder(self, client: TestClient) -> None:
+        """The crawler copy carries the page's origin where the page has it, and says I, never we, as the page does."""
+        response = client.get("/seo-proxy/about")
+        assert response.status_code == 200
+        text = response.text
+        # The page's order: transparency, then the origin, then the ways in.
+        assert (
+            text.index('<h2 id="transparency">Transparency</h2>')
+            < text.index("<h2>Origin</h2>")
+            < text.index("<h2>Open</h2>")
+        )
+        for sentence in (
+            "It started in November 2025 as pyplots.ai, a catalogue of Python plotting examples.",
+            "It grew out of everyday work: showing colleagues a chart instead of explaining it at length.",
+            "They, and later people who found it online, wanted two things from it: ideas for which plot fits "
+            "their data, and to get to know libraries they hadn't used yet, since each has its own strengths.",
+            "After a few months on pyplots.ai, I decided to go bigger. In April 2026 it became anyplot.ai.",
+            "Today it covers fifteen libraries in four languages, and one colourblind-safe palette travels "
+            "across all of them.",
+        ):
+            assert sentence in text, sentence
+        assert "weekend" not in text
+        # One person builds the site; AboutPage.test.tsx holds the page to the same.
+        body = text.split("<h1>About anyplot</h1>", 1)[1].split("<nav>", 1)[0]
+        prose = re.sub(r"<[^>]+>", " ", body)
+        assert not re.search(r"\b(we|our|ours|us)\b", prose, re.IGNORECASE)
+
+    def test_seo_about_names_the_builder_and_carries_the_stack_and_costs(self, client: TestClient) -> None:
+        """Who built the site and how, and the transparency facts that moved here from the legal page."""
+        response = client.get("/seo-proxy/about")
+        assert response.status_code == 200
+        for heading in ("<h2>Who built it</h2>", "<h2>How it is built</h2>", '<h2 id="transparency">Transparency</h2>'):
+            assert heading in response.text
+        for fact in (
+            "Markus Neusinger",
+            "I'm a chart nerd. Physicist by training, senior data analyst by trade.",
+            "Since 2013 I have built data pipelines, models and the tools around them, lately with AI agents "
+            "doing the legwork.",
+            "I know the stack from building it by hand: from 2022 to 2024 I built and ran a platform for "
+            "blockchain market data, largely without AI.",
+            "On anyplot the agents write the code; I decide, test and send back.",
+            "I have built it alone and in my own time since November 2025, in Visp, a small town in the Swiss Alps.",
+            "I wanted one place to find the right plot for my data.",
+            "AI models write anyplot's code: the site, the API, and the agents behind Use with my data.",
+            # The spec approval stands in the lede, the month in "Who built it" and the origin.
+            "Outside the plot pipeline the agents merge nothing without my OK, and what I correct becomes a rule "
+            "they follow.",
+            # The stack the description names, from the page's table.
+            "The site runs on React 19, Vite, MUI 9 with MUI X and TypeScript.",
+            "The API runs on Python 3.14, FastAPI, SQLAlchemy and PostgreSQL 18.",
+            "Checks: tests and lint on every pull request that changes Python or frontend code outside the plot "
+            "catalogue, an 80 % patch-coverage target, CodeQL, every migration run on a throwaway PostgreSQL, and "
+            "by rule a check of the live site after a merge.",
+            "Running costs about $75 a month (as of November 2026).",
+            # The corrected pipeline and review claims (AboutPage.tsx says the same).
+            "Every night a job regenerates the oldest implementations",
+            "the bar drops 10 points per repair, to 50 at the last review",
+            "What counts as a good plot is my call; AI helped turn it into 24 criteria and their points. The "
+            "rubric isn't fixed: it has changed more than thirty times since November 2025, for example after a "
+            "review passed a plot whose title was cut off.",
+        ):
+            assert fact in response.text, fact
+        assert "A new spec needs my approval" not in response.text
+        assert "ships a new release" not in response.text
+        # The checks before the review are the ones a workflow runs; none looks for a blank image.
+        assert "Automated checks come first: the code runs, the canvas has its size." in response.text
+        assert "blank" not in response.text
+        # The source and its licence are stated once, under Transparency: the licence covers the
+        # whole stack, as LICENSE and AboutPage.tsx say, not only the catalogue content.
+        assert response.text.count('<a href="https://github.com/MarkusNeusinger/anyplot">') == 1
+        assert "is open source under the MIT License at" in response.text
+        assert response.text.count("MIT License") == 1
+        assert "MIT-licensed" not in response.text
+        for link in (
+            "https://www.linkedin.com/in/markus-neusinger/",
+            "https://github.com/MarkusNeusinger",
+            "https://neusinger.com",
+            "https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#how-i-build-anyplot",
+            "https://github.com/MarkusNeusinger/anyplot/blob/main/README.md#engineering-highlights",
+            "https://github.com/MarkusNeusinger/anyplot/blob/main/docs/concepts/ai-workflow.md",
+        ):
+            assert f'href="{link}"' in response.text, link
+        # The legal page keeps only the legal notice and the privacy policy.
+        legal = client.get("/seo-proxy/legal").text
+        assert "Running costs" not in legal
+        assert "Transparency" not in legal
+        assert "transparency" not in legal
 
     def test_seo_agent_carries_the_explainer_and_its_terms(self, client: TestClient) -> None:
         """llms.txt links /agent, where the assistant's terms live; a crawler there got the spec route's 404."""
@@ -1309,35 +1443,127 @@ class TestSeoProxyRouter:
         assert "kept until you ask to delete it" in response.text
         # The server logs sit in the EU (the `_Default` sink's europe-west4 bucket).
         assert "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4)" in response.text
-        # The hosting sentence names what LegalPage.tsx's hosting row names, BigQuery included.
-        assert "Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands" in response.text
-        # The machine-read line, mirrored from the human page's "machine readers" row.
-        assert "Machine readers: each request by a crawler, an AI assistant or an MCP client" in response.text
-        assert "without IP address or user-agent, kept up to 180 days" in response.text
+        # The hosting sentence names what LegalPage.tsx's hosting sentence names, BigQuery included;
+        # Cloudflare's roles and place stand in its own item, once.
+        assert "Google Cloud Run, SQL, Storage, Logging and BigQuery in the Netherlands (europe-west4).</li>" in (
+            response.text
+        )
+        assert "CDN / DDoS / bot check" not in response.text
+        assert response.text.count("EU data centers for EU visitors") == 1
+        # The machine-read lines and the share counters, mirrored from the human page's shared row:
+        # what each counts, each period tied to its own store, the place once, and the negative both
+        # share after them. The fields beyond that hold nothing about a person and stand in the docs.
+        assert "Machine readers and shared links: each request by a crawler, an AI assistant or an MCP" in (
+            response.text
+        )
+        for fact in (
+            "Server logs: IP address, URL and user-agent of each request, for security and debugging; kept 30 days",
+            "client is one line, kept up to 180 days in Google Cloud Logging and BigQuery.",
+            "Shared links: counts of the link previews that messengers and social networks fetch, kept "
+            "without a time limit in Google Cloud SQL.",
+            "Both in the Netherlands (europe-west4). Neither holds an IP address or a user-agent.</li>",
+            # Cloudflare's place at its first mention, then the edge and the check, which runs only on
+            # the three actions, apart.
+            "Cloudflare (global, EU data centers for EU visitors): as the CDN, it uses your IP address to "
+            "rate-limit, filter bots and absorb DDoS attacks.",
+            "Its Turnstile runs when you send feedback, rate a plot or open the data assistant, and checks "
+            "that a browser, not a script, is asking. For that it reads your IP address, user-agent and TLS "
+            "fingerprint",
+            "kept until you ask to delete it, in Google Cloud SQL in the Netherlands (europe-west4)",
+        ):
+            assert fact in response.text, fact
+        # The right to object carries the condition that makes it one, as on the human page.
+        assert "object to the processing for a reason specific to your situation" in response.text
+        assert "object to the processing, and" not in response.text
+        assert "restriction, objection, and" not in response.text
+        # Plain words, as on the human page: no article numbers, no wording of legal texts, and no
+        # law named.
+        for term in (
+            "Art. 6",
+            "Legal bases",
+            "controller",
+            "supervisory",
+            "particular situation",
+            "GDPR",
+            "data protection law",
+        ):
+            assert term not in response.text, term
+        # The list of searches without a hit, mirrored from the human page's row: what is kept, what the
+        # shared rule refuses, why a row is pseudonymous, and the period the API's purge keeps.
+        assert (
+            "Searches without a hit: when a gallery search finds nothing, two seconds after you stop typing or "
+            "when you leave the field, its text (lowercase, first 40 characters) is counted per day" in response.text
+        )
+        assert "An e-mail address or a link with http:// is not kept; anything else you type may be" in response.text
+        assert "A row holds no IP address and no time of day" in response.text
+        assert f"Kept {search_misses.RETENTION_DAYS} days in Google Cloud SQL" in response.text
+        # "No time of day" was true of the shares only; it went with their other fields rather than
+        # being stretched over the machine-read lines, which carry a timestamp. It stands once, for
+        # the search list, whose row holds a day and no time.
+        assert response.text.count("time of day") == 1
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
         # The site-wide facts the human page states once each, the stored feedback fields included.
         for fact in (
-            "Running costs about $60 a month (October 2026).",
-            "a random id that ties your own submissions together",
-            "the optional contact field",
-            "legitimate interest (Art. 6(1)(f) GDPR)",
-            "the Cloudflare Access login cookie",
-            "a complaint to a supervisory authority",
+            # Who is responsible, under the page's own heading, not only as the legal notice's operator.
+            "<li>Who is responsible: Markus Neusinger (see above).</li>",
+            # No event carries what a visitor typed any more (docs/reference/plausible.md, "Search");
+            # what the dashboard still shows is a fact about today, not a note on older entries,
+            # through the item's end, as on the human page.
+            "no IP address stored. Search texts sent up to and including November 2026 still show there.</li>",
+            # Every field the feedback record holds, each by its name, then who reads it: the operator,
+            # and the coding assistant the admin page's "copy prompt for Claude Code" button hands the
+            # message, page and reaction to (app/src/utils/claudePrompt.ts).
+            "Feedback: your message and reaction, the optional contact field, the page, window size, "
+            "user-agent and a random id that ties your own submissions together; kept until you ask to "
+            "delete it, in Google Cloud SQL in the Netherlands (europe-west4). The operator reads the "
+            "entries, and when he works on one, its message, page and reaction can go to an AI coding "
+            "assistant (such as Claude Code by Anthropic), which processes it under its provider's own "
+            "terms, outside the EU hosting named above, with training on what he sends switched off. The "
+            "salted IP hash against spam",
+            # The search list's purpose has its basis, in the same place of the list as on the page.
+            "Why this is allowed: a legitimate interest in protecting the site, counting its readers, "
+            "seeing what its catalogue lacks, and the assistant's telemetry and limits",
+            # The login cookie is the operator's own, as the human page says ("I sign in through
+            # Cloudflare Access").
+            "<li>No cookies for visitors (the operator: the Cloudflare Access login cookie), no accounts, "
+            "and no name or email unless you type one.",
+            # The rights item whole, through the address, the early deletion of a feedback case, what
+            # lets the operator find an entry, that a log line cannot be deleted one by one and when it
+            # expires, with the periods of the server logs' item and of the machine-read and telemetry
+            # items, and the about 30 days the database's automatic backups keep a deleted entry (30
+            # daily backups, docs/reference/database.md, "Automated backups").
+            "Rights: you can ask what is stored about you and have it corrected, erased or restricted, "
+            "object to the processing for a reason specific to your situation, and complain to a data "
+            'protection authority. A few lines to <a href="mailto:admin@anyplot.ai">admin@anyplot.ai</a> '
+            "are enough, also to have a feedback case deleted early. Tell the operator what you sent and "
+            "roughly when, or the contact you typed, so the entry can be found. Log lines cannot be deleted "
+            "one by one: they expire after 30 days (server logs) or 180 days (machine reads, assistant "
+            "telemetry). The database's automatic backups keep a deleted entry for about 30 days.</li>",
             "transfers outside Switzerland and the EU",
             "cleared by the next feedback after ten minutes, and its salt dies with the server instance",
             "uses your IP address to rate-limit, filter bots and absorb DDoS attacks",
-            "no name or email unless you type one",
-            "may credit your public username",
-            "browsing the catalogue never reaches a model",
-            # The bot check, as LegalPage.tsx's "bot check" row states it.
-            "Cloudflare Turnstile checks that a browser, not a script, is asking",
+            "no accounts, and no name or email unless you type one",
+            # The GitHub credit, and that the operator removes it on request while the public history
+            # keeps it: the username sits in the spec's `suggested` field, which a pull request empties.
+            "Suggesting a plot type on GitHub may credit your public username in its spec. Ask and the "
+            "operator removes it; the public history keeps it.</li>",
+            "<li>No AI training on what you send.</li>",
+            "your plot votes, a release number",
+            "and your consent to a feedback case: you give it when you send it and can withdraw it at any "
+            "time by asking.</li>",
+            # The bot check, as LegalPage.tsx's "cloudflare" row states it.
+            "checks that a browser, not a script, is asking",
             "user-agent and TLS fingerprint",
-            "with no cookie",
-            "as its own controller, to improve the check",
+            "keeps an item in your browser's storage, with no cookie; anyplot learns only whether the check passed",
+            "Cloudflare also uses these signals on its own behalf, to improve the check",
+            "Google Cloud and Cloudflare apply their data processing terms",
         ):
             assert fact in response.text, fact
+        # The feedback item must not claim a sole reader, and the cookie item names the operator as its holder.
+        for gone in ("read only by the operator", "admins: the Cloudflare Access login cookie"):
+            assert gone not in response.text, gone
 
     def test_seo_legal_mirrors_the_data_assistant_section(self, client: TestClient) -> None:
         """The crawler body carries the assistant's facts the human page states (LegalPage.tsx `#assistant`)."""
@@ -1345,21 +1571,69 @@ class TestSeoProxyRouter:
         assert response.status_code == 200
         for fact in (
             'id="assistant"',
-            "experimental feature, and the operator may pause it",
-            "Google Cloud Vertex AI in the EU",
-            "nobody checks them by hand",
-            "salted with a value that lives as long as the server instance",
-            "it starts unticked",
-            "180 days",
-            "a licence from Highsoft",
-            "consent (Art. 6(1)(a) GDPR)",
-            "your request (Art. 6(1)(b) GDPR)",
-            "Telemetry: up to 180 days",
-            "cleared after an hour idle",
+            # What it is, and where its terms of use stand: its own page, as on the human page.
+            "Only if you use it. It adapts a catalogue plot to your data. Status, limits and your code: see "
+            '<a href="https://anyplot.ai/agent">the data assistant\'s page</a>.</li>',
+            "Google Cloud Vertex AI in the EU, under Google Cloud's data processing terms",
+            "Don't paste personal data you are not allowed to share",
+            # The ids keep what the limits count on, the salted tab id and the salted IP address,
+            # both personal data; the sentences that state the limits stand on the assistant's page.
+            "<li>Ids: a random tab id stands in for you. The per-tab limits and a pause after misuse go by "
+            "that id, the per-network limits by your IP address. Both ids are salted with a value",
+            "salted with a value that lives only as long as the server instance",
+            # Why they are pseudonymous and not anonymous, and what a feedback case holds, as the
+            # page's own test pins them.
+            "in memory, never written down",
+            "Nothing durable: only timestamps could match them to the 30-day server logs",
+            "so they are pseudonymous",
+            "Admins: a keyed hash (HMAC)",
+            "a profile of your data with its first 5 rows",
+            # Both hashes the row stores, the tab id's and the session id's (api/agent_cases.py
+            # `build_case`, `session_hash`), then who reads a case, and what: the triage session with
+            # the coding assistant (.claude/skills/triage-agent-cases/SKILL.md, "Read each case"), the
+            # run's details and the two hashes included.
+            "your reaction, message, hashes of your tab id and of the session id, and the run's details. "
+            "The operator reads the cases to fix what went wrong, also with AI coding assistants (such "
+            "as Claude Code by Anthropic) and in test runs on other AI models: your reaction and message, "
+            "the conversation, the data sample or file, the plot and its code, the run's details and the "
+            "two hashes. Those tools process a case under their providers' own terms, outside the EU "
+            "route named above, with training on what he sends switched off.</li>",
+            "it starts unticked, which leaves out that file only",
+            "never your text, data, column or file names",
+            # Every kind of field by its name: event types, plot type and library record what a
+            # visitor did and chose, so no category of "technical details" covers them.
+            "Telemetry holds event types, formats, sizes, plot type, library, language code (rare ones as "
+            '"other"), attempts, defect ids, statuses, latencies and token counts.',
+            # The match the telemetry reference documents: by time, and exactly by token counts.
+            "For 30 days, the time or the token counts of a telemetry line could match it to the request "
+            "that wrote it.",
+            "your request: making the plot you ask the data assistant for",
+            "your consent to a feedback case",
+            # The page's periods and places for the assistant's data, each beside its data.
+            "Telemetry: up to 180 days in Google Cloud Logging and BigQuery in the Netherlands (europe-west4)",
+            "private bucket in Google Cloud Storage in the Netherlands (europe-west4) for 180 days",
+            "The triage row stays until you ask to delete it, in Google Cloud SQL in the Netherlands",
+            "server memory only, cleared after an hour idle",
+            "keeps its last 16 results in memory",
+            "only if you tick",
             "it is not used for training",
-            "The triage row stays until you ask to delete it",
         ):
             assert fact in response.text, fact
+        # The assistant's terms of use stand on its own page now, not in the privacy policy.
+        for moved in (
+            "without warranty",
+            "results can be wrong and nobody checks them by hand",
+            "may pause it at any time",
+            "use it only with data you may share",
+            "unlawful content",
+            "automated requests",
+            "Daily limits apply per tab and per network",
+            "a misuse can pause you for the day",
+            "yours to use, as is",
+            "Highcharts",
+            "<li>Limits:",
+        ):
+            assert moved not in response.text, moved
 
     def test_seo_mcp_tells_agents_how_to_connect(self, client: TestClient) -> None:
         """The /mcp page's audience is AI agents — the bot body must carry the

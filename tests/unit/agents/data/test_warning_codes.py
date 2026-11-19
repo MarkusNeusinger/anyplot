@@ -11,6 +11,7 @@ from agents.anyplot.data.parse import (
     AMBIGUOUS_DATE_ORDER,
     HEADERLESS_LIST_WARNING,
     NS_OUT_OF_RANGE,
+    OFFSET_DATES,
     ParseError,
     minus_note,
     parse_dataset,
@@ -121,6 +122,7 @@ SAMPLES: dict[str, str] = {
         "utc_offsets_normalised"
     ),
     f"column 't': {NS_OUT_OF_RANGE}": "sub_microsecond_text",
+    f"column 'day': {OFFSET_DATES}": "offset_dates_text",
     f"column 'd': {AMBIGUOUS_DATE_ORDER}": "date_order_ambiguous",
     f"column 'd': {AMBIGUOUS_MONTH_FIRST}": "date_order_ambiguous",
     "column 'm': 12 cells read as months (YYYY-MM, each as the first day of the month)": "months_read",

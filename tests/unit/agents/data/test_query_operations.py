@@ -83,6 +83,33 @@ class TestTotalOverAllRows:
             "summed hardness over all 7 rows: 1 row, 4 other columns dropped, 1 row without a value in hardness left out"
         ]
 
+    @pytest.mark.parametrize("held", ["4.5", "45"], ids=["decimals", "whole"])
+    def test_a_total_over_rows_that_all_lack_the_value_is_empty_and_never_zero(self, held: str) -> None:
+        """A question about rows with no value has no figure for an answer. The 0 a sum of nothing would give reads
+        like a measured total, and the reply could state it."""
+        data = f"batch,hardness,lab\nK1,{held},south\nK2,{held},south\nK3,,north\nK4,,north\n"
+        result = query(
+            {"op": "keep_rows", "where": [{"column": "lab", "test": "eq", "value": "north"}]},
+            {"op": "aggregate", "column": "hardness", "how": "sum"},
+            data=data,
+        )
+
+        assert one_row(result) == {"hardness": ""}
+        assert result.changes[-1] == (
+            "summed hardness over all 2 rows: 1 row, 2 other columns dropped, 2 rows without a value in hardness left out"
+        )
+
+    def test_a_keyed_total_counts_its_empty_groups_also_when_the_names_give_way(self) -> None:
+        """Past the room the line leaves, the names give way to totals, and the groups left empty keep their count."""
+        names = [f"reading_{index}_" + "q" * 50 for index in range(6)]
+        # The south lab holds no value in any column; the north lab holds one in each.
+        data = "lab," + ",".join(names) + "\nnorth," + ",".join("1" for _ in names) + "\nsouth," + "," * 5 + "\n"
+
+        (line,) = query({"op": "aggregate", "by": ["lab"], "columns": names, "how": "sum"}, data=data).changes
+
+        assert len(line) <= MAX_NOTE_CHARS
+        assert line.endswith(", 6 group figures left empty, 6 empty cells in 6 of the 6 value columns left out")
+
     def test_a_mean_and_a_count_say_which_rows_they_leave_out(self) -> None:
         mean = query({"op": "aggregate", "column": "temperature", "how": "mean"})
         count = query({"op": "aggregate", "column": "temperature", "how": "count"})

@@ -536,6 +536,20 @@ def test_run_tests_installs_and_requires_the_renderers_libraries() -> None:
     assert "libcairo2" in cairo and "libcairo2" in renderer
 
 
+def test_run_tests_sets_up_and_requires_the_javascript_runtime() -> None:
+    """The job "Run Tests" sets up Node, the lock's `node_modules` and Chromium with the composite action before pytest
+    and sets `ANYPLOT_REQUIRE_JS_RUNTIME=1`, so the tests that render through `automation/js-render/render.mjs` run
+    there, and a missing piece fails them instead of skipping them (`tests/libraries.py`). A job that installs Python
+    alone skips every one of them without a word."""
+    job = load_workflow("ci-tests.yml")["jobs"]["test"]
+    assert job["env"]["ANYPLOT_REQUIRE_JS_RUNTIME"] == "1"
+    steps = job["steps"]
+    [setup] = [i for i, step in enumerate(steps) if step.get("uses") == "./.github/actions/setup-node"]
+    [pytest_step] = [i for i, step in enumerate(steps) if "uv run pytest" in step.get("run", "")]
+    assert setup < pytest_step
+    assert steps[setup]["if"] == "steps.check.outputs.should_test == 'true'"
+
+
 class TestCiMigrationsWorkflow:
     """ci-migrations.yml runs every revision against a throwaway PostgreSQL, never against a shared one."""
 

@@ -9,7 +9,7 @@ import { FAB_ROW_CENTER_XS } from 'src/theme/floating-actions';
  * scroll-to-top button) applies the same value, so they move as one.
  *
  * Returns `'none'` while the footer is offscreen and on viewports from MUI's
- * sm breakpoint up, where the footer never reaches the button column.
+ * sm breakpoint up, where the footer's lines stay clear of the buttons.
  */
 export function useFooterLift(): string {
   // Number of pixels the footer currently overlaps the viewport. When the
@@ -23,7 +23,9 @@ export function useFooterLift(): string {
     let rafId = 0;
     const update = () => {
       // Only narrow mobile viewports actually collide — at MUI's sm breakpoint
-      // and above the footer's last link sits well left of the FAB row.
+      // and above the footer's lines stay clear of the FAB row: below the
+      // width where its single row clears the buttons, the footer puts the
+      // links and the name on two short centred lines (Footer.tsx).
       if (window.innerWidth >= 600) {
         setLift(0);
         return;

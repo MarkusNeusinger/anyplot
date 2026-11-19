@@ -17,6 +17,7 @@ docs/
 ├── contributing.md   # user-facing: how to propose plots, improve specs
 ├── development.md    # local setup, testing, code quality
 ├── concepts/         # philosophy, design decisions, roadmaps (vision, library-expansion)
+├── decisions/        # one file per decision of the owner (format in its README; the files stay unindexed)
 ├── workflows/        # how the GitHub Actions automation works
 └── reference/        # technical lookup: api, database, mcp, repository, style-guide, tagging-system, plausible, seo, performance
 agentic/docs/         # agent-workflow internals (project-guide.md) — for AI agents, not end users
@@ -64,7 +65,9 @@ Checklist for adding, renaming, or removing a doc:
   docs and the About page's copy of the rubric. A count that only
   grows (merged pull requests) is written as a floor, "more than N",
   bounded by the test's `MERGED_PRS_SNAPSHOT`, which every release
-  updates.
+  updates. The README's release count is the exception: it is exact,
+  read from `CHANGELOG.md`'s version headings, and every release
+  raises it.
   The showcase image (`docs/assets/readme-showcase.png`) is redrawn
   from live data by `scripts/readme_showcase.py`, at every release
   (`agentic/commands/release.md` step 4) and whenever a pick or the

@@ -29,6 +29,7 @@ import pytest
 
 from agents.anyplot.data.kinds import read_kinds
 from agents.anyplot.data.typed_json import typed_json
+from tests.libraries import skip_or_fail_js_runtime
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -118,7 +119,7 @@ def harness(tmp_path_factory: pytest.TempPathFactory) -> Harness:
     node = shutil.which("node")
     modules = _node_modules()
     if node is None or modules is None:
-        pytest.skip("needs node on PATH and the lock's node_modules (npm ci, or ANYPLOT_NODE_MODULES)")
+        skip_or_fail_js_runtime("needs node on PATH and the lock's node_modules (npm ci, or ANYPLOT_NODE_MODULES)")
     root = tmp_path_factory.mktemp("checkout")
     (root / "automation" / "js-render").mkdir(parents=True)
     shutil.copy(HARNESS, root / "automation" / "js-render" / "render.mjs")
@@ -131,7 +132,7 @@ def harness(tmp_path_factory: pytest.TempPathFactory) -> Harness:
     allowlist.write_text(json.dumps(builder.allowlist(modules)), encoding="utf-8")
     probe = Harness(root, node, allowlist).render(tmp_path_factory.mktemp("probe"), CANVAS, sandbox=False)
     if probe.returncode != 0:
-        pytest.skip(f"the harness cannot render here (no browser?): {probe.stderr.strip()[-300:]}")
+        skip_or_fail_js_runtime(f"the harness cannot render here (no browser?): {probe.stderr.strip()[-300:]}")
     return Harness(root, node, allowlist)
 
 

@@ -68,6 +68,7 @@ from api.agent_cases import (
     read_manifest,
     write_case,
 )
+from api.body_limit import DEFAULT_MAX_BODY_BYTES, Bound
 from api.dependencies import require_db
 from api.routers.debug import AdminIdentity, require_admin, require_admin_identity
 from core.agent_cases import (
@@ -101,9 +102,54 @@ the renderer's cap (`agents/renderer/wire.py` `MAX_CONVERT_INPUT_BYTES`, copied 
 the agents package). It travels as base64 in JSON, about 6.7 MB, because the CSRF guard takes JSON only."""
 MAX_CONVERT_BASE64_CHARS = 4 * ((MAX_CONVERT_BYTES + 2) // 3)
 MAX_REQUEST_BODY_BYTES = MAX_CONVERT_BASE64_CHARS + 4096
-"""The largest body any agent route takes, by its declared length: the conversion's base64 and the JSON around it
-(the paste's 1 MB of text stays far below even with every character escaped)."""
+"""The largest body any agent route takes, by its declared length: the conversion's base64 and the JSON around it.
+It is the file conversion's bound (`BODY_RULES`); the paste has a smaller one of its own (`MAX_PASTE_BODY_BYTES`)."""
 CONVERT_PATH_SUFFIX = "/dataset/convert"
+MAX_SOURCE_CHARS = 1_024
+"""The name of the file a paste was read from (`DatasetBody.source`)."""
+MAX_PASTE_BODY_BYTES = 2 * MAX_DATASET_BYTES + 6 * MAX_SOURCE_CHARS + 1024
+"""The largest body the paste route takes, as a browser writes it: UTF-8, with only the escapes JSON needs. JSON
+writes a line break, a tab, a quotation mark and a backslash as two bytes, so the 1 MB of text is at most 2 MB as
+sent, and a table full of nothing else is still a table. Beside it the file name, at the six bytes a character can
+take as sent, and the JSON around both. Text that would be longer still holds control characters, which the parser
+refuses anyway; a client that writes every non-ASCII character as an escape sends more and is refused."""
+MAX_LARGE_BODIES = 4
+"""How many bodies above the small default the two data routes take at once, on both lanes together; one more is
+answered `503 capacity`, which the page words as busy. Every other body of the chat is a few kilobytes."""
+LARGE_BODY_STALL_S = 15.0
+"""The longest wait for the next part of a large body. A connection that sends nothing for this long has dropped,
+or was never going to send: a browser's upload arrives in a steady run of small parts."""
+LARGE_BODY_TOTAL_S = 120.0
+"""The longest a large body may take to arrive whole: the largest one, an uploaded file of 5 MB as it is sent, in
+this time is a line of about half a megabit a second."""
+_DATA_ROUTE = r"/(?:debug/agent/sessions/[^/]+|agent/session)/dataset"
+
+
+def _data_bound(max_bytes: int) -> Bound:
+    """The bound of a route that carries data, answered with the codes the page reads from these routes."""
+    return Bound(
+        max_bytes,
+        detail="too_long",
+        large=True,
+        length_detail="length_required",
+        busy_detail="capacity",
+        slow_detail="upload_timeout",
+    )
+
+
+BODY_RULES: tuple[tuple[re.Pattern[str], Bound], ...] = (
+    (re.compile(_DATA_ROUTE), _data_bound(MAX_PASTE_BODY_BYTES)),
+    (re.compile(_DATA_ROUTE + "/convert"), _data_bound(MAX_REQUEST_BODY_BYTES)),
+)
+"""The two routes of each lane that carry data, the paste and the file conversion, with the body each needs
+(`api/body_limit.py`; registered in `api/main.py`). A session id in the admin lane's path is any one segment: a
+malformed one is the route's to refuse, and its body is bounded all the same."""
+BODY_PREFIXES: dict[str, Bound] = {
+    "/agent": Bound(DEFAULT_MAX_BODY_BYTES, detail="too_long"),
+    "/debug/agent": Bound(DEFAULT_MAX_BODY_BYTES, detail="too_long"),
+}
+"""Every other route of the two lanes: the API's small default, answered with the chat's own code. The largest of
+those bodies is the column bindings, about 22 KB with every name at its longest."""
 MAX_SHEET_NAME_CHARS = 255
 MAX_DATASET_TABLES = 10  # agents/anyplot/data/parse.py MAX_TABLES: the tables of one paste the page may choose from
 MAX_MESSAGE_CHARS = 2000
@@ -346,8 +392,8 @@ class AgentHTTPError(Exception):
     """An agent-route error, answered as `{"detail": code}` plus `"ref"` when known.
 
     Not an `HTTPException` on purpose: the API-wide handler reshapes those into
-    `{"status", "message", "path"}` and drops their headers, while the chat
-    page needs a stable code and the request id to quote. `errors` carries the
+    `{"status", "message", "path"}`, while the chat page needs a stable code
+    and the request id to quote. `errors` carries the
     binding check lines of a `422 invalid`; `case_id` the stored case of a
     `502 row_missing`, so the page can chain its next edit to it; `cause` the
     agents service's sentence naming what a refused paste fails on (`_cause`).
@@ -453,6 +499,11 @@ def require_same_site_client(request: Request) -> None:
 
 def require_body_within_cap(request: Request) -> None:
     """Refuse a request body over `MAX_REQUEST_BODY_BYTES` by its declared `Content-Length`, before it is read.
+
+    The second line: the bound in front of the router (`api/body_limit.py`, `BODY_RULES`) already holds every route
+    to the body it needs and refuses a data body without a length. This check stays, at the cap of the largest route,
+    for an app built without that
+    middleware, such as a router mounted alone in a test.
 
     Placed before `require_utf8_body`, which reads the body. A route that declares a body
     model has its body read by FastAPI before any dependency runs, so for those this is a
@@ -647,7 +698,7 @@ class DatasetBody(_StrictBody):
     # The name of the file the page read `text` from (a drop, `.open()`, a pasted file). The agents
     # service sanitises and screens it and keeps it apart from the notes (`file_name` in the answer, never a
     # request to the assistant); it is never logged.
-    source: Annotated[str, Field(min_length=1, max_length=1_024)] | None = None
+    source: Annotated[str, Field(min_length=1, max_length=MAX_SOURCE_CHARS)] | None = None
     # Which of several tables in `text` to read (the page's table picker, from the previous answer's
     # `tables`, 1-based); the agents service reads the first without it.
     table: Annotated[int, Field(strict=True, ge=1, le=MAX_DATASET_TABLES)] | None = None
@@ -1004,7 +1055,13 @@ async def _read_capped(response: httpx.Response, max_bytes: int) -> bytes | None
 
 
 async def _fetch_bundle(
-    client: httpx.AsyncClient, ctx: AgentContext, sid: str, *, version: int | None, include_data: bool
+    client: httpx.AsyncClient,
+    ctx: AgentContext,
+    sid: str,
+    *,
+    version: int | None,
+    include_data: bool,
+    with_case_key: bool = False,
 ) -> bytes:
     """The agents service's bundle of the session (`GET /v1/sessions/{sid}/bundle`), read whole.
 
@@ -1012,12 +1069,15 @@ async def _fetch_bundle(
     route: an upstream error keeps its status and code (`404 session_expired` for
     another user's session, `404 not_found` for a version the session lacks),
     `502 upstream` when the service cannot be reached, and `502 too_large` above
-    `MAX_BUNDLE_BYTES`.
+    `MAX_BUNDLE_BYTES`. `with_case_key` asks for `session.case_key`, which only a stored
+    feedback case needs: a saved session never carries it.
     """
     path = f"/sessions/{sid}/bundle"
     params: dict[str, str | int] = {"include_data": "true" if include_data else "false"}
     if version is not None:
         params["version"] = version
+    if with_case_key:
+        params["with_case_key"] = "true"
     try:
         response = await _open_stream(client, ctx, "GET", path, params=params)
         try:
@@ -1749,7 +1809,9 @@ async def submit_feedback(
     shape is `502 upstream`, and a failed upload is `502 storage`, which leaves no
     manifest: files without one are an aborted case, never a case.
     """
-    content = await _fetch_bundle(client, ctx, sid, version=body.result_version, include_data=body.include_data)
+    content = await _fetch_bundle(
+        client, ctx, sid, version=body.result_version, include_data=body.include_data, with_case_key=True
+    )
     created_at = datetime.now(UTC)
     submission = Submission(
         reaction=body.reaction,

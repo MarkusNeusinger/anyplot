@@ -53,4 +53,25 @@ describe('buildClaudePrompt', () => {
     expect(out).toMatch(/Implement a fix/);
     expect(out).toMatch(/Open a pull request/);
   });
+
+  // The legal page's site feedback row (app/src/pages/LegalPage.tsx) names the message, the page
+  // and the reaction as what can go to the coding assistant: a fourth parameter changes that row
+  // too. Function.length does not count a parameter with a default value, so the copy test in
+  // app/src/pages/DebugPage.test.tsx pins that the entry's other fields stay out at the call site.
+  it('takes three parameters: the message, the page and the reaction', () => {
+    expect(buildClaudePrompt).toHaveLength(3);
+
+    const out = buildClaudePrompt('The legend hides the last bar', '/plots/bar-basic', 'bug');
+    expect(out).toContain('> The legend hides the last bar');
+    expect(out).toContain('on https://anyplot.ai/plots/bar-basic:');
+    expect(out).toContain('following bug report on');
+  });
+
+  // The repository is public: the visitor's words stay out of what a session publishes there.
+  it('asks to keep the quoted message out of commits, pull requests and issues', () => {
+    const out = buildClaudePrompt('hi', '/p', 'bug');
+    expect(out).toContain(
+      'Do not quote the message in the repository, a commit, a pull request or an issue; describe the problem in your own words.'
+    );
+  });
 });

@@ -16,7 +16,8 @@ Developers waste hours on visualization:
 
 ## The solution
 
-**anyplot is an AI-powered platform where specifications meet automation.**
+**anyplot is a catalogue where specifications meet automation: AI writes and reviews the code, by rules its owner
+sets.**
 
 ### The human touch
 
@@ -48,7 +49,7 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
   ROC curve, Sankey diagram)
 - **Multiple Styles**: Same plot, different visual styles—pick what you like
 - **Community + AI**: Users submit specs, AI generates and maintains code
-- **Global**: AI-native means any language, anywhere
+- **Global**: one specification per plot type serves every language and every library
 
 ## Key features
 
@@ -60,11 +61,12 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 - Search and filter by tags and titles
 - AI-generated explanations
 - **MCP Server**: Integrate anyplot into your AI workflow ([Docs](../reference/mcp.md), [Issue #4129](https://github.com/MarkusNeusinger/anyplot/issues/4129))
-- **Use with my data** (experimental since 2026-11-02): Paste your data on a plot page, and the chat at `/agent` adapts that plot's code to it ([Design](agent-network.md))
+- **Use with my data** (experimental since 2026-11-02): Paste your data or drop a file (CSV, Excel, OpenDocument,
+  Parquet, and more) on a plot page, and the chat at `/agent` adapts that plot's code to it ([Design](agent-network.md))
 
 ### Premium (future)
 
-- **Try with *your* data**: Upload CSV/Excel/JSON, see all plots with your actual data (beyond the free chat, which takes pasted text for one plot at a time)
+- **Try with *your* data**: Upload CSV/Excel/JSON, see all plots with your actual data (beyond the free chat, which makes one plot at a time)
 - **Custom styles**: Generate plots matching your brand colors
 - **API access**: Programmatic access to plot generation
 

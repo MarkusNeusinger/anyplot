@@ -41,7 +41,9 @@ import binascii
 import difflib
 import functools
 import hashlib
+import hmac
 import json
+import logging
 import math
 import re
 import secrets
@@ -55,6 +57,8 @@ from core.agent_cases import CASE_ID_PATTERN as CASE_ID_PATTERN
 from core.agent_cases import CASE_PREFIX, CODE_FILE_NAMES, MANIFEST_NAME, MANIFEST_SCHEMA, case_object
 from core.constants import library_file_extension
 
+
+logger = logging.getLogger(__name__)
 
 CASE_STATUS_NEW = "new"
 """The status of a fresh case; the triage moves it to `in_progress`, `done` or `wont_solve`."""
@@ -200,9 +204,31 @@ def new_case_id(now: datetime) -> str:
     return f"{now:%Y%m%dT%H%M%SZ}-{secrets.token_hex(4)}"
 
 
-def session_hash(session_id: str) -> str:
-    """The first 16 hex digits of the session id's SHA-256: groups a session's cases without naming it."""
-    return hashlib.sha256(session_id.encode()).hexdigest()[:16]
+_SALT = secrets.token_bytes(32)
+"""This process's salt for `session_hash` where the bundle brings no key: never logged, never configured, gone with
+the process."""
+_CASE_KEY = re.compile(r"[0-9a-f]{16}")
+
+
+def session_hash(session_id: str, case_key: object = None) -> str:
+    """What a case records for its session, 16 hex digits: groups a session's cases without naming the session.
+
+    The agents service's request log holds the session id, so a plain hash of it could be made again from that log
+    and would tie a stored case to the session's requests. The value is therefore the key the agents service made
+    under its own per-process salt (`case_key`, the bundle's `session.case_key`, sent when the feedback route asks
+    for it): a session never outlives that salt, so every case of a session gets the same key, and once that
+    process is gone the key cannot be made again from a session id.
+
+    A bundle without a usable key (an agents service from before the field) gets a hash under this process's salt
+    instead. It cannot be made again either, but this process restarts while a session lives on, and a correction
+    sent after that carries another value than the case it names: both then stay in the list, unreplaced. That
+    path is logged, without the session id, because once both services run the field it means the bundle lost it.
+    """
+    if isinstance(case_key, str) and _CASE_KEY.fullmatch(case_key):
+        return case_key
+    found = "no case key" if case_key is None else "a case key of another form"
+    logger.warning("a session bundle carried %s; the case is keyed under this process's salt", found)
+    return hmac.new(_SALT, b"case:" + session_id.encode(), hashlib.sha256).hexdigest()[:16]
 
 
 def prompt_hash(prompt_hashes: Any) -> str | None:
@@ -341,7 +367,9 @@ def build_case(
             raise BundleError(f"{what} no data.csv although the data was asked for")
         files.append(CaseFile("data.csv", _utf8(data_csv, "data.csv")))
 
-    # The bundle as the manifest keeps it: without the PNGs and the data, which are files of their own.
+    # The bundle as the manifest keeps it: without the PNGs and the data, which are files of their own, and without
+    # the session's case key, which the manifest holds once, checked, as `session_hash`.
+    session = _dict(bundle.get("session"))
     kept = {
         **{key: value for key, value in bundle.items() if key != "data_csv"},
         "versions": [
@@ -349,8 +377,9 @@ def build_case(
             for item in versions
         ],
     }
+    if isinstance(bundle.get("session"), dict):
+        kept["session"] = {key: value for key, value in session.items() if key != "case_key"}
 
-    session = _dict(bundle.get("session"))
     config = _dict(bundle.get("config"))
     result = _dict(version.get("result"))
     manifest = {
@@ -359,7 +388,7 @@ def build_case(
         "created_at": created_at.isoformat(timespec="seconds").replace("+00:00", "Z"),
         "case_uri": f"gs://{bucket}/{CASE_PREFIX}/{case_id}/",
         "user_hash": user_hash,
-        "session_hash": session_hash(session_id),
+        "session_hash": session_hash(session_id, session.get("case_key")),
         "spec_id": _text(session.get("spec_id")),
         "library_id": version_library(version, session),
         "language": _text(session.get("locale")),
