@@ -5,4 +5,4 @@
   the public dashboard now that the property `query` is no longer an allowed
   property; Plausible still stores them, so the analytics row on `/legal` and
   its crawler copy say "still stored by Plausible, no longer shown" instead of
-  "still show there".
+  "still show there". (#13203)
