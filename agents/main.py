@@ -1658,10 +1658,10 @@ async def _ingest_paste(
     delta[SUMMARY_PENDING] = ingested.dataset_id
     # Read again: the chip's choice may have landed while the judges ran, and no offer comes after a choice.
     # From this read to the append below nothing suspends: `InMemorySessionService.get_session` and
-    # `append_event` (ADK 2.13) contain no `await` that yields, and the code between them is synchronous,
-    # so on the one event loop no `PUT /language` can land in between; the read and the conditional
-    # write are atomic. A persistent session service with I/O in either call would need a
-    # compare-and-set instead. Keep any new `await` out of this block.
+    # `append_event` (ADK 2.13, checked again on 2.14.1) contain no `await` that yields, and the code
+    # between them is synchronous, so on the one event loop no `PUT /language` can land in between; the
+    # read and the conditional write are atomic. A persistent session service with I/O in either call
+    # would need a compare-and-set instead. Keep any new `await` out of this block.
     session = await runtime.session(user, sid)
     current = read_session(session.state) or view
     # The view of the plot was set on the data this paste replaces, and the paste's delta writes it out. It is kept

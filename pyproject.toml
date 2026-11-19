@@ -141,10 +141,10 @@ lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-l
 # for a checkout, and the service loads them through a registry that never downloads.
 # tests/unit/agents/code/test_treesitter.py holds all of it.
 agents = [
-    "google-adk==2.13.0",
+    "google-adk==2.14.1",
     "anthropic[vertex]>=1.8.0",
-    "tree-sitter==0.26.0",
-    "tree-sitter-language-pack==1.24.1",
+    "tree-sitter==0.26.1",
+    "tree-sitter-language-pack==1.25.0",
 ]
 all = [
     "anyplot[test,dev,plotting,typecheck]",

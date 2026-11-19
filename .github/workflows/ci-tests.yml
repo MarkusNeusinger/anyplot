@@ -66,6 +66,11 @@ jobs:
       # them the validator's walk of the admitted modules saw matplotlib alone and
       # missed pygal's alias of types.FunctionType (2026-11-02).
       ANYPLOT_REQUIRE_LIBRARIES: "1"
+      # The JavaScript runtime is set up below, so a test that renders through
+      # Node and Chromium fails when one piece is missing instead of skipping
+      # (tests/libraries.py); the harness's sandbox limits and the page a visitor
+      # downloads were tested only on a developer's machine before.
+      ANYPLOT_REQUIRE_JS_RUNTIME: "1"
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -210,6 +215,13 @@ jobs:
     - name: Fetch the tree-sitter grammars
       if: steps.check.outputs.should_test == 'true'
       run: uv run --no-sync python -m tools.tree_sitter_grammars
+
+    # Node, the lock's node_modules and Playwright's Chromium, as the JavaScript
+    # implementations get them: tests/unit/automation and tests/unit/agents render
+    # through automation/js-render/render.mjs and need all three.
+    - name: Set up the JavaScript render runtime
+      if: steps.check.outputs.should_test == 'true'
+      uses: ./.github/actions/setup-node
 
     # Unit tests (mocked dependencies) and integration tests (SQLite in memory)
     # for every author; the e2e tests against real PostgreSQL are in test-e2e.

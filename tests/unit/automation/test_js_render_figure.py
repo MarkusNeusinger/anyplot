@@ -23,7 +23,7 @@ import pytest
 
 from agents.anyplot.render import harness as python_harness
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE
-from tests.libraries import skip_or_fail
+from tests.libraries import skip_or_fail, skip_or_fail_js_runtime
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -128,7 +128,7 @@ def harness(tmp_path_factory: pytest.TempPathFactory) -> Harness:
     node = shutil.which("node")
     modules = _node_modules()
     if node is None or modules is None:
-        pytest.skip("needs node on PATH and the lock's node_modules (npm ci, or ANYPLOT_NODE_MODULES)")
+        skip_or_fail_js_runtime("needs node on PATH and the lock's node_modules (npm ci, or ANYPLOT_NODE_MODULES)")
     if package_dir("plotly") is None:
         skip_or_fail("needs plotly, whose bundled plotly.js draws the figures (the lib-plotly extra)")
     root = tmp_path_factory.mktemp("checkout")
@@ -137,7 +137,7 @@ def harness(tmp_path_factory: pytest.TempPathFactory) -> Harness:
     (root / "node_modules").symlink_to(modules.resolve(), target_is_directory=True)
     probe = Harness(root, node).draw(tmp_path_factory.mktemp("probe"), plotly_figure(800, 450))
     if probe.returncode != 0:
-        pytest.skip(f"the harness cannot render here (no browser?): {probe.stderr.strip()[-300:]}")
+        skip_or_fail_js_runtime(f"the harness cannot render here (no browser?): {probe.stderr.strip()[-300:]}")
     return Harness(root, node)
 
 
