@@ -12,8 +12,8 @@
   `13.03.2026-05:00` as that day at 05:00, `2026-03-01/05` as 1 March, and a
   range of times such as `2026-03-01 9:00-17:00` as 09:00 at an offset of
   -17:00, which no place has; each was rated certain and made without
-  asking.
+  asking. (#13187)
 - **A time without a colon keeps its hour.** Hours such as `2026-03-01T00`
   to `T03`, `2026-03-01 10am` and `2026-03-01T1000` are written with their
   time; the column of dates used to drop it, because only a colon made a
-  column one of times.
+  column one of times. (#13187)
