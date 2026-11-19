@@ -2,11 +2,11 @@
 
 The prep eval's `de-tagesmittel-pro-sensor`: the daily mean of the temperature per sensor drops the humidity, so the
 scatter plot's y axis loses its column and no column is left for it. The root then added the timestamps as days since
-the first date, which nobody asked for, and the column landed on an axis. With the guard nothing a conversion makes in
-that turn lands on a role, whichever way it comes in (the same data step, a second one, a binding call), the table
-keeps only what was asked for, the session block names the role that lost its column, and the next turn lists what the
-server can compute for it. A refused call costs none of the turn's two data steps, and a derived column the request
-names still takes the axis it names.
+the first date, which nobody asked for, and the column landed on an axis. With the guard no date turned into numbers
+and no row number made in that turn lands on a role, whichever way it comes in (the same data step, a second one, a
+binding call), the table keeps only what was asked for, the session block names the role that lost its column, and
+the next turn lists what the server can compute for it. A refused call costs none of the turn's two data steps, and a
+column the request derives or converts from text itself still takes the axis it names.
 """
 
 import json
@@ -20,7 +20,14 @@ from agents.anyplot.agent import CONVERSIONS_HEADING, EMPTIED_HEADING
 from agents.anyplot.plugins.ledger import ledger_for
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import DATASET_ID, SUMMARY_PENDING, read_session
-from agents.anyplot.tools.session import COLUMN_HELD_MESSAGE, set_bindings
+from agents.anyplot.tools.session import (
+    COLUMN_HELD_MESSAGE,
+    LOSING_LINE,
+    LOST_LINE,
+    MADE_BEFORE_LINE,
+    MADE_NOW_LINE,
+    set_bindings,
+)
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import default_script
@@ -108,7 +115,9 @@ class TestTheWaysIn:
         assert "Tag" not in bound.values() and "Tag" not in columns
         refused = answers(fake, 1)
         assert '\\"code\\": \\"invalid_operation\\"' in refused and HELD in refused
-        assert "y lost its column 'Feuchte' in this turn" in refused and "'Tag' is a conversion" in refused
+        # Nothing was stored, so y still holds Feuchte: the refusal says it would lose it, never that it lost it.
+        assert LOSING_LINE.format(role="y", column="Feuchte") in refused and MADE_NOW_LINE.format(name="Tag") in refused
+        assert LOST_LINE.format(role="y", column="Feuchte") not in refused
 
     async def test_a_second_data_step_stores_nothing_and_the_reply_names_the_axis(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
@@ -122,7 +131,8 @@ class TestTheWaysIn:
 
         bound, columns = await outcome(runtime, sid)
         assert bound == {"x": "Temperatur"} and columns == ["Zeitpunkt", "Sensor", "Temperatur"]
-        assert HELD in answers(fake, 2)
+        refused = answers(fake, 2)
+        assert HELD in refused and LOST_LINE.format(role="y", column="Feuchte") in refused
         # The facts the reply states: the role that lost its column and that column, for every call after the change.
         for call in (1, 2):
             assert f"- {EMPTIED_HEADING.format(count=1)}\n{LOST_Y}" in block_of(fake, call)
@@ -179,7 +189,31 @@ class TestTheWaysIn:
         await say(client, sid, {"text": "Drop the humidity."})
 
         bound, _ = await outcome(runtime, sid)
-        assert bound == {"x": "Temperatur", "y": "Feuchte"} and HELD in answers(fake, 2)
+        refused = answers(fake, 2)
+        assert bound == {"x": "Temperatur", "y": "Feuchte"} and HELD in refused
+        assert LOSING_LINE.format(role="y", column="Feuchte") in refused
+        assert MADE_BEFORE_LINE.format(name="index") in refused
+
+    async def test_a_text_column_the_request_converts_and_sums_is_its_own(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models
+    ) -> None:
+        """The price read from text and summed per region in one call: the aggregate takes both axes' columns and the
+        new column fills x, as the request means. A conversion of a text column is no fill the guard holds."""
+        prices = "Region,Qty,Weight,Price\nNord,3,1.5,12 Stk à CHF\nSüd,5,2.5,20 Stk à CHF\nNord,2,1.0,8 Stk à CHF\n"
+        extract = {"op": "extract", "column": "Price", "keep": "number", "name": "Preis"}
+        total = {"op": "aggregate", "by": ["Region"], "column": "Preis", "how": "sum"}
+        script = default_script()
+        script["root"] = [prepare_call(extract, total), {"text": "Preis summed per region: 2 rows."}]
+        fake = swap_models("anthropic-vertex", script)
+        sid = await summarized(client, runtime, prices)
+
+        await say(client, sid, {"text": "Total price per region, the price is the number in Price."})
+
+        bound, columns = await outcome(runtime, sid)
+        assert bound == {"x": "Preis"} and columns == ["Region", "Preis"]
+        assert HELD not in answers(fake, 1)
+        # y lost Weight to the aggregate, with nothing left to take it: the block says so.
+        assert f"- {EMPTIED_HEADING.format(count=1)}\n<user_data>\ny: Weight\n</user_data>" in block_of(fake, 1)
 
 
 class TestWhatTheGuardLeaves:
@@ -255,10 +289,11 @@ class TestWhatTheGuardLeaves:
 
 
 class TestSetBindings:
-    async def test_it_refuses_a_conversion_of_the_turn_only_once_the_turn_emptied_a_role(
+    async def test_it_refuses_the_turns_date_numbers_only_once_the_turn_emptied_a_role(
         self, client: httpx.AsyncClient, runtime: Runtime
     ) -> None:
-        """The binding call alone: a conversion column the turn made, while a role it emptied is open."""
+        """The binding call alone: a column of dates turned into numbers that the turn made, once a role it emptied is
+        open; the same binding before that is the user's offer taken."""
         sid = await summarized(client, runtime, SENSORS.replace("Feuchte", "Tag"))
         context = await context_for(client, sid, "inv-e-1")
         ledger = ledger_for("inv-e-1")

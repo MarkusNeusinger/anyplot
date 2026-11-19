@@ -22,8 +22,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   pipeline runs. Its result says whether the data is still `data_confirmed`: bindings that
   only leave out confirmed number series (`y2`) keep the confirmation (`narrowed_confirmation`,
   `AGENT_NARROWED_BINDINGS=keep`, since 2026-10-15), any other change drops it. In a turn whose own change of the
-  data emptied a role, a binding that puts a conversion column of the turn on a role is refused, the whole call,
-  with `invalid_bindings` and a fixed `message` (`data/emptied.py`).
+  data emptied a role, a binding that puts a column of the turn holding a date turned into numbers or the row
+  numbers on a role is refused, the whole call, with `invalid_bindings` and a fixed `message` (`data/emptied.py`).
 * `set_language(language, applies_to)`: the reply language (the session language,
   `session_state.LANGUAGE`, with the source `chosen`), the plot's text
   (`session_state.PLOT_LANGUAGE`) or both (the default), validated like the language
@@ -86,8 +86,9 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   alone, `plot_outdated`; `reset_view` clears the view, and a view that does not fit the table the call
   leaves refuses the whole call. A selection held from before that keeps every row of the table the call
   leaves is cleared with a line of its own (`plot_view.idle_selections`). Once a call of the turn has left a
-  required role without the column it was bound to, a call that makes a conversion column or whose carry would
-  put one on a role is refused before anything is stored, with `invalid_operation` and a fixed `message`, and
+  required role without the column it was bound to, a call that turns a date into numbers or makes the row
+  numbers, or whose carry would put such a column on a role, is refused before anything is stored, with
+  `invalid_operation` and a fixed `message`, and
   counts against none of the turn's caps (`data/emptied.py`, `_turn_columns`).
 * `query_data(operations, columns, limit, from_version)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, or of the two only a
@@ -379,9 +380,10 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         return _error("invalid_bindings")
     landed = held_bindings(parsed, view.bindings, ledger.made_columns) if ledger.emptied_roles else []
     if landed:
-        # A conversion of a turn whose change of the data emptied a role takes no role in it (`data/emptied.py`).
+        # A date turned into numbers or the row numbers, made in a turn whose change of the data emptied a role, take
+        # no role in it (`data/emptied.py`).
         ledger.guard_held.append("set_bindings")
-        return _column_held(ledger.emptied_roles, [binding.column for binding in landed], "invalid_bindings")
+        return _column_held(ledger.emptied_roles, {}, [], [binding.column for binding in landed], "invalid_bindings")
     roles = view.snapshot.roles()
     check, delta = apply_bindings(parsed, roles, profile)
     if not delta:
@@ -583,32 +585,46 @@ def _version_refusal(code: VersionRefusal) -> dict[str, Any]:
 
 
 COLUMN_HELD_MESSAGE = (
-    "Nothing changed. This turn's change of the data left {roles} without the column it was bound to, and in such a "
-    "turn no conversion or row number is made and none takes a role: the role waits for the user, and the next turn "
-    "lists what the server can compute for it. Leave that column out, and say in the reply which role lost its column."
+    "Nothing changed. In a turn whose change of the data leaves a required role without the column it was bound to "
+    "({roles}), no date is turned into numbers, no row number is made, and none made in the turn takes a role: the "
+    "role waits for the user, and the next turn lists what the server can compute for it. Leave that column out of "
+    "the call; the errors say which role loses or lost which column."
 )
 """The refusal of the guard on an emptied role (`data/emptied.py`): server text, the role names the spec's own; the
-columns stand fenced beside it under `errors`. It comes with the code the tool answers a call it cannot make with
-(`invalid_operation`, `invalid_bindings`), as the refusal of a view that would break the bindings does: the message
-says why."""
+columns stand fenced beside it under `errors`. It never says a role lost its column, since the call it refuses may be
+the one that would have emptied it: the `errors` lines tell the two apart. It comes with the code the tool answers a
+call it cannot make with (`invalid_operation`, `invalid_bindings`), as the refusal of a view that would break the
+bindings does: the message says why."""
+LOST_LINE = "{role} lost its column '{column}' in an earlier change of this turn"
+LOSING_LINE = "{role} would lose its column '{column}' with this call"
+MADE_NOW_LINE = "'{name}' holds a date turned into numbers or the row numbers, and this call would make it"
+MADE_BEFORE_LINE = "'{name}' holds a date turned into numbers or the row numbers, made earlier in this turn"
+"""The `errors` lines of the guard's refusal, fenced since they name the user's columns: a role an earlier call of the
+turn emptied, a role this call would empty, a column this call would make, a column an earlier call made."""
 
 
-def _column_held(lost: Mapping[str, str], columns: Sequence[str], code: str) -> dict[str, Any]:
-    """The refusal with `code` of a call that would make or bind a conversion in a turn that emptied the roles of
-    `lost` (role: the column it was bound to): the fixed message, and the lines that name the columns, fenced."""
+def _column_held(
+    lost: Mapping[str, str], losing: Mapping[str, str], made_now: Sequence[str], made_before: Sequence[str], code: str
+) -> dict[str, Any]:
+    """The refusal with `code` of a call that would make or bind a date turned into numbers or the row numbers in a
+    turn that emptied the roles of `lost`, or of `losing` with this very call (each role: the column it was bound to):
+    the fixed message, and the lines that name the columns, fenced."""
     lines = [
-        *(f"{role} lost its column '{column}' in this turn" for role, column in lost.items()),
-        *(f"'{name}' is a conversion this turn would make or made" for name in dict.fromkeys(columns)),
+        *(LOST_LINE.format(role=role, column=column) for role, column in lost.items()),
+        *(LOSING_LINE.format(role=role, column=column) for role, column in losing.items() if role not in lost),
+        *(MADE_NOW_LINE.format(name=name) for name in dict.fromkeys(made_now)),
+        *(MADE_BEFORE_LINE.format(name=name) for name in dict.fromkeys(made_before) if name not in made_now),
     ]
-    message = COLUMN_HELD_MESSAGE.format(roles=", ".join(lost))
+    roles = list(dict.fromkeys([*lost, *losing]))
+    message = COLUMN_HELD_MESSAGE.format(roles=", ".join(roles))
     return {"status": "error", "code": code, "message": message, "errors": _fenced_lines(lines)}
 
 
 @dataclass(frozen=True)
 class _TurnColumns:
     """What one `prepare_data` call does to the guard on an emptied role: the roles it empties (`emptied`), the
-    conversion columns of the turn once it is stored (`made`), and its refusal when it would make or bind one in a
-    turn that emptied a role."""
+    turn's columns of a date turned into numbers or the row numbers once it is stored (`made`), and its refusal when it
+    would make or bind one in a turn that emptied a role."""
 
     emptied: list[Emptied]
     made: list[str]
@@ -628,35 +644,33 @@ def _turn_columns(
     """The guard on an emptied role for one `prepare_data` call (`data/emptied.py`).
 
     `bindings` are the ones in force on `current`, the current version; `start` is the version the call's operations
-    start from (another one for a rebuild); `parsed` is the table they leave. The conversion columns of the turn are
-    the earlier calls' under this call's renames and this call's own new ones, each while the table still has it. The
-    call empties a role when it leaves one open that it found bound, judged with the conversion columns no role held
-    hidden. Once the turn has emptied a role, the call is refused when it makes a conversion column or when the carry
-    that stores it (`push_version`, which computes the same bindings) would put one on a role.
+    start from (another one for a rebuild); `parsed` is the table they leave. The turn's columns of a date turned into
+    numbers or the row numbers (`emptied.made_columns`) are the earlier calls' under this call's renames and this
+    call's own new ones, each while the table still has it. The call empties a role when it leaves one open that it
+    found bound, judged with those columns hidden that no role held. Once the turn has emptied a role, the call is
+    refused when it makes such a column or when the carry that stores it (`push_version`, which computes the same
+    bindings) would put one on a role.
     """
     names = {column.name for column in parsed.profile.columns}
     converted = prepared.converted if prepared is not None else {}
     row_numbers = prepared.row_numbers if prepared is not None else []
     splits = prepared.splits if prepared is not None else []
-    new = [
-        name
-        for name in made_columns(converted, row_numbers, splits, {column.name for column in start.columns})
-        if name in names
-    ]
+    # A date column may come and go within the call (a `make_date`, an `aggregate` after the `date_number`).
+    dates = {column.name for column in [*start.columns, *parsed.profile.columns] if column.dtype == "datetime"}
+    before = {column.name for column in start.columns}
+    new = [name for name in made_columns(converted, row_numbers, dates, before) if name in names]
     made = [name for name in dict.fromkeys([*renamed(ledger.made_columns, operations), *new]) if name in names]
     bound = {binding.column for binding in bindings}
-    now = emptied(bindings, roles, current, parsed.profile, [name for name in made if name not in bound])
-    lost = dict(ledger.emptied_roles)
-    for item in now:
-        lost.setdefault(item.role, item.column)
-    if not lost:
-        return _TurnColumns(now, made)
+    now = {item.role: item.column for item in emptied(bindings, roles, current, parsed.profile, set(made) - bound)}
+    if not ledger.emptied_roles and not now:
+        return _TurnColumns([], made)
+    emptied_now = [Emptied(role, column) for role, column in now.items()]
     carried = carry_bindings(bindings, roles, parsed.profile, current, converted, row_numbers, splits)
-    landed = held_bindings(carried, bindings, made)
+    landed = [binding.column for binding in held_bindings(carried, bindings, made)]
     if not new and not landed:
-        return _TurnColumns(now, made)
-    refusal = _column_held(lost, [*new, *(binding.column for binding in landed)], "invalid_operation")
-    return _TurnColumns(now, made, refusal)
+        return _TurnColumns(emptied_now, made)
+    refusal = _column_held(ledger.emptied_roles, now, new, landed, "invalid_operation")
+    return _TurnColumns(emptied_now, made, refusal)
 
 
 async def prepare_data(

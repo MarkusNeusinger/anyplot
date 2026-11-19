@@ -1,4 +1,4 @@
-"""A required role that the turn's own change of the data left without its column, and the conversions that wait.
+"""A required role that the turn's own change of the data left without its column, and the fills that wait for it.
 
 No ADK import. The daily mean of the temperature per sensor of a table of timed readings drops the humidity, so the
 scatter plot's y axis loses its column and no column is left to take it. The root then added the timestamps as days
@@ -11,20 +11,22 @@ the reply says which role lost its column, the plot waits, and the next turn lis
 The guard reads typed records only, never a word of the request:
 
 * `emptied`: the required roles a `prepare_data` call leaves open that were bound before it. They are judged with
-  the turn's conversion columns that no role held before the call hidden (`hidden`), so a call that empties a role
-  and fills it with a conversion of its own counts as emptying it.
-* `made_columns`: the new columns a conversion made, the same records the carry binds to an open role by itself and
-  the kinds the session block offers for one: a `set_type`, a `date_number` or a text operation into a column of its
-  own (`Prepared.converted`), a `row_number` (`Prepared.row_numbers`) and the parts of a `split`
-  (`Prepared.splits`). A `set_type` in place (a decimal mark, a column read as numbers) makes no new column, and a
-  derived column (`derive`, `compute`, `classify`, `make_date`) is no conversion: a request that names one gets it on
-  the axis it names, also in a turn that emptied another.
+  the turn's fills that no role held before the call hidden (`hidden`), so a call that empties a role and fills it
+  with one of its own counts as emptying it.
+* `made_columns`: the new columns that hold a date turned into numbers (`Prepared.converted` with a date column as
+  its source, which `date_number` makes) or the row numbers (`Prepared.row_numbers`): the two fills the server offers
+  for an open number axis, which no request of the turn's own needs to fill one. A conversion of a text column (a
+  `set_type` into a column of its own, `extract`, `strip`, `replace`, `split`) is none: it is usually the request's
+  own, a price read from `CHF 1'200` and then summed per region by the same call, whose aggregate takes the axes'
+  columns. Neither is a `set_type` in place (a decimal mark) or a derived column (`derive`, `compute`, `classify`,
+  `make_date`): a request that names one gets it on the axis it names, also in a turn that emptied another.
 * `held_bindings`: the bindings that put such a column on a role that did not hold it before.
 
 Once a call of the turn has emptied a role, the root's tools refuse a `prepare_data` call that makes such a column or
 whose carry binds one, and a `set_bindings` call that binds one (`tools/session.py`); the refusal counts against none
 of the turn's caps (`RequestLedger.guard_held`). The two cannot be told apart by these records when one message both
-empties an axis and asks for a conversion onto it: that request waits one turn, and the next turn lists the offer.
+empties an axis and asks for the days or the row numbers on it: that request waits one turn, and the next turn lists
+the offer.
 """
 
 from collections.abc import Collection, Mapping, Sequence
@@ -50,22 +52,19 @@ class Emptied:
 
 
 def made_columns(
-    converted: Mapping[str, str], row_numbers: Sequence[str], splits: Sequence[Sequence[str]], before: Collection[str]
+    converted: Mapping[str, str], row_numbers: Sequence[str], dates: Collection[str], before: Collection[str]
 ) -> list[str]:
-    """The new columns a call's conversions made, in order: `Prepared.converted` with a name other than its source,
-    `Prepared.row_numbers` and every part of `Prepared.splits`, each only when the table the call started from
-    (`before`, its column names) did not have it, so a row-number column the paste already had is none."""
-    names = [
-        *(name for name, source in converted.items() if name != source),
-        *row_numbers,
-        *(part for parts in splits for part in parts if part),
-    ]
+    """The new columns of a call that hold a date turned into numbers or the row numbers, in order: the columns of
+    `Prepared.converted` whose source is one of `dates` (the date columns of the tables the call started from and
+    left), and `Prepared.row_numbers`, each only when the table the call started from (`before`, its column names) did
+    not have it, so a row-number column the paste already had is none."""
+    names = [*(name for name, source in converted.items() if name != source and source in dates), *row_numbers]
     return [name for name in dict.fromkeys(names) if name not in before]
 
 
 def renamed(names: Sequence[str], operations: Sequence[Operation]) -> list[str]:
-    """`names` after the `rename` operations of a call, in their order: a conversion column the call renames is still
-    the conversion."""
+    """`names` after the `rename` operations of a call, in their order: a column of row numbers the call renames
+    still holds them."""
     current = list(names)
     for operation in operations:
         if isinstance(operation, Rename):

@@ -3,13 +3,13 @@
 - **The chat no longer fills an emptied plot axis with a column nobody asked
   for.** After a change of the data that took an axis's column (the daily mean
   per sensor drops the humidity of a scatter plot's y), the assistant added the
-  timestamps as days since the first date and put them on the chart, in most
-  runs of the eval case. In such a turn the server now refuses to make a conversion or
-  a row number, or to bind one, whichever call tries it, and the refusal costs
-  none of the turn's two data steps. The table keeps only what was asked for,
-  the reply names the axis that lost its column, the plot waits, and the next
-  turn lists what the server can compute for it. A column the request derives
-  itself still takes the axis it names.
+  timestamps as days since the first date and put them on the chart. In such a
+  turn the server now refuses to turn a date into numbers or to make row
+  numbers, or to bind such a column, whichever call tries it, and the refusal
+  costs none of the turn's two data steps. The table keeps only what was asked
+  for, the reply names the axis that lost its column, the plot waits, and the
+  next turn lists what the server can compute for it. A column the request
+  derives or converts from text itself still takes the axis it names.
 - **A plot selection that hides no row any more is cleared.** After "keep only
   these rows in the table", the old selection stayed in force on the plot. A
   change of the table now clears every selection that keeps all of its rows,

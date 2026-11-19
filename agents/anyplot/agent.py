@@ -135,9 +135,9 @@ CONVERSIONS_HEADING = (
 of 2026-11-01: the root asked the user for a date column that a conversion of the `Month` text would have made."""
 EMPTIED_HEADING = (
     "Roles this turn's change of the data left without the column they were bound to: {count}, listed below with that "
-    "column. Say in the reply which role lost its column and that the plot waits for one. In this turn no conversion "
-    "or row number is made for them and none takes a role, which the server refuses: the next turn lists what it can "
-    "compute for them (see 'Step 1: the data')"
+    "column. Say in the reply which role lost its column and that the plot waits for one. In this turn no date is "
+    "turned into numbers and no row number is made for them, and none takes a role, which the server refuses: the next "
+    "turn lists what it can compute for them (see 'Step 1: the data')"
 )
 """The session block's line over the required roles a `prepare_data` call of this turn left open that were bound
 before it (`data/emptied.py`), for every later model call of the turn while they stay open. Without it the root saw
