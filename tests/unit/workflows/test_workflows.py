@@ -539,8 +539,8 @@ def test_run_tests_installs_and_requires_the_renderers_libraries() -> None:
 def test_run_tests_sets_up_and_requires_the_javascript_runtime() -> None:
     """The job "Run Tests" sets up Node, the lock's `node_modules` and Chromium with the composite action before pytest
     and sets `ANYPLOT_REQUIRE_JS_RUNTIME=1`, so the tests that render through `automation/js-render/render.mjs` run
-    there, and a missing piece fails them instead of skipping them (`tests/libraries.py`). Before that the job
-    installed Python alone and 121 of them skipped silently."""
+    there, and a missing piece fails them instead of skipping them (`tests/libraries.py`). A job that installs Python
+    alone skips every one of them without a word."""
     job = load_workflow("ci-tests.yml")["jobs"]["test"]
     assert job["env"]["ANYPLOT_REQUIRE_JS_RUNTIME"] == "1"
     steps = job["steps"]
