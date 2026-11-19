@@ -21,7 +21,10 @@
   hidden axes, axes with no visible tick label, `matplotlib.category`
   converters/formatters/locators, hand-set tick labels, non-finite limits, and
   `other`-scaled axes), credited as `drawn_text` in the figure check, and the
-  assistant states axis ranges only from `axes`. In sandbox mode, the JavaScript text probe also wraps `fillText`
-  and `strokeText` for Chart.js, keeping each chart's last complete draw and
-  subtracting model-reported texts by count so plugin-drawn value labels and
-  doughnut center numbers reach the assistant as `annotations`.
+  assistant states axis ranges only from `axes`. In sandbox mode, the
+  JavaScript text probe also wraps `fillText` and `strokeText` for Chart.js,
+  keeping each chart's last complete draw and subtracting model-reported texts
+  by count so plugin-drawn value labels and doughnut center numbers reach the
+  assistant as `annotations`; fully transparent text and text of size 0 are
+  not recorded, and a render run records through the page the browser loads
+  while the `plot-<theme>.html` it writes carries no recorder.

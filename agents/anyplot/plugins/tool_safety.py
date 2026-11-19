@@ -605,9 +605,9 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
         shown = result[SHOWS_KEY]
         if isinstance(shown, dict):
             # No drawn texts (a probe that reported none, an empty dict, or `shrunk_shows` with nothing left): the root
-            # gets no `texts` at all, so it has nothing to quote and no null or `{}` to narrate (user test of 2026-11-01:
-            # "I couldn't read the title back"). `texts_complete` qualifies `texts` and stays out when True or without
-            # `texts`; an empty `axes` list goes like None.
+            # gets no `texts` at all, so it has nothing to quote and no null or `{}` to narrate (handed a null, the root
+            # told the user it could not read the title back). `texts_complete` qualifies `texts` and stays out when
+            # True or without `texts`; an empty `axes` list goes like None.
             drop = {
                 *(("texts", "texts_complete") if not shown.get("texts") else ()),
                 *(("texts_complete",) if shown.get("texts_complete") is not False else ()),
