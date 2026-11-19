@@ -580,6 +580,37 @@ READINGS: dict[str, Reading] = {
         ["2026-03-01T10z", "2026-03-02T11z"], ["2026-03-01", "2026-03-02"], 0, False, None, ""
     ),
     "f4_lower_z": Reading(["2026-03-01z", "2026-03-02z"], [None, None], 2, False, None, ""),
+    # A word after the date's last part: pandas skips `of`, `on` and `and` (dateutil's filler words) and reads the
+    # rest, also for a month or a year alone, and takes a weekday after the date without checking it.
+    "word_after_date": Reading(
+        ["2026-03-01 of", "2026-03-02 on", "2026-03-03 and"],
+        ["2026-03-01", "2026-03-02", "2026-03-03"],
+        0,
+        False,
+        None,
+        "",
+    ),
+    "word_after_month": Reading(["2026-03 of", "2026-04 and"], ["2026-03-01", "2026-04-01"], 0, False, None, ""),
+    "word_after_month_name": Reading(
+        ["March 2026 of", "April 2026 of"], ["2026-03-01", "2026-04-01"], 0, False, None, ""
+    ),
+    "word_after_year": Reading(["2026 of", "2027 on"], ["2026-01-01", "2027-01-01"], 0, False, None, ""),
+    "weekday_after_date": Reading(
+        ["1 March 2026, Sunday", "15 March 2026, Sunday"], ["2026-03-01", "2026-03-15"], 0, False, None, ""
+    ),
+    "weekday_after_name_date": Reading(
+        ["March 1, 2026 Sun", "March 15, 2026 Sun"], ["2026-03-01", "2026-03-15"], 0, False, None, ""
+    ),
+    "weekday_after_dot_date": Reading(
+        ["01.03.2026 Sunday", "15.03.2026 Sunday"], ["2026-03-01", "2026-03-15"], 0, False, None, ""
+    ),
+    "wrong_weekday_after": Reading(
+        ["1 March 2026, Monday", "15 March 2026, Friday"], ["2026-03-01", "2026-03-15"], 0, False, None, ""
+    ),
+    # A wrong weekday before the date is dropped unchecked, as before: a word in the weekday's place is the reader's.
+    "wrong_weekday_before": Reading(
+        ["Monday, 1 March 2026", "Friday, 15 March 2026"], ["2026-03-01", "2026-03-15"], 0, False, None, ""
+    ),
 }
 PASTED: dict[str, Pasted] = {
     "iso_date": Pasted("datetime", ["2026-03-01", "2026-03-02", "2026-12-31"], []),
@@ -777,6 +808,15 @@ PASTED: dict[str, Pasted] = {
     "iso_space_lower_z": Pasted("text", None, []),
     "lone_hour_lower_z": Pasted("text", None, []),
     "f4_lower_z": Pasted("text", None, []),
+    "word_after_date": Pasted("text", None, []),
+    "word_after_month": Pasted("text", None, []),
+    "word_after_month_name": Pasted("text", None, []),
+    "word_after_year": Pasted("text", None, []),
+    "weekday_after_date": Pasted("text", None, []),
+    "weekday_after_name_date": Pasted("text", None, []),
+    "weekday_after_dot_date": Pasted("text", None, []),
+    "wrong_weekday_after": Pasted("text", None, []),
+    "wrong_weekday_before": Pasted("text", None, []),
 }
 PASTE_CHANGED: dict[str, Pasted] = {
     # An offset past those in use (-12:00 to +14:00) is the end of a range, never an offset: the paste keeps the
@@ -848,6 +888,21 @@ CHANGED: dict[str, Reading] = {
         ["2026-03-01", "2026-03-02"],
         guess="the days of 2 dates with a UTC offset as written, the offset dropped",
     ),
+    # A word after the date's last part is more after the date, whichever date it ends and whatever pandas would
+    # skip: unreadable before pandas sees it. A weekday after the date is such a word too, checked against nothing.
+    **{
+        name: Reading(READINGS[name].cells, [None] * len(READINGS[name].cells), len(READINGS[name].cells))
+        for name in (
+            "word_after_date",
+            "word_after_month",
+            "word_after_month_name",
+            "word_after_year",
+            "weekday_after_date",
+            "weekday_after_name_date",
+            "weekday_after_dot_date",
+            "wrong_weekday_after",
+        )
+    },
 }
 """The rows whose reading the strict date rule changes on purpose, with the reading they have now."""
 
@@ -1031,6 +1086,15 @@ UNREADABLE: dict[str, list[str | None]] = {
 March, beside a notice of offsets no cell holds), a sign and digits as 05:00, and an interval as its first day."""
 
 
+READ_AS = {
+    "Sunday, 1 March 2026": "2026-03-01",
+    "1st of March 2026": "2026-03-01",
+    "1 March 2026 at 10:00": "2026-03-01T10:00:00",
+    "Sun Mar 1 10:00:00 2026": "2026-03-01T10:00:00",
+}
+"""What main reads for cells with a word before the date, inside it or before a time, as the head reads them."""
+
+
 class TestStrictRule:
     """A cell converts only as a date alone or a date followed by a time; anything else after the date is unread."""
 
@@ -1101,7 +1165,9 @@ class TestStrictRule:
         [
             (["2026-03-01 approved", "2026-03-02 approved"], 2),  # a word after the date: more, by any reading
             (["2026-03-01T10-12", "2026-03-02T08-17"], 2),  # a range of hours: more than a time
-            (["2026-03 approved", "2026-04 approved"], 0),  # a month and a word: no day, so no reason
+            (["2026-03 approved", "2026-04 approved"], 2),  # a word after a month: more, as after a day
+            (["2026 of", "2027 on"], 2),  # and after a year
+            (["2026-03T10:00", "2026-04T11:00"], 0),  # a time after a month: unread, but no more than a time
         ],
     )
     def test_the_reason_counts_a_day_with_more_after_it(self, cells: list[str], more: int) -> None:
@@ -1173,6 +1239,45 @@ class TestStrictRule:
             apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
 
         assert caught.value.message == "the value for column 't' is not an ISO date (YYYY-MM-DD, with an optional time)"
+
+    @pytest.mark.parametrize(
+        "cell",
+        [
+            "2026-03-01 of",
+            "2026-03-01 on",
+            "2026-03-01 and",
+            "2026-03-01 approved",
+            "2026-03-01 UTC",
+            "2026-03-01 at",
+            "2026 of",
+            "2026-03 of",
+            "March 2026 of",
+            "1 March 2026, Sunday",
+        ],
+    )
+    def test_a_word_after_the_date_never_reaches_the_reader(self, cell: str, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A word after the date's last part is more after the date: the gate leaves the cell out before pandas, whose
+        reader skips some words (`of`, `on`, `and`) and would read `2026 of` as the year 2026, rated certain."""
+        seen: list[str] = []
+        reader = prepare_module._inferred_dates
+
+        def spy(texts: pd.Series, day_first: bool, column: object) -> tuple[pd.Series, bool]:
+            seen.extend(text for text in texts if isinstance(text, str))
+            return reader(texts, day_first, column)
+
+        monkeypatch.setattr(prepare_module, "_inferred_dates", spy)
+
+        reading = converted([cell])
+
+        assert seen == []
+        assert reading == Reading([cell], [None], 1) and prepare_module._date_cell(cell) is None
+
+    @pytest.mark.parametrize(
+        "cell", ["Sunday, 1 March 2026", "1st of March 2026", "1 March 2026 at 10:00", "Sun Mar 1 10:00:00 2026"]
+    )
+    def test_a_word_before_the_date_inside_it_or_before_a_time_still_reads(self, cell: str) -> None:
+        """A weekday before the date, a word between its parts and a word that joins it to a time stay for pandas."""
+        assert converted([cell]).values == [READ_AS[cell]]
 
     def test_a_refusal_for_cells_of_no_date_keeps_its_words(self) -> None:
         text = "d,v\nunknown,1\nn.a.: none,2\n2026-03-01,3\n"

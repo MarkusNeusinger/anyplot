@@ -48,7 +48,10 @@ The operations:
   day and the year as programs write it (`Sun Mar 1 10:00:00 2026`). Anything else after the
   date (a second date such as `2026-03-01-2026-03-05`, more numbers such as `2026-03-01/05`, a
   number alone after a space, a sign and digits after a space, a range of times such as
-  `2026-03-01 9:00-17:00` or `T10-12`, a time after a month or a year) makes the cell
+  `2026-03-01 9:00-17:00` or `T10-12`, a time after a month or a year, a word after the date's
+  last part such as `2026-03-01 approved`, `2026 of` or a weekday after the date, where a word
+  before the date or between its parts, as `Sunday, 1 March 2026` and `1st of March 2026`, and
+  one that joins it to a time, as `1 March 2026 at 10:00`, stay) makes the cell
   unreadable, counted like any other, before pandas could guess a reading; the column is
   written with a time when a cell read holds one, never because some cell holds a colon. A
   month name with a four-digit year (`Nov 2026`, `Okt. 2026`, `2026 Nov`, in the eleven
@@ -4599,10 +4602,14 @@ _MERIDIEM_AFTER_NUMBER = re.compile(r"[0-9]\s*[AaPp]\.?\s?[Mm](?:\.|(?![^\W\d_])
 DateShape = Literal["day", "month", "year", "quarter"]
 
 
-def _date_shape(text: str) -> DateShape | None:
+def _date_shape(text: str, *, word_at_end: bool = False) -> DateShape | None:
     """What a cell's date names when it is a date and nothing else, else None: its parts are numbers, at most one
-    month name (`months.month_number`), a quarter (`Q1`) and other words, which the reader takes or fails on
-    (`Sunday`, `at`), between `-`, `.`, `/`, commas and spaces.
+    month name (`months.month_number`), a quarter (`Q1`) and other words, between `-`, `.`, `/`, commas and spaces.
+    A word before the date or between its parts (`Sunday, 1 March 2026`, `1st of March 2026`) is the reader's to take
+    or fail on; a word after the date's last part is more after the date (`2026-03-01 of`, `2026 of`, `2026-03-01
+    approved`): no reading takes it, since pandas would skip `of`, `on` or `and` and read the rest. Only with
+    `word_at_end` may words end it: for the date before a time, which they join to it (`1 March 2026 at 10:00`), and
+    for the reason a refusal names (`_date_then_more`).
 
     A day takes three numbers (`2026-03-01`, `01.03.26`, `01 03 2026`), two beside a month name (`1 March 2026`) or
     the eight digits of `YYYYMMDD`; a month two numbers, one of four digits (`2026-03`, `03/2026`), or a month name and
@@ -4617,17 +4624,23 @@ def _date_shape(text: str) -> DateShape | None:
         return None  # `2026-03-01 -` before ` 05`: a part that joins to more (1 to 5 March), never a time
     numbers: list[int] = []
     months = quarters = 0
+    word_last = False
     for part in _DATE_PARTS.split(text.strip()):
         if not part:
             continue
+        word_last = False
         if _QUARTER_PART.fullmatch(part):
             quarters += 1
         elif (number := _NUMBER_PART.fullmatch(part)) is not None:
             numbers.append(len(number.group(1)))
         elif _WORD_PART.fullmatch(part):
-            months += month_number(part) is not None
+            month = month_number(part) is not None
+            months += month
+            word_last = not month
         else:
             return None
+    if word_last and not word_at_end:
+        return None  # `2026-03-01 of`: a word after the date's last part, which a reader would skip by guess
     if quarters:
         return "quarter" if quarters == 1 and not months and numbers == [4] else None
     if months > 1:
@@ -4646,12 +4659,15 @@ _CUTS = re.compile(r"[-./,\s+:Tt]")
 
 
 def _date_then_more(text: str) -> bool:
-    """Whether a cell no reading takes begins with a date that names a day and holds more after it than a time
-    (`2026-03-01-2026-03-05`, `13.03.2026-05:00`, `2026-03-01/05`, `2026-03-01 approved`): the shape a refusal names
-    as its reason. A time's shape after the date (an impossible one, `T25` or ` 10:60`, included) or a date with an
-    offset (`2026-02-30+01:00`) is no "more": those cells hold a day or a time no calendar has, by any reading."""
+    """Whether a cell no reading takes holds more after its date than a time: the shape a refusal names as its
+    reason. That is a date of any shape with a word after it, as the gate sees it (`2026-03-01 approved`, `2026 of`),
+    or a date that names a day and more after it (`2026-03-01-2026-03-05`, `13.03.2026-05:00`, `2026-03-01/05`). A
+    time's shape after the date (an impossible one, `T25` or ` 10:60`, included) or a date with an offset
+    (`2026-02-30+01:00`) is no "more": those cells hold a day or a time no calendar has, by any reading."""
     if DATE_OFFSET.fullmatch(text):
         return False
+    if _date_shape(text) is None and _date_shape(text, word_at_end=True) is not None:
+        return True
     for cut in _CUTS.finditer(text):
         if cut.start() and _date_shape(text[: cut.start()]) == "day":
             shaped = _TIME_SHAPED.fullmatch(text[cut.start() :])
@@ -4670,7 +4686,7 @@ def _date_cell(text: str) -> bool | None:
     """
     text = text.strip()
     time = _TIME_AFTER_DATE.search(text)
-    if time is not None and _zone_fits(time) and _date_shape(text[: time.start()]) == "day":
+    if time is not None and _zone_fits(time) and _date_shape(text[: time.start()], word_at_end=True) == "day":
         return True
     if _time_inside(text):
         return True
