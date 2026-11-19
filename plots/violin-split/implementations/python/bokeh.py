@@ -1,256 +1,172 @@
 """ anyplot.ai
 violin-split: Split Violin Plot
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-08
+Library: bokeh 3.10.2 | Python 3.14.10
+Quality: 84/100 | Updated: 2026-11-19
 """
 
-import sys
+import os
+import time
 from pathlib import Path
 
-
-# Remove script directory from sys.path to avoid shadowing bokeh package
-script_dir = str(Path(__file__).parent)
-if script_dir in sys.path:
-    sys.path.remove(script_dir)
-# Also remove if it's sys.path[0]
-if sys.path and sys.path[0] == script_dir:
-    sys.path.pop(0)
-
-import os  # noqa: E402
-import time  # noqa: E402
-
-import numpy as np  # noqa: E402
-from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import HoverTool, Legend, LegendItem  # noqa: E402
-from bokeh.plotting import figure  # noqa: E402
-from selenium import webdriver  # noqa: E402
-from selenium.webdriver.chrome.options import Options  # noqa: E402
+import numpy as np
+import pandas as pd
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem, Range1d
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Change to script directory for output files
-os.chdir(Path(__file__).parent)
-
-
-# Theme configuration
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito colors for split groups
-COLOR_PLACEBO = "#009E73"  # First series - brand green
-COLOR_TREATMENT = "#C475FD"  # Second series - vermillion
+# Imprint palette: all eight positions, one per split group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Clinical trial recovery scores (placebo vs active treatment)
+# Columns: set these to your table's column names
+CONDITION = "Condition Severity"  # role: category
+SCORE = "Recovery Score (0-100)"  # role: value
+ARM = "Treatment Arm"  # role: split_group
+
+# Data: replace this block with your own table, for example df = pd.read_csv("trial.csv")
 np.random.seed(42)
+rows = []
+for cond, base, gain, spread in [("Mild", 65, 12, 8), ("Moderate", 45, 25, 12), ("Severe", 30, 35, 15)]:
+    placebo = np.clip(np.random.normal(base, spread, 120), 0, 100)
+    treatment = np.clip(np.random.normal(base + gain, spread * 0.85, 120), 0, 100)
+    rows += [(cond, v, "Placebo") for v in placebo]
+    rows += [(cond, v, "Active Treatment") for v in treatment]
+df = pd.DataFrame(rows, columns=[CONDITION, SCORE, ARM])
 
-conditions = ["Mild", "Moderate", "Severe"]
-split_groups = ["Placebo", "Active Treatment"]
-n_per_group = 120
-
-# Generate realistic recovery improvement data (0-100 scale)
-data = []
-for cond in conditions:
-    # Base recovery varies by condition severity
-    base = {"Mild": 65, "Moderate": 45, "Severe": 30}[cond]
-    improvement = {"Mild": 12, "Moderate": 25, "Severe": 35}[cond]
-    spread = {"Mild": 8, "Moderate": 12, "Severe": 15}[cond]
-
-    # Placebo group - lower improvement
-    placebo = np.clip(np.random.normal(base, spread, n_per_group), 0, 100)
-    for v in placebo:
-        data.append({"category": cond, "value": v, "split_group": "Placebo"})
-
-    # Active treatment - higher improvement
-    treatment = np.clip(np.random.normal(base + improvement, spread * 0.85, n_per_group), 0, 100)
-    for v in treatment:
-        data.append({"category": cond, "value": v, "split_group": "Active Treatment"})
-
-# Organize data by category and split group
-values_by_cat_group = {}
-for cat in conditions:
-    values_by_cat_group[cat] = {}
-    for sg in split_groups:
-        values_by_cat_group[cat][sg] = [d["value"] for d in data if d["category"] == cat and d["split_group"] == sg]
+# Plot: reads only df and the constants above
+conditions = list(df[CONDITION].unique())
+arms = list(df[ARM].unique())
+VIOLIN_WIDTH = 0.35  # half-width of a violin in category units
 
 
-def gaussian_kde_numpy(values, n_points=100, y_min=0.0, y_max=100.0):
-    """Compute kernel density estimate using Gaussian kernels with bounded domain."""
-    values = np.array(values)
-    n = len(values)
-
-    # Scott's rule for bandwidth
-    std = np.std(values, ddof=1)
-    bandwidth = 1.06 * std * n ** (-1 / 5)
-
-    # Grid for evaluation - bounded to data scale
-    y_grid = np.linspace(y_min, y_max, n_points)
-
-    # Compute KDE at each grid point
-    density = np.zeros(n_points)
-    for i, y in enumerate(y_grid):
-        kernel_values = np.exp(-0.5 * ((y - values) / bandwidth) ** 2)
-        density[i] = np.sum(kernel_values) / (n * bandwidth * np.sqrt(2 * np.pi))
-
-    return y_grid, density
+def gaussian_kde(values, lo, hi, n_points=120):
+    """Gaussian KDE (Scott-style bandwidth) evaluated on a grid from lo to hi."""
+    values = np.asarray(values, dtype=float)
+    values = values[~np.isnan(values)]
+    bandwidth = 1.06 * np.std(values, ddof=1) * len(values) ** (-1 / 5)
+    grid = np.linspace(lo, hi, n_points)
+    z = (grid[:, None] - values[None, :]) / bandwidth
+    density = np.exp(-0.5 * z**2).sum(axis=1) / (len(values) * bandwidth * np.sqrt(2 * np.pi))
+    return grid, density
 
 
-# Create figure
+y_min, y_max = df[SCORE].min(), df[SCORE].max()
+pad = (y_max - y_min) * 0.05
+y_lo, y_hi = y_min - 2.2 * pad, y_max + 2.2 * pad
+
+title = "Clinical Recovery Scores · violin-split · python · bokeh · anyplot.ai"
+title_pt = round(50 * min(1.0, 67 / len(title)))
+
 p = figure(
-    width=4800,
-    height=2700,
-    title="Clinical Recovery Scores · violin-split · bokeh · anyplot.ai",
-    x_axis_label="Condition Severity",
-    y_axis_label="Recovery Score (0-100)",
+    width=3200,
+    height=1800,
+    title=title,
+    x_axis_label=CONDITION,
+    y_axis_label=SCORE,
     x_range=conditions,
-    y_range=(-5, 105),
-    tools="pan,wheel_zoom,box_zoom,reset",
+    y_range=Range1d(y_lo, y_hi),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Width of each violin half
-violin_width = 0.35
+legend_renderers = {}
+stats = {"x": [], "y": [], "group": [], "median": [], "q1": [], "q3": [], "n": []}
 
-# Store patches for legend
-placebo_patch = None
-treatment_patch = None
+for idx, cond in enumerate(conditions):
+    i = idx + 0.5  # center of the categorical slot
+    for k, arm in enumerate(arms):
+        values = df.loc[(df[CONDITION] == cond) & (df[ARM] == arm), SCORE].to_numpy()
+        grid, density = gaussian_kde(values, max(y_lo, values.min() - pad), min(y_hi, values.max() + pad))
+        half = density / density.max() * VIOLIN_WIDTH
+        sign = -1 if k == 0 else 1  # first arm left, second arm right of the shared center line
+        xs = np.concatenate([[i], i + sign * half, [i]])
+        ys = np.concatenate([[grid[0]], grid, [grid[-1]]])
+        color = IMPRINT_PALETTE[k]
+        patch = p.patch(xs, ys, fill_color=color, fill_alpha=0.65, line_color=color, line_width=2)
+        legend_renderers.setdefault(arm, patch)
 
-# Store statistics for hover tooltips
-stats_data = {"x": [], "y": [], "group": [], "median": [], "q1": [], "q3": [], "n": []}
-
-# Draw split violins for each category
-for i, cat in enumerate(conditions):
-    cat_x = i
-
-    for sg in split_groups:
-        values = values_by_cat_group[cat][sg]
-        y_grid, density = gaussian_kde_numpy(values, y_min=0.0, y_max=100.0)
-
-        # Normalize density to fit within violin width
-        max_density = max(density)
-        if max_density > 0:
-            density_norm = density / max_density * violin_width
-        else:
-            density_norm = density
-
-        # Build polygon coordinates
-        if sg == "Placebo":
-            # Left half - density goes negative (left)
-            xs = np.concatenate([cat_x - density_norm, [cat_x], [cat_x]])
-            ys = np.concatenate([y_grid, [y_grid[-1]], [y_grid[0]]])
-            color = COLOR_PLACEBO
-        else:
-            # Right half - density goes positive (right)
-            xs = np.concatenate([[cat_x], cat_x + density_norm, [cat_x]])
-            ys = np.concatenate([[y_grid[0]], y_grid, [y_grid[-1]]])
-            color = COLOR_TREATMENT
-
-        # Draw violin patch
-        patch = p.patch(xs.tolist(), ys.tolist(), fill_color=color, fill_alpha=0.65, line_color=color, line_width=2)
-
-        # Store first patches for legend
-        if sg == "Placebo" and placebo_patch is None:
-            placebo_patch = patch
-        elif sg == "Active Treatment" and treatment_patch is None:
-            treatment_patch = patch
-
-        # Add quartile markers
         q1, median, q3 = np.percentile(values, [25, 50, 75])
+        x0, x1 = sorted([i, i + sign * VIOLIN_WIDTH * 0.6])
+        p.segment(x0=[x0], y0=[median], x1=[x1], y1=[median], line_color=INK, line_width=5)
+        for q in (q1, q3):
+            p.segment(x0=[x0], y0=[q], x1=[x1], y1=[q], line_color=INK, line_width=3, line_dash="dashed")
 
-        # Horizontal offset for quartile lines
-        if sg == "Placebo":
-            line_start = cat_x - violin_width * 0.6
-            line_end = cat_x
-        else:
-            line_start = cat_x
-            line_end = cat_x + violin_width * 0.6
+        stats["x"].append(i + sign * VIOLIN_WIDTH / 2)
+        stats["y"].append(median)
+        stats["group"].append(f"{cond} - {arm}")
+        stats["median"].append(f"{median:.1f}")
+        stats["q1"].append(f"{q1:.1f}")
+        stats["q3"].append(f"{q3:.1f}")
+        stats["n"].append(str(len(values)))
 
-        # Draw quartile lines with theme-adaptive colors
-        p.segment(x0=[line_start], y0=[median], x1=[line_end], y1=[median], line_color=INK, line_width=4)
-        p.segment(
-            x0=[line_start], y0=[q1], x1=[line_end], y1=[q1], line_color=INK_SOFT, line_width=2, line_dash="dashed"
-        )
-        p.segment(
-            x0=[line_start], y0=[q3], x1=[line_end], y1=[q3], line_color=INK_SOFT, line_width=2, line_dash="dashed"
-        )
-
-        # Store hover data for this violin
-        hover_x = cat_x - violin_width / 2 if sg == "Placebo" else cat_x + violin_width / 2
-        stats_data["x"].append(hover_x)
-        stats_data["y"].append(median)
-        stats_data["group"].append(f"{cat} - {sg}")
-        stats_data["median"].append(f"{median:.1f}")
-        stats_data["q1"].append(f"{q1:.1f}")
-        stats_data["q3"].append(f"{q3:.1f}")
-        stats_data["n"].append(str(len(values)))
-
-# Add invisible scatter points for hover tooltips
-hover_circles = p.scatter(x=stats_data["x"], y=stats_data["y"], size=30, fill_alpha=0, line_alpha=0)
-
-# Configure HoverTool with statistics
-hover = HoverTool(
-    renderers=[hover_circles],
-    tooltips=[("Group", "@group"), ("Median", "@median"), ("Q1", "@q1"), ("Q3", "@q3"), ("N", "@n")],
+# Invisible hit targets that carry the per-half statistics for hover tooltips
+hover_points = p.scatter(x="x", y="y", size=60, fill_alpha=0, line_alpha=0, source=ColumnDataSource(stats))
+p.add_tools(
+    HoverTool(
+        renderers=[hover_points],
+        tooltips=[("Group", "@group"), ("Median", "@median"), ("Q1", "@q1"), ("Q3", "@q3"), ("N", "@n")],
+    )
 )
-hover_circles.data_source.data.update(stats_data)
-p.add_tools(hover)
 
-# Add legend with theme-adaptive styling
 legend = Legend(
-    items=[
-        LegendItem(label="Placebo", renderers=[placebo_patch]),
-        LegendItem(label="Active Treatment", renderers=[treatment_patch]),
-    ],
-    location="top_right",
+    items=[LegendItem(label=str(arm), renderers=[legend_renderers[arm]]) for arm in arms],
+    location="bottom_left",
+    title=ARM,
 )
-legend.label_text_font_size = "22pt"
-legend.glyph_width = 80
-legend.glyph_height = 50
-legend.spacing = 20
-legend.padding = 30
-legend.background_fill_alpha = 0.9
-legend.background_fill_color = ELEVATED_BG
-legend.border_line_color = INK_SOFT
-legend.border_line_width = 2
-legend.label_text_color = INK
 p.add_layout(legend)
+legend.label_text_font_size = "34pt"
+legend.title_text_font_size = "34pt"
+legend.label_text_color = INK_SOFT
+legend.title_text_color = INK
+legend.glyph_width = 70
+legend.glyph_height = 50
+legend.spacing = 14
+legend.padding = 24
+legend.margin = 30
+legend.background_fill_color = ELEVATED_BG
+legend.background_fill_alpha = 0.9
+legend.border_line_color = INK_SOFT
 
-# Style - large text for 4800x2700 canvas
-p.title.text_font_size = "28pt"
+# Style
+p.title.text_font_size = f"{title_pt}pt"
 p.title.align = "center"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-
-# Grid styling
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.15
 p.ygrid.grid_line_color = INK
-
-# Axis styling
+p.ygrid.grid_line_alpha = 0.15
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
-p.outline_line_color = INK_SOFT
-p.outline_line_width = 1
-
-# Background
+p.outline_line_color = None
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 
-# Save as HTML
+# Save HTML, then screenshot it with headless Chrome
 output_file(f"plot-{THEME}.html")
 save(p)
 
-# Screenshot with headless Chrome - Selenium 4 / Selenium Manager
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -264,6 +180,9 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
