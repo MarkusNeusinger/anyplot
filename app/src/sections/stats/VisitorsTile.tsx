@@ -1,20 +1,21 @@
 /**
- * The stats page's "visitors" tile: per UTC day of the last 28, the visits with a second page
- * or an interaction, from Plausible (`GET /insights/visitors`, `visitors.ts`).
+ * The stats page's "visitors" tile: per UTC day of the last 28, the unique visitors who stayed
+ * ten seconds and did something, from Plausible (`GET /insights/visitors`, `visitors.ts`).
  *
- * - Bars: one per day, the day's engaged visits, drawn like the two tiles below it (`DayStrip`).
- *   Those are the visits Plausible does not count as bounced. A crawler farm that runs the
- *   page's scripts loads one page per visit, so it shows in the number of all visits and not in
- *   the bars.
- * - Below: all visits of the same days as one plain line, with a hint on the word "all" that
- *   says what else is in that number.
+ * - Bars: one per day, the day's engaged visitors, drawn like the two tiles below it
+ *   (`DayStrip`). Those had the site in front of them for ten seconds of a visit and used a
+ *   pointer, a finger or a key in it, before the ten seconds or after them. A crawler farm that
+ *   runs the page's scripts seldom stays ten seconds and does nothing when it does, so it shows
+ *   in the number of all visitors and not in the bars.
+ * - Below: all unique visitors of the same days as one plain line, with a hint on the word "all"
+ *   that says what else is in that number.
  * - Until every day of the window is counted (`engagedDays`), the tile draws the unique
  *   visitors per day, as it did before: a strip that is empty for most of its days says less
- *   than the one it replaces. The same holds for an answer without engaged visits, from an API
- *   revision older than the page. The switch happens by itself on the day the window's first
- *   day is the one the counting began.
- * - A day inside a counted window that has no number (its answer had no bounce rate) draws the
- *   floor and says "not counted", not "0".
+ *   than the one it replaces. The same holds for an answer without engaged visitors, from an API
+ *   revision older than the page or from a day the API could not count them. The switch happens
+ *   by itself on the day the window's first day is the one the counting began.
+ * - A day inside a counted window that has no number draws the floor and says "not counted",
+ *   not "0".
  * - Loading and an answer without days are one muted line each.
  */
 
@@ -25,7 +26,7 @@ import { SectionHeader } from 'src/components/SectionHeader';
 import { DayStrip } from 'src/sections/stats/DayStrip';
 import { HintTerm } from 'src/sections/stats/HintTerm';
 import { CHART_PX } from 'src/sections/stats/stripGeometry';
-import { ALL_VISITS_HINT, engagedDays, type VisitorsAnswer } from 'src/sections/stats/visitors';
+import { ALL_VISITORS_HINT, engagedDays, type VisitorsAnswer } from 'src/sections/stats/visitors';
 import { fontSize, semanticColors, typography } from 'src/theme';
 
 const smallSx = {
@@ -34,8 +35,10 @@ const smallSx = {
   color: semanticColors.mutedText,
 } as const;
 
-const visits = (n: number): string => (n === 1 ? 'visit' : 'visits');
 const visitors = (n: number): string => (n === 1 ? 'visitor' : 'visitors');
+
+/** What the bars count once every day of the window is counted. */
+const ENGAGED = 'visitors who stayed ten seconds and did something';
 
 export interface VisitorsTileProps {
   /** `null` while loading. */
@@ -49,7 +52,7 @@ export function VisitorsTile({ answer, formatNum }: VisitorsTileProps) {
 
   let header = 'unique visitors · last 28 days';
   if (engaged) {
-    header = `visits with a second page or an interaction · last 28 days · ${formatNum(engaged.engaged)} total`;
+    header = `${ENGAGED} · last 28 days · ${formatNum(engaged.engaged)} total`;
   } else if (points.length > 0) {
     header += ` · ${formatNum(points.reduce((sum, point) => sum + point.visitors, 0))} total`;
   }
@@ -96,8 +99,8 @@ export function VisitorsTile({ answer, formatNum }: VisitorsTileProps) {
                 value: point.engaged ?? 0,
                 description: point.engaged === null ? 'not counted' : undefined,
               }))}
-              label="visits with a second page or an interaction per day"
-              describe={n => `${n} ${visits(n)}`}
+              label={`${ENGAGED} per day`}
+              describe={n => `${n} ${visitors(n)}`}
               testId="visitors"
             />
             <Box
@@ -105,10 +108,10 @@ export function VisitorsTile({ answer, formatNum }: VisitorsTileProps) {
               sx={{ ...smallSx, listStyle: 'none', m: 0, mt: 0.75, p: 0, lineHeight: 1.6 }}
             >
               <li data-testid="visitors-all">
-                <HintTerm hint={ALL_VISITS_HINT} testId="visitors-all-term">
+                <HintTerm hint={ALL_VISITORS_HINT} testId="visitors-all-term">
                   all
                 </HintTerm>{' '}
-                visits: {formatNum(engaged.visits)}
+                visitors: {formatNum(engaged.visitors)}
               </li>
             </Box>
           </>

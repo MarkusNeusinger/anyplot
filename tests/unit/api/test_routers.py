@@ -4,9 +4,12 @@ Tests for api/routers/ endpoints.
 Tests the modular router endpoints.
 """
 
+import logging
 import re
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -3023,153 +3026,144 @@ class TestInsightsRouter:
         today_iso = frozen_now.date().isoformat()
         expected_start_iso = (frozen_now.date() - timedelta(days=27)).isoformat()
 
-        captured: dict = {}
+        plausible = self._PlausibleClient(totals={"results": []}, engaged={"results": []})
+        response = self._get_visitors(client, plausible, frozen_now)
 
-        class _MockResp:
-            status_code = 200
+        assert response.status_code == 200
+        # Both queries, the visitors and the engaged ones, cover the same days.
+        assert len(plausible.queries) == 2
+        assert [query["date_range"] for query in plausible.queries] == [[expected_start_iso, today_iso]] * 2
 
-            def raise_for_status(self) -> None:
-                return None
+    class _PlausibleClient:
+        """A Plausible Stats API that records each query and answers it by what it asks, not by its order.
 
-            def json(self) -> dict:
-                return {"results": []}
-
-        class _MockClient:
-            async def __aenter__(self):
-                return self
-
-            async def __aexit__(self, *_args):
-                return False
-
-            async def post(self, *_args, **kwargs):
-                captured["payload"] = kwargs.get("json")
-                return _MockResp()
-
-        class _FrozenDatetime(_dt):
-            @classmethod
-            def now(cls, tz=None):  # type: ignore[override]
-                return frozen_now if tz is _tz.utc else frozen_now.replace(tzinfo=None)
-
-        with (
-            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
-            patch("api.routers.insights.settings") as mock_settings,
-            patch("api.routers.insights.httpx.AsyncClient", return_value=_MockClient()),
-            patch("api.routers.insights.datetime", _FrozenDatetime),
-        ):
-            mock_settings.plausible_api_key = "test-key"
-            mock_settings.plausible_site_id = "anyplot.ai"
-            mock_settings.plausible_api_url = "https://plausible.io/api/v2/query"
-            response = client.get("/insights/visitors")
-            assert response.status_code == 200
-            assert captured["payload"]["date_range"] == [expected_start_iso, today_iso]
-
-    def test_visitors_engaged_visits_are_the_visits_that_did_not_bounce(self, client: TestClient) -> None:
-        """A day's engaged visits are its visits minus the bounced ones, from the day the bounce rate holds.
-
-        A crawler farm loads one page per visit: 606 visitors at 87 % bounce are 80 engaged visits. Before
-        2026-11-10 web-vitals events kept every visit from bouncing, so those days carry no number at all.
+        `totals` answers the query without filters, `engaged` the one with them: a body (status 200), an
+        `httpx.Response`, or an exception the call raises.
         """
-        from datetime import datetime as _dt
-        from datetime import timezone as _tz
 
-        frozen_now = _dt(2026, 11, 15, 12, 0, 0, tzinfo=_tz.utc)
-        captured: dict = {}
+        def __init__(self, totals: dict | httpx.Response | Exception, engaged: dict | httpx.Response | Exception):
+            self.queries: list[dict] = []
+            self._totals = totals
+            self._engaged = engaged
 
-        class _MockResp:
-            status_code = 200
+        async def __aenter__(self):
+            return self
 
-            def raise_for_status(self) -> None:
-                return None
+        async def __aexit__(self, *_args):
+            return False
 
-            def json(self) -> dict:
-                return {
-                    "results": [
-                        {"dimensions": ["2026-11-08"], "metrics": [264, 275, 18]},
-                        {"dimensions": ["2026-11-09"], "metrics": [259, 280, 41]},
-                        {"dimensions": ["2026-11-10"], "metrics": [292, 303, 80]},
-                        {"dimensions": ["2026-11-11"], "metrics": [0, 0, None]},  # nothing to divide
-                        {"dimensions": ["2026-11-12 00:00:00"], "metrics": [515, 526, 87.4]},
-                        {"dimensions": ["2026-11-13"], "metrics": [606, 614, 87]},
-                        {"dimensions": ["2026-11-14"], "metrics": [100, 120]},  # a row without the rate
-                        {"dimensions": ["2026-11-15"], "metrics": [90, 95, None]},  # visits, and no rate
-                    ]
-                }
+        async def post(self, url: str, **kwargs) -> httpx.Response:
+            query = kwargs["json"]
+            self.queries.append(query)
+            answer = self._engaged if "filters" in query else self._totals
+            if isinstance(answer, Exception):
+                raise answer
+            if isinstance(answer, httpx.Response):
+                return answer
+            return httpx.Response(200, json=answer, request=httpx.Request("POST", url))
 
-        class _MockClient:
-            async def __aenter__(self):
-                return self
-
-            async def __aexit__(self, *_args):
-                return False
-
-            async def post(self, *_args, **kwargs):
-                captured["payload"] = kwargs.get("json")
-                return _MockResp()
-
-        class _FrozenDatetime(_dt):
-            @classmethod
-            def now(cls, tz=None):  # type: ignore[override]
-                return frozen_now if tz is _tz.utc else frozen_now.replace(tzinfo=None)
-
+    def _get_visitors(self, client: TestClient, plausible: "_PlausibleClient", now: datetime) -> httpx.Response:
+        """`GET /insights/visitors` against *plausible* on the day of *now*, past the cache."""
         with (
             patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
             patch("api.routers.insights.settings") as mock_settings,
-            patch("api.routers.insights.httpx.AsyncClient", return_value=_MockClient()),
-            patch("api.routers.insights.datetime", _FrozenDatetime),
+            patch("api.routers.insights.httpx.AsyncClient", return_value=plausible),
+            patch("api.routers.insights.datetime", self._frozen(now)),
         ):
             mock_settings.plausible_api_key = "test-key"
             mock_settings.plausible_site_id = "anyplot.ai"
             mock_settings.plausible_api_url = "https://plausible.io/api/v2/query"
-            body = client.get("/insights/visitors").json()
+            return client.get("/insights/visitors")
 
-        assert captured["payload"]["metrics"] == ["visitors", "visits", "bounce_rate"]
-        assert body["engaged_since"] == "2026-11-10"
+    # The 28 days up to 2026-11-19: unique visitors and visits, and the unique visitors with `input=yes`.
+    _TOTALS = {
+        "results": [
+            {"dimensions": ["2026-11-13"], "metrics": [264, 275]},
+            {"dimensions": ["2026-11-14"], "metrics": [292, 303]},
+            {"dimensions": ["2026-11-15"], "metrics": [515, 526]},
+            {"dimensions": ["2026-11-16 00:00:00"], "metrics": [606, 614]},
+            {"dimensions": ["2026-11-17"], "metrics": [100, 120]},
+            {"dimensions": ["2026-11-18"], "metrics": [90]},  # a row without the visits
+            {"dimensions": ["2026-11-19"], "metrics": [50, 55]},
+        ]
+    }
+    _ENGAGED = {
+        "results": [
+            {"dimensions": ["2026-11-14"], "metrics": [40]},  # the day the event began: not counted
+            {"dimensions": ["2026-11-15"], "metrics": [61]},
+            {"dimensions": ["2026-11-16"], "metrics": [80]},
+            {"dimensions": ["2026-11-17"], "metrics": [150]},  # more than the day's visitors
+            {"dimensions": ["2026-11-19"], "metrics": ["many"]},  # no number
+        ]
+    }
+
+    def test_visitors_engaged_are_the_visitors_who_stayed_and_did_something(self, client: TestClient) -> None:
+        """A day's engaged visitors are its unique visitors with a `stayed_10s` event whose `input` is `yes`.
+
+        Counted from 2026-11-15, the first full day of the event; never more than the day's visitors, and 0
+        for a day the second query has no row for.
+        """
+        plausible = self._PlausibleClient(totals=self._TOTALS, engaged=self._ENGAGED)
+        body = self._get_visitors(client, plausible, datetime(2026, 11, 19, 12, tzinfo=timezone.utc)).json()
+
+        window = {"site_id": "anyplot.ai", "date_range": ["2026-10-23", "2026-11-19"], "dimensions": ["time:day"]}
+        assert sorted(plausible.queries, key=lambda query: "filters" in query) == [
+            {**window, "metrics": ["visitors", "visits"]},
+            {
+                **window,
+                "metrics": ["visitors"],
+                "filters": [["is", "event:goal", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]],
+            },
+        ]
+        assert body["engaged_since"] == "2026-11-15"
         by_day = {point["date"]: point for point in body["points"]}
         assert len(by_day) == 28
-        # Before the day the bounce rate holds: the visits are there, the engaged ones are not a number.
-        assert by_day["2026-11-08"] == {"date": "2026-11-08", "visitors": 264, "visits": 275, "engaged": None}
-        assert by_day["2026-11-09"]["engaged"] is None
-        assert by_day["2026-10-19"] == {"date": "2026-10-19", "visitors": 0, "visits": 0, "engaged": None}
-        # From that day on: visits * (100 - bounce) / 100, rounded.
-        assert by_day["2026-11-10"] == {"date": "2026-11-10", "visitors": 292, "visits": 303, "engaged": 61}
-        assert by_day["2026-11-11"] == {"date": "2026-11-11", "visitors": 0, "visits": 0, "engaged": 0}
-        assert by_day["2026-11-12"]["engaged"] == 66
-        assert by_day["2026-11-13"] == {"date": "2026-11-13", "visitors": 606, "visits": 614, "engaged": 80}
-        # Visits without a bounce rate: no number, never "every visit was engaged".
-        assert by_day["2026-11-14"] == {"date": "2026-11-14", "visitors": 100, "visits": 120, "engaged": None}
-        assert by_day["2026-11-15"] == {"date": "2026-11-15", "visitors": 90, "visits": 95, "engaged": None}
+        # Before the first full day of the event: the visitors are there, the engaged ones are not a number.
+        assert by_day["2026-10-23"] == {"date": "2026-10-23", "visitors": 0, "visits": 0, "engaged": None}
+        assert by_day["2026-11-13"] == {"date": "2026-11-13", "visitors": 264, "visits": 275, "engaged": None}
+        assert by_day["2026-11-14"] == {"date": "2026-11-14", "visitors": 292, "visits": 303, "engaged": None}
+        # From that day on: the count as Plausible answers it.
+        assert by_day["2026-11-15"] == {"date": "2026-11-15", "visitors": 515, "visits": 526, "engaged": 61}
+        assert by_day["2026-11-16"] == {"date": "2026-11-16", "visitors": 606, "visits": 614, "engaged": 80}
+        # Cut to the day's visitors, of whom they are a part.
+        assert by_day["2026-11-17"]["engaged"] == 100
+        # No row in an answer that came: none of the day's visitors; a metric that is no number reads as zero.
+        assert by_day["2026-11-18"] == {"date": "2026-11-18", "visitors": 90, "visits": 0, "engaged": 0}
+        assert by_day["2026-11-19"]["engaged"] == 0
 
-    @pytest.mark.parametrize(
-        ("visits", "bounce_rate", "engaged"),
-        [
-            (0, 0, 0),
-            (0, None, 0),
-            (10, 0, 10),
-            (10, 100, 0),
-            (614, 87, 80),
-            (3, 33, 2),
-            (5, 150, 0),
-            (5, -20, 5),
-            (5, None, None),
-        ],
-        ids=[
-            "no-visit",
-            "no-visit-no-rate",
-            "none-bounced",
-            "all-bounced",
-            "a-farm-day",
-            "rounded",
-            "above-100",
-            "below-0",
-            "visits-without-a-rate",
-        ],
-    )
-    def test_engaged_visits_stay_between_none_and_all(
-        self, visits: int, bounce_rate: float | None, engaged: int | None
+    def test_visitors_without_engaged_when_their_query_fails(
+        self, client: TestClient, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from api.routers.insights import _engaged_visits
+        """A refused engaged query leaves every day without engaged visitors, so the tile draws the unique ones.
 
-        assert _engaged_visits(visits, bounce_rate) == engaged
+        The log names the status and Plausible's answer: a filter it cannot answer reads differently from an
+        outage.
+        """
+        refused = httpx.Response(
+            400,
+            json={"error": "The goal `stayed_10s` is not configured for this site."},
+            request=httpx.Request("POST", "https://plausible.io/api/v2/query"),
+        )
+        plausible = self._PlausibleClient(totals=self._TOTALS, engaged=refused)
+
+        with caplog.at_level(logging.WARNING, logger="api.routers.insights"):
+            body = self._get_visitors(client, plausible, datetime(2026, 11, 19, 12, tzinfo=timezone.utc)).json()
+
+        points = body["points"]
+        assert len(points) == 28
+        assert all(point["engaged"] is None for point in points)
+        assert {point["date"]: point["visitors"] for point in points}["2026-11-16"] == 606
+        [warning] = [record for record in caplog.records if "engaged visitors" in record.getMessage()]
+        assert "HTTP 400" in warning.getMessage()
+        assert "is not configured for this site" in warning.getMessage()
+
+    def test_visitors_empty_when_the_visitors_query_fails(self, client: TestClient) -> None:
+        """Without the day's visitors there is nothing to draw, whatever the engaged query answered."""
+        plausible = self._PlausibleClient(totals=httpx.ConnectTimeout("slow"), engaged=self._ENGAGED)
+        response = self._get_visitors(client, plausible, datetime(2026, 11, 19, 12, tzinfo=timezone.utc))
+
+        assert response.status_code == 200
+        assert response.json()["points"] == []
 
     # --- /insights/machine-readers: the machine-read telemetry's public tile -------------------
 

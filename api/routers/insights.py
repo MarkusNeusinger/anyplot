@@ -11,6 +11,7 @@ Public analytics and discovery features that leverage aggregated database data:
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 import random
@@ -115,21 +116,20 @@ class DailyImplPoint(BaseModel):
     count: int
 
 
-# The first UTC day whose bounce rate says what it should. Until 2026-11-09 every page load sent
-# web-vitals events, and Plausible takes any custom event for an interaction, so no visit
-# bounced: the days before would read as "every visit was engaged".
-ENGAGED_SINCE = date(2026, 11, 10)
+# The first full UTC day of the `stayed_10s` event: the tracker began sending it during
+# 2026-11-14, so that day holds only the visits after the deploy and would count too few.
+ENGAGED_SINCE = date(2026, 11, 15)
 
 
 class VisitorPoint(BaseModel):
-    """One UTC day of the site's visits, sourced from Plausible.
+    """One UTC day of the site's visitors, sourced from Plausible.
 
-    `engaged` is the day's visits with a second page or an interaction: the visits Plausible does
-    not count as bounced. A visit that bounced is one page and nothing else, which is a reader who
-    found what they came for and also what a crawler farm's page load looks like. It is `None` for
-    a day before `ENGAGED_SINCE`, and for a day whose answer has visits and no bounce rate.
-    Plausible answers the bounce rate in whole percent, so the number is right to about one in two
-    hundred of the day's visits.
+    `engaged` is the day's unique visitors who had the site in front of them for ten seconds of a
+    visit and used a pointer, a finger or a key in it, before the ten seconds or after them: the
+    visitors with a `stayed_10s` event whose `input` is `yes`. A visitor who left within ten seconds
+    or did nothing is a reader who found what they came for, or automated traffic that runs the
+    page's scripts. It is never more than the day's `visitors`, and `None` for a day before
+    `ENGAGED_SINCE` and for every day when Plausible did not answer that count.
     """
 
     date: str  # ISO "YYYY-MM-DD"
@@ -139,7 +139,7 @@ class VisitorPoint(BaseModel):
 
 
 class VisitorsResponse(BaseModel):
-    """The site's visits per day for the public stats page."""
+    """The site's visitors per day for the public stats page."""
 
     points: list[VisitorPoint]
     engaged_since: str = ENGAGED_SINCE.isoformat()
@@ -743,17 +743,13 @@ async def get_related_specs(
 # =============================================================================
 
 
-def _engaged_visits(visits: int, bounce_rate: float | None) -> int | None:
-    """The visits Plausible did not count as bounced, from its two public numbers.
+# The visitors the stats page draws: a `stayed_10s` event with `input=yes`. The tracker sends
+# that once per visit at most, at ten seconds when the visitor did something before them, or at
+# the first input after them (`app/src/analytics/stay.ts`).
+STAYED_WITH_INPUT = [["is", "event:goal", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]]
 
-    A day without a visit has none. A day with visits and no bounce rate has no such number:
-    a missing rate read as zero would call every one of its visits engaged.
-    """
-    if visits == 0:
-        return 0
-    if bounce_rate is None:
-        return None
-    return max(0, min(visits, round(visits * (100 - bounce_rate) / 100)))
+# A Plausible day's metrics as numbers, by ISO date.
+_PlausibleDays = dict[str, list[float | None]]
 
 
 def _number(value: object) -> float | None:
@@ -761,12 +757,52 @@ def _number(value: object) -> float | None:
     return float(value) if isinstance(value, int | float) and not isinstance(value, bool) else None
 
 
-async def _fetch_plausible_visitors() -> VisitorsResponse:
-    """Query the Plausible Stats API v2 for visitors, visits and the bounce rate per day (last 28d).
+def _count(metrics: list[float | None] | None, index: int) -> int:
+    """A count from a day's metrics: zero for a day without a row, and for a metric it lacks or that is no number."""
+    value = metrics[index] if metrics is not None and index < len(metrics) else None
+    return max(0, int(value or 0))
 
-    A day's `engaged` visits are its visits minus the bounced ones (`_engaged_visits`), from
-    `ENGAGED_SINCE` on. The stats page draws those: a crawler farm that runs the page's scripts
-    loads one page per visit, so it inflates the visitors and leaves the engaged visits alone.
+
+async def _plausible_days(client: httpx.AsyncClient, query: dict[str, object]) -> _PlausibleDays:
+    """One Stats API v2 query by `time:day`: each day's metrics, by its ISO date.
+
+    Raises when the call fails, Plausible refuses the query, or the answer is not the documented shape.
+    """
+    resp = await client.post(
+        settings.plausible_api_url,
+        headers={"Authorization": f"Bearer {settings.plausible_api_key}", "Content-Type": "application/json"},
+        json=query,
+    )
+    resp.raise_for_status()
+    days: _PlausibleDays = {}
+    # Plausible v2 response: {"results": [{"dimensions": ["YYYY-MM-DD"], "metrics": [...]}, ...]}
+    for row in resp.json().get("results", []):
+        dims = row.get("dimensions") or []
+        metrics = row.get("metrics") or []
+        if not dims or not metrics:
+            continue
+        # The time:day dimension can come back as "YYYY-MM-DD" or an ISO datetime —
+        # normalize to a plain ISO date so the join with the zero-filled axis works.
+        days[str(dims[0])[:10]] = [_number(value) for value in metrics]
+    return days
+
+
+def _failure(exc: BaseException) -> str:
+    """What a failed query says in the log: for a refused one its status and the start of Plausible's answer,
+    which names a filter it cannot answer; otherwise the kind of error."""
+    if isinstance(exc, httpx.HTTPStatusError):
+        return f"HTTP {exc.response.status_code}: {exc.response.text[:300]}"
+    return type(exc).__name__
+
+
+async def _fetch_plausible_visitors() -> VisitorsResponse:
+    """Query the Plausible Stats API v2 for visitors, visits and engaged visitors per day (last 28d).
+
+    Two queries over the same days, sent together: unique visitors and visits, and the unique visitors
+    with `STAYED_WITH_INPUT`, a day's `engaged` from `ENGAGED_SINCE` on. The stats page draws those once
+    every day of its window has them: a crawler farm that runs the page's scripts inflates the visitors,
+    seldom stays ten seconds and does nothing when it does, so it leaves the engaged ones alone. When the
+    second query fails, no day has engaged visitors and the page draws the unique visitors.
 
     The 28-day window ends on today (inclusive) so the rightmost bar reflects
     current-day traffic as a partial day, matching how Plausible's dashboard
@@ -779,7 +815,7 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
     custom range pulls today's partial row in.
 
     Returns an empty `points` list when the API key is not configured or the
-    upstream call fails — the stats page treats `points: []` as "no data" and
+    first query fails — the stats page treats `points: []` as "no data" and
     renders a placeholder instead of an all-zero chart, so we can distinguish
     real zeros (Plausible returned 0 visitors for a day) from missing data.
     On a successful fetch the response is zero-filled across all 28 days so
@@ -790,62 +826,58 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
 
     today = datetime.now(timezone.utc).date()
     start = today - timedelta(days=27)
-    payload = {
+    window: dict[str, object] = {
         "site_id": settings.plausible_site_id,
-        "metrics": ["visitors", "visits", "bounce_rate"],
         "date_range": [start.isoformat(), today.isoformat()],
         "dimensions": ["time:day"],
     }
+    totals: _PlausibleDays | BaseException
+    engaged: _PlausibleDays | BaseException
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(
-                settings.plausible_api_url,
-                headers={"Authorization": f"Bearer {settings.plausible_api_key}", "Content-Type": "application/json"},
-                json=payload,
+            totals, engaged = await asyncio.gather(
+                _plausible_days(client, {**window, "metrics": ["visitors", "visits"]}),
+                _plausible_days(client, {**window, "metrics": ["visitors"], "filters": STAYED_WITH_INPUT}),
+                return_exceptions=True,
             )
-            resp.raise_for_status()
-            data = resp.json()
-    except Exception:
-        logger.warning("Plausible visitors fetch failed (returning empty series)", exc_info=True)
+    except Exception as exc:  # the client itself failed: neither query has an answer
+        totals = engaged = exc
+    if isinstance(totals, BaseException):
+        logger.warning(
+            "Plausible visitors fetch failed (returning empty series): %s", _failure(totals), exc_info=totals
+        )
         return VisitorsResponse(points=[])
-
-    # Plausible v2 response: {"results": [{"dimensions": ["YYYY-MM-DD"], "metrics": [visitors, visits, bounce]}, ...]}
-    by_date: dict[str, tuple[int, int, float | None]] = {}
-    for row in data.get("results", []):
-        dims = row.get("dimensions") or []
-        metrics = row.get("metrics") or []
-        if not dims or not metrics:
-            continue
-        # The time:day dimension can come back as "YYYY-MM-DD" or an ISO datetime —
-        # normalize to a plain ISO date so the join with the zero-filled axis works.
-        day_str = str(dims[0])[:10]
-        # A metric the row lacks, or one that is no number, is no number here either: a count
-        # reads as zero, and a missing bounce rate leaves the day without engaged visits.
-        numbers = [_number(value) for value in metrics[:3]]
-        numbers += [None] * (3 - len(numbers))
-        by_date[day_str] = (int(numbers[0] or 0), int(numbers[1] or 0), numbers[2])
+    engaged_days = None if isinstance(engaged, BaseException) else engaged
+    if isinstance(engaged, BaseException):
+        logger.warning(
+            "Plausible engaged visitors fetch failed (no day has engaged visitors): %s",
+            _failure(engaged),
+            exc_info=engaged,
+        )
 
     points = []
     for offset in range(27, -1, -1):
         day = today - timedelta(days=offset)
-        visitors, visits, bounce_rate = by_date.get(day.isoformat(), (0, 0, None))
+        key = day.isoformat()
+        visitors = _count(totals.get(key), 0)
+        engaged_count = None
+        if engaged_days is not None and day >= ENGAGED_SINCE:
+            # A day without a row in a query that answered had no such visitor; a count above the
+            # day's unique visitors cannot be, and is cut to them.
+            engaged_count = min(visitors, _count(engaged_days.get(key), 0))
         points.append(
-            VisitorPoint(
-                date=day.isoformat(),
-                visitors=visitors,
-                visits=visits,
-                engaged=_engaged_visits(visits, bounce_rate) if day >= ENGAGED_SINCE else None,
-            )
+            VisitorPoint(date=key, visitors=visitors, visits=_count(totals.get(key), 1), engaged=engaged_count)
         )
     return VisitorsResponse(points=points)
 
 
 @router.get("/visitors", response_model=VisitorsResponse)
 async def get_visitors() -> VisitorsResponse:
-    """Get visitors, visits and engaged visits per day for the last 28 days (Plausible Stats API).
+    """Get visitors, visits and engaged visitors per day for the last 28 days (Plausible Stats API).
 
-    A point's `engaged` is its visits with a second page or an interaction, `None` before
-    `engaged_since` (`ENGAGED_SINCE`).
+    A point's `engaged` is its unique visitors who stayed ten seconds of a visit and did something
+    in it, before the ten seconds or after them; `None` before `engaged_since` (`ENGAGED_SINCE`)
+    and for every day when Plausible did not answer that count.
 
     Cached for ~1h via stale-while-revalidate so we stay well under Plausible's
     600-req/h rate limit even under traffic spikes on the public stats page.

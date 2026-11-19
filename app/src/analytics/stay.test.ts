@@ -40,7 +40,7 @@ describe('the ten seconds of a visit', () => {
     expect(pageActive()).toBe(false);
   });
 
-  it('comes once, after ten seconds in front of the visitor', () => {
+  it('comes once, after ten seconds in front of the visitor, and not again without input', () => {
     const stayed = vi.fn();
     beginStay(Date.now(), stayed);
 
@@ -107,6 +107,46 @@ describe('the ten seconds of a visit', () => {
     vi.advanceTimersByTime(7_000);
 
     expect(stayed).toHaveBeenCalledExactlyOnceWith(true);
+
+    // The stay is over: more input says nothing more.
+    noteStayInput();
+    vi.advanceTimersByTime(60_000);
+    noteStayInput();
+    expect(stayed).toHaveBeenCalledTimes(1);
+  });
+
+  it('tells the first input after a moment that came without one, and nothing after it', () => {
+    // Someone opens the page, fetches a coffee, then clicks around.
+    const stayed = vi.fn();
+    beginStay(Date.now(), stayed);
+    vi.advanceTimersByTime(STAY_MS);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+
+    vi.advanceTimersByTime(5 * 60_000);
+    expect(stayed).toHaveBeenCalledTimes(1);
+    noteStayInput();
+    expect(stayed.mock.calls).toEqual([[false], [true]]);
+
+    noteStayInput();
+    vi.advanceTimersByTime(60_000);
+    noteStayInput();
+    expect(stayed).toHaveBeenCalledTimes(2);
+  });
+
+  it('runs no second clock while it waits for an input', () => {
+    const stayed = vi.fn();
+    beginStay(Date.now(), stayed);
+    vi.advanceTimersByTime(STAY_MS);
+
+    setStayActive(false, Date.now());
+    vi.advanceTimersByTime(60_000);
+    setStayActive(true, Date.now());
+    vi.advanceTimersByTime(60_000);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+
+    // Still waiting: the input is told all the same.
+    noteStayInput();
+    expect(stayed.mock.calls).toEqual([[false], [true]]);
   });
 
   it('starts over with a new visit, and forgets the input of the one before', () => {
@@ -125,6 +165,25 @@ describe('the ten seconds of a visit', () => {
     expect(second).toHaveBeenCalledExactlyOnceWith(false);
   });
 
+  it('starts over with a new visit, and forgets that the one before waited for an input', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    beginStay(Date.now(), first);
+    vi.advanceTimersByTime(STAY_MS);
+    expect(first).toHaveBeenCalledExactlyOnceWith(false);
+
+    beginStay(Date.now(), second);
+    vi.advanceTimersByTime(2_000);
+    noteStayInput();
+    // The input belongs to the new stay, which has not stayed yet.
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(8_000);
+    expect(second).toHaveBeenCalledExactlyOnceWith(true);
+    expect(first).toHaveBeenCalledTimes(1);
+  });
+
   it('never comes for a stay that was ended, and ignores what follows it', () => {
     const stayed = vi.fn();
     beginStay(Date.now(), stayed);
@@ -135,5 +194,15 @@ describe('the ten seconds of a visit', () => {
     noteStayInput();
     vi.advanceTimersByTime(60_000);
     expect(stayed).not.toHaveBeenCalled();
+  });
+
+  it('tells no input after a stay that was ended while it waited for one', () => {
+    const stayed = vi.fn();
+    beginStay(Date.now(), stayed);
+    vi.advanceTimersByTime(STAY_MS);
+    endStay();
+
+    noteStayInput();
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
   });
 });

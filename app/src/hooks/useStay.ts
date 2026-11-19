@@ -10,8 +10,8 @@ const STAY_INPUTS = ['pointerdown', 'pointermove', 'touchstart', 'keydown', 'whe
 
 /**
  * Tells the visit's ten-second clock (`src/analytics/stay.ts`) what the page is doing: whether
- * it is in front of the visitor, and whether the visitor did anything. Mounted once, in the
- * root layout.
+ * it is in front of the visitor, and whether the visitor did anything, before the ten seconds
+ * or after them. Mounted once, in the root layout.
  *
  * The clock itself starts with the visit, in `useAnalytics`; this hook only reports changes.
  * `pagehide` stops it whatever the visibility says: a page that goes into the back-forward

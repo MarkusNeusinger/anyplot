@@ -91,6 +91,26 @@ describe('useStay', () => {
     expect(own).toHaveBeenCalledExactlyOnceWith(true);
   });
 
+  it('after ten seconds without input, waits for the visitor’s own input, not a scripted one', () => {
+    const listeners = new Map<string, EventListener>();
+    const add = vi.spyOn(window, 'addEventListener');
+    renderHook(() => useStay());
+    for (const [type, listener] of add.mock.calls) listeners.set(type, listener as EventListener);
+
+    const stayed = vi.fn();
+    beginStay(Date.now(), stayed);
+    vi.advanceTimersByTime(STAY_MS);
+    expect(stayed).toHaveBeenCalledExactlyOnceWith(false);
+
+    listeners.get('pointerdown')?.({ isTrusted: false } as Event);
+    listeners.get('wheel')?.({ isTrusted: false } as Event);
+    expect(stayed).toHaveBeenCalledTimes(1);
+
+    listeners.get('pointermove')?.({ isTrusted: true } as Event);
+    listeners.get('pointermove')?.({ isTrusted: true } as Event);
+    expect(stayed.mock.calls).toEqual([[false], [true]]);
+  });
+
   it('takes its listeners away when the layout unmounts', () => {
     const remove = vi.spyOn(window, 'removeEventListener');
     const view = renderHook(() => useStay());

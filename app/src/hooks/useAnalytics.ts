@@ -24,18 +24,21 @@ export type AnalyticsEvent =
   | 'stayed_10s';
 
 /**
- * The event the tracker sends by itself, once per visit, when the page has been in front of
- * the visitor for ten seconds (`src/analytics/stay.ts`). No component sends it: `TrackEvent`
- * leaves it out.
+ * The event the tracker sends by itself when the page has been in front of the visitor for ten
+ * seconds of a visit (`src/analytics/stay.ts`), with `input` `yes` or `no`. After a `no` it is
+ * sent once more, with `yes`, at the visitor's first input later in the visit, so a visit
+ * sends one `yes`, one `no`, or a `no` and then a `yes`. The stats page counts the visitors
+ * with a `yes` (`ENGAGED_SINCE` in `api/routers/insights.py`). No component sends it:
+ * `TrackEvent` leaves it out.
  */
 export const STAYED_EVENT = 'stayed_10s';
 
 /**
- * Whether `stayed_10s` keeps a visit from counting as bounced. While it is measured it does
- * not: no public number moves until the share of visits that stay is known for the crawler
- * farm and for readers. Turning it on makes a visit of more than ten seconds an engaged one,
- * and from that day the engaged visits count more than before, so `ENGAGED_SINCE` in
- * `api/routers/insights.py` moves to the first full UTC day after it.
+ * Whether `stayed_10s` keeps a visit from counting as bounced. It does not: the stats page
+ * reads the event and its `input` itself, so Plausible's bounce rate and visit duration stay
+ * what they were. Turning it on would make every visit that stays ten seconds an engaged one
+ * for Plausible, with or without input, and give a one-page visit that stays a duration of
+ * about ten seconds where it had none.
  */
 export const STAYED_INTERACTIVE: boolean = false;
 
@@ -120,12 +123,15 @@ function noteSent(now: number): void {
 
 /**
  * Sends `stayed_10s`: the page has been in front of the visitor for ten seconds of this visit.
- * `input` says whether a pointer, a finger or a key was used in that time.
+ * `input` says whether a pointer, a finger or a key was used in that time; a second call, with
+ * `true`, comes at the first input after a moment that came without one.
  *
  * Nothing is sent once the visit is over for Plausible, which is 30 minutes after the last
- * thing sent: ten seconds collected across a long pause would open a visit of their own
- * there, one without a page. Nor while the admin's own use is muted, nor anywhere but on the
- * live site: the moment comes from a timer, long after the pageview that was checked.
+ * thing sent: ten seconds collected across a long pause, or an input after it, would open a
+ * visit of their own there, one without a page. Nor while the admin's own use is muted, nor
+ * anywhere but on the live site: the moment comes from a timer, long after the pageview that
+ * was checked. Each call is checked when it comes, so an input after a `no` that was not sent
+ * can still send its `yes`: the visit stayed ten seconds and the visitor did something.
  */
 function sendStayed(input: boolean): void {
   const now = Date.now();
@@ -340,7 +346,7 @@ export function useAnalytics() {
   const trackEvent: TrackEvent = useCallback(
     (name: AnalyticsEvent, props?: EventProps, url?: string) => {
       if (!isProduction || analyticsMuted()) return;
-      // The visit's clock sends this one itself, once (the type refuses the call).
+      // The visit's clock sends this one itself (the type refuses the call).
       if (name === STAYED_EVENT) return;
       const now = Date.now();
       const feature = name === 'ui_feature' ? props?.feature : undefined;
