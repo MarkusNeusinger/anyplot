@@ -5,10 +5,12 @@ its closing reply came from the adapter's `changes` notes, written before the re
 user asked for "6,5 Mio." on the axis, the axis showed "6.0 M", and the reply claimed
 "about 6,5 Mio."; another reply said the title was not set while the image showed one.
 
-Two measurements, both code:
+Three measurements, all code:
 
 * `drawn_texts` reads the drawn texts the render's probe reports (the `labels` field) by
-  role, every one of them; `plot_texts` clips them into `PlotShows.texts`, which the root
+  role, every one of them; `plot_texts` builds `PlotShows.texts` from them, each role's
+  distinct count with all of its texts or both ends, and `texts_complete` carries
+  `DrawnTexts.complete` into `PlotShows.texts_complete` (omitted when True), which the root
   reads fenced next to the result. Every library's render reports them since 2026-11-01:
   matplotlib, seaborn and plotnine through `harness.drawn_labels`, pygal, altair and
   lets-plot through `harness.install_text_probes`, the JavaScript libraries, plotly and bokeh
@@ -16,10 +18,19 @@ Two measurements, both code:
   text probes their rows load (`text_probe.R`, `text_probe.jl`, `harness.collect_text_probe`).
   The probe is written by the code under test, so every value is checked for type and
   clipped; a probe without `labels` (a failed text report) yields None, which the root never
-  sees (`plugins/tool_safety.fence_pipeline_notes` drops it), and a run with requested texts
-  then carries `UNVERIFIED_LINE` instead of a silent pass.
+  sees (`plugins/tool_safety.fence_pipeline_notes` drops both None and an empty dict, together
+  with `texts_complete`), and a run with requested texts then carries `UNVERIFIED_LINE` instead
+  of a silent pass.
+* `plot_axes` reads the measured axis ranges the render's probe reports (`axes`,
+  `harness.drawn_axes`: matplotlib and seaborn, leaving out axes that are hidden, have no
+  visible tick label, use `matplotlib.category`, or set tick labels by hand; plotnine maps its
+  scales before matplotlib and reports none) into `PlotShows.axes`, at most `MAX_AXES`
+  non-empty entries of `x`, `y` and `z`, each with a closed `scale` (`linear`, `log`, `date`)
+  and sorted finite numbers or ISO 8601 strings; a probe without `axes` yields None, and
+  `fence_pipeline_notes` drops both None and an empty list.
 * `expected_misses` checks each of the run's `expected_texts` (the texts and number formats
-  the user asked to see, verbatim) against all drawn texts, never the clipped summary. A
+  the user asked to see, verbatim) against all drawn texts, never the `PlotShows.texts`
+  record. A
   text (`Population 2025`, `Top 10`) must stand whole in one drawn text (case, spacing,
   quotes, dashes and mathtext markup aside). A number-format example (`format_unit`: a
   number with one short unit, `6,5 Mio.`, `12 %`, `CHF 6,5`) must draw its unit, and every
@@ -37,15 +48,27 @@ under `EXPECT_LINE_ID` that quotes it, and `reviewed_misses` reads those lines b
 render no readable review answered for keeps `UNVERIFIED_LINE`.
 """
 
+import math
 import re
 import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
+from datetime import datetime
+from typing import Any, cast
 
 from core.defects import DEFECT_RE
 
-from .schemas import MAX_SHOWN_TEXT_CHARS, ShownGroup
+from .schemas import (
+    AXIS_SCALES,
+    MAX_AXES,
+    MAX_SHOWN_TEXT_CHARS,
+    AxisScale,
+    ShownAxes,
+    ShownAxis,
+    ShownGroup,
+    ShownRole,
+    parse_axis_date,
+)
 
 
 MAX_LABELS = 400
@@ -60,14 +83,14 @@ GROUP_LIMITS: dict[ShownGroup, int] = {
     "z axis label": 2,
     "other axis labels": 3,
     "legend": 12,
-    "x tick labels": 8,
-    "y tick labels": 8,
+    "x tick labels": 20,
+    "y tick labels": 20,
     "z tick labels": 8,
-    "annotations": 8,
+    "annotations": 16,
     "other texts": 6,
 }
-"""Distinct texts `PlotShows.texts` keeps per role: enough to quote a title or read a tick format, and
-at most 64 texts of `MAX_SHOWN_TEXT_CHARS` (about 5 KB) next to the result's other fields."""
+"""Distinct texts `PlotShows.texts` lists per role before cutting to both ends: at most 96 texts of
+`MAX_SHOWN_TEXT_CHARS` across the roles next to the result's other fields."""
 UNVERIFIED_LINE = (
     "SC-04 ({theme}): the requested texts could not be checked against the render "
     "→ compare them with the image. Likely cause: no drawn texts to check them against and no readable review."
@@ -243,14 +266,98 @@ def probe_error(probe: Any) -> str | None:
     return error if isinstance(error, str) and error in PROBE_ERRORS else "other"
 
 
-def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, list[str]] | None:
-    """`PlotShows.texts`: the drawn texts within `GROUP_LIMITS` and `MAX_SHOWN_TEXT_CHARS`, for the root's reply."""
+def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, ShownRole] | None:
+    """`PlotShows.texts`: per role, its distinct count and either every text or both ends within `GROUP_LIMITS`."""
     if drawn is None:
         return None
-    return {
-        group: list(dict.fromkeys(_clip(text, MAX_SHOWN_TEXT_CHARS) for text in texts))[: GROUP_LIMITS[group]]
-        for group, texts in drawn.groups.items()
-    }
+    roles: dict[ShownGroup, ShownRole] = {}
+    for group, raw_texts in drawn.groups.items():
+        distinct = list(dict.fromkeys(_clip(text, MAX_SHOWN_TEXT_CHARS) for text in raw_texts))
+        if not distinct:
+            continue
+        bound = GROUP_LIMITS[group]
+        count = len(distinct)
+        if count <= bound:
+            roles[group] = ShownRole(count=count, texts=distinct)
+        else:
+            head = math.ceil(bound / 2)
+            tail = bound // 2
+            roles[group] = ShownRole(count=count, first=distinct[:head], last=distinct[count - tail :])
+    return roles
+
+
+def texts_complete(drawn: DrawnTexts | None) -> bool:
+    """`PlotShows.texts_complete`: False when the probe left a drawn text out or cut it (`DrawnTexts.complete`)."""
+    return drawn is None or drawn.complete
+
+
+AXIS_NAMES = ("x", "y", "z")
+AXIS_KEYS = frozenset({"scale", "min", "max"})
+MAX_AXES_SCAN = 16
+"""Raw `axes` items inspected before stopping: the harness writes at most `MAX_AXES` (2)."""
+
+
+def _finite_limit(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    try:
+        number = float(value)
+    except OverflowError:
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _date_limit(value: Any) -> tuple[str, datetime] | None:
+    try:
+        return parse_axis_date(value)
+    except ValueError:
+        return None
+
+
+def _shown_axis(raw: Any) -> ShownAxis | None:
+    if not isinstance(raw, dict) or set(raw) != AXIS_KEYS:
+        return None
+    scale = raw.get("scale")
+    if not isinstance(scale, str) or scale not in AXIS_SCALES:
+        return None
+    if scale == "date":
+        low_date = _date_limit(raw["min"])
+        high_date = _date_limit(raw["max"])
+        if low_date is None or high_date is None:
+            return None
+        (low_text, low_dt), (high_text, high_dt) = low_date, high_date
+        if (low_dt.tzinfo is None) != (high_dt.tzinfo is None) or low_dt > high_dt:
+            return None
+        return ShownAxis(scale="date", min=low_text, max=high_text)
+    low = _finite_limit(raw["min"])
+    high = _finite_limit(raw["max"])
+    if low is None or high is None or low > high:
+        return None
+    return ShownAxis(scale=cast(AxisScale, scale), min=low, max=high)
+
+
+def plot_axes(probe: Any) -> list[ShownAxes] | None:
+    """`PlotShows.axes` from a render's probe, read as untrusted data; None when the probe has none."""
+    if not isinstance(probe, dict):
+        return None
+    entries = probe.get("axes")
+    if not isinstance(entries, list):
+        return None
+    shown: list[ShownAxes] = []
+    for entry in entries[:MAX_AXES_SCAN]:
+        if not isinstance(entry, dict):
+            continue
+        axes: dict[str, ShownAxis] = {}
+        for name in AXIS_NAMES:
+            if name in entry:
+                axis = _shown_axis(entry[name])
+                if axis is not None:
+                    axes[name] = axis
+        if axes:
+            shown.append(ShownAxes(**axes))
+            if len(shown) >= MAX_AXES:
+                break
+    return shown
 
 
 def _norm(text: str, *, quotes: bool = False) -> str:
@@ -331,15 +438,21 @@ def _quote(texts: Sequence[str], limit: int = 3) -> str:
     return ", ".join(f'"{text}"' for text in texts[:limit])
 
 
-def _observed(texts: dict[ShownGroup, list[str]], kind: str) -> str:
+def _listed(role: ShownRole | None) -> list[str]:
+    if role is None:
+        return []
+    return list(role.texts) if role.texts is not None else [*(role.first or ()), *(role.last or ())]
+
+
+def _observed(texts: dict[ShownGroup, ShownRole], kind: str) -> str:
     """What the plot shows instead, for the miss's line: the tick labels for a format, the title for a text."""
     if kind == "format":
         for group in TICK_GROUPS:
-            if texts.get(group):
-                return f"its {group} read {_quote(texts[group])}"
+            if listed := _listed(texts.get(group)):
+                return f"its {group} read {_quote(listed)}"
         return "it shows no tick labels"
-    if texts.get("title"):
-        return f"its title reads {_quote(texts['title'], 1)}"
+    if listed := _listed(texts.get("title")):
+        return f"its title reads {_quote(listed, 1)}"
     return "it has no title"
 
 

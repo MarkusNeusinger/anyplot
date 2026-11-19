@@ -38,8 +38,11 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    than `TEXT_OVERLAP_TOLERANCE_PX` (`text_overlaps`, the deepest pairs by role, and
    `text_overlaps_total`), annotations outside their axes, the
    number of drawn point marks (scatter offsets) and the number of vertices of the
-   visible `plot()` lines (`line_points`), and the content of the drawn texts by role
-   (`labels`, `drawn_labels`: what the root's closing reply is grounded in). Only rendered text counts: matplotlib keeps tick
+   visible `plot()` lines (`line_points`), the content of the drawn texts by role
+   (`labels`, `drawn_labels`: what the root's closing reply is grounded in), and, for
+   matplotlib and seaborn, the measured axis ranges of the first `AXES_LIMIT` non-empty
+   rectilinear axes that draw scale tick labels and are not a colorbar's (`axes`, `drawn_axes`; plotnine
+   maps its scales before matplotlib and reports none). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
    (`axis("off")`, a twin's), which report themselves visible but are never drawn,
    and an edge label one tick step past the view sat beyond the canvas in every
@@ -166,6 +169,7 @@ stdout, so the host reads them as hints (a retry decision, a memory figure), nev
 as a verdict.
 """
 
+import datetime
 import errno
 import functools
 import io
@@ -241,6 +245,7 @@ default forms of shared Han characters; JP is the TTC's first face, and the form
 POLAR_BIN_DEG = 5  # width of one angle bin of the plotted points in the probe's `polar` field
 POLAR_RINGS = 10  # radius bins: tenths of the visible radius range, centre to edge
 POLAR_AXES_LIMIT = 4  # polar axes the probe describes per figure
+AXES_LIMIT = 2  # non-empty rectilinear non-colorbar axes whose ranges the probe's `axes` field reports
 DENSITY_AXES_LIMIT = 8  # axes the probe's `density` field describes per figure
 DENSITY_LABEL_LIMIT = 500  # data-anchored texts per axes matched against the marks
 DENSITY_MARK_LIMIT = 2_000  # bar ends and points per axes a text is matched against
@@ -1687,6 +1692,196 @@ def drawn_labels(figure, drawn, extents=None, canvas=None):
     return labels, truncated or len(entries) > LABEL_LIMIT
 
 
+def _converter(axis):
+    get_converter = getattr(axis, "get_converter", None)
+    return get_converter() if callable(get_converter) else getattr(axis, "converter", None)
+
+
+def _is_category_axis(axis):
+    """Whether an axis maps string categories to positions (`matplotlib.category`), with or without its own converter."""
+    converter = _converter(axis)
+    if converter is not None and "category" in type(converter).__module__:
+        return True
+    return (
+        type(axis.get_major_formatter()).__module__ == "matplotlib.category"
+        or type(axis.get_major_locator()).__module__ == "matplotlib.category"
+    )
+
+
+def _is_hand_labelled_formatter(formatter):
+    """Whether `formatter` writes labels set by hand (`set_ticklabels`: `Axis._format_with_dict` or `FixedFormatter`)."""
+    from matplotlib import ticker as mticker
+    from matplotlib.axis import Axis
+
+    if isinstance(formatter, mticker.FixedFormatter):
+        return True
+    if isinstance(formatter, mticker.FuncFormatter):
+        wrapped = getattr(formatter, "func", None)
+        return isinstance(wrapped, functools.partial) and wrapped.func is Axis._format_with_dict
+    return False
+
+
+def _is_hand_labelled_axis(axis):
+    """Whether an axis's major tick labels were set by hand rather than formatted from its scale."""
+    return _is_hand_labelled_formatter(axis.get_major_formatter())
+
+
+def _is_plotnine_figure(figure):
+    """Whether `figure` was built by plotnine (`PlotnineLayoutEngine` or `p9GridSpec`), whose scales map data to plain
+    numbers before matplotlib sees them."""
+    if type(figure).__module__.startswith("plotnine"):
+        return True
+    get_engine = getattr(figure, "get_layout_engine", None)
+    engine = get_engine() if callable(get_engine) else getattr(figure, "_layout_engine", None)
+    if engine is not None and type(engine).__module__.startswith("plotnine"):
+        return True
+    for ax in figure.get_axes():
+        get_gridspec = getattr(ax, "get_gridspec", None)
+        gridspec = get_gridspec() if callable(get_gridspec) else None
+        if gridspec is not None and type(gridspec).__module__.startswith("plotnine"):
+            return True
+    return False
+
+
+def _axis_scale(axis):
+    """One of `linear`, `log` or `date` for a non-categorical axis, or None for any other scale or converter."""
+    converter = _converter(axis)
+    if converter is not None:
+        module = type(converter).__module__
+        if "dates" in module or type(converter).__name__ == "DatetimeConverter":
+            return "date"
+        return None
+    if "dates" in type(axis.get_major_formatter()).__module__ or "dates" in type(axis.get_major_locator()).__module__:
+        return "date"
+    scale = axis.get_scale()
+    return scale if scale in ("linear", "log") else None
+
+
+def _iso_date(axis, value):
+    """A matplotlib date number as an ISO 8601 string of at most 32 characters, or None when out of range."""
+    from matplotlib import dates as mdates
+
+    unit = getattr(axis, "units", None)
+    tz = unit if isinstance(unit, datetime.tzinfo) else None
+    if tz is None:
+        fmt_tz = getattr(axis.get_major_formatter(), "tz", None)
+        if isinstance(fmt_tz, datetime.tzinfo) and (
+            fmt_tz.utcoffset(datetime.datetime(2020, 1, 1)) != datetime.timedelta(0)
+            or fmt_tz.utcoffset(datetime.datetime(2020, 7, 1)) != datetime.timedelta(0)
+        ):
+            tz = fmt_tz
+    try:
+        moment = mdates.num2date(value, tz=tz)
+    except ValueError, OverflowError:
+        return None
+    if tz is None:
+        moment = moment.replace(tzinfo=None)
+    text = moment.isoformat()
+    if len(text) > 32 and moment.tzinfo is not None:
+        text = moment.astimezone(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+    return text if 10 <= len(text) <= 32 and text[4:5] == "-" else None
+
+
+def _has_visible_tick_label(axis, drawn):
+    """Whether the probe's draw (`drawn`, by id) rendered a tick label of `axis` that its scale formatted.
+
+    `Axis.draw` draws only the ticks inside the view interval, and of those only the visible,
+    non-empty labels reach `drawn`, so the answer is read from what that draw left: the ticks
+    already in `axis.__dict__`, read without materializing more. Neither the plot's locator nor its
+    formatter runs again, so a formatter that counts its calls saves the same PNG bytes. A group
+    whose formatter is categorical or hand-set (`_is_hand_labelled_formatter`) does not count.
+    """
+    for ticks_attr, locator, formatter in (
+        ("majorTicks", axis.get_major_locator(), axis.get_major_formatter()),
+        ("minorTicks", axis.get_minor_locator(), axis.get_minor_formatter()),
+    ):
+        if (
+            type(locator).__module__ == "matplotlib.category"
+            or type(formatter).__module__ == "matplotlib.category"
+            or _is_hand_labelled_formatter(formatter)
+        ):
+            continue
+        if any(id(tick.label1) in drawn or id(tick.label2) in drawn for tick in axis.__dict__.get(ticks_attr, ())):
+            return True
+    return False
+
+
+def _axis_range(axis, get_limits, drawn):
+    """One axis's `{"scale", "min", "max"}`, or None when hidden, unlabelled, categorical, hand-labelled, non-finite or another scale."""
+    if axis is None or not axis.get_visible() or _is_category_axis(axis) or _is_hand_labelled_axis(axis):
+        return None
+    scale = _axis_scale(axis)
+    if scale is None:
+        return None
+    raw_low, raw_high = get_limits()
+    low, high = float(raw_low), float(raw_high)
+    if not (math.isfinite(low) and math.isfinite(high)):
+        return None
+    if not _has_visible_tick_label(axis, drawn):
+        return None
+    if low > high:
+        low, high = high, low
+    if scale == "date":
+        start, end = _iso_date(axis, low), _iso_date(axis, high)
+        if start is None or end is None:
+            return None
+        return {"scale": scale, "min": start, "max": end}
+    return {"scale": scale, "min": low, "max": high}
+
+
+def drawn_axes(figure, drawn=None):
+    """The measured axis ranges of the first `AXES_LIMIT` non-empty rectilinear axes, in `figure.get_axes()` order.
+
+    plotnine maps its scales before matplotlib sees them, so a plotnine figure reports none.
+    Colorbars, invisible axes, axes with `axison` false (or `_axis3don` false on 3D axes) and
+    non-rectilinear projections (`polar`, map projections) are skipped. Each entry holds `x`,
+    `y` and, on a 3D axes, `z`, each with `scale` (`linear`, `log`, `date`) and sorted `min`
+    and `max` at full precision or as ISO 8601 strings; an axis that is hidden, has no visible
+    tick label, is categorical (`matplotlib.category` converter, formatter or locator), has
+    hand-set tick labels (`set_ticklabels`), is non-finite or uses another scale is left out of
+    its entry, and an entry with no axis left is skipped without counting towards `AXES_LIMIT`.
+    `drawn` is what the probe's draw rendered (`_draw_recording_texts`); a caller without it,
+    such as a test, gets that one draw here.
+    """
+    if _is_plotnine_figure(figure):
+        return []
+    if drawn is None:
+        _renderer(figure)
+        drawn = _draw_recording_texts(figure)
+    report = []
+    for axes in figure.get_axes():
+        try:
+            projection = getattr(axes, "name", "rectilinear")
+            axis_on = getattr(axes, "_axis3don", True) if projection == "3d" else getattr(axes, "axison", True)
+            if (
+                not axes.get_visible()
+                or not axis_on
+                or projection not in ("rectilinear", "3d")
+                or getattr(axes, "_colorbar", None) is not None
+            ):
+                continue
+        except Exception:
+            continue
+        entry = {}
+        pairs = [("x", axes.xaxis, axes.get_xlim), ("y", axes.yaxis, axes.get_ylim)]
+        zaxis = getattr(axes, "zaxis", None)
+        get_zlim = getattr(axes, "get_zlim", None)
+        if zaxis is not None and callable(get_zlim):
+            pairs.append(("z", zaxis, get_zlim))
+        for name, axis, get_limits in pairs:
+            try:
+                measured = _axis_range(axis, get_limits, drawn)
+            except Exception:
+                continue
+            if measured is not None:
+                entry[name] = measured
+        if entry:
+            report.append(entry)
+            if len(report) >= AXES_LIMIT:
+                break
+    return report
+
+
 def _outside(box, width, height):
     """Whether a text box lies wholly outside the `width` x `height` canvas."""
     return box[2] <= 0 or box[3] <= 0 or box[0] >= width or box[1] >= height
@@ -1803,8 +1998,13 @@ def probe(figure, dpi):
         texts_part = {"labels": labels, "labels_truncated": truncated}
     except Exception:  # the texts are for the reply's grounding; they never break the probe
         texts_part = {}
+    try:
+        axes_part = {} if _is_plotnine_figure(figure) else {"axes": drawn_axes(figure, drawn)}
+    except Exception:  # the axis ranges are for the reply's grounding too; they never break the probe
+        axes_part = {}
     return {
         **texts_part,
+        **axes_part,
         "figsize": [float(width_in), float(height_in)],
         "dpi": float(dpi or figure.dpi),
         "canvas": [

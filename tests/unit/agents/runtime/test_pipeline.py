@@ -2,6 +2,7 @@
 
 import json
 import re
+from typing import Any, cast
 
 import pytest
 
@@ -79,6 +80,7 @@ def run_with(shipped: bool = True, **candidate: object) -> Run:
             "plan": AdaptPlan(changes=["c"]),
             "attempt": 1,
             "changes": ["c"],
+            "texts_complete": True,
         }
         values.update(candidate)
         run.best = Candidate(**values)
@@ -157,7 +159,13 @@ class TestFinish:
         first = run.best
         assert first is not None
         repaired = Candidate(
-            working="w2", run_form="r2", pngs={}, plan=AdaptPlan(changes=["fix"]), attempt=2, review_score=83
+            working="w2",
+            run_form="r2",
+            pngs={},
+            plan=AdaptPlan(changes=["fix"]),
+            attempt=2,
+            review_score=83,
+            texts_complete=True,
         )
         repaired.reviewed_ok = repaired.status_ok = True
         run.best, run.best_scored = repaired, first
@@ -189,7 +197,15 @@ class TestFinish:
         run = run_with(reviewed_ok=True, status_ok=True, review_score=88, advisory_lines=[overlap])
         scored = run.best
         assert scored is not None
-        clean = Candidate(working="w2", run_form="r2", pngs={}, plan=AdaptPlan(), attempt=3, review_score=clean_score)
+        clean = Candidate(
+            working="w2",
+            run_form="r2",
+            pngs={},
+            plan=AdaptPlan(),
+            attempt=3,
+            review_score=clean_score,
+            texts_complete=True,
+        )
         clean.reviewed_ok, clean.status_ok = clean_meets_bar, clean_meets_bar
         run.best, run.best_scored = clean, scored
 
@@ -217,6 +233,15 @@ class TestFinish:
 
         assert light.artifacts == ["plot-light.png", "plot.py", "data.csv"]
         assert finish(dark_run).artifacts == ["plot-dark.png", "plot.py", "data.csv"]
+
+    def test_candidate_requires_texts_complete_and_finish_forwards_it(self) -> None:
+        with pytest.raises(TypeError, match="texts_complete"):
+            cast(Any, Candidate)(working="w", run_form="r", pngs={}, plan=AdaptPlan(), attempt=1)
+
+        complete = finish(run_with(texts_complete=True, reviewed_ok=True))
+        cut = finish(run_with(texts_complete=False, reviewed_ok=True))
+        assert complete.shows is not None and complete.shows.texts_complete is True
+        assert cut.shows is not None and cut.shows.texts_complete is False
 
     def test_the_shipped_round_is_marked_even_when_a_later_round_failed(self) -> None:
         """Attempt 1 rendered and was reviewed with a finding; the repair failed its check, so attempt 1 ships."""

@@ -15,6 +15,7 @@ from agents.anyplot.grounding import UNVERIFIED_LINE
 from agents.anyplot.pipeline import EARLIER_REQUESTS_HEADING, REVIEW_EXPECTED_HEADING, SELF_REVIEW_LINE
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.runtimes import PythonRuntime
+from agents.anyplot.schemas import ShownAxes, ShownAxis, ShownRole
 from agents.anyplot.scoring import DE_DEFAULTS, SCORED
 from agents.anyplot.services import get_services
 from agents.anyplot.settings import get_settings
@@ -747,7 +748,12 @@ async def test_a_text_probe_grounds_the_reply_and_the_review_checks_the_requeste
     script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
     ask_for(script, TEMPERATURE)
     script["reviewer"] = [{"json": score()}]
-    probe = {"labels": [{"kind": "title", "text": "Prüfungen"}, {"kind": "y axis label", "text": "Punkte"}]}
+    probe = {
+        "labels": [{"kind": "title", "text": "Prüfungen"}, {"kind": "y axis label", "text": "Punkte"}],
+        "axes": [
+            {"x": {"scale": "linear", "min": 0.0, "max": 10.0}, "y": {"scale": "linear", "min": 15.5, "max": 98.5}}
+        ],
+    }
     backend.script = lambda job, theme: FakeOutcome(probe=probe)
     fake = swap_models("gemini", script)
     sid = await open_session(client)
@@ -760,10 +766,72 @@ async def test_a_text_probe_grounds_the_reply_and_the_review_checks_the_requeste
     assert REVIEW_TASK in review
     shipped = get_services().versions.get(sid)
     assert shipped is not None and shipped.result.shows is not None
-    assert shipped.result.shows.texts == {"title": ["Prüfungen"], "y axis label": ["Punkte"]}
+    assert shipped.result.shows.texts == {
+        "title": ShownRole(count=1, texts=["Prüfungen"]),
+        "y axis label": ShownRole(count=1, texts=["Punkte"]),
+    }
+    assert shipped.result.shows.axes == [
+        ShownAxes(x=ShownAxis(scale="linear", min=0.0, max=10.0), y=ShownAxis(scale="linear", min=15.5, max=98.5))
+    ]
     assert "Prüfungen" in root_inputs(fake)[-1]
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert (result["texts"], result["texts_expected"]) == (["title", "y axis label"], True)  # roles, never texts
+
+
+async def test_a_library_without_axes_ignores_probe_axes_and_forwards_incomplete_texts(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Only matplotlib and seaborn read `probe['axes']`; a tampered or non-matplotlib probe's `axes` is ignored, while
+    `labels_truncated` reaches the root as `texts_complete: false`."""
+    from agents.anyplot.session_state import SUMMARY_PENDING
+    from agents.anyplot.sub_agents.adapter import ADAPTERS
+    from agents.main import app, get_runtime
+
+    from .conftest import CASES
+    from .test_service_flow import USER, snapshot_body
+
+    monkeypatch.setenv("AGENT_LIBRARIES", "matplotlib,seaborn,plotnine")
+    get_settings.cache_clear()
+    monkeypatch.setitem(ADAPTERS, "plotnine", ADAPTERS["matplotlib"])
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    script["reviewer"] = [{"json": score()}]
+    backend.script = lambda job, theme: FakeOutcome(
+        probe={
+            "labels": [{"kind": "title", "text": "Prüfungen"}],
+            "labels_truncated": True,
+            "axes": [{"x": {"scale": "linear", "min": 0.0, "max": 10.0}}],
+        }
+    )
+    fake = swap_models("gemini", script)
+    opened = await client.post(
+        "/v1/sessions",
+        headers=HEADERS,
+        json={
+            "user": USER,
+            "spec_id": "scatter-basic",
+            "library": "plotnine",
+            "locale": "en",
+            "snapshot": snapshot_body(),
+        },
+    )
+    assert opened.status_code == 200, opened.text
+    sid = opened.json()["session_id"]
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    assert (await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})).status_code == 200
+    rt = app.dependency_overrides[get_runtime]()
+    await rt.write_state(await rt.session(USER, sid), {SUMMARY_PENDING: None})
+    assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
+
+    events = await create_plot(client, sid)
+
+    plot = next(item for name, item in events if name == "plot")
+    assert plot["status"] == "ok"
+    shipped = get_services().versions.get(sid)
+    assert shipped is not None and shipped.result.shows is not None
+    assert shipped.result.shows.axes is None
+    assert shipped.result.shows.texts_complete is False
+    shows = fake.requests[-1].contents[-1].parts[0].function_response.response["shows"]
+    assert '"texts_complete": false' in shows and '"axes"' not in shows
 
 
 async def test_a_failed_text_probe_drops_the_texts_and_is_logged(

@@ -799,7 +799,7 @@ NO_BROWSER = {"PLAYWRIGHT_BROWSERS_PATH": "/nonexistent/anyplot-no-browsers"}
 
 
 def test_page_only_writes_the_page_a_render_builds_and_starts_no_browser(harness: Harness, tmp_path: Path) -> None:
-    """The page is byte for byte the one the render screenshots, policy and table included, whatever
+    """The page is byte for byte the page a render writes (`plot-<theme>.html`), policy and table included, whatever
     `ANYPLOT_NO_HTML` says; no browser starts, so the code does not run (it would throw)."""
     data = '{"columns":["label"],"data":[["</script>"],[null]]}'
     source = (

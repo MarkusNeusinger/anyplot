@@ -1078,6 +1078,13 @@ def _stands_in(wanted: str, text: str) -> bool:
     return re.search(before + re.escape(wanted) + after, text) is not None
 
 
+def _role_texts(role: Any) -> list[str]:
+    """The listed texts of one `PlotShows.texts` role record (`texts`, or `first` and `last`), never its keys."""
+    if not isinstance(role, dict):
+        return []
+    return [str(text) for key in ("texts", "first", "last") for text in role.get(key) or []]
+
+
 def unbacked_quotes(replies: list[str], shows: dict[str, Any] | None) -> int:
     """How many passages the root's replies to a shipped plot quote that no drawn text and no requested text holds.
 
@@ -1089,7 +1096,7 @@ def unbacked_quotes(replies: list[str], shows: dict[str, Any] | None) -> int:
     shows = shows or {}
     texts = shows.get("texts")
     groups = texts.values() if isinstance(texts, dict) else []
-    drawn = [_norm_quote(str(text)) for group in groups for text in group or []]
+    drawn = [_norm_quote(text) for group in groups for text in _role_texts(group)]
     drawn += [_norm_quote(str(text)) for text in shows.get("requested_not_found") or []]
     count = 0
     for reply in replies:
@@ -1183,12 +1190,13 @@ def version_facts(sid: str, number: Any) -> dict[str, Any] | None:
     if version is None:
         return None
     shows = version.result.shows
+    shown = shows.model_dump(mode="json") if shows is not None else None
     return {
         "number": number,
         "code": version.export,
         "language": version.language,
         "theme": version.theme,
-        "texts": dict(shows.texts) if shows is not None and shows.texts is not None else None,
+        "texts": shown["texts"] if shown is not None else None,
         "requested_not_found": list(shows.requested_not_found) if shows is not None else [],
         "view": version.view,
         "view_rows": version.view_rows.model_dump(mode="json") if version.view_rows is not None else None,
@@ -1281,7 +1289,7 @@ def _view_texts(facts: dict[str, Any] | None) -> list[str] | None:
     texts = (facts or {}).get("texts")
     if facts is None or not isinstance(texts, dict):
         return None
-    return [str(text) for role in VIEW_TEXT_ROLES for text in texts.get(role) or []]
+    return [text for role in VIEW_TEXT_ROLES for text in _role_texts(texts.get(role))]
 
 
 def turn_view_facts(lines: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1317,9 +1325,10 @@ def view_record(
     - `drawn_rows`: the rows that version drew, `{rows, of_rows}` of its `view_rows`, the `DrawnRows` the pipeline
       builds once per run and hands to every adapter and reviewer request of it; None when it stored none.
       `words_hold_view` says whether the server's view words there hold every part of the case's view.
-    - `named`: whether every part of the view (`view_tokens`) stands in a drawn text of `VIEW_TEXT_ROLES`; None
-      when the version shipped no drawn texts (`PlotShows.texts` keeps a few texts per role, so size a case's marks
-      to fit them) or the view has no part a label repeats (`load_case` refuses `named` and `clear` for such a view).
+    - `named`: whether every part of the view (`view_tokens`) stands in a listed text of `VIEW_TEXT_ROLES`; None
+      when the version shipped no drawn texts (`PlotShows.texts` lists up to 16 annotations, 12 legend entries, 6
+      other texts, 3 titles and 2 subtitles, and only both ends above a role's bound, so size a case's marks to fit
+      them) or the view has no part a label repeats (`load_case` refuses `named` and `clear` for such a view).
     - `cleared`: `every_row`, the clearing turn shipped a new version that drew no view; `still_named`, a part of
       the view still stands in one of its drawn texts.
 
