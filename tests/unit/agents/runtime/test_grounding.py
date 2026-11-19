@@ -106,6 +106,7 @@ from agents.anyplot.schemas import (
 from agents.anyplot.services import Services
 from agents.anyplot.session_state import BINDINGS, DATASET_ID, SessionView, initial_state
 from agents.anyplot.tools.session import get_dataset_profile
+from tests.libraries import import_library
 
 
 LORENZ_CODE = """
@@ -1395,7 +1396,7 @@ class TestHarnessAxes:
     def test_seaborn_reports_its_ranges_through_the_harness_probe(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        sns = pytest.importorskip("seaborn")
+        sns = import_library("seaborn")
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(Figure, "savefig", Figure.savefig)
         harness.install_probe("light")
@@ -1461,7 +1462,7 @@ class TestHarnessAxes:
     def test_plotnine_reports_no_axes_through_the_harness_probe(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        p9 = pytest.importorskip("plotnine")
+        p9 = import_library("plotnine")
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(Figure, "savefig", Figure.savefig)
         harness.install_probe("light")
@@ -1505,8 +1506,7 @@ class TestHarnessAxes:
     def test_hand_labelled_and_converterless_categorical_axes_report_no_range(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import seaborn as sns
-
+        sns = import_library("seaborn")
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(Figure, "savefig", Figure.savefig)
         harness.install_probe("light")
@@ -1639,8 +1639,7 @@ class TestHarnessAxes:
     def test_axes_without_visible_tick_labels_rugplot_and_jointplot(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import seaborn as sns
-
+        sns = import_library("seaborn")
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(Figure, "savefig", Figure.savefig)
         harness.install_probe("light")
