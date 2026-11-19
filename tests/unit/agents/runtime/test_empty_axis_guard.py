@@ -206,7 +206,7 @@ class TestWhatTheGuardLeaves:
     async def test_the_next_turn_lists_what_the_server_can_compute_and_takes_the_users_pick(
         self, client: httpx.AsyncClient, runtime: Runtime, swap_models
     ) -> None:
-        """The row numbers first, as the owner's order for a number axis has it; the days, asked for in the next turn,
+        """The row numbers first, as a number axis is offered them before any date; the days, asked for in the next turn,
         take y as an offer the user took."""
         script = default_script()
         script["root"] = [
