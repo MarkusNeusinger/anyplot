@@ -56,7 +56,8 @@ date differs from its name, or whose "Where" names neither a pull request nor an
 this repository.
 
 Keep to what happened. "Decided" gives the owner's reason when he gave one, and says so when the
-reason is the agent's reading. The rules for public text apply: no private detail, nothing a visitor
+reason is the agent's reading. A decision that no public text named as his at the time, and that he
+confirmed later, says so: "He confirmed it as his decision on 2026-11-19." The rules for public text apply: no private detail, nothing a visitor
 wrote, and a security finding only at the level of its class.
 
 One file per decision, and never a shared list: pull requests that are open at the same time then
