@@ -29,6 +29,10 @@ ROLLING = [
 ]
 """The roles of `line-timeseries-rolling`, the spec of the live test of 2026-11-01."""
 OPERATIONS = TypeAdapter(list[Operation])
+PAIRS = '{"2026-11-26": 1, "2026-11-25": 2, "2026-11-24": 3}'
+"""Days newest first as the keys of JSON pairs, which the parser keeps text: a dry run reads every cell, no guess."""
+DAYS = "Datum;Preis\n" + "".join(f"2026-11-{day};{day}\n" for day in range(26, 16, -1)) + "offen;0\n"
+"""Ten days newest first and one cell of no date: the paste keeps the column text, a dry run reads ten of eleven."""
 
 
 def found(
@@ -48,50 +52,50 @@ def applied(parsed: ParsedDataset, candidate: Candidate | RowNumbers) -> ParsedD
 
 class TestCandidates:
     def test_a_certain_date_conversion_of_a_newest_first_column(self) -> None:
-        text = "Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n24 Nov 2026;3\n"
-
-        [candidate] = found(text, language="de")
+        [candidate] = found(PAIRS, language="de")
 
         # No sort: the table keeps its rows as pasted, and a plot run draws the dates oldest first by itself.
         assert candidate.role == "date" and candidate.dry.certain
         assert candidate.operations() == [
-            {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"}
+            {"op": "set_type", "column": "category", "type": "datetime", "name": "category (Datum)"}
         ]
         assert candidate.line() == (
-            "date: column 'Datum' (text): 3 of 3 cells would be read as dates (format inferred, day before month); "
-            'certain: every cell reads and nothing is guessed; operations: [{"op": "set_type", "column": "Datum", '
-            '"type": "datetime", "name": "Datum (Datum)"}]'
+            "date: column 'category' (text): 3 of 3 cells would be read as dates (format inferred, year first); "
+            'certain: every cell reads and nothing is guessed; operations: [{"op": "set_type", "column": "category", '
+            '"type": "datetime", "name": "category (Datum)"}]'
         )
         assert "newest first" not in candidate.made()
 
     def test_its_operations_fill_the_role(self) -> None:
         """The operations the line gives make the column that the service binds (`carry_bindings`): the role is filled."""
-        text = "Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n24 Nov 2026;3\n"
-        parsed = parse_dataset(text)
+        parsed = parse_dataset(PAIRS)
         roles = parse_roles(ROLLING)
-        [candidate] = found(text)
+        [candidate] = found(PAIRS)
 
         after = applied(parsed, candidate)
 
-        column = next(column for column in after.profile.columns if column.name == "Datum (date)")
+        column = next(column for column in after.profile.columns if column.name == "category (date)")
         assert column.dtype == "datetime" and column.order == "descending"  # the rows stay as pasted
-        assert after.csv.splitlines()[1] == "26 Nov 2026,1,2026-11-26"
+        assert after.csv.splitlines()[1] == "2026-11-26,1,2026-11-26"
         assert check_bindings(default_bindings(roles, after.profile), roles, after.profile).complete
 
     def test_an_uncertain_conversion_says_why(self) -> None:
-        [candidate] = found("Datum,Preis\n26.11.26,1\n27.11.26,2\n")
+        """Slash dates whose order no cell settles: the paste reads them day first by guess, and so does a dry run."""
+        [candidate] = found('{"01/11/2026": 1, "02/11/2026": 2}')
 
         assert not candidate.dry.certain
-        assert "uncertain: the reading guesses the century of two-digit years" in candidate.line()
+        assert "uncertain: the reading guesses the day and month order" in candidate.line()
         assert "newest first" not in candidate.line()
 
     def test_cells_that_would_be_missing_are_counted(self) -> None:
-        rows = "".join(f"{day} Nov 2026;{day}\n" for day in range(1, 11)) + "offen;11\n"
-
-        [candidate] = found("Datum;Preis\n" + rows)
+        [candidate] = found(DAYS)
 
         assert "10 of 11 cells would be read as dates" in candidate.line()
         assert "uncertain: 1 cell would not read and be missing" in candidate.line()
+
+    def test_dates_outside_the_date_list_are_no_candidate(self) -> None:
+        """`26 Nov 2026` is no form the chat reads: no dry run proposes what no conversion reads."""
+        assert found("Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n24 Nov 2026;3\n") == []
 
     def test_a_number_role_takes_a_currency_column(self) -> None:
         [candidate] = found("when,price\n2024-01-01,$5\n2024-01-02,7\n2024-01-03,$12\n")
@@ -103,11 +107,12 @@ class TestCandidates:
         ]
 
     def test_a_column_of_dates_is_never_a_number_candidate(self) -> None:
-        """`Nov 26, 2026` would be 26.2026 behind a unit `Nov`: a date column serves a date role or none."""
+        """`Nov 26, 2026` would be 26.2026 behind a unit `Nov`: a date column serves a date role or none. The paste
+        types it as dates, so the open measure gets the offer of a free date column, never a number conversion."""
         roles = [*parse_roles(ROLLING)[:2]]
         text = "when;price;note\n2024-01-01;x;Nov 26, 2026\n2024-01-02;y;Nov 25, 2026\n"
 
-        assert found(text, roles=roles) == []
+        assert found(text, roles=roles) == [DateNumbers(role="value", column="note", dates=2)]
 
     @pytest.mark.parametrize(
         "text",
@@ -123,12 +128,13 @@ class TestCandidates:
         assert found(text) == []
 
     def test_a_column_kept_text_on_request_is_no_candidate(self) -> None:
-        assert found("Datum,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n", keep_text=["Datum"]) == []
+        assert found(DAYS) != []
+        assert found(DAYS, keep_text=["Datum"]) == []
 
     def test_a_column_a_role_holds_is_no_candidate(self) -> None:
         """A conversion is a suggestion, like the defaults: it takes a free column only, although a column bound by
         hand may serve several roles (owner decision of 2026-11-04)."""
-        parsed = parse_dataset("Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n24 Nov 2026;3\n")
+        parsed = parse_dataset(DAYS)
         label = DataRole(name="label", kinds=("text",), required=False, variadic=False, description="")
         roles = [*parse_roles(ROLLING)[:2], label]
         free = [Binding(role="value", column="Preis")]
@@ -145,7 +151,7 @@ class TestCandidates:
 
     def test_a_dry_run_is_made_once_per_version(self) -> None:
         cache: dict[tuple[str, str], DryRun | None] = {}
-        text = "Datum;Preis;Notiz\n26 Nov 2026;1;a\n25 Nov 2026;2;b\n"
+        text = "Datum;Preis;Notiz\n" + "".join(f"2026-11-{day};{day};a\n" for day in range(26, 16, -1)) + "offen;0;b\n"
 
         first = found(text, cache=cache)
         cache[("Datum", "datetime")] = None  # a stored verdict is taken as it is
@@ -159,23 +165,28 @@ class TestCandidates:
             DataRole(name=f"t{index}", kinds=("datetime",), required=True, variadic=False, description="a date")
             for index in range(MAX_CANDIDATES + 2)
         ]
-        header = ";".join(f"c{index}" for index in range(MAX_CANDIDATES + 2))
-        rows = ";".join("26 Nov 2026" for _ in range(MAX_CANDIDATES + 2))
+        width = MAX_CANDIDATES + 2
+        header = ";".join(f"c{index}" for index in range(width))
+        days = "".join(";".join(f"2026-11-{day}" for _ in range(width)) + "\n" for day in range(10, 20))
+        # One cell of no date in each column, each in a row of its own, keeps every column text at the paste.
+        stray = "".join(
+            ";".join("offen" if row == index else "2026-12-01" for index in range(width)) + "\n" for row in range(width)
+        )
 
-        assert len(found(f"{header}\n{rows}\n{rows}\n", roles=roles)) == MAX_CANDIDATES
+        assert len(found(f"{header}\n{days}{stray}", roles=roles)) == MAX_CANDIDATES
 
     def test_the_line_is_valid_json_after_operations(self) -> None:
-        [candidate] = found("Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n")
+        [candidate] = found(PAIRS)
 
         assert json.loads(candidate.line().split("; operations: ", 1)[1]) == candidate.operations()
 
     @pytest.mark.parametrize(
         "text",
         [
-            "Order ID,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n",  # the name says an id
-            "Code,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n",
+            DAYS.replace("Datum", "Order ID"),  # the name says an id, though ten of eleven cells read as dates
+            DAYS.replace("Datum", "Code"),
             "Season,Preis\n2009-10,1\n2010-11,2\n2011-12,3\n",  # spans of years
-            "Saison,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n",
+            DAYS.replace("Datum", "Saison"),
             "Land,Preis\nAT,1\nCH,2\nDE,3\n",  # short capitals
         ],
     )
@@ -261,13 +272,21 @@ class TestRowNumbers:
 
     def test_a_conversion_comes_first(self) -> None:
         """Real dates take the axis: the row numbers are the last fallback, never in place of the user's dates."""
-        text = "Datum;Preis\n8 Nov 2026;1\n9 Nov 2026;3\n10 Nov 2026;2\n"
-
-        [candidate] = found(text, roles=parse_roles(LINE))
+        [candidate] = found('{"2026-11-08": 1, "2026-11-09": 3, "2026-11-10": 2}', roles=parse_roles(LINE))
 
         assert isinstance(candidate, Candidate) and candidate.role == "x" and candidate.certain
-        assert candidate.moved == Binding(role="y", column="Preis")
-        assert "y then takes 'Preis', which x holds now" in candidate.line()
+        assert candidate.moved == Binding(role="y", column="value")
+        assert "y then takes 'value', which x holds now" in candidate.line()
+
+    def test_days_with_a_month_name_take_the_axis_without_a_conversion(self) -> None:
+        """A day with a month name is a date at the paste: it takes x, the numbers take y, nothing is left open."""
+        text = "Datum;Preis\n8 Nov 2026;1\n9 Nov 2026;3\n10 Nov 2026;2\n"
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes["Datum"] == "datetime"
+        bindings = default_bindings(parse_roles(LINE), parsed.profile)
+        assert {binding.role: binding.column for binding in bindings} == {"x": "Datum", "y": "Preis"}
+        assert found(text, roles=parse_roles(LINE)) == []
 
     def test_a_taken_name_gets_a_number(self) -> None:
         [candidate] = found("index,value\na,1\nb,2\nc,3\n", roles=parse_roles(LINE))
@@ -585,8 +604,7 @@ class TestRanges:
 def test_bindings_are_untouched() -> None:
     """The check reads the bindings; it never changes them."""
     bindings = [Binding(role="value", column="Preis")]
-    parsed = parse_dataset("Datum,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n")
+    parsed = parse_dataset(DAYS)
 
-    candidates(bindings, parse_roles(ROLLING), parsed.profile, parsed)
-
+    assert candidates(bindings, parse_roles(ROLLING), parsed.profile, parsed) != []
     assert bindings == [Binding(role="value", column="Preis")]

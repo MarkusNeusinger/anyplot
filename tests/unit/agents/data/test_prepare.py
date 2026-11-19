@@ -18,7 +18,14 @@ from pydantic import TypeAdapter, ValidationError
 
 from agents.anyplot.data import months as months_module
 from agents.anyplot.data import prepare as prepare_module
-from agents.anyplot.data.parse import AMBIGUOUS_DATE_ORDER, MAX_COMPUTED_BYTES, RESPELLED, ParsedDataset, parse_dataset
+from agents.anyplot.data.parse import (
+    AMBIGUOUS_DATE_ORDER,
+    DATE_FORMS,
+    MAX_COMPUTED_BYTES,
+    RESPELLED,
+    ParsedDataset,
+    parse_dataset,
+)
 from agents.anyplot.data.prepare import (
     AMBIGUOUS_MONTH_FIRST,
     MAX_CONDITIONS,
@@ -779,15 +786,24 @@ class TestSetTypeDatetime:
 
         assert failure(text, operation) == ("type_mismatch", "column 't': 1 of 3 cells cannot be read as dates")
 
-    def test_without_a_format_the_format_is_inferred_day_first(self) -> None:
-        text = "t,v\nJan 2024,1\n2024-02,2\n03/04/2024,3\n15 March 2024,4\n"
+    def test_without_a_format_each_cell_reads_in_its_own_form(self) -> None:
+        """The paste keeps such a mix as text; a request reads every cell in its form of the list, and the change line
+        names each form, the slash date's order (settled by a day over 12) among them."""
+        text = "t,v\nJan 2024,1\n2024-02,2\n15/04/2024,3\n15 March 2024,4\n"
         prepared = prepare(text, {"op": "set_type", "column": "t", "type": "datetime"})
 
-        assert cells(prepared, 0) == ["2024-01-01", "2024-02-01", "2024-04-03", "2024-03-15"]
+        assert cells(prepared, 0) == ["2024-01-01", "2024-02-01", "2024-04-15", "2024-03-15"]
         assert prepared.changes == [
-            "t: 4 cells read as dates (format inferred, year first where a cell starts with one, else day before month; "
-            "1 cell with a month name and a year as the first day of the month)"
+            "t: 4 cells read as dates (format inferred cell by cell: day before month; a day, a month name and a year; "
+            "months as their first day)"
         ]
+
+    def test_without_a_format_the_order_of_a_slash_column_is_the_columns(self) -> None:
+        text = "t,v\n03/04/2024,1\n03/15/2024,2\n"
+        prepared = from_text(text, "t", {"op": "set_type", "column": "t", "type": "datetime"})
+
+        assert cells(prepared, 0) == ["2024-03-04", "2024-03-15"]
+        assert prepared.changes == ["t: 2 cells read as dates (format inferred, month before day)"]
 
     def test_a_number_column_is_a_type_mismatch(self) -> None:
         assert failure(SALES, {"op": "set_type", "column": "Umsatz", "type": "datetime"})[0] == "type_mismatch"
@@ -824,14 +840,13 @@ class TestSetTypeDatetime:
 
         mixed = "t;v\nOkt. 2026;1\nOkt. 2026;2\n15.03.2026;3\n"
         assert apply_operations(parse_dataset(mixed, text_columns=["t"]), to_dates).changes == [
-            "t: 3 cells read as dates (format inferred, day before month; 2 cells with a month name and a year as the "
-            "first day of the month)"
+            "t: 3 cells read as dates (format inferred cell by cell: day before month; months as their first day)"
         ]
 
     def test_month_names_leave_no_day_and_month_order_open(self) -> None:
-        """`1 Nov 2026` names its month: no `AMBIGUOUS_DATE_ORDER` note travels with it, unlike `01/11/2026`."""
+        """`Nov 2026` names its month: no `AMBIGUOUS_DATE_ORDER` note travels with it, unlike `01/11/2026`."""
         to_dates = OPERATIONS.validate_python([{"op": "set_type", "column": "t", "type": "datetime"}])
-        named = apply_operations(parse_dataset("t,v\n1 Nov 2026,1\n1 Oct 2026,2\n"), to_dates)
+        named = apply_operations(parse_dataset("t,v\nNov 2026,1\nOct 2026,2\n", text_columns=["t"]), to_dates)
         digits = apply_operations(parse_dataset("t,v\n01/11/2026,1\n01/10/2026,2\n", text_columns=["t"]), to_dates)
 
         assert cells(named, 0) == ["2026-11-01", "2026-10-01"]
@@ -841,19 +856,20 @@ class TestSetTypeDatetime:
     @pytest.mark.parametrize(
         "cells",
         [
-            ["May", "June", "April"],  # pandas: the year 1
-            ["Nov 26", "Oct 26", "Sep 26"],  # pandas: 26 November of the year 1
-            ["13:00", "14:00", "15:30"],  # pandas: today at that time
+            ["May", "June", "April"],  # a month without a year
+            ["Nov 26", "Oct 26", "Sep 26"],  # a two-digit year
+            ["13:00", "14:00", "15:30"],  # a time alone
             ["now", "today", "now"],
+            ["1st Nov 2026", "2nd Nov 2026", "3rd Nov 2026"],  # an ordinal: a form outside the list
         ],
     )
-    def test_a_date_pandas_would_only_fill_in_is_refused(self, cells: list[str]) -> None:
+    def test_a_cell_of_no_listed_form_is_refused_with_the_forms_that_read(self, cells: list[str]) -> None:
         text = "t,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
 
         code, message = failure(text, {"op": "set_type", "column": "t", "type": "datetime"})
 
         assert code == "type_mismatch"
-        assert message == f"column 't': {len(cells)} of {len(cells)} cells cannot be read as dates"
+        assert message == f"column 't': {len(cells)} of {len(cells)} cells cannot be read as dates; {DATE_FORMS}"
 
     def test_the_year_1_written_out_is_a_date(self) -> None:
         """Only a year 1 that pandas filled in fails: `0001-03-01` says it."""
@@ -868,18 +884,19 @@ class TestSetTypeDatetime:
 class TestSetTypeIntoNewColumn:
     """`set_type` with `name`: the conversion an open role asks for, beside the column it reads (2026-11-01)."""
 
-    TEXT = "Datum;Preis\n26 Nov 2026;$5\n25 Nov 2026;7\n24 Nov 2026;$12\n"
+    TEXT = "Datum;Preis\n2026-11-26;$5\n2026-11-25;7\n2026-11-24;$12\n"
+    """`Datum` is kept text for the date conversions (`from_text`), as the paste would type its cells itself."""
 
     def test_dates_go_into_a_new_column_and_the_source_stays(self) -> None:
-        prepared = prepare(
-            self.TEXT, {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"}
+        prepared = from_text(
+            self.TEXT, "Datum", {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"}
         )
 
         assert rows(prepared)[0] == "Datum,Preis,Datum (Datum)"
-        assert cells(prepared, 0) == ["26 Nov 2026", "25 Nov 2026", "24 Nov 2026"]
+        assert cells(prepared, 0) == ["2026-11-26", "2026-11-25", "2026-11-24"]
         assert cells(prepared, 2) == ["2026-11-26", "2026-11-25", "2026-11-24"]
         assert prepared.changes == [
-            "new column Datum (Datum): 3 cells of Datum read as dates (format inferred, day before month); "
+            "new column Datum (Datum): 3 cells of Datum read as dates (format inferred, year first); "
             "Datum stays as it is"
         ]
         assert prepared.converted == {"Datum (Datum)": "Datum"}
@@ -897,7 +914,7 @@ class TestSetTypeIntoNewColumn:
     def test_a_column_read_in_place_is_its_own_source(self) -> None:
         """Read from text in place, the column fills an open role as a named conversion would (`carry_bindings`)."""
         numbers = prepare(self.TEXT, {"op": "set_type", "column": "Preis", "type": "number"})
-        dates = prepare(self.TEXT, {"op": "set_type", "column": "Datum", "type": "datetime"})
+        dates = from_text(self.TEXT, "Datum", {"op": "set_type", "column": "Datum", "type": "datetime"})
 
         assert numbers.converted == {"Preis": "Preis"} and dtypes(numbers)["Preis"] == "integer"
         assert dates.converted == {"Datum": "Datum"} and dtypes(dates)["Datum"] == "datetime"
@@ -911,15 +928,16 @@ class TestSetTypeIntoNewColumn:
     def test_a_rename_or_drop_in_the_same_call_follows_the_new_column(self) -> None:
         convert = {"op": "set_type", "column": "Datum", "type": "datetime", "name": "neu"}
 
-        renamed = prepare(self.TEXT, convert, {"op": "rename", "column": "neu", "name": "Tag"})
-        dropped = prepare(self.TEXT, convert, {"op": "drop_columns", "columns": ["neu"]})
+        renamed = from_text(self.TEXT, "Datum", convert, {"op": "rename", "column": "neu", "name": "Tag"})
+        dropped = from_text(self.TEXT, "Datum", convert, {"op": "drop_columns", "columns": ["neu"]})
 
         assert renamed.converted == {"Tag": "Datum"}
         assert dropped.converted == {}
 
     def test_a_sort_on_the_new_column_puts_the_dates_oldest_first(self) -> None:
-        prepared = prepare(
+        prepared = from_text(
             self.TEXT,
+            "Datum",
             {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"},
             {"op": "sort", "column": "Datum (Datum)"},
         )
@@ -972,7 +990,7 @@ class TestDryRun:
         return prepare_module.dry_run(prepare_module.read_frame(parsed), column, target, parsed.profile.decimal)
 
     def test_a_certain_date_conversion(self) -> None:
-        dry = self.run("Datum,v\n26 Nov 2026,1\n25 Nov 2026,2\n24 Nov 2026,3\n", "Datum", "datetime")
+        dry = self.run("Datum,v\n26.11.2026,1\n25.11.2026,2\n24.11.2026,3\n", "Datum", "datetime")
 
         assert dry is not None and dry.certain
         assert (dry.present, dry.read) == (3, 3)
@@ -981,11 +999,11 @@ class TestDryRun:
     @pytest.mark.parametrize(
         ("cells", "guess"),
         [
-            (["1 Nov 2026", "1 Oct 2026"], None),
             (["Nov 2026", "Okt. 2026"], None),
-            (["26.11.26", "25.11.26"], "the century of two-digit years"),
+            (["01.11.2026", "01.10.2026"], None),  # a dot date is day first, as at the paste
             (["01/11/2026", "01/10/2026"], "the day and month order"),
             (["13/11/2026", "01/10/2026"], None),  # a day over 12 settles the order
+            (["11/13/2026", "10/01/2026"], None),  # and a month first column too
         ],
     )
     def test_what_a_date_reading_guesses(self, cells: list[str], guess: str | None) -> None:
@@ -1000,7 +1018,7 @@ class TestDryRun:
         assert prepare_module.dry_run(prepare_module.read_frame(parsed), "d", "datetime") is None
 
     def test_mixed_cells_within_the_tenth_are_uncertain(self) -> None:
-        cells = [f"{day} Nov 2026" for day in range(1, 11)] + ["no date"]
+        cells = [f"2026-11-{day:02d}" for day in range(1, 11)] + ["no date"]
         dry = self.run("d,v\n" + "".join(f"{cell},1\n" for cell in cells), "d", "datetime")
 
         assert dry is not None and not dry.certain
@@ -2639,7 +2657,8 @@ class TestFidelity:
         expected = [f"2024-06-0{n}T13:00:00+00:00" for n in range(1, 10)]
         assert cells(prepared, 1) == [*expected[:4], "", *expected[4:]]
         assert prepared.changes == [
-            "t: 9 cells read as dates (format inferred, year first), 1 cell could not be read and is now missing"
+            "t: 9 cells read as dates (format inferred, year first), 1 cell could not be read as a date and is now "
+            f"missing; {DATE_FORMS}"
         ]
 
     def test_conditions_on_a_column_with_an_offset_compare_moments(self) -> None:
@@ -2700,8 +2719,8 @@ class TestFidelity:
 
     def test_different_utc_offsets_are_converted_to_utc_and_named(self) -> None:
         """Owner decision of 2026-10-15, as the parser writes such a column: UTC, with the offsets in the change line."""
-        text = "label,t\nx,05.01.2024 12:00 +01:00\ny,05.07.2024 12:00 +02:00\nz,2024-08-01 09:30 +02:00\n"
-        prepared = prepare(text, set_dates(column="t"))
+        text = "label,t\nx,2024-01-05T12:00+01:00\ny,2024-07-05T12:00+02:00\nz,2024-08-01 09:30+02:00\n"
+        prepared = from_text(text, "t", set_dates(column="t"))
 
         assert cells(prepared, 1) == [
             "2024-01-05T11:00:00+00:00",
@@ -2709,16 +2728,15 @@ class TestFidelity:
             "2024-08-01T07:30:00+00:00",
         ]
         assert prepared.changes == [
-            "t: 3 cells read as dates (format inferred, year first where a cell starts with one, else day before "
-            "month), times with the UTC offsets +01:00, "
+            "t: 3 cells read as dates (format inferred, year first), times with the UTC offsets +01:00, "
             "+02:00 converted to UTC (+00:00); the instants are the same"
         ]
 
     def test_times_with_and_without_an_offset_are_refused(self) -> None:
-        text = "label,t\nx,05.01.2024 12:00 +01:00\ny,05.07.2024 12:00\nz,2024-08-01 09:30 +02:00\n"
+        text = "label,t\nx,2024-01-05T12:00+01:00\ny,2024-07-05T12:00\nz,2024-08-01 09:30+02:00\n"
         code, message = failure(text, set_dates(column="t"))
 
-        assert code == "type_mismatch" and "no time is given a zone by guess" in message
+        assert code == "type_mismatch" and "no cell is given a zone by guess" in message
 
 
 def set_number(column: str) -> dict[str, Any]:

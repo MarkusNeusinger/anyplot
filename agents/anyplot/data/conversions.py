@@ -28,20 +28,28 @@ dates. The session block shows the root one line per candidate (`Candidate.line`
   The user confirms the data as usual, and `.undo()` takes it back. A `certain` line listed
   in a later turn (after an undo, or a binding the user changed) is never made by itself.
 * `uncertain`: some cells would not read and would be missing, or the reading guesses the
-  day and month order, the century of a two-digit year, the decimal mark or thousands
-  separators, or takes the days of dates with a UTC offset and no time as written
-  (`2026-03-01-05:00`, the offset dropped; `prepare.Conversion.guess`). The root proposes the
-  conversion with the counts, as its one question. A date followed by a sign and digits in
-  another form (`2026-03-01-03`, an hour label as much as an offset) makes no candidate, since
-  `set_type` refuses the column.
+  day and month order, the decimal mark or thousands separators, or takes the days of dates
+  with a UTC offset and no time as written (`2026-03-01-05:00`, the offset dropped;
+  `prepare.Conversion.guess`). The root proposes the conversion with the counts, as its one
+  question. A date followed by a sign and digits in another form (`2026-03-01-03`, an hour
+  label as much as an offset) makes no candidate, since `set_type` refuses the column.
+
+A conversion to dates without a format reads the forms the paste reads (`parse.read_dates`),
+so a pasted text column whose every cell reads as dates is rare: the paste would have typed it.
+What reaches a dry run as text is a column with cells outside the list (`uncertain`, or no
+candidate when more than a tenth fail), days with a UTC offset, or a column the parser keeps
+text by its own rule (the keys of `json_pairs`, a `json_stat` dimension). Dates in another form
+are no candidate: a `set_type` with a `date_format` reads the forms a format names (`YYYYMMDD`,
+`MM/YYYY`, `YYYY`) on request, and no conversion reads the others (`1st March 2026`, `2026/03/01`).
 
 Converted dates that run newest first stay in the order of the rows: a plot run draws a
 bound date column oldest first by itself (`plot_view.drawn_in_order`), so no conversion
 sorts the table and the root never asks about it.
 
 A date column for the axis counts even when the axis is taken: the defaults fill the roles in
-spec order, so `8 Nov 2026,3000` on a line plot has its one number column on `x` and `y`
-open. The dates then take the axis, and the numbers move to `y` (`bindings.axis_slot`).
+spec order, so a text column of days beside one number column on a line plot has the numbers
+on `x` and `y` open. The dates then take the axis, and the numbers move to `y`
+(`bindings.axis_slot`).
 
 A lower and upper bound pair left open (`bounds.py`: both roles required and unbound, also when
 the defaults left them open because two unrelated measures would have been inverted) takes a

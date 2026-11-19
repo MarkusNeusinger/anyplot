@@ -388,10 +388,10 @@ class TestFixtures:
         assert all("summary" in item.tags for item in cases)
         # A summary changes the data only for what the server found in code (live tests of 2026-11-01 and 11-02): a
         # column that converts for certain fills an open role, a list of values gets its row numbers, and a column
-        # of ranges fills a lower and upper bound pair left open.
+        # of ranges fills a lower and upper bound pair left open. Days with a month name (`8 Nov 2026`) are dates at
+        # the paste already, so their summary converts nothing.
         changing = {item.id for item in cases if item.expected_operations}
         assert changing == {
-            "en-summary-convert-day-dates",
             "en-summary-year-column",
             "en-summary-row-number",
             "de-summary-zeilennummer",

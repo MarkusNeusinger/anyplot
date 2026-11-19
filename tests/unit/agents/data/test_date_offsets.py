@@ -17,7 +17,7 @@ from pydantic import TypeAdapter
 
 from agents.anyplot.data.bindings import default_bindings
 from agents.anyplot.data.conversions import Candidate, candidates
-from agents.anyplot.data.parse import MAX_COMPUTED_BYTES, ParsedDataset, _offset_days, parse_dataset
+from agents.anyplot.data.parse import DATE_FORMS, MAX_COMPUTED_BYTES, ParsedDataset, _offset_days, parse_dataset
 from agents.anyplot.data.prepare import (
     OFFSET_DAYS_READING,
     Operation,
@@ -113,7 +113,7 @@ class TestPaste:
         assert parsed.csv.splitlines()[1] == f"2026-03-01{offset},12"
         assert NOTE in parsed.warnings
 
-    @pytest.mark.parametrize("offset", ["-03", "+01", "-0500", "+0100", "-05:00:00"])
+    @pytest.mark.parametrize("offset", ["-03", "+01", "-0500", "+0100", "-05:00:00", "-17:00", "+15:00"])
     def test_a_sign_and_digits_in_no_offset_form_get_no_offset_note(self, offset: str) -> None:
         """`2026-03-01-03` may be an hour label: no sentence calls it an offset; the column is text as before."""
         parsed = parse_dataset(table(offset))
@@ -221,8 +221,9 @@ class TestConversion:
         [line] = prepare(text, operation).changes
 
         assert len(line) <= MAX_NOTE_CHARS
-        # The impossible day is no date read, so its offset is not among those dropped.
-        assert f", 1 cell could not be read and is now missing; {LONG} stays as it is, 20 dates had the UTC " in line
+        # The impossible day is no date read, so its offset is not among those dropped; the offsets are listed or,
+        # past the room the line has, summed up.
+        assert f", 1 cell could not be read as a date and is now missing; {LONG} stays as it is, 20 dates had " in line
 
     def test_the_count_of_unreadable_cells_is_never_cut_beside_many_offsets(self) -> None:
         text = "day,kWh\n" + "".join(f"2026-03-{1 + index % 28:02d}{offset},{index}\n" for index, offset in MANY)
@@ -231,7 +232,7 @@ class TestConversion:
 
         assert line.startswith("new column day (date): 32 cells of day read as dates (format inferred, year first)")
         assert line.endswith(
-            ", 1 cell could not be read and is now missing; day stays as it is, 32 dates had 16 different UTC "
+            ", 1 cell could not be read as a date and is now missing; day stays as it is, 32 dates had 16 different UTC "
             "offsets, from -04:30 to +04:30, which were dropped; the days are as written"
         )
 
@@ -246,7 +247,7 @@ class TestConversion:
 
         assert len(line) <= MAX_NOTE_CHARS
         assert line.startswith("new column day (date): 12 cells of day read as dates (format inferred, year first)")
-        assert ", 1 cell could not be read and is now missing; day stays as it is, 12 dates had " in line
+        assert ", 1 cell could not be read as a date and is now missing; day stays as it is, 12 dates had " in line
 
     def test_the_count_of_unreadable_cells_is_never_cut_beside_times_read_in_utc(self) -> None:
         """The older notice of times with several offsets, converted to UTC, leaves the count whole too."""
@@ -260,7 +261,10 @@ class TestConversion:
         [line] = apply_operations(parsed, OPERATIONS.validate_python([operation])).changes
 
         assert len(line) <= MAX_NOTE_CHARS
-        assert f", 1 cell could not be read and is now missing; {LONG} stays as it is, times with the UTC " in line
+        assert (
+            f", 1 cell could not be read as a date and is now missing; {LONG} stays as it is, times with the UTC "
+            in line
+        )
 
     def test_a_column_that_mixes_the_shape_with_plain_dates_reads_every_day(self) -> None:
         prepared = prepare("day,kWh\n2026-03-01,12\n2026-03-02+01:00,15\n", to_dates())
@@ -275,21 +279,15 @@ class TestConversion:
         [
             "2026-03-02T10:00+01:00",
             "2026-03-02 10:00",
-            "2026-03-02T10",
-            "2026-03-02T00",
-            "02.03.2026 10:00",  # a time after a date of another shape, found once the cell is read
-            "2026-03-02/05",  # a time of day the reading finds, though no `T` or space stands before it
-            "2026-03-02 10",
-            "01.03.2026 00:00",  # a midnight written out is a time too
+            "2026-03-02T10:00:00.5",
             "2026-03-02t10:00",  # RFC 3339 allows a lowercase t
             "2026-03-02t10:00+01:00",
-            "2026-03-02T0000",  # a compact midnight, which the reading finds no hour in
-            "03/02/2026 12 AM",
+            "02.03.2026 10:00",  # a time in another form of the list, which a conversion reads cell by cell
+            "01.03.2026 00:00",  # a midnight written out is a time too
         ],
     )
     def test_beside_times_the_column_stays_as_it_is(self, timed: str) -> None:
-        """A date with an offset names a day, not a moment: no midnight is made up for it, at any offset, and no hour
-        of a time beside it (`T10`, with no colon) is dropped to make the column one of days."""
+        """A date with an offset names a day, not a moment: no midnight is made up for it, at any offset."""
         code, message = refusal(f"day,kWh\n2026-03-01+01:00,12\n{timed},15\n2026-03-03+01:00,11\n", to_dates())
 
         assert code == "type_mismatch"
@@ -298,14 +296,47 @@ class TestConversion:
             "moment, so the column stays as it is"
         )
 
-    @pytest.mark.parametrize("day", ["Mar 1 2026", "01 03 2026"])
-    def test_a_date_written_with_spaces_is_no_time(self, day: str) -> None:
-        """A space between the parts of a date is no time: only a time's shape after it (`10`, `10:00`) is one."""
+    @pytest.mark.parametrize(
+        "timed", ["2026-03-02T10", "2026-03-02T10:00+01:00", "2026-03-02 10:00", "2026-03-02 12 AM"]
+    )
+    def test_with_a_format_an_iso_date_and_a_time_beside_the_days_refuses_the_column(self, timed: str) -> None:
+        """A format reads the column as it did: an ISO date with a time's shape refuses it, whether the format reads
+        that cell or not."""
+        text = f"day,kWh\n2026-03-01+01:00,12\n{timed},15\n2026-03-03+01:00,11\n"
+
+        code, message = refusal(text, to_dates(date_format="YYYY-MM-DD"))
+
+        assert code == "type_mismatch"
+        assert message.startswith("column 'day' holds dates with a UTC offset and no time beside times")
+
+    @pytest.mark.parametrize(
+        "timed",
+        [
+            "2026-03-02T10",  # an hour without its minutes is no time of the list
+            "2026-03-02T00",
+            "2026-03-02/05",
+            "2026-03-02 10",
+            "2026-03-02T0000",
+            "03/02/2026 12 AM",
+        ],
+    )
+    def test_beside_a_cell_outside_the_date_list_that_cell_is_unreadable(self, timed: str) -> None:
+        """No hour of such a cell is dropped to make the column one of days: it reads as no date, and one of three is
+        more than a reading may leave missing."""
+        code, message = refusal(f"day,kWh\n2026-03-01+01:00,12\n{timed},15\n2026-03-03+01:00,11\n", to_dates())
+
+        assert (code, message) == ("type_mismatch", f"column 'day': 1 of 3 cells cannot be read as dates; {DATE_FORMS}")
+
+    @pytest.mark.parametrize(("day", "read"), [("Mar 1 2026", "2026-03-01"), ("01 03 2026", "")])
+    def test_a_date_written_with_spaces_is_no_time(self, day: str, read: str) -> None:
+        """A space between the parts of a date makes no time: `Mar 1 2026` is a day with a month name, read in its
+        own form beside the days, and `01 03 2026` is no form of the list, so it is missing."""
         text = f"day,kWh\n{day},1\n" + "".join(f"2026-03-{day:02d}+01:00,{day}\n" for day in range(2, 12))
 
         prepared = prepare(text, to_dates())
 
-        assert column(prepared, "day (date)") == [f"2026-03-{day:02d}" for day in range(1, 12)]
+        assert column(prepared, "day (date)") == [read] + [f"2026-03-{day:02d}" for day in range(2, 12)]
+        assert (", 1 cell could not be read as a date and is now missing" in prepared.changes[0]) == (not read)
         assert prepared.changes[0].endswith(
             "10 dates had the UTC offset +01:00, which was dropped; the days are as written"
         )
@@ -321,8 +352,8 @@ class TestConversion:
         assert column(prepared, "day (date)") == [f"2026-03-{day:02d}" for day in range(1, 11)] + [""]
         assert line == (
             "new column day (date): 10 cells of day read as dates (format inferred, year first), 1 cell could not be "
-            "read and is now missing; day stays as it is, 10 dates had the UTC offset +01:00, which was dropped; the "
-            "days are as written"
+            "read as a date and is now missing; day stays as it is, 10 dates had the UTC offset +01:00, which was "
+            "dropped; the days are as written"
         )
 
     @pytest.mark.parametrize("offset", ["-03", "+01", "-0500", "+0100", "-05:00:00"])
@@ -480,7 +511,17 @@ class TestFilterBound:
     def test_a_time_after_t_or_a_space_reads_as_before(self, zoned: bool, value: str, kept: list[str]) -> None:
         assert column(prepare(self.ZONED if zoned else self.NAIVE, keep("ge", value)), "v") == kept
 
-    @pytest.mark.parametrize("value", ["2026-03-01-03", "2026-03-01+0100", "2026-03-01-05:00:00", "2026-03-01+24:00"])
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "2026-03-01-03",
+            "2026-03-01+0100",
+            "2026-03-01-05:00:00",
+            "2026-03-01+24:00",
+            "2026-03-01-17:00",  # past the offsets in use: an hour, as at the paste and in a conversion
+            "2026-03-01+15:00",
+        ],
+    )
     @pytest.mark.parametrize("zoned", [False, True])
     def test_a_sign_and_digits_in_no_offset_form_are_refused(self, value: str, zoned: bool) -> None:
         code, message = refusal(self.ZONED if zoned else self.NAIVE, keep("ge", value))
@@ -492,8 +533,24 @@ class TestFilterBound:
             "offset in the form YYYY-MM-DD±HH:MM"
         )
 
+    @pytest.mark.parametrize("value", ["2026-03-01T09:00-17:00", "2026-03-01T09:00+14:30", "2026-03-01 08:00-16:30"])
+    def test_a_time_with_an_offset_past_those_in_use_is_no_bound(self, value: str) -> None:
+        """`09:00-17:00` is a range of times, never a moment at −17:00: the paste and a conversion read it as no date."""
+        code, message = refusal(self.ZONED, keep("ge", value))
+
+        assert (code, message) == (
+            "invalid_operation",
+            "the value for column 't' is not an ISO date (YYYY-MM-DD, with an optional time)",
+        )
+
     @pytest.mark.parametrize(
-        ("value", "kept"), [("2026-03-01T10:00:00+01:00", ["3", "4"]), ("2026-02-28T23:00:00Z", ["2", "3", "4"])]
+        ("value", "kept"),
+        [
+            ("2026-03-01T10:00:00+01:00", ["3", "4"]),
+            ("2026-02-28T23:00:00Z", ["2", "3", "4"]),
+            ("2026-02-28T23:00:00z", ["2", "3", "4"]),  # RFC 3339 allows a lowercase z, read as UTC as `Z` is
+            ("2026-02-28t23:00z", ["2", "3", "4"]),
+        ],
     )
     def test_a_time_with_an_offset_compares_moments_as_before(self, value: str, kept: list[str]) -> None:
         assert column(prepare(self.ZONED, keep("ge", value)), "v") == kept

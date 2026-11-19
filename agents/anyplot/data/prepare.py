@@ -38,29 +38,41 @@ The operations:
   ordinary decimals is a `type_mismatch`). The cells are read with Python's own parser
   and stored at microseconds, so any year from 1 to 9999 fits (a datetime64[ns] holds
   only 1677 to 2262; a date pandas still cannot hold is an `invalid_operation`, never a
-  crash). Without `date_format`
-  a month name with a four-digit year (`Nov 2026`, `Okt. 2026`, `2026 Nov`, in the eleven
-  languages of `months.py`) is its month's first day, as the parser reads it, and pandas
-  infers the format of every other cell, day before month when ambiguous, as the parser
-  reads a slash date, except for a cell that starts with a year (`2024-06-01T13:00:00Z`
-  is 1 June; the order is chosen per cell); a cell pandas would only fill in (no digit, as
-  `May` or `now`; a time alone, which it puts on today; no year, which it makes the year
-  1) is a failure, never a made-up date (since 2026-11-01); a fraction of a second and a UTC offset are
+  crash). Without `date_format` the cells are read in the forms of the date list, with the
+  parser's own reader (`parse.read_dates`), so a cell converts when it is in a form the paste
+  types: `2026-03-01`, also with a time after `T` (or `t`) or a space, seconds, a fraction and
+  a UTC offset of −12:00 to +14:00 (`Z` or `z` for UTC); `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
+  and a day with a month name and a four-digit year (`8 Nov 2026`, `1. März 2026`,
+  `March 1, 2026`), each also with a time; a month, `2026-03` or a month name with a four-digit
+  year (`Nov 2026`, `Okt. 2026`), as its first day; the month names are those of `months.py`,
+  in a day only a name written as one word: a month written with its number and a marker
+  (`3月`, `tháng 3`) reads as a month of a year (`2026年3月`), not as part of a day. Each
+  cell reads in its own form, and the change line names each form read; the slash dates have one order of day and month, decided as at the paste (day first by guess,
+  which the reading names, when no slash cell settles it in a column of slash dates; beside
+  other forms only an order the slash dates settle); any other cell is unreadable. The
+  refusal says why, by the reason of each cell left unread (`parse.UnreadReason`,
+  `_unread_words`): a day that does not exist, slash dates that settle no single order,
+  or no form of the list, for which it names the forms the chat reads (`parse.DATE_FORMS`); the
+  change line of a conversion that leaves cells missing says the same where the whole line holds
+  it. The paste and a conversion differ in four places, each on purpose: the paste types a column
+  of one form only, while a conversion reads a mix cell by cell; it keeps year spans and columns
+  named for ids or seasons as text, while a request reads their `YYYY-MM` cells as months; it keeps
+  days with a UTC offset as text, while a request reads their days; and it keeps times with and
+  without an offset as text, while a request is refused with the reason. A form outside the list reads only with a `date_format` that names it
+  (`YYYYMMDD`, `MM/YYYY`, `YYYY`); one that no format names (`1st March 2026`, `2026/03/01`,
+  `01.03.26`) reads in no conversion. A fraction of a second and a UTC offset are
   kept (`_cell_text`), different offsets in one column are read in UTC with the offsets
   named in the change line (owner decision of 2026-10-15, as the parser writes such a
   column), and times with and without an offset are a `type_mismatch`. With a format or without, a
-  date followed directly by a UTC offset and no time (`2026-03-01+01:00`, `2026-03-01Z`,
-  `parse.DATE_OFFSET`, which the parser keeps text) is read as the day written: the offset is
+  date followed directly by a UTC offset in use and no time (`2026-03-01+01:00`, `2026-03-01Z`,
+  `parse.date_offset`, which the parser keeps text) is read as the day written: the offset is
   dropped, and the change line counts the dates per offset ("3 dates had the UTC offset -05:00,
-  which was dropped; the days are as written"). Such dates beside times (a cell read as a date
-  with a time's shape after its date, `T10`, ` 10:00` or ` 12 AM`, or a time of day the reading
-  finds in it; a space inside a date such as `Mar 1 2026` is none) are a
-  `type_mismatch`, as a day is no moment; a cell that reads as no date is counted missing, colon or
-  not. So is a date followed by a sign and digits in any other form (`2026-03-01-03`,
-  `2026-03-01+0100`, `parse.DATE_SIGN_DIGITS`), which may be an hour label: pandas alone reads `-05:00`
-  as 05:00 and `-03` as 03:00. Either way a cell that cannot be read becomes missing and the
-  change line counts it; when more than 10 % of the non-missing cells fail, the
-  operation is a `type_mismatch` instead. To number, a minus written as the minus sign
+  which was dropped; the days are as written"). Such dates beside a cell read with a time are a
+  `type_mismatch`, as a day is no moment; a cell that reads as no date is counted missing. So is
+  a date followed by a sign and digits in any other form (`2026-03-01-03`, `2026-03-01+0100`,
+  `2026-03-01-17:00`, `parse.DATE_SIGN_DIGITS`), which may be an hour label. Either way a cell
+  that cannot be read becomes missing and the change line counts it; when more than 10 % of the
+  non-missing cells fail, the operation is a `type_mismatch` instead. To number, a minus written as the minus sign
   `−` before the number is a sign, as the parser reads it, and the change line counts
   those cells; an en dash is none (`10–20`). With `name`, a conversion to number or datetime
   writes a new column of that name, appended last, and keeps the source column as it
@@ -355,9 +367,8 @@ import math
 import re
 import sys
 import unicodedata
-import warnings
 from collections import Counter
-from collections.abc import Callable, Collection, Hashable, Iterable, Sequence
+from collections.abc import Callable, Collection, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, timedelta, timezone, tzinfo
 from decimal import ROUND_FLOOR, InvalidOperation, localcontext
@@ -392,23 +403,31 @@ from ..schemas import (
     NewName,
 )
 from .generate import FUNCTIONS, IDENTIFIER, Expr, GenerateError, evaluate, parse_expression, source_text
-from .months import month_number, month_year, named_months
+from .months import month_number, named_months
 from .parse import (
     AMBIGUOUS_DATE_ORDER,
+    DATE_FORMS,
     DATE_OFFSET,
     DATE_SIGN_DIGITS,
     MAX_COMPUTED_BYTES,
     MAX_INPUT_CELL_CHARS,
     MISSING_VALUES,
     YEAR_MONTH,
+    DateCells,
+    DateShape,
     ParsedDataset,
+    UnreadReason,
     ascii_minus,
     canonical_names,
+    date_offset,
     keeps_value,
     minus_note,
+    offset_in_use,
     pandas_dtypes,
     parse_dataset,
+    read_dates,
     rounded_note,
+    utc_offset,
     value_like,
 )
 
@@ -645,7 +664,6 @@ _ORDER_NOTES: dict[str, str] = {"day": AMBIGUOUS_DATE_ORDER, "month": AMBIGUOUS_
 _AMBIGUOUS_WARNING = re.compile(
     rf"column '(?P<name>.+)': (?P<note>{re.escape(AMBIGUOUS_DATE_ORDER)}|{re.escape(AMBIGUOUS_MONTH_FIRST)})"
 )
-_YEAR_FIRST = re.compile(r"\s*[0-9]{4}[-/.]")
 _DAY_FIRST_FORMATS = frozenset(("DD.MM.YYYY", "DD/MM/YYYY"))
 """The formats that read a day before a month; `MM/DD/YYYY` is the one that reads the month first."""
 
@@ -653,10 +671,14 @@ _DAY_FIRST_FORMATS = frozenset(("DD.MM.YYYY", "DD/MM/YYYY"))
 class PrepareError(Exception):
     """An operation that cannot be applied; `code` is fixed, `message` names columns at most."""
 
-    def __init__(self, code: PrepareErrorCode, message: str) -> None:
+    def __init__(
+        self, code: PrepareErrorCode, message: str, *, unread: Mapping[UnreadReason, int] | None = None
+    ) -> None:
         super().__init__(f"{code}: {message}")
         self.code: PrepareErrorCode = code
         self.message = message
+        self.unread: dict[UnreadReason, int] = dict(unread or {})
+        """Per reason (`parse.UnreadReason`), the cells a refused reading of dates without a format left unread."""
 
 
 @dataclass(frozen=True)
@@ -898,7 +920,7 @@ class DropRows(_Strict):
 
 
 class SetType(_Strict):
-    """`decimal` defaults to the dataset's own; `date_format` left out lets pandas infer the format.
+    """`decimal` defaults to the dataset's own; `date_format` left out reads the forms the paste reads (`read_dates`).
 
     `name` writes the converted cells into a new column of that name, appended last, and keeps
     `column` as it is (to number or datetime only): the conversion a role left open asks for
@@ -1637,7 +1659,8 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         if kind == "datetime":
             return _reread_dates(frame, op, present, carried)
         conversion = _date_conversion(series, op.date_format)
-    _check_failed(op.column, conversion.failed, present, "numbers" if op.type == "number" else "dates")
+    what = "numbers" if op.type == "number" else "dates"
+    _check_failed(op.column, conversion.failed, present, what, conversion.why, conversion.unread)
     # A conversion into a new column keeps the source as it is: what the cells said stays beside what was read.
     target = op.name or op.column
     result[target] = conversion.values
@@ -1661,20 +1684,28 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
     else:
         change = f"new column {op.name}: {_count(read, 'cell')} of {op.column} {conversion.reading}"
     # The cells left missing are a loss of the step itself: kept whole, whatever the notices beside them take.
-    kept = ""
+    missing = ""
     if conversion.failed:
-        kept += f", {_count(conversion.failed, 'cell')} could not be read and {_be(conversion.failed)} now missing"
-    if op.name is not None:
-        kept += f"; {op.column} stays as it is"
+        # Without a format the count says itself what the cells were not read as: it stays when the reason gives way.
+        what = (" as a date" if conversion.failed == 1 else " as dates") if conversion.why else ""
+        count = _count(conversion.failed, "cell")
+        missing = f", {count} could not be read{what} and {_be(conversion.failed)} now missing"
+    kept = missing + (f"; {op.column} stays as it is" if op.name is not None else "")
     notice = conversion.notice
     if op.type == "number" and op.decimal is None and _mark_open(_texts(series), conversion):
         # The reading took the dataset's mark for cells the other mark reads too: said here, where the root can
         # still act on it, as the parser says it of a pasted column (`parse.AMBIGUOUS_DOTS`).
         notice = "; ".join(part for part in (notice, _open_mark_note(conversion.used)) if part)
+    head = min(len(change), NOTE_HEAD_CHARS)
     if conversion.dropped:
         # The offsets are listed while the line keeps the start that names its step beside the counts.
-        room = MAX_NOTE_CHARS - min(len(change), NOTE_HEAD_CHARS) - len(kept) - 2 - (len(notice) + 2 if notice else 0)
+        room = MAX_NOTE_CHARS - head - len(kept) - 2 - (len(notice) + 2 if notice else 0)
         notice = _joined(notice, _dropped_note(conversion.dropped, room))
+    why = f"; {conversion.why}" if conversion.why else ""
+    if why and len(change) + len(kept) + len(why) + (len(notice) + 2 if notice else 0) <= MAX_NOTE_CHARS:
+        # Why the cells were left missing, where the whole line holds it: the reading's words (the order a slash
+        # column was read in), its counts and its notices never give way to it.
+        kept = missing + why + kept[len(missing) :]
     return result, _with_notice(change, notice, kept)
 
 
@@ -1701,9 +1732,8 @@ class Conversion:
     offsets, the typographic minus). `order` is the day and month order a date reading
     chose by guess (`day` or `month`, every day at most 12, `_order_open`). `guess` names
     what the reading guessed, for the dry run of an open role (`dry_run`): the day and
-    month order, a two-digit year, the decimal mark, spaces or apostrophes as thousands
-    separators, the written days of dates whose UTC offset it dropped; None when the cells
-    say how they read.
+    month order, the decimal mark, spaces or apostrophes as thousands separators, the
+    written days of dates whose UTC offset it dropped; None when the cells say how they read.
     """
 
     values: pd.Series
@@ -1719,6 +1749,13 @@ class Conversion:
     dropped: Counter[str] = field(default_factory=Counter)
     """Per UTC offset as written, the dates read whose cell had it and no time (`parse.DATE_OFFSET`), read as the day
     written without it (`_day_offsets`); `_set_type` counts them in its change line (`_dropped_note`)."""
+    unread: Counter[UnreadReason] = field(default_factory=Counter)
+    """Per reason (`parse.UnreadReason`), the cells a reading of dates without a format left unread: the refusal's
+    words are chosen by it (`_unread_words`), and a count of refusals by their reason reads it."""
+    why: str = ""
+    """What a reading of dates without a format says of the cells it left unread (`_unread_words`): the refusal says
+    it, and so does the change line where the whole line holds it (`_set_type`); "" when every cell read or the
+    request named its format."""
 
 
 def _number_conversion(series: pd.Series, requested: str) -> Conversion:
@@ -1787,55 +1824,103 @@ _LEADING_ZERO = re.compile(r"(?<![0-9.,'’\s])0[0-9]")
 
 
 def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
-    """The cells of a column that is no date column yet as dates (`_to_dates`), with the words of the change line."""
-    converted, failed, with_time, notice, dropped = _to_dates(series, date_format)
-    originals = _texts(series)
-    read = converted.notna()
-    texts = [text for text, ok in zip(originals, read, strict=True) if ok and isinstance(text, str)]
-    named = {text for text in texts if _month_iso(text) is not None} if date_format is None else set()
-    named_cells = sum(text in named for text in texts)  # `named` holds distinct cells, a month may repeat
-    # A month name says which part is the month (`1 Nov 2026`): only the other cells leave the order open.
-    unnamed = pd.Series(
-        [isinstance(text, str) and text not in named and not _names_month(text) for text in originals],
-        index=series.index,
-    )
+    """The cells of a column that is no date column yet as dates (`_to_dates`), with the words of the change line.
+
+    Without a format the cells read as the paste reads them (`parse.read_dates`), and so does the order of day and
+    month: the column's, a guess only for a slash column that no cell settles, which the reading names (`order`,
+    `guess`); a dot date is day first, as at the paste. With a format the order is a guess when every day is at
+    most 12 (`_order_open`), since the cells read the other way too.
+    """
+    dates = _to_dates(series, date_format)
+    listed = dates.listed
     order: str | None = None
-    year_first = date_format is None and any(_YEAR_FIRST.match(text) for text in texts if text not in named)
-    if (
-        date_format in (None, "MM/DD/YYYY", *_DAY_FIRST_FORMATS)
-        and not year_first
-        and _order_open(converted[read & unnamed])
-    ):
+    if listed is not None:
+        # The reader guesses for a column of slash dates alone (`DateCells.guessed`), the one column that may swap its
+        # day and month later: in a mix a swap would turn the other cells too, so there it reads no guessed order.
+        order = "day" if listed.guessed else None
+    elif date_format in ("MM/DD/YYYY", *_DAY_FIRST_FORMATS) and _order_open(dates.values):
         order = "month" if date_format == "MM/DD/YYYY" else "day"
     guess = "the day and month order" if order else None
-    if date_format is None and any(not _FOUR_DIGITS.search(text) for text in texts):
-        guess = "the century of two-digit years"
-    if dropped:
+    if dates.dropped:
         # The written day of a date with a UTC offset is a choice (the day in UTC is another reading), so an open
         # role proposes the conversion instead of making it unasked (`DryRun.certain`).
-        days = f"the days of {_count(dropped.total(), 'date')} with a UTC offset as written, the offset dropped"
+        days = f"the days of {_count(dates.dropped.total(), 'date')} with a UTC offset as written, the offset dropped"
         guess = f"{guess} and {days}" if guess else days
     if date_format == "YYYY":
         # A number column of 1450, 1890 and 2100 reads as years too: the change line says so, the user checks it.
         reading = "read as years (YYYY, each as 1 January)"
     elif date_format:
         reading = f"read as dates ({date_format})"
-    elif texts and named_cells == len(texts):
+    elif listed is not None and len(listed.shapes) > 1:
+        words = dict.fromkeys(_shape_words(shape, listed.day_first) for shape in listed.shapes)
+        reading = f"read as dates (format inferred cell by cell: {'; '.join(words)})"
+    elif listed is not None and listed.shape == "month_name":
         reading = MONTH_NAMES_READING
+    elif listed is not None and listed.shape == "day_month":
+        reading = DAY_MONTH_READING
+    elif listed is not None and listed.shape in ("dot", "slash"):
+        reading = f"read as dates (format inferred, {_shape_words(listed.shape, listed.day_first)})"
     else:
-        # The cells that were read decide the wording; an unreadable one is counted by the caller.
-        others = [text for text in texts if text not in named]
-        year_cells = sum(1 for text in others if _YEAR_FIRST.match(text))
-        if year_cells == len(others):
-            how = "format inferred, year first"  # `2024-06-01` is 1 June, no day-before-month guess
-        elif year_cells:
-            how = "format inferred, year first where a cell starts with one, else day before month"
-        else:
-            how = "format inferred, day before month"
-        if named:
-            how += f"; {_count(named_cells, 'cell')} with a month name and a year as the first day of the month"
-        reading = f"read as dates ({how})"
-    return Conversion(converted, failed, reading, notice, with_time, order, guess, dropped=dropped)
+        reading = "read as dates (format inferred, year first)"  # `2026-03-01` and `2026-03`: the year leads
+    unread: Counter[UnreadReason] = Counter()
+    if listed is not None and dates.failed:
+        # A cell that read but a nanosecond column cannot hold (before 1677) has no reason of the list's: no form.
+        for text, value in zip(dates.cells, dates.values, strict=True):
+            if text is not None and pd.isna(value):
+                unread[listed.unread.get(text, "no_form")] += 1
+    return Conversion(
+        dates.values,
+        dates.failed,
+        reading,
+        dates.notice,
+        dates.with_time,
+        order,
+        guess,
+        dropped=dates.dropped,
+        unread=unread,
+        why=_unread_words(unread),
+    )
+
+
+def _shape_words(shape: DateShape, day_first: bool) -> str:
+    """How a reading without a format names the cells of one shape it read (`_date_conversion`)."""
+    if shape == "slash":
+        return "day before month" if day_first else "month before day"
+    return {
+        "iso": "year first",
+        "dot": "day before month",
+        "day_month": "a day, a month name and a year",
+        "month": "months as their first day",
+        "month_name": "months as their first day",
+    }[shape]
+
+
+SLASH_ORDER = (
+    "its slash dates settle no single order of day and month; a date_format of DD/MM/YYYY or MM/DD/YYYY sets one only "
+    "for a column of slash dates"
+)
+"""Why slash dates were left unread (`parse.UnreadReason` `slash_order`): their column's slash dates settle both orders,
+or none beside cells of another form. True of both, and so is its advice: a format reads a column of one form, so it
+helps a column of slash dates and not a mix. Without a count, as the refusal and the change line count the cells, so
+the reason fits beside them on more change lines."""
+
+
+def _unread_words(unread: Counter[UnreadReason]) -> str:
+    """Why a reading without a format left cells unread, one clause per reason it found (`parse.UnreadReason`), in this
+    order: days the calendar does not have, with their count; slash dates whose column settles no single order of day
+    and month (`SLASH_ORDER`); and, for cells of no form of the list, the forms the chat reads. A cell of a form the
+    list reads is never told the forms, which name its own."""
+    clauses = []
+    if impossible := unread["no_such_date"]:
+        clauses.append(
+            f"{_count(impossible, 'cell')} {'names' if impossible == 1 else 'name'} a day that does not exist, "
+            "such as 31 November"
+        )
+    if unread["slash_order"]:
+        clauses.append(SLASH_ORDER)
+    if unread["no_form"]:
+        clauses.append(DATE_FORMS)
+    return "; ".join(clauses)
 
 
 DRY_RUN_SAMPLE = 20
@@ -1982,6 +2067,9 @@ def read_frame(parsed: ParsedDataset) -> pd.DataFrame:
 
 MONTH_NAMES_READING = "read as months (a month name and a year, each as the first day of the month)"
 """The change line of a `set_type` to dates whose every read cell names a month and a year, as the parser's note says."""
+DAY_MONTH_READING = "read as dates (a day, a month name and a year)"
+"""The change line of a `set_type` to dates whose cells write a day with a month name (`8 Nov 2026`, `March 1, 2026`):
+the name settles which part is the month, so the reading takes no order of day and month."""
 _FOUR_DIGITS = re.compile(r"[0-9]{4}")
 _LETTERS = re.compile(r"[^\W\d_]+")
 
@@ -3690,12 +3778,11 @@ def _typed(texts: pd.Series, decimal: str) -> _Typed:
     """Text cells typed as `set_type` would type them: numbers, else dates, else text.
 
     Numbers are read with the dataset's decimal mark first and its thousands rules (`_number_conversion`),
-    dates with the inferred format (`_date_conversion`); either holds when at most `MAX_FAILED_SHARE` of the
-    cells fail, which become missing. A number counts only in a cell the parser reads as one (`value_like`:
-    `10 kg`, `CHF 1'200`), never behind a word `set_type` would take off as a unit when asked to (`Q1`, `x3`
-    are labels). Numbers with leading zeros stay text, as the parser keeps them (`007` is a code), a number
-    behind a month name (`Nov 2026`) is a date, and a column with a cell of digits alone is never one
-    (pandas reads `00123` as the year 123). Cells whose decimal mark could as well separate thousands
+    dates in the forms of the date list, as the paste reads them (`_date_conversion`); either holds when at most
+    `MAX_FAILED_SHARE` of the cells fail, which become missing. A number counts only in a cell the parser reads as
+    one (`value_like`: `10 kg`, `CHF 1'200`), never behind a word `set_type` would take off as a unit when asked to
+    (`Q1`, `x3` are labels). Numbers with leading zeros stay text, as the parser keeps them (`007` is a code), and
+    a number behind a month name (`Nov 2026`) is a date. Cells whose decimal mark could as well separate thousands
     (`_mark_open`) stay text too, with `OPEN_MARK_READING`: the parser keeps the pasted cells of such a column
     to read them again, and a new column has none. So do dates with a UTC offset and no time, with
     `OFFSET_DAYS_READING` (reading their days drops the offsets, which only a request does), and a date followed
@@ -3714,17 +3801,12 @@ def _typed(texts: pd.Series, decimal: str) -> _Typed:
             if _mark_open(texts, number):
                 return _Typed(texts, "text", OPEN_MARK_READING)
             return _Typed(number.values, "number", number.reading, failed, number.notice)
-    if any(isinstance(text, str) and _DIGITS_ONLY.fullmatch(text) for text in texts):
-        return _Typed(texts, "text", TEXT_READING)
     dates = _attempt(lambda: _date_conversion(texts, None))
     if dates is not None and dates.failed <= MAX_FAILED_SHARE * present:
         if dates.dropped:
             return _Typed(texts, "text", OFFSET_DAYS_READING)
         return _Typed(dates.values, "datetime", dates.reading, dates.failed, dates.notice, dates.with_time, dates.order)
     return _Typed(texts, "text", TEXT_READING)
-
-
-_DIGITS_ONLY = re.compile(r"[0-9]+")
 
 
 def _attempt(convert: Callable[[], Conversion]) -> Conversion | None:
@@ -4144,12 +4226,12 @@ def _check_offset_day_value(series: pd.Series, test: str, value: str, column: st
     """
     if test in ("eq", "ne"):
         text = value.strip()
-        if not any(shape.fullmatch(text) for shape in _VALUE_FORMS) or DATE_OFFSET.fullmatch(text):
+        if not any(shape.fullmatch(text) for shape in _VALUE_FORMS) or date_offset(text):
             return
     elif test not in ORDER_TESTS:
         return
     cells = list(series.dropna())
-    if not cells or not all(isinstance(cell, str) and DATE_OFFSET.fullmatch(cell) for cell in cells):
+    if not cells or not all(isinstance(cell, str) and date_offset(cell) for cell in cells):
         return
     raise PrepareError(
         "invalid_operation",
@@ -4234,7 +4316,7 @@ def _names_a_day(value: str) -> bool:
     """Whether a condition's date value is a date with no time of day: alone (`2024-01-31`), or followed directly by
     a UTC offset (`2024-01-31+01:00`, `parse.DATE_OFFSET`)."""
     text = value.strip()
-    found = DATE_OFFSET.fullmatch(text)
+    found = date_offset(text)
     try:
         date.fromisoformat(found.group(1) if found is not None else text)
     except ValueError:
@@ -4258,10 +4340,11 @@ def _moment(value: str, column: str, zone: tzinfo | None = None) -> pd.Timestamp
     by a sign and digits in another form (`2024-01-01-03`, `parse.DATE_SIGN_DIGITS`) is refused, and so
     is a time after any other character than `T`, `t` or a space (`2024-01-01−05:00`, `2024-01-01x05:00`):
     `fromisoformat` takes any character for the `T` and would read `+01:00`, `-03` or `−05:00` as a time
-    of day.
+    of day. An offset counts only within −12:00 to +14:00 (`parse.utc_offset`), as at the paste: past
+    them, `2024-01-01-17:00` is a date and an hour, and `2024-01-01T09:00-17:00` a range of times.
     """
     text = value.strip()
-    day = DATE_OFFSET.fullmatch(text)
+    day = date_offset(text)
     if day is None and DATE_SIGN_DIGITS.fullmatch(text):
         raise PrepareError(
             "invalid_operation",
@@ -4276,17 +4359,22 @@ def _moment(value: str, column: str, zone: tzinfo | None = None) -> pd.Timestamp
             raise _not_an_iso_date(column) from None
         if zone is None:
             return pd.Timestamp(midnight)
-        offset = timezone(timedelta(minutes=_offset_minutes(day.group(2))))
+        offset = timezone(timedelta(minutes=utc_offset(day.group(2)) or 0))
         return pd.Timestamp(midnight.replace(tzinfo=offset)).tz_convert(zone)
     start = _ISO_DAY.match(text)
     if start is not None and text[start.end() : start.end() + 1] not in ("", "T", "t", " "):
         # `fromisoformat` takes any character after the date for the `T` (RFC 3339 allows `t` and a space too):
         # `2024-01-01−05:00` would read as 05:00.
         raise _not_an_iso_date(column)
+    if start is not None and ":" in text and text.endswith("z"):
+        text = text[:-1] + "Z"  # RFC 3339 allows a lowercase `z` after a time, which `fromisoformat` refuses
     try:
         moment = datetime.fromisoformat(text)
     except ValueError:
         raise _not_an_iso_date(column) from None
+    shift = moment.utcoffset()
+    if shift is not None and not offset_in_use(shift.total_seconds() / 60):
+        raise _not_an_iso_date(column)
     stamp = pd.Timestamp(moment)
     if zone is None and stamp.tzinfo is not None:
         raise PrepareError(
@@ -4429,90 +4517,118 @@ def _plain_number(body: str, decimal: str) -> str | None:
     return cleaned if math.isfinite(float(cleaned)) else None
 
 
-def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, int, bool, str, Counter[str]]:
-    """The cells as datetimes (NaT where a cell cannot be read), how many non-missing cells failed, whether
-    the column is written with a time (the parser's rule: any source cell holds a colon), the notice of
-    different UTC offsets converted to UTC, else "", and the UTC offsets dropped from dates read as the day
-    written (`_day_offsets`), counted per offset as written."""
+@dataclass(frozen=True)
+class _Dates:
+    """A column's cells read as dates (`_to_dates`): NaT where a cell cannot be read, how many non-missing cells
+    failed, whether the column is written with a time, the notice of different UTC offsets converted to UTC, else "",
+    the UTC offsets dropped from dates read as the day written (`_day_offsets`), counted per offset as written, the
+    cells as the reading saw them (trimmed, the day of a date with an offset alone), and, without a format, the date
+    list's reading of them (`parse.read_dates`)."""
+
+    values: pd.Series
+    failed: int
+    with_time: bool
+    notice: str
+    dropped: Counter[str]
+    cells: list[str | None] = field(default_factory=list)
+    listed: DateCells | None = None
+
+
+def _to_dates(series: pd.Series, date_format: str | None) -> _Dates:
+    """The cells as dates: in exactly `date_format`, or without one in the forms of the date list, with the paste's
+    own reader (`parse.read_dates`), so a conversion reads a cell exactly when the paste would type it.
+
+    A date followed directly by a UTC offset and no time is read as the day written (`_day_offsets`); beside a cell
+    read with a time, such a day is refused (`_days_beside_times`), as a day is no moment. Without a format, cells
+    with and without an offset are refused with their counts (`_naive_and_zoned`), and different offsets are read in
+    UTC with a notice that names them, as the parser writes such a column.
+    """
     texts = _texts(series)
-    notice = ""
     if date_format == "MM.YYYY" and _kind(series) == "number":
         texts = _month_year_texts(series, texts)
     texts, offsets = _day_offsets(texts, series.name)
+    cells = [text.strip() if isinstance(text, str) else None for text in texts]
+    listed = None
     days = any(offset is not None for offset in offsets)
-    if days and any(
-        isinstance(text, str) and offset is None and _ISO_DAY_TIME.match(text)
-        for text, offset in zip(texts, offsets, strict=True)
-    ):
-        # Before the reading: beside a time with an offset, pandas would refuse naive days and zoned times instead.
-        raise _days_beside_times(series.name)
     if date_format:
+        if days and any(
+            cell is not None and offset is None and _ISO_DAY_TIME.match(cell)
+            for cell, offset in zip(cells, offsets, strict=True)
+        ):
+            # An ISO date with a time beside the days refuses the column whether the format reads that cell or not.
+            raise _days_beside_times(series.name)
         # Python's own reader, one cell at a time: any year from 1 to 9999, stored at the parser's microseconds
         # (a datetime64[ns] holds only 1677 to 2262, review of 2026-10-15).
-        values = [_read_date(text, date_format) if isinstance(text, str) else None for text in texts]
-        result = pd.Series(values, index=series.index, dtype="datetime64[us]")
+        moments = [_read_date(cell, date_format) if cell is not None else None for cell in cells]
+        with_time = any(":" in cell for cell in cells if cell is not None)
     else:
-        # A month name with a year (`Nov 2026`, `Okt. 2026`) is its month's first day, in the eleven languages of
-        # `months.py`, as the parser reads it; pandas knows English names only (live test of 2026-11-01).
-        original = texts
-        texts = pd.Series([_month_iso(text) or text for text in texts], index=series.index, dtype="str")
-        # A year-first cell (`2024-06-01T13:00:00Z`) reads year, month, day: with `dayfirst` pandas would read it as
-        # 6 January (review of 2026-10-15). Day before month is for the other shapes only, decided per cell, so one
-        # cell of another shape never turns the year-first ones around (review of #12196).
-        year_first = texts.map(lambda text: isinstance(text, str) and bool(_YEAR_FIRST.match(text))).astype(bool)
-        (first, utc_first), (rest, utc_rest) = (
-            _inferred_dates(texts.where(year_first), False, series.name),
-            _inferred_dates(texts.where(~year_first), True, series.name),
-        )
-        converted = utc_first or utc_rest
-        read = [part for part in (first, rest) if part.notna().any()]  # an all-unreadable part has no zone
-        if len({str(part.dtype) for part in read}) > 1:
-            # Two parts in different zones: one column holds one zone, so both are written in UTC.
-            if any(part.dt.tz is None for part in read):
-                raise _naive_and_zoned(series.name)
-            first, rest = (part.dt.tz_convert("UTC") if part.notna().any() else part for part in (first, rest))
-            converted = True
-        # Each part is NaT outside its own cells: one alone is the result, two of one dtype merge.
-        if not rest.notna().any():
-            result = first
-        elif not first.notna().any():
-            result = rest
-        else:
-            result = first.where(year_first, rest)
-        if converted:
-            notice = f"times with the UTC offsets {', '.join(_offsets(texts))} converted to UTC (+00:00); "
-            notice += "the instants are the same"
-        result = _without_filled_in(result, original)
-    failed = int((result.isna() & texts.notna()).sum())
-    with_time = any(":" in text for text in texts if isinstance(text, str))
+        listed = read_dates(cell for cell in cells if cell is not None)
+        moments = [listed.moments.get(cell) if cell is not None else None for cell in cells]
+        with_time = listed.with_time
+    if days and any(
+        offset is None and moment is not None and ":" in cell
+        for cell, offset, moment in zip(cells, offsets, moments, strict=True)
+        if cell is not None
+    ):
+        raise _days_beside_times(series.name)
+    notice = ""
+    if listed is None:
+        values = pd.Series(moments, index=series.index, dtype="datetime64[us]")
+    else:
+        zones = listed.offsets
+        if None in zones and len(zones) > 1:
+            zoned = sum(moment is not None and moment.tzinfo is not None for moment in moments)
+            naive = sum(moment is not None and moment.tzinfo is None for moment in moments)
+            raise _naive_and_zoned(series.name, zoned, naive)
+        if len(zones) > 1:
+            shown = ", ".join(_offset_text(zone) for zone in sorted(zone for zone in zones if zone is not None))
+            notice = f"times with the UTC offsets {shown} converted to UTC (+00:00); the instants are the same"
+            moments = [moment.astimezone(UTC) if moment is not None else None for moment in moments]
+        values = _date_series(moments, [listed.fractions.get(cell or "", "") for cell in cells], series.index)
+    failed = int((values.isna() & texts.notna()).sum())
     if days:
-        if any(
-            offset is None and isinstance(value, pd.Timestamp) and _holds_time(text, value)
-            for text, offset, value in zip(texts, offsets, result, strict=True)
-        ):
-            raise _days_beside_times(series.name)
         # Every cell read is a day: a colon is left only in a cell that did not read (`n.a.: none`), counted as such.
         with_time = False
-    dropped = Counter(offset for offset, read in zip(offsets, result.notna(), strict=True) if offset and read)
-    return result, failed, with_time, notice, dropped
+    dropped = Counter(offset for offset, read in zip(offsets, values.notna(), strict=True) if offset and read)
+    return _Dates(values, failed, with_time, notice, dropped, cells, listed)
+
+
+_NS_RANGE = (datetime(1677, 9, 22), datetime(2262, 4, 11))
+"""The moments a `datetime64[ns]` column holds, a day inside each end so an offset never crosses them, as the parser
+checks a column with fractions below a microsecond."""
+
+
+def _date_series(moments: list[datetime | None], fractions: list[str], index: pd.Index) -> pd.Series:
+    """The moments of the date list as one column, at the microseconds a moment holds, or at nanoseconds when a cell
+    writes more than six digits of a second: then a moment that column cannot hold (before 1677, after 2262) reads as
+    none, as no digit is dropped without a word."""
+    nano = any(len(fraction) > 6 for fraction, moment in zip(fractions, moments, strict=True) if moment is not None)
+    unit: Literal["us", "ns"] = "ns" if nano else "us"
+    stamps: list[pd.Timestamp | None] = []
+    for moment, fraction in zip(moments, fractions, strict=True):
+        if moment is None or (nano and not _NS_RANGE[0] <= moment.replace(tzinfo=None) <= _NS_RANGE[1]):
+            stamps.append(None)
+            continue
+        stamp = pd.Timestamp(moment).as_unit(unit)
+        stamps.append(stamp + pd.Timedelta(int((fraction + "000000000")[6:9]), "ns") if nano else stamp)
+    zone = next((moment.tzinfo for moment in moments if moment is not None), None)
+    return pd.Series(stamps, index=index, dtype=pd.DatetimeTZDtype(unit, tz=zone) if zone else f"datetime64[{unit}]")
+
+
+def _offset_text(minutes: int) -> str:
+    """An offset in minutes east of UTC as `+HH:MM`."""
+    hours, rest = divmod(abs(minutes), 60)
+    return f"{'-' if minutes < 0 else '+'}{hours:02d}:{rest:02d}"
 
 
 _ISO_DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 """The start of an ISO date, `YYYY-MM-DD`; a time after it stands behind `T` or a space (`_moment`)."""
-_TIME_SHAPE = r"(?:[Tt ][0-9]{1,2}(?::[0-9]{2}|\s*[AaPp]\.?\s?[Mm]\.?|$)|[Tt][0-9]{4})"
-"""A time after a date: `T` or a space, then an hour alone at the end (`T10`), an hour with its minutes (`10:00`), or
-an hour with am or pm (`12 AM`), or a compact `T0000`. A space before other digits is part of a date (`Mar 1 2026`,
-`01 03 2026`), and one before an ordinal (`1st`) holds no time either."""
-_ISO_DAY_TIME = re.compile(r"\s*[0-9]{4}-[0-9]{2}-[0-9]{2}" + _TIME_SHAPE)
-"""An ISO date followed by a time (`_TIME_SHAPE`: `2026-03-01T10`, `2026-03-01 10:00`, `2026-03-01t10:00+01:00`)."""
-_DAY_THEN_TIME = re.compile(r"[0-9]" + _TIME_SHAPE)
-"""The end of a date of any shape and a time after it (`01.03.2026 00:00`, `03/01/2026 12 AM`)."""
-
-
-def _holds_time(text: str, value: pd.Timestamp) -> bool:
-    """Whether a cell read as a date holds a time: one written after its date (`_DAY_THEN_TIME`), or a time of day the
-    reading found in it, which a cell such as `2026-03-01/05` gets from pandas."""
-    return bool(_DAY_THEN_TIME.search(text)) or value != value.normalize()
+_ISO_DAY_TIME = re.compile(
+    r"\s*[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[Tt ][0-9]{1,2}(?::[0-9]{2}|\s*[AaPp]\.?\s?[Mm]\.?|$)|[Tt][0-9]{4})"
+)
+"""An ISO date followed by a time (`2026-03-01T10`, `2026-03-01 10:00`, `2026-03-01t10:00+01:00`): with a format, such a
+cell beside dates with a UTC offset and no time refuses the column, read or not (`_to_dates`). Without a format a cell
+of the date list holds a time when it holds a colon, and every other cell is unreadable."""
 
 
 def _days_beside_times(column: object) -> PrepareError:
@@ -4524,20 +4640,20 @@ def _days_beside_times(column: object) -> PrepareError:
 
 
 def _day_offsets(texts: pd.Series, column: object) -> tuple[pd.Series, list[str | None]]:
-    """The cells with every date followed directly by a UTC offset and no time (`parse.DATE_OFFSET`) as the date
-    alone, and per cell the offset it had as written, None for every other cell.
+    """The cells with every date followed directly by a UTC offset in use and no time (`parse.date_offset`) as the
+    date alone, and per cell the offset it had as written, None for every other cell.
 
     A date column holds a day without an offset or a moment with one, so such a cell is read as the day written:
     a midnight at its offset would be a time nobody wrote. The caller counts the offsets dropped, so the change
     line names each (`_dropped_note`). A date followed directly by a sign and digits of another form
-    (`parse.DATE_SIGN_DIGITS`: `2026-03-01-03`, `2026-03-01+0100`, `2026-03-01-05:00:00`) is refused before
-    pandas sees it, which reads `-03` as 03:00 and `-05:00` as 05:00: it may be an hour label as well as an offset.
+    (`parse.DATE_SIGN_DIGITS`: `2026-03-01-03`, `2026-03-01+0100`, `2026-03-01-05:00:00`, `2026-03-01-17:00`) is
+    refused: it may be an hour label as well as an offset.
     """
     days: list[object] = []
     offsets: list[str | None] = []
     for text in texts:
         cell = text.strip() if isinstance(text, str) else None
-        found = DATE_OFFSET.fullmatch(cell) if cell is not None else None
+        found = date_offset(cell) if cell is not None else None
         if cell is not None and found is None and DATE_SIGN_DIGITS.fullmatch(cell):
             raise PrepareError(
                 "type_mismatch",
@@ -4562,7 +4678,7 @@ def _dropped_note(dropped: Counter[str], room: int) -> str:
     if len(dropped) == 1:
         [offset] = dropped
         return f"{dates} had the UTC offset {offset}, which was dropped; {days} as written"
-    ordered = sorted(dropped, key=lambda offset: (_offset_minutes(offset), offset))
+    ordered = sorted(dropped, key=lambda offset: (utc_offset(offset) or 0, offset))
     listed = _listed([f"{offset} ({dropped[offset]})" for offset in ordered])
     note = f"{dates} had the UTC offsets {listed}, which were dropped; {days} as written"
     if len(note) <= room:
@@ -4573,97 +4689,14 @@ def _dropped_note(dropped: Counter[str], room: int) -> str:
     )
 
 
-def _offset_minutes(offset: str) -> int:
-    """A `parse.DATE_OFFSET` offset (`Z`, `+01:00`, `-05:30`) in minutes east of UTC."""
-    if offset == "Z":
-        return 0
-    minutes = int(offset[1:3]) * 60 + int(offset[4:6])
-    return -minutes if offset.startswith("-") else minutes
-
-
-def _inferred_dates(texts: pd.Series, day_first: bool, column: object) -> tuple[pd.Series, bool]:
-    """pandas' per-cell format inference over `texts` (missing stays NaT), and whether it converted to UTC.
-
-    Different UTC offsets (summer and winter time) cannot share a column, so they are read in UTC,
-    as the parser writes such a column (owner decision of 2026-10-15), and the change line names
-    them. Times with and without an offset are refused: no time gets a zone by guess.
-    """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        try:
-            return pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=day_first), False
-        except ValueError:
-            pass
-        offsets = [_offset_of(text, day_first) for text in texts if isinstance(text, str)]
-        if any(offset is None for offset in offsets if offset is not pd.NaT):
-            raise _naive_and_zoned(column) from None
-        return pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=day_first, utc=True), True
-
-
-def _offset_of(text: str, day_first: bool) -> object:
-    """One cell's UTC offset as a timedelta, None for a time without one, NaT for a cell that is no date."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        stamp = pd.to_datetime(text, errors="coerce", dayfirst=day_first)
-    return stamp.utcoffset() if isinstance(stamp, pd.Timestamp) else pd.NaT
-
-
-def _offsets(texts: pd.Series) -> list[str]:
-    """The distinct UTC offsets of the cells, as `+HH:MM`, in order."""
-    found: set[int] = set()
-    for text in texts:
-        if isinstance(text, str):
-            offset = _offset_of(text, not _YEAR_FIRST.match(text))
-            if isinstance(offset, timedelta):
-                found.add(int(offset.total_seconds() // 60))
-    shown = []
-    for minutes in sorted(found):
-        hours, rest = divmod(abs(minutes), 60)
-        shown.append(f"{'-' if minutes < 0 else '+'}{hours:02d}:{rest:02d}")
-    return shown
-
-
-def _naive_and_zoned(column: object) -> PrepareError:
+def _naive_and_zoned(column: object, zoned: int, naive: int) -> PrepareError:
+    """The refusal of cells with a UTC offset beside cells without one, counted: a cell without one may be a day as
+    well as a time, so it is called a cell."""
     return PrepareError(
         "type_mismatch",
-        f"column '{column}' holds times with a UTC offset and times without one; no time is given a zone by guess, "
-        "so the column stays as it is",
+        f"column '{column}' holds {_count(zoned, 'cell')} with a UTC offset and {_count(naive, 'cell')} without one; "
+        "no cell is given a zone by guess, so the column stays as it is",
     )
-
-
-def _without_filled_in(result: pd.Series, texts: pd.Series) -> pd.Series:
-    """The inferred dates without those pandas made up by filling in what the cell lacks, which become failures.
-
-    pandas reads a cell without a year as the year 1 (`May` as 0001-05-01, `Nov 26` as
-    0001-11-26), a time alone as today (`13:00`) and `now` and `today` as the moment of the
-    run: none of them is a date the user wrote (review of 2026-11-01: a column of names with
-    one `May` would have read as dates, and `Nov 26` as the year 1). A cell without a digit,
-    a time alone, and a year 1 not written as `0001` fail and are counted like any other.
-    """
-    made_up = pd.Series(
-        [
-            isinstance(text, str) and (not _DIGIT.search(text) or bool(_TIME_ONLY.fullmatch(text.strip())))
-            for text in texts
-        ],
-        index=result.index,
-    )
-    year_one = (result.dt.year == 1).fillna(False).astype(bool)
-    unwritten = pd.Series([not (isinstance(text, str) and "0001" in text) for text in texts], index=result.index)
-    return result.mask(made_up | (year_one & unwritten))
-
-
-_DIGIT = re.compile(r"[0-9]")
-_TIME_ONLY = re.compile(r"[0-9]{1,2}:[0-9]{2}(?::[0-9]{2}(?:[.,][0-9]+)?)?\s*(?:[ap]\.?\s?m\.?)?", re.IGNORECASE)
-
-
-def _month_iso(text: object) -> str | None:
-    """`YYYY-MM-01` for a cell that names a month and a year (`months.month_year`) within `MONTH_YEAR_RANGE`, else None."""
-    found = month_year(text) if isinstance(text, str) else None
-    if found is None:
-        return None
-    year, month = found
-    low, high = MONTH_YEAR_RANGE
-    return f"{year:04d}-{month:02d}-01" if low <= year <= high else None
 
 
 def _read_date(text: str, date_format: str) -> datetime | None:
@@ -4723,9 +4756,14 @@ def _month_year_texts(series: pd.Series, texts: pd.Series) -> pd.Series:
     return pd.Series(padded, index=series.index, dtype="str")
 
 
-def _check_failed(column: str, failed: int, present: int, what: str) -> None:
+def _check_failed(
+    column: str, failed: int, present: int, what: str, why: str = "", unread: Counter[UnreadReason] | None = None
+) -> None:
+    """Refuse a reading that leaves more than `MAX_FAILED_SHARE` of the cells unread; `why` says why
+    (`_unread_words`), and the refusal carries the reasons (`PrepareError.unread`) for a count by reason."""
     if present and failed / present > MAX_FAILED_SHARE:
-        raise PrepareError("type_mismatch", f"column '{column}': {failed} of {present} cells cannot be read as {what}")
+        message = f"column '{column}': {failed} of {present} cells cannot be read as {what}"
+        raise PrepareError("type_mismatch", f"{message}; {why}" if why else message, unread=unread)
 
 
 _PERIOD_WORDS = {
