@@ -486,7 +486,17 @@ class TestFilterBound:
     def test_a_time_after_t_or_a_space_reads_as_before(self, zoned: bool, value: str, kept: list[str]) -> None:
         assert column(prepare(self.ZONED if zoned else self.NAIVE, keep("ge", value)), "v") == kept
 
-    @pytest.mark.parametrize("value", ["2026-03-01-03", "2026-03-01+0100", "2026-03-01-05:00:00", "2026-03-01+24:00"])
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "2026-03-01-03",
+            "2026-03-01+0100",
+            "2026-03-01-05:00:00",
+            "2026-03-01+24:00",
+            "2026-03-01-17:00",  # past the offsets in use: an hour, as at the paste and in a conversion
+            "2026-03-01+15:00",
+        ],
+    )
     @pytest.mark.parametrize("zoned", [False, True])
     def test_a_sign_and_digits_in_no_offset_form_are_refused(self, value: str, zoned: bool) -> None:
         code, message = refusal(self.ZONED if zoned else self.NAIVE, keep("ge", value))
@@ -496,6 +506,16 @@ class TestFilterBound:
             "the value for column 't' is a date followed directly by a sign and digits in no UTC offset form, which "
             "may be an hour as well as an offset: give the date alone (YYYY-MM-DD), a time (YYYY-MM-DDTHH:MM) or the "
             "offset in the form YYYY-MM-DD±HH:MM"
+        )
+
+    @pytest.mark.parametrize("value", ["2026-03-01T09:00-17:00", "2026-03-01T09:00+14:30", "2026-03-01 08:00-16:30"])
+    def test_a_time_with_an_offset_past_those_in_use_is_no_bound(self, value: str) -> None:
+        """`09:00-17:00` is a range of times, never a moment at −17:00: the paste and a conversion read it as no date."""
+        code, message = refusal(self.ZONED, keep("ge", value))
+
+        assert (code, message) == (
+            "invalid_operation",
+            "the value for column 't' is not an ISO date (YYYY-MM-DD, with an optional time)",
         )
 
     @pytest.mark.parametrize(
