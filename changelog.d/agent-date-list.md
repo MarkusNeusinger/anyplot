@@ -1,0 +1,23 @@
+### Changed
+
+- **Dates are read in a short list of forms, the same at the paste and on
+  request.** In the chat of "Use with my data", a conversion of a text column
+  to dates without a format now reads exactly the forms the paste reads:
+  `2026-03-01`, also with a time, seconds, a fraction and a UTC offset;
+  `01.03.2026`; `03/15/2026` or `15/03/2026`, with the order of day and month
+  decided once for the whole column; and months such as `2026-03` or
+  `Mar 2026`. A cell in any other form is not read, and the chat says which
+  forms it reads ("the chat reads 2026-03-01, 01.03.2026, 03/15/2026, each
+  also with a time, and months such as 2026-03 or Mar 2026"); a format such
+  as `YYYYMMDD` or `MM/YYYY` still reads its own form on request. Before, a
+  general reader guessed the format cell by cell: it read a range of days as
+  its first day, hour labels `T00` to `T03` as one day four times, `-05:00`
+  after a space as 05:00, and month-first dates in one column partly day
+  first, and the chat made such conversions without asking.
+
+### Fixed
+
+- **A UTC offset counts only from −12:00 to +14:00.** A pasted
+  `2026-03-01 08:00-16:30` is no longer typed as a time at an offset of
+  −16:30, and a date followed by `-17:00` is no date with an offset, at the
+  paste, in a conversion and as a filter bound.

@@ -47,8 +47,9 @@ bound date column oldest first by itself (`plot_view.drawn_in_order`), so no con
 sorts the table and the root never asks about it.
 
 A date column for the axis counts even when the axis is taken: the defaults fill the roles in
-spec order, so `8 Nov 2026,3000` on a line plot has its one number column on `x` and `y`
-open. The dates then take the axis, and the numbers move to `y` (`bindings.axis_slot`).
+spec order, so a text column of days beside one number column on a line plot has the numbers
+on `x` and `y` open. The dates then take the axis, and the numbers move to `y`
+(`bindings.axis_slot`).
 
 A lower and upper bound pair left open (`bounds.py`: both roles required and unbound, also when
 the defaults left them open because two unrelated measures would have been inverted) takes a

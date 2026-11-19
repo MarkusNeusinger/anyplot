@@ -892,7 +892,7 @@ class DropRows(_Strict):
 
 
 class SetType(_Strict):
-    """`decimal` defaults to the dataset's own; `date_format` left out lets pandas infer the format.
+    """`decimal` defaults to the dataset's own; `date_format` left out reads the forms the paste reads (`read_dates`).
 
     `name` writes the converted cells into a new column of that name, appended last, and keeps
     `column` as it is (to number or datetime only): the conversion a role left open asks for
