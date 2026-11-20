@@ -1,7 +1,7 @@
 """ anyplot.ai
 precision-recall: Precision-Recall Curve
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-10
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 76/100 | Updated: 2026-11-20
 """
 
 import os
@@ -23,141 +23,115 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette (first series always #009E73)
-BRAND = "#009E73"
-SECONDARY = "#C475FD"
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Generate synthetic classification data with imbalanced classes
+# Constants
+F1_LEVELS = [0.2, 0.4, 0.6, 0.8]  # iso-F1 reference contours
+
+# Columns: set these to your table's column names
+Y_TRUE = "y_true"  # role: y_true
+Y_SCORES = ["y_score"]  # role: y_scores
+RECALL = "Recall (Sensitivity)"  # role: extra
+PRECISION = "Precision (PPV)"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
 np.random.seed(42)
-n_samples = 500
-
-# Simulate imbalanced dataset: 20% positive, 80% negative
-positive_ratio = 0.2
-n_positive = int(n_samples * positive_ratio)
-n_negative = n_samples - n_positive
-
-# True labels
-y_true = np.concatenate([np.ones(n_positive), np.zeros(n_negative)])
-
-# Simulate classifier scores - good classifier gives higher scores to positives
-positive_scores = np.random.beta(5, 2, n_positive)  # Skewed higher
-negative_scores = np.random.beta(2, 5, n_negative)  # Skewed lower
-y_scores = np.concatenate([positive_scores, negative_scores])
-
-# Calculate precision-recall curve
-# Sort by scores descending
-desc_score_indices = np.argsort(y_scores)[::-1]
-y_scores_sorted = y_scores[desc_score_indices]
-y_true_sorted = y_true[desc_score_indices]
-
-# Get unique thresholds
-distinct_value_indices = np.where(np.diff(y_scores_sorted))[0]
-threshold_idxs = np.concatenate([[0], distinct_value_indices + 1])
-
-# Calculate TP, FP cumulative sums
-tps = np.cumsum(y_true_sorted)
-fps = np.cumsum(1 - y_true_sorted)
-
-# Calculate precision and recall at each threshold
-precision_vals = tps / (tps + fps)
-recall_vals = tps / tps[-1]
-
-# Use thresholds at distinct values (add starting point: recall=0, precision=1)
-precision = np.concatenate([[1], precision_vals[threshold_idxs]])
-recall = np.concatenate([[0], recall_vals[threshold_idxs]])
-
-# Calculate Average Precision (area under curve)
-recall_diff = np.diff(recall)
-average_precision = np.sum(precision[1:] * recall_diff)
-
-# Create step-wise data for proper step visualization
-recall_step = []
-precision_step = []
-for i in range(len(recall) - 1):
-    recall_step.extend([recall[i], recall[i + 1]])
-    precision_step.extend([precision[i], precision[i]])
-recall_step.append(recall[-1])
-precision_step.append(precision[-1])
-
-df_curve = pd.DataFrame(
-    {"recall": recall_step, "precision": precision_step, "model": f"Classifier (AP = {average_precision:.3f})"}
+n_positive = 100  # imbalanced: 20% positive
+n_negative = 400
+df = pd.DataFrame(
+    {
+        Y_TRUE: np.concatenate([np.ones(n_positive), np.zeros(n_negative)]),
+        Y_SCORES[0]: np.concatenate([np.random.beta(5, 2, n_positive), np.random.beta(2, 5, n_negative)]),
+    }
 )
 
-# Create iso-F1 curves data
-f1_scores = [0.2, 0.4, 0.6, 0.8]
-f1_data = []
-for f1_score in f1_scores:
-    x = np.linspace(f1_score / 2 + 0.01, 1, 100)
-    y = f1_score * x / (2 * x - f1_score)
-    mask = (y >= 0) & (y <= 1)
-    for xi, yi in zip(x[mask], y[mask], strict=False):
-        f1_data.append({"recall": xi, "precision": yi, "f1": f"F1={f1_score:.1f}"})
+# Plot: reads only df and the constants above
+positive_ratio = df[Y_TRUE].mean()
 
-df_f1 = pd.DataFrame(f1_data)
+# Precision and recall at every distinct score threshold
+order = np.argsort(df[Y_SCORES[0]].to_numpy())[::-1]
+scores_sorted = df[Y_SCORES[0]].to_numpy()[order]
+true_sorted = df[Y_TRUE].to_numpy()[order]
+threshold_idxs = np.concatenate([[0], np.where(np.diff(scores_sorted))[0] + 1])
+tps = np.cumsum(true_sorted)
+fps = np.cumsum(1 - true_sorted)
+precision = np.concatenate([[1], (tps / (tps + fps))[threshold_idxs]])
+recall = np.concatenate([[0], (tps / tps[-1])[threshold_idxs]])
 
-# Labels for iso-F1 curves (at the end of each curve)
+# Average Precision: step-wise area under the curve
+average_precision = np.sum(precision[1:] * np.diff(recall))
+
+# Stepped line: hold each precision until the next recall value
+df_curve = pd.DataFrame(
+    {
+        RECALL: np.repeat(recall, 2)[1:],
+        PRECISION: np.repeat(precision, 2)[:-1],
+        "model": f"Classifier (AP = {average_precision:.3f})",
+    }
+)
+
+# Iso-F1 contours and their end labels
+f1_rows = []
 f1_labels = []
-for f1_score in f1_scores:
-    x = np.linspace(f1_score / 2 + 0.01, 1, 100)
-    y = f1_score * x / (2 * x - f1_score)
-    mask = (y >= 0) & (y <= 1)
-    if np.any(mask):
-        f1_labels.append({"recall": x[mask][-1] + 0.01, "precision": y[mask][-1], "label": f"F1={f1_score:.1f}"})
-
+for f1 in F1_LEVELS:
+    x = np.linspace(f1 / 2 + 0.01, 1, 100)
+    y = f1 * x / (2 * x - f1)
+    keep = (y >= 0) & (y <= 1)
+    f1_rows.append(pd.DataFrame({RECALL: x[keep], PRECISION: y[keep], "f1": f"F1={f1:.1f}"}))
+    if keep.any():
+        f1_labels.append({RECALL: x[keep][-1] - 0.035, PRECISION: y[keep][-1] + 0.025, "label": f"F1={f1:.1f}"})
+df_f1 = pd.concat(f1_rows)
 df_f1_labels = pd.DataFrame(f1_labels)
 
-# Build the plot
+df_baseline = pd.DataFrame(
+    {
+        RECALL: [df_curve[RECALL].max() * 0.2],
+        PRECISION: [positive_ratio + 0.03],
+        "label": [f"Random Baseline ({positive_ratio:.0%})"],
+    }
+)
+
 plot = (
     ggplot()
     # Iso-F1 curves (background)
     + geom_line(
         data=df_f1,
-        mapping=aes(x="recall", y="precision", group="f1"),
+        mapping=aes(x=RECALL, y=PRECISION, group="f1"),
         color=INK_SOFT,
         alpha=0.3,
-        size=1,
+        size=0.6,
         linetype="dotted",
     )
-    # F1 labels
-    + geom_text(
-        data=df_f1_labels, mapping=aes(x="recall", y="precision", label="label"), color=INK_MUTED, size=10, alpha=0.6
-    )
+    + geom_text(data=df_f1_labels, mapping=aes(x=RECALL, y=PRECISION, label="label"), color=INK_MUTED, size=4)
     # Main precision-recall curve
-    + geom_area(data=df_curve, mapping=aes(x="recall", y="precision"), fill=BRAND, alpha=0.2)
-    + geom_line(data=df_curve, mapping=aes(x="recall", y="precision", color="model"), size=1.5)
+    + geom_area(data=df_curve, mapping=aes(x=RECALL, y=PRECISION), fill=IMPRINT_PALETTE[0], alpha=0.2)
+    + geom_line(data=df_curve, mapping=aes(x=RECALL, y=PRECISION, color="model"), size=1.0)
     # Baseline: random classifier
-    + geom_hline(yintercept=positive_ratio, color=SECONDARY, size=1.2, linetype="dashed")
-    + geom_text(
-        data=pd.DataFrame(
-            {"x": [0.85], "y": [positive_ratio + 0.03], "label": [f"Random Baseline ({positive_ratio:.0%})"]}
-        ),
-        mapping=aes(x="x", y="y", label="label"),
-        color=INK_SOFT,
-        size=12,
-    )
-    # Labels and title
-    + labs(x="Recall (Sensitivity)", y="Precision (PPV)", title="precision-recall · letsplot · anyplot.ai", color="")
+    + geom_hline(yintercept=positive_ratio, color=IMPRINT_PALETTE[1], size=0.8, linetype="dashed")
+    + geom_text(data=df_baseline, mapping=aes(x=RECALL, y=PRECISION, label="label"), color=INK_SOFT, size=5)
+    + labs(title="precision-recall · python · letsplot · anyplot.ai", color="")
     + scale_x_continuous(limits=[0, 1.0])
     + scale_y_continuous(limits=[0, 1.05])
-    + scale_color_manual(values=[BRAND])
-    # Size for 4800x2700 at scale=3
-    + ggsize(1600, 900)
-    # Theme
+    + scale_color_manual(values=IMPRINT_PALETTE)
+    + ggsize(800, 450)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major_x=element_blank(),
+        panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=RULE, size=0.3),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_title=element_text(color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="top",
     )
 )
 
-# Save as PNG (scale 3x = 4800 x 2700 px) and HTML
-ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
+# Save PNG (scale 4 = 3200 x 1800 px) and HTML
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
 ggsave(plot, f"plot-{THEME}.html", path=".")
