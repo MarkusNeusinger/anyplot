@@ -12,8 +12,8 @@
   anything the checker cannot read is refused. impl-merge merges only the head
   commit it checked or GitHub's own merges of `main` into it; repair takes its
   review feedback from the reviewer's own comment only, and the automatic
-  retries count only the workflows' own comments.
+  retries count only the workflows' own comments. (#13280)
 - **Workflow inputs reach no run script as text.** In the pipeline's workflows,
   dispatch inputs and event values go through `env:` and are checked for their
   shape before their first use, and the watchdog takes a spec ID from an issue
-  title only in the catalogue's shape.
+  title only in the catalogue's shape. (#13280)
