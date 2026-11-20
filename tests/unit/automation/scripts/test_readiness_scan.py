@@ -813,15 +813,20 @@ def test_the_write_watch_sees_a_write_outside_the_working_directory(tmp_path):
 
 
 def test_the_bare_copy_checks_the_sessions_file_without_the_agent_runtime(tmp_path):
-    """The command as the prompts give it: `-I`, the copy the workflow makes before the session, a hostile workspace."""
+    """The command as the prompts give it: `-I -B`, the copy the workflow makes before the session, a hostile workspace.
+
+    `-B` keeps the interpreter from leaving bytecode in the copy: the check is promised to write nothing, and a
+    retry must run the copy as the workflow staged it.
+    """
     tree = _bare_tree(tmp_path)
+    before = sorted(str(path.relative_to(tree)) for path in tree.rglob("*"))
     workspace = tmp_path / "ws"
     for package in ("core", "agents"):
         (workspace / package).mkdir(parents=True)
         (workspace / package / "__init__.py").write_text('raise SystemExit("the workspace was imported")\n')
     (workspace / "plotly.py").write_text(SURFACE, encoding="utf-8")
     result = subprocess.run(
-        [sys.executable, "-I", str(tree / "automation" / "scripts" / "readiness_scan.py"), "check", "plotly.py"]
+        [sys.executable, "-I", "-B", str(tree / "automation" / "scripts" / "readiness_scan.py"), "check", "plotly.py"]
         + ["--spec-id", "surface-basic", "--library", "plotly"],
         capture_output=True,
         text=True,
@@ -831,6 +836,7 @@ def test_the_bare_copy_checks_the_sessions_file_without_the_agent_runtime(tmp_pa
     assert result.returncode == 1, result.stdout + result.stderr
     assert result.stdout.splitlines()[-1] == "readiness: refused (security:banned-import, webgl)"
     assert sorted(path.name for path in workspace.iterdir()) == ["agents", "core", "plotly.py"]
+    assert sorted(str(path.relative_to(tree)) for path in tree.rglob("*")) == before
 
 
 def test_without_the_copy_python_itself_exits_2(tmp_path):

@@ -87,7 +87,8 @@ def test_both_workflows_prepare_the_same_copy():
 @pytest.mark.parametrize("workflow", WORKFLOWS)
 def test_the_prompt_runs_the_check_from_that_copy(workflow):
     prompt = PROMPTS[workflow].read_text(encoding="utf-8")
-    command = f".venv/bin/python -I {SESSION_TOOLS}/automation/scripts/readiness_scan.py check"
+    # `-B`: the interpreter writes no bytecode into the copy, so a retry runs the copy as the workflow staged it.
+    command = f".venv/bin/python -I -B {SESSION_TOOLS}/automation/scripts/readiness_scan.py check"
     assert command in prompt
     assert "--spec-id {SPEC_ID} --library {LIBRARY}" in prompt
 

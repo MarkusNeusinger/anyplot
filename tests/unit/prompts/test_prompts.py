@@ -1414,7 +1414,7 @@ class TestAdaptableCode:
         content = GENERATE_PROMPT.read_text()
         step = content[content.index("### Step 3c:") : content.index("## Step 4:")]
         assert (
-            ".venv/bin/python -I /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \\\n"
+            ".venv/bin/python -I -B /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \\\n"
             "    plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}"
         ) in step
         # Each sentence that keeps a session from damaging a plot for a clean check, pinned on its own.
@@ -1457,7 +1457,7 @@ class TestAdaptableCode:
         content = REPAIR_PROMPT.read_text()
         step = content[content.index("### Step 5b:") : content.index("## Step 6:")]
         assert (
-            ".venv/bin/python -I /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \\\n"
+            ".venv/bin/python -I -B /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \\\n"
             "    plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}"
         ) in step
         for sentence in (

@@ -254,7 +254,7 @@ In the same attempt, run the readiness check. The site's agent chat ("Use with m
 
 ```bash
 cd "$GITHUB_WORKSPACE"
-.venv/bin/python -I /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \
+.venv/bin/python -I -B /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \
     plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}
 ```
 

@@ -143,7 +143,7 @@ In the same attempt, run the readiness check: the validator of the site's agent 
 
 ```bash
 cd "$GITHUB_WORKSPACE"
-.venv/bin/python -I /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \
+.venv/bin/python -I -B /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \
     plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}
 ```
 
