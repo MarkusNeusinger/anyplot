@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked: Stacked Bar Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-09
@@ -8,6 +8,7 @@ import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens (see prompts/default-style-guide.md)
@@ -17,88 +18,108 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette: first series is ALWAYS #009E73
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: first series is ALWAYS #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Quarterly sales by product category
-data = pd.DataFrame(
-    {
-        "Quarter": ["Q1", "Q1", "Q1", "Q1", "Q2", "Q2", "Q2", "Q2", "Q3", "Q3", "Q3", "Q3", "Q4", "Q4", "Q4", "Q4"],
-        "Product": [
-            "Electronics",
-            "Clothing",
-            "Home & Garden",
-            "Sports",
-            "Electronics",
-            "Clothing",
-            "Home & Garden",
-            "Sports",
-            "Electronics",
-            "Clothing",
-            "Home & Garden",
-            "Sports",
-            "Electronics",
-            "Clothing",
-            "Home & Garden",
-            "Sports",
-        ],
-        "Sales": [85, 62, 45, 38, 92, 71, 52, 44, 78, 65, 48, 41, 110, 88, 68, 55],
-    }
+# Column names
+QUARTER = "Quarter"  # role: category
+PRODUCT = "Product Category"  # role: component
+SALES = "Sales (Thousands USD)"  # role: value
+
+# Data: quarterly sales by product category, components ordered largest at the bottom
+quarters = ["Q1", "Q2", "Q3", "Q4"]
+sales_by_product = {
+    "Electronics": [85, 92, 78, 110],
+    "Clothing": [62, 71, 65, 88],
+    "Home & Garden": [45, 52, 48, 68],
+    "Sports": [38, 44, 41, 55],
+}
+df = pd.DataFrame(
+    [
+        {QUARTER: quarter, PRODUCT: product, SALES: values[i]}
+        for product, values in sales_by_product.items()
+        for i, quarter in enumerate(quarters)
+    ]
 )
 
-# Define category order (largest at bottom) and apply Okabe-Ito colors
-category_order = ["Electronics", "Clothing", "Home & Garden", "Sports"]
-order_map = {cat: i for i, cat in enumerate(category_order)}
-data["color_order"] = data["Product"].map(order_map)
+# Plot
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+quarter_f, product_f, sales_f = QUARTER.translate(ESCAPE), PRODUCT.translate(ESCAPE), SALES.translate(ESCAPE)
+product_order = list(dict.fromkeys(df[PRODUCT]))
+df["stack_order"] = df[PRODUCT].map({p: i for i, p in enumerate(product_order)})
 
-# Calculate totals for labels above stacks
-totals = data.groupby("Quarter")["Sales"].sum().reset_index()
-totals.columns = ["Quarter", "Total"]
+totals = df.groupby(QUARTER, sort=False)[SALES].sum().reset_index()
 
-# Create stacked bar chart
 bars = (
-    alt.Chart(data)
-    .mark_bar(stroke=PAGE_BG, strokeWidth=2)
+    alt.Chart(df)
+    .mark_bar(stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
-        x=alt.X("Quarter:O", title="Quarter", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=0)),
-        y=alt.Y("sum(Sales):Q", title="Sales (Thousands USD)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
+        x=alt.X(quarter_f, type="ordinal", title=QUARTER, sort=None, axis=alt.Axis(labelAngle=0)),
+        y=alt.Y(sales_f, type="quantitative", title=SALES, aggregate="sum"),
         color=alt.Color(
-            "Product:N",
-            title="Product Category",
-            scale=alt.Scale(domain=category_order, range=IMPRINT),
-            legend=alt.Legend(
-                titleFontSize=18, labelFontSize=16, symbolSize=300, orient="right", titlePadding=10, labelLimit=150
-            ),
+            product_f,
+            type="nominal",
+            title=PRODUCT,
+            sort=None,
+            scale=alt.Scale(domain=product_order, range=IMPRINT_PALETTE[: len(product_order)]),
+            legend=alt.Legend(symbolSize=300, titlePadding=10, labelLimit=150, padding=8),
         ),
-        order=alt.Order("color_order:Q", sort="ascending"),
-        tooltip=["Quarter:O", "Product:N", alt.Tooltip("Sales:Q", title="Sales (K USD)")],
+        order=alt.Order("stack_order:Q", sort="ascending"),
+        tooltip=[
+            alt.Tooltip(quarter_f, type="ordinal", title=QUARTER),
+            alt.Tooltip(product_f, type="nominal", title=PRODUCT),
+            alt.Tooltip(sales_f, type="quantitative", title=SALES),
+        ],
     )
 )
 
-# Add total value labels above each stack
-text = (
+labels = (
     alt.Chart(totals)
-    .mark_text(fontSize=18, fontWeight="bold", dy=-12, color=INK)
-    .encode(x=alt.X("Quarter:O"), y=alt.Y("Total:Q"), text=alt.Text("Total:Q", format=".0f"))
+    .mark_text(fontSize=11, fontWeight="bold", dy=-6, color=INK)
+    .encode(
+        x=alt.X(quarter_f, type="ordinal", sort=None),
+        y=alt.Y(sales_f, type="quantitative"),
+        text=alt.Text(sales_f, type="quantitative", format=".0f"),
+    )
 )
 
-# Combine bars and labels
 chart = (
-    (bars + text)
+    (bars + labels)
     .properties(
-        width=1600,
-        height=900,
+        width=580,
+        height=340,
         background=PAGE_BG,
-        title=alt.Title("bar-stacked · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        title=alt.Title("bar-stacked · python · altair · anyplot.ai", fontSize=16, anchor="middle"),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.15, labelColor=INK_SOFT, titleColor=INK
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.15,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=11,
+        titleFontSize=13,
     )
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=11,
+        titleFontSize=12,
+    )
 )
 
-# Save as PNG and HTML with theme-suffixed filenames
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save: PNG scaled down if oversized, then padded (never cropped) to the 3200 x 1800 target, plus interactive HTML
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+TW, TH = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TW or img.height > TH:  # other data can widen the legend: scale down, never crop
+    img.thumbnail((TW, TH), Image.LANCZOS)
+canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+canvas.paste(img, ((TW - img.width) // 2, (TH - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
 chart.save(f"plot-{THEME}.html")
