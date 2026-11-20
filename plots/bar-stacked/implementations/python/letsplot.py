@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked: Stacked Bar Chart
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-09
@@ -20,69 +20,62 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Quarterly sales by product category
-data = {
-    "quarter": ["Q1", "Q2", "Q3", "Q4"] * 4,
-    "product": ["Electronics"] * 4 + ["Furniture"] * 4 + ["Clothing"] * 4 + ["Office Supplies"] * 4,
-    "sales": [
-        120,
-        145,
-        165,
-        190,  # Electronics
-        85,
-        92,
-        78,
-        110,  # Furniture
-        65,
-        88,
-        95,
-        72,  # Clothing
-        45,
-        52,
-        48,
-        58,  # Office Supplies
-    ],
+# Column constants
+QUARTER = "quarter"  # role: category
+PRODUCT = "product"  # role: component
+SALES = "sales"  # role: value
+
+# Data: quarterly sales by product category (thousands of dollars)
+sales_by_product = {
+    "Electronics": [120, 145, 165, 190],
+    "Furniture": [85, 92, 78, 110],
+    "Clothing": [65, 88, 95, 72],
+    "Office Supplies": [45, 52, 48, 58],
 }
-df = pd.DataFrame(data)
+quarters = ["Q1", "Q2", "Q3", "Q4"]
+df = pd.DataFrame(
+    [
+        {QUARTER: quarter, PRODUCT: product, SALES: values[i]}
+        for product, values in sales_by_product.items()
+        for i, quarter in enumerate(quarters)
+    ]
+)
 
-# Create stacked bar chart with refined visual presentation
+# Plot
 plot = (
-    ggplot(df, aes(x="quarter", y="sales", fill="product"))
+    ggplot(df, aes(x=QUARTER, y=SALES, fill=PRODUCT))
     + geom_bar(
         stat="identity",
         position="stack",
         width=0.65,
-        color="white",
+        color=PAGE_BG,
         size=0.3,
-        tooltips=layer_tooltips().title("@product").line("Sales: @sales K$").format("sales", ".0f"),
+        tooltips=layer_tooltips().title(f"@{PRODUCT}").line(f"Sales: @{SALES} K$").format(SALES, ".0f"),
     )
     + scale_fill_manual(values=IMPRINT)
-    + labs(title="bar-stacked · letsplot · anyplot.ai", x="Quarter", y="Sales (Thousands $)", fill="Product")
+    + labs(title="bar-stacked · python · letsplot · anyplot.ai", x="Quarter", y="Sales (Thousands $)", fill="Product")
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_y=element_line(color=RULE, size=0.25),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_ticks=element_blank(),
-        axis_line_y=element_line(color=INK_SOFT, size=0.3),
-        axis_line_x=element_line(color=INK_SOFT, size=0.3),
-        plot_title=element_text(size=24, color=INK),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
+        plot_title=element_text(size=16, color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=10, color=INK),
         legend_position="right",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
-
-# Save HTML
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
