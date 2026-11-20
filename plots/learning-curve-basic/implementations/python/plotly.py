@@ -1,24 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 learning-curve-basic: Model Learning Curve
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-10
 """
 
-# ruff: noqa: C408
-
 import os
-import sys
 
-
-# Avoid import shadowing: remove current directory from path before importing plotly
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-if _current_dir in sys.path:
-    sys.path.remove(_current_dir)
-if "" in sys.path:
-    sys.path.remove("")
-
-import numpy as np  # noqa: E402
-import plotly.graph_objects as go  # noqa: E402
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
 
 
 # Theme tokens
@@ -29,135 +19,111 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette (first series always #009E73)
-TRAIN_COLOR = "#009E73"  # bluish green
-VAL_COLOR = "#C475FD"  # vermillion
+# Imprint palette: all eight positions, one per series in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Simulate learning curve data from cross-validation
-np.random.seed(42)
+# Columns: set these to your table's column names
+TRAIN_SIZE = "Training set size (samples)"  # role: train_sizes
+FOLD = "Cross-validation fold"  # role: extra
+TRAIN_SCORE = "Training score"  # role: train_scores
+VALIDATION_SCORE = "Validation score"  # role: validation_scores
+METRIC = "Accuracy"  # role: extra
 
-# Training set sizes (10 different sizes)
-train_sizes = np.array([50, 100, 200, 400, 600, 800, 1000, 1500, 2000, 3000])
-
-# Simulate 5-fold cross-validation scores
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
+# One row per training size and cross-validation fold, as sklearn's learning_curve returns them
+rng = np.random.default_rng(42)
+sizes = np.array([50, 100, 200, 400, 600, 800, 1000, 1500, 2000, 3000])
 n_folds = 5
-n_sizes = len(train_sizes)
+size_grid = np.repeat(sizes, n_folds)
+train_base = 0.96 - 0.04 * np.log10(size_grid / 50)
+validation_base = 0.68 + 0.20 * (1 - np.exp(-size_grid / 800))
+df = pd.DataFrame(
+    {
+        TRAIN_SIZE: size_grid,
+        FOLD: np.tile(np.arange(1, n_folds + 1), len(sizes)),
+        TRAIN_SCORE: train_base + rng.normal(0, 0.01, len(size_grid)),
+        VALIDATION_SCORE: validation_base + rng.normal(0, 0.02, len(size_grid)),
+    }
+)
 
-# Training scores: start high, decrease slightly with more data
-train_scores = np.zeros((n_folds, n_sizes))
-for i, size in enumerate(train_sizes):
-    base_score = 0.96 - 0.04 * np.log10(size / 50)
-    train_scores[:, i] = base_score + np.random.normal(0, 0.01, n_folds)
+# Plot: reads only df and the constants above
+stats = df.groupby(TRAIN_SIZE, sort=False).agg(
+    train_mean=(TRAIN_SCORE, "mean"),
+    train_std=(TRAIN_SCORE, lambda s: s.std(ddof=0)),
+    val_mean=(VALIDATION_SCORE, "mean"),
+    val_std=(VALIDATION_SCORE, lambda s: s.std(ddof=0)),
+)
+x = stats.index.to_numpy()
 
-# Validation scores: start low, improve with more data, converge toward training
-validation_scores = np.zeros((n_folds, n_sizes))
-for i, size in enumerate(train_sizes):
-    improvement = 0.20 * (1 - np.exp(-size / 800))
-    base_score = 0.68 + improvement
-    validation_scores[:, i] = base_score + np.random.normal(0, 0.02, n_folds)
+series = [
+    (TRAIN_SCORE, "train_mean", "train_std", IMPRINT_PALETTE[0]),
+    (VALIDATION_SCORE, "val_mean", "val_std", IMPRINT_PALETTE[1]),
+]
 
-# Calculate means and standard deviations
-train_mean = train_scores.mean(axis=0)
-train_std = train_scores.std(axis=0)
-validation_mean = validation_scores.mean(axis=0)
-validation_std = validation_scores.std(axis=0)
-
-# Create figure
 fig = go.Figure()
-
-# Training score band (±1 std)
-train_band_color = f"rgba({int(TRAIN_COLOR[1:3], 16)}, {int(TRAIN_COLOR[3:5], 16)}, {int(TRAIN_COLOR[5:7], 16)}, 0.2)"
-fig.add_trace(
-    go.Scatter(
-        x=np.concatenate([train_sizes, train_sizes[::-1]]),
-        y=np.concatenate([train_mean + train_std, (train_mean - train_std)[::-1]]),
-        fill="toself",
-        fillcolor=train_band_color,
-        line=dict(color="rgba(255,255,255,0)"),
-        showlegend=False,
-        hoverinfo="skip",
-        name="Training ±1 std",
+for name, mean_col, std_col, color in series:
+    mean, std = stats[mean_col].to_numpy(), stats[std_col].to_numpy()
+    red, green, blue = (int(color[i : i + 2], 16) for i in (1, 3, 5))
+    # ±1 std band across folds
+    fig.add_trace(
+        go.Scatter(
+            x=np.concatenate([x, x[::-1]]),
+            y=np.concatenate([mean + std, (mean - std)[::-1]]),
+            fill="toself",
+            fillcolor=f"rgba({red}, {green}, {blue}, 0.2)",
+            line={"width": 0},
+            showlegend=False,
+            hoverinfo="skip",
+        )
     )
-)
-
-# Training score line
-fig.add_trace(
-    go.Scatter(
-        x=train_sizes,
-        y=train_mean,
-        mode="lines+markers",
-        name="Training Score",
-        line=dict(color=TRAIN_COLOR, width=4),
-        marker=dict(size=12, color=TRAIN_COLOR),
-        hovertemplate="<b>Training Score</b><br>Size: %{x}<br>Score: %{y:.3f}<extra></extra>",
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=mean,
+            mode="lines+markers",
+            name=name,
+            line={"color": color, "width": 3},
+            marker={"size": 9, "color": color},
+            hovertemplate=f"<b>{name}</b><br>Size: %{{x}}<br>{METRIC}: %{{y:.3f}}<extra></extra>",
+        )
     )
-)
 
-# Validation score band (±1 std)
-val_band_color = f"rgba({int(VAL_COLOR[1:3], 16)}, {int(VAL_COLOR[3:5], 16)}, {int(VAL_COLOR[5:7], 16)}, 0.2)"
-fig.add_trace(
-    go.Scatter(
-        x=np.concatenate([train_sizes, train_sizes[::-1]]),
-        y=np.concatenate([validation_mean + validation_std, (validation_mean - validation_std)[::-1]]),
-        fill="toself",
-        fillcolor=val_band_color,
-        line=dict(color="rgba(255,255,255,0)"),
-        showlegend=False,
-        hoverinfo="skip",
-        name="Validation ±1 std",
-    )
-)
-
-# Validation score line
-fig.add_trace(
-    go.Scatter(
-        x=train_sizes,
-        y=validation_mean,
-        mode="lines+markers",
-        name="Validation Score",
-        line=dict(color=VAL_COLOR, width=4),
-        marker=dict(size=12, color=VAL_COLOR),
-        hovertemplate="<b>Validation Score</b><br>Size: %{x}<br>Score: %{y:.3f}<extra></extra>",
-    )
-)
-
-# Layout
 fig.update_layout(
-    title=dict(
-        text="learning-curve-basic · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"
-    ),
-    xaxis=dict(
-        title=dict(text="Training Set Size", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        gridwidth=1,
-        showgrid=True,
-        linecolor=INK_SOFT,
-    ),
-    yaxis=dict(
-        title=dict(text="Accuracy Score (0-1)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        gridwidth=1,
-        showgrid=True,
-        linecolor=INK_SOFT,
-        range=[0.60, 1.02],
-    ),
-    legend=dict(
-        font=dict(size=18, color=INK_SOFT),
-        x=0.98,
-        y=0.02,
-        xanchor="right",
-        yanchor="bottom",
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
-    ),
+    autosize=False,
+    width=800,
+    height=450,
+    title={"text": "learning-curve-basic · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}},
+    xaxis={
+        "title": {"text": TRAIN_SIZE, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "showgrid": True,
+        "zeroline": False,
+    },
+    yaxis={
+        "title": {"text": f"{METRIC} (mean ± 1 std across folds)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "showgrid": True,
+        "zeroline": False,
+    },
+    legend={
+        "font": {"size": 10, "color": INK_SOFT},
+        "x": 0.98,
+        "y": 0.04,
+        "xanchor": "right",
+        "yanchor": "bottom",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin=dict(l=100, r=80, t=100, b=100),
+    font={"color": INK},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
 
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
