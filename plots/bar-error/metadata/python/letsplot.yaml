@@ -2,47 +2,45 @@ library: letsplot
 language: python
 specification_id: bar-error
 created: '2025-12-27T19:22:36Z'
-updated: '2026-05-10T15:04:12Z'
-generated_by: claude-haiku
-workflow_run: 25631708358
+updated: '2026-11-20T18:23:14Z'
+generated_by: claude-sonnet
+workflow_run: 44790820606
 issue: 2376
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 80
 review:
   strengths:
-  - 'Perfect visual quality: all text legible in both light and dark themes with proper
-    theme-adaptive colors'
-  - 'Complete spec compliance: error bars with caps, asymmetric errors, proper legend
-    and caption'
-  - Clean code with KISS structure, deterministic data, and all imports properly used
-  - 'Correct application of Okabe-Ito palette (first series #009E73, positions 1-5
-    in order)'
-  - Proper theme token integration (INK, INK_SOFT, PAGE_BG) across all chrome elements
+  - Native geom_errorbar on bounds computed from the lower and upper error columns
+    draws asymmetric 95% CI arms with caps at both ends
+  - Theme tokens (INK, INK_SOFT, PAGE_BG) carried through every chrome element; error
+    bars in INK_SOFT stand out against bars and page in both renders
+  - 'Adaptable-code layout: role-tagged column constants and a Plot block that reads
+    only df'
+  - Caption names what the error bars represent (95% confidence interval)
   weaknesses:
-  - 'Design Excellence underdeveloped: uses safe defaults without distinctive visual
-    touches; consider removing top/right spines for cleaner aesthetic or adding more
-    intentional visual hierarchy'
-  - 'Library Mastery limited: implementation follows standard ggplot2 patterns; doesn''t
-    leverage distinctive letsplot interactive capabilities or library-specific features'
+  - 'DE-02 (both): all four panel borders are drawn as a full frame around the plot
+    area where nothing requires them → L-shaped frame (left and bottom axis lines
+    only) or none. Likely cause: the default panel border of the lets-plot theme was
+    not removed (panel_border=element_blank() plus axis_line=element_line(color=INK_SOFT)).'
+  - 'Suggestion: the bar outlines render pure white, prominent on the dark background;
+    an outline in PAGE_BG or none would keep the chrome theme-adaptive.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "bar-error · letsplot · anyplot.ai" in dark text (#1A1A17), clearly readable. Axis labels "Conversion Rate (%)" and "Test Group" in dark text, fully visible. Y-axis ticks (0-19) and x-axis category labels in soft gray (#4A4A44), readable. Grid lines are subtle but visible. Caption is legible.
-      Data: Five bars using Okabe-Ito colors (green, orange, blue, purple, yellow). Error bars with caps in INK_SOFT (#4A4A44), alpha=0.85, clearly distinguishable. Asymmetric error ranges are visible and properly proportioned.
-      Legibility verdict: PASS - All elements are readable with excellent contrast and no "light on light" failures.
+      Background: warm off-white #FAF8F1, 3200x1800 landscape.
+      Chrome: title 'bar-error · python · letsplot · anyplot.ai' top-left in near-black; axis titles 'Conversion rate (%)' and 'Test group' dark; tick labels 0-18 (step 2) and category names in INK_SOFT gray; very faint horizontal grid; caption 'Error bars show the 95% confidence interval' bottom-right. A full four-sided panel frame surrounds the plot area. All text readable.
+      Data: five bars Control #009E73, Variant A #C475FD, Variant B #4467A3, Variant C #BD8233, Variant D #AE3030 with thin white outlines; dark gray (#4A4A44) error bars with wide caps, asymmetric arms, Variant C reaching 18.5.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title and axis labels in light text (#F0EFE8), clearly visible against dark background. Tick labels in light gray (#B8B7B0), appropriately lightened for dark theme. No "dark on dark" failures. Grid lines subtle but visible. Caption readable.
-      Data: Bar colors are IDENTICAL to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00). Error bars adapt to dark theme with appropriate lightening, maintaining visibility without creating unreadable dark-on-dark contrast.
-      Legibility verdict: PASS - All text is readable against dark background; data colors preserved from light render; no chrome failures.
-
-    Both renders: Theme-adaptive color application is correct. Only chrome (background, text, grid, bars) flips between themes; Okabe-Ito data colors remain identical. Both renders pass legibility and theme-readiness checks.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light #F0EFE8, ticks and caption in #B8B7B0; grid faint; panel frame in a muted gray. No dark-on-dark text.
+      Data: identical bar colors to the light render; bar outlines pure white and more prominent; error bars light gray #B8B7B0 and clearly visible against bars and page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,50 +51,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text legible in both themes; font sizes properly set (title 24pt,
-          axis labels 20pt, ticks 16pt); theme-adaptive colors applied correctly
+        comment: Title 16 pt, axis titles 12 pt, ticks and caption 10 pt per the lets-plot
+          sizing table; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; bar labels, axes, caption well-spaced
+        comment: No text collisions; caption sits clear below the x-axis title
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars (width 0.68) and error bars (width 0.23, size 1.3) clearly visible
-          with proper caps; asymmetric ranges distinguishable
+        comment: Five wide bars and INK_SOFT error bars (size 1.0, caps width 0.23)
+          clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used; CVD-safe; no red-green-only signaling
+        comment: Categories are also named on the x-axis, so color is never the sole
+          signal; error bars contrast with page and bars
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 @ scale 3 = 4800x2700 px; good proportions; nothing cut
-          off; generous margins
+        comment: 3200x1800 canvas (gate passed); balanced margins, nothing cut off,
+          title ~43% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Conversion Rate %); title follows
-          required format
+        comment: '''Conversion rate (%)'' with unit and ''Test group'' taken from
+          the column constants'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green); Okabe-Ito positions 1-5 in order;
-          backgrounds #FAF8F1 (light) / #1A1A17 (dark); both renders theme-correct'
+        comment: 'Imprint palette in canonical order, Control in #009E73; backgrounds
+          #FAF8F1/#1A1A17; data colors identical across themes'
     design_excellence:
-      score: 10
+      score: 6
       max: 20
       items:
       - id: DE-01
@@ -104,25 +103,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Clean professional execution. Alpha blending (0.92) and error bar
-          styling (alpha 0.85) show thought, but no distinctive custom touches beyond
-          expected defaults
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 0
         max: 6
         passed: false
-        comment: Subtle y-axis grid, good whitespace, refined error bar styling. Spine
-          treatment is standard (L-shaped). Slightly above default but lacks exceptional
-          polish
+        comment: All four panel borders drawn where nothing requires them (defect
+          line)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Color differentiation enables clear comparison. Variant C naturally
-          stands out. Error ranges communicate uncertainty. Functional but not exceptionally
-          compelling storytelling
+        comment: Data displayed in natural order, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -132,26 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar chart with error bars
+        comment: Vertical bar chart with error bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars with visible caps; caption explains 95% CI; all required
-          elements
+        comment: Caps at both ends, caption names the 95% CI, consistent bar width
+          and error styling; C1-C4 all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct; axes encompass all data
+        comment: Bars from zero, y-axis spans every upper bound (18.5); asymmetric
+          arms drawn at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; category labels match
+        comment: Title 'bar-error · python · letsplot · anyplot.ai'; fill legend correctly
+          hidden since the x-axis names each bar
     data_quality:
       score: 15
       max: 15
@@ -161,21 +157,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Asymmetric error bars shown; five categories with realistic variation;
-          all aspects of bar-error type represented
+        comment: Five categories with asymmetric CIs of differing lengths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: A/B test conversion rates (11-17%) with realistic error bounds; neutral,
-          plausible context
+        comment: 'A/B test conversion rates, control first: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values; scale enables clear visualization
+        comment: Rates 11-17% with 1-2 pp CI arms are sensible; checked bounds Control
+          11.1-13.7, Variant C 14.7-18.5 against the axis
     code_quality:
       score: 10
       max: 10
@@ -185,50 +180,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward script
+        comment: Column constants with roles, one Data block, Plot block reads only
+          df; adaptable-code check passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, pandas, lets_plot components)
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Native geom_errorbar on precomputed bounds; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: ggplot2 grammar properly applied; theme tokens correctly integrated;
-          solid idiomatic usage
+        passed: false
+        comment: Standard grammar-of-graphics layering, nothing beyond the library
+          prompt
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Standard ggplot2 patterns; HTML export present but not distinctively
-          leveraged; could showcase more letsplot-specific capabilities
+        comment: Nothing beyond what the library prompt mandates (HTML export is mandated)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-20T18:19:40Z'
 impl_tags:
   dependencies: []
   techniques:
