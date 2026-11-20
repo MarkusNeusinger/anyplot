@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 confusion-matrix: Confusion Matrix Heatmap
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-09
@@ -8,107 +8,88 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - Iris classification
+# Imprint palette: sequential colormap runs from position 1 to position 3
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Columns: set these to your table's column names
+TRUE_LABEL = "True Label"  # role: true_labels
+PREDICTED_LABEL = "Predicted Label"  # role: predicted_labels
+CLASS_NAME = "Class Name"  # role: class_names
+
+# Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
 iris = load_iris()
-X, y = iris.data, iris.target
-class_names = iris.target_names
+X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.3, random_state=42)
+clf = RandomForestClassifier(random_state=42).fit(X_train, y_train)
+df = pd.DataFrame({TRUE_LABEL: y_test, PREDICTED_LABEL: clf.predict(X_test), CLASS_NAME: iris.target_names[y_test]})
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+# Plot: reads only df and the constants above
+codes = sorted(set(df[TRUE_LABEL]) | set(df[PREDICTED_LABEL]))
+names = dict(zip(df[TRUE_LABEL], df[CLASS_NAME], strict=True))
+classes = [str(names.get(code, code)) for code in codes]
+n_classes = len(classes)
+matrix = pd.crosstab(df[TRUE_LABEL], df[PREDICTED_LABEL]).reindex(index=codes, columns=codes, fill_value=0)
+counts = matrix.to_numpy()
+row_share = counts / np.maximum(counts.sum(axis=1, keepdims=True), 1) * 100
 
-# Train classifier
-clf = RandomForestClassifier(random_state=42)
-clf.fit(X_train, y_train)
-y_pred = clf.predict(X_test)
+title = "Iris Classifier · confusion-matrix · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 
-# Build confusion matrix
-n_classes = len(class_names)
-confusion_matrix = np.zeros((n_classes, n_classes))
-for true_label, pred_label in zip(y_test, y_pred, strict=True):
-    confusion_matrix[true_label, pred_label] += 1
-
-# Plot
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
+fig.subplots_adjust(left=0.2, right=0.85, top=0.9, bottom=0.18)
 
-# Create heatmap using Blues colormap
-im = ax.imshow(confusion_matrix, cmap="Blues", aspect="equal")
+im = ax.imshow(counts, cmap=imprint_seq, vmin=0, aspect="equal")
 
-# Add colorbar with theme-adaptive styling
-cbar = ax.figure.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-cbar.ax.tick_params(labelsize=16, colors=INK_SOFT)
-cbar.ax.yaxis.set_tick_params(color=INK_SOFT)
-cbar.set_label("Count", fontsize=18, color=INK)
-for spine in cbar.ax.spines.values():
-    spine.set_edgecolor(INK_SOFT)
+cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
+cbar.ax.tick_params(labelsize=10, colors=INK_SOFT)
+cbar.set_label("Count (% = share of true class)", fontsize=10, color=INK)
+cbar.outline.set_edgecolor(INK_SOFT)
 
-# Set ticks and labels
-ax.set_xticks(np.arange(n_classes))
-ax.set_yticks(np.arange(n_classes))
-ax.set_xticklabels(class_names, fontsize=18, color=INK_SOFT)
-ax.set_yticklabels(class_names, fontsize=18, color=INK_SOFT)
+ax.set_xticks(np.arange(n_classes), classes)
+ax.set_yticks(np.arange(n_classes), classes)
+ax.tick_params(axis="both", labelsize=12, colors=INK_SOFT, length=0)
+plt.setp(ax.get_xticklabels(), rotation=30, ha="right", rotation_mode="anchor")
 
-# Rotate x-axis labels for readability
-plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
-
-# Annotate cells with counts and percentages
+# Cell annotations: ink chosen from the luminance of the cell's own color
 for i in range(n_classes):
     for j in range(n_classes):
-        count = confusion_matrix[i, j]
-        row_total = confusion_matrix[i, :].sum()
-        if row_total > 0:
-            percentage = count / row_total * 100
-        else:
-            percentage = 0
-
-        # Choose text color based on background intensity
-        text_color = "#FFFDF6" if count > confusion_matrix.max() * 0.5 else "#1A1A17"
-
-        # Display count and percentage
-        text = ax.text(
+        r, g, b, _ = imprint_seq(im.norm(counts[i, j]))
+        luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        ax.text(
             j,
             i,
-            f"{int(count)}\n({percentage:.1f}%)",
+            f"{counts[i, j]}\n({row_share[i, j]:.0f}%)",
             ha="center",
             va="center",
-            color=text_color,
-            fontsize=16,
+            color="#1A1A17" if luminance > 0.3 else "#FFFDF6",
+            fontsize=12,
             fontweight="bold",
         )
 
-# Grid lines between cells
+# Cell borders, drawn on the page background so cells read as separate tiles
 ax.set_xticks(np.arange(n_classes + 1) - 0.5, minor=True)
 ax.set_yticks(np.arange(n_classes + 1) - 0.5, minor=True)
-ax.grid(which="minor", color=INK_SOFT, linestyle="-", linewidth=0.8, alpha=0.3)
-ax.tick_params(which="minor", bottom=False, left=False)
+ax.grid(which="minor", color=PAGE_BG, linewidth=2.5)
+ax.tick_params(which="minor", length=0)
+for spine in ax.spines.values():
+    spine.set_visible(False)
 
-# Spine styling
-for spine in ("top", "right"):
-    ax.spines[spine].set_visible(False)
-for spine in ("left", "bottom"):
-    ax.spines[spine].set_color(INK_SOFT)
+ax.set_xlabel(PREDICTED_LABEL, fontsize=13, color=INK, labelpad=8)
+ax.set_ylabel(TRUE_LABEL, fontsize=13, color=INK, labelpad=8)
+fig.suptitle(title, fontsize=title_fontsize, fontweight="medium", color=INK, y=0.96)
 
-# Labels and title
-ax.set_xlabel("Predicted Label", fontsize=20, color=INK)
-ax.set_ylabel("True Label", fontsize=20, color=INK)
-ax.set_title(
-    "Iris Classification · confusion-matrix · matplotlib · anyplot.ai",
-    fontsize=24,
-    fontweight="medium",
-    color=INK,
-    pad=20,
-)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
