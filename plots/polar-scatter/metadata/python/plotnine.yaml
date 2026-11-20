@@ -12,100 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-sca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 95
+quality_score: 74
 review:
   strengths:
-  - Flawless theme adaptation with correct color tokens in both light and dark modes
-  - Excellent data visualization with clear compass and wind-speed representation
-  - Professional design with custom circular gridlines and strategic label placement
-  - Perfect palette compliance using Okabe-Ito colors in correct order (green, orange,
-    blue)
-  - All text is legible and properly sized across both themes
-  - Strong library mastery with appropriate geom layering and coordinate conversion
-  weaknesses: []
+  - Hand-built polar frame in plotnine's grammar (geom_path rings, geom_segment spokes,
+    geom_text compass labels) with north-up clockwise convention
+  - Theme tokens threaded through every chrome element; both renders readable with
+    identical data colors
+  - Translucent markers let the prevailing clusters read darker while single outliers
+    stay visible
+  weaknesses:
+  - 'VQ-05 (both): canvas is 3600x3600 instead of the canonical 2400x2400 (+1200 x
+    +1200 px) → 2400x2400. Likely cause: figure_size=(12, 12) saved at dpi=300; use
+    figure_size=(6, 6), dpi=400.'
+  - 'SC-04 (both): title ''polar-scatter · plotnine · anyplot.ai'' lacks the language
+    segment → ''polar-scatter · python · plotnine · anyplot.ai''. Likely cause: labs(title=...)
+    string.'
+  - 'VQ-07 (both): the legend runs alphabetically, Afternoon (#C475FD) first and Morning
+    (#009E73) last → natural time order with #009E73 as the first entry. Likely cause:
+    scale_color_manual(values=colors) without limits.'
+  - 'VQ-01 (both): speed ring labels and legend entries are small for the canvas,
+    about 5 pt and 7 pt at the canonical 2400 px scale, below the 8 pt reference →
+    8 pt equivalent. Likely cause: geom_text(size=10) and legend_text size=14 on a
+    12-inch figure at 300 dpi.'
+  - 'VQ-02 (both): the ''5'' and ''10'' speed labels on the NNE line are partly covered
+    by NE-cluster markers → place the speed-label line in an empty sector (around
+    135 deg, SE). Likely cause: label_angle = np.radians(90 - 22.5).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with proper theme adaptation
-      Chrome: Title, compass labels (N, NE, E, SE, S, SW, W, NW), and speed labels all rendered in dark text and clearly readable. Legend has light background with dark text.
-      Data: 120 wind data points color-coded by time of day - Morning in brand green (#009E73), Afternoon in orange (#D55E00), Evening in blue (#0072B2). Circular gridlines and radial spokes provide grid context in subtle gray.
-      Legibility verdict: PASS - all text is legible, properly sized, and well-positioned
+      Background: warm off-white #FAF8F1, square canvas of 3600x3600.
+      Chrome: title 'polar-scatter · plotnine · anyplot.ai' in dark ink, bold compass labels, dashed speed rings every 5 m/s labelled 5-20 and '25 m/s' along the NNE line, light spokes, boxed legend 'Time of Day' at right. All readable; speed labels small and '5'/'10' partly covered by NE markers.
+      Data: 120 translucent markers, Afternoon #C475FD, Evening #4467A3, Morning #009E73 (legend in alphabetical order); SW and NE clusters.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with correct dark theme
-      Chrome: Title, compass labels, and speed labels all rendered in light text and clearly readable against dark background. Legend has dark background with light text. No dark-on-dark legibility issues.
-      Data: Colors identical to light render (green, orange, blue) - only chrome flipped to dark theme. Gridlines remain visible and functional.
-      Legibility verdict: PASS - all text is readable in the dark theme with proper contrast
+      Background: warm near-black #1A1A17.
+      Chrome: title, compass labels, legend in light ink; rings and spokes subtle but visible; no dark-on-dark text.
+      Data: marker colors identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All text explicitly sized and theme-adapted
+        comment: Speed ring labels and legend entries are small for the canvas (about
+          5 pt and 7 pt at the canonical 2400 px scale) (defect line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Well-spaced labels, appropriate point density
+        comment: The '5' and '10' speed labels on the NNE line are partly covered
+          by NE-cluster markers (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements visible with appropriate alpha
+        comment: 120 markers with alpha 0.75; clusters read darker, single markers
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe
+        comment: Green / purple / blue differ in lightness and hue; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Square format appropriate, proper padding
+        passed: false
+        comment: Canvas 3600x3600 instead of 2400x2400 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format, meaningful compass/speed labels
+        comment: Compass directions name the angle; outermost ring carries the unit
+          '25 m/s'; legend titled 'Time of day'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'First series #009E73, correct backgrounds for both themes'
+        comment: 'Colors are Imprint, but the legend runs alphabetically: Afternoon
+          (purple) first, Morning (#009E73) last (defect line)'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom circular grid, compass labels, intentional styling
+        comment: 'Typographic hierarchy chosen beyond baseline: bold INK compass labels
+          over small INK_SOFT speed labels, unit only on the outermost ring'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed, custom gridlines, generous whitespace
+        comment: Speed labels placed along the NNE half-spoke between the spokes rather
+          than on a spoke; dashed rings vs solid spokes
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point, visual hierarchy, color-coded categories
+        passed: false
+        comment: Data displayed with no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -113,25 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper polar coordinate scatter plot
+        comment: Polar scatter with north-up clockwise compass convention
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines, angular marks, color encoding
+        comment: Radial gridlines every 5 m/s, compass angular ticks, color by time
+          of day with legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle and radius correctly mapped
+        comment: Each marker at its own angle and radius, no jitter; radius from 0
+          to the 25 m/s rim covers all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Correct format, legend labels match
+        passed: false
+        comment: Title 'polar-scatter · plotnine · anyplot.ai' lacks the language
+          segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -141,19 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wind direction, speed, time categories shown
+        comment: Two prevailing directions, outliers, empty SE sector, interleaving
+          categories - all aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic wind patterns with prevailing directions
+        comment: Wind observations with SW prevailing and NE secondary flow, realistic
+          and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible axis limits for data range
+        comment: Speeds 1-25 m/s, sensible for surface wind; no Check values in the
+          spec
     code_quality:
       score: 10
       max: 10
@@ -163,48 +191,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions, straightforward
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set, deterministic
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports, no cruft
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No simulated interactivity
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: ggplot + geoms, proper aesthetics, good use of coord_fixed
+        comment: Grammar layering with geom_path/geom_segment/geom_text/geom_point,
+          scale_color_manual, coord_fixed - library-prompt baseline
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: geom_path for circles, geom_segment for spokes, geom_text for labels
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-63bb674708
 impl_tags:
   dependencies: []
   techniques:
