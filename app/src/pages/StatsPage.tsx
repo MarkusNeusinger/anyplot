@@ -277,8 +277,8 @@ export function StatsPage() {
             </Box>
           ))}
         </Box>
-        {/* Visitors (last 28 days): the visits with a second page or an interaction, from the
-            Plausible Stats API, with all visits as a line under the strip. */}
+        {/* Visitors (last 28 days): the visitors who stayed ten seconds and did something, from
+            the Plausible Stats API, with all visitors as a line under the strip. */}
         <VisitorsTile answer={visitors} formatNum={formatNum} />
 
         {/* Machine readers (last 28 days): verified crawlers and AI assistants,

@@ -489,38 +489,38 @@ describe('StatsPage', () => {
     expect(screen.getByText('plausible.view()')).toBeInTheDocument();
   });
 
-  it('draws the visits with a second page or an interaction once every day is counted', async () => {
+  it('draws the visitors who stayed ten seconds and did something once every day is counted', async () => {
     mockFetchSuccess({
       points: [
-        { date: '2026-11-10', visitors: 292, visits: 303, engaged: 61 },
-        { date: '2026-11-11', visitors: 353, visits: 360, engaged: 76 },
+        { date: '2026-11-15', visitors: 292, visits: 303, engaged: 61 },
+        { date: '2026-11-16', visitors: 353, visits: 360, engaged: 76 },
       ],
-      engaged_since: '2026-11-10',
+      engaged_since: '2026-11-15',
     });
 
     render(<StatsPage />);
 
     await waitFor(() => {
       expect(screen.getByTestId('visitors-header')).toHaveTextContent(
-        'visits with a second page or an interaction · last 28 days · 137 total'
+        'visitors who stayed ten seconds and did something · last 28 days · 137 total'
       );
     });
-    expect(screen.getByTestId('visitors-all')).toHaveTextContent('all visits: 663');
+    expect(screen.getByTestId('visitors-all')).toHaveTextContent('all visitors: 645');
     expect(screen.getAllByTestId('visitors-day')).toHaveLength(2);
     // The visitors' strip comes first in the page, then the machine readers'.
     const strips = screen.getAllByRole('group').map(group => group.getAttribute('aria-label'));
-    expect(strips.indexOf('visits with a second page or an interaction per day')).toBeLessThan(
-      strips.indexOf('machine readers per day')
-    );
+    expect(
+      strips.indexOf('visitors who stayed ten seconds and did something per day')
+    ).toBeLessThan(strips.indexOf('machine readers per day'));
   });
 
   it('keeps the unique visitors while the window holds a day from before the counting', async () => {
     mockFetchSuccess({
       points: [
-        { date: '2026-11-09', visitors: 259, visits: 280, engaged: null },
-        { date: '2026-11-10', visitors: 292, visits: 303, engaged: 61 },
+        { date: '2026-11-14', visitors: 259, visits: 280, engaged: null },
+        { date: '2026-11-15', visitors: 292, visits: 303, engaged: 61 },
       ],
-      engaged_since: '2026-11-10',
+      engaged_since: '2026-11-15',
     });
 
     render(<StatsPage />);

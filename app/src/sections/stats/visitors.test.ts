@@ -4,17 +4,17 @@ import { engagedDays, readVisitors } from 'src/sections/stats/visitors';
 
 const ANSWER = {
   points: [
-    { date: '2026-11-08', visitors: 264, visits: 275, engaged: null },
-    { date: '2026-11-09', visitors: 259, visits: 280, engaged: null },
-    { date: '2026-11-10', visitors: 292, visits: 303, engaged: 61 },
-    { date: '2026-11-11', visitors: 353, visits: 360, engaged: 76 },
+    { date: '2026-11-13', visitors: 264, visits: 275, engaged: null },
+    { date: '2026-11-14', visitors: 292, visits: 303, engaged: null },
+    { date: '2026-11-15', visitors: 515, visits: 526, engaged: 61 },
+    { date: '2026-11-16', visitors: 606, visits: 614, engaged: 80 },
   ],
-  engaged_since: '2026-11-10',
+  engaged_since: '2026-11-15',
 };
 
 describe('readVisitors', () => {
   it('reads an answer as it is', () => {
-    expect(readVisitors(ANSWER)).toEqual({ points: ANSWER.points, engagedSince: '2026-11-10' });
+    expect(readVisitors(ANSWER)).toEqual({ points: ANSWER.points, engagedSince: '2026-11-15' });
   });
 
   it('reads an answer of an older API revision as days with visitors only', () => {
@@ -39,7 +39,7 @@ describe('readVisitors', () => {
   it('turns a number that is none into zero, drops a day without a date', () => {
     const answer = readVisitors({
       points: [
-        { date: '2026-11-12', visitors: -4, visits: 12.9, engaged: 3.2 },
+        { date: '2026-11-12', visitors: 5.7, visits: -4, engaged: 3.2 },
         { visitors: 9, visits: 9, engaged: 9 },
         null,
         { date: '2026-11-13', visitors: 'many', visits: 20, engaged: 'some' },
@@ -49,61 +49,75 @@ describe('readVisitors', () => {
 
     expect(answer).toEqual({
       points: [
-        { date: '2026-11-12', visitors: 0, visits: 12, engaged: 3 },
+        { date: '2026-11-12', visitors: 5, visits: 0, engaged: 3 },
         { date: '2026-11-13', visitors: 0, visits: 20, engaged: null },
       ],
       engagedSince: null,
     });
   });
 
-  it('never reads more engaged visits than the day has visits', () => {
+  it('never reads more engaged visitors than the day has visitors', () => {
     const answer = readVisitors({
-      points: [{ date: '2026-11-12', visitors: 5, visits: 6, engaged: 40 }],
+      points: [{ date: '2026-11-15', visitors: 5, visits: 6, engaged: 40 }],
     });
 
-    expect(answer.points[0].engaged).toBe(6);
+    expect(answer.points[0].engaged).toBe(5);
   });
 
-  it('reads engaged visits without the day’s visits as no number', () => {
-    // A part of nothing: the tile would have no total to set it against.
-    const answer = readVisitors({ points: [{ date: '2026-11-12', visitors: 5, engaged: 4 }] });
+  it('reads engaged visitors without the day’s visits, which they are not a part of', () => {
+    const answer = readVisitors({ points: [{ date: '2026-11-15', visitors: 5, engaged: 4 }] });
 
-    expect(answer.points[0]).toMatchObject({ visits: null, engaged: null });
+    expect(answer.points[0]).toMatchObject({ visitors: 5, visits: null, engaged: 4 });
+  });
+
+  it('reads a day without visitors as one without engaged visitors', () => {
+    const answer = readVisitors({ points: [{ date: '2026-11-15', engaged: 4 }] });
+
+    expect(answer.points[0]).toMatchObject({ visitors: 0, engaged: 0 });
   });
 });
 
 describe('engagedDays', () => {
   it('is null while the window still holds a day from before the counting began', () => {
-    // The window starts on 2026-11-08, two days before the first counted one: the tile keeps
+    // The window starts on 2026-11-13, two days before the first counted one: the tile keeps
     // drawing the unique visitors, not a strip that is empty for the days without a number.
     expect(engagedDays(readVisitors(ANSWER))).toBeNull();
   });
 
-  it('sums the engaged visits and all visits once the window’s first day is counted', () => {
+  it('sums the engaged visitors and all visitors once the window’s first day is counted', () => {
     const counted = readVisitors({ ...ANSWER, points: ANSWER.points.slice(2) });
 
-    // 61 + 76, against the 303 + 360 visits of the same two days.
-    expect(engagedDays(counted)).toEqual({ engaged: 137, visits: 663 });
+    // 61 + 80, against the 515 + 606 visitors of the same two days.
+    expect(engagedDays(counted)).toEqual({ engaged: 141, visitors: 1121 });
   });
 
   it('leaves a day without a number out of both sums', () => {
-    // A day whose answer had visits and no bounce rate.
     const gap = readVisitors({
       points: [
         ...ANSWER.points.slice(2),
-        { date: '2026-11-12', visitors: 515, visits: 526, engaged: null },
+        { date: '2026-11-17', visitors: 100, visits: 120, engaged: null },
       ],
-      engaged_since: '2026-11-10',
+      engaged_since: '2026-11-15',
     });
 
-    expect(engagedDays(gap)).toEqual({ engaged: 137, visits: 663 });
+    expect(engagedDays(gap)).toEqual({ engaged: 141, visitors: 1121 });
+  });
+
+  it('is null for an answer that counted no day, so the tile draws the unique visitors', () => {
+    // The API's engaged query failed: every day comes without the number.
+    const uncounted = readVisitors({
+      points: ANSWER.points.slice(2).map(point => ({ ...point, engaged: null })),
+      engaged_since: '2026-11-15',
+    });
+
+    expect(engagedDays(uncounted)).toBeNull();
   });
 
   it('is null for an answer that names no day the counting began, or no day at all', () => {
     const older = readVisitors({ points: [{ date: '2026-11-11', visitors: 353 }] });
 
     expect(engagedDays(older)).toBeNull();
-    expect(engagedDays(readVisitors({ points: [], engaged_since: '2026-11-10' }))).toBeNull();
+    expect(engagedDays(readVisitors({ points: [], engaged_since: '2026-11-15' }))).toBeNull();
     // Counted days without the date they began: an answer this page does not know.
     expect(engagedDays(readVisitors({ points: ANSWER.points.slice(2) }))).toBeNull();
   });

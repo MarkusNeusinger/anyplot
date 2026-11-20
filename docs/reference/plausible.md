@@ -242,7 +242,7 @@ were counted and shown nowhere.
 | `plots_scrolled` | `share`, `results`, `filtered` | `usePlotsScrolled.ts` | How far a visitor got through the gallery |
 | `ui_feature` | `feature` | Thirteen places, see [Feature use](#feature-use-ui_feature) | A visitor uses a feature of the interface, once per feature and visit |
 | `nav_click` | `source`, `target`, `spec`, `library` | The landing page, see [Landing page clicks](#landing-page-clicks-nav_click) | A visitor goes on from an element of the landing page |
-| `stayed_10s` | `input` | The tracker itself (`useAnalytics.ts`, `analytics/stay.ts`) | The site was in front of the visitor for ten seconds of a visit, once per visit |
+| `stayed_10s` | `input`, `actions` | The tracker itself (`useAnalytics.ts`, `analytics/stay.ts`) | The site was in front of the visitor for ten seconds of a visit. At most twice per visit: at ten seconds, and once more with `input` `yes` at the first input after ten seconds without one. A `yes` names its kinds of input in `actions` |
 
 Every event property holds a value from a closed list or a catalogue id, so no
 event property carries anything a visitor typed. Until 2026-11-18 one did:
@@ -536,10 +536,16 @@ and sends the event only on the landing page.
 
 ### Ten seconds on the site (`stayed_10s`)
 
-> **Status (2026-11-14):** the event is sent and measured. It doesn't change
-> the bounce rate yet (`STAYED_INTERACTIVE` is `false`). Whether a visit of
-> more than ten seconds counts as engaged is the owner's decision after about
-> a week of numbers.
+> **Status (2026-11-19):** decided. A visitor counts on the `/stats` tile when
+> they had the site in front of them for ten seconds of a visit and did
+> something: a pointer move, a click, the wheel, a finger, or a key, before
+> the ten seconds or after them. Someone who opens a page, fetches a coffee,
+> and then clicks around counts; someone who copies code in five seconds and
+> leaves doesn't. The tile counts unique visitors per day, from 2026-11-15,
+> the first full day of the event, and switches to that count on 2026-12-12,
+> the first day its 28-day window starts on 2026-11-15. The event stays
+> non-interactive (`STAYED_INTERACTIVE` is `false`), so Plausible's bounce
+> rate and visit duration don't change.
 
 Plausible counts a visit as bounced unless it has a second page or a custom
 event. A reader who lands on a plot, reads for a minute, and leaves is a
@@ -548,7 +554,7 @@ Analytics 4 adds a third way out: a session is engaged when it "lasts longer
 than 10 seconds", has a key event, or has two page views
 ([Google's definition](https://support.google.com/analytics/answer/12195621)).
 Plausible has no such clock and no setting for its bounce rule, so the app
-keeps the clock and reports once per visit.
+keeps the clock and reports it.
 
 - **What is counted.** The time the site is in front of the visitor: the tab
   visible and its window in focus (`pageActive()` in `analytics/stay.ts`).
@@ -559,47 +565,132 @@ keeps the clock and reports once per visit.
   [Google tag settings](https://support.google.com/analytics/answer/12131703)),
   and how Plausible counts time on page. A tab opened in the background, a
   window behind another, and a page in the back-forward cache add nothing.
+  A page can also lose focus or be hidden without an event that says so, so
+  the clock asks again before the moment comes: if the page isn't active, it
+  books the time so far and waits until the page is active again. Since
+  nothing says when the page left, that time can already reach ten seconds,
+  and the moment then comes as soon as the page is back, never while it
+  isn't. An input brings the clock up to date first, for a page that reports
+  focus only after the first touch, such as an iOS in-app webview.
 - **Over the whole visit.** The clock starts with the pageview that begins a
   visit and runs through everything after it. A click after five seconds or a
   second page neither stops it nor starts it again, and time away only pauses
   it.
-- **Once per visit, and only inside it.** A visit ends for Plausible 30
-  minutes after the last thing sent. Ten seconds collected across a longer
-  pause send nothing: the event would open a visit of its own there, one
-  without a page.
-- **`input`.** `yes` when the visitor used a pointer, a finger, or a key in
-  those seconds (`pointerdown`, `pointermove`, `touchstart`, `keydown`,
-  `wheel`, and only events the browser marks as the user's own), `no`
-  otherwise. Scrolling isn't asked: a page that scrolls itself says nothing.
+- **At most twice per visit, and only inside it.** At ten seconds the event
+  goes out with `input`. After a `no`, the tracker keeps waiting, and the
+  first input later in the same visit sends it once more with `yes`; after
+  that, nothing. A visit sends one `yes`, one `no`, or a `no` and then a
+  `yes`. A visit ends for Plausible 30 minutes after the last thing sent. Ten
+  seconds collected across a longer pause, or an input after it, send
+  nothing: the event would open a visit of its own there, one without a page.
+  The next pageview then begins a new visit and a new clock.
+- **`input`.** `yes` when the visitor used a pointer, a finger, or a key
+  (`pointerdown`, `mousedown`, `click`, `touchstart`, `keydown`, `wheel`,
+  `pointermove`, and only events the browser marks as the user's own) before
+  the ten seconds, or in the late event after them; `no` at ten seconds
+  without any. Scrolling isn't asked: a page that scrolls itself says
+  nothing. `click` and `mousedown` are there for what arrives without
+  pointer events: a screen reader activating from its virtual cursor,
+  VoiceOver's double tap, voice control. A script's `element.click()` isn't
+  the user's own, so automation gains nothing from them. A pointer move
+  counts only once the pointer has travelled 4 CSS pixels from the first
+  position seen on the page; the first move only records it. A script that
+  sets the mouse once, and a cursor that stands still while the layout
+  shifts under it, give a single move; a person's mouse always travels
+  further. Every other input counts at once. The late `yes` exists
+  since the deploy that followed the decision: on the days before it, a
+  visitor who did something only after the ten seconds sent a `no` and
+  nothing more, and isn't counted. The owner accepted that.
+- **`actions`.** Only on a `yes`: the kinds of input that made it count,
+  from a closed list (`STAY_ACTIONS` in `analytics/stay.ts`), so a kind that
+  starts to fire by itself one day can be seen and left out of the count:
+  - `move`: a pointer move, once the pointer has travelled 4 CSS pixels
+  - `press`: a pointer or mouse button pressed (`pointerdown`, `mousedown`)
+  - `click`: a click (`click`)
+  - `touch`: a finger on the screen (`touchstart`)
+  - `key`: a key (`keydown`)
+  - `wheel`: the wheel (`wheel`)
+
+  At ten seconds the value holds every kind seen in the stay up to then,
+  each once, in that order, joined with `+`: `move+press+wheel`, `move`,
+  `touch`. The late `yes` holds the one kind of the input that sent it. A
+  `no` carries no `actions`, and neither does any event sent before the
+  property was deployed. One gesture can bring several kinds: a mouse click
+  is `press` and `click`, and a tap `press`, `touch`, and `click`.
+- **Each send is checked when it comes.** Nothing is sent outside the live
+  site or while the admin's own use is muted. When the `no` wasn't sent
+  because of the mute, an input that comes once the mute is off still sends
+  its `yes`; an input while it is on is used up and sends nothing.
 - **Never from a component.** `TrackEvent` leaves the name out, and
   `trackEvent` sends nothing for it.
 
-While it is measured, the event goes out with `interactive: false`, which
-keeps it out of Plausible's bounce rate: no public number moves. The
-measurement answers one question the averages can't. On 2026-11-10 to
-2026-11-13 Plausible's time on page was 4 seconds for the farm-pattern
-visitors and 106 seconds for search visitors on a current Chrome, but that
-average holds only visits that sent an engagement signal when they left, and a
-page that is killed sends none. How many of the farm's page loads stay ten
-seconds is therefore not known. Read it per segment: filter by the goal
-`stayed_10s` and break down by browser version, source, and `input`.
+The event goes out with `interactive: false`, which keeps it out of
+Plausible's bounce rate and visit duration. The `/stats` tile reads the event
+itself (see [Reading stats](#reading-stats--backend--plausible-stats-api)),
+so it needs neither. Turning it on (`STAYED_INTERACTIVE = true`) would make
+every visit that stays ten seconds an engaged one for Plausible, with or
+without input, and give a one-page visit that stays a duration of about ten
+seconds where it had 0 before.
 
-Turning it on (`STAYED_INTERACTIVE = true`) has these effects, to be written
-here when it happens:
-
-- The bounce rate becomes "left within ten seconds without doing anything".
-- A one-page visit that stays gets a visit duration of about ten seconds, the
-  time of its last event, where it had 0 before. The average rises, and for
-  those visits it understates the time they read.
-- The engaged visits of the `/stats` tile count more than before from that
-  day, and the days already counted can't be recomputed. `ENGAGED_SINCE` in
-  `api/routers/insights.py` moves to the first full UTC day after the change,
-  and the tile's switch moves with it.
+The event was measured from its deploy on 2026-11-14 until the decision on
+2026-11-19. Plausible's time on page couldn't answer the question: on 2026-11-10 to 2026-11-13 it was 4 seconds for the
+farm-pattern visitors and 106 seconds for search visitors on a current
+Chrome, but that average holds only visits that sent an engagement signal
+when they left, and a page that is killed sends none. The event did. On
+2026-11-15 to 2026-11-19 the crawler-farm pattern (Direct, desktop Chrome 148
+to 154) stayed ten seconds in 14 of 679 visits, all without input; Google
+visitors stayed in 181 of 256 visits, 176 of them with input. Read it per
+segment: filter by the goal `stayed_10s` and break down by browser version,
+source, and `input`.
 
 A second opinion of 2026-11-14 (Gemini 4 Argon and Claude Fable) is behind
 this order: measure first, count focused time, and keep the event inside the
 visit. The tracker script the site serves already sends nothing when
 `navigator.webdriver` is true, so that check adds nothing against the farm.
+
+A second opinion of 2026-11-20 (Gemini 4 Carbon and Claude Fable) led to
+the rule's details that the owner approved that day: `click` and `mousedown`
+count, a pointer move only after it travels, the clock checks that the page
+is active before the moment comes, the tile filters by the event's name, and
+its days are the site's (see
+[Reading stats](#reading-stats--backend--plausible-stats-api)).
+
+#### Early warnings
+
+No rule in the browser can keep out automation that waits ten seconds and
+sends input that looks human. What shows it is the data the site already
+collects. Read these from time to time; each has its baseline from
+2026-11-15 to 2026-11-19:
+
+- **Visitors with `input` `yes` in the farm pattern** (source Direct, desktop
+  Chrome, about one page per visit, see
+  [The Windows 10 Chrome farm](#the-windows-10-chrome-farm-2026-11-09)):
+  0. A rise means automation that dwells and sends input.
+- **The share of `yes` among the Google visits that stayed**: 176 of 181. A
+  drop means a regression in a browser or in the tracker's listeners.
+- **The stay rate on mobile**: 30 of 59 visits stayed ten seconds. A drop
+  means trouble with focus or touch.
+- **The bounce rate among visits with `input` `yes`**: 42 %.
+- **The mix of `actions` values**, a breakdown of `stayed_10s` by
+  `actions`. A value that is a single kind and jumps, or a single kind that
+  appears alone in the farm pattern, points at an input that fires by
+  itself. Such a kind can be left out of the tile's count without a change
+  to the tracker (see
+  [Reading stats](#reading-stats--backend--plausible-stats-api)). The
+  property is new, so this warning has no baseline yet.
+
+#### Known gaps
+
+These visitors aren't counted, although they read:
+
+- **A phone that lands on a plot's interactive view and touches only the
+  plot.** The events inside the plot's cross-origin frame don't reach the
+  page. A message from the frame at its first input would close this gap,
+  if it ever matters.
+- **A reader on a second monitor whose window never has focus.** The clock
+  needs focus, as Google Analytics 4's does. This is kept on purpose.
+- **A screen reader user who only reads in browse mode**, without an input
+  the page sees.
 
 ### Events that ended
 
@@ -910,7 +1001,7 @@ Enterprise plan, so you change them in the dashboard.
 | `plots_scrolled` | Custom event | How far visitors get through the gallery |
 | `ui_feature` | Custom event | Which features of the interface are used |
 | `nav_click` | Custom event | Which element of the landing page visitors go on from |
-| `stayed_10s` | Custom event | Visitors who had the site in front of them for ten seconds |
+| `stayed_10s` | Custom event | Visitors who had the site in front of them for ten seconds; with `input` `yes`, the visitors the `/stats` tile counts |
 | Visit /plots | Pageview, `/plots*` | Visitors who reached the gallery, with any filters |
 | Scroll 90% on / | Pageview, scroll depth | Visitors who saw the whole landing page |
 | Outbound Link: Click | The script's own | Clicks on links to other sites |
@@ -934,7 +1025,8 @@ Enterprise plan, so you change them in the dashboard.
 | `results` | `1-24`, `25-99`, `100-999`, `1000+` | `plots_scrolled` |
 | `filtered` | `true`, `false` | `plots_scrolled` |
 | `feature` | The thirteen of [Feature use](#feature-use-ui_feature) | `ui_feature` |
-| `input` | `yes`, `no`: whether a pointer, a finger, or a key was used in the ten seconds | `stayed_10s` |
+| `input` | `yes`, `no`: whether a pointer, a finger, or a key was used in the ten seconds; after a `no`, `yes` at the first input later in the visit | `stayed_10s` |
+| `actions` | Only with `input` `yes`: the kinds of input, each once, in the order `move`, `press`, `click`, `touch`, `key`, `wheel`, joined with `+` (such as `move+press+wheel`); on the late `yes` the one kind that sent it (see [Ten seconds on the site](#ten-seconds-on-the-site-stayed_10s)) | `stayed_10s` |
 | `theme` | `dark`, `light`: the theme in effect, resolved from the three-state mode | Every pageview and event |
 
 ### Funnels and breakdowns
@@ -960,49 +1052,69 @@ The backend sends Plausible nothing. It reads aggregate visit data from
 Plausible to render the visitors tile at the top of the public stats page.
 
 Once every day of its window is counted, the tile draws one bar per day: the
-day's visits with a second page or an
-interaction. Those are the visits Plausible doesn't count as bounced, and a
-bounced visit is one pageview and no custom event. Every route change sends a
-pageview, and no event of the app is sent as non-interactive, so a visitor
-who opens a second page or uses anything that is counted stays in. Under the
-strip stands the number of all visits of the same days, with a hint on the
-word "all": a visit of one page without a click is a reader who found what
-they came for, or automated traffic that runs the page's scripts. A crawler
-farm loads one page per visit, so it raises all visits and leaves the bars
-alone ([The Windows 10 Chrome farm](#the-windows-10-chrome-farm-2026-11-09)).
+day's unique visitors who stayed ten seconds and did something. Those had the
+site in front of them for ten seconds of a visit and used a pointer, a
+finger, or a key in it, before the ten seconds or after them: the visitors
+with a `stayed_10s` event whose `input` is `yes` (see
+[Ten seconds on the site](#ten-seconds-on-the-site-stayed_10s)). Under the
+strip stands the number of all unique visitors of the same days, with a hint
+on the word "all": a visitor who left within ten seconds or did nothing is a
+reader who found what they came for, or automated traffic that runs the
+page's scripts. A crawler farm seldom stays ten seconds and does nothing
+when it does, so it raises all visitors and leaves the bars alone
+([The Windows 10 Chrome farm](#the-windows-10-chrome-farm-2026-11-09)).
 
-The count starts on 2026-11-10. Until 2026-11-09 every page load sent
-web-vitals events, which Plausible takes for interactions, so no visit of
-those days bounced, and no other number of Plausible's says which visits had
-a second page. A strip that is empty for the days before would say less than
-the one it replaces, so the tile switches by itself: until every day of the
-28-day window is counted, which is on 2026-12-07, it draws the unique
-visitors per day as it did before, and from that day on the engaged visits.
-An answer without engaged visits, from an API revision older than the page,
-draws the unique visitors too. A day inside a counted window whose answer
-had no bounce rate draws the floor and is named "not counted".
+The count starts on 2026-11-15, the first full day of `stayed_10s`: the
+deploy that began sending it finished on 2026-11-14 at 23:17 Zurich time
+(22:17 UTC). A strip that is empty for the days before would say less than the one it
+replaces, so the tile switches by itself: until every day of the 28-day
+window is counted, which is on 2026-12-12, it draws the unique visitors per
+day as it did before, and from that day on the engaged visitors. An answer
+without engaged visitors, from an API revision older than the page or from a
+failed second query, draws the unique visitors too. A day inside a counted
+window without a number draws the floor and is named "not counted".
 
 - **Endpoint**: `GET /insights/visitors` (in `api/routers/insights.py`)
-- **Upstream call**: `POST https://plausible.io/api/v2/query` with body
-  `{"site_id": "anyplot.ai", "metrics": ["visitors", "visits", "bounce_rate"], "date_range": ["<today - 27 days>", "<today>"], "dimensions": ["time:day"]}`.
-  The explicit range ends on today; Plausible's `28d` preset ends on
-  yesterday.
-- **Engaged visits**: `visits * (100 - bounce_rate) / 100`, rounded, per day
-  from `ENGAGED_SINCE` on. Plausible answers the bounce rate in whole
-  percent, so a day's number is right to about one in two hundred of its
-  visits, and anyone can compute it from the public dashboard.
+- **Upstream calls**: two `POST https://plausible.io/api/v2/query`, sent
+  together, over the same days. The first counts unique visitors and visits:
+  `{"site_id": "anyplot.ai", "metrics": ["visitors", "visits"], "date_range": ["<today - 27 days>", "<today>"], "dimensions": ["time:day"]}`.
+  The second counts the engaged visitors: the same body with
+  `"metrics": ["visitors"]` and
+  `"filters": [["is", "event:name", ["stayed_10s"]], ["is", "event:props:input", ["yes"]]]`.
+  The filter names the event, not its goal: a goal filter matches the
+  goal's display name, so renaming the goal in the dashboard would break
+  the count. Both gave the same per-day counts on the live API on
+  2026-11-20. The explicit range ends on today; Plausible's `28d` preset
+  ends on yesterday.
+- **Days**: the site's days, not UTC days. Plausible buckets `time:day` and
+  reads the dates of `date_range` in the site's reporting time zone,
+  Europe/Zurich (read through the Sites API on 2026-11-20), so the endpoint
+  takes today there: `PLAUSIBLE_TIMEZONE` in `api/routers/insights.py`.
+  Change it together with the site's setting. The zone data comes from the
+  API's base image, which installs the system package `tzdata`
+  (docker-library/python `3.14/slim-trixie/Dockerfile`). Should the zone
+  not resolve, the endpoint answers no days.
+- **Engaged visitors**: the second query's count per day from
+  `ENGAGED_SINCE` on, 0 for a day it has no row for, and never more than the
+  day's unique visitors. While the query fails, the tile draws the unique
+  visitors, nothing on the page says why, and the API's log names the
+  status and the start of Plausible's answer.
 - **Auth**: `Authorization: Bearer ${PLAUSIBLE_API_KEY}` (Stats API key
   created in Plausible → Account Settings → API Keys, then mirrored to
   GCP Secret Manager as `PLAUSIBLE_API_KEY` for Cloud Run)
-- **Caching**: 1h stale-while-revalidate via `get_or_set_cache` so
-  traffic spikes stay well under Plausible's 600-req/h rate limit.
-- **Graceful degradation**: When `PLAUSIBLE_API_KEY` is unset or the
-  upstream call fails, the endpoint returns `points: []` (empty list).
+- **Caching**: 1h stale-while-revalidate via `get_or_set_cache`, two
+  requests per refresh, so traffic spikes stay well under Plausible's
+  600-req/h rate limit.
+- **Graceful degradation**: When `PLAUSIBLE_API_KEY` is unset, the time
+  zone can't be resolved, or the first query fails, the endpoint returns
+  `points: []` (empty list).
   The frontend distinguishes this from "real zeros": an empty list
   triggers the "visitor data unavailable" placeholder, while a non-empty
-  list with low or zero values renders the normal 28-bar strip. The
-  dashboard endpoint is unaffected because visitors load on a separate
-  fetch.
+  list with low or zero values renders the normal 28-bar strip. When only
+  the second query fails, every day's `engaged` is `null`, the log says why
+  (the status and the start of Plausible's answer), and the tile draws the
+  unique visitors. The dashboard endpoint is unaffected because visitors
+  load on a separate fetch.
 
 ## Code locations
 
@@ -1013,10 +1125,10 @@ had no bounce rate draws the floor and is named "not counted".
 - **Pageview sending**: the layout effect in `app/src/layouts/RootLayout.tsx` (every navigation) and `app/src/hooks/useUrlSync.ts` (a filter change on `/plots`)
 - **Redirects that record nothing**: `app/src/routes/redirects.ts`
 - **Gallery scroll event**: `app/src/hooks/usePlotsScrolled.ts`, with the percentage from `app/src/utils/galleryScroll.ts`
-- **Ten seconds on the site**: the clock in `app/src/analytics/stay.ts`, started with each visit and sent by `sendStayed()` in `app/src/hooks/useAnalytics.ts` (`STAYED_EVENT`, `STAYED_INTERACTIVE`); `app/src/hooks/useStay.ts`, mounted in `RootLayout`, tells it when the page is in front of the visitor
+- **Ten seconds on the site**: the clock and the wait for a late input in `app/src/analytics/stay.ts`, started with each visit and sent by `sendStayed()` in `app/src/hooks/useAnalytics.ts` (`STAYED_EVENT`, `STAYED_INTERACTIVE`); `app/src/hooks/useStay.ts`, mounted in `RootLayout`, tells it when the page is in front of the visitor and when the visitor does something
 - **Event sending**: a component calls `useAnalytics().trackEvent`, or receives it as an `onTrackEvent` or `onTrack` prop of the type `TrackEvent`
 - **Agent chat events**: `app/src/pages/AgentChatPage.tsx` (`agent_open`, admin mute), `app/src/hooks/useAgentSession.ts` (`agent_plot_rendered`), `app/src/sections/agent-chat/ResultCard.tsx` (`copy_code`)
-- **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`, with `ENGAGED_SINCE` and `_engaged_visits()`
+- **Stats API consumer**: `_fetch_plausible_visitors()` in `api/routers/insights.py`, with `ENGAGED_SINCE`, the second query's `STAYED_WITH_INPUT`, and `_plausible_days()`
 - **Visitors tile**: `app/src/sections/stats/VisitorsTile.tsx`, its answer's check and sums in `app/src/sections/stats/visitors.ts`, and the hinted word in `app/src/sections/stats/HintTerm.tsx` (shared with the shared links tile)
 - **Shared links** (not in Plausible): `record_share()` in `api/shared_links.py`, called by `api/routers/og_images.py`; a crawler's fetch is a machine read instead (`api/machine_reads.py`, [Machine readers](machine-readers.md))
 - **Search misses** (the texts not in Plausible): the miss rule, the pause and what reports or drops a pending text in `app/src/sections/plots-gallery/FilterBar/FilterSearch.tsx`; the one decision (`claimSearchMiss()`), the report that counts `search_no_results` and sends the text (`reportSearchMiss()`), the sender and `isCountableMiss()` in `app/src/lib/searchMiss.ts`; the shared cases of both rules in `app/src/hooks/searchQuery.cases.json`, `read_json_body()`, `is_countable()` and `record_miss()` in `api/search_misses.py` behind `POST /search/miss` (`api/routers/search.py`), and the owner's section `app/src/sections/debug/SearchMissesSection.tsx`
@@ -1090,7 +1202,10 @@ event.
     not confirmed
 - [x] After `stayed_10s` is deployed (2026-11-14): the goal `stayed_10s`
   (custom event) and the property `input` added (read back through the Sites
-  API on 2026-11-19)
+  API on 2026-11-19). The `/stats` tile's second query ran once with the real
+  key on 2026-11-20 and answered, with the same per-day counts whether it
+  filters on the event name or on the goal (see
+  [Reading stats](#reading-stats--backend--plausible-stats-api))
 - [x] After the app's deploy that stops sending `query` (the private list of
   search misses): the texts sent until then stay, as the owner decided, and
   are not deleted. The property `query` was removed from the dashboard's
@@ -1098,8 +1213,13 @@ event.
   hides it and keeps the texts at Plausible. The privacy page's clause
   (`app/src/pages/LegalPage.tsx`) and its crawler copy (`api/routers/seo.py`)
   say so in the same change: "still stored by Plausible, no longer shown"
+- [ ] After the deploy that sends `actions` with `stayed_10s`: add the
+  property `actions` in Site settings → Custom properties (an owner step).
+  It is not the property `action` deleted in phase 5. The `/stats` tile
+  doesn't need it; reading the mix in the dashboard does (see
+  [Early warnings](#early-warnings))
 
 ---
 
-**Last Updated**: 2026-11-19
-**Status**: Twelve custom events, all twelve dashboard goals; `stayed_10s` is sent and measured and doesn't change the bounce rate yet. No event carries what a visitor typed: the gallery's searches that found nothing are in a private list in the database; the texts sent before are still stored at Plausible and hidden from the dashboard. Pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here
+**Last Updated**: 2026-11-20
+**Status**: Twelve custom events, all twelve dashboard goals; `stayed_10s` with `input=yes` is what the `/stats` tile counts from 2026-11-15 and draws from 2026-12-12, and it doesn't change the bounce rate. No event carries what a visitor typed: the gallery's searches that found nothing are in a private list in the database; the texts sent before are still stored at Plausible and hidden from the dashboard. Pageviews carry the kind of page; the agent chat's detail is in the server's telemetry and shared links in the database, not here

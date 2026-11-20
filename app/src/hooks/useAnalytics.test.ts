@@ -253,7 +253,7 @@ describe('useAnalytics', () => {
       vi.restoreAllMocks();
     });
 
-    it('is sent once per visit, ten seconds after the pageview that began it', () => {
+    it('is sent ten seconds after the pageview that began the visit, and not again for its next page', () => {
       at('/scatter-basic');
       const { result } = renderHook(() => useAnalytics());
       result.current.trackPageview();
@@ -289,15 +289,128 @@ describe('useAnalytics', () => {
       expect(stayed()).toHaveLength(1);
     });
 
-    it('says when the visitor used a pointer, a finger or a key in those seconds', () => {
+    it('says when the visitor used a pointer, a finger or a key in those seconds, and which', () => {
       at('/scatter-basic');
       const { result } = renderHook(() => useAnalytics());
       result.current.trackPageview();
       vi.advanceTimersByTime(2_000);
-      noteStayInput();
+      noteStayInput('key');
       vi.advanceTimersByTime(8_000);
 
-      expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'yes' }, interactive: false }]]);
+      expect(stayed()).toEqual([
+        [STAYED_EVENT, { props: { input: 'yes', actions: 'key' }, interactive: false }],
+      ]);
+
+      // That is the visit's one event: more input sends nothing more.
+      noteStayInput('key');
+      vi.advanceTimersByTime(60_000);
+      expect(stayed()).toHaveLength(1);
+    });
+
+    it('names every kind of input in those seconds once, in the fixed order, joined with +', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      noteStayInput('wheel');
+      noteStayInput('press');
+      noteStayInput('move');
+      noteStayInput('wheel');
+      noteStayInput('press');
+      vi.advanceTimersByTime(STAY_MS);
+
+      expect(stayed()).toEqual([
+        [
+          STAYED_EVENT,
+          { props: { input: 'yes', actions: 'move+press+wheel' }, interactive: false },
+        ],
+      ]);
+    });
+
+    it('is sent once more, with yes, at the first input after ten seconds without one', () => {
+      // Someone opens a page, fetches a coffee, then clicks around: they count all the same.
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      vi.advanceTimersByTime(STAY_MS);
+      vi.advanceTimersByTime(3 * 60_000);
+      // On a second page of the same visit.
+      at('/plots');
+      result.current.trackPageview();
+      noteStayInput('press');
+
+      // The `no` names no kind; the late `yes` names the one kind of the input that sent it.
+      expect(stayed()).toEqual([
+        [STAYED_EVENT, { props: { input: 'no' }, interactive: false }],
+        [STAYED_EVENT, { props: { input: 'yes', actions: 'press' }, interactive: false }],
+      ]);
+
+      noteStayInput('click');
+      vi.advanceTimersByTime(60_000);
+      noteStayInput('key');
+      expect(stayed()).toHaveLength(2);
+    });
+
+    it('sends no yes for an input after the visit is over for Plausible', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      vi.advanceTimersByTime(STAY_MS);
+      // More than 30 minutes after the `no`, the last thing sent.
+      vi.advanceTimersByTime(31 * 60_000);
+      noteStayInput('key');
+
+      expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'no' }, interactive: false }]]);
+    });
+
+    it('waits for the new visit’s own ten seconds, not for the input the visit before lacked', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      vi.advanceTimersByTime(STAY_MS);
+      vi.advanceTimersByTime(45 * 60_000);
+
+      at('/heatmap-basic');
+      result.current.trackPageview();
+      vi.advanceTimersByTime(2_000);
+      noteStayInput('touch');
+      // Two seconds into the new visit: no late `yes` for the one before.
+      expect(stayed()).toHaveLength(1);
+
+      vi.advanceTimersByTime(8_000);
+      expect(stayed()).toEqual([
+        [STAYED_EVENT, { props: { input: 'no' }, interactive: false }],
+        [STAYED_EVENT, { props: { input: 'yes', actions: 'touch' }, interactive: false }],
+      ]);
+    });
+
+    it('sends the yes of an input that comes after a no that was muted', () => {
+      // Each send is checked when it comes: the visit stayed ten seconds, and the visitor did
+      // something once the mute was off.
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      setAnalyticsMuted(true);
+      vi.advanceTimersByTime(STAY_MS);
+      setAnalyticsMuted(false);
+      expect(stayed()).toEqual([]);
+
+      noteStayInput('click');
+      expect(stayed()).toEqual([
+        [STAYED_EVENT, { props: { input: 'yes', actions: 'click' }, interactive: false }],
+      ]);
+    });
+
+    it('uses up an input that comes while the mute is on, and sends nothing for it', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      vi.advanceTimersByTime(STAY_MS);
+      setAnalyticsMuted(true);
+      noteStayInput('key');
+      setAnalyticsMuted(false);
+      noteStayInput('key');
+
+      expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'no' }, interactive: false }]]);
     });
 
     it('is not sent for a page that is never in front of the visitor', () => {
