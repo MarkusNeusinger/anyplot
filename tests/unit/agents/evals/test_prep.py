@@ -306,6 +306,13 @@ class TestFixtures:
             first = parse_dataset(item.before_dataset_text or "").profile.columns[0]
             second = parse_dataset(item.dataset_text or "").profile.columns[0]
             assert (first.dtype, second.dtype) == ("datetime", "text"), item.id
+            # A right reply may relay the server's refusal, which lists the forms the chat reads (`8 Nov 2026` among
+            # them): no stale value may stand in it.
+            read_as_dates = _operations([{"op": "set_type", "column": second.name, "type": "datetime"}])
+            with pytest.raises(PrepareError) as refused:
+                apply_operations(parse_dataset(item.dataset_text or ""), read_as_dates)
+            assert "8 Nov 2026" in str(refused.value), item.id  # the form list this pin is about
+            assert not any(value.casefold() in str(refused.value).casefold() for value in item.stale_values), item.id
         (again,) = [item for item in replaced if item.before_message is not None]
         # The earlier wish holds: the same daily mean per sensor the case of a typed request expects.
         daily = next(item for item in cases if item.id == "de-tagesmittel-pro-sensor").expected_operations[0]
@@ -1227,7 +1234,7 @@ class TestReplyShape:
     def test_a_reply_that_names_a_stale_value_is_a_miss_before_any_other(self) -> None:
         """A value of the table a paste replaced tells the user something false about the data in force: found without
         regard to case, counted, and the miss whatever else the reply does or leaves out."""
-        stale = ["Nov", "2026-11", "11.2026"]
+        stale = ["November", "2026-11", "11.2026"]
         told = CaseResult("s-001", [], [])
         prep.measure_reply(
             told, ["5 rows; day already holds dates from 8 to 13 november 2026."], blocked=False, rows={5}, stale=stale
@@ -1510,6 +1517,11 @@ class TestRun:
         told, misled = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
 
         first, after_profile, only = [anthropic_shape(call["messages"]) for call in fake.calls]
+        # What the server itself puts before the root on that turn (the new table's profile among it) holds no stale
+        # value, so only a reply that took one from earlier names one; the fixture test checks the refusal of a
+        # `set_type`, which lists the forms the chat reads.
+        block = fake.calls[0]["system"][-1]["text"].casefold()
+        assert "1st march 2026" in block and not any(value.casefold() in block for value in day_text.stale_values)
         discussion = [
             ("user", [f"text:{ACTION_MESSAGES['summarize_data']}"]),
             ("assistant", [f"text:{day_text.before_reply}"]),
@@ -1528,7 +1540,8 @@ class TestRun:
             0,
         )
         assert told.reply_words == len(clean.split()) and told.conversions_owed == 0
-        assert (misled.match, misled.tool_calls, misled.reply_miss, misled.stale_named) == (True, [], "stale", 1)
+        # "8 to 13 November 2026" holds two of them: `November` and `13 Nov`.
+        assert (misled.match, misled.tool_calls, misled.reply_miss, misled.stale_named) == (True, [], "stale", 2)
         assert score(cases, [told, misled])["summary"]["reply_miss_kinds"] == {"stale": 1}
 
     def test_try_again_reaches_the_root_with_the_wish_it_repeats(self, services: Services, swap_models) -> None:

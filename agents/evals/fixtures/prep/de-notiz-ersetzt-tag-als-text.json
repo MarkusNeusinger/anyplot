@@ -5,7 +5,7 @@
   "message": "Wandle die Spalte Tag in Datumswerte um.",
   "first_turn": true,
   "expected_operations": [],
-  "stale_values": ["Nov", "2026-11", "11.2026"],
+  "stale_values": ["November", "novembre", "13 Nov", "Nov 13", "2026-11", "11.2026"],
   "locale": "de",
   "spec_id": "line-timeseries-rolling",
   "tags": ["note", "replaced_table", "stale"]
