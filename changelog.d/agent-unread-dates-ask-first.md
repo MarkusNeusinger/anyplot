@@ -9,4 +9,4 @@
   lists the forms it reads. The same holds for a column with a day that does
   not exist, with slash dates whose order of day and month is not settled, or
   with times with and without a UTC offset in one column. A list of values
-  without such a column still gets its row numbers as before.
+  without such a column still gets its row numbers as before. (#13224)
