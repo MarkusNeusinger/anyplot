@@ -16,8 +16,8 @@
   the line of its own file, also inside an import guard the chat's normaliser
   hoists. Inside the existing three attempts of the adaptability self-check it
   removes every refusal it can without making the plot worse, keeps the ones
-  the spec needs (a WebGL trace for a 3D plot) and the ones a built-in example
-  dataset causes, and names the verdict in a `Readiness self-check:` line of
+  the spec needs (a WebGL trace for a 3D plot) and the ones that name a
+  built-in example dataset the prompts allow, and names the verdict in a `Readiness self-check:` line of
   the commit body. The check decides nothing: the record-only scan still makes
   its own copy after the session and never reads the session's, and the regen
   gate stays the only thing that decides. `line_map` moves from

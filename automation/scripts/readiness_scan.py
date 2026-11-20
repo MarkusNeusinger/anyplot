@@ -69,11 +69,12 @@ never reads that one, because the session can write anywhere on the runner::
     readiness_scan.py check FILE --spec-id S --library B
 
 Exit 0 accepted, excluded or not checked; 1 refused; 2 when the check itself
-cannot run (an unreadable file, a validator from outside its tree, a broken
-copy). Python exits 2 as well when the copy is missing. A normaliser or
-validator that fails on the file is no such case: the scan records it as a
-refusal key (``error:<type>``, ``security:validator-failed``), so the check
-reports it as a refusal too, exit 1.
+cannot run (a path that names no file, a validator from outside its tree, a
+broken copy). Python exits 2 as well when the copy is missing. A file the
+session can fix is no such case: a normaliser or validator that fails on it is
+a refusal key in the scan (``error:<type>``, ``security:validator-failed``),
+and a file that is not UTF-8 text is one the chat cannot read (``encoding``),
+so the check reports each as a refusal, exit 1.
 """
 
 from __future__ import annotations
@@ -365,7 +366,12 @@ def cmd_check(args: argparse.Namespace) -> int:
     """Print every refusal of one file and the verdict; never raises (module docstring, ``check``)."""
     try:
         code = Path(args.file).read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as exc:
+    except UnicodeDecodeError as exc:  # the session's file, which it can fix: the chat cannot read it either
+        line = exc.object[: exc.start].count(b"\n") + 1
+        print(f"encoding: line {line} is not UTF-8 text, so the chat cannot read the file → save it as UTF-8")
+        print("readiness: refused (encoding)")
+        return 1
+    except OSError as exc:
         print(f"readiness: not run (cannot read {args.file}: {_error(exc)})")
         return 2
     try:

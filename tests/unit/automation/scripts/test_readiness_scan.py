@@ -736,13 +736,21 @@ def test_a_validator_from_outside_the_scripts_tree_is_a_check_that_could_not_run
     assert out.count("\n") == 1
 
 
-@pytest.mark.parametrize("content", [None, b"\xff\xfe not utf-8"], ids=["missing", "not-utf-8"])
-def test_a_file_the_check_cannot_read_is_a_check_that_could_not_run(tmp_path, capsys, content):
-    if content is not None:
-        (tmp_path / "new.py").write_bytes(content)
+def test_a_path_that_names_no_file_is_a_check_that_could_not_run(tmp_path, capsys):
     code = readiness_scan.main(["check", str(tmp_path / "new.py"), "--spec-id", SPEC, "--library", LIB])
     assert code == 2
     assert capsys.readouterr().out.startswith(f"readiness: not run (cannot read {tmp_path / 'new.py'}: ")
+
+
+def test_a_file_that_is_not_utf8_is_a_refusal_the_session_can_fix(tmp_path, capsys):
+    """The session wrote the file and can save it again; the chat cannot read it as it is."""
+    (tmp_path / "new.py").write_bytes(CLEAN.encode().replace(b"import pandas", b"import \xff pandas"))
+    code = readiness_scan.main(["check", str(tmp_path / "new.py"), "--spec-id", SPEC, "--library", LIB])
+    assert code == 1
+    assert capsys.readouterr().out == (
+        f"encoding: line {_line_of(CLEAN, 'import pandas')} is not UTF-8 text, so the chat cannot read the file "
+        "→ save it as UTF-8\nreadiness: refused (encoding)\n"
+    )
 
 
 # Runs the copy's scanner under an audit hook that records every file opened for writing, wherever it lives:

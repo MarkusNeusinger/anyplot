@@ -266,8 +266,8 @@ with its hint and with the line of the file as the session wrote it, then a
 verdict line (`readiness: accepted`, `refused (<keys>)`, `excluded`, `not run`,
 or `not checked` for a library without a Python profile). It writes nothing
 and exits 0 when there's nothing to fix, 1 on a refusal (a normaliser or
-validator that fails on the file included, as the scan records it), and 2
-when the check itself can't run. See
+validator that fails on the file included, as the scan records it, and a file
+that isn't UTF-8 text), and 2 when the check itself can't run. See
 [Readiness self-check](../../docs/workflows/overview.md#readiness-self-check).
 
 ### `readiness_record.py`

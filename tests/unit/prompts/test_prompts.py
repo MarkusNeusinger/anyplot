@@ -1421,16 +1421,25 @@ class TestAdaptableCode:
         for sentence in (
             "One attempt runs both commands, and you fix what both report before you re-render.",
             "Adaptability never blocks the implementation, and neither does readiness",
-            "**Remove every refusal of the readiness check that you can remove without making the plot worse,**",
+            "**Remove every refusal of the readiness check that you can remove without making the plot worse,** "
+            "on a regeneration also the ones the previous file already had.",
+            "The render stays as it is.",
             "**Never remove an element the spec asks for to get rid of a refusal.**",
             "When the spec needs the construct, leave the refusal and say so in the commit body: a 3D trace in "
             "plotly draws with WebGL, which the chat's renderer lacks, and a 3D spec still needs it.",
             "**A map spec is excluded** (`readiness: excluded`)",
-            "**A refusal caused by a built-in example dataset the prompts allow** (`sns.load_dataset`, "
-            "`sklearn.datasets`) stays as it is.",
-            'never "fix" it by swapping the data scenario or writing the dataset out inline.',
+            "**A refusal line that names `sns.load_dataset` or a `sklearn.datasets` name stays as it is:**",
+            'Name it in the `Readiness self-check:` line, and never "fix" it by swapping the data scenario or '
+            "writing the dataset out inline.",
+            "This covers only those lines; every other refusal, also one with the same hint (a file read, another "
+            "import), is removed as above.",
+            "this prompt names no refused construct of its own and makes one exception below (the built-in "
+            "datasets), so don't guess at others.",
             "Never trade a defect in the render for a clean check.",
-            "When the chat's own tools fail on your file, that is a refusal of the file like any other (exit 1)",
+            "2 when the check itself cannot run (its copy is missing or broken, or the path names no file).",
+            "When the chat's own tools fail on your file, or cannot read it, that is a refusal of the file like any "
+            "other (exit 1)",
+            "say so in the commit body and don't run it again.",
             "One check that cannot run doesn't end the other: keep fixing what the other reports within the three "
             "attempts, then go on to Step 4.",
         ):
@@ -1458,12 +1467,17 @@ class TestAdaptableCode:
             "Such a fix is a named code-quality item, like a line of the self-check: keep the render the same.",
             "Never remove an element the spec asks for to get rid of a refusal: when the spec needs the construct",
             "leave the refusal and say so in the commit body.",
-            "A refusal caused by a built-in example dataset the prompts allow (`sns.load_dataset`, "
-            "`sklearn.datasets`) stays as well",
-            'never "fix" it by swapping the data scenario or writing the dataset out inline.',
+            "A refusal line that names `sns.load_dataset` or a `sklearn.datasets` name stays as well",
+            'name it in the commit body, and never "fix" it by swapping the data scenario or writing the dataset '
+            "out inline.",
+            "This covers only those lines; every other refusal, also one with the same hint (a file read, another "
+            "import), is removed as above.",
+            "Its output is the whole rule, with one exception below (the built-in datasets).",
             "A map spec is excluded (`readiness: excluded`): there is nothing to fix.",
             "Never trade a defect in the render for a clean check.",
-            "When the chat's own tools fail on your file, that is a refusal of the file like any other (exit 1).",
+            "2 when the check itself cannot run (its copy is missing or broken, or the path names no file).",
+            "When the chat's own tools fail on your file, or cannot read it, that is a refusal of the file like any "
+            "other (exit 1).",
             "If a command cannot run (exit 2), say so in the commit body and don't run it again. One check that "
             "cannot run doesn't end the other: keep fixing what the other reports within the three attempts.",
         ):

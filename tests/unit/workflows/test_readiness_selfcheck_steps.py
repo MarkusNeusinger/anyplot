@@ -145,7 +145,8 @@ def _prepare(runner: Runner, workflow: str, shell: list[str], tools: Path, *, sh
     return subprocess.run(
         [*shell, script],
         cwd=runner.ws,
-        env=_env(GITHUB_SHA=sha or runner.sha, TOOLS=str(tools)),
+        # The runner's own RUNNER_TEMP, the one the gate's scan gets: a file the copy left there is in its reach.
+        env=_env(GITHUB_SHA=sha or runner.sha, TOOLS=str(tools), RUNNER_TEMP=str(runner.runner_temp)),
         capture_output=True,
         text=True,
     )
