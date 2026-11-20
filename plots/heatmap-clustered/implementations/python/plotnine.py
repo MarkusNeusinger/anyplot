@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-clustered: Clustered Heatmap
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-09
@@ -18,8 +18,10 @@ from plotnine import (
     geom_text,
     geom_tile,
     ggplot,
+    guide_colorbar,
+    guides,
     labs,
-    scale_fill_cmap,
+    scale_fill_gradient2,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -28,184 +30,149 @@ from plotnine import (
 from scipy.cluster.hierarchy import dendrogram, linkage
 
 
-# Theme tokens (see prompts/default-style-guide.md)
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Gene expression data (12 genes x 8 samples)
-np.random.seed(42)
+# Imprint palette: diverging ends and the theme-adaptive midpoint
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+DIV_LOW, DIV_HIGH = IMPRINT_PALETTE[4], IMPRINT_PALETTE[2]
+DIV_MID = "#FAF8F1" if THEME == "light" else "#1A1A17"
 
-n_genes = 12
-n_samples = 8
+# Constants
+CLUSTER_METHOD = "ward"  # Ward linkage on Euclidean distance, the spec's common default
 
-# Gene names
-gene_names = [f"Gene{i + 1}" for i in range(n_genes)]
-sample_names = [f"Sample{chr(65 + i)}" for i in range(n_samples)]
+# Columns: set these to your table's column names
+CUSTOMER = "Customer"  # role: row_labels
+VALUE = "Z-score vs. all customers"  # role: matrix
 
-# Create expression data with cluster structure
-# Group 1: Genes 1-4 (co-expressed, upregulated in samples A-D)
-# Group 2: Genes 5-8 (co-expressed, upregulated in samples E-H)
-# Group 3: Genes 9-12 (variable expression)
-expression = np.zeros((n_genes, n_samples))
+# Data: replace this block with your own long table, for example df = pd.read_csv("behavior.csv")
+# Customer segmentation: 24 customers x 12 standardized behavior metrics, three hidden segments
+rng = np.random.default_rng(42)
+metrics = [
+    "Order frequency",
+    "Basket size",
+    "Loyalty points",
+    "Premium share",
+    "Discount usage",
+    "Cart abandonment",
+    "Coupon redemption",
+    "Return rate",
+    "Email opens",
+    "App sessions",
+    "Weekend share",
+    "Support tickets",
+]
+segment_profiles = np.array(
+    [
+        [1.6, 1.4, 1.5, 1.3, -1.2, -0.9, -1.0, -0.6, 0.4, 0.8, 0.0, -0.5],  # loyal big spenders
+        [0.0, -1.1, -0.5, -1.4, 1.7, 1.2, 1.6, 0.9, 0.3, -0.2, 0.5, 0.2],  # bargain hunters
+        [-1.5, -0.6, -1.2, -0.3, -0.4, 0.6, -0.5, 0.0, -1.2, 1.4, 1.2, 1.1],  # casual browsers
+    ]
+)
+segment_of = rng.permutation(np.repeat([0, 1, 2], [9, 8, 7]))
+values = segment_profiles[segment_of] + rng.normal(0, 0.45, size=(len(segment_of), len(metrics)))
+customers = [f"C{i + 1:02d}" for i in range(len(segment_of))]
+df = pd.DataFrame(values.round(2), index=pd.Index(customers, name=CUSTOMER), columns=metrics)
 
-# Cluster 1 genes - high in first half of samples
-for i in range(4):
-    expression[i, :4] = np.random.uniform(1.5, 3.0, 4)
-    expression[i, 4:] = np.random.uniform(-2.5, -1.0, 4)
+# Plot: reads only df and the constants above
+table = df
+row_link = linkage(table.to_numpy(), method=CLUSTER_METHOD)
+col_link = linkage(table.to_numpy().T, method=CLUSTER_METHOD)
+row_dend = dendrogram(row_link, no_plot=True)
+col_dend = dendrogram(col_link, no_plot=True)
+table = table.iloc[row_dend["leaves"], col_dend["leaves"]]
+n_rows, n_cols = table.shape
 
-# Cluster 2 genes - high in second half of samples
-for i in range(4, 8):
-    expression[i, :4] = np.random.uniform(-2.0, -0.5, 4)
-    expression[i, 4:] = np.random.uniform(1.0, 2.5, 4)
+# One unit per cell; the heatmap spans x 0..n_cols and y 0..n_rows, first leaf at the top
+dend_w = 0.28 * n_cols  # row dendrogram width
+dend_h = 0.22 * n_rows  # column dendrogram height
+gap = 0.4
 
-# Cluster 3 genes - mixed pattern
-for i in range(8, 12):
-    expression[i, :] = np.random.uniform(-1.5, 1.5, n_samples)
-    expression[i, i % n_samples] = 2.5  # One strong signal per gene
-
-# Perform hierarchical clustering on rows (genes) and columns (samples)
-row_linkage = linkage(expression, method="ward")
-col_linkage = linkage(expression.T, method="ward")
-
-# Get dendrogram coordinates
-row_dend = dendrogram(row_linkage, no_plot=True)
-col_dend = dendrogram(col_linkage, no_plot=True)
-
-# Reorder data according to clustering
-row_order = row_dend["leaves"]
-col_order = col_dend["leaves"]
-reordered_expr = expression[row_order, :][:, col_order]
-reordered_genes = [gene_names[i] for i in row_order]
-reordered_samples = [sample_names[i] for i in col_order]
-
-# Layout parameters
-# Main heatmap: x from 20 to 100, y from 0 to 60
-# Row dendrogram: x from 0 to 18, y from 0 to 60
-# Col dendrogram: x from 20 to 100, y from 62 to 82
-heatmap_x_start = 20
-heatmap_x_end = 100
-heatmap_y_start = 0
-heatmap_y_end = 60
-cell_width = (heatmap_x_end - heatmap_x_start) / n_samples
-cell_height = (heatmap_y_end - heatmap_y_start) / n_genes
-
-# Create heatmap tile data
-tile_data = []
-for i, gene in enumerate(reordered_genes):
-    for j, sample in enumerate(reordered_samples):
-        x_pos = heatmap_x_start + (j + 0.5) * cell_width
-        y_pos = heatmap_y_start + (i + 0.5) * cell_height
-        tile_data.append(
-            {"x": x_pos, "y": y_pos, "value": round(reordered_expr[i, j], 2), "gene": gene, "sample": sample}
-        )
-tile_df = pd.DataFrame(tile_data)
-
-# Create row dendrogram segments (on the left, rotated 90 degrees)
-row_segments = []
-max_row_dist = max(row_linkage[:, 2]) if len(row_linkage) > 0 else 1
-dend_width = 16  # Width for row dendrogram
-
-for xs, ys in zip(row_dend["icoord"], row_dend["dcoord"], strict=True):
-    # In original dendrogram: x is leaf position, y is distance
-    # We rotate: original x -> new y, original y -> new x (from right edge going left)
-    for k in range(3):
-        # Map original x positions (leaf positions) to y coordinates
-        # Original x spans 5, 15, 25, ... for n leaves
-        orig_x1, orig_x2 = xs[k], xs[k + 1]
-        orig_y1, orig_y2 = ys[k], ys[k + 1]
-
-        # Normalize original x to [0, n_genes] and map to heatmap y range
-        new_y1 = heatmap_y_start + (orig_x1 / (n_genes * 10)) * (heatmap_y_end - heatmap_y_start)
-        new_y2 = heatmap_y_start + (orig_x2 / (n_genes * 10)) * (heatmap_y_end - heatmap_y_start)
-
-        # Normalize original y (distance) and map to x (from right edge going left)
-        new_x1 = heatmap_x_start - 2 - (orig_y1 / max_row_dist) * dend_width
-        new_x2 = heatmap_x_start - 2 - (orig_y2 / max_row_dist) * dend_width
-
-        row_segments.append({"x": new_x1, "xend": new_x2, "y": new_y1, "yend": new_y2})
-
-row_seg_df = pd.DataFrame(row_segments)
-
-# Create column dendrogram segments (on top)
-col_segments = []
-max_col_dist = max(col_linkage[:, 2]) if len(col_linkage) > 0 else 1
-dend_height = 16  # Height for column dendrogram
-
-for xs, ys in zip(col_dend["icoord"], col_dend["dcoord"], strict=True):
-    for k in range(3):
-        orig_x1, orig_x2 = xs[k], xs[k + 1]
-        orig_y1, orig_y2 = ys[k], ys[k + 1]
-
-        # Map original x to heatmap x range
-        new_x1 = heatmap_x_start + (orig_x1 / (n_samples * 10)) * (heatmap_x_end - heatmap_x_start)
-        new_x2 = heatmap_x_start + (orig_x2 / (n_samples * 10)) * (heatmap_x_end - heatmap_x_start)
-
-        # Map original y (distance) to y above heatmap
-        new_y1 = heatmap_y_end + 3 + (orig_y1 / max_col_dist) * dend_height
-        new_y2 = heatmap_y_end + 3 + (orig_y2 / max_col_dist) * dend_height
-
-        col_segments.append({"x": new_x1, "xend": new_x2, "y": new_y1, "yend": new_y2})
-
-col_seg_df = pd.DataFrame(col_segments)
-
-# Create row labels (gene names on the right)
-row_labels = pd.DataFrame(
+tiles = pd.DataFrame(
     {
-        "x": [heatmap_x_end + 2] * n_genes,
-        "y": [heatmap_y_start + (i + 0.5) * cell_height for i in range(n_genes)],
-        "label": reordered_genes,
+        "x": np.tile(np.arange(n_cols) + 0.5, n_rows),
+        "y": np.repeat(n_rows - np.arange(n_rows) - 0.5, n_cols),
+        "value": table.to_numpy().ravel(),
     }
 )
 
-# Create column labels (sample names at bottom)
-col_labels = pd.DataFrame(
-    {
-        "x": [heatmap_x_start + (i + 0.5) * cell_width for i in range(n_samples)],
-        "y": [heatmap_y_start - 2] * n_samples,
-        "label": reordered_samples,
-    }
-)
 
-# Build the plot
+def branches(dend, link, horizontal):
+    """Turn scipy's dendrogram coordinates into segments in heatmap units."""
+    n_leaves = len(dend["leaves"])
+    top = link[:, 2].max()
+    rows = []
+    for leaf_pos, height in zip(dend["icoord"], dend["dcoord"], strict=True):
+        pos = [(p - 5) / 10 + 0.5 for p in leaf_pos]
+        dist = [h / top for h in height]
+        for k in range(3):
+            if horizontal:  # row tree: leaves on y (top-down), distance grows leftwards
+                rows.append(
+                    {
+                        "x": -gap - dist[k] * dend_w,
+                        "xend": -gap - dist[k + 1] * dend_w,
+                        "y": n_leaves - pos[k],
+                        "yend": n_leaves - pos[k + 1],
+                    }
+                )
+            else:  # column tree: leaves on x, distance grows upwards
+                rows.append(
+                    {
+                        "x": pos[k],
+                        "xend": pos[k + 1],
+                        "y": n_rows + gap + dist[k] * dend_h,
+                        "yend": n_rows + gap + dist[k + 1] * dend_h,
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
+row_segments = branches(row_dend, row_link, horizontal=True)
+col_segments = branches(col_dend, col_link, horizontal=False)
+
+row_labels = pd.DataFrame({"x": n_cols + 0.3, "y": n_rows - np.arange(n_rows) - 0.5, "label": table.index.tolist()})
+col_labels = pd.DataFrame({"x": np.arange(n_cols) + 0.5, "y": -0.3, "label": table.columns.tolist()})
+
+title = "heatmap-clustered · python · plotnine · anyplot.ai"
+limit = np.abs(table.to_numpy()).max()
+
 plot = (
     ggplot()
-    # Heatmap tiles
-    + geom_tile(aes(x="x", y="y", fill="value"), data=tile_df, width=cell_width * 0.95, height=cell_height * 0.95)
-    # Row dendrogram
-    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=row_seg_df, color=INK_SOFT, size=1.2)
-    # Column dendrogram
-    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=col_seg_df, color=INK_SOFT, size=1.2)
-    # Row labels
-    + geom_text(aes(x="x", y="y", label="label"), data=row_labels, ha="left", size=11, color=INK_SOFT)
-    # Column labels
+    + geom_tile(aes(x="x", y="y", fill="value"), data=tiles, width=0.96, height=0.96)
+    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=row_segments, color=INK_SOFT, size=0.5)
+    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=col_segments, color=INK_SOFT, size=0.5)
+    + geom_text(aes(x="x", y="y", label="label"), data=row_labels, ha="left", size=6.5, color=INK_SOFT)
     + geom_text(
-        aes(x="x", y="y", label="label"), data=col_labels, ha="center", va="top", size=11, color=INK_SOFT, angle=45
+        aes(x="x", y="y", label="label"), data=col_labels, ha="right", va="top", size=6.5, color=INK_SOFT, angle=45
     )
-    # Color scale (BrBG diverging colormap for data centered at zero)
-    + scale_fill_cmap(cmap_name="BrBG", name="Expression Level")
-    # Remove axes
-    + scale_x_continuous(breaks=[], expand=(0.02, 0))
-    + scale_y_continuous(breaks=[], expand=(0.02, 0))
-    + coord_cartesian(xlim=(-5, 120), ylim=(-8, 82))
-    + labs(x="", y="", title="heatmap-clustered · plotnine · anyplot.ai")
+    + scale_fill_gradient2(low=DIV_LOW, mid=DIV_MID, high=DIV_HIGH, midpoint=0, limits=(-limit, limit), name=VALUE)
+    + guides(fill=guide_colorbar(nbin=64, theme=theme(legend_title_position="top")))
+    + scale_x_continuous(breaks=[], expand=(0, 0))
+    + scale_y_continuous(breaks=[], expand=(0, 0))
+    + coord_cartesian(xlim=(-gap - dend_w - 0.3, n_cols + 2.6), ylim=(-6.2, n_rows + gap + dend_h + 0.3), expand=False)
+    + labs(x="", y="", title=title)
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
+        figure_size=(6, 6),
+        text=element_text(size=8),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        plot_title=element_text(size=24, ha="center", color=INK),
+        plot_title=element_text(size=13, ha="center", color=INK),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
+        legend_position="bottom",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=14, color=INK),
-        legend_text=element_text(size=12, color=INK_SOFT),
+        legend_title=element_text(size=9, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_key_width=200,
+        legend_key_height=10,
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
