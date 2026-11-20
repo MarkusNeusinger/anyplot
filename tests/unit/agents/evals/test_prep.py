@@ -301,6 +301,11 @@ class TestFixtures:
             assert any(value.casefold() in earlier for value in item.stale_values), item.id
             assert not any(value.casefold() in current for value in item.stale_values), item.id
             assert not item.expected_operations and item.spec_id == "line-timeseries-rolling", item.id
+            # The case's premise: the earlier day column reads as dates at the paste, the new one in no form, so no
+            # operation reads it. A date form added to the chat's list that takes `1st March 2026` changes the case.
+            first = parse_dataset(item.before_dataset_text or "").profile.columns[0]
+            second = parse_dataset(item.dataset_text or "").profile.columns[0]
+            assert (first.dtype, second.dtype) == ("datetime", "text"), item.id
         (again,) = [item for item in replaced if item.before_message is not None]
         # The earlier wish holds: the same daily mean per sensor the case of a typed request expects.
         daily = next(item for item in cases if item.id == "de-tagesmittel-pro-sensor").expected_operations[0]
