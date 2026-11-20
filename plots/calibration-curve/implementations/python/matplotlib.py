@@ -1,13 +1,14 @@
 """ anyplot.ai
 calibration-curve: Calibration Curve
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-10
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 77/100 | Updated: 2026-11-20
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
@@ -17,185 +18,90 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - canonical order
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
-BRAND = IMPRINT[0]  # #009E73
+# Imprint palette: all eight positions, one per model in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data
-np.random.seed(42)
+# Constants
+N_BINS = 10  # equal-width probability bins, 0.0-0.1, 0.1-0.2, ...
+MARKERS = ["o", "s", "^", "D", "v", "P", "X", "*"]  # one shape per model, so color is not the only cue
+
+# Columns: set these to your table's column names
+OUTCOME = "Actual outcome (0 or 1)"  # role: y_true
+MODELS = ["Well-calibrated", "Overconfident", "Underconfident"]  # role: y_prob
+
+# Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
+rng = np.random.default_rng(42)
 n_samples = 2000
-n_bins = 10
-
-y_true = np.random.binomial(1, 0.35, n_samples)
-
-logits_calibrated = 1.2 * (y_true * 2 - 1) + np.random.normal(0, 1.0, n_samples)
-y_prob_calibrated = 1 / (1 + np.exp(-logits_calibrated))
-
-logits_over = 2.0 * (y_true * 2 - 1) + np.random.normal(0, 0.5, n_samples)
-y_prob_overconfident = 1 / (1 + np.exp(-logits_over))
-
-logits_under = 0.5 * (y_true * 2 - 1) + np.random.normal(0, 0.8, n_samples)
-y_prob_underconfident = 1 / (1 + np.exp(-logits_under))
-
-bin_edges = np.linspace(0, 1, n_bins + 1)
-
-# Calculate calibration curves - well-calibrated
-bin_idx_cal = np.digitize(y_prob_calibrated, bin_edges[1:-1])
-prob_true_cal = np.array([np.mean(y_true[bin_idx_cal == i]) for i in range(n_bins) if np.sum(bin_idx_cal == i) > 0])
-prob_pred_cal = np.array(
-    [np.mean(y_prob_calibrated[bin_idx_cal == i]) for i in range(n_bins) if np.sum(bin_idx_cal == i) > 0]
-)
-prob_std_cal = np.array(
-    [
-        np.std(y_true[bin_idx_cal == i]) / np.sqrt(np.sum(bin_idx_cal == i))
-        for i in range(n_bins)
-        if np.sum(bin_idx_cal == i) > 0
-    ]
+y_true = rng.binomial(1, 0.35, n_samples)
+signal = y_true * 2 - 1
+df = pd.DataFrame(
+    {
+        OUTCOME: y_true,
+        MODELS[0]: 1 / (1 + np.exp(-(1.2 * signal + rng.normal(0, 1.0, n_samples)))),
+        MODELS[1]: 1 / (1 + np.exp(-(2.0 * signal + rng.normal(0, 0.5, n_samples)))),
+        MODELS[2]: 1 / (1 + np.exp(-(0.5 * signal + rng.normal(0, 0.8, n_samples)))),
+    }
 )
 
-# Calculate calibration curves - overconfident
-bin_idx_over = np.digitize(y_prob_overconfident, bin_edges[1:-1])
-prob_true_over = np.array([np.mean(y_true[bin_idx_over == i]) for i in range(n_bins) if np.sum(bin_idx_over == i) > 0])
-prob_pred_over = np.array(
-    [np.mean(y_prob_overconfident[bin_idx_over == i]) for i in range(n_bins) if np.sum(bin_idx_over == i) > 0]
-)
-prob_std_over = np.array(
-    [
-        np.std(y_true[bin_idx_over == i]) / np.sqrt(np.sum(bin_idx_over == i))
-        for i in range(n_bins)
-        if np.sum(bin_idx_over == i) > 0
-    ]
-)
+# Plot: reads only df and the constants above
+edges = np.linspace(0, 1, N_BINS + 1)
+outcome = df[OUTCOME].to_numpy(dtype=float)
 
-# Calculate calibration curves - underconfident
-bin_idx_under = np.digitize(y_prob_underconfident, bin_edges[1:-1])
-prob_true_under = np.array(
-    [np.mean(y_true[bin_idx_under == i]) for i in range(n_bins) if np.sum(bin_idx_under == i) > 0]
+fig, (ax1, ax2) = plt.subplots(
+    2, 1, figsize=(8, 4.5), dpi=400, sharex=True, gridspec_kw={"height_ratios": [3, 1]}, facecolor=PAGE_BG
 )
-prob_pred_under = np.array(
-    [np.mean(y_prob_underconfident[bin_idx_under == i]) for i in range(n_bins) if np.sum(bin_idx_under == i) > 0]
-)
-prob_std_under = np.array(
-    [
-        np.std(y_true[bin_idx_under == i]) / np.sqrt(np.sum(bin_idx_under == i))
-        for i in range(n_bins)
-        if np.sum(bin_idx_under == i) > 0
-    ]
-)
+for ax in (ax1, ax2):
+    ax.set_facecolor(PAGE_BG)
 
-brier_cal = np.mean((y_prob_calibrated - y_true) ** 2)
-brier_over = np.mean((y_prob_overconfident - y_true) ** 2)
-brier_under = np.mean((y_prob_underconfident - y_true) ** 2)
+ax1.plot([0, 1], [0, 1], "--", linewidth=1.2, color=INK_SOFT, alpha=0.7, label="Perfect calibration")
 
-# Plot
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 9), gridspec_kw={"height_ratios": [3, 1]}, facecolor=PAGE_BG)
-ax1.set_facecolor(PAGE_BG)
-ax2.set_facecolor(PAGE_BG)
+for i, model in enumerate(MODELS):
+    prob = df[model].to_numpy(dtype=float)
+    valid = ~np.isnan(prob) & ~np.isnan(outcome)
+    prob, hit = prob[valid], outcome[valid]
 
-# Calibration curves with confidence bands
-ax1.plot([0, 1], [0, 1], "--", linewidth=2, color=INK_SOFT, label="Perfect Calibration", alpha=0.6)
+    # Per-bin mean prediction, observed fraction of positives and its standard error
+    which = np.digitize(prob, edges[1:-1])
+    count = np.bincount(which, minlength=N_BINS)
+    filled = count > 0
+    mean_pred = np.bincount(which, weights=prob, minlength=N_BINS)[filled] / count[filled]
+    frac_pos = np.bincount(which, weights=hit, minlength=N_BINS)[filled] / count[filled]
+    stderr = np.sqrt(frac_pos * (1 - frac_pos) / count[filled])
+    brier = np.mean((prob - hit) ** 2)
 
-# Well-calibrated
-ax1.fill_between(
-    prob_pred_cal, prob_true_cal - prob_std_cal, prob_true_cal + prob_std_cal, alpha=0.2, color=IMPRINT[0]
-)
-ax1.plot(
-    prob_pred_cal,
-    prob_true_cal,
-    "o-",
-    color=IMPRINT[0],
-    linewidth=3,
-    markersize=10,
-    label=f"Well-Calibrated (Brier: {brier_cal:.3f})",
-)
+    ax1.fill_between(mean_pred, frac_pos - stderr, frac_pos + stderr, alpha=0.2, color=IMPRINT_PALETTE[i], linewidth=0)
+    ax1.plot(
+        mean_pred,
+        frac_pos,
+        marker=MARKERS[i],
+        color=IMPRINT_PALETTE[i],
+        linewidth=1.8,
+        markersize=5,
+        label=f"{model} (Brier {brier:.3f})",
+    )
+    ax2.hist(prob, bins=2 * N_BINS, range=(0, 1), alpha=0.6, color=IMPRINT_PALETTE[i], edgecolor=PAGE_BG, linewidth=0.3)
 
-# Overconfident
-ax1.fill_between(
-    prob_pred_over, prob_true_over - prob_std_over, prob_true_over + prob_std_over, alpha=0.2, color=IMPRINT[1]
-)
-ax1.plot(
-    prob_pred_over,
-    prob_true_over,
-    "s-",
-    color=IMPRINT[1],
-    linewidth=3,
-    markersize=10,
-    label=f"Overconfident (Brier: {brier_over:.3f})",
-)
-
-# Underconfident
-ax1.fill_between(
-    prob_pred_under, prob_true_under - prob_std_under, prob_true_under + prob_std_under, alpha=0.2, color=IMPRINT[2]
-)
-ax1.plot(
-    prob_pred_under,
-    prob_true_under,
-    "^-",
-    color=IMPRINT[2],
-    linewidth=3,
-    markersize=10,
-    label=f"Underconfident (Brier: {brier_under:.3f})",
-)
-
-ax1.set_xlabel("Mean Predicted Probability (0 to 1)", fontsize=20, color=INK)
-ax1.set_ylabel("Fraction of Positives (0 to 1)", fontsize=20, color=INK)
-ax1.set_title("calibration-curve · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax1.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+# Style
+ax1.set_title("calibration-curve · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax1.set_ylabel("Fraction of positives", fontsize=10, color=INK)
+ax2.set_xlabel("Mean predicted probability", fontsize=10, color=INK)
+ax2.set_ylabel("Count", fontsize=10, color=INK)
 ax1.set_xlim(0, 1)
 ax1.set_ylim(0, 1)
 
-leg1 = ax1.legend(fontsize=16, loc="lower right")
-leg1.get_frame().set_facecolor(ELEVATED_BG)
-leg1.get_frame().set_edgecolor(INK_SOFT)
-leg1.get_frame().set_linewidth(0.5)
-for text in leg1.get_texts():
-    text.set_color(INK_SOFT)
+leg = ax1.legend(fontsize=8, loc="lower right")
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_linewidth(0.5)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-ax1.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
-ax1.spines["top"].set_visible(False)
-ax1.spines["right"].set_visible(False)
-for s in ("left", "bottom"):
-    ax1.spines[s].set_color(INK_SOFT)
+for ax in (ax1, ax2):
+    ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+    ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_color(INK_SOFT)
 
-# Histogram
-ax2.hist(
-    y_prob_calibrated, bins=20, alpha=0.6, color=IMPRINT[0], label="Well-Calibrated", edgecolor=PAGE_BG, linewidth=0.5
-)
-ax2.hist(
-    y_prob_overconfident,
-    bins=20,
-    alpha=0.6,
-    color=IMPRINT[1],
-    label="Overconfident",
-    edgecolor=PAGE_BG,
-    linewidth=0.5,
-)
-ax2.hist(
-    y_prob_underconfident,
-    bins=20,
-    alpha=0.6,
-    color=IMPRINT[2],
-    label="Underconfident",
-    edgecolor=PAGE_BG,
-    linewidth=0.5,
-)
-
-ax2.set_xlabel("Predicted Probability (0 to 1)", fontsize=20, color=INK)
-ax2.set_ylabel("Count (Sample Frequency)", fontsize=20, color=INK)
-ax2.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-leg2 = ax2.legend(fontsize=16, loc="upper right")
-leg2.get_frame().set_facecolor(ELEVATED_BG)
-leg2.get_frame().set_edgecolor(INK_SOFT)
-leg2.get_frame().set_linewidth(0.5)
-for text in leg2.get_texts():
-    text.set_color(INK_SOFT)
-
-ax2.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
-ax2.spines["top"].set_visible(False)
-ax2.spines["right"].set_visible(False)
-for s in ("left", "bottom"):
-    ax2.spines[s].set_color(INK_SOFT)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.09, right=0.97, top=0.92, bottom=0.12, hspace=0.12)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

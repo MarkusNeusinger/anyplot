@@ -2,47 +2,74 @@ library: matplotlib
 language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:38:04Z'
-updated: '2026-05-10T10:48:24Z'
-generated_by: claude-haiku
-workflow_run: 25626604745
+updated: '2026-11-20T17:34:43Z'
+generated_by: claude-sonnet
+workflow_run: 44783390127
 issue: 2331
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 77
 review:
   strengths:
-  - Perfect theme compliance - both light and dark renders maintain full readability
-    with proper contrast flipping, no dark-on-dark or light-on-light failures
-  - Comprehensive spec adherence - all required features present (diagonal reference
-    line, 10 bins, confidence bands, histogram, Brier scores, multi-model comparison)
-  - Strong visual hierarchy - 3:1 height ratio between main calibration plot and histogram,
-    clear data storytelling through color (Okabe-Ito palette) and marker shapes (circles,
-    squares, triangles)
-  - Clean, maintainable code with reproducible seed and idiomatic matplotlib patterns
+  - Two-panel layout via plt.subplots(sharex=True, height_ratios [3, 1]) keeps the
+    histogram on the same 0-1 probability axis and smaller than the curve
+  - Brier score per model inside each legend entry makes it unambiguous which metric
+    belongs to which curve
+  - Distinct marker shapes per model plus Imprint colors keep the curves distinguishable
+    without relying on hue
+  - 'Theme tokens threaded through title, labels, ticks, spines, grid and legend frame:
+    both renders fully readable'
+  - Data block ends in one tidy df with column constants; empty bins are dropped rather
+    than plotted
   weaknesses:
-  - 'Minor: Library mastery could showcase more distinctive matplotlib techniques
-    beyond standard fill_between and legend customization'
-  - 'Minor: Design excellence is professional but not particularly innovative - uses
-    established best practices rather than introducing novel visual approaches'
+  - 'DQ-03 (both): the model labels contradict their curves — ''Well-calibrated''
+    (Brier 0.103) runs far off the diagonal (0.11 observed at 0.35 predicted, 0.90
+    at 0.75), and ''Overconfident'' has the best Brier (0.020) and a steep step from
+    0.0 to 1.0 with predictions bunched near 0.12 and 0.88, which is the shape of
+    underconfidence → generate each model''s probabilities so its curve shows its
+    label: a well-calibrated model whose observed rate follows the predicted probability
+    (e.g. draw y_true ~ Bernoulli(p) from the model''s own p), and an overconfident
+    model with predictions pushed past the observed rates (flatter-than-diagonal curve).
+    Likely cause: all three models are a sigmoid of a ±signal plus noise, ignoring
+    the 0.35 base rate, and the overconfident one has the cleaner signal.'
+  - 'VQ-03 (both): bin markers that sit at a fraction of exactly 0.0 or 1.0 (four
+    Overconfident squares on the top edge, several points on the bottom edge) are
+    cut in half by the axes frame → show each bin''s marker whole, e.g. ylim(-0.03,
+    1.03) or clip_on=False on the curve. Likely cause: ax1.set_ylim(0, 1) with default
+    clipping.'
+  - 'VQ-03 (both): the three histograms drawn on top of each other at alpha 0.6 hide
+    the green series between 0.25 and 0.75 under the blue and purple bars, so its
+    distribution cannot be read → keep each model''s distribution distinguishable,
+    e.g. histtype=''step'' outlines or a lower alpha with an outline. Likely cause:
+    three ax2.hist calls with alpha=0.6 and filled bars.'
+  - 'DQ-02 (both): the scenario is generic — models are named only by their calibration
+    behaviour and the outcome is ''Actual outcome (0 or 1)'', with no application
+    → name the outcome and models after one of the spec''s applications (e.g. loan
+    default with logistic regression, gradient boosting, naive Bayes). Likely cause:
+    OUTCOME and MODELS constants.'
+  - 'Suggestion: lines 63-67 could use sklearn.calibration.calibration_curve(hit,
+    prob, n_bins=N_BINS, strategy=''uniform'') and sklearn.metrics.brier_score_loss.'
+  - 'Suggestion: the wide translucent Overconfident band (0.03-0.47 around 0.42) draws
+    the eye more than the curves; a thinner band or none would keep focus on the bins.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with proper contrast
-      Chrome: Title "calibration-curve · matplotlib · anyplot.ai" is dark and clearly readable. Axis labels ("Mean Predicted Probability", "Fraction of Positives", "Predicted Probability", "Count") are dark and legible. Tick labels are in soft gray-brown tone and fully readable against light background. No text is light-on-light.
-      Data: Three calibration curves shown with circles (green #009E73), squares (orange #D55E00), and triangles (blue #0072B2). Confidence bands have appropriate alpha blending. Dashed diagonal reference line is subtle but visible. Legend has elevated background (#FFFDF6) with dark text.
-      Legibility verdict: PASS - all elements readable, proper contrast maintained throughout light theme
+      Background: warm off-white #FAF8F1 across canvas and both panels, 3200x1800.
+      Chrome: title "calibration-curve · python · matplotlib · anyplot.ai" in dark ink, centred; y labels "Fraction of positives" and "Count", x label "Mean predicted probability" in dark ink; tick labels soft grey; subtle y-grid; top/right spines removed; legend on an elevated off-white frame, lower right.
+      Data: dashed grey diagonal; three calibration curves with markers — green #009E73 circles (Well-calibrated, Brier 0.103), purple #C475FD squares (Overconfident, Brier 0.020), blue #4467A3 triangles (Underconfident, Brier 0.184) — each with a translucent standard-error band; the purple curve steps from 0 to 1 between 0.34 and 0.57. Markers at y=0 and y=1 are half-clipped by the frame. Lower panel: three overlapping 20-bin histograms at alpha 0.6 sharing the 0-1 x axis.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with proper contrast
-      Chrome: Title is light (#F0EFE8) and clearly readable. Axis labels are light and legible. Tick labels are in light soft tone (#B8B7B0) and fully readable against dark background. No dark-on-dark failures detected.
-      Data: Colors are identical to light render (green, orange, blue markers with same confidence bands and dashed reference line). Histogram shows same color coding. All data elements distinguish clearly from the dark background. Legend has dark elevated background (#242420) with light text.
-      Legibility verdict: PASS - all text readable with proper light-on-dark contrast, no theme-adaptation failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels in light ink, ticks light grey, grid subtle, legend frame dark elevated #242420 with light text; no dark-on-dark text.
+      Data: identical colors, markers, bands and histograms to the light render; only chrome flips. Brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -50,85 +77,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and colored for both themes - title 24pt,
-          labels 20pt, ticks 16pt. Fully readable in both light and dark renders.
+        comment: All sizes set explicitly (title 12, axis titles 10, ticks and legend
+          8 pt), all text readable in both themes; title spans about 52 % of the width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. Histogram labels and calibration
-          plot labels have clear space.
+        comment: Legend sits in the empty lower-right area; no text collides with
+          text or data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Markers (circles, squares, triangles) clearly visible at appropriate
-          sizes. Confidence bands with alpha=0.2 are subtle but visible. Lines are
-          thick enough (linewidth=3).
+        passed: false
+        comment: Bin markers at 0.0 and 1.0 are cut in half by the axes frame, and
+          the three overlapping 60 % alpha histograms hide the green series (defect
+          lines)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Visual distinction via both color
-          AND marker shape (circles/squares/triangles) provides redundancy beyond
-          color alone.
+        comment: Each model has its own marker shape (circle, square, triangle), so
+          hue is not the only cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions with gridspec height_ratios=[3,1]. Nothing
-          cut off. Tight_layout and bbox_inches='tight' ensure proper spacing.
+        comment: 3200x1800 canvas, 3:1 panel split, balanced margins, nothing cut
+          off at the canvas edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''calibration-curve · matplotlib · anyplot.ai''.
-          Axis labels descriptive with units (''Mean Predicted Probability (0 to 1)'',
-          ''Fraction of Positives (0 to 1)'', etc.).'
+        comment: 'Mean predicted probability / Fraction of positives / Count: descriptive,
+          quantities are unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Subsequent series follow Okabe-Ito
-          order (#D55E00, #0072B2). Backgrounds correct (#FAF8F1 light, #1A1A17 dark).
-          Both renders theme-correct with chrome flipping while data colors remain
-          constant.'
+        comment: 'Imprint positions 1-3 in canonical order (#009E73, #C475FD, #4467A3),
+          identical in both renders; #FAF8F1 / #1A1A17 backgrounds and theme-correct
+          chrome'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: 'Professional polish with intentional design choices: custom marker
-          shapes for visual distinction, confidence bands for uncertainty, careful
-          color palette. Legend styling with elevated background shows thought. Lacks
-          some innovation.'
+        comment: The style-guide baseline, nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Top and right spines removed (L-shaped frame). Grid is subtle (y-axis
-          only, alpha=0.1). Generous whitespace. Legend frames properly styled. Minor
-          room for additional refinement.
+        comment: Spine and grid rules met; the shared x axis is what the spec's histogram
+          bullet requires
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: main plot with three calibration curves
-          + histogram. Diagonal reference line guides viewer to identify deviations.
-          Color + shape coding creates immediate distinction. Brier scores add quantitative
-          context.'
+        comment: Data displayed; no hierarchy or focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -138,32 +155,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calibration curve / reliability diagram showing predicted
-          probability vs observed frequency.
+        comment: Reliability diagram with optional histogram panel
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: diagonal reference line, 10 bins with
-          equal intervals, confidence bands, histogram of predicted probabilities,
-          Brier score display, multi-model comparison.'
+        comment: Diagonal reference, 10 equal-width bins, Brier per model in the legend,
+          histogram panel sharing the 0-1 axis and smaller (C1-C5 met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X/Y mapping correct: X=mean predicted probability (0-1), Y=fraction
-          of positives (0-1). Axes show all data within proper bounds.'
+        comment: x = mean predicted probability per bin, y = fraction of positives;
+          unsmoothed polylines through the computed pairs
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clearly identify models (Well-Calibrated,
-          Overconfident, Underconfident) with Brier scores.
+        comment: Title is calibration-curve · python · matplotlib · anyplot.ai; legend
+          names each model with its Brier score
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
@@ -171,24 +186,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of calibration curve visualization: binned probabilities
-          with error bands, reference diagonal, histogram of probability distribution,
-          multiple calibration states.'
+        comment: Three models with clearly different calibration shapes and prediction
+          distributions
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 2000 samples is within recommended 500-10000 range. Three distinct
-          scenarios (well-calibrated, overconfident, underconfident) are all plausible
-          and neutral.
+        comment: 'Plausible but generic: models named only by calibration behaviour,
+          no application (defect line)'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Probability scale 0-1 is correct for this domain. 10 bins with equal
-          probability intervals (0.0-0.1, etc.) as specified.
+        passed: false
+        comment: 'Checked: curve shapes against the model labels and Brier values.
+          ''Well-calibrated'' runs far off the diagonal; ''Overconfident'' shows the
+          steep S of underconfidence and the best Brier (defect line)'
     code_quality:
       score: 10
       max: 10
@@ -198,65 +212,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward procedural code with no unnecessary functions or
-          classes. Data generation and plotting are direct and readable.
+        comment: Flat script, tidy df with column constants, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) ensuring deterministic output across runs.
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy. All imports
-          used.'
+        comment: os, matplotlib.pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Uses vectorized numpy operations efficiently. No fake UI or unnecessary
-          complexity.
+        comment: Vectorised bincount binning in one loop; a handful of lines only
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with f-string. Uses current API with no
-          bare 'plot.png' or deprecated methods.
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper Axes methods (ax.plot, ax.fill_between, ax.hist). Correct
-          figure creation with facecolor. Theme environment variable properly handled.
-          Fairly standard patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of fill_between for confidence bands, gridspec_kw for layout
-          control, and legend frame customization. Techniques are solid but somewhat
-          standard for matplotlib.
+        comment: Correct Axes API, subplots with sharex and height_ratios; standard
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-20T17:29:55Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
