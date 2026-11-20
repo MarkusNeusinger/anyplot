@@ -1,10 +1,10 @@
 # The visitors tile counts a visitor who stayed ten seconds and did something, in either order
 
 - Date: 2026-11-19
-- Proposed: after a week of measuring `stayed_10s`, what the visitors tile on `/stats` counts. Any
-  visit of ten seconds; ten seconds with an action within them; or ten seconds with an action or an
-  interaction such as copying code within them. And whether the tile counts visits or unique
-  visitors.
+- Proposed: after measuring `stayed_10s` since its deploy on 2026-11-14, what the visitors tile on
+  `/stats` counts. Any visit of ten seconds; ten seconds with an action within them; or that, or an
+  interaction such as copying code even without the ten seconds. And whether the tile counts visits
+  or unique visitors.
 - Decided: a visitor counts when they were on the site for ten seconds and did something (a pointer
   move, a click, the wheel, a finger, or a key), no matter whether the action came before or after
   the ten seconds. His reason was his own example: someone opens the page, fetches a coffee, then

@@ -582,8 +582,9 @@ keeps the clock and reports it.
   visitor who did something only after the ten seconds sent a `no` and
   nothing more, and isn't counted. The owner accepted that.
 - **Each send is checked when it comes.** Nothing is sent outside the live
-  site or while the admin's own use is muted. When the `no` wasn't sent for
-  either reason, a later input still sends its `yes`.
+  site or while the admin's own use is muted. When the `no` wasn't sent
+  because of the mute, an input that comes once the mute is off still sends
+  its `yes`; an input while it is on is used up and sends nothing.
 - **Never from a component.** `TrackEvent` leaves the name out, and
   `trackEvent` sends nothing for it.
 
@@ -595,8 +596,8 @@ every visit that stays ten seconds an engaged one for Plausible, with or
 without input, and give a one-page visit that stays a duration of about ten
 seconds where it had 0 before.
 
-A week of measurement came before the decision. Plausible's time on page
-couldn't answer it: on 2026-11-10 to 2026-11-13 it was 4 seconds for the
+The event was measured from its deploy on 2026-11-14 until the decision on
+2026-11-19. Plausible's time on page couldn't answer the question: on 2026-11-10 to 2026-11-13 it was 4 seconds for the
 farm-pattern visitors and 106 seconds for search visitors on a current
 Chrome, but that average holds only visits that sent an engagement signal
 when they left, and a page that is killed sends none. The event did. On

@@ -130,8 +130,9 @@ function noteSent(now: number): void {
  * thing sent: ten seconds collected across a long pause, or an input after it, would open a
  * visit of their own there, one without a page. Nor while the admin's own use is muted, nor
  * anywhere but on the live site: the moment comes from a timer, long after the pageview that
- * was checked. Each call is checked when it comes, so an input after a `no` that was not sent
- * can still send its `yes`: the visit stayed ten seconds and the visitor did something.
+ * was checked. Each call is checked when it comes: after a `no` the mute kept back, an input
+ * once the mute is off still sends its `yes`, since the visit stayed ten seconds and the visitor
+ * did something. An input while the mute is on is used up and sends nothing.
  */
 function sendStayed(input: boolean): void {
   const now = Date.now();

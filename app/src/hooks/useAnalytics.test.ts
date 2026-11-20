@@ -376,6 +376,19 @@ describe('useAnalytics', () => {
       expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'yes' }, interactive: false }]]);
     });
 
+    it('uses up an input that comes while the mute is on, and sends nothing for it', () => {
+      at('/scatter-basic');
+      const { result } = renderHook(() => useAnalytics());
+      result.current.trackPageview();
+      vi.advanceTimersByTime(STAY_MS);
+      setAnalyticsMuted(true);
+      noteStayInput();
+      setAnalyticsMuted(false);
+      noteStayInput();
+
+      expect(stayed()).toEqual([[STAYED_EVENT, { props: { input: 'no' }, interactive: false }]]);
+    });
+
     it('is not sent for a page that is never in front of the visitor', () => {
       page(false);
       at('/scatter-basic');
