@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 silhouette-basic: Silhouette Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-10
@@ -20,13 +20,14 @@ from plotnine import (
     ggplot,
     labs,
     scale_color_manual,
+    scale_x_continuous,
     theme,
     theme_minimal,
-    xlim,
 )
 from sklearn.cluster import KMeans
-from sklearn.datasets import load_iris
-from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.datasets import load_wine
+from sklearn.metrics import silhouette_samples
+from sklearn.preprocessing import StandardScaler
 
 
 # Theme tokens
@@ -36,105 +37,72 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette: all eight positions, one per cluster in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - Clustering iris dataset into 3 groups
-np.random.seed(42)
-iris = load_iris()
-X = iris.data
-n_clusters = 3
+# Columns: set these to your table's column names
+FLAVANOIDS = "flavanoids"  # role: samples
+COLOR = "color_intensity"  # role: extra
+PROLINE = "proline"  # role: extra
+CLUSTER = "Cluster"  # role: cluster_labels
+SILHOUETTE = "Silhouette coefficient"  # role: silhouette_values
 
-# Perform K-means clustering
-kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-cluster_labels = kmeans.fit_predict(X)
+# Data: replace this block with your own table, for example df = pd.read_csv("silhouettes.csv")
+# Wine chemistry (178 samples, 3 measurements), standardized and clustered with K-means (k = 4)
+df = load_wine(as_frame=True).frame[[FLAVANOIDS, COLOR, PROLINE]]
+features = StandardScaler().fit_transform(df)
+labels = KMeans(n_clusters=4, random_state=7, n_init=10).fit_predict(features)
+df[CLUSTER] = [f"Cluster {label + 1}" for label in labels]
+df[SILHOUETTE] = silhouette_samples(features, labels)
 
-# Calculate silhouette scores
-silhouette_vals = silhouette_samples(X, cluster_labels)
-avg_silhouette = silhouette_score(X, cluster_labels)
+# Plot: reads only df and the constants above
+GAP = 6  # empty rows between cluster blocks
+df = df.sort_values([CLUSTER, SILHOUETTE], kind="stable").reset_index(drop=True)
+cluster_names = df[CLUSTER].unique().tolist()
+block_index = df[CLUSTER].map({name: i for i, name in enumerate(cluster_names)})
+df["row"] = np.arange(len(df)) + block_index * GAP
 
-# Build dataframe for plotting - sort samples within each cluster by silhouette score
-data_rows = []
-y_position = 0
-cluster_centers = []
-cluster_avg_scores = []
+avg_score = df[SILHOUETTE].mean()
+x_min = min(0.0, df[SILHOUETTE].min())
+x_max = df[SILHOUETTE].max()
+label_x = x_max + 0.04
 
-for cluster_idx in range(n_clusters):
-    # Get samples in this cluster
-    mask = cluster_labels == cluster_idx
-    cluster_silhouettes = silhouette_vals[mask]
-    cluster_silhouettes_sorted = np.sort(cluster_silhouettes)
+summary = df.groupby(CLUSTER, sort=False).agg(row=("row", "mean"), avg=(SILHOUETTE, "mean"), n=(SILHOUETTE, "size"))
+summary = summary.reset_index()
+summary["label"] = [
+    f"{c}\navg {a:.2f} (n={n})" for c, a, n in zip(summary[CLUSTER], summary["avg"], summary["n"], strict=True)
+]
+summary["x"] = label_x
 
-    # Calculate cluster average
-    cluster_avg = cluster_silhouettes.mean()
-    cluster_avg_scores.append(cluster_avg)
+avg_label = pd.DataFrame({"x": [avg_score + 0.01], "y": [df["row"].max()], "label": [f"Overall avg {avg_score:.2f}"]})
 
-    # Track the center position for annotation
-    cluster_start = y_position
-
-    # Add each sample as a row
-    for sil_val in cluster_silhouettes_sorted:
-        data_rows.append({"y": y_position, "silhouette": sil_val, "cluster": f"Cluster {cluster_idx}"})
-        y_position += 1
-
-    cluster_end = y_position - 1
-    cluster_centers.append((cluster_start + cluster_end) / 2)
-
-    # Add small gap between clusters
-    y_position += 8
-
-df = pd.DataFrame(data_rows)
-df["x_start"] = 0  # Starting x position for horizontal bars
-
-# Create annotation dataframe for cluster labels
-annotation_df = pd.DataFrame(
-    {
-        "y": cluster_centers,
-        "x": [-0.08] * n_clusters,
-        "label": [f"Cluster {i}\n(avg: {cluster_avg_scores[i]:.2f})" for i in range(n_clusters)],
-    }
-)
-
-# Create average line label dataframe
-avg_label_df = pd.DataFrame(
-    {"x": [avg_silhouette + 0.02], "y": [max(df["y"]) * 0.95], "label": [f"Avg: {avg_silhouette:.2f}"]}
-)
-
-# Create the silhouette plot using horizontal segments
 plot = (
     ggplot()
-    + geom_segment(aes(x="x_start", xend="silhouette", y="y", yend="y", color="cluster"), data=df, size=1.5)
-    + geom_vline(xintercept=avg_silhouette, color=INK_SOFT, linetype="dashed", size=1.2, alpha=0.6)
-    + geom_text(aes(x="x", y="y", label="label"), data=annotation_df, size=12, ha="right", color=INK_SOFT)
-    + geom_text(aes(x="x", y="y", label="label"), data=avg_label_df, size=11, ha="left", color=INK_SOFT)
-    + scale_color_manual(values=IMPRINT)
-    + labs(
-        x="Silhouette Coefficient",
-        y="Sample Index (sorted within cluster)",
-        title="silhouette-basic · plotnine · anyplot.ai",
-    )
-    + xlim(-0.25, 1.0)
+    + geom_segment(aes(x=0, xend=SILHOUETTE, y="row", yend="row", color=CLUSTER), data=df, size=0.9)
+    + geom_vline(xintercept=avg_score, color=INK, linetype="dashed", size=0.6)
+    + geom_text(aes(x="x", y="row", label="label"), data=summary, size=8, ha="left", color=INK, lineheight=1.0)
+    + geom_text(aes(x="x", y="y", label="label"), data=avg_label, size=7, ha="left", va="bottom", color=INK_SOFT)
+    + scale_color_manual(values=IMPRINT_PALETTE, limits=cluster_names)
+    + scale_x_continuous(limits=(x_min - 0.05, x_max + 0.4), breaks=np.round(np.arange(-0.2, x_max + 0.1, 0.1), 1))
+    + labs(x=SILHOUETTE, y="Samples (sorted within cluster)", title="silhouette-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
+        text=element_text(size=7),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_y=element_blank(),
         panel_grid_minor_y=element_blank(),
-        panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.10),
-        panel_grid_minor_x=element_line(color=INK, size=0.2, alpha=0.05),
-        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
-        plot_title=element_text(size=24, color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text_x=element_text(size=16, color=INK_SOFT),
+        panel_grid_minor_x=element_blank(),
+        panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.12),
+        panel_border=element_blank(),
+        plot_title=element_text(size=12, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text_x=element_text(size=8, color=INK_SOFT),
         axis_text_y=element_blank(),
         axis_ticks_major_y=element_blank(),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
-        legend_position="right",
+        legend_position="none",
     )
 )
 
-# Save as PNG
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
