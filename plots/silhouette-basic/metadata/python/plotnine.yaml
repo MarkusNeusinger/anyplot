@@ -2,46 +2,48 @@ library: plotnine
 language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:58:40Z'
-updated: '2026-05-10T12:53:12Z'
-generated_by: claude-haiku
-workflow_run: 25628966958
+updated: '2026-11-20T18:11:01Z'
+generated_by: claude-sonnet
+workflow_run: 44787841550
 issue: 2334
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - 'Perfect theme adaptation: chrome correctly flips between light/dark while data
-    colors remain constant across both renders'
-  - Comprehensive silhouette plot with all required features (individual scores, cluster
-    grouping, average line, cluster averages)
-  - Professional typography and spacing; all text readable in both themes with no
-    legibility issues
-  - Clean, idiomatic plotnine code using high-level API and proper ggplot composition
-  - Correct Okabe-Ito palette (green, orange, blue) following specification
-  - 'Thoughtful visual hierarchy: bars primary, annotations secondary, reference line
-    provides context'
+  - 'Every characteristic of the spec is present: one bar per sample from zero, sorted
+    within cluster, color blocks separated by gaps, a dashed average line across all
+    clusters, and each cluster''s average beside its own block'
+  - Cluster annotations carry the cluster name, average and size in one aligned column
+    outside the data, so no legend is needed
+  - Real wine-chemistry data with four clusters of clearly unequal size and quality,
+    including a negative score
+  - Theme tokens threaded through every text element; data colors identical across
+    light and dark
+  - Clean Data/Plot separation with column constants; sorting and summaries done with
+    pandas sort_values and groupby
   weaknesses:
-  - Design Excellence is solid but not distinctive; follows guidelines well but lacks
-    unique visual sophistication or memorable styling
-  - Library Mastery shows good typical usage but limited distinctive features; more
-    advanced plotnine techniques could elevate the implementation
+  - 'Suggestion: the x axis starts at -0.1 for a single score near -0.02, leaving
+    a narrow empty strip left of zero; tightening the lower expansion would give the
+    bars a little more width.'
+  - 'Suggestion: drawing each cluster annotation in its cluster''s color (darkened
+    for the light theme) would tie the text to its block more directly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), properly rendered, not pure white
-      Chrome: Title "silhouette-basic · plotnine · anyplot.ai" clearly visible in dark text; axis labels "Silhouette Coefficient" and "Sample index (sorted within cluster)" readable; tick labels visible; cluster annotations on left visible in gray
-      Data: Three silhouette clusters shown as horizontal bars in green (#009E73), orange (#D55E00), blue (#0072B2) - Okabe-Ito positions 1-3; vertical dashed reference line at average (0.55) with label; cluster averages annotated; legend on right with "Cluster Assignment"
-      Legibility verdict: PASS - All text elements have excellent contrast and readability on light background
+      Background: warm off-white #FAF8F1, no border, x grid only, very faint.
+      Chrome: title 'silhouette-basic · python · plotnine · anyplot.ai' in dark ink at top centre (about half the width); x title 'Silhouette coefficient', y title 'Samples (sorted within cluster)'; x ticks -0.1 to 0.7 in soft ink; no y ticks. All readable.
+      Data: four stacked blocks of 178 sample bars from zero, sorted within cluster, bottom to top: Cluster 1 #009E73 (n=57, one bar slightly negative), Cluster 2 #C475FD (n=63), Cluster 3 #4467A3 (n=28), Cluster 4 #BD8233 (n=30), separated by gaps. Black dashed vertical line at the overall average 0.43 with 'Overall avg 0.43' above the top block. Right-hand column of annotations 'Cluster k / avg x.xx (n=..)' level with each block, clear of the bars.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), properly rendered, not pure black
-      Chrome: Title clearly visible in light text; axis labels readable in light text; cluster annotations visible in light gray; no dark-on-dark conflicts
-      Data: Colors IDENTICAL to light render - green, orange, blue bars unchanged; average line and labels visible; legend clearly readable
-      Legibility verdict: PASS - All text elements properly adapted to dark theme with light text (#F0EFE8 primary, #B8B7B0 secondary), excellent contrast, no legibility failures
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and annotations in light ink, ticks and the average label in soft light grey; no dark-on-dark text.
+      Data: block colors identical to the light render; the dashed average line flips to light ink and stays clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,68 +54,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set; perfectly readable in both themes
+        comment: All sizes set explicitly (title 12, axis titles 10, ticks 8, annotations
+          at tick size); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; excellent spacing throughout
+        comment: No text collisions; cluster annotations sit in a column right of
+          the longest bar, overall-average label above the top block
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars sized appropriately for density; all elements fully visible
+        comment: 178 one-row segments merge into solid tapered blocks, which the spec
+          permits; average line dashed and visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; no red-green sole signaling
+        comment: Four Imprint hues well apart in luminance and hue; each block also
+          labelled by text
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 proportions ideal; no clipping or waste
+        comment: 3200x1800, plot fills the canvas, annotation column uses the right-hand
+          space; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with range indicated; clear title format
+        comment: '''Silhouette coefficient'' (unitless quantity) and ''Samples (sorted
+          within cluster)'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; Okabe-Ito order followed; backgrounds correct;
-          both renders theme-adapted'
+        comment: 'Clusters 1-4 in Imprint order #009E73, #C475FD, #4467A3, #BD8233;
+          backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional and clean; intentional hierarchy; exemplary theme handling
-          but not distinctive
+        comment: The style-guide baseline; typography hierarchy is the standard one
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed; subtle x-axis grid; generous whitespace
+        comment: 'Beyond baseline: y ticks and y grid removed for the ordinal sample
+          axis, gaps between blocks, annotations aligned in one column outside the
+          data'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy; annotations guide interpretation; average
-          reference line adds context
+        comment: Data displayed with the annotations the Notes ask for; no hierarchy
+          chosen beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -123,27 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct silhouette plot; properly visualizes clustering quality
+        comment: Correct silhouette plot; no added layers beyond bars, average line
+          and cluster annotations
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bars, cluster grouping, average line, cluster
-          annotations, sklearn usage'
+        comment: Bars from zero sorted within cluster (C1), colored blocks with gaps
+          (C2), dashed average line across all clusters (C3), per-cluster average
+          beside each block (C4), sklearn silhouette_samples used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (silhouette coefficient), Y-axis (sample index) correct; all
-          data shown
+        comment: x = silhouette coefficient, y = sorted row order; the one negative
+          score (about -0.02) extends left of zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend properly identifies clusters
+        comment: Title 'silhouette-basic · python · plotnine · anyplot.ai'; legend
+          correctly suppressed, clusters named by the annotations
     data_quality:
       score: 15
       max: 15
@@ -153,20 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Individual scores, cluster grouping, average line, cluster averages
-          all present
+        comment: Clusters of unequal size (28-63) and quality, tapering blocks, a
+          negative score, clusters short of and past the average
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris with K-means clustering real-world plausible and neutral
+        comment: 'Wine chemistry (flavanoids, color intensity, proline) clustered
+          with K-means: real, neutral scientific data'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150 samples, 3 clusters, silhouette range (-1 to 1) sensible
+        comment: No check values in the spec; checked the overall average 0.43 is
+          the mean of silhouette_samples (equals silhouette_score) and the per-cluster
+          averages are groupby means of the plotted values
     code_quality:
       score: 10
       max: 10
@@ -176,57 +191,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward script; no unnecessary functions/classes
+        comment: Imports, constants, Data block, Plot block, save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeds set for numpy and KMeans
+        comment: 'Bundled dataset and KMeans random_state=7: deterministic'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Sorting and per-cluster summaries via pandas sort_values/groupby;
+          no written-out algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png
+        comment: Saves plot-{THEME}.png at 3200x1800 with current plotnine API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: High-level ggplot API throughout; clean theme composition
+        comment: Correct ggplot layering with per-layer data frames; standard usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: true
-        comment: Good grammar-of-graphics understanding; typical usage
+        comment: Generic grammar-of-graphics usage
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-20T18:06:50Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
   - layer-composition
+  - manual-ticks
   patterns:
   - dataset-loading
-  - iteration-over-groups
-  dataprep: []
+  - groupby-aggregation
+  dataprep:
+  - normalization
   styling:
-  - publication-ready
+  - grid-styling

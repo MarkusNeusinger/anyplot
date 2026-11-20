@@ -2,47 +2,50 @@ library: altair
 language: python
 specification_id: bar-error
 created: '2025-12-27T19:22:47Z'
-updated: '2026-05-10T14:53:54Z'
-generated_by: claude-haiku
-workflow_run: 25631537233
+updated: '2026-11-20T18:14:24Z'
+generated_by: claude-sonnet
+workflow_run: 44789862048
 issue: 2376
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - Excellent visual quality with all text legible in both light and dark themes
-  - Proper theme adaptation with no dark-on-dark failures
-  - Full spec compliance with all required features correctly implemented
-  - Clean idiomatic Altair code using layering for multi-mark composition
-  - Proper use of Okabe-Ito brand color and theme-adaptive chrome tokens
-  - Helpful annotation clarifies error bar meaning
+  - 'Correct canvas: inner view 620x320 at scale 4, padded (never cropped) to exactly
+    3200x1800 in both themes'
+  - 'Theme tokens threaded through every element: INK error bars stand out on the
+    green bars and on both pages'
+  - Value axis from zero spanning every error bar, categories in natural order with
+    the control group first
+  - Data block with column-role constants and escaped field names, so a user's own
+    table drops in
+  - Formatted HTML tooltips show group, response and SD on hover
   weaknesses:
-  - Design Excellence is solid but not exceptional - styling is functional rather
-    than distinctive
-  - Visual refinement could be enhanced with subtle bar edge colors, custom grid styling,
-    or emphasis techniques
+  - 'CQ-04 (code): lines 75-83 build the error bars from a mark_rule stem plus a transform_fold
+    mark_tick cap layer → one `base.mark_errorbar(ticks=True).encode(x=x_enc, y=alt.Y(LOWER,
+    type="quantitative"), y2=alt.Y2(UPPER))` layer with the tick size/thickness and
+    INK color set on the mark (altair). Likely cause: error bars hand-built instead
+    of using the native errorbar mark.'
+  - 'Suggestion: the caps render at the tick mark''s default opacity and look a shade
+    lighter than the stems; opacity=1 would make the error bar read as one stroke.'
+  - 'Suggestion: a ''Response rate (%)'' axis with ticks every 20 % would lighten
+    the grid.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title (28px), axis labels (22px), tick labels (18px) all clearly readable in dark text
-      Data: Green bars (#009E73, Okabe-Ito) with gray error bars featuring visible horizontal caps
-      Annotation: "Error bars: ±1 SD" positioned in top-right, secondary text color, fully legible
-      Grid: Subtle (10% opacity), does not compete with data
-      Legibility verdict: PASS - all elements readable against light background, no light-on-light issues
+      Background: warm off-white #FAF8F1, 3200x1800, chart centred with even padding
+      Chrome: title 'bar-error · python · altair · anyplot.ai' bold near-black, centred; y-axis 'Response rate (%)' 0-100 in steps of 10, x-axis 'Treatment group' with Control, Drug A, Drug B, Drug C, Combination; soft grey ticks and subtle horizontal grid; note 'Error bars: ±1 SD' top-left inside the plot. All readable.
+      Data: five #009E73 bars of equal width with even gaps (45.2, 62.8, 58.3, 71.5, 82.1); near-black error stems with caps at both ends (caps a shade lighter), all within the 0-100 axis
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title, axis labels, tick labels all clearly readable in light text
-      Data: Green bars identical to light render (#009E73), confirming proper theme adaptation
-      Error bars: Gray bars visible against dark background with clear caps
-      Annotation: "Error bars: ±1 SD" remains visible and readable
-      Grid: Subtle but visible
-      Legibility verdict: PASS - all elements readable, no dark-on-dark failures detected, brand green reads well on dark surface
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels and note in light grey; grid subtle; no dark-on-dark text
+      Data: identical #009E73 bars; error stems and caps flip to light ink and stand out on bars and page
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,68 +56,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit (28px title, 22px axes, 18px ticks). Readable
-          in both themes.
+        comment: Explicit sizes (title 18, axis titles 14, ticks 12, note 12); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text readable without collisions. Annotation well-positioned.
+        comment: No text collisions; the ±1 SD note sits in the empty top-left corner
+          clear of every error bar
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bars and caps clearly visible. Appropriate spacing.
+        comment: Five wide bars, error stems and caps clearly visible on bars and
+          page in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73, adequate contrast, no red-green dependency.'
+        comment: Single green series, INK error bars give strong contrast; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions (1600x900), nothing cut off, generous whitespace.
+        comment: Canvas 3200x1800 (no gate file); balanced margins, title ~39% of
+          width, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include units. Title format correct.
+        comment: '''Response rate (%)'' with unit, ''Treatment group'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Backgrounds correct. Both renders theme-correct.'
+        comment: 'Bars #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional and functional, annotation adds clarity. Not exceptional.
+        comment: 'Style-guide baseline: theme tokens, explicit sizes; nothing beyond
+          it'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Standard styling, clean and functional. Could add subtle bar edges
-          or custom grid.
+        comment: Spine and grid rules met; nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Visual hierarchy shows Combination treatment superiority. Straightforward
-          narrative.
+        comment: Data displayed in natural order (control first); no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar chart with error bars.
+        comment: Vertical bar chart with error bars, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: bars, values, symmetric errors, caps, annotation.'
+        comment: Caps at both ends, ±1 SD annotation, consistent widths/styling; C1-C4
+          all met (zero baseline, axis 0-100 spans every bar, control first)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: treatment groups, Y: response rate (0-100%), errors correctly
-          calculated.'
+        comment: Bars at their values, bounds = value ± SD computed from the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and error explanation.
+        comment: Title 'bar-error · python · altair · anyplot.ai'; annotation names
+          error meaning; no legend needed (single series)
     data_quality:
       score: 15
       max: 15
@@ -153,23 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: 5 categories, varied values (45.2-82.1), varied
-          errors (8.5-15.2).'
+        comment: Five groups with varied means and varied error magnitudes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Treatment comparison with measurement uncertainty is realistic and
-          neutral.
+        comment: Clinical treatment response rates, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response rate scale (0-100%) sensible, values span 35-95.
+        comment: Response rates 45-82 % with SD 8.5-15.2 %, all bounds inside 0-100
+          %
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -177,57 +184,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward: data, layers, combination. No unnecessary functions.'
+        comment: Imports, tokens, column constants, Data block, Plot, Save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data (explicit values).
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, altair, pandas.'
+        comment: os, altair, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, clear names. No fake UI.
+        passed: false
+        comment: Error bars hand-built from mark_rule + folded mark_tick where mark_errorbar(ticks=True)
+          draws both (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html. Current API (altair 6.1.0).
+        comment: Saves plot-{THEME}.png (padded to 3200x1800) and .html; Altair 6
+          API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper Chart().mark_bar().encode() pattern. Idiomatic layering with
-          alt.layer().
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: 'Good use of Altair strengths: encoding, layering, tooltips, interactive
-          export.'
+        comment: Chart/encode/layer pattern, escaped fields with type= and title=;
+          default, the native errorbar mark is not used
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: transform_fold draws both caps from one tick layer; formatted tooltips
+          in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-20T18:10:52Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - annotations
+  - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling: []
