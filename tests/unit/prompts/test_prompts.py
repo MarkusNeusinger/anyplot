@@ -1417,13 +1417,26 @@ class TestAdaptableCode:
             ".venv/bin/python -I /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \\\n"
             "    plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}"
         ) in step
-        assert "One attempt runs both commands" in step
-        assert "neither does readiness" in step
-        assert "without making the plot worse" in step
-        assert "Never remove an element the spec asks for to get rid of a refusal." in step
-        assert "A map spec is excluded" in step
-        assert "say so in the commit body" in step
+        # Each sentence that keeps a session from damaging a plot for a clean check, pinned on its own.
+        for sentence in (
+            "One attempt runs both commands, and you fix what both report before you re-render.",
+            "Adaptability never blocks the implementation, and neither does readiness",
+            "**Remove every refusal of the readiness check that you can remove without making the plot worse,**",
+            "**Never remove an element the spec asks for to get rid of a refusal.**",
+            "When the spec needs the construct, leave the refusal and say so in the commit body: a 3D trace in "
+            "plotly draws with WebGL, which the chat's renderer lacks, and a 3D spec still needs it.",
+            "**A map spec is excluded** (`readiness: excluded`)",
+            "**A refusal caused by a built-in example dataset the prompts allow** (`sns.load_dataset`, "
+            "`sklearn.datasets`) stays as it is.",
+            'never "fix" it by swapping the data scenario or writing the dataset out inline.',
+            "Never trade a defect in the render for a clean check.",
+            "When the chat's own tools fail on your file, that is a refusal of the file like any other (exit 1)",
+            "One check that cannot run doesn't end the other: keep fixing what the other reports within the three "
+            "attempts, then go on to Step 4.",
+        ):
+            assert sentence in step, sentence
         assert "Readiness self-check: accepted" in content
+        assert "Readiness self-check: refused (webgl), kept: the spec's 3D surface needs a WebGL trace" in content
         assert "Readiness self-check:` lines" in content  # the final check asks for it
         # On a regeneration, removing a refusal is a code change the regen mindset allows.
         mindset = next(
@@ -1434,24 +1447,54 @@ class TestAdaptableCode:
     def test_repair_runs_the_same_readiness_check(self) -> None:
         content = REPAIR_PROMPT.read_text()
         step = content[content.index("### Step 5b:") : content.index("## Step 6:")]
-        assert "/tmp/anyplot-readiness/automation/scripts/readiness_scan.py check" in step
-        assert "each running both commands" in step and "neither does readiness" in step
-        assert "Never remove an element the spec asks for" in step
+        assert (
+            ".venv/bin/python -I /tmp/anyplot-readiness/automation/scripts/readiness_scan.py check \\\n"
+            "    plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --spec-id {SPEC_ID} --library {LIBRARY}"
+        ) in step
+        for sentence in (
+            "At most three attempts in total, the first run included, each running both commands.",
+            "The self-check never blocks the repair, and neither does readiness",
+            "Remove every refusal of the readiness check that you can remove without making the plot worse",
+            "Such a fix is a named code-quality item, like a line of the self-check: keep the render the same.",
+            "Never remove an element the spec asks for to get rid of a refusal: when the spec needs the construct",
+            "leave the refusal and say so in the commit body.",
+            "A refusal caused by a built-in example dataset the prompts allow (`sns.load_dataset`, "
+            "`sklearn.datasets`) stays as well",
+            'never "fix" it by swapping the data scenario or writing the dataset out inline.',
+            "A map spec is excluded (`readiness: excluded`): there is nothing to fix.",
+            "Never trade a defect in the render for a clean check.",
+            "When the chat's own tools fail on your file, that is a refusal of the file like any other (exit 1).",
+            "If a command cannot run (exit 2), say so in the commit body and don't run it again. One check that "
+            "cannot run doesn't end the other: keep fixing what the other reports within the three attempts.",
+        ):
+            assert sentence in step, sentence
         assert "Readiness self-check: accepted" in content
 
+    # Rule ids and category names that are also plain English words, each with the use the steps make of it.
+    PLAIN_WORDS = {
+        "canvas": "Step 3c's pair comparison measures renders 'at the same canvas size'",
+        "size": "the same phrase",
+    }
+
     def test_the_readiness_steps_leave_the_rules_to_the_command(self) -> None:
-        """The command's output is the rule; a list of refused constructs in the prompt would drift from it."""
+        """The command's output is the rule; a list of refused constructs in the prompt would drift from it.
+
+        The names come from the validator and the readiness scan themselves: every rule id the validator emits and
+        every category the scan blocks for, so a new one is checked without editing this test.
+        """
         validator = (REPO_ROOT / "agents" / "anyplot" / "code" / "validate.py").read_text(encoding="utf-8")
-        rules = set(re.findall(r'(?:self\.add|Finding)\(\s*"([a-z]+-[a-z0-9-]+)"', validator))
-        assert {"banned-import", "banned-attribute", "banned-keyword", "url-literal"} <= rules
-        rules |= {"no-theme", "map-spec"}
+        readiness = (REPO_ROOT / "agents" / "anyplot" / "code" / "readiness.py").read_text(encoding="utf-8")
+        rules = set(re.findall(r'(?:self\.add|Finding)\(\s*"([a-z][a-z0-9-]*)"', validator))
+        rules |= set(re.findall(r"""f?["']([a-z][a-z-]*): """, readiness))
+        assert {"banned-import", "url-literal", "dunder", "rng", "syntax", "no-theme", "map-spec", "webgl"} <= rules
         generate, repair = GENERATE_PROMPT.read_text(), REPAIR_PROMPT.read_text()
         sections = [
             generate[generate.index("### Step 3c:") : generate.index("## Step 4:")],
             repair[repair.index("### Step 5b:") : repair.index("## Step 6:")],
         ]
         for section in sections:
-            assert not [rule for rule in sorted(rules) if re.search(rf"(?<![\w-]){re.escape(rule)}(?![\w-])", section)]
+            named = [rule for rule in sorted(rules) if re.search(rf"(?<![\w-]){re.escape(rule)}(?![\w-])", section)]
+            assert set(named) <= set(self.PLAIN_WORDS), named
             for construct in ("import json", ".format", "aes(", "class "):
                 assert construct not in section
 

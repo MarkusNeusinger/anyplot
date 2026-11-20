@@ -68,9 +68,12 @@ never reads that one, because the session can write anywhere on the runner::
 
     readiness_scan.py check FILE --spec-id S --library B
 
-Exit 0 accepted, excluded or not checked; 1 refused; 2 when it cannot run (an
-unreadable file, a validator from outside its tree, a normaliser or validator
-that crashes). Python exits 2 as well when the copy is missing.
+Exit 0 accepted, excluded or not checked; 1 refused; 2 when the check itself
+cannot run (an unreadable file, a validator from outside its tree, a broken
+copy). Python exits 2 as well when the copy is missing. A normaliser or
+validator that fails on the file is no such case: the scan records it as a
+refusal key (``error:<type>``, ``security:validator-failed``), so the check
+reports it as a refusal too, exit 1.
 """
 
 from __future__ import annotations
@@ -127,13 +130,18 @@ def _side(
 class _Scan:
     """One file's side of the record, and what only the session's check prints.
 
-    ``reasons`` holds every refusal in the validator's own words, each line number one of the scanned file;
-    ``failure`` says why the chat's normaliser or validator could not judge the file at all.
+    ``reasons`` holds every refusal in the validator's own words, each line number one of the scanned file. A
+    normaliser or validator that fails on the file is a refusal too: the chat cannot take the file either.
     """
 
     side: dict
     reasons: list[str] = field(default_factory=list)
-    failure: str | None = None
+
+
+# What a session can do about a normaliser or validator that fails on its file: the error names no line.
+_CRASH_ADVICE = (
+    "write the construct the error points at more plainly (often the one changed last) and run the check again"
+)
 
 
 def _validator() -> tuple[ModuleType, ModuleType, ModuleType, ModuleType, ModuleType]:
@@ -170,7 +178,8 @@ def _scan(code: str, *, spec_id: str, library: str) -> _Scan:
         normalised = normalise_module.normalise(stripped, library=library)
     except Exception as exc:  # a file the normaliser cannot take: the chat cannot open it either
         side = _side("error", refusals={f"error:{_token(type(exc).__name__.lower())}"}, spec_refused=map_spec)
-        return _Scan(side, failure=f"the chat's normaliser failed on this file: {_error(exc)}")
+        reason = f"error: the chat's normaliser fails on this file ({_error(exc)}), so the chat cannot open it"
+        return _Scan(side, [f"{reason} → {_CRASH_ADVICE}"])
     result = readiness.scan(normalised, spec_id=spec_id, library=library, enabled_libraries=[library])
     categories = {_token(reason.split(":", 1)[0].strip()) for reason in result.reasons}
     if result.status != "blocked":
@@ -187,21 +196,22 @@ def _scan(code: str, *, spec_id: str, library: str) -> _Scan:
         if _token(reason.split(":", 1)[0].strip()) not in ("map-spec", "security")
     ]
     counts: dict[str, int] = {}
-    failure = None
     if "security" in categories:
         try:
             # Every finding, not the scan's first five: the session needs each line, and the key needs each rule.
-            for finding in validate.validate_security(normalised, library=library):
-                rule = _token(finding.rule)
-                counts[rule] = counts.get(rule, 0) + 1
-                where = "" if finding.line is None else f" at line {lines.get(finding.line, finding.line)}"
-                reasons.append(f"security: {finding.rule}{where}: {finding.message}")
+            findings = validate.validate_security(normalised, library=library)
         except Exception as exc:  # the scan fails closed on a crashing validator, and so does the key
-            counts = {}
-            failure = f"the chat's validator failed on this file: {_error(exc)}"
+            findings = []
+            reason = f"security: validator-failed: the chat's validator fails on this file ({_error(exc)})"
+            reasons.append(f"{reason}, so the chat refuses it → {_CRASH_ADVICE}")
+        for finding in findings:
+            rule = _token(finding.rule)
+            counts[rule] = counts.get(rule, 0) + 1
+            where = "" if finding.line is None else f" at line {lines.get(finding.line, finding.line)}"
+            reasons.append(f"security: {finding.rule}{where}: {finding.message}")
         keys |= {f"security:{rule}" for rule in counts} or {"security:validator-failed"}
     side = _side("blocked", refusals=keys, spec_refused=map_spec, findings=counts)
-    return _Scan(side, sorted(reasons, key=_first_line), failure)
+    return _Scan(side, sorted(reasons, key=_first_line))
 
 
 def _relined(reason: str, lines: dict[int, int]) -> str:
@@ -240,8 +250,6 @@ def check(code: str, *, spec_id: str, library: str) -> tuple[int, list[str]]:
             f"readiness: excluded ({spec_id} is a map spec, which the chat refuses whatever the code holds; "
             "nothing to fix)"
         ]
-    if result.failure is not None:
-        return 2, [f"readiness: not run ({result.failure})"]
     if not side["refusals"]:
         return 0, ["readiness: accepted"]
     return 1, [*result.reasons, f"readiness: refused ({', '.join(side['refusals'])})"]

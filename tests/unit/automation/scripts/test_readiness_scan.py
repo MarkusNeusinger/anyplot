@@ -540,6 +540,55 @@ def test_a_line_that_lost_its_noqa_comment_still_maps_to_itself():
     assert lines[0].startswith(f"security: banned-import at line {_line_of(guarded, 'import json')}: ")
 
 
+HEAD_IMPORTS = "import os\n\nimport matplotlib.pyplot as plt\nimport pandas as pd\n"
+# The two guards the normaliser hoists (its "try guard" and "find_spec guard" steps): the guard lines go, and the
+# imports inside lose their indentation, so the guard becomes one replaced region of the normalised text.
+TRY_GUARD = CLEAN.replace(
+    HEAD_IMPORTS,
+    'import os\nimport sys\n\n\n_saved = sys.path[:]\nsys.path = [p for p in sys.path if p != ""]\n'
+    "try:\n    import json\n    import matplotlib.pyplot as plt\n    import pandas as pd\n"
+    "finally:\n    sys.path = _saved\n",
+)
+FIND_SPEC_GUARD = CLEAN.replace(
+    HEAD_IMPORTS,
+    "import importlib.util\nimport os\nimport sys\n\nimport pandas as pd\n\n\n"
+    'spec = importlib.util.find_spec("matplotlib")\n'
+    "if spec and spec.origin != __file__:\n    import json\n    import matplotlib.pyplot as plt\n"
+    "else:\n    cwd = os.getcwd()\n    sys.path = [p for p in sys.path if os.path.abspath(p) != cwd]\n"
+    "    try:\n        import matplotlib.pyplot as plt\n    finally:\n        sys.path.insert(0, cwd)\n",
+)
+
+
+@pytest.mark.parametrize(
+    ("code", "change"),
+    [(TRY_GUARD, "replaced the try/finally sys.path guard"), (FIND_SPEC_GUARD, "replaced the find_spec guard")],
+    ids=["try-finally", "find_spec"],
+)
+def test_a_refusal_inside_a_hoisted_guard_names_its_own_line(code, change):
+    """Mapped by position inside the region, the import landed on the guard's `try:` or on another import."""
+    from agents.anyplot.code.normalise import normalise_report
+
+    assert [line for line in normalise_report(code, library=LIB).changes if line.startswith(change)]
+    status, lines = check(code, spec_id=SPEC, library=LIB)
+    assert status == 1
+    assert lines[0].startswith(f"security: banned-import at line {_line_of(code, 'import json')}: ")
+
+
+def test_a_reason_over_several_lines_names_both_ends_in_the_file():
+    """The header drops six lines from the normalised text: both ends of a range move, one alone would not do."""
+    spread = FIXED_SAVE.replace('plt.savefig("plot-light.png")', 'plt.savefig(\n    "plot-light.png",\n    dpi=200,\n)')
+    first = _line_of(spread, "plt.savefig(")
+    status, lines = check(spread, spec_id=SPEC, library=LIB)
+    assert status == 1
+    assert f"savefig-target: single-theme savefig target 'plot-light.png' at lines {first}-{first + 3}" in lines
+
+
+def test_a_range_whose_ends_meet_in_the_file_is_one_line():
+    assert readiness_scan._relined("x at lines 3-5", {3: 7, 5: 9}) == "x at lines 7-9"
+    assert readiness_scan._relined("x at lines 3-4", {3: 7, 4: 7}) == "x at line 7"
+    assert readiness_scan._relined("syntax: line 3 does not parse", {3: 8}) == "syntax: line 8 does not parse"
+
+
 def test_check_prints_every_finding_not_only_the_scans_first_five():
     from agents.anyplot.code import normalise as normalise_module
     from agents.anyplot.code.validate import validate_security
@@ -617,7 +666,13 @@ def test_a_library_without_a_python_profile_is_not_checked():
     )
 
 
-def test_a_normaliser_that_crashes_is_a_check_that_could_not_run(monkeypatch):
+CRASH_ADVICE = (
+    "→ write the construct the error points at more plainly (often the one changed last) and run the check again"
+)
+
+
+def test_a_normaliser_that_fails_on_the_file_is_a_refusal_of_the_file(monkeypatch):
+    """The scan records it as a key, and the gate keeps the live file for it; the session must see it as one too."""
     from agents.anyplot.code import normalise as normalise_module
 
     def boom(code: str, *, library: str) -> str:
@@ -625,12 +680,17 @@ def test_a_normaliser_that_crashes_is_a_check_that_could_not_run(monkeypatch):
 
     monkeypatch.setattr(normalise_module, "normalise", boom)
     assert check(CLEAN, spec_id=SPEC, library=LIB) == (
-        2,
-        ["readiness: not run (the chat's normaliser failed on this file: ValueError: cannot normalise)"],
+        1,
+        [
+            "error: the chat's normaliser fails on this file (ValueError: cannot normalise), so the chat cannot "
+            f"open it {CRASH_ADVICE}",
+            "readiness: refused (error:valueerror)",
+        ],
     )
+    assert _record(CLEAN, CLEAN.replace("1, 2, 3, 4", "1, 2, 3, 5"))["added"] == []  # both sides fail alike
 
 
-def test_a_validator_that_crashes_is_a_check_that_could_not_run(monkeypatch):
+def test_a_validator_that_fails_on_the_file_is_a_refusal_of_the_file(monkeypatch):
     from agents.anyplot.code import validate
 
     def boom(code: str, *, library: str) -> list:
@@ -638,9 +698,31 @@ def test_a_validator_that_crashes_is_a_check_that_could_not_run(monkeypatch):
 
     monkeypatch.setattr(validate, "validate_security", boom)
     assert check(BANNED_IMPORT, spec_id=SPEC, library=LIB) == (
-        2,
-        ["readiness: not run (the chat's validator failed on this file: RuntimeError: validator down)"],
+        1,
+        [
+            "security: validator-failed: the chat's validator fails on this file (RuntimeError: validator down), "
+            f"so the chat refuses it {CRASH_ADVICE}",
+            "readiness: refused (security:validator-failed)",
+        ],
     )
+
+
+def test_a_crash_on_the_new_file_only_is_a_refusal_in_the_check_and_a_regression_in_the_record(monkeypatch):
+    """The two ends of one path: what the gate would keep the live file for, the session is told to fix."""
+    from agents.anyplot.code import normalise as normalise_module
+
+    real = normalise_module.normalise
+
+    def on_new_only(code: str, *, library: str) -> str:
+        if "import json" in code:
+            raise RecursionError("maximum recursion depth exceeded")
+        return real(code, library=library)
+
+    monkeypatch.setattr(normalise_module, "normalise", on_new_only)
+    record = _record(BANNED_IMPORT, CLEAN)
+    assert record["verdict"] == "regression" and record["added"] == ["error:recursionerror"]
+    status, lines = check(BANNED_IMPORT, spec_id=SPEC, library=LIB)
+    assert status == 1 and lines[-1] == "readiness: refused (error:recursionerror)"
 
 
 def test_a_validator_from_outside_the_scripts_tree_is_a_check_that_could_not_run(tmp_path, monkeypatch, capsys):
@@ -663,15 +745,63 @@ def test_a_file_the_check_cannot_read_is_a_check_that_could_not_run(tmp_path, ca
     assert capsys.readouterr().out.startswith(f"readiness: not run (cannot read {tmp_path / 'new.py'}: ")
 
 
-def test_the_check_writes_nothing(tmp_path, monkeypatch, capsys):
+# Runs the copy's scanner under an audit hook that records every file opened for writing, wherever it lives:
+# the self-check log the attempts are counted from is an absolute path outside any test directory.
+WRITE_WATCH = (
+    "import json, os, runpy, sys\n"
+    "writes = []\n"
+    "WRITING = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_APPEND\n"
+    "def hook(event, args):\n"
+    "    if event == 'open' and isinstance(args[2], int) and args[2] & WRITING:\n"
+    "        writes.append(str(args[0]))\n"
+    "sys.addaudithook(hook)\n"
+    "script = sys.argv.pop(1)\n"
+    "sys.argv[0] = script\n"
+    "status = 0\n"
+    "try:\n"
+    "    runpy.run_path(script, run_name='__main__')\n"
+    "except SystemExit as exc:\n"
+    "    status = exc.code\n"
+    "sys.stderr.write('WRITES ' + json.dumps(writes) + '\\n')\n"
+    "sys.exit(status)\n"
+)
+
+
+def test_the_check_writes_nothing(tmp_path):
     """No summary line, no record, no entry in the self-check log, whose lines count the attempts."""
+    tree = _bare_tree(tmp_path)
     (tmp_path / "new.py").write_text(BANNED_NAME, encoding="utf-8")
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary"))
-    code = readiness_scan.main(["check", "new.py", "--spec-id", SPEC, "--library", LIB])
-    assert code == 1
-    assert capsys.readouterr().out.endswith("readiness: refused (security:banned-name)\n")
-    assert sorted(path.name for path in tmp_path.iterdir()) == ["new.py"]
+    result = subprocess.run(
+        [sys.executable, "-I", "-B", "-c", WRITE_WATCH, str(tree / "automation" / "scripts" / "readiness_scan.py")]
+        + ["check", "new.py", "--spec-id", SPEC, "--library", LIB],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env={"PATH": "/usr/bin:/bin", "GITHUB_STEP_SUMMARY": str(tmp_path / "summary")},
+    )
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.endswith("readiness: refused (security:banned-name)\n")
+    (writes,) = [line.removeprefix("WRITES ") for line in result.stderr.splitlines() if line.startswith("WRITES ")]
+    assert json.loads(writes) == []
+    assert not (tmp_path / "summary").exists()
+
+
+def test_the_write_watch_sees_a_write_outside_the_working_directory(tmp_path):
+    """The watch itself: an append to an absolute path elsewhere, as a log line would be, is caught."""
+    elsewhere = tmp_path / "elsewhere" / "anyplot-selfcheck.jsonl"
+    elsewhere.parent.mkdir()
+    script = tmp_path / "appends.py"
+    script.write_text(f"open({str(elsewhere)!r}, 'a').write('x')\n", encoding="utf-8")
+    (tmp_path / "cwd").mkdir()
+    result = subprocess.run(
+        [sys.executable, "-I", "-B", "-c", WRITE_WATCH, str(script)],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path / "cwd",
+        env={"PATH": "/usr/bin:/bin"},
+    )
+    (writes,) = [line.removeprefix("WRITES ") for line in result.stderr.splitlines() if line.startswith("WRITES ")]
+    assert json.loads(writes) == [str(elsewhere)]
 
 
 def test_the_bare_copy_checks_the_sessions_file_without_the_agent_runtime(tmp_path):

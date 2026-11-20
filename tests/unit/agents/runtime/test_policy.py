@@ -47,6 +47,20 @@ class TestAdapterInstruction:
         assert source("prompts/default-style-guide.md").strip() in policy.adapter_instruction("matplotlib")
         assert source("prompts/library/seaborn.md").strip() in policy.adapter_instruction("seaborn")
 
+    def test_the_pipelines_readiness_self_check_stays_out_of_the_chat(self) -> None:
+        """The repair prompt's step for it is the pipeline's; the chat's adapter has no such command.
+
+        "Which weaknesses to fix" is cut verbatim out of the repair prompt, so a rule about the readiness
+        self-check belongs in that prompt's Step 5b, never in the excerpted section.
+        """
+        from core.constants import LIBRARY_LANGUAGES
+
+        weaknesses, _ = policy.repair_excerpts()
+        assert "Step 5b" not in weaknesses
+        for library in LIBRARY_LANGUAGES:
+            text = policy.adapter_instruction(library).lower()
+            assert "readiness" not in text and "readiness_scan" not in text, library
+
     def test_the_adapter_works_to_the_reviewers_rubric(self) -> None:
         """One source (owner, 2026-10-13): the adapter reads the very rubric sections the reviewer scores with,
         the anchors and the 5c/5d checks included, and the VQ-03 table only once."""

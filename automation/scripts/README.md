@@ -264,8 +264,10 @@ prompt), run from a copy that "Prepare the readiness self-check" makes at
 the validator as `scan` and prints every refusal in the validator's words,
 with its hint and with the line of the file as the session wrote it, then a
 verdict line (`readiness: accepted`, `refused (<keys>)`, `excluded`, `not run`,
-or `not checked` for a library without a Python profile). It writes nothing and exits 0 when there's nothing to fix, 1
-on a refusal, and 2 when it can't run. See
+or `not checked` for a library without a Python profile). It writes nothing
+and exits 0 when there's nothing to fix, 1 on a refusal (a normaliser or
+validator that fails on the file included, as the scan records it), and 2
+when the check itself can't run. See
 [Readiness self-check](../../docs/workflows/overview.md#readiness-self-check).
 
 ### `readiness_record.py`

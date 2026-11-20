@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.unit.workflows.test_adapt_generate_steps import SHELLS, _env, _names, _step
+from tests.unit.workflows.test_adapt_generate_steps import SHELLS, _env, _git, _names, _step, _workflow
 from tests.unit.workflows.test_readiness_scan_steps import SCANNER, SHELL_IDS, STEP, Runner
 
 
@@ -95,6 +95,19 @@ def test_the_prompt_runs_the_check_from_that_copy(workflow):
 # --- the gate's scan never reads the session's copy ------------------------------------------------
 
 
+def _code(script: str) -> str:
+    return "\n".join(line for line in script.splitlines() if not line.lstrip().startswith("#"))
+
+
+def _reads(script: str) -> set[str]:
+    """Every shell variable a step script reads."""
+    return set(re.findall(r"\$\{?([A-Za-z_]\w*)", _code(script)))
+
+
+def _assigns(script: str) -> set[str]:
+    return set(re.findall(r"(?:^|[;\s])([A-Za-z_]\w*)=", _code(script), re.MULTILINE))
+
+
 @pytest.mark.parametrize("workflow", WORKFLOWS)
 def test_the_gates_scan_names_no_path_of_the_sessions_copy(workflow):
     scan = _step(workflow, STEP)
@@ -104,6 +117,26 @@ def test_the_gates_scan_names_no_path_of_the_sessions_copy(workflow):
     script = str(scan["run"])
     assert 'TOOLS="$RUNNER_TEMP/readiness-tools"' in script
     assert script.index('rm -rf "$TOOLS"') < script.index('git archive "$GITHUB_SHA"')
+
+
+@pytest.mark.parametrize("workflow", WORKFLOWS)
+def test_no_channel_carries_the_sessions_copy_to_the_gates_scan(workflow):
+    """Not by name, and not through a variable: no `$GITHUB_ENV` line, no job or workflow `env`, nothing inherited.
+
+    Each script reads only what it assigns itself, its own step's `env`, and two runner values, so a variable
+    another step exported (`echo "X=$TOOLS" >> "$GITHUB_ENV"`, then `${X:-$TOOLS}`) fails here.
+    """
+    text = (ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
+    assert text.count("anyplot-readiness") == 1  # the prepare step's own `env`, nowhere else
+    document = _workflow(workflow)
+    assert "env" not in document and all("env" not in job for job in document["jobs"].values())
+    runner_values = {"RUNNER_TEMP", "GITHUB_SHA"}
+    for name in (PREPARE, STEP):
+        step = _step(workflow, name)
+        script = str(step["run"])
+        foreign = _reads(script) - _assigns(script) - set(step.get("env") or {}) - runner_values
+        assert foreign == set(), (name, foreign)
+    assert not re.search(r"GITHUB_(ENV|OUTPUT|PATH|STATE)", str(_step(workflow, PREPARE)["run"]))
 
 
 def _prepare(runner: Runner, workflow: str, shell: list[str], tools: Path, *, sha: str | None = None):
@@ -130,6 +163,10 @@ class TestPrepareStep:
         tools = tmp_path / "anyplot-readiness"
         (tools / "stale").mkdir(parents=True)
         (tools / "stale" / "left.py").write_text("x", encoding="utf-8")
+        # The workspace's own validator differs from the ref's in every file, as a checkout of another branch would.
+        tracked = _git(runner.ws, "ls-files", "agents", "core", "automation").splitlines()
+        for relative in tracked:
+            (runner.ws / relative).write_text(f"BRANCH {relative}\n", encoding="utf-8")
         result = _prepare(runner, workflow, shell, tools)
         assert result.returncode == 0, result.stdout + result.stderr
         assert f"::notice::readiness self-check: the validator from {runner.sha} is at {tools}" in result.stdout
@@ -147,6 +184,16 @@ class TestPrepareStep:
         # The ref's scanner, not the one the branch carries; the package files are empty, not the agent runtime.
         assert "Stub readiness_scan" in (tools / SCANNER).read_text(encoding="utf-8")
         assert [(tools / name).read_text() for name in ("agents/__init__.py", "agents/anyplot/__init__.py")] == ["", ""]
+        # Every other file, validator modules included, is byte for byte the ref's.
+        for relative in _files(tools):
+            if relative not in ("agents/__init__.py", "agents/anyplot/__init__.py"):
+                ref = subprocess.run(
+                    ["git", "-C", str(runner.ws), "show", f"{runner.sha}:{relative}"],
+                    capture_output=True,
+                    env=_env(),
+                    check=True,
+                ).stdout
+                assert (tools / relative).read_bytes() == ref, relative
 
     def test_without_the_workflow_ref_there_is_no_copy_and_no_failure(self, tmp_path, shell, workflow):
         runner = Runner(tmp_path, regeneration=True)
