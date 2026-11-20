@@ -419,12 +419,19 @@ TOOL_FORMS: dict[str, Row] = {
     "year_slash_twelve_hour": Row(
         ["2026/03/01 10:00 PM", "2026/3/2 12:00 AM"], ["2026-03-01T22:00:00", "2026-03-02T00:00:00"], with_time=True
     ),
+    "year_slash_one_digit_hour": Row(
+        ["2026/3/1 9:05", "2026/03/02 9:05:30"], ["2026-03-01T09:05:00", "2026-03-02T09:05:30"], with_time=True
+    ),
+    "year_slash_one_and_two_digit_hours": Row(
+        ["2026/3/1 9:05", "2026/3/1 10:30"], ["2026-03-01T09:05:00", "2026-03-01T10:30:00"], with_time=True
+    ),
 }
 """Forms the list took in because widely used tools write them and none needs a guess: a time followed by ` UTC`
 (BigQuery), the same moment as `Z`; a UTC offset after one space, `+0100` or `+01:00` (git, Ruby), the same moment as
 the offset written directly after the time; a 12-hour clock with `AM` or `PM` (US Excel), after any day of the list,
 `12 AM` as midnight and `12 PM` as noon; and a date with the year first and slashes (`2026/03/01`, East Asian locales),
-one or two digits for the month and the day, with a time as the ISO date takes it. The paste kept each of them as text
+one or two digits for the month and the day, with a time as the ISO date takes it or with a one-digit hour as the dot
+and slash dates take it (`2026/3/1 9:05`, as such a locale's spreadsheet shows it). The paste kept each of them as text
 before, and no conversion without a format read them; the paste types them now, a day with a month name with its note
 as before."""
 
@@ -528,6 +535,7 @@ class TestTheFormsToolsWrite:
             ["2026-03-01 10:00:00 UTC", "2026-03-02 10:00:00"],
             ["2026-03-01 10:00:00 +0100", "2026-03-02 10:00:00"],
             ["2026/03/01 10:00 UTC", "2026/03/02 10:00"],
+            ["2026/03/01 10:00 UTC", "2026/3/2 9:05"],
         ],
     )
     def test_times_with_and_without_a_zone_stay_text_and_are_refused(self, cells: list[str]) -> None:
@@ -639,6 +647,11 @@ UNLISTED: dict[str, tuple[list[str], str]] = {
     "twelve_hour_after_a_time": (["2026-03-01 10:00 11:00 AM", "2026-03-02 10:00 11:00 AM"], "text"),
     "locale_string_with_a_comma": (["3/1/2026, 10:00:00 AM", "3/2/2026, 2:30:00 PM"], "text"),
     "year_first_with_dots": (["2026.03.01", "2026.03.15"], "text"),
+    "iso_one_digit_hour": (["2026-03-01 9:05", "2026-03-02 9:05:30"], "text"),
+    "year_slash_one_digit_hour_with_a_fraction": (["2026/3/1 9:05:30.5", "2026/3/2 9:05:30.5"], "text"),
+    "year_slash_one_digit_hour_with_an_offset": (["2026/3/1 9:05+01:00", "2026/3/2 9:05 +0100"], "text"),
+    "year_slash_one_digit_hour_in_utc": (["2026/3/1 9:05 UTC", "2026/3/2 9:05 UTC"], "text"),
+    "year_slash_one_digit_hour_after_t": (["2026/3/1T9:05", "2026/3/2T9:05"], "text"),
     "year_first_slash_without_a_day": (["2026/03", "2026/04"], "text"),
     "dashes_day_first": (["15-03-2026", "16-03-2026"], "text"),
     "day_dashes_month_name": (["01-Mar-2026", "15-Mar-2026"], "text"),
@@ -654,7 +667,8 @@ UNLISTED: dict[str, tuple[list[str], str]] = {
 or a near miss of a form the list took in later (`TOOL_FORMS`): another spelling of `UTC`, a zone name, an offset
 without a time or of hours alone after a space, a zone after a date whose time takes none (a dot, a slash or a month
 name: only the ISO time and the year-first slash date's take an offset), `AM` and `PM` with dots, without minutes, after `T` or beside a zone,
-a comma after the year, the year first with dots."""
+a comma after the year, the year first with dots, a one-digit hour after an ISO date (as on main) or with a fraction,
+an offset or `T` after a year-first slash date."""
 
 DEFECTS: dict[str, list[str]] = {
     "range_of_days": ["2026-03-01-2026-03-05", "2026-03-06-2026-03-10"],

@@ -42,7 +42,8 @@ The operations:
   parser's own reader (`parse.read_dates`), so a cell converts when it is in a form the paste
   types: `2026-03-01`, also with a time after `T` (or `t`) or a space, seconds, a fraction and
   a UTC offset of −12:00 to +14:00 (`Z` or `z` for UTC, also ` UTC`, and an offset after one space,
-  ` +0100` or ` +01:00`); `2026/03/01` and `2026/3/1`, with a time as `2026-03-01` takes it;
+  ` +0100` or ` +01:00`); `2026/03/01` and `2026/3/1`, with a time as `2026-03-01` takes it or with a
+  one-digit hour as `01.03.2026` takes it (`2026/3/1 9:05`);
   `01.03.2026` and `1.3.2026`, `03/15/2026` or `15/03/2026`,
   and a day with a month name and a four-digit year (`8 Nov 2026`, `1. März 2026`,
   `March 1, 2026`), each also with a time, also on a 12-hour clock (`10:00:00 AM`); a month,

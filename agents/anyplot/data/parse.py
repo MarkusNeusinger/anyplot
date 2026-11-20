@@ -467,6 +467,11 @@ _ISO_STAMP = re.compile(r"([0-9]{4})-([0-9]{2})-([0-9]{2})" + _STAMP_TIME)
 _YEAR_SLASH_STAMP = re.compile(r"([0-9]{4})/([0-9]{1,2})/([0-9]{1,2})" + _STAMP_TIME)
 """A date with the year first and slashes (`2026/03/01`, `2026/3/1`), with a time as the ISO date takes it: the year,
 the month and the day stand in the ISO order, so no other cell has to settle which part is the month."""
+_YEAR_SLASH_DATE = re.compile(r"([0-9]{4})/([0-9]{1,2})/([0-9]{1,2})" + _LOCAL_TIME)
+"""The same date with a time as the dot and slash dates take it (`_LOCAL_TIME`), which reads a one-digit hour as a
+spreadsheet in a Japanese or Chinese locale shows it (`2026/3/1 9:05`, `2026/03/01 9:05:30`): such a time takes no
+fraction and no offset, as on those dates. An ISO date takes no one-digit hour (`2026-03-01 9:05` is no form of the
+list)."""
 _TWELVE_HOUR = re.compile(r"(.+) ([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))? ?(AM|PM|am|pm)")
 """A date followed by a time on a 12-hour clock (`3/1/2026 10:00:00 AM`, `2026-03-01 9:05pm`): after one space, an hour
 of one or two digits, minutes, optional seconds, and `AM` or `PM` in upper or lower case after one space or none. The
@@ -538,7 +543,8 @@ YEAR_MONTH = re.compile(r"([0-9]{4})-([0-9]{2})")
 DateShape = Literal["iso", "year_slash", "dot", "slash", "day_month", "month", "month_name"]
 DATE_SHAPES: tuple[DateShape, ...] = ("iso", "year_slash", "dot", "slash", "day_month", "month", "month_name")
 """The shapes of the date list in the order the paste tries them (`read_dates`): `2026-03-01` and `2026/03/01`, each
-with an optional time, also with a UTC offset (`_ISO_STAMP`, `_YEAR_SLASH_STAMP`), `01.03.2026` and `03/15/2026` or
+with an optional time, also with a UTC offset (`_ISO_STAMP`, `_YEAR_SLASH_STAMP`), the latter also with a one-digit
+hour (`_YEAR_SLASH_DATE`), `01.03.2026` and `03/15/2026` or
 `15/03/2026`, each with an optional time (`_DOT_DATE`, `_SLASH_DATE`), a day with a month name and a four-digit year,
 also with a time (`8 Nov 2026`, `1. März 2026`, `March 1, 2026`: `_DAY_MONTH_DATE`, `_MONTH_DAY_DATE`), `2026-03`
 (`YEAR_MONTH`), and a month name with a four-digit year (`Mar 2026`, `months.month_year`). Each day's time may also
@@ -547,8 +553,14 @@ pattern in `_date_shape` and its reader in `_READERS`: the paste and every conve
 then on."""
 _STAMP_SHAPES: dict[DateShape, re.Pattern[str]] = {"iso": _ISO_STAMP, "year_slash": _YEAR_SLASH_STAMP}
 """The shapes whose time is the ISO one (`_STAMP_TIME`): their cells keep a fraction and an offset (`_as_iso_stamps`)."""
-_NUMBERED_SHAPES: dict[DateShape, re.Pattern[str]] = {"dot": _DOT_DATE, "slash": _SLASH_DATE, "month": YEAR_MONTH}
-"""The shapes after those of `_STAMP_SHAPES` that are numbers alone, in the order `DATE_SHAPES` tries them."""
+_NUMBERED_SHAPES: dict[DateShape, re.Pattern[str]] = {
+    "year_slash": _YEAR_SLASH_DATE,
+    "dot": _DOT_DATE,
+    "slash": _SLASH_DATE,
+    "month": YEAR_MONTH,
+}
+"""The shapes that are numbers alone with a time of `_LOCAL_TIME` or none, in the order `DATE_SHAPES` tries them, after
+those of `_STAMP_SHAPES`: a year-first slash date reads here only what its ISO time does not take, a one-digit hour."""
 SPAN_WORDS: frozenset[str] = frozenset(
     {"season", "seasons", "saison", "saisons", "spielzeit", "temporada", "stagione", "seizoen", "sezon", "span"}
 )
@@ -3302,7 +3314,7 @@ def _type_column(column: _Column) -> None:
        fraction digits and the offset kept as written, an offset within −12:00 to +14:00,
        `utc_offset`, also after one space, ` +0100`, or written ` UTC`), the same with the
        year first and slashes (`2026/03/01`, `_YEAR_SLASH_STAMP`, one- or two-digit month and
-       day), `DD.MM.YYYY`, `DD/MM/YYYY` / `MM/DD/YYYY`, or a day with a month name
+       day, and also a one-digit hour as below, `_YEAR_SLASH_DATE`), `DD.MM.YYYY`, `DD/MM/YYYY` / `MM/DD/YYYY`, or a day with a month name
        and a four-digit year (`8 Nov 2026`, `1. März 2026`, `March 1, 2026`, with a note that
        counts them, `DAY_MONTH_DATES`), the last four with an optional ` HH:MM[:SS]` and one- or
        two-digit day and month; every day also with a 12-hour time (` 10:00:00 AM`,

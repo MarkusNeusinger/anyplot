@@ -17,7 +17,7 @@
   months such as 2026-03 or Mar 2026"). A format such as `YYYYMMDD` or
   `MM/YYYY` still reads its own
   form on request, and a form no format names, such as `1st March 2026` or
-  `2026/03/01`, is read by no conversion now. Before, a general reader
+  `2026.03.01`, is read by no conversion now. Before, a general reader
   guessed the format cell by cell: it read a range of days as its first day,
   hour labels `T00` to `T03` as one day four times, `-05:00` after a space as
   05:00, and month-first dates in one column partly day first, and the chat
