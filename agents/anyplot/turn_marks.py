@@ -29,8 +29,11 @@ The facts are the table's version, its column names and the bindings at both end
   is the turn's.
 * A turn that began without a table gets none: no role held a column it could have moved, and the first table's
   bindings are the defaults the data card shows.
-* A table that replaces the data (`generate_data`, `run_data_code`) is judged by names like any other: a name it has
-  again counts as the same column, so asking for `cos(x)` after `sin(x)` (`x` and `y` both times) marks nothing.
+* A turn in which a step replaced the data gets none, whatever else it did (`REPLACING_TOOLS`: `generate_data` and
+  `run_data_code`, the example data among them). Every role of a new table holds one of its columns, so a line per
+  role would only repeat what the step's own change line says, that the table is new, and the count would fill with
+  turns that reassigned nothing on the user's table. Marks are for a turn whose steps changed the table it began
+  with: `prepare_data`, a rebuild from an earlier version of the same data included, judged by the names.
 
 The lines join the turn's change lines in the `done` event only (`agents/main.py`, `_session_sync`), after the data
 steps' own. They never join the ledger's change lines, a stored version's or a tool result: the root reads none of
@@ -39,13 +42,20 @@ them. The `chat_turn` telemetry line counts the codes (`turn_marks`), never a ro
 
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from .schemas import MAX_NOTE_CHARS, Binding, DatasetProfile
 
 
+if TYPE_CHECKING:  # the ledger keeps the turn's start as `TableFacts`, so it imports this module
+    from .plugins.ledger import ToolCall
+
+
 TurnMark = Literal["axis_moved", "new_column_bound"]
 """The closed codes of the marks, in the order a role's codes are listed."""
+REPLACING_TOOLS = frozenset({"generate_data", "run_data_code"})
+"""The root's tools whose stored version replaces the data instead of changing it (`push_version(rebind=True)`): a
+turn with such a call gets no mark (pinned to ToolSafety's names by a test)."""
 
 
 @dataclass(frozen=True)
@@ -102,11 +112,13 @@ class RoleMark:
     line: str
 
 
-def turn_marks(start: TableFacts | None, end: TableFacts | None) -> list[RoleMark]:
+def turn_marks(start: TableFacts | None, end: TableFacts | None, calls: Iterable["ToolCall"] = ()) -> list[RoleMark]:
     """The marks of a turn from the table it began on (`start`) to the one it ended on (`end`): one per role that a
     mark fires on, in the order of the start's bindings and then the end's. Empty when the turn changed no table (the
-    same version at both ends) or began or ended without one."""
-    if start is None or end is None or start.dataset_id == end.dataset_id:
+    same version at both ends), began or ended without one, or replaced the data: one of its root `calls` (the ledger's
+    record) is a `REPLACING_TOOLS` call that stored a version."""
+    replaced = any(call.tool in REPLACING_TOOLS and call.outcome == "changed" for call in calls)
+    if start is None or end is None or start.dataset_id == end.dataset_id or replaced:
         return []
     before, now = dict(start.bindings), dict(end.bindings)
     marks: list[RoleMark] = []

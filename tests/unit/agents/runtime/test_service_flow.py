@@ -3335,9 +3335,6 @@ async def test_generate_data_on_a_paste_is_the_next_version_and_undo_restores_th
     assert done["dataset"]["changes"] == [
         "generated 5 rows: x from -1 to 1, y = log(x)",
         "y: 3 of 5 values are undefined and left empty",
-        # The table replaced the paste, so both roles hold its columns now: the server's marks name them.
-        "x takes the new column 'x' instead of 'Study Hours'",
-        "y takes the new column 'y' instead of 'Exam Score'",
     ]
     # A generated table starts from the default bindings for its columns.
     assert done["dataset"]["bindings"] == [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]

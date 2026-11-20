@@ -19,16 +19,19 @@ import httpx
 import pytest
 
 from agents.anyplot import pipeline, telemetry, turn_marks
-from agents.anyplot.plugins.ledger import RequestLedger
+from agents.anyplot.plugins.ledger import RequestLedger, ToolCall
+from agents.anyplot.plugins.tool_safety import DATA_CODE_TOOL, GENERATE_TOOL
 from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_NOTE_CHARS, Binding
 from agents.anyplot.services import Services
 from agents.anyplot.session_state import SUMMARY_PENDING, confirmation_fingerprint, read_session
+from agents.anyplot.tools.session import DATA_CODE_CHANGE, EXAMPLE_DATA_CHANGE
 from agents.anyplot.turn_marks import RoleMark, TableFacts, mark_codes, table_facts
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import default_script
+from .test_data_code_tool import SNIPPET
 from .test_paste_conversions import SID, block_now, open_spec, paste, pasted, say
-from .test_service_flow import HEADERS, USER, _session_state, permissive_queue, prepare_call
+from .test_service_flow import HEADERS, SINE_LINE, USER, _session_state, generate_call, permissive_queue, prepare_call
 
 
 def facts(dataset_id: str, columns: str, **bindings: str) -> TableFacts:
@@ -92,6 +95,23 @@ class TestTheMarks:
         start = facts("v1", "Hours,Score", x="Hours", y="Score")
 
         assert marks(start, facts("v1", "Hours,Score", x="Score", y="Hours")) == []
+
+    def test_a_turn_in_which_a_step_replaced_the_data_has_none_whatever_else_it_did(self) -> None:
+        """A new table puts its own columns on every role: the step's change line says so, a mark would repeat it. A
+        replacing call that stored nothing replaced nothing, and a change of the table is marked as before."""
+        start = facts("v1", "Hours,Score", x="Hours", y="Score")
+        end = facts("v3", "x,y", x="x", y="y")
+        moved = marks(start, end)
+
+        for tool in turn_marks.REPLACING_TOOLS:
+            assert turn_marks.turn_marks(start, end, [ToolCall(tool, outcome="changed")]) == []
+            assert len(turn_marks.turn_marks(start, end, [ToolCall(tool, outcome="error")])) == len(moved) == 2
+        prepared = [ToolCall("prepare_data", outcome="changed"), ToolCall("set_bindings", outcome="changed")]
+        assert len(turn_marks.turn_marks(start, end, prepared)) == 2
+
+    def test_the_replacing_tools_are_the_tools_that_store_a_new_table(self) -> None:
+        assert turn_marks.REPLACING_TOOLS == {GENERATE_TOOL, DATA_CODE_TOOL}
+        assert turn_marks.REPLACING_TOOLS < telemetry.TOOL_NAMES
 
     def test_a_turn_without_a_table_at_either_end_has_none(self) -> None:
         """No role held a column it could have moved: the first table's bindings are the defaults the card shows."""
@@ -294,6 +314,47 @@ async def test_a_turn_that_only_re_binds_has_no_dataset_and_no_mark(
     name, done = events[-1]
     assert name == "done" and "dataset" not in done
     assert done["bindings"] == [{"role": "x", "column": HUMID}, {"role": "y", "column": TEMP}]
+    (turn,) = chat_turns(caplog)
+    assert turn["turn_marks"] == []
+
+
+async def test_a_formula_over_a_paste_replaced_the_table_and_has_no_mark_whatever_else_the_turn_did(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The generated table puts its own columns on both roles, and the turn swaps them after: its change line says the
+    table is new, and no line repeats it for each role."""
+    caplog.set_level(logging.INFO)
+    script = default_script()
+    script["root"] = [generate_call(("y", "sin(x)")), bind_call(x="y", y="x"), {"text": "A sine, axes swapped."}]
+    swap_models("anthropic-vertex", script)
+    sid = await readings_session(client, runtime)
+
+    events = await say(client, sid, {"text": "plot a sine instead, with the axes swapped"})
+
+    name, done = events[-1]
+    assert name == "done" and done["bindings"] == [{"role": "x", "column": "y"}, {"role": "y", "column": "x"}]
+    assert done["dataset"]["changes"] == [SINE_LINE]
+    (turn,) = chat_turns(caplog)
+    assert turn["turn_marks"] == []
+
+
+@pytest.mark.parametrize(("source", "change"), [("python", DATA_CODE_CHANGE), ("example", EXAMPLE_DATA_CHANGE)])
+async def test_a_table_computed_from_code_over_a_paste_replaced_it_and_has_no_mark(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture, source: str, change: str
+) -> None:
+    """The user's code, or example data, makes a new table with its own columns on both roles: no line per role."""
+    caplog.set_level(logging.INFO)
+    script = default_script()
+    run = {"call": "run_data_code", "args": {"code": SNIPPET, "source_language": source}}
+    script["root"] = [run, {"text": "4 rows, 2 columns from the code."}]
+    swap_models("anthropic-vertex", script)
+    sid = await readings_session(client, runtime)
+
+    events = await say(client, sid, {"text": "use this code for the data instead"})
+
+    name, done = events[-1]
+    assert name == "done" and done["bindings"] == [{"role": "x", "column": "x"}, {"role": "y", "column": "y"}]
+    assert done["dataset"]["changes"] == [f"{change}: 4 rows, 2 columns"]
     (turn,) = chat_turns(caplog)
     assert turn["turn_marks"] == []
 

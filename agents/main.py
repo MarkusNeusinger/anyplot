@@ -2548,11 +2548,12 @@ async def _after_turn(runtime: Runtime, user: str, sid: str, facts: TurnFacts, l
 
 def _turn_marks(ledger: RequestLedger, view: SessionView, sid: str) -> tuple[RoleMark, ...]:
     """What the turn did to the plot's roles (`turn_marks.py`), from where the root's steps began to the table and
-    bindings it ended with; never raises, since a mark must never cost the turn its `done`."""
+    bindings it ended with, none when a step of the turn replaced the data (the record of its calls); never raises,
+    since a mark must never cost the turn its `done`."""
     try:
         stored = get_services().datasets.get(view.dataset_id, sid) if view.dataset_id else None
         end = table_facts(stored.dataset_id, stored.profile, view.bindings) if stored is not None else None
-        return tuple(turn_marks(ledger.marks_from, end))
+        return tuple(turn_marks(ledger.marks_from, end, ledger.tool_calls))
     except Exception as exc:
         logger.warning("turn marks failed: %s", type(exc).__name__)
         return ()

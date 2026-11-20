@@ -6,7 +6,8 @@
   silently. Such a turn's change lines now end with one line per axis in the
   server's own words, such as `x takes the new column 'Day no' instead of
   'Air temp'` or `y lost its column 'Rel humidity' and holds none now`. A turn
-  that only re-binds, the server's own conversions of a paste and a renamed
-  column get no line, and nothing is blocked. The assistant never reads these
+  that only re-binds, a turn whose formula or code replaced the table, the
+  server's own conversions of a paste and a renamed column get no line, and
+  nothing is blocked. The assistant never reads these
   lines. The usage telemetry counts the marks by their closed codes, never by
   a role or a column.
