@@ -5,8 +5,7 @@
   test runs of one request the assistant did so unasked, and the page took the new bindings silently. Three options:
   show a line in the server's words for each reassigned axis; also keep a column on an axis that still has it; or
   run a second reader on every turn that changes the data.
-- Decided: show the line and block nothing, on a turn whose steps changed the table it began with, not on one that
-  replaced it with a new table. The marks are a list that grows when needed. A second reader may come
+- Decided: show the line and block nothing. The marks are a list that grows when needed. A second reader may come
   later, only on the marked turns, only if the count calls for it, counted first and behind a switch. His reasons:
   one unasked change in five test runs is thin; a good enough model or clear enough rules make a second reader
   unnecessary; and the assistant must not get more input than it has.
