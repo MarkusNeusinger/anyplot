@@ -210,7 +210,7 @@ export function LegalPage() {
                       public dashboard
                     </Link>
                     : no cookies, no cross-site id, no IP address kept. search texts sent up to and
-                    including november 2026 still show there.
+                    including november 2026 are still stored by Plausible, no longer shown.
                     <Kept items={[['where', 'Plausible Analytics (EU, proxied)']]} />
                   </>,
                 ],

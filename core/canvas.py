@@ -14,6 +14,12 @@ agents service, ``docs/concepts/agent-network.md``) exists.
 ``tests/unit/core/test_canvas.py`` runs the workflow's script and this module on
 the same PNGs and requires identical output.
 
+This module measures one render. The step measures ``plot-dark.png`` as well:
+it requires both renders on the same target, tags each defect line with the
+render that missed (``(both)`` when the two drifted alike, the line this module
+writes), and adds the dark render's fields to its notice line after
+``attempt=``. That part has no copy here; the parity tests compare the rest.
+
 The two auto-reject checks of ``prompts/quality-criteria.md`` that only need the
 PNG are here as well: AR-04 (``check_blank``: under 10 KB, or more than 95 % of
 the pixels one color) and AR-07 (``check_format``: the file is a PNG). They are
@@ -274,7 +280,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m core.canvas", description="Check a rendered PNG against the 3200x1800 / 2400x2400 canvas."
     )
-    parser.add_argument("png", type=Path, help="the rendered PNG (the pipeline gates plot-light.png)")
+    parser.add_argument("png", type=Path, help="one rendered PNG (run it once per theme render)")
     parser.add_argument("--library", default="", help="library id; picks the likely-cause hint")
     parser.add_argument("--attempt", default=None, help="attempt number for the notice line")
     parser.add_argument("--out", type=Path, default=None, help="write the defect line here on drift")

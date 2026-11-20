@@ -2,128 +2,136 @@ library: altair
 language: python
 specification_id: heatmap-clustered
 created: '2025-12-25T19:23:15Z'
-updated: '2026-05-09T08:56:34Z'
-generated_by: claude-haiku
-workflow_run: 25596944956
+updated: '2026-11-20T01:38:57Z'
+generated_by: claude-sonnet
+workflow_run: 44654204172
 issue: 2021
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/altair/plot-dark.html
-quality_score: 94
+quality_score: 79
 review:
   strengths:
-  - 'Excellent theme adaptation: both light and dark renders are fully legible with
-    no contrast issues or dark-on-dark failures. Dendrograms properly styled with
-    INK_SOFT colors that flip appropriately between themes.'
-  - 'Complete spec implementation: hierarchical clustering with dendrograms on both
-    axes, diverging colormap centered on zero, colorbar legend, and data reordering
-    all correctly implemented using scipy and Altair''s APIs.'
-  - 'High code quality: clean structure, proper use of random seed for reproducibility,
-    efficient dendrogram coordinate transformation, and idiomatic Altair patterns
-    for layout composition (hconcat/vconcat).'
-  - 'Publication-ready styling: professional proportions, appropriate font sizes (title=28,
-    axis labels=22, ticks=18) for large canvas, subtle grid (10% opacity), theme-adaptive
-    legend styling with background and stroke colors.'
-  - 'Interactive visualization: proper use of .interactive() for genuine zoom/pan
-    capability and tooltips showing gene, sample, and expression value on hover.'
+  - Row dendrogram leaves sit exactly on their gene rows (leaf y ≈ tick y within 2
+    px) and merge heights are readable in both themes
+  - Imprint diverging ramp centered on zero with domainMid=0 and a theme-adaptive
+    midpoint, plus a color bar titled with its unit, 'Expression (log2 ratio)'
+  - 'Idiomatic Altair dendrograms: mark_rule with x2/y2 segments from scipy''s icoord/dcoord
+    and a reversed scale domain so the row tree grows left'
+  - 'Native Altair interactivity in the HTML output: tooltips with gene, sample, and
+    expression to two decimals, plus zoom and pan via .interactive()'
   weaknesses:
-  - 'Optional enhancement: specification suggests ''consider adding row/column color
-    bars for group annotations'' — not implemented, though this is marked as optional
-    (''consider'') in the spec. Could enhance the visualization by grouping genes/samples
-    by detected clusters.'
+  - 'SC-02 (both): the column dendrogram''s leaves stand about 256 px (≈3.2 columns)
+    left of their columns: leaves at x≈360–1462 while the cell centers run x≈615–1719,
+    so the leftmost leaves hang over the gene-label gutter and no leaf sits on its
+    own sample (spec C1) → each leaf centered over its column (+256 px). Likely cause:
+    hconcat(corner, col_dendro_chart) gives the corner only DENDRO=70 view px while
+    the heatmap''s y-axis labels and ''Genes'' title add about 64 view px left of
+    the cells; lay the four views out as one aligned grid (alt.concat(corner, col_dendro_chart,
+    row_dendro_chart, heatmap, columns=2)) or widen the corner by the y-axis extent.'
+  - 'VQ-01 (both): axis tick labels (Gene_xx, Sample_xx) at labelFontSize=9, below
+    the 10 px altair reference, read smaller than the 10 px color-bar labels → 10
+    px (+1). Likely cause: labelFontSize=9 in both alt.Axis calls.'
+  - 'DQ-02 (both): rows and columns are labelled Gene_01…Gene_20 and Sample_01…Sample_15,
+    placeholders that read generic → real-looking gene symbols and sample or condition
+    names. Likely cause: the f-string label lists in the DataFrame constructor.'
+  - 'CQ-01 (code): a branches() helper function (lines 68–76) breaks the Imports →
+    Data → Plot → Save, no-functions structure → build the two segment tables inline.
+    Likely cause: the helper wrapping the icoord/dcoord loop.'
+  - 'Suggestion: row or column color strips for the four gene groups, which the Notes
+    allow, would name the clusters the dendrograms reveal.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) with subtle visual separation from white. Title "heatmap-clustered · altair · anyplot.ai" in dark text is clearly visible at top. Dendrograms on left and top are rendered as thin gray lines (#4A4A44) showing hierarchical clustering structure. Main heatmap displays a 20×15 gene-sample matrix with cells colored using brownbluegreen diverging colormap (negative values = brown, zero = cream, positive values = teal-green). Colorbar legend on right shows "Expression" scale from -4 to +6. Gene labels (Gene_01-Gene_20) on Y-axis and Sample labels (Sample_01-Sample_15) on X-axis are in dark gray text at appropriate font sizes. All axes are clearly labeled "Genes" and "Samples". Grid is visible but subtle (10% opacity).
-      Legibility verdict: PASS — All text is readable against the light background. No contrast issues detected.
+      Background: warm off-white #FAF8F1 on a 2400x2400 square canvas, padded evenly; no pure white.
+      Chrome: bold title "heatmap-clustered · python · altair · anyplot.ai" in near-black at top center; axis titles "Genes" (rotated) and "Samples" in INK; gene and sample tick labels in dark grey INK_SOFT, sample labels rotated -45°; color bar on an elevated #FFFDF6 panel with a thin grey frame, title "Expression (log2 ratio)", ticks -4…6. All readable.
+      Data: 20x15 matrix of rect cells in the Imprint diverging ramp (matte red #AE3030 for negative values, off-white at 0, blue #4467A3 for positive values, with Vega's HCL interpolation giving tan and teal in between). Four co-expression blocks emerge after reordering. Row dendrogram on the left in INK_SOFT 1.5 px rules, leaves aligned with the gene rows. Column dendrogram on top, but its leaves sit about 3 columns left of the cells they belong to.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) with appropriate visual separation from pure black. Title and all axis labels are rendered in light text (#F0EFE8) that stands out clearly against the dark background. Dendrograms are rendered in light gray (#B8B7B0), remaining clearly visible. The heatmap cell colors are identical to the light render (confirming only chrome flips between themes). Colorbar legend has dark theme styling with darker background (#242420) and light text, maintaining visual hierarchy. Gene and sample labels are in light gray, fully readable. The diverging colormap values range is identical.
-      Legibility verdict: PASS — All text is readable against the dark background. No dark-on-dark failures; dendrogram lines and grid are appropriately visible. Brand colors and data differentiation are maintained.
+      Background: warm near-black #1A1A17; no pure black.
+      Chrome: title and axis titles in light #F0EFE8; tick labels in light grey #B8B7B0; color bar panel #242420 with a light frame, title and labels light. No dark-on-dark text.
+      Data: the same red and blue endpoints; the ramp's midpoint is the dark page color, so near-zero cells fade into the background and strong values read as teal or blue and orange or red. Dendrograms in light grey are clearly visible, with the same column-dendrogram offset as in the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set and readable in both themes. Title=28,
-          axis labels=22, ticks=18 — all clearly visible.
+        comment: All text readable in both themes; axis tick labels at labelFontSize=9
+          sit below the 10 px altair reference (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Sample labels rotated -45°, no collisions. All text well-spaced and
-          readable.
+        comment: Rotated sample labels clear each other; 'Genes' title clear of the
+          row dendrogram and the gene labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells, dendrograms, and grid all clearly visible. Dendrogram
-          lines (strokeWidth=1.5) stand out against background.
+        comment: 300 cells clearly drawn; dendrogram rules at 1.5 px in INK_SOFT visible
+          on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses brownbluegreen (BrBG) diverging colormap, colorblind-safe and
-          appropriate for centered data.
+        comment: Red-to-blue diverging ramp, CVD-safe, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Excellent proportions: empty corner (top-left), dendrograms integrated
-          on edges, main heatmap centered. Nothing cut off.'
+        comment: 2400x2400 square, title ~83% of plot width (expected for mandated
+          title), nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''heatmap-clustered · altair · anyplot.ai''.
-          Axes labeled ''Genes'' and ''Samples''.'
+        comment: Genes, Samples, and color bar 'Expression (log2 ratio)' with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Diverging colormap correct for continuous centered data. Plot backgrounds
-          match spec (#FAF8F1 light, #1A1A17 dark). Both renders theme-correct with
-          only chrome flipping.'
+        comment: 'imprint_div range #AE3030 / theme midpoint / #4467A3 with domainMid=0
+          as the altair prompt prescribes; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Professional styling with custom dendrogram visualization. Theme-adaptive
-          colors throughout. Functional elegance rather than striking design.
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: 'Well-refined: subtle grid (10% opacity), generous whitespace, clean
-          dendrogram rendering. Could add slightly more polish.'
+        passed: false
+        comment: Axis-free dendrograms and a frameless view meet the baseline; nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Strong visual hierarchy through clustering structure. Colors guide
-          viewer to expression patterns. Clear focal point through dendrogram groupings.
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -131,30 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: clustered heatmap with dendrograms on both axes.'
+        comment: 'Clustermap: heatmap with row and column dendrograms'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All features present: heatmap, dendrograms (rows & columns), diverging
-          colormap, colorbar, reordered data.'
+        passed: false
+        comment: 'C1 broken for columns: column dendrogram leaves sit ~3 columns left
+          of their cells (defect line). Row dendrogram aligned; C2 reorder, C3 diverging
+          + color bar, C4 distinguishable merge heights met; C5 not drawn (conditional)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Sample labels, Y=Gene labels, color=Expression values (domain centered
-          on zero). All data shown.
+        comment: Samples on x, genes on y, expression on color, all 300 cells shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows 'Expression' with colorbar scale.
-          All labels clear.
+        comment: Title 'heatmap-clustered · python · altair · anyplot.ai'; color bar
+          titled for a reader
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -162,91 +170,90 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of plot type: 2D matrix, hierarchical structure,
-          color scale, cluster visualization.'
+        comment: Four planted co-expression blocks emerge after reordering; dendrograms
+          show distinct merge levels
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Gene expression data is realistic. Clustered patterns show co-expression
-          (authentic use case). Neutral, scientific context.
+        comment: Gene expression is plausible and neutral, but Gene_01/Sample_01 placeholder
+          labels read generic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 genes × 15 samples within spec (10-100 rows, 10-50 columns). Values
-          (-4 to +6) realistic for log-expression. Readable at large canvas.
+        comment: log2 ratios about -5 to +6, 20x15 inside the Data range; no Check
+          values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No unnecessary functions/classes. Linear flow. Straightforward clustering
-          and visualization logic.
+        comment: branches() helper function at lines 68-76 (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42). Deterministic data generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, altair, numpy, pandas, scipy. No unused imports.'
+        comment: All imports used (PIL for the pad step)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code. Uses .interactive() for real zoom/pan (not
-          simulated). Appropriate complexity.
+        comment: scipy linkage/dendrogram, DataFrame.stack for the long table
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-{THEME}.png and plot-{THEME}.html. Current Altair API.
+        comment: plot-{THEME}.png padded to 2400x2400 and plot-{THEME}.html, Altair
+          6 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent idiomatic Altair: high-level API, proper hconcat/vconcat
-          for layout, scale/axis/legend configuration, theme customization via configure_*
-          methods.'
+        comment: mark_rule with x2/y2 for dendrogram segments, reversed scale domain
+          for the left-growing tree, sort= lists for the clustered order
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Good usage of Altair's composition features and interactive capabilities.
-          Implementation is solid but not particularly distinctive beyond Altair's
-          standard patterns.
-    score_caps_applied: false
-    total_score: 94
-    total_max: 100
+        passed: false
+        comment: Native hconcat/vconcat multi-view composition; little beyond that
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-20T01:33:35Z'
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
+  - colorbar
+  - subplots
   - hover-tooltips
-  - html-export
   patterns:
   - data-generation
   - matrix-construction
+  - wide-to-long
   dataprep:
   - hierarchical-clustering
   styling:

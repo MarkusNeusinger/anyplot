@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-scatter: Polar Scatter Plot
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-09
+Quality: 74/100 | Updated: 2026-05-09
 """
 
 import os

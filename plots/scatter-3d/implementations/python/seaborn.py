@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-3d: 3D Scatter Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 93/100 | Created: 2026-05-08
+Quality: 72/100 | Created: 2026-05-08
 """
 
 import os

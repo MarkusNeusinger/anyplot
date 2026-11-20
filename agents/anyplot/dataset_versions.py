@@ -124,6 +124,18 @@ def original_number(store: DatasetStore, session_id: str, view: SessionView) -> 
     return stored.number if stored is not None else view.dataset_version
 
 
+def replaced_earlier_data(store: DatasetStore, session_id: str, view: SessionView) -> bool:
+    """Whether the current data's original replaced data the session held before: the session numbers every version
+    it stores once, the first data with 1, so an original numbered above 1 came after other data.
+
+    Read from the stored original, never from the current number, which the versions made from the original (the
+    server's conversions on the summary turn, the root's own change) raise on a first paste too; False when the
+    store no longer holds the original."""
+    original = _original_id(view)
+    stored = store.get(original, session_id) if original else None
+    return stored is not None and stored.number > 1
+
+
 def kept_versions(store: DatasetStore, session_id: str, view: SessionView) -> list[KeptVersion]:
     """Every version of the current data the store still holds, oldest first and the current last: the original,
     the history and the current version, each under its number in the session (`StoredDataset.number`).

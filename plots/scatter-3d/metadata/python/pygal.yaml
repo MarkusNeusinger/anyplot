@@ -2,117 +2,142 @@ library: pygal
 language: python
 specification_id: scatter-3d
 created: '2026-05-08T22:44:49Z'
-updated: '2026-05-08T22:53:30Z'
-generated_by: claude-haiku
-workflow_run: 25583075635
+updated: '2026-11-20T00:11:47Z'
+generated_by: claude-sonnet
+workflow_run: 44642652488
 issue: 1945
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 79
 review:
   strengths:
-  - Excellent theme adaptation with readable output in both light and dark renders
-  - Correct palette choice using viridis for continuous Z-encoding with professional
-    visual hierarchy
-  - Strong technical execution with explicit font sizing and proper theme tokens
-  - Meets all spec requirements with clear 3D scatter representation
-  - Deterministic data generation and clean code structure
+  - 'A true 3D scatter in a library without 3D support: an orthographic projection
+    at a 38/24 deg oblique view gives all three axes visible extent and makes the
+    depth of the cloud apparent'
+  - Depth cues from dashed pane grids on the depth-chosen back walls and floor, with
+    solid box edges in a heavier weight
+  - All three axes carry tick values and titles with units (mm, mg), and the varieties
+    are named in a legend with Imprint green, purple and blue
+  - 'Theme tokens threaded through Style and inline CSS: both renders read cleanly
+    with identical data colours'
+  - Plausible, neutral seed-morphology scenario with weight correlated to length inside
+    each variety
   weaknesses:
-  - 'Non-idiomatic pygal pattern: creates 150 separate series instead of one series
-    with point color mapping'
-  - 'Minimal design excellence: appears as well-configured library default rather
-    than custom refined aesthetic'
-  - 'Axis labels lack units: descriptive but could be more specific'
+  - 'VQ-02 (both): the box''s back vertical edge and both top edges climb to about
+    y=60 px and cross the title text between "pygal" and "·" → keep the whole frame
+    at least 20 px below the title baseline. Likely cause: chart.range = (-0.12, 1.42)
+    with margin_top=30 maps the projected top-back corner (unit z=1) onto the title
+    row.'
+  - 'VQ-05 (both): the 3D box fills the top ~75 % of the square canvas and presses
+    against the title, while below the left-aligned legend about 20 % (~480 px) of
+    the canvas stays empty → centre the box vertically so top and bottom margins are
+    similar (shift about +200 px down). Likely cause: chart.range lower bound -0.12
+    leaves no room below and margin_bottom=40 plus legend_at_bottom leave the freed
+    space unused.'
+  - 'CQ-01 (code): three helper functions unit(), project() and screen() (lines 62-78)
+    → inline the normalisation and the rotation as array expressions on the stacked
+    coordinates. Likely cause: projection factored into functions.'
+  - 'CQ-04 (code): chrome_colors (line 122) is never used and the Style colours are
+    padded with a magic (INK_SOFT,) * 40 (line 129) → delete chrome_colors and size
+    the padding from len(frame_lines) plus the label series. Likely cause: leftovers
+    from an earlier colouring approach.'
+  - 'Suggestion: a subtle per-variety highlight, e.g. naming the heaviest variety
+    in the subtitle, would give the clusters a focal point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "scatter-3d (Z encoded by color) · pygal · anyplot.ai" clearly readable; axis labels "X Dimension" and "Y Dimension" in dark text; tick labels (20, 30, 40...) visible; subtle dotted grid lines
-      Data: 150 points with viridis colormap (blue→cyan→green→yellow) encoding Z dimension; three distinct clusters visible; markers at 7px size are optimal for density
-      Legibility verdict: PASS - All text clearly readable against light background, no legibility failures
+      Background: warm off-white #FAF8F1 across the 2400x2400 square canvas.
+      Chrome: title "scatter-3d · python · pygal · anyplot.ai" in dark ink at the top; the box's back vertical edge and top edges run up into the title row and cross it between "pygal" and "·". An oblique 3D box: solid grey box edges, dashed grey pane grids on the two back walls and the floor. Tick values 14/26/38/50 on the vertical axis, 4.9/4.1/3.2 along the width edge, 4.8/6.7/8.5/10.3 along the length edge; axis titles "Seed weight (mg)", "Seed width (mm)", "Seed length (mm)" — all dark and readable. Legend bottom-left (Sunrise, Meadow, Harvest); the bottom ~20 % of the canvas is empty.
+      Data: 150 markers in three clusters — Sunrise #009E73 low near the front, Meadow #C475FD mid-height, Harvest #4467A3 high at the back right; markers ~11 px, clearly visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, and tick labels all rendered in light text; clearly visible against dark background; subtle dotted grid appropriately visible
-      Data: Identical viridis colors to light render (blue→cyan→green→yellow) - data colors unchanged, only chrome adapted; three clusters clearly distinguished
-      Legibility verdict: PASS - All text clearly readable against dark background; no dark-on-dark failures; excellent theme adaptation
+      Background: warm near-black #1A1A17.
+      Chrome: title, tick values, axis titles and legend in light ink and fully readable; box edges and dashed grids in light grey, subtle but visible; no dark-on-dark text. The same frame/title collision as in light.
+      Data: identical green, purple and blue markers and positions as the light render; only chrome flips. Brand green reads well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28/22/18px), all readable in both themes,
-          tick labels could be marginally larger
+        comment: Explicit sizes (title 60, axis titles 44, ticks 40, legend 48 px);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No overlapping text; all elements well-spaced
+        passed: false
+        comment: The box's back vertical edge and top edges run into the title text
+          (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 points optimally sized at 7px; markers clearly distinguishable
-          with viridis gradient
+        comment: 150 markers at dots_size 11 clearly visible; legend swatches match
+          the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis perceptually uniform and colorblind-safe; excellent contrast
+        comment: Green, purple and blue are well separated and CVD-safe; groups also
+          separated spatially
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Plot fills 50-60% of canvas with balanced margins; excellent proportions
+        passed: false
+        comment: 2400x2400 canvas correct, but the box crowds the title while the
+          bottom ~20 % of the canvas stays empty (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but lack units (X Dimension, Y Dimension)
+        comment: Seed length (mm), Seed width (mm), Seed weight (mg) carry units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Viridis correct for continuous data; backgrounds are exact theme
-          colors; data colors identical across themes
+        comment: 'Imprint positions 1-3 in canonical order, first group #009E73; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured defaults with professional viridis, but minimal custom
-          design
+        passed: true
+        comment: 'Raised: a deliberate two-weight chrome hierarchy - solid INK_SOFT
+          box edges over dashed INK_MUTED pane grids - built for a 3D box pygal does
+          not provide'
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Raised: back walls chosen from projected depth so the pane grids
+          sit behind the cloud, and the duplicate tick at the shared front corner
+          is suppressed'
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Subtle grid and clean layout, but minimal customization beyond defaults
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Clear visual hierarchy through color gradient; viewer immediately
-          understands 3D concept
+        comment: Clusters displayed; no focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +147,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D scatter representation as 2D with color encoding
+        comment: A true 3D scatter via orthographic projection inside a box frame
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X, Y, Z dimensions present; color encoding works; 150-point dataset
+        comment: C1 box frame with three labelled axes and units; C2 oblique 38/24
+          deg view; C3 pane grids and box edges, markers at 0.72 opacity; C4 group
+          colors with a named legend; rotation not supported by pygal (N/A)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly mapped; Z properly encoded as viridis color
+        comment: Every marker is the projection of its own x, y, z; padded ranges
+          show all data; no displacement
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: scatter-3d · pygal · anyplot.ai'
+        comment: Title scatter-3d · python · pygal · anyplot.ai; legend names the
+          three varieties
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -150,55 +179,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates all aspects of 3D scatter with clustering and relationships
+        comment: Three clusters separated in depth and height, within-cluster weight-length
+          correlation
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible synthetic data with three clusters, neutral topic
+        comment: Seed morphology of three named varieties - plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges and realistic distributions
+        comment: Seed length 4.8-10.3 mm, width ~2.4-4.9 mm, weight 14-50 mg read
+          off the axes - plausible for cereal seeds; no Check values in the spec
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        passed: false
+        comment: Three helper functions unit/project/screen (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, readable code; custom viridis approximation is reasonable
+        passed: false
+        comment: Unused chrome_colors and a magic (INK_SOFT,)*40 colour padding (defect
+          line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output to plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -206,24 +238,29 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY correctly but creates 150 separate series instead of
-          one series with color mapping
+        comment: pygal.XY with one series per group and a Style object; default
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses Style object with theme tokens and custom viridis; interactive
-          HTML output
+        comment: 'Raised: per-series stroke_style dasharray for the pane grid and
+          print_labels for in-plot axis text; interactive HTML tooltips'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-20T00:07:18Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
+  - 3d-projection
+  - custom-legend
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - custom-colormap
+  - alpha-blending
+  - grid-styling
