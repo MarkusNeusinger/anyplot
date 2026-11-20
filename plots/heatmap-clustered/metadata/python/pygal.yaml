@@ -12,110 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/pygal/plot-dark.html
-quality_score: 92
+quality_score: 0
 review:
   strengths:
-  - Custom dendrogram implementation with proper hierarchical clustering
-  - Excellent theme adaptation with correct color tokens in both light/dark renders
-  - Professional layout utilizing seaborn clustermap pattern with visual hierarchy
-  - Data quality with realistic cancer drug/cell line context and plausible IC50 values
-  - Proper Okabe-Ito palette compliance with diverging colormap for centered data
-  weaknesses: []
+  - Row and column dendrograms from SciPy Ward linkage, leaves aligned with the matrix
+  - Real drug and cell-line names with class and lineage blocks
+  - Graph subclass draws into pygal's SVG tree, shared by PNG and HTML
+  weaknesses:
+  - 'AR-09 (both): colorbar title ''Sensitivity (log IC50)'' is cut at the right canvas
+    edge, showing only ''Sensitivity (log IC'' → keep it fully inside the canvas,
+    e.g. rotate it beside the bar. Likely cause: centred text at cb_title_x with colorbar_width=180
+    leaves no room on the right.'
+  - 'VQ-05 (both): canvas is 4800x2700 → 3200x1800 or 2400x2400. Likely cause: ClusteredHeatmap(width=4800,
+    height=2700).'
+  - 'VQ-07 (both): diverging map uses Material blues/reds with a fixed near-white
+    midpoint → imprint_div #4467A3 ↔ page color ↔ #AE3030. Likely cause: the diverging_colormap
+    list.'
+  - 'VQ-01 (both): title at 28 px and column labels at 30 px on the large canvas read
+    tiny → pygal references 66 / 44 px. Likely cause: title_font_size=28 and col_font_size=min(30,
+    …).'
+  - 'VQ-02 (both): colorbar title overlaps the top-right SKOV3 cells, and ''5-Fluorouracil''/''Gemcitabine''
+    touch the row dendrogram leaves → clear both by at least 10 px. Likely cause:
+    cb_title_y and label_margin_left too small for the longest label.'
+  - 'SC-04 (both): title ''heatmap-clustered · pygal · anyplot.ai'' lacks the language
+    → ''heatmap-clustered · python · pygal · anyplot.ai''. Likely cause: the title
+    string.'
+  - 'CQ-04 (code): sys.path removal hack and the unused show_values/_get_text_color
+    branch add about 25 lines without visible effect → delete them. Likely cause:
+    leftovers from earlier versions.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with gentle cream tone
-      Chrome: Title "heatmap-clustered · pygal · anyplot.ai" is clearly visible in dark text; row labels (drug names) on left and column labels (cell lines) at bottom are all readable in dark text; colorbar label "Sensitivity (log IC50)" is clear with value scale from +2.3 to -2.3
-      Data: Diverging colormap (blue for low sensitivity/high IC50 → white for neutral → red for high sensitivity/low IC50) clearly shows drug-cell line interactions; dendrograms on left and top show hierarchical clustering structure; cell borders provide good definition
-      Legibility verdict: PASS - all text elements are clear and readable; dendrograms and cells are distinct and visible
+      Background: warm off-white #FAF8F1, 4800x2700 canvas
+      Chrome: tiny monospace title 'heatmap-clustered · pygal · anyplot.ai' at the top; bold row labels (drugs) left, small rotated column labels (cell lines) below a bottom dendrogram; axis titles 'Drugs' and 'Cell Lines'; colorbar title 'Sensitivity (log IC' cut off at the right canvas edge
+      Data: 12x10 matrix in a Material blue-white-red colormap, row dendrogram left, column dendrogram below the matrix, colorbar -2.3 to +2.3
+      Legibility verdict: FAIL - colorbar title clipped at the right edge, title and column labels very small
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with brownish undertone
-      Chrome: Title visible in light text; row labels and column labels are light-colored (#F0EFE8) and readable against dark background (no dark-on-dark issues); colorbar labels are clear
-      Data: Data colors (blue/white/red diverging scale) are identical to light render, confirming proper theme separation - only chrome adapted; dendrograms visible with INK_SOFT color; cells are clearly distinguishable
-      Legibility verdict: PASS - all text meets dark theme requirements with proper light-colored chrome; excellent contrast between light text and dark background
+      Background: warm near-black #1A1A17
+      Chrome: light text throughout; the colorbar title in light ink runs over the pale top-right cells and is clipped at the right edge
+      Data: same cell colors as light (fixed white midpoint), dark cell borders, light-grey dendrograms
+      Legibility verdict: FAIL - colorbar title clipped and partly lost over pale cells
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 16
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 3
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; readable in both themes; no text too
-          small
+        passed: false
+        comment: Title at 28 px and column labels at 30 px on a 4800 px canvas, far
+          below the pygal references
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Row and column labels spaced well; rotated labels don't overlap;
-          all text fully readable
+        passed: false
+        comment: Colorbar title runs over the top-right heatmap cells; '5-Fluorouracil'
+          and 'Gemcitabine' touch the row dendrogram
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dendrograms clearly visible; heatmap cells optimally sized for 12×10
-          matrix; colorbar legible
+        comment: Cells and dendrogram strokes visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging scale is perceptually uniform; good contrast; CVD-safe
-          blue-white-red palette
+        comment: Blue-red diverging, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: 4800×2700 landscape format; plot fills 65% of canvas; balanced margins;
-          dendrograms positioned optimally
+        passed: false
+        comment: Canvas 4800x2700, neither 3200x1800 nor 2400x2400
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; 'Drugs' and 'Cell Lines' labels descriptive;
-          colorbar labeled 'Sensitivity (log IC50)' with units
+        comment: '''Drugs'', ''Cell Lines'', colorbar ''Sensitivity (log IC50)'''
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Diverging colormap appropriate for centered data; backgrounds correct
-          (#FAF8F1 light, #1A1A17 dark); data colors identical between themes; chrome
-          properly theme-adaptive'
+        passed: false
+        comment: Material blue/red 11-stop colormap with a fixed near-white midpoint
+          instead of imprint_div
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful layout with custom dendrogram rendering; intentional color
-          hierarchy; professional polish; above library defaults but not FiveThirtyEight-exceptional
+        passed: false
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle dendrogram styling with INK_SOFT color; cell borders provide
-          definition; generous whitespace; polished appearance
+        passed: false
+        comment: Nothing beyond the baseline; large empty band above the matrix
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy through clustering reorders data to reveal natural
-          groupings; color contrast emphasizes drug sensitivity patterns; dendrograms
-          guide interpretation of relationships
+        passed: false
+        comment: Clustering blocks as the spec asks, nothing beyond
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -123,28 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: clustered heatmap with row/column dendrograms'
+        comment: Clustermap with both dendrograms
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: dendrograms on both axes, hierarchical reordering,
-          diverging colormap, colorbar legend'
+        comment: Dendrograms, reordering, diverging map, colorbar all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis=Cell Lines, Y-axis=Drugs; matrix values correctly mapped to
-          colors; all data visible
+        comment: Cells at their reordered positions
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Title: ''heatmap-clustered · pygal · anyplot.ai'' ✓; Row/column
-          labels correctly identify data; colorbar legend properly labeled'
+        passed: false
+        comment: 'Title lacks the language segment: ''heatmap-clustered · pygal ·
+          anyplot.ai'''
     data_quality:
       score: 15
       max: 15
@@ -154,27 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: high sensitivity (blue), low sensitivity (red),
-          neutral (white); different drug classes and cell line types; clustering
-          patterns visible'
+        comment: Drug-class and lineage blocks visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real cell line names (A549, MCF7, SKOV3, etc.); real cancer drugs
-          (Paclitaxel, Cisplatin, Erlotinib, etc.); plausible drug sensitivity context;
-          neutral scientific domain
+        comment: Real drugs and cell lines
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: IC50 log scale (-2.3 to +2.3) is realistic; drug sensitivities reflect
-          biological knowledge (chemotherapy vs targeted); synthetic data respects
-          domain constraints
+        comment: log IC50 within ±2.3
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -182,57 +184,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data generation → Chart creation → Rendering; Graph subclass
-          is necessary for custom visualization, not over-engineering
+        comment: Graph subclass required for pygal
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; all randomness controlled; results fully
-          reproducible
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, scipy.cluster, scipy.spatial, pygal; no
-          unused dependencies'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean implementation; dendrogram and interpolation logic well-structured;
-          no over-engineering or fake functionality
+        passed: false
+        comment: sys.path removal hack and dead show_values/_get_text_color path
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html; uses current
-          pygal API
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Expertly uses pygal's Graph subclass pattern; proper implementation
-          of _plot() and _compute() methods; correct style configuration via Style
-          object
+        passed: false
+        comment: Style object and _plot/_compute hooks
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages pygal-specific Graph subclass pattern (unique to pygal);
-          manual SVG/dendrogram rendering capitalizes on pygal's SVG manipulation;
-          distinctive from other libraries' heatmap approaches
+        passed: false
+        comment: Draws into pygal's SVG node tree for shared PNG/HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies:
   - scipy

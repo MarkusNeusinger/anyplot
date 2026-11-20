@@ -2,45 +2,48 @@ library: altair
 language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:29:57Z'
-updated: '2026-05-09T03:31:23Z'
-generated_by: claude-haiku
-workflow_run: 25590385550
+updated: '2026-11-20T00:44:25Z'
+generated_by: claude-sonnet
+workflow_run: 44647493011
 issue: 2006
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 82
 review:
   strengths:
-  - Perfect visual legibility in both light and dark themes with all text clearly
-    readable
-  - Correct theme-adaptive chrome throughout (backgrounds, text colors, grid colors
-    properly themed)
-  - Proper Okabe-Ito palette usage (#009E73) maintained identically across both renders
-  - Clean, well-structured code with deterministic data generation via seed
-  - Effective interactive features with meaningful date/price tooltips
-  - Appropriate date label rotation (-45°) and formatting ("%b %Y") for readability
-  - Realistic time series data demonstrating stock price volatility and trend
+  - 'Theme tokens thread through every chrome element; both renders are fully legible
+    with identical #009E73 data colour'
+  - True temporal axis with calendar-month ticks ('%b %Y', tickCount='month') shows
+    business-day gaps as uneven spacing
+  - Exact 3200x1800 canvas via the pad-only step, with balanced proportions and compact
+    mandated title
+  - Escaped column constants with explicit type= and title= keep the code adaptable
+    to user tables
+  - Formatted temporal and currency tooltips with .interactive() zoom/pan add value
+    in the HTML view
   weaknesses:
-  - Design could leverage more sophisticated enhancements (custom reference lines,
-    period highlighting, secondary insights)
-  - Limited exploration of altair's advanced features (selection objects, conditional
-    encoding, cross-filtering)
+  - 'SC-03 (both): default miter line joins draw thin spikes that overshoot the data
+    values at sharp reversals (e.g. the Feb ~92.5 and Nov ~114 peaks) → round joins
+    so the line ends at each value. Likely cause: mark_line without strokeJoin=''round''.'
+  - 'DE-02 (both): a full four-sided frame surrounds the plot area where the style
+    guide asks for an L-shaped frame (left and bottom) or none → drop the view stroke.
+    Likely cause: configure_view(stroke=INK_SOFT, strokeWidth=1).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct
-      Chrome: Title "line-timeseries · altair · anyplot.ai" in dark text (#1A1A17), X-axis "Date" with rotated month-year labels, Y-axis "Stock Price ($)" with numeric values 76-120 - all clearly readable with excellent contrast
-      Data: Line in Okabe-Ito brand color #009E73, 3px stroke width with 150-size point markers clearly visible
-      Legibility verdict: PASS - all text readable, excellent contrast, grid at ~10% opacity aids without dominating
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas
+      Chrome: bold title 'line-timeseries · python · altair · anyplot.ai' centred in near-black; axis titles 'Date' and 'Stock price ($)' in INK; tick labels (y 75-120 in steps of 5, x 'Feb 2024'…'Dec 2024' rotated -45°) in INK_SOFT; subtle grid on both axes; full box frame around the plot area
+      Data: one #009E73 line with small filled green point overlays, 252 business days; thin miter spikes at sharp reversals
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct (not pure black)
-      Chrome: Title and axis labels in light text (#F0EFE8 for title, #B8B7B0 for ticks), all clearly readable against dark background - no dark-on-dark failures
-      Data: Line color #009E73 identical to light render, clearly visible on dark surface, point markers visible
-      Legibility verdict: PASS - all text readable with excellent contrast, no "dark-on-dark" issues, theme chrome properly adapted
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light #F0EFE8, ticks in #B8B7B0, grid subtle but visible; no dark-on-dark text
+      Data: identical #009E73 line and points as in the light render; brand green reads well
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,74 +54,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, tick labels 18px all properly sized
-          and readable in both themes
+        comment: Explicit sizes (labels 10, titles 12, title 16 at scale 4); title,
+          axis titles and ticks readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels rotated -45° prevent overlap; Y-axis well-spaced
+        comment: No text collisions; -45 degree month labels clear of each other and
+          the axis title
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3px line stroke with 150-size point markers clearly visible; no hidden
-          elements
+        comment: 1.8 px line with small filled point overlays suits 252 observations;
+          line clearly visible on both surfaces
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 colorblind-safe; excellent contrast with both
-          backgrounds'
+        comment: Single brand-green series with strong contrast on both backgrounds;
+          no colour-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper 4800x2700px proportions; title, axes, and data well-positioned;
-          nothing cut off
+        comment: Exact 3200x1800 canvas (pad-only), plot area fills it with balanced
+          margins; title about 40 % of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Stock Price ($) descriptive with units
+        comment: '''Date'' and ''Stock price ($)'' are descriptive with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct backgrounds (#FAF8F1 light / #1A1A17 dark), first series
-          #009E73, theme-adaptive chrome properly applied to both renders'
+        comment: 'Line and points #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips
+          correctly'
     design_excellence:
-      score: 14
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Clean, professional execution with proper theme tokens; could enhance
-          with custom enhancements like reference lines or period highlighting
+        comment: Style-guide baseline (Imprint, theme tokens, explicit font sizes),
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 1
         max: 6
-        passed: true
-        comment: Subtle grid at 10% opacity, clean axis presentation, generous whitespace
+        passed: false
+        comment: Subtle 10 % grid, but configure_view draws a full four-sided frame
+          where the style guide asks for an L-shaped frame or none (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear temporal trend showing volatility and drift; could emphasize
-          specific intervals or turning points
+        passed: false
+        comment: Data displayed; no hierarchy or focal point chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -126,28 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series line chart with datetime X-axis and numeric Y-axis
+        comment: Correct time series line on a temporal x axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Intelligent date formatting (%b %Y), rotated labels prevent overlap,
-          grid on both axes, interactive tooltips included
+        comment: '''%b %Y'' monthly ticks at calendar intervals (C2), labels rotated,
+          grid on both axes (C3), true date axis with business-day gaps (C1), zero=False
+          (C5); C4 condition not met (no explicit missing values)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: X-axis uses date:T; Y-axis uses price:Q; scale=zero=False appropriate;
-          axes show full 252-point range
+        comment: x/y correct and all data visible, but default miter line joins draw
+          thin spikes past the data values at sharp reversals (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-timeseries · altair · anyplot.ai' ✓; single-series plot
-          correctly omits legend
+        comment: Title 'line-timeseries · python · altair · anyplot.ai' correct; no
+          legend needed for a single series (N/A)
     data_quality:
       score: 15
       max: 15
@@ -157,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 252 trading days with realistic volatility and trend demonstrates
-          temporal patterns, downtrends, and recovery
+        comment: 252 trading days show trend, drawdown, recovery, level shift and
+          noise; weekend gaps show uneven spacing
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price simulation ($100 start, $76-$120 range) realistic and
-          domain-appropriate; neutral data
+        comment: Plausible, neutral daily stock price scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price values sensible; Y-axis ticks well-distributed; date range
-          appropriate for analysis
+        comment: Prices 78-117 USD from a 100 USD start with about 2 USD daily moves
+          are sensible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -182,58 +186,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; direct chart construction
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported; all used
+        comment: altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; clean theme-token handling; appropriate complexity
+        comment: Appropriate complexity; follows the six-zone data block and the mandated
+          pad block
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with scale_factor=3.0 and plot-{THEME}.html;
-          current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of altair declarative API with proper mark_line(),
-          encoding, properties, and theme configuration
+        comment: Escaped fields with explicit type=/title=, alt.OverlayMarkDef for
+          point overlay, Scale(zero=False), declarative axis config
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Good use of hover tooltips with date formatting, temporal encoding,
-          and interactivity; could explore selection and conditional encoding
+        passed: false
+        comment: Calendar-interval tickCount='month' (Vega-Lite time interval) plus
+          formatted temporal tooltips and .interactive() zoom/pan
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-20T00:40:44Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - grid-styling

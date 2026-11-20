@@ -1,319 +1,225 @@
 """ anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-09
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 78/100 | Updated: 2026-11-20
 """
 
 import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
-# Theme-adaptive colors
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series must be #009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data: Voter migration between political parties across 4 election cycles
-# Time points: 2012, 2016, 2020, 2024
-# Categories: Conservative, Liberal, Progressive, Independent
+# Columns: set these to your table's column names
+TIME_POINT = "Election year"  # role: time_point
+CATEGORY = "Party"  # role: category
+NEXT_CATEGORY = "Party at next election"  # role: extra
+NEXT_TIME_POINT = "Next election year"  # role: extra
+FLOW = "Voters (thousands)"  # role: value
 
-time_points = ["2012", "2016", "2020", "2024"]
-categories = ["Conservative", "Liberal", "Progressive", "Independent"]
+# Data: replace this block with your own edge list, for example df = pd.read_csv("flows.csv")
+# One row per band: the party at one election, the party at the next, and the voters who made that move.
+df = pd.DataFrame(
+    [
+        ("2012", "2016", "Conservative", "Conservative", 280),
+        ("2012", "2016", "Conservative", "Independent", 20),
+        ("2012", "2016", "Liberal", "Liberal", 250),
+        ("2012", "2016", "Liberal", "Progressive", 30),
+        ("2012", "2016", "Liberal", "Independent", 15),
+        ("2012", "2016", "Progressive", "Progressive", 120),
+        ("2012", "2016", "Progressive", "Liberal", 25),
+        ("2012", "2016", "Independent", "Independent", 80),
+        ("2012", "2016", "Independent", "Conservative", 30),
+        ("2012", "2016", "Independent", "Liberal", 20),
+        ("2016", "2020", "Conservative", "Conservative", 260),
+        ("2016", "2020", "Conservative", "Independent", 50),
+        ("2016", "2020", "Liberal", "Liberal", 240),
+        ("2016", "2020", "Liberal", "Progressive", 45),
+        ("2016", "2020", "Progressive", "Progressive", 140),
+        ("2016", "2020", "Progressive", "Liberal", 35),
+        ("2016", "2020", "Independent", "Independent", 90),
+        ("2016", "2020", "Independent", "Conservative", 25),
+        ("2016", "2020", "Independent", "Progressive", 15),
+        ("2020", "2024", "Conservative", "Conservative", 250),
+        ("2020", "2024", "Conservative", "Independent", 35),
+        ("2020", "2024", "Liberal", "Liberal", 255),
+        ("2020", "2024", "Liberal", "Progressive", 40),
+        ("2020", "2024", "Progressive", "Progressive", 160),
+        ("2020", "2024", "Progressive", "Liberal", 40),
+        ("2020", "2024", "Independent", "Independent", 100),
+        ("2020", "2024", "Independent", "Conservative", 20),
+        ("2020", "2024", "Independent", "Liberal", 10),
+    ],
+    columns=[TIME_POINT, NEXT_TIME_POINT, CATEGORY, NEXT_CATEGORY, FLOW],
+)
 
-# Define flows between consecutive time points
-# Format: (source_time_idx, source_cat_idx, target_cat_idx, value)
-flows_data = [
-    # 2012 -> 2016 transitions
-    (0, 0, 0, 280),  # Conservative stays Conservative
-    (0, 0, 3, 20),  # Conservative to Independent
-    (0, 1, 1, 250),  # Liberal stays Liberal
-    (0, 1, 2, 30),  # Liberal to Progressive
-    (0, 1, 3, 15),  # Liberal to Independent
-    (0, 2, 2, 120),  # Progressive stays Progressive
-    (0, 2, 1, 25),  # Progressive to Liberal
-    (0, 3, 3, 80),  # Independent stays Independent
-    (0, 3, 0, 30),  # Independent to Conservative
-    (0, 3, 1, 20),  # Independent to Liberal
-    # 2016 -> 2020 transitions
-    (1, 0, 0, 260),  # Conservative stays Conservative
-    (1, 0, 3, 50),  # Conservative to Independent
-    (1, 1, 1, 240),  # Liberal stays Liberal
-    (1, 1, 2, 45),  # Liberal to Progressive
-    (1, 2, 2, 140),  # Progressive stays Progressive
-    (1, 2, 1, 35),  # Progressive to Liberal
-    (1, 3, 3, 90),  # Independent stays Independent
-    (1, 3, 0, 25),  # Independent to Conservative
-    (1, 3, 2, 15),  # Independent to Progressive
-    # 2020 -> 2024 transitions
-    (2, 0, 0, 250),  # Conservative stays Conservative
-    (2, 0, 3, 35),  # Conservative to Independent
-    (2, 1, 1, 255),  # Liberal stays Liberal
-    (2, 1, 2, 40),  # Liberal to Progressive
-    (2, 2, 2, 160),  # Progressive stays Progressive
-    (2, 2, 1, 40),  # Progressive to Liberal
-    (2, 3, 3, 100),  # Independent stays Independent
-    (2, 3, 0, 20),  # Independent to Conservative
-    (2, 3, 1, 10),  # Independent to Liberal
-]
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+TITLE = "alluvial-basic · python · altair · anyplot.ai"
 
-# Canvas dimensions: 1600x900 for 4800x2700 at scale_factor=3.0
-width = 1600
-height = 900
-node_width = 60
-node_padding = 20
+# Canvas: inner view in px; saved at scale_factor 4 and padded to 3200 x 1800
+WIDTH, HEIGHT = 620, 320
+NODE_WIDTH, NODE_GAP = 54, 7
+TOP, BOTTOM, SIDE = 46, 14, 40
+CURVE_POINTS = 30
 
-# Colors for each category (using Okabe-Ito palette)
-category_colors = {
-    "Conservative": IMPRINT[0],  # #009E73 (brand green)
-    "Liberal": IMPRINT[1],  # #C475FD (vermillion)
-    "Progressive": IMPRINT[2],  # #4467A3 (blue)
-    "Independent": IMPRINT[3],  # #BD8233 (reddish purple)
-}
+time_points = list(dict.fromkeys([*df[TIME_POINT], *df[NEXT_TIME_POINT]]))
+categories = list(dict.fromkeys([*df[CATEGORY], *df[NEXT_CATEGORY]]))
+color_of = dict(zip(categories, IMPRINT_PALETTE, strict=False))
+time_idx = {tp: i for i, tp in enumerate(time_points)}
+n_cols = len(time_points)
+col_x = [SIDE + i * (WIDTH - 2 * SIDE) / (n_cols - 1) for i in range(n_cols)]
 
-# Calculate totals at each time point for each category
-totals = {}
-for t in range(len(time_points)):
-    totals[t] = dict.fromkeys(categories, 0)
+# Block size per column: outgoing flow in the first column, incoming flow after that
+edges = df.assign(src_t=df[TIME_POINT].map(time_idx))
+edges["tgt_t"] = df[NEXT_TIME_POINT].map(time_idx)
+totals = {(0, c): v for c, v in edges[edges["src_t"] == 0].groupby(CATEGORY, sort=False)[FLOW].sum().items()}
+totals.update({(t, c): v for (t, c), v in edges.groupby(["tgt_t", NEXT_CATEGORY], sort=False)[FLOW].sum().items()})
 
-# Accumulate incoming flows for each node (except first column uses outgoing)
-for src_t, src_cat_idx, tgt_cat_idx, val in flows_data:
-    tgt_t = src_t + 1
-    if src_t == 0:
-        totals[0][categories[src_cat_idx]] += val
-    totals[tgt_t][categories[tgt_cat_idx]] += val
-
-# Margins for layout
-top_margin = 130
-bottom_margin = 50
-left_margin = 100
-right_margin = 100
-available_height = height - top_margin - bottom_margin
-available_width = width - left_margin - right_margin
-
-# X positions for each time point (evenly spaced)
-x_positions = []
-for t in range(len(time_points)):
-    x_positions.append(left_margin + t * (available_width / (len(time_points) - 1)))
-
-# Calculate node positions for each time point
-node_positions = {}
-for t in range(len(time_points)):
-    time_total = sum(totals[t].values())
-    if time_total == 0:
-        continue
-
-    # Calculate heights proportionally
-    total_height = available_height * 0.85
-    padding_total = node_padding * (len(categories) - 1)
-    usable_height = total_height - padding_total
-
-    current_y = top_margin + (available_height - total_height) / 2
-    node_positions[t] = {}
-
+# Stack the blocks of each column, with a gap between them
+usable = (HEIGHT - TOP - BOTTOM) - NODE_GAP * (len(categories) - 1)
+blocks = {}
+for t in range(n_cols):
+    col_total = sum(v for (tt, _), v in totals.items() if tt == t)
+    y = TOP
     for cat in categories:
-        cat_total = totals[t][cat]
-        if cat_total > 0:
-            node_height = (cat_total / time_total) * usable_height
-            node_positions[t][cat] = {
-                "y": current_y,
-                "height": node_height,
-                "x": x_positions[t] - node_width / 2,
-                "total": cat_total,
-            }
-            current_y += node_height + node_padding
-        else:
-            node_positions[t][cat] = {"y": current_y, "height": 0, "x": x_positions[t], "total": 0}
+        size = totals.get((t, cat), 0) / col_total * usable if col_total else 0
+        if size > 0:
+            blocks[(t, cat)] = {"y": y, "h": size, "total": totals[(t, cat)]}
+            y += size + NODE_GAP
 
-# Create node rectangles data
-nodes_data = []
-for t in range(len(time_points)):
-    for cat in categories:
-        pos = node_positions[t][cat]
-        if pos["height"] > 0:
-            nodes_data.append(
-                {
-                    "name": cat,
-                    "time_point": time_points[t],
-                    "x": pos["x"],
-                    "y": pos["y"],
-                    "x2": pos["x"] + node_width,
-                    "y2": pos["y"] + pos["height"],
-                    "color": category_colors[cat],
-                    "total": pos["total"],
-                    "label_x": pos["x"] + node_width / 2,
-                    "label_y": pos["y"] + pos["height"] / 2,
-                }
-            )
+nodes = pd.DataFrame(
+    [
+        {
+            "party": cat,
+            "year": time_points[t],
+            "x": col_x[t] - NODE_WIDTH / 2,
+            "x2": col_x[t] + NODE_WIDTH / 2,
+            "y": b["y"],
+            "y2": b["y"] + b["h"],
+            "label_x": col_x[t],
+            "label_y": b["y"] + b["h"] / 2,
+            "total": b["total"],
+        }
+        for (t, cat), b in blocks.items()
+    ]
+)
 
-nodes_df = pd.DataFrame(nodes_data)
+# Bands: smoothstep ribbons from the right edge of one block to the left edge of the next
+out_y = {k: b["y"] for k, b in blocks.items()}
+in_y = {k: b["y"] for k, b in blocks.items()}
+points = []
+for i, row in enumerate(edges.itertuples(index=False)):
+    src, tgt = (row.src_t, row[2]), (row.tgt_t, row[3])
+    flow = row[4]
+    h_src = flow / totals[src] * blocks[src]["h"]
+    h_tgt = flow / totals[tgt] * blocks[tgt]["h"]
+    s0, t0 = out_y[src], in_y[tgt]
+    out_y[src] += h_src
+    in_y[tgt] += h_tgt
+    x0, x1 = col_x[src[0]] + NODE_WIDTH / 2, col_x[tgt[0]] - NODE_WIDTH / 2
+    steps = [k / (CURVE_POINTS - 1) for k in range(CURVE_POINTS)]
+    top_edge = [(x0 + u * (x1 - x0), s0 + u * u * (3 - 2 * u) * (t0 - s0)) for u in steps]
+    bottom_edge = [(x0 + u * (x1 - x0), s0 + h_src + u * u * (3 - 2 * u) * (t0 + h_tgt - s0 - h_src)) for u in steps]
+    for order, (x, y) in enumerate(top_edge + bottom_edge[::-1]):
+        points.append({"band": i, "party": row[2], "x": x, "y": y, "order": order, "voters": flow})
+bands = pd.DataFrame(points)
 
-# Track y offsets for stacking flows within nodes
-source_offsets = {}
-target_offsets = {}
-for t in range(len(time_points)):
-    source_offsets[t] = {cat: node_positions[t][cat]["y"] for cat in categories}
-    target_offsets[t] = {cat: node_positions[t][cat]["y"] for cat in categories}
+headers = pd.DataFrame({"x": col_x, "y": TOP - 12, "year": time_points})
 
-# Generate flow polygon data
-all_flow_data = []
-num_curve_points = 30
+x_scale = alt.Scale(domain=[0, WIDTH], nice=False)
+y_scale = alt.Scale(domain=[HEIGHT, 0], nice=False)
 
-for flow_idx, (src_t, src_cat_idx, tgt_cat_idx, val) in enumerate(flows_data):
-    tgt_t = src_t + 1
-    src_cat = categories[src_cat_idx]
-    tgt_cat = categories[tgt_cat_idx]
+LEGEND = alt.Legend(titleFontSize=11, labelFontSize=10, orient="right", symbolType="square", symbolSize=140)
 
-    src_pos = node_positions[src_t][src_cat]
-    tgt_pos = node_positions[tgt_t][tgt_cat]
-
-    if src_pos["height"] == 0 or tgt_pos["height"] == 0:
-        continue
-
-    # Calculate flow heights proportional to value
-    src_height = (val / totals[src_t][src_cat]) * src_pos["height"]
-    tgt_height = (val / totals[tgt_t][tgt_cat]) * tgt_pos["height"]
-
-    # Get current offset positions
-    src_y_top = source_offsets[src_t][src_cat]
-    src_y_bottom = src_y_top + src_height
-    tgt_y_top = target_offsets[tgt_t][tgt_cat]
-    tgt_y_bottom = tgt_y_top + tgt_height
-
-    # Update offsets for next flow
-    source_offsets[src_t][src_cat] += src_height
-    target_offsets[tgt_t][tgt_cat] += tgt_height
-
-    # X coordinates for flow start and end
-    x_start = x_positions[src_t] + node_width / 2
-    x_end = x_positions[tgt_t] - node_width / 2
-
-    # Generate top curve points using smoothstep
-    top_points = []
-    for i in range(num_curve_points):
-        t_param = i / (num_curve_points - 1)
-        x = x_start + t_param * (x_end - x_start)
-        bezier_t = t_param * t_param * (3 - 2 * t_param)
-        y = src_y_top + bezier_t * (tgt_y_top - src_y_top)
-        top_points.append((x, y))
-
-    # Generate bottom curve points (reverse order for closed polygon)
-    bottom_points = []
-    for i in range(num_curve_points - 1, -1, -1):
-        t_param = i / (num_curve_points - 1)
-        x = x_start + t_param * (x_end - x_start)
-        bezier_t = t_param * t_param * (3 - 2 * t_param)
-        y = src_y_bottom + bezier_t * (tgt_y_bottom - src_y_bottom)
-        bottom_points.append((x, y))
-
-    # Combine into closed polygon
-    all_points = top_points + bottom_points
-    flow_id = f"{time_points[src_t]}-{src_cat}-{tgt_cat}-{flow_idx}"
-
-    for pt_idx, (x, y) in enumerate(all_points):
-        all_flow_data.append(
-            {
-                "flow_id": flow_id,
-                "source_cat": src_cat,
-                "target_cat": tgt_cat,
-                "value": val,
-                "x": x,
-                "y": y,
-                "order": pt_idx,
-            }
-        )
-
-flows_df = pd.DataFrame(all_flow_data)
-
-# Create flow polygons layer
-links_chart = (
-    alt.Chart(flows_df)
+band_layer = (
+    alt.Chart(bands)
     .mark_line(filled=True, opacity=0.5, strokeWidth=0)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[0, width]), axis=None),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height]), axis=None),
+        x=alt.X("x:Q", scale=x_scale, axis=None),
+        y=alt.Y("y:Q", scale=y_scale, axis=None),
         color=alt.Color(
-            "source_cat:N",
-            scale=alt.Scale(domain=list(category_colors.keys()), range=list(category_colors.values())),
-            legend=alt.Legend(title="Party", titleFontSize=22, labelFontSize=20, orient="right"),
+            "party:N",
+            title=CATEGORY,
+            sort=None,
+            scale=alt.Scale(domain=categories, range=IMPRINT_PALETTE),
+            legend=LEGEND,
         ),
-        detail="flow_id:N",
+        detail="band:N",
         order="order:Q",
     )
 )
 
-# Create node rectangles layer
-nodes_chart = (
-    alt.Chart(nodes_df)
-    .mark_rect(stroke=INK_SOFT, strokeWidth=2)
+node_layer = (
+    alt.Chart(nodes)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=0.8)
     .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[0, width])),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height])),
+        x=alt.X("x:Q", scale=x_scale),
         x2="x2:Q",
+        y=alt.Y("y:Q", scale=y_scale),
         y2="y2:Q",
-        color=alt.Color("color:N", scale=None),
+        color=alt.Color(
+            "party:N",
+            title=CATEGORY,
+            sort=None,
+            scale=alt.Scale(domain=categories, range=IMPRINT_PALETTE),
+            legend=LEGEND,
+        ),
         tooltip=[
-            alt.Tooltip("name:N", title="Party"),
-            alt.Tooltip("time_point:N", title="Year"),
-            alt.Tooltip("total:Q", title="Voters (thousands)"),
+            alt.Tooltip("party:N", title=CATEGORY),
+            alt.Tooltip("year:N", title=TIME_POINT),
+            alt.Tooltip("total:Q", title=FLOW),
         ],
     )
 )
 
-# Create node labels (full names, centered on nodes)
-node_labels = (
-    alt.Chart(nodes_df)
-    .mark_text(fontSize=16, fontWeight="bold", color=INK, baseline="middle", align="center")
-    .encode(
-        x=alt.X("label_x:Q", scale=alt.Scale(domain=[0, width])),
-        y=alt.Y("label_y:Q", scale=alt.Scale(domain=[0, height])),
-        text="name:N",
-    )
+label_layer = (
+    alt.Chart(nodes)
+    .mark_text(fontSize=7, fontWeight="bold", color=INK, baseline="middle", align="center")
+    .encode(x=alt.X("label_x:Q", scale=x_scale), y=alt.Y("label_y:Q", scale=y_scale), text="party:N")
 )
 
-# Create time point labels (column headers)
-time_labels_data = []
-for t, tp in enumerate(time_points):
-    time_labels_data.append({"x": x_positions[t], "y": top_margin - 40, "text": tp})
-time_labels_df = pd.DataFrame(time_labels_data)
-
-time_labels = (
-    alt.Chart(time_labels_df)
-    .mark_text(fontSize=24, fontWeight="bold", color=INK, baseline="bottom")
-    .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=[0, width])),
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height])),
-        text="text:N",
-    )
+header_layer = (
+    alt.Chart(headers)
+    .mark_text(fontSize=13, fontWeight="bold", color=INK, baseline="bottom")
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="year:N")
 )
 
-# Combine all layers with interactivity
+# Style
 chart = (
-    alt.layer(links_chart, nodes_chart, node_labels, time_labels)
+    alt.layer(band_layer, node_layer, label_layer, header_layer)
     .properties(
-        width=width,
-        height=height,
+        width=WIDTH,
+        height=HEIGHT,
         background=PAGE_BG,
-        title=alt.Title(
-            text="alluvial-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK, offset=20
-        ),
+        title=alt.Title(TITLE, fontSize=16, anchor="middle", color=INK, offset=8),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_legend(
-        padding=15, cornerRadius=5, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
-    )
-    .configure_axis(
-        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+        padding=8, cornerRadius=4, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
     )
     .interactive()
 )
 
-# Save as PNG and HTML
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad (never crop) the saved PNG to the canonical landscape canvas
+TARGET_W, TARGET_H = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, larger than {TARGET_W}x{TARGET_H}")
+canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")

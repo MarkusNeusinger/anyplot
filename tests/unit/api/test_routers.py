@@ -1512,9 +1512,10 @@ class TestSeoProxyRouter:
             # Who is responsible, under the page's own heading, not only as the legal notice's operator.
             "<li>Who is responsible: Markus Neusinger (see above).</li>",
             # No event carries what a visitor typed any more (docs/reference/plausible.md, "Search");
-            # what the dashboard still shows is a fact about today, not a note on older entries,
+            # what Plausible still stores is a fact about today, not a note on older entries,
             # through the item's end, as on the human page.
-            "no IP address stored. Search texts sent up to and including November 2026 still show there.</li>",
+            "no IP address stored. Search texts sent up to and including November 2026 are still stored "
+            "by Plausible, no longer shown.</li>",
             # Every field the feedback record holds, each by its name, then who reads it: the operator,
             # and the coding assistant the admin page's "copy prompt for Claude Code" button hands the
             # message, page and reaction to (app/src/utils/claudePrompt.ts).

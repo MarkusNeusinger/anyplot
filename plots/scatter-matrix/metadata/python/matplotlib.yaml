@@ -2,119 +2,126 @@ library: matplotlib
 language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:13:20Z'
-updated: '2026-05-09T14:45:01Z'
-generated_by: claude-haiku
-workflow_run: 25603606426
+updated: '2026-11-20T02:35:44Z'
+generated_by: claude-sonnet
+workflow_run: 44661073081
 issue: 2035
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.10
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 85
 review:
   strengths:
-  - Excellent theme adaptation with no dark-on-dark or light-on-light failures
-  - Professional matplotlib usage with GridSpec for complex panel layout
-  - 'Thoughtful visual design: diagonal cells subtly distinguished via background
-    color'
-  - Perfect font sizing for 4800×2700px canvas; all text clearly readable in both
-    themes
-  - Clean, straightforward code structure; reproducible with seed
-  - Realistic, well-chosen data (Iris measurements); demonstrates all plot features
-  - Okabe-Ito palette correctly applied; strong categorical separation by species
-  - Symmetric matrix layout properly implemented; clear legend with species labels
+  - Shared column x-limits and row y-limits computed from the data (limits dict) so
+    every point can be traced across the grid and the upper triangle mirrors the lower
+  - Diagonal histograms share one bin edge set per variable across species (np.histogram_bin_edges),
+    so the overlaid species distributions are directly comparable
+  - Small (s=9), translucent (alpha=0.6) edgeless points let each cell show the shape
+    of its cloud and the three species clusters
+  - MaxNLocator(nbins=3, prune='both') keeps tick labels sparse so neighbouring cells
+    never collide
+  - Diagonal cells on the elevated surface separate distributions from scatters; one
+    horizontal legend serves the whole grid
+  - All chrome threaded through theme tokens; both renders theme-correct with identical
+    Imprint data colors
   weaknesses:
-  - 'Minor: DE-01 could be higher (8/8) with additional aesthetic refinements such
-    as custom title styling or more pronounced spine/grid subtlety'
-  - 'Minor: LM-02 at 3/5 — while GridSpec usage is excellent, implementation doesn''t
-    explore other distinctive matplotlib features for extreme visual polish'
+  - 'VQ-01 (both): tick labels at 6 pt, below the style guide''s 8 pt reference, read
+    small beside the 8 pt axis titles → 7–8 pt (+1 to +2 pt), which the 3-tick pruning
+    leaves room for. Likely cause: ax.tick_params(labelsize=6).'
+  - 'Suggestion: the empty band between the legend and the top row (about 7 % of the
+    canvas height) could go to the grid by raising top= in subplots_adjust or lowering
+    the legend anchor.'
+  - 'Suggestion: the handles comprehension enumerates groups but never uses k; `for
+    group in groups` is enough.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "scatter-matrix · matplotlib · anyplot.ai" in dark (#1A1A17), axis labels with units on left/bottom edges, tick labels dark and clearly visible
-      Data: Diagonal histograms with stacked Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2); off-diagonal scatter plots with same colors showing clear species separation
-      Legibility verdict: PASS — all text is readable; no light-on-light failures; grid subtle (alpha=0.12) but visible
+      Background: warm off-white #FAF8F1 page, diagonal cells on the slightly lighter elevated surface #FFFDF6.
+      Chrome: title "scatter-matrix · python · matplotlib · anyplot.ai" centred at top (~65 % width), dark ink; framed horizontal legend "Species" (Setosa, Versicolor, Virginica) below it; variable names with units along the left and bottom edges in dark ink; small soft-ink tick labels (3 or fewer per axis), subtle grid, top/right spines removed. All readable.
+      Data: 4×4 square grid (2400×2400). Off-diagonal: small translucent points, Setosa #009E73, Versicolor #C475FD, Virginica #4467A3; Setosa forms a separate cluster in every petal cell. Diagonal: overlaid per-species histograms with shared bins. Columns share x range, rows share y range.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light color (#F0EFE8), axis labels and tick labels in light color (#B8B7B0) — all clearly readable, no dark-on-dark failures
-      Data: Histograms and scatter plot colors are pixel-identical to light render (green, orange, blue); only chrome changes color
-      Legibility verdict: PASS — all text is readable; no dark-on-dark failures; legend frame background is elevated dark (#242420) with appropriate contrast
+      Background: warm near-black #1A1A17, diagonal cells on #242420.
+      Chrome: title, legend text, axis titles in light ink; tick labels in light soft ink; legend frame light outline on dark fill. No dark-on-dark text.
+      Data: same three Imprint colors as the light render, identical positions; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt, 18pt, 14pt); readable in both
-          themes
+        comment: Readable in both themes; tick labels at 6 pt sit below the 8 pt reference
+          (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; axis labels on edges only
+        comment: No text collisions; pruned ticks keep neighbouring cells clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker sizing (s=140) optimal for 50 points per species
+        comment: s=9, alpha=0.6 points suit 150 points per cell; legend glyphs match
+          the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; no red-green as sole signal
+        comment: Green/purple/blue Imprint hues, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions; balanced margins; 16:9 canvas
+        comment: Canonical 2400×2400 square; balanced labels; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units (Sepal Length (cm), etc.)
+        comment: Variable names with units (cm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order 1,2,3; backgrounds #FAF8F1/#1A1A17;
-          both renders theme-correct'
+        comment: Imprint positions 1–3 in canonical order; correct backgrounds in
+          both themes
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Professional execution with intentional design; diagonal cells visually
-          distinguished via background color
+        comment: Elevated surface for diagonal cells and a horizontal framed legend
+          above the grid give a clear hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed (top/right); subtle grid (alpha=0.12); generous whitespace
+        comment: Tight 0.08 cell spacing with tick density pruned to 3 per axis chosen
+          for small cells; shared histogram bins
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visual hierarchy through background distinction; color coding
-          shows species story
+        passed: false
+        comment: Data displayed; no focal hierarchy beyond the species coloring
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter matrix with diagonal histograms
+        comment: Correct SPLOM with diagonal histograms
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 4 variables, 3 species, symmetric layout'
+        comment: 'C1–C4 all met: square grid, shared ranges per row/column, edge labels,
+          small translucent points, one legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; axes show full data range
+        comment: Marks at their values; limits from the data with 6 % padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match species
+        comment: Mandated title format; legend title Species with matching entries
     data_quality:
       score: 15
       max: 15
@@ -152,19 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: distributions, correlations, multiple groups'
+        comment: Shows clusters, correlations (petal pair), separated and overlapping
+          distributions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-like flower measurements; real-world plausible and neutral
+        comment: Iris-like flower measurements, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually correct for iris flowers
+        comment: Species means and spreads match real iris measurements (e.g. petal
+          length ~1.5/4.3/5.5 cm); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -174,60 +184,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward script flow
+        comment: Flat script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality or over-engineering
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png
+        comment: plot-{THEME}.png at dpi 400, no bbox_inches
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: GridSpec is idiomatic pattern; uses high-level API correctly
+        comment: Axes methods over plt.subplots grid, fig.legend for a figure-level
+          legend, subplots_adjust for canvas control
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: GridSpec and custom legend are matplotlib-specific; could explore
-          more distinctive features
+        passed: false
+        comment: matplotlib.ticker MaxNLocator with prune='both' to thin ticks per
+          cell
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-d922b380f3
+  rendered_at: '2026-11-20T02:31:56Z'
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
+  - subplots-grid
+  - small-multiples
   - custom-legend
+  - histogram-overlay
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
-  dataprep: []
+  - nested-loops
+  dataprep:
+  - binning
   styling:
   - alpha-blending
-  - grid-styling
-  - edge-highlighting
+  - minimal-chrome
+  - theme-tokens

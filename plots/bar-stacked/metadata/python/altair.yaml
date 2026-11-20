@@ -12,36 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 79
 review:
   strengths:
-  - Perfect text legibility with explicitly set font sizes in both light and dark
-    themes
-  - Flawless Okabe-Ito palette compliance with correct theme-adaptive chrome (backgrounds,
-    text, grid colors)
-  - Complete spec compliance with all required features implemented
-  - Realistic business data context with clear quarterly and product-level insights
-  - Clean, professional code with proper theme token management
-  - Total labels above stacks add valuable clarity without clutter
-  - Both light and dark renders are equally readable with no theme-specific issues
+  - 'Stacking done declaratively: aggregate sum on y and alt.Order keep the component
+    order identical in every bar'
+  - Total labels layered above each stack and equal to the segment sums
+  - Theme tokens threaded through axes, title and legend; text readable on both surfaces
+  - Vega-Lite tooltips in the HTML output
   weaknesses:
-  - Design Excellence could be elevated beyond well-configured defaults with more
-    distinctive aesthetic or compositional choices
+  - 'VQ-05 (both): the saved canvas is 5538x2979 instead of 3200x1800, and the legend
+    is jammed against the right canvas edge and the title against the top edge → 3200x1800
+    with margins around title and legend (−2338 × −1179 px). Likely cause: width=1600,
+    height=900 with scale_factor=3.0 and no pad-to-target step.'
+  - 'SC-04 (both): title reads ''bar-stacked · altair · anyplot.ai'', missing the
+    language segment → ''bar-stacked · python · altair · anyplot.ai''. Likely cause:
+    the alt.Title string.'
+  - 'Suggestion: more distinctive typography or composition beyond the style-guide
+    baseline.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title "bar-stacked · altair · anyplot.ai" (28px, dark), X-axis label "Quarter" (22px, dark), Y-axis label "Sales (Thousands USD)" (22px, dark), tick labels (18px, dark) - all readable
-      Data: Four product categories in Okabe-Ito order: Electronics (#009E73, bluish green at base), Clothing (#D55E00, vermillion), Home & Garden (#0072B2, blue), Sports (#CC79A7, reddish purple). Total labels (230, 259, 232, 321) above stacks in dark ink. All bars clearly visible against light background
-      Legibility verdict: PASS - All text perfectly readable, no overlaps, perfect contrast
+      Background: warm off-white #FAF8F1, canvas 5538x2979
+      Chrome: title 'bar-stacked · altair · anyplot.ai' pressed against the top edge; y-axis 'Sales (Thousands USD)' 0-340 with ticks every 20, x-axis 'Quarter'; legend 'Product Category' jammed against the right canvas edge; all text readable
+      Data: four stacks, Electronics #009E73 at the bottom, Clothing #C475FD, Home & Garden #4467A3, Sports #BD8233; page-colored segment strokes; totals 230, 259, 232, 321 above stacks
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title, axis labels, and tick labels rendered in light color (#F0EFE8) - all readable against dark background. No dark-on-dark failures
-      Data: All four product colors remain identical to light render (#009E73, #D55E00, #0072B2, #CC79A7). Total labels (230, 259, 232, 321) in light ink. All bars clearly distinguishable from background
-      Legibility verdict: PASS - All text perfectly readable, excellent contrast, no theme-specific legibility issues
+      Background: warm near-black #1A1A17
+      Chrome: light title, axis and tick text, legend on elevated dark fill; no dark-on-dark
+      Data: identical colors to the light render; totals in light ink
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -49,71 +52,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
-          perfectly readable in both themes
+        comment: 'Title 28 px, axis titles 22 px, ticks 18 px, legend 16 px at scale
+          3: all at or above reference, readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no overlapping elements
+        comment: No text collides
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bar segments clearly visible and appropriately sized for canvas
+        comment: Wide bars with clearly separated segments; legend swatches match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe with good contrast
+        comment: Imprint hues with distinct lightness
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Perfect balance; plot uses 60-70% of canvas with generous margins
+        passed: false
+        comment: Canvas is 5538x2979, not a canonical size; the legend is jammed against
+          the right canvas edge and the title against the top edge (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include units; title in correct format
+        comment: '''Quarter'' and ''Sales (Thousands USD)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; correct Okabe-Ito order; perfect theme-adaptive
-          chrome'
+        comment: 'Electronics #009E73 first, Imprint order; theme chrome correct'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional styling with intentional hierarchy; well-configured
-          defaults but not distinctive
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Grid customization, white bar strokes, theme-adaptive legend styling
+        passed: false
+        comment: Page-colored segment strokes, but the legend and title are crammed
+          to the canvas edges with no breathing room
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Total labels and visual hierarchy guide viewer; quarterly trend clearly
-          visible
+        passed: false
+        comment: Totals as the Notes suggest; no hierarchy beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -127,20 +129,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: stacking, legend, total labels, consistent
-          ordering'
+        comment: 'C1-C5 all met: zero baseline, consistent order largest at bottom,
+          legend, even bars, totals above stacks'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Color/Order all correctly assigned
+        comment: Quarter on x, summed sales stacked on y
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title 'bar-stacked · altair · anyplot.ai' lacks the language segment
+          (defect line)
     data_quality:
       score: 15
       max: 15
@@ -150,20 +153,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: quarterly variation, product composition, individual
-          and cumulative values'
+        comment: Varying totals and composition across four quarters
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business scenario; neutral and comprehensible
+        comment: 'Quarterly retail sales by product category: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually plausible values for sales in thousands USD
+        comment: Totals 230, 259, 232, 321 equal the segment sums
     code_quality:
       score: 10
       max: 10
@@ -173,13 +175,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -191,30 +193,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of altair's declarative API and encoding patterns
+        comment: aggregate sum in the y encoding with alt.Order stacking, layered
+          with `+` over a totals chart
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses order parameter and theme configuration; fairly standard patterns
+        passed: false
+        comment: Vega-Lite tooltips in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-1bf36bc7d5
 impl_tags:
   dependencies: []
   techniques:

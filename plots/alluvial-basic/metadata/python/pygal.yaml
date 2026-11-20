@@ -12,91 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 49
 review:
   strengths:
-  - Correct alluvial diagram structure with time-ordered columns and party categories
-    clearly labeled
-  - Proper use of Okabe-Ito palette with consistent party colors across both themes
-  - 'Excellent data storytelling: flow bands effectively show voter migration magnitude
-    and direction across four election cycles'
-  - Well-considered transparency (0.35 opacity) on overlapping flows improves clarity
-    without hiding data
-  - Strong typography hierarchy with explicit font sizing (title 28px, year labels
-    52px, party labels 44px) ensuring readability at large canvas size
-  - Clean, minimal design with good use of whitespace and balanced margins
-  - Realistic example data (US voter migration across 2012–2024 elections) with factually
-    plausible proportions and transitions
+  - Translucent bands colored by source category keep overlapping flows distinguishable
+    in both themes
+  - Category labels colored like their blocks tie the labels to the stacks
+  - Bezier bands give smooth, readable transitions between columns
   weaknesses:
-  - Minimal use of pygal library—implementation uses pygal only for title rendering
-    but hand-codes entire alluvial diagram in manual SVG. This sidesteps pygal's charting
-    API and reduces library mastery.
-  - 'Low library-specific techniques: implementation doesn''t leverage pygal''s interactive
-    features, animation support, or other distinctive capabilities; approach could
-    be replicated in any graphics library'
+  - 'VQ-01 (both): the title is drawn at 28 units on a 4800 px canvas and reads tiny
+    → the library prompt''s 66 on the 3200x1800 canvas. Likely cause: title_font_size=28.'
+  - 'VQ-05 (both): canvas is 4800x2700 → 3200x1800 (−1600 × −900). Likely cause: pygal.XY(width=4800,
+    height=2700).'
+  - 'SC-02 (both): category labels appear only at the first and last columns → labels
+    at every column, as the Notes and C4 ask. Likely cause: label loops only for year
+    index 0 and n_years-1.'
+  - 'SC-03 (both): each column is normalized to its own year total, so a band''s width
+    differs at its two ends and the 2020 Other bands spill below their block → one
+    scale for the whole diagram. Likely cause: source_height and target_height divided
+    by year0_total and year1_total.'
+  - 'SC-04 (both): title ''alluvial-basic·pygal·anyplot.ai'' lacks the language →
+    ''alluvial-basic · python · pygal · anyplot.ai''. Likely cause: the title string.'
+  - 'DQ-02 (both): the scenario is real politics, Democratic and Republican voters
+    across the 2012-2024 US elections → a neutral scenario of the same shape, for
+    example customers moving between subscription tiers across quarters. Likely cause:
+    the parties and years lists.'
+  - 'DQ-03 (both): block counts disagree with their flows (2020 Other holds 2.8 but
+    sends 3.3; 2020 Democratic holds 81.3 but receives 71.0) → block sizes derived
+    from the flows. Likely cause: the hand-typed voter_counts array.'
+  - 'CQ-01 (code): line 26 opens the Data block with no column-0 # Plot marker after
+    it → one block between column-0 # Data and # Plot markers that ends by binding
+    df, with no plotting, styling or theme token inside and no plotting call above
+    it. Likely cause: the plot code is not separated from the data generation.'
+  - 'CQ-01 (code): has no column constant for the required roles `time_point`, `category`,
+    `value`, `flow` → one string constant per required column role above the Data
+    block, each with a trailing # role: <role> comment naming a spec role. Likely
+    cause: column names are typed where they are used instead of once, above the block.'
+  - 'CQ-04 (code): np.random.seed(42) seeds a generator that is never used → delete
+    it. Likely cause: leftover template line.'
+  - 'CQ-05 (code): plot-{THEME}.html embeds plot-{THEME}.svg, which the script never
+    writes, so the HTML shows nothing → write the SVG or inline it. Likely cause:
+    the missing SVG save.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), as specified. Clear and inviting foundation.
-      Chrome: Title "alluvial-basic·pygal·anyplot.ai" at top in dark text (28px); year labels (2012, 2016, 2020, 2024) at bottom in bold dark text (52px); party labels (Democratic, Republican, Independent, Other) on left and right sides in matching party colors (44px bold). Subtitle "Voter Migration Between Political Parties (Millions of Voters)" in italics below years. All text is readable and well-positioned.
-      Data: Four vertical bars (nodes) at each year in Okabe-Ito colors (#009E73 Democratic, #D55E00 Republican, #0072B2 Independent, #CC79A7 Other). Semi-transparent flow bands (opacity 0.35) connect bars across years, showing voter transitions. Band widths are proportional to flow magnitude.
-      Legibility verdict: PASS - All elements clearly readable, excellent contrast, well-balanced layout.
+      Background: warm off-white #FAF8F1, 4800x2700.
+      Chrome: title 'alluvial-basic·pygal·anyplot.ai' at the top in a very small monospace font; bold year labels 2012, 2016, 2020, 2024 below the columns; category labels colored like their blocks, only left of the first column and right of the last; a grey caption 'Voter Migration Between Political Parties (Millions of Voters)' below. All text except the tiny title reads comfortably.
+      Data: four stacked blocks per column (Democratic #009E73, Republican #C475FD, Independent #4467A3, Other #BD8233) with translucent bands (0.35) colored by source; at the bottom of the 2020 column the Other bands extend below the block.
+      Legibility verdict: FAIL (title far too small for the canvas)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), as specified. Maintains theme consistency.
-      Chrome: Title, year labels, and party labels all visible in light-colored text, readable against dark background. Subtitle visible in muted light color. All text elements maintain readability through appropriate color adaptation.
-      Data: Bars maintain identical Okabe-Ito colors to light render (#009E73, #D55E00, #0072B2, #CC79A7). Flow bands appear darker/more muted due to 0.35 opacity blending with dark background, but remain visible and distinguishable. The color identity is preserved—only the visual appearance due to compositing changes, which is correct behavior.
-      Legibility verdict: PASS - All elements readable; flow bands slightly less vibrant than light render (expected from opacity blending), but still clearly visible and functionally effective for understanding voter transitions.
+      Background: warm near-black #1A1A17.
+      Chrome: title, year labels and caption in light ink; category labels in their category colors, readable on the dark page. Title equally tiny.
+      Data: block and band colors identical to the light render; bands read darker from blending but stay distinguishable.
+      Legibility verdict: FAIL (title far too small for the canvas)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
-        passed: true
-        comment: All font sizes explicitly set and perfectly readable in both renders
+        passed: false
+        comment: Title at 28 units on a 4800 px canvas reads tiny in both themes (defect
+          line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no overlapping elements
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and flow bands optimally adapted to data density
+        comment: Blocks and translucent bands visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good contrast throughout
+        comment: Four distinct Imprint hues
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Perfect layout with balanced margins and good canvas utilization
+        passed: false
+        comment: Canvas 4800x2700 instead of 3200x1800 (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; labels descriptive with context (millions of
-          voters)
+        comment: Year labels and a descriptive caption with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors correct (#009E73 first), backgrounds theme-correct,
-          both renders compliant
+        comment: 'First category #009E73, Imprint order, correct backgrounds, identical
+          data colors'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -104,23 +123,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults, professional but not exceptional
-          design
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good refinement with bar borders and opacity choices; generous whitespace
+        passed: false
+        comment: Nothing beyond the baseline; large empty band above the diagram
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Effective visual hierarchy showing voter transitions across four
-          cycles; clear narrative
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -128,29 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial diagram with all required elements
+        comment: Basic alluvial diagram
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: time points, categories, proportional bands,
-          transparency, clear labels'
+        passed: false
+        comment: Category labels only at the first and last columns; the Notes and
+          C4 ask for labels at every column (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Time points and categories correctly mapped; all data visible
+        passed: false
+        comment: Each column normalized to its own total, so bands taper and the 2020
+          Other bands spill below their block (defect line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; party identification clear through consistent
-          coloring and labels
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
-      score: 14
+      score: 9
       max: 15
       items:
       - id: DQ-01
@@ -158,74 +175,73 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all 4 parties across 4 time points with varied transition patterns
+        comment: Stable flows, crossings, rare transitions, changing block sizes
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 0
         max: 5
-        passed: true
-        comment: Real-world plausible scenario (US voter migration), though political
-          topic is flagged in content policy
+        passed: false
+        comment: 'Real politics: US parties across real elections (defect line)'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Voter counts in millions are factually proportional and logically
-          consistent
+        passed: false
+        comment: Block counts disagree with their flows (defect line)
     code_quality:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Linear code flow: imports → constants → data → chart → SVG → save'
+        passed: false
+        comment: 'No # Data/# Plot markers, no column constants (defect lines)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data is deterministic
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, cairosvg, numpy, pygal) are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Functional but uses pygal minimally for title only; hand-codes SVG
-          for actual visualization
+        comment: Unused np.random.seed(42) with no random draws (defect line)
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Correct output files (plot-light.png, plot-dark.png, HTML)
+        passed: false
+        comment: HTML embeds plot-{THEME}.svg, which is never written (defect line)
     library_mastery:
-      score: 3
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Pygal chart created and rendered, but actual visualization is hand-coded
-          SVG; minimal idiomatic usage
+        passed: true
+        comment: pygal Style and chart render canvas and title; the diagram is SVG
+          appended to pygal's output
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No distinctive pygal features used; approach generic and library-independent
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies:
   - cairosvg

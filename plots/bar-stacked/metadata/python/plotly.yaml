@@ -12,39 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 72
 review:
   strengths:
-  - Perfect visual quality with excellent readability in both light and dark themes
-  - 'Flawless palette compliance: Okabe-Ito colors identical across themes, theme-appropriate
-    chrome'
-  - 'Masterful Plotly usage: custom hover templates, theme-adaptive environment variables,
-    rich interactive features'
-  - Realistic, meaningful data showing revenue composition with growth insights
-  - Clean, maintainable code with clear structure
-  - All spec requirements met completely
+  - Font sizes set explicitly for every text element; all text readable in both themes
+  - Imprint positions 1-4 in canonical order with theme-correct chrome in both renders
+  - Totals above each stack equal the segment sums, components ordered with the largest
+    at the bottom
+  - Hover shows each segment's share of the quarter's total in the HTML output
   weaknesses:
-  - Design Excellence solid but not exceptional—could elevate with more sophisticated
-    annotation styling or refined visual hierarchy
+  - 'VQ-05 (both): canvas is 4800x2700, off both canonical sizes → 3200x1800 (-1600
+    x -900). Likely cause: write_image(width=1600, height=900, scale=3) instead of
+    width=800, height=450, scale=4.'
+  - 'VQ-02 (both): the Q4 total box ''$390K +11.4% QoQ'' overlaps the legend box,
+    the legend covers the right edge of the Q4 Support and Services segments, and
+    the QoQ lines touch the top segment labels 30/35/40 → keep legend and totals clear
+    of the bars and of each other. Likely cause: legend at x=0.99,y=0.99 inside the
+    plot area and the annotation at total+12 with a two-line box.'
+  - 'SC-04 (both): title ''bar-stacked · plotly · anyplot.ai'' lacks the language
+    segment → ''bar-stacked · python · plotly · anyplot.ai''. Likely cause: the title
+    string.'
+  - 'CQ-01 (code): no column constants for the category, component and value roles,
+    no # Data / # Plot block separation, and COLORS lists 4 of 8 Imprint positions
+    zipped with strict=True → one constant per role above a Data block that binds
+    df, all eight Imprint positions looked up per component. Likely cause: data typed
+    as parallel lists used directly in the plot code.'
+  - 'CQ-04 (code): line 21 calls the palette ''Okabe-Ito'' above Imprint hexes → name
+    it Imprint. Likely cause: a stale comment.'
+  - 'Suggestion: the QoQ growth text could live in the hover rather than in boxes
+    over the stacks, which would free the top of the chart.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title, axis labels, tick labels are dark (#1A1A17) and perfectly readable against light background
-      Data: Four stacked components use correct Okabe-Ito colors (Software #009E73 green at base, Hardware #D55E00 orange, Services #0072B2 blue, Support #CC79A7 purple); component values labeled inside with white text for contrast; total annotations above bars with growth rates in light boxes with dark text
-      Grid: Y-axis grid is subtle and appropriate
-      Legend: Top-right, light background, dark text, clearly labeled
-      Legibility verdict: PASS - all text readable with no overlap
+      Background: warm off-white #FAF8F1
+      Chrome: title 'bar-stacked · plotly · anyplot.ai' dark; axis titles 'Quarter' and 'Revenue (Thousands USD)'; ticks dark grey; near-invisible y grid; legend without title at the top right inside the plot area
+      Data: four stacks Q1-Q4 2024, Software #009E73 bottom, Hardware #C475FD, Services #4467A3, Support #BD8233; white in-bar values; boxed bold totals with '+x% QoQ' lines above Q2-Q4; the Q4 box overlaps the legend, which covers the right edge of the Q4 bar
+      Legibility verdict: PASS (text readable, but overlapping at the top right)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title, axis labels, tick labels are light (#F0EFE8 and #B8B7B0) and perfectly readable against dark background; no dark-on-dark failures
-      Data: Data colors remain IDENTICAL to light render (Software #009E73, Hardware #D55E00, Services #0072B2, Support #CC79A7); component values in white; total annotations use light text on dark boxes
-      Grid: Y-axis grid is subtle and visible
-      Legend: Top-right, dark background, light text
-      Legibility verdict: PASS - all text readable in both renders, theme chrome correctly adapted
+      Background: warm near-black #1A1A17
+      Chrome: light title, axis titles and ticks; legend and total boxes on a dark elevated fill with light text; no dark-on-dark text
+      Data: segment colors identical to the light render; same legend/total collision at Q4
+      Legibility verdict: PASS (same overlap as light)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 22
       max: 30
       items:
       - id: VQ-01
@@ -52,51 +63,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (28px), labels (22px), ticks (18px) all explicitly set and
-          perfectly readable in both themes
+        comment: Sizes set explicitly (title 28, axis titles 22, ticks 18, legend
+          18, totals 20); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: No overlapping text; bars have subtle separators; annotations positioned
-          clearly
+        passed: false
+        comment: Q4 total box overlaps the legend box and the legend covers the right
+          part of the Q4 Support and Services segments; the QoQ lines of the total
+          boxes touch the top segment labels (30, 35, 40)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 16 segments (4 bars × 4 components) clearly distinct and visible
+        comment: All 16 segments visible; legend swatches match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; white text has good contrast
-          on segments
+        comment: Neighbouring segments distinguishable; no red-green pair
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins; legend and annotations
-          well-positioned
+        passed: false
+        comment: Canvas is 4800x2700, not one of the two canonical sizes (3200x1800
+          or 2400x2400)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (Thousands USD); X-axis is descriptive (Quarter)
+        comment: '''Quarter'' and ''Revenue (Thousands USD)'' descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; subsequent colors follow Okabe-Ito order;
-          backgrounds correct (#FAF8F1 light, #1A1A17 dark); chrome theme-correct
-          in both renders'
+        comment: Imprint positions 1-4 in canonical order, correct backgrounds and
+          theme chrome
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -104,24 +114,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional color palette, thoughtful annotations with growth rates,
-          subtle bar borders. Well-crafted but not extraordinary.
+        comment: Boxed bold totals on the elevated surface form a deliberate second
+          typographic level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle Y-axis grid, styled bar edges, generous whitespace, legend
-          with border/background. Good refinement but could be slightly more polished.
+        passed: false
+        comment: Baseline spine/grid rules; layout crowded at the top right where
+          legend and Q4 total collide
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Meaningful data (quarterly revenue composition), annotations emphasize
-          progression, stacking naturally tells composition story. Good visual hierarchy.
+        passed: false
+        comment: Data displayed; the steady growth reads on its own, no hierarchy
+          chosen beyond that
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -129,25 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart; bars properly stacked
+        comment: Stacked bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present and working
+        comment: Shared baseline, consistent order with largest at bottom, legend,
+          equal widths, totals above stacks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=quarters, Y=revenue; axes show all data
+        comment: Quarters on x, revenue on y from 0
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Correct format; legend labels correct
+        passed: false
+        comment: Title 'bar-stacked · plotly · anyplot.ai' lacks the language segment
     data_quality:
       score: 15
       max: 15
@@ -157,36 +168,37 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full composition across quarters with varying component sizes
+        comment: Growing totals, four components of different size
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business scenario (quarterly revenue by product category); neutral
-          and professional
+        comment: 'Quarterly revenue by product line: real, neutral business scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually plausible; growth rates realistic; proportions logical
+        comment: 'Checked: totals 270/305/350/390 equal the segment sums; QoQ 13.0/14.8/11.4
+          % match the totals'
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Linear structure; no functions/classes
+        passed: false
+        comment: 'No column constants, no # Data / # Plot block separation, palette
+          sized to the four components'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded and deterministic
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -195,35 +207,36 @@ review:
         comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic; no over-engineering
+        passed: false
+        comment: Comment calls the palette 'Okabe-Ito' above Imprint hexes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves correctly; uses current API
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 10
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Expert use of go.Figure(), add_trace(), custom hover templates, comprehensive
-          update_layout()
+        comment: Correct go.Bar / barmode stack; hover text pre-built per point as
+          HTML strings instead of hovertemplate fields
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Custom hover templates with percentages, theme-adaptive styling,
-          HTML export, creative annotation styling
+        passed: false
+        comment: add_annotation boxes with bgcolor/border and inline HTML spans
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-dd574aaf58
 impl_tags:
   dependencies: []
   techniques:

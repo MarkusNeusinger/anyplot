@@ -2,42 +2,46 @@ library: plotly
 language: python
 specification_id: line-timeseries
 created: '2025-12-26T14:59:10Z'
-updated: '2026-05-09T03:32:51Z'
-generated_by: claude-haiku
-workflow_run: 25590297718
+updated: '2026-11-20T00:48:49Z'
+generated_by: claude-sonnet
+workflow_run: 44647884109
 issue: 2006
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 85
 review:
   strengths:
-  - Perfectly readable in both light and dark themes with zero adaptation failures
-  - Clean, professional design with thoughtful use of Okabe-Ito palette and theme-adaptive
-    tokens
-  - 'Excellent specification compliance: intelligent date formatting, grid on both
-    axes, proper temporal data handling'
-  - 'Strong library mastery: range slider, custom hover templates, and month-based
-    ticking demonstrate idiomatic plotly usage'
-  - Realistic, neutral data with full feature coverage (uptrend, volatility, noise)
+  - 'True datetime axis with plotly''s calendar-aware dtick="M1" and a "%b %Y" tickformat:
+    twelve evenly spaced month ticks that fit the one-year span and need no rotation'
+  - The y axis spans the data (about 98 to 160) instead of being pinned at zero, so
+    the trend, the ~60-day cycle and the daily noise are all legible
+  - 'Theme tokens thread through title, axis titles, ticks, axis lines and grid; both
+    renders read cleanly with identical #009E73 data colour'
+  - Native rangeslider and "x unified" hover with a date-formatted hovertemplate give
+    real time-window exploration in the HTML output
+  - Column constants and a clean Data block keep the script short (86 lines) and linear
   weaknesses:
-  - Design Excellence adequate but not exceptional; DE-01 relies on defaults (5/8)
-    and DE-03 lacks visual storytelling or hierarchy (2/6)
+  - 'Suggestion: the "Date" axis title sits below the range slider, about 160 px from
+    its tick labels; moving it closer (or noting the slider) would tie it to the axis
+    it names.'
+  - 'Suggestion: the solid vertical month grid at 15 % alpha is as strong as the horizontal
+    grid; a lighter x grid would push the guides further behind the line.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "line-timeseries · plotly · anyplot.ai" in dark text, centered and prominent; x-axis label "Date" and y-axis label "Stock Price ($)" both descriptive with units; tick labels (Jan 2024 through Dec 2024, price values 20-180) cleanly spaced with no overlap; all text dark and crisp against light background
-      Data: Thick brand-green line (#009E73) connects 365 daily points showing uptrend from ~100 to ~160 over 2024; subtle light green fill beneath the line adds visual interest; grid lines visible but subtle on both axes; range slider visible at bottom
-      Legibility verdict: PASS - All text perfectly readable; no dark-on-light failures
+      Background: Warm off-white #FAF8F1 across paper and plot area; canvas 3200x1800.
+      Chrome: Centered title "line-timeseries · python · plotly · anyplot.ai" in near-black; y-axis title "Stock Price ($)" and x-axis title "Date" (below the range slider) in dark ink; y ticks 100-160 every 10, x ticks "Jan 2024" ... "Dec 2024" monthly, unrotated, dark-grey and fully readable. Solid grey grid lines on both axes, subtle; left and bottom axis lines in INK_SOFT.
+      Data: One #009E73 line of 366 daily prices rising from ~100 to ~160 with a ~60-day wave and daily noise; y axis spans the data, not zero. A range slider strip below the axis repeats the line in miniature with grey handles. No legend (single series).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text, axis labels and tick labels all light-colored; grid lines visible and appropriate; no dark-on-dark text failures present; all labels clearly readable against dark background
-      Data: Data line remains identical brand-green (#009E73) - confirms correct theme-independent color for categorical data; fill area maintains light green visibility; theme-adaptive chrome (text, background, grid) correctly flipped while data colors stayed constant
-      Legibility verdict: PASS - All text readable; no dark-on-dark failures; data colors identical to light render proving correct theme adaptation
+      Background: Warm near-black #1A1A17 across paper and plot area.
+      Chrome: Title, axis titles in light ink; tick labels in light grey; grid lines light at low alpha and still visible; axis lines light grey; range slider handles light. No dark-on-dark text anywhere.
+      Data: The same #009E73 line, identical to the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,73 +52,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, ticks 18px; all explicitly sized and
-          perfectly readable in both themes
+        comment: Title 16 px, axis titles 12 px, ticks 10 px at scale 4 (the library
+          prompt's sizes); INK/INK_SOFT tokens make every label readable on both surfaces
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; clean spacing throughout all tick labels and
-          titles
+        comment: Twelve monthly tick labels sit unrotated with clear gaps; no text
+          touches the line or the range slider
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 3px perfectly visible; 365 data points handled without
-          clutter
+        comment: 2.5 px line carries 366 daily points clearly; the line's density
+          is permitted by the spec
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito brand green #009E73; good contrast on both backgrounds;
-          colorblind-safe'
+        comment: 'Single #009E73 series with strong contrast on both backgrounds;
+          no colour-only encoding'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas; balanced margins; range slider integrated
-          cleanly
+        comment: 3200x1800 canvas; plot area fills the frame, balanced margins, title
+          at about 38 % width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Stock Price ($) and Date both descriptive with units
+        comment: '"Stock Price ($)" with unit, "Date" on the time axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 light / #1A1A17 dark;
-          theme-adaptive chrome perfect in both renders'
+        comment: 'Imprint position 1 #009E73 in both renders; #FAF8F1 / #1A1A17 backgrounds;
+          chrome flips correctly'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Clean professional design with filled-area accent; relies on plotly
-          defaults rather than custom refinements
+        comment: The style-guide baseline (tokens, explicit sizes), nothing beyond
+          it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid, clean layout, range slider adds polish; minimal customization
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Displays uptrend clearly but lacks visual hierarchy or emphasis to
-          guide viewer
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +127,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time-series line plot with datetime x-axis
+        comment: Single line on a true datetime axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Intelligent date formatting (%b %Y), monthly ticking (dtick=M1),
-          grid on both axes, proper temporal handling
+        comment: C1 one line in time order on a date axis; C2 "%b %Y" ticks at monthly
+          calendar intervals (dtick M1), no rotation needed; C3 grid on both axes,
+          subordinate; C4 n/a (no missing values marked); C5 y axis spans ~98-160,
+          not forced to zero
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x, price on y; all 365 points visible and mapped correctly
+        comment: Date on x, price on y; full year visible; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format line-timeseries · plotly · anyplot.ai correct; legend
-          appropriately hidden for single-series
+        comment: Title "line-timeseries · python · plotly · anyplot.ai"; legend N/A
+          for a single series (permitted by C6)
     data_quality:
       score: 15
       max: 15
@@ -154,21 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full year of daily data; shows trend, volatility, and noise; realistic
-          stock-price behavior
+        comment: A year of daily data with trend, ~60-day cycle and noise exercises
+          the monthly date formatting
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world stock scenario; neutral and comprehensible
+        comment: Daily stock closing prices, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily prices over one year realistic; ~55% annual growth plausible;
-          values factually sound
+        comment: Prices ~100 to ~160 over 2024 read off the axis, plausible for a
+          growth stock; the spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -178,51 +183,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → save; no unnecessary
-          functions'
+        comment: Linear tokens -> column constants -> Data block -> Plot -> Save;
+          no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, numpy, pandas, plotly) actively used
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; theme-token pattern elegant; no fake functionality
+        comment: 86 lines, nothing hand-rolled that a call computes, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct filenames plot-{THEME}.png/html; target 4800×2700 via 1600×900×scale=3
+        comment: write_image plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html;
+          autosize=False
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: High-level go.Figure() and go.Scatter() API; proper update_layout()
-          pattern; custom hovertemplate with date formatting
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: Range slider is distinctive; custom hover formatting; unified hover
-          mode; plotly-specific dtick for month ticking
+        passed: true
+        comment: Plotly's calendar-aware dtick="M1" with a d3 tickformat, and a hovertemplate
+          using %{x|%b %d, %Y} date formatting
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Native x-axis rangeslider for interactive time-window selection and
+          hovermode "x unified" in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-20T00:44:35Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -232,4 +241,5 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - minimal-chrome

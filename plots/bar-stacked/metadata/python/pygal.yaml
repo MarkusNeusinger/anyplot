@@ -2,115 +2,135 @@ library: pygal
 language: python
 specification_id: bar-stacked
 created: '2025-12-26T10:03:55Z'
-updated: '2026-05-09T07:18:43Z'
-generated_by: claude-haiku
-workflow_run: 25594901612
+updated: '2026-11-20T01:32:40Z'
+generated_by: claude-sonnet
+workflow_run: 44653377827
 issue: 1947
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/pygal/plot-dark.html
-quality_score: 94
+quality_score: 80
 review:
   strengths:
-  - Perfect spec compliance with all stacked bar chart requirements
-  - Flawless theme adaptation with both renders fully legible
-  - Correct Okabe-Ito palette with brand green as first series
-  - Professional presentation with custom styling and typography hierarchy
-  - Data clarity enhanced by printed values in segment centers
-  - Clean and straightforward code with proper imports and deterministic output
+  - Native pygal.StackedBar with print_values_position='center' puts each segment's
+    value inside it, all labels fitting their segments
+  - Components ordered with the largest (Development) at the bottom and kept in the
+    same order in every sprint
+  - Imprint palette in canonical order through Style(colors=...), with theme-adaptive
+    chrome threaded through background, foreground and foreground_subtle
+  - 'Adaptable data block: tidy df with role constants, pivot_table(sort=False) and
+    reindex keep the component order'
+  - Interactive HTML output with pygal's built-in hover tooltips
   weaknesses:
-  - Design excellence could explore custom visual emphasis techniques such as alpha-blending
-    or edge-highlighting
-  - Styling is professional but fairly standard for pygal stacked bars without distinctive
-    flourishes beyond data labels
+  - 'VQ-07 (both): the bar fills render translucent, so the data colors differ between
+    themes — Development reads about #4BB998 on the light page and #087757 on the
+    dark page instead of #009E73 in both (same shift for lavender, blue and ochre)
+    → fully opaque fills so every Imprint position is identical in both renders. Likely
+    cause: pygal''s default Style fill opacity (about 0.7, measured from the blend)
+    left unset; set Style(opacity=1, opacity_hover=1).'
+  - 'VQ-01 (light): the white value labels sit on the washed-out translucent segments
+    (pale lavender, pale ochre, pale green) and read faint, e.g. ''64'', ''42'', ''33''
+    → clearly contrasting labels on every segment. Likely cause: value_colors=(''#FFFFFF'',)
+    combined with the translucent fills; opaque fills (opacity=1) restore the contrast.'
+  - 'VQ-05 (both): the legend''s second row (''Testing'', ''Meetings'') ends about
+    15 px above the bottom canvas edge while the top margin is far larger → at least
+    about 50 px of bottom margin (+35 px). Likely cause: margin=50 with legend_at_bottom=True
+    and no margin_bottom.'
+  - 'Suggestion: total labels above each stack, which the Notes allow, would make
+    the per-sprint totals readable without summing segments.'
+  - 'Suggestion: the y-axis ''0'' tick renders smaller than the 100–400 ticks; matching
+    it would even the axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct, not pure white
-      Chrome: Title "bar-stacked · pygal · anyplot.ai" clearly visible in dark text; axis labels "Energy (Million kWh)" and "Quarter" readable; tick labels (0-280, Q1-Q4) distinct; legend labels clear at bottom
-      Data: Stacked bars with Solar (brand green #009E73), Wind (orange #D55E00), Hydro (blue #0072B2), Nuclear (reddish-purple #CC79A7) in correct Okabe-Ito order; data values printed in segment centers; bars well-spaced with subtle y-axis grid
-      Legibility verdict: PASS - all elements readable, proper contrast, no light-on-light failures
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: title "bar-stacked · python · pygal · anyplot.ai" centered in dark ink; y-axis title "Team hours", x-axis title "Sprint", ticks 0–400 and Sprint 1–6 all dark and readable; dotted y-guides subtle; two-column legend at the bottom (Development, Code review, Testing, Meetings), its second row close to the bottom edge.
+      Data: six stacked bars, Development (green) at the bottom, then Code review (lavender), Testing (blue), Meetings (ochre); fills are translucent so they read lighter than the palette (Development ~#4BB998); white value labels centered in each segment, faint on the pale lavender/ochre segments.
+      Legibility verdict: PASS (chrome readable; white value labels low-contrast on pale segments)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct, not pure black
-      Chrome: Title visible in light text; axis labels and tick labels all readable on dark background; legend labels clear; no dark-on-dark contrast issues
-      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7) confirming proper color consistency; brand green clearly visible; grid remains subtle; data values readable
-      Legibility verdict: PASS - both renders properly theme-adapted, no dark-on-dark failures, full legibility maintained
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text in light ink, all readable; no dark-on-dark text; guides subtle.
+      Data: same layout and order; the translucent fills blend with the dark page so colors read darker than in light (Development ~#087757), i.e. not identical to the light render; white value labels clearly readable on every segment.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All text readable at full size in both themes with explicit font
-          sizing
+        comment: All sizes explicitly set (title 66, axis titles 56, ticks 44, values
+          36); chrome readable in both themes, but white value labels on the pale
+          translucent segments of the light render are faint (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text readable with proper bar spacing and margins
+        comment: No text collisions; value labels fit inside every segment
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with data values printed in centers
+        comment: Six wide bars, 24 segments, each with a value label that fits its
+          segment; legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with adequate contrast
+        comment: Green/lavender/blue/ochre neighbours are well separated in lightness
+          and hue in both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions at 4800x2700, proper margins, nothing cut off
+        comment: 3200x1800, plot fills the canvas well, but the legend's second row
+          sits about 15 px from the bottom edge (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; axis labels descriptive with units
+        comment: '''Team hours'' carries its unit; ''Sprint'' is a categorical axis'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: First series is brand green; Okabe-Ito order correct; backgrounds
-          correct; both renders theme-correct
+        passed: false
+        comment: Imprint order correct, backgrounds correct, but the fills are translucent
+          so the data colors differ between themes (defect line)
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom Style with explicit font sizing and theme-adaptive colors;
-          professional but fairly standard
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Spines properly removed, subtle y-axis-only grid, generous whitespace
+        comment: Y-only dotted guides and spacing per baseline, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear hierarchy with printed values guiding viewer; consistent component
-          ordering
+        comment: Data displayed with segment values; no focal point chosen beyond
+          the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -120,25 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct StackedBar chart type
+        comment: pygal.StackedBar, one stack per sprint from a zero baseline
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All stacked components, individual values, cumulative totals shown
+        comment: C1 zero baseline, untruncated axis; C2 same order, largest (Development)
+          at bottom; C3 distinct colors with legend; C4 even widths and gaps; C5 totals
+          not drawn (optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, all data shown
+        comment: Segments at their values, stack tops equal totals
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title 'bar-stacked · python · pygal · anyplot.ai'; legend names the
+          four task types
     data_quality:
       score: 15
       max: 15
@@ -148,19 +171,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All stacked bar aspects shown with 4 components
+        comment: 6 categories, 4 components, varying totals and component shares
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Energy consumption data is realistic and neutral
+        comment: 'Team hours by task type per sprint: concrete and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Quarterly energy data with sensible values
+        comment: Totals 366-429 hours per sprint, plausible for a small team; no Check
+          values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -170,54 +194,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward code without unnecessary abstractions
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used and necessary
+        comment: os, sys, pandas, pygal, Style all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Tidy df then pivot_table per the library prompt; no hand-rolled computation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal 3
+          API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Proper use of StackedBar, Style, chart.add(), and ANYPLOT_THEME
+        comment: StackedBar with Style tokens, print_values_position='center', value_formatter
+          and truncate_legend=-1 beyond the prompt's baseline
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Uses print_values with custom formatter; fairly standard feature
-          set
+        comment: pygal's native in-segment value printing plus interactive SVG tooltips
+          in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-20T01:26:47Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
+  - hover-tooltips
   patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - publication-ready
+  - iteration-over-groups
+  dataprep:
+  - long-to-wide
+  styling: []

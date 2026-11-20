@@ -12,117 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 66
 review:
   strengths:
-  - Perfect palette compliance with all three Okabe-Ito colors in correct order and
-    brand green as first series
-  - Excellent theme-adaptive chrome implementation with both renders fully readable
-  - Complete scatter matrix specification with histograms on diagonal and all pairwise
-    relationships
-  - Interactive tooltips on scatter plots for exploring exact values
-  - Clean, deterministic code with proper random seed
-  - Proper title format and descriptive axis labels with units
+  - Correct 4x4 SPLOM with stacked per-species histograms on the diagonal
+  - 'Theme tokens threaded through axis, view and title: both renders readable'
+  - Vega-Lite tooltips on every scatter point in the HTML output
   weaknesses:
-  - 'Font sizes don''t match style guide: tick labels 14px (should be 18px), axis
-    titles 18px (should be 22px)'
-  - Limited design sophistication without custom visual enhancements beyond standard
-    library defaults
-  - No distinctive library features beyond basic hconcat/vconcat grid patterns
-  - Generic design without visual storytelling or explicit emphasis on data insights
+  - 'VQ-05 (both): canvas is 4524x4293, not a canonical size → 2400x2400. Likely cause:
+    280 px cells, a separate legend chart and scale_factor=3.0 with no pad-to-target
+    step.'
+  - 'VQ-02 (both): x tick labels collide on several cells (''0.00.5'', ''4.04.5'',
+    ''4.44.8'') → sparse ticks that keep a gap. Likely cause: default tick count on
+    narrow cells.'
+  - 'VQ-03, SC-04 (both): the legend shows only a stray hollow circle with no entries
+    → one Species legend with all three entries. Likely cause: the legend lives on
+    a separate mark_point chart while every data chart sets legend=None.'
+  - 'SC-04 (both): the title lacks the language segment (''scatter-matrix · altair
+    · anyplot.ai'') → ''scatter-matrix · python · altair · anyplot.ai''. Likely cause:
+    the title string.'
+  - 'VQ-03, SC-02 (both): points at size 120 and opacity 0.7 merge into opaque blobs,
+    missing C4''s small translucent points → about size 20-30, opacity about 0.6.
+    Likely cause: mark_circle(size=120, opacity=0.7).'
+  - 'SC-03 (both): zero-based scales squeeze each cloud into a corner of its cell
+    (sepal axes run 0-8) → scale zero=False. Likely cause: default alt.Scale.'
+  - 'VQ-06 (both): raw axis titles ''Count of Records'' and ''Sepal Length (cm) (binned)''
+    → reader-facing titles. Likely cause: default titles of count() and bin.'
+  - 'CQ-04 (code): a dummy mark_point chart (lines 123-145) stands in for the native
+    legend → let the data charts'' color encoding draw the legend. Likely cause: legend=None
+    on every cell.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text against light background
-      Data: Three Okabe-Ito colors correctly used (green #009E73, orange #D55E00, blue #0072B2) - first series is brand green
-      Diagonal: Stacked histograms showing species distributions
-      Off-diagonal: Scatter plots showing pairwise relationships with interactive tooltips
-      Legend: Right-positioned with proper color coding for three species
+      Background: warm off-white #FAF8F1; canvas 4524x4293.
+      Chrome: title 'scatter-matrix · altair · anyplot.ai' at top; every cell carries its own axis titles, including 'Count of Records' and '(binned)' on the diagonal; tick labels collide on several x axes ('0.00.5', '4.04.5', '4.44.8'); a lone hollow blue circle stands where a legend should be. Text readable.
+      Data: 4x4 grid of histograms (diagonal) and scatters, Setosa #009E73, Versicolor #C475FD, Virginica #4467A3; large size-120 points; zero-based scales push each cloud into a corner.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and axis labels visible in light color (INK #F0EFE8, INK_SOFT #B8B7B0), no dark-on-dark failures
-      Data: Colors identical to light render (green, orange, blue remain #009E73, #D55E00, #0072B2)
-      Grid: Subtle at opacity 0.10, visible but not dominant
-      Legend background: Elevated (#242420) with light text on dark surface
-      All text readable against dark background with proper theme adaptation
+      Background: warm near-black #1A1A17.
+      Chrome: light ink titles and ticks, same collisions and stray legend circle.
+      Data: identical colors to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 19
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Readable in both themes; title 28px correct, but tick labels 14px
-          and axis titles 18px smaller than style guide (18px and 22px recommended)
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: All text well-spaced, no overlapping elements
+        comment: Tick labels collide on several x axes (defect line)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: Scatter points (size=120, opacity=0.7) and histogram bars (opacity=0.8)
-          optimally sized
+        comment: Legend reduced to a stray hollow circle; size-120 points form opaque
+          blobs (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with colorblind-safe colors and good contrast
+        comment: CVD-distinguishable trio
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Perfect layout with scatter matrix filling 60-70% of canvas and balanced
-          margins
+        passed: false
+        comment: Canvas 4524x4293, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Title correct format, axis labels include units (cm)
+        comment: Raw 'Count of Records' and '(binned)' titles (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct, secondary colors in Okabe-Ito order,
-          backgrounds and theme chrome perfect'
+        comment: Imprint order, correct backgrounds
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured library defaults without custom enhancements
+        passed: true
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and styled legend background; minimal customization
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual interpretation or emphasis
+        comment: Data displayed, no hierarchy
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -130,26 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter matrix with histograms on diagonal
+        comment: 4x4 SPLOM with histograms on the diagonal
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: distributions, pairwise plots, variable names,
-          color encoding'
+        comment: 'C4 missed: points are large and nearly opaque, and the grid has
+          no working legend (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: X/Y correctly assigned in each cell
+        comment: Zero-based scales squeeze every cloud into a corner of its cell (defect
+          line)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format and legend labels correct
+        passed: false
+        comment: Title lacks the 'python' segment; legend shows no entries (defect
+          line)
     data_quality:
       score: 15
       max: 15
@@ -159,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all scatter matrix aspects with visible correlations
+        comment: Clusters and correlations visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset is realistic, well-known, and neutral
+        comment: Iris-like measurements, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150 points with realistic iris measurements
+        comment: Plausible iris ranges
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -181,49 +185,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple data generation → plotting → save flow
+        comment: Linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, altair, numpy, pandas'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity with clean nested loops
+        comment: Dummy legend chart (lines 123-145) stands in for the native legend
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: plot-{THEME}.png + .html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Excellent idiomatic usage with alt.Chart, mark_*, hconcat/vconcat,
-          alt.Color, alt.Tooltip
+        comment: Standard hconcat/vconcat usage
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Standard Altair patterns without distinctive features
+        comment: Nothing beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-1bf36bc7d5
 impl_tags:
   dependencies: []
   techniques:
