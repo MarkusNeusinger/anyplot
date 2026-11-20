@@ -2,114 +2,130 @@ library: pygal
 language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:36:53Z'
-updated: '2026-05-10T10:54:20Z'
-generated_by: claude-haiku
-workflow_run: 25626720583
+updated: '2026-11-20T17:39:08Z'
+generated_by: claude-sonnet
+workflow_run: 44784350229
 issue: 2331
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - Perfect theme adaptation with both renders fully readable
-  - Complete specification implementation with all required features
-  - Clean data demonstration showing calibration differences
-  - Proper palette compliance with Okabe-Ito colors
+  - Each calibration point is one bin's computed (mean prediction, fraction of positives)
+    pair, joined by straight segments with no smoothing and no invented endpoints;
+    empty bins are skipped as the spec permits
+  - The perfect-calibration diagonal is a dashed line in the neutral INK_MUTED tone,
+    so it reads as a reference and not as a third model in both themes
+  - The Brier score sits in each model's legend entry, so it is clear which model
+    it belongs to
+  - Per-point pygal labels give an HTML tooltip with predicted vs observed and the
+    bin count n, a library-native interactive detail
+  - Theme tokens go through pygal's Style (background, foreground, foreground_subtle),
+    and the data colors are identical in both renders
   weaknesses:
-  - Design Excellence below maximum — straightforward styling without specialized
-    emphasis techniques
-  - Limited Library Mastery demonstration — standard pygal patterns without advanced
-    interactive features
+  - 'VQ-01 (both): legend text at 38 px, below pygal''s 44 px legend reference, reads
+    small beside the 48 px axis titles even though it carries the Brier scores → 44
+    px (+6 px). Likely cause: Style(legend_font_size=38).'
+  - 'DQ-02 (both): the second classifier is labelled "Overconfident Model", which
+    names a behaviour instead of a model, and the data has no domain → a real classifier
+    name such as "Gradient Boosting" or "Random Forest" in a named setting such as
+    credit default. Likely cause: the Y_PROB label list.'
+  - 'CQ-04 (code): lines 89–100 write the equal-width binning and the Brier score
+    out by hand (np.digitize loop over 10 bins, np.mean of squared error) → sklearn.calibration.calibration_curve(y_true,
+    y_prob, n_bins=N_BINS) and sklearn.metrics.brier_score_loss; np.histogram(y_prob,
+    bin_edges) for the per-bin n. Likely cause: hand-rolled binning loop.'
+  - 'Suggestion: the dark-render grid (dotted guides) is very faint on #1A1A17; a
+    slightly lighter guide tone would keep it as visible as in the light render.'
+  - 'Suggestion: an optional histogram of predicted probabilities could show where
+    predictions bunch.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "calibration-curve · pygal · anyplot.ai" in dark text; axis labels "Mean Predicted Probability" and "Fraction of Positives" clearly visible; tick labels 0.0-1.0 readable; grid lines subtle
-      Data: Green dashed diagonal reference line (#009E73); orange line with dots for Logistic Regression (#D55E00); blue line with dots for Overconfident Model (#0072B2); all colors clearly visible
-      Legibility verdict: PASS - all elements readable against light background, no contrast issues
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title "calibration-curve · python · pygal · anyplot.ai" centred in dark ink at ~70 % width; axis titles "Mean predicted probability" / "Fraction of positives"; ticks 0.0–1.0 on both axes; subtle dotted grid; all text dark and readable. Legend at the bottom in three columns: "Perfect calibration", "Logistic Regression (Brier 0.211)", "Overconfident Model (Brier 0.231)".
+      Data: grey dashed diagonal from (0,0) to (1,1); Logistic Regression in #009E73 with 10 dot markers hugging the diagonal; Overconfident Model in #C475FD with 10 dots forming a flattened S (above the diagonal at low p, below at high p). Straight segments, no smoothing.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color, distinctly darker than pure black
-      Chrome: Title in light text; axis labels in light text; tick labels visible; grid lines visible; no dark-on-dark text rendering issues
-      Data: Green dashed diagonal (#009E73) identical to light; orange line with dots identical to light; blue line with dots identical to light; perfect color consistency between renders
-      Legibility verdict: PASS - all elements readable against dark background, no dark-on-dark failures, only chrome adapted for theme
+      Background: warm near-black #1A1A17, correct.
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text. Dotted grid is present but very faint.
+      Data: identical #009E73 and #C475FD curves and dots; the diagonal flips to the light muted grey dashed line and stays visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized (28px title, 22px labels, 18px ticks) and
-          readable in both themes
+        comment: All sizes set and readable in both themes; legend at 38 px is below
+          the 44 px reference and reads small (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text and markers distinguishable; 3-column legend prevents overlap
+        comment: No text collisions; curves cross the diagonal cleanly
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 16px dots clearly visible; three curves distinct even with overlapping
-          paths
+        comment: 10 bins per model drawn as prominent dots; lines clearly visible
+          in both themes; legend swatches match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe; colors easily distinguishable
+        comment: Green vs purple, plus a dashed neutral reference; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700px correct; generous margins; nothing cut off
+        comment: 3200x1800; balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with correct title format
+        comment: Descriptive probability axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first; Okabe-Ito order; backgrounds correct; theme-consistent
+        comment: 'First model #009E73, second #C475FD; reference in neutral INK_MUTED;
+          correct backgrounds both themes'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: false
-        comment: Professional with custom Style; straightforward approach without
-          specialized emphasis
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Dashed line for perfect calibration; subtle grid; generous whitespace;
-          effective but standard
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clear focal point comparing models; visual hierarchy through line
-          styles; good guidance
+        comment: Data displayed as the Notes ask; no own focal point
     spec_compliance:
       score: 15
       max: 15
@@ -119,27 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: XY scatter plot correct for calibration curves
+        comment: Reliability diagram on an XY chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference, 10 bins, Brier scores, two models
+        comment: Diagonal reference (C2), 10 equal-width bins, Brier per model in
+          the legend (C3), distinct colors + legend (C5); optional histogram not drawn
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct; [0,1] range; all data visible
+        comment: x = mean predicted, y = fraction positive, shared 0–1 scale; points
+          at their bin values, unsmoothed (C1)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend includes all series with Brier scores
+        comment: Mandated title; legend names each model with its Brier score
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -147,22 +165,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Perfect calibration, two models, Brier scores, comprehensive coverage
+        comment: Near-calibrated model vs an overconfident S-shaped model
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Binary classification with 2000 samples; realistic model patterns
+        comment: Plausible ML evaluation, but 'Overconfident Model' is a generic label
+          without domain (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Probability range [0,1]; Brier scores ~0.2 realistic; bin population
-          adequate
+        comment: 2000 samples in spec range; Brier 0.211/0.231 computed from data,
+          consistent with ~0.2 floor for Beta(2,2) true probabilities
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -170,31 +189,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; straightforward implementation
+        comment: Flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set; fully deterministic
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, pygal'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Readable, maintainable; no fake UI
+        passed: false
+        comment: Lines 89–100 hand-roll calibration_curve and brier_score_loss (defect
+          line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct naming; current API
+        comment: plot-{THEME}.png and .html
     library_mastery:
       score: 6
       max: 10
@@ -204,22 +224,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct pygal patterns; Style and XY correctly used
+        comment: pygal.XY with Style tokens, per-series stroke_style/show_dots overrides,
+          x_value_formatter/value_formatter
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Stroke_dasharray for dashed line; standard usage without advanced
-          features
+        comment: Per-point dict values with labels give native SVG tooltips carrying
+          bin n
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-20T17:35:15Z'
 impl_tags:
   dependencies: []
   techniques:
+  - reference-line
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
-  styling: []
+  styling:
+  - publication-ready
