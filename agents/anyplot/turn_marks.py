@@ -10,6 +10,8 @@ reassigned shows as a line in the server's own words, whatever the reply says, a
 of `MARKS`, with its own test, and the callers stay as they are.
 
 * `axis_moved`: a role that held a column when the turn began holds another column, or none, when it ended.
+* `axis_filled`: a role that held no column when the turn began holds a column the table already had when it ended:
+  an open axis filled is a reassignment like the others.
 * `new_column_bound`: a column the turn made, one the table did not have when the turn began, stands on a role when
   the turn ended.
 
@@ -23,7 +25,8 @@ The facts are the table's version, its column names and the bindings at both end
 * The start is where the root's own steps begin. The `/messages` route takes it before the run; a step the server
   makes itself in the turn moves it to the version that step left, so its own bindings are never marked: the `certain`
   conversions of a paste's summary turn (`paste_conversions.py`, which bind what they made by design and say so) and
-  the repeated key a plot run combines (`repeated_keys.py`, announced with the plot).
+  the repeated key a plot run combines (`repeated_keys.py`, announced with the plot), the latter only while the root
+  has not changed the table in the turn, so a step of its own before the combine keeps its marks.
 * A `rename` keeps its column: `prepare_data` moves the start's names through the turn's renames (`renamed`), so a
   renamed bound column is no new column and its role did not move, while a new column that takes the old name later
   is the turn's.
@@ -51,7 +54,7 @@ if TYPE_CHECKING:  # the ledger keeps the turn's start as `TableFacts`, so it im
     from .plugins.ledger import ToolCall
 
 
-TurnMark = Literal["axis_moved", "new_column_bound"]
+TurnMark = Literal["axis_moved", "axis_filled", "new_column_bound"]
 """The closed codes of the marks, in the order a role's codes are listed."""
 REPLACING_TOOLS = frozenset({"generate_data", "run_data_code"})
 """The root's tools whose stored version replaces the data instead of changing it (`push_version(rebind=True)`): a
@@ -99,6 +102,7 @@ class Axis:
 
 MARKS: tuple[tuple[TurnMark, Callable[[Axis], bool]], ...] = (
     ("axis_moved", lambda axis: axis.before is not None and axis.now != axis.before),
+    ("axis_filled", lambda axis: axis.before is None and axis.now is not None and not axis.new),
     ("new_column_bound", lambda axis: axis.now is not None and axis.new),
 )
 """Each mark with the test of a role that it fires on."""

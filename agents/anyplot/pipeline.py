@@ -2298,9 +2298,12 @@ def _combine_repeated_key(
         ctx.state[key] = value
     ledger.dataset_changes.extend(combined.changes)
     ledger.data_step = (combined.version.dataset_id, combined.line)
-    # The server's own step, announced with the plot: the turn's marks start from the version it left (`turn_marks.py`).
+    # The server's own step, announced with the plot: the turn's marks start from the version it left (`turn_marks.py`),
+    # but only while they still start from the version it combined. After a data step of the root's own in the turn the
+    # start stays where it is, so that step's marks are kept.
     version = combined.version
-    ledger.marks_from = table_facts(version.dataset_id, version.stored.profile, version.bindings)
+    if ledger.marks_from is not None and ledger.marks_from.dataset_id == view.dataset_id:
+        ledger.marks_from = table_facts(version.dataset_id, version.stored.profile, version.bindings)
     return read_session(ctx.state) or view, combined.version.stored, combined.line
 
 

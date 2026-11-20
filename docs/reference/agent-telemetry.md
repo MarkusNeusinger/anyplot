@@ -305,7 +305,8 @@ own `not_ready`. No field is new, but three readings change from that date on:
 
 - **`chat_turn.turn_marks`.** What a turn that changed the table did to the plot's roles, as the server marks it,
   distinct and sorted: `axis_moved` when a role that held a column at the turn's start holds another column or none
-  at its end, and `new_column_bound` when a column the turn made stands on a role. It is empty for every other turn:
+  at its end, `axis_filled` when a role that held none takes a column the table already had, and `new_column_bound`
+  when a column the turn made stands on a role. It is empty for every other turn:
   one that changed no table (a turn that only re-binds included), one that began without data, one in which
   `generate_data` or `run_data_code` replaced the table, and the server's own steps, the conversions of a paste's
   summary turn and a repeated key that a plot run combined. The data card shows a

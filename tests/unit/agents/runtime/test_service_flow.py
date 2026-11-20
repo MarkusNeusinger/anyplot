@@ -2892,7 +2892,11 @@ async def test_a_request_to_read_the_listed_column_in_place_fills_the_open_role(
     turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "read Price as numbers"})
 
     name, done = parse_sse(turn.text)[-1]
-    assert name == "done" and done["dataset"]["changes"] == ["Price: 3 cells read as numbers, unit '$' removed"]
+    # The carry filled the open role with the column read in place: the server's mark says so after the step's line.
+    assert name == "done" and done["dataset"]["changes"] == [
+        "Price: 3 cells read as numbers, unit '$' removed",
+        "y takes 'Price'",
+    ]
     assert [column["name"] for column in done["dataset"]["profile"]["columns"]] == ["Hours", "Price"]
     assert done["bindings"] == [{"role": "x", "column": "Hours"}, {"role": "y", "column": "Price"}]
 

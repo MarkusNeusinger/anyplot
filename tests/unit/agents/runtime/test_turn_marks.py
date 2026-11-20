@@ -51,6 +51,13 @@ class TestTheMarks:
 
         assert found == [(("axis_moved",), "y takes 'Day' instead of 'Humid'")]
 
+    def test_an_open_role_that_takes_a_column_the_table_had_is_filled(self) -> None:
+        start = facts("v1", "Name,Score,Hours", x="Score")
+
+        found = marks(start, facts("v2", "Name,Score,Hours", x="Score", y="Hours"))
+
+        assert found == [(("axis_filled",), "y takes 'Hours'")]
+
     def test_an_open_role_that_takes_a_column_the_turn_made_is_a_new_column_bound(self) -> None:
         start = facts("v1", "Name,Score", x="Score")
 
@@ -156,8 +163,9 @@ class TestTheMarks:
     def test_the_codes_are_distinct_and_sorted(self) -> None:
         both = RoleMark(("axis_moved", "new_column_bound"), "x")
         moved = RoleMark(("axis_moved",), "y")
+        filled = RoleMark(("axis_filled",), "size")
 
-        assert mark_codes([moved, both]) == ["axis_moved", "new_column_bound"]
+        assert mark_codes([moved, both, filled]) == ["axis_filled", "axis_moved", "new_column_bound"]
         assert mark_codes([]) == []
 
     def test_the_telemetry_codes_are_the_marks(self) -> None:
@@ -169,16 +177,20 @@ HOURS = "Student,Study Hours,Exam Score\n" + "".join(f"S{i:02d},{2 + 2 * (i % 4)
 """12 invented students over 4 study hours, three per hour, so a line plot's key repeats."""
 
 
-def test_a_combined_key_moves_the_start_past_the_servers_step() -> None:
-    """A plot run's combined key is the server's own step, announced with the plot: the turn's marks start from the
-    version it left, so what the turn did to the roles before it is not marked against the start of the turn."""
+LINE_BOUND = [Binding(role="x", column="Study Hours"), Binding(role="y", column="Exam Score")]
+MOVED_Y = [LINE_BOUND[0], Binding(role="y", column="Student")]
+"""The bindings a turn began with when it moved y onto the scores before the plot run."""
+
+
+def combined(*, after_a_data_step: bool) -> tuple[RequestLedger, TableFacts, TableFacts]:
+    """A plot run that combines the repeated hours of a confirmed `line-basic` table, in a turn that began with y on
+    another column (`MOVED_Y`): on the version the run combines, or on a version before a data step of the root's own.
+    The ledger after the step, the turn's start, and the facts of the version the step left."""
     store, view = pasted(HOURS, "line-basic")
-    bound = [Binding(role="x", column="Study Hours"), Binding(role="y", column="Exam Score")]
-    view = replace(view, bindings=bound, confirmed=confirmation_fingerprint(view.dataset_id, bound))
+    view = replace(view, bindings=LINE_BOUND, confirmed=confirmation_fingerprint(view.dataset_id, LINE_BOUND))
     dataset = store.get(view.dataset_id, SID)
     assert dataset is not None
-    # The turn began with y on another column and moved it before the run.
-    start = table_facts(view.dataset_id, dataset.profile, [bound[0], Binding(role="y", column="Student")])
+    start = table_facts("before the root's step" if after_a_data_step else view.dataset_id, dataset.profile, MOVED_Y)
     ledger = RequestLedger(marks_from=start)
     ctx = SimpleNamespace(state={}, session=SimpleNamespace(id=SID))
 
@@ -192,10 +204,27 @@ def test_a_combined_key_moves_the_start_past_the_servers_step() -> None:
     )
 
     assert line is not None and drawn.dataset_id != view.dataset_id
-    end = table_facts(drawn.dataset_id, drawn.profile, bound)  # the combined key keeps the bindings
+    return ledger, start, table_facts(drawn.dataset_id, drawn.profile, LINE_BOUND)  # the combine keeps the bindings
+
+
+def test_a_combined_key_moves_the_start_past_the_servers_step() -> None:
+    """A plot run's combined key is the server's own step, announced with the plot: the turn's marks start from the
+    version it left, so what the turn did to the roles before it (a narrowing `set_bindings`) is not marked."""
+    ledger, start, end = combined(after_a_data_step=False)
+
     assert ledger.marks_from == end
     assert turn_marks.turn_marks(ledger.marks_from, end) == []
     assert turn_marks.turn_marks(start, end) != []  # what the turn's start alone would have marked
+
+
+def test_a_combined_key_after_a_data_step_of_the_roots_keeps_that_steps_marks() -> None:
+    """The other order: the root changed the table and moved y, then a plot run combined a key. No route reaches it
+    today: a version the turn stored is unconfirmed, a combine needs confirmed data, and ToolSafety refuses a plot
+    after a data step of the turn. Built here, the start stays where the root's steps began, and their marks stay."""
+    ledger, start, end = combined(after_a_data_step=True)
+
+    assert ledger.marks_from == start
+    assert marks(ledger.marks_from, end) == [(("axis_moved",), "y takes 'Exam Score' instead of 'Student'")]
 
 
 # --- Whole turns -------------------------------------------------------------------------------------------------
@@ -242,12 +271,13 @@ def chat_turns(caplog: pytest.LogCaptureFixture) -> list[dict[str, Any]]:
     return [line for line in lines if line["event"] == "chat_turn"]
 
 
-async def readings_session(client: httpx.AsyncClient, runtime: Runtime) -> str:
-    """A `scatter-basic` session on the readings, humidity against temperature, its paste summarized."""
+async def readings_session(client: httpx.AsyncClient, runtime: Runtime, **roles: str) -> str:
+    """A `scatter-basic` session on the readings, its paste summarized, bound as `roles` say (role=column) or, without
+    them, humidity against temperature."""
     sid = await open_spec(client, "scatter-basic")
     await paste(client, sid, READINGS)
     await runtime.write_state(await runtime.session(USER, sid), {SUMMARY_PENDING: None})
-    bindings = [{"role": "x", "column": TEMP}, {"role": "y", "column": HUMID}]
+    bindings = [{"role": role, "column": column} for role, column in (roles or {"x": TEMP, "y": HUMID}).items()]
     bound = await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=bindings)
     assert bound.status_code == 200, bound.text
     return sid
@@ -297,6 +327,25 @@ async def test_a_data_turn_that_leaves_the_roles_alone_has_no_mark(
     assert events[-1][1]["dataset"]["changes"] == [f"sorted by {TEMP}, ascending"]
     (turn,) = chat_turns(caplog)
     assert turn["turn_marks"] == []
+
+
+async def test_an_open_axis_the_turn_filled_with_a_column_the_table_had_is_marked(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    """y was open; the turn sorted the table and put the humidity, there all along, on it: a reassignment too."""
+    caplog.set_level(logging.INFO)
+    script = default_script()
+    script["root"] = [prepare_call({"op": "sort", "column": TEMP}), bind_call(x=TEMP, y=HUMID), {"text": "Sorted."}]
+    swap_models("anthropic-vertex", script)
+    sid = await readings_session(client, runtime, x=TEMP)
+
+    events = await say(client, sid, {"text": "sort by temperature"})
+
+    name, done = events[-1]
+    assert name == "done" and done["bindings"] == [{"role": "x", "column": TEMP}, {"role": "y", "column": HUMID}]
+    assert done["dataset"]["changes"] == [f"sorted by {TEMP}, ascending", f"y takes '{HUMID}'"]
+    (turn,) = chat_turns(caplog)
+    assert turn["turn_marks"] == ["axis_filled"]
 
 
 async def test_a_turn_that_only_re_binds_has_no_dataset_and_no_mark(

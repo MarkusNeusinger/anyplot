@@ -320,7 +320,8 @@ class RequestLedger:
     marks_from: TableFacts | None = None
     """The table and bindings the turn's marks compare its end with (`turn_marks.py`): set by the `/messages` route
     before the run, moved to the version a step of the server's own left (the paste conversions of a summary turn, a
-    repeated key a plot run combined), and carried through the root's renames by `prepare_data`. None without a route
+    repeated key a plot run combined while the root had changed no table in the turn), and carried through the root's
+    renames by `prepare_data`. None without a route
     (`adk web`) and in a session without data: no marks. It names the user's columns, so it is never logged or sent."""
     data_step: tuple[str, str] | None = None
     """The dataset id and the announcement of the repeated key a plot run of this invocation combined
