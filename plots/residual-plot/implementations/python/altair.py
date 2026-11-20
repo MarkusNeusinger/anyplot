@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 residual-plot: Residual Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-11-20
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-20
 """
 
 import os
