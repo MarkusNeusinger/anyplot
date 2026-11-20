@@ -12,81 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-sca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 61
 review:
   strengths:
-  - Perfect visual quality with all text legible and no overlaps
-  - Excellent spec compliance with all requirements correctly implemented
-  - Clean, reproducible code with proper theme-adaptive handling
-  - Realistic wind data with meaningful categorical grouping
-  - Perfect palette compliance with theme-correct chrome in both light and dark renders
+  - Theme tokens threaded through Style; both renders theme-correct with identical
+    Imprint data colors
+  - Realistic, neutral wind scenario with three prevailing directions by time of day
+  - Interactive HTML output keeps pygal's native hover tooltips
   weaknesses:
-  - Generic aesthetic design without custom visual polish
-  - Minimal visual refinement beyond gridlines
-  - Limited library mastery without distinctive pygal feature usage
+  - 'SC-01 (both): the plot is a Cartesian scatter of x/y wind components on a square
+    grid, not a polar scatter → draw concentric radius rings and angular spokes with
+    markers at their angle and radius. Likely cause: pygal.XY used with plain x/y
+    axes and guides.'
+  - 'SC-02, DQ-01 (both): no radial gridlines, no angular ticks and no degree or compass
+    labels, so direction cannot be read (C2, C3) → rings at regular speed steps and
+    spokes at 0°, 90°, 180°, 270° or every 45°, labeled in degrees. Likely cause:
+    show_x_guides/show_y_guides square grid only.'
+  - 'VQ-01 (both): title 28 px, tick labels 18 px and legend 16 px on a 4800x2700
+    canvas read small → style-guide sizes for the canvas (about +2x). Likely cause:
+    Style font sizes not scaled to the canvas.'
+  - 'VQ-03, VQ-05 (both): 8 px dots and a 16 px legend crammed into the top-left corner
+    read small on the 4800 px canvas → larger markers and a legend placed with breathing
+    room. Likely cause: dots_size=8, default legend position.'
+  - 'VQ-06 (both): axis titles ''X Component (m/s)'' / ''Y Component (m/s)'' describe
+    derived components, not wind direction and speed → label the radius quantity and
+    the angle. Likely cause: x_title/y_title.'
+  - 'SC-04 (both): title ''polar-scatter · pygal · anyplot.ai'' lacks the language
+    segment → ''polar-scatter · python · pygal · anyplot.ai''. Likely cause: the title
+    string.'
+  - 'CQ-01, CQ-04 (code): lines 15-27 guard the pygal import with importlib and sys.path
+    surgery → a plain import pygal. Likely cause: a filename-shadowing workaround
+    left in the script.'
+  - 'Suggestion: use the compass convention (0° at the top, clockwise) for wind direction.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) as required
-      Chrome: Title "polar-scatter · pygal · anyplot.ai" in dark text, axis labels and tick labels all clearly readable in dark (#1A1A17)
-      Data: Morning series in #009E73 (green), Afternoon in #D55E00 (orange), Evening in #0072B2 (blue); clear scattered points connected across categories
-      Legibility verdict: PASS - all text readable with good contrast; no "light on light" issues
+      Background: warm off-white #FAF8F1 on a 4800x2700 canvas
+      Chrome: small dark title 'polar-scatter · pygal · anyplot.ai' at top; Cartesian axes 'X Component (m/s)' / 'Y Component (m/s)' with -12..16 and -20..20 ticks; dotted square grid; tiny legend in the top-left corner. Text readable but very small for the canvas
+      Data: Morning #009E73 in the lower right, Afternoon #C475FD upper right, Evening #4467A3 left; small 8 px dots
+      Legibility verdict: PASS (small)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) as required
-      Chrome: Title and labels in light text (#F0EFE8) with good visibility; tick labels in muted tone (#A8A79F) with adequate contrast
-      Data: Same color scheme as light render - Morning green, Afternoon orange, Evening blue all identical to light
-      Legibility verdict: PASS - all text maintains proper contrast; no dark-on-dark failures; data colors consistent with light render
+      Background: warm near-black #1A1A17
+      Chrome: light title, ticks and axis titles; faint dark grid; no dark-on-dark text
+      Data: identical colors and positions to the light render
+      Legibility verdict: PASS (small)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 3
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title=28, labels=22, ticks=18); fully
-          readable in both themes
+        passed: false
+        comment: Title 28 px, ticks 18 px, legend 16 px on a 4800x2700 canvas read
+          small, far below the style-guide sizes (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; clean layout
+        comment: No text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: 110 data points with 8px markers, well-adapted to density
+        passed: false
+        comment: 8 px dots read small on the 4800 px canvas; legend swatches tiny
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, good contrast, CVD-safe
+        comment: Distinct hues, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Balanced margins, plot fills 50-70% of canvas, legend well-positioned
+        passed: false
+        comment: Legend crammed into the top-left corner at 16 px; tiny title leaves
+          the frame unbalanced (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels with units
+        passed: false
+        comment: Axis titles 'X Component' / 'Y Component' describe Cartesian components,
+          not direction and speed (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order; backgrounds correct; text
-          colors theme-correct'
+        comment: 'Morning #009E73 first, Imprint order; backgrounds correct in both
+          themes'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -94,104 +117,108 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but lacks exceptional design polish
+        comment: Default
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Gridlines present but minimal additional refinement
+        comment: Default
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear narrative through time-of-day categorization with visual hierarchy
-          via color
+        passed: false
+        comment: Default
     spec_compliance:
-      score: 15
+      score: 8
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Correct polar scatter plot using pygal.XY
+        passed: false
+        comment: A Cartesian scatter of converted components with a square grid, no
+          polar frame (defect line)
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: All spec requirements present
+        passed: false
+        comment: No radial rings, no angular ticks, no degrees shown (C2, C3) (defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y mapping from polar conversion
+        comment: Points placed at their converted coordinates
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct, legend labels match
+        passed: false
+        comment: Title lacks the language segment 'python' (defect line)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Demonstrates wind variation across three time periods
+        passed: false
+        comment: 'The angular structure of the data cannot be read: no angles anywhere
+          (defect line)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wind observations with realistic speeds and directions
+        comment: Neutral wind scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct proportions
+        comment: Realistic speeds
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear flow, no over-engineering
+        passed: false
+        comment: An import-guard block with sys.path manipulation (lines 15-27) breaks
+          the linear script (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code
+        passed: false
+        comment: Lines 15-27 work around a filename shadowing that a plain import
+          pygal does not need (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME} format
+        comment: plot-{THEME}.png / .html
     library_mastery:
       score: 4
       max: 10
@@ -201,14 +228,16 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct usage but could leverage more advanced features
+        comment: Default
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses standard pygal capabilities
+        comment: Default
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-9afec7eaef
 impl_tags:
   dependencies: []
   techniques: []

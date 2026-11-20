@@ -2,49 +2,46 @@ library: seaborn
 language: python
 specification_id: line-confidence
 created: '2025-12-26T16:12:46Z'
-updated: '2026-05-09T12:37:46Z'
-generated_by: claude-haiku
-workflow_run: 25601191068
+updated: '2026-11-20T02:15:44Z'
+generated_by: claude-sonnet
+workflow_run: 44658768417
 issue: 2007
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 84
 review:
   strengths:
-  - Perfect visual quality across both light and dark renders with excellent legibility
-    and proper color application
-  - Flawless spec compliance with all required features correctly implemented
-  - Excellent theme adaptation with proper background and text color switching between
-    light and dark
-  - Clean, reproducible code with proper KISS structure and deterministic seeding
-    via np.random.seed(42)
-  - Professional data quality with realistic, neutral context (temperature forecasting
-    with growing uncertainty)
+  - Exact 3200x1800 canvas and a title scaled to its length, so nothing crowds or
+    clips in either theme
+  - 'Band and line share #009E73, with the band at alpha 0.25 and the line plus white-edged
+    markers drawn on top, so the band clearly belongs to the line'
+  - Legend names the band as a 95% prediction interval and lists it first, in the
+    empty lower-left corner
+  - Tidy df with column constants passed straight to sns.lineplot(data=df, ...), so
+    axis titles come from the column names
+  - Realistic Li-ion discharge forecast whose interval widens with discharge time
   weaknesses:
-  - Design sophistication is functional but not distinctive — uses solid defaults
-    without custom visual elevations or accent colors
-  - Library mastery could be deeper — seaborn offers more sophisticated aesthetic
-    abstractions and patterns that aren't fully explored beyond basic set_theme usage
+  - 'Suggestion: a short note or marker at the end-of-discharge knee (around 140 min)
+    could guide the eye to where the interval starts to widen fastest.'
+  - 'Suggestion: seaborn''s own estimator band (sns.lineplot with errorbar=(''pi'',
+    95) over ensemble samples) would show a more distinctive seaborn idiom than matplotlib
+    fill_between on precomputed bounds.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "Temperature Forecast · line-confidence · seaborn · anyplot.ai" is bold and dark (#1A1A17); X-axis label "Day" and Y-axis label "Temperature (°C)" are clearly readable at 20pt; tick labels are in secondary text color (#4A4A44) at 16pt; all have strong dark-on-light contrast
-      Data: Central line uses brand green (#009E73) with linewidth=3 and small circular markers (markersize=5); confidence band is same green with alpha=0.25 semi-transparency; band widens from ~4°C at day 1 to ~14°C at day 30, visually communicating growing forecast uncertainty; 30-day trend shows warming from 21°C to 29°C with weekly cyclical pattern
-      Grid: Y-axis grid only, subtle with alpha=0.10, solid lines — visible but not dominant
-      Legend: Lower right, identifies "95% Confidence Interval" and "Forecast"; positioned to avoid data overlap
-      Legibility verdict: PASS — all text is readable, no contrast failures, proper sizing for 4800×2700px canvas
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "Battery Discharge Forecast · line-confidence · python · seaborn · anyplot.ai" in dark ink, centered, ~75% of the plot width; axis titles "Discharge time (min)" and "Cell voltage (V)"; dark-grey tick labels 0-180 and 3.2-4.2; subtle horizontal gridlines; top and right spines removed. All readable.
+      Data: #009E73 line with small white-edged circle markers at 31 points, falling from ~4.15 V to ~3.2 V with a steepening knee after ~130 min; light-green band (same hue, alpha 0.25) narrow at the start and widening toward 180 min; gridlines visible through the band. Legend lower left on an elevated box: "95% prediction interval" swatch, then "Predicted voltage" line+marker.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
-      Chrome: Title, axis labels, and tick labels are now in light colors (#F0EFE8 for title, #B8B7B0 for secondaries); light-on-dark contrast is excellent; NO dark-on-dark failures; all text remains clearly readable
-      Data: Central line and confidence band are identical green (#009E73) to light render — data colors DO NOT change between themes, only chrome flips ✓; uncertainty widening pattern is identical to light render; upward trend is identical
-      Grid: Y-axis grid visible and subtle, same as light render
-      Legend: Identical position and labels to light render
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors correctly preserved, proper theme-chrome flip
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles in light ink, tick labels in light grey, faint gridlines, light spines; legend box on #242420 with light text. No dark-on-dark text.
+      Data: identical #009E73 line, markers and band (band reads as a deep green tone on the dark page, still distinct from it); same shapes and positions as light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,76 +52,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title 24pt, labels 20pt, ticks 16pt) properly sized and
-          readable in both themes with correct color adaptation
+        comment: Title ~10 pt (scaled to its 77-char length), axis titles 10 pt, ticks
+          and legend 8 pt; all readable in both themes, INK/INK_SOFT tokens threaded
+          through
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Title, axis labels, legend all well-positioned with no collisions
-          or overlapping elements
+        comment: Legend sits in the empty lower-left corner below the band; no text
+          collides with text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Central line (linewidth=3) and confidence band (alpha=0.25) clearly
-          distinguishable from background and each other across density variations
+        comment: '31 sparse points: 2 px line with 3.5 pt white-edged markers, band
+          clearly distinct from the page in both themes; legend glyphs match the marks'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito brand green #009E73 is colorblind-safe and has strong
-          contrast on both light and dark backgrounds'
+        comment: Single hue, no red-green signal; good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect at 4800×2700px with generous margins; proper use of tight_layout
-          and bbox_inches; nothing cut off
+        comment: 3200x1800 exact (no canvas gate file); balanced axis labels, title
+          well inside the width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes spec/library/site; Y-axis labeled with units (°C);
-          all descriptive and clear
+        comment: '''Discharge time (min)'' and ''Cell voltage (V)'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses #009E73; backgrounds #FAF8F1 (light) and #1A1A17
-          (dark); data colors identical between renders, chrome correctly flips'
+        comment: 'Single series #009E73 identical in both renders; backgrounds #FAF8F1
+          / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Clean, professional theme-aware styling with proper token application;
-          solid defaults but lacks custom visual elevations or distinctive touches
+        passed: true
+        comment: 'Beyond baseline: title font scaled to the title length, white-edged
+          markers that read crisply on the line in both themes, descriptive title
+          prefix'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed (L-shape), y-axis grid subtle (alpha=0.10),
-          generous whitespace, legend well-positioned; very clean overall
+        comment: 'Beyond baseline: x-limits flush to the data range, y-limits padded
+          proportionally to the band, legend placed in the one empty corner with band
+          entry first'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Confidence band widening visualizes growing uncertainty; upward trend
-          clear; weekly cycle readable; strong narrative but could be enhanced with
-          annotations
+        passed: false
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +131,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot with confidence interval using fill_between
+        comment: Line with shaded confidence band; no unasked additions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Central line present, semi-transparent band (alpha=0.25, within 0.2-0.4
-          spec range), legend identifying both elements
+        comment: Solid prominent line on top of the band (C1), band spans lower to
+          upper bound (C2), alpha 0.25 with gridlines visible through it (C3), legend
+          names line and 95% prediction interval (C4), band a lighter tone of the
+          line color (C5), y grid present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: days 0–31 correct; Y-axis: ~5–45°C range with proper padding;
-          bounds correctly shown'
+        comment: x = discharge time, y = voltage; axes show all data, marks at their
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec; legend labels clear and accurate
+        comment: '''Battery Discharge Forecast · line-confidence · python · seaborn
+          · anyplot.ai'' matches the format; legend entries are reader text'
     data_quality:
       score: 15
       max: 15
@@ -164,21 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Realistic warming trend, weekly cycle, growing uncertainty band,
-          30 data points (within 20-200 spec range)
+        comment: Central estimate, interval that widens with time, 31 points inside
+          the 20-200 range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature forecast with confidence intervals is real-world plausible;
-          15–42°C range reasonable; neutral context
+        comment: Li-ion cell discharge forecast from a model ensemble; plausible and
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible x/y ranges for temperature domain; data not cramped or stretched
+        comment: No check values in the spec; checked the voltage runs from ~4.15
+          V (full charge) to ~3.2 V near cutoff with the end-of-discharge knee, sensible
+          for a Li-ion cell
     code_quality:
       score: 10
       max: 10
@@ -188,54 +190,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward linear script flow
+        comment: Linear script; column constants with role comments, one Data block
+          binding df, adaptable-code static check passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output across runs
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (os, matplotlib, numpy, seaborn); no unused dependencies
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or unnecessary complexity; idiomatic matplotlib/seaborn
-          patterns
+        comment: Appropriate complexity, nothing written out that a call computes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with facecolor=PAGE_BG; current API usage
+        comment: Saves plot-{THEME}.png at dpi 400 without bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: sns.set_theme() + rc dict, proper axes-level APIs, theme tokens applied
-          consistently
+        comment: sns.lineplot(data=df, x=..., y=...) with constants, sns.set_theme
+          rc, sns.despine — correct usage per the library prompt, nothing beyond
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Solid matplotlib integration; could explore seaborn figure-level
-          APIs, aesthetic abstractions, or alternative patterns
+        comment: Nothing beyond what the library prompt mandates; band via matplotlib
+          fill_between
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-20T02:11:32Z'
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
