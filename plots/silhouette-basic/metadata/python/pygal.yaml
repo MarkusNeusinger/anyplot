@@ -2,46 +2,63 @@ library: pygal
 language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:38:31Z'
-updated: '2026-05-10T12:56:14Z'
-generated_by: claude-haiku
-workflow_run: 25629009223
+updated: '2026-11-20T18:08:45Z'
+generated_by: claude-sonnet
+workflow_run: 44788781967
 issue: 2334
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - Visual quality nearly perfect (29/30) with excellent text legibility and layout
-  - Spec compliance and data quality flawless (15/15 each)
-  - Clean, reproducible code with explicit font sizing
-  - Excellent light and dark theme adaptation with proper contrast
-  - Silhouette visualization effectively shows cluster quality distribution
+  - One XY chart carries all 150 per-sample bars (strokes from 0 to the score with
+    butt caps, broken by allow_interruptions) plus the vertical dashed average line,
+    so the line spans every cluster block natively
+  - Bars sorted descending within each cluster, four empty rows separate the blocks,
+    and block thickness reads as cluster size (n=30/51/69); the negative tail of cluster
+    0 extends left of zero
+  - Per-point label dicts with print_labels place an 'avg 0.24 / 0.73 / 0.49' annotation
+    beside each block, clear of its bars, in both themes
+  - 'Theme tokens threaded through Style and the inline CSS (text-overlay fill = INK),
+    so all text is readable on both #FAF8F1 and #1A1A17; Imprint order starts with
+    #009E73'
+  - Silhouette values computed with sklearn.metrics.silhouette_samples on a KMeans
+    clustering, as the Notes ask; the data block ends in a tidy df
   weaknesses:
-  - 'VQ-07: First data series (Cluster 0) renders in blue (#0072B2) instead of brand
-    green (#009E73) — verify pygal color cycling order'
-  - DE scores reflect well-configured defaults rather than exceptional aesthetic choices
-    — lacks custom palette variations or visual emphasis
-  - 'LM-02 low: doesn''t showcase distinctive pygal features like interactive tooltips
-    or custom formatters'
+  - 'VQ-03 (both): legend glyphs are ~10 px squares beside 40 px legend text, and
+    the ''Average 0.524'' entry shows a square swatch instead of the dashed line it
+    explains → swatches near the text height that match their marks. Likely cause:
+    pygal''s default legend box size with legend_font_size=40 and the average series
+    added as an ordinary series.'
+  - 'VQ-05 (both): the x range runs to 1.0 while the longest bar ends at 0.81 and
+    starts at -0.2 while the lowest score is -0.05, leaving about a quarter of the
+    plot width empty → tighten to about -0.1…0.9. Likely cause: axis_min subtracts
+    an extra 0.1 after flooring and axis_max adds 0.1 after ceiling.'
+  - 'DQ-02 (both): the clustering has no domain: columns ''Feature 1'' / ''Feature
+    2'' and clusters ''Cluster 0–2'' read as generic → name a plausible measured dataset
+    (e.g. flower petal/sepal measurements as the spec''s iris example) and its features.
+    Likely cause: the synthetic random blobs in the data block.'
+  - 'Suggestion: the dotted x guides almost vanish on the dark background; a slightly
+    lighter guide tone would keep the grid subtle but visible.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "silhouette-basic · pygal · anyplot.ai" clearly visible in dark text; x-axis "Silhouette Coefficient (avg: 0.524)" and y-axis "Samples (grouped by cluster)" both readable with proper contrast
-      Data: Three clusters shown - Cluster 0 (blue, 25 bars ~0.2-0.9), Cluster 1 (orange, 25 bars ~0.6-1.0), Cluster 2 (green, 25 bars -0.1 to 0.6); all bars clearly differentiated with color
-      Legibility verdict: PASS - all text readable, high contrast, no overlaps
+      Background: warm off-white #FAF8F1, 3200x1800 landscape.
+      Chrome: title "silhouette-basic · python · pygal · anyplot.ai" centered at top in dark ink; x-axis title "Silhouette coefficient", rotated y-axis title "Samples, grouped by cluster"; tick labels -0.2 … 1 at 0.2 steps; dotted vertical guides visible but subtle; legend row at the bottom with four entries (Cluster 0 n=30 avg 0.24, Cluster 1 n=51 avg 0.73, Cluster 2 n=69 avg 0.49, Average 0.524) with small square swatches. All text readable.
+      Data: three blocks of thin horizontal bars from zero, sorted descending within each block, separated by gaps: green #009E73 cluster 0 on top (5 short negative bars to the left of zero), lavender #C475FD cluster 1 (longest bars, to ~0.81), blue #4467A3 cluster 2 (largest block). A dark dashed vertical line at 0.524 runs across all blocks. Annotations "avg 0.24", "avg 0.73", "avg 0.49" sit beside each block, clear of the bars.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and axis labels clearly visible in light text (#F0EFE8); no dark-on-dark failures; proper contrast throughout
-      Data: Cluster colors identical to light render (blue, orange, green) - only chrome elements adapted to dark theme
-      Legibility verdict: PASS - all text readable with light coloring, excellent theme adaptation, no contrast issues
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels, legend and annotations all in light ink; no dark-on-dark text. The dotted x guides are very faint on the dark surface.
+      Data: identical cluster colors (#009E73, #C475FD, #4467A3) and layout; the average line flips to a light dashed line and stays clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -49,47 +66,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28/22/18px); all perfectly readable in
-          both themes
+        comment: Explicit sizes (title 64, labels 44, ticks 40, annotations 38); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend properly spaced
+        comment: No text collisions; annotations clear of bars and the average line
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: 75 bars with separators optimally sized and distinct
+        passed: false
+        comment: Bars sized to 150 rows; legend swatches tiny and the average entry
+          shows a square, not the dashed line (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with excellent contrast; CVD-safe
+        comment: Green/lavender/blue are CVD-distinguishable; good contrast in both
+          themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 60-70% canvas utilization; balanced margins
+        passed: false
+        comment: 3200x1800; x range -0.2…1.0 leaves ~25% of the width empty (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: '''Silhouette coefficient'' and ''Samples, grouped by cluster'''
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Okabe-Ito colors correct, but Cluster 0 (first series) is blue instead
-          of brand green (#009E73)
+        passed: true
+        comment: 'Imprint order from #009E73; correct theme backgrounds; data colors
+          identical across themes'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -97,20 +117,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults; lacks custom palette or extraordinary design
-          choices
+        comment: Style-guide baseline; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle grid, generous margins, separator gaps add structure
+        passed: false
+        comment: Butt-capped bars with deliberate block gaps and annotation placement
+          beside each block
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear cluster quality narrative; visual hierarchy via separation
+        passed: false
+        comment: Data displayed as the Notes ask; no hierarchy chosen beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct silhouette plot with horizontal bars
+        comment: Silhouette plot of horizontal per-sample bars; no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bars, grouping, sorting, annotations'
+        comment: C1 sorted per-sample bars, C2 colored blocks with gaps, C3 average
+          line across all clusters, C4 per-cluster avg annotations, C5 nothing extra
+          — all met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: All 150 samples drawn at their scores; negatives left of zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; legend shows cluster names and averages
+        comment: Mandated title format; legend names clusters and the average
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -148,19 +170,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all silhouette aspects: good, moderate, and poor cohesion'
+        comment: Strong, moderate and weak clusters, negative scores, unequal sizes
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Real K-means clustering; neutral scenario
+        passed: false
+        comment: Generic 'Feature 1/2' blobs without a domain (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Silhouette range, sample size, cluster count all reasonable
+        comment: 150 samples, 3 clusters, scores within -0.05…0.81; no Check values
+          in the spec
     code_quality:
       score: 10
       max: 10
@@ -170,31 +193,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no functions/classes
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeds set for determinism
+        comment: np.random.seed(42) and KMeans random_state
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, no over-engineering
+        comment: Appropriate complexity; silhouette_samples used, nothing hand-rolled
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and naming
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; pygal 3 API
     library_mastery:
       score: 6
       max: 10
@@ -203,21 +226,34 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good pygal API usage with custom Style and separators
+        passed: false
+        comment: XY chart with allow_interruptions and None breaks, per-point label
+          dicts with print_labels, stroke_style per series
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Doesn't leverage advanced pygal features like interactivity
+        comment: pygal's inline CSS injection (css=['inline:…']) to set per-series
+          stroke widths and annotation text styling
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-20T18:05:00Z'
 impl_tags:
   dependencies:
-  - sklearn
-  techniques: []
+  - scikit-learn
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  - reference-line
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
-  styling: []
+  dataprep:
+  - clustering
+  - sorting
+  styling:
+  - custom-css
+  - grid-styling

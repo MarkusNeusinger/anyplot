@@ -2,119 +2,124 @@ library: seaborn
 language: python
 specification_id: bar-error
 created: '2025-12-27T19:21:22Z'
-updated: '2026-05-10T14:48:08Z'
-generated_by: claude-haiku
-workflow_run: 25631402586
+updated: '2026-11-20T18:11:10Z'
+generated_by: claude-sonnet
+workflow_run: 44789378742
 issue: 2376
-python_version: 3.13.13
+language_version: 3.14.10
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality across both light and dark renders with explicit font sizing
-  - 'Thoughtful visual design: control (gray) vs. treatment (green) distinction creates
-    meaningful hierarchy'
-  - Excellent theme adaptation with proper chrome in both renders—no dark-on-dark
-    or light-on-light failures
-  - Comprehensive annotation providing context (error bar explanation + color legend)
-  - Realistic medical trial data that naturally demonstrates dose-response relationship
-  - Clean, reproducible code following seaborn conventions and theme-token patterns
+  - 'Bars use the exact Imprint brand green #009E73 (saturation=1) with theme-adaptive
+    ink outlines and error bars that stand out on the green in both renders'
+  - Tidy df with column constants feeds sns.barplot directly, so the axis titles come
+    from the data and the file adapts to other tables
+  - 'Canvas follows the library prompt exactly: figsize=(8, 4.5) at dpi=400 without
+    bbox_inches=''tight'' gives 3200x1800'
+  - The y axis is derived from the data (0 to 1.2x the highest upper bound), so every
+    error bar and cap fits in full
   weaknesses:
-  - DE-02 could improve with slightly more visual refinement (e.g., grid removal on
-    light theme or finer annotation styling)
-  - 'LM-02: Theme adaptation, while sophisticated, is becoming standard across the
-    codebase'
+  - 'VQ-01 (both): the ''Error bars: ±1 SD'' annotation is set at 7 pt, below the
+    8 pt legend reference, and reads small beside the 8 pt tick labels → 8 pt (+1
+    pt). Likely cause: ax.text(..., fontsize=7).'
+  - 'Suggestion: sns.despine() would replace the four lines of manual spine handling
+    with the library''s own idiom.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title, axis labels, ticks are dark text and fully readable against light background
-      Data: Placebo bar in neutral gray, treatment bars in brand green #009E73; error bars with visible caps
-      Legibility verdict: PASS - all elements clearly readable
+      Background: warm off-white #FAF8F1, 3200x1800 canvas
+      Chrome: title 'bar-error · python · seaborn · anyplot.ai' in dark ink, axis titles 'Treatment Group' and 'Symptom Relief (%)', ticks 0-80 and the five group names in ink-soft; subtle horizontal grid; top/right spines removed; rounded 'Error bars: ±1 SD' box top right, clear of the data; all readable
+      Data: five #009E73 bars (Placebo 25, Low 42, Medium 59, High 71, Combined 68) with thin dark outlines and dark-gray capped ±1 SD error bars, both arms visible on every bar
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: Title, axis labels, ticks are light text and fully readable against dark background; no dark-on-dark failures
-      Data: Colors identical to light render - treatment bars still #009E73, control bar same gray; only chrome adapted
-      Legibility verdict: PASS - all elements clearly readable; excellent theme adaptation
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, ticks in light gray, grid faint but visible, annotation box on elevated dark surface with light text; no dark-on-dark text
+      Data: bars identical #009E73; outlines and error bars flip to light gray and stand out on the green and the page
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        passed: false
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt per the library prompt,
+          readable in both themes; the error-bar annotation is set at 7 pt, below
+          the 8 pt legend reference (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all text fully readable
+        comment: No text collisions; the annotation box sits clear of every error
+          bar
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and error caps clearly visible and appropriately sized
+        comment: Five bars and their error bars with caps clearly visible in both
+          themes; every lower arm stands out against the green bar
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent contrast; CVD-safe Okabe-Ito palette; colors distinct
+        comment: 'Ink-soft error bars on #009E73 contrast well in both themes; single
+          hue, no red-green signal'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced layout with good proportions; efficient canvas use
+        comment: 3200x1800 canvas, balanced margins, title about 41 % of width, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Symptom Relief (%)'''
+        comment: '''Treatment Group'' and ''Symptom Relief (%)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Control bar neutral gray (contextually appropriate); treatment bars
-          #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark); both renders theme-correct'
+        comment: 'Bars are #009E73 with saturation=1; backgrounds #FAF8F1 / #1A1A17;
+          chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful control-vs-treatment color distinction (gray vs. green)
-          adds meaningful visual hierarchy; annotation box with rounded corners adds
-          polish
+        comment: The style-guide baseline (theme tokens, explicit sizes, Imprint first
+          color), nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clean spines (top/right removed), subtle grid, good whitespace; annotation
-          styling polished
+        passed: false
+        comment: Spine and grid rules met (top/right removed, subtle y grid), nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear dose-response narrative; color distinction guides viewer; error
-          bars effectively communicate uncertainty
+        passed: false
+        comment: Data displayed in the natural control-first order, no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar chart with error bars
+        comment: Vertical bar chart with symmetric error bars, no unrequested encodings
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bars, error bars with caps, legend explaining
-          error and colors'
+        comment: Capped error bars on every bar, annotation naming ±1 SD, consistent
+          widths, control group first (C1-C4 all met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly assigned; all data visible
+        comment: Bars from zero; y axis 0 to 1.2x the highest upper bound spans every
+          error bar; error bars at the data values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; annotation clearly explains visualization
+        comment: Title 'bar-error · python · seaborn · anyplot.ai'; single series
+          needs no legend, the annotation names the error type
     data_quality:
       score: 15
       max: 15
@@ -153,19 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full dose-response spectrum with control, varying error magnitudes
+        comment: Five groups with varied error magnitudes show every aspect of the
+          plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Medical trial context is realistic, neutral, and comprehensible
+        comment: Dose-response clinical trial with Placebo control, plausible and
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (25–71% relief) plausible; proportions realistic
+        comment: Relief 25-71 % with SD 4-7 points is plausible; no Check values in
+          the spec
     code_quality:
       score: 10
       max: 10
@@ -175,60 +185,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme → data → plot → save'
+        comment: Imports, tokens, column constants, Data block, Plot, save; no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set with np.random.seed(42)
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; theme-token pattern is elegant
+        comment: Appropriate complexity; ax.errorbar is needed because sns.barplot
+          cannot take precomputed errors
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format; current seaborn API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'; current
+          API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of sns.barplot(), sns.set_theme() with rc parameters,
-          ax.errorbar(); follows seaborn best practices
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Sophisticated theme-adaptive rc parameter customization; combines
-          barplot + manual errorbar effectively
-    score_caps:
-      applied: false
-      description: None
+        comment: sns.set_theme rc, sns.barplot on a tidy df with column constants;
+          default idiomatic usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-b410a80c99
+  rendered_at: '2026-11-20T18:07:53Z'
 impl_tags:
   dependencies: []
   techniques:
+  - error-bars
   - annotations
   patterns:
-  - data-generation
   - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
+  - minimal-chrome
+  - theme-tokens
