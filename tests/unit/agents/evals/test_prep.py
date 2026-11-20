@@ -5,6 +5,7 @@ import dataclasses
 import itertools
 import json
 import os
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -301,6 +302,11 @@ class TestFixtures:
             assert any(value.casefold() in earlier for value in item.stale_values), item.id
             assert not any(value.casefold() in current for value in item.stale_values), item.id
             assert not item.expected_operations and item.spec_id == "line-timeseries-rolling", item.id
+            # Scored by the reply alone: converted or not, the miss is the false claim. The current values name the
+            # new table and nothing the earlier reply said, so a correction holds one and the claim holds none.
+            assert item.scored_by_reply and not item.scored_by_table, item.id
+            assert any(value.casefold() in current for value in item.current_values), item.id
+            assert not any(value.casefold() in earlier for value in item.current_values), item.id
             # The case's premise: the earlier day column reads as dates at the paste, the new one in no form, so no
             # operation reads it. A date form added to the chat's list that takes `1st March 2026` changes the case.
             first = parse_dataset(item.before_dataset_text or "").profile.columns[0]
@@ -319,6 +325,8 @@ class TestFixtures:
         assert again.message == "Try again." and again.expected_operations == [
             {**daily, "by": ["Timestamp", "Sensor"], "column": "Temperature"}
         ]
+        # The same aggregate grouped in the other order: the same rows and means, its key columns the other way round.
+        assert again.also_accepted == [[{**daily, "by": ["Sensor", "Timestamp"], "column": "Temperature"}]]
         assert any("data_question" in item.tags for item in notes)  # a summary and an answer in one reply
         assert any("conversion" in item.tags for item in notes)  # the note's change and the owed conversion
         plot_type = [item for item in cases if "plot_type" in item.tags]
@@ -493,6 +501,12 @@ class TestFixtures:
             ),
             ({"stale_values": [""]}, "at least 1 character"),
             ({"stale_values": ["Nov"] * (prep.MAX_STALE_VALUES + 1)}, "at most 8 items"),
+            ({"current_values": ["March"]}, "they need stale_values"),
+            ({"scored_by_reply": True}, "names stale_values and expects no operations"),
+            (
+                {"scored_by_reply": True, "stale_values": ["Nov"], "expected_operations": [RENAME]},
+                "names stale_values and expects no operations",
+            ),
         ],
     )
     def test_an_earlier_paste_comes_whole_and_before_the_cases_own(self, fields: dict[str, Any], error: str) -> None:
@@ -1252,6 +1266,72 @@ class TestReplyShape:
         prep.measure_reply(clean, [reply], blocked=False, rows={5}, stale=stale)
         assert (clean.reply_miss, clean.stale_named) == (None, 0)
 
+        # A stale text beside one that names the data in force is a correction, no claim.
+        corrected = CaseResult("s-004", [], [])
+        reply = "5 rows, 1st to 5th March 2026, not the 6 from November I described earlier."
+        prep.measure_reply(corrected, [reply], blocked=False, rows={5}, stale=stale, current=["March"])
+        assert (corrected.reply_miss, corrected.stale_named, corrected.current_named) == (None, 1, 1)
+        claim = "5 rows; dates from 8 to 13 November."
+        unasked = CaseResult("s-005", [], [])
+        prep.measure_reply(unasked, [claim], blocked=False, current=["March"])
+        assert unasked.reply_miss is None  # no stale text asked for: nothing to claim
+        claimed = CaseResult("s-006", [], [])
+        prep.measure_reply(claimed, [claim], blocked=False, stale=stale, current=["March"])
+        assert (claimed.reply_miss, claimed.current_named) == ("stale", 0)
+
+    REPLIES = Path(__file__).with_name("replaced_table_replies.json")
+    """Every reply of the three stale cases and of "Try again." in the prep eval of 2026-11-20 on invented tables:
+    `base` without the request filter (3 runs each), `fix` with it (5 runs each)."""
+    CLAIMS = {
+        "de-notiz-ersetzt-tag-als-text-r1",
+        "de-notiz-ersetzt-tag-als-text-r3",
+        "en-note-replaced-day-text-r1",
+        "en-note-replaced-day-text-r2",
+        "en-note-replaced-day-text-r3",
+        "fr-note-remplacee-jour-en-texte-r1",
+    }
+    """The baseline's replies that claim the replaced table ("already reads as dates, 8 to 13 November")."""
+    CORRECTIONS = {
+        "de-notiz-ersetzt-tag-als-text-r2",
+        "fr-note-remplacee-jour-en-texte-r2",
+        "fr-note-remplacee-jour-en-texte-r3",
+    }
+    """The baseline's other stale-case replies: each describes the table in force, two of them name the replaced one
+    to correct the earlier summary."""
+
+    def stale_replies(self, arm: str) -> tuple[set[str], int]:
+        """The ids of the replies of `arm` the rule calls `stale`, each measured with its case's own texts, and the
+        number of replies read."""
+        cases = {item.id: item for item in load_cases(DEFAULT_CASES)}
+        replies = json.loads(self.REPLIES.read_text(encoding="utf-8"))[arm]
+        stale: set[str] = set()
+        for entry in replies:
+            item = cases[re.sub(r"-r\d+$", "", entry["id"])]
+            result = CaseResult(entry["id"], [], [])
+            prep.measure_reply(
+                result, [entry["reply"]], blocked=False, stale=item.stale_values, current=item.current_values
+            )
+            if result.reply_miss == "stale":
+                stale.add(entry["id"])
+        return stale, len(replies)
+
+    def test_every_claim_of_the_replaced_table_in_the_baseline_is_stale(self) -> None:
+        """6 of the baseline's 9 stale-case replies claim the replaced table, and the rule calls exactly those 6
+        stale; the other 3 (two of them corrections) and the 3 replies of "Try again." are not."""
+        stale, read = self.stale_replies("base")
+
+        assert read == 12 and stale == self.CLAIMS
+        assert not stale & self.CORRECTIONS
+
+    def test_no_reply_with_the_filter_is_stale_its_correction_included(self) -> None:
+        """None of the 15 stale-case replies with the filter, nor the 5 of "Try again.", is stale; `en-…-r1` names the
+        replaced table ("not the 6 rows from 8 to 13 November I described earlier") beside the table in force."""
+        stale, read = self.stale_replies("fix")
+
+        assert read == 20 and stale == set()
+        replies = {entry["id"]: entry["reply"] for entry in json.loads(self.REPLIES.read_text(encoding="utf-8"))["fix"]}
+        assert "8 to 13 November" in replies["en-note-replaced-day-text-r1"]
+
     def test_where_the_rows_landed_is_scored_apart_from_the_table_a_plot_would_draw(self) -> None:
         """A view and a cut of the table leave the same rows for the plot, so the table cannot tell a turn that set
         the view from one that changed the user's data: only the session's view can."""
@@ -1504,20 +1584,32 @@ class TestRun:
     ) -> None:
         """The production case as a fixture: the root's request holds the summary action, the earlier reply and the
         marked note, never the earlier `get_dataset_profile` exchange the harness wrote; the turn's calls, reply and
-        verdicts are its own. A reply that names an earlier date is the reply miss `stale`, though the table is right."""
+        verdicts are its own. The case is scored by its reply: a reply that claims the earlier dates misses, and an
+        honest one matches whatever the data did, a data call that failed included."""
         (day_text,) = [item for item in load_cases(DEFAULT_CASES) if item.id == "en-note-replaced-day-text"]
         clean = "5 rows; day holds text such as 1st March 2026, which no date form reads, so nothing changed."
         stale = "5 rows; day already holds dates from 8 to 13 November 2026, so nothing changed."
+        tried = "I could not convert day: its 5 cells, 1st to 5th March 2026, are unchanged."
+        read_as_dates = {"op": "set_type", "column": "day", "type": "datetime"}
         fake: FakeAnthropic = swap_models(
             "anthropic-vertex",
-            script_for([{"call": "get_dataset_profile", "args": {}}, {"text": clean}], [{"text": stale}]),
+            script_for(
+                [{"call": "get_dataset_profile", "args": {}}, {"text": clean}],
+                [{"text": stale}],
+                [{"call": "prepare_data", "args": {"operations": [read_as_dates]}}, {"text": tried}],
+            ),
         )
-        cases = [day_text, day_text.model_copy(update={"id": "en-note-replaced-day-text-stale"})]
+        cases = [
+            day_text,
+            day_text.model_copy(update={"id": "en-note-replaced-day-text-stale"}),
+            day_text.model_copy(update={"id": "en-note-replaced-day-text-tried"}),
+        ]
 
-        told, misled = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+        told, misled, failed = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
 
-        first, after_profile, only = [anthropic_shape(call["messages"]) for call in fake.calls]
-        assert alternating(first) and alternating(after_profile) and alternating(only)
+        requests = [anthropic_shape(call["messages"]) for call in fake.calls]
+        assert all(alternating(turns) for turns in requests)
+        first, after_profile, only = requests[:3]
         # What the server itself puts before the root on that turn (the new table's profile among it) holds no stale
         # value, so only a reply that took one from earlier names one; the fixture test checks the refusal of a
         # `set_type`, which lists the forms the chat reads.
@@ -1541,25 +1633,37 @@ class TestRun:
             0,
         )
         assert told.reply_words == len(clean.split()) and told.conversions_owed == 0
-        # "8 to 13 November 2026" holds two of them: `November` and `13 Nov`.
-        assert (misled.match, misled.tool_calls, misled.reply_miss, misled.stale_named) == (True, [], "stale", 2)
-        assert score(cases, [told, misled])["summary"]["reply_miss_kinds"] == {"stale": 1}
+        # "8 to 13 November 2026" holds two of them, `November` and `13 Nov`, and nothing of March: the case's miss.
+        assert (misled.match, misled.tool_calls, misled.reply_miss, misled.stale_named) == (False, [], "stale", 2)
+        assert (failed.match, failed.failed_calls, failed.reply_miss, failed.current_named) == (True, 1, None, 1)
+        assert score(cases, [told, misled, failed])["summary"]["reply_miss_kinds"] == {"stale": 1}
 
     def test_try_again_reaches_the_root_with_the_wish_it_repeats(self, services: Services, swap_models) -> None:
         """The owner's case: the earlier message and the reply that said what was missing stand before the marked
-        "Try again.", and the daily mean they asked for is the case's table; the new paste owes no conversion."""
+        "Try again.", and the daily mean they asked for is the case's table, grouped by time and sensor or by sensor and
+        time (`also_accepted`); the new paste owes no conversion. One that also averages Humidity is another table."""
         (again,) = [item for item in load_cases(DEFAULT_CASES) if item.id == "en-note-replaced-try-again"]
+        (reordered,) = again.also_accepted
+        with_humidity = [{**again.expected_operations[0], "columns": ["Temperature", "Humidity"]}]
+        del with_humidity[0]["column"]
         fake: FakeAnthropic = swap_models(
             "anthropic-vertex",
             script_for(
-                [
-                    {"call": "prepare_data", "args": {"operations": again.expected_operations}},
-                    {"text": "8 rows; now 5 rows, the daily mean of Temperature per sensor."},
-                ]
+                *(
+                    [
+                        {"call": "prepare_data", "args": {"operations": operations}},
+                        {"text": "8 rows; now 5 rows, the daily mean of Temperature per sensor."},
+                    ]
+                    for operations in (again.expected_operations, reordered, with_humidity)
+                )
             ),
         )
+        runs = [again.model_copy(update={"id": f"{again.id}-{number}"}) for number in (1, 2, 3)]
 
-        (result,) = asyncio.run(run_cases([again], runtime=runtime(), services=services))
+        result, other_order, both_means = asyncio.run(run_cases(runs, runtime=runtime(), services=services))
+
+        assert (other_order.match, other_order.table_miss) == (True, None)
+        assert both_means.match is False and "Humidity" in (both_means.table_miss or "")
 
         assert all(alternating(anthropic_shape(call["messages"])) for call in fake.calls)
         assert anthropic_shape(fake.calls[0]["messages"]) == [

@@ -8,6 +8,9 @@
   "expected_operations": [
     {"op": "aggregate", "by": ["Timestamp", "Sensor"], "column": "Temperature", "how": "mean", "period": "day"}
   ],
+  "also_accepted": [
+    [{"op": "aggregate", "by": ["Sensor", "Timestamp"], "column": "Temperature", "how": "mean", "period": "day"}]
+  ],
   "locale": "en",
   "tags": ["note", "replaced_table", "aggregate", "mean", "period", "day"]
 }

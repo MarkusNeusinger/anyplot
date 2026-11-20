@@ -113,9 +113,12 @@ model call (`_write_earlier_turn`): the user's message (`before_message`, typed 
 summary action as the route stores it, `summary_action_line`), the root's `get_dataset_profile` call with the tool's
 own answer for that table, and the root's reply (`before_reply`). The paste then counts as summarized, and the case
 pastes `dataset_text` and runs its turn as any case does; the turn's calls, replies and verdicts are read from its own
-events only. `stale_values` are texts the turn's replies must not hold, such as the earlier table's values as a reply
-would write them, compared without regard to case: a reply that holds one is the reply miss `stale`, whatever its
-shape, and the report counts them (`stale_named`), never the texts.
+events only. `stale_values` are texts the turn's replies must not hold as a claim, such as the earlier table's values
+as a reply would write them, and `current_values` texts that name the table in force, such as its own dates, all
+compared without regard to case: a reply that holds a stale text and no current one is the reply miss `stale`, whatever
+its shape, while one that holds both corrects the earlier summary. The report counts them (`stale_named`,
+`current_named`), never the texts. A case with `scored_by_reply` is scored by its reply alone: any outcome of the data
+counts, and it matches when the turn wrote a reply that is no `stale` miss (`score_reply`).
 
 A case with `plot_request` asks for a change of the plot, alone or beside its data operations: an order of the
 bars, a total in the title. Its turn must send that wish to the plot, a `keep_plot_request` or a `plot_pipeline`
@@ -439,8 +442,18 @@ class PrepCase(BaseModel):
     """The root's reply on the earlier paste's summary turn: the discussion the case's turn keeps, such as what did not
     fit and what the root offered."""
     stale_values: list[Annotated[str, Field(min_length=1)]] = Field(default_factory=list, max_length=MAX_STALE_VALUES)
-    """Texts the turn's replies must not hold, compared without regard to case, such as the values of a table a paste
-    replaced as a reply would write them: a reply that holds one is the reply miss `stale` (`measure_reply`)."""
+    """Texts the turn's replies must not hold as a claim, compared without regard to case, such as the values of a
+    table a paste replaced as a reply would write them: a reply that holds one and none of `current_values` is the
+    reply miss `stale` (`measure_reply`)."""
+    current_values: list[Annotated[str, Field(min_length=1)]] = Field(default_factory=list, max_length=MAX_STALE_VALUES)
+    """Texts that name the table in force, as a reply writes them, such as its own dates: a reply that holds one beside
+    a stale value names the replaced table to correct itself ("not the 6 rows from November I described"), which is
+    no stale miss. Only with `stale_values`."""
+    scored_by_reply: bool = False
+    """The case is scored by its reply alone (since 2026-11-20): any outcome of the data counts, unchanged or
+    changed and a failed data call too, and the case matches when the turn wrote a reply that is no `stale` miss
+    (`score_reply`). For a request with several fair outcomes whose one wrong answer is a false claim, such as a note
+    on a replaced table whose column no date form reads. It needs `stale_values` and expects no operations."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -467,6 +480,12 @@ class PrepCase(BaseModel):
             raise ValueError("an earlier message comes with the earlier paste it was typed with")
         if self.before_dataset_text is not None and self.dataset_text is None:
             raise ValueError("an earlier paste is one the case's own dataset replaces")
+        if self.current_values and not self.stale_values:
+            raise ValueError("current_values tell a correction from a stale claim, so they need stale_values")
+        if self.scored_by_reply and (
+            not self.stale_values or self.expected_operations or self.refuse or self.strict_operations
+        ):
+            raise ValueError("a case scored by its reply names stale_values and expects no operations")
         return self
 
     @property
@@ -1046,12 +1065,15 @@ class CaseResult:
     closing_invitation: bool = False
     """The last sentence of the last reply text, or its last clause, asks the user to choose (`INVITATION`)."""
     reply_miss: str | None = None
-    """`stale` (the reply holds a text the case forbids it, `PrepCase.stale_values`), `unnamed` (the reply leaves out a
+    """`stale` (the reply holds a text the case forbids it, `PrepCase.stale_values`, and none that names the table in
+    force, `PrepCase.current_values`), `unnamed` (the reply leaves out a
     text the case asks for, `PrepCase.reply_names`), `closing_question` or
     `closing_invitation` (one the turn was not blocked for, see `measure_reply`), `long` (over `MAX_REPLY_WORDS`),
     or `no_row_count` (a summary turn whose reply names no row count of the data, `names_count`)."""
     stale_named: int = 0
     """How many of the case's `stale_values` the turn's replies hold: a count, never a text."""
+    current_named: int = 0
+    """How many of the case's `current_values` the turn's replies hold: a count, never a text."""
     roles_open: bool = False
     """The turn left a required role of the spec without a column, so the plot cannot be drawn until the user binds
     one or brings other data: the reply may close with a question about it."""
@@ -1301,7 +1323,9 @@ class CaseRunner:
                 rows=rows if summary_turn else None,
                 names=case.reply_names,
                 stale=case.stale_values,
+                current=case.current_values,
             )
+            score_reply(result, case.scored_by_reply)
             score_figures(result, case.figures)
             if result.reply_error is not None:
                 result.match = False
@@ -1604,6 +1628,8 @@ def score_turn(
     result.ops_exact = any(same_operations(result.found, operations) for operations, _, _ in readings)
     if case.refuse:
         result.match = result.stored_calls == 0
+    elif case.scored_by_reply:
+        result.match = True  # any outcome of the data counts; the reply decides (`score_reply`)
     elif case.scored_by_table:
         misses = [
             missing
@@ -1682,6 +1708,13 @@ def score_question(result: CaseResult, asks: Literal["view", "table"] | None) ->
         result.match = False
 
 
+def score_reply(result: CaseResult, by_reply: bool) -> None:
+    """For a case scored by its reply (`PrepCase.scored_by_reply`): a miss when the turn wrote no reply to judge or its
+    reply is a `stale` miss (`measure_reply`). Its other reply misses count in the reply gate, as every case's do."""
+    if by_reply and (result.reply_words is None or result.reply_miss == "stale"):
+        result.match = False
+
+
 def score_figures(result: CaseResult, expected: FiguresExpectation | None) -> None:
     """Whether the number-provenance verdicts of the turn's replies (`result.figure_verdicts`) are what the case asks
     (`FIGURES_EXPECTATIONS`); a miss otherwise. A case without the expectation, or one that only records, is not
@@ -1743,6 +1776,7 @@ def measure_reply(
     rows: Collection[int] | None = None,
     names: Sequence[str] = (),
     stale: Sequence[str] = (),
+    current: Sequence[str] = (),
 ) -> None:
     """The reply's shape: its words and questions, whether it closes with a question, and its reply miss.
 
@@ -1755,8 +1789,10 @@ def measure_reply(
     summary may name: the paste's, and the last version's when the turn made one; a reply that names neither has
     no summary (`no_row_count`). `names` are the texts the case asks the reply to contain (`PrepCase.reply_names`):
     a reply that leaves one out is `unnamed`, whatever its shape, since what it left out is what the user had to
-    hear. `stale` are the texts the reply must not hold (`PrepCase.stale_values`), compared without regard to case: a
-    reply that holds one is `stale` before any other miss, since it tells the user something false about the data.
+    hear. `stale` are the texts the reply must not hold as a claim (`PrepCase.stale_values`) and `current` the ones
+    that name the data in force (`PrepCase.current_values`), all compared without regard to case: a reply that holds
+    a stale text and no current one is `stale` before any other miss, since it tells the user something false about
+    the data; one that holds both names the replaced data beside the data in force, as a correction does.
     """
     from agents.anyplot.telemetry import ends_with_question
 
@@ -1768,8 +1804,9 @@ def measure_reply(
     result.closing_question = ends_with_question(texts[-1])
     result.closing_invitation = closes_with_invitation(texts[-1])
     result.stale_named = sum(1 for value in stale if value.casefold() in reply.casefold())
+    result.current_named = sum(1 for value in current if value.casefold() in reply.casefold())
     waiting = blocked or result.failed_calls or (result.roles_open and not result.offered)
-    if result.stale_named:
+    if result.stale_named and not result.current_named:
         result.reply_miss = "stale"
     elif any(name not in reply for name in names):
         result.reply_miss = "unnamed"
