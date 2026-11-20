@@ -1,7 +1,7 @@
 """anyplot.ai
 elbow-curve: Elbow Curve for K-Means Clustering
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-10
+Quality: pending | Updated: 2026-05-10
 """
 
 import os
