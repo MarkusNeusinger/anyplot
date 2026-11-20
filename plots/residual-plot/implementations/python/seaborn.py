@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 residual-plot: Residual Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-10
@@ -18,36 +18,35 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
-ACCENT_RED = "#C475FD"  # Okabe-Ito position 2 for trend/outliers
 
-# Data - manufacturing quality control (wafer defect prediction)
+# Imprint palette: all eight positions, one per group in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+OUTLIER_SD = 2  # residuals beyond this many standard deviations count as outliers
+
+# Columns: set these to your table's column names
+OBSERVED = "Observed defect count"  # role: y_true
+PREDICTED = "Fitted values (predicted defect count)"  # role: y_pred
+RESIDUAL = "Residuals (observed - predicted)"  # role: extra
+GROUP = "Residual type"  # role: extra
+
+# Data: replace this block with your own table, for example df = pd.read_csv("predictions.csv")
+# Manufacturing quality control: wafer defect counts against process temperature, fitted linearly
 np.random.seed(42)
 n_samples = 150
-
-# Feature: process temperature (°C)
 temperature = np.random.uniform(700, 1100, n_samples)
-
-# True relationship: exponential relationship (will show non-linearity in residuals)
 y_true = 1000 + 0.5 * temperature + 0.0005 * temperature**2 + np.random.normal(0, 150, n_samples)
-
-# Fit linear model (will miss the quadratic component)
 slope, intercept = np.polyfit(temperature, y_true, 1)
-y_pred = slope * temperature + intercept
+df = pd.DataFrame({OBSERVED: y_true, PREDICTED: slope * temperature + intercept})
 
-# Calculate residuals
-residuals = y_true - y_pred
+# Plot: reads only df and the constants above
+df[RESIDUAL] = df[OBSERVED] - df[PREDICTED]
+residual_std = df[RESIDUAL].std(ddof=0)
+outlier_label = f"Outlier (|z| > {OUTLIER_SD})"
+df[GROUP] = np.where(df[RESIDUAL].abs() > OUTLIER_SD * residual_std, outlier_label, "Normal")
+palette = {"Normal": IMPRINT_PALETTE[0], outlier_label: IMPRINT_PALETTE[1]}
 
-# Identify outliers (beyond 2 standard deviations)
-residual_std = np.std(residuals)
-outlier_mask = np.abs(residuals) > 2 * residual_std
-
-# Create DataFrame for seaborn
-df = pd.DataFrame(
-    {"Fitted Values": y_pred, "Residuals": residuals, "Type": np.where(outlier_mask, "Outlier (|z| > 2)", "Normal")}
-)
-
-# Configure seaborn theme
 sns.set_theme(
     style="ticks",
     rc={
@@ -59,61 +58,56 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot using seaborn scatterplot with hue for outliers
+# Points: outliers get their own hue; alpha keeps the dense middle readable
 sns.scatterplot(
     data=df,
-    x="Fitted Values",
-    y="Residuals",
-    hue="Type",
-    palette={"Normal": BRAND, "Outlier (|z| > 2)": ACCENT_RED},
-    s=180,
+    x=PREDICTED,
+    y=RESIDUAL,
+    hue=GROUP,
+    hue_order=[g for g in palette if g in set(df[GROUP])],
+    palette=palette,
+    s=60,
     alpha=0.75,
+    edgecolor=PAGE_BG,
+    linewidth=0.4,
     ax=ax,
 )
 
-# Add polynomial trend line (order=2) to show non-linear pattern
+# Quadratic trend of the residuals: reveals the curvature the linear model misses
 sns.regplot(
     data=df,
-    x="Fitted Values",
-    y="Residuals",
+    x=PREDICTED,
+    y=RESIDUAL,
     scatter=False,
     order=2,
-    line_kws={"color": INK_SOFT, "linewidth": 2.5, "linestyle": "--", "alpha": 0.6, "label": "Trend (2nd order)"},
+    ci=None,
+    line_kws={"color": INK_SOFT, "linewidth": 2.0, "linestyle": "--", "label": "Trend (2nd order)"},
     ax=ax,
 )
 
-# Reference line at y=0 (perfect prediction)
-ax.axhline(y=0, color=INK, linestyle="-", linewidth=2, zorder=2, alpha=0.8)
+# Zero reference line and the +/- SD outlier bands
+ax.axhline(0, color=INK, linewidth=1.5, zorder=2, alpha=0.8)
+ax.axhline(OUTLIER_SD * residual_std, color=INK_SOFT, linestyle=":", linewidth=1.2, label=f"±{OUTLIER_SD} SD")
+ax.axhline(-OUTLIER_SD * residual_std, color=INK_SOFT, linestyle=":", linewidth=1.2)
 
-# Add ±2 standard deviation bands
-ax.axhline(y=2 * residual_std, color=INK_SOFT, linestyle="--", linewidth=1.5, alpha=0.5, label="±2 SD")
-ax.axhline(y=-2 * residual_std, color=INK_SOFT, linestyle="--", linewidth=1.5, alpha=0.5)
-
-# Styling
-ax.set_xlabel("Fitted Values (Predicted Defect Count)", fontsize=20, color=INK)
-ax.set_ylabel("Residuals (Actual - Predicted)", fontsize=20, color=INK)
-ax.set_title("residual-plot · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-
-# Remove top and right spines
+# Style
+ax.set_title("residual-plot · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel(PREDICTED, fontsize=10)
+ax.set_ylabel(RESIDUAL, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.grid(True, alpha=0.15, linewidth=0.6)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
+ax.legend(fontsize=8, loc="upper right", framealpha=0.95)
 
-# Custom legend with better positioning
-handles, labels = ax.get_legend_handles_labels()
-ax.legend(handles, labels, fontsize=14, loc="upper right", framealpha=0.95, edgecolor=INK_SOFT)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
