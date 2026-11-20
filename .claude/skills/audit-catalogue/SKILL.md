@@ -255,7 +255,8 @@ the spec, a held pair, a rebuild instead of a port).
    fix was cut (adopt mode takes the whole file, so it would revert that), the
    header block, the agent validator against the base (a new refusal or a new
    `deprecated-api` hint fails), and with `--render` both themes on the canvas
-   target and not blank. The render gets a scrubbed environment: no token or
+   target, on the same one of the two canvases (as impl-review's canvas gate
+   requires), and not blank. The render gets a scrubbed environment: no token or
    database URL of your shell reaches the code. Look at the renders yourself.
 
 What renders locally: the JavaScript libraries through `render.mjs`, exactly
