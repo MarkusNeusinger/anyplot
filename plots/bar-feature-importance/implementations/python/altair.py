@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 96/100 | Updated: 2026-05-10
+Library: altair 6.3.0 | Python 3.14.10
+Quality: 86/100 | Updated: 2026-11-20
 """
 
 import os
@@ -9,86 +9,100 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Feature importances from a hypothetical RandomForest model
+# Imprint palette: all eight positions, canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+IMPRINT_SEQ = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[2]]  # single-polarity ramp: brand green to blue
+
+# Columns: set these to your table's column names
+FEATURE = "Feature"  # role: feature
+IMPORTANCE = "Importance score"  # role: importance
+STD = "Std. deviation"  # role: std
+
+# Data: replace this block with your own table, for example df = pd.read_csv("importances.csv")
+# Feature importances from a hypothetical RandomForest churn model
 np.random.seed(42)
-
-features = [
-    "customer_lifetime_value",
-    "purchase_frequency",
-    "avg_order_value",
-    "days_since_last_purchase",
-    "total_purchases",
-    "account_age_months",
-    "email_open_rate",
-    "website_visits",
-    "support_tickets",
-    "referral_count",
-    "cart_abandonment_rate",
-    "discount_usage",
-    "mobile_app_usage",
-    "newsletter_subscribed",
-    "social_media_engagement",
-]
-
-# Realistic importance scores (sum to ~1.0 for tree-based models)
-importances = np.array(
-    [0.182, 0.156, 0.134, 0.098, 0.087, 0.072, 0.058, 0.051, 0.042, 0.038, 0.031, 0.022, 0.015, 0.009, 0.005]
+importances = [0.182, 0.156, 0.134, 0.098, 0.087, 0.072, 0.058, 0.051, 0.042, 0.038, 0.031, 0.022, 0.015, 0.009, 0.005]
+df = pd.DataFrame(
+    {
+        FEATURE: [
+            "customer_lifetime_value",
+            "purchase_frequency",
+            "avg_order_value",
+            "days_since_last_purchase",
+            "total_purchases",
+            "account_age_months",
+            "email_open_rate",
+            "website_visits",
+            "support_tickets",
+            "referral_count",
+            "cart_abandonment_rate",
+            "discount_usage",
+            "mobile_app_usage",
+            "newsletter_subscribed",
+            "social_media_engagement",
+        ],
+        IMPORTANCE: importances,
+        STD: np.array(importances) * np.random.uniform(0.15, 0.35, len(importances)),
+    }
 )
 
-# Standard deviations for ensemble variability
-stds = importances * np.random.uniform(0.15, 0.35, len(importances))
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+LOW, HIGH = "low", "high"
+plot_df = df.copy()
+plot_df[LOW] = df[IMPORTANCE] - df[STD]
+plot_df[HIGH] = df[IMPORTANCE] + np.fmax(df[STD], 0)
+x_max = plot_df[HIGH].max() * 1.12
 
-df = pd.DataFrame({"feature": features, "importance": importances, "std": stds})
+base = alt.Chart(plot_df).encode(
+    y=alt.Y(
+        FEATURE.translate(ESCAPE),
+        type="nominal",
+        title=FEATURE,
+        sort=df.sort_values(IMPORTANCE, ascending=False)[FEATURE].tolist(),
+        axis=alt.Axis(labelLimit=400, ticks=False, domain=False),
+    )
+)
 
-# Sort by importance for display
-df = df.sort_values("importance", ascending=True).reset_index(drop=True)
-
-# Create base chart
-base = alt.Chart(df).encode(
-    y=alt.Y("feature:N", sort=None, title="Feature", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelLimit=300)),
-    x=alt.X("importance:Q", title="Importance Score", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
+x_scale = alt.Scale(domain=[0, x_max], nice=False)
+bars = base.mark_bar(size=17).encode(
+    x=alt.X(IMPORTANCE.translate(ESCAPE), type="quantitative", title=IMPORTANCE, scale=x_scale),
+    color=alt.Color(IMPORTANCE.translate(ESCAPE), type="quantitative", scale=alt.Scale(range=IMPRINT_SEQ), legend=None),
     tooltip=[
-        alt.Tooltip("feature:N", title="Feature"),
-        alt.Tooltip("importance:Q", title="Importance", format=".3f"),
-        alt.Tooltip("std:Q", title="Std Dev", format=".3f"),
+        alt.Tooltip(FEATURE.translate(ESCAPE), type="nominal", title=FEATURE),
+        alt.Tooltip(IMPORTANCE.translate(ESCAPE), type="quantitative", title=IMPORTANCE, format=".3f"),
+        alt.Tooltip(STD.translate(ESCAPE), type="quantitative", title=STD, format=".3f"),
     ],
 )
 
-# Bars with color gradient based on importance using viridis (continuous sequential)
-bars = base.mark_bar(size=30).encode(color=alt.Color("importance:Q", scale=alt.Scale(scheme="viridis"), legend=None))
-
-# Error bars
-error_bars = (
-    base.mark_errorbar(color=INK_SOFT, thickness=2)
-    .encode(x=alt.X("x_min:Q", title=""), x2="x_max:Q")
-    .transform_calculate(x_min="datum.importance - datum.std", x_max="datum.importance + datum.std")
+error_bars = base.mark_rule(color=INK, strokeWidth=1.6).encode(
+    x=alt.X(LOW, type="quantitative", scale=x_scale), x2=alt.X2(HIGH)
 )
 
-# Text labels at end of bars
-text = (
-    base.mark_text(align="left", baseline="middle", dx=5, fontSize=16, fontWeight="bold", color=INK)
-    .encode(text=alt.Text("importance:Q", format=".3f"), x=alt.X("text_x:Q"))
-    .transform_calculate(text_x="datum.importance + datum.std + 0.005")
+labels = base.mark_text(align="left", baseline="middle", dx=6, fontSize=11, fontWeight="bold", color=INK).encode(
+    x=alt.X(HIGH, type="quantitative", scale=x_scale),
+    text=alt.Text(IMPORTANCE.translate(ESCAPE), type="quantitative", format=".3f"),
 )
 
-# Combine layers
 chart = (
-    (bars + error_bars + text)
+    (bars + error_bars + labels)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         background=PAGE_BG,
         title=alt.Title(
-            "bar-feature-importance · altair · anyplot.ai", fontSize=28, anchor="start", offset=20, color=INK
+            "bar-feature-importance · python · altair · anyplot.ai", fontSize=16, anchor="start", color=INK
         ),
     )
     .configure_axis(
@@ -98,13 +112,20 @@ chart = (
         titleColor=INK,
         gridColor=INK,
         gridOpacity=0.10,
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=11,
+        titleFontSize=13,
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_view(fill=PAGE_BG, stroke=None)
 )
 
-# Save output
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save output, padded (never cropped) to the 3200 x 1800 target
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+TARGET_W, TARGET_H = 3200, 1800
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.width > TARGET_W or img.height > TARGET_H:
+    raise SystemExit(f"altair produced {img.width}x{img.height}, exceeds {TARGET_W}x{TARGET_H}; shrink width/height")
+canvas = Image.new("RGB", (TARGET_W, TARGET_H), PAGE_BG)
+canvas.paste(img, ((TARGET_W - img.width) // 2, (TARGET_H - img.height) // 2))
+canvas.save(f"plot-{THEME}.png")
