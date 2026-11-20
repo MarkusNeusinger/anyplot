@@ -2,127 +2,121 @@ library: altair
 language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T17:39:34Z'
-updated: '2026-05-10T03:40:52Z'
-generated_by: claude-haiku
-workflow_run: 25618691863
+updated: '2026-11-20T16:14:29Z'
+generated_by: claude-sonnet
+workflow_run: 44770183528
 issue: 2275
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance with all required features (learning curve type, training/validation
-    distinction, confidence bands, legend encoding)
-  - Excellent data quality with realistic cross-validation setup (5 folds), neutral
-    domain, appropriate accuracy ranges clearly showing learning dynamics
-  - Flawless theme adaptation across light and dark renders with correct chrome (text
-    colors, backgrounds, grid) and identical data colors
-  - Clean, reproducible code with deterministic seed, minimal focused structure, and
-    proper idiomatic altair API usage
-  - 'Correct Okabe-Ito palette usage (position 1 #009E73 for training, position 2
-    #D55E00 for validation) maintained consistently across themes'
+  - Lines pass straight through the fold means at every evaluated size with filled
+    markers via mark_line(point=OverlayMarkDef), bands at opacity 0.2 stay translucent
+    in both themes
+  - X ticks sit exactly on the ten evaluated training sizes, so each measurement lines
+    up with a grid line
+  - Y domain derived from the band extents (snapped to 0.05), no typed numbers; theme
+    tokens thread through every chrome element in both renders
+  - Tidy one-row-per-curve-and-size df with escaped column constants and typed encodings;
+    native tooltips and .interactive() add value in the HTML
   weaknesses:
-  - Design Excellence is functional but minimal—visual refinement beyond requirements
-    is limited; could benefit from custom styling or visual emphasis techniques
-  - Tick label sizing at 18px is readable but could be 19-20px for maximum clarity
-    on the large 4800x2700 pixel canvas
+  - 'Suggestion: legend title ''Curve'' could name what it separates, e.g. ''Score
+    on''.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - exactly as specified
-      Chrome: Title "learning-curve-basic · altair · anyplot.ai" readable at 28px dark text; axis labels "Training Set Size (samples)" and "Accuracy Score" clear at 22px; tick labels visible at 18px; grid subtle at low opacity
-      Data: Training line green (#009E73, Okabe-Ito position 1) at ~0.96-0.98 accuracy with matching confidence band; validation line orange (#D55E00, position 2) rising from ~0.74 to ~0.85 with matching band; 10 data points per series with clear markers; opacity 0.2 on bands shows uncertainty
-      Legibility verdict: PASS - all text elements readable, no overlap, no light-on-light issues
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'learning-curve-basic · python · altair · anyplot.ai' centered in dark ink; axis titles 'Training set size (samples)' and 'Accuracy (mean of 5 folds)'; ticks 0.70-1.00 and 100-1,000 at the evaluated sizes; rounded legend 'Curve' top right; all readable.
+      Data: training #009E73 line with filled markers ~0.98→0.96 in a narrow green band; validation #C475FD 0.74→0.87 with a band that narrows with size; bands at opacity 0.2.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - exactly as specified
-      Chrome: Title readable at 28px in light text (#F0EFE8); axis labels clear in INK_SOFT (#B8B7B0) at 22px; tick labels readable at 18px in secondary light text; grid subtle and visible on dark surface
-      Data: Training line green (#009E73) and validation line orange (#D55E00) - identical to light render, confirming only chrome (background, text) flipped; confidence bands visible with same transparency; data markers clear and distinguishable
-      Legibility verdict: PASS - all text readable against dark surface, no dark-on-dark failures, brand green #009E73 remains visible and readable
+      Background: warm near-black #1A1A17, 3200x1800.
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; legend box elevated #242420; no dark-on-dark.
+      Data: identical green and purple lines, markers and bands; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title (28px), labels (22px), ticks (18px) all readable in both themes.
-          Tick labels could be 19-20px for maximum clarity on large canvas.
+        comment: Title 16, axis titles 12, ticks/legend 10 at scale_factor 4 (library-prompt
+          reference); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Confidence bands overlap intentionally with transparency; all text
-          clear; no collisions.
+        comment: No text collisions; the two bands never overlap each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Band opacity 0.2 appropriate; line size 3 and point size 100 clearly
-          visible; 10 points per series manageable density.
+        comment: 10 points per series drawn as filled 60-size markers on 2.5 px lines;
+          legend stroke glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; green-to-orange contrast strong; no reliance
-          on red-green alone.
+        comment: Green vs purple is distinguishable under CVD; good contrast on both
+          surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 proportions appropriate; nothing cut off; generous margins
-          and whitespace.
+        comment: Exactly 3200x1800 (pad-only); title about 45% of width; balanced
+          axis titles; no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Training Set Size (samples)" and "Accuracy Score" descriptive with
-          units; title matches spec format.'
+        comment: '''Training set size (samples)'' and ''Accuracy (mean of 5 folds)''
+          are descriptive with units/metric'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito 1-2); backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark); both renders theme-compliant.'
+        comment: 'Training #009E73, Validation #C475FD (Imprint 1-2); backgrounds
+          #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Solid intentional design (monotone interpolation, appropriate opacity,
-          multi-layer composition). Professional but straightforward—no custom styling
-          beyond requirements.
+        comment: 'Style-guide baseline: theme tokens, Imprint palette, elevated rounded
+          legend box; nothing beyond'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Clean lines, subtle grid, proper legend encoding. Minimally customized
-          but well-executed.
+        comment: X ticks placed exactly at the 10 evaluated training sizes, so the
+          vertical grid marks every measurement; y domain snapped to 0.05 steps from
+          the data
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Clear visual hierarchy (training high/flat; validation rising with
-          data). Confidence bands emphasize uncertainty. Divergence and convergence
-          patterns clearly visible.
+        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart with confidence bands correct for learning curve visualization.
+        comment: Two-line learning curve with bands; no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Training/validation scores shown; ±1 std confidence bands present;
-          legend encoding for two series; interactive tooltips included.
+        comment: C1 linear lines through fold means; C2 translucent ±1 std bands;
+          C3 legend; C4 sample-size x and metric y; C5 nothing extra
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: training size (100-1000 samples); Y-axis: accuracy (0.65-1.0
-          appropriately zoomed); all data visible.'
+        comment: Marks at their mean values, linear interpolation, axis domain covers
+          all bands
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title "learning-curve-basic · altair · anyplot.ai" matches spec format;
-          legend encoding present for Training/Validation distinction.
+        comment: Title 'learning-curve-basic · python · altair · anyplot.ai'; legend
+          'Curve' with Training / Validation
     data_quality:
       score: 15
       max: 15
@@ -163,22 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Captures learning curve essentials: divergence (overfitting), convergence
-          (improving validation), variance structure (confidence bands).'
+        comment: Shows the gap, rising validation, slightly falling training, wider
+          validation band at small sizes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic accuracy ranges (0.74-0.99); typical 5-fold CV; synthetic
-          but plausible; neutral domain.
+        comment: Plausible 5-fold classification accuracy scenario, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample sizes (100-1000) typical; accuracy range (0.65-1.0) appropriate;
-          10 points per series good resolution.
+        comment: Accuracy 0.74-0.98 over 100-1000 samples is sensible; spec has no
+          Check values
     code_quality:
       score: 10
       max: 10
@@ -188,35 +181,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; direct plotting; clear and focused.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas; all used; no dead imports.
+        comment: All imports used (PIL for the pad step)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; proper altair API; thoughtful layer composition;
-          no overcomplication.
+        comment: Appropriate complexity; tidy df with column constants
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html; scale_factor=3.0 correct for
-          4800x2700 target; altair 6.1.0 current.
+        comment: Saves plot-{THEME}.png (padded) and plot-{THEME}.html with the Altair
+          6 API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -224,26 +216,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: alt.layer() for composition; proper Q/N encoding specs; theme-aware
-          configure_* methods; .interactive() for interactivity. Very good altair
-          practices.
+        comment: alt.layer of mark_area(y/y2) and mark_line, shared Scale objects,
+          typed escaped encodings, tooltips, .interactive()
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Monotone interpolation, alpha/opacity on mark_area, tooltip formatting,
-          selective legend suppression. Solid knowledge, relatively direct usage.
+        comment: mark_line point=alt.OverlayMarkDef for markers in one mark, y2 band
+          encoding, legend symbolType='stroke'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-20T16:10:43Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - wide-to-long
   dataprep: []
   styling:
   - alpha-blending
