@@ -1,90 +1,76 @@
 """ anyplot.ai
 learning-curve-basic: Model Learning Curve
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-10
+Library: matplotlib 3.11.2 | Python 3.14.10
+Quality: 82/100 | Updated: 2026-11-20
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"
-ACCENT = "#C475FD"
 
-# Data - Simulate learning curve for a model
-np.random.seed(42)
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Training set sizes (10 different sizes)
-train_sizes = np.array([50, 100, 200, 400, 600, 800, 1000, 1200, 1400, 1600])
+# Columns: set these to your table's column names
+TRAIN_SIZE = "Training set size (samples)"  # role: train_sizes
+TRAIN_ERROR = "Training error (MSE)"  # role: train_scores
+VALIDATION_ERROR = "Validation error (MSE)"  # role: validation_scores
 
-# Simulate 5 cross-validation folds
+# Data: replace this block with your own table, for example df = pd.read_csv("learning_curve.csv")
+# Scenario: a high-variance (overfitting) regressor, 5-fold cross-validated mean squared error
+rng = np.random.default_rng(7)
+sizes = np.array([100, 200, 400, 700, 1000, 1500, 2000, 2500, 3000, 4000])
 n_folds = 5
-n_sizes = len(train_sizes)
-
-# Training scores: Start high, stay high (model fits training data well)
-train_scores_mean = 0.99 - 0.15 * np.exp(-train_sizes / 200)
-train_scores = np.zeros((n_folds, n_sizes))
-for i in range(n_folds):
-    noise = np.random.randn(n_sizes) * 0.01
-    train_scores[i] = train_scores_mean + noise
-
-# Validation scores: Start lower, improve with more data (learning effect)
-validation_scores_mean = 0.65 + 0.20 * (1 - np.exp(-train_sizes / 500))
-validation_scores = np.zeros((n_folds, n_sizes))
-for i in range(n_folds):
-    noise = np.random.randn(n_sizes) * 0.02
-    validation_scores[i] = validation_scores_mean + noise
-
-# Calculate means and standard deviations
-train_mean = np.mean(train_scores, axis=0)
-train_std = np.std(train_scores, axis=0)
-val_mean = np.mean(validation_scores, axis=0)
-val_std = np.std(validation_scores, axis=0)
+train_mean = 0.02 + 0.04 * (1 - np.exp(-sizes / 900))
+validation_mean = 0.30 + 0.55 * np.exp(-sizes / 1100)
+df = pd.DataFrame(
+    {
+        TRAIN_SIZE: np.repeat(sizes, n_folds),
+        TRAIN_ERROR: np.repeat(train_mean, n_folds) * (1 + rng.normal(0, 0.12, sizes.size * n_folds)),
+        VALIDATION_ERROR: np.repeat(validation_mean, n_folds) * (1 + rng.normal(0, 0.09, sizes.size * n_folds)),
+    }
+)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Training curve with confidence band
-ax.fill_between(train_sizes, train_mean - train_std, train_mean + train_std, alpha=0.15, color=BRAND)
-ax.plot(train_sizes, train_mean, "o-", color=BRAND, linewidth=3, markersize=10, label="Training Score")
+curves = [(TRAIN_ERROR, "Training error", "o"), (VALIDATION_ERROR, "Validation error", "s")]
+for color, (column, label, marker) in zip(IMPRINT_PALETTE, curves, strict=False):
+    stats = df.groupby(TRAIN_SIZE)[column].agg(["mean", "std"])
+    ax.fill_between(
+        stats.index, stats["mean"] - stats["std"], stats["mean"] + stats["std"], color=color, alpha=0.2, lw=0
+    )
+    ax.plot(stats.index, stats["mean"], marker=marker, color=color, linewidth=2.5, markersize=6, label=label)
 
-# Validation curve with confidence band
-ax.fill_between(train_sizes, val_mean - val_std, val_mean + val_std, alpha=0.15, color=ACCENT)
-ax.plot(train_sizes, val_mean, "s-", color=ACCENT, linewidth=3, markersize=10, label="Validation Score")
+ax.set_xlabel(TRAIN_SIZE, fontsize=10, color=INK)
+ax.set_ylabel("Mean squared error (5-fold CV)", fontsize=10, color=INK)
+ax.set_title("learning-curve-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.set_ylim(0, df[VALIDATION_ERROR].max() * 1.08)
+ax.set_xlim(0, df[TRAIN_SIZE].max() * 1.03)
 
-# Labels and styling
-ax.set_xlabel("Training Set Size (samples)", fontsize=20, color=INK)
-ax.set_ylabel("Accuracy Score", fontsize=20, color=INK)
-ax.set_title("learning-curve-basic · matplotlib · anyplot.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+for side in ("top", "right"):
+    ax.spines[side].set_visible(False)
+for side in ("left", "bottom"):
+    ax.spines[side].set_color(INK_SOFT)
+ax.yaxis.grid(True, alpha=0.2, linewidth=0.8, color=INK)
+ax.set_axisbelow(True)
 
-# Spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-for s in ("left", "bottom"):
-    ax.spines[s].set_color(INK_SOFT)
+leg = ax.legend(fontsize=8, loc="upper right")
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Grid
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
-
-# Legend
-leg = ax.legend(fontsize=16, loc="lower right")
-if leg:
-    leg.get_frame().set_facecolor(PAGE_BG)
-    leg.get_frame().set_edgecolor(INK_SOFT)
-    plt.setp(leg.get_texts(), color=INK_SOFT)
-
-# Set y-axis limits to show full range with some padding
-ax.set_ylim(0.55, 1.02)
-ax.set_xlim(0, 1700)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
