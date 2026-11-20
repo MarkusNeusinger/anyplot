@@ -671,10 +671,12 @@ collects. Read these from time to time; each has its baseline from
 - **The stay rate on mobile**: 30 of 59 visits stayed ten seconds. A drop
   means trouble with focus or touch.
 - **The bounce rate among visits with `input` `yes`**: 42 %.
-- **The mix of `actions` values.** A value that is a single kind and jumps,
-  or a kind that appears alone where it used to come with others, points at
-  an input that fires by itself. Such a kind can be left out of the count
-  (see [Reading stats](#reading-stats--backend--plausible-stats-api)). The
+- **The mix of `actions` values**, a breakdown of `stayed_10s` by
+  `actions`. A value that is a single kind and jumps, or a single kind that
+  appears alone in the farm pattern, points at an input that fires by
+  itself. Such a kind can be left out of the tile's count without a change
+  to the tracker (see
+  [Reading stats](#reading-stats--backend--plausible-stats-api)). The
   property is new, so this warning has no baseline yet.
 
 #### Known gaps
@@ -1062,8 +1064,9 @@ page's scripts. A crawler farm seldom stays ten seconds and does nothing
 when it does, so it raises all visitors and leaves the bars alone
 ([The Windows 10 Chrome farm](#the-windows-10-chrome-farm-2026-11-09)).
 
-The count starts on 2026-11-15, the first full day of `stayed_10s`. A
-strip that is empty for the days before would say less than the one it
+The count starts on 2026-11-15, the first full day of `stayed_10s`: the
+deploy that began sending it finished on 2026-11-14 at 23:17 Zurich time
+(22:17 UTC). A strip that is empty for the days before would say less than the one it
 replaces, so the tile switches by itself: until every day of the 28-day
 window is counted, which is on 2026-12-12, it draws the unique visitors per
 day as it did before, and from that day on the engaged visitors. An answer
@@ -1087,7 +1090,11 @@ window without a number draws the floor and is named "not counted".
   reads the dates of `date_range` in the site's reporting time zone,
   Europe/Zurich (read through the Sites API on 2026-11-20), so the endpoint
   takes today there: `PLAUSIBLE_TIMEZONE` in `api/routers/insights.py`.
-  Change it together with the site's setting.
+  Change it together with the site's setting. The zone needs a time zone
+  database: `zoneinfo` reads the system's, and the API's slim base image
+  need not ship one, so the `tzdata` package is a direct dependency that
+  `zoneinfo` falls back to. Should the zone still not resolve, the endpoint
+  answers no days.
 - **Engaged visitors**: the second query's count per day from
   `ENGAGED_SINCE` on, 0 for a day it has no row for, and never more than the
   day's unique visitors. While the query fails, the tile draws the unique
@@ -1099,8 +1106,9 @@ window without a number draws the floor and is named "not counted".
 - **Caching**: 1h stale-while-revalidate via `get_or_set_cache`, two
   requests per refresh, so traffic spikes stay well under Plausible's
   600-req/h rate limit.
-- **Graceful degradation**: When `PLAUSIBLE_API_KEY` is unset or the first
-  query fails, the endpoint returns `points: []` (empty list).
+- **Graceful degradation**: When `PLAUSIBLE_API_KEY` is unset, the time
+  zone can't be resolved, or the first query fails, the endpoint returns
+  `points: []` (empty list).
   The frontend distinguishes this from "real zeros": an empty list
   triggers the "visitor data unavailable" placeholder, while a non-empty
   list with low or zero values renders the normal 28-bar strip. When only

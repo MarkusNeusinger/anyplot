@@ -120,11 +120,15 @@ class DailyImplPoint(BaseModel):
 # The Plausible site's reporting time zone, read through the Sites API on 2026-11-20. Plausible's
 # `time:day` buckets and `date_range` dates are days of that zone, so the visitors tile takes its
 # today there. It must match the site's setting in Plausible.
+#
+# `tzdata` is a direct dependency (pyproject.toml) for this zone: `zoneinfo` reads the system's
+# time zone database first and falls back to that package, and the API's slim base image need not
+# ship a system database. Without either, the fetch answers no days (`_fetch_plausible_visitors`).
 PLAUSIBLE_TIMEZONE = "Europe/Zurich"
 
-# The first full day of the `stayed_10s` event, in the site's time zone: the tracker began sending
-# it in the evening of 2026-11-14, so that day holds only the visits after the deploy and would
-# count too few.
+# The first full day of the `stayed_10s` event, in the site's time zone. The deploy that began
+# sending it finished on 2026-11-14 at 22:17 UTC, 23:17 in Zurich, so that day holds only the
+# visits of its last 43 minutes or so and would count too few.
 ENGAGED_SINCE = date(2026, 11, 15)
 
 
@@ -830,8 +834,8 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
     rightmost chart bar permanently at 0. An explicit `[today-27, today]`
     custom range pulls today's partial row in.
 
-    Returns an empty `points` list when the API key is not configured or the
-    first query fails — the stats page treats `points: []` as "no data" and
+    Returns an empty `points` list when the API key is not configured, the time
+    zone cannot be resolved, or the first query fails — the stats page treats `points: []` as "no data" and
     renders a placeholder instead of an all-zero chart, so we can distinguish
     real zeros (Plausible returned 0 visitors for a day) from missing data.
     On a successful fetch the response is zero-filled across all 28 days so
@@ -840,23 +844,25 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
     if not settings.plausible_api_key:
         return VisitorsResponse(points=[])
 
-    today = datetime.now(ZoneInfo(PLAUSIBLE_TIMEZONE)).date()
-    start = today - timedelta(days=27)
-    window: dict[str, object] = {
-        "site_id": settings.plausible_site_id,
-        "date_range": [start.isoformat(), today.isoformat()],
-        "dimensions": ["time:day"],
-    }
     totals: _PlausibleDays | BaseException
     engaged: _PlausibleDays | BaseException
     try:
+        # The zone is resolved inside the error handling: a time zone database that cannot be found
+        # answers no days, as an outage does, and not an error of the endpoint.
+        today = datetime.now(ZoneInfo(PLAUSIBLE_TIMEZONE)).date()
+        start = today - timedelta(days=27)
+        window: dict[str, object] = {
+            "site_id": settings.plausible_site_id,
+            "date_range": [start.isoformat(), today.isoformat()],
+            "dimensions": ["time:day"],
+        }
         async with httpx.AsyncClient(timeout=10.0) as client:
             totals, engaged = await asyncio.gather(
                 _plausible_days(client, {**window, "metrics": ["visitors", "visits"]}),
                 _plausible_days(client, {**window, "metrics": ["visitors"], "filters": STAYED_WITH_INPUT}),
                 return_exceptions=True,
             )
-    except Exception as exc:  # the client itself failed: neither query has an answer
+    except Exception as exc:  # no time zone, or the client itself failed: neither query has an answer
         totals = engaged = exc
     if isinstance(totals, BaseException):
         logger.warning(

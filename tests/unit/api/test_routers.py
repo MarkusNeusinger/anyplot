@@ -3053,6 +3053,36 @@ class TestInsightsRouter:
         assert [point["date"] for point in body["points"]][-1] == last_day
         assert body["points"][-1]["visitors"] == 7
 
+    def test_visitors_empty_when_the_time_zone_cannot_be_resolved(
+        self, client: TestClient, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Without a time zone database the endpoint answers no days, as for an outage, and not an error."""
+        from zoneinfo import ZoneInfoNotFoundError
+
+        plausible = self._PlausibleClient(totals=self._TOTALS, engaged=self._ENGAGED)
+        with (
+            caplog.at_level(logging.WARNING, logger="api.routers.insights"),
+            patch("api.routers.insights.ZoneInfo", side_effect=ZoneInfoNotFoundError("No time zone found")),
+        ):
+            response = self._get_visitors(client, plausible, datetime(2026, 11, 19, 12, tzinfo=timezone.utc))
+
+        assert response.status_code == 200
+        assert response.json()["points"] == []
+        assert plausible.queries == []
+        [warning] = [record for record in caplog.records if "visitors fetch failed" in record.getMessage()]
+        assert "ZoneInfoNotFoundError" in warning.getMessage()
+
+    def test_tzdata_is_a_runtime_dependency(self) -> None:
+        """The zone resolves on an image without a system time zone database only through the `tzdata` package."""
+        import tomllib
+        from pathlib import Path
+
+        pyproject = tomllib.loads((Path(__file__).resolve().parents[3] / "pyproject.toml").read_text(encoding="utf-8"))
+        names = [
+            re.split(r"[<>=!~\[ ;]", requirement, maxsplit=1)[0] for requirement in pyproject["project"]["dependencies"]
+        ]
+        assert "tzdata" in names
+
     def test_visitors_time_zone_is_the_plausible_sites(self) -> None:
         """The zone must match the Plausible site's reporting time zone, and resolve where the tests run."""
         from datetime import timedelta

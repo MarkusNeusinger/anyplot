@@ -54,6 +54,9 @@ dependencies = [
     "pyjwt[crypto]>=2.13.0",
     # Auth — Cloud Run ID tokens for the agent BFF's upstream calls (api/routers/agent.py)
     "google-auth[requests]>=2.48.0",
+    # Time zones — zoneinfo falls back to this package where the system has no time zone
+    # database, which the slim base image need not ship (PLAUSIBLE_TIMEZONE, api/routers/insights.py)
+    "tzdata>=2025.2",
 ]
 
 [project.optional-dependencies]
