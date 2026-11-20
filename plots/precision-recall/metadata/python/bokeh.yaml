@@ -2,52 +2,55 @@ library: bokeh
 language: python
 specification_id: precision-recall
 created: '2025-12-26T17:40:49Z'
-updated: '2026-05-10T05:40:34Z'
-generated_by: claude-haiku
-workflow_run: 25620782801
+updated: '2026-11-20T16:37:48Z'
+generated_by: claude-sonnet
+workflow_run: 44773947177
 issue: 2274
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/bokeh/plot-dark.html
-quality_score: 92
+quality_score: 79
 review:
   strengths:
-  - Excellent text legibility in both light and dark themes with properly sized and
-    colored text elements
-  - Perfect theme adaptation with consistent use of INK and INK_SOFT tokens for chrome
-    elements across both renders
-  - 'Correct Okabe-Ito palette compliance: brand green (#009E73) and accent orange
-    (#D55E00) remain identical across themes'
-  - 'Complete spec compliance: stepped line style, Average Precision scores in legend,
-    baseline reference line, multi-classifier comparison'
-  - Clean, reproducible code with deterministic random seed (42) and minimal unnecessary
-    complexity
-  - Proper data context with realistic imbalanced classification scenario and appropriate
-    scale for probability metrics
+  - Native p.step(mode='after') draws the threshold curve as a true stepped line through
+    sklearn's computed points, matching sklearn's own steps-post convention
+  - Average Precision is computed with average_precision_score and shown in each classifier's
+    legend entry, so each AP sits beside its curve's color
+  - Random-classifier baseline is a horizontal dotted INK_SOFT line at the computed
+    positive class ratio (0.30), labelled in the legend and visible in both themes
+  - 'Complete theme threading: title, axis titles, ticks, legend box and labels all
+    use INK / INK_SOFT / ELEVATED_BG tokens; data colors identical across renders'
+  - 'Adaptable structure: column constants, a Data block that ends in one tidy df,
+    and a plot loop over SCORE_COLUMNS that scales to more classifiers'
   weaknesses:
-  - 'Design Excellence below average: uses standard styling without custom visual
-    refinements or extra sophistication'
-  - Limited exploration of Bokeh-specific interactive features (no callbacks, streaming,
-    or custom extensions)
-  - Visual refinement could be enhanced with more deliberate whitespace management
-    or design flourishes
+  - 'DE-02 (both): the plot area is framed on all four sides (top and right outline
+    drawn in INK_SOFT) where the plot type does not require it → L-shaped frame with
+    only the left and bottom axis lines. Likely cause: p.outline_line_color = INK_SOFT
+    (set it to None).'
+  - 'DQ-02 (both): the ground-truth column is labelled only ''Actual class'' and the
+    features are anonymous make_classification output, so the scenario names no domain
+    → rename the target to a real positive class (for example ''Fraudulent transaction'')
+    and frame the two models as scoring that task. Likely cause: Y_TRUE = "Actual
+    class".'
+  - 'Suggestion: faint iso-F1 contour lines (the Notes allow them) labelled with their
+    F1 value would give the AP comparison a reference frame.'
+  - 'Suggestion: format the y ticks uniformly (0.0 … 1.0) with NumeralTickFormatter
+    so ''1'' and ''0'' match ''0.8''.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines at 10% opacity.
-      Chrome: Title "precision-recall · bokeh · anyplot.ai" at 28pt in dark text (#1A1A17); axis labels "Recall" and "Precision" at 22pt; tick labels at 18pt — all clearly readable against light background.
-      Data: Two stepped curves (Logistic Regression in brand green #009E73, Naive Bayes in accent orange #D55E00) representing threshold-based precision-recall trade-off; dashed baseline at positive class ratio (0.30) in INK_SOFT gray; legend (top-right) displays AP scores for each classifier.
-      Legibility verdict: PASS — all text is properly sized, colored, and positioned; no elements compete with each other; grid is subtle and supports data comprehension.
+      Background: warm off-white #FAF8F1 across canvas and plot area, 3200x1800.
+      Chrome: title 'precision-recall · python · bokeh · anyplot.ai' bold near-black top-left (~50% width); italic axis titles 'Recall' and 'Precision'; tick labels 0-1 in dark grey; faint grid; legend top-right on an elevated off-white box with grey border. All text readable. Plot area framed on all four sides by a grey outline.
+      Data: Logistic Regression stepped line in #009E73 (AP = 0.788), Naive Bayes stepped line in #C475FD (AP = 0.797); curves cross near recall 0.5; sawtooth at low recall, steep fall to ~0.30 at recall 1; dotted grey horizontal baseline at 0.30 labelled 'Random classifier (baseline = 0.30)'.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid lines at 10% opacity.
-      Chrome: Title at 28pt in light text (#F0EFE8); axis labels at 22pt in light text; tick labels at 18pt in INK_SOFT (#B8B7B0) — all clearly visible against dark background with no dark-on-dark issues.
-      Data: Stepped curves are identical in color to light render (green #009E73, orange #D55E00 maintain semantic meaning across themes); baseline dashed line remains visible and readable; legend box uses dark background (#242420) with light text, properly contrasted.
-      Legibility verdict: PASS — all text is readable on dark background; data colors are unchanged from light render (only chrome adapts); no legibility failures; brand green is clearly visible.
-
-    Both renders confirm proper theme adaptation: data colors are invariant (Okabe-Ito positions 1–2), chrome elements flip appropriately (text, grid, background, legend box), and all required elements (stepped curves, AP scores, baseline, legend) are present and functional.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light #F0EFE8, ticks and legend labels in light grey #B8B7B0, legend box #242420 with grey border; grid faint but visible. No dark-on-dark text.
+      Data: identical #009E73 and #C475FD stepped curves; baseline dotted in light grey, clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,75 +61,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title 28pt, labels 22pt, ticks 18pt) explicitly set and
-          readable in both themes; proper color tokens used
+        comment: Title 50pt, axis titles 42pt, ticks 34pt, legend 30pt; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Well-spaced elements with good padding; legend positioned cleanly;
-          no collisions
+        comment: Legend sits in the empty top-right corner clear of both curves; no
+          text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Two stepped curves clearly distinct; baseline visible; all lines
-          have appropriate line width (5px)
+        comment: Step lines at width 6 clearly visible; baseline distinct; legend
+          glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; orange and green are well-distinguished;
-          no red-green sole signal
+        comment: Green vs purple differ in hue and lightness; baseline neutral and
+          dotted
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Good proportions; nothing cut off; ranges properly padded (x: -0.02
-          to 1.05, y: 0 to 1.08); min borders set'
+        comment: 3200x1800, no canvas gate failure; title ~50% width; balanced axis
+          labels; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'precision-recall · bokeh · anyplot.ai'; axis labels 'Recall'
-          and 'Precision' are descriptive
+        comment: '''Recall'' and ''Precision'' are unitless ratios, descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand); second #D55E00 (Okabe-Ito pos 2);
-          backgrounds #FAF8F1 light / #1A1A17 dark; theme-adaptive chrome correct'
+        comment: 'Imprint positions 1-2 (#009E73, #C475FD) identical in both renders;
+          #FAF8F1 / #1A1A17 backgrounds; all chrome theme-adaptive'
     design_excellence:
-      score: 13
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Proper palette and typography, but standard styling without custom
-          refinements or design flourishes
+        comment: The style-guide baseline (Imprint palette, theme tokens, explicit
+          font sizes), nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 0
         max: 6
         passed: false
-        comment: Subtle grid (10% alpha) and clean legend, but minimal custom element
-          styling or whitespace management
+        comment: All four sides framed by the plot outline where nothing requires
+          it (defect line)
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Clear precision-recall trade-off narrative; comparison structure
-          guides viewer; baseline provides context; good visual hierarchy
+        passed: false
+        comment: Data displayed with AP in the legend as the Notes ask; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -136,31 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct precision-recall curve with stepped line style for threshold-based
-          representation
+        comment: Precision-recall curve, precision on y against recall on x
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: AP scores in legend; baseline reference line; stepped style; multi-classifier
-          comparison with distinct colors
+        comment: Stepped lines (C1), horizontal baseline at the positive ratio (C2),
+          AP in legend (C3), distinct colors with legend (C5); iso-F1 is optional
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Recall (0-1 padded to 1.05); Y: Precision (0-1 padded to 1.08);
-          all data visible'
+        comment: Curves drawn through sklearn's computed threshold points; full 0-1
+          range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''precision-recall · bokeh · anyplot.ai'';
-          legend labels include AP scores'
+        comment: Title 'precision-recall · python · bokeh · anyplot.ai'; legend labels
+          name each classifier with its AP
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -168,22 +169,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete precision-recall curves, AP scores, baseline, stepped representation
-          of all aspects
+        comment: Two classifiers that cross around recall 0.5, sawtooth at low recall,
+          fall toward baseline at high recall
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Imbalanced classification (70/30 split); realistic scenario; two
-          classifiers for comparison; proper train-test evaluation
+        passed: false
+        comment: Real classifier names, but the target is labelled only 'Actual class'
+          with no domain (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Probability scale (0-1) appropriate; 2000 training / 1000 test samples;
-          AP scores (0.788, 0.797) and baseline (0.30) are reasonable
+        comment: 'Checked: baseline 0.30 computed from the labels matches the 70/30
+          weights; AP 0.788/0.797 computed by average_precision_score, consistent
+          with the curves'
     code_quality:
       score: 10
       max: 10
@@ -193,67 +195,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes; straightforward data generation
-          → training → prediction → plotting flow
+        comment: Flat script, constants, Data block ending in df, Plot zone reads
+          only df
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; all model and split random_state=42; fully
-          deterministic
+        comment: random_state=42 on data, split and model
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used and necessary; no extraneous dependencies beyond
-          sklearn and selenium
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI or simulated interactivity; proper
-          theme tokens and ColumnDataSource pattern
+        comment: precision_recall_curve / average_precision_score do the computation;
+          one loop over score columns
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.html and plot-{THEME}.png (no bare plot.png);
-          current Bokeh 3.9.0 API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; Bokeh 3 API with toolbar_location=None
+          and CDP viewport pin
     library_mastery:
-      score: 9
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent: figure(), ColumnDataSource, p.step() for stepped lines,
-          p.line() for baseline, Legend object, theme-adaptive styling, output_file/save,
-          Selenium screenshot'
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Good Bokeh-specific features (stepped mode, theme-adaptive legend
-          styling, glyph properties, ColumnDataSource); limited exploration of interactive
-          capabilities
+        comment: 'figure + ColumnDataSource + p.step(mode=''after'') + Legend model:
+          the library prompt''s pattern, nothing beyond it'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Native step glyph only; nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-20T16:33:52Z'
 impl_tags:
   dependencies:
   - sklearn
   - selenium
   techniques:
   - custom-legend
+  - layer-composition
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   - columndatasource
   dataprep: []
   styling:
-  - publication-ready
+  - grid-styling
