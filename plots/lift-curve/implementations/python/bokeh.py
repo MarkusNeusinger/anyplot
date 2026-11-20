@@ -1,7 +1,7 @@
 """anyplot.ai
 lift-curve: Model Lift Chart
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-11-20
+Quality: pending | Updated: 2026-11-20
 """
 
 import os
