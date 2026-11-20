@@ -2,46 +2,62 @@ library: letsplot
 language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:37:18Z'
-updated: '2026-05-10T11:06:10Z'
-generated_by: claude-haiku
-workflow_run: 25626801514
+updated: '2026-11-20T17:52:28Z'
+generated_by: claude-sonnet
+workflow_run: 44785802268
 issue: 2331
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-dark.html
-quality_score: 91
+quality_score: 80
 review:
   strengths:
-  - Excellent theme support with proper color token adaptation across both light and
-    dark renders
-  - Complete spec compliance with all required features (diagonal line, bins, Brier
-    Score, ECE, histogram)
-  - Strong visual quality with readable text at full resolution and proper font sizing
-  - Clean, reproducible code with deterministic data generation
-  - Proper Okabe-Ito palette usage with good color hierarchy
+  - 'Theme tokens threaded through every chrome element: title, subtitle, ticks, axis
+    lines and grid read cleanly on both #FAF8F1 and #1A1A17, with the #009E73 curve
+    identical in both'
+  - Brier score (0.052) and ECE (0.188) are computed from the data and shown in the
+    subtitle, directly under the title of the single model they describe
+  - Ten equal-width bins with empty bins dropped; each bin is a visible point on an
+    unsmoothed line, against a dashed diagonal that stays distinct in both themes
+  - lets-plot layer_tooltips() with formatted Predicted / Observed / Bin size lines
+    for the HTML output
+  - Canonical 3200x1800 canvas with text at the library's reference sizes
   weaknesses:
-  - Design Excellence could be elevated by removing top/right spines for cleaner L-shaped
-    frame
-  - Library Mastery could showcase more distinctive letsplot features beyond basic
-    tooltips
+  - 'DE-02 (both): the panel is boxed by all four borders, including top and right,
+    where a calibration curve needs none → an L-shaped frame (left and bottom axis
+    lines only). Likely cause: the default panel border left on; set panel_border=element_blank()
+    and keep axis_line.'
+  - 'SC-02 (both): C4 missed: the histogram of predicted probabilities is drawn inside
+    the calibration panel instead of as a secondary panel sharing the probability
+    axis → a smaller separate panel below the curve (for example gggrid with a shorter
+    height). Likely cause: geom_bar added to the same ggplot as the curve.'
+  - 'SC-03 (both): the histogram bars are read against the ''Fraction of positives''
+    axis, scaled so the tallest bar sits at 0.25, while the subtitle calls them a
+    ''share of predictions per bin'' → bars on their own axis showing the real share
+    or count. Likely cause: share = counts / counts.max() * HIST_HEIGHT plotted on
+    the curve''s y scale.'
+  - 'DQ-02 (both): the columns are the generic ''Actual outcome'' and ''Predicted
+    probability'' with no application context → name a concrete scenario from the
+    spec''s applications (for example ''Loan defaulted'' and ''Predicted default probability'').
+    Likely cause: the Y_TRUE / Y_PROB column names.'
+  - 'Suggestion: the code comment calls the model overconfident, but the curve (below
+    the diagonal at low probabilities, above it at high ones) shows an underconfident
+    model; the comment could say so.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme color
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark text (#1A1A17 / #4A4A44) - fully readable
-      Data: Green calibration curve (#009E73) with points (size=5, alpha=0.9); dashed reference line in gray (#4A4A44); histogram bars in muted gray (#6B6A63) at bottom
-      Grid: Subtle light gray grid lines visible but not dominant
-      Legibility verdict: PASS - all elements readable with excellent contrast against light surface
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title "calibration-curve · python · letsplot · anyplot.ai" in dark ink top-left, subtitle "Brier score 0.052 · ECE 0.188 · grey bars: share of predictions per bin" in soft grey; axis titles "Mean predicted probability" / "Fraction of positives" and ticks 0-1 in steps of 0.2 all dark and readable; subtle grid; the panel is boxed on all four sides.
+      Data: #009E73 calibration line with 10 bin points: flat at 0 up to ~0.34, rising through 0.36 at 0.45 and 0.94 at 0.56, flat at 1.0 from 0.65 to 0.94 (an S shape across the dashed dark-grey diagonal). 20 muted grey histogram bars along the bottom, tallest ~0.25, bimodal around 0.12 and 0.75.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme color
-      Chrome: Title, axis labels in light text (#F0EFE8), tick labels in secondary light (#B8B7B0) - fully readable
-      Data: Green calibration curve (#009E73) identical to light render; dashed reference line in light gray; histogram bars in light gray
-      Grid: Subtle light grid lines visible and readable
-      Color consistency: Data colors (Okabe-Ito #009E73) identical between renders - only chrome adapted (PASS)
-      Legibility verdict: PASS - no dark-on-dark failures; all text clearly visible against near-black background
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, subtitle, ticks and axis titles in light grey, all readable; no dark-on-dark text; grid subtle; panel border in soft grey.
+      Data: identical #009E73 curve and points; diagonal flips to light grey dashes; histogram bars in dark grey, still distinct from the background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,73 +68,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set (title=24pt, labels=20pt, ticks=16pt);
-          fully readable in both themes
+        comment: 'Title 16, subtitle 12, axis titles 12, ticks 10 at ggsize(800, 450):
+          the library''s reference sizes, readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean separation between curve, points, histogram; no collisions
+        comment: No text collisions; the dashed diagonal crosses the muted histogram
+          bars but stays readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line (size=2), points (size=5, alpha=0.9), histogram bars all visible
-          and distinguishable
+        comment: 10 bin points at size 3.5 on a 1.2 line are prominent for sparse
+          data; histogram bars are solid and muted
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 primary color; good contrast; CVD-safe palette'
+        comment: Single green series against a neutral dashed diagonal and grey bars;
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions; generous margins; nothing cut off
+        comment: 3200x1800 canonical canvas, panel fills the canvas, nothing cut off,
+          title about 46 % of the width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axes; metrics in title
+        comment: '''Mean predicted probability'' and ''Fraction of positives'': descriptive,
+          unitless probabilities'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
-          both renders theme-correct'
+        comment: 'Curve #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips, data
+          color identical'
     design_excellence:
-      score: 14
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Good professional polish with proper theme tokens; dashed reference
-          line adds visual distinction; histogram enriches composition
+        passed: false
+        comment: The style-guide baseline typography with a soft subtitle; nothing
+          beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 0
         max: 6
         passed: false
-        comment: Subtle grid and generous whitespace; could improve by removing top/right
-          spines for cleaner L-shaped frame
+        comment: All four panel borders drawn where the plot type needs none (defect
+          line)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clear focal point on calibration curve; histogram adds context; metrics
-          support interpretation
+        passed: false
+        comment: Histogram muted and capped at a quarter of the height so the green
+          curve is the focal point; subtitle explains the bars
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -126,29 +146,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calibration curve with binned calibration analysis
+        comment: Binned reliability diagram with points and connecting line
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Diagonal reference line, 10 bins, Brier Score, ECE, histogram all
-          present
+        passed: false
+        comment: 'Diagonal, 10 equal-width bins, Brier + ECE in the subtitle present;
+          C4 missed: the histogram is overlaid in the main panel, not a secondary
+          panel (defect line)'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'X: Mean Predicted Probability (0-1); Y: Fraction of Positives (0-1);
-          full data range shown'
+        passed: false
+        comment: Curve points sit at their computed bin means; the histogram bars
+          read against the 'Fraction of positives' axis with an arbitrary scale (defect
+          line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct; metrics displayed; single series, no legend needed
+        comment: Title 'calibration-curve · python · letsplot · anyplot.ai'; single
+          series, no legend needed (N/A)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -156,22 +179,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: calibration curve, perfect calibration line,
-          prediction distribution, summary metrics'
+        comment: Shows a strong S-shaped miscalibration, the diagonal, the prediction
+          distribution and both summary metrics; the multi-model case is conditional
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Imbalanced binary classification (60/40); realistic overconfidence;
-          sensible probability distributions
+        passed: false
+        comment: Generic 'Actual outcome' / 'Predicted probability' with no application
+          domain (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample size 1000 (within 500-10000 recommendation); probability range
-          0-1; sensible for classification
+        comment: 'Checked: 1000 samples (in the 500-10000 range); Brier = mean squared
+          error of prob vs outcome; ECE = bin-size-weighted |observed - predicted|
+          over non-empty bins, both computed, not placed'
     code_quality:
       score: 10
       max: 10
@@ -181,63 +205,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions; straightforward linear execution; clear
-          logic flow
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42); deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: numpy, pandas, lets_plot'
+        comment: os, numpy, pandas, lets_plot all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity
+        comment: Binning via one groupby/agg; ECE in one vectorized line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png + plot-{THEME}.html
+        comment: plot-{THEME}.png at scale=4 and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Perfect ggplot composition syntax; proper geom_line/geom_point/geom_bar
-          usage; theme customization idiomatic
+        comment: Layered ggplot composition with per-layer data; layer_tooltips()
+          with .line()/.format() instead of a pre-formatted tooltip column
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses tooltip aes() and HTML export; could explore more letsplot-specific
-          features
+        comment: lets-plot's layer_tooltips builder for bin details in the HTML output
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-20T17:47:51Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
-  - binning
-  - matrix-construction
+  - groupby-aggregation
   dataprep:
   - binning
+  - normalization
   styling:
-  - publication-ready
   - alpha-blending
+  - grid-styling
