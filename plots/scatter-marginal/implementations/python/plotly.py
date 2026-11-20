@@ -1,133 +1,107 @@
 """ anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-09
+Library: plotly 7.1.0 | Python 3.14.10
+Quality: 85/100 | Updated: 2026-11-20
 """
 
 import os
-import sys
 
 import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
 
-
-try:
-    import plotly.graph_objects as go
-except ImportError:
-    __file__ = os.path.abspath(__file__)
-    __dir__ = os.path.dirname(__file__)
-    if __dir__ in sys.path:
-        sys.path.remove(__dir__)
-    import plotly.graph_objects as go
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Imprint palette: single series uses position 1
 BRAND = "#009E73"
 
-# Data - Bivariate normal with correlation (scientific measurement scenario)
-np.random.seed(42)
-n = 200
-# Temperature (°C) and relative humidity (%)
-temperature = np.random.randn(n) * 3.5 + 22
-humidity = 0.65 * temperature + np.random.randn(n) * 6 + 35
+# Columns: set these to your table's column names
+TEMPERATURE = "Temperature (°C)"  # role: x
+HUMIDITY = "Relative Humidity (%)"  # role: y
 
-# Create scatter plot with marginal histograms using go (for full control)
+# Data: replace this block with your own table, for example df = pd.read_csv("measurements.csv")
+rng = np.random.default_rng(42)
+n = 200
+temperature = rng.normal(22, 3.5, n)
+humidity = 0.65 * temperature + rng.normal(0, 6, n) + 35
+df = pd.DataFrame({TEMPERATURE: temperature, HUMIDITY: humidity})
+
+# Plot: reads only df and the constants above
 fig = go.Figure()
 
-# Add scatter trace
 fig.add_trace(
     go.Scatter(
-        x=temperature,
-        y=humidity,
+        x=df[TEMPERATURE],
+        y=df[HUMIDITY],
         mode="markers",
-        marker=dict(size=14, color=BRAND, opacity=0.65, line=dict(width=1, color=PAGE_BG)),
-        name="Measurements",
-        showlegend=False,
+        marker={"size": 9, "color": BRAND, "opacity": 0.65, "line": {"width": 0.75, "color": PAGE_BG}},
+        hovertemplate=f"{TEMPERATURE}: %{{x:.1f}}<br>{HUMIDITY}: %{{y:.1f}}<extra></extra>",
     )
 )
 
-# Add marginal histogram for X (temperature)
+# Top marginal: shares the scatter's x axis, counts on its own y axis
 fig.add_trace(
     go.Histogram(
-        x=temperature,
-        name="Temp Distribution",
-        marker=dict(color=BRAND, opacity=0.6),
-        yaxis="y2",
+        x=df[TEMPERATURE],
         xaxis="x",
-        showlegend=False,
+        yaxis="y2",
+        marker={"color": BRAND, "opacity": 0.45},
         nbinsx=25,
+        hovertemplate="%{x}: %{y} observations<extra></extra>",
     )
 )
 
-# Add marginal histogram for Y (humidity)
+# Right marginal: shares the scatter's y axis, counts on its own x axis
 fig.add_trace(
     go.Histogram(
-        y=humidity,
-        name="Humidity Distribution",
-        marker=dict(color=BRAND, opacity=0.6),
+        y=df[HUMIDITY],
         xaxis="x2",
         yaxis="y",
-        showlegend=False,
+        marker={"color": BRAND, "opacity": 0.45},
         nbinsy=25,
         orientation="h",
+        hovertemplate="%{y}: %{x} observations<extra></extra>",
     )
 )
 
-# Enhanced hover tooltips for better data storytelling
-fig.update_traces(
-    hovertemplate="<b>Measurement</b><br>Temperature: %{x:.1f}°C<br>Humidity: %{y:.1f}%<extra></extra>",
-    selector=dict(mode="markers"),
-)
+axis_style = {
+    "tickfont": {"size": 10, "color": INK_SOFT},
+    "gridcolor": GRID,
+    "gridwidth": 0.5,
+    "linecolor": INK_SOFT,
+    "linewidth": 1,
+    "showline": True,
+    "zeroline": False,
+}
+marginal_style = {"showticklabels": False, "showgrid": False, "showline": False, "zeroline": False}
 
-# Update layout with refined design: spine removal, subtle grid, publication-grade styling
 fig.update_layout(
-    title=dict(text="scatter-marginal · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
-    xaxis=dict(
-        domain=[0, 0.85],
-        title=dict(text="Temperature (°C)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        linecolor=INK_SOFT,
-        showgrid=True,
-        gridwidth=0.5,
-        showline=True,
-        linewidth=1.5,
-        mirror=False,
-        side="bottom",
-    ),
-    yaxis=dict(
-        domain=[0, 0.85],
-        title=dict(text="Relative Humidity (%)", font=dict(size=22, color=INK)),
-        tickfont=dict(size=18, color=INK_SOFT),
-        gridcolor=GRID,
-        linecolor=INK_SOFT,
-        showgrid=True,
-        gridwidth=0.5,
-        showline=True,
-        linewidth=1.5,
-        mirror=False,
-        side="left",
-    ),
-    xaxis2=dict(
-        domain=[0.85, 1], showticklabels=False, gridcolor=GRID, linecolor=INK_SOFT, showgrid=False, showline=False
-    ),
-    yaxis2=dict(
-        domain=[0.85, 1], showticklabels=False, gridcolor=GRID, linecolor=INK_SOFT, showgrid=False, showline=False
-    ),
+    autosize=False,
+    title={
+        "text": "scatter-marginal · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={**axis_style, "domain": [0, 0.86], "title": {"text": TEMPERATURE, "font": {"size": 12, "color": INK}}},
+    yaxis={**axis_style, "domain": [0, 0.84], "title": {"text": HUMIDITY, "font": {"size": 12, "color": INK}}},
+    xaxis2={**marginal_style, "domain": [0.88, 1], "anchor": "y"},
+    yaxis2={**marginal_style, "domain": [0.86, 1], "anchor": "x"},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font=dict(family="Arial, sans-serif", color=INK),
+    font={"color": INK},
     showlegend=False,
-    margin=dict(l=120, r=80, t=100, b=100),
-    height=900,
-    width=1600,
+    bargap=0.05,
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
     hovermode="closest",
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
