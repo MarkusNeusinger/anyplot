@@ -2,42 +2,47 @@ library: altair
 language: python
 specification_id: lift-curve
 created: '2025-12-27T19:22:47Z'
-updated: '2026-05-10T16:50:19Z'
-generated_by: claude-haiku
-workflow_run: 25634078630
+updated: '2026-11-20T18:38:34Z'
+generated_by: claude-sonnet
+workflow_run: 44793850290
 issue: 2379
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.10
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 84
 review:
   strengths:
-  - Perfect visual quality (30/30) with excellent text legibility in both light and
-    dark themes
-  - Excellent theme-adaptive styling with correct Okabe-Ito palette compliance and
-    zero accessibility issues
-  - Clean, idiomatic Altair code with proper use of layer composition and configuration
-    APIs
-  - Realistic churn prediction scenario with mathematically correct lift calculations
-  - All spec requirements met perfectly with proper title format and axis labels
+  - Lift computed vectorized (cumsum over the score-ranked outcomes, ceil indexing
+    per percent), so the plateau of 5.0 and the meeting point at 1.00 fall out of
+    the data
+  - Lift-axis domain derived from the data with headroom, so the curve's peak clears
+    the frame and the axis holds both the baseline and the maximum
+  - Theme-adaptive dashed mark_rule baseline (INK_SOFT) reads clearly in both renders
+    and stays distinct from the green curve
+  - Decile markers with a page-colored halo and formatted tooltips for inspection
+    in the HTML output
+  - Canvas padded (never cropped) to exactly 3200x1800
   weaknesses:
-  - Design Excellence uses library defaults rather than distinctive aesthetic choices
-    or custom visual refinements
+  - 'Suggestion: value labels at two or three key deciles (for example 10% and 20%)
+    would let the static PNG answer the spec''s ''how many times more'' question without
+    hovering.'
+  - 'Suggestion: a lighter grid (x ticks every 10%) would reduce the 21-column grid
+    behind a curve read mainly at deciles.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid overlay
-      Chrome: Title "lift-curve · altair · anyplot.ai" in dark text (INK color), axis labels "Population Targeted (%)" and "Cumulative Lift" with descriptive formatting, tick labels in secondary color (INK_SOFT) all clearly readable
-      Data: Main lift curve in brand green (#009E73) showing strong performance at low percentiles declining smoothly to y=1 at 100%, reference line at y=1 as gray dashed line (#999999), decile markers as green dots at 10%, 20%, 30%, etc.
-      Legibility verdict: PASS - All text is dark and clearly visible against the warm light background with good contrast
+      Background: warm off-white #FAF8F1, 3200x1800, chart centred with even padding
+      Chrome: title 'lift-curve · python · altair · anyplot.ai' bold dark ink; axis titles 'Population targeted (%)' and 'Cumulative lift' dark; tick labels 0-100 step 5 and 0.0-5.5 step 0.5 in soft dark gray; subtle grid and thin frame; all readable
+      Data: #009E73 lift line starting at 5.0, plateau to ~9%, descending through 4.1 (20%), 2.4 (40%), 1.7 (60%), meeting the dashed dark-gray y=1 rule at 100%; green decile dots with light halo at 10..100%
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid overlay
-      Chrome: Title in light text (INK color), axis labels and tick labels in light secondary color (INK_SOFT) all clearly visible against dark background - no dark-on-dark failures
-      Data: Lift curve remains identical brand green (#009E73), reference line identical gray dashed (#999999), decile markers identical green dots - data colors are preserved exactly as in light render
-      Legibility verdict: PASS - All text is light and clearly visible against the dark background, no readability issues, proper theme adaptation throughout
+      Background: warm near-black #1A1A17
+      Chrome: title and axis titles in light ink, tick labels light gray, grid subtle, frame light gray; no dark-on-dark text
+      Data: identical #009E73 curve and decile dots (halo now dark page color); dashed y=1 rule in light gray, clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,50 +53,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: 28px title, 22px axis labels, 18px
-          tick labels. Perfectly readable in both light and dark themes.'
+        comment: Title 16, axis titles 12, tick labels 10 at scale 4; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. All labels fully readable and well-spaced.
+        comment: No text collisions; decile markers sit on the line without hiding
+          it
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lift line strokeWidth=4 and decile markers size=200 are perfectly
-          adapted to data density and clearly visible.
+        comment: 3 px line and size-60 decile markers with a page-colored outline
+          suit the 100-point curve; dashed reference line clear in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Okabe-Ito palette with good contrast and luminance differences.
+        comment: Single green series against a neutral dashed baseline; no red-green
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with plot filling good canvas area and balanced margins.
+        comment: Canvas gate passed (3200x1800, padded not cropped); balanced margins,
+          title ~35% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Population Targeted (%)'' and ''Cumulative
-          Lift''.'
+        comment: '''Population targeted (%)'' and ''Cumulative lift'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds are #FAF8F1 (light) / #1A1A17
-          (dark), theme-correct chrome in both renders, data colors identical across
-          themes.'
+        comment: 'Curve #009E73, reference line INK_SOFT token, backgrounds #FAF8F1/#1A1A17,
+          data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -99,21 +105,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults but not custom palette or publication-polished
-          design.
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Good visual refinement with subtle grid and clean layout.
+        passed: false
+        comment: 'Beyond baseline: lift-axis domain derived from the data with 8%
+          headroom so the 5.0 plateau clears the frame; decile dots carry a page-colored
+          halo that separates them from the line'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Visual hierarchy guides viewer through lift curve story with thick
-          main line and decile markers creating emphasis.
+        passed: false
+        comment: Data displayed with the decile markers the Notes suggest; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lift curve implementation.
+        comment: Cumulative lift curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: lift line, reference line at y=1, decile markers.'
+        comment: x = % targeted 0-100, y = cumulative lift, dashed y=1 rule across
+          the full axis, decile markers on the curve (C1-C5 all met)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, axes show full data range.
+        comment: Unsmoothed line through computed values at 1..100%; axes hold all
+          data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'lift-curve · altair · anyplot.ai' correct, no legend
-          needed for single series.
+        comment: '''lift-curve · python · altair · anyplot.ai''; single series, no
+          legend needed (N/A)'
     data_quality:
       score: 15
       max: 15
@@ -152,20 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of lift curve with realistic churn prediction scenario.
+        comment: High plateau near the theoretical maximum, steady descent, meeting
+          y=1 at 100%
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world customer churn prediction scenario, neutral and comprehensible.
+        comment: Customer churn model, 20% churn rate, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically correct lift calculation with sensible sample size
-          and realistic distributions.
+        comment: 'Checked: lift at 100% = 1.00 falls out of the cumsum computation;
+          plateau 5.0 = 1/0.20 baseline, the maximum possible lift'
     code_quality:
       score: 10
       max: 10
@@ -175,57 +185,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure with no unnecessary abstractions.
+        comment: Linear imports-constants-data-plot-save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: altair, numpy, pandas.'
+        comment: os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with appropriate complexity.
+        comment: Lift computed vectorized with cumsum and ceil indexing; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output as plot-{THEME}.png and plot-{THEME}.html.
+        comment: plot-{THEME}.png and .html, Altair 6 API with typed encodings
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of Altair''s high-level API: Chart().mark_*(), layer(),
-          encode(), configure_*.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses layer composition and alt.Scale() for domain control, but styling
-          is standard.
+        passed: false
+        comment: 'Beyond the prompt: data-free mark_rule for the baseline instead
+          of a two-point line, shared x/y encoding objects reused across layers in
+          alt.layer'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-1bf36bc7d5
+  rendered_at: '2026-11-20T18:35:11Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - reference-line
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - cumulative-sum
   dataprep:
   - cumulative-sum
-  styling: []
+  - ranking
+  styling:
+  - minimal-chrome
+  - grid-styling
