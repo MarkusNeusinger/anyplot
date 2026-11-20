@@ -2,46 +2,44 @@ library: plotly
 language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T17:37:42Z'
-updated: '2026-05-10T03:31:06Z'
-generated_by: claude-haiku
-workflow_run: 25618666638
+updated: '2026-11-20T16:04:48Z'
+generated_by: claude-sonnet
+workflow_run: 44768620120
 issue: 2275
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - Perfect technical execution with all visual quality criteria scored maximum
-  - Flawless specification compliance and data quality
-  - Exemplary code quality with KISS structure and reproducibility
-  - Theme-adaptive implementation with correct Okabe-Ito palette usage
-  - Realistic learning curve data showing genuine ML insights for overfitting diagnosis
+  - Fold statistics come straight from a tidy df via pandas groupby/agg, so each line
+    passes through the fold mean at every evaluated size with linear segments (C1)
+  - Translucent ±1 std bands (alpha 0.2) in the series colors keep both curves readable
+    in both themes (C2)
+  - Theme tokens threaded through every chrome element, zeroline disabled; Imprint
+    positions 1 and 2 identical in both renders
+  - 'Axis titles name the sample unit and the metric with the band meaning: ''Accuracy
+    (mean ± 1 std across folds)'''
+  - Custom hovertemplate with the metric name and hoverinfo='skip' on the band traces
+    give a clean hover in the HTML view
   weaknesses:
-  - Design excellence somewhat standard (well-configured but not exceptional)
-  - Library mastery competent but not distinctive (lacks interactive features like
-    animations or callbacks)
-  - Confidence bands use simple transparency (could explore alternatives)
+  - 'Suggestion: the empty band between the title and the plot top (about 120 px at
+    display scale) could be tightened with a smaller top margin or title y position.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "learning-curve-basic · plotly · anyplot.ai" (28px), axis labels "Training Set Size" and "Accuracy Score (0-1)" (22px), tick labels (18px, #4A4A44) — all clearly readable in dark text
-      Data: Training score (green #009E73) line 0.96→0.88 with light green ±1std band; Validation score (orange #D55E00) line 0.68→0.87 with light orange band; 10 data points per series with size-12 markers
-      Legend: Bottom-right, white box (#FFFDF6) with gray border, clearly readable
-      Grid: Subtle, both axes, low opacity, not competing with data
-      Legibility verdict: PASS — all elements readable, no overlaps, good contrast
+      Background: warm off-white #FAF8F1 across paper and plot area.
+      Chrome: title 'learning-curve-basic · python · plotly · anyplot.ai' top-left in dark ink; x title 'Training set size (samples)', y title 'Accuracy (mean ± 1 std across folds)'; tick labels 0–3000 and 0.7–0.95 in dark grey; subtle grid; framed legend lower right ('Training score', 'Validation score'). All readable.
+      Data: training line #009E73 falls from about 0.96 to 0.89 with a narrow green band; validation line #C475FD rises from about 0.69 to 0.86 with a wider lavender band; 10 marked points per series.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title and axis labels in light text (#F0EFE8), tick labels in soft gray (#B8B7B0) — all clearly readable against dark surface; NO dark-on-dark failures
-      Data: Training score green #009E73 (identical to light), Validation score orange #D55E00 (identical to light) ✓
-      Legend: Background adapts to #242420, border color #B8B7B0, text #B8B7B0 — theme-correct
-      Grid: Subtle light lines, appropriate opacity
-      Color fidelity: Data colors identical across both renders; only chrome flips themes as required ✓
-      Legibility verdict: PASS — all text readable, no theme-adaptation failures, color consistency verified
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, tick labels in light grey, subtle light grid, legend box on #242420 with light border and text. No dark-on-dark text.
+      Data: identical green #009E73 and lavender #C475FD lines and bands as in the light render; only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,68 +50,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 28px, labels 22px, ticks 18px)
+        comment: Sizes set explicitly at the library prompt's references (title 16,
+          axis titles 12, ticks and legend 10 at scale 4); all text readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text readable, no collisions
+        comment: No text collisions; the legend sits in the empty lower-right corner
+          below the validation band
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers size 12, lines width 4, optimal for 10 points per series
+        comment: 10 points per series with 9 px markers and 3 px lines, bands at alpha
+          0.2; legend glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, good contrast
+        comment: 'Green #009E73 vs lavender #C475FD differ strongly in hue and lightness;
+          not a red-green pair'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700, 50-60% canvas fill, balanced margins
+        comment: 3200x1800 canvas (gate passed), plot fills about 70% of the canvas,
+          balanced margins, title at about 43% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with context
+        comment: x 'Training set size (samples)', y 'Accuracy (mean ± 1 std across
+          folds)' — metric and band meaning named
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Training=#009E73, Validation=#D55E00, correct theme backgrounds and
-          chrome
+        comment: 'Training #009E73, validation #C475FD (Imprint positions 1 and 2),
+          identical in both renders; backgrounds #FAF8F1 / #1A1A17; zeroline disabled,
+          chrome from theme tokens'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful palette use, clear hierarchy, professional — clearly above
-          defaults
+        comment: 'Default: the style-guide baseline (theme tokens, Imprint, explicit
+          sizes), nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid, generous whitespace — good refinement
+        passed: false
+        comment: 'Default: subtle grid and token chrome, nothing beyond the baseline'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Color contrast shows train/val, gap shows overfitting, convergence
-          shows diminishing returns
+        passed: false
+        comment: 'Default: data displayed as the spec asks, no hierarchy chosen beyond
+          the Notes'
     spec_compliance:
       score: 15
       max: 15
@@ -123,25 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct learning curve with confidence bands
+        comment: 'Learning curve: two mean lines with ±1 std bands, no additional
+          layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shaded regions, legend, labeled axes
+        comment: Shaded bands, metric on y, legend, sample sizes on x — every Notes
+          bullet and C1–C5 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: Lines pass through the fold means at each size (groupby mean), linear
+          segments, no smoothing; axes auto-ranged from data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format, matching labels
+        comment: Title 'learning-curve-basic · python · plotly · anyplot.ai'; legend
+          entries 'Training score' / 'Validation score'
     data_quality:
       score: 15
       max: 15
@@ -151,19 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows overfitting, gap, convergence, fold variability
+        comment: Shows the train/validation gap, falling training and rising validation
+          scores, wider validation bands at small sizes and partial convergence
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic ML scenario, neutral, plausible
+        comment: Plausible classifier accuracy from 5-fold CV over 50–3000 samples;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic ranges (0.68-0.96 accuracy, 50-3000 sizes, ±0.01-0.02 variance)
+        comment: No check values in the spec; checked accuracies stay in 0.67–0.97,
+          train std ~0.01, validation std ~0.02
     code_quality:
       score: 10
       max: 10
@@ -173,33 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no unnecessary functions
+        comment: Constants → Data → Plot → Save zones, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: os, numpy, pandas, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no fake UI
+        comment: Fold statistics via pandas groupby/agg; one loop over two series;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct format: plot-{THEME}.png/html'
+        comment: write_image to plot-{THEME}.png at 800x450 scale 4 and write_html
+          plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -207,23 +222,30 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct use of go.Figure(), Scatter(), fill='toself', update_layout()
-          — fairly standard
+        comment: 'Default: correct go.Figure/go.Scatter with fill=''toself'' and update_layout,
+          the standard pattern'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses basic fill-to-self and hover, but lacks animations/callbacks/advanced
-          interactivity
+        comment: Custom hovertemplate with the metric name and hoverinfo='skip' on
+          the bands give a clean HTML hover (library-native interactivity, 5e)
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-20T16:01:18Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - groupby-aggregation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
