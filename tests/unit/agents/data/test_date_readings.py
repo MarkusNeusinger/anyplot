@@ -465,9 +465,9 @@ class TestTheFormsToolsWrite:
     column."""
 
     def test_slash_dates_with_a_twelve_hour_time_whose_order_no_cell_settles_are_not_read_by_a_guess(self) -> None:
-        """US spreadsheets write the month first, others the day: the clock settles no order, so a column whose days
-        are all 12 or less keeps its cells as written, with no note, and a conversion says why instead of guessing. A
-        cell whose day and month are equal reads in both orders and is read."""
+        """Tools write the month first in some locales, the day in others: the clock settles no order, so a column
+        whose days are all 12 or less keeps its cells as written, with no note, and a conversion says why instead of
+        guessing. A cell whose day and month are equal reads in both orders and is read."""
         cells = ["3/1/2026 10:00:00 AM", "3/2/2026 10:00:00 AM", "3/3/2026 10:00:00 AM", "3/4/2026 10:00:00 AM"]
         listed = read_dates(cells)
         text = "d,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
@@ -651,6 +651,14 @@ class TestTwelveHourTimesByAFormat:
     )
     def test_no_other_spelling_or_hour_is_read(self, date_format: str, cell: str) -> None:
         assert _read_date(cell, date_format) is None
+
+    @pytest.mark.parametrize("space", ["\N{NARROW NO-BREAK SPACE}", "\N{NO-BREAK SPACE}"])
+    def test_a_no_break_space_before_the_meridiem_reads_with_a_format_as_without_one(self, space: str) -> None:
+        """Tools built on ICU write a narrow no-break space before AM and PM: the list and a format read it alike."""
+        cell = f"3/15/2026 10:00{space}AM"
+
+        assert read_dates([cell]).moments[cell] == datetime(2026, 3, 15, 10)
+        assert _read_date(cell, "MM/DD/YYYY") == datetime(2026, 3, 15, 10)
 
 
 NUMBERED_MONTH_DAYS: dict[str, list[str]] = {

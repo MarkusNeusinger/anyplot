@@ -3829,11 +3829,10 @@ def read_dates(cells: Iterable[str]) -> DateCells:
         shaped is not None and shaped.shape != "slash" and _READERS[shaped.shape](shaped) is not None
         for shaped in found.values()
     )
-    # US spreadsheets write slash dates with a 12-hour clock month first, others (Australian, Indian) day first: the
-    # clock settles no order, and it makes the day-first guess the list takes for plain slash dates unsafe, so such a
-    # column reads only in an order its own cells settle, and the chat asks for the rest. One slash cell with AM or PM
-    # is enough, since the order is the column's: its cells without a time come from the same table, and a guess on
-    # them alone would be the same guess.
+    # Tools write slash dates with a 12-hour clock month first in some locales and day first in others, so the clock
+    # settles no order: such a column reads only in an order its own cells settle, and the chat asks for the rest. One
+    # slash cell with AM or PM is enough, since the order is the column's: its cells without a time come from the same
+    # table, and a guess on them alone would be the same guess.
     twelve_hour = any(shaped is not None and shaped.shape == "slash" and shaped.meridiem for shaped in found.values())
     unsettled = day_only == month_only and (day_only or mixed or twelve_hour)
     guessed = (
@@ -4019,8 +4018,10 @@ class TwelveHourTime:
 
 def twelve_hour_time(cell: str) -> TwelveHourTime | None:
     """The time on a 12-hour clock a cell ends in, in the spellings the date list reads (`_TWELVE_HOUR`), else None: the
-    one reading of such a time for the list and for a conversion by an explicit format (`prepare._read_date`)."""
-    found = _TWELVE_HOUR.fullmatch(cell)
+    one reading of such a time for the list and for a conversion by an explicit format (`prepare._read_date`). The
+    spaces the list reads as plain ones (`_SPACE_FOLD`) are plain ones here too, since tools built on ICU write a
+    narrow no-break space before `AM` and `PM`; the day it returns has them folded as well."""
+    found = _TWELVE_HOUR.fullmatch(cell.translate(_SPACE_FOLD))
     if found is None:
         return None
     day, hour, minute, second, meridiem = found.groups()
