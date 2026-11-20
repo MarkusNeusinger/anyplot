@@ -12,37 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 93
+quality_score: 72
 review:
   strengths:
-  - Perfect text legibility in both themes with explicit font sizing
-  - Exceptional 3D visualization with thoughtful pane styling and edge color adaptation
-  - All spec requirements met with correct data mapping and clear axis labels
-  - Clean, reproducible code with proper theme token implementation
-  - Strong visual hierarchy in data presentation with three distinct clusters clearly
-    visible
+  - Text sizes set explicitly and readable in both themes
+  - Oblique view (elev 20, azim 45) shows all three axes with depth
+  - Pane faces and edges use theme tokens
   weaknesses:
-  - Library Mastery could be enhanced with more advanced matplotlib 3D features like
-    custom lighting or texture effects
+  - 'VQ-05 (both): the canvas is 2508x2667 px instead of a canonical size → 3200x1800
+    (+692 × −867). Likely cause: figsize=(16, 9) at dpi=300 with bbox_inches=''tight''
+    trimming and reshaping the 3D figure.'
+  - 'SC-04 (both): the title reads ''scatter-3d · seaborn · anyplot.ai'', missing
+    the language segment → ''scatter-3d · python · seaborn · anyplot.ai''. Likely
+    cause: the ax.set_title string.'
+  - 'VQ-06 (both): the axes are labeled ''Feature A'', ''Feature B'', ''Feature C'',
+    placeholder identifiers without meaning or units → descriptive variable names
+    with units. Likely cause: the set_xlabel/set_ylabel/set_zlabel strings.'
+  - 'DQ-02 (both): the data are abstract Gaussian blobs on ''Feature A/B/C'' with
+    no real-world context → a concrete domain (for example soil samples, sensor readings)
+    with named variables. Likely cause: the data block.'
+  - 'LM-01 (code): seaborn is neither imported nor used; the file is plain matplotlib
+    → use seaborn for the theme (sns.set_theme with the theme tokens) at least. Likely
+    cause: the imports and styling block.'
+  - 'Suggestion: an optional group color with a legend would add the fourth dimension
+    the Notes mention.'
   image_description: |-
     Light render (plot-light.png):
-      Background: #FAF8F1 warm off-white surface (correct)
-      Chrome: Title "scatter-3d · seaborn · anyplot.ai" in dark text (INK #1A1A17) at 24pt, axis labels "Feature A/B/C" at 20pt, tick labels at 16pt in INK_SOFT (#4A4A44) — all clearly readable against light background with excellent contrast
-      Data: 150 points rendered in Okabe-Ito brand green (#009E73), organized in three distinct clusters; markers have subtle edge colors matching background for definition
-      3D panes: All set to #FAF8F1 background with INK_SOFT edges, creating cohesive theme
-      Legibility verdict: PASS — all text elements are clearly readable; excellent contrast; no dark-on-light issues
+      Background: warm off-white #FAF8F1 with matching panes and INK_SOFT edges
+      Chrome: title 'scatter-3d · seaborn · anyplot.ai' and axis titles Feature A/B/C in dark ink, tick labels in soft ink, all readable; mid-gray pane grid; portrait-ish 2508x2667 canvas with a large empty band under the title
+      Data: 150 brand-green #009E73 markers in three clusters, alpha 0.7 with light edges
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: #1A1A17 warm near-black surface (correct)
-      Chrome: Title in light text (INK #F0EFE8) at 24pt, axis labels at 20pt, tick labels at 16pt in INK_SOFT (#B8B7B0) — all clearly readable against dark background with excellent contrast and no dark-on-dark failures
-      Data: Same 150 points in identical #009E73 brand green (confirming data colors are theme-independent as required); three clusters visible with same spatial relationships as light render
-      3D panes: All set to #1A1A17 background with INK_SOFT edges, maintaining theme consistency
-      Legibility verdict: PASS — all text elements are clearly readable; excellent contrast; no dark-on-dark failures (the most common failure mode was successfully avoided); grid lines visible but subtle
-
-    Both renders verify correct theme adaptation: data colors identical across themes (only chrome varies), backgrounds match specification (#FAF8F1 light / #1A1A17 dark), text colors properly adapted to backgrounds.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink, readable; no dark-on-dark text; gray grid visible
+      Data: same green markers, depth-shaded, dark edges
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -50,77 +58,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: Title 24 pt, labels 20 pt, ticks 16 pt set explicitly; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; markers appropriately spaced in 3D; axis labels
-          well-positioned with labelpad
+        comment: No text collisions; marker overlap within clusters is permitted (C5)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers optimally sized (s=200, alpha=0.7) for 150 points; all elements
-          clearly visible and distinguishable
+        comment: 150 markers at s=200, alpha 0.7, clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 is colorblind-safe; adequate contrast against
-          both backgrounds'
+        comment: Single brand green; adequate contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Perfect layout; 16:9 aspect ratio appropriate; plot fills canvas
-          well with balanced margins; tight layout applied
+        passed: false
+        comment: Canvas 2508x2667 instead of a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive axis labels (Feature A/B/C); correct title format (scatter-3d
-          · seaborn · anyplot.ai)
+        passed: false
+        comment: 'Axes labeled Feature A/B/C: placeholder identifiers without meaning
+          or units (defect line)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses #009E73; backgrounds are #FAF8F1 (light) / #1A1A17
-          (dark); text colors theme-adapted; both renders theme-correct'
+        comment: 'Single series in #009E73; backgrounds correct'
     design_excellence:
-      score: 16
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Thoughtful 3D pane styling with theme-adaptive colors; view angle
-          chosen intentionally (elev=20, azim=45); professional appearance above defaults
+        passed: false
+        comment: Style-guide baseline typography and palette; nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Refined pane styling; edge colors adapted to background; appropriate
-          marker styling; overall clean appearance
+        passed: false
+        comment: Default mid-gray pane grid, subtle; baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Three distinct clusters clearly visible; 3D perspective reveals spatial
-          relationships; visual hierarchy guides understanding of data
+        passed: false
+        comment: Three clusters displayed; no hierarchy chosen
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,28 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D scatter plot implementation
+        comment: Correct 3D scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: x/y/z dimensions, clustered data, clear visualization'
+        comment: Oblique view, frame with pane grid, translucent markers; color is
+          optional and not used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z axes correctly mapped; all data visible; no mapping issues
+        comment: Each marker at its x/y/z values; all data inside the axes
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct (scatter-3d · seaborn · anyplot.ai); single-series
-          (legend N/A)
+        passed: false
+        comment: Title 'scatter-3d · seaborn · anyplot.ai' lacks the language segment
+          (defect line); single series, legend N/A
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -157,21 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all aspects of 3D scatter: 150 points, three clusters,
-          spatial relationships'
+        comment: Three separated clusters in 3D
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Synthetic but plausible; neutral labels; realistic clustering pattern
+        passed: false
+        comment: Abstract 'Feature A/B/C' clusters with no real-world context (defect
+          line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values roughly [-3, 5] sensible; cluster separation clear; all data
-          visible
+        comment: Values in roughly [-3, 5], sensible for standardized features
     code_quality:
       score: 10
       max: 10
@@ -181,50 +181,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward: imports → data → plot → save; no functions/classes'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy; all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no fake functionality; appropriate complexity
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current API
+        comment: Saves plot-{THEME}.png
     library_mastery:
-      score: 7
+      score: 2
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Correct use of matplotlib 3D projection, set_facecolor, set_edgecolor,
-          view_init()
+        passed: false
+        comment: seaborn is neither imported nor used; plain matplotlib 3D (defect
+          line)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Uses 3D scatter, pane styling, view angle customization, edge color
-          matching
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-b410a80c99
 impl_tags:
   dependencies: []
   techniques:

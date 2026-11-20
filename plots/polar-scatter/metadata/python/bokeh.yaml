@@ -2,54 +2,67 @@ library: bokeh
 language: python
 specification_id: polar-scatter
 created: '2025-12-26T16:16:51Z'
-updated: '2026-05-09T10:47:24Z'
-generated_by: claude-haiku
-workflow_run: 25599108792
+updated: '2026-11-20T02:11:15Z'
+generated_by: claude-sonnet
+workflow_run: 44657544736
 issue: 2023
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.14.10
+library_version: 3.10.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/bokeh/plot-dark.html
-quality_score: 93
+quality_score: 83
 review:
   strengths:
-  - Perfect text legibility with explicit font sizing across all elements; no readability
-    issues in either theme
-  - 'Flawless theme adaptation: data colors constant, chrome perfectly theme-aware
-    (light/dark text, correct backgrounds)'
-  - 'Excellent data choice for polar plot: realistic wind patterns with clear directional
-    clustering demonstrate the visualization technique effectively'
-  - Correct Okabe-Ito palette usage (positions 1-3 in canonical order); first series
-    correctly uses brand green (#009E73)
-  - Custom polar grid construction shows thoughtful design; cardinal and intermediate
-    direction labels enhance usability
-  - Clean code with KISS structure, reproducible seed, proper use of ColumnDataSource
-    and bokeh patterns
-  - All spec requirements met completely; title, legend, and data mapping are correct
-  - Wind data is factually plausible and contextually neutral
+  - Square 2400×2400 canvas with the polar disc centered and generous padding; the
+    radius axis starts at 0 and the 40 m/s rim reaches past the largest observation
+    in both renders
+  - Ring step computed from the data (1-2-5 nice-step rule) so gridlines stay regular
+    for any table, with ring labels placed along the sparse SE spoke where they collide
+    with no markers
+  - 'Typographic hierarchy on the angular ticks: bold INK cardinal letters at 32 pt,
+    softer INK_SOFT intercardinals at 26 pt'
+  - Markers at alpha 0.7 with a page-colored 2 px outline keep the NE and SW clusters
+    readable while single outliers stay visible
+  - Theme tokens threaded through every text element, legend frame and grid line;
+    Imprint positions 1-3 identical in both renders
+  - Native HoverTool on the scatter renderers shows direction, speed and time of day
+    in the HTML output, with brace-wrapped column names read straight from the tidy
+    df
   weaknesses:
-  - 'Design Excellence could be elevated: visual refinement could push toward more
-    polished appearance (DE-02: currently 4/6)'
-  - 'Library Mastery: while bokeh patterns are used idiomatically, could leverage
-    more advanced bokeh capabilities beyond HoverTools (callbacks, streaming, linked
-    selection)'
+  - 'SC-03 (both): directions are placed counter-clockwise from east (theta=0° at
+    E, 90° at N) while the axis is labelled with compass directions, so a wind direction
+    of 90° is drawn at N instead of E → measure bearings clockwise from north (x =
+    r·sin θ, y = r·cos θ) so each compass label stands for the degrees it names. Likely
+    cause: df[''x''] = speed·cos(theta), df[''y''] = speed·sin(theta) together with
+    the COMPASS map {0: ''E'', 90: ''N'', …}.'
+  - 'VQ-03 (both): the legend glyphs are dots of about 8 px beside 30 px data markers,
+    so the legend swatches read much smaller and fainter than the marks they explain
+    → glyphs at about the marker size (+20 px). Likely cause: the scatter legend glyph
+    is not sized to the renderer''s size=30; glyph_height/glyph_width=30 only reserve
+    the cell.'
+  - 'DE-02 (both): spokes are drawn every 30° while the angular labels sit every 45°,
+    so NE, NW, SW and SE float between spokes with no gridline under them → align
+    spokes with the labelled directions (every 45°). Likely cause: range(0, 360, 30)
+    for the spokes vs the 45° COMPASS keys.'
+  - 'Suggestion: the ring gridlines could use bokeh''s native circle/annulus glyph
+    with a data-unit radius instead of a 200-point p.line per ring.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and appropriate
-      Chrome: Title "polar-scatter · bokeh · anyplot.ai" in dark 28pt text at top (readable); Cardinal directions (N, E, W, S) in dark bold 24pt (clearly visible); Intermediate directions (NE, NW, SW, SE) in dark 20pt secondary text (readable); Radius labels (5, 10, 15, 20, 25, 30) in 20pt secondary text positioned radially (readable); "Wind Speed (m/s)" label at bottom in 22pt secondary text (readable)
-      Data: Green (#009E73) markers for Morning (NE clustering ~45°), orange (#D55E00) for Afternoon (SW clustering ~225°), blue (#0072B2) for Evening (variable); all colors from Okabe-Ito positions 1-3 as required; radial gridlines subtle but visible; angular spokes every 30° visible
-      Legibility verdict: PASS - All text clearly readable on light background; no dark-on-light issues; data markers distinctly visible
+      Background: warm off-white #FAF8F1 across the whole 2400×2400 canvas.
+      Chrome: centered bold title "polar-scatter · python · bokeh · anyplot.ai" (~48 % width); bold dark N/E/S/W and softer NE/NW/SW/SE labels outside the rim; ring labels 5–40 in INK_SOFT along the SE spoke; "Wind speed (m/s)" centered below the disc; boxed legend "Time of day" top-left. Eight faint concentric rings (5–40) and 12 spokes every 30°. All text dark and readable.
+      Data: 120 circles at 30 px, alpha 0.7 with page-colored outline — Morning #009E73 clustered NE, Afternoon #C475FD clustered SW with outliers to ~39, Evening #4467A3 scattered near the center. Legend glyphs are tiny dots.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and appropriate
-      Chrome: Title in light 28pt text (visible); Cardinal directions in light text (visible); Intermediate directions in lighter secondary text (readable, not dark-on-dark); Radius labels in light text (readable); "Wind Speed (m/s)" in light text (readable); Legend visible with theme-adapted styling
-      Data: Green (#009E73) markers identical to light render, orange (#D55E00) identical, blue (#0072B2) identical - CRITICAL: data colors do NOT change between themes, only chrome flips
-      Legibility verdict: PASS - No dark-on-dark failures; all text light-colored against dark background; brand green visually distinct and accessible; perfect theme consistency with light render for data encoding
+      Background: warm near-black #1A1A17.
+      Chrome: title, cardinal letters near-white; intercardinals, ring labels, axis title and legend labels light grey; legend box on #242420. Rings and spokes subtle grey. A faint frame line is visible around the plot area. No dark-on-dark text.
+      Data: same three Imprint colors and positions as the light render; outlines flip to the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,70 +70,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set with perfect readability in both themes
+        comment: All font sizes set explicitly (title 44 pt, compass 32/26 pt, legend
+          26 pt, ring labels 24 pt); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-spaced with no collisions
+        comment: No text collisions; ring labels on the empty SE spoke clear of markers
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Markers and grid perfectly adapted to data density
+        passed: false
+        comment: 30 px markers with alpha and outline suit 120 points; legend glyphs
+          are tiny dots far smaller than the marks (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides excellent CVD-safe contrast
+        comment: Imprint green/lavender/blue are CVD-safe; adequate contrast on both
+          surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 50-70% with balanced margins; appropriate square format
+        comment: 2400×2400 square, disc centered, balanced padding, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; axis label includes units (m/s)
+        comment: Radius titled 'Wind speed (m/s)'; angles labelled with compass directions
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand), subsequent follow Okabe-Ito; backgrounds
-          correct; chrome theme-adapted'
+        comment: 'Imprint positions 1–3 in canonical order, first series #009E73;
+          backgrounds #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom polar grid with thoughtful direction labels; above generic
-          defaults
+        comment: Raised by one for the deliberate two-level compass hierarchy (bold
+          INK cardinals vs smaller INK_SOFT intercardinals)
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Good refinement with hidden axes, subtle grid, styled legend
+        passed: false
+        comment: Ring labels on the sparse SE spoke are a good touch, but the 30°
+          spokes do not align with the 45° compass labels (defect line); stays at
+          default
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Excellent data choice; clear directional clustering tells a compelling
-          story
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,25 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar scatter with proper grid and angular spacing
+        comment: Polar scatter with rings and spokes; color by time of day as the
+          spec offers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features from spec present and functional
+        comment: Rings at regular intervals, compass ticks, radius from 0 past the
+          max, legend, translucency — all present
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Polar-to-Cartesian conversion correct; all 120 points visible
+        passed: false
+        comment: Angles run counter-clockwise from E, so the compass labels do not
+          stand for the bearing degrees (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title in the mandated format; legend titled 'Time of day' with matching
+          entries
     data_quality:
       score: 15
       max: 15
@@ -156,20 +177,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all polar plot aspects: directional clustering, speed variation,
-          categories'
+        comment: Two prevailing-direction clusters, a variable group, outliers and
+          empty sectors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real wind analysis scenario; neutral and comprehensible
+        comment: Wind observations by time of day; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds and distributions factually plausible
+        comment: Speeds 2–40 m/s with gamma tails; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -179,60 +200,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no unnecessary functions
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead code
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake functionality
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format and current API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium as the
+          library prompt prescribes
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of bokeh patterns and recommended APIs
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses bokeh-distinctive features (HoverTool, custom legends, HTML
-          export)
+        comment: Raised for per-group ColumnDataSource slices of the tidy df and an
+          explicit Legend/LegendItem model placed with add_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Raised for the native HoverTool with brace-wrapped column-name fields
+          and number formats
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-3b9198ae16
+  rendered_at: '2026-11-20T02:07:03Z'
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - polar-projection
-  - custom-legend
-  - annotations
   - hover-tooltips
+  - custom-legend
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
+  - columndatasource
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome

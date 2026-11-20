@@ -2,55 +2,56 @@ library: pygal
 language: python
 specification_id: scatter-marginal
 created: '2025-12-26T15:02:10Z'
-updated: '2026-05-09T05:32:14Z'
-generated_by: claude-haiku
-workflow_run: 25592866414
+updated: '2026-11-20T01:11:04Z'
+generated_by: claude-sonnet
+workflow_run: 44650746445
 issue: 2005
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.10
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/pygal/plot-dark.html
-quality_score: 90
+quality_score: 81
 review:
   strengths:
-  - Perfect visual quality with all text readable in both light and dark themes
-  - 'Flawless spec compliance: scatter-marginal correctly implemented with proper
-    axis alignment and marginal distribution placement'
-  - 'Excellent theme adaptation: data colors (#009E73) identical across themes, all
-    chrome elements properly theme-adaptive'
-  - 'Strong code quality: clean, reproducible (seed=42), proper theme-token usage
-    throughout'
-  - Well-designed composite layout with generous whitespace and balanced margins for
-    4800×2700 canvas
-  - Summary statistics box adds valuable context (correlation, means, n) without visual
-    clutter
-  - 'Perfect data quality: realistic bivariate correlation scenario with diverse distributions
-    visible in both margins'
+  - Marginals read their margins from the scatter's rendered plot box, so the histogram
+    bars sit flush with the scatter's axes and peaks line up with the point clouds
+    that cause them
+  - Correct 3200x1800 canvas with a theme-correct composite in both renders
+  - Concrete wind-turbine power-curve scenario with labelled units; right-skewed wind
+    marginal and bimodal power marginal
+  - Marginals in a quiet INK_MUTED tone so the green scatter stays the main panel
+  - HTML output keeps pygal's native SVG tooltips for each observation
   weaknesses:
-  - 'Design sophistication could be elevated: color palette is minimal (only brand
-    green + neutral grays), limited visual flourishes or distinctive design elements'
-  - 'Library mastery: PIL image composition is somewhat manual; could explore pygal''s
-    native multi-chart capabilities more idiomatically'
-  - 'Visual refinement could push further: spines left as defaults, grid styling is
-    subtle but could be more intentionally designed, limited visual hierarchy or emphasis
-    techniques'
+  - 'VQ-05 (both): the y-axis tick labels mix two sizes: the major ticks 0, 1000 and
+    2000 render at 44 px while 200…2200 render at 56 px, so the round values read
+    smaller than their neighbours → one size for all y ticks (major = 56 px, +12 px).
+    Likely cause: Style label_font_size=56 with major_label_font_size=44.'
+  - 'SC-02 (both): the scatter points render fully opaque #009E73 with no blending
+    where they overlap around 4–6 m/s, so dense regions do not read darker as the
+    Notes (alpha ~0.6–0.7) and the translucency bullet ask → fill opacity about 0.6.
+    Likely cause: Style opacity=0.6 does not reach the dots in render_to_png; give
+    the series an rgba color (rgba(0,158,115,0.6)) or set the dot fill-opacity through
+    css.'
+  - 'CQ-01 (code): four helper functions (nice_range, style, plot_box, font) split
+    a linear script → plain statements: the bin limits computed inline, one Style
+    per panel, the font loaded once. Likely cause: helpers kept from a refactor.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1, matches spec requirement perfectly
-      Chrome: Title "scatter-marginal · pygal · anyplot.ai" is centered and clear in dark INK color. Axis labels "Measurement A (units)" and "Measurement B (units)" are positioned correctly with good spacing. All tick labels are dark and readable. Summary box has dark text on slightly elevated background.
-      Data: Scatter points are teal (#009E73), marginal histograms are subtle gray. All markers clearly visible with 150 points at opacity 0.65. No overlapping or hidden elements.
-      Legibility verdict: PASS - all text is crisp and readable against the light off-white surface. Perfect contrast and font sizing throughout.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 composite.
+      Chrome: bold dark title 'Wind Turbine Output · scatter-marginal · python · pygal · anyplot.ai' centred at the top; axis titles 'Wind speed (m/s)' and 'Power output (kW)' and the tick labels in dark ink; dotted guides subtle; summary card (n = 220, r = 0.95, mean 789 kW) in the top-right corner on an elevated surface. The y ticks 0, 1000 and 2000 render smaller than the others.
+      Data: 220 opaque #009E73 points rising along an S-shaped power curve from 2 to 18 m/s and 0 to ~2080 kW; gray top histogram (peak at ~5 m/s, long right tail) and a sideways right histogram (peaks near 0 kW and near 1800-2000 kW), both aligned with the scatter axes.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17, matches spec requirement perfectly
-      Chrome: Title is light-colored (#F0EFE8) and clearly visible. Axis labels and tick labels are light gray (#B8B7B0), readable with good contrast. Summary box has appropriate elevated background (#242420) with light text. No dark-on-dark issues.
-      Data: Scatter data points remain teal (#009E73) - identical colors to light render, confirming theme-invariant data. Marginal bars use theme-adapted gray. All elements are distinguishable and visible.
-      Legibility verdict: PASS - all text is readable on the dark surface. Chrome colors properly adapt to dark theme. No contrast failures or dark-on-dark problems. Both renders are equally legible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, all readable; guides subtle; summary card on #242420 with light text. No dark-on-dark text.
+      Data: identical #009E73 points and the same layout; marginal bars in the dark INK_MUTED gray.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -58,80 +59,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set in Style object and ImageDraw. Perfect
-          readability in both themes.
+        comment: Title 66 px bold, axis titles 56 px, ticks 56/44 px on the 3200x1800
+          canvas; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Excellent spacing throughout. No overlapping text elements. Axis
-          labels, ticks, and summary box clearly separated.
+        comment: No text collisions; summary card sits in the empty corner clear of
+          both marginals
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter markers perfectly adapted to 150 points (size=10, opacity=0.65).
-          Marginal bars clearly visible. No overlapping.
+        comment: 220 points at dots_size=11 clearly visible; marginal bars visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito first series (#009E73) is CVD-safe. Marginal gray provides
-          good luminance contrast.
+        comment: Single green series against muted gray marginals; good luminance
+          contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 4800×2700 landscape optimal. Composite fills 60-70% of canvas. Balanced
-          margins, nothing cut off.
+        passed: false
+        comment: Canvas 3200x1800 correct and panels well proportioned, but the y-axis
+          tick labels mix two sizes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Measurement A/B). Title format correct.
+        comment: 'Wind speed (m/s) and Power output (kW): descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓. Backgrounds #FAF8F1/#1A1A17 ✓. Theme-adaptive
-          tokens throughout. Data identical across themes, chrome flips correctly.
-          Both renders theme-correct.'
+        comment: 'Series #009E73, marginals in INK_MUTED, backgrounds #FAF8F1/#1A1A17,
+          chrome flips correctly'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Clean design with custom Style objects and theme adaptation. Summary
-          box adds polish. Color palette minimal (brand + grays). Professional but
-          not exceptional.
+        comment: 'Style-guide baseline: default pygal typography with DejaVu title;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Grid subtle via foreground_subtle. Generous whitespace. Summary box
-          has rounded corners and elevated background. Could push further with spine
-          removal.
+        comment: 'Raised by one: the marginals take their margins from the scatter''s
+          rendered plot box so the bars sit flush with its axes, count axes hidden
+          and 10 px panel gaps'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Shows correlation AND distributions clearly. Summary statistics add
-          context. Visual hierarchy guides viewer. Good storytelling through statistics
-          and layout, but could leverage more visual emphasis.
+        comment: Default; the summary card is an unrequested annotation and earns
+          no storytelling credit
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -139,29 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct scatter-marginal: main XY scatter lower-left, top marginal
-          (X), right marginal (Y). All subtypes present.'
+        comment: Correct scatter with top and right marginal histograms
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features present: bivariate scatter, marginal histograms, proper
-          alignment, axes show all data.'
+        passed: false
+        comment: Layout, axis sharing and zero-baseline histograms present; points
+          render opaque, so the translucency bullet is missed (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X → Measurement A (horizontal), Y → Measurement B (vertical). Axes
-          ranges appropriate. Marginals aligned.
+        comment: Wind speed on x, power on y; all points inside the axis ranges; marks
+          at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend (single series, appropriate). Axis
-          labels descriptive with units.
+        comment: Title 'Wind Turbine Output · scatter-marginal · python · pygal ·
+          anyplot.ai' matches the format; single series, no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -171,84 +168,88 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all features: positive correlation, realistic X distribution,
-          diverse Y distribution. Outliers and density patterns visible.'
+        comment: Shows the bivariate relationship, a right-skewed x marginal and a
+          bimodal y marginal
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible measurement scenario. Correlated bivariate is
-          realistic. No controversial elements.
+        comment: 'Wind turbine power curve: concrete, plausible, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ranges sensible (x~10-90, y~10-110). Correlation r=0.556 realistic.
-          Sample n=150 appropriate. Factually consistent.
+        comment: 'Checked: Weibull wind speeds 2-18 m/s, 2000 kW rated output with
+          a sigmoid power curve, r = 0.95; sensible for the domain'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Linear flow: config → data → charts → compose → save. No unnecessary
-          functions/classes.'
+        passed: false
+        comment: Four helper functions split an otherwise linear script (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. All data deterministic.
+        comment: default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: io, os, numpy, pygal, PIL. No extraneous.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No fake functionality or
-          over-engineering.
+        comment: Appropriate complexity; numpy histogram for the bins
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html. Current pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: false
-        comment: Correct high-level API usage (XY, Bar, HorizontalBar). Proper Style
-          configuration. Good parameters. PIL composition somewhat outside pygal workflow.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Creative PIL image composition for layout. Custom Style objects with
-          theme adaptation. Could leverage pygal's unique strengths more idiomatically.
+        comment: 'Default: XY, Bar, HorizontalBar with Style; composition done in
+          PIL'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Raised by one: the HTML keeps pygal''s native SVG with hover tooltips
+          per observation'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-9afec7eaef
+  rendered_at: '2026-11-20T01:06:49Z'
 impl_tags:
   dependencies:
   - pillow
-  techniques: []
+  techniques:
+  - subplots
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - binning
   styling:
-  - alpha-blending
+  - minimal-chrome

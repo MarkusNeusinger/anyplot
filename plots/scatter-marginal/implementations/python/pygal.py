@@ -1,229 +1,191 @@
 """ anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-09
+Library: pygal 3.1.3 | Python 3.14.10
+Quality: 81/100 | Updated: 2026-11-20
 """
 
 import io
 import os
+import re
 
 import numpy as np
+import pandas as pd
 import pygal
 from PIL import Image, ImageDraw, ImageFont
 from pygal.style import Style
 
 
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
-
-# Theme-adaptive colors from default-style-guide.md
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-BRAND = "#009E73"  # First categorical series
-SECONDARY = "#C475FD"  # For marginals if colored
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data - correlated bivariate data with realistic measurement context
-np.random.seed(42)
-n_points = 150
-x = np.random.randn(n_points) * 15 + 50  # Measurement A in range ~10-90
-y = x * 0.6 + np.random.randn(n_points) * 12 + 20  # Measurement B correlated
+# Constants
+N_BINS = 12  # histogram bins per marginal
 
-# Calculate correlation for annotation
-correlation = np.corrcoef(x, y)[0, 1]
+# Columns: set these to your table's column names
+WIND_SPEED = "Wind speed (m/s)"  # role: x
+POWER = "Power output (kW)"  # role: y
 
-# Calculate histogram data for marginals
-n_bins = 10
-x_min, x_max = np.floor(x.min() / 5) * 5, np.ceil(x.max() / 5) * 5
-y_min, y_max = np.floor(y.min() / 5) * 5, np.ceil(y.max() / 5) * 5
+# Data: replace this block with your own table, for example df = pd.read_csv("turbine.csv")
+rng = np.random.default_rng(42)
+speed = np.clip(rng.weibull(2.3, 220) * 8.5, 2.0, 22.0)
+rated_kw = 2000.0
+power = rated_kw / (1 + np.exp(-(speed - 8.5) / 1.5)) + rng.normal(0, 120, speed.size)
+df = pd.DataFrame({WIND_SPEED: speed.round(2), POWER: np.clip(power, 0, rated_kw * 1.05).round(0)})
 
-x_hist, x_edges = np.histogram(x, bins=n_bins, range=(x_min, x_max))
-y_hist, y_edges = np.histogram(y, bins=n_bins, range=(y_min, y_max))
+# Plot: reads only df and the constants above
+x, y = df[WIND_SPEED].to_numpy(), df[POWER].to_numpy()
 
-# Dimensions for layout
-total_width = 4800
-total_height = 2700
-margin_plot_size = 450
-title_height = 100
-gap = 15
 
-scatter_width = total_width - margin_plot_size - gap * 3
-scatter_height = total_height - margin_plot_size - title_height - gap * 3
+def nice_range(values, bins):
+    """Bin-aligned limits: whole multiples of a round bin width that cover the data."""
+    raw = (np.nanmax(values) - np.nanmin(values)) / bins
+    unit = 10 ** np.floor(np.log10(raw))
+    step = np.ceil(raw / unit) * unit
+    return np.floor(np.nanmin(values) / step) * step, np.ceil(np.nanmax(values) / step) * step
 
-left_margin = 100
-bottom_margin = 80
-top_margin = 20
-right_margin = 20
 
-# Custom style for main scatter - theme-adaptive
-scatter_style = Style(
-    background=PAGE_BG,
-    plot_background=PAGE_BG,
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=(BRAND,),  # Okabe-Ito first series
-    title_font_size=48,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=32,
-    opacity=0.65,
-    opacity_hover=0.9,
-)
+x_lo, x_hi = nice_range(x, N_BINS)
+y_lo, y_hi = nice_range(y, N_BINS)
+x_counts, _ = np.histogram(x, bins=N_BINS, range=(x_lo, x_hi))
+y_counts, _ = np.histogram(y, bins=N_BINS, range=(y_lo, y_hi))
 
-# Custom style for marginal histograms - theme-adaptive, subtle color
-marginal_style = Style(
-    background=PAGE_BG,
-    plot_background=PAGE_BG,
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=(INK_SOFT,),  # Subtle gray for marginals
-    title_font_size=32,
-    label_font_size=32,
-    major_label_font_size=30,
-    legend_font_size=28,
-    opacity=0.6,
-)
+# Layout on the 3200 x 1800 canvas
+W, H = 3200, 1800
+TITLE_H, GAP, PAD = 130, 10, 20
+TOP_H, RIGHT_W = 330, 400
+scatter_w = W - 2 * PAD - GAP - RIGHT_W
+scatter_h = H - TITLE_H - PAD - GAP - TOP_H
 
-# Create main scatter plot
+title = "Wind Turbine Output · scatter-marginal · python · pygal · anyplot.ai"
+title_size = round(66 * min(1.0, 67 / len(title)))
+
+
+def style(colors, opacity):
+    return Style(
+        background=PAGE_BG,
+        plot_background=PAGE_BG,
+        foreground=INK,
+        foreground_strong=INK,
+        foreground_subtle=INK_MUTED,
+        colors=colors,
+        title_font_size=56,
+        label_font_size=56,
+        major_label_font_size=44,
+        opacity=opacity,
+        opacity_hover=opacity,
+        stroke_width=2,
+    )
+
+
 scatter = pygal.XY(
-    width=scatter_width,
-    height=scatter_height,
-    style=scatter_style,
-    x_title="Measurement A (units)",
-    y_title="Measurement B (units)",
+    width=scatter_w,
+    height=scatter_h,
+    style=style(IMPRINT_PALETTE, 0.6),
+    x_title=WIND_SPEED,
+    y_title=POWER,
     show_legend=False,
     stroke=False,
-    dots_size=10,
+    dots_size=11,
     show_x_guides=True,
     show_y_guides=True,
     x_label_rotation=0,
-    truncate_label=-1,
     explicit_size=True,
-    margin_top=top_margin,
-    margin_right=right_margin,
-    margin_bottom=bottom_margin,
-    margin_left=left_margin,
-    range=(y_min - 5, y_max + 5),
-    xrange=(x_min - 5, x_max + 5),
+    margin=20,
+    xrange=(x_lo, x_hi),
+    range=(y_lo, y_hi),
 )
+scatter.add("Observations", list(zip(df[WIND_SPEED], df[POWER], strict=True)))
 
-scatter_points = [(float(xi), float(yi)) for xi, yi in zip(x, y, strict=True)]
-scatter.add("Data", scatter_points)
 
-# Create top marginal histogram (X distribution)
+def plot_box(chart):
+    """Plot-area origin and size in pixels, read from the rendered SVG."""
+    svg = chart.render().decode("utf-8")
+    left, top = map(float, re.search(r'translate\(([\d.]+), ([\d.]+)\)" class="plot"', svg).groups())
+    width, height = map(
+        float, re.search(r'class="plot"[^>]*>\s*<rect x="0" y="0" width="([\d.]+)" height="([\d.]+)"', svg).groups()
+    )
+    return left, top, width, height
+
+
+# The marginals take the scatter's plot box so their bins line up with its axes
+p_left, p_top, p_w, p_h = plot_box(scatter)
+marginal_style = style((INK_MUTED,), 0.55)
+marginal_common = {
+    "style": marginal_style,
+    "show_legend": False,
+    "show_x_labels": False,
+    "show_y_labels": False,
+    "show_x_guides": False,
+    "show_y_guides": False,
+    "explicit_size": True,
+    "spacing": 3,
+}
+
 x_margin = pygal.Bar(
-    width=scatter_width,
-    height=margin_plot_size,
-    style=marginal_style,
-    show_legend=False,
-    show_x_labels=False,
-    show_y_labels=True,
-    show_y_guides=True,
-    show_x_guides=False,
-    margin_top=top_margin,
-    margin_right=right_margin,
-    margin_bottom=20,
-    margin_left=left_margin,
-    explicit_size=True,
-    spacing=2,
+    width=scatter_w,
+    height=TOP_H,
+    margin_left=p_left,
+    margin_right=scatter_w - p_left - p_w,
+    margin_top=20,
+    margin_bottom=0,
+    range=(0, x_counts.max() * 1.08),
+    **marginal_common,
 )
-x_margin.add("X Distribution", [float(h) for h in x_hist])
+x_margin.add("Wind speed", x_counts.tolist())
 
-# Create right marginal histogram (Y distribution)
 y_margin = pygal.HorizontalBar(
-    width=margin_plot_size,
-    height=scatter_height,
-    style=marginal_style,
-    show_legend=False,
-    show_x_labels=False,
-    show_y_labels=False,
-    show_y_guides=False,
-    show_x_guides=False,
-    margin_top=top_margin,
-    margin_right=30,
-    margin_bottom=bottom_margin,
-    margin_left=10,
-    explicit_size=True,
-    spacing=2,
+    width=RIGHT_W,
+    height=scatter_h,
+    margin_left=0,
+    margin_right=20,
+    margin_top=p_top,
+    margin_bottom=scatter_h - p_top - p_h,
+    range=(0, y_counts.max() * 1.08),
+    **marginal_common,
 )
-y_margin.add("Y Distribution", [float(h) for h in y_hist[::-1]])
+y_margin.add("Power", y_counts.tolist())
 
-# Render each chart to PNG in memory
-scatter_png = scatter.render_to_png()
-x_margin_png = x_margin.render_to_png()
-y_margin_png = y_margin.render_to_png()
+# Compose the three panels
+canvas = Image.new("RGB", (W, H), PAGE_BG)
+scatter_x, scatter_y = PAD, TITLE_H + TOP_H + GAP
+for chart, origin in (
+    (x_margin, (PAD, TITLE_H)),
+    (y_margin, (PAD + scatter_w + GAP, scatter_y)),
+    (scatter, (scatter_x, scatter_y)),
+):
+    canvas.paste(Image.open(io.BytesIO(chart.render_to_png())).convert("RGB"), origin)
 
-# Open images
-scatter_img = Image.open(io.BytesIO(scatter_png))
-x_margin_img = Image.open(io.BytesIO(x_margin_png))
-y_margin_img = Image.open(io.BytesIO(y_margin_png))
 
-# Create final composite image with theme-adaptive background
-final_img = Image.new("RGB", (total_width, total_height), PAGE_BG)
+def font(size, bold=False):
+    try:
+        return ImageFont.truetype("DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf", size)
+    except OSError:
+        return ImageFont.load_default(size=size)
 
-# Calculate positions
-scatter_x = gap
-scatter_y = title_height + margin_plot_size + gap
-x_margin_x = gap
-x_margin_y = title_height
-y_margin_x = gap + scatter_width + gap
-y_margin_y = title_height + margin_plot_size + gap
 
-# Paste images
-final_img.paste(x_margin_img, (x_margin_x, x_margin_y))
-final_img.paste(y_margin_img, (y_margin_x, y_margin_y))
-final_img.paste(scatter_img, (scatter_x, scatter_y))
+draw = ImageDraw.Draw(canvas)
+title_font = font(title_size, bold=True)
+title_w = draw.textlength(title, font=title_font)
+draw.text(((W - title_w) / 2, 28), title, fill=INK, font=title_font)
 
-# Add title and corner annotation
-draw = ImageDraw.Draw(final_img)
-title_text = "scatter-marginal · pygal · anyplot.ai"
-try:
-    title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
-    stats_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
-    stats_font_bold = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 42)
-except OSError:
-    title_font = ImageFont.load_default()
-    stats_font = ImageFont.load_default()
-    stats_font_bold = ImageFont.load_default()
+# Summary card in the empty top-right corner
+card = [(PAD + scatter_w + GAP + 30, TITLE_H + 30), (W - PAD - 10, TITLE_H + TOP_H - 20)]
+draw.rounded_rectangle(card, radius=16, fill=ELEVATED_BG, outline=INK_MUTED, width=2)
+draw.text((card[0][0] + 28, card[0][1] + 22), "Summary", fill=INK, font=font(42, bold=True))
+lines = [f"n = {len(df)}", f"r = {df[WIND_SPEED].corr(df[POWER]):.2f}", f"mean {df[POWER].mean():.0f} kW"]
+for i, line in enumerate(lines):
+    draw.text((card[0][0] + 28, card[0][1] + 88 + i * 52), line, fill=INK_SOFT, font=font(36))
 
-# Get text bounding box for centering title
-bbox = draw.textbbox((0, 0), title_text, font=title_font)
-text_width = bbox[2] - bbox[0]
-text_x = (total_width - text_width) // 2
-text_y = 30
-draw.text((text_x, text_y), title_text, fill=INK, font=title_font)
+canvas.save(f"plot-{THEME}.png", "PNG")
 
-# Add statistics in the corner space (top-right empty area)
-corner_x = y_margin_x + 30
-corner_y = title_height + 30
-corner_width = margin_plot_size - 60
-corner_height = margin_plot_size - 80
-
-# Draw subtle background for stats box with theme-adaptive colors
-elevated_bg = "#FFFDF6" if THEME == "light" else "#242420"
-box_border = INK_MUTED
-
-stats_box = [(corner_x, corner_y), (corner_x + corner_width, corner_y + corner_height)]
-draw.rounded_rectangle(stats_box, radius=15, fill=elevated_bg, outline=box_border, width=2)
-
-# Add statistics text
-stats_title = "Summary"
-draw.text((corner_x + 35, corner_y + 25), stats_title, fill=INK, font=stats_font_bold)
-
-stats_lines = [f"n = {n_points}", f"r = {correlation:.3f}", f"A̅ = {np.mean(x):.1f}", f"B̅ = {np.mean(y):.1f}"]
-line_y = corner_y + 85
-for line in stats_lines:
-    draw.text((corner_x + 35, line_y), line, fill=INK_SOFT, font=stats_font)
-    line_y += 50
-
-# Save final image and HTML
-final_img.save(f"plot-{THEME}.png", "PNG")
-
-# Also save the scatter SVG as HTML for interactivity
-scatter_svg_full = scatter.render().decode("utf-8")
-with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
-    f.write(scatter_svg_full)
+# Interactive HTML: the scatter panel as SVG
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(scatter.render())

@@ -2,50 +2,56 @@ library: plotly
 language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:37:52Z'
-updated: '2026-05-09T01:10:02Z'
-generated_by: claude-haiku
-workflow_run: 25587120588
+updated: '2026-11-20T00:24:17Z'
+generated_by: claude-sonnet
+workflow_run: 44644045370
 issue: 1878
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/plotly/plot-dark.html
-quality_score: 93
+quality_score: 80
 review:
   strengths:
-  - Excellent specification compliance — all required features present and correctly
-    implemented
-  - Perfect visual quality across both light and dark themes with text legible and
-    proper contrast
-  - Realistic browser market share data with appropriate scale and domain knowledge
-  - Clean, reproducible, theme-adaptive code demonstrating mastery of style guidelines
-  - Okabe-Ito palette correctly applied with brand green as first series in both renders
+  - Fixed node x/y positions in go.Sankey give strict, evenly spaced year columns
+    with a consistent browser order, which is the alluvial layout the spec asks for
+  - Bands in the source browser's color at alpha 0.3 stay distinguishable where they
+    cross in both themes, and the node colors are identical across themes
+  - Year headers in bold sit cleanly above each column, and every block is labelled
+    in every column
+  - The tidy DataFrame with column constants drives the whole plot, so the data block
+    can be swapped for a real table
+  - Native hover templates in the HTML show source → target and the flow size
   weaknesses:
-  - Design Excellence could be elevated with more sophisticated visual refinements
-    (custom typography variations, additional subtle styling techniques)
-  - Legend implementation via scatter traces is unconventional approach (not a bug,
-    just could be more elegant)
-  - Could explore additional Plotly interactivity features for higher Library Mastery
-    score
+  - 'VQ-05 (both): an empty band of about 12 % of the canvas height lies between the
+    title (y=0.97) and the year headers, plus about 10 % unused below the legend,
+    so the diagram fills only about 60 % of the height → close the gap so the title
+    sits about 4 % above the headers (about −60 px at 800x450). Likely cause: margin
+    t=100 together with the headers at y=1.02 and the legend at y=-0.12 with b=80.'
+  - 'DQ-03 (code): FLOW is labelled ''Users moving (%)'' and SHARE ''Market share
+    (%)'', but each column sums to 1000, so the HTML hover reports ''Users moving
+    (%): 420'' → per-column values that sum to 100 (divide the flows by 10), or a
+    label without ''%''. Likely cause: the flow values on a per-mille scale under
+    a percent label.'
+  - 'Suggestion: the legend repeats what the labels at every block already say; dropping
+    it would free vertical space for the diagram.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — matches specification
-      Chrome: Title, year labels (2015, 2018, 2021, 2024), category labels (Chrome, Firefox, Safari, Edge) all in black/dark ink colors
-      Data: Four browser categories shown as colored nodes with semi-transparent flow ribbons connecting across time points. Chrome (green #009E73), Firefox (orange #D55E00), Safari (blue #0072B2), Edge (pink #CC79A7)
-      Legibility verdict: PASS — All text clearly readable against light background; no dark-on-light failures; flows visible with 0.3 alpha transparency
+      Background: warm off-white #FAF8F1, landscape 3200x1800.
+      Chrome: centered title "Browser Market Share · alluvial-basic · python · plotly · anyplot.ai" in dark ink across about 58 % of the width; bold year headers 2015, 2018, 2021 and 2024 above the four columns; dark node labels (Chrome, Firefox, Safari, Edge) beside every block, and on the left of the blocks in the last column; a horizontal legend in an elevated box with a soft border below the diagram. An empty band lies between the title and the headers.
+      Data: four columns of blocks: Chrome #009E73 (largest, growing), Firefox #C475FD (shrinking), Safari #4467A3, Edge #BD8233. Translucent bands at alpha 0.3 in the source color connect neighboring columns: wide bands for stable users, thin crossing bands for switchers.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — matches specification
-      Chrome: Title, year labels, category labels all in light cream colors (#F0EFE8, #B8B7B0); no dark-on-dark failures detected
-      Data: Browser node colors IDENTICAL to light render (green, orange, blue, pink unchanged). Flow colors also unchanged from light version. Only chrome (background, text, borders) adapts to dark theme
-      Legibility verdict: PASS — All text clearly readable against dark background; brand green (#009E73) visible and distinguishable; flows clearly visible
-
-    Theme consistency: ✓ Data colors identical between renders; only chrome flips as intended per style guide
+      Background: warm near-black #1A1A17.
+      Chrome: the title, year headers and node labels are light cream and the legend text is soft grey on a #242420 box; no dark-on-dark text anywhere.
+      Data: block colors are identical to the light render; the bands are the same colors at alpha 0.3 and read as darker tints on the dark page but stay distinguishable where they cross.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,74 +59,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 32px, year labels 26px, all text explicitly sized for 4800×2700px
-          canvas. Both themes readable.
+        comment: Title 16, column headers 13 bold, node labels and legend 11, all
+          explicitly sized; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Year labels above plot, category labels within nodes, legend below.
-          No text collisions.
+        comment: Column headers sit above the columns; the 2024 labels lie on translucent
+          bands but read cleanly behind plotly's text halo; the legend clears the
+          lowest blocks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All browsers visible despite market share disparities. Semi-transparent
-          flows (0.3 alpha) prevent occlusion.
+        comment: Blocks, wide bands and hair-thin transition bands all visible in
+          both themes; legend swatches match the block colors
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. No red-green sole signal.
+        comment: Four Imprint hues, distinct in lightness, and labelled at every block;
+          no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Landscape 4800×2700px, generous margins (l=60, r=60, t=140, b=80),
-          nothing cut off.
+        comment: 3200x1800 canvas correct; an empty band of about 12 % of the height
+          between the title and the column headers squeezes the diagram (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive and formatted per spec. Year and category labels
-          clear.
+        comment: No axes; descriptive title prefix and year headers serve as labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand). Okabe-Ito positions 1-4 in order.
-          Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+        comment: 'Chrome #009E73 first, then Imprint positions 2-4 in canonical order;
+          backgrounds #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional styling with intentional color hierarchy and semi-transparent
-          flows. Above generic defaults but room for more refinement.
+        comment: The style-guide baseline (theme tokens, Imprint palette, explicit
+          sizes), nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Node borders with subtle colors, transparent flows, generous whitespace.
-          Minimal but refined.
+        comment: Clean but default plotly Sankey spacing; nothing decided beyond the
+          baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: Clear temporal narrative showing Chrome dominance and transitions.
-          Strong focal point with room for additional emphasis.
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -130,30 +136,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Sankey diagram correctly implements alluvial diagram specification.
+        comment: Alluvial via go.Sankey with fixed column x positions; no unasked
+          layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: time points, categories, values, flow magnitudes,
-          transparency, labels.'
+        comment: C1 columns 2015-2024 left to right; C2 bands only between neighbors,
+          width = flow; C3 consistent category colors, bands in source color at alpha
+          0.3; C4 year header above every column and a label at every block; C5 no
+          extra layers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=categories. Flow values encoded in band width. All data
-          shown.
+        comment: Block heights equal summed flows; all 28 flows drawn
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec. Legend shows all 4 categories with correct
-          colors.
+        comment: '''Browser Market Share · alluvial-basic · python · plotly · anyplot.ai'';
+          legend entries match the browsers'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -161,22 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates time progression, transitions, flow magnitudes, persistence.
-          Complete feature coverage.
+        comment: Stable flows, crossovers, growth and shrinkage across four time points
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Browser market share data is real-world plausible (Chrome growth,
-          Firefox decline, Safari stable, Edge emergence). Neutral.
+        comment: Browser market share 2015-2024, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Values 15-480, 3-year intervals, 4-browser scope all appropriate
-          for domain.
+        passed: false
+        comment: Columns labelled '(%)' sum to 1000 each, so the hover reports 420
+          % (defect line)
     code_quality:
       score: 10
       max: 10
@@ -186,57 +192,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes. Straightforward structure.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data, fully reproducible.
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os (stdlib) and plotly.graph_objects (main library), all used.
+        comment: os, numpy, pandas, plotly all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI.
+        comment: Tidy df with column constants, vectorised node positions
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API.
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html, autosize=False
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses go.Sankey with proper configuration. Theme-adaptive tokens applied
-          idiomatically.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages arrangement='snap', semi-transparent links, custom positioning,
-          formatted hover. Could explore more advanced interactivity.
+        comment: go.Sankey with explicit node x/y; default
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond the library prompt
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-20T00:20:20Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - groupby-aggregation
   styling:
   - alpha-blending
+  - minimal-chrome

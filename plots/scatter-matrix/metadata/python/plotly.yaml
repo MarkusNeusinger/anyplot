@@ -12,36 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 74
 review:
   strengths:
-  - Excellent theme adaptation with perfect INK/INK_SOFT token usage—both renders
-    fully readable
-  - Clean, professional implementation following Plotly idioms exactly
-  - Strong color encoding—Okabe-Ito palette used correctly to distinguish regions
-  - 'Thoughtful design details: marker white edges, legend background, generous margins'
-  - Perfect spec compliance and data quality
-  - Deterministic, reproducible implementation with seed control
+  - Theme tokens threaded through title, ticks, grid and legend; both renders readable
+  - Small translucent outlined markers keep each region's cloud readable
+  - legendgroup ties each region across all 16 subplots to one legend in the HTML
+  - Variable names with units along the left and bottom edges
   weaknesses:
-  - Design excellence could be elevated with more sophisticated visual refinements
-    (custom fonts, emphasis through color contrast, visual hierarchy)
-  - Library mastery could leverage more distinctive Plotly features (callbacks, advanced
-    interactivity patterns)
+  - 'VQ-05 (both): canvas is 4800x4800, off the required 2400x2400 square (+2400 x
+    +2400 px) → width=600, height=600, scale=4. Likely cause: write_image(width=1600,
+    height=1600, scale=3).'
+  - 'VQ-02 (both): the Region legend box sits inside the Temperature x Wind Speed
+    cell and covers several data points → place it outside the grid. Likely cause:
+    legend x=0.98, y=0.98 anchored inside the plot area.'
+  - 'VQ-07 (dark): bright white zero lines run along x=0 in the Wind Speed column
+    and y=0 in the Wind Speed row, untinted chrome on #1A1A17 → zeroline=False or
+    zerolinecolor from INK_SOFT. Likely cause: zerolinecolor not set in update_xaxes/update_yaxes.'
+  - 'SC-04 (both): title reads "scatter-matrix · plotly · anyplot.ai", missing the
+    language segment → "scatter-matrix · python · plotly · anyplot.ai". Likely cause:
+    the title string.'
+  - 'CQ-01 (code): no column-0 # Data / # Plot markers and no column constants; column
+    names are typed where used → one Data block ending in df between # Data and #
+    Plot, and column constants with # role: comments above it. Likely cause: the file
+    predates the adaptable-code convention.'
+  - 'Suggestion: drop interior tick labels so only the edge cells carry them, which
+    lightens the grid.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matching spec
-      Chrome: Title, axis labels (Temperature °C, Humidity %, Pressure hPa, Wind Speed m/s), and tick labels all in dark text (INK #1A1A17), clearly readable
-      Data: Three region categories shown with Okabe-Ito colors—bluish green (#009E73) Coastal, orange (#D55E00) Mountain, blue (#0072B2) Desert. Markers have white edges for definition. Histograms on diagonal, scatter plots off-diagonal
-      Legibility verdict: PASS - All text fully readable, excellent contrast
+      Background: warm off-white #FAF8F1, 4800x4800
+      Chrome: title "scatter-matrix · plotly · anyplot.ai" centered in dark ink; variable names with units on the left and bottom edges; tick labels on every cell in soft dark gray; subtle grid; boxed Region legend inside the top-right cell; all readable
+      Data: 4x4 grid; overlaid histograms on the diagonal, scatter off-diagonal; Coastal #009E73, Mountain #C475FD, Desert #4467A3; markers size 8 at 0.7 opacity with a page-colored outline
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matching spec
-      Chrome: Title, axis labels, and tick labels all in light text (INK_SOFT #B8B7B0), clearly readable against dark background. Grid subtle but visible
-      Data: Data colors identical to light render (positions 1-3 of Okabe-Ito palette unchanged). No dark-on-dark text issues; light-colored tick labels read well on dark background
-      Legibility verdict: PASS - Perfect theme adaptation, all elements readable
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles and ticks in light ink; legend on the elevated dark surface; bright white zero lines at x=0 in the Wind Speed column and y=0 in the Wind Speed row; no dark-on-dark text
+      Data: identical colors to the light render
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -49,67 +60,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicit; readable in both themes
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Clean spacing, legend positioned with background
+        passed: false
+        comment: Legend box sits on the Temperature x Wind Speed cell and covers data
+          points (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers visible with white edges; histograms distinct
+        comment: Markers and histograms clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe
+        comment: CVD-safe Imprint positions
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Square format appropriate; proportions good
+        passed: false
+        comment: Canvas 4800x4800, off the 2400x2400 square contract (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Variable names with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73; Okabe-Ito order; themes correct'
+        passed: false
+        comment: Imprint colors correct, but untinted white zero lines in the dark
+          render (defect line)
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional design; thoughtful legend styling and marker edges
+        comment: Style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Subtle grid; generous margins; deliberate edge treatment
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: true
-        comment: Good exploratory structure; lacks narrative emphasis
+        comment: Data displayed, no hierarchy beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -117,25 +130,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot matrix
+        comment: Scatter matrix with diagonal histograms
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: C1-C4 met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correct; all data visible
+        comment: Axes correct, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format and labels correct
+        passed: false
+        comment: Title lacks the language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -145,70 +158,73 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All plot aspects shown
+        comment: Correlations, clusters and varied distributions shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Weather data plausible
+        comment: Regional weather stations, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Regional values sensible
+        comment: No check values; plausible pressure, humidity, temperature, wind
+          ranges
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No unnecessary functions
+        passed: false
+        comment: 'No # Data / # Plot zones and no column constants (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}
+        comment: plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses make_subplots and go.* correctly
+        comment: Correct make_subplots + graph_objects usage
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: Could leverage more Plotly features
+        comment: legendgroup links each region across all subplots in the HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-beb4cae6a8.sg-90127758e8.lib-dd574aaf58
 impl_tags:
   dependencies: []
   techniques:
