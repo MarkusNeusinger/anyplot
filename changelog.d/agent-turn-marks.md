@@ -10,4 +10,4 @@
   re-binds, a turn whose formula or code replaced the table, the server's own
   conversions of a paste and a renamed column get no line, and nothing is
   blocked. The assistant never reads these lines. The usage telemetry counts
-  the marks by their closed codes, never by a role or a column.
+  the marks by their closed codes, never by a role or a column. (#13229)

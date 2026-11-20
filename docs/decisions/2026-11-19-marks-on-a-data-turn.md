@@ -9,4 +9,4 @@
   later, only on the marked turns, only if the count calls for it, counted first and behind a switch. His reasons:
   one unasked change in five test runs is thin; a good enough model or clear enough rules make a second reader
   unnecessary; and the assistant must not get more input than it has.
-- Where: `docs/concepts/agent-network.md`
+- Where: #13229
