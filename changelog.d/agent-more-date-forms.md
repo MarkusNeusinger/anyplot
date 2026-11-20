@@ -14,4 +14,4 @@
   first with a note that says it is a guess. Before, the paste kept such a
   column as text, and for an axis that takes dates the chat asked whether to
   number the rows instead. Zone names such as `GMT`, a comma after the year,
-  weekdays and ordinals stay outside the list.
+  weekdays and ordinals stay outside the list. (#13278)

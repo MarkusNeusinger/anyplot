@@ -8,4 +8,4 @@
 - Decided: the two zone spellings and the 12-hour clock, and, on his own word in the chat, a fourth
   form: a date with the year first and slashes (`2026/03/01`). The reason is the card's, which he
   accepted: tools his audience uses every day write these forms, and none of them needs a guess.
-- Where: `docs/concepts/agent-network.md`
+- Where: #13278
