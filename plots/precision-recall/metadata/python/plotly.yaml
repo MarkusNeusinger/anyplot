@@ -2,51 +2,50 @@ library: plotly
 language: python
 specification_id: precision-recall
 created: '2025-12-26T17:39:47Z'
-updated: '2026-05-10T05:34:20Z'
-generated_by: claude-haiku
-workflow_run: 25620791759
+updated: '2026-11-20T16:26:06Z'
+generated_by: claude-sonnet
+workflow_run: 44771910870
 issue: 2274
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.14.10
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/plotly/plot-dark.html
-quality_score: 94
+quality_score: 82
 review:
   strengths:
-  - Excellent visual quality across both light and dark themes with no legibility
-    issues
-  - Proper palette compliance with Okabe-Ito colors; data colors maintain identity
-    across themes
-  - 'Comprehensive feature coverage: classifier curve, baseline, and iso-F1 reference
-    curves all present'
-  - Realistic fraud-detection use case with appropriate imbalanced dataset
-  - Reproducible implementation with proper seeding
-  - Well-structured code with clean imports and no unnecessary complexity
-  - Strong theme-adaptive styling that correctly flips chrome while preserving data
-    colors
+  - Stepped curve drawn with line shape 'hv' through the points of precision_recall_curve,
+    matching sklearn's step convention
+  - AP and the baseline value are computed and carried in the legend entries (AP =
+    0.812, Random baseline 0.10)
+  - Iso-F1 contours drawn first and faint, so they sit behind the classifier curve
+  - Theme tokens threaded through title, ticks, grid, axis lines and legend box; both
+    renders readable
+  - Per-trace hovertemplates give recall and precision on hover in the HTML output
+  - Data follows the adaptable-code zones with column constants and a computed positive
+    ratio
   weaknesses:
-  - 'Design Excellence slightly below maximum: could enhance visual refinement through
-    additional styling choices'
-  - Library Mastery could showcase more distinctive plotly interactive features
+  - 'SC-02 (both): the four iso-F1 contours share one grey dotted style and carry
+    their F1 values only as four identical legend entries, so no contour can be matched
+    to its value on the plot (C4: each labeled with its F1 value) → label each contour
+    with its F1 value on the plot, e.g. a small INK_SOFT text at its right end. Likely
+    cause: the iso-F1 loop sets only name= and no on-curve label.'
+  - 'Suggestion: start each iso-F1 contour at recall f1/(2−f1) so it reaches precision
+    1; the F1 = 0.2 contour now stops abruptly near precision 0.81 because the linspace
+    sampling skips the steep part.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title, axis labels, tick labels all in dark text (#1A1A17) - fully readable
-      Data: Classifier curve in brand green (#009E73), baseline in orange (#E69F00), iso-F1 in muted color (#4A4A44)
-      Grid: Subtle, nearly invisible - does not compete with data
-      Legend: Top-left with elevated background (#FFFDF6), all series labeled with metrics
-      Legibility verdict: PASS - all text clearly visible and readable
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: centered title "precision-recall · python · plotly · anyplot.ai" in dark ink; axis titles "Recall (sensitivity)" and "Precision (positive predictive value)" dark; tick labels 0–1 in soft dark grey; subtle grid; legend box (elevated off-white, thin border) right of the plot with Classifier (AP = 0.812), Random baseline (0.10), F1 = 0.8/0.6/0.4/0.2. All readable.
+      Data: #009E73 stepped PR curve with a translucent green fill to zero, flat at 1.0 to recall 0.21, sawtooth plateau around 0.93–0.97, stepping down to 0.25 at recall 1 and dropping to 0.10; ochre #BD8233 dashed horizontal baseline at 0.10; four grey dotted iso-F1 contours behind the curve.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title, axis labels, tick labels now in light text (#F0EFE8, #B8B7B0) - full contrast, readable
-      Data: Classifier curve remains #009E73 (identical to light render), baseline #E69F00, iso-F1 curves unchanged
-      Grid: Light subtle grid lines - properly visible without dominance
-      Legend: Dark background (#242420) with light text - maintains readability
-      Legibility verdict: PASS - no dark-on-dark failures; all text clearly readable; brand green remains prominent
-      Theme sync: ✓ Data colors identical; only chrome flips (background, text, legend box)
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light ink, ticks in light grey, grid subtle, legend box dark elevated with light border and text. No dark-on-dark text.
+      Data: identical colors to light (green curve, ochre baseline); fill reads as a dark green tint; contours light grey dotted.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,70 +56,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, tick labels 18px; all readable in light
-          and dark
+        comment: All sizes set explicitly (title 16, axis titles 12, ticks 10, legend
+          10 at 800x450, scale 4); every text readable in both themes; title fills
+          about 38% of the width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend clear of plot; no text collisions
+        comment: Legend sits outside the plot area on the right; no text collides
+          with text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Classifier curve prominent; baseline and iso-curves well-adapted
+        comment: 2.5 px stepped curve dominates, dashed baseline clear, iso-F1 contours
+          faint but visible; legend line samples match their traces in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors; CVD-safe and distinct
+        comment: 'Green curve, ochre dashed baseline, grey dotted contours: told apart
+          by dash pattern and luminance, not hue alone'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper proportions, generous margins, nothing cut off
+        comment: 3200x1800 (canvas gate passed); plot fills about 65% of the canvas,
+          legend docked beside it
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct title format
+        comment: 'Recall (sensitivity) / Precision (positive predictive value): descriptive;
+          both are unitless ratios'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct; both renders theme-compliant'
+        comment: 'Curve #009E73, baseline Imprint #BD8233, contours in INK_SOFT; backgrounds
+          #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Professional styling with intentional color hierarchy; consistent
-          across themes
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Subtle grid, semi-transparent fill, legend box; room for enhancement
+        comment: The spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear narrative: classifier vs. random with F1 framework; visual
-          hierarchy guides viewer'
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,25 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct precision-recall curve with stepped line style
+        comment: Precision-recall curve
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: AP score, baseline, stepped style, iso-F1 curves all present
+        passed: false
+        comment: Stepped curve, horizontal baseline, AP in legend present; the iso-F1
+          contours (C4) are labelled only through four identical legend entries (defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: recall [0-1], Y: precision [0-1]; full data range'
+        comment: Recall on x, precision on y; hv step through the computed points
+          (sklearn step convention)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; all series labeled with metrics
+        comment: Title precision-recall · python · plotly · anyplot.ai; legend entries
+          readable, classifier listed first
     data_quality:
       score: 15
       max: 15
@@ -156,19 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows classifier tradeoff, baseline, and F1 references; comprehensive
+        comment: High-precision plateau, sawtooth, steep fall at high recall, curve
+          ending on the baseline
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fraud detection with 10% imbalance, 1000 samples; plausible and neutral
+        comment: Fraud detection, 1000 transactions, 10% fraud
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard [0,1] scales; AP=0.812 realistic for good classifier
+        comment: 'Checked: baseline at 0.10 = the positive ratio (computed, y_true.mean());
+          curve ends at recall 1 at precision 0.10; AP 0.812 from average_precision_score.
+          No Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -178,58 +189,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; direct generation and plot
+        comment: Flat script in the six zones
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity
+        comment: precision_recall_curve and average_precision_score do the computation;
+          nothing written out
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: plot-{THEME}.png at 800x450 scale 4 plus plot-{THEME}.html
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: go.Figure(), add_trace(), update_layout(); theme-adaptive colors
-          all idiomatic
+        comment: Correct graph_objects usage; nothing beyond the usual patterns
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Uses shape=hv, fill=tozeroy, hovertemplate; could leverage more interactive
-          features
+        comment: Per-trace hovertemplates with %{fullData.name} and legend traceorder='reversed'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-dd574aaf58
+  rendered_at: '2026-11-20T16:21:52Z'
 impl_tags:
   dependencies:
   - sklearn
   techniques:
-  - html-export
+  - layer-composition
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
