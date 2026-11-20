@@ -1,0 +1,14 @@
+{
+  "before_dataset_text": "day,visitors\n8 Nov 2026,1403\n9 Nov 2026,1527\n10 Nov 2026,1496\n11 Nov 2026,1618\n12 Nov 2026,1580\n13 Nov 2026,1702\n",
+  "before_reply": "6 rows and 2 columns: day holds dates from 8 to 13 November 2026 and is on the date axis, visitors on the value axis.",
+  "dataset_text": "day,visitors\n1st March 2026,87\n2nd March 2026,93\n3rd March 2026,78\n4th March 2026,102\n5th March 2026,95\n",
+  "message": "Convert the column day to dates.",
+  "first_turn": true,
+  "expected_operations": [],
+  "scored_by_reply": true,
+  "stale_values": ["November", "novembre", "13 Nov", "Nov 13", "2026-11", "11.2026"],
+  "current_values": ["March", "März", "mars", "2026-03", "03.2026"],
+  "locale": "en",
+  "spec_id": "line-timeseries-rolling",
+  "tags": ["note", "replaced_table", "stale"]
+}

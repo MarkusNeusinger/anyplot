@@ -5,18 +5,22 @@ import dataclasses
 import itertools
 import json
 import os
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
+import httpx
 import pytest
 from pydantic import ValidationError
 
 from agents.anyplot.data.generate import Generate, generate
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import PrepareError, apply_operations
+from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import FakeJudge, JudgeVerdict
 from agents.anyplot.opening import instruction_like
+from agents.anyplot.plugins.replaced_table import REPLACED_TABLE_LINE
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.services import Services
 from agents.anyplot.settings import get_settings
@@ -45,9 +49,10 @@ from agents.evals.prep import (
     select_cases,
     verdict_of,
 )
-from agents.main import Runtime
+from agents.main import ACTION_MESSAGES, Runtime
 
 from ..runtime.fakes import FakeAnthropic
+from ..runtime.test_replaced_table import alternating, anthropic_shape
 
 
 OPERATIONS = (
@@ -152,8 +157,12 @@ class TestFixtures:
         # nothing, so the view they found is still set. Since 2026-11-16, four questions whose figure only a question's
         # own operation gives (`question_ops`, a figure the reply names): a grand total of more rows than a question
         # returns, a slope and an intercept asked in French, a fit and a formula on its row, and a fit of the rows the
-        # plot shows.
-        assert len(cases) == 136
+        # plot shows. Since 2026-11-20, four notes sent with a paste that replaced a summarized one (`replaced_table`,
+        # `before_dataset_text`): a `day` the earlier table held as dates and the new one as text no date form reads,
+        # in English, German and French, which changes nothing and whose reply names none of the earlier dates
+        # (`stale_values`), and a "try again" after the earlier reply said the table had no time column, which is the
+        # daily mean per sensor the earlier message asked for.
+        assert len(cases) == 140
         views = {item.id: item.view for item in cases if item.view is not None}
         assert sorted(case_id for case_id, landing in views.items() if landing == "set") == [
             "de-frage-zur-ganzen-tabelle",
@@ -253,6 +262,7 @@ class TestFixtures:
             "fr-appliquer-la-vue-au-tableau",
             "fr-garder-deux-villes",
             "fr-lignes-de-test-en-trop",
+            "fr-note-remplacee-jour-en-texte",
             "fr-plus-grands-d-abord",
             "fr-question-pente",
             "fr-summary-mois-recents-d-abord",
@@ -274,8 +284,49 @@ class TestFixtures:
         assert len(rebuilt) == 3 and all(item.expected_from_version == "original" for item in rebuilt)
         assert [item.id for item in cases if "misrouted" in item.tags] == ["en-table-as-message"]
         notes = [item for item in cases if item.first_turn]
-        assert len(notes) == 7 and {item.locale for item in notes} == {"de", "en"}
+        assert len(notes) == 11 and {item.locale for item in notes} == {"de", "en", "fr"}
         assert all(item.message and item.dataset_text and "note" in item.tags for item in notes)
+        replaced = [item for item in cases if item.before_dataset_text is not None]
+        assert sorted(item.id for item in replaced) == [
+            "de-notiz-ersetzt-tag-als-text",
+            "en-note-replaced-day-text",
+            "en-note-replaced-try-again",
+            "fr-note-remplacee-jour-en-texte",
+        ]
+        assert all(item.first_turn and "replaced_table" in item.tags for item in replaced)
+        stale = [item for item in replaced if item.stale_values]
+        assert {item.locale for item in stale} == {"de", "en", "fr"}
+        for item in stale:
+            # Each names what the earlier reply said and nothing the new table holds, so only a stale reply has one.
+            earlier, current = (item.before_reply or "").casefold(), (item.dataset_text or "").casefold()
+            assert any(value.casefold() in earlier for value in item.stale_values), item.id
+            assert not any(value.casefold() in current for value in item.stale_values), item.id
+            assert not item.expected_operations and item.spec_id == "line-timeseries-rolling", item.id
+            # Scored by the reply alone: converted or not, the miss is the false claim. The current values name the
+            # new table and nothing the earlier reply said, so a correction holds one and the claim holds none.
+            assert item.scored_by_reply and not item.scored_by_table, item.id
+            assert any(value.casefold() in current for value in item.current_values), item.id
+            assert not any(value.casefold() in earlier for value in item.current_values), item.id
+            # The case's premise: the earlier day column reads as dates at the paste, the new one in no form, so no
+            # operation reads it. A date form added to the chat's list that takes `1st March 2026` changes the case.
+            first = parse_dataset(item.before_dataset_text or "").profile.columns[0]
+            second = parse_dataset(item.dataset_text or "").profile.columns[0]
+            assert (first.dtype, second.dtype) == ("datetime", "text"), item.id
+            # A right reply may relay the server's refusal, which lists the forms the chat reads (`8 Nov 2026` among
+            # them): no stale value may stand in it.
+            read_as_dates = _operations([{"op": "set_type", "column": second.name, "type": "datetime"}])
+            with pytest.raises(PrepareError) as refused:
+                apply_operations(parse_dataset(item.dataset_text or ""), read_as_dates)
+            assert "8 Nov 2026" in str(refused.value), item.id  # the form list this pin is about
+            assert not any(value.casefold() in str(refused.value).casefold() for value in item.stale_values), item.id
+        (again,) = [item for item in replaced if item.before_message is not None]
+        # The earlier wish holds: the same daily mean per sensor the case of a typed request expects.
+        daily = next(item for item in cases if item.id == "de-tagesmittel-pro-sensor").expected_operations[0]
+        assert again.message == "Try again." and again.expected_operations == [
+            {**daily, "by": ["Timestamp", "Sensor"], "column": "Temperature"}
+        ]
+        # The same aggregate grouped in the other order: the same rows and means, its key columns the other way round.
+        assert again.also_accepted == [[{**daily, "by": ["Sensor", "Timestamp"], "column": "Temperature"}]]
         assert any("data_question" in item.tags for item in notes)  # a summary and an answer in one reply
         assert any("conversion" in item.tags for item in notes)  # the note's change and the owed conversion
         plot_type = [item for item in cases if "plot_type" in item.tags]
@@ -331,7 +382,7 @@ class TestFixtures:
             "en-figures-worked-sum": "not_withheld",
             "fr-chiffres-total-des-montants": "queried",
         }
-        assert len(every) == 145 and all("figures" in item.tags for item in opt_in)
+        assert len(every) == 149 and all("figures" in item.tags for item in opt_in)
         # A locale or another of their tags never pulls them in; with their own tag beside it, both sets run.
         assert not any(item.figures for item in select_cases(every, {"de", "fr", "data_question", "decimal_comma"}))
         both = select_cases(every, {"fr", "figures"})
@@ -438,6 +489,42 @@ class TestFixtures:
         with pytest.raises(ValidationError):
             PrepCase.model_validate({**data, **fields})
 
+    @pytest.mark.parametrize(
+        ("fields", "error"),
+        [
+            ({"before_dataset_text": HOURS}, "comes with the root's reply to it"),
+            ({"before_reply": "4 rows."}, "comes with the root's reply to it"),
+            ({"before_message": "the mean per day"}, "comes with the earlier paste"),
+            (
+                {"before_dataset_text": HOURS, "before_reply": "4 rows.", "dataset_text": None, "first_turn": False},
+                "the case's own dataset replaces",
+            ),
+            ({"stale_values": [""]}, "at least 1 character"),
+            ({"stale_values": ["Nov"] * (prep.MAX_STALE_VALUES + 1)}, "at most 8 items"),
+            ({"current_values": ["March"]}, "they need stale_values"),
+            ({"scored_by_reply": True}, "names stale_values and expects no operations"),
+            (
+                {"scored_by_reply": True, "stale_values": ["Nov"], "expected_operations": [RENAME]},
+                "names stale_values and expects no operations",
+            ),
+        ],
+    )
+    def test_an_earlier_paste_comes_whole_and_before_the_cases_own(self, fields: dict[str, Any], error: str) -> None:
+        """The earlier turn is a paste and the root's reply to it, with the message typed with that paste if any, and
+        the case's own dataset replaces it."""
+        data: dict[str, Any] = {
+            "id": "x-001",
+            "dataset_text": HOURS,
+            "message": "Try again.",
+            "first_turn": True,
+            "expected_operations": [],
+            "locale": "en",
+        }
+        whole = {"before_dataset_text": HOURS, "before_message": "the mean per day", "before_reply": "4 rows."}
+        assert PrepCase.model_validate({**data, **whole, "stale_values": ["Nov"]}).before_reply == "4 rows."
+        with pytest.raises(ValidationError, match=error):
+            PrepCase.model_validate({**data, **fields})
+
     def test_every_fixture_is_consistent_with_the_operations(self) -> None:
         """The expected operations apply to the fixture's own dataset, and the dataset passes the pre-filter.
 
@@ -446,6 +533,8 @@ class TestFixtures:
         for item in load_cases(DEFAULT_CASES):
             parsed = parse_dataset(item.dataset_text) if item.dataset_text else None
             assert parsed is None or not instruction_like(parsed), item.id
+            earlier = parse_dataset(item.before_dataset_text) if item.before_dataset_text else None
+            assert earlier is None or not instruction_like(earlier), item.id
             decimal = parsed.profile.decimal if parsed else "."
             canonical_operations(item.expected_operations, decimal)  # raises for a bad fixture
             formulas = [operation for operation in item.expected_operations if operation["op"] == "generate_data"]
@@ -1156,6 +1245,93 @@ class TestReplyShape:
         prep.measure_reply(half, ["Basel fällt weg. Passt das?"], blocked=False, names=["Basel", "Genf"])
         assert half.reply_miss == "unnamed" and half.closing_question  # the missing name is the miss that counts
 
+    def test_a_reply_that_names_a_stale_value_is_a_miss_before_any_other(self) -> None:
+        """A value of the table a paste replaced tells the user something false about the data in force: found without
+        regard to case, counted, and the miss whatever else the reply does or leaves out."""
+        stale = ["November", "2026-11", "11.2026"]
+        told = CaseResult("s-001", [], [])
+        prep.measure_reply(
+            told, ["5 rows; day already holds dates from 8 to 13 november 2026."], blocked=False, rows={5}, stale=stale
+        )
+        assert (told.reply_miss, told.stale_named) == ("stale", 1)
+
+        worst = CaseResult("s-002", [], [])
+        prep.measure_reply(
+            worst, ["day runs from 2026-11-08 to 13.11.2026. Which?"], blocked=False, rows={5}, names=["X"], stale=stale
+        )
+        assert (worst.reply_miss, worst.stale_named) == ("stale", 2)  # before `unnamed`, the question, the row count
+
+        clean = CaseResult("s-003", [], [])
+        reply = "5 rows; day holds text such as 1st March 2026, which no date form reads, so nothing changed."
+        prep.measure_reply(clean, [reply], blocked=False, rows={5}, stale=stale)
+        assert (clean.reply_miss, clean.stale_named) == (None, 0)
+
+        # A stale text beside one that names the data in force is a correction, no claim.
+        corrected = CaseResult("s-004", [], [])
+        reply = "5 rows, 1st to 5th March 2026, not the 6 from November I described earlier."
+        prep.measure_reply(corrected, [reply], blocked=False, rows={5}, stale=stale, current=["March"])
+        assert (corrected.reply_miss, corrected.stale_named, corrected.current_named) == (None, 1, 1)
+        claim = "5 rows; dates from 8 to 13 November."
+        unasked = CaseResult("s-005", [], [])
+        prep.measure_reply(unasked, [claim], blocked=False, current=["March"])
+        assert unasked.reply_miss is None  # no stale text asked for: nothing to claim
+        claimed = CaseResult("s-006", [], [])
+        prep.measure_reply(claimed, [claim], blocked=False, stale=stale, current=["March"])
+        assert (claimed.reply_miss, claimed.current_named) == ("stale", 0)
+
+    REPLIES = Path(__file__).with_name("replaced_table_replies.json")
+    """Every reply of the three stale cases and of "Try again." in the prep eval of 2026-11-20 on invented tables:
+    `base` without the request filter (3 runs each), `fix` with it (5 runs each)."""
+    CLAIMS = {
+        "de-notiz-ersetzt-tag-als-text-r1",
+        "de-notiz-ersetzt-tag-als-text-r3",
+        "en-note-replaced-day-text-r1",
+        "en-note-replaced-day-text-r2",
+        "en-note-replaced-day-text-r3",
+        "fr-note-remplacee-jour-en-texte-r1",
+    }
+    """The baseline's replies that claim the replaced table ("already reads as dates, 8 to 13 November")."""
+    CORRECTIONS = {
+        "de-notiz-ersetzt-tag-als-text-r2",
+        "fr-note-remplacee-jour-en-texte-r2",
+        "fr-note-remplacee-jour-en-texte-r3",
+    }
+    """The baseline's other stale-case replies: each describes the table in force, two of them name the replaced one
+    to correct the earlier summary."""
+
+    def stale_replies(self, arm: str) -> tuple[set[str], int]:
+        """The ids of the replies of `arm` the rule calls `stale`, each measured with its case's own texts, and the
+        number of replies read."""
+        cases = {item.id: item for item in load_cases(DEFAULT_CASES)}
+        replies = json.loads(self.REPLIES.read_text(encoding="utf-8"))[arm]
+        stale: set[str] = set()
+        for entry in replies:
+            item = cases[re.sub(r"-r\d+$", "", entry["id"])]
+            result = CaseResult(entry["id"], [], [])
+            prep.measure_reply(
+                result, [entry["reply"]], blocked=False, stale=item.stale_values, current=item.current_values
+            )
+            if result.reply_miss == "stale":
+                stale.add(entry["id"])
+        return stale, len(replies)
+
+    def test_every_claim_of_the_replaced_table_in_the_baseline_is_stale(self) -> None:
+        """6 of the baseline's 9 stale-case replies claim the replaced table, and the rule calls exactly those 6
+        stale; the other 3 (two of them corrections) and the 3 replies of "Try again." are not."""
+        stale, read = self.stale_replies("base")
+
+        assert read == 12 and stale == self.CLAIMS
+        assert not stale & self.CORRECTIONS
+
+    def test_no_reply_with_the_filter_is_stale_its_correction_included(self) -> None:
+        """None of the 15 stale-case replies with the filter, nor the 5 of "Try again.", is stale; `en-…-r1` names the
+        replaced table ("not the 6 rows from 8 to 13 November I described earlier") beside the table in force."""
+        stale, read = self.stale_replies("fix")
+
+        assert read == 20 and stale == set()
+        replies = {entry["id"]: entry["reply"] for entry in json.loads(self.REPLIES.read_text(encoding="utf-8"))["fix"]}
+        assert "8 to 13 November" in replies["en-note-replaced-day-text-r1"]
+
     def test_where_the_rows_landed_is_scored_apart_from_the_table_a_plot_would_draw(self) -> None:
         """A view and a cut of the table leave the same rows for the plot, so the table cannot tell a turn that set
         the view from one that changed the user's data: only the session's view can."""
@@ -1291,6 +1467,16 @@ def script_for(*answers: list[dict[str, Any]]) -> dict[str, list[Any]]:
     return {"root": [item for turn in answers for item in turn], "adapter": [], "reviewer": []}
 
 
+def part_essence(part: Any) -> tuple[str, Any]:
+    """A stored part as a model reads it: a call's tool and arguments, an answer's tool and payload, or a text; the
+    ids a provider or ADK gave the call are left out."""
+    if part.function_call is not None:
+        return "call", (part.function_call.name, part.function_call.args)
+    if part.function_response is not None:
+        return "answer", (part.function_response.name, part.function_response.response)
+    return ("thought" if part.thought else "text"), part.text
+
+
 class TestRun:
     def test_the_report_holds_the_bindings_after_the_turn_and_the_guards_lines(
         self, services: Services, swap_models
@@ -1392,6 +1578,189 @@ class TestRun:
         assert results[3].tool_calls == ["get_dataset_profile"] and results[3].found == []
         assert len(fake.calls) == 8
         assert len(services.datasets) == 0  # every session was deleted
+
+    def test_an_earlier_paste_reaches_the_root_as_the_discussion_and_the_turn_is_read_alone(
+        self, services: Services, swap_models
+    ) -> None:
+        """The production case as a fixture: the root's request holds the summary action, the earlier reply and the
+        marked note, never the earlier `get_dataset_profile` exchange the harness wrote; the turn's calls, reply and
+        verdicts are its own. The case is scored by its reply: a reply that claims the earlier dates misses, and an
+        honest one matches whatever the data did, a data call that failed included."""
+        (day_text,) = [item for item in load_cases(DEFAULT_CASES) if item.id == "en-note-replaced-day-text"]
+        clean = "5 rows; day holds text such as 1st March 2026, which no date form reads, so nothing changed."
+        stale = "5 rows; day already holds dates from 8 to 13 November 2026, so nothing changed."
+        tried = "I could not convert day: its 5 cells, 1st to 5th March 2026, are unchanged."
+        read_as_dates = {"op": "set_type", "column": "day", "type": "datetime"}
+        fake: FakeAnthropic = swap_models(
+            "anthropic-vertex",
+            script_for(
+                [{"call": "get_dataset_profile", "args": {}}, {"text": clean}],
+                [{"text": stale}],
+                [{"call": "prepare_data", "args": {"operations": [read_as_dates]}}, {"text": tried}],
+            ),
+        )
+        cases = [
+            day_text,
+            day_text.model_copy(update={"id": "en-note-replaced-day-text-stale"}),
+            day_text.model_copy(update={"id": "en-note-replaced-day-text-tried"}),
+        ]
+
+        told, misled, failed = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        requests = [anthropic_shape(call["messages"]) for call in fake.calls]
+        assert all(alternating(turns) for turns in requests)
+        first, after_profile, only = requests[:3]
+        # What the server itself puts before the root on that turn (the new table's profile among it) holds no stale
+        # value, so only a reply that took one from earlier names one; the fixture test checks the refusal of a
+        # `set_type`, which lists the forms the chat reads.
+        block = fake.calls[0]["system"][-1]["text"].casefold()
+        assert "1st march 2026" in block and not any(value.casefold() in block for value in day_text.stale_values)
+        discussion = [
+            ("user", [f"text:{ACTION_MESSAGES['summarize_data']}"]),
+            ("assistant", [f"text:{day_text.before_reply}"]),
+            ("user", [f"text:{REPLACED_TABLE_LINE}\n\n{day_text.message}"]),
+        ]
+        assert first == only == discussion
+        assert after_profile == [
+            *discussion,
+            ("assistant", ["call:get_dataset_profile"]),
+            ("user", ["result:get_dataset_profile"]),
+        ]
+        assert (told.match, told.tool_calls, told.reply_miss, told.stale_named) == (
+            True,
+            ["get_dataset_profile"],
+            None,
+            0,
+        )
+        assert told.reply_words == len(clean.split()) and told.conversions_owed == 0
+        # "8 to 13 November 2026" holds two of them, `November` and `13 Nov`, and nothing of March: the case's miss.
+        assert (misled.match, misled.tool_calls, misled.reply_miss, misled.stale_named) == (False, [], "stale", 2)
+        assert (failed.match, failed.failed_calls, failed.reply_miss, failed.current_named) == (True, 1, None, 1)
+        assert score(cases, [told, misled, failed])["summary"]["reply_miss_kinds"] == {"stale": 1}
+
+    def test_try_again_reaches_the_root_with_the_wish_it_repeats(self, services: Services, swap_models) -> None:
+        """The owner's case: the earlier message and the reply that said what was missing stand before the marked
+        "Try again.", and the daily mean they asked for is the case's table, grouped by time and sensor or by sensor and
+        time (`also_accepted`); the new paste owes no conversion. One that also averages Humidity is another table."""
+        (again,) = [item for item in load_cases(DEFAULT_CASES) if item.id == "en-note-replaced-try-again"]
+        (reordered,) = again.also_accepted
+        with_humidity = [{**again.expected_operations[0], "columns": ["Temperature", "Humidity"]}]
+        del with_humidity[0]["column"]
+        fake: FakeAnthropic = swap_models(
+            "anthropic-vertex",
+            script_for(
+                *(
+                    [
+                        {"call": "prepare_data", "args": {"operations": operations}},
+                        {"text": "8 rows; now 5 rows, the daily mean of Temperature per sensor."},
+                    ]
+                    for operations in (again.expected_operations, reordered, with_humidity)
+                )
+            ),
+        )
+        runs = [again.model_copy(update={"id": f"{again.id}-{number}"}) for number in (1, 2, 3)]
+
+        result, other_order, both_means = asyncio.run(run_cases(runs, runtime=runtime(), services=services))
+
+        assert (other_order.match, other_order.table_miss) == (True, None)
+        assert both_means.match is False and "Humidity" in (both_means.table_miss or "")
+
+        assert all(alternating(anthropic_shape(call["messages"])) for call in fake.calls)
+        assert anthropic_shape(fake.calls[0]["messages"]) == [
+            ("user", [f"text:{again.before_message}"]),
+            ("assistant", [f"text:{again.before_reply}"]),
+            ("user", [f"text:{REPLACED_TABLE_LINE}\n\n{again.message}"]),
+        ]
+        assert (result.match, result.tool_calls, result.reply_miss) == (True, ["prepare_data"], None)
+        assert (result.conversions_owed, result.server_operations) == (0, 0)
+
+    @pytest.mark.parametrize("typed", [False, True], ids=["summary_action", "note"])
+    async def test_the_earlier_turn_is_stored_as_the_route_and_the_root_store_one(
+        self, services: Services, swap_models, typed: bool
+    ) -> None:
+        """The harness writes the earlier paste's summary turn without a model; a real turn on the same paste, through
+        the route with a scripted root, stores the same four events of one invocation: the user's turn, the profile
+        call, the tool's answer and the reply. The action names the session language and carries the pasted notes, as
+        the route writes them; a note typed with the paste is stored alone."""
+        from agents.anyplot.session_state import language_delta, read_session
+        from agents.evals.matrix import AttributionCollector
+        from agents.main import app, check_caller, get_runtime
+
+        table = "Visitors counted at the gate\n\nday,visitors\n8 Nov 2026,1403\n9 Nov 2026,1527\n10 Nov 2026,1496\n"
+        message = "Make the daily mean of the visitors." if typed else None
+        reply = "3 rows; day holds dates." if typed else "3 Zeilen; Tag enthält Datumswerte vom 8. bis 10. November."
+        swap_models("anthropic-vertex", script_for([{"call": "get_dataset_profile", "args": {}}, {"text": reply}]))
+        case_ = PrepCase(
+            id="x-earlier",
+            before_dataset_text=table,
+            before_message=message,
+            before_reply=reply,
+            dataset_text=HOURS,
+            message="Try again.",
+            first_turn=True,
+            expected_operations=[],
+            locale="en",
+            spec_id="line-timeseries-rolling",
+        )
+        live = runtime()
+        app.dependency_overrides[get_runtime] = lambda: live
+        app.dependency_overrides[check_caller] = lambda: None
+
+        async def stored_turn(user: str, write: bool) -> tuple[list[tuple[str, str, list[Any]]], int, bool]:
+            headers = {"X-Anyplot-User": user, "X-Request-Id": f"req-{user}"}
+            body = {
+                "user": user,
+                "spec_id": case_.spec_id,
+                "library": case_.library,
+                "locale": "en",
+                "snapshot": snapshot_from_repo(case_.spec_id, case_.library).model_dump(),
+            }
+            sid = (await client.post("/v1/sessions", headers=headers, json=body)).json()["session_id"]
+            assert (await client.post(f"/v1/sessions/{sid}/dataset", headers=headers, json={"text": table})).is_success
+            if not typed:  # a known session language other than English, which the action line names
+                await live.write_state(await live.session(user, sid), language_delta("de", "chosen"))
+            view = read_session((await live.session(user, sid)).state)
+            pasted = services.datasets.get(view.dataset_id or "", sid) if view is not None else None
+            assert pasted is not None and pasted.context_lines  # the notes path is part of what is compared
+            if write:
+                await runner._write_earlier_turn(user, sid, case_)
+            else:
+                asked = {"text": message} if typed else {"action": "summarize_data"}
+                assert (await client.post(f"/v1/sessions/{sid}/messages", headers=headers, json=asked)).is_success
+            session = await live.session(user, sid)
+            essence = [
+                (event.author, str(event.content.role), [part_essence(part) for part in event.content.parts or []])
+                for event in session.events
+                if event.content is not None and event.content.parts
+            ]
+            # The turn's events share one invocation, whose id is random in both.
+            invocations = {event.invocation_id for event in session.events if event.content is not None}
+            summarized = read_session(session.state)
+            return essence, len(invocations), summarized is not None and not summarized.summary_pending
+
+        try:
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agents") as client:
+                runner = prep.CaseRunner(client, live, AttributionCollector(), get_settings())
+                real = await stored_turn("prep_real_turn", write=False)
+                written = await stored_turn("prep_written_turn", write=True)
+        finally:
+            app.dependency_overrides.clear()
+
+        assert written == real
+        essence, invocations, summarized = written
+        assert len(essence) == 4 and invocations == 1 and summarized
+        assert [(author, role) for author, role, _ in essence] == [
+            ("user", "user"),
+            ("anyplot", "model"),
+            ("anyplot", "user"),
+            ("anyplot", "model"),
+        ]
+        [(kind, asked)] = essence[0][2]
+        if typed:
+            assert (kind, asked) == ("text", message)  # the notes reach that turn by its session block, not the turn
+        else:
+            line = f"{ACTION_MESSAGES['summarize_data']} Reply in German, the session language.\n\n"
+            assert kind == "text" and asked.startswith(line) and "Visitors counted at the gate" in asked
 
     def test_the_operations_of_answered_questions_are_read_and_scored(self, services: Services, swap_models) -> None:
         """A case that names `question_ops` passes when the server answered a question with them: a grand total is an
