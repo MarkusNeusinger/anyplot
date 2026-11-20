@@ -1,7 +1,7 @@
 """anyplot.ai
 precision-recall: Precision-Recall Curve
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-11-20
+Quality: pending | Updated: 2026-11-20
 """
 
 import os
