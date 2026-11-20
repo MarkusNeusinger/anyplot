@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-09
@@ -8,7 +8,7 @@ import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
 from matplotlib.path import Path
 
 
@@ -19,221 +19,176 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette — use positions 1→N in order
-IMPRINT = [
-    "#009E73",  # 1: bluish green (brand)
-    "#C475FD",  # 2: vermillion
-    "#4467A3",  # 3: blue
-    "#BD8233",  # 4: reddish purple
+# Imprint palette: all eight positions, one per category in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns: set these to your table's column names
+TIME_POINT = "Time point"  # role: time_point
+NEXT_TIME_POINT = "Next time point"  # role: extra
+CATEGORY = "Party"  # role: category
+NEXT_CATEGORY = "Party at next time point"  # role: extra
+VALUE = "Voters in party (thousand)"  # role: value
+FLOW = "Flow (thousand voters)"  # role: flow
+
+# Data: replace this block with your own table, for example df = pd.read_csv("flows.csv")
+# Voter migration between parties across four election cycles: one row per band,
+# from (time point, party) to (next time point, party).
+parties = ["Party A", "Party B", "Party C", "Independent"]
+years = ["2012", "2016", "2020", "2024"]
+flow_matrices = [
+    [[380, 20, 30, 20], [25, 310, 25, 20], [10, 15, 80, 15], [5, 5, 15, 25]],
+    [[340, 15, 45, 20], [20, 285, 30, 15], [15, 15, 105, 15], [5, 5, 20, 50]],
+    [[310, 10, 40, 20], [20, 255, 30, 15], [15, 10, 160, 15], [5, 5, 20, 70]],
 ]
+df = pd.DataFrame(
+    [
+        {
+            TIME_POINT: years[k],
+            NEXT_TIME_POINT: years[k + 1],
+            CATEGORY: src,
+            NEXT_CATEGORY: dst,
+            VALUE: sum(matrix[i]),
+            FLOW: matrix[i][j],
+        }
+        for k, matrix in enumerate(flow_matrices)
+        for i, src in enumerate(parties)
+        for j, dst in enumerate(parties)
+    ]
+)
 
-# Data: Voter migration across 4 election cycles
-np.random.seed(42)
+# Plot: reads only df and the constants above
+time_points = list(dict.fromkeys([*df[TIME_POINT], *df[NEXT_TIME_POINT]]))
+categories = list(dict.fromkeys([*df[CATEGORY], *df[NEXT_CATEGORY]]))
+colors = {cat: IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)] for i, cat in enumerate(categories)}
 
-time_points = ["2012", "2016", "2020", "2024"]
-categories = ["Party A", "Party B", "Party C", "Independent"]
-colors = {cat: IMPRINT[i] for i, cat in enumerate(categories)}
-
-# Node values at each time point (thousands of voters)
+# Block value per (time point, category): outflow, or inflow in the last column
+out_sum = df.groupby([TIME_POINT, CATEGORY])[VALUE].first()
+in_sum = df.groupby([NEXT_TIME_POINT, NEXT_CATEGORY])[FLOW].sum()
 node_values = {
-    "2012": {"Party A": 450, "Party B": 380, "Party C": 120, "Independent": 50},
-    "2016": {"Party A": 420, "Party B": 350, "Party C": 150, "Independent": 80},
-    "2020": {"Party A": 380, "Party B": 320, "Party C": 200, "Independent": 100},
-    "2024": {"Party A": 350, "Party B": 280, "Party C": 250, "Independent": 120},
+    (tp, cat): (out_sum if (tp, cat) in out_sum.index else in_sum).get((tp, cat), 0.0)
+    for tp in time_points
+    for cat in categories
 }
 
-# Flow matrix between consecutive time points
-flows = [
-    # 2012 -> 2016
-    {
-        ("Party A", "Party A"): 380,
-        ("Party A", "Party B"): 20,
-        ("Party A", "Party C"): 30,
-        ("Party A", "Independent"): 20,
-        ("Party B", "Party A"): 25,
-        ("Party B", "Party B"): 310,
-        ("Party B", "Party C"): 25,
-        ("Party B", "Independent"): 20,
-        ("Party C", "Party A"): 10,
-        ("Party C", "Party B"): 15,
-        ("Party C", "Party C"): 80,
-        ("Party C", "Independent"): 15,
-        ("Independent", "Party A"): 5,
-        ("Independent", "Party B"): 5,
-        ("Independent", "Party C"): 15,
-        ("Independent", "Independent"): 25,
-    },
-    # 2016 -> 2020
-    {
-        ("Party A", "Party A"): 340,
-        ("Party A", "Party B"): 15,
-        ("Party A", "Party C"): 45,
-        ("Party A", "Independent"): 20,
-        ("Party B", "Party A"): 20,
-        ("Party B", "Party B"): 285,
-        ("Party B", "Party C"): 30,
-        ("Party B", "Independent"): 15,
-        ("Party C", "Party A"): 15,
-        ("Party C", "Party B"): 15,
-        ("Party C", "Party C"): 105,
-        ("Party C", "Independent"): 15,
-        ("Independent", "Party A"): 5,
-        ("Independent", "Party B"): 5,
-        ("Independent", "Party C"): 20,
-        ("Independent", "Independent"): 50,
-    },
-    # 2020 -> 2024
-    {
-        ("Party A", "Party A"): 310,
-        ("Party A", "Party B"): 10,
-        ("Party A", "Party C"): 40,
-        ("Party A", "Independent"): 20,
-        ("Party B", "Party A"): 20,
-        ("Party B", "Party B"): 255,
-        ("Party B", "Party C"): 30,
-        ("Party B", "Independent"): 15,
-        ("Party C", "Party A"): 15,
-        ("Party C", "Party B"): 10,
-        ("Party C", "Party C"): 160,
-        ("Party C", "Independent"): 15,
-        ("Independent", "Party A"): 5,
-        ("Independent", "Party B"): 5,
-        ("Independent", "Party C"): 20,
-        ("Independent", "Independent"): 70,
-    },
-]
-
-# Plot setup
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
-
-# Layout parameters
-x_positions = [2.0, 4.0, 6.0, 8.0]
-node_width = 0.6
+# Layout: stacked blocks per column, heights proportional to value
+x_positions = {tp: 2.0 + 2.0 * i for i, tp in enumerate(time_points)}
+node_width = 0.9
 total_height = 7.5
 node_gap = 0.25
+usable_height = total_height - (len(categories) - 1) * node_gap
 
-# Calculate node positions and store boundaries
 node_bounds = {}
-for t_idx, tp in enumerate(time_points):
-    values = [node_values[tp][cat] for cat in categories]
-    total = sum(values)
-    usable_height = total_height - (len(categories) - 1) * node_gap
-    heights = [v / total * usable_height for v in values]
-
-    y = 0.5
-    for c_idx, cat in enumerate(categories):
-        h = heights[c_idx]
-        node_bounds[(tp, cat)] = {"x": x_positions[t_idx], "y_start": y, "height": h}
-        y += h + node_gap
-
-# Draw flows between consecutive time points
-for t_idx in range(len(time_points) - 1):
-    tp_from = time_points[t_idx]
-    tp_to = time_points[t_idx + 1]
-
-    from_offsets = dict.fromkeys(categories, 0)
-    to_offsets = dict.fromkeys(categories, 0)
-
-    flow_data = flows[t_idx]
-    for from_cat in categories:
-        for to_cat in categories:
-            flow_val = flow_data.get((from_cat, to_cat), 0)
-            if flow_val <= 0:
-                continue
-
-            from_node = node_bounds[(tp_from, from_cat)]
-            to_node = node_bounds[(tp_to, to_cat)]
-
-            from_total = sum(node_values[tp_from].values())
-            to_total = sum(node_values[tp_to].values())
-
-            usable_height = total_height - (len(categories) - 1) * node_gap
-            from_height = flow_val / from_total * usable_height
-            to_height = flow_val / to_total * usable_height
-
-            x0 = from_node["x"] + node_width / 2
-            x1 = to_node["x"] - node_width / 2
-            mid_x = (x0 + x1) / 2
-
-            y0_start = from_node["y_start"] + from_offsets[from_cat]
-            y0_end = y0_start + from_height
-            y1_start = to_node["y_start"] + to_offsets[to_cat]
-            y1_end = y1_start + to_height
-
-            # Draw curved flow band using bezier path
-            verts = [
-                (x0, y0_start),
-                (mid_x, y0_start),
-                (mid_x, y1_start),
-                (x1, y1_start),
-                (x1, y1_end),
-                (mid_x, y1_end),
-                (mid_x, y0_end),
-                (x0, y0_end),
-                (x0, y0_start),
-            ]
-            codes = [
-                Path.MOVETO,
-                Path.CURVE4,
-                Path.CURVE4,
-                Path.CURVE4,
-                Path.LINETO,
-                Path.CURVE4,
-                Path.CURVE4,
-                Path.CURVE4,
-                Path.CLOSEPOLY,
-            ]
-            path = Path(verts, codes)
-            patch = mpatches.PathPatch(path, facecolor=colors[from_cat], edgecolor="none", alpha=0.4)
-            ax.add_patch(patch)
-
-            from_offsets[from_cat] += from_height
-            to_offsets[to_cat] += to_height
-
-# Draw nodes (rectangles)
 for tp in time_points:
+    column_total = sum(node_values[(tp, cat)] for cat in categories)
+    y = 0.5
     for cat in categories:
-        node = node_bounds[(tp, cat)]
-        y_start = node["y_start"]
-        height = node["height"]
-        x = node["x"]
+        height = node_values[(tp, cat)] / column_total * usable_height
+        node_bounds[(tp, cat)] = (y, height)
+        y += height + node_gap
 
-        rect = mpatches.Rectangle(
-            (x - node_width / 2, y_start), node_width, height, facecolor=colors[cat], edgecolor=INK_SOFT, linewidth=1.5
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+# Bands between neighboring columns: width proportional to flow, bezier edges
+from_offsets = dict.fromkeys(node_bounds, 0.0)
+to_offsets = dict.fromkeys(node_bounds, 0.0)
+for _, row in df.iterrows():
+    tp_from, tp_to, cat_from, cat_to, flow = (
+        row[TIME_POINT],
+        row[NEXT_TIME_POINT],
+        row[CATEGORY],
+        row[NEXT_CATEGORY],
+        row[FLOW],
+    )
+    from_total = sum(node_values[(tp_from, c)] for c in categories)
+    to_total = sum(node_values[(tp_to, c)] for c in categories)
+    from_height = flow / from_total * usable_height
+    to_height = flow / to_total * usable_height
+
+    x0 = x_positions[tp_from] + node_width / 2
+    x1 = x_positions[tp_to] - node_width / 2
+    mid_x = (x0 + x1) / 2
+
+    y0_start = node_bounds[(tp_from, cat_from)][0] + from_offsets[(tp_from, cat_from)]
+    y0_end = y0_start + from_height
+    y1_start = node_bounds[(tp_to, cat_to)][0] + to_offsets[(tp_to, cat_to)]
+    y1_end = y1_start + to_height
+
+    verts = [
+        (x0, y0_start),
+        (mid_x, y0_start),
+        (mid_x, y1_start),
+        (x1, y1_start),
+        (x1, y1_end),
+        (mid_x, y1_end),
+        (mid_x, y0_end),
+        (x0, y0_end),
+        (x0, y0_start),
+    ]
+    codes = [
+        Path.MOVETO,
+        Path.CURVE4,
+        Path.CURVE4,
+        Path.CURVE4,
+        Path.LINETO,
+        Path.CURVE4,
+        Path.CURVE4,
+        Path.CURVE4,
+        Path.CLOSEPOLY,
+    ]
+    ax.add_patch(mpatches.PathPatch(Path(verts, codes), facecolor=colors[cat_from], edgecolor="none", alpha=0.4))
+
+    from_offsets[(tp_from, cat_from)] += from_height
+    to_offsets[(tp_to, cat_to)] += to_height
+
+# Blocks with category and value labels
+for (tp, cat), (y_start, height) in node_bounds.items():
+    x = x_positions[tp]
+    ax.add_patch(
+        mpatches.Rectangle(
+            (x - node_width / 2, y_start), node_width, height, facecolor=colors[cat], edgecolor=INK_SOFT, linewidth=0.8
         )
-        ax.add_patch(rect)
-
-        # Add category label
-        value = node_values[tp][cat]
-        label = f"{cat}\n({value}K)"
-        ax.text(x, y_start + height / 2, label, ha="center", va="center", fontsize=15, fontweight="bold", color=INK)
-
-# Add time point labels
-for t_idx, tp in enumerate(time_points):
+    )
     ax.text(
-        x_positions[t_idx], total_height + 0.8, tp, ha="center", va="bottom", fontsize=22, fontweight="bold", color=INK
+        x,
+        y_start + height / 2,
+        f"{cat}{' ' if height < 0.5 else chr(10)}({node_values[(tp, cat)]:g}K)",
+        ha="center",
+        va="center",
+        fontsize=7,
+        fontweight="bold",
+        color=INK,
     )
 
-# Create legend
+# Column headers
+for tp in time_points:
+    ax.text(
+        x_positions[tp], total_height + 0.8, tp, ha="center", va="bottom", fontsize=12, fontweight="bold", color=INK
+    )
+
+# Legend
 legend_handles = [mpatches.Patch(color=colors[cat], label=cat) for cat in categories]
-leg = ax.legend(handles=legend_handles, loc="lower left", bbox_to_anchor=(0.01, 0.02), fontsize=16, framealpha=0.95)
+leg = ax.legend(
+    handles=legend_handles,
+    loc="lower center",
+    bbox_to_anchor=(0.5, 0.0),
+    ncol=len(categories),
+    fontsize=8,
+    framealpha=0.95,
+)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
-leg.get_frame().set_linewidth(1)
+leg.get_frame().set_linewidth(0.8)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Styling
-ax.set_xlim(0.8, 9.2)
-ax.set_ylim(-0.5, total_height + 1.5)
-ax.set_title(
-    "Voter Migration 2012-2024 · alluvial-basic · matplotlib · anyplot.ai",
-    fontsize=24,
-    fontweight="medium",
-    color=INK,
-    pad=20,
-)
+# Style
+x_values = list(x_positions.values())
+ax.set_xlim(min(x_values) - 1.2, max(x_values) + 1.2)
+ax.set_ylim(-1.0, total_height + 1.5)
+title = f"Voter Migration {time_points[0]}-{time_points[-1]} · alluvial-basic · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
 ax.axis("off")
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.93, bottom=0.02)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
