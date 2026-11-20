@@ -91,7 +91,7 @@ jobs:
           [[ "$PR_NUM" =~ ^[1-9][0-9]{0,9}$ ]] || refuse bad_number
           [ -n "$HEAD_REPO" ] && [ "${HEAD_REPO,,}" = "${REPOSITORY,,}" ] || refuse cross_repository
           gh pr view "$PR_NUM" --repo "$REPOSITORY" \
-            --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,labels \
+            --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName,labels \
             > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err" || refuse pr_unreadable
           GUARD_RC=0
           GUARD_OUT=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \

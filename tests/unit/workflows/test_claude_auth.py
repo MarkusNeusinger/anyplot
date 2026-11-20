@@ -640,6 +640,9 @@ def _run(tmp_path: Path, script: str, **env: str) -> tuple[subprocess.CompletedP
 
 
 def _run_step(tmp_path: Path, filename: str, name: str, **env: str):
+    if name == "Handle repair failure":
+        # The repair's guard step passed the pull request (test_pr_guard_steps.py runs the other cases).
+        env = {"GUARD_ALLOWED": "true", **env}
     return _run(tmp_path, _step(filename, name)["run"], **env)
 
 

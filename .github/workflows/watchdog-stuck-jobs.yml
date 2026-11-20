@@ -152,10 +152,12 @@ jobs:
             [[ "$DRY_RUN" == "true" ]] && return 0
             for i in 1 2 3 4 5 6; do
               sleep 10
-              n=$(gh run list --workflow=impl-generate.yml --limit 30 --json displayTitle,createdAt \
-                --jq "[.[] | select(.displayTitle == \"Generate: $lib for $spec\" and .createdAt >= \"$t0\")] | length" \
-                2>/dev/null || echo 0)
-              if (( n > 0 )); then
+              # Values go to jq as arguments, and the count is compared only
+              # once it is digits.
+              n=$(gh run list --workflow=impl-generate.yml --limit 30 --json displayTitle,createdAt 2>/dev/null \
+                | jq --arg title "Generate: $lib for $spec" --arg t0 "$t0" \
+                    '[.[] | select(.displayTitle == $title and .createdAt >= $t0)] | length' 2>/dev/null) || n=0
+              if [[ "$n" =~ ^[0-9]+$ ]] && [ "$n" -gt 0 ]; then
                 return 0
               fi
             done
@@ -209,11 +211,15 @@ jobs:
           }
 
           # Resolve issue number → spec_id by parsing the issue title prefix
-          # `[spec-id] ...` (set by spec-create.yml when the spec lands).
+          # `[spec-id] ...` (set by spec-create.yml when the spec lands). The
+          # title is the issue author's text: only a value in the catalogue's
+          # spec id shape (the guard's `spec-id` check) comes back, anything
+          # else is "no spec id".
           spec_id_for_issue() {
-            local issue_num="$1"
-            gh issue view "$issue_num" --json title --jq '.title' \
-              | grep -oP '^\[\K[^]]+' || true
+            local issue_num="$1" title candidate
+            title=$(gh issue view "$issue_num" --json title --jq '.title' 2>/dev/null) || return 0
+            candidate=$(grep -oP '^\[\K[^]]+' <<< "$title" | head -n 1) || true
+            python3 "$PR_GUARD" spec-id -- "$candidate" 2>/dev/null || true
           }
 
           # Only the pipeline's own pull requests ("Stage the pull request
@@ -227,7 +233,11 @@ jobs:
           own_prs() {
             python3 "$PR_GUARD" filter --repo "$GH_REPO" --libraries "$LIBRARIES"
           }
-          GUARD_FIELDS="number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner"
+          # A library from a label, before it goes into a dispatch input.
+          registered_library() {
+            [[ "$1" =~ ^[a-z0-9]+$ ]] && [[ " $LIBRARIES " == *" $1 "* ]]
+          }
+          GUARD_FIELDS="number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName"
 
           # How many of the pipeline's own pull requests are open for one
           # (spec, library) pair. `head:` matches a branch of that name in
@@ -246,12 +256,16 @@ jobs:
 
           ##### A) Scan open implementation PRs ##############################
           # `gh pr list --search "head:..."` does not support prefix matching,
-          # so list all open PRs and filter client-side by branch name.
-          PRS_JSON=$(gh pr list --state open --limit 200 \
+          # so list all open PRs and filter client-side by branch name. Up to
+          # 1000, far more than are ever open, so pull requests that the
+          # guard skips below cannot crowd the pipeline's own out of the list.
+          PRS_JSON=$(gh pr list --state open --limit 1000 \
             --json "${GUARD_FIELDS},labels,updatedAt" \
             --jq '[.[] | select(.headRefName | startswith("implementation/"))]')
           LISTED=$(jq 'length' <<<"$PRS_JSON")
-          # A guard that does not answer skips section A for this scan; B and C still run.
+          # A filter that fails while the scan runs skips section A only; B
+          # and C still run. (A guard that could not be staged stops the job
+          # before this step.)
           if OWN_JSON=$(own_prs <<<"$PRS_JSON"); then
             SKIPPED=$(( LISTED - $(jq 'length' <<<"$OWN_JSON") ))
             PRS_JSON="$OWN_JSON"
@@ -564,6 +578,10 @@ jobs:
               case "$label" in
                 generate:*)
                   lib="${label#generate:}"
+                  if ! registered_library "$lib"; then
+                    echo "::warning::Issue #$num: a generate: label names no registered library — skipped"
+                    continue
+                  fi
                   marker="watchdog:retried-$lib"
                   if echo " $labels " | grep -q " $marker "; then
                     echo "::warning::Issue #$num: generate:$lib already retried by watchdog — needs manual attention"
@@ -589,6 +607,10 @@ jobs:
                 impl:*:failed)
                   lib_failed="${label#impl:}"
                   lib="${lib_failed%:failed}"
+                  if ! registered_library "$lib"; then
+                    echo "::warning::Issue #$num: an impl:*:failed label names no registered library — skipped"
+                    continue
+                  fi
                   marker="watchdog:retried-$lib"
                   if echo " $labels " | grep -q " $marker "; then
                     echo "::warning::Issue #$num: $lib already retried by watchdog — needs manual attention"

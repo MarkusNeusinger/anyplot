@@ -33,6 +33,8 @@ def own_fields(repo: str = "owner/repo", head_sha: str = HEAD_SHA) -> dict[str, 
         "headRepository": {"name": name},
         "headRepositoryOwner": {"login": owner},
         "headRefOid": head_sha,
+        "author": {"login": "app/github-actions", "is_bot": True},
+        "baseRefName": "main",
     }
 
 

@@ -15,6 +15,8 @@ show all of:
 - its head branch lives in this repository: `isCrossRepository` is `false`, and
   `headRepositoryOwner.login` / `headRepository.name` name the repository the
   workflow runs in (compared without case, as GitHub compares them);
+- the pipeline opened it: `author.login` is `PIPELINE_AUTHOR`, the GitHub
+  Actions app as `gh` names it, and it targets `BASE_BRANCH`;
 - its head branch is `implementation/<spec-id>/<library>`, where the spec id is
   lowercase letters and digits in hyphen-separated groups (the catalogue's
   shape, `spec_pr_guard.SPEC_ID_RE`) and the library is one of the caller's
@@ -27,24 +29,29 @@ show all of:
 A missing or null field, or one of the wrong type, refuses the pull request,
 like any other mismatch: nothing is assumed.
 
-Usage (the workflows run a copy staged from their own commit, see
+Usage (the workflows run a copy staged from their own commit, or from `main`
+on a pull-request event; see
 `docs/workflows/overview.md#pull-requests-the-pipeline-acts-on`):
 
     python3 pr_guard.py check --repo OWNER/NAME --libraries "altair bokeh ..." \\
         --number 123 [--spec-id SPEC --library LIB] < pr.json
     python3 pr_guard.py filter --repo OWNER/NAME --libraries "altair bokeh ..." \\
         < prs.json > own.json
+    python3 pr_guard.py spec-id VALUE
 
 `check` exits 0 and prints `number=`, `spec_id=`, `library=`, `branch=` and
 `head_sha=` lines, every value checked, so a workflow can append them to
 `$GITHUB_OUTPUT`; or exits 1 and prints one `reason=<code>` line, a code from
 `REASONS`; or exits 2 when it cannot run at all (bad arguments). `filter` reads
 a JSON array, prints the entries that pass as a JSON array, writes one line per
-skipped entry to stderr, and exits 2 when its input is not a JSON array. A
-caller treats any exit status but 0 as a refusal.
+skipped entry to stderr, and exits 2 when its input is not a JSON array.
+`spec-id` prints VALUE and exits 0 when it has the catalogue's spec id shape,
+and prints nothing and exits 1 otherwise; the workflows check a spec id from a
+dispatch input or an issue title with it. A caller treats any exit status but
+0 as a refusal.
 
-Standard library only, and Python 3.12 syntax, so a job runs it with the
-runner's own `python3` before it sets up anything else.
+Standard library only, and Python 3.12 syntax, so a job can run it with
+whichever `python3` the runner has at that point, the image's own included.
 """
 
 from __future__ import annotations
@@ -61,6 +68,7 @@ from typing import Any
 # The catalogue's spec id shape; equal to spec_pr_guard.SPEC_ID_RE (a test
 # keeps the two in step), duplicated because the workflows stage this file alone.
 SPEC_ID_PATTERN = r"[a-z0-9]+(?:-[a-z0-9]+)*"
+SPEC_ID_RE = re.compile(SPEC_ID_PATTERN)
 LIBRARY_PATTERN = r"[a-z0-9]+"
 BRANCH_RE = re.compile(rf"implementation/(?P<spec>{SPEC_ID_PATTERN})/(?P<library>{LIBRARY_PATTERN})")
 HEAD_SHA_RE = re.compile(r"[0-9a-f]{40}")
@@ -69,8 +77,14 @@ NUMBER_RE = re.compile(r"[1-9][0-9]{0,9}")
 # repository name 100 of letters, digits, hyphens, dots and underscores.
 REPO_RE = re.compile(r"(?P<owner>[A-Za-z0-9-]{1,39})/(?P<name>[A-Za-z0-9._-]{1,100})")
 LIBRARY_RE = re.compile(LIBRARY_PATTERN)
-# A branch name far longer than any spec id is not worth matching.
+# A branch name or spec id far longer than any in the catalogue is not worth matching.
 MAX_BRANCH = 200
+MAX_SPEC_ID = 100
+# Who opens the pipeline's pull requests (impl-generate, with GITHUB_TOKEN),
+# as `gh pr view/list --json author` names it; regen_writeback.BOT_AUTHOR is
+# the same account. And the branch they target.
+PIPELINE_AUTHOR = "app/github-actions"
+BASE_BRANCH = "main"
 
 # Every reason a pull request is refused, the workflows' own included. A code
 # is a fixed word, so it can go into a log line or a job summary as it is.
@@ -81,15 +95,27 @@ REASONS: dict[str, str] = {
     "bad_number": "the pull request number is not a positive integer",
     "number_mismatch": "the data is for another pull request than the one asked for",
     "cross_repository": "the head branch lives in another repository",
+    "author_mismatch": "the pipeline did not open the pull request",
+    "base_mismatch": "the pull request does not target the default branch",
     "branch_shape": "the head branch is not implementation/<spec-id>/<library>",
     "unknown_library": "the library in the head branch is not a registered library",
     "head_sha_shape": "the head commit is not a full commit SHA",
     "input_mismatch": "the spec id or library differs from the one the workflow was dispatched with",
     # The workflows'.
+    "bad_input": "a dispatch input does not have its expected shape",
     "pr_unreadable": "the pull request could not be read from GitHub",
     "guard_failed": "the guard could not be staged or did not run to an answer",
 }
-REQUIRED_FIELDS = ("number", "headRefName", "headRefOid", "isCrossRepository", "headRepository", "headRepositoryOwner")
+REQUIRED_FIELDS = (
+    "number",
+    "headRefName",
+    "headRefOid",
+    "isCrossRepository",
+    "headRepository",
+    "headRepositoryOwner",
+    "author",
+    "baseRefName",
+)
 
 
 @dataclass(frozen=True)
@@ -122,6 +148,11 @@ def _string_field(data: Mapping[str, Any], *path: str) -> str | None:
     return value if isinstance(value, str) else None
 
 
+def is_spec_id(value: object) -> bool:
+    """Whether `value` has the catalogue's spec id shape."""
+    return isinstance(value, str) and len(value) <= MAX_SPEC_ID and SPEC_ID_RE.fullmatch(value) is not None
+
+
 def check(
     data: Any,
     *,
@@ -142,9 +173,18 @@ def check(
         return _refuse("missing_field", pr_number)
     branch = data.get("headRefName")
     head_sha = data.get("headRefOid")
+    base = data.get("baseRefName")
     owner = _string_field(data, "headRepositoryOwner", "login")
     name = _string_field(data, "headRepository", "name")
-    if not isinstance(branch, str) or not isinstance(head_sha, str) or owner is None or name is None:
+    author = _string_field(data, "author", "login")
+    if not (
+        isinstance(branch, str)
+        and isinstance(head_sha, str)
+        and isinstance(base, str)
+        and owner is not None
+        and name is not None
+        and author is not None
+    ):
         return _refuse("missing_field", pr_number)
     if not isinstance(data.get("isCrossRepository"), bool):
         return _refuse("missing_field", pr_number)
@@ -159,6 +199,10 @@ def check(
         or name.lower() != want["name"].lower()
     ):
         return _refuse("cross_repository", pr_number)
+    if author != PIPELINE_AUTHOR:
+        return _refuse("author_mismatch", pr_number)
+    if base != BASE_BRANCH:
+        return _refuse("base_mismatch", pr_number)
 
     match = BRANCH_RE.fullmatch(branch) if len(branch) <= MAX_BRANCH else None
     if match is None:
@@ -199,12 +243,20 @@ def _shown(number: int | None) -> str:
     return str(number) if number is not None else "?"
 
 
+def _read_json() -> Any:
+    """stdin as JSON; raises ValueError for anything that is not (a too deeply nested document included)."""
+    try:
+        return json.loads(sys.stdin.read())
+    except RecursionError as exc:
+        raise ValueError("too deeply nested") from exc
+
+
 def _run_check(args: argparse.Namespace, libraries: frozenset[str]) -> int:
     if args.number is None or not NUMBER_RE.fullmatch(args.number):
         print("reason=bad_number")
         return 1
     try:
-        data = json.loads(sys.stdin.read())
+        data = _read_json()
     except ValueError:
         print("reason=unreadable")
         return 1
@@ -224,7 +276,7 @@ def _run_check(args: argparse.Namespace, libraries: frozenset[str]) -> int:
 
 def _run_filter(args: argparse.Namespace, libraries: frozenset[str]) -> int:
     try:
-        entries = json.loads(sys.stdin.read())
+        entries = _read_json()
     except ValueError:
         print("error: the listing is not JSON", file=sys.stderr)
         return 2
@@ -243,14 +295,23 @@ def _run_filter(args: argparse.Namespace, libraries: frozenset[str]) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0] if __doc__ else None)
-    parser.add_argument("mode", choices=("check", "filter"))
-    parser.add_argument("--repo", required=True, help="OWNER/NAME of the repository the workflow runs in")
-    parser.add_argument("--libraries", required=True, help="space-separated registered libraries")
-    parser.add_argument("--number", help="check: the pull request number the workflow was asked about")
-    parser.add_argument("--spec-id", help="check: the spec id the workflow was dispatched with, if any")
-    parser.add_argument("--library", help="check: the library the workflow was dispatched with, if any")
+    modes = parser.add_subparsers(dest="mode", required=True)
+    for mode in ("check", "filter"):
+        sub = modes.add_parser(mode)
+        sub.add_argument("--repo", required=True, help="OWNER/NAME of the repository the workflow runs in")
+        sub.add_argument("--libraries", required=True, help="space-separated registered libraries")
+        if mode == "check":
+            sub.add_argument("--number", help="the pull request number the workflow was asked about")
+            sub.add_argument("--spec-id", help="the spec id the workflow was dispatched with, if any")
+            sub.add_argument("--library", help="the library the workflow was dispatched with, if any")
+    modes.add_parser("spec-id").add_argument("value")
     args = parser.parse_args(argv)
 
+    if args.mode == "spec-id":
+        if not is_spec_id(args.value):
+            return 1
+        print(args.value)
+        return 0
     libraries = _libraries(args.libraries)
     if libraries is None or not REPO_RE.fullmatch(args.repo):
         print("error: --libraries must name at least one library and --repo must be OWNER/NAME", file=sys.stderr)

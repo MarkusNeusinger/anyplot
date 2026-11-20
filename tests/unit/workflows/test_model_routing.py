@@ -191,20 +191,20 @@ def _extract_inputs_script(
     *, library: str, model: str, label_trigger: bool, spec: str, regen_gate: str = "true"
 ) -> tuple[str, dict[str, str]]:
     dispatch = not label_trigger
-    context = {
-        "github.event_name": "workflow_dispatch" if dispatch else "issues",
-        "inputs.specification_id": spec if dispatch else "",
-        "inputs.library": library if dispatch else "",
-        "inputs.issue_number": "",
-        "inputs.model": model if dispatch else "",
-        "github.event.issue.number": "" if dispatch else "42",
-    }
+    # Every input and event value reaches the step through env:.
     env = {
+        "EVENT_NAME": "workflow_dispatch" if dispatch else "issues",
+        "SPEC_ID_INPUT": spec if dispatch else "",
+        "LIBRARY_INPUT": library if dispatch else "",
+        "ISSUE_INPUT": "",
+        "MODEL_INPUT": model if dispatch else "",
+        "REGEN_GATE_INPUT": regen_gate if dispatch else "",
+        "EVENT_ISSUE_NUMBER": "" if dispatch else "42",
         "LABEL_NAME": "" if dispatch else f"generate:{library}",
         "ISSUE_TITLE": "" if dispatch else f"[{spec}] Some plot",
         "REGEN_GATE": regen_gate,
     }
-    return _render(_step("impl-generate.yml", "Extract inputs")["run"], context), env
+    return _render(_step("impl-generate.yml", "Extract inputs")["run"], {}), env
 
 
 def _run_extract_inputs(
@@ -221,7 +221,8 @@ def _run_extract_inputs(
     script, env = _extract_inputs_script(
         library=library, model=model, label_trigger=label_trigger, spec=spec, regen_gate=regen_gate
     )
-    return _run_script(script, repo, tmp_path, **env)
+    stage_guard(tmp_path)
+    return _run_script(script, repo, tmp_path, RUNNER_TEMP=str(tmp_path), **env)
 
 
 def _create_pr_body(tmp_path: Path, *, model: str, **extra: str) -> str:
@@ -342,7 +343,8 @@ class TestImplGenerateRouting:
 
     def test_routing_fails_without_origin_main(self, repo_without_main, tmp_path):
         script, env = _extract_inputs_script(library="plotly", model="auto", label_trigger=False, spec="spec-a")
-        result = _exec(script, repo_without_main, tmp_path, **env)
+        stage_guard(tmp_path)
+        result = _exec(script, repo_without_main, tmp_path, RUNNER_TEMP=str(tmp_path), **env)
         assert result.returncode != 0
         assert "::error::origin/main unavailable — cannot route the model" in result.stdout
         assert "model" not in _outputs(tmp_path / "github_output")

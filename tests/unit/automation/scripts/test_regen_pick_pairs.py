@@ -42,6 +42,8 @@ OWN = {
     "headRepository": {"name": "r"},
     "headRepositoryOwner": {"login": "o"},
     "headRefOid": "0" * 40,
+    "author": {"login": "app/github-actions", "is_bot": True},
+    "baseRefName": "main",
 }
 
 
@@ -904,7 +906,7 @@ class TestReadRecords:
             "activity for 1 issue(s)" in capsys.readouterr().out
         )
         prs_call, kept_call, gates_call, issues_call = fake.calls
-        guard = "number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner"
+        guard = "number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName"
         assert prs_call[prs_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels"
         assert prs_call[prs_call.index("--state") + 1] == "all" and "--repo" in prs_call and "o/r" in prs_call
         assert kept_call[kept_call.index("--json") + 1] == f"{guard},state,updatedAt,closedAt,labels"
@@ -942,6 +944,8 @@ class TestReadRecords:
     FOREIGN = [
         {"isCrossRepository": True, "headRepositoryOwner": {"login": "elsewhere"}},
         {"isCrossRepository": None},
+        {"author": {"login": "someone"}},
+        {"baseRefName": "other"},
         {"headRefName": "implementation/a/notalib"},
     ]
 

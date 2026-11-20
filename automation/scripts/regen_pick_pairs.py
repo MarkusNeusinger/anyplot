@@ -545,7 +545,11 @@ def issue_failures(repo: str, spec_issues: dict[str, int]) -> Callable[[str], di
         issue = spec_issues.get(spec)
         if issue is None:
             return {}
-        jq = '.[] | select(.body != null and (.body | contains("<!-- impl-fail:"))) | {created_at, body} | @json'
+        # The workflow's own failure comments only (REST names the app with the `[bot]` suffix).
+        jq = (
+            '.[] | select(.user.login == "github-actions[bot]" and .body != null'
+            ' and (.body | contains("<!-- impl-fail:"))) | {created_at, body} | @json'
+        )
         try:
             raw = subprocess.run(
                 ["gh", "api", "--paginate", f"repos/{repo}/issues/{issue}/comments?per_page=100", "--jq", jq],

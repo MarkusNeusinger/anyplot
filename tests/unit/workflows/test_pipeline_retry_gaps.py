@@ -456,6 +456,8 @@ class TestRepairCrashRetryBudget:
         "MODEL": "sonnet",
         "REPOSITORY": "owner/repo",
         "RUN_ID": "1",
+        # The guard step passed the pull request.
+        "GUARD_ALLOWED": "true",
     }
 
     def _crash(self, tmp_path: Path, **env: str) -> tuple[subprocess.CompletedProcess[str], list[list[str]]]:

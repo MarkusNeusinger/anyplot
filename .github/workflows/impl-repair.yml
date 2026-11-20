@@ -142,9 +142,10 @@ jobs:
           echo "Pull request guard staged from ${GUARD_REF}; libraries: $(cat "$G/libraries")"
 
       # The repair's first use of the pull request. The spec id and library it
-      # was dispatched with must be the ones its branch names. A refusal
-      # fetches nothing, and "Handle repair failure" stays off the pull
-      # request (it runs only once `allowed` is set).
+      # was dispatched with must be the ones its branch names, and the attempt
+      # a small number. A refusal checks out nothing. A decided refusal sets
+      # `refused`, which keeps "Handle repair failure" off the pull request; a
+      # pull request that could not be read is checked again there.
       - name: Check the pull request is the pipeline's own
         id: guard
         env:
@@ -153,21 +154,27 @@ jobs:
           PR_NUMBER: ${{ inputs.pr_number }}
           SPEC_ID_INPUT: ${{ inputs.specification_id }}
           LIBRARY_INPUT: ${{ inputs.library }}
+          ATTEMPT_INPUT: ${{ inputs.attempt }}
         run: |
           G="$RUNNER_TEMP/pr-guard"
           PR_SHOWN="${PR_NUMBER//[^0-9]/}"
           PR_SHOWN="${PR_SHOWN:0:10}"
           refuse() {
-            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was fetched, labelled or commented on"
+            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was checked out, labelled or commented on"
             echo "- PR #${PR_SHOWN} refused: \`${1}\`, not one of the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
+            case "$1" in
+              pr_unreadable|guard_failed) ;;
+              *) echo "refused=true" >> "$GITHUB_OUTPUT" ;;
+            esac
             exit 1
           }
           # gh pr view also takes a URL or a branch name for its argument.
           [[ "$PR_NUMBER" =~ ^[1-9][0-9]{0,9}$ ]] || refuse bad_number
+          [[ "$ATTEMPT_INPUT" =~ ^[1-9]$ ]] || refuse bad_input
           READ_OK=0
           for attempt in 1 2 3; do
             if gh pr view "$PR_NUMBER" --repo "$REPOSITORY" \
-                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner \
+                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName \
                  > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
               READ_OK=1
               break
@@ -339,11 +346,10 @@ jobs:
         if: steps.lang.outputs.language == 'javascript'
         uses: ./.github/actions/setup-node
 
-      # The review's own comment only: the last "AI Review" comment the
-      # reviewing app posted, as "Validate review output" in impl-review.yml
-      # selects it. Anyone can comment on a pull request, and this text is
-      # the repair session's brief. REST names the app `claude[bot]`, a login
-      # no account can register; GraphQL would drop the suffix.
+      # This text is the repair session's brief, so only the reviewing app's
+      # comment is taken: the last "AI Review" comment of `claude[bot]`, as
+      # "Extract quality score" in impl-review.yml selects the review comment.
+      # REST names the app with the `[bot]` suffix; GraphQL drops it.
       - name: Extract AI feedback from PR
         id: feedback
         env:
@@ -368,9 +374,10 @@ jobs:
       - name: Remove ai-rejected label
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ inputs.pr_number }}
         run: |
-          gh pr edit ${{ inputs.pr_number }} --remove-label "ai-rejected" 2>/dev/null || true
-          gh pr edit ${{ inputs.pr_number }} --remove-label "ai-repair-paused" 2>/dev/null || true
+          gh pr edit "$PR_NUM" --remove-label "ai-rejected" 2>/dev/null || true
+          gh pr edit "$PR_NUM" --remove-label "ai-repair-paused" 2>/dev/null || true
 
       - name: Run Claude Code to repair implementation
         id: claude
@@ -541,8 +548,10 @@ jobs:
       # unrepaired file.
       - name: Stop when Claude stopped the session
         if: steps.claude_cost.outputs.stopped == 'true'
+        env:
+          STOP_REASON: ${{ steps.claude_cost.outputs.stop_reason }}
         run: |
-          echo "::error::Claude stopped the session (${{ steps.claude_cost.outputs.stop_reason }}); the retry is skipped"
+          echo "::error::Claude stopped the session (${STOP_REASON//[^a-z_]/}); the retry is skipped"
           exit 1
 
       # A repair is new code with its own renders. Renders without a pushed
@@ -836,8 +845,10 @@ jobs:
       - name: Post repair status
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ inputs.pr_number }}
+          ATTEMPT: ${{ inputs.attempt }}
         run: |
-          gh pr comment ${{ inputs.pr_number }} --body "## :wrench: Repair Attempt ${{ inputs.attempt }}/4
+          gh pr comment "$PR_NUM" --body "## :wrench: Repair Attempt ${ATTEMPT}/4
 
           Applied fixes based on AI review feedback.
 
@@ -864,13 +875,18 @@ jobs:
       # Code Action transient failure), restore the ai-rejected label and
       # auto-retry once. After one auto-retry, fall back to manual.
       # ========================================================================
-      # Only for a pull request the guard passed: a refused one (or a run that
-      # failed before the check) gets no label, comment or retry from here;
-      # the watchdog's repair cases pick up the pipeline's own.
+      # Only for one of the pipeline's own pull requests. One the guard
+      # refused gets nothing from here (the `if`). When the run failed before
+      # the guard passed it (the credentials, the checkout, the staging, or
+      # three failed reads), the handler first checks it itself, with the
+      # guard from this workflow's commit, staged again if the run never got
+      # that far, and writes nothing unless that check passes.
       - name: Handle repair failure
-        if: failure() && steps.guard.outputs.allowed == 'true'
+        if: failure() && steps.guard.outputs.refused != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GUARD_ALLOWED: ${{ steps.guard.outputs.allowed }}
+          GUARD_REF: ${{ github.sha }}
           PR_NUM: ${{ inputs.pr_number }}
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
@@ -889,6 +905,37 @@ jobs:
           # "Stage the render hash" failed: read from the step's outcome.
           RENDER_HASH_OUTCOME: ${{ steps.render_hash.outcome }}
         run: |
+          # Returns 0 only when the pull request passes the guard, read now.
+          pr_is_own() {
+            local G="$RUNNER_TEMP/pr-guard" raw="application/vnd.github.raw+json" attempt
+            [[ "$PR_NUM" =~ ^[1-9][0-9]{0,9}$ ]] && [[ "$ATTEMPT" =~ ^[1-9]$ ]] || return 1
+            if [ ! -s "$G/pr_guard.py" ] || [ ! -s "$G/libraries" ]; then
+              mkdir -p "$G/core" || return 1
+              gh api -H "Accept: $raw" "repos/${REPOSITORY}/contents/automation/scripts/pr_guard.py?ref=${GUARD_REF}" \
+                > "$G/pr_guard.py" 2>/dev/null || return 1
+              gh api -H "Accept: $raw" "repos/${REPOSITORY}/contents/core/constants.py?ref=${GUARD_REF}" \
+                > "$G/core/constants.py" 2>/dev/null || return 1
+              (cd "$G" && python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))") \
+                > "$G/libraries" 2>/dev/null || return 1
+              [ -s "$G/libraries" ] || return 1
+            fi
+            for attempt in 1 2 3; do
+              if gh pr view "$PR_NUM" --repo "$REPOSITORY" \
+                   --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName \
+                   > "$RUNNER_TEMP/handler-pr.json" 2>/dev/null; then
+                python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
+                  --number "$PR_NUM" --spec-id "$SPEC_ID" --library "$LIBRARY" < "$RUNNER_TEMP/handler-pr.json" > /dev/null
+                return
+              fi
+              [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+            done
+            return 1
+          }
+          if [ "$GUARD_ALLOWED" != "true" ] && ! pr_is_own; then
+            echo "::warning::The repair failed before its pull request was checked, and it could not be checked now: no label, comment or retry from here; the watchdog's repair rescue picks up the pipeline's own"
+            exit 0
+          fi
+
           if [ -z "$GATE" ] && [ "$RENDER_HASH_OUTCOME" = "failure" ]; then
             GATE="render.sha256 could not be staged beside the repaired renders"
           fi
@@ -949,11 +996,12 @@ jobs:
           # "0\n1", the `-ge` test below errored into its else branch, and
           # every crash bought another retry. A read that fails three times
           # counts as a spent budget (fail closed), like impl-review's; the
-          # watchdog's crashed-repair case picks the PR up from there.
+          # watchdog's crashed-repair case picks the PR up from there. Only the
+          # workflow's own comments count.
           RETRY_COUNT=""
           for attempt in 1 2 3; do
             if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
-                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/retry-count.err) \
+                 --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/retry-count.err) \
                && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/retry-count.err) \
                && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
               break

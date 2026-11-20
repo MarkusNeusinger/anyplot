@@ -204,22 +204,39 @@ jobs:
           # explicit dispatch with regen_gate=false, or one that adopts a file
           # from source_ref, forces a regeneration.
           REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && (inputs.regen_gate == false || inputs.source_ref != '')) && 'false' || 'true' }}
-          # Via env, never interpolated into the script: free text from a dispatch.
+          # Every dispatch input and event value comes in through env:, never
+          # pasted into the script, and is checked for its shape before its
+          # first use. A dispatch can carry text that came from an issue.
+          EVENT_NAME: ${{ github.event_name }}
+          SPEC_ID_INPUT: ${{ inputs.specification_id }}
+          LIBRARY_INPUT: ${{ inputs.library }}
+          ISSUE_INPUT: ${{ inputs.issue_number }}
+          MODEL_INPUT: ${{ inputs.model }}
+          REGEN_GATE_INPUT: ${{ inputs.regen_gate }}
+          EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
           SOURCE_REF_INPUT: ${{ inputs.source_ref }}
           SOURCE_MODEL_INPUT: ${{ inputs.source_model }}
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          # A value that fails its check stops the job with one line that
+          # names the input, never its value.
+          G="$RUNNER_TEMP/pr-guard"
+          bad_input() {
+            echo "::error::bad_input: ${1} does not have its expected shape; nothing was generated"
+            echo "- Inputs: \`bad_input\` (${1})" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          }
+          if [ "$EVENT_NAME" == "workflow_dispatch" ]; then
             # From workflow_dispatch
-            SPEC_ID="${{ inputs.specification_id }}"
-            LIBRARY="${{ inputs.library }}"
-            ISSUE="${{ inputs.issue_number }}"
-            MODEL="${{ inputs.model }}"
+            SPEC_ID="$SPEC_ID_INPUT"
+            LIBRARY="$LIBRARY_INPUT"
+            ISSUE="$ISSUE_INPUT"
+            MODEL="$MODEL_INPUT"
           else
             # From label trigger: generate:{library}
-            LIBRARY=$(echo "$LABEL_NAME" | sed 's/^generate://')
+            LIBRARY="${LABEL_NAME#generate:}"
             # Extract spec ID from issue title: [spec-id] ...
             SPEC_ID=$(echo "$ISSUE_TITLE" | sed -n 's/^\[\([a-z0-9-]*\)\].*/\1/p')
-            ISSUE="${{ github.event.issue.number }}"
+            ISSUE="$EVENT_ISSUE_NUMBER"
             MODEL=""
           fi
 
@@ -232,6 +249,25 @@ jobs:
             echo "::error::Could not determine library"
             exit 1
           fi
+
+          # The spec id in the catalogue's shape (the guard's own check), a
+          # registered library, digits for the issue, a listed model, and a
+          # boolean that is exactly true or false.
+          python3 "$G/pr_guard.py" spec-id -- "$SPEC_ID" > /dev/null 2>&1 || bad_input "specification_id"
+          if ! [[ "$LIBRARY" =~ ^[a-z0-9]+$ ]] || [[ " $(cat "$G/libraries" 2>/dev/null) " != *" $LIBRARY "* ]]; then
+            bad_input "library"
+          fi
+          if [ -n "$ISSUE" ] && ! [[ "$ISSUE" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            bad_input "issue_number"
+          fi
+          case "$MODEL" in
+            ''|auto|haiku|sonnet|opus) ;;
+            *) bad_input "model" ;;
+          esac
+          case "$REGEN_GATE_INPUT" in
+            ''|true|false) ;;
+            *) bad_input "regen_gate" ;;
+          esac
 
           # Adopt mode: the implementation comes from this ref of origin
           # ("Adopt implementation from source ref") instead of Claude.
@@ -384,8 +420,14 @@ jobs:
       # Consolidate issue number from inputs or fallback
       - name: Set final issue number
         id: issue
+        env:
+          ISSUE: ${{ steps.inputs.outputs.issue_number || steps.spec_issue.outputs.issue_number }}
         run: |
-          ISSUE="${{ steps.inputs.outputs.issue_number || steps.spec_issue.outputs.issue_number }}"
+          # The specification.yaml fallback is file content: digits only.
+          if [ -n "$ISSUE" ] && ! [[ "$ISSUE" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            echo "::warning::The issue number has no number's shape — PR will not have Parent Issue link"
+            ISSUE=""
+          fi
           echo "number=$ISSUE" >> $GITHUB_OUTPUT
           if [ -n "$ISSUE" ]; then
             echo "::notice::Using issue #$ISSUE for tracking"
@@ -902,8 +944,10 @@ jobs:
       # the pair instead of the steps below running without an implementation.
       - name: Stop when Claude stopped the session
         if: steps.claude_cost.outputs.stopped == 'true'
+        env:
+          STOP_REASON: ${{ steps.claude_cost.outputs.stop_reason }}
         run: |
-          echo "::error::Claude stopped the session (${{ steps.claude_cost.outputs.stop_reason }}); the retry is skipped"
+          echo "::error::Claude stopped the session (${STOP_REASON//[^a-z_]/}); the retry is skipped"
           exit 1
 
       # ========================================================================
@@ -1526,16 +1570,13 @@ jobs:
             echo "::error::could not label PR #${pr} ${REGEN_LABEL}"
           }
 
-          # Check if PR already exists: one of the pipeline's own, from this
-          # repository's $BRANCH ("Stage the pull request guard"). `--head`
-          # matches a branch of that name in any repository, and a pull
-          # request from elsewhere is never taken over: its number would go
-          # to the labels below and to the review dispatch. A listing or a
-          # guard that fails finds none, and `gh pr create` then fails on a
-          # pull request that does exist rather than adopt an unchecked one.
+          # Check if PR already exists: only one of the pipeline's own, from
+          # this repository's $BRANCH, is reused ("Stage the pull request
+          # guard"). A listing or a guard that fails finds none, and
+          # `gh pr create` then fails on a pull request that does exist.
           EXISTING_PR=""
           if LISTED=$(gh pr list --head "$BRANCH" --base main \
-                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner 2>/dev/null) \
+                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName 2>/dev/null) \
              && OWN=$(python3 "$RUNNER_TEMP/pr-guard/pr_guard.py" filter --repo "$REPOSITORY" \
                  --libraries "$(cat "$RUNNER_TEMP/pr-guard/libraries")" <<< "$LISTED"); then
             EXISTING_PR=$(jq -r --arg b "$BRANCH" '[.[] | select(.headRefName == $b)][0].number // empty' <<< "$OWN")
@@ -1855,8 +1896,10 @@ jobs:
 
       - name: Determine result
         id: result
+        env:
+          PR_EXISTS: ${{ steps.pr.outputs.pr_exists }}
         run: |
-          if [ "${{ steps.pr.outputs.pr_exists }}" == "true" ]; then
+          if [ "$PR_EXISTS" == "true" ]; then
             echo "success=true" >> $GITHUB_OUTPUT
           else
             echo "success=false" >> $GITHUB_OUTPUT
@@ -2122,11 +2165,11 @@ jobs:
           # One paginated call, two numbers per page ("<genuine> <infra>"), summed by awk.
           # Three attempts: the cap fails closed on a count that cannot be
           # read, so one failed call would end the pair's retries, and mark a
-          # first generation as failed.
+          # first generation as failed. Only the workflow's own comments count.
           COUNTS=""
           for attempt in 1 2 3; do
             if PAGES=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
-                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | \"\(map(select(.body | contains(\"$INFRA_TAG\") | not)) | length) \(map(select(.body | contains(\"$INFRA_TAG\"))) | length)\"") \
+                 --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | \"\(map(select(.body | contains(\"$INFRA_TAG\") | not)) | length) \(map(select(.body | contains(\"$INFRA_TAG\"))) | length)\"") \
                && COUNTS=$(printf '%s\n' "$PAGES" | awk '{ g += $1; i += $2 } END { print (g + 0) " " (i + 0) }') \
                && [[ "$COUNTS" =~ ^[0-9]+\ [0-9]+$ ]]; then
               break

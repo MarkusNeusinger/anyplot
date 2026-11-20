@@ -162,13 +162,13 @@ jobs:
           # ("Stage the pull request guard"). Until the guard has passed it,
           # nothing the pull request carries (its branch name, its body)
           # reaches a command, a path, a pattern or $GITHUB_OUTPUT; a refusal
-          # fetches nothing of it and writes nothing to it, and leaves one
+          # checks out nothing of it and writes nothing to it, and leaves one
           # error line and one summary line with a fixed reason code.
           G="$RUNNER_TEMP/pr-guard"
           PR_SHOWN="${PR_NUMBER//[^0-9]/}"
           PR_SHOWN="${PR_SHOWN:0:10}"
           refuse() {
-            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was fetched, labelled or commented on"
+            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was checked out, labelled or commented on"
             echo "- PR #${PR_SHOWN} refused: \`${1}\`, not one of the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           }
@@ -185,7 +185,7 @@ jobs:
           READ_OK=0
           for attempt in 1 2 3; do
             if gh pr view "$PR_NUMBER" --repo "$REPOSITORY" \
-                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,body \
+                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName,body \
                  > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
               READ_OK=1
               break
@@ -387,6 +387,8 @@ jobs:
           echo "ext=$EXT"           >> $GITHUB_OUTPUT
 
       - name: Checkout PR code
+        env:
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
           # Keep the regen helpers from THIS workflow's ref before switching to
           # the PR head: the gate's parser must match the workflow that calls
@@ -406,8 +408,8 @@ jobs:
           # The reviewer's step-10 self-check (`check-feedback`) runs this
           # same workflow-ref copy of the gate.
           cp automation/scripts/regen_gate.py /tmp/anyplot-regen-gate.py
-          git fetch origin ${{ steps.pr.outputs.head_sha }}
-          git checkout ${{ steps.pr.outputs.head_sha }}
+          git fetch origin "$HEAD_SHA"
+          git checkout "$HEAD_SHA"
 
       # Pre-merge test hook (impl-generate.yml dispatches the review on its own
       # ref when run from a feature branch): review with that branch's
@@ -1792,11 +1794,11 @@ jobs:
           # `--paginate --jq` prints one count per page, so the pages are
           # summed. A read that fails three times counts as a spent budget
           # (fail closed): the brown-out that breaks the read must not buy a
-          # second automatic re-review.
+          # second automatic re-review. Only the workflow's own comments count.
           RETRY_COUNT=""
           for attempt in 1 2 3; do
             if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
-                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/retry-count.err) \
+                 --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/retry-count.err) \
                && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/retry-count.err) \
                && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
               break
@@ -2810,11 +2812,12 @@ jobs:
           # Paginate so the marker is found even on PRs with >30 comments.
           # `--paginate --jq` prints one count per page, so the pages are
           # summed. An unreadable budget counts as spent (fail closed): the
-          # brown-out that brought this step here must not lift the cap.
+          # brown-out that brought this step here must not lift the cap. Only
+          # the workflow's own comments count.
           RETRY_COUNT=""
           for attempt in 1 2 3; do
             if PAGES=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
-                 --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/rescue-gh.err) \
+                 --jq "[.[] | select(.user.login == \"github-actions[bot]\" and .body != null and (.body | contains(\"$MARKER\")))] | length" 2> /tmp/rescue-gh.err) \
                && RETRY_COUNT=$(printf '%s\n' "$PAGES" | jq -s 'add // 0' 2>> /tmp/rescue-gh.err) \
                && [[ "$RETRY_COUNT" =~ ^[0-9]+$ ]]; then
               break

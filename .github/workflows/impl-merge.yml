@@ -175,7 +175,7 @@ jobs:
           PR_SHOWN="${PR_NUMBER//[^0-9]/}"
           PR_SHOWN="${PR_SHOWN:0:10}"
           refuse() {
-            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was fetched, merged or commented on"
+            echo "::error::PR #${PR_SHOWN} refused (${1}): not one of the pipeline's own pull requests; nothing of it was merged, labelled or commented on"
             echo "- PR #${PR_SHOWN} refused: \`${1}\`, not one of the pipeline's own pull requests" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           }
@@ -183,7 +183,7 @@ jobs:
           READ_OK=0
           for attempt in 1 2 3; do
             if gh pr view "$PR_NUMBER" --repo "$REPOSITORY" \
-                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner \
+                 --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName \
                  > "$RUNNER_TEMP/pr.json" 2> "$RUNNER_TEMP/pr.err"; then
               READ_OK=1
               break
@@ -371,8 +371,8 @@ jobs:
         id: issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.check.outputs.pr_number }}
         run: |
-          PR_NUM="${{ steps.check.outputs.pr_number }}"
           PR_BODY=$(gh pr view "$PR_NUM" --json body -q '.body' 2>/dev/null || echo "")
           ISSUE=$(echo "$PR_BODY" | grep -oP '\*\*Parent Issue:\*\* #\K\d+' | head -1 || echo "")
           echo "number=$ISSUE" >> $GITHUB_OUTPUT
@@ -385,8 +385,8 @@ jobs:
         id: quality
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.check.outputs.pr_number }}
         run: |
-          PR_NUM="${{ steps.check.outputs.pr_number }}"
           LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2>/dev/null || echo "")
           SCORE=$(echo "$LABELS" | grep -oP 'quality:\K\d+' | head -1 || echo "")
           echo "score=$SCORE" >> $GITHUB_OUTPUT
@@ -433,14 +433,19 @@ jobs:
           # two. The merge names that head (--match-head-commit), so a commit
           # pushed in between is never merged.
           # Prints the head to merge and returns 0; 1 = refused (why in
-          # head.why); 2 = could not read it this time.
+          # head.why); 2 = could not read it this time; 3 = already merged
+          # (an earlier attempt merged and its answer was lost; the branch is
+          # then gone, so the head can no longer be fetched).
           G="$RUNNER_TEMP/pr-guard"
           MAX_UPDATES=8
           merge_target() {
             local view out head commit hops=0
             view=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" \
-              --json number,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner \
+              --json number,state,headRefName,headRefOid,isCrossRepository,headRepository,headRepositoryOwner,author,baseRefName \
               2> "$RUNNER_TEMP/head.err") || return 2
+            if [ "$(jq -r '.state // ""' <<< "$view" 2>/dev/null)" = "MERGED" ]; then
+              return 3
+            fi
             if ! out=$(python3 "$G/pr_guard.py" check --repo "$REPOSITORY" --libraries "$(cat "$G/libraries")" \
                  --number "$PR_NUM" --spec-id "$SPEC_ID" --library "$LIBRARY" <<< "$view"); then
               echo "the pull request no longer passes the guard (${out//[^a-z_=]/})" > "$RUNNER_TEMP/head.why"
@@ -533,14 +538,25 @@ jobs:
             # only `write`, so a repo-admin PAT is required (ADMIN_TOKEN).
             TARGET_RC=0
             TARGET=$(merge_target) || TARGET_RC=$?
+            if [ "$TARGET_RC" -eq 3 ]; then
+              echo "::notice::PR #${PR_NUM} is already merged — continuing to post-merge steps"
+              exit 0
+            fi
             if [ "$TARGET_RC" -eq 1 ]; then
               WHY=$(head -c 300 "$RUNNER_TEMP/head.why" 2>/dev/null | tr '\n' ' ')
               echo "::error::PR #${PR_NUM} not merged: its head is neither the checked commit ${VALIDATED_SHA} nor GitHub's merges of main into it (${WHY:-no reason recorded}); re-dispatch impl-merge.yml to check it again"
               exit 1
             fi
             if [ "$TARGET_RC" -ne 0 ] || [ -z "$TARGET" ]; then
-              echo "Could not read the head of PR #${PR_NUM}: $(head -c 300 "$RUNNER_TEMP/head.err" 2>/dev/null | tr '\n' ' ')" > /tmp/merge.err
-            elif gh pr merge "$PR_NUM" \
+              # The head could not be read this time. The checked commit
+              # itself is always safe to name (GitHub merges only when the
+              # head is that commit), and the merge call then also answers
+              # "already merged" for a merge whose answer an earlier attempt
+              # lost, which the check below takes as success.
+              echo "::warning::Could not read the head of PR #${PR_NUM} ($(head -c 300 "$RUNNER_TEMP/head.err" 2>/dev/null | tr '\n' ' ')); naming the checked commit ${VALIDATED_SHA}"
+              TARGET="$VALIDATED_SHA"
+            fi
+            if gh pr merge "$PR_NUM" \
               --repo "$REPOSITORY" \
               --squash \
               --admin \

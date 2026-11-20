@@ -38,6 +38,8 @@ def own(**change: Any) -> dict[str, Any]:
         "isCrossRepository": False,
         "headRepository": {"id": "R_x", "name": "anyplot"},
         "headRepositoryOwner": {"id": "U_x", "login": "MarkusNeusinger"},
+        "author": {"is_bot": True, "login": "app/github-actions"},
+        "baseRefName": "main",
         "body": "**Parent Issue:** #42",
     }
     data.update(change)
@@ -83,6 +85,23 @@ class TestRefused:
     def test_any_sign_of_another_repository(self, change):
         assert check(own(**change)).reason == "cross_repository"
 
+    @pytest.mark.parametrize(
+        "author",
+        [
+            {"login": "MarkusNeusinger"},
+            {"login": "github-actions"},  # GraphQL's spelling is the app/ one
+            {"login": "github-actions[bot]"},  # the REST spelling is not what gh prints here
+            {"login": "app/claude"},
+            {"login": "APP/GITHUB-ACTIONS"},
+        ],
+    )
+    def test_a_pull_request_the_pipeline_did_not_open(self, author):
+        assert check(own(author=author)).reason == "author_mismatch"
+
+    @pytest.mark.parametrize("base", ["develop", "Main", "main ", "release/v1"])
+    def test_a_pull_request_that_does_not_target_main(self, base):
+        assert check(own(baseRefName=base)).reason == "base_mismatch"
+
     @pytest.mark.parametrize("field", pr_guard.REQUIRED_FIELDS)
     def test_a_missing_field_fails_closed(self, field):
         data = own()
@@ -106,6 +125,9 @@ class TestRefused:
             {"headRepository": {"name": None}},
             {"headRepository": "anyplot"},
             {"headRepositoryOwner": {}},
+            {"author": {"login": None}},
+            {"author": "app/github-actions"},
+            {"baseRefName": ["main"]},
         ],
     )
     def test_a_field_of_the_wrong_type_fails_closed(self, change):
@@ -197,17 +219,22 @@ class TestCodes:
 
 
 class TestRunnerPython:
-    """The jobs stage these files and run them with the runner's own python3 (3.12 on ubuntu-24.04)."""
+    """The jobs stage these two files alone and run them with the runner's own python3 (3.12 on ubuntu-24.04)."""
 
-    @pytest.mark.parametrize("module", [pr_guard, sys.modules["core.constants"]])
+    STAGED = [pytest.param(pr_guard, id="pr_guard"), pytest.param(sys.modules["core.constants"], id="constants")]
+
+    @pytest.mark.parametrize("module", STAGED)
     def test_parses_as_python_3_12(self, module):
         source = Path(module.__file__).read_text(encoding="utf-8")
         ast.parse(source, feature_version=(3, 12))
 
-    def test_imports_the_standard_library_only(self):
-        tree = ast.parse(Path(pr_guard.__file__).read_text(encoding="utf-8"))
+    @pytest.mark.parametrize("module", STAGED)
+    def test_imports_the_standard_library_only(self, module):
+        """Staged alone, a file can import neither a third-party package nor a sibling of its own."""
+        tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
         names = {a.name.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
         names |= {n.module.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
+        assert all(n.level == 0 for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)), "relative import"
         assert names <= sys.stdlib_module_names | {"__future__"}, names
 
 
@@ -281,6 +308,42 @@ class TestCheckCli:
             text=True,
         )
         assert result.returncode == 2 and result.stdout == "reason=guard_failed\n"
+
+    def test_a_too_deeply_nested_document_is_unreadable(self, staged):
+        result = run(staged, "check", "[" * 100_000 + "]" * 100_000, "--number", "13275")
+        assert (result.returncode, result.stdout) == (1, "reason=unreadable\n")
+
+
+class TestSpecIdCli:
+    """As the workflows call it: the value after `--`, so one that starts with a hyphen is a value too."""
+
+    @staticmethod
+    def _run(staged: Path, value: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, "-I", str(staged), "spec-id", "--", value], capture_output=True, text=True
+        )
+
+    @pytest.mark.parametrize("value", ["scatter-basic", "a", "a1-b2-c3", "x" * 100])
+    def test_a_spec_id_in_the_catalogues_shape_is_printed(self, staged, value):
+        result = self._run(staged, value)
+        assert (result.returncode, result.stdout) == (0, value + "\n")
+
+    @pytest.mark.parametrize(
+        "value", ["", "Scatter", "a--b", "-a", "a-", "a b", "a/b", "../a", "a\nb", "$(x)", "a;b", "x" * 101]
+    )
+    def test_anything_else_prints_nothing(self, staged, value):
+        result = self._run(staged, value)
+        assert (result.returncode, result.stdout) == (1, "")
+
+    def test_the_workflows_pass_the_value_after_a_double_dash(self):
+        workflows = Path(__file__).resolve().parents[4] / ".github" / "workflows"
+        calls = [
+            line
+            for path in workflows.glob("*.yml")
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if "pr_guard.py" in line and " spec-id " in line or '"$PR_GUARD" spec-id' in line
+        ]
+        assert calls and all("spec-id -- " in line for line in calls), calls
 
 
 class TestFilterCli:

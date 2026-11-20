@@ -354,6 +354,7 @@ def test_repair_records_render_freshness_without_failing(tmp_path, shell, ages, 
 )
 def test_a_failed_gate_is_named_in_the_crash_comment(tmp_path, markers, expected):
     env = {"PR_NUM": "7", "SPEC_ID": "spec-a", "LIBRARY": "plotly", "ATTEMPT": "2", "MODEL": "sonnet"}
+    env["GUARD_ALLOWED"] = "true"  # the guard step passed the pull request
     script = str(_step("impl-repair.yml", "Handle repair failure")["run"])
     result, calls = _run(script, tmp_path, tmp_path, REPOSITORY="o/r", RUN_ID="1", GH_MARKERS=markers, GATE="G1", **env)
     assert result.returncode == 0, result.stdout + result.stderr
@@ -376,6 +377,7 @@ def test_a_failed_gate_is_named_in_the_crash_comment(tmp_path, markers, expected
 def test_a_failed_hash_write_is_named_in_the_crash_comment(tmp_path, env, named):
     """ "Stage the render hash" failed after every gate passed: the comment says so instead of blaming Claude."""
     base = {"PR_NUM": "7", "SPEC_ID": "spec-a", "LIBRARY": "plotly", "ATTEMPT": "2", "MODEL": "sonnet", "GATE": ""}
+    base["GUARD_ALLOWED"] = "true"  # the guard step passed the pull request
     script = str(_step("impl-repair.yml", "Handle repair failure")["run"])
     result, calls = _run(script, tmp_path, tmp_path, REPOSITORY="o/r", RUN_ID="1", GH_MARKERS="0", **{**base, **env})
     assert result.returncode == 0, result.stdout + result.stderr

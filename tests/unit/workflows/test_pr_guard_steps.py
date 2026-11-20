@@ -26,6 +26,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +35,7 @@ import yaml
 
 from automation.scripts import pr_guard, regen_pick_pairs
 from tests.unit.workflows.pr_guard_support import (
+    CONSTANTS,
     GUARD,
     HEAD_SHA,
     LIBRARIES,
@@ -80,15 +82,36 @@ elif key == "issue view":
     print(os.environ.get("GH_ISSUE_TITLE", ""))
 elif key == "pr create":
     print("https://github.com/owner/repo/pull/124")
+elif key == "run list":
+    print(os.environ.get("GH_RUNS_JSON", "[]"))
 elif args[:1] == ["api"]:
-    if "/actions/" in " ".join(args):
+    joined = " ".join(args)
+    if "/actions/" in joined:
         sys.exit(1)
+    if "/contents/" in joined:
+        # A file of this repository at a ref, from $GH_CONTENTS_DIR.
+        path = joined.split("/contents/", 1)[1].split("?", 1)[0].split(" ", 1)[0]
+        source = os.path.join(os.environ.get("GH_CONTENTS_DIR", "/nonexistent"), path)
+        if not os.path.isfile(source):
+            print("HTTP 404", file=sys.stderr)
+            sys.exit(1)
+        sys.stdout.write(open(source, encoding="utf-8").read())
+        sys.exit(0)
     print(os.environ.get("GH_API_JSON", "[]"))
 """
 # Logs its arguments, then runs the real git.
 FAKE_GIT = f"""#!/bin/sh
 printf '%s\\n' "$*" >> "$SHIM_GIT_LOG"
 exec {REAL_GIT} "$@"
+"""
+# The runner's python3 in the jobs that stage the guard is the image's own: it
+# sees none of this repository's packages. The interpreter the virtual
+# environment was made from is such a one (the project is installed into the
+# environment, not into it), started without user site-packages and without
+# PYTHON* variables. Its working directory is on its path, as on the runner.
+BASE_PYTHON = getattr(sys, "_base_executable", None) or sys.executable
+FAKE_PYTHON = f"""#!/bin/sh
+exec {BASE_PYTHON} -s -E "$@"
 """
 WRITES = {
     "pr edit",
@@ -162,12 +185,22 @@ class Run:
         return [line for line in self.result.stdout.splitlines() if line.startswith("::error::")]
 
 
-def _run(script: str, tmp: Path, *, cwd: Path | None = None, shell=PIPEFAIL, stage: bool = True, **env: str) -> Run:
-    """Run a step script as Actions does, behind a staged guard, with fake `gh`, `git` and `sleep`."""
+def _run(
+    script: str,
+    tmp: Path,
+    *,
+    cwd: Path | None = None,
+    shell=PIPEFAIL,
+    stage: bool = True,
+    fake_gh: str = FAKE_GH,
+    **env: str,
+) -> Run:
+    """Run a step script as Actions does, behind a staged guard, with fake `gh`, `git`, `python3` and `sleep`."""
     assert "${{" not in script
     bin_dir = tmp / "bin"
     bin_dir.mkdir(exist_ok=True)
-    for name, body in (("gh", FAKE_GH), ("git", FAKE_GIT), ("sleep", "#!/bin/sh\nexit 0\n")):
+    fakes = (("gh", fake_gh), ("git", FAKE_GIT), ("python3", FAKE_PYTHON), ("sleep", "#!/bin/sh\nexit 0\n"))
+    for name, body in fakes:
         (bin_dir / name).write_text(body, encoding="utf-8")
         (bin_dir / name).chmod(0o755)
     runner = tmp / "runner"
@@ -226,6 +259,8 @@ FOREIGN = [
     pytest.param({"isCrossRepository": None}, "missing_field", id="null-cross-repository"),
     pytest.param({"headRepositoryOwner": None}, "missing_field", id="no-owner"),
     pytest.param({"headRepository": {"name": "other"}}, "cross_repository", id="other-repository"),
+    pytest.param({"author": {"login": "someone"}}, "author_mismatch", id="other-author"),
+    pytest.param({"baseRefName": "release"}, "base_mismatch", id="other-base"),
     pytest.param({"headRefName": f"{BRANCH}/extra"}, "branch_shape", id="extra-segment"),
     pytest.param({"headRefName": "implementation/Spec-A/plotly"}, "branch_shape", id="uppercase"),
     pytest.param({"headRefName": "implementation/../plotly"}, "branch_shape", id="traversal"),
@@ -259,16 +294,34 @@ class TestStagingStep:
         texts = {step["run"] for _, _, step in steps}
         assert len(texts) == 1, [f"{w}:{j}" for w, j, s in steps]
 
+    # The two spellings of "main, never the pull request's merge commit" for a
+    # job a pull-request event starts: one decides by the event, one is fixed.
+    PULL_REQUEST_EVENT_REFS = (
+        "${{ github.event_name == 'pull_request' && 'origin/main' || github.sha }}",
+        "origin/${{ github.event.repository.default_branch }}",
+    )
+
     def test_the_ref_is_the_workflows_own_commit_or_main(self):
         """On a pull-request event the workflow's commit is the pull request's merge commit."""
         for filename, job, step in _staging_steps():
             on = _workflow(filename).get("on") or _workflow(filename).get(True)
             ref = step["env"]["GUARD_REF"]
             if "pull_request" in on:
-                assert "github.sha" not in ref or "'origin/main'" in ref, (filename, job)
-                assert "main" in ref or "default_branch" in ref, (filename, job)
+                assert ref in self.PULL_REQUEST_EVENT_REFS, (filename, job, ref)
             else:
                 assert ref == "${{ github.sha }}", (filename, job)
+
+    @pytest.mark.parametrize(
+        ("event", "ref"), [("pull_request", "origin/main"), ("workflow_dispatch", "<sha>"), ("schedule", "<sha>")]
+    )
+    def test_the_event_ref_names_main_on_the_pull_request_event(self, event, ref):
+        """The `&& ||` expression, evaluated: swapping its branches would stage from the merge commit."""
+        expression = self.PULL_REQUEST_EVENT_REFS[0]
+        match = re.fullmatch(
+            r"\$\{\{ github\.event_name == 'pull_request' && '([^']+)' \|\| github\.sha \}\}", expression
+        )
+        assert match is not None
+        assert (match.group(1) if event == "pull_request" else "<sha>") == ref
 
     def test_the_library_list_comes_from_the_registry(self):
         (text,) = {step["run"] for _, _, step in _staging_steps()}
@@ -276,20 +329,58 @@ class TestStagingStep:
         for library in LIBRARIES.split():
             assert library not in text
 
-    @SHELLS
-    def test_stages_the_committed_guard_never_the_working_tree(self, tmp_path, shell):
+    @staticmethod
+    def _stage(tmp_path: Path, shell, constants: str | None = None) -> tuple[Run, Path]:
+        """Stage from a commit whose constants are `constants` (the repository's when None)."""
         repo = tmp_path / "repo"
         repo.mkdir()
         env = _git_env(tmp_path)
         _git(repo, env, "init", "-q", "-b", "main")
         sha = commit_guard_sources(repo, env)
-        # The working tree holds something else; the staged copy must not be it.
+        if constants is not None:
+            (repo / "core" / "constants.py").write_text(constants, encoding="utf-8")
+            _git(repo, env, "commit", "-q", "-am", "constants")
+            sha = _git(repo, env, "rev-parse", "HEAD")
+        # The working tree holds something else; the staged copies must not be it.
         (repo / "automation" / "scripts" / "pr_guard.py").write_text("raise SystemExit(0)\n", encoding="utf-8")
+        (repo / "core" / "constants.py").write_text('SUPPORTED_LIBRARIES = frozenset(["tree"])\n', encoding="utf-8")
         run = _run(_step("impl-review.yml", STAGE)["run"], tmp_path, cwd=repo, shell=shell, stage=False, GUARD_REF=sha)
+        return run, tmp_path / "runner" / "pr-guard"
+
+    @SHELLS
+    def test_stages_the_committed_guard_never_the_working_tree(self, tmp_path, shell):
+        run, staged = self._stage(tmp_path, shell)
         assert run.rc == 0, run.log
-        staged = tmp_path / "runner" / "pr-guard"
         assert (staged / "pr_guard.py").read_bytes() == GUARD.read_bytes()
         assert (staged / "libraries").read_text(encoding="utf-8").split() == LIBRARIES.split()
+
+    @SHELLS
+    def test_the_library_list_comes_from_the_staged_constants(self, tmp_path, shell):
+        """A list the repository's own package does not hold: only the staged copy can have given it."""
+        run, staged = self._stage(tmp_path, shell, 'SUPPORTED_LIBRARIES = frozenset(["zeta", "alpha"])\n')
+        assert run.rc == 0, run.log
+        assert (staged / "libraries").read_text(encoding="utf-8").split() == ["alpha", "zeta"]
+
+    @SHELLS
+    @pytest.mark.parametrize(
+        "constants",
+        [
+            "import yaml\nSUPPORTED_LIBRARIES = frozenset(['altair'])\n",
+            "from core import palette\nSUPPORTED_LIBRARIES = frozenset(['altair'])\n",
+        ],
+        ids=["third-party-import", "sibling-import"],
+    )
+    def test_constants_that_need_more_than_themselves_stop_the_job(self, tmp_path, shell, constants):
+        """On the runner, the staged file stands alone: an import it cannot satisfy is a refusal, loudly."""
+        run, staged = self._stage(tmp_path, shell, constants)
+        assert run.rc == 1, run.log
+        assert len(run.errors()) == 1 and run.errors()[0].startswith("::error::guard_failed")
+        assert not (staged / "libraries").exists()
+
+    def test_the_staging_interpreter_cannot_see_the_repositorys_packages(self, tmp_path):
+        """The check of the tests above: the runner-like python3 finds no `core` of its own."""
+        run = _run('cd "$RUNNER_TEMP" && python3 -c "import core"', tmp_path, stage=False)
+        assert run.rc != 0 and "ModuleNotFoundError" in run.log
 
     @SHELLS
     def test_a_ref_without_the_guard_stops_the_job(self, tmp_path, shell):
@@ -340,10 +431,10 @@ def _extract(tmp: Path, cwd: Path, pr: dict[str, Any] | None, *, shell=PIPEFAIL,
     )
 
 
-def _assert_refused(run: Run, code: str, number: str = "7") -> None:
-    """No outputs, no writes, one error line and one summary line with the fixed code."""
+def _assert_refused(run: Run, code: str, number: str = "7", outputs: dict[str, str] | None = None) -> None:
+    """No outputs (but `outputs`), no writes, one error line and one summary line with the fixed code."""
     assert run.rc != 0, run.log
-    assert run.outputs == {}
+    assert run.outputs == (outputs or {})
     errors = run.errors()
     assert len(errors) == 1, run.log
     assert errors[0].startswith(f"::error::PR #{number} refused ({code}): not one of the pipeline's own pull requests")
@@ -408,8 +499,9 @@ class TestImplReview:
         assert "cut -d" not in script
 
     def test_the_checkout_takes_the_checked_head(self):
-        script = _step("impl-review.yml", "Checkout PR code")["run"]
-        assert "${{ steps.pr.outputs.head_sha }}" in script
+        step = _step("impl-review.yml", "Checkout PR code")
+        assert step["env"]["HEAD_SHA"] == "${{ steps.pr.outputs.head_sha }}"
+        assert 'git fetch origin "$HEAD_SHA"' in step["run"] and 'git checkout "$HEAD_SHA"' in step["run"]
 
     def test_nothing_after_a_refusal_writes_to_the_pull_request(self):
         """A refusal fails the step; only `always()` / `failure()` steps run after it."""
@@ -426,8 +518,16 @@ class TestImplReview:
 
 
 class TestImplRepair:
+    REFUSED = {"refused": "true"}
+
     def _check(self, tmp: Path, pr: dict[str, Any], *, shell=PIPEFAIL, **env: str) -> Run:
-        values = {"REPOSITORY": REPO, "PR_NUMBER": "7", "SPEC_ID_INPUT": "spec-a", "LIBRARY_INPUT": "plotly"}
+        values = {
+            "REPOSITORY": REPO,
+            "PR_NUMBER": "7",
+            "SPEC_ID_INPUT": "spec-a",
+            "LIBRARY_INPUT": "plotly",
+            "ATTEMPT_INPUT": "2",
+        }
         return _run(
             _step("impl-repair.yml", CHECK_STEP)["run"], tmp, shell=shell, GH_PR_JSON=json.dumps(pr), **values | env
         )
@@ -436,13 +536,24 @@ class TestImplRepair:
     @pytest.mark.parametrize(("change", "code"), FOREIGN)
     def test_a_refused_pull_request_is_never_fetched(self, tmp_path, shell, change, code):
         run = self._check(tmp_path, _foreign(change), shell=shell)
-        _assert_refused(run, code)
+        # A decided refusal says so, which keeps the failure handler off the pull request.
+        _assert_refused(run, code, outputs=self.REFUSED)
         assert run.git == []
 
     @pytest.mark.parametrize(("spec", "library"), [("spec-b", "plotly"), ("spec-a", "altair")])
     def test_inputs_that_differ_from_the_branch_are_refused(self, tmp_path, spec, library):
         run = self._check(tmp_path, own_pr(7, BRANCH), SPEC_ID_INPUT=spec, LIBRARY_INPUT=library)
-        _assert_refused(run, "input_mismatch")
+        _assert_refused(run, "input_mismatch", outputs=self.REFUSED)
+
+    @pytest.mark.parametrize("attempt", ["", "0", "10", "2;x", "a"])
+    def test_an_attempt_that_is_no_small_number_is_refused(self, tmp_path, attempt):
+        run = self._check(tmp_path, own_pr(7, BRANCH), ATTEMPT_INPUT=attempt)
+        _assert_refused(run, "bad_input", outputs=self.REFUSED)
+        assert run.gh == []
+
+    def test_an_unreadable_pull_request_is_no_decided_refusal(self, tmp_path):
+        """The failure handler checks it again itself; one of the pipeline's own then gets its retry."""
+        _assert_refused(self._check(tmp_path, own_pr(7, BRANCH), GH_FAIL="1"), "pr_unreadable")
 
     @SHELLS
     def test_the_pipelines_own_pull_request_passes(self, tmp_path, shell):
@@ -457,9 +568,75 @@ class TestImplRepair:
         assert checkout["env"]["BRANCH"] == "${{ steps.guard.outputs.branch }}"
         assert "gh " not in checkout["run"]
 
-    def test_the_failure_handler_runs_only_for_a_checked_pull_request(self):
+    def test_the_failure_handler_stays_off_a_refused_pull_request(self):
         handler = _step("impl-repair.yml", "Handle repair failure")
-        assert handler["if"] == "failure() && steps.guard.outputs.allowed == 'true'"
+        assert handler["if"] == "failure() && steps.guard.outputs.refused != 'true'"
+        assert handler["env"]["GUARD_ALLOWED"] == "${{ steps.guard.outputs.allowed }}"
+        assert handler["env"]["GUARD_REF"] == "${{ github.sha }}"
+
+    def _handler(self, tmp: Path, pr: dict[str, Any], *, stage: bool = True, allowed: str = "", **env: str) -> Run:
+        """ "Handle repair failure" after a crash with no gate and no stop, its retry budget unspent."""
+        values = {
+            "GUARD_ALLOWED": allowed,
+            "GUARD_REF": "a" * 40,
+            "PR_NUM": "7",
+            "SPEC_ID": "spec-a",
+            "LIBRARY": "plotly",
+            "ATTEMPT": "2",
+            "MODEL": "sonnet",
+            "REPOSITORY": REPO,
+            "RUN_ID": "1",
+            "CLAUDE_STOPPED": "false",
+            "GATE": "",
+            "RENDER_HASH_OUTCOME": "",
+            # The retry-marker read: no earlier marker comment.
+            "GH_API_JSON": "0",
+        }
+        script = _step("impl-repair.yml", "Handle repair failure")["run"].replace("/tmp/", f"{tmp}/")
+        return _run(script, tmp, stage=stage, GH_PR_JSON=json.dumps(pr), **values | env)
+
+    @staticmethod
+    def _retried(run: Run) -> bool:
+        return [c[:3] for c in run.gh if c[:2] == ["workflow", "run"]] == [["workflow", "run", "impl-repair.yml"]]
+
+    @SHELLS
+    def test_a_run_that_failed_before_the_check_still_retries_the_pipelines_own(self, tmp_path, shell):
+        run = self._handler(tmp_path, own_pr(7, BRANCH), shell=shell)
+        assert run.rc == 0, run.log
+        assert self._retried(run)
+        assert ["pr", "edit", "7", "--add-label", "ai-rejected"] in run.gh
+
+    def test_a_run_that_never_staged_the_guard_stages_it_from_its_own_commit(self, tmp_path):
+        """The credentials or the checkout failed: the handler fetches the guard at GUARD_REF itself."""
+        contents = tmp_path / "contents"
+        for source, rel in ((GUARD, "automation/scripts/pr_guard.py"), (CONSTANTS, "core/constants.py")):
+            (contents / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, contents / rel)
+        run = self._handler(tmp_path, own_pr(7, BRANCH), stage=False, GH_CONTENTS_DIR=str(contents))
+        assert run.rc == 0, run.log
+        fetched = [c for c in run.gh if c[:1] == ["api"] and "/contents/" in " ".join(c)]
+        assert len(fetched) == 2 and all(f"?ref={'a' * 40}" in " ".join(c) for c in fetched)
+        assert self._retried(run)
+
+    @pytest.mark.parametrize(("change", "code"), FOREIGN)
+    def test_a_pull_request_the_handler_cannot_pass_gets_nothing(self, tmp_path, change, code):
+        run = self._handler(tmp_path, _foreign(change))
+        assert run.rc == 0, run.log
+        assert _writes(run.gh) == []
+        assert "could not be checked now" in run.log
+
+    def test_a_guard_that_cannot_be_staged_gets_nothing(self, tmp_path):
+        run = self._handler(tmp_path, own_pr(7, BRANCH), stage=False, GH_CONTENTS_DIR=str(tmp_path / "none"))
+        assert run.rc == 0 and _writes(run.gh) == []
+
+    def test_an_unreadable_pull_request_gets_nothing(self, tmp_path):
+        run = self._handler(tmp_path, own_pr(7, BRANCH), GH_FAIL="1")
+        assert run.rc == 0 and _writes(run.gh) == []
+
+    def test_a_checked_pull_request_needs_no_second_check(self, tmp_path):
+        run = self._handler(tmp_path, _foreign({"isCrossRepository": True}), allowed="true")
+        assert self._retried(run)
+        assert not [c for c in run.gh if c[:2] == ["pr", "view"]]
 
     def test_the_feedback_is_the_reviewers_comment_only(self, tmp_path):
         comments = [
@@ -669,19 +846,30 @@ class TestImplMergeHead:
         origin.commit(origin.work, {"plots/spec-a/implementations/python/plotly.py": "import os\n"}, "later")
         self._refused(origin.run(origin.push_branch()), "is not a merge")
 
-    def _evil_merge(self, origin: MergeOrigin, name: str) -> None:
+    def _altered_merge(self, origin: MergeOrigin, name: str) -> None:
         origin.move_main(name)
         _git(origin.work, origin.env, "merge", "-q", "--no-ff", "--no-commit", "main")
         (origin.work / "core" / f"{name}-extra.py").write_text("z = 3\n", encoding="utf-8")
         _git(origin.work, origin.env, "add", "-A")
         _git(origin.work, origin.env, "commit", "-q", "-m", "merge main")
 
+    @pytest.mark.parametrize(("merges", "merged"), [(8, True), (9, False)])
+    def test_the_chain_is_bounded_at_eight_merges(self, origin, merges, merged):
+        for i in range(merges):
+            origin.move_main(f"m{i}")
+            _git(origin.work, origin.env, "merge", "-q", "--no-ff", "--no-edit", "main")
+        run = origin.run(origin.push_branch())
+        if merged:
+            assert run.rc == 0, run.log
+        else:
+            self._refused(run, "not within 8 merges of main")
+
     def test_a_merge_that_carries_a_change_of_its_own_is_not_merged(self, origin):
-        self._evil_merge(origin, "y")
+        self._altered_merge(origin, "y")
         self._refused(origin.run(origin.push_branch()), "is not the clean merge of its parents")
 
     def test_a_chain_with_one_altered_merge_is_not_merged(self, origin):
-        self._evil_merge(origin, "y")
+        self._altered_merge(origin, "y")
         origin.move_main("w")
         _git(origin.work, origin.env, "merge", "-q", "--no-ff", "--no-edit", "main")
         self._refused(origin.run(origin.push_branch()), "is not the clean merge of its parents")
@@ -696,6 +884,130 @@ class TestImplMergeHead:
     def test_a_pull_request_that_no_longer_passes_the_guard_is_not_merged(self, origin):
         run = origin.run(origin.validated, isCrossRepository=True)
         self._refused(run, "no longer passes the guard (reason=cross_repository)")
+
+
+# A `gh` that keeps the pull request's state in $MERGE_STATE and its head on
+# the origin's branch. `pr update-branch` merges main into the branch the way
+# GitHub does (parents: the head, then main) once main moved; the first
+# `pr merge` merges, deletes the branch and loses its answer (a 502). After
+# that, MERGED_VIEWS=fail makes every `pr view` fail, MERGED_VIEWS=state only
+# the state probe; a second `pr merge` answers "already merged" with exit
+# $ALREADY_MERGED_RC.
+FAKE_GH_MERGE = """#!/usr/bin/env python3
+import json, os, subprocess, sys
+args = sys.argv[1:]
+with open(os.environ["GH_LOG"], "a", encoding="utf-8") as f:
+    f.write(json.dumps(args) + "\\n")
+path = os.environ["MERGE_STATE"]
+st = json.load(open(path))
+origin, branch, work = os.environ["MERGE_ORIGIN"], os.environ["MERGE_BRANCH"], os.environ["MERGE_WORK"]
+
+def git(*a, cwd=origin):
+    return subprocess.run(["git", "-C", cwd, *a], check=True, capture_output=True, text=True).stdout.strip()
+
+def head():
+    r = subprocess.run(["git", "-C", origin, "rev-parse", "-q", "--verify", "refs/heads/" + branch],
+                       capture_output=True, text=True)
+    return r.stdout.strip() or st["last_head"]
+
+def save():
+    json.dump(st, open(path, "w"))
+
+def bad_gateway():
+    print("HTTP 502: Bad Gateway", file=sys.stderr)
+    sys.exit(1)
+
+key = " ".join(args[:2])
+fields = args[args.index("--json") + 1] if "--json" in args else ""
+views = os.environ.get("MERGED_VIEWS", "")
+if key == "pr view":
+    if st["merged"] and (views == "fail" or (views == "state" and fields == "state")):
+        bad_gateway()
+    state = "MERGED" if st["merged"] else "OPEN"
+    if fields == "state":
+        print(state)
+    else:
+        pr = json.loads(os.environ["GH_PR_JSON"])
+        print(json.dumps({**pr, "state": state, "headRefOid": head()}))
+elif key == "pr update-branch":
+    if st["merged"]:
+        sys.exit(1)
+    if os.environ.get("UPDATE_MOVES_MAIN") == "1" and not st.get("updated"):
+        git("fetch", "-q", "origin", cwd=work)
+        git("checkout", "-q", "-B", "update", "origin/" + branch, cwd=work)
+        git("merge", "-q", "--no-ff", "-m", "Merge branch 'main'", "origin/main", cwd=work)
+        git("push", "-q", "origin", "update:refs/heads/" + branch, cwd=work)
+        st["updated"] = True
+        save()
+elif key == "pr merge":
+    target = args[args.index("--match-head-commit") + 1]
+    if st["merged"]:
+        print("! Pull request owner/repo#7 was already merged", file=sys.stderr)
+        sys.exit(int(os.environ.get("ALREADY_MERGED_RC", "1")))
+    if target != head():
+        print("GraphQL: Head branch was modified. Review and try the merge again.", file=sys.stderr)
+        sys.exit(1)
+    st.update(merged=True, last_head=head(), merges=st.get("merges", 0) + 1)
+    save()
+    git("update-ref", "-d", "refs/heads/" + branch)
+    bad_gateway()
+"""
+
+
+class TestImplMergeLostAnswer:
+    """`gh pr merge` merged on the server, but its answer was lost; the branch is gone with it."""
+
+    @pytest.fixture
+    def origin(self, tmp_path: Path) -> MergeOrigin:
+        return MergeOrigin(tmp_path)
+
+    def _run(self, origin: MergeOrigin, *, shell, update: bool, views: str, already_rc: str) -> tuple[Run, dict]:
+        tmp = origin.tmp
+        if update:
+            origin.move_main("y")
+        state = tmp / "merge-state.json"
+        state.write_text(json.dumps({"merged": False, "last_head": ""}), encoding="utf-8")
+        update_clone = tmp / "update-clone"
+        subprocess.run([REAL_GIT, "clone", "-q", str(origin.origin), str(update_clone)], env=origin.env, check=True)
+        script = _step("impl-merge.yml", "Merge PR to main (with retry)", "merge")["run"].replace("/tmp/", f"{tmp}/")
+        run = _run(
+            script,
+            tmp,
+            cwd=origin.ws,
+            shell=shell,
+            PR_NUM="7",
+            REPOSITORY=REPO,
+            HAS_ADMIN_TOKEN="true",
+            BRANCH=BRANCH,
+            VALIDATED_SHA=origin.validated,
+            SPEC_ID="spec-a",
+            LIBRARY="plotly",
+            GH_PR_JSON=json.dumps(own_pr(7, BRANCH)),
+            MERGE_STATE=str(state),
+            MERGE_ORIGIN=str(origin.origin),
+            MERGE_BRANCH=BRANCH,
+            MERGE_WORK=str(update_clone),
+            MERGED_VIEWS=views,
+            UPDATE_MOVES_MAIN="1" if update else "0",
+            ALREADY_MERGED_RC=already_rc,
+            GIT_CONFIG_GLOBAL=origin.env["GIT_CONFIG_GLOBAL"],
+            GIT_AUTHOR_NAME="t",
+            GIT_AUTHOR_EMAIL="t@example.invalid",
+            GIT_COMMITTER_NAME="t",
+            GIT_COMMITTER_EMAIL="t@example.invalid",
+            fake_gh=FAKE_GH_MERGE,
+        )
+        return run, json.loads(state.read_text(encoding="utf-8"))
+
+    @SHELLS
+    @pytest.mark.parametrize("update", [False, True], ids=["head-unchanged", "head-an-update-merge"])
+    @pytest.mark.parametrize("views", ["state", "fail"], ids=["state-probe-fails", "every-view-fails"])
+    @pytest.mark.parametrize("already_rc", ["0", "1"], ids=["already-merged-exit-0", "already-merged-exit-1"])
+    def test_a_merged_pull_request_ends_as_merged(self, origin, shell, update, views, already_rc):
+        run, state = self._run(origin, shell=shell, update=update, views=views, already_rc=already_rc)
+        assert run.rc == 0, run.log
+        assert state["merged"] and state["merges"] == 1
+        assert run.errors() == []
 
 
 # --- impl-review-retry -------------------------------------------------------------------------
@@ -791,24 +1103,145 @@ class TestWatchdog:
         assert "could not be checked against the pull request guard" in run.log
         assert "::notice::Watchdog scan complete" in run.log
 
+    # Both places of section B that ask whether a pair has an open PR.
+    SECTION_B = pytest.mark.parametrize(
+        ("label", "why"),
+        [("generate:plotly", "stuck pending"), ("impl:plotly:failed", "failed")],
+        ids=["generate-label", "failed-label"],
+    )
+
     @pytest.mark.parametrize(
         ("change", "retried"),
         [
             pytest.param({"isCrossRepository": True}, True, id="foreign-pr-is-no-open-pr"),
+            pytest.param({"author": {"login": "someone"}}, True, id="foreign-author-is-no-open-pr"),
             pytest.param({"headRefName": "implementation/spec-a/plotlyx"}, True, id="prefix-match-is-no-open-pr"),
             pytest.param({"headRefName": "implementation/spec-b/plotly"}, True, id="another-pair-is-no-open-pr"),
             pytest.param({}, False, id="own-open-pr-blocks-the-retry"),
         ],
     )
-    def test_a_generation_retry_counts_only_the_pipelines_own_open_pull_request(self, tmp_path, change, retried):
+    @SECTION_B
+    def test_a_generation_retry_counts_only_the_pipelines_own_open_pull_request(
+        self, tmp_path, change, retried, label, why
+    ):
         """Section B: whether the pair has an open PR, read from a `head:` search."""
-        issues = [{"number": 42, "labels": [{"name": "generate:plotly"}], "updatedAt": STALE}]
+        issues = [{"number": 42, "labels": [{"name": label}], "updatedAt": STALE}]
         # The fake answers every `pr list` with this one PR, section A's listing included.
         pr = {**own_pr(5, BRANCH, labels=[{"name": "ai-approved"}], updatedAt=STALE), **change}
         run = _scan(tmp_path, [pr], DRY_RUN="true", GH_ISSUES_JSON=json.dumps(issues), GH_ISSUE_TITLE="[spec-a] A spec")
         assert run.rc == 0, run.log
-        dispatch = "[dry-run] Issue #42: generate (stuck pending) plotly → gh workflow run impl-generate.yml"
+        dispatch = f"[dry-run] Issue #42: generate ({why}) plotly → gh workflow run impl-generate.yml"
         assert (dispatch in run.log) is retried
+
+    @SECTION_B
+    @pytest.mark.parametrize(
+        "title", ["[Spec-A] x", "[spec-a/../b] x", "[spec a] x", "[$(x)] x", "[spec-a;b] x", "[-a] x", "no brackets"]
+    )
+    def test_a_title_without_a_spec_id_in_the_catalogues_shape_starts_nothing(self, tmp_path, label, why, title):
+        issues = [{"number": 42, "labels": [{"name": label}], "updatedAt": STALE}]
+        run = _scan(tmp_path, [], DRY_RUN="true", GH_ISSUES_JSON=json.dumps(issues), GH_ISSUE_TITLE=title)
+        assert run.rc == 0, run.log
+        assert "cannot resolve spec_id from title" in run.log
+        assert "impl-generate.yml" not in run.log and "$(x)" not in run.log
+
+    @SECTION_B
+    def test_a_label_without_a_registered_library_starts_nothing(self, tmp_path, label, why):
+        issues = [{"number": 42, "labels": [{"name": label.replace("plotly", "notalib")}], "updatedAt": STALE}]
+        run = _scan(tmp_path, [], DRY_RUN="true", GH_ISSUES_JSON=json.dumps(issues), GH_ISSUE_TITLE="[spec-a] x")
+        assert run.rc == 0, run.log
+        assert "names no registered library" in run.log and "impl-generate.yml" not in run.log
+
+    def test_a_generation_retry_waits_for_its_run_by_title(self, tmp_path):
+        """The run list is matched in jq with the values as arguments; the count is read only as digits."""
+        issues = [{"number": 42, "labels": [{"name": "generate:plotly"}], "updatedAt": STALE}]
+        runs = [{"displayTitle": "Generate: plotly for spec-a", "createdAt": "2999-01-01T00:00:00Z"}]
+        run = _scan(
+            tmp_path, [], GH_ISSUES_JSON=json.dumps(issues), GH_ISSUE_TITLE="[spec-a] x", GH_RUNS_JSON=json.dumps(runs)
+        )
+        assert run.rc == 0, run.log
+        assert ["issue", "edit", "42", "--add-label", "watchdog:retried-plotly"] in run.gh
+
+    def test_every_listing_of_the_scan_goes_through_the_guard(self):
+        """Two listings, the scan's and the one inside `open_own_prs`; both call sites of B use the function."""
+        script = _code_only(_step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"])
+        assert len(re.findall(r"gh pr list\b", script)) == 2
+        assert script.count('open_pr=$(open_own_prs "$spec_id" "$lib")') == 2
+
+
+# --- impl-generate's inputs --------------------------------------------------------------------
+
+
+class TestImplGenerateInputs:
+    """Dispatch inputs and event values reach "Extract inputs" through env:, shape-checked before first use."""
+
+    DISPATCH = {
+        "EVENT_NAME": "workflow_dispatch",
+        "SPEC_ID_INPUT": "spec-a",
+        "LIBRARY_INPUT": "plotly",
+        "ISSUE_INPUT": "42",
+        "MODEL_INPUT": "sonnet",
+        "REGEN_GATE_INPUT": "true",
+        "EVENT_ISSUE_NUMBER": "",
+        "LABEL_NAME": "",
+        "ISSUE_TITLE": "",
+        "REGEN_GATE": "true",
+        "SOURCE_REF_INPUT": "",
+        "SOURCE_MODEL_INPUT": "",
+    }
+
+    def _extract(self, tmp: Path, *, shell=PIPEFAIL, **change: str) -> Run:
+        script = _step("impl-generate.yml", "Extract inputs")["run"]
+        return _run(script, tmp, shell=shell, **self.DISPATCH | change)
+
+    @SHELLS
+    @pytest.mark.parametrize(
+        ("name", "value", "input_name"),
+        [
+            ("SPEC_ID_INPUT", "spec-a$(x)", "specification_id"),
+            ("SPEC_ID_INPUT", "spec-a\nb", "specification_id"),
+            ("SPEC_ID_INPUT", "Spec-A", "specification_id"),
+            ("SPEC_ID_INPUT", "-spec", "specification_id"),
+            ("SPEC_ID_INPUT", "../spec", "specification_id"),
+            ("LIBRARY_INPUT", "notalib", "library"),
+            ("LIBRARY_INPUT", "plotly;x", "library"),
+            ("ISSUE_INPUT", "42;x", "issue_number"),
+            ("ISSUE_INPUT", "0", "issue_number"),
+            ("MODEL_INPUT", "gpt", "model"),
+            ("REGEN_GATE_INPUT", "yes", "regen_gate"),
+        ],
+    )
+    def test_a_value_without_its_shape_stops_the_job(self, tmp_path, shell, name, value, input_name):
+        run = self._extract(tmp_path, shell=shell, **{name: value})
+        assert run.rc == 1 and run.outputs == {}
+        assert run.errors() == [
+            f"::error::bad_input: {input_name} does not have its expected shape; nothing was generated"
+        ]
+        assert "$(x)" not in run.log and ";x" not in run.log
+
+    @pytest.mark.parametrize(
+        ("title", "label"),
+        [("[spec--a] x", "generate:plotly"), ("[spec-a] x", "generate:notalib"), ("[spec-a] x", "generate:")],
+    )
+    def test_the_label_trigger_is_checked_the_same_way(self, tmp_path, title, label):
+        run = self._extract(
+            tmp_path,
+            EVENT_NAME="issues",
+            SPEC_ID_INPUT="",
+            LIBRARY_INPUT="",
+            MODEL_INPUT="",
+            EVENT_ISSUE_NUMBER="42",
+            ISSUE_TITLE=title,
+            LABEL_NAME=label,
+        )
+        assert run.rc == 1 and run.outputs == {}
+
+    def test_no_input_reaches_the_script_as_text(self):
+        """Every value the step reads from a dispatch or an event is in env:, none in the script."""
+        step = _step("impl-generate.yml", "Extract inputs")
+        assert "${{" not in step["run"]
+        for name in ("specification_id", "library", "issue_number", "model", "regen_gate"):
+            assert f"${{{{ inputs.{name} }}}}" in step["env"].values(), name
+        assert "${{ github.event.issue.number }}" in step["env"].values()
 
 
 # --- impl-generate's lookup of an existing pull request ---------------------------------------
@@ -869,10 +1302,21 @@ class TestImplGenerateLookup:
 
 # --- every workflow that takes a pull request ---------------------------------------------------
 
-# Reads a pull request by number, or picks pull requests from a list.
-READS_A_PULL_REQUEST = re.compile(r"gh pr view|pr_number|gh pr list")
-# A job takes a pull request by number from its trigger.
-NUMBER_FROM_TRIGGER = re.compile(r"inputs\.pr_number|client_payload\.pr_number|github\.event\.pull_request\.number")
+# What the scan covers, and no more (docs/workflows/overview.md says the same):
+# a workflow reads a pull request when its text has `gh pr view`, `gh pr list`,
+# `gh pr checkout`, `gh pr diff`, `pr_number`, a `/pulls` API path,
+# `refs/pull/` or `head_ref`; a job takes a pull request number from
+# `inputs.pr_number`, `client_payload.pr_number`,
+# `github.event.pull_request.number` or a `needs.<job>.outputs.pr_number`. A
+# number under another name, or a read through another API call, is not found.
+READS_A_PULL_REQUEST = re.compile(r"gh pr (view|list|checkout|diff)|pr_number|/pulls\b|refs/pull/|head_ref")
+NUMBER_FROM_TRIGGER = re.compile(
+    r"inputs\.pr_number|client_payload\.pr_number|github\.event\.pull_request\.number"
+    r"|needs\.[A-Za-z0-9_-]+\.outputs\.pr_number"
+)
+# The only checkout refs allowed before the guard: none (the workflow's own
+# commit), or the default branch.
+CHECKOUT_REFS_BEFORE_THE_GUARD = ("", "${{ github.event.repository.default_branch }}")
 GUARD_RUN = re.compile(r'pr_guard\.py" (check|filter)|"\$PR_GUARD" filter')
 # Jobs that take a pull request of another of the pipeline's shapes, each with
 # the check that stands in for the guard there and must stay in the job.
@@ -900,10 +1344,21 @@ REPOSITORY_FILTERS = (
     "select(.isCrossRepository == false)",
     "jq -r '.isCrossRepository'",
 )
+# Listings that only hold work back and never pick a pull request to act on:
+# they count every pull request, a fork's included (a fork's open edit is one
+# the held-back work could race). Each must stay a bare count.
+HOLD_BACK_ONLY = {("daily-regen.yml", "Skip-gate — open PRs touching this spec?")}
+# A `gh pr list` in command position (not inside a message), any flag spelling.
+LISTING = re.compile(r"(?:^|[\s(|;&])gh pr list(?=\s)")
 
 
 def _reading_workflows() -> list[str]:
-    return [p.name for p in sorted(WORKFLOWS.glob("*.yml")) if READS_A_PULL_REQUEST.search(p.read_text("utf-8"))]
+    """The workflows whose text, comments left out, reads a pull request."""
+    return [
+        p.name
+        for p in sorted(WORKFLOWS.glob("*.yml"))
+        if READS_A_PULL_REQUEST.search(_code_only(p.read_text(encoding="utf-8")))
+    ]
 
 
 def _run_scripts(filename: str) -> list[tuple[str, dict[str, Any]]]:
@@ -913,7 +1368,7 @@ def _run_scripts(filename: str) -> list[tuple[str, dict[str, Any]]]:
 def _listings(script: str) -> list[str]:
     """Each `gh pr list` command of a script, its continuation lines joined."""
     joined = re.sub(r"\\\n\s*", " ", _code_only(script))
-    return [line[m.start() :] for line in joined.splitlines() for m in re.finditer(r"gh pr list\s+--", line)]
+    return [line[m.start() :].lstrip(" (|;&") for line in joined.splitlines() for m in LISTING.finditer(line)]
 
 
 class TestEveryPullRequestReader:
@@ -966,12 +1421,13 @@ class TestEveryPullRequestReader:
         for step in steps[:guard_at]:
             assert not BEFORE_THE_GUARD.search(_code_only(step.get("run", ""))), (filename, job, step.get("name"))
             ref = str((step.get("with") or {}).get("ref", ""))
-            assert "pull_request.head" not in ref and "steps." not in ref, (filename, job, step.get("name"))
+            assert ref in CHECKOUT_REFS_BEFORE_THE_GUARD, (filename, job, step.get("name"), ref)
         script = _code_only(steps[guard_at]["run"])
         check = script.index('pr_guard.py" check')
         for match in BEFORE_THE_GUARD.finditer(script):
             assert match.start() > check, (filename, job, match.group(0))
-        output = script.find("GITHUB_OUTPUT")
+        # A refusal may say it refused (a fixed flag); nothing else is written before the check.
+        output = script.replace('echo "refused=true" >> "$GITHUB_OUTPUT"', "").find("GITHUB_OUTPUT")
         assert output == -1 or output > check, (filename, job)
 
     @pytest.mark.parametrize("filename", [p.name for p in sorted(WORKFLOWS.glob("*.yml"))])
@@ -980,9 +1436,81 @@ class TestEveryPullRequestReader:
             listings = _listings(step["run"])
             if not listings:
                 continue
+            if (filename, step.get("name")) in HOLD_BACK_ONLY:
+                for listing in listings:
+                    assert "--json number --jq 'length'" in listing, (filename, listing)
+                continue
             for listing in listings:
                 assert "isCrossRepository" in listing or "GUARD_FIELDS" in listing, (filename, job, listing)
             assert any(f in step["run"] for f in REPOSITORY_FILTERS), (filename, job, step.get("name"))
+
+    def test_the_hold_back_listings_still_exist(self):
+        for filename, name in HOLD_BACK_ONLY:
+            assert _listings(_step(filename, name)["run"]), (filename, name)
+
+    def test_a_listing_under_another_flag_spelling_is_found(self):
+        script = 'X=$(gh pr list -R "$REPO" --json number | jq length)\necho "gh pr list failed"'
+        assert _listings(script) == ['gh pr list -R "$REPO" --json number | jq length)']
+
+
+# Expressions a `run:` script may hold: values that cannot carry text from
+# outside (an issue, a pull request, a comment, a branch name, a dispatch).
+SAFE_EXPRESSIONS = re.compile(
+    r"github\.(sha|repository|run_id|event_name|event\.issue\.number|event\.pull_request\.number"
+    r"|event\.pull_request\.(base|head)\.sha|event\.merge_group\.(base|head)_sha)"
+    r"|runner\.temp|secrets\.[A-Za-z0-9_]+|vars\.[A-Za-z0-9_]+|steps\.guard\.outputs\.[a-z_]+"
+)
+# The pipeline's privileged workflows: none of these may paste anything else.
+PIPELINE = re.compile(r"impl-.*|bulk-generate|daily-regen|watchdog-stuck-jobs|spec-create|report-validate")
+# Elsewhere, values only this repository's writers set, listed so that a new
+# one is a decision: the base branch of CI, a boolean input of CI, and the
+# changed spec and implementation paths of a push to main.
+KNOWN_ELSEWHERE = {
+    ("ci-changelog.yml", "github.base_ref"),
+    ("ci-tests.yml", "inputs.force_run"),
+    ("sync-labels.yml", "steps.detect.outputs.specs"),
+    ("sync-labels.yml", "steps.detect.outputs.impls"),
+}
+
+
+def _run_expressions() -> list[tuple[str, str, str]]:
+    return [
+        (path.name, str(step.get("name")), match.group(1))
+        for path in sorted(WORKFLOWS.glob("*.yml"))
+        for _, step in _run_scripts(path.name)
+        for match in EXPRESSION.finditer(step["run"])
+    ]
+
+
+class TestNoOutsideTextInRunScripts:
+    def test_no_run_script_pastes_a_value_that_can_carry_outside_text(self):
+        """Such values go through `env:` and are checked for their shape there."""
+        found = [
+            (filename, name, expression)
+            for filename, name, expression in _run_expressions()
+            if not SAFE_EXPRESSIONS.fullmatch(expression)
+            and (PIPELINE.fullmatch(filename.removesuffix(".yml")) or (filename, expression) not in KNOWN_ELSEWHERE)
+        ]
+        assert found == []
+
+    def test_the_known_exceptions_still_exist(self):
+        present = {(filename, expression) for filename, _, expression in _run_expressions()}
+        assert KNOWN_ELSEWHERE <= present
+
+    @pytest.mark.parametrize(
+        "expression",
+        [
+            "inputs.specification_id",
+            "github.event.issue.title",
+            "github.event.comment.body",
+            "github.head_ref",
+            "github.event.pull_request.head.ref",
+            "steps.pr.outputs.branch",
+            "matrix.spec_id",
+        ],
+    )
+    def test_values_that_can_carry_outside_text_are_not_safe(self, expression):
+        assert not SAFE_EXPRESSIONS.fullmatch(expression)
 
 
 class TestTheScriptsListings:
