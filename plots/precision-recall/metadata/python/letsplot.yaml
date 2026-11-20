@@ -2,44 +2,67 @@ library: letsplot
 language: python
 specification_id: precision-recall
 created: '2025-12-26T19:22:34Z'
-updated: '2026-05-10T05:47:58Z'
-generated_by: claude-haiku
-workflow_run: 25620955706
+updated: '2026-11-20T16:45:37Z'
+generated_by: claude-sonnet
+workflow_run: 44774960654
 issue: 2274
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.14.10
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/python/letsplot/plot-dark.html
-quality_score: 91
+quality_score: 76
 review:
   strengths:
-  - Correct precision-recall curve with stepped line style
-  - Complete iso-F1 reference contours with clear labels
-  - Excellent theme-adaptive styling in both light and dark renders
-  - Clear legibility with proper text colors and sizes
-  - All specification requirements implemented
-  - Clean, reproducible code with deterministic data generation
+  - Correct stepped PR curve through computed threshold points with AP 0.920 in the
+    legend, clearly tied to the curve
+  - Horizontal dashed random baseline at the 20% positive ratio, labeled, in a distinct
+    Imprint hue and linetype
+  - Faint dotted iso-F1 contours, each labeled with its F1 value, subordinate to the
+    curve
+  - Theme tokens threaded through all chrome; both renders readable and data colors
+    identical
+  - Correct 3200x1800 canvas via ggsize(800, 450) + scale 4, plus HTML export
   weaknesses:
-  - Limited use of lets-plot distinctive features beyond standard ggplot2 API
-  - Design excellence is competent but not exceptional - could benefit from more visual
-    polish
+  - 'VQ-02 (both): the ''F1=0.6'' label at recall ~0.96, precision ~0.47 is crossed
+    by the PR curve''s horizontal step at precision 0.47, and ''F1=0.8'' sits on the
+    curve''s steps near precision 0.67 → place the iso-F1 labels where their contour
+    is clear of the PR curve (e.g. at the contour''s upper-left end or at a recall
+    where the curve is far away), no text touching the curve. Likely cause: f1_labels
+    anchored at each contour''s right end (x[keep][-1] - 0.035), where the curve drops
+    through them.'
+  - 'SC-01 (both): an unrequested filled band under the curve (geom_area, alpha 0.2)
+    tints the whole panel and the iso-F1 contours behind it → remove the area fill;
+    the stepped line alone carries the curve. Likely cause: geom_area(data=df_curve,
+    ...) on line 108.'
+  - 'DE-02 (both): the panel keeps a dark four-sided frame (top and right spines drawn)
+    → L-shaped frame (left and bottom only) or none, per the style guide''s Spines
+    rule. Likely cause: theme_minimal() axis/panel border defaults not overridden
+    (panel_border / axis_line).'
+  - 'DQ-02 (both): the series is named only ''Classifier'' with no application → name
+    a concrete model from the spec''s applications, e.g. ''Fraud detector (AP = 0.920)''.
+    Likely cause: the ''model'' label string in df_curve.'
+  - 'CQ-04 (code): lines 53-63 hand-roll the descending sort, cumulative TP/FP, precision,
+    recall and AP → sklearn.metrics.precision_recall_curve(y_true, y_score) and average_precision_score(y_true,
+    y_score). Likely cause: manual threshold loop instead of the available call.'
+  - 'Suggestion: let the y axis end at 1.0 from the data instead of the typed limit
+    1.05, which leaves an empty 1.1 tick row.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with clean styling
-      Chrome: Title "precision-recall · letsplot · anyplot.ai" in dark text (#1A1A17), axis labels "Recall (Sensitivity)" and "Precision (PPV)" are clearly readable, tick labels in appropriate secondary color (#4A4A44). Y-axis grid is subtle and not overwhelming.
-      Data: Main classifier curve in brand green (#009E73) with light fill underneath. Orange/vermillion dashed baseline at 20% (positive class ratio). Iso-F1 contours in light dotted lines as background reference. Legend shows "Classifier (AP = 0.920)" with clear formatting.
-      Legibility verdict: PASS - All text is readable and well-contrasted against the light background. Proper visual hierarchy established.
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: title 'precision-recall · python · letsplot · anyplot.ai' top-left in dark ink; axis titles 'Recall (Sensitivity)' and 'Precision (PPV)'; ticks 0-1 (x) and 0-1.1 (y) in INK_SOFT; subtle horizontal grid; panel framed on all four sides; legend on top 'Classifier (AP = 0.920)'.
+      Data: #009E73 stepped PR curve, precision 1.0 up to recall ~0.54, then sawtooth decline to ~0.66 at 0.95 and a steep drop to 0.2 at recall 1.0; light green area fill under it; purple #C475FD dashed baseline at 0.2 labeled 'Random Baseline (20%)'; four faint dotted iso-F1 contours labeled F1=0.2/0.4/0.6/0.8 at their right ends - 'F1=0.6' is crossed by the curve's step at 0.47 and 'F1=0.8' sits on the curve.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) maintaining theme consistency
-      Chrome: Title in light text (#F0EFE8) is visible and readable. Axis labels and tick labels in light gray (#B8B7B0) are clearly distinguishable from the dark background. No dark-on-dark conflicts. Y-axis grid is subtle and appropriate.
-      Data: Main classifier curve maintains identical brand green (#009E73) color from light render. Orange baseline is clearly visible. Iso-F1 contours visible as background reference. All data colors match light render perfectly - only chrome has changed theme.
-      Legibility verdict: PASS - All text is readable with good contrast. The color palette adaptation is correct with data colors unchanged and only non-data chrome adapted to dark theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and ticks in light ink, readable; no dark-on-dark text; legend box on elevated #242420; panel frame in a soft grey.
+      Data: identical #009E73 curve and #C475FD baseline as the light render; area fill reads as dark green; iso-F1 contours and labels faint but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -47,114 +70,109 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title 24pt, axis 20pt, ticks 16pt) with
-          correct theme colors. Light render dark text on light bg is excellent. Dark
-          render light text on dark bg is readable with proper contrast.
+        comment: Title 16 pt, axis titles 12 pt, ticks 10 pt, annotations 4-5 mm;
+          all text readable in both themes with INK/INK_SOFT tokens
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No overlapping text elements. Baseline label positioned clearly.
-          F1 labels well-spaced.
+        passed: false
+        comment: The F1=0.6 label is crossed by the PR curve's step at precision 0.47
+          and F1=0.8 sits on the curve's steps (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, and curves clearly visible. Iso-F1 contours visible
-          with good opacity.
+        comment: Stepped curve at size 1.0 clear; dashed baseline and faint dotted
+          iso-F1 contours visible in both themes; legend line sample matches
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Uses Okabe-Ito palette (green #009E73, orange #D55E00). Colorblind-safe
-          with no red-green-only signals.'
+        comment: Green curve vs purple dashed baseline, distinguished by hue and linetype;
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off. Generous margins. Axes range [0,
-          1] shows all data clearly.
+        comment: 3200x1800 canvas, gate passed; balanced proportions, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'precision-recall · letsplot · anyplot.ai' is descriptive.
-          Axis labels 'Recall (Sensitivity)' and 'Precision (PPV)' are clear and include
-          context.
+        comment: '''Recall (Sensitivity)'' and ''Precision (PPV)'' descriptive; unitless
+          ratios'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (brand green). Secondary is #D55E00 (orange).
-          Both renders theme-correct: light bg #FAF8F1, dark bg #1A1A17. Data colors
-          identical between themes, only chrome adapts.'
+        comment: '#009E73 first series, #C475FD baseline; backgrounds #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 7
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Good design with iso-F1 contours as advanced reference feature. Stepped
-          curve style is technically correct. Area fill with alpha transparency is
-          effective. However, limited custom refinement beyond standard ggplot2.
+        comment: 'Style-guide baseline: tokens, explicit sizes, Imprint palette; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 1
         max: 6
         passed: true
-        comment: Theme-minimal base is clean. Y-axis grid only is subtle. Good whitespace.
-          Could benefit from more visual polish or custom styling choices.
+        comment: Panel keeps a four-sided frame instead of the style guide's L-shaped
+          one (defect line); y-only grid is the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
         passed: true
-        comment: 'Strong visual hierarchy: main classifier curve in focus, baseline
-          for context, F1 contours for reference. The AP score (0.920) is prominently
-          displayed. Multi-layered approach guides viewer effectively.'
+        comment: Data displayed with spec-required layers; no focal point chosen beyond
+          the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct precision-recall curve implementation with proper stepped
-          line style.
+        passed: false
+        comment: Correct PR curve, but an unrequested filled band (geom_area) under
+          the curve (defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: PR curve ✓, AP score ✓, baseline line
-          ✓, stepped style ✓, iso-F1 curves ✓.'
+        comment: Stepped line (C1), horizontal baseline at 20% (C2), AP in legend
+          (C3), labeled faint iso-F1 contours (C4); single classifier so C5 N/A
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: recall [0, 1]. Y-axis: precision [0, 1.05]. All data visible.
-          Axes properly scaled for imbalanced classification context.'
+        comment: Recall on x, precision on y, curve through computed threshold points;
+          all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format. Legend displays 'Classifier (AP = 0.920)' with
-          AP metric prominently shown.
+        comment: Title 'precision-recall · python · letsplot · anyplot.ai' correct;
+          legend 'Classifier (AP = 0.920)' matches
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -162,26 +180,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive: main PR curve, baseline for random classifier, iso-F1
-          reference contours, AP score. Demonstrates all major aspects of precision-recall
-          evaluation.'
+        comment: Shows stepped sawtooth, steep fall to the baseline at high recall,
+          baseline, AP, iso-F1
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Binary classification with 20% positive class (imbalanced). Uses
-          beta distributions for realistic probability scores. Appropriate domain
-          context.
+        passed: false
+        comment: Imbalanced 20% positive classifier is plausible, but the series is
+          the generic 'Classifier' with no domain (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 samples is appropriate for PR curve evaluation. Probability scores
-          well-calibrated. Axis ranges [0, 1] correct for precision/recall metrics.
+        comment: 'Checked: baseline at 100/500 = 0.20 drawn at 0.2; AP 0.920 computed
+          as step-wise sum; precision/recall in [0,1]'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -189,61 +205,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes. Straightforward linear implementation.
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output across runs.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pandas, lets_plot. No unused dependencies.'
+        comment: Imports all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI elements. Calculations are correct and appropriate complexity.
+        passed: false
+        comment: Lines 53-63 write out precision/recall/AP that sklearn.metrics computes
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly. Uses current
-          lets_plot API with ggsave.
+        comment: Saves plot-{THEME}.png at scale 4 and plot-{THEME}.html; current
+          API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Good ggplot2-style grammar: ggplot(), geom layers, aesthetic mappings,
-          theme system. Proper use of scale_color_manual and theme functions. Could
-          demonstrate more lets-plot specific features.'
+        comment: Standard grammar-of-graphics layering with ggsize/ggsave; default,
+          nothing beyond
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: false
-        comment: Limited use of lets-plot distinctive capabilities. Mostly standard
-          ggplot2 API. No interactive features leveraged despite lets-plot's strengths
-          in interactivity.
+        passed: true
+        comment: Nothing beyond what the library prompt mandates; HTML export interactivity
+          only by default
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-c82e6bcb31
+  rendered_at: '2026-11-20T16:41:02Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
