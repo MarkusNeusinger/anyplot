@@ -1,15 +1,31 @@
-# ruff: noqa: F405
-"""anyplot.ai
+""" anyplot.ai
 lift-curve: Model Lift Chart
-Library: lets-plot | Python 3.13
-Quality: pending | Created: 2025-12-27
+Library: letsplot 4.11.0 | Python 3.14.10
+Quality: 83/100 | Updated: 2026-11-20
 """
 
 import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403, F405
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_line,
+    geom_point,
+    geom_text,
+    ggplot,
+    ggsave,
+    ggsize,
+    labs,
+    scale_x_continuous,
+    scale_y_continuous,
+    theme,
+)
 
 
 LetsPlot.setup_html()
@@ -17,85 +33,72 @@ LetsPlot.setup_html()
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
-REFERENCE = "#AE3030"  # Okabe-Ito position 5 for reference line
 
-# Data: Fraud detection model
-# Using exponential distribution for scores to reflect realistic fraud detection patterns
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Constants
+BASELINE_LIFT = 1.0  # random selection captures responders at the base rate
+DECILE_STEP = 10  # markers every 10 % of the population
+
+# Columns: set these to your table's column names
+Y_TRUE = "Actual fraud (0/1)"  # role: y_true
+Y_SCORE = "Model fraud score"  # role: y_score
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
 n_samples = 1200
-
-# Fraud cases (10% base rate) with skewed distribution
 n_fraud = int(n_samples * 0.10)
-fraud_scores = np.random.exponential(scale=0.3, size=n_fraud)
-fraud_scores = np.clip(fraud_scores, 0, 1)  # Normalize to [0, 1]
-
-# Legitimate cases with lower exponential scores
-legit_scores = np.random.exponential(scale=0.15, size=n_samples - n_fraud)
-legit_scores = np.clip(legit_scores, 0, 1)
-
+fraud_scores = np.clip(np.random.exponential(scale=0.3, size=n_fraud), 0, 1)
+legit_scores = np.clip(np.random.exponential(scale=0.15, size=n_samples - n_fraud), 0, 1)
 y_true = np.concatenate([np.ones(n_fraud), np.zeros(n_samples - n_fraud)])
 y_score = np.concatenate([fraud_scores, legit_scores])
-
-# Shuffle data
 shuffle_idx = np.random.permutation(n_samples)
-y_true = y_true[shuffle_idx]
-y_score = y_score[shuffle_idx]
+df = pd.DataFrame({Y_TRUE: y_true[shuffle_idx].astype(int), Y_SCORE: y_score[shuffle_idx]})
 
-# Calculate lift curve
-sorted_idx = np.argsort(y_score)[::-1]
-y_true_sorted = y_true[sorted_idx]
+# Plot: reads only df and the constants above
+ranked = df.sort_values(Y_SCORE, ascending=False)
+n_rows = len(ranked)
+n_targeted = np.arange(1, n_rows + 1)
+cum_responders = ranked[Y_TRUE].to_numpy().cumsum()
+base_rate = df[Y_TRUE].mean()
 
-n_fraud_total = np.sum(y_true)
-baseline_rate = n_fraud_total / n_samples
-cumsum_fraud = np.cumsum(y_true_sorted)
-n_evaluated = np.arange(1, n_samples + 1)
-population_pct = n_evaluated / n_samples * 100
-response_rate = cumsum_fraud / n_evaluated
-lift = response_rate / baseline_rate
+POP = "Population targeted (%)"
+LIFT = "Cumulative lift"
+curve = pd.DataFrame({POP: n_targeted / n_rows * 100, LIFT: cum_responders / n_targeted / base_rate})
+step_rows = np.round(np.arange(DECILE_STEP, 100 + DECILE_STEP, DECILE_STEP) / 100 * n_rows).astype(int) - 1
+deciles = curve.iloc[step_rows]
 
-# Sample points for smooth curve
-sample_idx = np.arange(0, n_samples, max(1, n_samples // 100))
-df = pd.DataFrame({"population_pct": population_pct[sample_idx], "lift": lift[sample_idx]})
+top = curve[LIFT].max()
+reference = pd.DataFrame({POP: [0, 100], LIFT: [BASELINE_LIFT, BASELINE_LIFT]})
+ref_label = pd.DataFrame({POP: [98], LIFT: [BASELINE_LIFT + top * 0.05], "label": ["Random selection (lift = 1)"]})
 
-# Reference line
-ref_df = pd.DataFrame({"population_pct": [0, 100], "lift": [1, 1]})
+title = "lift-curve · python · letsplot · anyplot.ai"
 
-# Create plot with theme-adaptive styling
 plot = (
-    ggplot()
-    + geom_line(aes(x="population_pct", y="lift"), data=ref_df, color=INK_SOFT, size=1.5, linetype="dashed", alpha=0.6)
-    + geom_line(aes(x="population_pct", y="lift"), data=df, color=BRAND, size=2.5)
-    + geom_point(aes(x="population_pct", y="lift"), data=df[::5], color=BRAND, size=4, alpha=0.8)
-    + labs(x="Population Targeted (%)", y="Cumulative Lift", title="lift-curve · letsplot · anyplot.ai")
-    + scale_x_continuous(breaks=list(range(0, 101, 10)), limits=[0, 100])
-    + scale_y_continuous(breaks=[1, 2, 3, 4, 5, 6, 7])
+    ggplot(curve, aes(x=POP, y=LIFT))
+    + geom_line(aes(x=POP, y=LIFT), data=reference, color=INK_SOFT, size=1.0, linetype="dashed")
+    + geom_line(color=IMPRINT_PALETTE[0], size=1.4)
+    + geom_point(data=deciles, color=IMPRINT_PALETTE[0], fill=PAGE_BG, shape=21, size=4, stroke=1.5)
+    + geom_text(aes(x=POP, y=LIFT, label="label"), data=ref_label, size=4, color=INK_SOFT, hjust="right")
+    + scale_x_continuous(breaks=list(range(0, 101, 10)), limits=[0, 100], expand=[0.01, 0])
+    + scale_y_continuous(limits=[0, top * 1.08], expand=[0, 0])
+    + labs(title=title)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK_SOFT, size=0.2),
         panel_grid_minor=element_blank(),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, color=INK),
-        legend_background=element_rect(fill=ELEVATED_BG),
-        legend_text=element_text(color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK),
     )
-    + ggsize(1600, 900)
-)
-
-# Add reference line label
-plot = plot + geom_text(
-    aes(x="x", y="y", label="label"),
-    data=pd.DataFrame({"x": [85], "y": [1.15], "label": ["Baseline (Lift = 1)"]}),
-    size=14,
-    color=INK_SOFT,
+    + ggsize(800, 450)
 )
 
 # Save with theme suffix
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
