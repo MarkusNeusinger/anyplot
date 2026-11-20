@@ -2,49 +2,45 @@ library: plotnine
 language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:41:44Z'
-updated: '2026-05-10T01:21:56Z'
-generated_by: claude-haiku
-workflow_run: 25616233545
+updated: '2026-11-20T15:51:38Z'
+generated_by: claude-sonnet
+workflow_run: 44766446057
 issue: 2276
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.14.10
+library_version: 0.15.9
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 82
 review:
   strengths:
-  - Perfect legibility in both light and dark themes with accurate theme-token adaptation
-  - 'All specification requirements met: sorted bars, gradient colors, error bars,
-    text annotations'
-  - 'Excellent code quality: clean structure, idiomatic plotnine usage, explicit typography
-    sizing'
-  - Clear visual hierarchy guides viewer from high-importance (top, bright) to low-importance
-    (bottom, dark)
-  - 'Professional minimal aesthetic: spines removed, subtle grid, adequate whitespace'
-  - 'Realistic, comprehensible data: house price model with meaningful feature names'
+  - 'Sequential imprint_seq gradient (#009E73 → #4467A3) via scale_fill_gradient mapped
+    to importance, so color and bar length tell the same ranking in both themes'
+  - Value labels placed past each error bar's upper end with a gap derived from the
+    data, so every label is clear of its error bar
+  - Bars sorted with the highest at the top through scale_x_discrete limits taken
+    from df
+  - Theme tokens threaded through title, axis text, error bars and grid; both renders
+    fully readable
+  - Correct 3200x1800 canvas and full mandated title with the python segment
   weaknesses:
-  - Design could explore custom color approaches beyond standard viridis (current
-    palette is correct but not distinctively sophisticated)
-  - Limited visual embellishment or emphasis techniques (though minimalist approach
-    aligns with style guide)
+  - 'Suggestion: drop the legend_background theme entry, which styles a legend that
+    guides(fill=False) never draws.'
+  - 'Suggestion: use the LO/HI constants in geom_errorbar''s aes instead of the literal
+    "lo"/"hi" strings.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white ✓
-      Chrome: Title (24pt), axis labels (20pt), tick labels (14-16pt) all clearly visible in dark INK colors ✓
-      Data: 15 horizontal bars with viridis colormap (yellow to dark purple), gradient effectively shows importance progression from 0.285 to 0.002; error bars visible; value annotations clear ✓
-      Grid: Subtle vertical grid (alpha=0.15) aids value reading without dominating ✓
-      Legibility verdict: PASS — All elements readable, no light-on-light issues
+      Background: warm off-white #FAF8F1 (sampled 250,248,241), 3200x1800.
+      Chrome: title 'bar-feature-importance · python · plotnine · anyplot.ai' in dark ink at about 56 % width; axis titles 'Feature' and 'Importance Score' dark; feature names and ticks 0.0–0.3 in INK_SOFT; subtle vertical grid only. All readable.
+      Data: 15 horizontal bars sorted highest at top, filled on the imprint_seq ramp from #009E73 (Porch Area, 0.002) to #4467A3 (Overall Quality, 0.285); dark-gray error bars centred on each bar end; value labels (0.285 … 0.002) in dark ink right after each error bar.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black ✓
-      Chrome: Title, axis labels, tick labels all clearly visible in light INK colors (#F0EFE8, #B8B7B0) ✓
-      Data: Viridis colormap identical to light render (yellow, greens, blues, purples) — only chrome flipped per theme tokens ✓
-      Grid: Subtle grid remains visible and appropriate ✓
-      Legibility verdict: PASS — No dark-on-dark failures, all text light-colored against dark background, data colors consistent with light render
-
-    Both renders pass full theme-readability checks. Text legibility is perfect in both; theme adaptation is correct.
+      Background: warm near-black #1A1A17 (sampled 26,26,23).
+      Chrome: title and axis titles in light ink, ticks and feature names in light gray; no dark-on-dark text; grid subtle.
+      Data: bar colors identical to the light render (same green-to-blue ramp); error bars in light gray, visible on every fill; value labels in light ink. Brand green clearly visible on the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,74 +51,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: Title 24pt, axis labels 20pt, ticks
-          14-16pt; all perfectly readable in both light and dark themes'
+        comment: Title 12 pt, axis titles 10 pt, ticks and value labels 8 pt, all
+          set explicitly; every text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no collisions; feature names clearly
-          spaced
+        comment: 'No collisions: value labels sit past each error bar''s upper end,
+          feature names clear of the bars'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 15 bars and error bars clearly visible; viridis gradient effectively
-          shows importance progression
+        comment: 15 bars at width 0.7 well visible; INK_SOFT error bars readable on
+          every gradient step; the 0.002 bar is still a distinct green sliver
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe; high contrast in both
-          light and dark themes
+        comment: Green-to-blue ramp differs in lightness and hue; no red-green signal;
+          high contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio; good proportions; nothing cut off; text annotations
-          positioned cleanly
+        comment: 3200x1800 canvas; title about 56 % of the width; balanced axis titles;
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with implicit units; title format correct
+        comment: '''Feature'' and ''Importance Score'' are reader text; importance
+          is unitless'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous data; backgrounds #FAF8F1 (light)
-          and #1A1A17 (dark); chrome (text, grid) theme-adaptive in both renders'
+        comment: 'Fill gradient is imprint_seq (#009E73 to #4467A3), identical in
+          both renders; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Clean professional layout; viridis gradient intentionally maps importance;
-          minimalist style appropriate but uses standard palette
+        passed: false
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Spines removed via theme_minimal; subtle x-axis grid (alpha=0.15);
-          good whitespace; theme tokens applied consistently
+        passed: false
+        comment: The spine and grid rules met (x-only grid, minimal theme), nothing
+          beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Clear visual hierarchy: highest-importance features emphasized at
-          top with bright colors; gradient aids understanding of relative importance'
+        passed: false
+        comment: Data displayed with the Notes' sort and gradient; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal bar chart via coord_flip
+        comment: Horizontal bar chart via coord_flip
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: sorted by importance, gradient colors,
-          error bars, text value annotations'
+        comment: Sorted highest at top (C2), imprint_seq gradient on importance (C3),
+          value labels at bar ends clear of error bars (C4), error bars centred on
+          bar ends and visible on every fill (C5), all names in full (C1)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (importance) and Y-axis (feature) correctly mapped; all 15
-          features visible
+        comment: Bars from a zero baseline to their values; error bars at importance
+          ± std; all 15 features shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend hidden (appropriate for single continuous
-          series)
+        comment: Title 'bar-feature-importance · python · plotnine · anyplot.ai';
+          legend N/A (single series, gradient redundant with length)
     data_quality:
       score: 15
       max: 15
@@ -163,22 +160,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 15 features shown; includes error bars; demonstrates full bar
-          chart capabilities
+        comment: Dominant features, long tail and per-feature std all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: House price prediction model with realistic feature names; neutral,
-          comprehensible scenario
+        comment: Random-forest house-price model with real-estate feature names; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importance scores (0.285 to 0.002) are realistic; error bars proportionally
-          small; scale sensible for domain
+        comment: Importances sum to 1.0 (0.285 down to 0.002); stds small and proportional;
+          no Check values in the Notes
     code_quality:
       score: 10
       max: 10
@@ -188,58 +183,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward imports → data → plot →
-          save
+        comment: Flat imports, constants, data block, plot, save; adaptable-code checker
+          passes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded; deterministic (no random element)
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic plotnine; appropriate complexity; no fake UI
+        comment: Appropriate complexity; label offset derived from df
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current plotnine API
+        comment: Saves plot-{THEME}.png at 3200x1800 via plot.save
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expertly uses plotnine grammar of graphics: ggplot() + geom_bar()
-          + coord_flip() + geom_errorbar() + geom_text() + scale_fill_cmap() + proper
-          theme tokens'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses scale_fill_cmap and geom_text appropriately; features are standard
-          plotnine practices rather than uniquely distinctive
+        passed: false
+        comment: Standard ggplot grammar (geom_col, geom_errorbar, geom_text, coord_flip,
+          scale_fill_gradient); nothing beyond the library prompt's patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-7035e69ce9.aqr-b7df133281.sg-90127758e8.lib-63bb674708
+  rendered_at: '2026-11-20T15:47:54Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  patterns:
-  - data-generation
+  - layer-composition
+  patterns: []
   dataprep: []
   styling:
   - custom-colormap
