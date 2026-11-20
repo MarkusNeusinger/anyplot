@@ -27,4 +27,4 @@
   `click`, `touch`, `key`, `wheel`, each once, joined with `+`), so a kind
   that starts to fire by itself can be seen and left out of the count.
   `docs/reference/plausible.md` names the early warnings with their
-  baselines and the readers the rule misses.
+  baselines and the readers the rule misses. (#13277)
